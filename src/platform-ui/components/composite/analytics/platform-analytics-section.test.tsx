@@ -74,6 +74,34 @@ describe("PlatformAnalyticsSection", () => {
     expect(onTimeframeValueChange).toHaveBeenCalledWith("month");
   });
 
+  it("keeps default analytics unboxed while owning its timeframe control", () => {
+    const onTimeframeValueChange = vi.fn();
+    render(
+      <PlatformAnalyticsSection
+        timeframe={{
+          value: "week",
+          options: [
+            { value: "day", label: "24H" },
+            { value: "week", label: "7D" },
+          ],
+          onValueChange: onTimeframeValueChange,
+          ariaLabel: "Agent analytics time frame",
+        }}
+        analytics={{
+          title: "Analytics",
+          metrics: [],
+          labels: [],
+          series: [],
+        }}
+      />,
+    );
+
+    expect(screen.queryByRole("heading", { name: "Analytics" })).toBeNull();
+    expect(screen.getByRole("radiogroup", { name: "Agent analytics time frame" })).not.toBeNull();
+    fireEvent.click(screen.getByRole("radio", { name: "24H" }));
+    expect(onTimeframeValueChange).toHaveBeenCalledWith("day");
+  });
+
   it("owns the analytics loading state", () => {
     render(
       <PlatformAnalyticsSection

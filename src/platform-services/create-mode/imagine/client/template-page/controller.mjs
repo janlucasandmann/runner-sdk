@@ -24,7 +24,6 @@ export const IMAGINE_TEMPLATE_PAGE_CONTROLLER_SCRIPT = String.raw`        functi
           favouriteTemplateIds,
           onToggleFavouriteTemplate,
           canGenerateVideo = true,
-          onUpgradeToIndividual,
           onBack,
         }) {
           const normalizedTemplates = useMemo(() => Array.isArray(templates) ? templates : [], [templates]);
@@ -61,8 +60,6 @@ export const IMAGINE_TEMPLATE_PAGE_CONTROLLER_SCRIPT = String.raw`        functi
           const [selectedTemplateAssetKeys, setSelectedTemplateAssetKeys] = useState([]);
           const [settingsFlipped, setSettingsFlipped] = useState(false);
           const [stylePickerOpen, setStylePickerOpen] = useState(false);
-          const [videoUpgradeModalOpen, setVideoUpgradeModalOpen] = useState(false);
-          const [videoUpgradeCheckoutLoading, setVideoUpgradeCheckoutLoading] = useState(false);
           const fileInputRef = useRef(null);
           const projectSelectorRef = useRef(null);
           const aspectRatioSelectorRef = useRef(null);

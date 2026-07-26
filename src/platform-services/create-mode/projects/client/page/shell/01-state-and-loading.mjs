@@ -65,17 +65,49 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         projectNavTaskRequest = null,
         projectNavSettingsRequestToken = 0,
         projectNavIssueRequest = null,
+        projectNavDeleteRequest = null,
         detailOnly,
         onCloseDetailOnly,
         standaloneMode,
         subscriptionTierId = "",
-        onUpgradeToIndividual,
       }) {
         const effectiveApiKey = useMemo(() => String(apiKey || "").trim(), [apiKey]);
         const isDetailOnlyMode = Boolean(detailOnly);
         const isStandaloneCalendarMode = standaloneMode === "calendar";
-        const normalizedSubscriptionTierId = normalizeSettingsTierId(subscriptionTierId) || "free";
-        const isCalendarCreationLocked = normalizedSubscriptionTierId === "free";
+        const normalizedSubscriptionTierId = normalizeSettingsTierId(subscriptionTierId) || "sandbox";
+        const isCalendarCreationLocked = normalizedSubscriptionTierId === "sandbox";
+        const initialNavigationProjectId = String(navigationRequest?.projectId || "").trim();
+        const initialNavigationTaskId = String(navigationRequest?.taskId || "").trim();
+        const initialNavigationOpensTaskScreen = Boolean(
+          initialNavigationProjectId
+          && initialNavigationTaskId
+          && navigationRequest?.taskDetailMode === "screen"
+        );
+        const initialNavigationProjectRecord = (() => {
+          if (!navigationRequest?.projectRecord || typeof navigationRequest.projectRecord !== "object" || Array.isArray(navigationRequest.projectRecord)) {
+            return null;
+          }
+          const normalizedProject = normalizePlaygroundProjectRecord(navigationRequest.projectRecord);
+          return normalizedProject.id === initialNavigationProjectId ? normalizedProject : null;
+        })();
+        const initialNavigationTaskRecord = (() => {
+          if (!initialNavigationOpensTaskScreen || !navigationRequest?.taskRecord || typeof navigationRequest.taskRecord !== "object" || Array.isArray(navigationRequest.taskRecord)) {
+            return null;
+          }
+          const normalizedTask = normalizePlaygroundTaskRecord({
+            ...navigationRequest.taskRecord,
+            id: initialNavigationTaskId,
+            projectId: initialNavigationProjectId,
+          });
+          return normalizedTask.id === initialNavigationTaskId && normalizedTask.projectId === initialNavigationProjectId
+            ? normalizedTask
+            : null;
+        })();
+        const initialNavigationTaskView = isStandaloneCalendarMode
+          ? "calendar"
+          : navigationRequest?.view === "overview"
+            ? "overview"
+            : "backlog";
         const editorDirtyRef = useRef(false);
         const taskAutosaveInFlightRef = useRef(false);
         const taskAutosaveQueuedRef = useRef(null);
@@ -116,6 +148,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const handledProjectNavTaskRequestTokenRef = useRef("");
         const handledProjectNavSettingsRequestTokenRef = useRef(0);
         const handledProjectNavIssueRequestTokenRef = useRef("");
+        const handledProjectNavDeleteRequestTokenRef = useRef("");
         const taskConnectorBrowserOpenFrameRef = useRef(null);
         const projectGithubPreparationPromisesRef = useRef(new Map());
         const projectWorkspaceLoadTokenRef = useRef("");
@@ -127,8 +160,13 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const handledOpenTaskRequestTokenRef = useRef("");
         const projectOverviewWorkspaceTeamsRequestedRef = useRef(false);
         const projectOverviewWorkspaceTeamMembersRequestedRef = useRef("");
-        const [projects, setProjects] = useState([]);
+        const [projects, setProjects] = useState(() => (
+          initialNavigationProjectRecord ? [initialNavigationProjectRecord] : []
+        ));
         const [selectedProjectId, setSelectedProjectId] = useState(() => {
+          if (initialNavigationProjectId) {
+            return initialNavigationProjectId;
+          }
           try {
             return localStorage.getItem("runner_demo_tasks_project_scope_id") || "";
           } catch {
@@ -136,11 +174,13 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           }
         });
         const [selectedProjectDetail, setSelectedProjectDetail] = useState({
-          project: null,
+          project: initialNavigationProjectRecord,
           summary: buildEmptyPlaygroundProjectSummary(),
           environments: [],
           recentThreads: [],
           threads: [],
+          workRelations: [],
+          agentSessions: [],
         });
         const [projectLoadState, setProjectLoadState] = useState({
           status: "loading",
@@ -198,6 +238,8 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [isProjectDescriptionEditing, setIsProjectDescriptionEditing] = useState(false);
         const [projectDescriptionHistory, setProjectDescriptionHistory] = useState({ past: [], future: [] });
         const projectDescriptionEditingRef = useRef(false);
+        const projectDescriptionDirtyProjectIdRef = useRef("");
+        const projectDescriptionRevisionRef = useRef(0);
         const [projectComposerEnvironmentPopoverOpen, setProjectComposerEnvironmentPopoverOpen] = useState(false);
         const projectComposerEnvironmentPopoverRef = useRef(null);
         const projectBlueprintPickerRef = useRef(null);
@@ -217,11 +259,53 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [projectEnvironmentFilePickerSearch, setProjectEnvironmentFilePickerSearch] = useState("");
         const [projectEnvironmentFilePickerExpandedFolders, setProjectEnvironmentFilePickerExpandedFolders] = useState([]);
         const [projectEnvironmentFilePickerSelectedPaths, setProjectEnvironmentFilePickerSelectedPaths] = useState([]);
-        const [taskView, setTaskView] = useState(() => isStandaloneCalendarMode ? "calendar" : "overview");
+        const [taskView, setTaskView] = useState(() => (
+          initialNavigationOpensTaskScreen ? initialNavigationTaskView : (isStandaloneCalendarMode ? "calendar" : "overview")
+        ));
         const [projectOverviewChartTimescale, setProjectOverviewChartTimescale] = useState("day");
         const [projectOverviewPerformanceRange, setProjectOverviewPerformanceRange] = useState("1m");
         const [projectOverviewHomeTab, setProjectOverviewHomeTab] = useState("general");
-        const [projectOverviewActivityTab, setProjectOverviewActivityTab] = useState("activity");
+        const [projectOverviewActivityTab, setProjectOverviewActivityTab] = useState("threads");
+        const [projectOverviewUpdateComposerState, setProjectOverviewUpdateComposerState] = useState({
+          open: false,
+          isSaving: false,
+          error: "",
+          draft: {
+            body: "",
+            status: "on_track",
+            attachments: [],
+          },
+        });
+        const [projectOverviewUpdateInteractionState, setProjectOverviewUpdateInteractionState] = useState({
+          updateId: "",
+          commentOpen: false,
+          emojiOpen: false,
+          commentValue: "",
+          isSaving: false,
+          reactionSaving: "",
+          error: "",
+        });
+        useEffect(() => {
+          setProjectOverviewUpdateComposerState({
+            open: false,
+            isSaving: false,
+            error: "",
+            draft: {
+              body: "",
+              status: "on_track",
+              attachments: [],
+            },
+          });
+          setProjectOverviewUpdateInteractionState({
+            updateId: "",
+            commentOpen: false,
+            emojiOpen: false,
+            commentValue: "",
+            isSaving: false,
+            reactionSaving: "",
+            error: "",
+          });
+        }, [selectedProjectId]);
         const [projectOverviewSidebarCollapsed, setProjectOverviewSidebarCollapsed] = useState(false);
         const [projectOverviewSidebarProgressView, setProjectOverviewSidebarProgressView] = useState("assignees");
         const projectOverviewSidebarAutoCollapsedForTaskRef = useRef(false);
@@ -263,12 +347,18 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           }
         }
         useEffect(() => {
-          if (projectOverviewHomeTab !== "permissions") {
+          if (workspaceTeamsCount > 0) {
+            projectOverviewWorkspaceTeamsRequestedRef.current = false;
+          }
+        }, [workspaceTeamsCount]);
+        useEffect(() => {
+          if (taskView !== "overview" || !String(selectedProjectId || "").trim()) {
             return;
           }
           requestProjectOverviewWorkspaceTeams();
         }, [
-          projectOverviewHomeTab,
+          taskView,
+          selectedProjectId,
           hasRealAccess,
           workspaceTeamsLoading,
           workspaceTeamsRequiresPlan,
@@ -304,6 +394,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [projectOverviewFileFilterMode, setProjectOverviewFileFilterMode] = useState("all");
         const [projectOverviewFileToolbarPopover, setProjectOverviewFileToolbarPopover] = useState("");
         const [projectOverviewFileActivityState, setProjectOverviewFileActivityState] = useState({
+          projectId: "",
           status: "idle",
           error: "",
           items: [],
@@ -321,16 +412,6 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           summary: null,
         });
         const [projectOverviewFileActivityReloadNonce, setProjectOverviewFileActivityReloadNonce] = useState(0);
-        const [projectOverviewOutcomeEditorState, setProjectOverviewOutcomeEditorState] = useState(null);
-        const [projectOverviewOutcomeActionMenuId, setProjectOverviewOutcomeActionMenuId] = useState("");
-        const [projectOverviewOutcomeRenameState, setProjectOverviewOutcomeRenameState] = useState(null);
-        const [projectOverviewOutcomeEditorVisible, setProjectOverviewOutcomeEditorVisible] = useState(false);
-        const [projectOverviewOutcomeEditorClosing, setProjectOverviewOutcomeEditorClosing] = useState(false);
-        const [projectOverviewOutcomeMilestonePickerOpen, setProjectOverviewOutcomeMilestonePickerOpen] = useState(false);
-        const projectOverviewOutcomeEditorCloseTimerRef = useRef(null);
-        const projectOverviewOutcomeEditorFrameRef = useRef(null);
-        const projectOverviewOutcomeMilestonePickerRef = useRef(null);
-        const projectOverviewOutcomeEditorAnimationMs = 75;
         const [projectOverviewSuppressedFileKeys, setProjectOverviewSuppressedFileKeys] = useState(() => {
           if (typeof window === "undefined" || !window.localStorage) {
             return [];
@@ -354,19 +435,26 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        const projectOverviewServerResourcesLoadKeyRef = useRef("");
 	        const projectListAutoLoadKeyRef = useRef("");
 	        const projectWorkspaceAutoLoadKeyRef = useRef("");
+	        const projectWorkGraphAutoLoadKeyRef = useRef("");
+	        const projectConfigLoadTokenRef = useRef("");
 \${CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.loadRefs}
 	        const projectCustomSkillsLoadKeyRef = useRef("");
 	        const taskDetailAutoLoadKeyRef = useRef("");
 	        const reportedProjectScopeIdRef = useRef("");
 	        const projectLocalNameOverridesRef = useRef(new Map());
 	        const [projectOverviewServerResourcesState, setProjectOverviewServerResourcesState] = useState({
+	          projectId: "",
 	          status: "idle",
 	          error: "",
 	          items: [],
 	        });
-	        const [projectOverviewVisibleThreadCount, setProjectOverviewVisibleThreadCount] = useState(5);
+	        const [projectOverviewThreadPagination, setProjectOverviewThreadPagination] = useState({
+	          pageIndex: 0,
+	          pageSize: 5,
+	        });
 	        const [projectOverviewVisibleActivityCount, setProjectOverviewVisibleActivityCount] = useState(5);
 	        const [projectOverviewSidebarPropertyPopover, setProjectOverviewSidebarPropertyPopover] = useState("");
+	        const [projectOverviewSidebarStatusSearchQuery, setProjectOverviewSidebarStatusSearchQuery] = useState("");
 	        const [projectOverviewOwnerCandidatesState, setProjectOverviewOwnerCandidatesState] = useState({
 	          projectId: "",
 	          status: "idle",
@@ -412,12 +500,12 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [releaseSortMode, setReleaseSortMode] = useState("default");
         const [releaseBacklogFilterMode, setReleaseBacklogFilterMode] = useState("open");
         const [releaseBacklogSortMode, setReleaseBacklogSortMode] = useState("default");
-        const [tasks, setTasks] = useState([]);
+        const [tasks, setTasks] = useState(() => (
+          initialNavigationTaskRecord ? [initialNavigationTaskRecord] : []
+        ));
         const [releases, setReleases] = useState([]);
         const [sprints, setSprints] = useState([]);
 \${CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.collectionState}
-        const [projectAgentUpgradeModalOpen, setProjectAgentUpgradeModalOpen] = useState(false);
-        const [projectAgentUpgradeCheckoutLoading, setProjectAgentUpgradeCheckoutLoading] = useState(false);
 \${CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.editorState}
         const [selectedReleaseId, setSelectedReleaseId] = useState("");
         const [releaseComposerOpen, setReleaseComposerOpen] = useState(false);
@@ -435,9 +523,13 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const releaseComposerAnimationMs = 75;
         const releaseDescriptionTextareaRef = useRef(null);
         const [isReleaseDescriptionEditing, setIsReleaseDescriptionEditing] = useState(false);
-        const [selectedTaskId, setSelectedTaskId] = useState("");
-        const [draftTask, setDraftTask] = useState(null);
-        const [projectTaskDetailScreenOpen, setProjectTaskDetailScreenOpen] = useState(false);
+        const [selectedTaskId, setSelectedTaskId] = useState(() => (
+          initialNavigationTaskRecord?.id || ""
+        ));
+        const [draftTask, setDraftTask] = useState(() => initialNavigationTaskRecord);
+        const [projectTaskDetailScreenOpen, setProjectTaskDetailScreenOpen] = useState(() => (
+          Boolean(initialNavigationTaskRecord && initialNavigationOpensTaskScreen)
+        ));
         const [issueComposerOpen, setIssueComposerOpen] = useState(false);
         const [issueComposerVisible, setIssueComposerVisible] = useState(false);
         const [issueComposerClosing, setIssueComposerClosing] = useState(false);
@@ -493,11 +585,6 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        const missionControlStrategyDraftRef = useRef(buildEmptyPlaygroundProjectStrategyBrief());
 	        const missionControlStrategyDraftProjectIdRef = useRef("");
 	        const selectedProjectMissionControlRef = useRef(buildEmptyPlaygroundProjectMissionControl());
-        const [missionControlSetupOutcomesDraft, setMissionControlSetupOutcomesDraft] = useState("");
-        const [missionControlSetupOutcomeTitleDrafts, setMissionControlSetupOutcomeTitleDrafts] = useState({});
-        const [isMissionControlSetupOutcomesEditing, setIsMissionControlSetupOutcomesEditing] = useState(false);
-        const [missionControlSetupOutcomeMenuIndex, setMissionControlSetupOutcomeMenuIndex] = useState(-1);
-        const missionControlSetupOutcomeMenuRef = useRef(null);
 	        const [projectRulesDraft, setProjectRulesDraft] = useState("");
 	        const [projectRuleInputValue, setProjectRuleInputValue] = useState("");
 	        const [projectRuleComposerOpen, setProjectRuleComposerOpen] = useState(false);
@@ -529,6 +616,12 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           threadId: "",
           projectId: "",
           status: "idle",
+          error: "",
+        });
+        const [missionControlDeliveryExecutionState, setMissionControlDeliveryExecutionState] = useState({
+          projectId: "",
+          status: "idle",
+          execution: null,
           error: "",
         });
         const missionControlAgentSavePromiseRef = useRef(null);
@@ -780,12 +873,21 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           }
 
           const shouldResetProjectDescriptionEditing = projectDraft?.id !== selectedProject.id;
+          if (shouldResetProjectDescriptionEditing) {
+            projectDescriptionDirtyProjectIdRef.current = "";
+            projectDescriptionRevisionRef.current = 0;
+          }
           setProjectDraft((current) => {
             const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
             const projectIndex = projects.findIndex((project) => project.id === normalizedProject.id);
             const wallpaperConfig = getPlaygroundProjectWallpaperConfig(selectedProject, projectIndex >= 0 ? projectIndex : 0);
             if (current?.id === selectedProject.id) {
-              if (projectDescriptionEditingRef.current || String(current.description || "") === String(normalizedProject.description || "")) {
+              const hasUnsavedDescription = projectDescriptionDirtyProjectIdRef.current === selectedProject.id;
+              if (
+                projectDescriptionEditingRef.current
+                || hasUnsavedDescription
+                || String(current.description || "") === String(normalizedProject.description || "")
+              ) {
                 return current;
               }
               return {
@@ -887,6 +989,104 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        }, [missionControlStrategyDraft]);
         const isSelectedProjectMissionControlRunning = missionControlRunState.projectId === selectedProjectId
           && (missionControlRunState.status === "running" || missionControlRunState.status === "syncing");
+        const selectedProjectDeliveryExecution = useMemo(() => {
+          if (
+            missionControlDeliveryExecutionState.projectId === selectedProjectId
+            && missionControlDeliveryExecutionState.execution
+          ) {
+            return missionControlDeliveryExecutionState.execution;
+          }
+          const projected = selectedProjectMissionControl.deliveryExecution;
+          return projected && typeof projected === "object" && !Array.isArray(projected)
+            ? projected
+            : null;
+        }, [
+          missionControlDeliveryExecutionState.execution,
+          missionControlDeliveryExecutionState.projectId,
+          selectedProjectId,
+          selectedProjectMissionControl.deliveryExecution,
+        ]);
+
+        useEffect(() => {
+          const normalizedProjectId = String(selectedProjectId || "").trim();
+          if (!normalizedProjectId || !missionControlStrategyOpen) {
+            setMissionControlDeliveryExecutionState((current) => ({
+              projectId: normalizedProjectId,
+              status: "idle",
+              execution: normalizedProjectId === current.projectId ? current.execution : null,
+              error: "",
+            }));
+            return undefined;
+          }
+          let cancelled = false;
+          let timeoutId = null;
+          const loadExecution = async () => {
+            try {
+              const response = await fetch(
+                backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId) + "/delivery-plan/execution",
+                {
+                  method: "GET",
+                  headers: requestHeaders,
+                },
+              );
+              const data = await response.json().catch(() => ({}));
+              if (cancelled) return;
+              if (response.status === 404) {
+                setMissionControlDeliveryExecutionState({
+                  projectId: normalizedProjectId,
+                  status: "ready",
+                  execution: null,
+                  error: "",
+                });
+                return;
+              }
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load delivery execution.");
+              }
+              const execution = data?.deliveryExecution && typeof data.deliveryExecution === "object"
+                ? data.deliveryExecution
+                : null;
+              setMissionControlDeliveryExecutionState({
+                projectId: normalizedProjectId,
+                status: "ready",
+                execution,
+                error: "",
+              });
+              if (execution && ["queued", "running", "blocked"].includes(String(execution.status || ""))) {
+                timeoutId = window.setTimeout(() => void loadExecution(), 5_000);
+              }
+            } catch (error) {
+              if (cancelled) return;
+              setMissionControlDeliveryExecutionState((current) => ({
+                projectId: normalizedProjectId,
+                status: "error",
+                execution: current.projectId === normalizedProjectId ? current.execution : null,
+                error: error instanceof Error ? error.message : "Failed to load delivery execution.",
+              }));
+              timeoutId = window.setTimeout(() => void loadExecution(), 10_000);
+            }
+          };
+          setMissionControlDeliveryExecutionState((current) => ({
+            projectId: normalizedProjectId,
+            status: "loading",
+            execution: current.projectId === normalizedProjectId
+              ? current.execution
+              : (
+                  selectedProjectMissionControl.deliveryExecution
+                  && typeof selectedProjectMissionControl.deliveryExecution === "object"
+                    ? selectedProjectMissionControl.deliveryExecution
+                    : null
+                ),
+            error: "",
+          }));
+          void loadExecution();
+          return () => {
+            cancelled = true;
+            if (timeoutId) {
+              window.clearTimeout(timeoutId);
+            }
+          };
+        }, [missionControlStrategyOpen, selectedProjectId]);
 
         useEffect(() => {
           setMissionControlSetupOpen(false);

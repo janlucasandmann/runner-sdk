@@ -900,25 +900,7 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
 	        display: none;
 	      }
 
-	      .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-agent-runtime-settings-card.playground-server-details-card::before {
-	        content: "";
-	        display: block;
-	        pointer-events: none;
-	        position: absolute;
-	        inset: 0;
-	        z-index: 5;
-	        border-radius: inherit;
-	        padding: 1px;
-	        background: var(--playground-project-overview-chart-border);
-	        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-	        mask-clip: content-box, border-box;
-	        mask-composite: exclude;
-	        mask-origin: content-box, border-box;
-	        mask-repeat: repeat, repeat;
-	        mask-size: auto, auto;
-	      }
-
-	      .playground-server-detail-content .playground-database-browser-surface.playground-server-details-card,
+		      .playground-server-detail-content .playground-database-browser-surface.playground-server-details-card,
 	      .playground-server-detail-content .playground-auth-users-surface.playground-server-details-card {
 	        --playground-project-overview-chart-border: linear-gradient(
 	          -10deg,
@@ -1065,18 +1047,18 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
 	        gap: 0;
 	      }
 
-	      .playground-database-description-section.playground-agents-detail-instructions-section {
-	        margin-top: 0;
+	      .playground-database-deployment-map {
 	        margin-bottom: 0;
+	      }
+
+	      .playground-database-description-section.platform-instructions-editor {
+	        margin: 0;
 	        padding-bottom: 3px !important;
-	        border: 1px solid rgba(255, 255, 255, 0.075) !important;
-	        border-radius: 15px !important;
-	        background: rgba(255, 255, 255, 0.075) !important;
 	        box-sizing: border-box;
 	      }
 
-	      .playground-database-description-section .playground-tasks-detail-section-title {
-	        font-size: 12px;
+	      .playground-database-description-section .platform-instructions-editor__title {
+	        font-size: 14px;
 	      }
 
 	      .playground-server-settings-tab .playground-environments-connections-title {

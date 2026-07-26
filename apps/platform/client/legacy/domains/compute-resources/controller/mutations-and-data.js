@@ -617,103 +617,97 @@
           }
   
           function renderServerAuthUserComposerModal() {
-            if (!serverAuthUserComposerState.open) {
-              return null;
-            }
-  
-            return React.createElement(PlatformModalBackdrop, {
-                className: "playground-tasks-project-modal-backdrop",
-                onClick: () => {
-                  if (!serverAuthUserComposerState.isSaving) {
+            const isSaving = Boolean(serverAuthUserComposerState.isSaving);
+            return React.createElement(PlatformModal, {
+                open: Boolean(serverAuthUserComposerState.open),
+                title: "Add User",
+                description: "Create a new email and password user inside this authentication resource.",
+                size: "medium",
+                portal: true,
+                as: "form",
+                initialFocusRef: serverAuthUserEmailInputRef,
+                onClose: () => {
+                  if (!isSaving) {
                     closeServerAuthUserComposer();
                   }
                 },
+                closeOnBackdrop: !isSaving,
+                closeOnEscape: !isSaving,
+                closeButtonDisabled: isSaving,
+                closeButtonLabel: "Close add user modal",
+                ariaLabel: "Add an authentication user",
+                className: "playground-auth-user-composer-modal",
+                bodyClassName: "playground-auth-user-composer-modal-body",
+                footerClassName: "playground-auth-user-composer-modal-footer",
+                surfaceProps: {
+                  onSubmit: (event) => void handleSubmitServerAuthUserComposer(event),
+                },
+                footer: React.createElement(React.Fragment, null,
+                  React.createElement(PlatformSecondaryButton, {
+                    type: "button",
+                    size: "medium",
+                    onClick: closeServerAuthUserComposer,
+                    disabled: isSaving,
+                  }, "Cancel"),
+                  React.createElement(PlatformPrimaryButton, {
+                    size: "medium",
+                    type: "submit",
+                    disabled: isSaving,
+                    "aria-busy": isSaving || undefined,
+                  }, isSaving ? "Creating..." : "Create User")
+                ),
               },
-                React.createElement(PlatformModalSurface, {
-                    as: "form",
-                    className: "playground-tasks-project-modal playground-database-browser-modal",
-                    onClick: (event) => event.stopPropagation(),
-                    onSubmit: (event) => void handleSubmitServerAuthUserComposer(event),
-                  },
-                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                    React.createElement("div", { className: "playground-database-browser-modal-title-row" },
-                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-                        React.createElement(User, { width: 16, height: 16, strokeWidth: 1.8 })
-                      ),
-                      React.createElement("div", { className: "playground-database-browser-modal-title" }, "Add User")
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: closeServerAuthUserComposer,
-                      title: "Close",
-                      disabled: serverAuthUserComposerState.isSaving,
-                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                React.createElement("div", { className: "playground-database-browser-modal-grid is-single-column" },
+                  React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Email"),
+                    React.createElement("input", {
+                      ref: serverAuthUserEmailInputRef,
+                      type: "email",
+                      className: "playground-environments-input",
+                      value: serverAuthUserComposerState.email,
+                      onChange: (event) => setServerAuthUserComposerState((current) => ({
+                        ...current,
+                        email: event.target.value,
+                        error: "",
+                      })),
+                      placeholder: "name@example.com",
+                      autoComplete: "email",
+                    })
                   ),
-                  React.createElement("div", { className: "playground-database-browser-modal-copy" }, "Create a new email/password user inside this auth module."),
-                  React.createElement("div", { className: "playground-database-browser-modal-grid is-single-column" },
-                    React.createElement("label", { className: "playground-tasks-project-modal-field" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Email"),
-                      React.createElement("input", {
-                        type: "email",
-                        className: "playground-environments-input",
-                        value: serverAuthUserComposerState.email,
-                        onChange: (event) => setServerAuthUserComposerState((current) => ({
-                          ...current,
-                          email: event.target.value,
-                          error: "",
-                        })),
-                        placeholder: "name@example.com",
-                        autoFocus: true,
-                      })
-                    ),
-                    React.createElement("label", { className: "playground-tasks-project-modal-field" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Password"),
-                      React.createElement("input", {
-                        type: "password",
-                        className: "playground-environments-input",
-                        value: serverAuthUserComposerState.password,
-                        onChange: (event) => setServerAuthUserComposerState((current) => ({
-                          ...current,
-                          password: event.target.value,
-                          error: "",
-                        })),
-                        placeholder: "At least 6 characters",
-                      })
-                    ),
-                    React.createElement("label", { className: "playground-tasks-project-modal-field" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Display Name"),
-                      React.createElement("input", {
-                        type: "text",
-                        className: "playground-environments-input",
-                        value: serverAuthUserComposerState.displayName,
-                        onChange: (event) => setServerAuthUserComposerState((current) => ({
-                          ...current,
-                          displayName: event.target.value,
-                          error: "",
-                        })),
-                        placeholder: "Optional",
-                      })
-                    )
+                  React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Password"),
+                    React.createElement("input", {
+                      type: "password",
+                      className: "playground-environments-input",
+                      value: serverAuthUserComposerState.password,
+                      onChange: (event) => setServerAuthUserComposerState((current) => ({
+                        ...current,
+                        password: event.target.value,
+                        error: "",
+                      })),
+                      placeholder: "At least 6 characters",
+                      autoComplete: "new-password",
+                    })
                   ),
-                  serverAuthUserComposerState.error
-                    ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, serverAuthUserComposerState.error)
-                    : null,
-                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button",
-                      onClick: closeServerAuthUserComposer,
-                      disabled: serverAuthUserComposerState.isSaving,
-                    }, "Cancel"),
-                    React.createElement(PlatformPrimaryButton, {
-                      size: "medium",
-                      type: "submit",
-                      className: "playground-environments-action-button is-primary",
-                      disabled: serverAuthUserComposerState.isSaving,
-                    }, serverAuthUserComposerState.isSaving ? "Creating..." : "Create User")
+                  React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Display Name"),
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-environments-input",
+                      value: serverAuthUserComposerState.displayName,
+                      onChange: (event) => setServerAuthUserComposerState((current) => ({
+                        ...current,
+                        displayName: event.target.value,
+                        error: "",
+                      })),
+                      placeholder: "Optional",
+                      autoComplete: "name",
+                    })
                   )
-                )
+                ),
+                serverAuthUserComposerState.error
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-error", role: "alert" }, serverAuthUserComposerState.error)
+                  : null
               );
           }
   
@@ -2727,8 +2721,12 @@
             startServerDeployProgressTimer();
   
             try {
+              const normalizedServerKind = canonicalizePlaygroundServerKind(serverToDeploy.kind);
+              const deployUrl = normalizedServerKind === "agent_runtime"
+                ? backendUrl + "/agent-runtimes/" + encodeURIComponent(serverToDeployId) + "/deploy"
+                : backendUrl + "/servers/" + encodeURIComponent(serverToDeployId) + "/deploy";
               const response = await fetch(
-                backendUrl + "/servers/" + encodeURIComponent(serverToDeployId) + "/deploy",
+                deployUrl,
                 {
                   method: "POST",
                   headers: {
@@ -2850,6 +2848,80 @@
                 isDeploying: false,
                 isInvoking: false,
                 error: error instanceof Error ? error.message : "Failed to deploy server.",
+                message: "",
+                lastResponseText: "",
+                deployProgress: 0,
+              });
+            }
+          }
+
+          async function handleDecommissionAgentRuntime() {
+            const serverId = String(draftServer?.id || "").trim();
+            if (
+              !serverId
+              || serverId === PLAYGROUND_SERVER_DRAFT_ID
+              || canonicalizePlaygroundServerKind(draftServer?.kind) !== "agent_runtime"
+              || serverDeploymentState.isDeploying
+              || serverDeploymentState.isDecommissioning
+            ) {
+              return;
+            }
+            if (!window.confirm(
+              "Decommission this agent runtime? Its endpoint will stop accepting new runs, while its configuration and run history remain available."
+            )) {
+              return;
+            }
+
+            setServerDeploymentState({
+              isDeploying: false,
+              isDecommissioning: true,
+              isInvoking: false,
+              error: "",
+              message: "Decommissioning agent runtime...",
+              lastResponseText: "",
+              deployProgress: 0,
+            });
+
+            try {
+              const response = await fetch(
+                backendUrl + "/agent-runtimes/" + encodeURIComponent(serverId) + "/decommission",
+                {
+                  method: "POST",
+                  headers: {
+                    ...requestHeaders,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({}),
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to decommission agent runtime.");
+              }
+              const updatedServer = getPlaygroundServerResponseRecord(data);
+              if (updatedServer) {
+                const normalizedServer = normalizePlaygroundServerRecord(updatedServer);
+                upsertLocalServerRecord(normalizedServer);
+                setDraftServer(normalizedServer);
+              }
+              setServerDeploymentState({
+                isDeploying: false,
+                isDecommissioning: false,
+                isInvoking: false,
+                error: "",
+                message: "Agent Runtime decommissioned",
+                lastResponseText: "",
+                deployProgress: 0,
+              });
+              void loadServerContext(serverId, { force: true });
+              void loadServerAnalytics(serverId, { force: true });
+              void loadServerDeployments(serverId, { force: true });
+            } catch (error) {
+              setServerDeploymentState({
+                isDeploying: false,
+                isDecommissioning: false,
+                isInvoking: false,
+                error: error instanceof Error ? error.message : "Failed to decommission agent runtime.",
                 message: "",
                 lastResponseText: "",
                 deployProgress: 0,

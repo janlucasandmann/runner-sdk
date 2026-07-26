@@ -12856,38 +12856,19 @@
         }
   
         .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-agent-runtime-settings-card.playground-server-details-card {
-          --playground-project-overview-chart-border: linear-gradient(
-            -10deg,
-            rgba(200, 200, 200, 0.25),
-            rgba(255, 255, 255, 0.1),
-            rgba(255, 255, 255, 0.15),
-            rgba(255, 255, 255, 0.375)
-          );
           position: relative;
           padding: 20px;
-          border: 0;
+          border: 1px solid rgba(255, 255, 255, 0.075);
           border-radius: 15px;
-          background: #000;
+          background: rgba(255, 255, 255, 0.075);
           overflow: visible;
-          -webkit-backdrop-filter: blur(50px);
-          backdrop-filter: blur(50px);
+          -webkit-backdrop-filter: none;
+          backdrop-filter: none;
         }
   
         .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-agent-runtime-settings-card.playground-server-details-card::before {
-          content: "";
-          pointer-events: none;
-          position: absolute;
-          inset: 0;
-          z-index: 5;
-          border-radius: inherit;
-          padding: 1px;
-          background: var(--playground-project-overview-chart-border);
-          mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-          mask-clip: content-box, border-box;
-          mask-composite: exclude;
-          mask-origin: content-box, border-box;
-          mask-repeat: repeat, repeat;
-          mask-size: auto, auto;
+          content: none;
+          display: none;
         }
   
         .playground-resources-page.is-develop-server-kind-page .playground-server-detail-metrics .playground-agent-runtime-settings-card.playground-server-details-card > * {
@@ -15496,7 +15477,7 @@
         .playground-auth-users-secret-name-title {
           color: rgba(255, 255, 255, 0.94);
           font-size: 12px;
-          font-weight: 600;
+          font-weight: 400;
           line-height: 1.35;
         }
   
@@ -15639,8 +15620,17 @@
           margin-top: 0;
         }
 
-        .playground-database-description-section.playground-agents-detail-instructions-section {
+        .playground-database-deployment-map {
+          margin-bottom: 0;
+        }
+
+        .playground-database-description-section.platform-instructions-editor {
+          margin: 0;
           padding-bottom: 3px !important;
+        }
+
+        .playground-database-description-section .platform-instructions-editor__title {
+          font-size: 14px;
         }
   
         .playground-servers-deployments-surface.is-web-app-history .playground-plugins-section-header {
@@ -15760,41 +15750,6 @@
           align-items: center;
           gap: 8px;
           flex-wrap: wrap;
-        }
-  
-        .playground-servers-analytics-log-pill {
-          display: inline-flex;
-          align-items: center;
-          min-height: 22px;
-          padding: 0 8px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.12);
-          color: rgba(255, 255, 255, 0.92);
-          font-size: 10px;
-          font-weight: 500;
-          line-height: 1;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-        }
-  
-        .playground-servers-analytics-log-pill.is-success {
-          background: rgba(94, 213, 143, 0.16);
-          color: rgb(127, 238, 168);
-        }
-  
-        .playground-servers-analytics-log-pill.is-info {
-          background: rgba(102, 166, 255, 0.16);
-          color: rgb(143, 196, 255);
-        }
-  
-        .playground-servers-analytics-log-pill.is-warning {
-          background: rgba(255, 191, 102, 0.16);
-          color: rgb(255, 209, 129);
-        }
-  
-        .playground-servers-analytics-log-pill.is-error {
-          background: rgba(255, 105, 105, 0.16);
-          color: rgb(255, 146, 146);
         }
   
         .playground-servers-logs-table.playground-agents-overview-table {
@@ -28534,6 +28489,14 @@
           white-space: nowrap;
         }
 
+        .playground-agents-detail-engine-provider-icon {
+          width: 16px;
+          height: 16px;
+          display: block;
+          flex: 0 0 16px;
+          object-fit: contain;
+        }
+
         .playground-agent-detail-sidebar-facts .playground-agents-detail-owner-popup-shell,
         .playground-agent-detail-sidebar-facts .playground-agents-detail-sidebar-owner-row {
           width: 100%;
@@ -30682,14 +30645,20 @@
         .playground-agent-title-actions-root,
         .playground-agent-title-actions-shell,
         .playground-database-title-actions-root,
-        .playground-database-title-actions-shell {
+        .playground-database-title-actions-shell,
+        .playground-server-title-actions-root,
+        .playground-server-title-actions-shell,
+        .playground-function-title-actions-root,
+        .playground-function-title-actions-shell {
           display: inline-flex;
           align-items: center;
           flex: 0 0 auto;
         }
 
         .playground-agent-title-actions-popup,
-        .playground-database-title-actions-popup {
+        .playground-database-title-actions-popup,
+        .playground-server-title-actions-popup,
+        .playground-function-title-actions-popup {
           --platform-popup-font-size: 12px;
         }
 

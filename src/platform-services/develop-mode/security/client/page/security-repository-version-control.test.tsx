@@ -116,7 +116,6 @@ describe("SecurityRepositoryVersionControl", () => {
     const onHeaderChange = vi.fn();
     const onNavigationGuardChange = vi.fn();
     const onVersionsSidebarOpenChange = vi.fn();
-    const onRunScan = vi.fn();
 
     render(
       <SecurityRepositoryVersionControl
@@ -125,7 +124,6 @@ describe("SecurityRepositoryVersionControl", () => {
         controlsPortalId="security-version-controls"
         versionsDrawerPortalId="security-version-drawer"
         onBack={vi.fn()}
-        onRunScan={onRunScan}
         onReload={vi.fn().mockResolvedValue(detail)}
         onHeaderChange={onHeaderChange}
         onNavigationGuardChange={onNavigationGuardChange}
@@ -175,13 +173,7 @@ describe("SecurityRepositoryVersionControl", () => {
     const saveOptionsButton = screen.getByRole("button", {
       name: "Version save options",
     });
-    const runScanButton = screen.getByRole("button", { name: "Run scan" });
-    expect(runScanButton.closest("#security-version-controls")).not.toBeNull();
-    expect(runScanButton.getAttribute("data-platform-button-variant")).toBe(
-      "secondary",
-    );
-    fireEvent.click(runScanButton);
-    expect(onRunScan).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "Run scan" })).toBeNull();
     expect((saveButton as HTMLButtonElement).disabled).toBe(true);
     expect((saveOptionsButton as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Change scan mode" }));

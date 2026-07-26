@@ -191,10 +191,44 @@
               return;
             }
             const normalizedProjectRecord = normalizePlaygroundProjectRecord(projectRecord);
+            const normalizedProjectMetadata = normalizedProjectRecord.metadata
+              && typeof normalizedProjectRecord.metadata === "object"
+              && !Array.isArray(normalizedProjectRecord.metadata)
+                ? normalizedProjectRecord.metadata
+                : {};
+            const committedProjectIcon = resolvePlaygroundProjectIconId(normalizedProjectRecord);
+            const committedProjectColor = String(
+              normalizedProjectRecord.color
+              || normalizedProjectMetadata.color
+              || ""
+            ).trim();
             setThreadProjectRecordsById((current) => ({
               ...current,
               [normalizedProjectRecord.id]: mergePlaygroundProjectRecords(projectRecord, current[normalizedProjectRecord.id]) || normalizedProjectRecord,
             }));
+            setThreadProjectContextById((current) => {
+              let didChange = false;
+              const next = Object.fromEntries(Object.entries(current).map(([threadId, context]) => {
+                if (String(context?.projectId || "").trim() !== normalizedProjectRecord.id) {
+                  return [threadId, context];
+                }
+                const updatedContext = {
+                  ...context,
+                  projectName: normalizedProjectRecord.name,
+                  projectIcon: committedProjectIcon,
+                  projectColor: committedProjectColor,
+                };
+                if (
+                  String(context?.projectName || "").trim() !== String(updatedContext.projectName || "").trim()
+                  || String(context?.projectIcon || "").trim() !== committedProjectIcon
+                  || String(context?.projectColor || "").trim() !== committedProjectColor
+                ) {
+                  didChange = true;
+                }
+                return [threadId, updatedContext];
+              }));
+              return didChange ? next : current;
+            });
             setRealProjects((current) => {
               const existingIndex = current.findIndex((project) => project.id === normalizedProjectRecord.id);
               if (existingIndex === -1) {
@@ -240,6 +274,7 @@
             });
           }, []);
   ${SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.state}
+  ${PLAN_GATE_APP_SCRIPT_FRAGMENTS.state}
           const [contentMode, setContentMode] = useState("chat");
           const [changesNavigationTarget, setChangesNavigationTarget] = useState(null);
           const computerAgentsMode = true;
@@ -355,7 +390,7 @@
           const resourcesViewRef = useRef(resourcesView);
           resourcesViewRef.current = resourcesView;
           const [resourcesServerKind, setResourcesServerKind] = useState("");
-  ${MODELS_APP_SCRIPT_FRAGMENTS.state}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.state}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.state}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.state}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.state}        const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
+  ${MODELS_APP_SCRIPT_FRAGMENTS.state}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.state}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.state}${TESTS_APP_SCRIPT_FRAGMENTS.state}${ASSURANCE_APP_SCRIPT_FRAGMENTS.state}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.state}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.state}        const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
           const [projectOverviewResourceSearchQuery, setProjectOverviewResourceSearchQuery] = useState("");
           const [projectOverviewResourceViewMode, setProjectOverviewResourceViewMode] = useState("list");
           const [projectOverviewResourceToolbarPopover, setProjectOverviewResourceToolbarPopover] = useState("");
@@ -385,6 +420,10 @@
           const [tasksProjectsHomeScope, setTasksProjectsHomeScope] = useState("all");
           const [tasksProjectSettingsRequestToken, setTasksProjectSettingsRequestToken] = useState(0);
           const [tasksProjectIssueRequest, setTasksProjectIssueRequest] = useState(null);
+          const [tasksProjectDeleteRequest, setTasksProjectDeleteRequest] = useState(null);
+          const [projectBreadcrumbMenuOpen, setProjectBreadcrumbMenuOpen] = useState(false);
+          const projectBreadcrumbMenuRef = useRef(null);
+          const projectBreadcrumbMenuSurfaceRef = useRef(null);
           const [topNavIssueComposerOpen, setTopNavIssueComposerOpen] = useState(false);
           const [topNavIssueComposerVisible, setTopNavIssueComposerVisible] = useState(false);
           const [topNavIssueComposerClosing, setTopNavIssueComposerClosing] = useState(false);
@@ -415,8 +454,6 @@
           const [pendingThreadComposerPlusOpen, setPendingThreadComposerPlusOpen] = useState(false);
           const [pluginsNavPopover, setPluginsNavPopover] = useState("");
           const [settingsCheckoutLoading, setSettingsCheckoutLoading] = useState(false);
-          const [composerAgentUpgradeModalOpen, setComposerAgentUpgradeModalOpen] = useState(false);
-          const [composerAgentUpgradeCheckoutLoading, setComposerAgentUpgradeCheckoutLoading] = useState(false);
           const [settingsSubscriptionActionId, setSettingsSubscriptionActionId] = useState("");
           const [settingsTopUpActionId, setSettingsTopUpActionId] = useState("");
           const [settingsSelectedTopUpId, setSettingsSelectedTopUpId] = useState("growth");
@@ -1237,6 +1274,7 @@
           }, [showSubscriptionSuccessModal]);
   
   ${SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.navigation}
+  ${PLAN_GATE_APP_SCRIPT_FRAGMENTS.lifecycle}
   
   ${INFERENCE_APP_SCRIPT_FRAGMENTS.navigation}
   ${TEAMS_APP_SCRIPT_FRAGMENTS.navigation}
@@ -1935,13 +1973,18 @@
               const launchPrompt = buildWelcomeWidgetTaskRunPrompt(normalizedTask, {
                 projectAttachments: projectLaunchAttachments,
               });
-              const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(normalizedTaskId) + "/start-thread", {
+              const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(normalizedTaskId) + "/run-thread", {
                 method: "POST",
                 headers: {
                   ...authRequestHeaders,
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
+                  executionMode: "deferred",
+                  idempotencyKey: "project-task-" + normalizedTaskId + "-" + (
+                    globalThis.crypto?.randomUUID?.()
+                    || Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)
+                  ),
                   title: taskPreview.ticketNumber + " " + taskPreview.title,
                   environmentId: launchEnvironmentId || undefined,
                   agentId: !isPlaygroundHumanAssigneeId(normalizedTask.assigneeAgentId) ? (normalizedTask.assigneeAgentId || undefined) : undefined,
@@ -1952,6 +1995,17 @@
                   runKind: "implementation",
                   allowAdditionalThread: true,
                   taskPreview,
+                  metadata: {
+                    triggerKind: "manual",
+                    source: "project_task",
+                    runKind: "implementation",
+                    runnerPlayground: {
+                      enabledSkills: enabledSkillsPayload,
+                      githubRepo: githubRepo || undefined,
+                      connectors: launchConnectors,
+                      taskPreview,
+                    },
+                  },
                 }),
               });
               const data = await response.json().catch(() => ({}));
@@ -2092,13 +2146,18 @@
                 taskRunPrompt,
                 "User message:" + String.fromCharCode(10) + userPrompt,
               ].filter(Boolean).join(String.fromCharCode(10) + String.fromCharCode(10));
-              const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(normalizedTaskId) + "/start-thread", {
+              const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(normalizedTaskId) + "/run-thread", {
                 method: "POST",
                 headers: {
                   ...authRequestHeaders,
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
+                  executionMode: "deferred",
+                  idempotencyKey: "project-task-" + normalizedTaskId + "-" + (
+                    globalThis.crypto?.randomUUID?.()
+                    || Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)
+                  ),
                   title: taskPreview.ticketNumber + " " + taskPreview.title,
                   environmentId: launchEnvironmentId || undefined,
                   agentId: !isPlaygroundHumanAssigneeId(normalizedTask.assigneeAgentId)
@@ -2112,6 +2171,17 @@
                   runKind: "implementation",
                   allowAdditionalThread: true,
                   taskPreview,
+                  metadata: {
+                    triggerKind: "manual",
+                    source: "project_task",
+                    runKind: "implementation",
+                    runnerPlayground: {
+                      enabledSkills: enabledSkillsPayload,
+                      githubRepo: githubRepo || undefined,
+                      connectors: launchConnectors,
+                      taskPreview,
+                    },
+                  },
                 }),
               });
               const data = await response.json().catch(() => ({}));
@@ -4597,7 +4667,12 @@
               return;
             }
   
-            void handleSettingsSubscribe("builder");
+            requestPlatformPlanGate({
+              entitlement: "agents.custom.create",
+              requiredPlan: "builder",
+              featureName: "the full platform",
+              source: "app-sidebar",
+            });
           }
   
           async function handleSettingsBuyTopUp(packageId) {

@@ -110,6 +110,12 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        fun
           const form = evaluationCreateForm && typeof evaluationCreateForm === "object" ? evaluationCreateForm : {};
           const name = String(form.name || "").trim() || "New Evaluation";
           const evaluatorType = ["agent", "code", "exact"].includes(String(form.evaluatorType || "").trim()) ? String(form.evaluatorType || "").trim() : "agent";
+          if (evaluatorType === "code") {
+            if (typeof window !== "undefined") {
+              window.alert("Code evaluators require the isolated grader sandbox and are not available on this deployment.");
+            }
+            return;
+          }
           const passThreshold = normalizePlaygroundEvaluationPassThreshold(form.passThreshold || 80);
           const creationRequestId = evaluationCreateRequestIdRef.current || createPlaygroundEvaluationId("eval_create");
           const draftId = evaluationCreateDraftIdRef.current || createPlaygroundEvaluationId("eval_set");
@@ -434,7 +440,29 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        fun
             }
             return null;
           }
-          const evaluator = normalizePlaygroundEvaluationEvaluator(runOptions.evaluator || sourceSet.evaluator);
+          const evaluatorSource = normalizePlaygroundEvaluationEvaluator(runOptions.evaluator || sourceSet.evaluator);
+          const selectedEvaluatorAgent = evaluatorSource.type === "agent"
+            ? getPlaygroundEvaluationAgentRecord(agentOptions, evaluatorSource.agentId)
+            : null;
+          const selectedEvaluatorAgentVersion = selectedEvaluatorAgent
+            ? getPlaygroundEvaluationAgentActiveVersion(selectedEvaluatorAgent)
+            : null;
+          const evaluator = normalizePlaygroundEvaluationEvaluator({
+            ...evaluatorSource,
+            agentVersionId: runOptions.evaluatorAgentVersionId
+              || evaluatorSource.agentVersionId
+              || selectedEvaluatorAgentVersion?.id,
+            agentVersionNumber: runOptions.evaluatorAgentVersionNumber
+              || evaluatorSource.agentVersionNumber
+              || selectedEvaluatorAgentVersion?.version,
+            agentVersionLabel: runOptions.evaluatorAgentVersionLabel
+              || evaluatorSource.agentVersionLabel
+              || selectedEvaluatorAgentVersion?.label,
+            agentVersionRevisionId: runOptions.evaluatorAgentVersionRevisionId
+              || evaluatorSource.agentVersionRevisionId
+              || selectedEvaluatorAgentVersion?.revisionId
+              || selectedEvaluatorAgentVersion?.revision_id,
+          });
           const selectedAgentVersion = getPlaygroundEvaluationAgentActiveVersion(selectedAgent);
           const evaluationSetSnapshot = normalizePlaygroundEvaluationSet({
             ...sourceSet,
@@ -538,6 +566,9 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        fun
             const selectedEnvironmentChoice = getPlaygroundEvaluationEnvironmentChoiceByKey(environmentChoices, form.environmentKey)
               || getPlaygroundEvaluationEnvironmentChoice(environmentChoices, sourceSet, defaultEnvironmentId);
             const evaluatorType = ["agent", "code", "exact"].includes(String(form.evaluatorType || "").trim()) ? String(form.evaluatorType || "").trim() : "agent";
+            if (evaluatorType === "code") {
+              throw new Error("Code evaluators require the isolated grader sandbox and are not available on this deployment.");
+            }
             const evaluator = {
               type: evaluatorType,
               agentId: evaluatorType === "agent" ? String(form.evaluatorAgentId || defaultAgentId || agentOptions[0]?.id || "").trim() : "",

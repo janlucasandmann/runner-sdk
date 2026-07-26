@@ -212,6 +212,19 @@ describe("permission policy", () => {
       ],
     ],
     [
+      "assurance_policy",
+      [
+        "assurance_policy_view",
+        "assurance_run_results_view",
+        "assurance_run",
+        "assurance_policy_manage",
+        "assurance_policy_versions_manage",
+        "assurance_approve",
+        "assurance_policy_access_manage",
+        "assurance_policy_delete",
+      ],
+    ],
+    [
       "database",
       [
         "database_schema_read",
@@ -366,6 +379,18 @@ describe("permission policy", () => {
       "contributor",
     );
     const fineTuningMember = createPlatformRolePermissionSet("fine_tuning_team_role", "member");
+    const assuranceOwner = createPlatformRolePermissionSet(
+      "assurance_policy_team_role",
+      "owner",
+    );
+    const assuranceContributor = createPlatformRolePermissionSet(
+      "assurance_policy_team_role",
+      "contributor",
+    );
+    const assuranceMember = createPlatformRolePermissionSet(
+      "assurance_policy_team_role",
+      "member",
+    );
     const securityContributor = createPlatformRolePermissionSet(
       "security_repository",
       "contributor",
@@ -474,6 +499,30 @@ describe("permission policy", () => {
     ).toBe("read_only");
     expect(
       getPlatformPermissionActionAccessByDefinition(fineTuningMember, "fine_tuning_stop"),
+    ).toBe("no_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(assuranceOwner, "assurance_approve"),
+    ).toBe("full_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(
+        assuranceContributor,
+        "assurance_policy_versions_manage",
+      ),
+    ).toBe("full_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(
+        assuranceContributor,
+        "assurance_approve",
+      ),
+    ).toBe("no_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(
+        assuranceMember,
+        "assurance_run_results_view",
+      ),
+    ).toBe("read_only");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(assuranceMember, "assurance_run"),
     ).toBe("no_access");
     expect(
       getPlatformPermissionActionAccessByDefinition(

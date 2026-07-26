@@ -212,8 +212,76 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
 	          const operatorPrompt = String(options?.userPrompt || "").trim();
 	          const projectContextDescription = getPlaygroundProjectMissionInstructions(normalizedProject);
 	          const projectOperatingProfileSection = buildPlaygroundMissionControlOperatingProfilePromptSection(normalizedProject);
-	          const currentProjectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(normalizedProject);
+	          const currentProjectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(normalizedProject, {
+	            releaseRecords: releases,
+	          });
 	          const currentProjectRulesSection = buildPlaygroundProjectRulesPromptSection(normalizedProject);
+	          const currentMissionControlRecord = getPlaygroundProjectMissionControlRecord(normalizedProject);
+	          const currentDeliveryAssurance = normalizePlaygroundDeliveryAssurance(
+	            currentMissionControlRecord.deliveryAssurance
+	          );
+	          const currentDeliveryAssuranceSection = hasMeaningfulPlaygroundDeliveryAssurance(currentDeliveryAssurance)
+	            ? JSON.stringify(currentDeliveryAssurance, null, 2)
+	            : "";
+	          const currentDeliveryContractRecord = currentMissionControlRecord.deliveryContract
+	            && typeof currentMissionControlRecord.deliveryContract === "object"
+	            && !Array.isArray(currentMissionControlRecord.deliveryContract)
+	            ? currentMissionControlRecord.deliveryContract
+	            : null;
+	          const currentDeliveryContractValue = currentDeliveryContractRecord?.contract
+	            && typeof currentDeliveryContractRecord.contract === "object"
+	            && !Array.isArray(currentDeliveryContractRecord.contract)
+	            ? currentDeliveryContractRecord.contract
+	            : null;
+	          const currentDeliveryServices = currentDeliveryContractValue?.services
+	            && typeof currentDeliveryContractValue.services === "object"
+	            && !Array.isArray(currentDeliveryContractValue.services)
+	            ? currentDeliveryContractValue.services
+	            : {};
+	          const currentDeliveryContractSection = currentDeliveryContractRecord
+	            ? JSON.stringify({
+	                schemaVersion: currentDeliveryContractRecord.schemaVersion || "",
+	                planId: currentDeliveryContractRecord.planId || "",
+	                revision: currentDeliveryContractRecord.revision || null,
+	                fingerprint: currentDeliveryContractRecord.fingerprint || "",
+	                contract: currentDeliveryContractValue
+	                  ? {
+	                      schemaVersion: currentDeliveryContractValue.schemaVersion || "",
+	                      mode: currentDeliveryContractValue.mode || "",
+	                      goal: currentDeliveryContractValue.goal || "",
+	                      validationAssetCount: Array.isArray(currentDeliveryContractValue.validationAssets)
+	                        ? currentDeliveryContractValue.validationAssets.length
+	                        : 0,
+	                      agents: currentDeliveryContractValue.agents || {},
+	                      services: Object.fromEntries(
+	                        Object.entries(currentDeliveryServices).map(([key, value]) => {
+	                          const service = value && typeof value === "object" && !Array.isArray(value)
+	                            ? value
+	                            : {};
+	                          return [key, {
+	                            enabled: service.enabled !== false,
+	                            name: service.name || "",
+	                            caseCount: key === "evaluation" && Array.isArray(service.cases)
+	                              ? service.cases.length
+	                              : key === "tests" && Array.isArray(service.definition?.cases)
+	                                ? service.definition.cases.length
+	                                : undefined,
+	                          }];
+	                        })
+	                      ),
+	                      acceptance: currentDeliveryContractValue.acceptance || {},
+	                      budget: currentDeliveryContractValue.budget || {},
+	                    }
+	                  : null,
+	              }, null, 2)
+	            : "";
+	          const currentDeliveryPlanSection = currentMissionControlRecord.deliveryPlan
+	            && typeof currentMissionControlRecord.deliveryPlan === "object"
+	            && !Array.isArray(currentMissionControlRecord.deliveryPlan)
+	            ? JSON.stringify(currentMissionControlRecord.deliveryPlan, null, 2)
+	            : "";
+	          const deliveryContractPath = "/workspace/tmp/mission-control-" + normalizedProject.id + "-delivery-contract.json";
+	          const deliveryIdempotencyKey = "mission-control-" + normalizedProject.id + "-delivery-v1";
 	          return [
 	            "You are running Mission Control for this project.",
 		            "Your job is to analyze the available project context, reconcile the current project state, define the right strategy, and update the project structure using the Task Management and Computer Agents skills where appropriate.",
@@ -235,6 +303,15 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
 	            currentProjectRulesSection
 	              ? ("Current project rules:" + newline + currentProjectRulesSection)
 	              : "Current project rules: None yet.",
+	            currentDeliveryAssuranceSection
+	              ? ("Current delivery-assurance contract:" + newline + currentDeliveryAssuranceSection)
+	              : "Current delivery-assurance contract: None yet.",
+	            currentDeliveryContractSection
+	              ? ("Current canonical delivery contract:" + newline + currentDeliveryContractSection)
+	              : "Current canonical delivery contract: None yet.",
+	            currentDeliveryPlanSection
+	              ? ("Current canonical delivery plan:" + newline + currentDeliveryPlanSection)
+	              : "Current canonical delivery plan: None yet.",
 	            availableReleasesSection,
 	            buildPlaygroundMissionControlTaskSnapshot(tasks),
 	            availableAgentsSection,
@@ -246,27 +323,30 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             [
               "Required outputs:",
               "1. Analyze the project operating profile, attachments, project goal, existing milestones, open work, completed work, comments, blocked work, and likely next steps.",
-              "2. Use the Computer Agents skill to inspect the live agent roster, environments, and available skills before assigning work.",
+            "2. Use the Computer Agents skill to inspect the live agent roster, environments, available skills, and the existing canonical project delivery plan before assigning work.",
+              "   - Inspect the plan with: python3 /workspace/.claude/skills/computer-agents/scripts/computer-agents.py projects delivery get " + normalizedProject.id,
+              "   - A not-found response means no canonical plan exists yet. A ready plan and all IDs in its bindings are authoritative and must be reused.",
 	              "3. Form a strategy for the project and explain the direction clearly.",
 	              "   - Also create compact structured strategy context agents can use inside every task prompt.",
-	              "   - The structured strategy context must express the project goal, primary outcomes, in-scope boundaries, out-of-scope boundaries, success criteria, risks/assumptions, and key decisions.",
-	              "   - Outcomes should be concrete user/business outcomes, not generic task status buckets. Include releaseIds (milestone ids) when outcomes clearly map to existing milestones. Use releaseId only for a legacy single-milestone mapping.",
-	              "   - Preserve existing outcome ids when you are updating an existing outcome. Only remove an outcome when it is clearly obsolete or the operator asks for that.",
+	              "   - The structured strategy context must express the project goal, in-scope boundaries, out-of-scope boundaries, project-level success criteria, risks/assumptions, and key decisions. Operational targets belong on milestones.",
+	              "   - Do not create or update separate outcome objects. Treat legacy outcome metadata only as migration input and preserve its useful content by merging it into milestone descriptions and milestone successCriteria.",
 	              "   - Update project rules when the project needs durable execution behavior that every future task agent should follow. Do not duplicate generic platform behavior as a rule.",
 	              "4. Inspect the available agents and assign the backlog work intentionally.",
 	              defaultExecutionAgent
 	                ? ("   - Every created or updated execution task and subtask must have an agent assignee. If no better specialist is obvious, set assigneeAgentId to " + defaultExecutionAgent.id + " (" + (defaultExecutionAgent.name || "Assistant") + ").")
                 : "   - Every created or updated execution task and subtask must have an agent assignee. If no better fit is obvious, use the system Assistant agent returned by the Computer Agents or Task Management skill.",
-              "5. Create or update the project structure using the Task Management skill whenever the project needs clearer execution steps.",
+              "5. Create or update the non-canonical project structure using the Task Management skill whenever the project needs clearer product, research, resource-request, or milestone work.",
               "   - If the project is empty or still loosely defined, create at least one milestone first and then place the new work under milestones.",
               "   - When the project is new, use the operating profile setup recipe, recommended resources, skills, sync targets, and dashboard focus as the default project shape.",
               "   - Prefer a clear hierarchy of parent tasks and subtasks instead of keeping every item flat.",
               "   - Add blocked-by dependencies so the execution order is explicit and immediately understandable.",
+              "   - Do not manually create the standard build, test, evaluate, optimize, re-evaluate, assure, or deliver tickets. The canonical project-delivery provisioner creates that dependency graph and binds every resource ID atomically.",
               "   - Create human-assigned resource request tasks only when user-owned input is required, such as API keys, credentials, billing decisions, repository access, or product decisions. Make them small, explicit, and acceptance-criteria driven.",
               "   - Never leave Mission Control-generated execution tasks unassigned. Unassigned execution backlog items are invalid.",
               "   - Pass assigneeAgentId whenever you create or update execution tasks, including parent tasks. Use the human assignment option only for resource/input requests or explicit manual reviews.",
               "   - Use in_review and reviewer metadata for work that needs human or agent acceptance before it is done.",
               "   - Set releaseId on planned work whenever the task belongs to a specific milestone.",
+              "   - Define measurable successCriteria directly on every milestone. Do not create a separate outcome object or duplicate milestone goals in project strategy metadata.",
               "   - Attach enabled skill IDs to tasks after you inspect the live skill list.",
               "   - Use the project's default environment for execution work unless a different environment is clearly more appropriate.",
               "   - Add task comments whenever they preserve important rationale, sequencing, architectural decisions, or handoff context.",
@@ -274,12 +354,30 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
               "   - Project connectors are inherited by project work. When a task needs repository context, attach the relevant project GitHub connector to the task so the execution thread can prepare the repository in the project environment.",
               "   - Write every task description as a concise professional execution brief in markdown. Include context, dependencies, deployment expectations, verification steps, and acceptance criteria.",
               "   - If a ticket creates cloud functions, web apps, databases, or integrations, include deploy-and-smoke-test requirements in that same ticket unless a dependency-linked deployment ticket already exists.",
+              "   - Treat Tests, Evaluations, and Agent Optimization as separate delivery services with different evidence responsibilities.",
+              "   - Tests prove deployable components and workflows work. Evaluations measure behavioral quality against a versioned dataset and explicit metrics. Agent Optimization consumes sealed Evaluation evidence only after build, Test, and baseline Evaluation gates pass.",
+              "   - Never substitute an Evaluation for component or integration testing, optimize against holdout cases, optimize indefinitely, or claim improvement without baseline-versus-candidate Evaluation evidence.",
+              "   - Bind canonicalAssurance.policyId, policyVersionId, and runId only to resources returned by the Computer Agents control plane. Never invent or predict these IDs.",
+              "   - The final evidence/release task must remain blocked until the canonical Assurance Run passes. Required Test runs must pass, Evaluations must meet their threshold, and required optimization proof must be retained before Assurance can pass. A task description, model assertion, JSON gate status, or smoke-test plan is not execution evidence.",
+              "   - Never self-approve a manual Assurance gate. Human approval must remain bound to the current server-issued evidence fingerprint.",
+              "6. For a deployable or agentic project, establish the canonical delivery graph through the Computer Agents skill.",
+              "   - Start from the skill reference references/project-delivery-contract.example.json and create a strict computer_agents_project_delivery_contract_v1 document at " + deliveryContractPath + ". Do not add undeclared fields.",
+              "   - Populate it only with live agent IDs, actual project attachments or validation-asset URIs, explicit executable Test Plan cases, separated train and validation/holdout Evaluation cases when optimization is enabled, bounded optimization controls, acceptance thresholds, and a total USD budget.",
+              "   - The contract must describe the Function and Metronome workflow needed for the MVP. Disable either service only when the project genuinely does not need it.",
+              "   - Apply the contract exactly once with the typed, idempotent command: python3 /workspace/.claude/skills/computer-agents/scripts/computer-agents.py projects delivery apply " + normalizedProject.id + " --contract-file " + deliveryContractPath + " --idempotency-key " + deliveryIdempotencyKey,
+              "   - After the plan is ready, start or resume its durable supervisor with: python3 /workspace/.claude/skills/computer-agents/scripts/computer-agents.py projects delivery execute " + normalizedProject.id,
+              "   - Inspect the authoritative stage, evidence, cost, and audit state with: python3 /workspace/.claude/skills/computer-agents/scripts/computer-agents.py projects delivery status " + normalizedProject.id,
+              "   - If a ready plan already exists, do not create replacements. Reuse its immutable contract, graph, resource bindings, and standard tickets.",
+              "   - The returned delivery plan is the sole authority for Function, Metronome, Test Plan/version, Evaluation/version, planned fine-tuning job, Assurance Policy/version, and task IDs. Never duplicate those resources with lower-level commands.",
+              "   - The server-owned supervisor is the only authority allowed to start Test, Evaluation, fine-tuning, Assurance, build, or handoff stages. Never queue them manually, skip a stage, or mark a canonical graph ticket complete.",
+              "   - A failed, incomplete, stale, mismatched, or over-budget result must remain terminal or blocked and must not unblock downstream nodes.",
+              "   - Every additional verification task must name the canonical resource ID, required evidence, pass/fail rule, and downstream work it unblocks.",
               "   - Keep descriptions focused and execution-ready rather than long speculative specs.",
               "   - Delete, close, or comment on obsolete tickets instead of leaving stale work mixed into the active plan.",
               "   - If a reusable project-specific workflow gap is obvious and worth reusing, create a custom skill before attaching it to tasks.",
               "   - Aim for task records that are execution-ready: milestone, assignee, environment, skills, hierarchy/dependencies, and useful comments should all be populated when the context supports it.",
               "   - When you create parent tasks, also create the subtasks and dependency chain needed to express the real order of work.",
-              "6. In your human-readable response, output only the strategy document markdown itself.",
+              "7. In your human-readable response, output only the strategy document markdown itself.",
               "   - Do not add any conversational intro, acknowledgement, explanation, or outro before or after the document.",
               "   - Start directly with the first strategy heading.",
               "   - Use these sections in order:",
@@ -287,13 +385,22 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
               "     - Strategic Breakdown",
               "     - Risks & Opportunities",
               "     - Recommended Next Moves",
-              "7. End your final response with a fenced code block labeled mission_control_json.",
+              "8. End your final response with a fenced code block labeled mission_control_json.",
               "   - The markdown before that code block must exactly match the strategy document text stored in the JSON document field.",
-	              "8. That JSON must contain these keys:",
+	              "9. That JSON must contain these keys:",
 	              '   - "summary": a 1-2 sentence summary for the Mission Control card',
 	              '   - "document": the full strategy document in markdown only, with no conversational preface or trailing commentary',
-	              '   - "strategyBrief": an object with keys "goal", "outcomes", "inScope", "outOfScope", "successCriteria", "risks", and "decisions"',
-	              '     - "outcomes" must be an array of objects with "id", "title", "description", optional "releaseIds", optional legacy "releaseId", and optional "successCriteria"',
+	              '   - "strategyBrief": an object with keys "goal", "inScope", "outOfScope", "successCriteria", "risks", and "decisions"',
+	              '     - Milestone-specific success criteria belong on the milestone successCriteria field through the Task Management skill, not in strategyBrief.',
+	              '   - "deliveryAssurance": an object with schemaVersion "mission_control_delivery_assurance_v1" and the keys "testPlan", "evaluationPlan", "optimizationPolicy", "canonicalAssurance", "completionPolicy", and "gates"',
+	              '     - When a canonical delivery plan exists, derive every ID and gate dependency exclusively from its returned bindings and graph. This object is only the UI projection; it must not create or authorize resources.',
+	              '     - "testPlan": {"required":boolean,"title":string,"testPlanId":string,"caseKinds":string[],"acceptanceCriteria":string[],"linkedTaskIds":string[],"releaseIds":string[]}',
+	              '     - "evaluationPlan": {"required":boolean,"evaluationSetIds":string[],"target":string,"metrics":string[],"passThreshold":number|null,"linkedTaskIds":string[]}',
+	              '     - "optimizationPolicy": {"enabled":boolean,"fineTuningJobId":string,"targetMetric":string,"targetValue":number|null,"maxIterations":number,"stopConditions":string[],"linkedTaskIds":string[]}',
+	              '     - "canonicalAssurance": {"policyId":string,"policyVersionId":string,"runId":string}. Use empty strings until each canonical resource actually exists.',
+	              '     - "completionPolicy": {"requireTestsPassing":boolean,"requireEvaluationPassing":boolean,"requireOptimizationProof":boolean,"humanApprovalRequired":boolean,"taskIds":string[]}. taskIds identifies only final tickets whose transition to done must be enforced by canonical Assurance.',
+	              '     - "gates": an ordered array of {"id":string,"kind":"build|test|evaluation|optimization|release","title":string,"dependsOn":string[],"requiredEvidence":string[],"taskIds":string[],"resourceIds":string[],"status":"planned|ready|passed|failed|blocked"}',
+	              '     - Gate status is a planning projection only. Mark a gate passed only when the referenced platform evidence already exists, and treat the canonical Assurance Run decision as the only release authority. Otherwise use planned, ready, failed, or blocked.',
 	              '   - "projectRules": optional array of rule strings. Include it only when project rules should be created, replaced, or updated; otherwise omit it.',
 	              '   - "projectRulesReplace": optional true. Include it only when intentionally clearing all existing project rules.',
 	            ].join(newline),

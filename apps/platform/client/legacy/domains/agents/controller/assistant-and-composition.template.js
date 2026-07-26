@@ -784,17 +784,6 @@
             });
           }
   
-          function renderAgentUpgradeModal() {
-            return renderPlaygroundAgentUpgradeModal({
-              isOpen: agentUpgradeModalOpen,
-              titleId: "playground-agent-upgrade-title",
-              onClose: closeAgentUpgradeModal,
-              onCheckout: handleAgentUpgradeCheckout,
-              checkoutLoading: agentUpgradeCheckoutLoading,
-              checkoutDisabled: typeof onUpgradeToIndividual !== "function",
-            });
-          }
-  
   	        const agentsHomeComposerSourceAgents = useMemo(
   	          () => ensurePlaygroundComposerDefaultChoices(Array.isArray(agents) ? agents : []),
   	          [agents]
@@ -822,8 +811,7 @@
             return React.createElement(React.Fragment, null,
               renderAgentCreationSetupModal(),
               renderAgentCreationPermissionModal(),
-              renderAgentModelPickerDialog(),
-              renderAgentUpgradeModal()
+              renderAgentModelPickerDialog()
             );
           }
   
@@ -863,8 +851,7 @@
               renderAgentModelPickerDialog(),
               renderAgentSendToTeamModal(),
               renderAgentAddToSquadModal(),
-              renderAgentApiModal(),
-              renderAgentUpgradeModal()
+              renderAgentApiModal()
             );
           }
   
@@ -1097,7 +1084,7 @@
                             environmentId: preferredEnvironmentId || undefined,
                             agentId: agentsHomeComposerAgentId || undefined,
                             isAgentSelectionBlocked: (agent) => isFreeAgentPlan && isPlaygroundFreePlanLockedComposerAgent(agent),
-                            onBlockedAgentSelect: openAgentUpgradeModal,
+                            onBlockedAgentSelect: requestAgentPlanGate,
                             keepFocusOnSubmit: true,
                             showUsageInStatus: false,
                             placeholder: "Type /agent or /team",
@@ -1143,10 +1130,9 @@
             renderAgentSendToTeamModal(),
             renderAgentAddToSquadModal(),
             renderAgentApiModal(),
-  	          renderAgentVersionsSidebarPortal(),
+            renderAgentVersionsSidebarPortal(),
             renderAgentVersionSaveDialog(),
-  	          renderAgentVersionModal(),
-  	          renderAgentUpgradeModal()
+            renderAgentVersionModal()
           );
         }
   

@@ -127,7 +127,40 @@ export function createPlatformConfig(env = process.env) {
   const platformSessionSecret = String(env.PLATFORM_SESSION_SECRET || "");
   const platformControlPlaneSecret = String(
     env.PLATFORM_CONTROL_PLANE_SECRET || "",
+  ).replace(/(?:\r\n|\r|\n)+$/, "");
+  const executionDispatcherRequested = String(
+    env.ENABLE_EXECUTION_DISPATCHER || "",
+  ).trim().toLowerCase();
+  if (
+    executionDispatcherRequested
+    && !["true", "false"].includes(executionDispatcherRequested)
+  ) {
+    throw new Error("ENABLE_EXECUTION_DISPATCHER must be true or false.");
+  }
+  const hasExecutionDispatcherSecret = Buffer.byteLength(
+    platformControlPlaneSecret,
+    "utf8",
+  ) >= 32;
+  const executionDispatcherEnabled = executionDispatcherRequested === "true"
+    || (!executionDispatcherRequested && hasExecutionDispatcherSecret);
+  if (executionDispatcherEnabled) {
+    validateSecret(
+      "PLATFORM_CONTROL_PLANE_SECRET",
+      platformControlPlaneSecret,
+    );
+  }
+  const executionDispatchControlOrigin = trimOrigin(
+    env.EXECUTION_DISPATCH_CONTROL_ORIGIN
+    || defaultUpstreamOrigin.replace(/\/v1$/i, ""),
   );
+  if (
+    executionDispatcherEnabled
+    && !isSecureOrLoopbackUrl(executionDispatchControlOrigin)
+  ) {
+    throw new Error(
+      "EXECUTION_DISPATCH_CONTROL_ORIGIN must use HTTPS, except for a loopback origin in local development.",
+    );
+  }
   // OIDC issuer comparison is deliberately exact. A trailing slash is part of
   // the issuer identifier and must not be normalized away.
   const oidcIssuerUrl = String(env.OIDC_ISSUER_URL || "").trim();
@@ -260,6 +293,36 @@ export function createPlatformConfig(env = process.env) {
           "http://localhost:4177",
         ],
     githubOauthEnvFileCandidates: runtimeEnvFileCandidates,
+    executionDispatcher: Object.freeze({
+      enabled: executionDispatcherEnabled,
+      controlOrigin: executionDispatchControlOrigin,
+      workerId: String(env.EXECUTION_DISPATCH_WORKER_ID || "").trim(),
+      pollIntervalMs: readPositiveInteger(
+        env.EXECUTION_DISPATCH_POLL_INTERVAL_MS,
+        2_000,
+        { minimum: 250, maximum: 60_000 },
+      ),
+      heartbeatIntervalMs: readPositiveInteger(
+        env.EXECUTION_DISPATCH_HEARTBEAT_INTERVAL_MS,
+        25_000,
+        { minimum: 5_000, maximum: 60_000 },
+      ),
+      leaseTtlMs: readPositiveInteger(
+        env.EXECUTION_DISPATCH_LEASE_TTL_MS,
+        120_000,
+        { minimum: 30_000, maximum: 5 * 60_000 },
+      ),
+      batchSize: readPositiveInteger(
+        env.EXECUTION_DISPATCH_BATCH_SIZE,
+        4,
+        { minimum: 1, maximum: 20 },
+      ),
+      maxConcurrency: readPositiveInteger(
+        env.EXECUTION_DISPATCH_MAX_CONCURRENCY,
+        4,
+        { minimum: 1, maximum: 20 },
+      ),
+    }),
     noVncNextRoot: path.join(packageRoot, "node_modules", "novnc-next"),
     notionOauthCallbackUri: String(
       env.NOTION_OAUTH_REDIRECT_URI

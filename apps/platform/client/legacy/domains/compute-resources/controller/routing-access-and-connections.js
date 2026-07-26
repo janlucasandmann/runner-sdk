@@ -221,6 +221,8 @@
             setServerActionsPopoverOpen(false);
             setServerResourceActionMenuState(null);
             setServerDetailTab("usage");
+            setServerUsageActivityTab("logs");
+            setSourceServerSettingsTableTab("access");
             setAuthDetailTab("users");
   	          setSecretsDetailTab("secrets");
             setAgentRuntimeDetailTab("usage");
@@ -1452,92 +1454,6 @@
               setDatabaseTeamAccessState({ teamId: "bulk", teamIds: removableTeamIds, action: "", error: message });
               setDatabaseSaveState({ isSaving: false, error: "", message: "" });
             }
-          }
-  
-          function updateDatabaseDescriptionValue(nextValue, { recordHistory = true } = {}) {
-            const normalizedNextValue = String(nextValue ?? "");
-            const previousValue = String(draftDatabase?.description || "");
-            if (normalizedNextValue === previousValue) return;
-            if (recordHistory) {
-              setDatabaseDescriptionHistory((current) => ({
-                past: [...(Array.isArray(current.past) ? current.past : []), previousValue].slice(-80),
-                future: [],
-              }));
-            }
-            updateDatabaseField("description", normalizedNextValue);
-          }
-  
-          function applyDatabaseDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart, options = {}) {
-            updateDatabaseDescriptionValue(nextValue, options);
-            window.requestAnimationFrame(() => {
-              const textarea = databaseDescriptionTextareaRef.current;
-              if (!textarea) {
-                return;
-              }
-              const maxLength = nextValue.length;
-              const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
-              const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
-              textarea.focus();
-              textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
-              resizeEnvironmentDescriptionTextarea(textarea);
-            });
-          }
-  
-          function handleDatabaseDescriptionUndo() {
-            const historyPast = Array.isArray(databaseDescriptionHistory.past) ? databaseDescriptionHistory.past : [];
-            if (!historyPast.length || isDatabaseTemplatePreview) return;
-            const currentValue = String(draftDatabase?.description || "");
-            const previousValue = historyPast[historyPast.length - 1];
-            setDatabaseDescriptionHistory((current) => ({
-              past: (Array.isArray(current.past) ? current.past : []).slice(0, -1),
-              future: [currentValue, ...(Array.isArray(current.future) ? current.future : [])].slice(0, 80),
-            }));
-            applyDatabaseDescriptionSelection(previousValue, previousValue.length, previousValue.length, { recordHistory: false });
-          }
-  
-          function handleDatabaseDescriptionRedo() {
-            const historyFuture = Array.isArray(databaseDescriptionHistory.future) ? databaseDescriptionHistory.future : [];
-            if (!historyFuture.length || isDatabaseTemplatePreview) return;
-            const currentValue = String(draftDatabase?.description || "");
-            const nextValue = historyFuture[0];
-            setDatabaseDescriptionHistory((current) => ({
-              past: [...(Array.isArray(current.past) ? current.past : []), currentValue].slice(-80),
-              future: (Array.isArray(current.future) ? current.future : []).slice(1),
-            }));
-            applyDatabaseDescriptionSelection(nextValue, nextValue.length, nextValue.length, { recordHistory: false });
-          }
-  
-          function handleDatabaseDescriptionFormat(formatType) {
-            const textarea = databaseDescriptionTextareaRef.current;
-            if (!textarea || !draftDatabase) {
-              return;
-            }
-            const value = String(draftDatabase?.description || "");
-            const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
-            const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
-            let edit = null;
-  
-            if (formatType === "bold") {
-              edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "**");
-            } else if (formatType === "italic") {
-              edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "*");
-            } else if (formatType === "underline") {
-              edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
-            } else if (formatType === "list") {
-              edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
-            } else if (formatType === "ordered-list") {
-              edit = buildEnvironmentDescriptionOrderedListEdit(value, selectionStart, selectionEnd);
-            } else if (formatType === "code") {
-              edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, String.fromCharCode(96));
-            } else if (formatType === "link") {
-              edit = buildEnvironmentDescriptionLinkEdit(value, selectionStart, selectionEnd);
-            }
-  
-            if (!edit) {
-              return;
-            }
-  
-            applyDatabaseDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
           }
   
           function openServerComposer(serverKind = "") {
@@ -3106,7 +3022,6 @@
   
           function openServerSecretComposer(secret = null) {
             const normalizedSecret = secret ? normalizePlaygroundSecretRecord(secret) : null;
-            setIsServerSecretDescriptionEditing(false);
             setServerSecretComposerState({
               open: true,
               secretId: normalizedSecret?.id || "",
@@ -3119,7 +3034,6 @@
           }
   
           function closeServerSecretComposer() {
-            setIsServerSecretDescriptionEditing(false);
             setServerSecretComposerState({
               open: false,
               secretId: "",
@@ -3129,54 +3043,6 @@
               error: "",
               isSaving: false,
             });
-          }
-  
-          function applyServerSecretDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-            setIsServerSecretDescriptionEditing(true);
-            setServerSecretComposerState((current) => ({
-              ...current,
-              description: nextValue,
-              error: "",
-            }));
-            window.requestAnimationFrame(() => {
-              const textarea = serverSecretDescriptionTextareaRef.current;
-              if (!textarea) {
-                return;
-              }
-              const maxLength = nextValue.length;
-              const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
-              const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
-              textarea.focus();
-              textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
-              resizeEnvironmentDescriptionTextarea(textarea);
-            });
-          }
-  
-          function handleServerSecretDescriptionFormat(formatType) {
-            const textarea = serverSecretDescriptionTextareaRef.current;
-            if (!textarea) {
-              return;
-            }
-            const value = String(serverSecretComposerState?.description || "");
-            const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
-            const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
-            let edit = null;
-  
-            if (formatType === "bold") {
-              edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "**");
-            } else if (formatType === "italic") {
-              edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "*");
-            } else if (formatType === "underline") {
-              edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
-            } else if (formatType === "list") {
-              edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
-            }
-  
-            if (!edit) {
-              return;
-            }
-  
-            applyServerSecretDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
           }
   
           async function handleServerSecretComposerSubmit(event) {

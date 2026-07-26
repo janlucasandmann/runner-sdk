@@ -2,7 +2,7 @@ export const FINE_TUNING_APP_TOP_NAVIGATION_SCRIPT = String.raw`        function
           const activeFineTuningJob = (Array.isArray(fineTuningJobs) ? fineTuningJobs : [])
             .map((job) => normalizePlaygroundFineTuningJob(job))
             .find((job) => job?.id === selectedFineTuningJobId);
-          const fineTuningPathItems = [{ label: "Configure" }, { label: "Fine-Tuning" }];
+          const fineTuningPathItems = [{ label: "Configure" }, { label: "Agent Optimization" }];
           if (fineTuningPageMode === "detail" && activeFineTuningJob?.name) {
             fineTuningPathItems.push({ label: activeFineTuningJob.name });
           }

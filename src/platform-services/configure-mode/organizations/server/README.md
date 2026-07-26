@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This directory contains HTTP routing and server-side domain adapters for the Organizations service in Configure Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
+This directory contains HTTP routing and server-side domain adapters for the Organizations service in Configure Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer. The adapter accepts only the organization, identity-connection, and authorization namespaces owned by this service; it is not a generic upstream pass-through.
 
 ## Contents
 

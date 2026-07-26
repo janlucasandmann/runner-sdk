@@ -1065,6 +1065,58 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
             );
           }
 
+          function renderProjectComposerNameControl() {
+            return React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-tasks-project-modal-icon-trigger" + (projectIconPickerOpen ? " is-active" : ""),
+                onClick: (event) => {
+                  event.preventDefault();
+                  setProjectIconPickerOpen((current) => !current);
+                },
+                title: "Choose project icon",
+              },
+                React.createElement(SelectedProjectIcon, { width: 20, height: 20, strokeWidth: 1.9 })
+              ),
+              React.createElement("input", {
+                className: "playground-tasks-project-modal-name-input",
+                value: projectDraft.name,
+                onChange: (event) => updateProjectDraftName(event.target.value),
+                placeholder: "Project name",
+                autoFocus: !embedded,
+              }),
+              projectIconPickerOpen
+                ? React.createElement("div", { className: "playground-tasks-project-icon-picker" },
+                    PLAYGROUND_PROJECT_ICON_OPTIONS.map((option) => {
+                      const Icon = option.icon;
+                      const isActive = projectDraft.icon === option.id;
+                      return React.createElement("button", {
+                        key: option.id,
+                        type: "button",
+                        className: "playground-tasks-project-icon-option" + (isActive ? " is-active" : ""),
+                        title: option.label,
+                        onClick: (event) => {
+                          event.preventDefault();
+                          setProjectDraft((current) => ({ ...current, icon: option.id }));
+                          setProjectIconPickerOpen(false);
+                        },
+                      },
+                        React.createElement(Icon, { width: 18, height: 18, strokeWidth: 1.9 })
+                      );
+                    })
+                  )
+                : null
+            );
+          }
+
+          function renderProjectInitialSetupBody() {
+            return React.createElement("div", { className: "playground-tasks-project-initial-setup-body" },
+              renderProjectLeadSelector({ label: "Project lead" }),
+              renderProjectBlueprintSelector(),
+              renderProjectInitialGoalField()
+            );
+          }
+
           const projectComposerForm = React.createElement(PlatformModalSurface, {
                   as: "form",
                   className: "playground-tasks-project-modal playground-tasks-project-composer-modal"
@@ -1076,47 +1128,7 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                   onSubmit: (event) => void (projectComposerMode === "edit" ? handleSaveProject(event) : handleCreateProject(event)),
                 },
                 React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-tasks-project-modal-icon-trigger" + (projectIconPickerOpen ? " is-active" : ""),
-                      onClick: (event) => {
-                        event.preventDefault();
-                        setProjectIconPickerOpen((current) => !current);
-                      },
-                      title: "Choose project icon",
-                    },
-                      React.createElement(SelectedProjectIcon, { width: 20, height: 20, strokeWidth: 1.9 })
-                    ),
-                    React.createElement("input", {
-                      className: "playground-tasks-project-modal-name-input",
-                      value: projectDraft.name,
-                      onChange: (event) => updateProjectDraftName(event.target.value),
-                      placeholder: "Project name",
-                      autoFocus: !embedded,
-                    }),
-                    projectIconPickerOpen
-                      ? React.createElement("div", { className: "playground-tasks-project-icon-picker" },
-                          PLAYGROUND_PROJECT_ICON_OPTIONS.map((option) => {
-                            const Icon = option.icon;
-                            const isActive = projectDraft.icon === option.id;
-                            return React.createElement("button", {
-                              key: option.id,
-                              type: "button",
-                              className: "playground-tasks-project-icon-option" + (isActive ? " is-active" : ""),
-                              title: option.label,
-                              onClick: (event) => {
-                                event.preventDefault();
-                                setProjectDraft((current) => ({ ...current, icon: option.id }));
-                                setProjectIconPickerOpen(false);
-                              },
-                            },
-                              React.createElement(Icon, { width: 18, height: 18, strokeWidth: 1.9 })
-                            );
-                          })
-                        )
-                      : null
-                  ),
+                  renderProjectComposerNameControl(),
                   renderProjectComposerEnvironmentPicker(),
                   embedded
                     ? null
@@ -1129,11 +1141,7 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
 	                ),
 	                embedded ? renderProjectWallpaperPicker() : null,
 	                isInitialProjectSetupModal
-	                  ? React.createElement("div", { className: "playground-tasks-project-initial-setup-body" },
-	                      renderProjectLeadSelector({ label: "Project lead" }),
-	                      renderProjectBlueprintSelector(),
-	                      renderProjectInitialGoalField()
-	                    )
+	                  ? renderProjectInitialSetupBody()
 	                  : null,
 	                isInitialProjectSetupModal ? null : renderProjectBlueprintSelector(),
 	                isInitialProjectSetupModal ? null : renderProjectLeadSelector(),
@@ -1357,17 +1365,20 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
 	                title: "New Project",
 	                as: "form",
 	                size: "medium",
-	                showHeader: false,
-	                showFooter: false,
-	                className: "playground-tasks-project-modal playground-tasks-project-composer-modal playground-tasks-project-initial-setup-modal",
-	                backdropClassName: "playground-tasks-project-modal-backdrop playground-tasks-project-initial-setup-backdrop",
-	                bodyClassName: "playground-tasks-project-initial-setup-modal-body-slot",
-	                bodyProps: {
-	                  style: {
-	                    padding: 0,
-	                    overflow: "visible",
-	                  },
-	                },
+	                className: "playground-project-create-modal playground-tasks-project-initial-setup-modal",
+	                bodyClassName: "playground-project-create-modal__body",
+	                footer: React.createElement(React.Fragment, null,
+	                  React.createElement(PlatformSecondaryButton, {
+	                    type: "button",
+	                    size: "medium",
+	                    onClick: () => closeProjectComposer(),
+	                  }, "Cancel"),
+	                  React.createElement(PlatformPrimaryButton, {
+	                    type: "submit",
+	                    size: "medium",
+	                    disabled: projectSaveState.isSaving || !String(projectDraft.name || "").trim(),
+	                  }, projectSaveState.isSaving ? "Creating..." : "Create Project")
+	                ),
 	                animationDurationMs: projectInitialSetupModalAnimationMs,
 	                onClose: () => closeProjectComposer(),
 	                surfaceProps: {
@@ -1375,7 +1386,14 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
 	                  onSubmit: (event) => void handleCreateProject(event),
 	                },
 	              },
-	              projectComposerForm.props.children
+	              React.createElement("div", { className: "playground-project-create-modal__identity" },
+	                renderProjectComposerNameControl(),
+	                renderProjectComposerEnvironmentPicker()
+	              ),
+	              renderProjectInitialSetupBody(),
+	              projectSaveState.error
+	                ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, projectSaveState.error)
+	                : null
 	            );
 	          }
 

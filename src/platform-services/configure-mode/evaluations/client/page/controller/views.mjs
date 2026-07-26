@@ -265,6 +265,93 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               className: "playground-evaluations-run-agent-version-label",
             }, runVersionLabel)
           );
+          const runTerminal = ["completed", "completed_with_errors", "failed", "cancelled"].includes(runStatus);
+          const evidenceTrusted = activeRun.evidenceProvenanceVerified === true
+            && activeRun.evidenceFingerprintVerified === true;
+          const evidenceSelfReported = activeRun.evidenceTrustLevel === "self_reported";
+          const evidenceLegacy = runTerminal && !activeRun.evidenceSchemaVersion;
+          const evidenceLabel = !runTerminal
+            ? "Pending"
+            : evidenceTrusted
+              ? "Verified worker"
+              : evidenceSelfReported
+                ? "Self-reported"
+                : evidenceLegacy
+                  ? "Legacy evidence"
+                  : "Invalid evidence";
+          const evidenceVariant = !runTerminal
+            ? "blue"
+            : evidenceTrusted
+              ? "green"
+              : evidenceSelfReported || evidenceLegacy
+                ? "yellow"
+                : "red";
+          const signatureLabel = activeRun.evidenceSignatureStatus === "kms_signed"
+            ? "KMS signed"
+            : runTerminal
+              ? "Unsigned"
+              : "Pending";
+          const signatureVariant = activeRun.evidenceSignatureStatus === "kms_signed"
+            ? "green"
+            : runTerminal
+              ? "yellow"
+              : "gray";
+          const compactEvidenceValue = (value) => {
+            const normalized = String(value || "").trim();
+            return normalized.length > 28
+              ? normalized.slice(0, 16) + "…" + normalized.slice(-8)
+              : normalized || "-";
+          };
+          const evidenceExplanation = !runTerminal
+            ? "Canonical evidence will be sealed when every case reaches a terminal state."
+            : evidenceTrusted
+              ? "The control plane verified that the leased execution worker reported this exact result set against immutable Evaluation and Agent bindings."
+              : evidenceSelfReported
+                ? "An API client reported these results. This run cannot satisfy release gates that require independently verified execution evidence."
+                : evidenceLegacy
+                  ? "This run predates canonical evidence envelopes. Re-run it with the execution worker before using it for an Assurance decision."
+                  : "The evidence envelope or its execution provenance failed verification. Treat these results as non-release evidence.";
+          const evidenceCard = React.createElement(PlatformUiCard, {
+              as: "section",
+              cardTitle: "Execution evidence",
+              className: "playground-evaluations-run-evidence-card"
+                + (evidenceTrusted ? " is-trusted" : runTerminal ? " is-untrusted" : " is-pending"),
+            },
+            React.createElement("div", { className: "playground-evaluations-run-evidence-summary" },
+              React.createElement(PlatformLabel, {
+                variant: evidenceVariant,
+              }, evidenceLabel),
+              React.createElement("p", null, evidenceExplanation)
+            ),
+            React.createElement("dl", { className: "playground-evaluations-run-evidence-grid" },
+              React.createElement("div", null,
+                React.createElement("dt", null, "Evidence fingerprint"),
+                React.createElement("dd", {
+                  title: activeRun.evidenceFingerprint || "",
+                }, compactEvidenceValue(activeRun.evidenceFingerprint))
+              ),
+              React.createElement("div", null,
+                React.createElement("dt", null, "Worker attestation"),
+                React.createElement("dd", {
+                  title: activeRun.evidenceAttestationId || "",
+                }, compactEvidenceValue(activeRun.evidenceAttestationId))
+              ),
+              React.createElement("div", null,
+                React.createElement("dt", null, "Target fingerprint"),
+                React.createElement("dd", {
+                  title: activeRun.targetFingerprint || "",
+                }, compactEvidenceValue(activeRun.targetFingerprint))
+              ),
+              React.createElement("div", null,
+                React.createElement("dt", null, "Signature"),
+                React.createElement("dd", null,
+                  React.createElement(PlatformLabel, {
+                    variant: signatureVariant,
+                  }, signatureLabel)
+                )
+              )
+            )
+          );
           const runProperties = React.createElement("div", { className: "playground-evaluations-detail-sidebar-list" },
             renderEvaluationDetailSidebarRow("status", "Status", React.createElement(PlatformLabel, {
               variant: runStatusVariant,
@@ -278,6 +365,15 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
             })),
             renderEvaluationDetailSidebarRow("threshold", "Pass Threshold", formatPlaygroundEvaluationPercent(activeRun.passThreshold)),
             renderEvaluationDetailSidebarRow("cases", "Cases", String(activeRun.totalCount || activeRun.cases?.length || 0)),
+            renderEvaluationDetailSidebarRow("evidence", "Evidence", React.createElement(PlatformLabel, {
+              variant: evidenceVariant,
+            }, evidenceLabel)),
+            renderEvaluationDetailSidebarRow("signature", "Signature", React.createElement(PlatformLabel, {
+              variant: signatureVariant,
+            }, signatureLabel)),
+            renderEvaluationDetailSidebarRow("attestation", "Attestation", compactEvidenceValue(activeRun.evidenceAttestationId), {
+              title: activeRun.evidenceAttestationId || "",
+            }),
             renderEvaluationDetailSidebarRow("created", "Started", formatPlaygroundEvaluationDate(activeRun.createdAt)),
             renderEvaluationDetailSidebarRow("completed", "Completed", runStatus === "running" || runStatus === "queued"
               ? "-"
@@ -303,6 +399,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               properties: runProperties,
             },
             React.createElement(React.Fragment, null,
+              evidenceCard,
               renderAnalyticsCard(activeSet, activeRun),
               renderRunCasesTable(activeSet, activeRun)
             )

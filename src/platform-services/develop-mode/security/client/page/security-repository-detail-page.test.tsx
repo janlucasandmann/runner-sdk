@@ -1,13 +1,25 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   SecurityFinding,
   SecurityRepositoryDetail,
   SecurityRun,
 } from "../domain/index.js";
 import { SecurityRepositoryDetailPage } from "./security-repository-detail-page.js";
+
+vi.mock("chart.js/auto", () => ({
+  default: class ChartMock {
+    destroy() {}
+  },
+}));
 
 function createRun(id: string, status: SecurityRun["status"]): SecurityRun {
   return {
@@ -115,10 +127,61 @@ const detail: SecurityRepositoryDetail = {
   auditEvents: [],
 };
 
-afterEach(cleanup);
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-07-26T12:00:00.000Z"));
+});
+
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 describe("SecurityRepositoryDetailPage", () => {
-  it("starts Runs & findings with centralized KPI cards", () => {
+  it("uses centralized empty states for every activity table view", () => {
+    const emptyDetail: SecurityRepositoryDetail = {
+      ...detail,
+      repository: {
+        ...detail.repository,
+        findingCounts: { open: 0, critical: 0, high: 0 },
+      },
+      runs: [],
+      findings: [],
+      auditEvents: [],
+    };
+
+    render(
+      <SecurityRepositoryDetailPage
+        detail={emptyDetail}
+        onOpenRun={vi.fn()}
+        onOpenFinding={vi.fn()}
+        onSavePolicy={vi.fn()}
+        onSaveThreatModel={vi.fn()}
+        onSaveSystemPrincipalPermissionSet={vi.fn()}
+        onAddTeamAccess={vi.fn()}
+        onRemoveTeamAccess={vi.fn()}
+        onSaveTeamRolePermissionSet={vi.fn()}
+        onSetStatus={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText("No security runs yet").closest(".platform-empty-state"),
+    ).not.toBeNull();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Findings" }));
+    expect(
+      screen.getByText("No findings yet").closest(".platform-empty-state"),
+    ).not.toBeNull();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Audit Log" }));
+    expect(
+      screen.getByText("No audit events yet").closest(".platform-empty-state"),
+    ).not.toBeNull();
+  });
+
+  it("starts Runs with centralized analytics and one tabbed activity table", () => {
     const { container } = render(
       <SecurityRepositoryDetailPage
         detail={detail}
@@ -136,34 +199,62 @@ describe("SecurityRepositoryDetailPage", () => {
     );
 
     const summary = screen.getByRole("region", {
-      name: "Security posture summary",
+      name: "Security agent activity",
     });
     expect(summary.parentElement?.firstElementChild).toBe(summary);
+    expect(summary.getAttribute("data-platform-analytics-variant")).toBe(
+      "default",
+    );
     expect(
-      summary.querySelectorAll("[data-platform-ui-card-variant='default']"),
-    ).toHaveLength(4);
+      summary.querySelectorAll(".platform-analytics__metric"),
+    ).toHaveLength(5);
 
     const openCard = within(summary)
-      .getByText("Open findings")
-      .closest("[data-platform-ui-card-variant='default']");
+      .getByText("Open Findings")
+      .closest(".platform-analytics__metric");
     const criticalCard = within(summary)
-      .getByText("Critical findings")
-      .closest("[data-platform-ui-card-variant='default']");
+      .getByText("Critical Findings")
+      .closest(".platform-analytics__metric");
     const fixesCard = within(summary)
-      .getByText("Completed fixes")
-      .closest("[data-platform-ui-card-variant='default']");
+      .getByText("Completed Fixes")
+      .closest(".platform-analytics__metric");
     const runsCard = within(summary)
-      .getByText("Security runs")
-      .closest("[data-platform-ui-card-variant='default']");
+      .getByText("Security Runs")
+      .closest(".platform-analytics__metric");
+    const findingsCard = within(summary)
+      .getByText("Findings")
+      .closest(".platform-analytics__metric");
 
     expect(openCard?.textContent).toContain("3");
-    expect(openCard?.textContent).toContain("1 critical · 1 high");
     expect(criticalCard?.textContent).toContain("1");
     expect(fixesCard?.textContent).toContain("2");
     expect(runsCard?.textContent).toContain("3");
-    expect(runsCard?.textContent).toContain("1 active · 1 failed");
-    expect(container.querySelector(".develop-security-metric-grid")).toBe(
-      summary,
-    );
+    expect(findingsCard?.textContent).toContain("0");
+    expect(
+      summary.classList.contains("playground-server-detail-analytics"),
+    ).toBe(true);
+    expect(container.querySelector(".develop-security-metric-grid")).toBeNull();
+
+    expect(screen.getByRole("table", { name: "Security runs" })).not.toBeNull();
+    expect(
+      screen.queryByRole("table", { name: "Security findings" }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("table", { name: "Security audit events" }),
+    ).toBeNull();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Findings" }));
+    expect(
+      screen.getByRole("table", { name: "Security findings" }),
+    ).not.toBeNull();
+    expect(screen.queryByRole("table", { name: "Security runs" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Audit Log" }));
+    expect(
+      screen.getByRole("table", { name: "Security audit events" }),
+    ).not.toBeNull();
+    expect(
+      screen.queryByRole("table", { name: "Security findings" }),
+    ).toBeNull();
   });
 });

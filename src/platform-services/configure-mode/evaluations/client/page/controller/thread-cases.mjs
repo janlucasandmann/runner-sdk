@@ -651,6 +651,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
             input: "",
             expectedOutput: "",
             evaluationGuidance: "",
+            optimizationRole: "train",
             runCount: 1,
           }, nextIndex, true);
         }

@@ -18,7 +18,6 @@ export function createProjectsService(adapters) {
   const handleProjectsRequest = createProjectsRequestHandler({
     ...adapters,
     proxyProjectResourceIndexGet,
-    proxyTaskStartThread: taskBacklogService.proxyTaskStartThread,
     proxyUpstreamTaskJsonRequest: taskUpstreamGateway.proxyUpstreamTaskJsonRequest,
   });
   return Object.freeze({

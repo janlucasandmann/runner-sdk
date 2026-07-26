@@ -506,7 +506,12 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
           const evaluatorTypeOptions = [
             { value: "exact", label: "Exact output", description: "Require an exact output match." },
             { value: "agent", label: "Agent evaluator", description: "Use an agent to score each result." },
-            { value: "code", label: "Code evaluator", description: "Score results with deterministic code." },
+            {
+              value: "code",
+              label: "Code evaluator (unavailable)",
+              description: "Requires the isolated grader sandbox.",
+              disabled: true,
+            },
           ];
           const selectedEvaluatorTypeLabel = evaluatorTypeOptions.find((option) => option.value === evaluatorType)?.label || "Agent evaluator";
           const renderRunSelector = ({
@@ -547,6 +552,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
             && getEvaluationRunnableCaseCount(targetSet) > 0
             && selectedEnvironmentKey
             && selectedTargetAgentId
+            && evaluatorType !== "code"
             && (evaluatorType !== "agent" || selectedEvaluatorAgentId)
           );
           return React.createElement(PlatformModal, {
@@ -674,14 +680,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
               )
             ),
               evaluatorType === "code"
-                ? React.createElement("label", { className: "playground-tasks-project-modal-field playground-tasks-issue-modal-field is-full" },
-                    React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Evaluator Code"),
-                    React.createElement("textarea", {
-                      className: "playground-tasks-issue-modal-input playground-tasks-issue-modal-textarea",
-                      value: form.evaluatorCode || "",
-                      placeholder: "return actual.trim() === expected.trim() ? 1 : 0;",
-                      onChange: (event) => setEvaluationRunForm((current) => ({ ...(current || {}), evaluatorCode: event.target.value })),
-                    })
+                ? React.createElement("div", { className: "playground-evaluations-create-code-field" },
+                    "Code evaluators are disabled until the isolated grader sandbox is available."
                   )
                 : null
           );
@@ -706,8 +706,9 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
             },
             {
               value: "code",
-              label: "Code",
-              description: "Score results with deterministic evaluator code.",
+              label: "Code (unavailable)",
+              description: "Requires the isolated grader sandbox.",
+              disabled: true,
             },
           ];
           const selectedEvaluatorType = evaluatorTypeOptions.find((option) => option.value === evaluatorType) || evaluatorTypeOptions[0];
@@ -809,7 +810,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
                 React.createElement(PlatformPrimaryButton, {
                   size: "medium",
                   type: "submit",
-                  disabled: evaluationCreateSubmitting || !String(form.name || "").trim(),
+                  disabled: evaluationCreateSubmitting || !String(form.name || "").trim() || evaluatorType === "code",
                   "aria-busy": evaluationCreateSubmitting || undefined,
                 },
                   evaluationCreateSubmitting
@@ -853,7 +854,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
                 ),
                 renderCreateEvaluationFact(renderCreateEvaluationHelpLabel(
                     "Evaluator",
-                    "Controls how each result is scored: use an agent for qualitative judgment, exact output for strict matching, or code for deterministic scoring.",
+                    "Controls how each result is scored. Agent grading supports qualitative judgment; exact output performs strict matching.",
                     "Evaluator information"
                   ),
                   React.createElement(PlatformSelector, {
@@ -903,14 +904,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
               )
             ),
             evaluatorType === "code"
-              ? React.createElement("label", { className: "playground-evaluations-create-code-field" },
-                  React.createElement("span", { className: "playground-evaluations-create-code-label" }, "Evaluator Code"),
-                  React.createElement("textarea", {
-                    className: "playground-evaluations-textarea playground-evaluations-create-code-input",
-                    value: form.evaluatorCode || "",
-                    placeholder: "return actual.trim() === expected.trim() ? 1 : 0;",
-                    onChange: (event) => setEvaluationCreateForm((current) => ({ ...(current || {}), evaluatorCode: event.target.value })),
-                  })
+              ? React.createElement("div", { className: "playground-evaluations-create-code-field" },
+                  "Code evaluators are disabled until the isolated grader sandbox is available."
                 )
               : null
           );

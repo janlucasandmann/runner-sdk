@@ -41,6 +41,11 @@ export const ProjectDetailPage = lazyNamed(
   () => import("../../platform-services/create-mode/projects/client/detail/project-detail-page.js"),
   "ProjectDetailPage",
 );
+export { ProjectIconPicker } from "../../platform-services/create-mode/projects/client/project-icon-picker/index.js";
+export {
+  ProjectSummary,
+  ProjectSummaryDetails,
+} from "../../platform-services/create-mode/projects/client/project-summary/index.js";
 export const TicketDetailPage = lazyNamed(
   () => import("../../platform-services/create-mode/projects/client/detail/ticket-detail-page.js"),
   "TicketDetailPage",
@@ -80,6 +85,13 @@ export const OrganizationsOverviewPage = lazyNamed(
       "../../platform-services/configure-mode/organizations/client/page/overview/organizations-overview-page.js"
     ),
   "OrganizationsOverviewPage",
+);
+export const OrganizationAccessControlPage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/configure-mode/organizations/client/access-control/organization-access-control-page.js"
+    ),
+  "OrganizationAccessControlPage",
 );
 export const MarketplaceOverviewPage = lazyNamed(
   () =>
@@ -122,6 +134,20 @@ export const EvaluationsOverviewPage = lazyNamed(
       "../../platform-services/configure-mode/evaluations/client/page/overview/evaluations-overview-page.js"
     ),
   "EvaluationsOverviewPage",
+);
+export const TestsWorkspacePage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/configure-mode/tests/client/page/tests-workspace-page.js"
+    ),
+  "TestsWorkspacePage",
+);
+export const AssuranceWorkspacePage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/configure-mode/assurance/client/page/assurance-workspace-page.js"
+    ),
+  "AssuranceWorkspacePage",
 );
 export const EvaluationDetailPage = lazyNamed(
   () =>
@@ -203,6 +229,13 @@ export const DevelopServerDetailPage = lazyNamed(
     ),
   "DevelopServerDetailPage",
 );
+export const SourceDeployableServerDetailPage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/develop-mode/shared/client/page/source-deployable-server-detail-page.js"
+    ),
+  "SourceDeployableServerDetailPage",
+);
 export const DevelopVoiceAgentsOverviewPage = lazyNamed(
   () => import("../../platform-services/develop-mode/voice-agents/client/page/overview-page.js"),
   "DevelopVoiceAgentsOverviewPage",
@@ -213,4 +246,11 @@ export const DevelopSecurityWorkspacePage = lazyNamed(
       "../../platform-services/develop-mode/security/client/page/develop-security-workspace-page.js"
     ),
   "DevelopSecurityWorkspacePage",
+);
+export const DevelopEvidenceAgentsWorkspacePage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/develop-mode/evidence-agents/client/page/evidence-agents-workspace-page.js"
+    ),
+  "DevelopEvidenceAgentsWorkspacePage",
 );

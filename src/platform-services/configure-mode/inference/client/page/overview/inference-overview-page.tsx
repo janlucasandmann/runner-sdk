@@ -29,6 +29,7 @@ export interface InferenceOverviewPageProps {
   canConfigure?: boolean;
   creatingEndpoint?: boolean;
   createError?: string;
+  onPlanRequired?: () => void;
   onOpenEndpoint: (endpointId: string) => void;
   onConfigureEndpoint: (
     input: CreateInferenceEndpointInput,
@@ -42,6 +43,7 @@ export function InferenceOverviewPage({
   canConfigure = true,
   creatingEndpoint = false,
   createError = "",
+  onPlanRequired,
   onOpenEndpoint,
   onConfigureEndpoint,
 }: InferenceOverviewPageProps) {
@@ -203,8 +205,13 @@ export function InferenceOverviewPage({
             primaryAction: {
               label: "New Endpoint",
               icon: Plus,
-              onClick: () => setCreateModalOpen(true),
-              disabled: !canConfigure,
+              onClick: () => {
+                if (!canConfigure) {
+                  onPlanRequired?.();
+                  return;
+                }
+                setCreateModalOpen(true);
+              },
             },
           },
           getRowActions,

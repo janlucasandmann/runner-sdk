@@ -358,6 +358,8 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
             environments: [],
             recentThreads: [],
             threads: [],
+            workRelations: [],
+            agentSessions: [],
           });
           editorDirtyRef.current = false;
           resetSaveState("");
@@ -390,6 +392,18 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           const preserveProjectConnectorBrowser = Boolean(options?.preserveProjectConnectorBrowser);
           const isSameSelectedProject = Boolean(normalizedProjectId) && normalizedProjectId === selectedProjectId;
           const preserveStandaloneSchedule = Boolean(isStandaloneCalendarMode && !normalizedProjectId);
+          const requestedTaskRecord = options?.taskRecord && typeof options.taskRecord === "object" && !Array.isArray(options.taskRecord)
+            ? normalizePlaygroundTaskRecord(options.taskRecord)
+            : null;
+          const initialTaskRecord = requestedTaskRecord?.id && requestedTaskRecord.projectId === normalizedProjectId
+            ? requestedTaskRecord
+            : null;
+          const initialTaskView = isStandaloneCalendarMode
+            ? "calendar"
+            : options?.taskView === "backlog"
+              ? "backlog"
+              : "overview";
+          const openInitialTaskScreen = Boolean(initialTaskRecord && options?.openTaskScreen);
           setProjectComposerOpen(false);
           setProjectComposerMode("create");
           setProjectIconPickerOpen(false);
@@ -398,9 +412,10 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
             resetProjectConnectorBrowserUiState();
           }
           setSelectedProjectId(normalizedProjectId);
-          setSelectedTaskId("");
-          setProjectTaskDetailScreenOpen(false);
-          setDraftTask(null);
+          selectedTaskIdRef.current = initialTaskRecord?.id || "";
+          setSelectedTaskId(initialTaskRecord?.id || "");
+          setProjectTaskDetailScreenOpen(openInitialTaskScreen);
+          setDraftTask(initialTaskRecord);
           if (!preserveStandaloneSchedule) {
             setSelectedScheduleId("");
             setScheduleViewMode("calendar");
@@ -425,7 +440,7 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
             error: "",
           });
           setSearchQuery("");
-          setTaskView(isStandaloneCalendarMode ? "calendar" : "overview");
+          setTaskView(initialTaskRecord ? initialTaskView : (isStandaloneCalendarMode ? "calendar" : "overview"));
           setBoardSprintId(PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID);
           setSprintComposerOpen(false);
           setSprintDraft(buildPlaygroundDefaultSprintDraft());
@@ -434,7 +449,7 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           if (!normalizedProjectId) {
             clearProjectWorkspace({ preserveSchedule: isStandaloneCalendarMode });
           } else {
-            setTasks([]);
+            setTasks(initialTaskRecord ? [initialTaskRecord] : []);
             setReleases([]);
             setSprints([]);
             setSchedules([]);
@@ -535,7 +550,31 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           });
         }
 
-        function openProjectComposerForEdit(projectRecord) {
+        async function openProjectComposerForEdit(projectRecord) {
+          let editableProjectRecord = projectRecord;
+          if (projectRecord?.isOverviewRecord) {
+            try {
+              const projectId = String(projectRecord.id || "").trim();
+              const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(projectId), {
+                method: "GET",
+                headers: requestHeaders,
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load the project.");
+              }
+              editableProjectRecord = getPlaygroundProjectResponseRecord(data, { id: projectId });
+              if (!editableProjectRecord) {
+                throw new Error("The project response was empty.");
+              }
+            } catch (error) {
+              setProjectLoadState({
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load the project.",
+              });
+              return;
+            }
+          }
           if (projectInitialSetupModalCloseTimerRef.current) {
             window.clearTimeout(projectInitialSetupModalCloseTimerRef.current);
             projectInitialSetupModalCloseTimerRef.current = null;
@@ -546,7 +585,7 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           }
           setProjectInitialSetupModalVisible(false);
           setProjectInitialSetupModalClosing(false);
-          const normalizedProject = normalizePlaygroundProjectRecord(projectRecord || selectedProject || buildPlaygroundDefaultProjectDraft());
+          const normalizedProject = normalizePlaygroundProjectRecord(editableProjectRecord || selectedProject || buildPlaygroundDefaultProjectDraft());
           const projectIndex = projects.findIndex((project) => project.id === normalizedProject.id);
           const activeEditDraft = projectComposerOpen
             && projectComposerMode === "edit"
@@ -560,7 +599,7 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           const nextProjectDraft = activeEditDraft && projectDraftNameDirtyRef.current
             ? mergePlaygroundProjectRecords(activeEditDraft, normalizedProject) || activeEditDraft
             : normalizedProject;
-          const wallpaperConfig = getPlaygroundProjectWallpaperConfig(projectRecord || nextProjectDraft, projectIndex >= 0 ? projectIndex : 0);
+          const wallpaperConfig = getPlaygroundProjectWallpaperConfig(editableProjectRecord || nextProjectDraft, projectIndex >= 0 ? projectIndex : 0);
           setProjectComposerMode("edit");
           setProjectDraft((current) => preserveDirtyProjectDraftName({
             ...nextProjectDraft,
@@ -715,9 +754,6 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           }
           setMissionControlSetupVisible(false);
           setMissionControlSetupClosing(false);
-          setMissionControlSetupOutcomeMenuIndex(-1);
-          setMissionControlSetupOutcomeTitleDrafts({});
-          setProjectOverviewOutcomeEditorState(null);
           closeProjectComposer({ animate: false });
         }
 
@@ -813,9 +849,6 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           setProjectIconPickerOpen(false);
           setProjectBlueprintPickerOpen(false);
           setProjectComposerEnvironmentPopoverOpen(false);
-          setMissionControlSetupOutcomeMenuIndex(-1);
-          setMissionControlSetupOutcomeTitleDrafts({});
-          setProjectOverviewOutcomeEditorState(null);
           setMissionControlSetupVisible(false);
           setMissionControlSetupClosing(true);
           if (missionControlSetupCloseTimerRef.current) {
@@ -877,53 +910,6 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           return undefined;
         }, [missionControlSetupOpen]);
 
-        useEffect(() => {
-          if (!missionControlSetupOpen && projectOverviewOutcomeEditorState?.source === "mission-control-setup") {
-            closeProjectOverviewOutcomeEditor({ animate: false });
-          }
-        }, [missionControlSetupOpen, projectOverviewOutcomeEditorState?.source]);
-
-        useEffect(() => {
-          if (!projectOverviewOutcomeEditorState) {
-            setProjectOverviewOutcomeEditorVisible(false);
-            setProjectOverviewOutcomeEditorClosing(false);
-            return undefined;
-          }
-          if (projectOverviewOutcomeEditorCloseTimerRef.current) {
-            window.clearTimeout(projectOverviewOutcomeEditorCloseTimerRef.current);
-            projectOverviewOutcomeEditorCloseTimerRef.current = null;
-          }
-          if (projectOverviewOutcomeEditorFrameRef.current) {
-            window.cancelAnimationFrame(projectOverviewOutcomeEditorFrameRef.current);
-            projectOverviewOutcomeEditorFrameRef.current = null;
-          }
-          setProjectOverviewOutcomeEditorVisible(false);
-          setProjectOverviewOutcomeEditorClosing(false);
-          setProjectOverviewOutcomeMilestonePickerOpen(false);
-          projectOverviewOutcomeEditorFrameRef.current = window.requestAnimationFrame(() => {
-            projectOverviewOutcomeEditorFrameRef.current = window.requestAnimationFrame(() => {
-              projectOverviewOutcomeEditorFrameRef.current = null;
-              setProjectOverviewOutcomeEditorVisible(true);
-            });
-          });
-          return undefined;
-        }, [Boolean(projectOverviewOutcomeEditorState)]);
-
-        useEffect(() => {
-          if (!projectOverviewOutcomeMilestonePickerOpen) {
-            return undefined;
-          }
-          function handleOutcomeMilestonePickerPointerDown(event) {
-            const target = event.target instanceof Node ? event.target : null;
-            if (target && projectOverviewOutcomeMilestonePickerRef.current?.contains(target)) {
-              return;
-            }
-            setProjectOverviewOutcomeMilestonePickerOpen(false);
-          }
-          window.addEventListener("pointerdown", handleOutcomeMilestonePickerPointerDown);
-          return () => window.removeEventListener("pointerdown", handleOutcomeMilestonePickerPointerDown);
-        }, [projectOverviewOutcomeMilestonePickerOpen]);
-
         const selectedTaskHeaderTicketNumber = selectedTaskId
           ? String(
               taskTicketNumbersById[selectedTaskId]
@@ -976,6 +962,38 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
               : "",
           };
         }, [openTaskHeaderNavigationIds, selectedTaskId]);
+        const selectedProjectHeaderAccessLevel = String(
+          selectedProject?.teamAccessLevel
+            || selectedProject?.accessLevel
+            || selectedProject?.metadata?.teamAccessLevel
+            || selectedProject?.metadata?.accessLevel
+            || ""
+        ).trim().toLowerCase();
+        const selectedProjectHeaderCanManage = Boolean(
+          selectedProject?.id
+          && (
+            isProjectCreatedByCurrentViewer(selectedProject)
+            || selectedProjectHeaderAccessLevel === "owner"
+            || selectedProjectHeaderAccessLevel === "admin"
+            || selectedProjectHeaderAccessLevel === "manage"
+          )
+        );
+        const selectedProjectHeaderCanViewSettings = Boolean(
+          selectedProject?.id
+          && (
+            selectedProjectHeaderCanManage
+            || [
+              "contributor",
+              "member",
+              "use",
+              "read",
+              "read_only",
+              "viewer",
+              "view",
+              "create",
+            ].includes(selectedProjectHeaderAccessLevel)
+          )
+        );
 
         useEffect(() => {
           if (typeof onTasksHeaderChange !== "function") {
@@ -985,11 +1003,15 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
             onTasksHeaderChange({
               mode: "project",
               title: selectedProjectWorkspaceTitle,
+              icon: selectedProject.icon || selectedProject.metadata?.icon || "",
+              color: selectedProject.color || selectedProject.metadata?.color || "",
               view: taskView,
               extraActions: taskView === "backlog" || taskView === "board"
                 ? renderProjectAppHeaderMilestoneSelector()
                 : null,
               projectId: selectedProject.id,
+              canViewProjectSettings: selectedProjectHeaderCanViewSettings,
+              canDeleteProject: selectedProjectHeaderCanManage,
               taskId: selectedTaskId,
               ticketNumber: selectedTaskHeaderTicketNumber,
               taskType: selectedTaskHeaderType,
@@ -1028,7 +1050,13 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           missionControlStrategyOpen,
           onTasksHeaderChange,
           selectedProject?.id,
+          selectedProject?.icon,
+          selectedProject?.color,
+          selectedProject?.metadata?.icon,
+          selectedProject?.metadata?.color,
           selectedProjectId,
+          selectedProjectHeaderCanManage,
+          selectedProjectHeaderCanViewSettings,
           selectedProjectWorkspaceTitle,
           selectedReleaseId,
           selectedScheduleId,
@@ -1068,7 +1096,17 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           setProjectTaskDetailScreenOpen(false);
           setDraftTask(null);
           setProjectSidebarPopover("");
-        }, [projectNavViewRequest, useUnifiedProjectNav]);
+          const requestedSectionId = String(projectNavViewRequest?.sectionId || "").trim();
+          const requestedHomeTab = requestedSectionId === "resources"
+            || (selectedProjectHeaderCanViewSettings && requestedSectionId === "permissions")
+              ? requestedSectionId
+              : "general";
+          setProjectOverviewHomeTab(requestedHomeTab);
+        }, [
+          projectNavViewRequest,
+          selectedProjectHeaderCanViewSettings,
+          useUnifiedProjectNav,
+        ]);
 
         useEffect(() => {
           const requestToken = String(projectNavTaskRequest?.token || "").trim();
@@ -1105,6 +1143,19 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
             openProjectIssueComposer();
           }
         }, [projectNavIssueRequest, selectedProject?.id, selectedProjectId, useUnifiedProjectNav]);
+
+        useEffect(() => {
+          const requestToken = String(projectNavDeleteRequest?.token || "").trim();
+          if (!useUnifiedProjectNav || !requestToken || handledProjectNavDeleteRequestTokenRef.current === requestToken) {
+            return;
+          }
+          handledProjectNavDeleteRequestTokenRef.current = requestToken;
+          const requestedProjectId = String(projectNavDeleteRequest?.projectId || "").trim();
+          if (!requestedProjectId || requestedProjectId !== String(selectedProject?.id || "").trim()) {
+            return;
+          }
+          void handleDeleteProject(requestedProjectId);
+        }, [projectNavDeleteRequest, selectedProject?.id, useUnifiedProjectNav]);
 
         function buildProjectWallpaperBackgroundImage(wallpaperId, fallbackProject = projectDraft) {
           const wallpaper = getPlaygroundProjectWallpaperConfig(
@@ -1246,6 +1297,8 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
                 environments: Array.isArray(extra.environments) ? extra.environments : current?.environments || [],
                 recentThreads: Array.isArray(extra.recentThreads) ? extra.recentThreads : current?.recentThreads || [],
                 threads: Array.isArray(extra.threads) ? extra.threads : current?.threads || [],
+                workRelations: Array.isArray(extra.workRelations) ? extra.workRelations : current?.workRelations || [],
+                agentSessions: Array.isArray(extra.agentSessions) ? extra.agentSessions : current?.agentSessions || [],
               };
             });
           }

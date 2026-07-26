@@ -792,31 +792,62 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
             const threadTitle = typeof options?.title === "string" && options.title.trim()
               ? options.title.trim()
               : taskPreview.ticketNumber + " " + (reviewRequestBody ? "Changes: " : "") + taskPreview.title;
-            const response = await fetch(backendUrl + "/tasks/" + encodeURIComponent(task.id) + "/start-thread", {
+            const taskRunIdempotencyKey = typeof options?.idempotencyKey === "string" && options.idempotencyKey.trim()
+              ? options.idempotencyKey.trim()
+              : "project-task-" + normalizedTaskId + "-" + (
+                  globalThis.crypto?.randomUUID?.()
+                  || Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)
+                );
+            const taskRunRequest = {
               method: "POST",
               headers: {
                 ...requestHeaders,
                 "Content-Type": "application/json",
+                "Idempotency-Key": taskRunIdempotencyKey,
               },
               body: JSON.stringify({
                 title: threadTitle,
+                executionMode: "deferred",
+                idempotencyKey: taskRunIdempotencyKey,
                 environmentId: launchEnvironmentId || undefined,
                 agentId: launchAgentId || undefined,
-                enabledSkills: enabledSkillsPayload,
-                githubRepo: githubRepo || undefined,
-                connectors: launchConnectors,
-                launchPrompt: launchPrompt,
-                runKind: normalizedRunKind,
-                allowAdditionalThread: true,
-                taskPreview,
+                moveToInProgress: true,
+                metadata: {
+                  triggerKind: "manual",
+                  source: normalizedRunKind === "review"
+                    ? "project_task_review"
+                    : "project_task",
+                  runKind: normalizedRunKind,
+                  runnerPlayground: {
+                    enabledSkills: enabledSkillsPayload,
+                    githubRepo: githubRepo || undefined,
+                    connectors: launchConnectors,
+                    taskPreview,
+                  },
+                },
               }),
-            });
+            };
+            let response;
+            try {
+              response = await fetch(
+                backendUrl + "/tasks/" + encodeURIComponent(task.id) + "/run-thread",
+                taskRunRequest,
+              );
+            } catch {
+              response = await fetch(
+                backendUrl + "/tasks/" + encodeURIComponent(task.id) + "/run-thread",
+                taskRunRequest,
+              );
+            }
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to start thread from task.");
             }
             const threadRecord = getPlaygroundThreadResponseRecord(data);
             const updatedTask = getPlaygroundTaskResponseRecord(data);
+            const agentSessionRecord = data?.agentSession && typeof data.agentSession === "object"
+              ? data.agentSession
+              : null;
 
             if (!threadRecord?.id) {
               throw new Error("Task thread creation failed.");
@@ -845,6 +876,25 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
             commitLocalTaskRecord(updatedTask, {
               selectTask: selectedTaskId === updatedTask.id,
             });
+            if (agentSessionRecord?.id) {
+              setSelectedProjectDetail((current) => {
+                if (!current?.project?.id || current.project.id !== updatedTask.projectId) {
+                  return current;
+                }
+                const currentSessions = Array.isArray(current.agentSessions)
+                  ? current.agentSessions
+                  : [];
+                return {
+                  ...current,
+                  agentSessions: [
+                    agentSessionRecord,
+                    ...currentSessions.filter((session) => (
+                      String(session?.id || "").trim() !== String(agentSessionRecord.id).trim()
+                    )),
+                  ],
+                };
+              });
+            }
             resetSaveState(typeof options?.successMessage === "string" && options.successMessage ? options.successMessage : "Thread started");
             if (onThreadStarted) {
               onThreadStarted(threadRecord.id, {

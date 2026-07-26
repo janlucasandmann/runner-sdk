@@ -93,7 +93,6 @@ export interface InferenceEndpointDetailPageProps {
   onTestConnection: () => void | Promise<void>;
   onRemoveEndpoint: () => void | Promise<void>;
   onRefreshLocalRunners?: () => void;
-  onUpgrade?: () => void;
 }
 
 const DETAIL_TABS = [
@@ -161,7 +160,6 @@ export function InferenceEndpointDetailPage({
   onTestConnection,
   onRemoveEndpoint,
   onRefreshLocalRunners,
-  onUpgrade,
 }: InferenceEndpointDetailPageProps) {
   const [activeTab, setActiveTab] = useState<InferenceEndpointDetailTab>("general");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -272,24 +270,6 @@ export function InferenceEndpointDetailPage({
 
   const renderGeneral = () => (
     <PlatformSettingsSectionList>
-      {!canConfigure && isExternal ? (
-        <PlatformSettingsSection
-          title="Plan access required"
-          description="External inference endpoints are available on Team, Business, and Enterprise plans."
-          icon={<CloudCog />}
-          actions={onUpgrade ? (
-            <PlatformPrimaryButton size="small" onClick={onUpgrade}>
-              Upgrade to Team
-            </PlatformPrimaryButton>
-          ) : undefined}
-        >
-          <p className="inference-endpoint-detail__section-copy">
-            Upgrade to route compatible model traffic through infrastructure managed by your
-            organization.
-          </p>
-        </PlatformSettingsSection>
-      ) : null}
-
       {isExternal ? (
         <PlatformSettingsSection
           title="Endpoint Configuration"
@@ -543,7 +523,7 @@ export function InferenceEndpointDetailPage({
             <PlatformPrimaryButton
               size="medium"
               fullWidth
-              disabled={!canConfigure || testing || !String(settings.baseUrl || "").trim()}
+              disabled={testing || !String(settings.baseUrl || "").trim()}
               onClick={() => void onTestConnection()}
             >
               {testing

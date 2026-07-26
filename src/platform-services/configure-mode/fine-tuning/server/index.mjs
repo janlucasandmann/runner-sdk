@@ -11,11 +11,11 @@ const REQUIRED_ADAPTERS = [
   "withProxyOrganizationHeader",
 ];
 
-/** Creates the complete server-side Fine-Tuning service from host transport adapters. */
+/** Creates the complete server-side Agent Optimization service from host transport adapters. */
 export function createFineTuningService(adapters = {}) {
   for (const adapterName of REQUIRED_ADAPTERS) {
     if (typeof adapters[adapterName] !== "function") {
-      throw new TypeError(`Fine-Tuning service requires the ${adapterName} adapter.`);
+      throw new TypeError(`Agent Optimization service requires the ${adapterName} adapter.`);
     }
   }
   return Object.freeze(createPlaygroundFineTuningRuntime(adapters));

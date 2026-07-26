@@ -12,7 +12,15 @@ import {
 } from "./index.mjs";
 import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
-assert.deepEqual(Object.keys(ORGANIZATIONS_STYLE_FRAGMENTS), ["billing", "overview"]);
+assert.deepEqual(Object.keys(ORGANIZATIONS_STYLE_FRAGMENTS), [
+  "accessControl",
+  "billing",
+  "overview",
+]);
+assert.match(
+  ORGANIZATIONS_STYLE_FRAGMENTS.accessControl,
+  /\.organization-access-control/,
+);
 assert.match(ORGANIZATIONS_STYLE_FRAGMENTS.billing, /\.playground-organization-billing-panel/);
 assert.match(ORGANIZATIONS_STYLE_FRAGMENTS.overview, /\.playground-team-page\.is-organization-overview-page/);
 assert.equal(Object.values(ORGANIZATIONS_STYLE_FRAGMENTS).join(""), ORGANIZATIONS_PAGE_CSS);
@@ -91,6 +99,7 @@ const pageFragments = createOrganizationsPageScriptFragments({ documentationUrl 
 assert.deepEqual(Object.keys(pageFragments), [
   "setup",
   "identityAndBilling",
+  "identityAccess",
   "overview",
   "members",
   "resources",
@@ -98,6 +107,11 @@ assert.deepEqual(Object.keys(pageFragments), [
 ]);
 assert.match(pageFragments.setup, /function renderOrganizationPage/);
 assert.match(pageFragments.identityAndBilling, /const renderOrganizationBillingSnapshot/);
+assert.match(
+  pageFragments.identityAccess,
+  /React\.createElement\(\s*OrganizationAccessControlPage/,
+);
+assert.match(pageFragments.identityAccess, /PLAYGROUND_ORGANIZATION_HEADER/);
 assert.match(pageFragments.overview, new RegExp(JSON.stringify(documentationUrl).replace(/[.*+?^\${}()|[\]\\]/g, "\\$&")));
 assert.match(pageFragments.overview, /const organizationOverviewRows =/);
 assert.match(pageFragments.overview, /React\.createElement\(OrganizationsOverviewPage/);
@@ -105,18 +119,41 @@ assert.match(pageFragments.members, /const renderMembers/);
 assert.doesNotMatch(pageFragments.members, /normalizeOrganizationTableSortDirection/);
 assert.match(pageFragments.resources, /const renderOrganizationResources/);
 assert.match(pageFragments.rolesAndView, /const renderOrganizationRoles/);
+assert.match(pageFragments.rolesAndView, /Identity & Access/);
+assert.match(pageFragments.rolesAndView, /renderOrganizationIdentityAccess/);
 assert.doesNotThrow(() => new Function(Object.values(pageFragments).join("")));
 assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-organizations-overview-controls/);
 
 const platformEntrySource = await readPlatformCompositionSource();
+const platformTemplateBindingsSource = await fs.readFile(
+  new URL(
+    "../../../../apps/platform/client/legacy/templates/template-bindings.mjs",
+    import.meta.url,
+  ),
+  "utf8",
+);
+const platformLifecycleSource = await fs.readFile(
+  new URL(
+    "../../../../apps/platform/client/legacy/domains/shell/controller/application-lifecycle-and-history.template.js",
+    import.meta.url,
+  ),
+  "utf8",
+);
 assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/organizations\/index\.mjs"/);
 assert.match(platformEntrySource, /const ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS = createOrganizationsPageScriptFragments\(/);
 assert.match(platformEntrySource, /organizationsService:\s*createOrganizationsService\(/);
 assert.match(platformEntrySource, /organizationsService\.handleRequest\(req, res, url\)/);
-assert.match(platformEntrySource, /\$\{ORGANIZATIONS_STYLE_FRAGMENTS\.billing\}/);
+assert.match(
+  platformTemplateBindingsSource,
+  /ORGANIZATIONS_STYLE_FRAGMENTS\.accessControl\s*\+\s*ORGANIZATIONS_STYLE_FRAGMENTS\.billing/,
+);
 assert.match(platformEntrySource, /\$\{ORGANIZATIONS_DOMAIN_SCRIPT_FRAGMENTS\.organizationIdentity\}/);
 assert.match(platformEntrySource, /\$\{ORGANIZATIONS_RUNTIME_SCRIPT_FRAGMENTS\.loading\}/);
 assert.match(platformEntrySource, /\$\{ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS\.setup\}/);
+assert.match(
+  platformLifecycleSource,
+  /\$\{ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS\.identityAccess\}/,
+);
 assert.match(platformEntrySource, /configurePrimaryEntries:[^\n]*ORGANIZATIONS_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
 assert.doesNotMatch(platformEntrySource, /^\s*\.playground-organization-billing-panel \{/m);
 assert.doesNotMatch(platformEntrySource, /function normalizeOrganizationPageRecord\(/);
@@ -151,9 +188,52 @@ assert.equal(proxyCalls[1]?.[3], "/organizations/org_1/members/user_1");
 assert.equal(proxyCalls[1]?.[4], "DELETE");
 
 handled = organizationsService.handleRequest(
+  { method: "GET", headers: {} },
+  {},
+  new URL("http://localhost/api/real/identity-connections/idp%20one/group-mappings"),
+);
+assert.equal(handled, true);
+assert.equal(proxyCalls[2]?.[0], "get");
+assert.equal(
+  proxyCalls[2]?.[3],
+  "/identity-connections/idp%20one/group-mappings",
+);
+
+handled = organizationsService.handleRequest(
+  { method: "POST", headers: {} },
+  {},
+  new URL("http://localhost/api/real/authorization/approvals/approval_1/resolve"),
+);
+assert.equal(handled, true);
+assert.equal(proxyCalls[3]?.[0], "json");
+assert.equal(
+  proxyCalls[3]?.[3],
+  "/authorization/approvals/approval_1/resolve",
+);
+assert.equal(proxyCalls[3]?.[4], "POST");
+
+handled = organizationsService.handleRequest(
+  { method: "GET", headers: {} },
+  {},
+  new URL("http://localhost/api/real/authorization/decisions?limit=25"),
+);
+assert.equal(handled, true);
+assert.equal(proxyCalls[4]?.[0], "get");
+assert.equal(
+  proxyCalls[4]?.[3],
+  "/authorization/decisions?limit=25",
+);
+
+handled = organizationsService.handleRequest(
   { method: "HEAD", headers: {} },
   {},
   new URL("http://localhost/api/real/organizations"),
+);
+assert.equal(handled, false);
+handled = organizationsService.handleRequest(
+  { method: "GET", headers: {} },
+  {},
+  new URL("http://localhost/api/real/authorization-secrets"),
 );
 assert.equal(handled, false);
 handled = organizationsService.handleRequest(

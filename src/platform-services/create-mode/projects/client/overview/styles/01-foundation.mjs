@@ -94,46 +94,6 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
         display: none;
       }
 
-      .playground-project-overview-sidebar-navigation {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        margin-bottom: 12px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .playground-project-overview-sidebar-navigation-link {
-        box-sizing: border-box;
-        width: 100%;
-        min-height: 30px;
-        padding: 0 8px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        border: 0;
-        border-radius: 8px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.7);
-        font: inherit;
-        font-size: 12px;
-        font-weight: 400;
-        text-align: left;
-        cursor: pointer;
-        transition: color 140ms ease, background-color 140ms ease;
-      }
-
-      .playground-project-overview-sidebar-navigation-link:hover {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.0375);
-      }
-
-      .playground-project-overview-sidebar-navigation-link.is-active {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.075);
-      }
-
       .playground-project-overview-sidebar-title {
         color: #fff;
         font-size: 12px;
@@ -269,16 +229,6 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
         overflow: hidden;
       }
 
-      .playground-project-overview-sidebar-progress-title {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .playground-project-overview-sidebar-progress-title svg {
-        color: rgba(255, 255, 255, 0.48);
-      }
-
       .playground-project-overview-sidebar-progress-analytics.platform-analytics.is-compact {
         gap: 14px;
       }
@@ -298,33 +248,6 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
       .playground-project-overview-sidebar-progress-breakdown {
         min-width: 0;
         margin-top: 8px;
-      }
-
-      .playground-project-overview-sidebar-progress-switch.platform-switch {
-        width: 100%;
-        min-width: 0;
-        height: 30px;
-        min-height: 30px;
-        gap: 8px;
-        padding: 0;
-        overflow: visible;
-        border-radius: 0;
-        background: transparent;
-      }
-
-      .playground-project-overview-sidebar-progress-switch .platform-switch__option {
-        min-width: 0;
-        flex: 1 1 0;
-        padding: 4px 10px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 999px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.5);
-      }
-
-      .playground-project-overview-sidebar-progress-switch .platform-switch__option.is-active {
-        background: rgba(255, 255, 255, 0.08);
-        color: #fff;
       }
 
       .playground-project-overview-sidebar-progress-list {
@@ -595,13 +518,22 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
         color: rgba(255, 255, 255, 0.45);
       }
 
-      .playground-project-overview-sidebar-status-dot {
-        width: 7px;
-        height: 7px;
-        flex: 0 0 7px;
-        border-radius: 999px;
-        background: #66a6ff;
-        box-shadow: 0 0 0 3px rgba(102, 166, 255, 0.12);
+      .playground-project-overview-status-icon.is-on-track {
+        color: #85df7b;
+      }
+
+      .playground-project-overview-status-icon.is-at-risk {
+        color: #ffb84d;
+      }
+
+      .playground-project-overview-status-value {
+        max-width: 100%;
+      }
+
+      .playground-project-overview-status-value .playground-tasks-status-value-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .playground-project-overview-sidebar-lead {
@@ -851,30 +783,39 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
         gap: 0;
       }
 
-      .playground-project-detail-header .playground-project-overview-description-editor {
+      .playground-project-overview-description-editor {
         width: 100%;
         min-width: 0;
         margin: 0;
       }
 
-      .playground-project-detail-header
-        .playground-project-overview-description-editor
+      .playground-project-overview-description-editor.is-minimalistic-ui.is-sticky
         .platform-instructions-editor__header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
         background: #000;
       }
 
-      .playground-project-detail-header
-        .playground-project-overview-description-editor
+      .playground-project-overview-description-editor
         .platform-instructions-editor__title {
         flex: 1 1 auto;
-        font-size: 18px;
-        font-weight: 500;
+        overflow: hidden;
+        font-size: 14px;
+        font-weight: 400;
       }
 
-      .playground-project-detail-header
-        .playground-project-overview-description-editor.platform-instructions-editor.is-minimalistic-ui
-        .platform-instructions-editor__prosemirror {
-        padding-top: 12px;
+      .playground-project-overview-description-editor
+        .platform-instructions-editor__title
+        .playground-project-overview-activity-tabs {
+        width: auto;
+        max-width: 100%;
+      }
+
+      .playground-project-overview-description-editor
+        .platform-instructions-editor__title
+        .platform-detail-tab-bar__list {
+        flex: 0 1 auto;
       }
 
       .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-overview {

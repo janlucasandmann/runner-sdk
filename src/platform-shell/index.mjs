@@ -28,3 +28,7 @@ export {
   ONBOARDING_CSS,
   ONBOARDING_PAGE_SCRIPT,
 } from "./onboarding/index.mjs";
+
+export {
+  PLAN_GATE_APP_SCRIPT_FRAGMENTS,
+} from "./plan-gate/index.mjs";

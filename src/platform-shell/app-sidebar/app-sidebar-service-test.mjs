@@ -62,6 +62,18 @@ assert.doesNotMatch(fragments.navigationItems, /if \(item\.active\)/);
 assert.match(fragments.threadList, /variant: "minimal"/);
 assert.match(fragments.threadList, /const contextualActions = Array\.isArray\(threadActionMenuState\.menuActions\)/);
 assert.match(fragments.threadList, /className: "tb-popup-row sidebar-thread-popup-row"/);
+assert.match(
+  fragments.threadList,
+  /function getSidebarThreadProjectPresentation\(safeThread, taskPreview, safeThreadId\)[\s\S]*?getThreadMissionControlMetadata\(safeThread\)[\s\S]*?threadProjectRecordsById\[projectId\][\s\S]*?realProjects/,
+);
+assert.match(
+  fragments.threadList,
+  /mergePlaygroundProjectRecords\(listedProjectRecord, cachedProjectRecord\)[\s\S]*?getPlaygroundProjectIconConfig\([\s\S]*?resolvePlaygroundProjectIconId\([\s\S]*?missionControlMetadata\?\.projectIcon/,
+);
+assert.match(
+  fragments.threadList,
+  /className: "sidebar-thread-project-icon"[\s\S]*?style: threadProject\.color \? \{ color: threadProject\.color \} : undefined[\s\S]*?React\.createElement\(ThreadProjectIcon/,
+);
 assert.ok(fragments.sidebar.includes("renderAppSidebarModeSelector()"));
 assert.ok(fragments.sidebar.includes("function renderAppSidebar()"));
 assert.match(fragments.sidebar, /onClick: \(\) => handleSidebarNavigationItemClick\(item\)/);

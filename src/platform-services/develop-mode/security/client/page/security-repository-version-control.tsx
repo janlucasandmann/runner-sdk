@@ -1,4 +1,4 @@
-import { Bookmark, Code2, Play, SquarePen, Trash2, Undo2 } from "lucide-react";
+import { Bookmark, Code2, SquarePen, Trash2, Undo2 } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -31,8 +31,13 @@ import { PlatformSelector } from "../../../../../platform-ui/components/ui/selec
 export interface SecurityRepositoryHeaderState {
   mode: "overview" | "detail";
   title: string;
-  resourceType?: "security_repository";
+  resourceType?: "security_repository" | "security_run" | "security_finding";
   resourceId?: string;
+  parentTitle?: string;
+  onParentClick?: () => void;
+  activeSection?: string;
+  sectionOptions?: readonly { value: string; label: string }[];
+  onSectionChange?: (section: string) => void;
   versionNumber?: number | null;
   versionIsLatest?: boolean;
   versionBusy?: boolean;
@@ -53,9 +58,11 @@ export interface SecurityRepositoryVersionControlProps {
   controlsPortalId?: string;
   versionsDrawerPortalId?: string;
   busy?: boolean;
-  runScanDisabled?: boolean;
   onBack: () => void;
-  onRunScan?: () => void;
+  activeSection?: string;
+  sectionOptions?: readonly { value: string; label: string }[];
+  onSectionChange?: (section: string) => void;
+  headerLeadingControls?: ReactNode;
   onReload: () => Promise<SecurityRepositoryDetail | null>;
   onHeaderChange?: (state: SecurityRepositoryHeaderState) => void;
   onVersionsSidebarOpenChange?: (open: boolean) => void;
@@ -170,9 +177,11 @@ export function SecurityRepositoryVersionControl({
   controlsPortalId = "",
   versionsDrawerPortalId = "",
   busy = false,
-  runScanDisabled = false,
   onBack,
-  onRunScan,
+  activeSection,
+  sectionOptions,
+  onSectionChange,
+  headerLeadingControls,
   onReload,
   onHeaderChange,
   onVersionsSidebarOpenChange,
@@ -298,6 +307,9 @@ export function SecurityRepositoryVersionControl({
       title: detail.repository.fullName,
       resourceType: "security_repository",
       resourceId: repositoryId,
+      activeSection,
+      sectionOptions,
+      onSectionChange,
       versionNumber: Number.isFinite(versionNumber) ? versionNumber : null,
       versionIsLatest:
         Number.isFinite(versionNumber) && versionNumber === latestVersionNumber,
@@ -305,17 +317,17 @@ export function SecurityRepositoryVersionControl({
       onVersionClick: openHistory,
       onOverviewClick: onBack,
     });
-    return () => {
-      onHeaderChange({ mode: "overview", title: "" });
-    };
   }, [
     detail.repository.fullName,
+    activeSection,
     isBusy,
     latestVersionNumber,
     onBack,
     onHeaderChange,
+    onSectionChange,
     openHistory,
     repositoryId,
+    sectionOptions,
     selectedVersion,
   ]);
 
@@ -540,16 +552,7 @@ export function SecurityRepositoryVersionControl({
   );
   const headerControls = (
     <div className="develop-security-version-controls">
-      {onRunScan ? (
-        <PlatformSecondaryButton
-          size="small"
-          disabled={isBusy || runScanDisabled}
-          onClick={onRunScan}
-        >
-          <Play width={14} height={14} />
-          Run scan
-        </PlatformSecondaryButton>
-      ) : null}
+      {headerLeadingControls}
       {publishControl}
     </div>
   );

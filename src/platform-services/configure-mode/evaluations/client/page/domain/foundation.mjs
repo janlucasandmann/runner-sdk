@@ -5,6 +5,12 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
         return prefix + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
       }
 
+      function readPlaygroundEvaluationPlainObject(value) {
+        return value && typeof value === "object" && !Array.isArray(value)
+          ? value
+          : {};
+      }
+
       function normalizePlaygroundEvaluationPassThreshold(value, fallback = 0.8) {
         const fallbackScore = Math.max(0, Math.min(1, Number(fallback) || 0.8));
         const numericValue = Number(value);
@@ -98,6 +104,10 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
         return {
           type,
           agentId: String(source.agentId || source.agent_id || "").trim(),
+          agentVersionId: String(source.agentVersionId || source.agent_version_id || source.versionId || source.version_id || "").trim(),
+          agentVersionNumber: Math.max(0, Number(source.agentVersionNumber || source.agent_version_number || source.versionNumber || source.version_number || source.version || 0) || 0),
+          agentVersionLabel: String(source.agentVersionLabel || source.agent_version_label || source.versionLabel || source.version_label || "").trim(),
+          agentVersionRevisionId: String(source.agentVersionRevisionId || source.agent_version_revision_id || source.revisionId || source.revision_id || "").trim(),
           code: String(source.code || ""),
         };
       }
@@ -109,7 +119,7 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
           return agent?.name || agent?.label || normalized.agentId || "Agent evaluator";
         }
         if (normalized.type === "code") {
-          return "Code evaluator";
+          return "Code evaluator (sandbox required)";
         }
         return "Exact output";
       }
@@ -161,6 +171,16 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
         return String(identity.name || identity.email || identity.id || identity.userId || "").trim();
       }
 
+      function normalizePlaygroundEvaluationOptimizationRole(value) {
+        const role = String(value || "").trim().toLowerCase();
+        return role === "validation" || role === "holdout" ? role : "train";
+      }
+
+      function getPlaygroundEvaluationOptimizationRoleLabel(value) {
+        const role = normalizePlaygroundEvaluationOptimizationRole(value);
+        return role === "validation" ? "Validation" : role === "holdout" ? "Holdout" : "Training";
+      }
+
       function normalizePlaygroundEvaluationDataRow(row, fallbackIndex = 0) {
         const source = row && typeof row === "object" && !Array.isArray(row) ? row : {};
         const input = typeof source.input === "string"
@@ -184,6 +204,13 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
           input,
           expectedOutput,
           evaluationGuidance: String(source.evaluationGuidance || source.evaluation_guidance || source.scoringGuidance || source.scoring_guidance || source.rubric || ""),
+          optimizationRole: normalizePlaygroundEvaluationOptimizationRole(
+            source.optimizationRole
+              || source.optimization_role
+              || source.datasetRole
+              || source.dataset_role
+              || source.split
+          ),
           runCount: normalizePlaygroundEvaluationCaseRunCount(source.runCount ?? source.run_count ?? source.runs ?? source.repeatCount ?? source.repeat_count ?? source.repetitions ?? 1),
           sourceThreadId: String(source.sourceThreadId || source.source_thread_id || source.metadata?.sourceThreadId || source.metadata?.source_thread_id || "").trim(),
           sourceThreadTitle: String(source.sourceThreadTitle || source.source_thread_title || source.metadata?.sourceThreadTitle || source.metadata?.source_thread_title || "").trim(),
@@ -204,25 +231,41 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
 
       function normalizePlaygroundEvaluationRunCase(rawCase, fallbackIndex = 0) {
         const source = rawCase && typeof rawCase === "object" && !Array.isArray(rawCase) ? rawCase : {};
-        const score = Number(source.score);
+        const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+          ? source.metadata
+          : {};
+        const evaluator = source.evaluator && typeof source.evaluator === "object" && !Array.isArray(source.evaluator)
+          ? source.evaluator
+          : {};
+        const rawScore = source.score;
+        const score = rawScore === null || rawScore === undefined || (typeof rawScore === "string" && !rawScore.trim())
+          ? null
+          : Number(rawScore);
         return {
-          id: String(source.id || source.caseRunId || source.case_run_id || "").trim() || createPlaygroundEvaluationId("eval_run_case"),
+          id: String(source.id || source.caseRunId || source.case_run_id || metadata.caseRunId || metadata.case_run_id || source.caseId || source.case_id || "").trim() || createPlaygroundEvaluationId("eval_run_case"),
           dataRowId: String(source.dataRowId || source.data_row_id || source.caseId || source.case_id || "").trim(),
           dataRowRunIndex: normalizePlaygroundEvaluationCaseRunCount(source.dataRowRunIndex ?? source.data_row_run_index ?? source.repeatIndex ?? source.repeat_index ?? 1),
           dataRowRunCount: normalizePlaygroundEvaluationCaseRunCount(source.dataRowRunCount ?? source.data_row_run_count ?? source.repeatCount ?? source.repeat_count ?? 1),
-          threadId: String(source.threadId || source.thread_id || "").trim(),
-          evaluatorThreadId: String(source.evaluatorThreadId || source.evaluator_thread_id || "").trim(),
+          threadId: String(source.threadId || source.thread_id || metadata.threadId || metadata.thread_id || "").trim(),
+          evaluatorThreadId: String(source.evaluatorThreadId || source.evaluator_thread_id || metadata.evaluatorThreadId || metadata.evaluator_thread_id || "").trim(),
           input: String(source.input || ""),
           expectedOutput: String(source.expectedOutput || source.expected_output || ""),
           evaluationGuidance: String(source.evaluationGuidance || source.evaluation_guidance || source.scoringGuidance || source.scoring_guidance || source.rubric || ""),
-          actualOutput: String(source.actualOutput || source.actual_output || ""),
+          optimizationRole: normalizePlaygroundEvaluationOptimizationRole(
+            source.optimizationRole || source.optimization_role || metadata.optimizationRole || metadata.optimization_role
+          ),
+          actualOutput: typeof (source.actualOutput ?? source.actual_output ?? source.output) === "string"
+            ? String(source.actualOutput ?? source.actual_output ?? source.output)
+            : source.output === null || source.output === undefined
+              ? ""
+              : JSON.stringify(source.output),
           evaluatorOutput: String(source.evaluatorOutput || source.evaluator_output || ""),
-          evaluatorReason: String(source.evaluatorReason || source.evaluator_reason || ""),
-          evaluatorParseStatus: String(source.evaluatorParseStatus || source.evaluator_parse_status || ""),
+          evaluatorReason: String(source.evaluatorReason || source.evaluator_reason || source.explanation || ""),
+          evaluatorParseStatus: String(source.evaluatorParseStatus || source.evaluator_parse_status || evaluator.parseStatus || evaluator.parse_status || ""),
           snapshotVersion: String(source.snapshotVersion || source.snapshot_version || ""),
           executionStage: String(source.executionStage || source.execution_stage || "").trim(),
-          failureStage: String(source.failureStage || source.failure_stage || "").trim(),
-          score: Number.isFinite(score) ? Math.max(0, Math.min(1, score)) : 0,
+          failureStage: String(source.failureStage || source.failure_stage || metadata.failureStage || metadata.failure_stage || "").trim(),
+          score: Number.isFinite(score) ? Math.max(0, Math.min(1, score)) : null,
           costTokens: normalizePlaygroundEvaluationTokenCount(
             source.costTokens
             ?? source.cost_tokens
@@ -247,10 +290,10 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
           ),
           costUsd: readPlaygroundEvaluationUsdCost(source),
           costSource: String(source.costSource || source.cost_source || ""),
-          status: ["queued", "running", "running_case", "waiting_for_case_summary", "running_evaluator", "scoring", "completed", "passed", "failed", "error"].includes(String(source.status || "").trim().toLowerCase())
+          status: ["queued", "running", "running_case", "waiting_for_case_summary", "running_evaluator", "scoring", "completed", "passed", "failed", "invalid", "grader_error", "infrastructure_error", "cancelled", "error"].includes(String(source.status || "").trim().toLowerCase())
             ? String(source.status || "").trim().toLowerCase()
             : "queued",
-          latencyMs: Math.max(0, Number(source.latencyMs || source.latency_ms || 0) || 0),
+          latencyMs: Math.max(0, Number(source.latencyMs || source.latency_ms || source.durationMs || source.duration_ms || 0) || 0),
           error: String(source.error || ""),
         };
       }
@@ -273,6 +316,15 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
           ...embeddedMetadata,
           ...sourceMetadata,
         };
+        const evidence = readPlaygroundEvaluationPlainObject(
+          source.evidence || embeddedRun.evidence || metadata.evidence,
+        );
+        const evidenceProvenance = readPlaygroundEvaluationPlainObject(
+          evidence.provenance,
+        );
+        const evidenceSignature = readPlaygroundEvaluationPlainObject(
+          evidence.signature,
+        );
         const resolvedSource = {
           ...embeddedRun,
           ...source,
@@ -299,16 +351,22 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
           ?? metadata.threshold
           ?? 0.8
         );
-        const averageScore = cases.length > 0
-          ? cases.reduce((sum, item) => sum + Number(item.score || 0), 0) / cases.length
-          : Number(
-              resolvedSource.averageScore
-              ?? resolvedSource.average_score
-              ?? metadata.averageScore
-              ?? metadata.average_score
-              ?? 0
-            ) || 0;
         const activeStatuses = new Set(["queued", "running", "running_case", "waiting_for_case_summary", "running_evaluator", "scoring"]);
+        const scoredStatuses = new Set(["completed", "passed", "failed"]);
+        const scoredCases = cases.filter((item) => scoredStatuses.has(item.status) && Number.isFinite(item.score));
+        const explicitAverageScoreValue = resolvedSource.averageScore
+          ?? resolvedSource.average_score
+          ?? metadata.averageScore
+          ?? metadata.average_score
+          ?? null;
+        const parsedExplicitAverageScore = explicitAverageScoreValue === null || explicitAverageScoreValue === undefined || explicitAverageScoreValue === ""
+          ? null
+          : Number(explicitAverageScoreValue);
+        const averageScore = cases.length > 0
+          ? (scoredCases.length > 0
+              ? scoredCases.reduce((sum, item) => sum + item.score, 0) / scoredCases.length
+              : null)
+          : (Number.isFinite(parsedExplicitAverageScore) ? Math.max(0, Math.min(1, parsedExplicitAverageScore)) : null);
         const explicitTotalCount = Math.max(0, Math.round(Number(
           resolvedSource.totalCount
           ?? resolvedSource.total_count
@@ -333,17 +391,26 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
           ?? metadata.passRate
           ?? metadata.pass_rate
         );
+        const scoredCount = cases.length > 0
+          ? scoredCases.length
+          : Math.min(totalCount, Math.max(0, Math.round(Number(
+              resolvedSource.scoredCount
+              ?? resolvedSource.scored_count
+              ?? metadata.scoredCount
+              ?? metadata.scored_count
+              ?? totalCount
+            ) || 0)));
         const passedCount = cases.length > 0
-          ? cases.filter((item) => !activeStatuses.has(item.status) && item.status !== "error" && Number(item.score || 0) >= passThreshold).length
+          ? scoredCases.filter((item) => item.score >= passThreshold).length
           : Math.min(
-              totalCount,
+              scoredCount,
               Math.max(
                 0,
                 Math.round(
                   Number.isFinite(explicitPassedCountValue)
                     ? explicitPassedCountValue
                     : Number.isFinite(passRateValue)
-                      ? passRateValue * totalCount
+                      ? passRateValue * scoredCount
                       : 0
                 )
               )
@@ -385,7 +452,7 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
           evaluationVersionNumber: Math.max(0, Number(resolvedSource.evaluationVersionNumber || resolvedSource.evaluation_version_number || metadata.evaluationVersionNumber || metadata.evaluation_version_number || 0) || 0),
           evaluationVersionLabel: String(resolvedSource.evaluationVersionLabel || resolvedSource.evaluation_version_label || metadata.evaluationVersionLabel || metadata.evaluation_version_label || "").trim(),
           label: String(resolvedSource.label || resolvedSource.name || ("Run " + (fallbackIndex + 1))).trim(),
-          status: ["queued", "running", "completed", "failed", "cancelled"].includes(String(resolvedSource.status || "").trim().toLowerCase())
+          status: ["queued", "running", "completed", "completed_with_errors", "failed", "cancelled"].includes(String(resolvedSource.status || "").trim().toLowerCase())
             ? String(resolvedSource.status || "").trim().toLowerCase()
             : "completed",
           createdAt: String(resolvedSource.createdAt || resolvedSource.created_at || new Date().toISOString()),
@@ -397,6 +464,7 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
           targetAgentVersionNumber: Math.max(0, Number(resolvedSource.targetAgentVersionNumber || resolvedSource.target_agent_version_number || resolvedSource.agentVersionNumber || resolvedSource.agent_version_number || resolvedSource.versionNumber || resolvedSource.version_number || runnerPlayground.targetAgentVersionNumber || runnerPlayground.target_agent_version_number || metadata.targetAgentVersionNumber || metadata.target_agent_version_number || 0) || 0),
           targetAgentVersionLabel: String(resolvedSource.targetAgentVersionLabel || resolvedSource.target_agent_version_label || resolvedSource.agentVersionLabel || resolvedSource.agent_version_label || resolvedSource.versionLabel || resolvedSource.version_label || runnerPlayground.targetAgentVersionLabel || runnerPlayground.target_agent_version_label || metadata.targetAgentVersionLabel || metadata.target_agent_version_label || "").trim(),
           targetAgentVersionRevisionId: String(resolvedSource.targetAgentVersionRevisionId || resolvedSource.target_agent_version_revision_id || resolvedSource.agentVersionRevisionId || resolvedSource.agent_version_revision_id || resolvedSource.revisionId || resolvedSource.revision_id || runnerPlayground.targetAgentVersionRevisionId || runnerPlayground.target_agent_version_revision_id || metadata.targetAgentVersionRevisionId || metadata.target_agent_version_revision_id || "").trim(),
+          targetFingerprint: String(resolvedSource.targetFingerprint || resolvedSource.target_fingerprint || metadata.targetFingerprint || metadata.target_fingerprint || evidence.target?.targetFingerprint || "").trim(),
           targetGuardrailId: String(resolvedSource.targetGuardrailId || resolvedSource.target_guardrail_id || resolvedSource.guardrailId || resolvedSource.guardrail_id || runnerPlayground.targetGuardrailId || runnerPlayground.target_guardrail_id || metadata.targetGuardrailId || metadata.target_guardrail_id || "").trim(),
           targetGuardrailName: String(resolvedSource.targetGuardrailName || resolvedSource.target_guardrail_name || resolvedSource.guardrailName || resolvedSource.guardrail_name || metadata.targetGuardrailName || metadata.target_guardrail_name || "").trim(),
           targetGuardrailVersionId: String(resolvedSource.targetGuardrailVersionId || resolvedSource.target_guardrail_version_id || resolvedSource.guardrailVersionId || resolvedSource.guardrail_version_id || metadata.targetGuardrailVersionId || metadata.target_guardrail_version_id || "").trim(),
@@ -413,8 +481,47 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
           passThreshold,
           datasetVersion: String(resolvedSource.datasetVersion || resolvedSource.dataset_version || metadata.datasetVersion || metadata.dataset_version || ""),
           evaluatorVersion: String(resolvedSource.evaluatorVersion || resolvedSource.evaluator_version || metadata.evaluatorVersion || metadata.evaluator_version || ""),
-          averageScore: Math.max(0, Math.min(1, averageScore)),
+          datasetFingerprint: String(resolvedSource.datasetFingerprint || resolvedSource.dataset_fingerprint || metadata.datasetFingerprint || metadata.dataset_fingerprint || ""),
+          caseSelectionFingerprint: String(resolvedSource.caseSelectionFingerprint || resolvedSource.case_selection_fingerprint || metadata.caseSelectionFingerprint || metadata.case_selection_fingerprint || ""),
+          evaluatorFingerprint: String(resolvedSource.evaluatorFingerprint || resolvedSource.evaluator_fingerprint || metadata.evaluatorFingerprint || metadata.evaluator_fingerprint || ""),
+          systemFingerprint: String(resolvedSource.systemFingerprint || resolvedSource.system_fingerprint || metadata.systemFingerprint || metadata.system_fingerprint || ""),
+          systemSnapshot: readPlaygroundEvaluationPlainObject(resolvedSource.systemSnapshot || resolvedSource.system_snapshot || metadata.systemSnapshot || metadata.system_snapshot),
+          evaluatorSystemSnapshot: readPlaygroundEvaluationPlainObject(resolvedSource.evaluatorSystemSnapshot || resolvedSource.evaluator_system_snapshot || metadata.evaluatorSystemSnapshot || metadata.evaluator_system_snapshot),
+          runFingerprint: String(resolvedSource.runFingerprint || resolvedSource.run_fingerprint || metadata.runFingerprint || metadata.run_fingerprint || ""),
+          evidence,
+          evidenceSchemaVersion: String(resolvedSource.evidenceSchemaVersion || resolvedSource.evidence_schema_version || evidence.schemaVersion || "").trim(),
+          evidenceFingerprint: String(evidence.fingerprint || resolvedSource.runFingerprint || resolvedSource.run_fingerprint || "").trim(),
+          evidenceFingerprintVerified: resolvedSource.evidenceFingerprintVerified === true || resolvedSource.evidence_fingerprint_verified === true,
+          evidenceSource: String(resolvedSource.evidenceSource || resolvedSource.evidence_source || evidenceProvenance.source || "").trim(),
+          evidenceTrustLevel: String(resolvedSource.evidenceTrustLevel || resolvedSource.evidence_trust_level || evidenceProvenance.trustLevel || evidenceProvenance.trust_level || "").trim(),
+          evidenceVerificationStatus: String(resolvedSource.evidenceVerificationStatus || resolvedSource.evidence_verification_status || evidenceProvenance.verificationStatus || evidenceProvenance.verification_status || "").trim(),
+          evidenceProvenanceVerified: resolvedSource.evidenceProvenanceVerified === true || resolvedSource.evidence_provenance_verified === true,
+          evidenceAttestationId: String(resolvedSource.evidenceAttestationId || resolvedSource.evidence_attestation_id || evidenceProvenance.attestation?.attestationId || "").trim(),
+          evidenceSignatureStatus: String(resolvedSource.evidenceSignatureStatus || resolvedSource.evidence_signature_status || (evidenceSignature.schemaVersion ? "kms_signed" : "unsigned")).trim(),
+          evidenceSignatureKeyVersion: String(resolvedSource.evidenceSignatureKeyVersion || resolvedSource.evidence_signature_key_version || evidenceSignature.keyVersion || "").trim(),
+          evidenceSignatureAlgorithm: String(resolvedSource.evidenceSignatureAlgorithm || resolvedSource.evidence_signature_algorithm || evidenceSignature.algorithm || "").trim(),
+          averageScore,
+          passRate: scoredCount > 0 ? passedCount / scoredCount : null,
+          scoredCount,
           passedCount,
+          failedCount: cases.length > 0
+            ? Math.max(0, scoredCount - passedCount)
+            : Math.max(0, Number(resolvedSource.failedCount ?? resolvedSource.failed_count ?? metadata.failedCount ?? metadata.failed_count ?? scoredCount - passedCount) || 0),
+          invalidCount: cases.length > 0
+            ? cases.filter((item) => item.status === "invalid").length
+            : Math.max(0, Number(resolvedSource.invalidCount ?? resolvedSource.invalid_count ?? metadata.invalidCount ?? metadata.invalid_count ?? 0) || 0),
+          graderErrorCount: cases.length > 0
+            ? cases.filter((item) => item.status === "grader_error").length
+            : Math.max(0, Number(resolvedSource.graderErrorCount ?? resolvedSource.grader_error_count ?? metadata.graderErrorCount ?? metadata.grader_error_count ?? 0) || 0),
+          infrastructureErrorCount: cases.length > 0
+            ? cases.filter((item) => item.status === "infrastructure_error" || item.status === "error").length
+            : Math.max(0, Number(resolvedSource.infrastructureErrorCount ?? resolvedSource.infrastructure_error_count ?? metadata.infrastructureErrorCount ?? metadata.infrastructure_error_count ?? 0) || 0),
+          cancelledCount: cases.length > 0
+            ? cases.filter((item) => item.status === "cancelled").length
+            : Math.max(0, Number(resolvedSource.cancelledCount ?? resolvedSource.cancelled_count ?? metadata.cancelledCount ?? metadata.cancelled_count ?? 0) || 0),
+          unscoredCount: cases.length > 0
+            ? Math.max(0, totalCount - scoredCount - cases.filter((item) => activeStatuses.has(item.status)).length)
+            : Math.max(0, Number(resolvedSource.unscoredCount ?? resolvedSource.unscored_count ?? metadata.unscoredCount ?? metadata.unscored_count ?? totalCount - scoredCount) || 0),
           totalCount,
           costTokens,
           costUsd,

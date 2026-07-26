@@ -19,6 +19,7 @@ export interface PlatformSwitchProps extends Omit<HTMLAttributes<HTMLDivElement>
   onValueChange: (value: string) => void;
   ariaLabel: string;
   disabled?: boolean;
+  fullWidth?: boolean;
 }
 
 function joinPlatformSwitchClassNames(...classNames: Array<string | false | null | undefined>) {
@@ -35,6 +36,7 @@ export const PlatformSwitch = forwardRef<HTMLDivElement, PlatformSwitchProps>(
     onValueChange,
     ariaLabel,
     disabled = false,
+    fullWidth = false,
     className = "",
     ...props
   }, ref) {
@@ -91,7 +93,12 @@ export const PlatformSwitch = forwardRef<HTMLDivElement, PlatformSwitchProps>(
         role="radiogroup"
         aria-label={ariaLabel}
         aria-disabled={disabled || undefined}
-        className={joinPlatformSwitchClassNames("platform-switch", disabled && "is-disabled", className)}
+        className={joinPlatformSwitchClassNames(
+          "platform-switch",
+          disabled && "is-disabled",
+          fullWidth && "is-full-width",
+          className,
+        )}
         data-platform-switch="true"
       >
         {options.map((option, index) => {

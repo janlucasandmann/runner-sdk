@@ -11,9 +11,16 @@ import {
 import {
   compactFineTuningJobRecord,
   compactFineTuningJobOverviewRecord,
+  isFineTuningPhaseActive,
+  normalizeFineTuningPhase,
   normalizeEvaluationSet,
 } from "./server/domain/index.mjs";
 import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
+
+const fineTuningRuntimeSource = await fs.readFile(
+  new URL("./server/runtime.mjs", import.meta.url),
+  "utf8",
+);
 
 assert.match(PLAYGROUND_FINE_TUNING_CSS, /\.playground-fine-tuning-page/);
 assert.match(PLAYGROUND_FINE_TUNING_SCRIPT, /function normalizePlaygroundFineTuningJob/);
@@ -36,14 +43,25 @@ assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /fineTuningCreateDefaultEv
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.access, /function renderFineTuningAccessSettings/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.access, /subjectType: "fine_tuning"/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.verification, /startFineTuningVerificationRuns/);
+assert.match(
+  FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.verification,
+  /publishFineTunedAgentVersion[\s\S]*?server-controlled publication policy/,
+);
+assert.match(
+  FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.verification,
+  /tryPersistFineTunedAgentVersion[\s\S]*?Implicit browser publication is disabled/,
+);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /renderCreateModal/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /React\.createElement\(PlatformModal/);
-assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /title: "New Fine-Tune"[\s\S]*?headerVariant: "search"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /title: "New Optimization"[\s\S]*?headerVariant: "search"/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /headerSearchProps: \{[\s\S]*?icon: TestTubeDiagonal[\s\S]*?value: form\.name/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /React\.createElement\(PlatformSecondaryButton/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /React\.createElement\(PlatformPrimaryButton/);
-assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /ariaLabel: "Select fine-tuner agent"/);
-assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /ariaLabel: "Select computer"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /ariaLabel: "Select agent to optimize"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /ariaLabel: "Select optimizer agent"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /ariaLabel: "Select environment"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /label: "Fresh baseline"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /value: "existing:" \+ run\.id/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /className: "playground-tasks-detail-central-selector playground-fine-tuning-create-selector"/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /popupClassName: "playground-tasks-detail-central-selector-popup playground-fine-tuning-create-selector-popup"/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /Loading evaluation sets\.\.\./);
@@ -59,15 +77,38 @@ assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /renderInstru
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.editor, /resizeFineTuningInstructionsTextarea/);
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /fineTuningInstructionsTextareaRef/);
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /fineTuningInstructionsHistory/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /tryPersistFineTunedAgentVersion/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /publishFineTunedAgentVersion/);
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /React\.createElement\(PlatformPopupSurface/);
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /React\.createElement\(PlatformModal(?:Backdrop|Surface)/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.actions, /tryPersistFineTunedAgentVersion/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.actions, /startFineTuningVerificationRuns/);
+assert.match(
+  fineTuningRuntimeSource,
+  /handleCreateJobLegacy[\s\S]*?legacy browser-driven optimization workflow is disabled/,
+);
+assert.match(
+  fineTuningRuntimeSource,
+  /publicationApprovalMatch[\s\S]*?resolveFineTuningPublicationCandidate[\s\S]*?approveBackendFineTuningPublication/,
+);
+assert.doesNotMatch(
+  fineTuningRuntimeSource.slice(fineTuningRuntimeSource.indexOf("function handleRequest")),
+  /handleCreateJobLegacy/,
+);
 assert.doesNotMatch(PLAYGROUND_FINE_TUNING_CSS, /\.playground-fine-tuning-create-modal \.playground-fine-tuning-instructions-section[\s\S]*?background: transparent !important;/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /React\.createElement\(FineTuningOverviewPage/);
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /React\.createElement\(PlatformDataTable/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /isPlanned[\s\S]*?"Planned"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.jobs, /phase === "planned" \|\| status === "planned"/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(FineTuningDetailPage/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /waiting for its delivery gate/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(PlatformAnalyticsSection/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /function renderFineTuningDescriptionEditor/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /function renderFineTuningInstructionsEditor/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /Approve & Publish/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(PlatformPrimaryButton/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.editor, /function approveFineTuningPublication/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.editor, /\/publication-approval/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /renderFineTuningAccessSettings\(job\)/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /variant: "minimalistic-ui"/);
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /PlaygroundFineTuningPerformanceChart/);
@@ -75,6 +116,8 @@ assert.equal(
   Object.values(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS).join(""),
   PLAYGROUND_FINE_TUNING_SCRIPT,
 );
+assert.equal(normalizeFineTuningPhase("planned"), "planned");
+assert.equal(isFineTuningPhaseActive("planned"), false);
 
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.state, /fineTuningJobs/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.navigation, /function openFineTuningPage/);
@@ -157,10 +200,35 @@ assert.equal(clearedDescriptionJob.description, "");
 const evaluationSet = normalizeEvaluationSet({
   id: "evaluation_1",
   name: "Support quality",
-  runs: [{ id: "run_1", averageScore: 0.9 }],
+  runs: [{
+    id: "run_1",
+    averageScore: 0.9,
+    costSource: "thread_usage_ct",
+    runFingerprint: "sha256:run",
+    datasetFingerprint: "sha256:dataset",
+    caseSelectionFingerprint: "sha256:selection",
+    evaluatorFingerprint: "sha256:evaluator",
+    systemFingerprint: "sha256:system",
+    cases: [{
+      id: "case_1",
+      dataRowId: "row_1",
+      status: "passed",
+      score: 0.9,
+      costUsd: 0.01,
+      costSource: "thread_usage_ct",
+      latencyMs: 420,
+    }],
+  }],
 });
 assert.equal(evaluationSet.id, "evaluation_1");
 assert.equal(evaluationSet.runs[0]?.averageScore, 0.9);
+assert.equal(evaluationSet.runs[0]?.costSource, "thread_usage_ct");
+assert.equal(evaluationSet.runs[0]?.datasetFingerprint, "sha256:dataset");
+assert.equal(evaluationSet.runs[0]?.caseSelectionFingerprint, "sha256:selection");
+assert.equal(evaluationSet.runs[0]?.evaluatorFingerprint, "sha256:evaluator");
+assert.equal(evaluationSet.runs[0]?.systemFingerprint, "sha256:system");
+assert.equal(evaluationSet.runs[0]?.cases[0]?.costSource, "thread_usage_ct");
+assert.equal(evaluationSet.runs[0]?.cases[0]?.latencyMs, 420);
 
 const responses = [];
 const adapters = {
@@ -213,7 +281,7 @@ assert.deepEqual(authenticatedList.payload.jobs, []);
 
 assert.throws(
   () => createFineTuningService({}),
-  /Fine-Tuning service requires the enrichThreadPayloadWithAgentGuardrails adapter/,
+  /Agent Optimization service requires the enrichThreadPayloadWithAgentGuardrails adapter/,
 );
 
-console.log("Fine-Tuning service client ownership, browser syntax, shell integration, and route contracts passed.");
+console.log("Agent Optimization service client ownership, browser syntax, shell integration, and route contracts passed.");

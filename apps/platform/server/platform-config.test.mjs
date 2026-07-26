@@ -27,6 +27,7 @@ test("uses fail-closed administrator configuration and portable local roots", ()
   assert.ok(path.isAbsolute(config.aiosHostingRoot));
   assert.ok(path.isAbsolute(config.playgroundSystemSkillsRoot));
   assert.ok(config.githubOauthAllowedOrigins.includes("http://localhost:4177"));
+  assert.equal(config.executionDispatcher.enabled, false);
 });
 
 test("normalizes explicit origins, paths, and administrator settings", () => {
@@ -62,7 +63,10 @@ test("normalizes explicit origins, paths, and administrator settings", () => {
 });
 
 test("builds a fail-closed on-prem OIDC profile without normalizing its issuer identifier", () => {
-  const config = createPlatformConfig(validOidcEnvironment());
+  const config = createPlatformConfig(validOidcEnvironment({
+    PLATFORM_CONTROL_PLANE_SECRET:
+      "control-plane-secret-with-at-least-32-bytes\n",
+  }));
 
   assert.equal(config.deploymentTopology, "on_prem");
   assert.equal(config.identityProvider, "oidc");
@@ -70,6 +74,15 @@ test("builds a fail-closed on-prem OIDC profile without normalizing its issuer i
   assert.equal(config.oidc.clientId, "computer-agents-platform");
   assert.deepEqual(config.oidc.scopes, ["openid", "profile", "email"]);
   assert.equal(config.platformCookieSecure, true);
+  assert.equal(config.executionDispatcher.enabled, true);
+  assert.equal(
+    config.platformControlPlaneSecret,
+    "control-plane-secret-with-at-least-32-bytes",
+  );
+  assert.equal(
+    config.executionDispatcher.controlOrigin,
+    "http://127.0.0.1:8080",
+  );
 });
 
 test("rejects incomplete or unsafe OIDC trust configuration", () => {
@@ -132,5 +145,12 @@ test("rejects incomplete or unsafe OIDC trust configuration", () => {
       RUNNER_UPSTREAM_ORIGIN: "",
     })),
     /RUNNER_UPSTREAM_ORIGIN must explicitly target/,
+  );
+  assert.throws(
+    () => createPlatformConfig({
+      ENABLE_EXECUTION_DISPATCHER: "true",
+      PLATFORM_CONTROL_PLANE_SECRET: "too-short",
+    }),
+    /PLATFORM_CONTROL_PLANE_SECRET must contain at least 32 bytes/,
   );
 });

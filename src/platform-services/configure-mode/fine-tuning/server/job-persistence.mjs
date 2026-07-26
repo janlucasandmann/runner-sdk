@@ -83,7 +83,7 @@ export function createFineTuningJobPersistenceCoordinator(options = {}) {
         }
       }
     }
-    throw lastError || new Error("Failed to persist fine-tuning job.");
+    throw lastError || new Error("Failed to persist optimization job.");
   }
 
   async function drain(jobId, state) {

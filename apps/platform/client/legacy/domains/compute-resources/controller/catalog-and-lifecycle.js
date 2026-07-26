@@ -2845,23 +2845,28 @@
           }, [draftServer, loadServerAnalytics, loadServerLogs, resourceMode, selectedServerId, selectedServerSnapshot, serverAnalyticsView, serverLogsState.kind]);
 
           useEffect(() => {
-            if (resourceMode !== "servers" || !["logs", "history"].includes(serverDetailTab)) {
+            if (resourceMode !== "servers") {
               return;
             }
             if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
               return;
             }
             const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
-            if (!["web_app", "function"].includes(canonicalizePlaygroundServerKind(activeServer?.kind))) {
+            const activeServerKind = canonicalizePlaygroundServerKind(activeServer?.kind);
+            if (!["web_app", "function"].includes(activeServerKind)) {
               return;
             }
-            if (serverDetailTab === "logs") {
-              void loadServerAnalytics(selectedServerId);
+            const isSourceServerUsageActivity = serverDetailTab === "usage";
+            if (!isSourceServerUsageActivity) {
+              return;
+            }
+            const activityTab = serverUsageActivityTab;
+            if (activityTab === "logs") {
               void loadServerLogs(selectedServerId, serverLogsState.kind);
-            } else {
+            } else if (activityTab === "history") {
               void loadServerDeployments(selectedServerId);
             }
-          }, [draftServer, loadServerAnalytics, loadServerDeployments, loadServerLogs, resourceMode, selectedServerId, selectedServerSnapshot, serverDetailTab, serverLogsState.kind]);
+          }, [draftServer, loadServerDeployments, loadServerLogs, resourceMode, selectedServerId, selectedServerSnapshot, serverDetailTab, serverLogsState.kind, serverUsageActivityTab]);
 
           useEffect(() => {
             if (resourceMode !== "servers" || serverDetailTab !== "code") {
@@ -3517,7 +3522,11 @@
 
             function handleAgentRuntimeSkillsPopoverPointerDown(event) {
               const target = event?.target instanceof Node ? event.target : null;
-              if (!target || !agentRuntimeSkillsActionsRef.current || agentRuntimeSkillsActionsRef.current.contains(target)) {
+              if (
+                !target
+                || agentRuntimeSkillsActionsRef.current?.contains(target)
+                || agentRuntimeSkillsPopupSurfaceRef.current?.contains(target)
+              ) {
                 return;
               }
               setAgentRuntimeSkillsPopoverOpen(false);
@@ -3720,7 +3729,11 @@
 
             function handleServerActionsPopoverPointerDown(event) {
               const target = event?.target instanceof Node ? event.target : null;
-              if (!target || !serverActionsPopoverRef.current || serverActionsPopoverRef.current.contains(target)) {
+              if (
+                !target
+                || serverActionsPopoverRef.current?.contains(target)
+                || serverActionsPopoverSurfaceRef.current?.contains(target)
+              ) {
                 return;
               }
               setServerActionsPopoverOpen(false);
@@ -3839,31 +3852,6 @@
               window.removeEventListener("keydown", handleDatabaseActionsPopoverEscape);
             };
           }, [databaseActionsPopoverOpen]);
-
-          useEffect(() => {
-            if (!databaseExportMenuOpen) return undefined;
-
-            function handleDatabaseExportMenuPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (!target || !databaseExportMenuRef.current || databaseExportMenuRef.current.contains(target)) {
-                return;
-              }
-              setDatabaseExportMenuOpen(false);
-            }
-
-            function handleDatabaseExportMenuEscape(event) {
-              if (event.key === "Escape") {
-                setDatabaseExportMenuOpen(false);
-              }
-            }
-
-            document.addEventListener("mousedown", handleDatabaseExportMenuPointerDown);
-            window.addEventListener("keydown", handleDatabaseExportMenuEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleDatabaseExportMenuPointerDown);
-              window.removeEventListener("keydown", handleDatabaseExportMenuEscape);
-            };
-          }, [databaseExportMenuOpen]);
 
           useEffect(() => {
             if (!environmentRenameState || !environmentRenameInputRef.current) {
@@ -4085,10 +4073,6 @@
             resizeEnvironmentDescriptionTextarea(serverComposerDescriptionTextareaRef.current);
           }, [serverComposerDraft?.description, serverComposerOpen]);
 
-          useLayoutEffect(() => {
-            resizeEnvironmentDescriptionTextarea(databaseDescriptionTextareaRef.current);
-          }, [draftDatabase?.description, draftDatabase?.id]);
-
           useEffect(() => {
             const textarea = serverDescriptionTextareaRef.current;
             const detailMain = serverDetailMainRef.current;
@@ -4134,52 +4118,6 @@
               observer.disconnect();
             };
           }, [draftServer?.id]);
-
-          useEffect(() => {
-            const textarea = databaseDescriptionTextareaRef.current;
-            const detailMain = serverDetailMainRef.current;
-            if (!textarea || !detailMain) return undefined;
-
-            let frameId = 0;
-            const timeoutIds = [];
-            const scheduleResize = () => {
-              if (frameId) {
-                window.cancelAnimationFrame(frameId);
-              }
-              frameId = window.requestAnimationFrame(() => {
-                resizeEnvironmentDescriptionTextarea(databaseDescriptionTextareaRef.current);
-              });
-            };
-
-            scheduleResize();
-            [120, 240, 360].forEach((delay) => {
-              timeoutIds.push(window.setTimeout(scheduleResize, delay));
-            });
-
-            if (typeof ResizeObserver === "undefined") {
-              window.addEventListener("resize", scheduleResize);
-              return () => {
-                if (frameId) {
-                  window.cancelAnimationFrame(frameId);
-                }
-                timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
-                window.removeEventListener("resize", scheduleResize);
-              };
-            }
-
-            const observer = new ResizeObserver(() => {
-              scheduleResize();
-            });
-            observer.observe(detailMain);
-
-            return () => {
-              if (frameId) {
-                window.cancelAnimationFrame(frameId);
-              }
-              timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
-              observer.disconnect();
-            };
-          }, [draftDatabase?.id]);
 
           useEffect(() => {
             if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || !serverEditorDirtyRef.current) {

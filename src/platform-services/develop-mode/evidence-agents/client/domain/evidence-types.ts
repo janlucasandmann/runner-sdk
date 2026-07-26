@@ -96,9 +96,17 @@ export interface EvidenceSourceSpan {
 }
 
 export interface EvidenceReviewTaskDetail extends EvidenceReviewTaskRow {
-  task: EvidenceReviewTaskRow & {
+  task: {
+    review_task_id: string;
+    status: EvidenceReviewStatus;
+    severity: EvidenceReviewSeverity;
+    reason_codes: string[];
+    target_type: "extraction_candidate";
     target_id: string;
+    created_at: string;
+    assigned_reviewer_id?: string | null;
     resolution?: string | null;
+    resolved_at?: string | null;
   };
   candidate: EvidenceReviewCandidateSummary & {
     variable_assertions: EvidenceVariableAssertion[];

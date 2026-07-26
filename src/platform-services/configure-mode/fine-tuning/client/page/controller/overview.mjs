@@ -3,7 +3,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_OVERVIEW_SCRIPT = String.raw`        fu
             .map((job) => {
               const normalizedJob = normalizePlaygroundFineTuningJob(job);
               const id = normalizePlaygroundFineTuningString(normalizedJob.id);
-              const name = normalizePlaygroundFineTuningString(normalizedJob.name) || "Untitled Fine-Tune";
+              const name = normalizePlaygroundFineTuningString(normalizedJob.name) || "Untitled Optimization";
               const agent = normalizedAgents.find((item) => (
                 normalizePlaygroundFineTuningString(item?.id)
                 === normalizePlaygroundFineTuningString(normalizedJob.targetAgentId || normalizedJob.agentId)
@@ -32,16 +32,19 @@ export const FINE_TUNING_PAGE_CONTROLLER_OVERVIEW_SCRIPT = String.raw`        fu
                 : currentFineTuningUser;
               const conductorLabel = getPlaygroundFineTuningPersonLabel(conductor) || "Unknown";
               const status = normalizePlaygroundFineTuningString(normalizedJob.status || "completed").toLowerCase();
+              const isPlanned = status === "planned";
               const hasAfter = hasPlaygroundFineTuningAfterResult(normalizedJob);
               const isError = new Set(["error", "failed", "cancelled", "canceled"]).has(status);
               const isActive = isPlaygroundFineTuningActiveStatus(status);
               const afterLabel = hasAfter
                 ? formatPlaygroundFineTuningPercent(normalizedJob.afterScore)
-                : isError
-                  ? "Error"
-                  : isActive
-                    ? "Running"
-                    : "Pending";
+                : isPlanned
+                  ? "Planned"
+                  : isError
+                    ? "Error"
+                    : isActive
+                      ? "Running"
+                      : "Pending";
               const improvementLabel = [
                 formatPlaygroundFineTuningPercent(normalizedJob.beforeScore),
                 "->",

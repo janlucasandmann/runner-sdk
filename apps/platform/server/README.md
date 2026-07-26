@@ -13,6 +13,9 @@ This directory is the Node platform host. It composes identity, routes, gateways
 - [`identity/`](identity/) — Provider-neutral browser identity, hosted Firebase
   and on-prem OIDC adapters, encrypted sessions, and short-lived principal
   assertions.
+- [`execution-dispatch/`](execution-dispatch/) — Browser-independent durable
+  Evaluation and Agent Optimization worker, signed worker assertions, claim
+  heartbeats, and retry acknowledgements.
 - [`integrations/`](integrations/) — This directory contains server-side adapters for external providers. Provider credentials and protocol behavior must remain behind these modules.
 - [`routes/`](routes/) — This directory owns ordered HTTP route-family matching. Route modules translate requests and delegate to gateways or owning services.
 - [`index.mjs`](index.mjs) — Public barrel or composition entry point.
@@ -47,6 +50,8 @@ from JSON and streaming proxies.
 
 - Browser credentials are resolved by `identity/`; route and gateway modules
   consume the resulting provider-neutral session.
+- Durable service execution uses signed worker assertions and claim-scoped
+  workload keys; browser sessions and cookies are never persisted for recovery.
 - Admin routes fail closed unless the configured administrator is authorized.
 - Secrets and upstream workload credentials must never be serialized into
   browser JavaScript or logged.

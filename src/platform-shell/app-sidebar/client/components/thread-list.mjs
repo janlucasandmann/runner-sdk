@@ -2,6 +2,64 @@ export function createAppSidebarThreadListScript(options = {}) {
   const metronomeSidebarEntryScript = String(options.metronomeSidebarEntryScript || "");
   const metronomeRunActionMenuScript = String(options.metronomeRunActionMenuScript || "");
   return `${metronomeSidebarEntryScript}
+        function getSidebarThreadProjectPresentation(safeThread, taskPreview, safeThreadId) {
+          const missionControlMetadata = getThreadMissionControlMetadata(safeThread);
+          const cachedProjectContext = safeThreadId
+            ? (threadProjectContextById[safeThreadId] || null)
+            : null;
+          const projectId = String(
+            taskPreview?.projectId
+            || missionControlMetadata?.projectId
+            || safeThread?.projectId
+            || cachedProjectContext?.projectId
+            || ""
+          ).trim();
+          if (!projectId) {
+            return null;
+          }
+
+          const cachedProjectRecord = threadProjectRecordsById[projectId] || null;
+          const listedProjectRecord = (Array.isArray(realProjects) ? realProjects : [])
+            .find((project) => String(project?.id || "").trim() === projectId) || null;
+          const projectRecord = mergePlaygroundProjectRecords(listedProjectRecord, cachedProjectRecord);
+          const projectMetadata = projectRecord?.metadata
+            && typeof projectRecord.metadata === "object"
+            && !Array.isArray(projectRecord.metadata)
+              ? projectRecord.metadata
+              : {};
+          const iconConfig = getPlaygroundProjectIconConfig(
+            resolvePlaygroundProjectIconId(
+              projectRecord,
+              taskPreview?.projectIcon,
+              missionControlMetadata?.projectIcon,
+              safeThread?.projectIcon,
+              cachedProjectContext?.projectIcon
+            )
+          );
+
+          return {
+            id: projectId,
+            title: String(
+              projectRecord?.name
+              || cachedProjectContext?.projectName
+              || taskPreview?.projectName
+              || missionControlMetadata?.projectName
+              || safeThread?.projectName
+              || "Project"
+            ).trim() || "Project",
+            Icon: iconConfig.icon || Rocket,
+            color: String(
+              projectRecord?.color
+              || projectMetadata.color
+              || taskPreview?.projectColor
+              || missionControlMetadata?.projectColor
+              || safeThread?.projectColor
+              || cachedProjectContext?.projectColor
+              || ""
+            ).trim(),
+          };
+        }
+
         function renderSidebarThreadRow(thread, options = {}) {
           try {
             const { pinned = false, metronomeChild = false } = options;
@@ -23,13 +81,8 @@ export function createAppSidebarThreadListScript(options = {}) {
             const isMenuOpen = canManageThread && threadActionMenuState?.threadId === safeThreadId;
             const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === safeThreadId;
             const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === safeThreadId;
-            const threadProjectId = typeof taskPreview?.projectId === "string" && taskPreview.projectId.trim()
-              ? taskPreview.projectId.trim()
-              : (typeof safeThread?.projectId === "string" ? safeThread.projectId.trim() : "");
-            const ThreadProjectIcon = Rocket;
-            const threadProjectTitle = typeof taskPreview?.projectName === "string" && taskPreview.projectName.trim()
-              ? taskPreview.projectName.trim()
-              : "Project";
+            const threadProject = getSidebarThreadProjectPresentation(safeThread, taskPreview, safeThreadId);
+            const ThreadProjectIcon = threadProject?.Icon || Rocket;
             const threadMetaText = threadMetaLabel(safeThread);
             const threadLastActivityText = formatCompactThreadActivityTime(resolveThreadSortTimestamp(safeThread));
             const handleSidebarThreadSelect = () => {
@@ -54,10 +107,11 @@ export function createAppSidebarThreadListScript(options = {}) {
               },
                 React.createElement("div", { className: "sidebar-thread-content" },
                   React.createElement("div", { className: "sidebar-thread-title-row" },
-                    threadProjectId
+                    threadProject
                       ? React.createElement("span", {
                           className: "sidebar-thread-project-icon",
-                          title: threadProjectTitle,
+                          title: threadProject.title,
+                          style: threadProject.color ? { color: threadProject.color } : undefined,
                         }, React.createElement(ThreadProjectIcon, { strokeWidth: 1.85 }))
                       : null,
                     isRunning

@@ -721,9 +721,10 @@
   ${TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation}
   ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.topNavigation}
   ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation}
-  ${MODELS_APP_SCRIPT_FRAGMENTS.topNavigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.topNavigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation}${INFERENCE_APP_SCRIPT_FRAGMENTS.topNavigation}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.topNavigation}
+  ${MODELS_APP_SCRIPT_FRAGMENTS.topNavigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.topNavigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation}${TESTS_APP_SCRIPT_FRAGMENTS.topNavigation}${ASSURANCE_APP_SCRIPT_FRAGMENTS.topNavigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation}${INFERENCE_APP_SCRIPT_FRAGMENTS.topNavigation}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.topNavigation}
   ${API_KEYS_APP_SCRIPT_FRAGMENTS.topNavigation}
   ${SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation}
+  ${EVIDENCE_AGENTS_APP_SCRIPT_FRAGMENTS.topNavigation}
           function renderResourcesPageNav() {
             const isResourcesDetailView = resourcesHeaderState.mode === "detail";
             const activeDevelopServerPageItem = activeResourcesView === "servers"
@@ -738,6 +739,31 @@
             const isDatabaseResourcesDetailView = isResourcesDetailView
               && activeResourcesView === "servers"
               && resourcesHeaderState.resourceType === "database";
+            const isSourceDeployableResourcesDetailView = isResourcesDetailView
+              && activeResourcesView === "servers"
+              && ["function", "web_app"].includes(activeResourcesServerKind)
+              && resourcesHeaderState.resourceType === "server";
+            const isAuthenticationResourcesDetailView = isResourcesDetailView
+              && activeResourcesView === "servers"
+              && activeResourcesServerKind === "auth"
+              && resourcesHeaderState.resourceType === "server";
+            const isAgentRuntimeResourcesDetailView = isResourcesDetailView
+              && activeResourcesView === "servers"
+              && activeResourcesServerKind === "agent_runtime"
+              && resourcesHeaderState.resourceType === "server";
+            const isSecretsResourcesDetailView = isResourcesDetailView
+              && activeResourcesView === "servers"
+              && activeResourcesServerKind === "secrets"
+              && resourcesHeaderState.resourceType === "server";
+            const isPaymentsResourcesDetailView = isResourcesDetailView
+              && activeResourcesView === "servers"
+              && activeResourcesServerKind === "payments"
+              && resourcesHeaderState.resourceType === "server";
+            const isManagedServerResourcesDetailView = isSourceDeployableResourcesDetailView
+              || isAuthenticationResourcesDetailView
+              || isAgentRuntimeResourcesDetailView
+              || isSecretsResourcesDetailView
+              || isPaymentsResourcesDetailView;
             const isVersionedDevelopResource = activeResourcesView === "servers"
               && ["web_app", "function"].includes(String(activeResourcesServerKind || ""));
             const returnToResourcesOverview = () => openResourcesView(activeResourcesView, {
@@ -787,7 +813,12 @@
                     id: "playground-database-title-actions",
                     className: "playground-database-title-actions-root",
                   })
-                : null;
+                : isManagedServerResourcesDetailView
+                  ? React.createElement("span", {
+                      id: "playground-server-title-actions",
+                      className: "playground-server-title-actions-root",
+                    })
+                  : null;
             const resourcesDetailPathItem = {
               label: resourcesHeaderState.title || "Resource",
               trailing: resourcesDetailVersionLabel || resourcesDetailTitleActions
@@ -847,8 +878,8 @@
                     },
                     ariaLabel: "Agent section",
                   })
-                : isDatabaseResourcesDetailView
-                  ? React.createElement(PlatformSwitch, {
+                  : isDatabaseResourcesDetailView
+                    ? React.createElement(PlatformSwitch, {
                       className: "playground-database-detail-header-switch",
                       value: ["data", "usage", "settings"].includes(resourcesHeaderState.activeSection)
                         ? resourcesHeaderState.activeSection
@@ -865,6 +896,95 @@
                       },
                       ariaLabel: "Database section",
                     })
+                  : isSourceDeployableResourcesDetailView
+                    ? React.createElement(PlatformSwitch, {
+                        className: "playground-source-server-detail-header-switch",
+                        value: ["usage", "code", "settings"].includes(resourcesHeaderState.activeSection)
+                          ? resourcesHeaderState.activeSection
+                          : "usage",
+                        options: [
+                          { value: "usage", label: "Usage" },
+                          { value: "code", label: "Code" },
+                          { value: "settings", label: "Settings" },
+                        ],
+                        onValueChange: (nextSection) => {
+                          if (typeof resourcesHeaderState.onSectionChange === "function") {
+                            resourcesHeaderState.onSectionChange(nextSection);
+                          }
+                        },
+                        ariaLabel: (activeResourcesServerKind === "web_app" ? "Web app" : "Function") + " section",
+                      })
+                  : isAuthenticationResourcesDetailView
+                    ? React.createElement(PlatformSwitch, {
+                        className: "playground-auth-detail-header-switch",
+                        value: ["users", "usage", "settings"].includes(resourcesHeaderState.activeSection)
+                          ? resourcesHeaderState.activeSection
+                          : "users",
+                        options: [
+                          { value: "users", label: "Users" },
+                          { value: "usage", label: "Usage" },
+                          { value: "settings", label: "Settings" },
+                        ],
+                        onValueChange: (nextSection) => {
+                          if (typeof resourcesHeaderState.onSectionChange === "function") {
+                            resourcesHeaderState.onSectionChange(nextSection);
+                          }
+                        },
+                      ariaLabel: "Authentication section",
+                    })
+                  : isAgentRuntimeResourcesDetailView
+                    ? React.createElement(PlatformSwitch, {
+                        className: "playground-agent-runtime-detail-header-switch",
+                        value: ["usage", "threads", "settings"].includes(resourcesHeaderState.activeSection)
+                          ? resourcesHeaderState.activeSection
+                          : "usage",
+                        options: [
+                          { value: "usage", label: "Usage" },
+                          { value: "threads", label: "Threads" },
+                          { value: "settings", label: "Settings" },
+                        ],
+                        onValueChange: (nextSection) => {
+                          if (typeof resourcesHeaderState.onSectionChange === "function") {
+                            resourcesHeaderState.onSectionChange(nextSection);
+                          }
+                        },
+                        ariaLabel: "Agent Runtime section",
+                      })
+                  : isSecretsResourcesDetailView
+                    ? React.createElement(PlatformSwitch, {
+                        className: "playground-secrets-detail-header-switch",
+                        value: ["secrets", "usage", "settings"].includes(resourcesHeaderState.activeSection)
+                          ? resourcesHeaderState.activeSection
+                          : "secrets",
+                        options: [
+                          { value: "secrets", label: "Secrets" },
+                          { value: "usage", label: "Usage" },
+                          { value: "settings", label: "Settings" },
+                        ],
+                        onValueChange: (nextSection) => {
+                          if (typeof resourcesHeaderState.onSectionChange === "function") {
+                            resourcesHeaderState.onSectionChange(nextSection);
+                          }
+                        },
+                        ariaLabel: "Secrets section",
+                      })
+                  : isPaymentsResourcesDetailView
+                    ? React.createElement(PlatformSwitch, {
+                        className: "playground-payments-detail-header-switch",
+                        value: ["usage", "settings"].includes(resourcesHeaderState.activeSection)
+                          ? resourcesHeaderState.activeSection
+                          : "usage",
+                        options: [
+                          { value: "usage", label: "Usage" },
+                          { value: "settings", label: "Settings" },
+                        ],
+                        onValueChange: (nextSection) => {
+                          if (typeof resourcesHeaderState.onSectionChange === "function") {
+                            resourcesHeaderState.onSectionChange(nextSection);
+                          }
+                        },
+                        ariaLabel: "Payments section",
+                      })
                   : null,
               includeSearchDivider: activeResourcesView === "agents"
                 || activeResourcesView === "computers"
@@ -1081,6 +1201,41 @@
             document.addEventListener("mousedown", handleTopNavIssueDetailSelectPopoverPointerDown);
             return () => document.removeEventListener("mousedown", handleTopNavIssueDetailSelectPopoverPointerDown);
           }, [topNavIssueDetailSelectPopover]);
+
+          useEffect(() => {
+            if (!projectBreadcrumbMenuOpen) {
+              return undefined;
+            }
+
+            function handleProjectBreadcrumbMenuPointerDown(event) {
+              const target = event?.target instanceof Node ? event.target : null;
+              if (
+                !target
+                || projectBreadcrumbMenuRef.current?.contains(target)
+                || projectBreadcrumbMenuSurfaceRef.current?.contains(target)
+              ) {
+                return;
+              }
+              setProjectBreadcrumbMenuOpen(false);
+            }
+
+            function handleProjectBreadcrumbMenuKeyDown(event) {
+              if (event.key === "Escape") {
+                setProjectBreadcrumbMenuOpen(false);
+              }
+            }
+
+            document.addEventListener("mousedown", handleProjectBreadcrumbMenuPointerDown);
+            document.addEventListener("keydown", handleProjectBreadcrumbMenuKeyDown);
+            return () => {
+              document.removeEventListener("mousedown", handleProjectBreadcrumbMenuPointerDown);
+              document.removeEventListener("keydown", handleProjectBreadcrumbMenuKeyDown);
+            };
+          }, [projectBreadcrumbMenuOpen]);
+
+          useEffect(() => {
+            setProjectBreadcrumbMenuOpen(false);
+          }, [tasksHeaderState.mode, tasksHeaderState.projectId]);
   
           function updateTopNavIssueDraft(updater) {
             setTopNavIssueDraft((current) => normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata(
@@ -1827,11 +1982,105 @@
                 )
               )
             });
+	          }
+
+          function getThreadPagePathItems() {
+            if (activeEvaluationThreadContext) {
+              return [
+                {
+                  label: "Evaluations",
+                  onClick: () => {
+                    setSelectedEvaluationCaseId("");
+                    openEvaluationsPage({ mode: "overview" });
+                  },
+                },
+                {
+                  label: activeEvaluationThreadContext.runLabel || "Run",
+                  onClick: () => {
+                    setSelectedEvaluationCaseId("");
+                    openEvaluationsPage({
+                      mode: "run",
+                      evaluationId: activeEvaluationThreadContext.evaluationSetId,
+                      evaluationRunId: activeEvaluationThreadContext.runId,
+                    });
+                  },
+                },
+                {
+                  label: activeEvaluationThreadContext.threadKind || "Evaluation",
+                  allowCurrentClick: true,
+                  onClick: () => {
+                    if (currentThreadId) {
+                      handleThreadSelect(currentThreadId);
+                    }
+                  },
+                },
+              ];
+            }
+
+            if (selectedThreadProjectId && selectedThreadProjectName) {
+              const ProjectBreadcrumbIcon = selectedThreadProjectIconConfig?.icon || Rocket;
+              const TicketTypeIcon = selectedThreadTaskType === "subtask"
+                ? Check
+                : selectedThreadTaskType === "loop"
+                  ? RefreshCw
+                  : Bookmark;
+              return [
+                {
+                  label: selectedThreadProjectName,
+                  leading: React.createElement("span", {
+                      className: "playground-project-breadcrumb-icon",
+                      style: {
+                        "--project-icon-color": selectedThreadProjectColor || "rgba(255, 255, 255, 0.82)",
+                      },
+                      "aria-hidden": "true",
+                    },
+                    React.createElement(ProjectBreadcrumbIcon, {
+                      width: 14,
+                      height: 14,
+                      strokeWidth: 1.8,
+                    })
+                  ),
+                  allowCurrentClick: true,
+                  onClick: openSelectedThreadProject,
+                },
+                ...(selectedThreadTaskTicketNumber
+                  ? [{
+                      label: selectedThreadTaskTicketNumber,
+                      leading: React.createElement("span", {
+                        className: "playground-tasks-backlog-project-icon is-" + selectedThreadTaskType,
+                        "aria-hidden": "true",
+                      }, React.createElement(TicketTypeIcon, {
+                        width: 12,
+                        height: 12,
+                        strokeWidth: 1.9,
+                      })),
+                      allowCurrentClick: true,
+                      onClick: openSelectedThreadTaskDetail,
+                    }]
+                  : []),
+              ];
+            }
+
+            return [{ label: selectedThreadTitle || "Current thread" }];
           }
-  
+
           function renderTasksPageNav() {
             const isProjectDetailView = tasksHeaderState.mode === "project";
             const projectTitle = String(tasksHeaderState.title || "").trim() || "Project";
+            const projectIconConfig = getPlaygroundProjectIconConfig(tasksHeaderState.icon);
+            const ProjectBreadcrumbIcon = projectIconConfig.icon || Rocket;
+            const projectIconColor = String(tasksHeaderState.color || "").trim() || "rgba(255, 255, 255, 0.82)";
+            const projectBreadcrumbLeading = React.createElement("span", {
+                className: "playground-project-breadcrumb-icon",
+                style: { "--project-icon-color": projectIconColor },
+                "aria-hidden": "true",
+              },
+              React.createElement(ProjectBreadcrumbIcon, {
+                width: 14,
+                height: 14,
+                strokeWidth: 1.8,
+              })
+            );
             const activeProjectView = tasksHeaderState.view === "board"
               ? "board"
               : tasksHeaderState.view === "backlog"
@@ -1869,6 +2118,105 @@
               : tasksProjectsHomeScope === "shared"
                 ? "shared"
                 : "all";
+            const projectId = String(tasksHeaderState.projectId || "").trim();
+            const canViewProjectSettings = tasksHeaderState.canViewProjectSettings !== false;
+            const canDeleteProject = tasksHeaderState.canDeleteProject !== false;
+            const navigateToProjectSection = (sectionId) => {
+              setProjectBreadcrumbMenuOpen(false);
+              setTasksProjectViewRequest({
+                view: "overview",
+                sectionId,
+                token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              });
+            };
+            const projectBreadcrumbTrailing = isProjectDetailView
+              ? React.createElement(PlatformPopup, {
+                  open: projectBreadcrumbMenuOpen,
+                  rootRef: projectBreadcrumbMenuRef,
+                  surfaceRef: projectBreadcrumbMenuSurfaceRef,
+                  rootClassName: "playground-project-breadcrumb-actions",
+                  surfaceClassName: "playground-tasks-toolbar-popup-menu playground-project-breadcrumb-menu",
+                  surfaceProps: {
+                    role: "menu",
+                    "aria-label": "Project actions",
+                  },
+                  trigger: React.createElement(PlatformIconButton, {
+                    size: "compact",
+                    className: "playground-project-breadcrumb-menu-trigger",
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      setProjectBreadcrumbMenuOpen((current) => !current);
+                    },
+                    title: "Project actions",
+                    "aria-label": "Project actions",
+                    "aria-expanded": projectBreadcrumbMenuOpen ? "true" : "false",
+                  }, React.createElement(Ellipsis, { width: 14, height: 14, strokeWidth: 1.8 })),
+                  variant: "minimal",
+                  portal: true,
+                  placement: "bottom-start",
+                  animation: "down-in",
+                },
+                  React.createElement("div", {
+                    className: "playground-project-breadcrumb-menu-id",
+                  },
+                    React.createElement("span", null, "Project ID"),
+                    React.createElement("code", { title: projectId }, projectId)
+                  ),
+                  React.createElement("div", {
+                    className: "playground-project-breadcrumb-menu-divider",
+                    role: "separator",
+                  }),
+                  [
+                    { id: "general", label: "Home", Icon: House },
+                    { id: "resources", label: "Resources", Icon: FolderOpen },
+                    ...(canViewProjectSettings
+                      ? [{ id: "permissions", label: "Settings", Icon: Settings2 }]
+                      : []),
+                  ].map((item) => React.createElement("button", {
+                      key: item.id,
+                      type: "button",
+                      className: "tb-popup-row",
+                      role: "menuitem",
+                      onClick: () => navigateToProjectSection(item.id),
+                    },
+                    React.createElement(item.Icon, {
+                      className: "tb-popup-icon",
+                      width: 14,
+                      height: 14,
+                      strokeWidth: 1.8,
+                    }),
+                    React.createElement("span", null, item.label)
+                  )),
+                  canDeleteProject
+                    ? React.createElement(React.Fragment, null,
+                        React.createElement("div", {
+                          className: "playground-project-breadcrumb-menu-divider",
+                          role: "separator",
+                        }),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "tb-popup-row is-danger",
+                          role: "menuitem",
+                          onClick: () => {
+                            setProjectBreadcrumbMenuOpen(false);
+                            setTasksProjectDeleteRequest({
+                              projectId,
+                              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                            });
+                          },
+                        },
+                          React.createElement(Trash2, {
+                            className: "tb-popup-icon",
+                            width: 14,
+                            height: 14,
+                            strokeWidth: 1.8,
+                          }),
+                          React.createElement("span", null, "Delete Project")
+                        )
+                      )
+                    : null
+                )
+              : null;
   
             return renderAppHeader({
               className: "playground-tasks-unified-navbar",
@@ -1884,6 +2232,8 @@
                       ? [
                           {
                             label: projectTitle,
+                            leading: projectBreadcrumbLeading,
+                            trailing: projectBreadcrumbTrailing,
                             onClick: () => setTasksProjectViewRequest({
                               view: activeProjectView,
                               token: Date.now().toString(36) + Math.random().toString(36).slice(2),
@@ -1904,7 +2254,11 @@
                             }),
                           },
                         ]
-                      : [{ label: projectTitle }]),
+                      : [{
+                          label: projectTitle,
+                          leading: projectBreadcrumbLeading,
+                          trailing: projectBreadcrumbTrailing,
+                        }]),
                   ]
                 : [{ label: "Create" }, { label: "Projects" }],
               center: isProjectDetailView
@@ -2114,7 +2468,6 @@
                     createAgentRequestToken: agentCreationPageRequestToken,
                     createAgentModelId: agentCreationPageModelId,
                     subscriptionTierId: accountTierId || "",
-                    onUpgradeToIndividual: () => handleSettingsSubscribe("builder"),
                     onPreferredAgentChange: (nextAgentId) => {
                       setPreferredAgentId(String(nextAgentId || "").trim());
                     },
@@ -2351,6 +2704,7 @@
                   resourceTemplatePreviewResources,
                   topNavActionsPortalId: "playground-resources-nav-actions",
                   databaseTitleActionsPortalId: "playground-database-title-actions",
+                  serverTitleActionsPortalId: "playground-server-title-actions",
                   versionsDrawerPortalId: "playground-agent-versions-drawer-root",
                   onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
                   onResourcesHeaderChange: setResourcesHeaderState,
@@ -2380,10 +2734,11 @@
                 : renderAuthGate();
           }
   
-  ${MODELS_APP_SCRIPT_FRAGMENTS.pageView}${GUARDRAILS_PAGE_RUNTIME_SCRIPT}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.pageView}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.home}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.notifications}
+  ${MODELS_APP_SCRIPT_FRAGMENTS.pageView}${GUARDRAILS_PAGE_RUNTIME_SCRIPT}${TESTS_APP_SCRIPT_FRAGMENTS.pageView}${ASSURANCE_APP_SCRIPT_FRAGMENTS.pageView}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.pageView}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.home}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.notifications}
   ${API_KEYS_PAGE_SCRIPT_FRAGMENTS.management}
   ${DEVELOP_HOME_PAGE_SCRIPT}
   ${SECURITY_APP_SCRIPT_FRAGMENTS.pageView}
+  ${EVIDENCE_AGENTS_APP_SCRIPT_FRAGMENTS.pageView}
   ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.statusIndicators}
   ${APP_HEADER_APP_SCRIPT_FRAGMENTS.breadcrumbBar}
   ${APP_HEADER_APP_SCRIPT_FRAGMENTS.appHeader}
@@ -2392,7 +2747,9 @@
   ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.sidebar}
   ${PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.modal}
   ${ONBOARDING_APP_SCRIPT_FRAGMENTS.host}
+  ${PLAN_GATE_APP_SCRIPT_FRAGMENTS.host}
           const renderedPlaygroundOnboarding = renderPlaygroundOnboardingHost();
+          const renderedPlatformPlanGate = renderPlatformPlanGateHost();
           const subscriptionSuccessPlanLabel = settingsCurrentTierId && settingsCurrentTierId !== "sandbox"
             ? formatSubscriptionTier(settingsCurrentTierId)
             : "paid plan";
@@ -2404,20 +2761,12 @@
                 onOpenBilling: handleOpenSubscriptionSuccessBilling,
               })
             : null;
-          const renderedComposerAgentUpgradeModal = renderPlaygroundAgentUpgradeModal({
-            isOpen: composerAgentUpgradeModalOpen,
-            titleId: "playground-composer-agent-upgrade-title",
-            onClose: closeComposerAgentUpgradeModal,
-            onCheckout: handleComposerAgentUpgradeCheckout,
-            checkoutLoading: composerAgentUpgradeCheckoutLoading,
-          });
-  
           if (!hasShellAccess && (sessionState.status === "loading" || sessionState.status === "unauthenticated" || sessionState.status === "error")) {
             return React.createElement(React.Fragment, null,
               renderAuthGate(),
               renderedPlaygroundOnboarding,
               renderedSubscriptionSuccessModal,
-              renderedComposerAgentUpgradeModal
+              renderedPlatformPlanGate
             );
           }
   
@@ -2426,7 +2775,7 @@
               renderPlatformNavigationGuardModal(),
               renderedPlaygroundOnboarding,
               renderedSubscriptionSuccessModal,
-              renderedComposerAgentUpgradeModal,
+              renderedPlatformPlanGate,
               renderPlatformResourceCreationHost(),
               renderAppHeaderSearchModal(),
               renderAppHeaderNotificationsPopup(),
@@ -2551,6 +2900,10 @@
   	                      ? renderModelsPageNav()
   	                    : activePage === "guardrails"
   	                      ? renderGuardrailsPageNav()
+                            : activePage === "tests"
+                              ? renderTestsPageNav()
+                            : activePage === "assurance"
+                              ? renderAssurancePageNav()
   	                    : activePage === "evaluations"
   	                      ? renderEvaluationsPageNav()
   	                    : activePage === "fine-tuning"
@@ -2567,6 +2920,8 @@
   	                      ? renderDevelopApiKeysNav()
                         : activePage === "develop-security"
                           ? renderDevelopSecurityNav()
+                        : activePage === "develop-evidence-agents"
+                          ? renderDevelopEvidenceAgentsNav()
   	                    : isResourcesPage
   	                      ? renderResourcesPageNav()
   	                    : activePage === "team"
@@ -2587,37 +2942,7 @@
   	                      ? renderGenericPageNav()
   	                    : renderAppHeader({
   	                        className: "playground-thread-navbar",
-  	                        pathItems: activeEvaluationThreadContext
-                              ? [
-                                  {
-                                    label: "Evaluations",
-                                    onClick: () => {
-                                      setSelectedEvaluationCaseId("");
-                                      openEvaluationsPage({ mode: "overview" });
-                                    },
-                                  },
-                                  {
-                                    label: activeEvaluationThreadContext.runLabel || "Run",
-                                    onClick: () => {
-                                      setSelectedEvaluationCaseId("");
-                                      openEvaluationsPage({
-                                        mode: "run",
-                                        evaluationId: activeEvaluationThreadContext.evaluationSetId,
-                                        evaluationRunId: activeEvaluationThreadContext.runId,
-                                      });
-                                    },
-                                  },
-                                  {
-                                    label: activeEvaluationThreadContext.threadKind || "Evaluation",
-                                    allowCurrentClick: true,
-                                    onClick: () => {
-                                      if (currentThreadId) {
-                                        handleThreadSelect(currentThreadId);
-                                      }
-                                    },
-                                  },
-                                ]
-                              : [{ label: selectedThreadTitle || "Current thread" }],
+                            pathItems: getThreadPagePathItems(),
                           center: activePage === "thread" && !isThreadSideDetailOpen
                               ? React.createElement(PlatformSwitch, {
                                   className: "playground-thread-details-mode-switch",
@@ -2866,7 +3191,7 @@
                                 )
                               : null,
   	                    }),
-  	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isResourcesVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (activePage === "files" || activePage === "guardrails" || activePage === "evaluations" || activePage === "fine-tuning" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "evaluations" ? " is-evaluations-page" : "") + (activePage === "fine-tuning" ? " is-fine-tuning-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
+                          React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isResourcesVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (isSourceDeployableCodeContentRoute ? " is-source-deployable-code-route" : "") + (activePage === "files" || activePage === "guardrails" || activePage === "tests" || activePage === "assurance" || activePage === "evaluations" || activePage === "fine-tuning" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "tests" ? " is-tests-page" : "") + (activePage === "assurance" ? " is-assurance-page" : "") + (activePage === "evaluations" ? " is-evaluations-page" : "") + (activePage === "fine-tuning" ? " is-fine-tuning-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
                               React.createElement(React.Suspense, {
                                 fallback: React.createElement(PlatformLoadingState, {
                                   className: "playground-content-route-loading",
@@ -2906,6 +3231,18 @@
   	                          : hasDemoAccess
   	                            ? renderDemoFeaturePage("resources")
   	                            : renderAuthGate()
+                              : activePage === "tests"
+                                ? hasRealAccess
+                                  ? renderTestsPage()
+                                  : hasDemoAccess
+                                    ? renderDemoFeaturePage("resources")
+                                    : renderAuthGate()
+                              : activePage === "assurance"
+                                ? hasRealAccess
+                                  ? renderAssurancePage()
+                                  : hasDemoAccess
+                                    ? renderDemoFeaturePage("resources")
+                                    : renderAuthGate()
   	                      : activePage === "evaluations"
   	                        ? hasRealAccess
   	                          ? renderEvaluationsPage()
@@ -2951,6 +3288,12 @@
                           : activePage === "develop-security"
                             ? hasRealAccess
                               ? renderDevelopSecurityPage()
+                              : hasDemoAccess
+                                ? renderDemoFeaturePage("resources")
+                                : renderAuthGate()
+                          : activePage === "develop-evidence-agents"
+                            ? hasRealAccess
+                              ? renderDevelopEvidenceAgentsPage()
                               : hasDemoAccess
                                 ? renderDemoFeaturePage("resources")
                                 : renderAuthGate()
@@ -3111,7 +3454,6 @@
                                 skills: computerAgentsMode ? demoSkills : [],
                                 skillDefaults: getDemoImageGenerationSkillDefaults(),
                                 canGenerateVideo: canGenerateImagineVideo,
-                                onUpgradeToIndividual: () => handleSettingsSubscribe("builder"),
                                 environmentId: resolvedEnvironmentId || "",
                                 agentId: resolvedComposerAgentId || "",
                                 onAgentChange: (nextAgentId) => {
@@ -3133,7 +3475,11 @@
                                 onActiveViewChange: setImagineActiveView,
                                 onMediaModeChange: setImagineMediaMode,
                                 onOpenPlansBudget: () => {
-  	                                openOrganizationBillingPage("billing", "costs-plans");
+                                  requestPlatformPlanGate({
+                                    mode: "budget",
+                                    title: "Usage budget required",
+                                    source: "imagine",
+                                  });
                                 },
                                 onThreadStarted: (threadId, options = {}) => {
                                   const normalizedThreadId = String(threadId || "").trim();
@@ -3252,7 +3598,6 @@
                               upstreamUrl: resolvedUpstreamUrl,
                               speechToTextUrl: speechToTextUrl || "",
                               subscriptionTierId: settingsCurrentTierId || accountTierId || "",
-                              onUpgradeToIndividual: () => handleSettingsSubscribe("builder"),
   	                            computerAgents: demoComputerAgents,
   	                            skills: demoSkills,
   	                            currentUserId: hasSessionAuth ? (sessionState.userId || "") : "",
@@ -3427,6 +3772,7 @@
                               projectNavTaskRequest: tasksProjectTaskRequest,
                               projectNavSettingsRequestToken: tasksProjectSettingsRequestToken,
                               projectNavIssueRequest: tasksProjectIssueRequest,
+                              projectNavDeleteRequest: tasksProjectDeleteRequest,
                             })
                             : hasDemoAccess
                               ? renderDemoFeaturePage("tasks")
@@ -3512,7 +3858,11 @@
                                         openToolsView("plugins");
                                       },
                                       onOpenPlansBudget: () => {
-  	                                      openOrganizationBillingPage("billing", "costs-plans");
+                                        requestPlatformPlanGate({
+                                          mode: "budget",
+                                          title: "Usage budget required",
+                                          source: "composer",
+                                        });
                                       },
                                       threadTaskPreview: selectedThreadTaskPreview || undefined,
                                       threadMissionControlPreview: selectedThreadMissionControlPreview || undefined,
@@ -3847,7 +4197,6 @@
                                 upstreamUrl: resolvedUpstreamUrl,
                                 speechToTextUrl: speechToTextUrl || "",
                                 subscriptionTierId: settingsCurrentTierId || accountTierId || "",
-                                onUpgradeToIndividual: () => handleSettingsSubscribe("builder"),
                                 computerAgents: demoComputerAgents,
                                 skills: demoSkills,
                                 currentUserName: hasSessionAuth ? accountName : "Agentic Compute Platform",

@@ -770,6 +770,126 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
     subjectTypes: ["evaluation", "evaluation_team_role"],
   },
   {
+    id: "test_plan_view",
+    ringId: "ring_1",
+    label: "View test plan",
+    description:
+      "View this test plan's immutable definitions, target, versions, and delivery links.",
+    subjectTypes: ["test_plan", "test_plan_team_role"],
+  },
+  {
+    id: "test_run_results_view",
+    ringId: "ring_1",
+    label: "View test evidence",
+    description:
+      "Inspect test runs, case results, exit codes, diagnostics, artifacts, and evidence fingerprints.",
+    subjectTypes: ["test_plan", "test_plan_team_role"],
+  },
+  {
+    id: "test_run",
+    ringId: "ring_2",
+    label: "Run tests",
+    description:
+      "Execute a published test-plan version in an authorized Computer Agents environment.",
+    subjectTypes: ["test_plan", "test_plan_team_role"],
+  },
+  {
+    id: "test_plan_manage",
+    ringId: "ring_2",
+    label: "Manage test plan",
+    description:
+      "Change test cases, setup and teardown steps, evidence policy, targets, and execution settings.",
+    subjectTypes: ["test_plan", "test_plan_team_role"],
+  },
+  {
+    id: "test_plan_versions_manage",
+    ringId: "ring_2",
+    label: "Manage versions",
+    description:
+      "Create and publish immutable test-plan versions used by new test runs.",
+    subjectTypes: ["test_plan", "test_plan_team_role"],
+  },
+  {
+    id: "test_plan_access_manage",
+    ringId: "ring_3",
+    label: "Manage access",
+    description:
+      "Share this test plan with teams and change their role permission pages.",
+    subjectTypes: ["test_plan", "test_plan_team_role"],
+  },
+  {
+    id: "test_plan_delete",
+    ringId: "ring_3",
+    label: "Delete test plan",
+    description:
+      "Permanently delete this test plan, its versions, retained results, and evidence artifacts.",
+    subjectTypes: ["test_plan", "test_plan_team_role"],
+  },
+  {
+    id: "assurance_policy_view",
+    ringId: "ring_1",
+    label: "View Assurance Policy",
+    description:
+      "View the policy, immutable versions, canonical gates, project binding, and release history.",
+    subjectTypes: ["assurance_policy", "assurance_policy_team_role"],
+  },
+  {
+    id: "assurance_run_results_view",
+    ringId: "ring_1",
+    label: "View Assurance evidence",
+    description:
+      "Inspect canonical evidence, gate outcomes, fingerprints, decisions, and the append-only audit log.",
+    subjectTypes: ["assurance_policy", "assurance_policy_team_role"],
+  },
+  {
+    id: "assurance_run",
+    ringId: "ring_2",
+    label: "Run Assurance",
+    description:
+      "Evaluate canonical Test, Evaluation, and Agent Optimization run IDs against a published policy version.",
+    subjectTypes: ["assurance_policy", "assurance_policy_team_role"],
+  },
+  {
+    id: "assurance_policy_manage",
+    ringId: "ring_2",
+    label: "Manage Assurance Policy",
+    description:
+      "Change project binding, release gates, thresholds, freshness, budget, and approval requirements.",
+    subjectTypes: ["assurance_policy", "assurance_policy_team_role"],
+  },
+  {
+    id: "assurance_policy_versions_manage",
+    ringId: "ring_2",
+    label: "Manage versions",
+    description:
+      "Create and publish immutable Assurance Policy versions used by new release decisions.",
+    subjectTypes: ["assurance_policy", "assurance_policy_team_role"],
+  },
+  {
+    id: "assurance_approve",
+    ringId: "ring_3",
+    label: "Approve release evidence",
+    description:
+      "Approve a manual release gate for the exact current evidence fingerprint.",
+    subjectTypes: ["assurance_policy", "assurance_policy_team_role"],
+  },
+  {
+    id: "assurance_policy_access_manage",
+    ringId: "ring_3",
+    label: "Manage access",
+    description:
+      "Share this Assurance Policy with teams and change their role permission pages.",
+    subjectTypes: ["assurance_policy", "assurance_policy_team_role"],
+  },
+  {
+    id: "assurance_policy_delete",
+    ringId: "ring_3",
+    label: "Delete Assurance Policy",
+    description:
+      "Permanently delete this policy, its versions, release decisions, and retained audit events.",
+    subjectTypes: ["assurance_policy", "assurance_policy_team_role"],
+  },
+  {
     id: "fine_tuning_view",
     ringId: "ring_1",
     label: "View fine-tuning job",
@@ -1136,6 +1256,10 @@ export const PLATFORM_PERMISSION_SUBJECT_TYPES = [
   "guardrail_team_role",
   "evaluation",
   "evaluation_team_role",
+  "test_plan",
+  "test_plan_team_role",
+  "assurance_policy",
+  "assurance_policy_team_role",
   "fine_tuning",
   "fine_tuning_team_role",
   "security_repository",
@@ -1164,6 +1288,10 @@ export const PLATFORM_SCOPED_PERMISSION_SUBJECT_TYPES = [
   "guardrail_team_role",
   "evaluation",
   "evaluation_team_role",
+  "test_plan",
+  "test_plan_team_role",
+  "assurance_policy",
+  "assurance_policy_team_role",
   "fine_tuning",
   "fine_tuning_team_role",
   "security_repository",

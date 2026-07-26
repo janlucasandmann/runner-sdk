@@ -1315,16 +1315,25 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
             );
           }
 
-          function renderProjectOverviewThreadsSection() {
-            return React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-agents-overview-table-section" },
+          function renderProjectOverviewThreadsSection(options = {}) {
+            const isEmbedded = options?.embedded === true;
+            return React.createElement("section", {
+                className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-agents-overview-table-section"
+                  + (isEmbedded ? " is-embedded" : ""),
+              },
               renderPlaygroundThreadOverviewTable({
-                threads: visibleProjectThreads,
+                threads: projectOverviewFilteredThreads,
                 tableOptions: {
                   key: "project-overview-threads-" + String(selectedProject?.id || ""),
                   ariaLabel: "Project threads",
                   variant: "minimalistic-ui",
                   toolbar: {
-                    title: "Threads",
+                    className: isEmbedded
+                      ? "playground-project-overview-threads-tabs-toolbar"
+                      : undefined,
+                    ...(isEmbedded
+                      ? { leading: options?.toolbarLeading || null }
+                      : { title: "Threads" }),
                     search: {
                       value: projectOverviewThreadSearchQuery,
                       onChange: setProjectOverviewThreadSearchQuery,
@@ -1332,7 +1341,7 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
                       ariaLabel: "Search project threads",
                       manual: true,
                     },
-                    filters: [
+                    filters: isEmbedded ? [] : [
                       {
                         id: "sort",
                         label: "Sort",
@@ -1351,6 +1360,11 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
                   },
                   emptyState: hasProjectOverviewThreadListFilters ? "No matching project threads." : "No project threads yet.",
                   noResultsState: "No matching project threads.",
+                  pagination: {
+                    value: projectOverviewThreadPagination,
+                    onChange: setProjectOverviewThreadPagination,
+                    pageSizeOptions: [5],
+                  },
                 },
                 rowOptions: {
                   ...projectOverviewThreadTableRowOptions,
@@ -1362,15 +1376,7 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
                   onToggleSelection: toggleProjectOverviewThreadSelection,
                   onToggleVisibleSelection: toggleVisibleProjectOverviewThreadSelection,
                 },
-              }),
-              hasMoreProjectThreads
-                ? React.createElement("div", { className: "playground-project-overview-threads-load-more" },
-                    React.createElement(PlatformSecondaryButton, {
-                      type: "button",
-                      onClick: () => typeof setProjectOverviewVisibleThreadCount === "function" && setProjectOverviewVisibleThreadCount((current) => current + 10),
-                    }, "Show more")
-                  )
-                : null
+              })
             );
           }
 

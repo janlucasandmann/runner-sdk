@@ -37,7 +37,6 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const modalCloseTimerRef = useRef(null);
         const evaluationSetPickerRef = useRef(null);
         const evaluationSetPickerSurfaceRef = useRef(null);
-        const fineTuningVersionRetryRef = useRef(new Set());
         const fineTuningRuntimeHydrationRef = useRef(new Set());
         const fineTuningThreadNotificationRef = useRef(new Set());
         const fineTuningJobListLoadRef = useRef("");
@@ -60,6 +59,8 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const [fineTuningOwnerSelectorOpen, setFineTuningOwnerSelectorOpen] = useState(false);
         const [fineTuningOwnerCandidatesByJobId, setFineTuningOwnerCandidatesByJobId] = useState({});
         const [fineTuningStopJobId, setFineTuningStopJobId] = useState("");
+        const [fineTuningApproveJobId, setFineTuningApproveJobId] = useState("");
+        const [fineTuningApprovalError, setFineTuningApprovalError] = useState("");
         const [evaluationSetPickerOpen, setEvaluationSetPickerOpen] = useState(false);
         const requestHeadersSignature = useMemo(() => JSON.stringify(requestHeaders || {}), [requestHeaders]);
 
@@ -300,7 +301,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           const target = targets[0] || null;
           if (!target?.id) {
             return {
-              error: "Run an evaluation first so fine-tuning can identify the target agent.",
+              error: "Run an evaluation first so Agent Optimization can identify the target agent.",
               targetAgent: null,
               targets,
             };
@@ -314,7 +315,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           };
           if (isDefaultFineTuningTargetAgent(targetAgent)) {
             return {
-              error: "Default agents cannot be fine-tuned. Create a custom agent and run the evaluation against it first.",
+              error: "Default agents cannot be optimized. Create a custom agent and run the evaluation against it first.",
               targetAgent,
               targets,
             };
@@ -422,7 +423,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           return normalizePlaygroundFineTuningJob({
             id: fineTuningJobId,
             name: normalizePlaygroundFineTuningString(metadata.fineTuningJobName || metadata.fine_tuning_job_name || version?.fineTuningJobName || version?.label)
-              || ("Fine-Tune " + formatPlaygroundFineTuningDateTime(createdAt)),
+              || ("Optimization " + formatPlaygroundFineTuningDateTime(createdAt)),
             status: normalizePlaygroundFineTuningString(metadata.fineTuningStatus || metadata.fine_tuning_status || "completed") || "completed",
             createdAt,
             updatedAt,
@@ -446,7 +447,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
             description: normalizePlaygroundFineTuningString(metadata.description),
             instructions: String(metadata.instructions || ""),
             threadId: normalizePlaygroundFineTuningString(metadata.threadId || metadata.thread_id || metadata.fineTuningThreadId || metadata.fine_tuning_thread_id),
-            threadTitle: normalizePlaygroundFineTuningString(metadata.threadTitle || metadata.thread_title || "Fine-Tuning Thread"),
+            threadTitle: normalizePlaygroundFineTuningString(metadata.threadTitle || metadata.thread_title || "Optimization Thread"),
             beforeScore: normalizePlaygroundFineTuningScore(metadata.beforeScore ?? metadata.before_score ?? 0),
             afterScore: normalizePlaygroundFineTuningScore(metadata.afterScore ?? metadata.after_score ?? 0),
             improvementScore: normalizePlaygroundFineTuningScore(metadata.improvementScore ?? metadata.improvement_score ?? 0),
@@ -532,22 +533,38 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
             const currentRunIds = currentForm.evaluationRunIds && typeof currentForm.evaluationRunIds === "object" && !Array.isArray(currentForm.evaluationRunIds)
               ? currentForm.evaluationRunIds
               : {};
+            const currentBaselineModes = currentForm.evaluationBaselineModes && typeof currentForm.evaluationBaselineModes === "object" && !Array.isArray(currentForm.evaluationBaselineModes)
+              ? currentForm.evaluationBaselineModes
+              : {};
             const nextRunIds = {};
+            const nextBaselineModes = {};
             nextSetIds.forEach((setId) => {
               const set = normalizedEvaluationSets.find((item) => normalizePlaygroundFineTuningString(item.id) === setId) || null;
               const latestRun = getPlaygroundFineTuningLatestRun(set);
               nextRunIds[setId] = normalizePlaygroundFineTuningString(
                 currentRunIds[setId] || latestRun?.id || latestRun?.runId || latestRun?.run_id || ""
               );
+              nextBaselineModes[setId] = currentBaselineModes[setId] === "existing" && nextRunIds[setId]
+                ? "existing"
+                : "fresh";
             });
             return {
               ...currentForm,
+              targetAgentId: currentForm.targetAgentId
+                || normalizedAgents.find((agent) => !isDefaultFineTuningTargetAgent(agent))?.id
+                || "",
+              fineTunerAgentId: currentForm.fineTunerAgentId
+                || currentForm.agentId
+                || defaultAgentId
+                || normalizedAgents[0]?.id
+                || "",
               evaluationSetIds: nextSetIds,
               evaluationRunIds: nextRunIds,
+              evaluationBaselineModes: nextBaselineModes,
             };
           });
           fineTuningCreateDefaultEvaluationAppliedRef.current = true;
-        }, [fineTuningCreateModalOpen, normalizedEvaluationSets, setFineTuningCreateForm]);
+        }, [fineTuningCreateModalOpen, normalizedEvaluationSets, normalizedAgents, defaultAgentId, setFineTuningCreateForm]);
 
         useEffect(() => () => {
           if (modalFrameRef.current && typeof window !== "undefined") window.cancelAnimationFrame(modalFrameRef.current);
@@ -575,7 +592,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
                 cache: "no-store",
                 headers: requestHeaders || {},
               });
-              const data = await readFineTuningJsonResponse(response, "Failed to load fine-tuning jobs.");
+              const data = await readFineTuningJsonResponse(response, "Failed to load optimization jobs.");
               if (cancelled) return;
               const backendJobs = readPlaygroundFineTuningJobListFromPayload(data);
               setFineTuningJobs((current) => mergeFineTuningJobLists(current, backendJobs));
@@ -671,22 +688,6 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
             document.removeEventListener("keydown", handleKeyDown);
           };
         }, [evaluationSetPickerOpen]);
-
-        useEffect(() => {
-          const job = selectedJob ? normalizePlaygroundFineTuningJob(selectedJob) : null;
-          if (!job?.id || isPlaygroundFineTuningAgentVersionReady(job.agentVersionCreationStatus) || !job.createdAgentVersion?.snapshot) return undefined;
-          if (!backendUrl || fineTuningVersionRetryRef.current.has(job.id)) return undefined;
-          fineTuningVersionRetryRef.current.add(job.id);
-          let cancelled = false;
-          void (async () => {
-            const persistedJob = await tryPersistFineTunedAgentVersion(job);
-            if (cancelled || !isPlaygroundFineTuningAgentVersionReady(persistedJob.agentVersionCreationStatus)) return;
-            patchFineTuningJob(job.id, () => persistedJob, { persist: true });
-          })();
-          return () => {
-            cancelled = true;
-          };
-        }, [backendUrl, selectedJob?.id, selectedJob?.agentVersionCreationStatus]);
 
         useEffect(() => {
           const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");

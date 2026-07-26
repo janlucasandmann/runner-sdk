@@ -230,6 +230,68 @@
   min-height: 0;
 }
 
+.playground-security-agent-detail-main .playground-server-detail-page {
+  width: min(100%, var(--playground-centered-page-max-width));
+  max-width: var(--playground-centered-page-max-width);
+  margin: 0 auto;
+}
+
+.playground-security-agent-detail-content,
+.playground-security-agent-detail-content > .develop-security-detail-stack {
+  gap: var(--resource-detail-section-gap);
+}
+
+.playground-security-agent-detail-main
+  .playground-server-detail-page
+  > .playground-security-agent-detail-sidebar.playground-project-overview-sidebar {
+  min-width: 0;
+  align-self: start;
+  top: 0;
+  margin-top: 0;
+}
+
+.playground-security-agent-detail-main
+  .playground-security-agent-detail-sidebar
+  .playground-project-overview-sidebar-row {
+  grid-template-columns: minmax(92px, 0.82fr) minmax(0, 1.38fr);
+}
+
+.playground-security-agent-detail-main
+  .playground-security-agent-detail-sidebar
+  .playground-project-overview-sidebar-row-value {
+  min-width: 0;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.playground-security-agent-detail-properties-card {
+  position: relative;
+  z-index: 2;
+}
+
+.playground-security-agent-detail-properties-card
+  .playground-server-detail-sidebar-identity-cell
+  .resource-overview-identity {
+  width: 100%;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+.playground-security-agent-detail-properties-card
+  .resource-overview-identity__visual,
+.playground-security-agent-detail-properties-card
+  .playground-server-detail-sidebar-owner-cell
+  .playground-team-member-avatar {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+}
+
+.develop-security-repository-run-scan {
+  width: 100%;
+  margin-top: 12px;
+}
+
 .develop-security-detail-header {
   display: flex;
   align-items: center;
@@ -343,6 +405,34 @@
   display: grid;
   gap: 0;
   margin: 0;
+}
+
+.develop-security-properties.is-sidebar {
+  display: flex;
+  margin: 0;
+}
+
+.develop-security-properties.is-sidebar > div {
+  display: grid;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.develop-security-properties.is-sidebar dt,
+.develop-security-properties.is-sidebar dd {
+  max-width: none;
+  font-size: 12px;
+}
+
+.develop-security-properties.is-sidebar dt {
+  color: #fff;
+}
+
+.develop-security-properties.is-sidebar dd {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: right;
 }
 
 .develop-security-properties > div {

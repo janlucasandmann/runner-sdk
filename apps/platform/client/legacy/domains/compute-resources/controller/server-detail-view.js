@@ -1,3 +1,34 @@
+          function handleSourceServerDetailTabChange(tabId) {
+            if (tabId !== "code") {
+              handleCloseServerFileEditor();
+            }
+            setServerDetailTab(tabId);
+            if (tabId === "code" && draftServer?.id) {
+              void loadServerFiles(draftServer.id);
+            }
+            if (tabId === "logs" && draftServer?.id) {
+              void loadServerLogs(draftServer.id, serverLogsState.kind);
+            }
+            if (tabId === "usage" && draftServer?.id) {
+              void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
+            }
+            if (tabId === "settings") {
+              if (
+                draftServer?.id
+                && !serverContextsById[draftServer.id]
+                && loadingServerContextId !== draftServer.id
+              ) {
+                void loadServerContext(draftServer.id);
+              }
+              if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
+                onWorkspaceTeamsRequest({});
+              }
+            }
+            if (tabId === "history" && draftServer?.id) {
+              void loadServerDeployments(draftServer.id);
+            }
+          }
+
           function renderCurrentServerEditor() {
             if (!draftServer) {
               return React.createElement("div", { className: "playground-environments-detail-empty" },
@@ -10,6 +41,7 @@
             const isFunctionServer = normalizedServerKind === "function";
             const isWebAppServer = normalizedServerKind === "web_app";
             const isSourceDeployableServer = isWebAppServer || isFunctionServer;
+            const serverKindLabel = formatPlaygroundServerKindLabel(normalizedServerKind);
             const isAuthServer = normalizedServerKind === "auth";
             const isAgentRuntimeServer = normalizedServerKind === "agent_runtime";
             const isSecretsServer = normalizedServerKind === "secrets";
@@ -327,7 +359,6 @@
                   { id: "memory", value: formatFunctionMemory(functionMemoryMb), label: "Memory", Icon: HardDrive },
                   { id: "cpu-time", value: formatPlaygroundServerLatency(functionCpuTimeMs), label: "CPU time", Icon: Cpu },
                   { id: "execution-time", value: formatPlaygroundServerLatency(resolvedServerAnalyticsSummary.p95LatencyMs), label: "Execution time", Icon: Clock },
-                  { id: "errors", value: String(Number(resolvedServerAnalyticsSummary.clientErrors ?? resolvedServerAnalyticsSummary.clientErrors24h ?? 0) + Number(resolvedServerAnalyticsSummary.serverErrors ?? resolvedServerAnalyticsSummary.serverErrors24h ?? 0)), label: "Errors", Icon: X },
                 ]
               : [
                   { id: "requests", value: String(resolvedServerAnalyticsSummary.totalRequests ?? resolvedServerAnalyticsSummary.totalRequests24h ?? 0), label: serverUsageMetricConfig.metricLabel, Icon: Globe },
@@ -539,8 +570,15 @@
               if (statusText.includes("success") || statusText.includes("complete")) return "success";
               return "info";
             };
-            const renderServerLogStatusPill = (label, tone) => React.createElement("span", {
-                className: "playground-servers-analytics-log-pill is-" + (tone || "info"),
+            const getServerLogStatusLabelVariant = (tone) => {
+              if (tone === "success") return "green";
+              if (tone === "warning") return "yellow";
+              if (tone === "error") return "red";
+              if (tone === "info") return "blue";
+              return "gray";
+            };
+            const renderServerLogStatusLabel = (label, tone) => React.createElement(PlatformLabel, {
+                variant: getServerLogStatusLabelVariant(tone),
               },
               label || "—"
             );
@@ -715,7 +753,9 @@
               const timestamp = Date.parse(String(deployment?.at || deployment?.createdAt || deployment?.updatedAt || ""));
               return Number.isFinite(timestamp) ? timestamp : 0;
             };
-            const renderServerDeploymentsSurface = () => {
+            const renderServerDeploymentsSurface = (options = {}) => {
+              const embedded = options?.embedded === true;
+              const toolbarLeading = options?.toolbarLeading || null;
               const loadedDeployments = Array.isArray(currentServerDeployments) ? currentServerDeployments : [];
               const fallbackDeployment = loadedDeployments.length > 0 ? null : buildPlaygroundServerCurrentDeploymentFallback(draftServer);
               const deployments = loadedDeployments.length > 0
@@ -727,25 +767,28 @@
               const activeDeploymentId = String(draftServer?.metadata?.activeDeploymentId || "").trim();
               const activeRevision = String(activeServerDeploymentRecord?.revision || draftServer?.metadata?.lastDeployment?.revision || draftServer?.metadata?.latestRevision || "").trim();
               const isServerDeploymentsLoading = loadingServerDeploymentsId === draftServer.id;
+              const deploymentRefreshButton = React.createElement(PlatformSecondaryButton, {
+                type: "button",
+                onClick: () => void loadServerDeployments(draftServer.id, { force: true }),
+                disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isServerDeploymentsLoading,
+              },
+                isServerDeploymentsLoading
+                  ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                  : React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Refresh")
+              );
               return React.createElement("div", {
-                  className: "playground-environments-editor-surface playground-servers-analytics-logs-surface playground-servers-deployments-surface" + (isWebAppServer ? " is-web-app-history" : ""),
+                  className: embedded
+                    ? "playground-source-server-usage-activity-table"
+                    : "playground-environments-editor-surface playground-servers-analytics-logs-surface playground-servers-deployments-surface" + (isWebAppServer ? " is-web-app-history" : ""),
                 },
-                React.createElement("div", { className: "playground-plugins-section-header playground-servers-logs-section-header" },
+                embedded ? null : React.createElement("div", { className: "playground-plugins-section-header playground-servers-logs-section-header" },
                   React.createElement("div", { className: "playground-plugins-section-copy" },
                     React.createElement("h3", { className: "playground-plugins-section-title" }, "Deployments")
                   ),
-                  React.createElement(PlatformSecondaryButton, {
-                    type: "button",
-                    onClick: () => void loadServerDeployments(draftServer.id, { force: true }),
-                    disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isServerDeploymentsLoading,
-                  },
-                    isServerDeploymentsLoading
-                      ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
-                      : React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Refresh")
-                  )
+                  deploymentRefreshButton
                 ),
-                serverDeploymentHistoryState.error
+                !embedded && serverDeploymentHistoryState.error
                   ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverDeploymentHistoryState.error)
                   : null,
                 React.createElement(PlatformDataTable, {
@@ -754,15 +797,30 @@
                   ariaLabel: "Server deployments",
                   className: "playground-servers-deployments-platform-table",
                   surface: "plain",
+                  variant: embedded ? "minimalistic-ui" : "default",
+                  layout: embedded ? "fill" : "content",
                   sticky: false,
+                  pagination: embedded
+                    ? {
+                        defaultValue: { pageIndex: 0, pageSize: 20 },
+                        pageSizeOptions: [20, 50, 100],
+                      }
+                    : undefined,
                   loading: isServerDeploymentsLoading && sortedDeployments.length === 0,
+                  error: embedded ? serverDeploymentHistoryState.error || null : null,
                   emptyState: "No deployments yet.",
+                  toolbar: embedded
+                    ? {
+                        leading: toolbarLeading,
+                        trailing: deploymentRefreshButton,
+                      }
+                    : undefined,
                   columns: [
                     {
                       id: "status",
                       header: "Status",
                       width: "minmax(90px, 0.75fr)",
-                      cell: ({ row: deployment }) => renderServerLogStatusPill(
+                      cell: ({ row: deployment }) => renderServerLogStatusLabel(
                         formatServerDeploymentOutcomeLabel(deployment?.outcome),
                         getServerDeploymentOutcomeTone(deployment)
                       ),
@@ -839,7 +897,9 @@
                 })
               );
             };
-            const renderServerLogsSurface = () => {
+            const renderServerLogsSurface = (options = {}) => {
+              const embedded = options?.embedded === true;
+              const toolbarLeading = options?.toolbarLeading || null;
               const isRequestLog = serverLogsState.kind === "request";
               const serverLogColumns = isRequestLog
                 ? [
@@ -847,7 +907,7 @@
                       id: "status",
                       header: "Status",
                       width: "minmax(90px, 0.75fr)",
-                      cell: ({ row: entry }) => renderServerLogStatusPill(
+                      cell: ({ row: entry }) => renderServerLogStatusLabel(
                         formatPlaygroundServerRequestStatus(entry?.status),
                         getServerLogStatusTone(entry, "request")
                       ),
@@ -887,7 +947,7 @@
                       id: "status",
                       header: "Status",
                       width: "minmax(90px, 0.75fr)",
-                      cell: ({ row: entry }) => renderServerLogStatusPill(
+                      cell: ({ row: entry }) => renderServerLogStatusLabel(
                         serverLogsState.kind === "deployment" ? String(entry?.stream || "deploy") : String(entry?.severity || "INFO"),
                         getServerLogStatusTone(entry, serverLogsState.kind)
                       ),
@@ -919,17 +979,37 @@
                       cell: ({ row: entry }) => formatPlaygroundFileDate(entry?.timestamp),
                     },
                   ];
+              const logsRefreshButton = React.createElement(PlatformSecondaryButton, {
+                type: "button",
+                onClick: () => void loadServerLogs(draftServer.id, serverLogsState.kind, { force: true }),
+                disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isServerLogsLoading,
+              },
+                isServerLogsLoading
+                  ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                  : React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Refresh")
+              );
               return React.createElement("div", {
-                  className: "playground-environments-editor-surface playground-servers-analytics-logs-surface",
+                  className: embedded
+                    ? "playground-source-server-usage-activity-table"
+                    : "playground-environments-editor-surface playground-servers-analytics-logs-surface",
                 },
                 React.createElement(PlatformDataTable, {
-                  rows: visibleServerLogList,
+                  rows: embedded ? displayedServerLogList : visibleServerLogList,
                   columns: serverLogColumns,
                   getRowId: (entry) => buildServerLogRowKey(entry, serverLogsState.kind),
                   ariaLabel: formatPlaygroundServerLogKindLabel(serverLogsState.kind) + " logs",
                   className: "playground-servers-logs-platform-table",
                   surface: "plain",
+                  variant: embedded ? "minimalistic-ui" : "default",
+                  layout: embedded ? "fill" : "content",
                   sticky: false,
+                  pagination: embedded
+                    ? {
+                        defaultValue: { pageIndex: 0, pageSize: 20 },
+                        pageSizeOptions: [20, 50, 100],
+                      }
+                    : undefined,
                   loading: isServerLogsLoading,
                   error: serverLogsState.error || null,
                   emptyState: normalizedServerLogsSearchQuery
@@ -944,7 +1024,8 @@
                     },
                   },
                   toolbar: {
-                    title: "All Logs",
+                    title: embedded ? undefined : "All Logs",
+                    leading: embedded ? toolbarLeading : undefined,
                     search: {
                       value: serverLogsSearchQuery,
                       manual: true,
@@ -955,6 +1036,7 @@
                       },
                     },
                     showSort: true,
+                    controlsLeading: embedded ? logsRefreshButton : undefined,
                     filters: [{
                       id: "kind",
                       label: "Log type",
@@ -974,7 +1056,7 @@
                   getRowAriaLabel: (entry) => "Inspect log " + buildServerLogRowKey(entry, serverLogsState.kind),
                   isRowExpanded: (entry) => expandedServerLogKey === buildServerLogRowKey(entry, serverLogsState.kind),
                   renderExpandedRow: ({ row: entry }) => renderServerLogDetailContent(entry, serverLogsState.kind),
-                  footer: hasMoreServerLogs
+                  footer: !embedded && hasMoreServerLogs
                     ? React.createElement("div", { className: "playground-servers-logs-load-more-row" },
                         React.createElement("button", {
                           type: "button",
@@ -988,6 +1070,41 @@
                     : null,
                 })
               );
+            };
+            const renderSourceServerUsageActivityTable = () => {
+              const activityTab = serverUsageActivityTab === "history" ? "history" : "logs";
+              const activityTabs = React.createElement(PlatformDetailTabBar, {
+                ariaLabel: serverKindLabel + " activity views",
+                value: activityTab,
+                tabs: [
+                  { id: "logs", label: "Logs" },
+                  { id: "history", label: "History" },
+                ],
+                onValueChange: (value) => {
+                  const nextTab = value === "history" ? "history" : "logs";
+                  setServerUsageActivityTab(nextTab);
+                  setExpandedServerLogKey("");
+                  if (!draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+                    return;
+                  }
+                  if (nextTab === "history") {
+                    void loadServerDeployments(draftServer.id);
+                  } else {
+                    void loadServerLogs(draftServer.id, serverLogsState.kind);
+                  }
+                },
+                variant: "minimal",
+                className: "playground-source-server-usage-activity-tabs",
+              });
+              return activityTab === "history"
+                ? renderServerDeploymentsSurface({
+                    embedded: true,
+                    toolbarLeading: activityTabs,
+                  })
+                : renderServerLogsSurface({
+                    embedded: true,
+                    toolbarLeading: activityTabs,
+                  });
             };
   
             const canUndoServerDescription = Array.isArray(serverDescriptionHistory.past) && serverDescriptionHistory.past.length > 0;
@@ -1067,7 +1184,7 @@
                 },
               })
             );
-            const descriptionSection = React.createElement("div", {
+            const legacyDescriptionSection = React.createElement("div", {
                 className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-database-description-section playground-server-settings-description-section",
                 key: "server-description",
               },
@@ -1077,16 +1194,64 @@
               ),
               serverDescriptionEditor
             );
+            const usesCentralServerDescription = isSourceDeployableServer || isAuthServer || isAgentRuntimeServer || isSecretsServer || isPaymentsServer;
+            const descriptionSection = usesCentralServerDescription
+              ? React.createElement(PlatformInstructionsEditor, {
+                  key: "managed-server-description",
+                  value: draftServer.description || "",
+                  onChange: (value) => updateServerField("description", value),
+                  title: "Description",
+                  placeholder: "Add Description here",
+                  ariaLabel: serverKindLabel + " description",
+                  readOnly: isServerTemplatePreview,
+                  stickyHeader: false,
+                  historyKey: "managed-server-description:" + (draftServer.id || "draft"),
+                  variant: "minimalistic-ui",
+                  className: "playground-managed-server-description-section"
+                    + (isSourceDeployableServer ? " playground-source-server-description-section" : "")
+                    + (isFunctionServer ? " playground-function-description-section" : "")
+                    + (isWebAppServer ? " playground-web-app-description-section" : "")
+                    + (isAuthServer ? " playground-auth-description-section" : "")
+                    + (isAgentRuntimeServer ? " playground-agent-runtime-description-section" : "")
+                    + (isSecretsServer ? " playground-secrets-description-section" : "")
+                    + (isPaymentsServer ? " playground-payments-description-section" : "")
+                    + " playground-server-settings-description-section",
+                  onEditingChange: (editing) => {
+                    if (!editing && !isServerTemplatePreview) {
+                      void commitDraftServerIfDirty();
+                    }
+                  },
+                })
+              : legacyDescriptionSection;
+            const serverDeploymentMapSection = isSourceDeployableServer || isAuthServer || isAgentRuntimeServer || isSecretsServer || isPaymentsServer
+              ? React.createElement(PlatformDeploymentMap, {
+                  key: "managed-server-deployment-map",
+                  regionCode: isAuthServer || isAgentRuntimeServer || isSecretsServer || isPaymentsServer
+                    ? draftServer.location || "eur3"
+                    : draftServer.region || "europe-west1",
+                  title: "Deployment region",
+                  className: "playground-managed-server-deployment-map"
+                    + (isSourceDeployableServer ? " playground-source-server-deployment-map" : "")
+                    + (isFunctionServer ? " playground-function-deployment-map" : "")
+                    + (isWebAppServer ? " playground-web-app-deployment-map" : "")
+                    + (isAuthServer ? " playground-auth-deployment-map" : "")
+                    + (isAgentRuntimeServer ? " playground-agent-runtime-deployment-map" : "")
+                    + (isSecretsServer ? " playground-secrets-deployment-map" : "")
+                    + (isPaymentsServer ? " playground-payments-deployment-map" : ""),
+                })
+              : null;
   
-  	          const isFunctionInvokeCapableServer = isFunctionServer || isAgentRuntimeServer;
-  	          const functionInvokePayload = JSON.stringify(isAgentRuntimeServer ? { prompt: "Run this agent workflow." } : { name: "Functions" });
-  	          const functionInvokeSlug = String(draftServer.slug || draftServer.name || (isAgentRuntimeServer ? "agent-runtime" : "hello-world"))
+              const isFunctionInvokeCapableServer = isFunctionServer || isAgentRuntimeServer;
+              const functionInvokePayload = JSON.stringify(isAgentRuntimeServer ? { content: "Run this agent workflow.", mode: "async" } : { name: "Functions" });
+              const functionInvokeSlug = String(draftServer.slug || draftServer.name || (isAgentRuntimeServer ? "agent-runtime" : "hello-world"))
               .trim()
               .toLowerCase()
               .replace(/[^a-z0-9]+/g, "-")
-  	            .replace(/^-+|-+$/g, "") || (isAgentRuntimeServer ? "agent-runtime" : "hello-world");
+                .replace(/^-+|-+$/g, "") || (isAgentRuntimeServer ? "agent-runtime" : "hello-world");
             const functionInvokeUrl = String(draftServer.serviceUrl || "").trim()
-              || ("https://api.computer-agents.com/functions/v1/" + functionInvokeSlug);
+              || (isAgentRuntimeServer
+                ? "https://api.computer-agents.com/v1/agent-runtimes/" + encodeURIComponent(String(draftServer.id || "runtime_id")) + "/runs"
+                : "https://api.computer-agents.com/functions/v1/" + functionInvokeSlug);
             const functionDeployedServiceUrl = String(draftServer.serviceUrl || "").trim();
             const functionAuthMetadata = draftServer?.metadata?.functionAuth && typeof draftServer.metadata.functionAuth === "object" && !Array.isArray(draftServer.metadata.functionAuth)
               ? draftServer.metadata.functionAuth
@@ -1149,7 +1314,7 @@
                 "request.httpMethod = \"POST\"",
                 ...(functionApiKeyAuthEnabled ? ["request.setValue(\"Bearer \\(apiKey)\", forHTTPHeaderField: \"Authorization\")"] : []),
                 "request.setValue(\"application/json\", forHTTPHeaderField: \"Content-Type\")",
-  	              "request.httpBody = try JSONSerialization.data(withJSONObject: " + (isAgentRuntimeServer ? "[\"prompt\": \"Run this agent workflow.\"]" : "[\"name\": \"Functions\"]") + ")",
+                "request.httpBody = try JSONSerialization.data(withJSONObject: " + (isAgentRuntimeServer ? "[\"content\": \"Run this agent workflow.\", \"mode\": \"async\"]" : "[\"name\": \"Functions\"]") + ")",
                 "",
                 "let (data, _) = try await URLSession.shared.data(for: request)",
                 "print(String(data: data, encoding: .utf8) ?? \"\")",
@@ -1245,20 +1410,22 @@
                     className: "playground-code-preview-state playground-server-invoke-code-editor",
                     style: { "--playground-server-invoke-code-height": functionInvokeCodeHeight },
                   },
-                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                    React.createElement("span", null, "Loading editor...")
+                    React.createElement(PlatformLoadingState, {
+                      message: "Loading code example...",
+                      centered: true,
+                      className: "playground-server-invoke-code-loading-state",
+                    })
                   )
                 : React.createElement("pre", {
                     className: "playground-server-invoke-code-fallback",
                     style: { minHeight: functionInvokeCodeHeight },
                   }, activeFunctionInvokeSnippet);
-  	          const functionInvokeSection = isFunctionInvokeCapableServer
-  	            ? React.createElement("section", {
-  	                className: "playground-server-invoke-section playground-server-details-card"
-  	                  + (isFunctionServer ? " playground-function-usage-invoke-section" : ""),
-  	              },
-  	                React.createElement("div", { className: "playground-server-invoke-title" }, "Invoke function"),
-  	                React.createElement("div", { className: "playground-server-invoke-auth-note" },
+            const functionInvokeSection = isFunctionInvokeCapableServer
+              ? React.createElement("section", {
+                  className: "playground-server-invoke-section playground-server-details-card"
+                    + (isFunctionServer ? " playground-function-usage-invoke-section" : ""),
+                },
+                  React.createElement("div", { className: "playground-server-invoke-auth-note" },
   	                  React.createElement("div", { className: "playground-server-invoke-auth-copy" },
   	                    React.createElement("div", { className: "playground-server-invoke-auth-toggle-copy" },
   	                      React.createElement("span", { className: "playground-server-invoke-auth-label" }, isAgentRuntimeServer ? "Computer Agents API key required" : "Require Computer Agents API key"),
@@ -1399,17 +1566,12 @@
             const serverUsageTabContent = isOperationalDetailServer
               ? isSourceDeployableServer || isAuthServer || isSecretsServer || isPaymentsServer || isAgentRuntimeServer
                 ? React.createElement(PlatformAnalyticsSection, {
-                    variant: "framed",
+                    variant: "default",
                     className: "playground-server-detail-analytics",
                     analytics: sourceServerDetailAnalyticsModel,
                     chartType: "line",
                     title: serverUsageMetricConfig.title,
-                    timeframe: {
-                      value: normalizedServerDetailChartTimescale,
-                      options: serverDetailTimescaleOptions,
-                      onValueChange: setServerDetailChartTimescale,
-                      ariaLabel: formatPlaygroundServerKindLabel(draftServer.kind) + " analytics time frame",
-                    },
+                    timeframe: undefined,
                   })
                 : React.createElement(React.Fragment, null,
                     React.createElement("div", { className: "playground-database-detail-usage-header-actions playground-server-detail-usage-header" },
@@ -1511,7 +1673,10 @@
                 ),
               },
             ];
-            const customDomainSection = isCustomDomainCapableServer
+            const renderCustomDomainSection = ({
+              toolbarLeading = null,
+              toolbarTitle = "Custom Domains",
+            } = {}) => isCustomDomainCapableServer
               ? React.createElement(PlatformDataTable, {
                   rows: activeCustomDomains,
                   columns: customDomainColumns,
@@ -1526,7 +1691,8 @@
                     defaultValue: { id: "lastChecked", direction: "desc" },
                   },
                   toolbar: {
-                    title: "Custom Domains",
+                    leading: toolbarLeading,
+                    title: toolbarTitle,
                     primaryAction: {
                       label: "Add Domain",
                       icon: Plus,
@@ -1579,6 +1745,7 @@
                   }),
                 })
               : null;
+            const customDomainSection = renderCustomDomainSection();
   
             const isConnectableServer = normalizedServerKind === "function" || normalizedServerKind === "web_app";
             const activeDatabaseBinding = getCurrentServerBindingByType("database");
@@ -2219,7 +2386,6 @@
                   React.createElement("div", { className: serverFileEditorStatusClassName }, serverFileEditorStatusText)
                 )
               : null;
-            const serverKindLabel = formatPlaygroundServerKindLabel(draftServer.kind);
             const sourceServerCodeWorkspaceRowById = new Map();
             const sourceServerCodeWorkspaceFiles = visibleServerSourceFileRows.map((row) => {
               const entry = row?.entry || {};
@@ -2407,7 +2573,7 @@
               React.createElement(PlatformCodeEditorWorkspace, {
                 className: "playground-server-source-code-workspace" + (isServerFileDragging ? " is-dragging" : ""),
                 ariaLabel: serverKindLabel + " code editor",
-                variant: "default",
+                variant: isSourceDeployableServer ? "full-screen" : "default",
                 files: sourceServerCodeWorkspaceFiles,
                 activeFileId: normalizeHistoryPath(serverFileEditorState.path || ""),
                 onFileSelect: handleSourceServerCodeWorkspaceFileSelect,
@@ -2520,7 +2686,8 @@
             function openServerAnalyticsView() {
               if (isSourceDeployableServer) {
                 handleCloseServerFileEditor();
-                setServerDetailTab("logs");
+                setServerUsageActivityTab("logs");
+                setServerDetailTab("usage");
               } else {
                 setServerAnalyticsView("analytics");
               }
@@ -2986,66 +3153,14 @@
               );
             }
   
-            const normalizedServerDetailTab = isSourceDeployableServer && ["usage", "code", "logs", "history", "settings"].includes(serverDetailTab)
+            const sourceServerDetailTabs = [
+              { id: "usage", label: "Usage", icon: ChartColumnIncreasing },
+              { id: "code", label: "Code", icon: Code2 },
+              { id: "settings", label: "Settings", icon: Settings },
+            ];
+            const normalizedServerDetailTab = isSourceDeployableServer && sourceServerDetailTabs.some((tab) => tab.id === serverDetailTab)
               ? serverDetailTab
               : "usage";
-            const handleSourceServerDetailTabChange = (tabId) => {
-              if (tabId !== "code") {
-                handleCloseServerFileEditor();
-              }
-              setServerDetailTab(tabId);
-              if (tabId === "code" && draftServer.id) {
-                void loadServerFiles(draftServer.id);
-              }
-              if (tabId === "logs" && draftServer.id) {
-                void loadServerLogs(draftServer.id, serverLogsState.kind);
-              }
-              if (tabId === "usage" && draftServer.id) {
-                void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
-              }
-              if (tabId === "settings") {
-                if (
-                  draftServer.id
-                  && !serverContextsById[draftServer.id]
-                  && loadingServerContextId !== draftServer.id
-                ) {
-                  void loadServerContext(draftServer.id);
-                }
-                if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
-                  onWorkspaceTeamsRequest({});
-                }
-              }
-              if (tabId === "history" && draftServer.id) {
-                void loadServerDeployments(draftServer.id);
-              }
-            };
-            const serverDetailTabs = isSourceDeployableServer
-              ? React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs" },
-                  React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-                    [
-                      { id: "usage", label: "Usage", Icon: ChartColumnIncreasing },
-                      { id: "code", label: "Code", Icon: Code2 },
-                      { id: "logs", label: "Logs", Icon: Terminal },
-                      { id: "history", label: "History", Icon: History },
-                      { id: "settings", label: "Settings", Icon: Settings },
-                    ].map((tab) => {
-                      const TabIcon = tab.Icon;
-                      return React.createElement("button", {
-                          key: tab.id,
-                          type: "button",
-                          className: "playground-project-overview-chart-tab" + (normalizedServerDetailTab === tab.id ? " is-active" : ""),
-                          onClick: () => handleSourceServerDetailTabChange(tab.id),
-                          "aria-pressed": normalizedServerDetailTab === tab.id ? "true" : "false",
-                          "aria-label": tab.label,
-                        },
-                        React.createElement(TabIcon, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.7 }),
-                        React.createElement("span", null, tab.label)
-                      );
-                    })
-                  )
-                )
-              : null;
-  
             const serverSharedTeamIds = getServerSharedTeamIds(draftServer);
             const serverSharedTeamIdSet = new Set(serverSharedTeamIds);
             const serverWorkspaceTeamById = new Map(normalizedEnvironmentWorkspaceTeams.map((team) => [String(team.id), team]));
@@ -3428,8 +3543,38 @@
                   )
                 )
               );
+            const normalizedSourceServerSettingsTableTab = sourceServerSettingsTableTab === "domains"
+              ? "domains"
+              : "access";
+            const sourceServerSettingsTableTabs = React.createElement(PlatformDetailTabBar, {
+              ariaLabel: serverKindLabel + " settings resources",
+              value: normalizedSourceServerSettingsTableTab,
+              tabs: [
+                { id: "access", label: "Manage Access" },
+                { id: "domains", label: "Custom Domains" },
+              ],
+              onValueChange: (nextTab) => {
+                setSourceServerSettingsTableTab(nextTab === "domains" ? "domains" : "access");
+                setSelectedServerAccessTeamIds(new Set());
+                setServerTeamMenuId("");
+              },
+              variant: "minimal",
+              className: "playground-source-server-settings-table-tabs",
+            });
+            const sourceServerSettingsResourcesTable = normalizedSourceServerSettingsTableTab === "domains"
+              ? renderCustomDomainSection({
+                  toolbarLeading: sourceServerSettingsTableTabs,
+                  toolbarTitle: null,
+                })
+              : React.cloneElement(serverTeamAccessTable, {
+                  leading: sourceServerSettingsTableTabs,
+                  title: null,
+                });
+            const serverSettingsResourcesTable = isSourceDeployableServer
+              ? sourceServerSettingsResourcesTable
+              : serverTeamAccessPlatformSection;
   
-  	          const serverDangerSection = !isServerTemplatePreview && isOperationalDetailServer
+            const serverDangerSection = !isFunctionServer && !isServerTemplatePreview && isOperationalDetailServer
   	            ? React.createElement("section", { className: "playground-server-danger-section playground-server-details-card" },
                   React.createElement("div", { className: "playground-server-danger-copy-row" },
                     React.createElement("span", { className: "playground-server-danger-icon", "aria-hidden": "true" },
@@ -3457,6 +3602,7 @@
               : null;
             const serverSettingsOverviewContent = React.createElement("div", {
                 className: "playground-server-settings-tab"
+                  + (isSourceDeployableServer ? " is-source-deployable-settings-tab" : "")
                   + (isFunctionServer ? " is-function-settings-tab" : "")
                   + (isWebAppServer ? " is-web-app-settings-tab" : "")
                   + (isAuthServer ? " is-auth-settings-tab" : "")
@@ -3464,44 +3610,40 @@
                   + (isPaymentsServer ? " is-payments-settings-tab" : "")
                   + (isAgentRuntimeServer ? " is-agent-runtime-settings-tab" : ""),
               },
+              serverDeploymentMapSection,
               descriptionSection,
-              customDomainSection,
-              isFunctionServer ? null : connectionsSection,
-              serverTeamAccessPlatformSection,
-              serverDangerSection
+              isFunctionServer ? functionInvokeSection : null,
+              serverSettingsResourcesTable,
+              connectionsSection,
+              null
             );
             const serverSettingsTabContent = serverSettingsPermissionContent || serverSettingsOverviewContent;
-            const serverEditorTabContent = isSourceDeployableServer
-              ? normalizedServerDetailTab === "logs"
-                ? serverLogsPageContent
-                : normalizedServerDetailTab === "history"
-                  ? renderServerDeploymentsSurface()
-                  : normalizedServerDetailTab === "code"
-                    ? sourceFilesSection
-                    : normalizedServerDetailTab === "usage"
-                      ? React.createElement(React.Fragment, null, serverUsageTabContent, functionInvokeSection)
-                      : normalizedServerDetailTab === "settings"
-                        ? serverSettingsTabContent
-                        : serverUsageTabContent
-              : React.createElement(React.Fragment, null,
-                  factsSection,
-                  functionInvokeSection,
-                  customDomainSection,
-                  connectionsSection,
-                  sourceFilesSection
-                );
+            const isSourceServerUsageTab = isSourceDeployableServer && normalizedServerDetailTab === "usage";
+            const isSourceServerCodeTab = isSourceDeployableServer && normalizedServerDetailTab === "code";
+            const serverEditorTabContent = React.createElement(React.Fragment, null,
+              factsSection,
+              functionInvokeSection,
+              customDomainSection,
+              connectionsSection,
+              sourceFilesSection
+            );
             const sourceServerDeploymentStatusText = isSourceDeployableServer
               ? serverDeploymentState.error
                 ? serverDeploymentState.error
-                : serverDeploymentState.isDeploying
-                  ? "Deploying " + serverKindLabel.toLowerCase() + "..."
-                  : serverDeploymentState.isInvoking
-                    ? "Testing live invocation..."
-                    : serverDeploymentState.message || ""
+                : serverDeploymentState.isDecommissioning
+                  ? "Decommissioning " + serverKindLabel.toLowerCase() + "..."
+                  : serverDeploymentState.isDeploying
+                    ? "Deploying " + serverKindLabel.toLowerCase() + "..."
+                    : serverDeploymentState.isInvoking
+                      ? "Testing live invocation..."
+                      : serverDeploymentState.message || ""
               : "";
             const sourceServerDeploymentStatusVariant = serverDeploymentState.error
               ? " is-error"
-              : serverDeploymentState.message && !serverDeploymentState.isDeploying && !serverDeploymentState.isInvoking
+              : serverDeploymentState.message
+                  && !serverDeploymentState.isDeploying
+                  && !serverDeploymentState.isDecommissioning
+                  && !serverDeploymentState.isInvoking
                 ? " is-success"
                 : "";
             const sourceServerDeploymentStatusBar = sourceServerDeploymentStatusText && !serverDeploymentStatusDismissed
@@ -3526,24 +3668,30 @@
                 )
               : null;
             const serverDetailContentClassName = "playground-server-detail-content" + (
-              isSourceDeployableServer && normalizedServerDetailTab === "code"
-                ? " is-code-tab"
-                : ""
+              isSourceServerCodeTab
+                ? " is-code-tab is-source-server-code-tab"
+                : isSourceServerUsageTab
+                  ? " is-source-server-usage-tab"
+                  : ""
             );
             const serverEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main" + (
-              isSourceDeployableServer && normalizedServerDetailTab === "code"
-                ? " is-code-tab"
-                : ""
+              isSourceServerCodeTab
+                ? " is-code-tab is-source-server-code-tab"
+                : isSourceServerUsageTab
+                  ? " is-source-server-usage-tab"
+                  : ""
             );
   
             const serverEditorScrollClassName = "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" + (
-              isSourceDeployableServer && normalizedServerDetailTab === "code"
-                ? " is-code-tab"
-                : ""
+              isSourceServerCodeTab
+                ? " is-code-tab is-source-server-code-tab"
+                : isSourceServerUsageTab
+                  ? " is-source-server-usage-tab"
+                  : ""
             );
             const serverEditorLayoutClassName = "playground-servers-editor-layout" + (
-              isSourceDeployableServer && normalizedServerDetailTab === "code"
-                ? " is-code-tab"
+              isSourceServerCodeTab
+                ? " is-code-tab is-source-server-code-tab"
                 : ""
             );
   
@@ -3862,16 +4010,21 @@
             }
 
             const sourceServerSidebarCollapsed = Boolean(serverDetailsCollapsed);
-            const sourceServerDeploymentLabel = serverDeploymentState.isDeploying
-              ? "Deploying"
-              : functionDeployedServiceUrl
-                ? "Deployed"
-                : "Not deployed";
-            const sourceServerDeploymentVariant = serverDeploymentState.isDeploying
+            const isSourceServerDecommissioning = serverDeploymentState.isDecommissioning === true;
+            const sourceServerDeploymentLabel = isSourceServerDecommissioning
+              ? "Decommissioning"
+              : serverDeploymentState.isDeploying
+                ? "Deploying"
+                : functionDeployedServiceUrl
+                  ? "Deployed"
+                  : "Not deployed";
+            const sourceServerDeploymentVariant = isSourceServerDecommissioning
               ? "yellow"
-              : functionDeployedServiceUrl
-                ? "green"
-                : "gray";
+              : serverDeploymentState.isDeploying
+                ? "yellow"
+                : functionDeployedServiceUrl
+                  ? "green"
+                  : "gray";
             const sourceServerSourceType = String(
               draftServer.sourceType
               || draftServer.source_type
@@ -3933,11 +4086,119 @@
                   )
                 )
               : renderSourceServerSidebarValue("Not deployed", "is-empty");
+            const sourceServerSidebarDeployControl = isSourceDeployableServer
+              ? React.createElement(PlatformButtonSelector, {
+                  mode: "split-action",
+                  buttonVariant: "primary",
+                  buttonSize: "medium",
+                  label: "Deploy",
+                  actionAriaLabel: "Deploy " + serverKindLabel.toLowerCase(),
+                  popupAriaLabel: serverKindLabel + " deployment actions",
+                  popupRole: "menu",
+                  popupVariant: "minimal",
+                  popupAlignment: "left",
+                  matchTriggerWidth: true,
+                  fullWidth: true,
+                  closeOnSelect: true,
+                  onAction: () => handleDeployServer(),
+                  actionDisabled: isServerTemplatePreview
+                    || serverDeploymentState.isDeploying
+                    || isSourceServerDecommissioning
+                    || serverDeploymentState.isInvoking
+                    || serverSaveState.isSaving
+                    || serverVersionState.status === "loading"
+                    || !draftServer.id
+                    || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                  popupDisabled: isServerTemplatePreview
+                    || serverDeploymentState.isDeploying
+                    || isSourceServerDecommissioning
+                    || serverSaveState.isSaving
+                    || serverVersionState.status === "loading",
+                  className: "playground-source-server-sidebar-deploy-selector",
+                  popupClassName: "playground-source-server-sidebar-deploy-popup",
+                },
+                React.createElement("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "tb-popup-row",
+                  onClick: () => {
+                    if (isWebAppServer) {
+                      if (draftServer.serviceUrl) {
+                        window.open(draftServer.serviceUrl, "_blank", "noopener,noreferrer");
+                      }
+                      return;
+                    }
+                    void handleInvokeServer();
+                  },
+                  disabled: serverDeploymentState.isInvoking
+                    || serverDeploymentState.isDeploying
+                    || isSourceServerDecommissioning
+                    || !draftServer.serviceUrl,
+                },
+                  isWebAppServer
+                    ? React.createElement(ArrowUpRight, {
+                        className: "tb-popup-icon",
+                        width: 14,
+                        height: 14,
+                        strokeWidth: 1.8,
+                      })
+                    : serverDeploymentState.isInvoking
+                    ? React.createElement(Loader2, {
+                        className: "tb-popup-icon playground-files-state-loader",
+                        width: 14,
+                        height: 14,
+                        strokeWidth: 1.8,
+                      })
+                    : React.createElement(Play, {
+                        className: "tb-popup-icon",
+                        width: 14,
+                        height: 14,
+                        strokeWidth: 1.8,
+                      }),
+                  React.createElement("span", { className: "tb-popup-label" },
+                    isWebAppServer
+                      ? "Open App"
+                      : serverDeploymentState.isInvoking
+                        ? "Testing..."
+                        : "Test Invoke"
+                  )
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "tb-popup-row",
+                  onClick: () => void decommissionActiveSourceServerDeployment(),
+                  disabled: serverDeploymentState.isDeploying
+                    || isSourceServerDecommissioning
+                    || serverDeploymentState.isInvoking
+                    || serverSaveState.isSaving
+                    || serverVersionState.status === "loading"
+                    || (!functionDeployedServiceUrl && !getDraftServerActiveVersion()?.id),
+                },
+                  isSourceServerDecommissioning
+                    ? React.createElement(Loader2, {
+                        className: "tb-popup-icon playground-files-state-loader",
+                        width: 14,
+                        height: 14,
+                        strokeWidth: 1.8,
+                      })
+                    : React.createElement(Square, {
+                        className: "tb-popup-icon",
+                        width: 14,
+                        height: 14,
+                        strokeWidth: 1.8,
+                      }),
+                  React.createElement("span", { className: "tb-popup-label" },
+                    isSourceServerDecommissioning ? "Decommissioning..." : "Decommission"
+                  )
+                )
+              )
+              : null;
             const sourceServerPropertiesSidebar = isSourceDeployableServer
               ? React.createElement(PlatformUiCard, {
                   as: "section",
                   variant: "sidebar",
-                  cardTitle: "Properties",
+                  cardTitle: undefined,
                   className: "playground-project-overview-sidebar-card playground-server-detail-properties-card",
                 },
                     React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
@@ -3959,26 +4220,15 @@
                           )
                         : null,
                       !isFunctionServer
-                        ? renderSourceServerSidebarRow("Region",
-                            renderSourceServerSidebarValue(draftServer.region || "europe-west1")
-                          )
-                        : null,
-                      !isFunctionServer
                         ? renderSourceServerSidebarRow("Authentication",
                             renderSourceServerSidebarValue(functionApiKeyAuthEnabled ? "API key required" : "Public")
                           )
                         : null,
-                      sourceServerSourceLabel
+                      !isWebAppServer && sourceServerSourceLabel
                         ? renderSourceServerSidebarRow("Source",
                             renderSourceServerSidebarValue(sourceServerSourceLabel)
                           )
                         : null,
-                      renderSourceServerSidebarRow("Resource ID",
-                        renderSourceServerSidebarValue(
-                          draftServer.id || "Unsaved resource",
-                          "is-id"
-                        )
-                      ),
                       renderSourceServerSidebarRow("Created",
                         renderSourceServerSidebarValue(formatPlaygroundFileDate(draftServer.createdAt))
                       ),
@@ -3989,122 +4239,64 @@
                         className: "playground-server-detail-sidebar-owner-row",
                         valueClassName: "playground-server-detail-sidebar-owner-cell",
                       })
-                    )
+                    ),
+                    sourceServerSidebarDeployControl
                   )
               : null;
-            const sourceServerConnectionsSidebar = isFunctionServer
-              ? React.createElement(PlatformUiCard, {
-                  as: "section",
-                  variant: "sidebar",
-                  cardTitle: "Connections",
-                  className: "playground-project-overview-sidebar-card playground-server-detail-connections-card",
-                },
-                  renderServerConnectionsSection({
-                    showTitle: false,
-                    className: "playground-server-detail-sidebar-connections",
-                  })
-                )
-              : null;
             const sourceServerDetailSidebar = isSourceDeployableServer
-              ? React.createElement(React.Fragment, null,
-                  sourceServerPropertiesSidebar,
-                  sourceServerConnectionsSidebar
-                )
+              ? sourceServerPropertiesSidebar
               : null;
-            const sourceServerDetailSidebarToggle = isSourceDeployableServer
-              ? React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-sidebar-toggle",
-                  onClick: () => setServerDetailsCollapsed((current) => !current),
-                  title: sourceServerSidebarCollapsed
-                    ? "Show " + serverKindLabel.toLowerCase() + " properties"
-                    : "Hide " + serverKindLabel.toLowerCase() + " properties",
-                  "aria-label": sourceServerSidebarCollapsed
-                    ? "Show " + serverKindLabel.toLowerCase() + " properties"
-                    : "Hide " + serverKindLabel.toLowerCase() + " properties",
-                  "aria-pressed": sourceServerSidebarCollapsed ? "true" : "false",
+            const renderSourceServerDetailContent = (content, className = "") =>
+              React.createElement("div", {
+                  className: "playground-server-detail-content" + (className ? " " + className : ""),
                 },
-                React.createElement(PanelRight, {
-                  width: 15,
-                  height: 15,
-                  strokeWidth: 1.8,
-                })
-              )
-              : null;
-            const sourceServerDetailHeader = isSourceDeployableServer
-              ? React.createElement("div", {
-                  className: "playground-server-detail-profile-section",
-                },
-                  renderServerResourceDetailTitleRow({
-                    className: " playground-server-function-title-input",
-                    placeholder: serverKindLabel,
-                    ariaLabel: serverKindLabel + " name",
-                    readOnly: isServerTemplatePreview,
-                  })
-                )
-              : null;
-            const sourceServerDetailContent = serverVersionChangesState
-              ? renderServerVersionChangesPage()
-              : React.createElement("div", { className: serverDetailContentClassName },
-                  serverSaveState.error
-                    ? React.createElement("div", {
-                        className: "playground-environments-error playground-environments-editor-notice",
-                        role: "alert",
-                      }, serverSaveState.error)
-                    : null,
-                  serverEditorTabContent
-                );
+                serverSaveState.error
+                  ? React.createElement("div", {
+                      className: "playground-environments-error playground-environments-editor-notice",
+                      role: "alert",
+                    }, serverSaveState.error)
+                  : null,
+                content
+              );
+            const sourceServerDetailContentByTab = {
+              usage: renderSourceServerDetailContent(
+                React.createElement(
+                  "div",
+                  { className: "playground-source-server-usage-tab-content" },
+                  serverUsageTabContent,
+                  renderSourceServerUsageActivityTable()
+                ),
+                "is-source-server-usage-tab"
+              ),
+              code: renderSourceServerDetailContent(sourceFilesSection, "is-code-tab is-source-server-code-tab"),
+              settings: renderSourceServerDetailContent(serverSettingsTabContent),
+            };
             const sourceServerDetailWorkspace = isSourceDeployableServer
-              ? React.createElement(DevelopServerDetailPage, {
-                  header: sourceServerDetailHeader,
-                  sidebarToggle: sourceServerDetailSidebarToggle,
+              ? React.createElement(SourceDeployableServerDetailPage, {
+                  resourceKind: isFunctionServer ? "function" : "web-app",
+                  contentByTab: sourceServerDetailContentByTab,
+                  overrideContent: serverVersionChangesState ? renderServerVersionChangesPage() : undefined,
                   sidebar: sourceServerDetailSidebar,
                   activeTab: normalizedServerDetailTab,
-                  onTabChange: handleSourceServerDetailTabChange,
                   sidebarCollapsed: sourceServerSidebarCollapsed,
                   ariaLabel: serverKindLabel + " details for " + (draftServer.name || "Untitled"),
                   sidebarAriaLabel: (draftServer.name || serverKindLabel) + " properties",
-                  className: isFunctionServer ? "is-function-server-detail" : "is-web-app-server-detail",
-                }, sourceServerDetailContent)
+                })
+              : null;
+            const sourceServerUsageTimeframeControl = isSourceServerUsageTab
+              ? React.createElement(PlatformSwitch, {
+                  className: "playground-source-server-detail-header-timeframe",
+                  value: normalizedServerDetailChartTimescale,
+                  options: serverDetailTimescaleOptions,
+                  onValueChange: setServerDetailChartTimescale,
+                  ariaLabel: serverKindLabel + " analytics time frame",
+                })
               : null;
             const sourceServerTopNavActions = isSourceDeployableServer
               && topNavActionsContainer
               ? createPortal(
                   React.createElement(React.Fragment, null,
-                    React.createElement(PlatformSecondaryButton, {
-                      size: "medium",
-                      type: "button",
-                      onClick: () => {
-                        if (isWebAppServer) {
-                          if (draftServer.serviceUrl) {
-                            window.open(draftServer.serviceUrl, "_blank", "noopener,noreferrer");
-                          }
-                          return;
-                        }
-                        void handleInvokeServer();
-                      },
-                      disabled: isServerTemplatePreview
-                        || serverDeploymentState.isInvoking
-                        || !draftServer.serviceUrl,
-                    },
-                      isWebAppServer
-                        ? React.createElement(ArrowUpRight, { width: 14, height: 14, strokeWidth: 1.8 })
-                        : serverDeploymentState.isInvoking
-                          ? React.createElement(Loader2, {
-                              width: 14,
-                              height: 14,
-                              strokeWidth: 1.8,
-                              className: "playground-files-state-loader",
-                            })
-                          : React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null,
-                        isWebAppServer
-                          ? "Open App"
-                          : serverDeploymentState.isInvoking
-                            ? "Testing..."
-                            : "Test Invoke"
-                      )
-                    ),
+                    sourceServerUsageTimeframeControl,
                     renderServerPublishSplitButton()
                   ),
                   topNavActionsContainer
@@ -4118,7 +4310,6 @@
                     ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
                     : null,
                   isSourceDeployableServer ? null : descriptionSection,
-                  serverDetailTabs,
                   serverEditorTabContent
                 );
             const serverEditorScroll = React.createElement("div", { className: serverEditorScrollClassName },
@@ -4233,102 +4424,15 @@
               const paymentsStatusVariant = paymentsMetadata.stripeAccountId
                 ? paymentsMetadata.chargesEnabled ? "green" : "yellow"
                 : "gray";
-              const paymentsDetailsSection = React.createElement(PlatformUiCard, {
-                  as: "section",
-                  className: "playground-server-details-card playground-server-runtime-card playground-payments-detail-card",
-                },
-                React.createElement("div", { className: "playground-server-details-card-header" },
-                  React.createElement("div", null,
-                    React.createElement("h2", { className: "playground-server-details-card-title" }, "Stripe payments"),
-                    React.createElement("p", { className: "playground-server-details-card-copy" },
-                      "Connect one Stripe account and bind it to web apps, functions, and agent runtimes without exposing Stripe keys."
-                    )
-                  ),
-                  React.createElement(PlatformLabel, { variant: paymentsStatusVariant }, paymentsStatus)
-                ),
-                React.createElement("div", { className: "playground-server-runtime-grid" },
-                  renderServerFactRow("Provider",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, "Stripe")
-                  ),
-                  renderServerFactRow("Mode",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, String(paymentsMetadata.mode || "test").toUpperCase())
-                  ),
-                  renderServerFactRow("Charges",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, paymentsMetadata.chargesEnabled ? "Enabled" : "Not enabled")
-                  ),
-                  renderServerFactRow("Payouts",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, paymentsMetadata.payoutsEnabled ? "Enabled" : "Not enabled")
-                  ),
-                  renderServerFactRow("Earned",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" },
-                      formatPlaygroundPaymentMoney(paymentsMetadata.totalEarnedCents, paymentsCurrency)
-                    )
-                  ),
-                  renderServerFactRow("Payments",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value" },
-                      String(Math.max(0, Number(paymentsMetadata.totalPaymentCount || 0)))
-                    )
-                  ),
-                  renderServerFactRow("Stripe Account",
-                    React.createElement("span", {
-                      className: "playground-environments-editor-fact-value is-id",
-                      title: String(paymentsMetadata.stripeAccountId || "None"),
-                    }, String(paymentsMetadata.stripeAccountId || "None"))
-                  )
-                )
-              );
-              const paymentsRuntimeSection = React.createElement(PlatformUiCard, {
-                  as: "section",
-                  className: "playground-server-details-card playground-server-runtime-card playground-payments-detail-card playground-payments-runtime-card",
-                },
-                React.createElement("div", { className: "playground-server-details-card-header" },
-                  React.createElement("div", null,
-                    React.createElement("h2", { className: "playground-server-details-card-title" }, "Runtime checkout API"),
-                    React.createElement("p", { className: "playground-server-details-card-copy" },
-                      "Connected workloads can create Stripe Checkout Sessions through the Computer Agents runtime SDK. Stripe credentials stay in the control plane."
-                    )
-                  )
-                ),
-                React.createElement("div", { className: "playground-server-runtime-grid" },
-                  renderServerFactRow("Node.js",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value is-id" }, "await computerAgents.payments.createCheckoutSession(...)")
-                  ),
-                  renderServerFactRow("Browser",
-                    React.createElement("span", { className: "playground-environments-editor-fact-value is-id" }, "await client.payments.createCheckoutSession(...)")
-                  )
-                )
-              );
               const normalizedPaymentsDetailTab = ["usage", "settings"].includes(serverDetailTab) ? serverDetailTab : "usage";
-              const paymentsDetailTabs = [
-                { id: "usage", label: "Usage", icon: ChartColumnIncreasing },
-                { id: "settings", label: "Settings", icon: Settings },
-              ];
-              const handlePaymentsDetailTabChange = (nextTab) => {
-                setServerOwnerPopoverOpen(false);
-                setServerDetailTab(nextTab);
-                if (nextTab === "usage" && draftServer.id) {
-                  void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
-                }
-                if (nextTab === "settings") {
-                  if (draftServer.id) void loadServerContext(draftServer.id);
-                  if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
-                }
-              };
-              const paymentsSettingsContent = serverSettingsPermissionContent || React.createElement("div", { className: "playground-server-settings-tab" },
-                descriptionSection,
-                paymentsRuntimeSection,
-                connectionsSection,
-                serverTeamAccessPlatformSection,
-                serverDangerSection
-              );
               const paymentsTabContent = normalizedPaymentsDetailTab === "settings"
-                ? paymentsSettingsContent
-                : React.createElement(React.Fragment, null, serverUsageTabContent, paymentsDetailsSection);
+                ? serverSettingsTabContent
+                : serverUsageTabContent;
               const paymentsStorageLocation = String(draftServer.location || "eur3").trim() || "eur3";
               const paymentsDetailSidebar = React.createElement(PlatformUiCard, {
                   as: "section",
                   variant: "sidebar",
-                  cardTitle: "Properties",
+                  cardTitle: undefined,
                   className: "playground-project-overview-sidebar-card playground-server-detail-properties-card playground-payments-detail-properties-card",
                 },
                 React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
@@ -4352,9 +4456,6 @@
                     renderSourceServerSidebarValue(formatPlaygroundPaymentMoney(paymentsMetadata.totalEarnedCents, paymentsCurrency))
                   ),
                   renderSourceServerSidebarRow("Location", renderSourceServerSidebarValue(paymentsStorageLocation)),
-                  renderSourceServerSidebarRow("Resource ID",
-                    renderSourceServerSidebarValue(draftServer.id || "Unsaved payments", "is-id")
-                  ),
                   renderSourceServerSidebarRow("Created",
                     renderSourceServerSidebarValue(formatPlaygroundFileDate(draftServer.createdAt))
                   ),
@@ -4368,30 +4469,10 @@
                 )
               );
               const paymentsDetailSidebarCollapsed = Boolean(serverDetailsCollapsed);
-              const paymentsDetailSidebarToggle = React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-sidebar-toggle",
-                  onClick: () => setServerDetailsCollapsed((current) => !current),
-                  title: paymentsDetailSidebarCollapsed ? "Show payments properties" : "Hide payments properties",
-                  "aria-label": paymentsDetailSidebarCollapsed ? "Show payments properties" : "Hide payments properties",
-                  "aria-pressed": paymentsDetailSidebarCollapsed ? "true" : "false",
-                },
-                React.createElement(PanelRight, { width: 15, height: 15, strokeWidth: 1.8 })
-              );
-              const paymentsDetailHeader = React.createElement("div", { className: "playground-server-detail-profile-section" },
-                renderServerResourceDetailTitleRow({
-                  className: " playground-server-function-title-input playground-payments-title-input",
-                  placeholder: "Payments",
-                  ariaLabel: "Payments name",
-                  readOnly: isServerTemplatePreview,
-                })
-              );
               const paymentsDetailWorkspace = React.createElement(DevelopServerDetailPage, {
-                  header: paymentsDetailHeader,
-                  tabs: paymentsDetailTabs,
+                  tabs: [],
                   activeTab: normalizedPaymentsDetailTab,
-                  onTabChange: handlePaymentsDetailTabChange,
-                  sidebarToggle: paymentsDetailSidebarToggle,
+                  onTabChange: () => undefined,
                   sidebar: paymentsDetailSidebar,
                   sidebarCollapsed: paymentsDetailSidebarCollapsed,
                   ariaLabel: "Payments details for " + (draftServer.name || "Untitled payments resource"),
@@ -4413,22 +4494,21 @@
                   : null,
                 paymentsTabContent
               );
+              const paymentsUsageTimeframeControl = normalizedPaymentsDetailTab === "usage"
+                ? React.createElement(PlatformSwitch, {
+                    className: "playground-payments-detail-header-timeframe",
+                    value: normalizedServerDetailChartTimescale,
+                    options: serverDetailTimescaleOptions,
+                    onValueChange: setServerDetailChartTimescale,
+                    ariaLabel: "Payments analytics time frame",
+                  })
+                : null;
               const paymentsTopNavActions = topNavActionsContainer
-                ? createPortal(
+                  ? createPortal(
                     React.createElement(React.Fragment, null,
-                      React.createElement(PlatformSecondaryButton, {
-                        size: "medium",
-                        type: "button",
-                        onClick: () => void syncPaymentsResource(draftServer.id),
-                        disabled: serverSaveState.isSaving || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
-                      },
-                        serverSaveState.isSaving
-                          ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
-                          : React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Sync Status")
-                      ),
+                      paymentsUsageTimeframeControl,
                       React.createElement(PlatformPrimaryButton, {
-                        size: "medium",
+                        size: "small",
                         type: "button",
                         onClick: () => void connectPaymentsResource(draftServer.id),
                         disabled: serverSaveState.isSaving || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
@@ -4461,147 +4541,108 @@
               const secrets = Array.isArray(currentServerSecrets) ? currentServerSecrets : [];
               const secretsLoading = loadingServerSecretsId === draftServer.id;
               const totalSecrets = secrets.length;
-              const secretDescriptionFormatActions = React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                [
-                  { id: "bold", label: "Bold", icon: Bold },
-                  { id: "italic", label: "Italic", icon: Italic },
-                  { id: "underline", label: "Underline", icon: Underline },
-                  { id: "list", label: "List", icon: List },
-                ].map((action) =>
-                  React.createElement("button", {
-                    key: action.id,
-                    type: "button",
-                    className: "playground-tasks-detail-format-button",
-                    title: action.label,
-                    "aria-label": action.label,
-                    disabled: serverSecretComposerState.isSaving,
-                    onMouseDown: (event) => event.preventDefault(),
-                    onClick: () => handleServerSecretDescriptionFormat(action.id),
-                  }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+              const isSecretComposerSaving = Boolean(serverSecretComposerState.isSaving);
+              const isEditingSecret = Boolean(serverSecretComposerState.secretId);
+              const secretComposerModal = React.createElement(PlatformModal, {
+                  open: Boolean(serverSecretComposerState.open),
+                  title: isEditingSecret ? "Edit Secret" : "Add Secret",
+                  description: isEditingSecret
+                    ? "Update this encrypted secret without exposing its current value."
+                    : "Store an encrypted value for agents and resources to use securely.",
+                  size: "medium",
+                  portal: true,
+                  as: "form",
+                  initialFocusRef: serverSecretNameInputRef,
+                  onClose: () => {
+                    if (!isSecretComposerSaving) {
+                      closeServerSecretComposer();
+                    }
+                  },
+                  closeOnBackdrop: !isSecretComposerSaving,
+                  closeOnEscape: !isSecretComposerSaving,
+                  closeButtonDisabled: isSecretComposerSaving,
+                  closeButtonLabel: "Close secret modal",
+                  ariaLabel: isEditingSecret ? "Edit secret" : "Add a secret",
+                  className: "playground-server-secret-composer-modal",
+                  bodyClassName: "playground-server-secret-composer-modal-body",
+                  footerClassName: "playground-server-secret-composer-modal-footer",
+                  surfaceProps: {
+                    onSubmit: (event) => void handleServerSecretComposerSubmit(event),
+                  },
+                  footer: React.createElement(React.Fragment, null,
+                    React.createElement(PlatformSecondaryButton, {
+                      type: "button",
+                      size: "medium",
+                      onClick: closeServerSecretComposer,
+                      disabled: isSecretComposerSaving,
+                    }, "Cancel"),
+                    React.createElement(PlatformPrimaryButton, {
+                      type: "submit",
+                      size: "medium",
+                      disabled: isSecretComposerSaving || !String(serverSecretComposerState.name || "").trim(),
+                      "aria-busy": isSecretComposerSaving || undefined,
+                    }, isSecretComposerSaving ? "Saving..." : "Save Secret")
+                  ),
+                },
+                React.createElement("div", { className: "playground-database-browser-modal-grid is-single-column" },
+                  React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Name"),
+                    React.createElement("input", {
+                      ref: serverSecretNameInputRef,
+                      type: "text",
+                      className: "playground-environments-input",
+                      value: serverSecretComposerState.name,
+                      placeholder: "Secret name",
+                      disabled: isSecretComposerSaving,
+                      onChange: (event) => setServerSecretComposerState((current) => ({
+                        ...current,
+                        name: event.target.value,
+                        error: "",
+                      })),
+                    })
+                  ),
+                  React.createElement(PlatformInstructionsEditor, {
+                    value: serverSecretComposerState.description || "",
+                    onChange: (value) => setServerSecretComposerState((current) => ({
+                      ...current,
+                      description: value,
+                      error: "",
+                    })),
+                    title: "Description",
+                    placeholder: "Describe how this secret should be used.",
+                    ariaLabel: "Secret description",
+                    readOnly: isSecretComposerSaving,
+                    stickyHeader: false,
+                    historyKey: "secret-description:" + (serverSecretComposerState.secretId || "new"),
+                    variant: "minimalistic-ui",
+                    className: "playground-server-secret-modal-description",
+                  }),
+                  React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" },
+                      isEditingSecret ? "Value (leave empty to keep existing)" : "Value"
+                    ),
+                    React.createElement("input", {
+                      type: "password",
+                      className: "playground-environments-input",
+                      value: serverSecretComposerState.value,
+                      placeholder: "Paste the secret value",
+                      autoComplete: "new-password",
+                      disabled: isSecretComposerSaving,
+                      onChange: (event) => setServerSecretComposerState((current) => ({
+                        ...current,
+                        value: event.target.value,
+                        error: "",
+                      })),
+                    })
+                  ),
+                  serverSecretComposerState.error
+                    ? React.createElement("div", {
+                        className: "playground-environments-error playground-environments-editor-notice",
+                        role: "alert",
+                      }, serverSecretComposerState.error)
+                    : null
                 )
               );
-              const secretDescriptionEditor = React.createElement("div", {
-                  className: "playground-tasks-detail-description-editor" + (isServerSecretDescriptionEditing ? " is-editing" : " is-preview"),
-                },
-                !isServerSecretDescriptionEditing
-                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                      String(serverSecretComposerState.description || "").trim()
-                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                            content: serverSecretComposerState.description,
-                            className: "playground-tasks-detail-description-preview tb-message-markdown",
-                          })
-                        : React.createElement("div", {
-                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                          }, "Add Description here")
-                    )
-                  : null,
-                React.createElement("textarea", {
-                  ref: serverSecretDescriptionTextareaRef,
-                  className: "playground-tasks-detail-description-input " + (isServerSecretDescriptionEditing ? "is-editing" : "is-preview"),
-                  rows: 1,
-                  placeholder: isServerSecretDescriptionEditing ? "Add Description here" : "",
-                  value: serverSecretComposerState.description || "",
-                  disabled: serverSecretComposerState.isSaving,
-                  onFocus: () => setIsServerSecretDescriptionEditing(true),
-                  onChange: (event) => {
-                    setServerSecretComposerState((current) => ({
-                      ...current,
-                      description: event.target.value,
-                      error: "",
-                    }));
-                    resizeEnvironmentDescriptionTextarea(event.currentTarget);
-                  },
-                  onBlur: () => setIsServerSecretDescriptionEditing(false),
-                })
-              );
-              const secretComposerModal = serverSecretComposerState.open
-                ? React.createElement(PlatformModalBackdrop, {
-                    className: "playground-tasks-project-modal-backdrop",
-                    onClick: () => {
-                      if (!serverSecretComposerState.isSaving) {
-                        closeServerSecretComposer();
-                      }
-                    },
-                  },
-                    React.createElement(PlatformModalSurface, {
-                        as: "form",
-                        className: "playground-tasks-project-modal playground-database-browser-modal playground-server-custom-domain-modal",
-                        onClick: (event) => event.stopPropagation(),
-                        onSubmit: (event) => void handleServerSecretComposerSubmit(event),
-                      },
-                      React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                        React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                          React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-                            React.createElement(Key, { width: 18, height: 18, strokeWidth: 1.9 })
-                          ),
-                          React.createElement("input", {
-                            type: "text",
-                            className: "playground-tasks-project-modal-name-input",
-                            value: serverSecretComposerState.name,
-                            placeholder: "New Secret",
-                            autoFocus: true,
-                            disabled: serverSecretComposerState.isSaving,
-                            onChange: (event) => setServerSecretComposerState((current) => ({
-                              ...current,
-                              name: event.target.value,
-                              error: "",
-                            })),
-                          })
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                          onClick: closeServerSecretComposer,
-                          title: "Close",
-                          disabled: serverSecretComposerState.isSaving,
-                        }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                      ),
-                      React.createElement("div", { className: "playground-server-custom-domain-modal-body" },
-                        React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-server-secret-modal-description" },
-                          React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                            React.createElement("div", { className: "playground-tasks-detail-section-title playground-server-description-title" }, "Description"),
-                            secretDescriptionFormatActions
-                          ),
-                          secretDescriptionEditor
-                        ),
-                        React.createElement("label", { className: "playground-environments-field playground-server-custom-domain-field" },
-                          React.createElement("span", { className: "playground-environments-field-label" },
-                            serverSecretComposerState.secretId ? "Value (leave empty to keep existing)" : "Value"
-                          ),
-                          React.createElement("input", {
-                            type: "text",
-                            className: "playground-environments-input",
-                            value: serverSecretComposerState.value,
-                            placeholder: "Paste the secret value",
-                            disabled: serverSecretComposerState.isSaving,
-                            onChange: (event) => setServerSecretComposerState((current) => ({
-                              ...current,
-                              value: event.target.value,
-                              error: "",
-                            })),
-                          })
-                        ),
-                        serverSecretComposerState.error
-                          ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSecretComposerState.error)
-                          : null
-                      ),
-                      React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button",
-                          onClick: closeServerSecretComposer,
-                          disabled: serverSecretComposerState.isSaving,
-                        }, "Cancel"),
-                        React.createElement(PlatformPrimaryButton, {
-                          size: "medium",
-                          type: "submit",
-                          className: "playground-environments-action-button is-primary",
-                          disabled: serverSecretComposerState.isSaving || !String(serverSecretComposerState.name || "").trim(),
-                        }, serverSecretComposerState.isSaving ? "Saving..." : "Save Secret")
-                      )
-                    )
-                  )
-                : null;
 	            const secretsSurface = React.createElement(PlatformUiCard, {
 	                as: "section",
 	                className: "playground-managed-data-list-surface playground-secrets-surface",
@@ -4640,17 +4681,11 @@
 	                          ),
 	                      toolbar: {
 	                        title: "All Secrets",
-	                        search: {
-	                          value: serverSecretsSearchQuery,
+                        search: {
+                          value: serverSecretsSearchQuery,
                           manual: true,
                           onChange: setServerSecretsSearchQuery,
                           placeholder: "Search secrets by name or description",
-                        },
-                        primaryAction: {
-                          label: "Add Secret",
-                          icon: Plus,
-                          onClick: () => openServerSecretComposer(null),
-                          disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
                         },
                       },
                       columns: [
@@ -4662,12 +4697,9 @@
 	                          width: "minmax(180px, 1.5fr)",
                           cell: ({ row: secret }) => React.createElement("div", {
                               className: "playground-auth-users-cell is-identifier is-secret-name",
-                              title: secret.description ? (secret.name + " - " + secret.description) : secret.name,
+                              title: secret.name,
                             },
-                            React.createElement("div", { className: "playground-auth-users-secret-name-title" }, secret.name),
-                            secret.description
-                              ? React.createElement("div", { className: "playground-auth-users-secret-description", title: secret.description }, secret.description)
-                              : null
+                            React.createElement("div", { className: "playground-auth-users-secret-name-title" }, secret.name)
                           ),
                         },
                         {
@@ -4715,22 +4747,6 @@
               );
   
 	            const normalizedSecretsDetailTab = ["secrets", "usage", "settings"].includes(secretsDetailTab) ? secretsDetailTab : "secrets";
-	            const secretsDetailTabs = [
-	              { id: "secrets", label: "Secrets", icon: Key },
-	              { id: "usage", label: "Usage", icon: ChartColumnIncreasing },
-	              { id: "settings", label: "Settings", icon: Settings },
-	            ];
-	            const handleSecretsDetailTabChange = (nextTab) => {
-	              setServerOwnerPopoverOpen(false);
-	              setSecretsDetailTab(nextTab);
-	              if (nextTab === "usage" && draftServer.id) {
-	                void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
-	              }
-	              if (nextTab === "settings") {
-	                if (draftServer.id) void loadServerContext(draftServer.id);
-	                if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
-	              }
-	            };
 	            const secretsStorageLocation = String(draftServer.location || "eur3").trim() || "eur3";
   	            const secretsTabContent = React.createElement(React.Fragment, null,
   	              secretsSurface,
@@ -4749,7 +4765,7 @@
 	            const secretsDetailSidebar = React.createElement(PlatformUiCard, {
 	                as: "section",
 	                variant: "sidebar",
-	                cardTitle: "Properties",
+	                cardTitle: undefined,
 	                className: "playground-project-overview-sidebar-card playground-server-detail-properties-card playground-secrets-detail-properties-card",
 	              },
 	              React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
@@ -4758,9 +4774,6 @@
 	                }),
 	                renderSourceServerSidebarRow("Secrets", renderSourceServerSidebarValue(String(totalSecrets))),
 	                renderSourceServerSidebarRow("Location", renderSourceServerSidebarValue(secretsStorageLocation)),
-	                renderSourceServerSidebarRow("Resource ID",
-	                  renderSourceServerSidebarValue(draftServer.id || "Unsaved secrets", "is-id")
-	                ),
 	                renderSourceServerSidebarRow("Created",
 	                  renderSourceServerSidebarValue(formatPlaygroundFileDate(draftServer.createdAt))
 	                ),
@@ -4774,24 +4787,6 @@
 	              )
 	            );
 	            const secretsDetailSidebarCollapsed = Boolean(serverDetailsCollapsed);
-	            const secretsDetailSidebarToggle = React.createElement("button", {
-	                type: "button",
-	                className: "playground-project-overview-sidebar-toggle",
-	                onClick: () => setServerDetailsCollapsed((current) => !current),
-	                title: secretsDetailSidebarCollapsed ? "Show secrets properties" : "Hide secrets properties",
-	                "aria-label": secretsDetailSidebarCollapsed ? "Show secrets properties" : "Hide secrets properties",
-	                "aria-pressed": secretsDetailSidebarCollapsed ? "true" : "false",
-	              },
-	              React.createElement(PanelRight, { width: 15, height: 15, strokeWidth: 1.8 })
-	            );
-	            const secretsDetailHeader = React.createElement("div", { className: "playground-server-detail-profile-section" },
-	              renderServerResourceDetailTitleRow({
-	                className: " playground-server-function-title-input playground-secrets-title-input",
-	                placeholder: "Secrets",
-	                ariaLabel: "Secrets name",
-	                readOnly: isServerTemplatePreview,
-	              })
-	            );
 	            const secretsEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main playground-managed-data-detail-main playground-secrets-detail-main" + (
 	              normalizedSecretsDetailTab === "secrets" ? " is-managed-data-list-tab is-secrets-tab" : ""
 	            );
@@ -4802,11 +4797,9 @@
 	              normalizedSecretsDetailTab === "secrets" ? " is-managed-data-list-tab is-secrets-tab" : ""
 	            );
 	            const secretsDetailWorkspace = React.createElement(DevelopServerDetailPage, {
-	                header: secretsDetailHeader,
-	                tabs: secretsDetailTabs,
+	                tabs: [],
 	                activeTab: normalizedSecretsDetailTab,
-	                onTabChange: handleSecretsDetailTabChange,
-	                sidebarToggle: secretsDetailSidebarToggle,
+	                onTabChange: () => undefined,
 	                sidebar: secretsDetailSidebar,
 	                sidebarCollapsed: secretsDetailSidebarCollapsed,
 	                sidebarAutoCollapseTabs: ["secrets"],
@@ -4823,8 +4816,37 @@
 	                : null,
 	              secretsEditorTabContent
 	            );
+	            const secretsUsageTimeframeControl = normalizedSecretsDetailTab === "usage"
+	              ? React.createElement(PlatformSwitch, {
+	                  className: "playground-secrets-detail-header-timeframe",
+	                  value: normalizedServerDetailChartTimescale,
+	                  options: serverDetailTimescaleOptions,
+	                  onValueChange: setServerDetailChartTimescale,
+	                  ariaLabel: "Secrets analytics time frame",
+	                })
+	              : null;
+	            const secretsAddSecretAction = React.createElement(PlatformPrimaryButton, {
+	                type: "button",
+	                size: "small",
+	                className: "playground-secrets-detail-header-add-secret",
+	                onClick: () => openServerSecretComposer(null),
+	                disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+	              },
+	              React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
+	              React.createElement("span", null, "Add Secret")
+	            );
+	            const secretsTopNavActions = topNavActionsContainer
+	              ? createPortal(
+	                  React.createElement(React.Fragment, null,
+	                    secretsUsageTimeframeControl,
+	                    secretsAddSecretAction
+	                  ),
+	                  topNavActionsContainer
+	                )
+	              : null;
   
 	            return React.createElement(React.Fragment, null,
+	              secretsTopNavActions,
 	              React.createElement("div", { className: secretsEditorMainClassName, ref: serverDetailMainRef },
 	                React.createElement("div", { className: secretsEditorScrollClassName }, secretsDetailWorkspace)
 	              ),
@@ -5005,9 +5027,6 @@
               const agentRuntimeRuns = Array.isArray(currentServerAgentRuntimeRuns) ? currentServerAgentRuntimeRuns : [];
               const agentRuntimeRunsLoading = loadingServerAgentRuntimeRunsId === draftServer.id;
               const totalRuns = agentRuntimeRuns.length;
-              const completedRuns = agentRuntimeRuns.filter((run) => run?.status === "completed").length;
-              const failedRuns = agentRuntimeRuns.filter((run) => run?.status === "failed").length;
-              const runningRuns = agentRuntimeRuns.filter((run) => run?.status === "running" || run?.status === "queued").length;
               const agentRuntimeSettingsRows = React.createElement("div", { className: "playground-server-detail-fact-rows" },
                 renderServerFactRow("Agent",
                   renderServerDetailSelectControl({
@@ -5129,76 +5148,89 @@
                 React.createElement("div", { className: "playground-tasks-skills" },
                   React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
                     React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Skills"),
-                    React.createElement("div", {
-                      className: "playground-tasks-skills-popup-shell tb-runner-chat",
-                      ref: agentRuntimeSkillsActionsRef,
-                    },
-                      React.createElement("button", {
+                    React.createElement(PlatformPopup, {
+                      open: agentRuntimeSkillsPopoverOpen,
+                      rootRef: agentRuntimeSkillsActionsRef,
+                      surfaceRef: agentRuntimeSkillsPopupSurfaceRef,
+                      rootClassName: "playground-tasks-skills-popup-shell tb-runner-chat",
+                      surfaceClassName: "tb-runner-chat tb-popup-menu-skills playground-agent-runtime-skills-popup",
+                      surfaceProps: {
+                        role: "dialog",
+                        "aria-label": "Manage skills",
+                        width: 280,
+                      },
+                      animation: "up-in",
+                      variant: "minimal",
+                      portal: true,
+                      portalOffset: 8,
+                      placement: "bottom-end",
+                      trigger: React.createElement(PlatformSecondaryButton, {
                         type: "button",
-                        className: "playground-environments-action-button playground-tasks-skills-manage-button" + (agentRuntimeSkillsPopoverOpen ? " is-active" : ""),
+                        size: "small",
+                        active: agentRuntimeSkillsPopoverOpen,
+                        className: "playground-agent-runtime-skills-manage-button",
+                        "aria-haspopup": "dialog",
+                        "aria-expanded": agentRuntimeSkillsPopoverOpen ? "true" : "false",
                         onClick: () => {
                           setServerDetailSelectPopover("");
                           setAgentRuntimeSkillsPopoverOpen((current) => !current);
                         },
                       }, "Manage Skills"),
-                      agentRuntimeSkillsPopoverOpen
-                        ? React.createElement(PlatformPopupSurface, { className: "tb-popup-menu-skills", animation: "up-in" },
-                            React.createElement("div", { className: "tb-popup-attach-topbar" },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close",
-                                onClick: () => setAgentRuntimeSkillsPopoverOpen(false),
-                                "aria-label": "Close skills popup",
-                              }, React.createElement(X, { className: "tb-popup-attach-topbar-icon", strokeWidth: 1.75 })),
-                              React.createElement("div", { className: "tb-popup-attach-topbar-title" }, "Skills"),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "tb-popup-attach-topbar-button tb-popup-attach-topbar-button-confirm",
-                                onClick: () => setAgentRuntimeSkillsPopoverOpen(false),
-                                "aria-label": "Done",
-                              }, React.createElement(Check, { className: "tb-popup-attach-topbar-icon", strokeWidth: 2 }))
-                            ),
-                            React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
-                              React.createElement(PlatformSwitch, {
-                                ariaLabel: "Skill source",
-                                value: agentRuntimeSkillsTab,
-                                options: [
-                                  { value: "system", label: "System" },
-                                  { value: "custom", label: "Custom" },
-                                ],
-                                onValueChange: setAgentRuntimeSkillsTab,
-                              })
-                            ),
-                            React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-divider tb-popup-panel-section-divider-spaced tb-popup-panel-section-skills-body" },
-                              (agentRuntimeSkillsTab === "system" ? agentRuntimeSystemSkillItems : agentRuntimeCustomSkillItems).map((skill) => {
-                                const isEnabled = effectiveAgentRuntimeSkillIds.includes(skill.id);
-                                return React.createElement("button", {
-                                    key: skill.id,
-                                    type: "button",
-                                    className: "tb-popup-row tb-popup-row-skill" + (isEnabled ? " selected" : ""),
-                                    onClick: () => toggleServerAgentRuntimeSkill(skill.id, baseAgentRuntimeSkillIds),
-                                  },
-                                    renderAgentRuntimeSkillIcon(skill, "tb-popup-icon"),
-                                    React.createElement("span", { className: "tb-popup-label" }, skill.name),
-                                    React.createElement("span", { className: "tb-popup-check-slot" },
-                                      isEnabled
-                                        ? React.createElement(Check, { className: "tb-popup-check", strokeWidth: 1.75 })
-                                        : null
-                                    )
-                                  );
-                              }),
-                              agentRuntimeSkillsTab === "custom" && runtimeCustomSkillsLoading
-                                ? React.createElement("div", { className: "tb-popup-loading-row" },
-                                    React.createElement("span", { className: "tb-popup-loading-spinner", "aria-hidden": "true" }),
-                                    React.createElement("span", { className: "tb-popup-loading-label" }, "Loading custom skills...")
-                                  )
-                                : null,
-                              agentRuntimeSkillsTab === "custom" && !runtimeCustomSkillsLoading && agentRuntimeCustomSkillItems.length === 0
-                                ? React.createElement("div", { className: "tb-popup-empty-state" }, "No custom skills yet.")
-                                : null
+                    },
+                      React.createElement("div", { className: "tb-popup-attach-topbar" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close",
+                          onClick: () => setAgentRuntimeSkillsPopoverOpen(false),
+                          "aria-label": "Close skills popup",
+                        }, React.createElement(X, { className: "tb-popup-attach-topbar-icon", strokeWidth: 1.75 })),
+                        React.createElement("div", { className: "tb-popup-attach-topbar-title" }, "Skills"),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "tb-popup-attach-topbar-button tb-popup-attach-topbar-button-confirm",
+                          onClick: () => setAgentRuntimeSkillsPopoverOpen(false),
+                          "aria-label": "Done",
+                        }, React.createElement(Check, { className: "tb-popup-attach-topbar-icon", strokeWidth: 2 }))
+                      ),
+                      React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
+                        React.createElement(PlatformSwitch, {
+                          ariaLabel: "Skill source",
+                          value: agentRuntimeSkillsTab,
+                          options: [
+                            { value: "system", label: "System" },
+                            { value: "custom", label: "Custom" },
+                          ],
+                          onValueChange: setAgentRuntimeSkillsTab,
+                        })
+                      ),
+                      React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-divider tb-popup-panel-section-divider-spaced tb-popup-panel-section-skills-body" },
+                        (agentRuntimeSkillsTab === "system" ? agentRuntimeSystemSkillItems : agentRuntimeCustomSkillItems).map((skill) => {
+                          const isEnabled = effectiveAgentRuntimeSkillIds.includes(skill.id);
+                          return React.createElement("button", {
+                              key: skill.id,
+                              type: "button",
+                              className: "tb-popup-row tb-popup-row-skill" + (isEnabled ? " selected" : ""),
+                              onClick: () => toggleServerAgentRuntimeSkill(skill.id, baseAgentRuntimeSkillIds),
+                            },
+                              renderAgentRuntimeSkillIcon(skill, "tb-popup-icon"),
+                              React.createElement("span", { className: "tb-popup-label" }, skill.name),
+                              React.createElement("span", { className: "tb-popup-check-slot" },
+                                isEnabled
+                                  ? React.createElement(Check, { className: "tb-popup-check", strokeWidth: 1.75 })
+                                  : null
+                              )
+                            );
+                        }),
+                        agentRuntimeSkillsTab === "custom" && runtimeCustomSkillsLoading
+                          ? React.createElement("div", { className: "tb-popup-loading-row" },
+                              React.createElement("span", { className: "tb-popup-loading-spinner", "aria-hidden": "true" }),
+                              React.createElement("span", { className: "tb-popup-loading-label" }, "Loading custom skills...")
                             )
-                          )
-                        : null
+                          : null,
+                        agentRuntimeSkillsTab === "custom" && !runtimeCustomSkillsLoading && agentRuntimeCustomSkillItems.length === 0
+                          ? React.createElement("div", { className: "tb-popup-empty-state" }, "No custom skills yet.")
+                          : null
+                      )
                     )
                   ),
                   agentRuntimeSkillEntries.length > 0
@@ -5318,159 +5350,101 @@
                 }
               };
   
-              const agentRuntimeRunComposerModal = serverAgentRuntimeRunComposer.open
-                ? React.createElement(PlatformModalBackdrop, {
-                    className: "playground-tasks-project-modal-backdrop playground-agent-runtime-thread-modal-backdrop",
-                    onClick: () => {
-                      if (!serverAgentRuntimeRunComposer.isSubmitting) {
-                        closeAgentRuntimeRunComposer();
-                      }
-                    },
+              const agentRuntimeRunComposerModal = React.createElement(PlatformModal, {
+                  open: Boolean(serverAgentRuntimeRunComposer.open),
+                  title: "New Thread",
+                  description: "Start a thread with this runtime's configured agent, computer, and execution policy.",
+                  size: "medium",
+                  portal: true,
+                  as: "form",
+                  onClose: () => {
+                    if (!serverAgentRuntimeRunComposer.isSubmitting) {
+                      closeAgentRuntimeRunComposer();
+                    }
                   },
-                    React.createElement(PlatformModalSurface, {
-                        as: "form",
-                        className: "playground-tasks-project-modal playground-environment-composer-modal",
-                        onClick: (event) => event.stopPropagation(),
-                        onSubmit: (event) => void handleAgentRuntimeRunSubmit(event),
-                      },
-                      React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                        React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                          React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-                            React.createElement(Bot, { width: 18, height: 18, strokeWidth: 1.9 })
-                          ),
-                          React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, "New Thread")
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                          onClick: closeAgentRuntimeRunComposer,
-                          title: "Close",
-                          disabled: serverAgentRuntimeRunComposer.isSubmitting,
-                        }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                      ),
-                      React.createElement("div", { className: "playground-environment-composer-modal-body" },
-                        React.createElement("div", { className: "playground-environments-field-grid" },
-                          React.createElement("label", { className: "playground-environments-field" },
-                            React.createElement("span", { className: "playground-environments-field-label" }, "Title"),
-                            React.createElement("input", {
-                              type: "text",
-                              className: "playground-environments-input",
-                              value: serverAgentRuntimeRunComposer.title,
-                              onChange: (event) => setServerAgentRuntimeRunComposer((current) => ({
-                                ...current,
-                                title: event.target.value,
-                              })),
-                              placeholder: "Optional run title",
-                              disabled: serverAgentRuntimeRunComposer.isSubmitting,
-                            })
-                          ),
-                          React.createElement("label", { className: "playground-environments-field" },
-                            React.createElement("span", { className: "playground-environments-field-label" }, "Mode"),
-                            React.createElement("select", {
-                              className: "playground-environments-input",
-                              value: serverAgentRuntimeRunComposer.mode,
-                              onChange: (event) => setServerAgentRuntimeRunComposer((current) => ({
-                                ...current,
-                                mode: event.target.value === "sync" ? "sync" : "async",
-                              })),
-                              disabled: serverAgentRuntimeRunComposer.isSubmitting,
-                            },
-                              React.createElement("option", { value: "async" }, "Async"),
-                              React.createElement("option", { value: "sync" }, "Sync")
-                            )
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
-                          React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                            React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Prompt"),
-                            React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                              [
-                                {
-                                  id: "bold",
-                                  label: "Bold",
-                                  icon: Bold,
-                                },
-                                {
-                                  id: "italic",
-                                  label: "Italic",
-                                  icon: Italic,
-                                },
-                                {
-                                  id: "underline",
-                                  label: "Underline",
-                                  icon: Underline,
-                                },
-                                {
-                                  id: "list",
-                                  label: "List",
-                                  icon: List,
-                                },
-                              ].map((action) =>
-                                React.createElement("button", {
-                                  key: action.id,
-                                  type: "button",
-                                  className: "playground-tasks-detail-format-button",
-                                  title: action.label,
-                                  "aria-label": action.label,
-                                  onMouseDown: (event) => event.preventDefault(),
-                                  onClick: () => handleServerAgentRuntimeRunPromptFormat(action.id),
-                                }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                              )
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isServerAgentRuntimeRunPromptEditing ? " is-editing" : " is-preview") },
-                            !isServerAgentRuntimeRunPromptEditing
-                              ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                                  String(serverAgentRuntimeRunComposer.prompt || "").trim()
-                                    ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                        content: serverAgentRuntimeRunComposer.prompt,
-                                        className: "playground-tasks-detail-description-preview tb-message-markdown",
-                                      })
-                                    : React.createElement("div", {
-                                        className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                      }, "Describe what the agent should do.")
-                                )
-                              : null,
-                            React.createElement("textarea", {
-                              ref: serverAgentRuntimeRunPromptTextareaRef,
-                              className: "playground-tasks-detail-description-input " + (isServerAgentRuntimeRunPromptEditing ? "is-editing" : "is-preview"),
-                              rows: 1,
-                              placeholder: isServerAgentRuntimeRunPromptEditing ? "Describe what the agent should do." : "",
-                              value: serverAgentRuntimeRunComposer.prompt,
-                              disabled: serverAgentRuntimeRunComposer.isSubmitting,
-                              onFocus: () => setIsServerAgentRuntimeRunPromptEditing(true),
-                              onChange: (event) => {
-                                setServerAgentRuntimeRunComposer((current) => ({
-                                  ...current,
-                                  prompt: event.target.value,
-                                }));
-                                resizeEnvironmentDescriptionTextarea(event.currentTarget);
-                              },
-                              onBlur: () => setIsServerAgentRuntimeRunPromptEditing(false),
-                            })
-                          )
-                        )
-                      ),
-                      serverAgentRuntimeRunComposer.error
-                        ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, serverAgentRuntimeRunComposer.error)
-                        : null,
-                      React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button",
-                          onClick: closeAgentRuntimeRunComposer,
-                          disabled: serverAgentRuntimeRunComposer.isSubmitting,
-                        }, "Cancel"),
-                        React.createElement(PlatformPrimaryButton, {
-                          size: "medium",
-                          type: "submit",
-                          className: "playground-environments-action-button is-primary",
-                          disabled: serverAgentRuntimeRunComposer.isSubmitting || !String(serverAgentRuntimeRunComposer.prompt || "").trim(),
-                        }, serverAgentRuntimeRunComposer.isSubmitting ? "Starting..." : "Start Run")
-                      )
-                    )
+                  closeOnBackdrop: !serverAgentRuntimeRunComposer.isSubmitting,
+                  closeOnEscape: !serverAgentRuntimeRunComposer.isSubmitting,
+                  closeButtonDisabled: serverAgentRuntimeRunComposer.isSubmitting,
+                  closeButtonLabel: "Close new thread modal",
+                  ariaLabel: "Start an agent runtime thread",
+                  className: "playground-agent-runtime-thread-modal",
+                  bodyClassName: "playground-agent-runtime-thread-modal-body",
+                  footerClassName: "playground-agent-runtime-thread-modal-footer",
+                  surfaceProps: {
+                    onSubmit: (event) => void handleAgentRuntimeRunSubmit(event),
+                  },
+                  footer: React.createElement(React.Fragment, null,
+                    React.createElement(PlatformSecondaryButton, {
+                      type: "button",
+                      size: "medium",
+                      onClick: closeAgentRuntimeRunComposer,
+                      disabled: serverAgentRuntimeRunComposer.isSubmitting,
+                    }, "Cancel"),
+                    React.createElement(PlatformPrimaryButton, {
+                      size: "medium",
+                      type: "submit",
+                      disabled: serverAgentRuntimeRunComposer.isSubmitting || !String(serverAgentRuntimeRunComposer.prompt || "").trim(),
+                      "aria-busy": serverAgentRuntimeRunComposer.isSubmitting || undefined,
+                    }, serverAgentRuntimeRunComposer.isSubmitting ? "Starting..." : "Start Thread")
+                  ),
+                },
+                React.createElement("div", { className: "playground-database-browser-modal-grid" },
+                  React.createElement("label", { className: "playground-tasks-project-modal-field" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Title"),
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-environments-input",
+                      value: serverAgentRuntimeRunComposer.title,
+                      onChange: (event) => setServerAgentRuntimeRunComposer((current) => ({
+                        ...current,
+                        title: event.target.value,
+                        error: "",
+                      })),
+                      placeholder: "Optional thread title",
+                      disabled: serverAgentRuntimeRunComposer.isSubmitting,
+                    })
+                  ),
+                  React.createElement("div", { className: "playground-tasks-project-modal-field" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Mode"),
+                    React.createElement(PlatformSelector, {
+                      value: serverAgentRuntimeRunComposer.mode === "sync" ? "sync" : "async",
+                      options: [
+                        { value: "async", label: "Async", description: "Start the thread and continue in the background." },
+                        { value: "sync", label: "Sync", description: "Wait for the runtime to complete the request." },
+                      ],
+                      onValueChange: (nextValue) => setServerAgentRuntimeRunComposer((current) => ({
+                        ...current,
+                        mode: nextValue === "sync" ? "sync" : "async",
+                        error: "",
+                      })),
+                      label: serverAgentRuntimeRunComposer.mode === "sync" ? "Sync" : "Async",
+                      ariaLabel: "Choose execution mode",
+                      fullWidth: true,
+                      disabled: serverAgentRuntimeRunComposer.isSubmitting,
+                      popupClassName: "playground-agent-runtime-thread-mode-popup",
+                    })
                   )
-                : null;
+                ),
+                React.createElement(PlatformInstructionsEditor, {
+                  value: serverAgentRuntimeRunComposer.prompt || "",
+                  onChange: (value) => setServerAgentRuntimeRunComposer((current) => ({
+                    ...current,
+                    prompt: value,
+                    error: "",
+                  })),
+                  title: "Prompt",
+                  placeholder: "Describe what the agent should do.",
+                  ariaLabel: "Agent runtime thread prompt",
+                  readOnly: serverAgentRuntimeRunComposer.isSubmitting,
+                  stickyHeader: false,
+                  variant: "minimalistic-ui",
+                  historyKey: "agent-runtime-thread-prompt:" + (draftServer.id || "draft"),
+                  className: "playground-agent-runtime-thread-prompt",
+                }),
+                serverAgentRuntimeRunComposer.error
+                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, serverAgentRuntimeRunComposer.error)
+                  : null
+              );
   
 	            const agentRuntimeRunsSurface = React.createElement(PlatformUiCard, {
 	                as: "section",
@@ -5498,16 +5472,11 @@
                       },
                       loading: agentRuntimeRunsLoading,
                       error: serverAgentRuntimeRunsState.error || null,
-                      emptyState: React.createElement("div", { className: "playground-files-state playground-agent-runtime-empty-state" },
-                        React.createElement("img", {
-                          className: "playground-agent-runtime-empty-state-image",
-                          src: "/img/empty-state/no-chats-yet.avif",
-                          alt: "",
-                          "aria-hidden": "true",
-                          draggable: "false",
-                        }),
-                        React.createElement("span", null, "No threads yet.")
-                      ),
+                      emptyState: React.createElement(PlatformEmptyState, {
+                        icon: MessageSquare,
+                        title: "No threads yet",
+                        description: "Threads started through this runtime will appear here.",
+                      }),
                       toolbar: {
                         title: "All Threads",
                         controlsLeading: React.createElement("button", {
@@ -5523,12 +5492,6 @@
                         search: {
                           placeholder: "Search threads",
                           getSearchText: (run) => [run.title, run.input, run.status, run.mode, run.threadId].filter(Boolean).join(" "),
-                        },
-                        primaryAction: {
-                          label: "New Thread",
-                          icon: Plus,
-                          onClick: openAgentRuntimeRunComposer,
-                          disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
                         },
                       },
                       columns: [
@@ -5580,32 +5543,7 @@
               const normalizedAgentRuntimeDetailTab = ["usage", "settings", "threads"].includes(agentRuntimeDetailTab)
                 ? agentRuntimeDetailTab
                 : "usage";
-              const agentRuntimeDetailTabs = [
-                { id: "usage", label: "Usage", icon: ChartColumnIncreasing },
-                { id: "threads", label: "Threads", icon: MessageSquare },
-                { id: "settings", label: "Settings", icon: Settings },
-              ];
-              const handleAgentRuntimeDetailTabChange = (nextTab) => {
-                setServerOwnerPopoverOpen(false);
-                setAgentRuntimeDetailTab(nextTab);
-                if (nextTab === "usage" && draftServer.id) {
-                  void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
-                }
-                if (nextTab === "settings") {
-                  if (draftServer.id) void loadServerContext(draftServer.id);
-                  if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
-                }
-              };
-              const agentRuntimeStorageLocation = String(draftServer.location || "eur3").trim() || "eur3";
-              const agentRuntimeThreadsTabContent = React.createElement(React.Fragment, null,
-                agentRuntimeRunsSurface,
-                React.createElement("div", { className: "playground-database-storage-location-note" },
-                  React.createElement(MapPin, { width: 13, height: 13, strokeWidth: 1.8 }),
-                  "Data is stored in Location ",
-                  React.createElement("strong", null, agentRuntimeStorageLocation),
-                  "."
-                )
-              );
+              const agentRuntimeThreadsTabContent = agentRuntimeRunsSurface;
               const agentRuntimeUsageTabContent = React.createElement(React.Fragment, null,
                 serverUsageTabContent,
                 functionInvokeSection
@@ -5613,24 +5551,118 @@
               const agentRuntimeSettingsTabContent = serverSettingsPermissionContent || React.createElement("div", {
                   className: "playground-server-settings-tab is-agent-runtime-settings-tab",
                 },
+                serverDeploymentMapSection,
                 descriptionSection,
                 agentRuntimeSettingsSection,
-                connectionsSection,
                 serverTeamAccessPlatformSection,
-                serverDangerSection
+                connectionsSection
               );
               const agentRuntimeEditorTabContent = normalizedAgentRuntimeDetailTab === "threads"
                 ? agentRuntimeThreadsTabContent
                 : normalizedAgentRuntimeDetailTab === "settings"
                   ? agentRuntimeSettingsTabContent
                   : agentRuntimeUsageTabContent;
+              const agentRuntimeEndpoint = String(draftServer.serviceUrl || "").trim();
+              const agentRuntimeIsDeployed = String(draftServer.status || "").trim().toLowerCase() === "deployed"
+                && Boolean(agentRuntimeEndpoint);
+              const agentRuntimeEndpointValue = agentRuntimeEndpoint
+                ? React.createElement("span", {
+                    className: "playground-agents-detail-sidebar-copy-value",
+                  },
+                  React.createElement("span", {
+                    className: "playground-environments-editor-fact-value playground-agent-runtime-endpoint-value",
+                    title: agentRuntimeEndpoint,
+                  }, agentRuntimeEndpoint),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-agents-detail-sidebar-copy-button",
+                    onClick: async () => {
+                      const copied = await copyTextToClipboard(agentRuntimeEndpoint);
+                      if (!copied) return;
+                      setCopiedFunctionServiceUrl(agentRuntimeEndpoint);
+                      window.setTimeout(() => {
+                        setCopiedFunctionServiceUrl((currentValue) =>
+                          currentValue === agentRuntimeEndpoint ? "" : currentValue
+                        );
+                      }, 3000);
+                    },
+                    title: copiedFunctionServiceUrl === agentRuntimeEndpoint ? "Copied" : "Copy Agent Runtime URL",
+                    "aria-label": copiedFunctionServiceUrl === agentRuntimeEndpoint
+                      ? "Agent Runtime URL copied"
+                      : "Copy Agent Runtime URL",
+                  },
+                    copiedFunctionServiceUrl === agentRuntimeEndpoint
+                      ? React.createElement(Check, { width: 12, height: 12, strokeWidth: 2 })
+                      : React.createElement(Copy, { width: 12, height: 12, strokeWidth: 1.8 })
+                  )
+                )
+                : renderSourceServerSidebarValue("Not deployed", "is-empty");
+              const agentRuntimeDeploymentControl = React.createElement(PlatformButtonSelector, {
+                  mode: "split-action",
+                  buttonVariant: "primary",
+                  buttonSize: "medium",
+                  label: agentRuntimeIsDeployed ? "Redeploy" : "Deploy",
+                  actionAriaLabel: (agentRuntimeIsDeployed ? "Redeploy " : "Deploy ") + (draftServer.name || "agent runtime"),
+                  popupAriaLabel: "Agent Runtime deployment actions",
+                  popupRole: "menu",
+                  popupVariant: "minimal",
+                  popupAlignment: "left",
+                  matchTriggerWidth: true,
+                  fullWidth: true,
+                  closeOnSelect: true,
+                  onAction: () => void handleDeployServer(),
+                  actionDisabled: serverDeploymentState.isDeploying
+                    || serverDeploymentState.isDecommissioning
+                    || serverSaveState.isSaving
+                    || !draftServer.id
+                    || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                  popupDisabled: serverDeploymentState.isDeploying
+                    || serverDeploymentState.isDecommissioning
+                    || serverSaveState.isSaving,
+                  className: "playground-agent-runtime-sidebar-deploy-selector",
+                },
+                React.createElement("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "tb-popup-row",
+                  onClick: () => void handleDecommissionAgentRuntime(),
+                  disabled: !agentRuntimeIsDeployed
+                    || serverDeploymentState.isDeploying
+                    || serverDeploymentState.isDecommissioning,
+                },
+                  serverDeploymentState.isDecommissioning
+                    ? React.createElement(Loader2, {
+                        className: "tb-popup-icon playground-files-state-loader",
+                        width: 14,
+                        height: 14,
+                        strokeWidth: 1.8,
+                      })
+                    : React.createElement(Square, {
+                        className: "tb-popup-icon",
+                        width: 14,
+                        height: 14,
+                        strokeWidth: 1.8,
+                      }),
+                  React.createElement("span", { className: "tb-popup-label" },
+                    serverDeploymentState.isDecommissioning ? "Decommissioning..." : "Decommission"
+                  )
+                )
+              );
               const agentRuntimeDetailSidebar = React.createElement(PlatformUiCard, {
                   as: "section",
                   variant: "sidebar",
-                  cardTitle: "Properties",
+                  cardTitle: undefined,
                   className: "playground-project-overview-sidebar-card playground-server-detail-properties-card playground-agent-runtime-detail-properties-card",
                 },
                 React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
+                  renderSourceServerSidebarRow("Status",
+                    React.createElement(PlatformLabel, {
+                      variant: agentRuntimeIsDeployed ? "green" : "gray",
+                    }, agentRuntimeIsDeployed ? "Deployed" : "Not deployed")
+                  ),
+                  renderSourceServerSidebarRow("Endpoint",
+                    agentRuntimeEndpointValue
+                  ),
                   renderSourceServerSidebarRow("Creator", serverCreatorValue, {
                     valueClassName: "playground-server-detail-sidebar-identity-cell",
                   }),
@@ -5643,19 +5675,7 @@
                   renderSourceServerSidebarRow("Execution",
                     renderSourceServerSidebarValue(agentRuntimeConfig.executionMode === "sync" ? "Sync" : "Async")
                   ),
-                  renderSourceServerSidebarRow("Streaming",
-                    React.createElement(PlatformLabel, {
-                      variant: agentRuntimeConfig.streamingEnabled === false ? "gray" : "green",
-                    }, agentRuntimeConfig.streamingEnabled === false ? "Disabled" : "Enabled")
-                  ),
                   renderSourceServerSidebarRow("Runs", renderSourceServerSidebarValue(String(totalRuns))),
-                  renderSourceServerSidebarRow("Completed", renderSourceServerSidebarValue(String(completedRuns))),
-                  renderSourceServerSidebarRow("Failed", renderSourceServerSidebarValue(String(failedRuns))),
-                  renderSourceServerSidebarRow("Running", renderSourceServerSidebarValue(String(runningRuns))),
-                  renderSourceServerSidebarRow("Location", renderSourceServerSidebarValue(agentRuntimeStorageLocation)),
-                  renderSourceServerSidebarRow("Resource ID",
-                    renderSourceServerSidebarValue(draftServer.id || "Unsaved agent runtime", "is-id")
-                  ),
                   renderSourceServerSidebarRow("Created",
                     renderSourceServerSidebarValue(formatPlaygroundFileDate(draftServer.createdAt))
                   ),
@@ -5666,36 +5686,17 @@
                     className: "playground-server-detail-sidebar-owner-row",
                     valueClassName: "playground-server-detail-sidebar-owner-cell",
                   })
-                )
+                ),
+                agentRuntimeDeploymentControl
               );
               const agentRuntimeDetailSidebarCollapsed = Boolean(serverDetailsCollapsed);
-              const agentRuntimeDetailSidebarToggle = React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-sidebar-toggle",
-                  onClick: () => setServerDetailsCollapsed((current) => !current),
-                  title: agentRuntimeDetailSidebarCollapsed ? "Show agent runtime properties" : "Hide agent runtime properties",
-                  "aria-label": agentRuntimeDetailSidebarCollapsed ? "Show agent runtime properties" : "Hide agent runtime properties",
-                  "aria-pressed": agentRuntimeDetailSidebarCollapsed ? "true" : "false",
-                },
-                React.createElement(PanelRight, { width: 15, height: 15, strokeWidth: 1.8 })
-              );
-              const agentRuntimeDetailHeader = React.createElement("div", { className: "playground-server-detail-profile-section" },
-                renderServerResourceDetailTitleRow({
-                  className: " playground-server-function-title-input playground-agent-runtime-title-input",
-                  placeholder: "Agent Runtime",
-                  ariaLabel: "Agent runtime name",
-                  readOnly: isServerTemplatePreview,
-                })
-              );
               const agentRuntimeDetailContentClassName = "playground-server-detail-content playground-agent-runtime-detail-content" + (
                 normalizedAgentRuntimeDetailTab === "threads" ? " is-managed-data-list-tab is-agent-runtime-threads-tab" : ""
               );
               const agentRuntimeDetailWorkspace = React.createElement(DevelopServerDetailPage, {
-                  header: agentRuntimeDetailHeader,
-                  tabs: agentRuntimeDetailTabs,
+                  tabs: [],
                   activeTab: normalizedAgentRuntimeDetailTab,
-                  onTabChange: handleAgentRuntimeDetailTabChange,
-                  sidebarToggle: agentRuntimeDetailSidebarToggle,
+                  onTabChange: () => undefined,
                   sidebar: agentRuntimeDetailSidebar,
                   sidebarCollapsed: agentRuntimeDetailSidebarCollapsed,
                   sidebarAutoCollapseTabs: ["threads"],
@@ -5720,8 +5721,42 @@
                   : null,
                 agentRuntimeEditorTabContent
               );
+              const agentRuntimeUsageTimeframeControl = normalizedAgentRuntimeDetailTab === "usage"
+                ? React.createElement(PlatformSwitch, {
+                    className: "playground-agent-runtime-detail-header-timeframe",
+                    value: normalizedServerDetailChartTimescale,
+                    options: serverDetailTimescaleOptions,
+                    onValueChange: setServerDetailChartTimescale,
+                    ariaLabel: "Agent Runtime analytics time frame",
+                  })
+                : null;
+              const agentRuntimeNewThreadAction = React.createElement(PlatformPrimaryButton, {
+                  type: "button",
+                  size: "small",
+                  className: "playground-agent-runtime-detail-header-new-thread",
+                  onClick: openAgentRuntimeRunComposer,
+                  disabled: !agentRuntimeIsDeployed
+                    || !draftServer.id
+                    || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                  title: agentRuntimeIsDeployed
+                    ? "Start a new Agent Runtime thread"
+                    : "Deploy this Agent Runtime before starting a thread",
+                },
+                React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
+                React.createElement("span", null, "New Thread")
+              );
+              const agentRuntimeTopNavActions = topNavActionsContainer
+                ? createPortal(
+                    React.createElement(React.Fragment, null,
+                      agentRuntimeUsageTimeframeControl,
+                      agentRuntimeNewThreadAction
+                    ),
+                    topNavActionsContainer
+                  )
+                : null;
 
               return React.createElement(React.Fragment, null,
+                agentRuntimeTopNavActions,
                 React.createElement("div", {
                     className: "playground-environments-editor-main playground-tasks-detail-main playground-managed-data-detail-main playground-agent-runtime-detail-main" + (
                       normalizedAgentRuntimeDetailTab === "threads" ? " is-managed-data-list-tab is-agent-runtime-threads-tab" : ""
@@ -5818,12 +5853,6 @@
                         onChange: setServerAuthSearchQuery,
                         placeholder: "Search by email address, phone number, or user UID",
                       },
-                      primaryAction: {
-                        label: "Add User",
-                        icon: Plus,
-                        onClick: openServerAuthUserComposer,
-                        disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
-                      },
                     },
                     columns: [
                       {
@@ -5885,22 +5914,6 @@
                   })
               );
               const normalizedAuthDetailTab = ["users", "usage", "settings"].includes(authDetailTab) ? authDetailTab : "users";
-              const authDetailTabs = [
-                { id: "users", label: "Users", icon: Users },
-                { id: "usage", label: "Usage", icon: ChartColumnIncreasing },
-                { id: "settings", label: "Settings", icon: Settings },
-              ];
-              const handleAuthDetailTabChange = (nextTab) => {
-                setServerOwnerPopoverOpen(false);
-                setAuthDetailTab(nextTab);
-                if (nextTab === "usage" && draftServer.id) {
-                  void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
-                }
-                if (nextTab === "settings") {
-                  if (draftServer.id) void loadServerContext(draftServer.id);
-                  if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
-                }
-              };
               const authStorageLocation = String(draftServer.location || "eur3").trim() || "eur3";
               const authUsersTabContent = React.createElement(React.Fragment, null,
                 authUsersSurface,
@@ -5919,7 +5932,7 @@
               const authDetailSidebar = React.createElement(PlatformUiCard, {
                   as: "section",
                   variant: "sidebar",
-                  cardTitle: "Properties",
+                  cardTitle: undefined,
                   className: "playground-project-overview-sidebar-card playground-server-detail-properties-card playground-auth-detail-properties-card",
                 },
                 React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
@@ -5928,9 +5941,6 @@
                   }),
                   renderSourceServerSidebarRow("Users", renderSourceServerSidebarValue(String(authUsers.length))),
                   renderSourceServerSidebarRow("Location", renderSourceServerSidebarValue(authStorageLocation)),
-                  renderSourceServerSidebarRow("Resource ID",
-                    renderSourceServerSidebarValue(draftServer.id || "Unsaved authentication", "is-id")
-                  ),
                   renderSourceServerSidebarRow("Created",
                     renderSourceServerSidebarValue(formatPlaygroundFileDate(draftServer.createdAt))
                   ),
@@ -5944,24 +5954,6 @@
                 )
               );
               const authDetailSidebarCollapsed = Boolean(serverDetailsCollapsed);
-              const authDetailSidebarToggle = React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-sidebar-toggle",
-                  onClick: () => setServerDetailsCollapsed((current) => !current),
-                  title: authDetailSidebarCollapsed ? "Show authentication properties" : "Hide authentication properties",
-                  "aria-label": authDetailSidebarCollapsed ? "Show authentication properties" : "Hide authentication properties",
-                  "aria-pressed": authDetailSidebarCollapsed ? "true" : "false",
-                },
-                React.createElement(PanelRight, { width: 15, height: 15, strokeWidth: 1.8 })
-              );
-              const authDetailHeader = React.createElement("div", { className: "playground-server-detail-profile-section" },
-                renderServerResourceDetailTitleRow({
-                  className: " playground-server-function-title-input playground-auth-title-input",
-                  placeholder: "Authentication",
-                  ariaLabel: "Authentication name",
-                  readOnly: isServerTemplatePreview,
-                })
-              );
               const authEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main playground-managed-data-detail-main playground-auth-detail-main" + (
                 normalizedAuthDetailTab === "users" ? " is-managed-data-list-tab is-auth-users-tab" : ""
               );
@@ -5972,11 +5964,9 @@
                 normalizedAuthDetailTab === "users" ? " is-managed-data-list-tab is-auth-users-tab" : ""
               );
               const authDetailWorkspace = React.createElement(DevelopServerDetailPage, {
-                  header: authDetailHeader,
-                  tabs: authDetailTabs,
+                  tabs: [],
                   activeTab: normalizedAuthDetailTab,
-                  onTabChange: handleAuthDetailTabChange,
-                  sidebarToggle: authDetailSidebarToggle,
+                  onTabChange: () => undefined,
                   sidebar: authDetailSidebar,
                   sidebarCollapsed: authDetailSidebarCollapsed,
                   sidebarAutoCollapseTabs: ["users"],
@@ -5993,8 +5983,37 @@
                   : null,
                 authEditorTabContent
               );
+              const authUsageTimeframeControl = normalizedAuthDetailTab === "usage"
+                ? React.createElement(PlatformSwitch, {
+                    className: "playground-auth-detail-header-timeframe",
+                    value: normalizedServerDetailChartTimescale,
+                    options: serverDetailTimescaleOptions,
+                    onValueChange: setServerDetailChartTimescale,
+                    ariaLabel: "Authentication analytics time frame",
+                  })
+                : null;
+              const authAddUserAction = React.createElement(PlatformPrimaryButton, {
+                  type: "button",
+                  size: "small",
+                  className: "playground-auth-detail-header-add-user",
+                  onClick: openServerAuthUserComposer,
+                  disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                },
+                React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Add User")
+              );
+              const authTopNavActions = topNavActionsContainer
+                ? createPortal(
+                    React.createElement(React.Fragment, null,
+                      authUsageTimeframeControl,
+                      authAddUserAction
+                    ),
+                    topNavActionsContainer
+                  )
+                : null;
 
               return React.createElement(React.Fragment, null,
+                authTopNavActions,
                 React.createElement("div", { className: authEditorMainClassName, ref: serverDetailMainRef },
                   React.createElement("div", { className: authEditorScrollClassName }, authDetailWorkspace)
                 ),

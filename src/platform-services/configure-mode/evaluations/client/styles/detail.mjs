@@ -489,6 +489,78 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         width: 100%;
       }
 
+      .playground-evaluations-run-evidence-card.platform-ui-card {
+        width: 100%;
+      }
+
+      .playground-evaluations-run-evidence-card.is-trusted {
+        border-color: rgba(74, 222, 128, 0.28);
+      }
+
+      .playground-evaluations-run-evidence-card.is-untrusted {
+        border-color: rgba(250, 204, 21, 0.28);
+      }
+
+      .playground-evaluations-run-evidence-summary {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .playground-evaluations-run-evidence-summary > .platform-label {
+        flex: 0 0 auto;
+        margin-top: 1px;
+      }
+
+      .playground-evaluations-run-evidence-summary > p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .playground-evaluations-run-evidence-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 24px;
+        margin: 18px 0 0;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-evaluations-run-evidence-grid > div {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-evaluations-run-evidence-grid dt,
+      .playground-evaluations-run-evidence-grid dd {
+        min-width: 0;
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .playground-evaluations-run-evidence-grid dt {
+        color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-evaluations-run-evidence-grid dd {
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.9);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        text-align: right;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-evaluations-run-evidence-grid dd > .platform-label {
+        font-family: inherit;
+      }
+
       .playground-evaluations-detail-overview-main .playground-evaluations-description-section,
       .playground-evaluations-detail-overview-main .playground-evaluations-dataset-guidance-section {
         min-width: 0;
@@ -497,6 +569,10 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
       @media (max-width: 760px) {
         .playground-evaluations-page .playground-guardrails-browser-body.is-detail-page {
           padding: 16px;
+        }
+
+        .playground-evaluations-run-evidence-grid {
+          grid-template-columns: minmax(0, 1fr);
         }
       }
 `;

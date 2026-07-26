@@ -17,6 +17,7 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	            name: normalizedProject.name || "Project",
 	            description: normalizedProject.description,
             color: normalizedProject.color || getPlaygroundProjectAccent(normalizedProject, projectIndex),
+            status: normalizedProjectStatus,
             priority: normalizedProjectPriority,
 	            defaultEnvironmentId: normalizedProject.defaultEnvironmentId || undefined,
             leadUserId: normalizedProjectLead.userId || undefined,
@@ -1151,14 +1152,7 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
               name: "Project",
             }
           );
-          const baseProjectMetadata = baseProject.metadata && typeof baseProject.metadata === "object" && !Array.isArray(baseProject.metadata)
-            ? baseProject.metadata
-            : {};
-          const shouldRefreshBaseProjectBeforePatch = options.refreshBaseProject !== false && (
-            isPlaceholderProjectDisplayName(baseProject.name)
-            || (!String(baseProject.description || "").trim() && typeof baseProjectMetadata.description !== "string")
-            || !getPlaygroundProjectWallpaperId(baseProject.wallpaperId || baseProjectMetadata.wallpaperId, "")
-          );
+          const shouldRefreshBaseProjectBeforePatch = options.refreshBaseProject !== false;
           if (shouldRefreshBaseProjectBeforePatch) {
             try {
               const projectResponse = await fetch(backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId), {
@@ -1174,10 +1168,35 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
               }
             } catch {}
           }
+          const refreshedBaseMissionControl = getPlaygroundProjectMissionControlRecord(baseProject);
           const normalizedMissionControlRecord = normalizePlaygroundProjectMissionControlRecord({
-            ...getPlaygroundProjectMissionControlRecord(baseProject),
+            ...refreshedBaseMissionControl,
             ...(missionControlRecord && typeof missionControlRecord === "object" ? missionControlRecord : {}),
           });
+          if (
+            refreshedBaseMissionControl.deliveryContract
+            && (!missionControlRecord?.deliveryContract || typeof missionControlRecord.deliveryContract !== "object")
+          ) {
+            normalizedMissionControlRecord.deliveryContract = clonePlaygroundProjectBlueprintValue(
+              refreshedBaseMissionControl.deliveryContract
+            );
+          }
+          if (
+            refreshedBaseMissionControl.deliveryPlan
+            && (!missionControlRecord?.deliveryPlan || typeof missionControlRecord.deliveryPlan !== "object")
+          ) {
+            normalizedMissionControlRecord.deliveryPlan = clonePlaygroundProjectBlueprintValue(
+              refreshedBaseMissionControl.deliveryPlan
+            );
+          }
+          if (
+            refreshedBaseMissionControl.deliveryExecution
+            && (!missionControlRecord?.deliveryExecution || typeof missionControlRecord.deliveryExecution !== "object")
+          ) {
+            normalizedMissionControlRecord.deliveryExecution = clonePlaygroundProjectBlueprintValue(
+              refreshedBaseMissionControl.deliveryExecution
+            );
+          }
           if (
             missionControlRecord
             && typeof missionControlRecord === "object"
@@ -1329,65 +1348,16 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
           return normalizePlaygroundStrategyTextList(values).join(String.fromCharCode(10));
         }
 
-        function serializeMissionControlSetupOutcomesForInput(outcomes) {
-          return (Array.isArray(outcomes) ? outcomes : [])
-            .map((outcome) => {
-              const normalizedOutcome = normalizePlaygroundStrategyOutcomeRecord(outcome);
-              const title = String(normalizedOutcome.title || "").trim();
-              const description = String(normalizedOutcome.description || "").trim();
-              return title || description
-                ? title + (description ? " - " + description : "")
-                : "";
-            })
-            .filter(Boolean)
-            .join(String.fromCharCode(10));
-        }
-
-        function getMissionControlSetupOutcomeDraftLines(value) {
-          const normalizedValue = String(value || "").replaceAll(String.fromCharCode(13), "");
-          return normalizedValue ? normalizedValue.split(String.fromCharCode(10)) : [];
-        }
-
-        function serializeMissionControlSetupOutcomeDraftLines(lines) {
-          return (Array.isArray(lines) ? lines : [])
-            .map((line) => String(line || "").replaceAll(String.fromCharCode(13), ""))
-            .join(String.fromCharCode(10));
-        }
-
-        function parseMissionControlSetupOutcomesInput(value, previousOutcomes = []) {
-          const lines = getMissionControlSetupOutcomeDraftLines(value)
-            .map((line) => line.trim().replace(/^[-*]\\s+/, "").replace(/^\\d+[.)]\\s+/, ""))
-            .filter(Boolean);
-          return lines.map((line, index) => {
-            const previousOutcome = normalizePlaygroundStrategyOutcomeRecord(previousOutcomes[index] || {}, index);
-            const parts = line.split(/\\s+-\\s+/);
-            const title = String(parts.shift() || "").trim();
-            const description = parts.join(" - ").trim();
-            return normalizePlaygroundStrategyOutcomeRecord({
-              ...previousOutcome,
-              title: title || previousOutcome.title || ("Outcome " + String(index + 1)),
-              description,
-            }, index);
-          });
-        }
-
-        function buildMissionControlSetupStrategyBriefFromDraft(outcomesDraftOverride) {
+        function buildMissionControlSetupStrategyBriefFromDraft() {
           const currentStrategyBrief = normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraftRef.current || missionControlStrategyDraft);
           const projectGoal = String(
             projectDescriptionTextareaRef.current
               ? projectDescriptionTextareaRef.current.value
               : projectDraft.description || ""
           ).replaceAll(String.fromCharCode(13), "").trim();
-          const outcomesDraft = typeof outcomesDraftOverride === "string"
-            ? outcomesDraftOverride
-            : missionControlSetupOutcomesDraft;
           return normalizePlaygroundProjectStrategyBrief({
             ...currentStrategyBrief,
             mission: projectGoal,
-            outcomes: parseMissionControlSetupOutcomesInput(
-              outcomesDraft,
-              currentStrategyBrief.outcomes
-            ),
           });
         }
 
@@ -1413,8 +1383,8 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
             });
             if (updatedProject?.id) {
               const savedStrategyBrief = getPlaygroundProjectStrategyBriefRecord(updatedProject);
-              if (JSON.stringify(savedStrategyBrief.outcomes) !== JSON.stringify(normalizedStrategyBrief.outcomes)) {
-                throw new Error("Outcome changes were not confirmed by the project API.");
+              if (JSON.stringify(savedStrategyBrief) !== JSON.stringify(normalizedStrategyBrief)) {
+                throw new Error("Strategy changes were not confirmed by the project API.");
               }
             }
             return updatedProject;

@@ -179,10 +179,93 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
           ?? source.ct
         ) || normalizePlaygroundFineTuningTokenCount(explicitOrComponentCostUsd * PLAYGROUND_FINE_TUNING_CT_PER_DOLLAR);
         const totalCostUsd = explicitOrComponentCostUsd || (totalCostTokens / PLAYGROUND_FINE_TUNING_CT_PER_DOLLAR);
+        const configuration = readPlaygroundFineTuningPlainObject(source.configuration || source.config);
+        const iterations = (Array.isArray(source.iterations) ? source.iterations : []).map((iteration, index) => {
+          const iterationSource = readPlaygroundFineTuningPlainObject(iteration);
+          const metrics = readPlaygroundFineTuningPlainObject(iterationSource.metrics);
+          const baselineMetrics = readPlaygroundFineTuningPlainObject(
+            iterationSource.baselineMetrics || iterationSource.baseline_metrics
+          );
+          return {
+            ...iterationSource,
+            id: normalizePlaygroundFineTuningString(iterationSource.id || "iteration_" + index),
+            number: Math.max(0, Number(iterationSource.number ?? iterationSource.iterationNumber ?? iterationSource.iteration_number ?? index) || 0),
+            status: normalizePlaygroundFineTuningString(iterationSource.status || iterationSource.phase || "queued"),
+            accepted: iterationSource.accepted === true,
+            targetMet: iterationSource.targetMet === true || iterationSource.target_met === true,
+            decision: normalizePlaygroundFineTuningString(iterationSource.decision),
+            decisionReason: normalizePlaygroundFineTuningString(iterationSource.decisionReason || iterationSource.decision_reason),
+            decisionEvidence: readPlaygroundFineTuningPlainObject(
+              iterationSource.decisionEvidence || iterationSource.decision_evidence
+            ),
+            optimizerThreadId: normalizePlaygroundFineTuningString(iterationSource.optimizerThreadId || iterationSource.optimizer_thread_id),
+            optimizerThreadTitle: normalizePlaygroundFineTuningString(iterationSource.optimizerThreadTitle || iterationSource.optimizer_thread_title),
+            candidateVersionId: normalizePlaygroundFineTuningString(iterationSource.candidateVersionId || iterationSource.candidate_version_id),
+            candidateVersion: readPlaygroundFineTuningPlainObject(iterationSource.candidateVersion || iterationSource.candidate_version),
+            candidateSnapshot: readPlaygroundFineTuningPlainObject(iterationSource.candidateSnapshot || iterationSource.candidate_snapshot),
+            analysisSummary: sanitizePlaygroundFineTuningAnalysisSummary(iterationSource.analysisSummary || iterationSource.analysis_summary || ""),
+            metrics: {
+              ...metrics,
+              averageScore: normalizePlaygroundFineTuningScore(metrics.averageScore ?? metrics.average_score ?? 0),
+              passRate: normalizePlaygroundFineTuningScore(metrics.passRate ?? metrics.pass_rate ?? 0),
+              totalCount: Math.max(0, Number(metrics.totalCount ?? metrics.total_count ?? 0) || 0),
+              passedCount: Math.max(0, Number(metrics.passedCount ?? metrics.passed_count ?? 0) || 0),
+              costUsd: normalizePlaygroundFineTuningUsdCost(metrics.costUsd ?? metrics.cost_usd ?? 0),
+            },
+            baselineMetrics: {
+              ...baselineMetrics,
+              averageScore: normalizePlaygroundFineTuningScore(baselineMetrics.averageScore ?? baselineMetrics.average_score ?? 0),
+              passRate: normalizePlaygroundFineTuningScore(baselineMetrics.passRate ?? baselineMetrics.pass_rate ?? 0),
+              totalCount: Math.max(0, Number(baselineMetrics.totalCount ?? baselineMetrics.total_count ?? 0) || 0),
+              passedCount: Math.max(0, Number(baselineMetrics.passedCount ?? baselineMetrics.passed_count ?? 0) || 0),
+              costUsd: normalizePlaygroundFineTuningUsdCost(baselineMetrics.costUsd ?? baselineMetrics.cost_usd ?? 0),
+            },
+            evaluationRuns: Array.isArray(iterationSource.evaluationRuns)
+              ? iterationSource.evaluationRuns
+              : Array.isArray(iterationSource.evaluation_runs)
+                ? iterationSource.evaluation_runs
+                : [],
+            caseComparisons: Array.isArray(iterationSource.caseComparisons)
+              ? iterationSource.caseComparisons
+              : Array.isArray(iterationSource.case_comparisons)
+                ? iterationSource.case_comparisons
+                : [],
+            startedAt: normalizePlaygroundFineTuningString(iterationSource.startedAt || iterationSource.started_at),
+            completedAt: normalizePlaygroundFineTuningString(iterationSource.completedAt || iterationSource.completed_at),
+            costTokens: normalizePlaygroundFineTuningTokenCount(iterationSource.costTokens ?? iterationSource.cost_tokens ?? 0),
+            costUsd: normalizePlaygroundFineTuningUsdCost(iterationSource.costUsd ?? iterationSource.cost_usd ?? 0),
+          };
+        }).sort((left, right) => left.number - right.number);
+        const costLedger = Array.isArray(source.costLedger)
+          ? source.costLedger
+          : Array.isArray(source.cost_ledger)
+            ? source.cost_ledger
+            : [];
+        const events = Array.isArray(source.events) ? source.events : [];
+        const budgetSource = readPlaygroundFineTuningPlainObject(source.budget);
+        const limitSource = readPlaygroundFineTuningPlainObject(configuration.limits);
+        const spentUsd = normalizePlaygroundFineTuningUsdCost(
+          budgetSource.spentUsd
+            ?? budgetSource.spent_usd
+            ?? costLedger.reduce((sum, entry) => sum + normalizePlaygroundFineTuningUsdCost(entry?.amountUsd ?? entry?.amount_usd), 0)
+            ?? totalCostUsd
+        ) || totalCostUsd;
+        const limitUsd = normalizePlaygroundFineTuningUsdCost(
+          budgetSource.limitUsd
+            ?? budgetSource.limit_usd
+            ?? limitSource.budgetUsd
+            ?? limitSource.budget_usd
+            ?? 0
+        );
         return {
           id: normalizePlaygroundFineTuningString(source.id || source.jobId || source.job_id) || createPlaygroundFineTuningId(),
-          name: normalizePlaygroundFineTuningString(source.name || source.title || "Fine-Tune Job " + (fallbackIndex + 1)),
+          schemaVersion: Math.max(1, Number(source.schemaVersion || source.schema_version || 1) || 1),
+          kind: normalizePlaygroundFineTuningString(source.kind || "agent_optimization"),
+          name: normalizePlaygroundFineTuningString(source.name || source.title || "Optimization Job " + (fallbackIndex + 1)),
           status: normalizePlaygroundFineTuningString(source.status || "completed") || "completed",
+          phase: normalizePlaygroundFineTuningString(source.phase || source.executionPhase || source.execution_phase || source.status || "queued"),
+          stopReason: normalizePlaygroundFineTuningString(source.stopReason || source.stop_reason),
+          targetMet: source.targetMet === true || source.target_met === true,
           createdAt: normalizePlaygroundFineTuningString(source.createdAt || source.created_at || nowIso),
           updatedAt: normalizePlaygroundFineTuningString(source.updatedAt || source.updated_at || source.createdAt || source.created_at || nowIso),
           agentId: normalizePlaygroundFineTuningString(source.agentId || source.agent_id),
@@ -199,6 +282,20 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
           environmentId: normalizePlaygroundFineTuningString(source.environmentId || source.environment_id),
           environmentName: normalizePlaygroundFineTuningString(source.environmentName || source.environment_name || "Computer"),
           evaluationSets,
+          configuration,
+          iterations,
+          currentIteration: Math.max(0, Number(source.currentIteration ?? source.current_iteration ?? 0) || 0),
+          bestIterationId: normalizePlaygroundFineTuningString(source.bestIterationId || source.best_iteration_id),
+          events,
+          costLedger,
+          budget: {
+            ...budgetSource,
+            limitUsd,
+            spentUsd,
+            remainingUsd: Math.max(0, Number(budgetSource.remainingUsd ?? budgetSource.remaining_usd ?? (limitUsd - spentUsd)) || 0),
+            exhausted: budgetSource.exhausted === true || (limitUsd > 0 && spentUsd >= limitUsd),
+          },
+          execution: readPlaygroundFineTuningPlainObject(source.execution),
           description: String(
             Object.prototype.hasOwnProperty.call(source, "description")
               ? source.description ?? ""
@@ -207,7 +304,7 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
           instructions: String(source.instructions || ""),
           verifyAfter: true,
           threadId,
-          threadTitle: normalizePlaygroundFineTuningString(source.threadTitle || source.thread_title || "Fine-Tuning Thread"),
+          threadTitle: normalizePlaygroundFineTuningString(source.threadTitle || source.thread_title || "Optimization Thread"),
           beforeScore: normalizePlaygroundFineTuningScore(source.beforeScore ?? source.before_score ?? 0),
           afterScore: normalizePlaygroundFineTuningScore(source.afterScore ?? source.after_score ?? 0),
           improvementScore: normalizePlaygroundFineTuningScore(source.improvementScore ?? source.improvement_score ?? 0),
@@ -224,6 +321,8 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
           createdAgentVersionId: normalizePlaygroundFineTuningString(source.createdAgentVersionId || source.created_agent_version_id || createdAgentVersion?.id || createdAgentVersion?.versionId || createdAgentVersion?.version_id),
           agentVersionCreationStatus: normalizePlaygroundFineTuningString(source.agentVersionCreationStatus || source.agent_version_creation_status || createdAgentVersion?.status || "proposed") || "proposed",
           agentVersionError: normalizePlaygroundFineTuningString(source.agentVersionError || source.agent_version_error || createdAgentVersion?.error),
+          publicationDecision: readPlaygroundFineTuningPlainObject(source.publicationDecision || source.publication_decision),
+          completedAt: normalizePlaygroundFineTuningString(source.completedAt || source.completed_at),
           metadata,
           error: normalizePlaygroundFineTuningString(source.error || source.message),
         };
@@ -253,6 +352,9 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
         const incomingHasExplicitStatus = Object.prototype.hasOwnProperty.call(incomingSource, "status")
           || Object.prototype.hasOwnProperty.call(incomingSource, "fineTuningStatus")
           || Object.prototype.hasOwnProperty.call(incomingSource, "fine_tuning_status");
+        const incomingHasExplicitPhase = Object.prototype.hasOwnProperty.call(incomingSource, "phase")
+          || Object.prototype.hasOwnProperty.call(incomingSource, "executionPhase")
+          || Object.prototype.hasOwnProperty.call(incomingSource, "execution_phase");
         const incomingHasExplicitDescription = Object.prototype.hasOwnProperty.call(incomingSource, "description");
         const incomingHasExplicitInstructions = Object.prototype.hasOwnProperty.call(incomingSource, "instructions");
         const existing = normalizePlaygroundFineTuningJob(existingJob);
@@ -262,6 +364,7 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
           ...existing,
           ...incoming,
           status: incomingHasExplicitStatus ? incoming.status : existing.status || incoming.status,
+          phase: incomingHasExplicitPhase ? incoming.phase : existing.phase || incoming.phase,
           description: incomingHasExplicitDescription ? incoming.description : existing.description,
           instructions: incomingHasExplicitInstructions ? incoming.instructions : existing.instructions,
           metadata: {
@@ -277,6 +380,16 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
           createdAgentVersionId: incoming.createdAgentVersionId || existing.createdAgentVersionId || normalizePlaygroundFineTuningString(mergedVersion?.id),
           analysisSummary: incoming.analysisSummary || existing.analysisSummary,
           evaluationRuns: Array.isArray(incoming.evaluationRuns) && incoming.evaluationRuns.length ? incoming.evaluationRuns : existing.evaluationRuns,
+          configuration: Object.keys(incoming.configuration || {}).length ? incoming.configuration : existing.configuration,
+          iterations: Array.isArray(incoming.iterations) && incoming.iterations.length ? incoming.iterations : existing.iterations,
+          events: Array.isArray(incoming.events) && incoming.events.length ? incoming.events : existing.events,
+          costLedger: Array.isArray(incoming.costLedger) && incoming.costLedger.length ? incoming.costLedger : existing.costLedger,
+          execution: Object.keys(incoming.execution || {}).length ? incoming.execution : existing.execution,
+          publicationDecision: Object.keys(incoming.publicationDecision || {}).length
+            ? incoming.publicationDecision
+            : existing.publicationDecision,
+          currentIteration: Number(incoming.currentIteration || 0) > 0 ? incoming.currentIteration : existing.currentIteration,
+          bestIterationId: incoming.bestIterationId || existing.bestIterationId,
         });
       }
 
@@ -308,7 +421,9 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
         const normalizedJob = normalizePlaygroundFineTuningJob(job);
         if (!normalizedJob.id) return false;
         const status = normalizePlaygroundFineTuningString(normalizedJob.status).toLowerCase();
-        if (!new Set(["completed", "error", "failed", "cancelled", "canceled"]).has(status)) return true;
+        const phase = normalizePlaygroundFineTuningString(normalizedJob.phase).toLowerCase();
+        if (phase === "planned" || status === "planned") return false;
+        if (!isPlaygroundFineTuningTerminalStatus(phase || status)) return true;
         if (!normalizedJob.threadId) return true;
         if (!normalizedJob.analysisSummary || normalizePlaygroundFineTuningString(normalizedJob.analysisSummary) === "Fine-tuning analysis is running.") return true;
         if (!hasPlaygroundFineTuningChangeArtifacts(normalizedJob)) return true;
@@ -320,10 +435,15 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
         const version = readPlaygroundFineTuningPlainObject(normalizedJob.createdAgentVersion);
         const versionMetadata = compactPlaygroundFineTuningReferenceMetadata(version.metadata);
         const metadata = compactPlaygroundFineTuningReferenceMetadata(normalizedJob.metadata);
-        return {
-          id: normalizedJob.id,
-          name: normalizedJob.name,
-          status: normalizedJob.status,
+          return {
+            id: normalizedJob.id,
+            schemaVersion: normalizedJob.schemaVersion,
+            kind: normalizedJob.kind,
+            name: normalizedJob.name,
+            status: normalizedJob.status,
+            phase: normalizedJob.phase,
+            stopReason: normalizedJob.stopReason,
+            targetMet: normalizedJob.targetMet,
           createdAt: normalizedJob.createdAt,
           updatedAt: normalizedJob.updatedAt,
           agentId: normalizedJob.agentId,
@@ -339,8 +459,15 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
           fineTunerAgentPhotoUrl: normalizedJob.fineTunerAgentPhotoUrl,
           environmentId: normalizedJob.environmentId,
           environmentName: normalizedJob.environmentName,
-          evaluationSets: normalizedJob.evaluationSets,
-          evaluationSetIds: normalizedJob.evaluationSets.map((set) => set.id).filter(Boolean),
+            evaluationSets: normalizedJob.evaluationSets,
+            evaluationSetIds: normalizedJob.evaluationSets.map((set) => set.id).filter(Boolean),
+            configuration: normalizedJob.configuration,
+            iterations: normalizedJob.iterations,
+            currentIteration: normalizedJob.currentIteration,
+            bestIterationId: normalizedJob.bestIterationId,
+            events: normalizedJob.events,
+            costLedger: normalizedJob.costLedger,
+            execution: normalizedJob.execution,
           description: truncatePlaygroundFineTuningReferenceText(normalizedJob.description, 4000),
           instructions: truncatePlaygroundFineTuningReferenceText(normalizedJob.instructions, 4000),
           verifyAfter: true,

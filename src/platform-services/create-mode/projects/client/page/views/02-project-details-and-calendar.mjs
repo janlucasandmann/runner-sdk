@@ -9,161 +9,162 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
           const isEditingRelease = releaseComposerMode === "edit" && Boolean(releaseDraft?.id);
           const isReleaseActionPending = releaseSaveState.isSaving || releaseDeletePending;
 
-          const modalElement = React.createElement(PlatformModalBackdrop, {
-              className: "playground-tasks-project-modal-backdrop playground-mission-control-modal-backdrop playground-tasks-release-modal-backdrop"
-                + (releaseComposerVisible ? " is-visible" : "")
-                + (releaseComposerClosing ? " is-closing" : ""),
-              onClick: () => closeReleaseComposer(),
+          return React.createElement(PlatformModal, {
+            open: releaseComposerOpen,
+            visible: releaseComposerVisible,
+            closing: releaseComposerClosing,
+            animationDurationMs: releaseComposerAnimationMs,
+            onClose: () => closeReleaseComposer(),
+            as: "form",
+            size: "medium",
+            maxHeight: "80vh",
+            title: isEditingRelease ? "Edit Milestone" : "Create Milestone",
+            headerVariant: "search",
+            headerSearchProps: {
+              icon: ListTodo,
+              value: releaseDraft.name || "",
+              placeholder: "Milestone name",
+              "aria-label": "Milestone name",
+              autoComplete: "off",
+              onChange: (event) => setReleaseDraft((current) => ({
+                ...current,
+                name: event.target.value,
+              })),
             },
-              React.createElement(PlatformModalSurface, {
-                  as: "form",
-                  className: "playground-tasks-project-modal playground-mission-control-modal playground-tasks-release-modal"
-                    + (releaseComposerVisible ? " is-visible" : "")
-                    + (releaseComposerClosing ? " is-closing" : ""),
-                  role: "dialog",
-                  "aria-modal": "true",
-                  "aria-label": isEditingRelease ? "Edit milestone" : "New milestone",
-                  onClick: (event) => event.stopPropagation(),
-                  onSubmit: (event) => void handleSaveRelease(event),
-                },
-                React.createElement("div", { className: "playground-tasks-project-modal-top playground-tasks-release-modal-top" },
-                  React.createElement("div", { className: "playground-tasks-project-modal-name-row playground-tasks-release-modal-name-row" },
-                    React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-                      React.createElement(ListTodo, { width: 18, height: 18, strokeWidth: 1.9 })
-                    ),
-                    React.createElement("input", {
-                      type: "text",
-                      className: "playground-tasks-project-modal-name-input playground-tasks-release-modal-title-input",
-                      value: releaseDraft.name,
-                      placeholder: isEditingRelease ? "Milestone name" : "New Milestone",
-                      autoFocus: true,
-                      onChange: (event) => setReleaseDraft((current) => ({ ...current, name: event.target.value })),
-                    })
-                  ),
-                  React.createElement("button", {
+            className: "playground-project-milestone-modal",
+            bodyClassName: "playground-project-milestone-modal__body",
+            footerClassName: "playground-project-milestone-modal__footer",
+            closeButtonLabel: "Close milestone",
+            closeButtonDisabled: isReleaseActionPending,
+            surfaceProps: {
+              onSubmit: (event) => void handleSaveRelease(event),
+            },
+            footer: React.createElement(React.Fragment, null,
+              isEditingRelease
+                ? React.createElement(PlatformSecondaryButton, {
                     type: "button",
-                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                    onClick: () => closeReleaseComposer(),
-                    title: "Close",
+                    size: "medium",
+                    style: { marginRight: "auto" },
+                    onClick: () => void handleDeleteRelease(releaseDraft.id),
                     disabled: isReleaseActionPending,
-                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  }, releaseDeletePending ? "Deleting..." : "Delete")
+                : null,
+              React.createElement(PlatformSecondaryButton, {
+                type: "button",
+                size: "medium",
+                onClick: () => closeReleaseComposer(),
+                disabled: isReleaseActionPending,
+              }, "Cancel"),
+              React.createElement(PlatformPrimaryButton, {
+                size: "medium",
+                type: "submit",
+                disabled: isReleaseActionPending || !String(releaseDraft.name || "").trim(),
+              }, releaseSaveState.isSaving
+                ? (isEditingRelease ? "Saving..." : "Creating...")
+                : (isEditingRelease ? "Save Milestone" : "Create Milestone"))
+            ),
+          },
+            React.createElement("div", { className: "playground-mission-control-modal-context playground-tasks-release-modal-context" },
+              React.createElement("div", { className: "playground-tasks-release-modal-date-row" },
+                React.createElement("label", { className: "playground-tasks-release-modal-field" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Start date"),
+                  React.createElement("input", {
+                    type: "date",
+                    className: "playground-tasks-release-modal-input",
+                    value: toPlaygroundDateInputValue(releaseDraft.startAt),
+                    onChange: (event) => setReleaseDraft((current) => ({
+                      ...current,
+                      startAt: fromPlaygroundDateInputValue(event.target.value),
+                    })),
+                  })
                 ),
-                React.createElement("div", { className: "playground-mission-control-modal-body playground-tasks-release-modal-body" },
-                  React.createElement("div", { className: "playground-mission-control-modal-context playground-tasks-release-modal-context" },
-                    React.createElement("div", { className: "playground-tasks-release-modal-date-row" },
-                      React.createElement("label", { className: "playground-tasks-release-modal-field" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Start date"),
-                        React.createElement("input", {
-                          type: "date",
-                          className: "playground-tasks-release-modal-input",
-                          value: toPlaygroundDateInputValue(releaseDraft.startAt),
-                          onChange: (event) => setReleaseDraft((current) => ({
-                            ...current,
-                            startAt: fromPlaygroundDateInputValue(event.target.value),
-                          })),
-                        })
-                      ),
-                      React.createElement("label", { className: "playground-tasks-release-modal-field" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "End date"),
-                        React.createElement("input", {
-                          type: "date",
-                          className: "playground-tasks-release-modal-input",
-                          value: toPlaygroundDateInputValue(releaseDraft.endAt),
-                          onChange: (event) => setReleaseDraft((current) => ({
-                            ...current,
-                            endAt: fromPlaygroundDateInputValue(event.target.value, { endOfDay: true }),
-                          })),
-                        })
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-release-modal-description" },
-                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                        React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                          [
-                            { id: "bold", label: "Bold", icon: Bold },
-                            { id: "italic", label: "Italic", icon: Italic },
-                            { id: "underline", label: "Underline", icon: Underline },
-                            { id: "list", label: "List", icon: List },
-                          ].map((action) =>
-                            React.createElement("button", {
-                              key: action.id,
-                              type: "button",
-                              className: "playground-tasks-detail-format-button",
-                              title: action.label,
-                              "aria-label": action.label,
-                              onMouseDown: (event) => event.preventDefault(),
-                              onClick: () => handleReleaseDescriptionFormat(action.id),
-                            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                          )
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isReleaseDescriptionEditing ? " is-editing" : " is-preview") },
-                        !isReleaseDescriptionEditing
-                          ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                              String(releaseDraft.description || "").trim()
-                                ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                    content: releaseDraft.description,
-                                    className: "playground-tasks-detail-description-preview tb-message-markdown",
-                                  })
-                                : React.createElement("div", {
-                                    className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                  }, "Optional details for this milestone.")
-                            )
-                          : null,
-                        React.createElement("textarea", {
-                          ref: releaseDescriptionTextareaRef,
-                          className: "playground-tasks-detail-description-input " + (isReleaseDescriptionEditing ? "is-editing" : "is-preview"),
-                          rows: 1,
-                          placeholder: isReleaseDescriptionEditing ? "Optional details for this milestone." : "",
-                          value: releaseDraft.description,
-                          onFocus: () => setIsReleaseDescriptionEditing(true),
-                          onChange: (event) => {
-                            setReleaseDraft((current) => ({ ...current, description: event.target.value }));
-                            resizeTaskDescriptionTextarea(event.currentTarget);
-                          },
-                          onBlur: () => {
-                            setIsReleaseDescriptionEditing(false);
-                          },
-                        })
-                      )
-                    ),
-                    releaseSaveState.error
-                      ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, releaseSaveState.error)
-                      : null
-                  ),
-                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                    isEditingRelease
-                      ? React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button",
-                          style: { marginRight: "auto" },
-                          onClick: () => void handleDeleteRelease(releaseDraft.id),
-                          disabled: isReleaseActionPending,
-                        }, releaseDeletePending ? "Deleting..." : "Delete")
-                      : null,
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button",
-                      onClick: () => closeReleaseComposer(),
-                      disabled: isReleaseActionPending,
-                    }, "Cancel"),
-                    React.createElement(PlatformPrimaryButton, {
-                      size: "medium",
-                      type: "submit",
-                      className: "playground-environments-action-button is-primary",
-                      disabled: isReleaseActionPending || !String(releaseDraft.name || "").trim(),
-                    }, releaseSaveState.isSaving
-                      ? (isEditingRelease ? "Saving..." : "Creating...")
-                      : (isEditingRelease ? "Save Milestone" : "Create Milestone"))
-                  )
+                React.createElement("label", { className: "playground-tasks-release-modal-field" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "End date"),
+                  React.createElement("input", {
+                    type: "date",
+                    className: "playground-tasks-release-modal-input",
+                    value: toPlaygroundDateInputValue(releaseDraft.endAt),
+                    onChange: (event) => setReleaseDraft((current) => ({
+                      ...current,
+                      endAt: fromPlaygroundDateInputValue(event.target.value, { endOfDay: true }),
+                    })),
+                  })
                 )
-              )
-            );
-
-          return typeof document !== "undefined" && document.body
-            ? createPortal(modalElement, document.body)
-            : modalElement;
+              ),
+              React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-release-modal-description" },
+                React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                  React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                    [
+                      { id: "bold", label: "Bold", icon: Bold },
+                      { id: "italic", label: "Italic", icon: Italic },
+                      { id: "underline", label: "Underline", icon: Underline },
+                      { id: "list", label: "List", icon: List },
+                    ].map((action) =>
+                      React.createElement("button", {
+                        key: action.id,
+                        type: "button",
+                        className: "playground-tasks-detail-format-button",
+                        title: action.label,
+                        "aria-label": action.label,
+                        onMouseDown: (event) => event.preventDefault(),
+                        onClick: () => handleReleaseDescriptionFormat(action.id),
+                      }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                    )
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isReleaseDescriptionEditing ? " is-editing" : " is-preview") },
+                  !isReleaseDescriptionEditing
+                    ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                        String(releaseDraft.description || "").trim()
+                          ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                              content: releaseDraft.description,
+                              className: "playground-tasks-detail-description-preview tb-message-markdown",
+                            })
+                          : React.createElement("div", {
+                              className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                            }, "Optional details for this milestone.")
+                      )
+                    : null,
+                  React.createElement("textarea", {
+                    ref: releaseDescriptionTextareaRef,
+                    className: "playground-tasks-detail-description-input " + (isReleaseDescriptionEditing ? "is-editing" : "is-preview"),
+                    rows: 1,
+                    placeholder: isReleaseDescriptionEditing ? "Optional details for this milestone." : "",
+                    value: releaseDraft.description,
+                    onFocus: () => setIsReleaseDescriptionEditing(true),
+                    onChange: (event) => {
+                      setReleaseDraft((current) => ({ ...current, description: event.target.value }));
+                      resizeTaskDescriptionTextarea(event.currentTarget);
+                    },
+                    onBlur: () => {
+                      setIsReleaseDescriptionEditing(false);
+                    },
+                  })
+                )
+              ),
+              React.createElement(PlatformInstructionsEditor, {
+                variant: "minimalistic-ui",
+                title: "Success criteria",
+                value: releaseDraft.successCriteriaInput || "",
+                onChange: (nextValue) => setReleaseDraft((current) => ({
+                  ...current,
+                  successCriteria: normalizePlaygroundStrategyTextList(nextValue),
+                  successCriteriaInput: nextValue,
+                })),
+                placeholder: "One measurable criterion per line",
+                ariaLabel: "Milestone success criteria",
+                historyKey: "project-milestone-success-criteria:"
+                  + String(selectedProjectId || "")
+                  + ":"
+                  + String(releaseDraft.id || "new"),
+                stickyHeader: false,
+              }),
+              releaseSaveState.error
+                ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, releaseSaveState.error)
+                : null
+            )
+          );
         }
 
         function renderProjectWorkingAgentLogoCarousel() {
@@ -290,7 +291,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
             },
             {
               title: "Milestones",
-              subtitle: "Group tasks into concrete milestones so agents work toward outcomes instead of isolated tickets.",
+              subtitle: "Group tasks into concrete milestones so agents work toward measurable delivery targets instead of isolated tickets.",
               Icon: CalendarIcon,
             },
           ];

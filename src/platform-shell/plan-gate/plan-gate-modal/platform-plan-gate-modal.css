@@ -1,0 +1,115 @@
+.platform-plan-gate-modal__body {
+  display: grid;
+  gap: 14px;
+}
+
+.platform-plan-gate-modal__plan {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.platform-plan-gate-modal__plan-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.platform-plan-gate-modal__eyebrow,
+.platform-plan-gate-modal__current-plan,
+.platform-plan-gate-modal__plan-description {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.platform-plan-gate-modal__plan-name {
+  margin-top: 2px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.platform-plan-gate-modal__price {
+  flex: 0 0 auto;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.platform-plan-gate-modal__plan-description,
+.platform-plan-gate-modal__current-plan,
+.platform-plan-gate-modal__error {
+  margin: 0;
+}
+
+.platform-plan-gate-modal__usage {
+  width: fit-content;
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: rgba(77, 163, 255, 0.12);
+  color: #8cc1ff;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.platform-plan-gate-modal__features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.platform-plan-gate-modal__feature {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 7px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.platform-plan-gate-modal__feature svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #85df7b;
+}
+
+.platform-plan-gate-modal__current-plan span {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.platform-plan-gate-modal__error {
+  color: #ff8584;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.platform-plan-gate-modal__loader {
+  animation: platform-plan-gate-spin 0.8s linear infinite;
+}
+
+@keyframes platform-plan-gate-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .platform-plan-gate-modal__features {
+    grid-template-columns: 1fr;
+  }
+}
+

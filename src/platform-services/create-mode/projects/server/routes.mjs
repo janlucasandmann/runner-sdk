@@ -10,7 +10,6 @@ function startRequest(handler) {
 export function createProjectsRequestHandler({
   proxyAiosJsonRequest,
   proxyProjectResourceIndexGet,
-  proxyTaskStartThread,
   proxyUpstreamGet,
   proxyUpstreamJsonRequest,
   proxyUpstreamTaskJsonRequest,
@@ -18,7 +17,6 @@ export function createProjectsRequestHandler({
   const dependencies = {
     proxyAiosJsonRequest,
     proxyProjectResourceIndexGet,
-    proxyTaskStartThread,
     proxyUpstreamGet,
     proxyUpstreamJsonRequest,
     proxyUpstreamTaskJsonRequest,
@@ -100,6 +98,15 @@ export function createProjectsRequestHandler({
       return startRequest(proxyProjectResourceIndexGet(req, res, decodeURIComponent(projectResourceIndexMatch[1])));
     }
 
+    const projectHomeMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/home$/);
+    if (method === "GET" && projectHomeMatch) {
+      return startRequest(proxyUpstreamGet(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectHomeMatch[1])}/home`,
+      ));
+    }
+
     const projectOwnerCandidatesMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/owner-candidates$/);
     if (method === "GET" && projectOwnerCandidatesMatch) {
       return startRequest(proxyUpstreamGet(
@@ -117,6 +124,106 @@ export function createProjectsRequestHandler({
         `/projects/${encodePathSegment(projectOwnerMatch[1])}/owner`,
         "PATCH",
       ));
+    }
+
+    const projectWorkGraphMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/work-graph$/);
+    if (method === "GET" && projectWorkGraphMatch) {
+      return startRequest(proxyUpstreamGet(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectWorkGraphMatch[1])}/work-graph`,
+      ));
+    }
+
+    const projectAgentSessionsMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/agent-sessions$/);
+    if (method === "GET" && projectAgentSessionsMatch) {
+      return startRequest(proxyUpstreamGet(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectAgentSessionsMatch[1])}/agent-sessions`,
+      ));
+    }
+
+    const projectAgentSessionSummaryMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/agent-sessions\/summary$/,
+    );
+    if (method === "GET" && projectAgentSessionSummaryMatch) {
+      return startRequest(proxyUpstreamGet(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectAgentSessionSummaryMatch[1])}/agent-sessions/summary`,
+      ));
+    }
+
+    const projectWorkRelationsMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/work-relations$/);
+    if (method === "POST" && projectWorkRelationsMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectWorkRelationsMatch[1])}/work-relations`,
+        "POST",
+      ));
+    }
+
+    const projectWorkRelationMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/work-relations\/([^/]+)$/,
+    );
+    if (method === "DELETE" && projectWorkRelationMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectWorkRelationMatch[1])}/work-relations/${encodePathSegment(projectWorkRelationMatch[2])}`,
+        "DELETE",
+      ));
+    }
+
+    const projectUpdatesMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/updates$/);
+    if (["GET", "POST"].includes(method) && projectUpdatesMatch) {
+      const upstreamPath = `/projects/${encodePathSegment(projectUpdatesMatch[1])}/updates`;
+      return method === "GET"
+        ? startRequest(proxyUpstreamGet(req, res, upstreamPath))
+        : startRequest(proxyUpstreamJsonRequest(req, res, upstreamPath, "POST"));
+    }
+
+    const projectDeliveryProvisionMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/delivery-plan\/provision$/);
+    if (method === "POST" && projectDeliveryProvisionMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectDeliveryProvisionMatch[1])}/delivery-plan/provision`,
+        "POST",
+      ));
+    }
+
+    const projectDeliveryExecutionActionMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/delivery-plan\/execution\/(start|reconcile|cancel)$/,
+    );
+    if (method === "POST" && projectDeliveryExecutionActionMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectDeliveryExecutionActionMatch[1])}/delivery-plan/execution/${projectDeliveryExecutionActionMatch[2]}`,
+        "POST",
+      ));
+    }
+
+    const projectDeliveryExecutionMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/delivery-plan\/execution$/,
+    );
+    if (method === "GET" && projectDeliveryExecutionMatch) {
+      return startRequest(proxyUpstreamGet(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectDeliveryExecutionMatch[1])}/delivery-plan/execution`,
+      ));
+    }
+
+    const projectDeliveryMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/delivery-plan$/);
+    if (["GET", "PUT"].includes(method) && projectDeliveryMatch) {
+      const upstreamPath = `/projects/${encodePathSegment(projectDeliveryMatch[1])}/delivery-plan`;
+      return method === "GET"
+        ? startRequest(proxyUpstreamGet(req, res, upstreamPath))
+        : startRequest(proxyUpstreamJsonRequest(req, res, upstreamPath, "PUT"));
     }
 
     const projectDetailMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)$/);
@@ -150,6 +257,16 @@ export function createProjectsRequestHandler({
       ));
     }
 
+    const taskAgentSessionsMatch = pathname.match(/^\/api\/real\/tasks\/([^/]+)\/agent-sessions$/);
+    if (method === "GET" && taskAgentSessionsMatch) {
+      return startRequest(proxyUpstreamTaskJsonRequest(
+        req,
+        res,
+        `/tasks/${encodePathSegment(taskAgentSessionsMatch[1])}/agent-sessions`,
+        method,
+      ));
+    }
+
     const taskReleaseMatch = pathname.match(/^\/api\/real\/tasks\/releases\/([^/]+)$/);
     if (["GET", "PATCH", "DELETE"].includes(method) && taskReleaseMatch) {
       return startRequest(proxyUpstreamTaskJsonRequest(req, res, `/tasks/releases/${encodePathSegment(taskReleaseMatch[1])}`, method));
@@ -160,9 +277,14 @@ export function createProjectsRequestHandler({
       return startRequest(proxyUpstreamTaskJsonRequest(req, res, `/tasks/sprints/${encodePathSegment(taskSprintMatch[1])}`, method));
     }
 
-    const taskStartThreadMatch = pathname.match(/^\/api\/real\/tasks\/([^/]+)\/start-thread$/);
-    if (method === "POST" && taskStartThreadMatch) {
-      return startRequest(proxyTaskStartThread(req, res, decodeURIComponent(taskStartThreadMatch[1])));
+    const taskRunThreadMatch = pathname.match(/^\/api\/real\/tasks\/([^/]+)\/run-thread$/);
+    if (method === "POST" && taskRunThreadMatch) {
+      return startRequest(proxyUpstreamTaskJsonRequest(
+        req,
+        res,
+        `/tasks/${encodePathSegment(taskRunThreadMatch[1])}/run-thread`,
+        method,
+      ));
     }
 
     const taskCommentsMatch = pathname.match(/^\/api\/real\/tasks\/([^/]+)\/comments$/);

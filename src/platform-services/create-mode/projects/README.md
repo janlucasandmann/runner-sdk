@@ -13,9 +13,13 @@ Projects experience.
 - `catalog.mjs` contains the immutable project-type catalog and lookup helpers.
 - `client/domain-foundation.mjs` defines project/task constants that must be
   available before dependent browser fragments initialize.
-- `client/domain-runtime.mjs` owns project, task, release, sprint, and Mission
-  Control normalization and presentation helpers. Calendar-owned fragments are
-  composed through `src/platform-services/create-mode/calendar`.
+- `client/domain-runtime.mjs` owns project, task, milestone/release, sprint, and
+  Mission Control normalization and presentation helpers. Milestones are the
+  canonical project delivery target and own their measurable success criteria;
+  legacy strategy outcomes are read only as migration fallbacks. An authoritative
+  Mission Control result replaces that legacy strategy branch after migrating its
+  useful content into milestones. Calendar-owned fragments are composed through
+  `src/platform-services/create-mode/calendar`.
 - `client/integrations/` owns the small project contracts consumed by other
   platform surfaces: task markdown, connector restore state, status items,
   project permissions, and project-linked file indexes.
@@ -31,6 +35,38 @@ Projects experience.
 - `server/task-upstream.mjs` owns task API routing and cloud fallback behavior.
 - `server/task-backlog.mjs` owns task-start execution and stateful ephemeral
   backlog composer sessions.
+
+## Canonical project delivery
+
+Mission Control uses the Computer Agents `projects delivery apply` command for
+deployable and agentic projects. It submits one strict
+`computer_agents_project_delivery_contract_v1` document; the platform API then
+provisions the deterministic
+`build -> test -> evaluate -> optimize -> re_evaluate -> assure -> deliver`
+graph and binds its Function, Metronome, Test Plan/version,
+Evaluation/version, planned fine-tuning job, Assurance Policy/version, and
+dependency-linked tasks atomically.
+
+The client proxies the delivery-plan GET, PUT, and provision routes before the
+generic project-detail route. Canonical `deliveryContract` and `deliveryPlan`
+metadata is retained during Mission Control autosave. The legacy
+`deliveryAssurance` object is a read/UI projection and is never release
+authority; only the bound Assurance Run can unlock the final delivery task.
+
+The server-owned delivery supervisor is the sole delivery stage-transition
+authority. The Projects client projects its latest execution, polls canonical
+execution state while Mission Control is visible, and never reconstructs stage
+state from task status. Supervisor-dispatched build and delivery tasks use the
+canonical task runner, so their threads also appear in the durable project
+agent-session ledger with delivery execution and stage correlation.
+
+## Work graph and agent runs
+
+The project work graph endpoint is the canonical read model for tasks, typed
+relations, and task-agent sessions. Blockers and parent-child hierarchy retain
+legacy task-field projections for mixed-version compatibility. Thread state is
+the execution source of truth and atomically advances its linked task-agent
+session through queued, active, paused, and terminal states.
 
 ## Host boundary
 

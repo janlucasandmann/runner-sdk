@@ -184,311 +184,6 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             return "";
           }
 
-          function normalizeProjectOverviewLatestUpdateRecord(value) {
-            if (value == null) return null;
-            if (typeof value === "string") {
-              const body = value.trim();
-              return body ? { body } : null;
-            }
-            if (typeof value !== "object" || Array.isArray(value)) {
-              return null;
-            }
-            const body = getProjectOverviewReadableText(
-              value.body
-                || value.text
-                || value.message
-                || value.content
-                || value.summary
-                || value.description
-                || value.note
-                || value.update
-                || value.markdown
-                || value.plainText
-                || value.goal
-                || value.title
-                || value.name
-                || ""
-            );
-            const timestamp = String(
-              value.updatedAt
-                || value.createdAt
-                || value.timestamp
-                || value.date
-                || ""
-            ).trim();
-            const authorName = String(
-              value.authorName
-                || value.actorName
-                || value.userName
-                || value.name
-                || value.author?.name
-                || value.actor?.name
-                || ""
-            ).trim();
-            const authorAvatarUrl = String(
-              value.authorAvatarUrl
-                || value.actorAvatarUrl
-                || value.avatarUrl
-                || value.photoUrl
-                || value.author?.avatarUrl
-                || value.actor?.avatarUrl
-                || ""
-            ).trim();
-            if (!body && !timestamp && !authorName && !authorAvatarUrl) {
-              return null;
-            }
-            return {
-              body,
-              timestamp,
-              authorName,
-              authorAvatarUrl,
-            };
-          }
-
-          function collectProjectOverviewLatestUpdateRecords() {
-            const metadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
-              ? selectedProject.metadata
-              : {};
-            const summary = selectedProjectSummary && typeof selectedProjectSummary === "object" && !Array.isArray(selectedProjectSummary)
-              ? selectedProjectSummary
-              : {};
-            const rawCandidates = [
-              selectedProject?.latestUpdate,
-              selectedProject?.statusUpdate,
-              selectedProject?.scopeUpdate,
-              selectedProject?.projectUpdate,
-              metadata.latestUpdate,
-              metadata.statusUpdate,
-              metadata.scopeUpdate,
-              metadata.projectUpdate,
-              summary.latestUpdate,
-              summary.statusUpdate,
-              summary.scopeUpdate,
-              summary.projectUpdate,
-            ];
-            [
-              selectedProject?.updates,
-              selectedProject?.projectUpdates,
-              selectedProject?.statusUpdates,
-              selectedProject?.comments,
-              metadata.updates,
-              metadata.projectUpdates,
-              metadata.statusUpdates,
-              metadata.comments,
-              summary.updates,
-              summary.projectUpdates,
-              summary.statusUpdates,
-            ].forEach((collection) => {
-              if (Array.isArray(collection)) {
-                collection.forEach((entry) => rawCandidates.push(entry));
-              }
-            });
-            return rawCandidates
-              .map(normalizeProjectOverviewLatestUpdateRecord)
-              .filter(Boolean)
-              .sort((left, right) => {
-                const leftTime = Date.parse(left.timestamp || "");
-                const rightTime = Date.parse(right.timestamp || "");
-                return (Number.isFinite(rightTime) ? rightTime : 0) - (Number.isFinite(leftTime) ? leftTime : 0);
-              });
-          }
-
-          function getProjectOverviewLatestUpdateTimestamp(...values) {
-            for (const value of values) {
-              const raw = String(value || "").trim();
-              if (!raw) continue;
-              const parsed = Date.parse(raw);
-              if (Number.isFinite(parsed)) {
-                return { timestamp: raw, time: parsed };
-              }
-            }
-            return { timestamp: "", time: 0 };
-          }
-
-          function buildProjectOverviewLatestUpdateActivityRecords() {
-            const metadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
-              ? selectedProject.metadata
-              : {};
-            const lead = getProjectOverviewSidebarLead();
-            const records = [];
-            const pushRecord = (record) => {
-              const body = getProjectOverviewReadableText(record?.body);
-              if (!body) return;
-              records.push({
-                body,
-                timestamp: String(record?.timestamp || "").trim(),
-                time: Number.isFinite(Number(record?.time)) ? Number(record.time) : 0,
-                authorName: String(record?.authorName || lead.name || "Project lead").trim(),
-                authorAvatarUrl: String(record?.authorAvatarUrl || lead.avatarUrl || "").trim(),
-              });
-            };
-
-            buildProjectOverviewActivityItems()
-              .filter((item) => item?.task || item?.taskId)
-              .forEach((item) => {
-                const task = item?.task || {};
-                const timestampInfo = getProjectOverviewLatestUpdateTimestamp(task.updatedAt, task.createdAt);
-                const verb = String(item?.verb || "").trim() || "updated";
-                pushRecord({
-                  body: [item?.actor || "Agent", verb, "ticket", item?.object || task.title || "Untitled task"].filter(Boolean).join(" "),
-                  timestamp: timestampInfo.timestamp,
-                  time: timestampInfo.time || Number(item?.time || 0),
-                  authorName: item?.actor,
-                  authorAvatarUrl: item?.photoUrl,
-                });
-              });
-
-            Object.values(releasesById || {}).forEach((release) => {
-              const name = String(release?.name || release?.title || "").trim();
-              if (!name) return;
-              const timestampInfo = getProjectOverviewLatestUpdateTimestamp(release.updatedAt, release.createdAt, release.timestamp);
-              if (!timestampInfo.time) return;
-              const isCreated = String(release?.createdAt || "").trim()
-                && String(release?.createdAt || "").trim() === String(release?.updatedAt || "").trim();
-              pushRecord({
-                body: (isCreated ? "Created milestone " : "Updated milestone ") + name,
-                timestamp: timestampInfo.timestamp,
-                time: timestampInfo.time,
-              });
-            });
-
-            const strategyTimestamp = getProjectOverviewLatestUpdateTimestamp(
-              metadata.strategyUpdatedAt,
-              metadata.missionControlUpdatedAt,
-              selectedProjectMissionControl?.updatedAt,
-              selectedProjectMissionControl?.createdAt
-            );
-            if (String(missionControlDocumentDraft || selectedProjectMissionControl?.document || "").trim() && strategyTimestamp.time) {
-              pushRecord({
-                body: "Updated project strategy",
-                timestamp: strategyTimestamp.timestamp,
-                time: strategyTimestamp.time,
-              });
-            }
-
-            const rulesTimestamp = getProjectOverviewLatestUpdateTimestamp(
-              metadata.rulesUpdatedAt,
-              metadata.projectRulesUpdatedAt,
-              selectedProject?.rulesUpdatedAt
-            );
-            const ruleEntries = typeof splitPlaygroundProjectRuleEntries === "function"
-              ? splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules)
-              : [];
-            if (ruleEntries.length > 0 && rulesTimestamp.time) {
-              pushRecord({
-                body: "Updated project rules",
-                timestamp: rulesTimestamp.timestamp,
-                time: rulesTimestamp.time,
-              });
-            }
-
-            const strategyBrief = typeof normalizePlaygroundProjectStrategyBrief === "function"
-              ? normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraft)
-              : { outcomes: [] };
-            const outcomesTimestamp = getProjectOverviewLatestUpdateTimestamp(
-              metadata.outcomesUpdatedAt,
-              metadata.strategyUpdatedAt,
-              metadata.missionControlUpdatedAt,
-              selectedProjectMissionControl?.updatedAt
-            );
-            if (Array.isArray(strategyBrief?.outcomes) && strategyBrief.outcomes.length > 0 && outcomesTimestamp.time) {
-              pushRecord({
-                body: "Updated project outcomes",
-                timestamp: outcomesTimestamp.timestamp,
-                time: outcomesTimestamp.time,
-              });
-            }
-
-            return records.sort((left, right) => (right.time || 0) - (left.time || 0));
-          }
-
-          function getProjectOverviewLatestUpdateInfo() {
-            const lead = getProjectOverviewSidebarLead();
-            const latestRecord = collectProjectOverviewLatestUpdateRecords()
-              .map((record) => ({
-                ...record,
-                body: getProjectOverviewReadableText(record?.body),
-                time: Date.parse(String(record?.timestamp || "")),
-              }))
-              .filter((record) => record.body)
-              .concat(buildProjectOverviewLatestUpdateActivityRecords())
-              .sort((left, right) => {
-                const leftTime = Number.isFinite(left.time) ? left.time : 0;
-                const rightTime = Number.isFinite(right.time) ? right.time : 0;
-                return rightTime - leftTime;
-              })[0] || null;
-            const body = getProjectOverviewReadableText(latestRecord?.body);
-            if (!body) {
-              return null;
-            }
-            const timestamp = String(latestRecord?.timestamp || "").trim();
-            const timeLabel = timestamp && typeof formatRelativeThreadTime === "function"
-              ? (formatRelativeThreadTime(timestamp) || "")
-              : "";
-            const actorName = latestRecord?.authorName || lead.name || "Project lead";
-            const actorAvatarUrl = latestRecord?.authorAvatarUrl || lead.avatarUrl || "";
-            const progressStats = getProjectOverviewProgressStats();
-            const healthLabel = progressStats.scopeCount > 0 && progressStats.completedCount >= progressStats.scopeCount
-              ? "Complete"
-              : "On track";
-            return {
-              actorName,
-              actorAvatarUrl,
-              body,
-              healthLabel,
-              timeLabel,
-            };
-          }
-
-          function renderProjectOverviewLatestUpdateSection() {
-            const update = getProjectOverviewLatestUpdateInfo();
-            const updateBody = getProjectOverviewReadableText(update?.body);
-            if (!update || !updateBody) {
-              return null;
-            }
-            return React.createElement("section", { className: "playground-project-overview-latest-update-card" },
-              React.createElement("div", { className: "playground-project-overview-latest-update-header" },
-                React.createElement("h2", { className: "playground-project-overview-latest-update-title" }, "Latest update"),
-                typeof openProjectComposerForEdit === "function"
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-project-overview-latest-update-button",
-                      onClick: () => openProjectComposerForEdit(selectedProject),
-                    },
-                      React.createElement(SquarePen, { className: "playground-project-overview-latest-update-button-icon", strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Update")
-                    )
-                  : null
-              ),
-              React.createElement("div", { className: "playground-project-overview-latest-update-meta" },
-                React.createElement("span", { className: "playground-project-overview-latest-update-status" },
-                  React.createElement(CircleCheckBig, { className: "playground-project-overview-latest-update-status-icon", strokeWidth: 2 }),
-                  React.createElement("span", null, update.healthLabel)
-                ),
-                React.createElement("span", { className: "playground-project-overview-latest-update-author" },
-                  renderProjectOverviewSidebarAvatar(update.actorName, update.actorAvatarUrl),
-                  React.createElement("span", null, update.actorName)
-                ),
-                update.timeLabel
-                  ? React.createElement("span", { className: "playground-project-overview-latest-update-time" }, update.timeLabel)
-                  : null
-              ),
-              React.createElement("p", { className: "playground-project-overview-latest-update-body" }, updateBody),
-              React.createElement("div", { className: "playground-project-overview-latest-update-actions" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-latest-update-icon-button",
-                  "aria-label": "Comment on latest update",
-                }, React.createElement(MessageCircle, { className: "playground-project-overview-latest-update-icon", strokeWidth: 1.8 })),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-latest-update-icon-button",
-                  "aria-label": "React to latest update",
-                }, React.createElement(Plus, { className: "playground-project-overview-latest-update-icon", strokeWidth: 1.8 }))
-              )
-            );
-          }
-
           function renderProjectOverviewGeneralGoalSection() {
             const goalText = getProjectOverviewReadableText(projectOverviewDraft?.description || projectOverviewGoal);
             return React.createElement("section", { className: "playground-project-overview-general-goal" },
@@ -1109,6 +804,8 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             const hasThreads = projectThreads.length > 0
               || Number(selectedProjectSummary?.threadsCount || 0) > 0;
             const hasActivity = buildProjectOverviewActivityItems().length > 0;
+            const hasMilestones = (Array.isArray(releases) && releases.length > 0)
+              || Number(selectedProjectSummary?.releaseCount || 0) > 0;
             const hasMissionControlDocument = Boolean(
               String(missionControlDocumentDraft || selectedProjectMissionControl?.document || "").trim()
               || String(selectedProjectMissionControl?.summary || "").trim()
@@ -1116,6 +813,7 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             return !hasTasks
               && !hasThreads
               && !hasActivity
+              && !hasMilestones
               && !projectHasCostData
               && !hasMissionControlDocument;
           }
@@ -1169,8 +867,8 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             }
             return React.createElement("div", { className: "playground-project-overview-general-grid" },
               renderProjectOverviewActivitySection(),
-              renderProjectOverviewSetupSection(),
-              renderProjectOverviewThreadsSection()
+              renderProjectOverviewMilestonesSection(),
+              renderProjectOverviewSetupSection()
             );
           }
 
@@ -1312,24 +1010,15 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
 
           function getProjectOverviewSidebarStatusValue() {
             const metadata = getProjectOverviewSidebarMetadata(projectOverviewDraft);
-            const raw = String(projectOverviewDraft?.status || projectOverviewDraft?.state || metadata.status || "backlog")
-              .trim()
-              .toLowerCase()
-              .replace(/[\s-]+/g, "_");
-            if (["done", "finished", "complete"].includes(raw)) return "completed";
-            if (["doing", "active"].includes(raw)) return "in_progress";
-            return ["backlog", "in_progress", "on_track", "at_risk", "blocked", "completed"].includes(raw) ? raw : "backlog";
+            return normalizePlaygroundProjectStatus(
+              projectOverviewDraft?.status || metadata.status || projectOverviewDraft?.state || "backlog"
+            );
           }
 
           function getProjectOverviewSidebarPriorityValue() {
             const metadata = getProjectOverviewSidebarMetadata(projectOverviewDraft);
             const raw = String(projectOverviewDraft?.priority || metadata.priority || "medium").trim().toLowerCase();
             return PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === raw) ? raw : "medium";
-          }
-
-          function getProjectOverviewSidebarProjectTypeValue() {
-            const metadata = getProjectOverviewSidebarMetadata(projectOverviewDraft);
-            return String(projectOverviewDraft?.projectType || projectOverviewDraft?.type || metadata.projectType || metadata.blueprintId || "blank").trim() || "blank";
           }
 
           function getProjectOverviewSidebarEnvironmentValue() {

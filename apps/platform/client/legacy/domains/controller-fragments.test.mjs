@@ -223,6 +223,36 @@ assert.match(
   /databaseTitleActionsPortalId: "playground-database-title-actions"/,
   "The Database detail controller must receive the title action portal target.",
 );
+assert.match(
+  shellCompositionSource,
+  /isManagedServerResourcesDetailView[\s\S]{0,3000}id: "playground-server-title-actions"/,
+  "The shared managed-server action target must render beside every managed server title.",
+);
+assert.match(
+  shellCompositionSource,
+  /serverTitleActionsPortalId: "playground-server-title-actions"/,
+  "The shared managed-server detail controller must receive the title action portal target.",
+);
+assert.match(
+  shellCompositionSource,
+  /isAuthenticationResourcesDetailView[\s\S]{0,300}React\.createElement\(PlatformSwitch,[\s\S]{0,500}\{ value: "users", label: "Users" \},[\s\S]{0,180}\{ value: "usage", label: "Usage" \},[\s\S]{0,180}\{ value: "settings", label: "Settings" \}/,
+  "Authentication details must use the centralized Users, Usage, and Settings app-header switch.",
+);
+assert.match(
+  shellCompositionSource,
+  /isAgentRuntimeResourcesDetailView[\s\S]{0,300}React\.createElement\(PlatformSwitch,[\s\S]{0,500}\{ value: "usage", label: "Usage" \},[\s\S]{0,180}\{ value: "threads", label: "Threads" \},[\s\S]{0,180}\{ value: "settings", label: "Settings" \}/,
+  "Agent Runtime details must use the centralized Usage, Threads, and Settings app-header switch.",
+);
+assert.match(
+  shellCompositionSource,
+  /isSecretsResourcesDetailView[\s\S]{0,300}React\.createElement\(PlatformSwitch,[\s\S]{0,500}\{ value: "secrets", label: "Secrets" \},[\s\S]{0,180}\{ value: "usage", label: "Usage" \},[\s\S]{0,180}\{ value: "settings", label: "Settings" \}/,
+  "Secrets details must use the centralized Secrets, Usage, and Settings app-header switch.",
+);
+assert.match(
+  shellCompositionSource,
+  /isPaymentsResourcesDetailView[\s\S]{0,300}React\.createElement\(PlatformSwitch,[\s\S]{0,500}\{ value: "usage", label: "Usage" \},[\s\S]{0,180}\{ value: "settings", label: "Settings" \}/,
+  "Payments details must use the centralized Usage and Settings app-header switch.",
+);
 assert.doesNotMatch(
   agentDialogsSource,
   /cardTitle: "Permissions"/,
@@ -272,6 +302,16 @@ assert.match(
   shellCompositionSource,
   /className: "playground-database-detail-header-switch"[\s\S]{0,500}\{ value: "data", label: "Data" \}[\s\S]{0,120}\{ value: "usage", label: "Usage" \}[\s\S]{0,120}\{ value: "settings", label: "Settings" \}/,
   "Database detail navigation must use the centralized app-header switch.",
+);
+assert.match(
+  shellCompositionSource,
+  /const isSourceDeployableResourcesDetailView =[\s\S]{0,240}\["function", "web_app"\]\.includes\(activeResourcesServerKind\)[\s\S]{0,120}resourcesHeaderState\.resourceType === "server"/,
+  "The app header must identify both Function and Web App detail routes.",
+);
+assert.match(
+  shellCompositionSource,
+  /className: "playground-source-server-detail-header-switch"[\s\S]{0,500}\{ value: "usage", label: "Usage" \}[\s\S]{0,120}\{ value: "code", label: "Code" \}[\s\S]{0,120}\{ value: "settings", label: "Settings" \}/,
+  "Function and Web App detail navigation must use the centralized app-header switch.",
 );
 assert.match(
   platformTemplateCss,
@@ -428,10 +468,10 @@ assert.match(
   /emptyState: agentDetailThreadFilterMode === "all"\s*\?\s*emptyAgentThreadsState/,
   "Agent Threads must render the centralized empty state when no filter is active.",
 );
-assert.match(
+assert.doesNotMatch(
   agentDialogsSource,
-  /const agentThreadsSection =[\s\S]{0,900}tableOptions: \{[\s\S]{0,260}pagination: \{\}/,
-  "Agent Threads must render the centralized data-table footer.",
+  /const agentThreadsSection =[\s\S]{0,900}tableOptions: \{[\s\S]{0,260}pagination:/,
+  "Agent Threads must not render a pagination footer.",
 );
 assert.match(
   agentDialogsSource,
@@ -472,6 +512,46 @@ assert.match(
   agentDialogsSource,
   /const renderAgentVoiceSelector\s*=\s*\(\)\s*=>\s*React\.createElement\(PlatformSelector,[\s\S]{0,1400}alignment: "end"[\s\S]{0,300}popupAlignment: "right"[\s\S]{0,300}fullWidth: true/,
   "Agent voice values must use the right-aligned centralized selector.",
+);
+assert.match(
+  agentDialogsSource,
+  /const renderAgentExecutionEngineSelector\s*=\s*\(\)\s*=>\s*React\.createElement\(PlatformSelector,[\s\S]{0,1800}ariaLabel: "Select agent engine"/,
+  "Agent details must expose the durable execution engine through the centralized sidebar selector.",
+);
+assert.match(
+  agentDialogsSource,
+  /renderAgentFactRow\(\s*"Engine",\s*renderAgentExecutionEngineSelector\(\)/,
+  "Agent details must render the execution-engine selector in the properties sidebar.",
+);
+assert.match(
+  agentMutationsSource,
+  /function buildSanitizedAgentPayload\(agent\)[\s\S]{0,1800}executionEngine: normalizePlaygroundAgentExecutionEngine\(agent\?\.executionEngine\)/,
+  "Agent saves must persist the selected execution engine.",
+);
+assert.match(
+  agentBootstrapSource,
+  /\["instructions", "model", "executionEngine", "reasoningEffort", "deepResearchModel"\]\.includes\(field\)/,
+  "Locked default agents must also protect their execution-engine setting.",
+);
+assert.match(
+  platformTemplateSource,
+  /const PLAYGROUND_AGENT_EXECUTION_ENGINE_OPTIONS = \[[\s\S]{0,900}id: "computer-agents-cli"[\s\S]{0,700}id: "grok-build"[\s\S]*?executionEngine: "computer-agents-cli"/,
+  "Agent records must define and default the two supported execution engines.",
+);
+assert.match(
+  platformTemplateSource,
+  /id: "computer-agents-cli"[\s\S]{0,160}label: "Claude Code"[\s\S]{0,300}iconUrl: "\/img\/020-engine-providers\/claude-code\.svg"/,
+  "The standard execution engine must use the Claude Code name and provider icon.",
+);
+assert.match(
+  platformTemplateSource,
+  /id: "grok-build"[\s\S]{0,300}description: "Run the selected model with Grok Build through its protected provider endpoint\."[\s\S]{0,160}iconUrl: "\/img\/020-engine-providers\/grok-build\.svg"/,
+  "The Grok Build option must describe durable provider-neutral per-agent routing.",
+);
+assert.match(
+  agentDialogsSource,
+  /const renderAgentExecutionEngineIcon[\s\S]{0,500}playground-agents-detail-engine-provider-icon[\s\S]{0,1000}leading: renderAgentExecutionEngineIcon\(option\)/,
+  "Agent engine selectors must render the matching provider icon in their trigger and options.",
 );
 assert.match(
   agentBootstrapSource,

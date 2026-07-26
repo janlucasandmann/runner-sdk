@@ -11,8 +11,9 @@ export function PlatformAnalyticsSection({
   timeframe,
 }: PlatformAnalyticsSectionProps) {
   const resolvedTitle = title ?? analytics.title;
-  const hasHeader = (variant === "framed" || variant === "compact")
-    && Boolean(resolvedTitle || timeframe);
+  const showTitle = (variant === "framed" || variant === "compact")
+    && Boolean(resolvedTitle);
+  const hasHeader = showTitle || Boolean(timeframe);
 
   return (
     <section
@@ -22,7 +23,7 @@ export function PlatformAnalyticsSection({
     >
       {hasHeader ? (
         <div className="platform-analytics__header">
-          {resolvedTitle ? <h2 className="platform-analytics__title">{resolvedTitle}</h2> : null}
+          {showTitle ? <h2 className="platform-analytics__title">{resolvedTitle}</h2> : null}
           {timeframe ? (
             <div className="platform-analytics__header-actions">
               <PlatformSwitch

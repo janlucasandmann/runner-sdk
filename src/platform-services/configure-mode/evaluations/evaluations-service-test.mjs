@@ -19,6 +19,7 @@ import {
   normalizeCaseRefinementResult,
   normalizeEvaluationSet,
   parseEvaluatorResult,
+  recomputeRun,
 } from "./server/domain/index.mjs";
 import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
@@ -37,13 +38,33 @@ assert.equal(
   PLAYGROUND_EVALUATIONS_CSS,
 );
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.foundation, /createPlaygroundEvaluationId/);
+assert.doesNotMatch(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.execution,
+  /new Function\("input",\s*"expected",\s*"actual"/,
+);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs,
+  /Code evaluator \(unavailable\)[\s\S]*?disabled: true/,
+);
+const evaluationRuntimeSecuritySource = await fs.readFile(
+  new URL("./server/runtime.mjs", import.meta.url),
+  "utf8",
+);
+assert.doesNotMatch(
+  evaluationRuntimeSecuritySource,
+  /new Function\("input",\s*"expected",\s*"actual"/,
+);
 const {
   createPlaygroundEvaluationSetDraft: createClientEvaluationSetDraft,
+  normalizePlaygroundEvaluationDataRow: normalizeClientEvaluationDataRow,
   normalizePlaygroundEvaluationRun: normalizeClientEvaluationRun,
 } = new Function(
-  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.foundation + "; return { createPlaygroundEvaluationSetDraft, normalizePlaygroundEvaluationRun };",
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.foundation + "; return { createPlaygroundEvaluationSetDraft, normalizePlaygroundEvaluationDataRow, normalizePlaygroundEvaluationRun };",
 )();
 assert.deepEqual(createClientEvaluationSetDraft().dataRows, []);
+assert.equal(normalizeClientEvaluationDataRow({ split: "holdout" }).optimizationRole, "holdout");
+assert.equal(normalizeClientEvaluationDataRow({ optimization_role: "validation" }).optimizationRole, "validation");
+assert.equal(normalizeClientEvaluationDataRow({ optimizationRole: "unexpected" }).optimizationRole, "train");
 const historicalClientRun = normalizeClientEvaluationRun({
   id: "historical_run_1",
   evaluationId: "evaluation_1",
@@ -299,7 +320,7 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /function handleDeleteEv
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /header: "Agent"[\s\S]*?header: "Environment"[\s\S]*?header: "Latest Score"[\s\S]*?header: "Avg Score"[\s\S]*?header: "Runs"[\s\S]*?header: "Date"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /defaultValue: tableMode === "scores"[\s\S]*?\{ id: "latestScore", direction: "desc" \}/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.runs, /function buildPlaygroundEvaluationScoreRows/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.runs, /run\.status !== "completed" && run\.status !== "failed"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.runs, /\["completed", "completed_with_errors", "failed"\]\.includes\(run\.status\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformSecondaryButton, \{[\s\S]*?From Threads/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformButtonSelector, \{[\s\S]*?mode: "split-action"[\s\S]*?buttonVariant: "primary"[\s\S]*?onAction: \(\) => openNewEvaluationCaseEditor\(set\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /"Upload JSONL file"/);
@@ -413,6 +434,9 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /accessor: \(\) => runEva
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /cell: \(\) => renderRunEvaluatorCell\(\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /playground-evaluations-case-source-grid/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /playground-evaluations-case-focused-editor/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /ariaLabel: "Select case optimization role"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /value: "train"[\s\S]*?value: "validation"[\s\S]*?value: "holdout"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /getPlaygroundEvaluationOptimizationRoleLabel\(optimizationRole\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /playground-evaluations-case-focused-editor",[\s\S]*?autoFocus: true/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /React\.createElement\(ArrowLeft/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /onClick: returnFromEvaluationCaseFocusedEditor/);
@@ -659,7 +683,10 @@ const evaluationRuntimeSource = await fs.readFile(
 assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/evaluations\/index\.mjs"/);
 assert.match(platformEntrySource, /const evaluationsService = createEvaluationsService\(/);
 assert.match(platformEntrySource, /evaluationsService\.handleRequest\(req, res, url\)/);
-assert.match(platformEntrySource, /\$\{PLAYGROUND_EVALUATIONS_CSS\}/);
+assert.match(
+  platformEntrySource,
+  /\$\{PLAYGROUND_EVALUATIONS_CSS \+ PLAYGROUND_TESTS_CSS \+ PLAYGROUND_ASSURANCE_CSS\}/,
+);
 assert.match(platformEntrySource, /\$\{PLAYGROUND_EVALUATIONS_SCRIPT\}/);
 assert.match(platformEntrySource, /\$\{EVALUATIONS_APP_SCRIPT_FRAGMENTS\.pageView\}/);
 assert.match(platformEntrySource, /\$\{EVALUATIONS_AGENT_SCRIPT_FRAGMENTS\.view\}/);
@@ -674,8 +701,13 @@ assert.match(evaluationRuntimeSource, /guardrail: record\.targetGuardrail \|\| n
 assert.match(evaluationRuntimeSource, /buildProxyPromptAdaptationsFromGuardrails\(explicitGuardrails\)/);
 assert.match(evaluationRuntimeSource, /targetGuardrail = await resolveEvaluationGuardrailTarget/);
 assert.match(evaluationRuntimeSource, /createEvaluationRunPersistenceCoordinator/);
-assert.match(evaluationRuntimeSource, /await runPersistence\.enqueue\(record, run\)/);
+assert.match(evaluationRuntimeSource, /await runPersistence\.enqueue\(record, executionRun\)/);
 assert.match(evaluationRuntimeSource, /await ensureRunPersisted\(record\)/);
+assert.match(evaluationRuntimeSource, /acquireRunLease/);
+assert.match(evaluationRuntimeSource, /heartbeatRunLease/);
+assert.match(evaluationRuntimeSource, /evaluation_execution_snapshot_v1/);
+assert.match(evaluationRuntimeSource, /findExistingEvaluationThread/);
+assert.match(evaluationRuntimeSource, /executeThreadMessageOnce/);
 
 const {
   mergePlaygroundEvaluationRunHistory: mergeClientEvaluationRunHistory,
@@ -755,6 +787,206 @@ assert.equal(evaluationRun.cases.length, 2);
 assert.equal(evaluationRun.status, "running");
 assert.equal(evaluationRun.targetGuardrailId, "guardrail_1");
 assert.equal(evaluationRun.targetGuardrailVersionId, "guardrail_version_1");
+assert.match(evaluationRun.datasetFingerprint, /^sha256:[a-f0-9]{64}$/);
+assert.match(evaluationRun.evaluatorFingerprint, /^sha256:[a-f0-9]{64}$/);
+assert.match(evaluationRun.systemFingerprint, /^sha256:[a-f0-9]{64}$/);
+assert.match(evaluationRun.runFingerprint, /^sha256:[a-f0-9]{64}$/);
+assert.equal(evaluationRun.datasetVersion, evaluationRun.datasetFingerprint);
+assert.equal(evaluationRun.systemSnapshot?.agent?.configurationFingerprint, "");
+assert.equal(evaluationRun.systemSnapshot?.sampling, null);
+const equivalentEvaluationRun = createEvaluationRun(evaluationSet, {
+  id: "run_2",
+  label: "Equivalent input",
+  targetGuardrailId: "guardrail_1",
+  targetGuardrailVersionId: "guardrail_version_1",
+});
+assert.equal(equivalentEvaluationRun.datasetFingerprint, evaluationRun.datasetFingerprint);
+assert.equal(equivalentEvaluationRun.evaluatorFingerprint, evaluationRun.evaluatorFingerprint);
+assert.equal(equivalentEvaluationRun.systemFingerprint, evaluationRun.systemFingerprint);
+assert.equal(equivalentEvaluationRun.runFingerprint, evaluationRun.runFingerprint);
+const snapshottedEvaluationRun = createEvaluationRun(evaluationSet, {
+  id: "run_system_snapshot",
+  targetAgentVersionId: "agent_version_1",
+  targetAgentSnapshot: {
+    model: "gpt-5",
+    instructions: "Use the verified support workflow.",
+    enabledSkills: ["crm", "knowledge"],
+    tools: [{ id: "ticket_lookup", apiKey: "must-not-persist" }],
+    temperature: 0.2,
+  },
+  environmentSnapshot: {
+    id: "computer_1",
+    revisionId: "environment_revision_7",
+    imageDigest: "sha256:image",
+    accessToken: "must-not-persist",
+  },
+  runtimeSnapshot: {
+    adapter: "computer-agents",
+    token: "must-not-persist",
+    auth: "must-not-persist",
+    maxTokens: 4096,
+    headers: {
+      Authorization: "must-not-persist",
+      "X-Trace-Mode": "evaluation",
+    },
+  },
+});
+assert.equal(
+  snapshottedEvaluationRun.systemSnapshot?.schemaVersion,
+  "evaluation_system_snapshot_v1",
+);
+assert.equal(
+  snapshottedEvaluationRun.systemSnapshot?.agent?.versionId,
+  "agent_version_1",
+);
+assert.match(
+  snapshottedEvaluationRun.systemSnapshot?.agent?.instructionsFingerprint || "",
+  /^sha256:[a-f0-9]{64}$/,
+);
+assert.deepEqual(
+  snapshottedEvaluationRun.systemSnapshot?.skills?.ids,
+  ["crm", "knowledge"],
+);
+assert.equal(
+  JSON.stringify(snapshottedEvaluationRun.systemSnapshot).includes("must-not-persist"),
+  false,
+);
+assert.equal(
+  JSON.stringify(snapshottedEvaluationRun.systemSnapshot).includes("Use the verified support workflow."),
+  false,
+);
+assert.deepEqual(
+  snapshottedEvaluationRun.systemSnapshot?.runtime,
+  {
+    adapter: "computer-agents",
+    headers: {
+      "X-Trace-Mode": "evaluation",
+    },
+    maxTokens: 4096,
+  },
+);
+const pinnedEvaluatorRun = createEvaluationRun(evaluationSet, {
+  id: "run_pinned_evaluator",
+  evaluator: {
+    type: "agent",
+    agentId: "agent_evaluator",
+    agentVersionId: "agent_evaluator_version_3",
+    agentVersionNumber: 3,
+    agentVersionRevisionId: "evaluator_revision_3",
+  },
+  evaluatorAgentSnapshot: {
+    model: "gpt-5",
+    instructions: "Grade against the supplied rubric.",
+    tools: [{ id: "artifact_reader", token: "must-not-persist" }],
+  },
+});
+assert.equal(
+  pinnedEvaluatorRun.evaluator?.agentVersionId,
+  "agent_evaluator_version_3",
+);
+assert.equal(
+  pinnedEvaluatorRun.evaluatorSystemSnapshot?.agent?.versionId,
+  "agent_evaluator_version_3",
+);
+assert.match(
+  pinnedEvaluatorRun.evaluatorSystemSnapshot?.agent?.instructionsFingerprint || "",
+  /^sha256:[a-f0-9]{64}$/,
+);
+assert.equal(
+  JSON.stringify(pinnedEvaluatorRun.evaluatorSystemSnapshot).includes("must-not-persist"),
+  false,
+);
+assert.equal(
+  JSON.stringify(pinnedEvaluatorRun.evaluatorSystemSnapshot).includes("Grade against the supplied rubric."),
+  false,
+);
+const changedSystemEvaluationRun = createEvaluationRun(evaluationSet, {
+  id: "run_changed_system",
+  targetAgentVersionId: "agent_version_1",
+  targetAgentSnapshot: {
+    model: "gpt-5",
+    instructions: "Use the verified support workflow.",
+    enabledSkills: ["crm", "knowledge"],
+    tools: [{ id: "ticket_lookup" }],
+    temperature: 0.7,
+  },
+  environmentSnapshot: {
+    id: "computer_1",
+    revisionId: "environment_revision_7",
+    imageDigest: "sha256:image",
+  },
+});
+assert.equal(
+  changedSystemEvaluationRun.datasetFingerprint,
+  snapshottedEvaluationRun.datasetFingerprint,
+);
+assert.notEqual(
+  changedSystemEvaluationRun.systemFingerprint,
+  snapshottedEvaluationRun.systemFingerprint,
+);
+const changedEvaluationRun = createEvaluationRun(normalizeEvaluationSet({
+  ...evaluationSet,
+  dataRows: [{
+    ...evaluationSet.dataRows[0],
+    expectedOutput: "A materially different expected result",
+  }],
+}), {
+  id: "run_3",
+  targetGuardrailId: "guardrail_1",
+  targetGuardrailVersionId: "guardrail_version_1",
+});
+assert.notEqual(changedEvaluationRun.datasetFingerprint, evaluationRun.datasetFingerprint);
+assert.notEqual(changedEvaluationRun.runFingerprint, evaluationRun.runFingerprint);
+
+const mixedOutcomeRun = recomputeRun({
+  id: "run_explicit_statuses",
+  passThreshold: 0.8,
+  cases: [
+    { id: "case_passed", status: "passed", score: 1 },
+    { id: "case_failed", status: "failed", score: 0.5 },
+    { id: "case_invalid", status: "invalid", score: null },
+    { id: "case_grader", status: "grader_error", score: null },
+    { id: "case_infrastructure", status: "infrastructure_error", score: null },
+  ],
+});
+assert.equal(mixedOutcomeRun.averageScore, 0.75);
+assert.equal(mixedOutcomeRun.scoredCount, 2);
+assert.equal(mixedOutcomeRun.passedCount, 1);
+assert.equal(mixedOutcomeRun.failedCount, 1);
+assert.equal(mixedOutcomeRun.invalidCount, 1);
+assert.equal(mixedOutcomeRun.graderErrorCount, 1);
+assert.equal(mixedOutcomeRun.infrastructureErrorCount, 1);
+assert.equal(mixedOutcomeRun.unscoredCount, 3);
+assert.equal(mixedOutcomeRun.passRate, 0.5);
+assert.equal(mixedOutcomeRun.status, "completed_with_errors");
+const unscoreableRun = recomputeRun({
+  id: "run_unscoreable",
+  cases: [{ id: "case_grader", status: "grader_error", score: null }],
+});
+assert.equal(unscoreableRun.averageScore, null);
+assert.equal(unscoreableRun.scoredCount, 0);
+assert.equal(unscoreableRun.status, "failed");
+
+const optimizationEvaluationSet = normalizeEvaluationSet({
+  id: "evaluation_optimization_roles",
+  name: "Optimization roles",
+  dataRows: [
+    { id: "train_case", input: "Train", expectedOutput: "Train output", optimizationRole: "train" },
+    { id: "validation_case", input: "Validate", expectedOutput: "Validation output", dataset_role: "validation" },
+    { id: "holdout_case", input: "Holdout", expectedOutput: "Holdout output", split: "holdout" },
+  ],
+});
+assert.deepEqual(
+  optimizationEvaluationSet.dataRows.map((row) => row.optimizationRole),
+  ["train", "validation", "holdout"],
+);
+const validationRun = createEvaluationRun(optimizationEvaluationSet, {
+  id: "run_validation_only",
+  optimizationRoles: ["validation"],
+});
+assert.deepEqual(validationRun.optimizationRoles, ["validation"]);
+assert.deepEqual(validationRun.cases.map((caseRun) => caseRun.dataRowId), ["validation_case"]);
+assert.equal(validationRun.cases[0]?.optimizationRole, "validation");
 
 const parsedScore = parseEvaluatorResult(
   '{"score":0.9,"reason":"Resolved correctly","passed":true,"confidence":0.8}',
@@ -863,6 +1095,51 @@ const persistedResult = await persistedResponse;
 assert.equal(persistedResult.status, 200);
 assert.equal(persistedResult.payload?.run?.id, "persisted");
 assert.deepEqual(backendPaths, ["/api/evaluations/runs/persisted"]);
+
+let resolveCodeEvaluatorResponse;
+const codeEvaluatorResponse = new Promise((resolve) => {
+  resolveCodeEvaluatorResponse = resolve;
+});
+const codeEvaluatorService = createEvaluationsService({
+  ...adapters,
+  hasAiosSession: () => true,
+  readRequestBody: async () => ({
+    evaluationSet: {
+      id: "evaluation_code_legacy",
+      name: "Legacy code evaluator",
+      targetAgentId: "agent_1",
+      environmentId: "computer_1",
+      evaluator: {
+        type: "code",
+        code: "globalThis.compromised = true; return 1;",
+      },
+      dataRows: [{
+        id: "case_1",
+        input: "Input",
+        expectedOutput: "Output",
+      }],
+    },
+    runOptions: {
+      targetAgentId: "agent_1",
+      environmentId: "computer_1",
+      evaluator: {
+        type: "code",
+        code: "globalThis.compromised = true; return 1;",
+      },
+    },
+  }),
+  sendJson: (_res, status, payload) => resolveCodeEvaluatorResponse({ status, payload }),
+});
+handled = codeEvaluatorService.handleRequest(
+  { method: "POST", headers: { host: "localhost" }, url: "/api/real/evaluations/runs" },
+  {},
+  new URL("http://localhost/api/real/evaluations/runs"),
+);
+assert.equal(handled, true);
+const rejectedCodeEvaluatorResult = await codeEvaluatorResponse;
+assert.equal(rejectedCodeEvaluatorResult.status, 422);
+assert.match(rejectedCodeEvaluatorResult.payload?.message || "", /isolated grader sandbox/);
+assert.equal(globalThis.compromised, undefined);
 
 assert.throws(
   () => createEvaluationsService({}),

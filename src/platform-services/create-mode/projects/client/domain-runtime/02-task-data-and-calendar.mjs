@@ -872,6 +872,16 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
         const draft = buildPlaygroundDefaultReleaseDraft();
         const createdAt = typeof release.createdAt === "string" && release.createdAt ? release.createdAt : draft.createdAt;
         const updatedAt = typeof release.updatedAt === "string" && release.updatedAt ? release.updatedAt : createdAt;
+        const metadata = release.metadata && typeof release.metadata === "object" && !Array.isArray(release.metadata)
+          ? release.metadata
+          : null;
+        const successCriteria = normalizePlaygroundStrategyTextList(
+          release.successCriteria
+          ?? release.success_criteria
+          ?? metadata?.successCriteria
+          ?? metadata?.success_criteria
+          ?? metadata?.outcomeSuccessCriteria
+        );
 
         return {
           ...draft,
@@ -880,10 +890,12 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           projectId: typeof release.projectId === "string" && release.projectId.trim() ? release.projectId.trim() : null,
           name: typeof release.name === "string" ? release.name : draft.name,
           description: typeof release.description === "string" ? release.description : draft.description,
+          successCriteria,
+          successCriteriaInput: serializePlaygroundMilestoneSuccessCriteria(successCriteria),
           startAt: typeof release.startAt === "string" && release.startAt ? release.startAt : null,
           endAt: typeof release.endAt === "string" && release.endAt ? release.endAt : null,
           sortOrder: Number.isFinite(release.sortOrder) ? Number(release.sortOrder) : draft.sortOrder,
-          metadata: release.metadata && typeof release.metadata === "object" && !Array.isArray(release.metadata) ? release.metadata : null,
+          metadata,
           taskCount: Number.isFinite(release.taskCount) ? Number(release.taskCount) : 0,
           openTaskCount: Number.isFinite(release.openTaskCount) ? Number(release.openTaskCount) : 0,
           taskIds: normalizePlaygroundIdList(release.taskIds),
@@ -914,7 +926,8 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           || metadata?.type
           || metadata?.blueprintId
         );
-        const icon = getPlaygroundProjectIconId(project.icon || metadata?.icon || projectBlueprint.iconId);
+        const hasExplicitIcon = hasPlaygroundExplicitProjectIcon(project);
+        const icon = getPlaygroundProjectIconId(metadata?.icon || project.icon || projectBlueprint.iconId);
         const wallpaperId = getPlaygroundProjectWallpaperId(project.wallpaperId || metadata?.wallpaperId || projectBlueprint.wallpaperId, "");
         const useCardBackgroundAsWallpaper = getPlaygroundProjectUseCardBackgroundAsWallpaper(
           project.useCardBackgroundAsWallpaper,
@@ -945,6 +958,9 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
 	          ? project.description
 	          : (metadataDescription || (typeof project.description === "string" ? project.description : draft.description));
         const projectRules = getPlaygroundProjectRules(project);
+        const normalizedProjectStatus = normalizePlaygroundProjectStatus(
+          project.status || metadata?.status || project.state || "backlog"
+        );
         const normalizedProjectPriority = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === String(project.priority || metadata?.priority || "").trim().toLowerCase())
           ? String(project.priority || metadata?.priority || "").trim().toLowerCase()
           : "medium";
@@ -997,12 +1013,14 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           projectType: projectBlueprint.id,
           type: projectBlueprint.id,
           icon,
+          __projectIconExplicit: hasExplicitIcon,
           wallpaperId,
           useCardBackgroundAsWallpaper,
-          color: typeof project.color === "string" && project.color.trim()
-            ? project.color.trim()
-            : (typeof metadata?.color === "string" && metadata.color.trim() ? metadata.color.trim() : projectBlueprint.color),
-          priority: normalizedProjectPriority,
+	          color: typeof project.color === "string" && project.color.trim()
+	            ? project.color.trim()
+	            : (typeof metadata?.color === "string" && metadata.color.trim() ? metadata.color.trim() : projectBlueprint.color),
+	          status: normalizedProjectStatus,
+	          priority: normalizedProjectPriority,
           defaultEnvironmentId: typeof project.defaultEnvironmentId === "string" && project.defaultEnvironmentId.trim()
             ? project.defaultEnvironmentId.trim()
             : typeof metadata?.defaultEnvironmentId === "string" && metadata.defaultEnvironmentId.trim()
@@ -1027,10 +1045,11 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
             avatarUrl: ownerAvatarUrl,
           },
 	          permissionSet: projectPermissionSet,
-		          metadata: {
-		            ...(metadata && typeof metadata === "object" ? metadata : {}),
-		            ...buildPlaygroundProjectBlueprintMetadata(projectBlueprint),
-            priority: normalizedProjectPriority,
+			          metadata: {
+			            ...(metadata && typeof metadata === "object" ? metadata : {}),
+			            ...buildPlaygroundProjectBlueprintMetadata(projectBlueprint),
+	            status: normalizedProjectStatus,
+	            priority: normalizedProjectPriority,
             leadUserId,
             leadName,
             leadEmail,
@@ -1265,8 +1284,8 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
 	          || hasOwnProjectField(rawPrimaryMetadata, "permissionSet");
 	        const primaryHasWallpaper = hasOwnProjectField(primaryProject, "wallpaperId")
           || hasOwnProjectField(rawPrimaryMetadata, "wallpaperId");
-        const primaryHasIcon = hasOwnProjectField(primaryProject, "icon")
-          || hasOwnProjectField(rawPrimaryMetadata, "icon");
+        const primaryHasIcon = hasPlaygroundExplicitProjectIcon(primaryProject);
+        const fallbackHasIcon = hasPlaygroundExplicitProjectIcon(fallbackProject);
         const primaryHasUseCardBackgroundAsWallpaper = hasOwnProjectField(primaryProject, "useCardBackgroundAsWallpaper")
           || hasOwnProjectField(rawPrimaryMetadata, "useCardBackgroundAsWallpaper");
         const primaryHasProjectType = hasOwnProjectField(primaryProject, "projectType")
@@ -1342,6 +1361,7 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           projectType: mergedBlueprint.id,
           type: mergedBlueprint.id,
           icon: mergedIcon,
+          __projectIconExplicit: primaryHasIcon || fallbackHasIcon,
           wallpaperId: mergedWallpaperId,
           useCardBackgroundAsWallpaper: mergedUseCardBackgroundAsWallpaper,
           color: mergedColor,
@@ -1388,116 +1408,6 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
         return mergePlaygroundProjectRecords(sourceRecord, fallbackProject) || normalizedSource;
       }
 
-      function parsePlaygroundTeamSharedResourceMetadata(share) {
-        const metadata = share?.metadata;
-        if (!metadata) {
-          return {};
-        }
-        if (typeof metadata === "string") {
-          try {
-            const parsed = JSON.parse(metadata);
-            return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
-          } catch {
-            return {};
-          }
-        }
-        return metadata && typeof metadata === "object" && !Array.isArray(metadata) ? metadata : {};
-      }
-
-      function getPlaygroundTeamSharedResourceType(share) {
-        const metadata = parsePlaygroundTeamSharedResourceMetadata(share);
-        return String(
-          share?.resourceType
-          || share?.resource_type
-          || metadata.resourceType
-          || metadata.resource_type
-          || metadata.resourceKind
-          || metadata.resource_kind
-          || metadata.kind
-          || metadata.type
-          || ""
-        ).trim().toLowerCase();
-      }
-
-      function getPlaygroundTeamSharedProjectId(share) {
-        const metadata = parsePlaygroundTeamSharedResourceMetadata(share);
-        const metadataProject = metadata.project && typeof metadata.project === "object" && !Array.isArray(metadata.project)
-          ? metadata.project
-          : {};
-        return String(
-          share?.resourceId
-          || share?.resource_id
-          || metadata.projectId
-          || metadata.project_id
-          || metadataProject.id
-          || ""
-        ).trim();
-      }
-
-      function markPlaygroundProjectAsTeamShared(project, share, team) {
-        if (!project?.id) {
-          return project;
-        }
-        const metadata = parsePlaygroundTeamSharedResourceMetadata(share);
-        const existingMetadata = project.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
-          ? project.metadata
-          : {};
-        return normalizePlaygroundProjectRecord({
-          ...project,
-          sharedWithMe: true,
-          isShared: true,
-          metadata: {
-            ...existingMetadata,
-            sharedWithMe: true,
-            isShared: true,
-            teamShared: true,
-            teamShareId: String(share?.id || existingMetadata.teamShareId || "").trim(),
-            teamId: String(team?.id || share?.teamId || share?.team_id || metadata.teamId || metadata.team_id || existingMetadata.teamId || "").trim(),
-            teamName: String(team?.name || metadata.teamName || metadata.team_name || existingMetadata.teamName || "").trim(),
-          },
-        });
-      }
-
-      function getPlaygroundFallbackTeamSharedProjectRecord(share, team) {
-        const metadata = parsePlaygroundTeamSharedResourceMetadata(share);
-        const metadataProject = metadata.project && typeof metadata.project === "object" && !Array.isArray(metadata.project)
-          ? metadata.project
-          : {};
-        const projectId = getPlaygroundTeamSharedProjectId(share);
-        if (!projectId) {
-          return null;
-        }
-        const projectName = String(
-          metadataProject.name
-          || metadataProject.title
-          || metadata.name
-          || metadata.title
-          || share?.resourceName
-          || share?.resource_name
-          || share?.name
-          || "Shared project"
-        ).trim() || "Shared project";
-        const shareUpdatedAt = String(share?.updatedAt || share?.updated_at || share?.createdAt || share?.created_at || "").trim();
-        return normalizePlaygroundProjectRecord({
-          ...metadataProject,
-          id: projectId,
-          name: projectName,
-          description: String(metadataProject.description || metadata.description || "").trim(),
-          updatedAt: shareUpdatedAt || metadataProject.updatedAt || metadata.updatedAt,
-          createdAt: String(share?.createdAt || share?.created_at || metadataProject.createdAt || metadata.createdAt || "").trim(),
-          metadata: {
-            ...(metadataProject.metadata && typeof metadataProject.metadata === "object" && !Array.isArray(metadataProject.metadata) ? metadataProject.metadata : {}),
-            ...metadata,
-            sharedWithMe: true,
-            isShared: true,
-            teamShared: true,
-            teamShareId: String(share?.id || "").trim(),
-            teamId: String(team?.id || share?.teamId || share?.team_id || metadata.teamId || metadata.team_id || "").trim(),
-            teamName: String(team?.name || metadata.teamName || metadata.team_name || "").trim(),
-          },
-        });
-      }
-
       function isPlaygroundProjectTeamSharedWithCurrentUser(project) {
         const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
           ? project.metadata
@@ -1517,102 +1427,6 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           || metadata.teamShareSource
           || metadata.teamAccessLevel
         );
-      }
-
-      async function resolvePlaygroundTeamSharedProjects({ backendUrl, headers, projects = [] }) {
-        const projectsById = new Map(
-          (Array.isArray(projects) ? projects : [])
-            .map((project) => [String(project?.id || "").trim(), project])
-            .filter(([projectId]) => projectId)
-        );
-        if (!backendUrl) {
-          return Array.from(projectsById.values());
-        }
-
-        const teamsResult = await fetchJsonWithTimeout(backendUrl + "/teams", {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-          headers,
-        }, 8000).catch(() => null);
-        const teams = teamsResult?.response?.ok
-          ? (Array.isArray(teamsResult.data?.data) ? teamsResult.data.data : (Array.isArray(teamsResult.data?.teams) ? teamsResult.data.teams : []))
-          : [];
-        const projectShares = [];
-
-        if (teams.length > 0) {
-          const shareResults = await Promise.allSettled(teams.map(async (team) => {
-            const teamId = String(team?.id || "").trim();
-            if (!teamId) {
-              return [];
-            }
-            const { response, data } = await fetchJsonWithTimeout(backendUrl + "/teams/" + encodeURIComponent(teamId) + "/resource-shares", {
-              method: "GET",
-              credentials: "include",
-              cache: "no-store",
-              headers,
-            }, 8000);
-            if (!response.ok) {
-              return [];
-            }
-            return (Array.isArray(data?.data) ? data.data : [])
-              .filter((share) => getPlaygroundTeamSharedResourceType(share) === "project")
-              .map((share) => ({ share, team }));
-          }));
-          shareResults.forEach((result) => {
-            if (result.status === "fulfilled" && Array.isArray(result.value)) {
-              projectShares.push(...result.value);
-            }
-          });
-        }
-
-        projectShares.forEach(({ share, team }) => {
-          const projectId = getPlaygroundTeamSharedProjectId(share);
-          if (!projectId || !projectsById.has(projectId)) {
-            return;
-          }
-          const sharedProject = markPlaygroundProjectAsTeamShared(projectsById.get(projectId), share, team);
-          if (sharedProject?.id) {
-            projectsById.set(projectId, sharedProject);
-          }
-        });
-
-        const missingSharedProjectIds = Array.from(new Set(projectShares
-          .map(({ share }) => getPlaygroundTeamSharedProjectId(share))
-          .filter((projectId) => projectId && !projectsById.has(projectId))));
-
-        if (missingSharedProjectIds.length > 0) {
-          const detailResults = await Promise.allSettled(missingSharedProjectIds.map(async (projectId) => {
-            const detailResponse = await fetch(backendUrl + "/projects/" + encodeURIComponent(projectId), {
-              method: "GET",
-              credentials: "include",
-              cache: "no-store",
-              headers,
-            });
-            const detailData = await detailResponse.json().catch(() => ({}));
-            if (!detailResponse.ok) {
-              throw new Error(detailData?.message || detailData?.error || "Failed to load shared project.");
-            }
-            return getPlaygroundProjectResponseRecord(detailData, { id: projectId }) || normalizePlaygroundProjectRecord({ id: projectId });
-          }));
-
-          missingSharedProjectIds.forEach((projectId, index) => {
-            const result = detailResults[index];
-            let sharedProject = result?.status === "fulfilled" ? result.value : null;
-            const matchingShare = projectShares.find(({ share }) => getPlaygroundTeamSharedProjectId(share) === projectId);
-            if (!sharedProject && matchingShare) {
-              sharedProject = getPlaygroundFallbackTeamSharedProjectRecord(matchingShare.share, matchingShare.team);
-            }
-            if (sharedProject && matchingShare) {
-              sharedProject = markPlaygroundProjectAsTeamShared(sharedProject, matchingShare.share, matchingShare.team);
-            }
-            if (sharedProject?.id) {
-              projectsById.set(projectId, sharedProject);
-            }
-          });
-        }
-
-        return Array.from(projectsById.values());
       }
 
       function toPlaygroundDatetimeLocalValue(value) {

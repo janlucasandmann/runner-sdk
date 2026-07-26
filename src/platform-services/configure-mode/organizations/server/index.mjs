@@ -1,5 +1,18 @@
 const ORGANIZATIONS_PROXY_METHODS = new Set(["GET", "POST", "PATCH", "PUT", "DELETE"]);
-const ORGANIZATIONS_PROXY_PATH_PATTERN = /^\/api\/real\/organizations(?:\/(.*))?$/;
+const ORGANIZATIONS_PROXY_ROUTES = Object.freeze([
+  Object.freeze({
+    pattern: /^\/api\/real\/organizations(?:\/(.*))?$/,
+    upstreamBase: "/organizations",
+  }),
+  Object.freeze({
+    pattern: /^\/api\/real\/identity-connections(?:\/(.*))?$/,
+    upstreamBase: "/identity-connections",
+  }),
+  Object.freeze({
+    pattern: /^\/api\/real\/authorization(?:\/(.*))?$/,
+    upstreamBase: "/authorization",
+  }),
+]);
 
 function assertAdapter(adapters, name) {
   if (typeof adapters[name] !== "function") {
@@ -7,14 +20,22 @@ function assertAdapter(adapters, name) {
   }
 }
 
-function buildOrganizationsUpstreamPath(match) {
+function buildOrganizationsUpstreamPath(upstreamBase, match) {
   const suffix = match?.[1]
     ? "/" + match[1]
       .split("/")
       .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
       .join("/")
     : "";
-  return "/organizations" + suffix;
+  return upstreamBase + suffix;
+}
+
+function matchOrganizationsProxyRoute(pathname) {
+  for (const route of ORGANIZATIONS_PROXY_ROUTES) {
+    const match = pathname.match(route.pattern);
+    if (match) return { match, upstreamBase: route.upstreamBase };
+  }
+  return null;
 }
 
 /** Creates the Organizations API proxy service from host transport adapters. */
@@ -24,11 +45,14 @@ export function createOrganizationsService(adapters = {}) {
 
   return Object.freeze({
     handleRequest(req, res, url) {
-      const organizationsProxyMatch = url.pathname.match(ORGANIZATIONS_PROXY_PATH_PATTERN);
-      if (!organizationsProxyMatch || !ORGANIZATIONS_PROXY_METHODS.has(req.method || "")) {
+      const route = matchOrganizationsProxyRoute(url.pathname);
+      if (!route || !ORGANIZATIONS_PROXY_METHODS.has(req.method || "")) {
         return false;
       }
-      const upstreamPath = buildOrganizationsUpstreamPath(organizationsProxyMatch);
+      const upstreamPath = buildOrganizationsUpstreamPath(
+        route.upstreamBase,
+        route.match,
+      );
       if (req.method === "GET") {
         void adapters.proxyUpstreamGet(req, res, upstreamPath + (url.search || ""));
       } else {

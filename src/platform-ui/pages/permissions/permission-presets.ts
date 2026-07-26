@@ -438,6 +438,108 @@ function createFineTuningRolePermissionSet(roleId: string): PlatformPermissionSe
   return permissionSet;
 }
 
+function createTestPlanRolePermissionSet(roleId: string): PlatformPermissionSet {
+  if (roleId === "owner" || roleId === "admin")
+    return createAdminPermissionSet("test_plan_team_role");
+  const permissionSet = createPlatformDefaultPermissionSet("test_plan_team_role");
+  if (roleId === "contributor") {
+    setRingAccess(permissionSet, "ring_1", "full_access");
+    setRingAccess(permissionSet, "ring_2", "full_access");
+    setRingAccess(permissionSet, "ring_3", "ask_for_permission");
+    applyAccess(
+      permissionSet,
+      [
+        "test_plan_view",
+        "test_run_results_view",
+        "test_run",
+        "test_plan_manage",
+        "test_plan_versions_manage",
+      ],
+      "full_access",
+    );
+    applyAccess(
+      permissionSet,
+      ["test_plan_access_manage", "test_plan_delete"],
+      "no_access",
+    );
+    return permissionSet;
+  }
+  setRingAccess(permissionSet, "ring_1", "read_only");
+  setRingAccess(permissionSet, "ring_2", "no_access");
+  setRingAccess(permissionSet, "ring_3", "no_access");
+  applyAccess(
+    permissionSet,
+    ["test_plan_view", "test_run_results_view"],
+    "read_only",
+  );
+  setActionAccess(permissionSet, "test_run", "full_access");
+  applyAccess(
+    permissionSet,
+    [
+      "test_plan_manage",
+      "test_plan_versions_manage",
+      "test_plan_access_manage",
+      "test_plan_delete",
+    ],
+    "no_access",
+  );
+  return permissionSet;
+}
+
+function createAssurancePolicyRolePermissionSet(roleId: string): PlatformPermissionSet {
+  if (roleId === "owner" || roleId === "admin") {
+    return createAdminPermissionSet("assurance_policy_team_role");
+  }
+  const permissionSet = createPlatformDefaultPermissionSet("assurance_policy_team_role");
+  if (roleId === "contributor") {
+    setRingAccess(permissionSet, "ring_1", "full_access");
+    setRingAccess(permissionSet, "ring_2", "full_access");
+    setRingAccess(permissionSet, "ring_3", "no_access");
+    applyAccess(
+      permissionSet,
+      [
+        "assurance_policy_view",
+        "assurance_run_results_view",
+        "assurance_run",
+        "assurance_policy_manage",
+        "assurance_policy_versions_manage",
+      ],
+      "full_access",
+    );
+    applyAccess(
+      permissionSet,
+      [
+        "assurance_approve",
+        "assurance_policy_access_manage",
+        "assurance_policy_delete",
+      ],
+      "no_access",
+    );
+    return permissionSet;
+  }
+  setRingAccess(permissionSet, "ring_1", "read_only");
+  setRingAccess(permissionSet, "ring_2", "no_access");
+  setRingAccess(permissionSet, "ring_3", "no_access");
+  applyAccess(
+    permissionSet,
+    ["assurance_policy_view", "assurance_run_results_view"],
+    "read_only",
+  );
+  applyAccess(
+    permissionSet,
+    [
+      "assurance_run",
+      "assurance_policy_manage",
+      "assurance_policy_versions_manage",
+      "assurance_approve",
+      "assurance_policy_access_manage",
+      "assurance_policy_delete",
+    ],
+    "no_access",
+  );
+  return permissionSet;
+}
+
 function createSecurityRepositoryRolePermissionSet(roleId: string): PlatformPermissionSet {
   if (roleId === "owner" || roleId === "admin") {
     return createAdminPermissionSet("security_repository");
@@ -537,6 +639,19 @@ export function createPlatformRolePermissionSet(
   }
   if (subjectType === "evaluation" || subjectType === "evaluation_team_role") {
     const permissionSet = createEvaluationRolePermissionSet(normalizedRoleId);
+    permissionSet.subjectType = subjectType;
+    return permissionSet;
+  }
+  if (subjectType === "test_plan" || subjectType === "test_plan_team_role") {
+    const permissionSet = createTestPlanRolePermissionSet(normalizedRoleId);
+    permissionSet.subjectType = subjectType;
+    return permissionSet;
+  }
+  if (
+    subjectType === "assurance_policy"
+    || subjectType === "assurance_policy_team_role"
+  ) {
+    const permissionSet = createAssurancePolicyRolePermissionSet(normalizedRoleId);
     permissionSet.subjectType = subjectType;
     return permissionSet;
   }

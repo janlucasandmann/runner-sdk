@@ -30,14 +30,17 @@ specific control that can resolve them, never in a full-width page label.
   sidebar sizing. Detail-route loading keeps this frame mounted and centers the
   centralized loading indicator in its content viewport.
 - [`security-repository-detail-page.tsx`](security-repository-detail-page.tsx) —
-  Combined Runs & findings, policy, threat model, audit, and settings
-  composition. Runs & findings starts with centralized KPI cards for open and
-  critical findings, completed fixes, and run activity. Its tab bar is the
-  first local content element because the repository identity and actions live
-  in the app header.
+  Runs, policy, and settings composition. Runs starts with centralized KPI
+  cards for open and critical findings, completed fixes, and run activity, then
+  presents runs, findings, and the append-only audit log as views of one
+  centralized table. Policy keeps trigger configuration and threat-model
+  context together as one versioned security configuration.
 - [`security-repository-sidebar.tsx`](security-repository-sidebar.tsx) —
   Project-ticket-compatible Details and Safety boundary cards with the direct
   property-list and creator/owner identity treatment from Evaluation details.
+  The primary Run scan action closes the Details card and remains disabled
+  while configuration is loading, another mutation is active, or monitoring is
+  not active.
   Owner uses the centralized selector, lazy-loads human members of teams with
   repository access, and permits reassignment only by the current owner.
   Policy and threat-model versions stay in their dedicated editors rather than
@@ -46,9 +49,9 @@ specific control that can resolve them, never in a full-width page label.
   creator, matching Evaluations.
 - [`security-repository-version-control.tsx`](security-repository-version-control.tsx)
   — Agent-compatible breadcrumb state, local configuration draft, shared
-  Run scan and publish controls, review diff, version-history drawer, comparison
-  view, and unsaved-navigation guard. The publish action and its selector share
-  one disabled state.
+  publish controls, review diff, version-history drawer, comparison view, and
+  unsaved-navigation guard. The publish action and its selector share one
+  disabled state.
 - [`security-repository-access-settings.tsx`](security-repository-access-settings.tsx)
   — Centralized minimal Manage access table plus All Agents and team-role
   permission editors. Repository access intentionally lives inside Settings,

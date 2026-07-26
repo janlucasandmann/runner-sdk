@@ -1,5 +1,9 @@
+import { createHash } from "node:crypto";
+
 export const EVALUATION_RUN_TTL_MS = 1000 * 60 * 60 * 6;
 export const EVALUATION_CT_PER_DOLLAR = 100;
+export const EVALUATION_FINGERPRINT_ALGORITHM = "sha256";
+export const EVALUATION_FINGERPRINT_SCHEMA_VERSION = "evaluation_fingerprint_v1";
 
 export function createEvaluationId(prefix = "eval") {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -9,12 +13,87 @@ export function normalizeString(value) {
   return String(value || "").trim();
 }
 
+function normalizeFingerprintValue(value, seen = new WeakSet()) {
+  if (value === null) return null;
+  if (value === undefined || typeof value === "function" || typeof value === "symbol") return undefined;
+  if (typeof value === "bigint") return value.toString();
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value !== "object") return value;
+  if (value instanceof Date) return value.toISOString();
+  if (seen.has(value)) {
+    throw new TypeError("Evaluation fingerprints cannot be created from cyclic values.");
+  }
+  seen.add(value);
+  try {
+    if (Array.isArray(value)) {
+      return value.map((item) => {
+        const normalized = normalizeFingerprintValue(item, seen);
+        return normalized === undefined ? null : normalized;
+      });
+    }
+    return Object.keys(value)
+      .sort()
+      .reduce((record, key) => {
+        const normalized = normalizeFingerprintValue(value[key], seen);
+        if (normalized !== undefined) record[key] = normalized;
+        return record;
+      }, {});
+  } finally {
+    seen.delete(value);
+  }
+}
+
+export function stableSerializeEvaluationValue(value) {
+  return JSON.stringify(normalizeFingerprintValue(value));
+}
+
+export function createEvaluationFingerprint(namespace, value) {
+  const normalizedNamespace = normalizeString(namespace) || "evaluation";
+  const digest = createHash(EVALUATION_FINGERPRINT_ALGORITHM)
+    .update(EVALUATION_FINGERPRINT_SCHEMA_VERSION)
+    .update("\n")
+    .update(normalizedNamespace)
+    .update("\n")
+    .update(stableSerializeEvaluationValue(value))
+    .digest("hex");
+  return `${EVALUATION_FINGERPRINT_ALGORITHM}:${digest}`;
+}
+
 export function normalizeEvaluator(rawEvaluator = {}) {
   const source = rawEvaluator && typeof rawEvaluator === "object" && !Array.isArray(rawEvaluator) ? rawEvaluator : {};
   const rawType = normalizeString(source.type || source.evaluatorType).toLowerCase();
   return {
     type: ["agent", "code", "exact"].includes(rawType) ? rawType : "exact",
     agentId: normalizeString(source.agentId || source.agent_id),
+    agentVersionId: normalizeString(
+      source.agentVersionId
+        || source.agent_version_id
+        || source.versionId
+        || source.version_id,
+    ),
+    agentVersionNumber: Math.max(
+      0,
+      Number(
+        source.agentVersionNumber
+          || source.agent_version_number
+          || source.versionNumber
+          || source.version_number
+          || source.version
+          || 0,
+      ) || 0,
+    ),
+    agentVersionLabel: normalizeString(
+      source.agentVersionLabel
+        || source.agent_version_label
+        || source.versionLabel
+        || source.version_label,
+    ),
+    agentVersionRevisionId: normalizeString(
+      source.agentVersionRevisionId
+        || source.agent_version_revision_id
+        || source.revisionId
+        || source.revision_id,
+    ),
     code: String(source.code || ""),
   };
 }
@@ -178,5 +257,3 @@ export function readUsdCostValue(source) {
   const tokenCount = readComputeTokenValue(source);
   return tokenCount > 0 ? tokenCount / EVALUATION_CT_PER_DOLLAR : 0;
 }
-
-

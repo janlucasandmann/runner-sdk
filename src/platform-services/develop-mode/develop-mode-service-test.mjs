@@ -8,6 +8,7 @@ const modeRoot = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(modeRoot, "../../..");
 const serviceNames = [
   "api-keys",
+  "evidence-agents",
   "security",
   "web-apps",
   "apis",
@@ -43,6 +44,7 @@ assert.match(platformEntrySource, /DevelopResourceOverviewRoute/);
 assert.match(platformEntrySource, /DevelopVoiceAgentsOverviewPage/);
 assert.match(platformEntrySource, /DevelopApiKeysOverviewPage/);
 assert.match(platformEntrySource, /DevelopSecurityWorkspacePage/);
+assert.match(platformEntrySource, /DevelopEvidenceAgentsWorkspacePage/);
 assert.doesNotMatch(platformEntrySource, /DevelopResourceOverviewPage/);
 
 console.log(`Develop mode service boundaries passed (${serviceNames.length} services checked).`);

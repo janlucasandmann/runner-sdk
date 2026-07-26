@@ -22,6 +22,7 @@ export function createEvaluationsService(adapters = {}) {
 
   const runtime = createPlaygroundEvaluationsRuntime(adapters);
   return Object.freeze({
+    runs: runtime.runs,
     handleRequest(req, res, url) {
       if (runtime.handleRequest(req, res, url)) {
         return true;

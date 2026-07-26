@@ -5,6 +5,26 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
           }
           const draft = buildEvaluationCaseEditorDraft(state.draft || {}, Number(state.index || 0));
           const runCountValue = String(state.draft?.runCount ?? draft.runCount ?? "1");
+          const optimizationRole = normalizePlaygroundEvaluationOptimizationRole(
+            state.draft?.optimizationRole || draft.optimizationRole
+          );
+          const optimizationRoleOptions = [
+            {
+              value: "train",
+              label: "Training",
+              description: "Used during optimization. Expected output and guidance may be shown to the optimizer.",
+            },
+            {
+              value: "validation",
+              label: "Validation",
+              description: "Used to select candidates. Expected output and guidance stay hidden from the optimizer.",
+            },
+            {
+              value: "holdout",
+              label: "Holdout",
+              description: "Sealed until final verification and never used to guide optimization.",
+            },
+          ];
           const isNew = state.isNew === true;
           const focusedEditor = evaluationCaseFocusedEditor;
           if (focusedEditor?.field) {
@@ -77,21 +97,41 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
               maxHeight: "min(720px, calc(100vh - 48px))",
               scrollable: true,
               title: isNew ? "New Case" : "Edit Case",
-              headerActions: React.createElement("label", { className: "playground-evaluations-case-editor-run-field" },
-                React.createElement("span", { className: "playground-evaluations-case-editor-run-label" }, "Runs per Evaluation"),
-                React.createElement("input", {
-                  type: "text",
-                  inputMode: "numeric",
-                  pattern: "[0-9]*",
-                  className: "playground-evaluations-case-editor-run-input",
-                  value: runCountValue,
-                  onChange: (event) => {
-                    const nextValue = String(event.target.value || "");
-                    if (nextValue && !/^\d{0,2}$/.test(nextValue)) return;
-                    if (nextValue && Number(nextValue) > 50) return;
-                    updateEvaluationCaseEditorDraft({ runCount: nextValue });
-                  },
-                })
+              headerActions: React.createElement("div", { className: "playground-evaluations-case-editor-header-actions" },
+                React.createElement("label", { className: "playground-evaluations-case-editor-run-field" },
+                  React.createElement("span", { className: "playground-evaluations-case-editor-run-label" }, "Runs per Evaluation"),
+                  React.createElement("input", {
+                    type: "text",
+                    inputMode: "numeric",
+                    pattern: "[0-9]*",
+                    className: "playground-evaluations-case-editor-run-input",
+                    value: runCountValue,
+                    onChange: (event) => {
+                      const nextValue = String(event.target.value || "");
+                      if (nextValue && !/^\d{0,2}$/.test(nextValue)) return;
+                      if (nextValue && Number(nextValue) > 50) return;
+                      updateEvaluationCaseEditorDraft({ runCount: nextValue });
+                    },
+                  })
+                ),
+                React.createElement("div", { className: "playground-evaluations-case-editor-role-field" },
+                  React.createElement("span", { className: "playground-evaluations-case-editor-run-label" }, "Optimization Role"),
+                  React.createElement(PlatformSelector, {
+                    value: optimizationRole,
+                    options: optimizationRoleOptions,
+                    onValueChange: (nextValue) => updateEvaluationCaseEditorDraft({
+                      optimizationRole: normalizePlaygroundEvaluationOptimizationRole(nextValue),
+                    }),
+                    ariaLabel: "Select case optimization role",
+                    label: getPlaygroundEvaluationOptimizationRoleLabel(optimizationRole),
+                    popupAlignment: "right",
+                    popupWidth: "min(330px, calc(100vw - 48px))",
+                    popupMaxWidth: "calc(100vw - 48px)",
+                    className: "playground-evaluations-case-editor-role-selector",
+                    triggerClassName: "playground-evaluations-case-editor-role-trigger",
+                    popupClassName: "playground-evaluations-case-editor-role-popup",
+                  })
+                )
               ),
               onClose: closeEvaluationCaseEditor,
               closeButtonLabel: "Close case editor",
@@ -159,6 +199,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
           const confidenceLabel = reasoningDisplay.confidence === null || reasoningDisplay.confidence === undefined
             ? "-"
             : formatPlaygroundEvaluationPercent(reasoningDisplay.confidence);
+          const optimizationRole = normalizePlaygroundEvaluationOptimizationRole(activeCase.optimizationRole);
           return React.createElement("div", { className: "playground-guardrails-detail playground-evaluations-detail playground-evaluations-case-detail" },
             React.createElement("div", { className: "playground-guardrails-editor" },
               React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-evaluations-case-section" },
@@ -174,6 +215,9 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
                   renderCaseKpi("Environment", renderRunEnvironmentCell(activeRun, activeSet)),
                   renderCaseKpi("Score", React.createElement("span", { className: "playground-evaluations-case-score" }, scoreLabel)),
                   renderCaseKpi("Confidence", confidenceLabel),
+                  renderCaseKpi("Dataset Role", React.createElement(PlatformLabel, {
+                    variant: optimizationRole === "holdout" ? "yellow" : optimizationRole === "validation" ? "blue" : "gray",
+                  }, getPlaygroundEvaluationOptimizationRoleLabel(optimizationRole))),
                   renderCaseKpi("Status", React.createElement(PlatformLabel, {
                     variant: displayStatusVariant,
                   }, displayStatus.replace(/_/g, " ")))

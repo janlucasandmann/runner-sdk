@@ -17,45 +17,114 @@ import {
   getFineTuningBaselineRun,
 } from "./evaluations.mjs";
 
-export function buildFineTuningPrompt({ targetAgent, fineTunerAgent, environment, evaluationSets, instructions, verifyAfter, jobId, nextVersionNumber }) {
-  const caseCount = evaluationSets.reduce((sum, set) => sum + (Array.isArray(set.dataRows) ? set.dataRows.length : 0), 0);
+export function buildFineTuningPrompt({
+  targetAgent,
+  fineTunerAgent,
+  environment,
+  evaluationSets,
+  evaluationRuns = [],
+  instructions,
+  jobId,
+  iterationNumber = 1,
+}) {
+  const runBySetId = new Map(
+    (Array.isArray(evaluationRuns) ? evaluationRuns : [])
+      .map((run) => [normalizeString(run?.evaluationSetId || run?.evaluation_set_id), run]),
+  );
   const evaluationSummary = evaluationSets.map((set, index) => {
-    const latestRun = getFineTuningBaselineRun(set);
-    const rows = (Array.isArray(set.dataRows) ? set.dataRows : []).slice(0, 8).map((row, rowIndex) => ({
-      index: rowIndex + 1,
-      input: String(row?.input || "").slice(0, 1200),
-      expectedOutput: String(row?.expectedOutput || row?.expected_output || "").slice(0, 1200),
-      evaluationGuidance: String(row?.evaluationGuidance || row?.evaluation_guidance || "").slice(0, 800),
-      runCount: Number(row?.runCount || row?.run_count || 1) || 1,
+    const run = runBySetId.get(normalizeString(set.id)) || getFineTuningBaselineRun(set) || {};
+    const dataRows = Array.isArray(set.dataRows) ? set.dataRows : [];
+    const roleByDataRowId = new Map(dataRows.map((row) => {
+      const requestedRole = normalizeString(
+        row?.optimizationRole || row?.optimization_role || "train",
+      ).toLowerCase();
+      return [
+        normalizeString(row?.id),
+        ["train", "validation", "holdout"].includes(requestedRole) ? requestedRole : "train",
+      ];
     }));
+    const visibleRunCases = (Array.isArray(run?.cases) ? run.cases : []).filter((caseItem) => {
+      const dataRowId = normalizeString(caseItem?.dataRowId || caseItem?.data_row_id);
+      const requestedRole = normalizeString(
+        caseItem?.optimizationRole
+          || caseItem?.optimization_role
+          || roleByDataRowId.get(dataRowId)
+          || "train",
+      ).toLowerCase();
+      return requestedRole !== "holdout";
+    });
+    const visibleScores = visibleRunCases.map((caseItem) => clampScore(caseItem?.score || 0));
+    const passThreshold = clampScore(set.passThreshold ?? set.pass_threshold ?? 0.8, 0.8);
+    const runCasesByDataRowId = new Map();
+    visibleRunCases.forEach((caseItem) => {
+      const dataRowId = normalizeString(caseItem?.dataRowId || caseItem?.data_row_id);
+      if (!dataRowId) return;
+      const values = runCasesByDataRowId.get(dataRowId) || [];
+      values.push(caseItem);
+      runCasesByDataRowId.set(dataRowId, values);
+    });
+    const cases = dataRows.map((row, rowIndex) => {
+      const role = ["train", "validation", "holdout"].includes(
+        normalizeString(row?.optimizationRole || row?.optimization_role).toLowerCase(),
+      )
+        ? normalizeString(row?.optimizationRole || row?.optimization_role).toLowerCase()
+        : "train";
+      if (role === "holdout") return null;
+      const caseRuns = runCasesByDataRowId.get(normalizeString(row?.id)) || [];
+      const scores = caseRuns.map((caseItem) => clampScore(caseItem?.score || 0));
+      const averageScore = scores.length
+        ? scores.reduce((sum, score) => sum + score, 0) / scores.length
+        : 0;
+      const evaluatorReasons = caseRuns
+        .map((caseItem) => sanitizeFineTuningAnalysisText(caseItem?.evaluatorReason || ""))
+        .filter(Boolean)
+        .slice(0, 3);
+      return {
+        index: rowIndex + 1,
+        id: normalizeString(row?.id),
+        role,
+        input: String(row?.input || "").slice(0, 1600),
+        ...(role === "train" ? {
+          expectedOutput: String(row?.expectedOutput || row?.expected_output || "").slice(0, 1600),
+          evaluationGuidance: String(row?.evaluationGuidance || row?.evaluation_guidance || "").slice(0, 1200),
+        } : {}),
+        currentScore: averageScore,
+        evaluatorReasons,
+      };
+    }).filter(Boolean);
     return {
       index: index + 1,
       id: set.id,
       name: set.name,
-      activeVersionId: set.activeVersionId,
-      activeVersionNumber: set.activeVersionNumber,
-      latestRun,
-      caseCount: Array.isArray(set.dataRows) ? set.dataRows.length : 0,
-      sampleCases: rows,
+      evaluationVersionId: set.activeVersionId,
+      evaluationVersionNumber: set.activeVersionNumber,
+      passThreshold,
+      averageScore: visibleScores.length
+        ? clampScore(visibleScores.reduce((sum, score) => sum + score, 0) / visibleScores.length)
+        : 0,
+      passRate: visibleScores.length
+        ? clampScore(visibleScores.filter((score) => score >= passThreshold).length / visibleScores.length)
+        : 0,
+      cases,
     };
   });
   return [
-    "You are running a fine-tuning analysis job for an AI agent platform.",
-    "Your job is to create and publish a safer, higher-performing version of the target agent from the selected evaluation evidence.",
-    "This is an execution task, not a recommendation task. The user approved this exact publish action by starting the fine-tune job.",
-    "Do not ask whether to continue, do not browse unrelated platform state, and do not stop after an analysis plan.",
-    "Focus on concrete instruction changes, missing constraints, failure modes, and evaluation-driven improvements.",
+    "You are optimizing the instructions of an AI agent from controlled evaluation evidence.",
+    "Create one candidate instruction snapshot. Do not publish, update, rename, or otherwise mutate the agent.",
+    "The platform will save the candidate as a draft and independently verify it.",
+    "Focus on generalizable instruction changes, missing constraints, failure modes, and evaluation-driven improvements.",
+    "Do not overfit to individual wording and do not encode expected answers as case-specific rules.",
     "Immutable target-agent identity: keep the target agent name exactly \"" + (targetAgent.name || "Agent") + "\". Do not rename the agent, change its avatar, owner, model, skills, guardrails, team access, or other configuration. Only improve the instructions.",
     "",
-    "Required execution path:",
-    "1. Adapt the target agent instructions directly from the evidence below.",
-    "2. Write the complete improved target-agent instructions to /tmp/fine-tuned-agent-instructions.md.",
-    "3. Run exactly this publish command:",
-    "   python3 /workspace/.claude/skills/computer-agents/scripts/computer-agents.py fine-tuning publish-agent-version --target-agent-id " + targetAgent.id + " --instructions-file /tmp/fine-tuned-agent-instructions.md --job-id " + (jobId || "fine_tune_job") + " --label \"Fine-Tuned Version\" --description \"Generated by fine-tuning job " + (jobId || "") + "\"",
-    "4. If the command succeeds, return a concise summary of the evidence, the exact instruction changes, and the published version id.",
-    "5. If the command fails, return the exact command error. Do not switch to curl or hand-written API calls.",
+    "Evidence policy:",
+    "- Training cases include expected outputs and rubrics and may guide the candidate.",
+    "- Validation cases omit expected outputs and rubrics. Use only their aggregate failure patterns.",
+    "- Holdout cases are sealed and never included in optimizer evidence.",
+    "- Preserve correct existing behavior unless evidence clearly requires a change.",
     "",
-    "Do not run agents list, threads list, evaluations list, versions list, or generic API discovery unless the required publish command fails because a required ID is invalid. All required IDs and evaluation evidence are included here.",
+    "Return only valid JSON in this exact shape:",
+    "{\"instructions\":\"complete replacement instructions\",\"summary\":\"concise evidence-based rationale\",\"risks\":[\"risk or tradeoff\"]}",
+    "The instructions value must be the complete instruction document, not a patch.",
     "",
     "Target agent:",
     JSON.stringify({
@@ -65,7 +134,8 @@ export function buildFineTuningPrompt({ targetAgent, fineTunerAgent, environment
       model: targetAgent.model,
       description: targetAgent.description,
       instructions: targetAgent.instructions,
-      nextVersionNumber,
+      jobId,
+      iterationNumber,
     }, null, 2),
     "",
     "Fine-tuner agent executing this job:",
@@ -75,22 +145,53 @@ export function buildFineTuningPrompt({ targetAgent, fineTunerAgent, environment
       model: fineTunerAgent.model,
     }, null, 2),
     "",
-    "Execution computer:",
+    "Optimization environment:",
     JSON.stringify({ id: environment.id, name: environment.name }, null, 2),
     "",
     "User focus:",
     instructions ? instructions : "No extra focus supplied.",
     "",
-    "Evaluation data:",
-    JSON.stringify({
-      evaluationSetCount: evaluationSets.length,
-      caseCount,
-      verifyAfter: Boolean(verifyAfter),
-      evaluationSets: evaluationSummary,
-    }, null, 2),
-    "",
-    "Return the final fine-tuning summary only after the version creation command has succeeded or failed with a concrete error."
+    "Evaluation evidence:",
+    JSON.stringify({ evaluationSets: evaluationSummary }, null, 2),
   ].join("\n");
+}
+
+export function parseFineTuningOptimizerResult(value) {
+  const raw = decodeMaybeEscapedText(value).trim();
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1] || "";
+  const object = raw.match(/\{[\s\S]*\}/)?.[0] || "";
+  for (const candidate of [fenced, object]) {
+    if (!candidate) continue;
+    try {
+      const parsed = JSON.parse(candidate);
+      const instructions = String(
+        parsed?.instructions
+          || parsed?.fullInstructions
+          || parsed?.full_instructions
+          || "",
+      ).trim();
+      if (!instructions) continue;
+      return {
+        instructions,
+        summary: sanitizeFineTuningAnalysisText(
+          parsed?.summary || parsed?.rationale || parsed?.reason || "",
+        ),
+        risks: (Array.isArray(parsed?.risks) ? parsed.risks : [])
+          .map((risk) => normalizeString(risk))
+          .filter(Boolean)
+          .slice(0, 12),
+        parseStatus: "parsed_json",
+        raw,
+      };
+    } catch {}
+  }
+  return {
+    instructions: "",
+    summary: sanitizeFineTuningAnalysisText(raw),
+    risks: [],
+    parseStatus: raw ? "unparsed" : "missing_output",
+    raw,
+  };
 }
 
 export function decodeMaybeEscapedText(value) {
@@ -299,5 +400,3 @@ export function buildEvaluationRunReferences(evaluationSets, verifyAfter, improv
     };
   });
 }
-
-

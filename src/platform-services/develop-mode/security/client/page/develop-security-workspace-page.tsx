@@ -15,6 +15,7 @@ import {
   type PlatformSystemAccessPrincipalId,
 } from "../../../../../platform-resources/access-control/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
+import { PlatformSwitch } from "../../../../../platform-ui/components/ui/switch/index.js";
 import {
   createPlatformDefaultPermissionSet,
   type PlatformPermissionSet,
@@ -48,18 +49,31 @@ import {
   readSecurityWorkspaceRoute,
   writeSecurityWorkspaceRoute,
 } from "../domain/index.js";
-import { SecurityFindingDetailPage } from "./security-finding-detail-page.js";
+import {
+  SECURITY_FINDING_HEADER_SECTIONS,
+  SecurityFindingDetailPage,
+  type SecurityFindingTab,
+} from "./security-finding-detail-page.js";
 import {
   SecurityDetailLoadingState,
   SecurityDetailPageFrame,
 } from "./security-detail-layout.js";
 import { SecurityOverviewPage } from "./security-overview-page.js";
-import { SecurityRepositoryDetailPage } from "./security-repository-detail-page.js";
+import {
+  SECURITY_REPOSITORY_HEADER_SECTIONS,
+  SecurityRepositoryDetailPage,
+  type SecurityRepositoryAnalyticsTimeframe,
+  type SecurityRepositoryTab,
+} from "./security-repository-detail-page.js";
 import {
   SecurityRepositoryVersionControl,
   type SecurityRepositoryHeaderState,
 } from "./security-repository-version-control.js";
-import { SecurityRunDetailPage } from "./security-run-detail-page.js";
+import {
+  SECURITY_RUN_HEADER_SECTIONS,
+  SecurityRunDetailPage,
+  type SecurityRunTab,
+} from "./security-run-detail-page.js";
 
 export interface DevelopSecurityWorkspacePageProps {
   controlsPortalId?: string;
@@ -146,6 +160,12 @@ export function DevelopSecurityWorkspacePage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
+  const [repositoryTab, setRepositoryTab] =
+    useState<SecurityRepositoryTab>("runs");
+  const [runTab, setRunTab] = useState<SecurityRunTab>("overview");
+  const [findingTab, setFindingTab] = useState<SecurityFindingTab>("evidence");
+  const [analyticsTimeframe, setAnalyticsTimeframe] =
+    useState<SecurityRepositoryAnalyticsTimeframe>("30d");
 
   const navigate = useCallback(
     (nextRoute: SecurityWorkspaceRoute, mode: "push" | "replace" = "push") => {
@@ -409,6 +429,55 @@ export function DevelopSecurityWorkspacePage({
   );
 
   useEffect(() => {
+    if (!onResourcesHeaderChange) return;
+    if (route.kind === "run" && runDetail) {
+      onResourcesHeaderChange({
+        mode: "detail",
+        title: `Run ${runDetail.run.id.slice(-8)}`,
+        resourceType: "security_run",
+        resourceId: runDetail.run.id,
+        parentTitle: runDetail.run.repositoryFullName || "Security repository",
+        onParentClick: () =>
+          navigate({ kind: "repository", id: runDetail.run.repositoryId }),
+        activeSection: runTab,
+        sectionOptions: SECURITY_RUN_HEADER_SECTIONS,
+        onSectionChange: (section) => setRunTab(section as SecurityRunTab),
+        onOverviewClick: backToSecurityOverview,
+      });
+      return;
+    }
+    if (route.kind === "finding" && findingDetail) {
+      onResourcesHeaderChange({
+        mode: "detail",
+        title: findingDetail.finding.title,
+        resourceType: "security_finding",
+        resourceId: findingDetail.finding.id,
+        parentTitle:
+          findingDetail.finding.repositoryFullName || "Security repository",
+        onParentClick: () =>
+          navigate({
+            kind: "repository",
+            id: findingDetail.finding.repositoryId,
+          }),
+        activeSection: findingTab,
+        sectionOptions: SECURITY_FINDING_HEADER_SECTIONS,
+        onSectionChange: (section) =>
+          setFindingTab(section as SecurityFindingTab),
+        onOverviewClick: backToSecurityOverview,
+      });
+    }
+  }, [
+    backToSecurityOverview,
+    findingDetail,
+    findingTab,
+    navigate,
+    onResourcesHeaderChange,
+    route.kind,
+    runDetail,
+    runTab,
+  ]);
+
+  useEffect(() => {
     if (route.kind !== "overview") return;
     onResourcesHeaderChange?.({ mode: "overview", title: "" });
     onVersionsSidebarOpenChange?.(false);
@@ -530,13 +599,30 @@ export function DevelopSecurityWorkspacePage({
           controlsPortalId={controlsPortalId}
           versionsDrawerPortalId={versionsDrawerPortalId}
           busy={Boolean(busyId)}
-          runScanDisabled={repositoryDetail.repository.status !== "active"}
           onBack={backToSecurityOverview}
-          onRunScan={() =>
-            void runMutation(route.id, async () => {
-              const run = await repository.createRun(route.id);
-              navigate({ kind: "run", id: run.id });
-            })
+          activeSection={repositoryTab}
+          sectionOptions={SECURITY_REPOSITORY_HEADER_SECTIONS}
+          onSectionChange={(section) =>
+            setRepositoryTab(section as SecurityRepositoryTab)
+          }
+          headerLeadingControls={
+            repositoryTab === "runs" ? (
+              <PlatformSwitch
+                value={analyticsTimeframe}
+                options={[
+                  { value: "24h", label: "24H" },
+                  { value: "7d", label: "7D" },
+                  { value: "30d", label: "30D" },
+                ]}
+                onValueChange={(value) =>
+                  setAnalyticsTimeframe(
+                    value as SecurityRepositoryAnalyticsTimeframe,
+                  )
+                }
+                ariaLabel="Security analytics time frame"
+                className="playground-security-agent-detail-header-timeframe"
+              />
+            ) : null
           }
           onReload={refresh}
           onHeaderChange={onResourcesHeaderChange}
@@ -551,6 +637,8 @@ export function DevelopSecurityWorkspacePage({
           }) => (
             <SecurityRepositoryDetailPage
               detail={versionedDetail}
+              activeTab={repositoryTab}
+              analyticsTimeframe={analyticsTimeframe}
               busy={versionBusy}
               viewerIdentity={viewerIdentity}
               onLoadOwnerCandidates={async () => {
@@ -605,6 +693,12 @@ export function DevelopSecurityWorkspacePage({
               onOpenRun={(run) => navigate({ kind: "run", id: run.id })}
               onOpenFinding={(finding) =>
                 navigate({ kind: "finding", id: finding.id })
+              }
+              onRunScan={() =>
+                void runMutation(route.id, async () => {
+                  const run = await repository.createRun(route.id);
+                  navigate({ kind: "run", id: run.id });
+                })
               }
               onSavePolicy={onPolicyChange}
               onSaveThreatModel={onThreatModelChange}
@@ -733,6 +827,7 @@ export function DevelopSecurityWorkspacePage({
                   navigate({ kind: "overview" });
                 });
               }}
+              onTabChange={setRepositoryTab}
             />
           )}
         </SecurityRepositoryVersionControl>
@@ -745,10 +840,9 @@ export function DevelopSecurityWorkspacePage({
       <SecurityDetailPageFrame>
         <SecurityRunDetailPage
           detail={runDetail}
+          activeTab={runTab}
           busy={Boolean(busyId)}
-          onBack={() =>
-            navigate({ kind: "repository", id: runDetail.run.repositoryId })
-          }
+          controlsPortalId={controlsPortalId}
           onRefresh={() => void loadRun(route.id)}
           onCancel={() =>
             void runMutation(route.id, async () => {
@@ -759,6 +853,7 @@ export function DevelopSecurityWorkspacePage({
           onOpenFinding={(finding) =>
             navigate({ kind: "finding", id: finding.id })
           }
+          onTabChange={setRunTab}
         />
       </SecurityDetailPageFrame>
     );
@@ -769,13 +864,8 @@ export function DevelopSecurityWorkspacePage({
       <SecurityDetailPageFrame>
         <SecurityFindingDetailPage
           detail={findingDetail}
+          activeTab={findingTab}
           busy={Boolean(busyId)}
-          onBack={() =>
-            navigate({
-              kind: "repository",
-              id: findingDetail.finding.repositoryId,
-            })
-          }
           onOpenRun={(runId) => navigate({ kind: "run", id: runId })}
           onTriage={(input: {
             status: SecurityFindingStatus;
@@ -787,6 +877,7 @@ export function DevelopSecurityWorkspacePage({
               await loadFinding(route.id);
             })
           }
+          onTabChange={setFindingTab}
         />
       </SecurityDetailPageFrame>
     );

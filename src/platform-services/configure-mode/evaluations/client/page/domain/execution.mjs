@@ -182,13 +182,13 @@ export const EVALUATIONS_PAGE_EXECUTION_SCRIPT = String.raw`      function parse
         const hasComparableActual = Boolean(actualOutput.trim());
         let evaluatorThreadRecord = null;
         let evaluatorOutput = "";
-        let score = 0;
-        let status = "completed";
+        let score = null;
+        let status = "invalid";
         if (evaluator.type === "exact") {
-          score = hasComparableActual && expected.trim()
-            ? (normalizePlaygroundEvaluationComparable(actualOutput) === normalizePlaygroundEvaluationComparable(expected) ? 1 : 0)
-            : 0;
-          status = hasComparableActual && expected.trim() ? (score >= 1 ? "passed" : "failed") : "completed";
+          if (expected.trim()) {
+            score = hasComparableActual && normalizePlaygroundEvaluationComparable(actualOutput) === normalizePlaygroundEvaluationComparable(expected) ? 1 : 0;
+            status = score >= 1 ? "passed" : "failed";
+          }
         } else if (evaluator.type === "agent") {
           const evaluatorAgentId = String(evaluator.agentId || "").trim();
           if (!evaluatorAgentId) {
@@ -248,20 +248,15 @@ export const EVALUATIONS_PAGE_EXECUTION_SCRIPT = String.raw`      function parse
             }),
           });
           const parsedScore = parsePlaygroundEvaluationScoreFromText(evaluatorOutput);
-          score = parsedScore === null ? 0 : parsedScore;
-          status = parsedScore === null ? "completed" : score >= 0.8 ? "passed" : "failed";
-        } else if (evaluator.type === "code") {
-          try {
-            const evaluatorFn = new Function("input", "expected", "actual", String(evaluator.code || "return 0;"));
-            const rawScore = evaluatorFn(String(row.input || ""), expected, actualOutput);
-            const numericScore = Number(rawScore);
-            score = Number.isFinite(numericScore) ? Math.max(0, Math.min(1, numericScore > 1 ? numericScore / 100 : numericScore)) : 0;
-            status = score >= 0.8 ? "passed" : "failed";
-          } catch (error) {
-            evaluatorOutput = error?.message || String(error);
-            score = 0;
-            status = "error";
+          score = parsedScore;
+          status = parsedScore === null ? "grader_error" : score >= 0.8 ? "passed" : "failed";
+          if (parsedScore === null) {
+            evaluatorOutput = evaluatorOutput || "The evaluator did not return a valid score.";
           }
+        } else if (evaluator.type === "code") {
+          evaluatorOutput = "Code evaluators require an isolated grader sandbox and are not available on this deployment.";
+          score = null;
+          status = "grader_error";
         }
         return {
           thread: threadRecord,
@@ -274,10 +269,9 @@ export const EVALUATIONS_PAGE_EXECUTION_SCRIPT = String.raw`      function parse
             score,
             status,
             latencyMs,
-            error: status === "error" ? evaluatorOutput : "",
+            error: ["grader_error", "infrastructure_error", "error"].includes(status) ? evaluatorOutput : "",
           },
         };
       }
 
 `;
-

@@ -6,26 +6,39 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        asy
           const selectedRunIds = form.evaluationRunIds && typeof form.evaluationRunIds === "object" && !Array.isArray(form.evaluationRunIds)
             ? form.evaluationRunIds
             : {};
+          const selectedBaselineModes = form.evaluationBaselineModes && typeof form.evaluationBaselineModes === "object" && !Array.isArray(form.evaluationBaselineModes)
+            ? form.evaluationBaselineModes
+            : {};
           const selectedSets = normalizedEvaluationSets
             .filter((set) => selectedSetIds.includes(set.id))
             .map((set) => {
-              const latestRun = getPlaygroundFineTuningLatestRun(set);
-              const selectedRunId = normalizePlaygroundFineTuningString(selectedRunIds[set.id] || latestRun?.id || latestRun?.runId || latestRun?.run_id || "");
-              const selectedRun = getPlaygroundFineTuningRunById(set, selectedRunId) || latestRun || null;
+              const selectedRunId = normalizePlaygroundFineTuningString(selectedRunIds[set.id]);
+              const selectedRun = getPlaygroundFineTuningRunById(set, selectedRunId) || null;
               return {
                 ...set,
-                fineTuningRunId: normalizePlaygroundFineTuningString(selectedRun?.id || selectedRunId),
-                fine_tuning_run_id: normalizePlaygroundFineTuningString(selectedRun?.id || selectedRunId),
+                fineTuningRunId: selectedRunId,
+                fine_tuning_run_id: selectedRunId,
                 selectedRun,
                 selected_run: selectedRun,
               };
             });
-          const fineTunerAgent = normalizedAgents.find((agent) => agent.id === form.agentId) || normalizedAgents[0] || null;
+          const targetAgent = normalizedAgents.find((agent) => (
+            normalizePlaygroundFineTuningString(agent?.id) === normalizePlaygroundFineTuningString(form.targetAgentId)
+          )) || null;
+          const fineTunerAgent = normalizedAgents.find((agent) => (
+            normalizePlaygroundFineTuningString(agent?.id) === normalizePlaygroundFineTuningString(form.fineTunerAgentId || form.agentId)
+          )) || null;
           const selectedEnvironment = normalizedEnvironments.find((environment) => environment.id === form.environmentId) || normalizedEnvironments[0] || null;
-          const targetResolution = resolveFineTuningTargetAgentForSelectedSets(selectedSets);
-          const targetAgent = targetResolution.targetAgent;
+          if (!targetAgent?.id) {
+            setCreateError("Select the agent to optimize.");
+            return;
+          }
+          if (isDefaultFineTuningTargetAgent(targetAgent)) {
+            setCreateError("Default agents cannot be optimized. Select a custom agent.");
+            return;
+          }
           if (!fineTunerAgent?.id) {
-            setCreateError("Select a fine-tuner agent.");
+            setCreateError("Select an optimizer agent.");
             return;
           }
           if (!selectedEnvironment?.id) {
@@ -36,8 +49,17 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        asy
             setCreateError("Select at least one evaluation set.");
             return;
           }
-          if (targetResolution.error || !targetAgent?.id) {
-            setCreateError(targetResolution.error || "Run an evaluation first so fine-tuning can identify the target agent.");
+          const emptySet = selectedSets.find((set) => !Array.isArray(set?.dataRows) || set.dataRows.length === 0);
+          if (emptySet) {
+            setCreateError("Evaluation set \"" + (emptySet.name || "Untitled Evaluation") + "\" has no cases.");
+            return;
+          }
+          const missingExistingBaseline = selectedSets.find((set) => (
+            selectedBaselineModes[set.id] === "existing"
+            && !normalizePlaygroundFineTuningString(selectedRunIds[set.id])
+          ));
+          if (missingExistingBaseline) {
+            setCreateError("Choose an existing baseline run for " + (missingExistingBaseline.name || "the evaluation") + ".");
             return;
           }
           const normalizedBackendUrl = String(backendUrl || "").replace(/\/+$/, "");
@@ -47,22 +69,14 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        asy
           }
           const jobId = createPlaygroundFineTuningId();
           const jobName = normalizePlaygroundFineTuningString(form.name || formatPlaygroundFineTuningDefaultJobName());
-          const optimisticJob = buildOptimisticFineTuningJob({
-            jobId,
-            name: jobName,
-            selectedSets,
-            targetAgent,
-            fineTunerAgent,
-            selectedEnvironment,
-            instructions: String(form.instructions || ""),
-            conductedBy: currentFineTuningUser,
-          });
+          const maximumCostIncreaseRatio = String(form.maximumCostIncreasePercent ?? "").trim()
+            ? Math.max(0, Math.min(1000, Number(form.maximumCostIncreasePercent) || 0)) / 100
+            : null;
+          const maximumLatencyIncreaseRatio = String(form.maximumLatencyIncreasePercent ?? "").trim()
+            ? Math.max(0, Math.min(1000, Number(form.maximumLatencyIncreasePercent) || 0)) / 100
+            : null;
           setCreateBusy(true);
           setCreateError("");
-          upsertFineTuningJob(optimisticJob);
-          closeCreateModal({ animate: true, force: true });
-          setCreateBusy(false);
-          void (async () => {
           try {
             const response = await fetch(normalizedBackendUrl + "/fine-tuning/jobs", {
               method: "POST",
@@ -75,88 +89,66 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        asy
               body: JSON.stringify({
                 id: jobId,
                 name: jobName,
-                agent: targetAgent,
                 targetAgent,
                 fineTunerAgent,
                 environment: selectedEnvironment,
                 evaluationSets: selectedSets,
+                evaluationRunIds: selectedRunIds,
+                evaluationBaselineModes: selectedBaselineModes,
+                objective: {
+                  mode: form.objectiveMode === "custom" ? "custom" : "evaluation_targets",
+                  successPolicy: {
+                    minimumAverageScore: Math.max(0, Math.min(100, Number(form.targetScorePercent ?? 80))) / 100,
+                    requiredPassRate: Math.max(0, Math.min(100, Number(form.targetPassRatePercent ?? 80))) / 100,
+                    maximumCostIncreaseRatio,
+                    maximumLatencyIncreaseRatio,
+                  },
+                  requireAllEvaluationTargets: true,
+                },
+                limits: {
+                  maxIterations: Math.max(1, Math.min(20, Number(form.maxIterations ?? 3) || 3)),
+                  budgetUsd: Math.max(0.01, Number(form.budgetUsd ?? 10) || 10),
+                  maxDurationMinutes: Math.max(5, Math.min(1440, Number(form.maxDurationMinutes ?? 120) || 120)),
+                  maxTransientRetries: Math.max(0, Math.min(5, Number(form.maxTransientRetries ?? 2) || 0)),
+                  plateauIterations: Math.max(1, Math.min(5, Number(form.plateauIterations ?? 2) || 2)),
+                  minimumIterationImprovement: Math.max(0, Math.min(100, Number(form.minimumIterationImprovementPercent ?? 1))) / 100,
+                },
+                publicationPolicy: {
+                  mode: form.publicationMode === "auto_on_target" ? "auto_on_target" : "manual",
+                  publishBestOnLimit: form.publishBestOnLimit === true,
+                },
                 instructions: String(form.instructions || ""),
-                verifyAfter: true,
-                nextAgentVersionNumber: getFineTuningNextAgentVersionNumber(targetAgent),
                 conductedBy: currentFineTuningUser,
                 createdBy: currentFineTuningUser,
               }),
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to start fine-tuning job.");
+              throw new Error(data?.message || data?.error || "Failed to start optimization job.");
             }
             const runtimeJob = normalizePlaygroundFineTuningJob(data?.job || data?.data || data);
-            patchFineTuningJob(jobId, () => runtimeJob);
+            upsertFineTuningJob(runtimeJob);
+            closeCreateModal({ animate: true, force: true });
             notifyFineTuningThreadStarted(runtimeJob);
-            const completedRuntimeJob = isFineTuningRuntimeJobComplete(runtimeJob)
-              ? runtimeJob
-              : await waitForFineTuningRuntimeJob(jobId, runtimeJob);
-            if (!isFineTuningRuntimeJobComplete(completedRuntimeJob)) {
-              patchFineTuningJob(jobId, () => completedRuntimeJob);
-              return;
-            }
-            const completedRuntimeStatus = normalizePlaygroundFineTuningString(completedRuntimeJob.status).toLowerCase();
-            if (new Set(["cancelled", "canceled"]).has(completedRuntimeStatus)) {
-              patchFineTuningJob(jobId, () => buildStoppedFineTuningJob(completedRuntimeJob), { persist: true });
-              return;
-            }
-            if (new Set(["error", "failed"]).has(completedRuntimeStatus)) {
-              throw new Error(completedRuntimeJob.error || completedRuntimeJob.agentVersionError || completedRuntimeJob.createdAgentVersion?.error || "Fine-tuning job failed.");
-            }
-            if (typeof onAgentsRefresh === "function") {
-              await onAgentsRefresh();
-            }
-            const runtimeVerificationAlreadyHandled = completedRuntimeJob.evaluationRuns.some((reference) => {
-              const status = normalizePlaygroundFineTuningString(reference?.status).toLowerCase();
-              return Boolean(reference?.afterRunId || reference?.after_run_id)
-                || (status && status !== "pending" && status !== "not_run");
-            });
-            if (runtimeVerificationAlreadyHandled) {
-              upsertFineTuningJob(completedRuntimeJob, { persist: true });
-              notifyFineTuningThreadStarted(completedRuntimeJob);
-              return;
-            }
-            const persistedJob = await tryPersistFineTunedAgentVersion(completedRuntimeJob);
-            patchFineTuningJob(jobId, () => persistedJob, { persist: true });
-            const verifiedJob = isPlaygroundFineTuningAgentVersionReady(persistedJob.agentVersionCreationStatus)
-              ? await startFineTuningVerificationRuns(persistedJob, selectedSets, targetAgent, selectedEnvironment)
-              : normalizePlaygroundFineTuningJob({
-                  ...persistedJob,
-                  status: "error",
-                  error: persistedJob.agentVersionError || persistedJob.createdAgentVersion?.error || "Fine-tuning finished, but no agent version was created.",
-                });
-            upsertFineTuningJob(verifiedJob, { persist: true });
-            notifyFineTuningThreadStarted(verifiedJob);
+            void waitForFineTuningRuntimeJob(jobId, runtimeJob)
+              .then((completedJob) => {
+                patchFineTuningJob(jobId, () => completedJob);
+                notifyFineTuningThreadStarted(completedJob);
+                if (isFineTuningRuntimeJobComplete(completedJob) && typeof onAgentsRefresh === "function") {
+                  void onAgentsRefresh();
+                }
+              })
+              .catch(() => {});
           } catch (error) {
-            const message = error?.message || String(error);
-            patchFineTuningJob(jobId, (currentJob) => normalizePlaygroundFineTuningJob({
-              ...currentJob,
-              status: "error",
-              error: message,
-              analysisSummary: currentJob.analysisSummary || message,
-              agentVersionCreationStatus: isPlaygroundFineTuningAgentVersionReady(currentJob.agentVersionCreationStatus) ? currentJob.agentVersionCreationStatus : "error",
-              agentVersionError: isPlaygroundFineTuningAgentVersionReady(currentJob.agentVersionCreationStatus) ? currentJob.agentVersionError : message,
-              createdAgentVersion: isPlaygroundFineTuningAgentVersionReady(currentJob.agentVersionCreationStatus)
-                ? currentJob.createdAgentVersion
-                : {
-                    ...(currentJob.createdAgentVersion || {}),
-                    status: "error",
-                    error: message,
-                },
-              updatedAt: new Date().toISOString(),
-            }), { persist: true });
+            setCreateError(error?.message || String(error));
+          } finally {
+            setCreateBusy(false);
           }
-          })();
         }
 
         function openJob(jobId) {
           const normalizedJobId = normalizePlaygroundFineTuningString(jobId);
+          setFineTuningApprovalError("");
           const recoveredJob = scoredJobs.find((job) => job.id === normalizedJobId) || displaySourceJobs.find((job) => job.id === normalizedJobId) || null;
           if (recoveredJob && !(Array.isArray(fineTuningJobs) ? fineTuningJobs : []).some((job) => normalizePlaygroundFineTuningJob(job).id === normalizedJobId)) {
             upsertFineTuningJob(recoveredJob);

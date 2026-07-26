@@ -704,27 +704,37 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
 	            return;
           }
 
-          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
-          const hasDescriptionOverride = typeof descriptionOverride === "string";
-          const nextDescription = hasDescriptionOverride
-            ? descriptionOverride
+	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+          const descriptionRevision = projectDescriptionRevisionRef.current;
+	          const hasDescriptionOverride = typeof descriptionOverride === "string";
+	          const nextDescription = hasDescriptionOverride
+	            ? descriptionOverride
             : (
                 projectDraft?.id === normalizedProject.id
                   ? String(projectDraft.description || "")
                   : String(normalizedProject.description || "")
-              );
-          if (nextDescription === String(normalizedProject.description || "")) {
-            setProjectSaveState((current) => current.error
-              ? { isSaving: false, error: "" }
-              : current
+	              );
+	          if (nextDescription === String(normalizedProject.description || "")) {
+            if (projectDescriptionRevisionRef.current === descriptionRevision) {
+              projectDescriptionDirtyProjectIdRef.current = "";
+            }
+	            setProjectSaveState((current) => current.error
+	              ? { isSaving: false, error: "" }
+	              : current
             );
             return;
           }
 
-          const nextProject = {
-            ...normalizedProject,
-            description: nextDescription,
-          };
+	          const nextProject = {
+	            ...normalizedProject,
+	            description: nextDescription,
+              metadata: {
+                ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" && !Array.isArray(normalizedProject.metadata)
+                  ? normalizedProject.metadata
+                  : {}),
+                description: nextDescription,
+              },
+	          };
           const nextName = String(nextProject.name || "").trim().replace(/\\s+/g, " ");
           if (!nextName) {
             return;
@@ -769,12 +779,31 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
               throw new Error(data?.message || data?.error || "Failed to update project description.");
             }
 
-            const updatedProject = getPlaygroundProjectResponseRecord(data, nextProject);
-            if (!updatedProject?.id) {
-              throw new Error("Project update failed.");
-            }
+            const responseProject = getPlaygroundProjectResponseRecord(data, nextProject);
+	            const updatedProject = responseProject?.id
+              ? normalizePlaygroundProjectRecord({
+                  ...responseProject,
+                  description: nextDescription,
+                  metadata: {
+                    ...(responseProject.metadata && typeof responseProject.metadata === "object" && !Array.isArray(responseProject.metadata)
+                      ? responseProject.metadata
+                      : {}),
+                    description: nextDescription,
+                  },
+                })
+              : null;
+	            if (!updatedProject?.id) {
+	              throw new Error("Project update failed.");
+	            }
 
-            rememberProjectLocalNameOverride(updatedProject.id, nextName);
+            const hasNewerDescriptionDraft = (
+              projectDescriptionDirtyProjectIdRef.current === updatedProject.id
+              && projectDescriptionRevisionRef.current !== descriptionRevision
+            );
+            if (!hasNewerDescriptionDraft) {
+              projectDescriptionDirtyProjectIdRef.current = "";
+            }
+	            rememberProjectLocalNameOverride(updatedProject.id, nextName);
             commitLocalProjectRecord({
               ...updatedProject,
               summary: updatedProject.summary || selectedProjectSummary,
@@ -785,13 +814,38 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
               threads: selectedProjectRecentThreads,
               selectImmediately: true,
             });
-            setProjectDraft((current) => current?.id === updatedProject.id
-              ? {
+	            setProjectDraft((current) => {
+                if (current?.id !== updatedProject.id) {
+                  return current;
+                }
+                if (hasNewerDescriptionDraft) {
+                  return {
+                    ...current,
+                    ...updatedProject,
+                    description: current.description,
+                    metadata: {
+                      ...(updatedProject.metadata && typeof updatedProject.metadata === "object" && !Array.isArray(updatedProject.metadata)
+                        ? updatedProject.metadata
+                        : {}),
+                      ...(current.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
+                        ? current.metadata
+                        : {}),
+                      description: String(current.description || ""),
+                    },
+                  };
+                }
+                return {
                   ...current,
                   ...updatedProject,
-                }
-              : current
-            );
+                  description: nextDescription,
+                  metadata: {
+                    ...(updatedProject.metadata && typeof updatedProject.metadata === "object" && !Array.isArray(updatedProject.metadata)
+                      ? updatedProject.metadata
+                      : {}),
+                    description: nextDescription,
+                  },
+                };
+              });
             setProjectSaveState({
               isSaving: false,
               error: "",
@@ -962,6 +1016,15 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
 
           const nextStartAt = resolvePlaygroundReleaseDraftDateValue(releaseDraft.startAt);
           const nextEndAt = resolvePlaygroundReleaseDraftDateValue(releaseDraft.endAt, { endOfDay: true });
+          const nextSuccessCriteria = normalizePlaygroundStrategyTextList(
+            releaseDraft.successCriteriaInput ?? releaseDraft.successCriteria
+          );
+          const nextMetadata = {
+            ...(releaseDraft.metadata && typeof releaseDraft.metadata === "object" && !Array.isArray(releaseDraft.metadata)
+              ? releaseDraft.metadata
+              : {}),
+            successCriteria: nextSuccessCriteria,
+          };
           if (nextStartAt && nextEndAt && Date.parse(nextEndAt) < Date.parse(nextStartAt)) {
             setReleaseSaveState({
               isSaving: false,
@@ -989,9 +1052,11 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
                   projectId: targetProjectId,
                   name: nextName,
                   description: typeof releaseDraft.description === "string" ? releaseDraft.description : "",
+                  successCriteria: nextSuccessCriteria,
                   startAt: nextStartAt,
                   endAt: nextEndAt,
                   sortOrder: Number.isFinite(releaseDraft.sortOrder) ? Number(releaseDraft.sortOrder) : releases.length + 1,
+                  metadata: nextMetadata,
                 }),
               },
             );
@@ -1219,6 +1284,12 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
 		            normalizedProject.permissionSet || normalizedProject.metadata?.permissionSet,
 		            "project"
 		          );
+          const normalizedProjectStatus = normalizePlaygroundProjectStatus(
+            normalizedProject.status
+              || metadataOverrides?.status
+              || normalizedProject.metadata?.status
+              || normalizedProject.state
+          );
           const normalizedProjectPriority = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === String(normalizedProject.priority || metadataOverrides?.priority || normalizedProject.metadata?.priority || "").trim().toLowerCase())
             ? String(normalizedProject.priority || metadataOverrides?.priority || normalizedProject.metadata?.priority || "").trim().toLowerCase()
             : "medium";
@@ -1257,6 +1328,7 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
             name: normalizedProject.name || "Project",
             description: normalizedProject.description,
             icon: getPlaygroundProjectIconId(normalizedProject.icon),
+            status: normalizedProjectStatus,
             priority: normalizedProjectPriority,
             wallpaperId: getPlaygroundProjectWallpaperId(normalizedProject.wallpaperId, PLAYGROUND_PROJECT_WALLPAPER_OPTIONS[0].id),
             useCardBackgroundAsWallpaper: normalizedProject.useCardBackgroundAsWallpaper !== false,

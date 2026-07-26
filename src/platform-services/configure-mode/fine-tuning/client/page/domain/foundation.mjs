@@ -256,6 +256,10 @@ export const FINE_TUNING_PAGE_FOUNDATION_SCRIPT = String.raw`
           "active",
           "analysis",
           "analyzing",
+          "assessing",
+          "baseline_queued",
+          "baseline_running",
+          "candidate_ready",
           "creating_agent_version",
           "creating-version",
           "creating_version",
@@ -264,6 +268,7 @@ export const FINE_TUNING_PAGE_FOUNDATION_SCRIPT = String.raw`
           "fine_tuning",
           "in-progress",
           "in_progress",
+          "optimizing",
           "pending",
           "processing",
           "publishing",
@@ -274,7 +279,9 @@ export const FINE_TUNING_PAGE_FOUNDATION_SCRIPT = String.raw`
           "running_evaluator",
           "scoring",
           "started",
+          "snapshotting",
           "verification",
+          "verification_queued",
           "verifying",
           "verifying_evaluation",
           "waiting_for_case_summary",
@@ -284,7 +291,22 @@ export const FINE_TUNING_PAGE_FOUNDATION_SCRIPT = String.raw`
       }
 
       function isPlaygroundFineTuningTerminalStatus(status) {
-        return new Set(["completed", "complete", "saved", "published", "error", "failed", "cancelled", "canceled"]).has(
+        return new Set([
+          "awaiting_review",
+          "completed",
+          "complete",
+          "completed_best_effort",
+          "completed_target_met",
+          "saved",
+          "published",
+          "stopped_budget",
+          "stopped_plateau",
+          "stopped_timeout",
+          "error",
+          "failed",
+          "cancelled",
+          "canceled",
+        ]).has(
           normalizePlaygroundFineTuningString(status).toLowerCase()
         );
       }
@@ -346,7 +368,7 @@ export const FINE_TUNING_PAGE_FOUNDATION_SCRIPT = String.raw`
 
       function formatPlaygroundFineTuningDefaultJobName(date = new Date()) {
         const safeDate = date instanceof Date && Number.isFinite(date.getTime()) ? date : new Date();
-        return "Fine-Tune " + safeDate.toLocaleString(undefined, {
+        return "Optimization " + safeDate.toLocaleString(undefined, {
           month: "short",
           day: "numeric",
           hour: "2-digit",

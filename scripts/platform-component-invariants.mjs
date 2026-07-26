@@ -21,6 +21,7 @@ const compositeComponents = [
   "code-editor-workspace",
   "code-preview-box",
   "data-table",
+  "deployment-map",
   "detail-sidebar",
   "detail-tab-bar",
   "diff-viewer",
@@ -183,6 +184,10 @@ const canonicalExports = new Map([
   [
     "./platform-ui/components/composite/data-table",
     "./dist/platform-ui/components/composite/data-table/index.js",
+  ],
+  [
+    "./platform-ui/components/composite/deployment-map",
+    "./dist/platform-ui/components/composite/deployment-map/index.js",
   ],
   [
     "./platform-ui/components/composite/detail-sidebar",

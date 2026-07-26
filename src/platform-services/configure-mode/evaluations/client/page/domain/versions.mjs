@@ -436,6 +436,7 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
               projectId: normalizedBaseSnapshot.projectId,
               cases: baseRows.map((row, index) => ({
                 id: String(row?.id || ("row_" + (index + 1))).trim(),
+                optimizationRole: normalizePlaygroundEvaluationOptimizationRole(row?.optimizationRole),
                 runCount: normalizePlaygroundEvaluationCaseRunCount(row?.runCount),
               })),
             },
@@ -449,6 +450,7 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
               projectId: normalizedTargetSnapshot.projectId,
               cases: targetRows.map((row, index) => ({
                 id: String(row?.id || ("row_" + (index + 1))).trim(),
+                optimizationRole: normalizePlaygroundEvaluationOptimizationRole(row?.optimizationRole),
                 runCount: normalizePlaygroundEvaluationCaseRunCount(row?.runCount),
               })),
             },
@@ -477,12 +479,14 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
               input: baseRow.input,
               expectedOutput: baseRow.expectedOutput,
               evaluationGuidance: baseRow.evaluationGuidance,
+              optimizationRole: normalizePlaygroundEvaluationOptimizationRole(baseRow.optimizationRole),
               runCount: normalizePlaygroundEvaluationCaseRunCount(baseRow.runCount),
             } : null,
             after: targetRow ? {
               input: targetRow.input,
               expectedOutput: targetRow.expectedOutput,
               evaluationGuidance: targetRow.evaluationGuidance,
+              optimizationRole: normalizePlaygroundEvaluationOptimizationRole(targetRow.optimizationRole),
               runCount: normalizePlaygroundEvaluationCaseRunCount(targetRow.runCount),
             } : null,
           }));

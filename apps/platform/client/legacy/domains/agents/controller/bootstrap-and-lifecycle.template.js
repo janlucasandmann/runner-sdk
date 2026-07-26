@@ -38,7 +38,6 @@
           onAgentMutated,
           onStartThreadWithAgent,
           onGenerateInstructions,
-          onUpgradeToIndividual,
   ${MODELS_AGENT_SCRIPT_FRAGMENTS.props}        embeddedInResources = false,
           topNavActionsPortalId = "",
           titleActionsPortalId = "",
@@ -293,8 +292,6 @@
           const [isAgentVersionDescriptionEditing, setIsAgentVersionDescriptionEditing] = useState(false);
           const [agentVersionChangesState, setAgentVersionChangesState] = useState(null);
           const [openAgentVersionMenuId, setOpenAgentVersionMenuId] = useState("");
-          const [agentUpgradeModalOpen, setAgentUpgradeModalOpen] = useState(false);
-          const [agentUpgradeCheckoutLoading, setAgentUpgradeCheckoutLoading] = useState(false);
           const [agentAssistantPresetRunState, setAgentAssistantPresetRunState] = useState({
             isStarting: false,
             actionType: "",
@@ -2077,7 +2074,7 @@
   
           function updateAgentField(field, value) {
             if (
-              ["instructions", "model", "reasoningEffort", "deepResearchModel"].includes(field)
+              ["instructions", "model", "executionEngine", "reasoningEffort", "deepResearchModel"].includes(field)
               && isPlaygroundDefaultAgentConfigurationLocked(draftAgent)
             ) {
               return;
@@ -2800,7 +2797,7 @@
             return nextDetails;
           }, [agentsObservabilityThreadDetailsById, backendUrl, requestHeaders]);
   
-          function openAgentUpgradeModal() {
+          function requestAgentPlanGate() {
             setToolbarPopover("");
             setSearchPopupQuery("");
             setAgentListActionMenuState(null);
@@ -2811,15 +2808,12 @@
             setAgentCreationPermissionModalOpen(false);
             setAgentsHomeActiveCreationCommand("");
             setAgentsHomeCreationCommandRequest(null);
-            setAgentUpgradeCheckoutLoading(false);
-            setAgentUpgradeModalOpen(true);
-          }
-  
-          function closeAgentUpgradeModal() {
-            if (agentUpgradeCheckoutLoading) {
-              return;
-            }
-            setAgentUpgradeModalOpen(false);
+            requestPlatformPlanGate({
+              entitlement: "agents.custom.create",
+              requiredPlan: "builder",
+              featureName: "custom agents and squads",
+              source: "agents",
+            });
           }
   
           function isAgentAllowedOnCurrentPlan(agentRecord) {
@@ -2833,7 +2827,7 @@
             if (isAgentAllowedOnCurrentPlan(agentRecord)) {
               return true;
             }
-            openAgentUpgradeModal();
+            requestAgentPlanGate();
             return false;
           }
   
@@ -2841,20 +2835,8 @@
             if (!isFreeAgentPlan) {
               return true;
             }
-            openAgentUpgradeModal();
+            requestAgentPlanGate();
             return false;
-          }
-  
-          async function handleAgentUpgradeCheckout() {
-            if (agentUpgradeCheckoutLoading || typeof onUpgradeToIndividual !== "function") {
-              return;
-            }
-            setAgentUpgradeCheckoutLoading(true);
-            try {
-              await Promise.resolve(onUpgradeToIndividual());
-            } catch {
-              setAgentUpgradeCheckoutLoading(false);
-            }
           }
   
           function performShowAgentsHome() {

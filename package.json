@@ -27,6 +27,13 @@
     "./platform-shell/app-header/global-search-modal/styles.css": {
       "default": "./dist/platform-shell/app-header/global-search-modal/global-search-modal.css"
     },
+    "./platform-shell/plan-gate/plan-gate-modal": {
+      "types": "./dist/platform-shell/plan-gate/plan-gate-modal/index.d.ts",
+      "default": "./dist/platform-shell/plan-gate/plan-gate-modal/index.js"
+    },
+    "./platform-shell/plan-gate/plan-gate-modal/styles.css": {
+      "default": "./dist/platform-shell/plan-gate/plan-gate-modal/platform-plan-gate-modal.css"
+    },
     "./platform-ui/components": {
       "types": "./dist/platform-ui/components/index.d.ts",
       "default": "./dist/platform-ui/components/index.js"
@@ -109,12 +116,26 @@
     "./platform-ui/components/composite/activity-timeline/styles.css": {
       "default": "./dist/platform-ui/components/composite/activity-timeline/activity-timeline.css"
     },
+    "./platform-ui/components/composite/comments": {
+      "types": "./dist/platform-ui/components/composite/comments/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/comments/index.js"
+    },
+    "./platform-ui/components/composite/comments/styles.css": {
+      "default": "./dist/platform-ui/components/composite/comments/comments.css"
+    },
     "./platform-ui/components/composite/analytics": {
       "types": "./dist/platform-ui/components/composite/analytics/index.d.ts",
       "default": "./dist/platform-ui/components/composite/analytics/index.js"
     },
     "./platform-ui/components/composite/analytics/styles.css": {
       "default": "./dist/platform-ui/components/composite/analytics/analytics.css"
+    },
+    "./platform-ui/components/composite/emoji-picker": {
+      "types": "./dist/platform-ui/components/composite/emoji-picker/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/emoji-picker/index.js"
+    },
+    "./platform-ui/components/composite/emoji-picker/styles.css": {
+      "default": "./dist/platform-ui/components/composite/emoji-picker/emoji-picker.css"
     },
     "./platform-ui/components/composite/attachments": {
       "types": "./dist/platform-ui/components/composite/attachments/index.d.ts",
@@ -150,6 +171,13 @@
     },
     "./platform-ui/components/composite/data-table/styles.css": {
       "default": "./dist/platform-ui/components/composite/data-table/data-table.css"
+    },
+    "./platform-ui/components/composite/deployment-map": {
+      "types": "./dist/platform-ui/components/composite/deployment-map/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/deployment-map/index.js"
+    },
+    "./platform-ui/components/composite/deployment-map/styles.css": {
+      "default": "./dist/platform-ui/components/composite/deployment-map/deployment-map.css"
     },
     "./platform-ui/components/composite/detail-sidebar": {
       "types": "./dist/platform-ui/components/composite/detail-sidebar/index.d.ts",
@@ -430,9 +458,11 @@
     "develop-home-service-test": "node ./src/platform-services/develop-mode/develop-home/develop-home-service-test.mjs && vitest run src/platform-services/develop-mode/develop-home/client/page",
     "api-keys-service-test": "node ./src/platform-services/develop-mode/api-keys/api-keys-service-test.mjs",
     "security-service-test": "node ./src/platform-services/develop-mode/security/security-service-test.mjs && vitest run src/platform-resources/plugins/connections src/platform-services/develop-mode/security/client/api src/platform-services/develop-mode/security/client/domain src/platform-services/develop-mode/security/client/page/security-overview-page.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-access-settings.test.tsx src/platform-services/develop-mode/security/client/page/security-detail-layout.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-detail-page.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-sidebar.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-version-control.test.tsx",
-    "evaluations-service-test": "node ./src/platform-services/configure-mode/evaluations/evaluations-service-test.mjs && node --test ./src/platform-services/configure-mode/evaluations/server/run-persistence.test.mjs && vitest run ./src/platform-services/configure-mode/evaluations/client/page/detail",
+    "evidence-agents-service-test": "node ./src/platform-services/develop-mode/evidence-agents/evidence-agents-service-test.mjs && vitest run src/platform-services/develop-mode/evidence-agents/client",
+    "evaluations-service-test": "node ./src/platform-services/configure-mode/evaluations/evaluations-service-test.mjs && node --test ./src/platform-services/configure-mode/evaluations/server/run-persistence.test.mjs ./src/platform-services/configure-mode/evaluations/server/domain/comparisons.test.mjs && vitest run ./src/platform-services/configure-mode/evaluations/client/page/detail",
     "files-service-test": "node ./src/platform-services/create-mode/files/files-service-test.mjs",
-    "fine-tuning-service-test": "node ./src/platform-services/configure-mode/fine-tuning/fine-tuning-service-test.mjs && node --test ./src/platform-services/configure-mode/fine-tuning/server/job-persistence.test.mjs",
+    "fine-tuning-service-test": "node ./src/platform-services/configure-mode/fine-tuning/fine-tuning-service-test.mjs && node --test ./src/platform-services/configure-mode/fine-tuning/server/job-persistence.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/domain/policies.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/domain/publication.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/application/job-orchestrator.test.mjs",
+    "assurance-service-test": "node ./src/platform-services/configure-mode/assurance/assurance-service-test.mjs",
     "guardrails-service-test": "node ./src/platform-services/configure-mode/guardrails/guardrails-service-test.mjs",
     "imagine-service-test": "node ./src/platform-services/create-mode/imagine/imagine-service-test.mjs",
     "inference-service-test": "node ./src/platform-services/configure-mode/inference/inference-service-test.mjs",
@@ -440,14 +470,16 @@
     "metronome-service-test": "node ./src/platform-services/create-mode/metronome/metronome-service-test.mjs",
     "marketplace-service-test": "node ./src/platform-services/configure-mode/marketplace/marketplace-service-test.mjs",
     "models-service-test": "node ./src/platform-services/configure-mode/models/models-service-test.mjs",
-    "organizations-service-test": "node ./src/platform-services/configure-mode/organizations/organizations-service-test.mjs",
+    "organizations-service-test": "node ./src/platform-services/configure-mode/organizations/organizations-service-test.mjs && vitest run ./src/platform-services/configure-mode/organizations/client",
     "settings-modal-service-test": "node ./src/platform-shell/settings-modal/settings-modal-service-test.mjs",
     "app-header-service-test": "node ./src/platform-shell/app-header/app-header-service-test.mjs",
     "app-sidebar-service-test": "node ./src/platform-shell/app-sidebar/app-sidebar-service-test.mjs",
     "onboarding-service-test": "node ./src/platform-shell/onboarding/onboarding-service-test.mjs",
     "navigation-guard-service-test": "node ./src/platform-shell/navigation-guard/navigation-guard-service-test.mjs && vitest run src/platform-ui/components/composite/modal/platform-unsaved-changes-modal.test.tsx",
+    "plan-gate-service-test": "node ./src/platform-shell/plan-gate/plan-gate-service-test.mjs && vitest run src/platform-shell/plan-gate/plan-gate-modal",
     "projects-service-test": "node ./src/platform-services/create-mode/projects/projects-service-test.mjs",
     "teams-service-test": "node ./src/platform-services/configure-mode/teams/teams-service-test.mjs",
+    "tests-service-test": "node ./src/platform-services/configure-mode/tests/tests-service-test.mjs",
     "thread-domain-test": "npm run build && node ./tests/thread-domain.test.mjs",
     "thread-ui-test": "npm run build && vitest run src/react/runner-chat/execution/active-run-instruction.test.ts src/react/runner-chat/legacy-timeline.test.ts && node ./tests/thread-ui.test.mjs",
     "thread-proxy-test": "node ./apps/platform/server/routes/thread-proxy-contract.test.mjs",
@@ -455,6 +487,7 @@
     "realtime-metronome-test": "npm run build && node ./tests/realtime-metronome-adapters.test.mjs",
     "platform-table-invariants": "node ./scripts/platform-table-invariants.mjs",
     "platform-component-invariants": "node ./scripts/platform-component-invariants.mjs",
+    "platform-deployment-map-generate": "node ./scripts/generate-platform-deployment-map.mjs",
     "platform-table-test": "npm run platform-table-invariants && vitest run src/platform-ui/components/composite/data-table",
     "platform-button-test": "vitest run src/platform-ui/components/ui/button",
     "platform-checkbox-test": "vitest run src/platform-ui/components/ui/checkbox",
@@ -536,6 +569,7 @@
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
+    "dotted-map": "^3.1.0",
     "jsdom": "^26.1.0",
     "typescript": "^5.9.2",
     "vite": "^6.4.3",

@@ -16,7 +16,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
 	                  onRunFinish: handleBacklogComposerRunFinish,
 	                  onBacklogMissionControlSubmit: handleBacklogMissionControlSubmit,
 	                  isAgentSelectionBlocked: (agent) => normalizedSubscriptionTierId === "free" && isPlaygroundFreePlanLockedComposerAgent(agent),
-	                  onBlockedAgentSelect: openProjectAgentUpgradeModal,
+	                  onBlockedAgentSelect: requestProjectAgentPlanGate,
 	                  onAgentChange: (nextAgentId) => setBacklogComposerAgentId(nextAgentId),
                   onEnvironmentChange: (nextEnvironmentId) => setBacklogComposerEnvironmentId(nextEnvironmentId),
                   onDocumentPreviewOpenChange: () => {
@@ -330,18 +330,6 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
           );
         }
 
-\${CALENDAR_PROJECTS_PAGE_VIEW_FRAGMENTS.upgradeModal}
-        function renderProjectAgentUpgradeModal() {
-          return renderPlaygroundAgentUpgradeModal({
-            isOpen: projectAgentUpgradeModalOpen,
-            titleId: "playground-project-agent-upgrade-title",
-            onClose: closeProjectAgentUpgradeModal,
-            onCheckout: handleProjectAgentUpgradeCheckout,
-            checkoutLoading: projectAgentUpgradeCheckoutLoading,
-            checkoutDisabled: typeof onUpgradeToIndividual !== "function",
-          });
-        }
-
         function renderMissionControlSetupEmptyState() {
           const capabilities = [
             {
@@ -355,8 +343,8 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
               Icon: ListTodo,
             },
             {
-              title: "Generate Outcomes",
-              copy: "Define measurable project outcomes and connect them to planned work.",
+              title: "Define Milestones",
+              copy: "Set measurable delivery targets and connect them to planned work.",
               Icon: Award,
             },
             {
@@ -518,176 +506,6 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             );
           }
 
-          function handleMissionControlOutcomesBlur() {
-            setIsMissionControlSetupOutcomesEditing(false);
-            updateMissionControlStrategyDraft(buildMissionControlSetupStrategyBriefFromDraft());
-          }
-
-          function renderMissionControlOutcomesEditor() {
-            const currentStrategyBrief = normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraftRef.current || missionControlStrategyDraft);
-            const outcomeRecords = parseMissionControlSetupOutcomesInput(missionControlSetupOutcomesDraft, currentStrategyBrief.outcomes);
-            const hasOutcomeRecords = outcomeRecords.length > 0;
-
-            function applyMissionControlSetupOutcomeRecords(nextOutcomes) {
-              const nextStrategyBrief = normalizePlaygroundProjectStrategyBrief({
-                ...currentStrategyBrief,
-                mission: String(projectDraft.description || "").replaceAll(String.fromCharCode(13), "").trim(),
-                outcomes: nextOutcomes.map((outcome, index) => normalizePlaygroundStrategyOutcomeRecord(outcome, index)),
-              });
-              updateMissionControlStrategyDraft(nextStrategyBrief);
-              syncMissionControlSetupOutcomesDraft(nextStrategyBrief);
-            }
-
-            function updateMissionControlSetupOutcomeTitle(indexToUpdate, nextValue) {
-              setMissionControlSetupOutcomeTitleDrafts((current) => ({
-                ...(current && typeof current === "object" ? current : {}),
-                [indexToUpdate]: String(nextValue || ""),
-              }));
-              const nextOutcomes = outcomeRecords.map((outcome, index) => index === indexToUpdate
-                ? normalizePlaygroundStrategyOutcomeRecord({ ...outcome, title: nextValue }, index)
-                : outcome
-              );
-              applyMissionControlSetupOutcomeRecords(nextOutcomes);
-            }
-
-            function getMissionControlSetupOutcomeTitleValue(outcome, index) {
-              if (
-                missionControlSetupOutcomeTitleDrafts
-                && typeof missionControlSetupOutcomeTitleDrafts === "object"
-                && Object.prototype.hasOwnProperty.call(missionControlSetupOutcomeTitleDrafts, index)
-              ) {
-                return missionControlSetupOutcomeTitleDrafts[index];
-              }
-              return outcome.title || "";
-            }
-
-            function commitMissionControlSetupOutcomeTitle(indexToCommit) {
-              setMissionControlSetupOutcomeTitleDrafts((current) => {
-                if (!current || typeof current !== "object" || !Object.prototype.hasOwnProperty.call(current, indexToCommit)) {
-                  return current;
-                }
-                const nextDrafts = { ...current };
-                delete nextDrafts[indexToCommit];
-                return nextDrafts;
-              });
-              handleMissionControlOutcomesBlur();
-            }
-
-            function addMissionControlSetupOutcome() {
-              setIsMissionControlSetupOutcomesEditing(true);
-              setMissionControlSetupOutcomeMenuIndex(-1);
-              applyMissionControlSetupOutcomeRecords(outcomeRecords.concat(normalizePlaygroundStrategyOutcomeRecord({
-                id: "outcome-" + String(outcomeRecords.length + 1).padStart(2, "0"),
-                title: "New outcome",
-                description: "",
-                successCriteria: [],
-              }, outcomeRecords.length)));
-            }
-
-            function deleteMissionControlSetupOutcome(indexToDelete) {
-              setMissionControlSetupOutcomeMenuIndex(-1);
-              setMissionControlSetupOutcomeTitleDrafts({});
-              applyMissionControlSetupOutcomeRecords(outcomeRecords.filter((_, index) => index !== indexToDelete));
-            }
-
-            function openMissionControlSetupOutcomeDetails(indexToOpen) {
-              const outcome = outcomeRecords[indexToOpen];
-              if (!outcome) {
-                return;
-              }
-              const nextStrategyBrief = normalizePlaygroundProjectStrategyBrief({
-                ...currentStrategyBrief,
-                outcomes: outcomeRecords,
-              });
-              updateMissionControlStrategyDraft(nextStrategyBrief);
-              syncMissionControlSetupOutcomesDraft(nextStrategyBrief);
-              setMissionControlSetupOutcomeMenuIndex(-1);
-              setProjectOverviewOutcomeEditorState({
-                index: indexToOpen,
-                draft: buildProjectOverviewOutcomeEditorDraft(outcome, indexToOpen),
-                source: "mission-control-setup",
-              });
-            }
-
-            return React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-mission-control-modal-context-editor playground-mission-control-modal-outcomes-editor" },
-              React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Outcomes"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-mission-control-modal-outcome-add",
-                  onClick: addMissionControlSetupOutcome,
-                  title: "Add outcome",
-                  "aria-label": "Add outcome",
-                }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
-              ),
-              React.createElement("div", { className: "playground-mission-control-modal-outcomes-list" },
-                hasOutcomeRecords
-                  ? outcomeRecords.map((outcome, index) =>
-                      React.createElement("div", {
-                          key: outcome.id || ("mission-control-outcome-" + index),
-                          className: "playground-mission-control-modal-outcome-row",
-                        },
-                        React.createElement("div", { className: "playground-mission-control-modal-outcome-copy" },
-                          React.createElement("input", {
-                            type: "text",
-                            className: "playground-mission-control-modal-outcome-input",
-                            value: getMissionControlSetupOutcomeTitleValue(outcome, index),
-                            placeholder: "Outcome",
-                            onFocus: () => setIsMissionControlSetupOutcomesEditing(true),
-                            onChange: (event) => updateMissionControlSetupOutcomeTitle(index, event.target.value),
-                            onBlur: () => commitMissionControlSetupOutcomeTitle(index),
-                          })
-                        ),
-                        React.createElement("div", {
-                            className: "playground-mission-control-modal-outcome-menu-shell playground-tasks-toolbar-popup-shell" + (missionControlSetupOutcomeMenuIndex === index ? " is-open" : ""),
-                            ref: missionControlSetupOutcomeMenuIndex === index ? missionControlSetupOutcomeMenuRef : null,
-                          },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-mission-control-modal-outcome-menu-trigger",
-                            onClick: () => setMissionControlSetupOutcomeMenuIndex((current) => current === index ? -1 : index),
-                            title: "Outcome options",
-                            "aria-label": "Outcome options",
-                            "aria-expanded": missionControlSetupOutcomeMenuIndex === index ? "true" : "false",
-                          }, React.createElement(EllipsisVertical, { width: 14, height: 14, strokeWidth: 1.8 })),
-                          missionControlSetupOutcomeMenuIndex === index
-                            ? React.createElement(PlatformPopupSurface, {
-                                className: "playground-tasks-toolbar-popup-menu playground-mission-control-modal-outcome-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                              },
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "tb-popup-row",
-                                  onClick: () => openMissionControlSetupOutcomeDetails(index),
-                                },
-                                  React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                    React.createElement("span", null, "Details")
-                                  )
-                                ),
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "tb-popup-row playground-tasks-detail-menu-item-danger",
-                                  onClick: () => deleteMissionControlSetupOutcome(index),
-                                },
-                                  React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                    React.createElement("span", null, "Delete outcome")
-                                  )
-                                )
-                              )
-                            : null
-                        )
-                      )
-                    )
-                  : React.createElement("button", {
-                      type: "button",
-                      className: "playground-mission-control-modal-outcomes-empty",
-                      onClick: addMissionControlSetupOutcome,
-                    }, "Add the first outcome")
-              )
-            );
-          }
-
           const studioElement = React.createElement(PlatformModal, {
             open: missionControlSetupOpen && projectComposerOpen && !missionControlSetupClosing,
             visible: missionControlSetupVisible,
@@ -710,7 +528,6 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             React.createElement("div", { className: "playground-mission-control-modal-body" },
               React.createElement("div", { className: "playground-mission-control-modal-context" },
                 renderMissionControlGoalEditor(),
-                renderMissionControlOutcomesEditor(),
                 missionControlAgentError
                   ? React.createElement("div", { className: "playground-mission-control-setup-error playground-environments-error" }, missionControlAgentError)
                   : null
@@ -720,12 +537,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
               )
             )
           );
-          return React.createElement(React.Fragment, null,
-            studioElement,
-            renderSharedProjectOverviewOutcomeEditorModal({
-              strategyBrief: normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraft),
-            })
-          );
+          return studioElement;
         }
 
 \${PROJECT_OVERVIEW_SCRIPT}
@@ -1027,6 +839,31 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                   : 0,
               }))
               .filter((segment) => segment.count > 0);
+            const deliveryExecution = selectedProjectDeliveryExecution
+              && typeof selectedProjectDeliveryExecution === "object"
+              && !Array.isArray(selectedProjectDeliveryExecution)
+              ? selectedProjectDeliveryExecution
+              : null;
+            const deliveryStageLabels = {
+              build: "Build",
+              test: "Test",
+              evaluate: "Evaluate",
+              optimize: "Optimize",
+              re_evaluate: "Re-evaluate",
+              assure: "Assure",
+              deliver: "Deliver",
+            };
+            const deliveryStages = Object.keys(deliveryStageLabels).map((stageId) => {
+              const stage = deliveryExecution?.stages?.[stageId];
+              return {
+                id: stageId,
+                label: deliveryStageLabels[stageId],
+                status: String(stage?.status || "pending").toLowerCase(),
+              };
+            });
+            const deliveryExecutionStatus = String(deliveryExecution?.status || "").toLowerCase();
+            const deliveryCostUsd = Number(deliveryExecution?.costUsd);
+            const deliveryBudgetUsd = Number(deliveryExecution?.budgetUsd);
             return React.createElement("div", { className: "playground-tasks-detail-shell" },
               React.createElement("div", { className: "playground-tasks-detail-main" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
                 React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
@@ -1137,6 +974,62 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                             )
                           )
                         : null
+                    ),
+                    React.createElement(PlatformUiCard, {
+                        as: "section",
+                        variant: "sidebar",
+                        cardTitle: "Delivery execution",
+                        className: "playground-mission-control-delivery-card",
+                        headerActions: deliveryExecution
+                          ? React.createElement("span", {
+                              className: "playground-mission-control-delivery-status is-" + (deliveryExecutionStatus || "queued"),
+                            }, deliveryExecutionStatus.replaceAll("_", " ") || "Queued")
+                          : null,
+                      },
+                      deliveryExecution
+                        ? React.createElement(React.Fragment, null,
+                            React.createElement("div", { className: "playground-mission-control-delivery-stages" },
+                              deliveryStages.map((stage) =>
+                                React.createElement("div", {
+                                    key: stage.id,
+                                    className: "playground-mission-control-delivery-stage",
+                                  },
+                                  React.createElement("span", {
+                                    className: "playground-mission-control-delivery-stage-indicator is-" + stage.status,
+                                    "aria-hidden": "true",
+                                  }),
+                                  React.createElement("span", { className: "playground-mission-control-delivery-stage-label" }, stage.label),
+                                  React.createElement("span", { className: "playground-mission-control-delivery-stage-status" }, stage.status.replaceAll("_", " "))
+                                )
+                              )
+                            ),
+                            React.createElement("div", { className: "playground-mission-control-delivery-budget" },
+                              React.createElement("span", null, "Verified cost"),
+                              React.createElement("span", null,
+                                (Number.isFinite(deliveryCostUsd) ? deliveryCostUsd : 0).toLocaleString(undefined, {
+                                  style: "currency",
+                                  currency: "USD",
+                                  maximumFractionDigits: 2,
+                                })
+                                + " / "
+                                + (Number.isFinite(deliveryBudgetUsd) ? deliveryBudgetUsd : 0).toLocaleString(undefined, {
+                                  style: "currency",
+                                  currency: "USD",
+                                  maximumFractionDigits: 2,
+                                })
+                              )
+                            ),
+                            deliveryExecution.lastError
+                              ? React.createElement("div", { className: "playground-mission-control-delivery-error" }, String(deliveryExecution.lastError))
+                              : null
+                          )
+                        : React.createElement("div", { className: "playground-mission-control-delivery-empty" },
+                            missionControlDeliveryExecutionState.status === "loading"
+                              ? "Loading the canonical execution…"
+                              : missionControlDeliveryExecutionState.error
+                                ? missionControlDeliveryExecutionState.error
+                                : "No delivery execution has started for this project."
+                          )
                     ),
                     React.createElement("div", { className: "playground-tasks-comments" },
                       React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Comments"),

@@ -32,15 +32,18 @@ Teams and Security Agents stay consistent.
 
 Repository details use the same centralized version-management contract as
 Agent details. The app-header breadcrumb shows the selected version, opens the
-shared history drawer, and hosts the secondary Run scan action beside the
-shared Save Changes split action. Both halves of that split action share one
-disabled state. The local detail surface begins with a combined Runs & findings
-tab and uses the Project ticket detail card-and-fact-row pattern for its
-Details and Safety boundary sidebar sections. A repository version is one
-coherent snapshot of scan policy plus threat model; publishing creates the
-immutable domain revisions used by future runs. GitHub identity, monitoring
-state, access grants, findings, and audit evidence are intentionally excluded
-so restoring configuration cannot roll back authority or retained evidence.
+shared history drawer, and hosts the shared Save Changes split action. Both
+halves of that split action share one disabled state. The primary Run scan
+action lives at the bottom of the Details sidebar and follows repository and
+mutation availability. The local detail surface begins with Runs, where runs,
+findings, and the append-only audit log are views of one centralized table. It
+uses the Project ticket detail card-and-fact-row pattern for its Details and
+Safety boundary sidebar sections. Policy combines scan triggers and threat
+model context because a repository version is one coherent snapshot of both;
+publishing creates the immutable domain revisions used by future runs. GitHub
+identity, monitoring state, access grants, findings, and audit evidence are
+intentionally excluded so restoring configuration cannot roll back authority
+or retained evidence.
 
 ## Structure
 

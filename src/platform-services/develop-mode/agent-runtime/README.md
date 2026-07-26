@@ -6,8 +6,9 @@
 
 `src/platform-services/develop-mode/agent-runtime` is the ownership boundary
 for the Develop-mode Agent Runtime experience. Its client domain owns the
-service definition and its client page owns the overview surface. Future
-detail, settings, usage, and server modules for this service belong here.
+service definition and its client page owns the overview surface. Its server
+module owns the canonical `/api/real/agent-runtimes` proxy contract used for
+deployment lifecycle and thread-backed invocation.
 
 ## Usage
 

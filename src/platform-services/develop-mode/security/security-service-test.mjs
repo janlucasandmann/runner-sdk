@@ -110,7 +110,8 @@ assert.doesNotThrow(
 
 const compositionSource = await readPlatformCompositionSource();
 assert.match(compositionSource, /develop-mode\/security\/index\.mjs/);
-assert.match(compositionSource, /Shield, Slash/);
+assert.match(compositionSource, /\bShield\b/);
+assert.match(compositionSource, /\bSlash\b/);
 assert.match(compositionSource, /DevelopSecurityWorkspacePage/);
 assert.match(compositionSource, /activePage === "develop-security"/);
 assert.match(
@@ -145,7 +146,7 @@ assert.match(
 );
 assert.match(
   productionAssetSource,
-  /\$\{securityPageCssText\}\\n\\n\$\{platformPermissionsPageCssText\}/,
+  /\$\{developServerDetailPageCssText\}\\n\\n\$\{securityPageCssText\}\\n\\n\$\{evidenceAgentsPageCssText\}\\n\\n\$\{platformPermissionsPageCssText\}/,
 );
 
 const pageSourceUrls = [
@@ -173,6 +174,13 @@ const repositoryDetailSource = await fs.readFile(
 );
 const repositorySidebarSource = await fs.readFile(
   new URL("./client/page/security-repository-sidebar.tsx", import.meta.url),
+  "utf8",
+);
+const repositoryVersionControlSource = await fs.readFile(
+  new URL(
+    "./client/page/security-repository-version-control.tsx",
+    import.meta.url,
+  ),
   "utf8",
 );
 for (const sharedPrimitive of [
@@ -220,33 +228,55 @@ assert.match(
   /if \(loading\)[\s\S]*<SecurityDetailLoadingState/,
   "Security detail routes must keep the centered detail loading frame mounted.",
 );
+assert.match(repositoryDetailSource, /id: "runs", label: "Runs"/);
 assert.match(
   repositoryDetailSource,
-  /id: "runs-findings", label: "Runs & findings"/,
+  /function RunsOverview[\s\S]*<PlatformAnalyticsSection/,
+  "Runs must use the centralized Agent Runtime analytics section.",
 );
 assert.match(
   repositoryDetailSource,
-  /function RunsAndFindings[\s\S]*<SecurityMetricGrid/,
-  "Runs & findings must retain its centralized KPI-card summary.",
+  /function RepositoryActivityTable[\s\S]*<PlatformDetailTabBar<SecurityRepositoryTableTab>[\s\S]*\{ id: "runs", label: "Runs" \}[\s\S]*\{ id: "findings", label: "Findings" \}[\s\S]*\{ id: "audit-log", label: "Audit Log" \}/,
+  "Runs, findings, and repository audit events must share one centralized table surface.",
+);
+assert.equal(
+  (repositoryDetailSource.match(/emptyState=\{\s*<PlatformEmptyState/g) || [])
+    .length,
+  3,
+  "Every repository activity table view must use the centralized empty-state component.",
+);
+assert.match(
+  repositoryDetailSource,
+  /if \(activeTab === "policy"\)[\s\S]*<PolicyEditor[\s\S]*<ThreatModelEditor/,
+  "Policy must compose trigger policy and threat-model context on one page.",
 );
 assert.doesNotMatch(
   repositoryDetailSource,
-  /\{ id: "(?:overview|findings|runs)", label: "(?:Overview|Findings|Runs)"/,
-  "Repository runs and findings must share one tab and must not restore the removed Overview tab.",
+  /id: "(?:runs-findings|threat-model|audit)", label:/,
+  "Repository details must not restore the removed combined, threat-model, or audit pages.",
 );
-assert.match(
-  pageSources,
-  /sidebarClassName="playground-ticket-detail-sidebar"/,
+assert.doesNotMatch(
+  repositoryDetailSource,
+  /activeTab === "(?:threat-model|audit)"/,
+  "Threat-model and audit content must be owned by Policy and Runs respectively.",
 );
-assert.match(
-  pageSources,
-  /playground-ticket-detail-sidebar-section playground-ticket-detail-sidebar-details/,
-);
-assert.match(pageSources, /playground-evaluations-detail-sidebar-list/);
-assert.match(pageSources, /playground-evaluations-detail-person/);
+assert.match(pageSources, /<DevelopServerDetailPage/);
+assert.match(pageSources, /playground-server-detail-properties-card/);
+assert.match(pageSources, /playground-project-overview-sidebar-rows/);
+assert.match(pageSources, /ResourceOverviewIdentityCell/);
 assert.match(pageSources, /playground-evaluations-detail-owner-value/);
 assert.match(repositorySidebarSource, /ariaLabel="Choose repository owner"/);
 assert.match(repositorySidebarSource, /PlatformSelector/);
+assert.match(
+  repositorySidebarSource,
+  /<PlatformPrimaryButton[\s\S]*className="develop-security-repository-run-scan"[\s\S]*Run scan/,
+  "Run scan must be the primary action at the bottom of the Details sidebar.",
+);
+assert.doesNotMatch(
+  repositoryVersionControlSource,
+  /Run scan|onRunScan|runScanDisabled/,
+  "Version controls must not duplicate the sidebar-owned Run scan action.",
+);
 assert.match(pageSources, /onLoadOwnerCandidates/);
 assert.doesNotMatch(
   repositorySidebarSource,
@@ -261,7 +291,7 @@ assert.doesNotMatch(
 assert.match(pageSources, /menuDisabled=\{isBusy \|\| !hasChanges\}/);
 assert.match(
   pageSources,
-  /playground-project-overview-layout playground-agents-detail-overview-layout develop-security-resource-detail/,
+  /is-security-agent-server-detail develop-security-resource-detail/,
 );
 assert.match(
   pageSources,

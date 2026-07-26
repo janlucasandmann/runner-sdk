@@ -53,7 +53,12 @@ export const IMAGINE_TEMPLATE_PAGE_GENERATION_SCRIPT = String.raw`          cons
           const setActiveTemplateMediaMode = useCallback((nextMode) => {
             const normalizedNextMode = String(nextMode || "").toLowerCase() === "video" ? "video" : "image";
             if (normalizedNextMode === "video" && !canUseVideoGeneration) {
-              setVideoUpgradeModalOpen(true);
+              requestPlatformPlanGate({
+                entitlement: "imagine.generate",
+                requiredPlan: "builder",
+                featureName: "video generation",
+                source: "imagine-template",
+              });
               return;
             }
             if (typeof onMediaModeChange === "function") {
@@ -162,62 +167,6 @@ export const IMAGINE_TEMPLATE_PAGE_GENERATION_SCRIPT = String.raw`          cons
                 )
                 : null
             );
-
-          const handleVideoUpgradeCheckout = useCallback(async () => {
-            if (typeof onUpgradeToIndividual !== "function") {
-              return;
-            }
-            setVideoUpgradeCheckoutLoading(true);
-            try {
-              await Promise.resolve(onUpgradeToIndividual());
-            } finally {
-              setVideoUpgradeCheckoutLoading(false);
-            }
-          }, [onUpgradeToIndividual]);
-
-          const renderImagineTemplateVideoUpgradeModal = () => {
-            if (!videoUpgradeModalOpen) {
-              return null;
-            }
-            return React.createElement(PlatformModalBackdrop, {
-              className: "playground-calendar-upgrade-backdrop",
-              onClick: () => setVideoUpgradeModalOpen(false),
-            },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-files-header-icon-button is-plain playground-calendar-upgrade-close",
-                "aria-label": "Close video generation upgrade prompt",
-                onClick: () => setVideoUpgradeModalOpen(false),
-              }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 })),
-              React.createElement("div", {
-                className: "playground-calendar-upgrade-shell",
-                onClick: (event) => event.stopPropagation(),
-              },
-                React.createElement("div", { className: "playground-calendar-upgrade-pill" }, "Video generation"),
-                React.createElement("h2", { className: "playground-calendar-upgrade-headline" },
-                  "Unlock video generation with ",
-                  React.createElement("span", { className: "playground-calendar-upgrade-headline-price" }, "Builder")
-                ),
-                React.createElement(PlatformModalSurface, { className: "playground-calendar-upgrade-modal" },
-                  React.createElement("div", { className: "playground-calendar-upgrade-modal-top" },
-                    React.createElement("div", { className: "playground-calendar-upgrade-modal-header" },
-                      React.createElement("div", { className: "playground-calendar-upgrade-modal-title" }, "Builder"),
-                      React.createElement("div", { className: "playground-calendar-upgrade-modal-offer" }, "$5 usage included")
-                    ),
-                    React.createElement("p", { className: "playground-calendar-upgrade-modal-copy" },
-                      "Video generation is available on paid plans because it uses premium video models and usage-based credits."
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-calendar-upgrade-modal-button",
-                      onClick: () => void handleVideoUpgradeCheckout(),
-                      disabled: videoUpgradeCheckoutLoading || typeof onUpgradeToIndividual !== "function",
-                    }, videoUpgradeCheckoutLoading ? "Opening checkout..." : "Upgrade to Builder")
-                  )
-                )
-              )
-            );
-          };
 
           const hiddenSystemPrompt = [
             "You are running inside Computer Agents Imagine template mode. Treat this as a visual generation workflow, not a general chat.",

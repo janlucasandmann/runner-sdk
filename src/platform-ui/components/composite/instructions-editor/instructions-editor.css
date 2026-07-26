@@ -239,9 +239,12 @@
 }
 
 .platform-instructions-editor.is-minimalistic-ui .platform-instructions-editor__preview,
-.platform-instructions-editor.is-minimalistic-ui .platform-instructions-editor__readonly,
-.platform-instructions-editor.is-minimalistic-ui .platform-instructions-editor__prosemirror {
+.platform-instructions-editor.is-minimalistic-ui .platform-instructions-editor__readonly {
   padding: 0;
+}
+
+.platform-instructions-editor.is-minimalistic-ui .platform-instructions-editor__prosemirror {
+  padding: 12px 0 0;
 }
 
 .platform-markdown { color: rgba(255, 255, 255, 0.7); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }

@@ -8,6 +8,27 @@ export const PROJECTS_DOMAIN_FOUNDATION_SCRIPT = `
         { id: "board", label: "Board", icon: LayoutGrid },
         { id: "calendar", label: "Calendar", icon: Clock },
       ];
+      const PLAYGROUND_PROJECT_STATUS_OPTIONS = [
+        { id: "backlog", label: "Backlog", icon: CircleDashed, toneClassName: "is-backlog" },
+        { id: "in_progress", label: "In Progress", icon: CircleEllipsis, toneClassName: "is-in-progress" },
+        { id: "on_track", label: "On Track", icon: CircleCheck, toneClassName: "is-on-track" },
+        { id: "at_risk", label: "At Risk", icon: AlertCircle, toneClassName: "is-at-risk" },
+        { id: "blocked", label: "Blocked", icon: AlertCircle, toneClassName: "is-blocked" },
+        { id: "completed", label: "Completed", icon: CircleCheck, toneClassName: "is-done" },
+      ];
+
+      function normalizePlaygroundProjectStatus(value) {
+        const raw = String(value || "backlog")
+          .trim()
+          .toLowerCase()
+          .replace(/[\\s-]+/g, "_");
+        const normalized = ["done", "finished", "complete"].includes(raw)
+          ? "completed"
+          : (["doing", "active"].includes(raw) ? "in_progress" : raw);
+        return PLAYGROUND_PROJECT_STATUS_OPTIONS.some((option) => option.id === normalized)
+          ? normalized
+          : "backlog";
+      }
 	      const PLAYGROUND_TASK_STATUS_OPTIONS = [
 	        { id: "backlog", label: "Backlog", icon: CircleDashed, toneClassName: "is-backlog", manual: true },
 	        { id: "todo", label: "Todo", icon: Circle, toneClassName: "is-todo", manual: true },
@@ -99,10 +120,14 @@ export const PROJECTS_DOMAIN_FOUNDATION_SCRIPT = `
       ];
       const PLAYGROUND_PROJECT_ACCENT_COLORS = [
         "#79d0ff",
-        "#f67ab7",
-        "#9b8bff",
+        "#b7bec8",
+        "#5f6bdc",
+        "#2db4ce",
         "#55d8a5",
-        "#f4b85f",
+        "#f5c400",
+        "#ff9b48",
+        "#f3c2bd",
+        "#ef5858",
       ];
       const PLAYGROUND_PROJECT_ICON_OPTIONS = [
         { id: "rocket", label: "Rocket", icon: Rocket },
@@ -119,6 +144,63 @@ export const PROJECTS_DOMAIN_FOUNDATION_SCRIPT = `
         { id: "folder-open", label: "Workspace", icon: FolderOpen },
         { id: "hard-drive", label: "Environment", icon: HardDrive },
         { id: "zap", label: "Execution", icon: Zap },
+        { id: "award", label: "Award", icon: Award },
+        { id: "book-open", label: "Knowledge", icon: BookOpen },
+        { id: "brain", label: "Intelligence", icon: Brain },
+        { id: "building", label: "Organization", icon: Building2 },
+        { id: "calendar", label: "Calendar", icon: CalendarIcon },
+        { id: "camera", label: "Camera", icon: Camera },
+        { id: "cloud", label: "Cloud", icon: Cloud },
+        { id: "cpu", label: "Compute", icon: Cpu },
+        { id: "database", label: "Database", icon: Database },
+        { id: "flag", label: "Milestone", icon: Flag },
+        { id: "globe", label: "Global", icon: Globe },
+        { id: "hand", label: "Human", icon: Hand },
+        { id: "heart", label: "Favorite", icon: Heart },
+        { id: "house", label: "Home", icon: House },
+        { id: "key", label: "Access", icon: KeyRound },
+        { id: "library", label: "Library", icon: LibraryBig },
+        { id: "lightbulb", label: "Idea", icon: Lightbulb },
+        { id: "mail", label: "Mail", icon: Mail },
+        { id: "map-pin", label: "Location", icon: MapPin },
+        { id: "monitor", label: "Desktop", icon: Monitor },
+        { id: "package", label: "Package", icon: Package },
+        { id: "paintbrush", label: "Design", icon: Paintbrush },
+        { id: "pen-tool", label: "Writing", icon: PenTool },
+        { id: "receipt", label: "Finance", icon: ReceiptText },
+        { id: "server", label: "Server", icon: Server },
+        { id: "shield", label: "Security", icon: Shield },
+        { id: "tag", label: "Tag", icon: Tag },
+        { id: "terminal", label: "Terminal", icon: Terminal },
+        { id: "test-tube", label: "Experiment", icon: TestTubeDiagonal },
+        { id: "vault", label: "Vault", icon: Vault },
+        { id: "wand", label: "Magic", icon: Wand2 },
+        { id: "webhook", label: "Webhook", icon: Webhook },
+        { id: "bell", label: "Alerts", icon: Bell },
+        { id: "braces", label: "Data", icon: Braces },
+        { id: "cable", label: "Connections", icon: Cable },
+        { id: "chart-column", label: "Analytics", icon: ChartColumnIncreasing },
+        { id: "circle-check", label: "Success", icon: CircleCheckBig },
+        { id: "clock", label: "Time", icon: Clock },
+        { id: "coins", label: "Budget", icon: Coins },
+        { id: "dollar-sign", label: "Revenue", icon: DollarSign },
+        { id: "file-text", label: "Documents", icon: FileText },
+        { id: "fingerprint", label: "Identity", icon: FingerprintPattern },
+        { id: "flask", label: "Lab", icon: FlaskConical },
+        { id: "function", label: "Function", icon: FunctionSquare },
+        { id: "git-branch", label: "Versions", icon: GitBranch },
+        { id: "image", label: "Images", icon: ImageIcon },
+        { id: "link", label: "Integration", icon: Link2 },
+        { id: "list-todo", label: "Tasks", icon: ListTodo },
+        { id: "metronome", label: "Workflow", icon: Metronome },
+        { id: "mic", label: "Voice", icon: Mic },
+        { id: "paperclip", label: "Attachments", icon: Paperclip },
+        { id: "pencil-ruler", label: "Planning", icon: PencilRuler },
+        { id: "pin", label: "Pinned", icon: Pin },
+        { id: "scan", label: "Vision", icon: Scan },
+        { id: "sliders", label: "Controls", icon: SlidersHorizontal },
+        { id: "sticky-note", label: "Notes", icon: StickyNote },
+        { id: "user", label: "Person", icon: UserRound },
       ];
       const PLAYGROUND_PROJECT_BLUEPRINT_PROFILE_DATA = ${JSON.stringify(PROJECT_TYPE_REGISTRY)};
       const PLAYGROUND_PROJECT_BLUEPRINT_ALIASES = ${JSON.stringify(PROJECT_TYPE_ALIASES)};

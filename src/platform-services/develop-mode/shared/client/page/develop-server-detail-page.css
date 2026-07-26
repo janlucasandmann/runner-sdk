@@ -11,6 +11,85 @@
   gap: var(--resource-detail-section-gap);
 }
 
+.playground-source-server-detail-main .playground-source-server-usage-activity-table {
+  width: 100%;
+  min-width: 0;
+}
+
+.playground-resources-page.is-develop-server-kind-page
+.playground-environments-editor-main.playground-tasks-detail-main.playground-source-server-detail-main.is-source-server-usage-tab,
+.playground-source-server-detail-main
+.playground-environments-detail-scroll.playground-environments-editor-scroll.is-source-server-usage-tab,
+.playground-source-server-detail-main
+.playground-server-detail-page.is-source-deployable-server-detail.is-source-server-usage-tab,
+.playground-source-server-detail-main
+.playground-server-detail-page__content.is-source-server-usage-tab,
+.playground-source-server-detail-main
+.playground-server-detail-content.is-source-server-usage-tab,
+.playground-source-server-detail-main
+.playground-source-server-usage-tab-content {
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.playground-resources-page.is-develop-server-kind-page
+.playground-environments-editor-main.playground-tasks-detail-main.playground-source-server-detail-main.is-source-server-usage-tab,
+.playground-source-server-detail-main
+.playground-environments-detail-scroll.playground-environments-editor-scroll.is-source-server-usage-tab,
+.playground-source-server-detail-main
+.playground-server-detail-content.is-source-server-usage-tab {
+  flex: 1 1 0;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-page.is-source-deployable-server-detail.is-source-server-usage-tab {
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.playground-source-server-detail-main
+.playground-source-server-usage-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--resource-detail-section-gap);
+}
+
+.playground-source-server-detail-main
+.playground-source-server-usage-tab-content
+> .playground-server-detail-analytics {
+  flex: 0 0 auto;
+}
+
+.playground-source-server-detail-main
+.playground-source-server-usage-activity-table {
+  flex: 1 1 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.playground-source-server-detail-main
+.playground-source-server-usage-activity-table
+> .platform-data-table.is-fill-layout,
+.playground-source-server-detail-main
+.playground-source-server-usage-activity-table
+> .platform-data-table.is-fill-layout
+> .platform-data-table__surface,
+.playground-source-server-detail-main
+.playground-source-server-usage-activity-table
+.platform-data-table.is-fill-layout
+.platform-data-table__table,
+.playground-source-server-detail-main
+.playground-source-server-usage-activity-table
+.platform-data-table.is-fill-layout
+.platform-data-table__scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+}
+
 .playground-source-server-detail-main .playground-server-settings-tab > * {
   margin-block: 0;
 }
@@ -18,6 +97,74 @@
 .playground-source-server-detail-main .playground-server-custom-domains-platform-table {
   margin-block: 0;
   padding-block: 0;
+}
+
+.playground-source-server-detail-main
+.playground-server-settings-tab.is-source-deployable-settings-tab
+.playground-server-settings-description-section
+.platform-instructions-editor__title {
+  font-size: 14px;
+}
+
+.playground-source-server-detail-main
+.playground-server-settings-tab.is-source-deployable-settings-tab
+.playground-server-settings-description-section {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.playground-source-server-detail-main
+.playground-server-settings-tab.is-function-settings-tab
+.playground-server-invoke-card {
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.playground-source-server-detail-main
+.playground-server-settings-tab.is-function-settings-tab
+.playground-server-invoke-card::before {
+  content: none;
+  display: none;
+}
+
+.playground-agent-runtime-detail-content .playground-server-invoke-card {
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.playground-agent-runtime-detail-content .playground-server-invoke-card::before {
+  content: none;
+  display: none;
+}
+
+.playground-resources-page.is-develop-server-kind-page
+.playground-server-detail-metrics
+.playground-agent-runtime-settings-card.playground-server-details-card {
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  background: rgba(255, 255, 255, 0.075);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.playground-resources-page.is-develop-server-kind-page
+.playground-server-detail-metrics
+.playground-agent-runtime-settings-card.playground-server-details-card::before {
+  content: none;
+  display: none;
+}
+
+.playground-agent-runtime-skills-popup {
+  z-index: 12080;
+  display: flex;
+  width: 280px;
+  height: 284px;
+  padding: 0;
+  flex-direction: column;
+}
+
+.playground-agent-runtime-sidebar-deploy-selector {
+  margin-top: 12px;
 }
 
 .playground-source-server-detail-main .playground-server-detail-page__header-content,
@@ -54,6 +201,97 @@
   height: 100%;
   min-height: 0;
   grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.playground-resources-page.is-develop-server-kind-page.is-source-server-code-tab
+> .playground-environments-detail-scroll.playground-settings-detail-scroll.is-source-server-code-tab,
+.playground-content-body.is-source-deployable-code-route
+> .playground-resources-page.is-develop-server-kind-page
+> .playground-environments-detail-scroll.playground-settings-detail-scroll,
+.playground-resources-page.is-develop-server-kind-page:has(
+  .playground-source-server-detail-main.is-source-server-code-tab
+)
+> .playground-environments-detail-scroll.playground-settings-detail-scroll {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.playground-resources-page.is-develop-server-kind-page.is-source-server-code-tab
+.playground-resources-detail-content.is-source-server-code-tab,
+.playground-content-body.is-source-deployable-code-route
+> .playground-resources-page.is-develop-server-kind-page
+> .playground-environments-detail-scroll.playground-settings-detail-scroll
+> .playground-resources-detail-content,
+.playground-resources-page.is-develop-server-kind-page:has(
+  .playground-source-server-detail-main.is-source-server-code-tab
+)
+> .playground-environments-detail-scroll.playground-settings-detail-scroll
+> .playground-resources-detail-content,
+.playground-resources-page.is-develop-server-kind-page.is-source-server-code-tab
+.playground-source-server-detail-main.is-source-server-code-tab,
+.playground-source-server-detail-main
+.playground-environments-detail-scroll.playground-environments-editor-scroll.is-source-server-code-tab,
+.playground-source-server-detail-main
+.playground-server-detail-page.is-source-deployable-server-detail.is-source-server-code-tab,
+.playground-source-server-detail-main
+.playground-server-detail-page__content.is-source-server-code-tab,
+.playground-resources-page.is-develop-server-kind-page
+.playground-server-detail-content.is-code-tab.is-source-server-code-tab,
+.playground-source-server-detail-main
+.playground-servers-editor-layout.is-source-server-code-tab {
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.playground-content-body:has(.platform-code-editor-workspace.is-full-screen)
+.playground-resources-page.is-develop-server-kind-page,
+.playground-content-body:has(.platform-code-editor-workspace.is-full-screen)
+.playground-resources-page.is-develop-server-kind-page
+> .playground-environments-detail-scroll.playground-settings-detail-scroll,
+.playground-content-body:has(.platform-code-editor-workspace.is-full-screen)
+.playground-resources-page.is-develop-server-kind-page
+.playground-resources-detail-content,
+.playground-content-body:has(.platform-code-editor-workspace.is-full-screen)
+.playground-source-server-detail-main,
+.playground-content-body:has(.platform-code-editor-workspace.is-full-screen)
+.playground-source-server-detail-main
+.playground-server-detail-page,
+.playground-content-body:has(.platform-code-editor-workspace.is-full-screen)
+.playground-source-server-detail-main
+.playground-server-detail-page__content,
+.playground-content-body:has(.platform-code-editor-workspace.is-full-screen)
+.playground-resources-page.is-develop-server-kind-page
+.playground-server-detail-content.is-code-tab,
+.playground-content-body:has(.platform-code-editor-workspace.is-full-screen)
+.playground-source-server-detail-main
+.playground-environments-detail-scroll.playground-environments-editor-scroll,
+.playground-content-body:has(.platform-code-editor-workspace.is-full-screen)
+.playground-source-server-detail-main
+.playground-servers-editor-layout {
+  box-sizing: border-box;
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-page.is-source-deployable-server-detail.is-code-tab {
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .playground-source-server-detail-main .playground-server-detail-page__content.is-code-tab {
@@ -184,6 +422,17 @@
 .playground-server-owner-selector-trigger {
   width: 100%;
   max-width: 100%;
+}
+
+.playground-source-server-detail-main
+.playground-source-server-sidebar-deploy-selector {
+  margin-top: 12px;
+}
+
+.playground-source-server-detail-main
+.playground-server-settings-tab.is-source-deployable-settings-tab
+.playground-environments-connections-section {
+  margin-bottom: 42px;
 }
 
 .playground-source-server-detail-main
@@ -426,10 +675,22 @@
 }
 
 .playground-managed-data-detail-main
+.playground-server-detail-page.is-headerless.is-tabless.is-managed-data-list-tab {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.playground-managed-data-detail-main
 .playground-server-detail-page__content.is-managed-data-list-tab {
   min-height: 0;
   height: 100%;
   overflow: hidden;
+}
+
+.playground-managed-data-detail-main
+.playground-server-settings-tab:is(.is-auth-settings-tab, .is-agent-runtime-settings-tab, .is-secrets-settings-tab, .is-payments-settings-tab)
+:is(.playground-auth-description-section, .playground-agent-runtime-description-section, .playground-secrets-description-section, .playground-payments-description-section)
+.platform-instructions-editor__title {
+  font-size: 14px;
 }
 
 .playground-managed-data-detail-main
@@ -749,4 +1010,18 @@
 
 .playground-source-server-detail-main .playground-server-detail-sidebar-url-link:hover {
   color: #7ebcff;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-page.is-source-deployable-server-detail
+.playground-server-detail-sidebar-url-link,
+.playground-source-server-detail-main
+.playground-server-detail-page.is-source-deployable-server-detail
+.playground-server-detail-sidebar-url-link:hover {
+  color: #fff;
+}
+
+.playground-resources-page.is-develop-server-kind-page.is-source-server-usage-tab
+> .playground-environments-detail-scroll.playground-settings-detail-scroll.is-source-server-usage-tab {
+  padding-bottom: 10px;
 }

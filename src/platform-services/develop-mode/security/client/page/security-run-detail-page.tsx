@@ -6,9 +6,11 @@ import { PlatformPrimaryButton, PlatformSecondaryButton } from "../../../../../p
 import { PlatformLabel } from "../../../../../platform-ui/components/ui/label/index.js";
 import type { SecurityAuditEvent, SecurityFinding, SecurityRunDetail } from "../domain/index.js";
 import { formatSecurityAction, formatSecurityTimestamp } from "../domain/index.js";
-import { SecurityResourceDetailPage } from "./security-detail-layout.js";
 import {
-  SecurityBackHeader,
+  SecurityDetailHeaderActionsPortal,
+  SecurityResourceDetailPage,
+} from "./security-detail-layout.js";
+import {
   SecurityFindingStatusLabel,
   SecurityJsonEvidence,
   SecurityMetricGrid,
@@ -17,24 +19,29 @@ import {
   SecuritySeverityLabel,
 } from "./security-presenters.js";
 
-type SecurityRunTab = "overview" | "findings" | "audit" | "artifacts";
+export type SecurityRunTab = "overview" | "findings" | "audit" | "artifacts";
 
-const RUN_TABS = [
+export const SECURITY_RUN_TABS = [
   { id: "overview", label: "Overview", icon: Activity },
   { id: "findings", label: "Findings", icon: FileSearch },
   { id: "audit", label: "Audit trail", icon: History },
   { id: "artifacts", label: "Artifacts", icon: Boxes },
 ] as const;
+export const SECURITY_RUN_HEADER_SECTIONS = SECURITY_RUN_TABS.map(
+  ({ id, label }) => ({ value: id, label }),
+);
 
 const RUN_STAGES = ["ingest", "checkout", "inventory", "scan", "validate", "triage", "remediate", "verify", "publish", "complete"] as const;
 
 export interface SecurityRunDetailPageProps {
   detail: SecurityRunDetail;
+  activeTab?: SecurityRunTab;
   busy?: boolean;
-  onBack: () => void;
+  controlsPortalId?: string;
   onRefresh: () => void;
   onCancel: () => void;
   onOpenFinding: (finding: SecurityFinding) => void;
+  onTabChange?: (tab: SecurityRunTab) => void;
 }
 
 function RunFindings({ rows, onOpen }: { rows: readonly SecurityFinding[]; onOpen: (finding: SecurityFinding) => void }) {
@@ -56,8 +63,20 @@ function RunAudit({ rows }: { rows: readonly SecurityAuditEvent[] }) {
   return <PlatformDataTable rows={rows} columns={columns} getRowId={(row) => row.id} ariaLabel="Run audit trail" surface="plain" layout="fill" variant="minimalistic-ui" sorting={{ defaultValue: { id: "time", direction: "asc" } }} emptyState="No run audit events were recorded." />;
 }
 
-export function SecurityRunDetailPage({ detail, busy = false, onBack, onRefresh, onCancel, onOpenFinding }: SecurityRunDetailPageProps) {
-  const [activeTab, setActiveTab] = useState<SecurityRunTab>("overview");
+export function SecurityRunDetailPage({
+  detail,
+  activeTab: controlledActiveTab,
+  busy = false,
+  controlsPortalId,
+  onRefresh,
+  onCancel,
+  onOpenFinding,
+  onTabChange,
+}: SecurityRunDetailPageProps) {
+  const [internalActiveTab, setInternalActiveTab] =
+    useState<SecurityRunTab>("overview");
+  const activeTab = controlledActiveTab ?? internalActiveTab;
+  const handleTabChange = onTabChange ?? setInternalActiveTab;
   const run = detail.run;
   const cancellable = ["queued", "running", "waiting_approval"].includes(run.status);
   const critical = detail.findings.filter((finding) => finding.severity === "critical").length;
@@ -110,29 +129,87 @@ export function SecurityRunDetailPage({ detail, busy = false, onBack, onRefresh,
   );
 
   return (
-    <SecurityResourceDetailPage<SecurityRunTab>
-      header={<SecurityBackHeader eyebrow="Security run" title={run.repositoryFullName || run.id} description={<span><GitCommitHorizontal width={13} height={13} /> <code>{run.headSha || "commit pending"}</code></span>} onBack={onBack} />}
-      headerActions={<div className="develop-security-inline-actions"><PlatformSecondaryButton size="small" onClick={onRefresh} disabled={busy}>Refresh</PlatformSecondaryButton>{cancellable ? <PlatformPrimaryButton size="small" className="is-destructive" onClick={onCancel} disabled={busy}><Ban width={14} height={14} /> Cancel run</PlatformPrimaryButton> : null}</div>}
-      tabs={RUN_TABS}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      ariaLabel={`Security run ${run.id}`}
-      sidebar={(
-        <PlatformUiCard as="section" variant="sidebar" cardTitle="Run properties">
-          <SecurityPropertyList items={[
-            { label: "Status", value: <SecurityRunStatusLabel status={run.status} /> },
-            { label: "Stage", value: run.stage },
-            { label: "Trigger", value: run.triggerType.replace(/_/g, " ") },
-            { label: "Commit", value: <code title={run.headSha || ""}>{run.headSha?.slice(0, 12) || "Pending"}</code> },
-            { label: "Policy", value: run.policyVersionId?.replace("security_policy_", "") || "—" },
-            { label: "Threat model", value: run.threatModelVersionId?.replace("security_threat_model_", "") || "—" },
-            { label: "Queued", value: formatSecurityTimestamp(run.queuedAt) },
-            { label: "Completed", value: formatSecurityTimestamp(run.completedAt) },
-          ]} />
-        </PlatformUiCard>
-      )}
-    >
-      {content}
-    </SecurityResourceDetailPage>
+    <>
+      <SecurityDetailHeaderActionsPortal portalId={controlsPortalId}>
+        <div className="develop-security-inline-actions">
+          <PlatformSecondaryButton
+            size="small"
+            onClick={onRefresh}
+            disabled={busy}
+          >
+            Refresh
+          </PlatformSecondaryButton>
+          {cancellable ? (
+            <PlatformPrimaryButton
+              size="small"
+              className="is-destructive"
+              onClick={onCancel}
+              disabled={busy}
+            >
+              <Ban width={14} height={14} /> Cancel run
+            </PlatformPrimaryButton>
+          ) : null}
+        </div>
+      </SecurityDetailHeaderActionsPortal>
+      <SecurityResourceDetailPage<SecurityRunTab>
+        tabs={[]}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        ariaLabel={`Security run ${run.id}`}
+        sidebar={
+          <PlatformUiCard
+            as="section"
+            variant="sidebar"
+            className="playground-project-overview-sidebar-card playground-server-detail-properties-card playground-security-agent-detail-properties-card"
+          >
+            <SecurityPropertyList
+              variant="sidebar"
+              items={[
+                {
+                  label: "Status",
+                  value: <SecurityRunStatusLabel status={run.status} />,
+                },
+                { label: "Stage", value: run.stage },
+                {
+                  label: "Trigger",
+                  value: run.triggerType.replace(/_/g, " "),
+                },
+                {
+                  label: "Commit",
+                  value: (
+                    <code title={run.headSha || ""}>
+                      {run.headSha?.slice(0, 12) || "Pending"}
+                    </code>
+                  ),
+                },
+                {
+                  label: "Policy",
+                  value:
+                    run.policyVersionId?.replace("security_policy_", "") || "—",
+                },
+                {
+                  label: "Threat model",
+                  value:
+                    run.threatModelVersionId?.replace(
+                      "security_threat_model_",
+                      "",
+                    ) || "—",
+                },
+                {
+                  label: "Queued",
+                  value: formatSecurityTimestamp(run.queuedAt),
+                },
+                {
+                  label: "Completed",
+                  value: formatSecurityTimestamp(run.completedAt),
+                },
+              ]}
+            />
+          </PlatformUiCard>
+        }
+      >
+        {content}
+      </SecurityResourceDetailPage>
+    </>
   );
 }

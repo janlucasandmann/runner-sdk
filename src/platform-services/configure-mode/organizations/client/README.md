@@ -8,6 +8,7 @@ This directory contains browser-side public composition and integration for the 
 
 ## Contents
 
+- [`access-control/`](access-control/) — Enterprise identity, approvals, agent delegations, and authorization decision audit for an organization.
 - [`domain/`](domain/) — This directory contains domain contracts, normalization, and pure transformations for the Organizations service in Configure Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
 - [`page/`](page/) — This directory contains page composition and page-local interaction behavior for the Organizations service in Configure Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
 - [`runtime/`](runtime/) — This directory contains stateful runtime orchestration for the Organizations service in Configure Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.

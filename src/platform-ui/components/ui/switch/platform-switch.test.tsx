@@ -56,4 +56,18 @@ describe("PlatformSwitch", () => {
     expect(onValueChange).toHaveBeenCalledWith("squads");
     expect(document.activeElement).toBe(screen.getByRole("radio", { name: "Squads" }));
   });
+
+  it("supports the shared full-width layout variant", () => {
+    const { container } = render(
+      <PlatformSwitch
+        ariaLabel="Agent type"
+        value="agents"
+        options={OPTIONS}
+        onValueChange={() => undefined}
+        fullWidth
+      />
+    );
+
+    expect(container.querySelector(".platform-switch")?.classList.contains("is-full-width")).toBe(true);
+  });
 });

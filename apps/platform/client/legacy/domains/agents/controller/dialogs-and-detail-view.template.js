@@ -1595,6 +1595,48 @@
                 disabled: isTeamAgent || isDefaultAgentConfigurationLocked,
               }
             );
+            const selectedExecutionEngine = PLAYGROUND_AGENT_EXECUTION_ENGINE_OPTIONS.find(
+              (option) => option.id === normalizePlaygroundAgentExecutionEngine(draftAgent.executionEngine)
+            ) || PLAYGROUND_AGENT_EXECUTION_ENGINE_OPTIONS[0];
+            const renderAgentExecutionEngineIcon = (option) => React.createElement("img", {
+                src: option.iconUrl,
+                alt: "",
+                draggable: "false",
+                className: "playground-agents-detail-engine-provider-icon",
+                "aria-hidden": "true",
+              });
+            const renderAgentExecutionEngineSelector = () => React.createElement(PlatformSelector, {
+                value: selectedExecutionEngine.id,
+                options: PLAYGROUND_AGENT_EXECUTION_ENGINE_OPTIONS.map((option) => ({
+                  value: option.id,
+                  label: option.label,
+                  description: option.description,
+                  leading: renderAgentExecutionEngineIcon(option),
+                })),
+                onValueChange: (nextExecutionEngine) => {
+                  updateAgentField(
+                    "executionEngine",
+                    normalizePlaygroundAgentExecutionEngine(nextExecutionEngine)
+                  );
+                },
+                ariaLabel: "Select agent engine",
+                label: React.createElement("span", {
+                    className: "playground-agents-detail-selector-label playground-agents-detail-execution-engine-selector-label",
+                  },
+                  renderAgentExecutionEngineIcon(selectedExecutionEngine),
+                  React.createElement("span", {
+                    className: "playground-agents-detail-selector-label-copy",
+                  }, selectedExecutionEngine.label)
+                ),
+                alignment: "end",
+                popupAlignment: "right",
+                fullWidth: true,
+                disabled: isDefaultAgentConfigurationLocked,
+                popupWidth: 280,
+                className: "playground-tasks-detail-central-selector playground-agents-detail-execution-engine-select-popup",
+                triggerClassName: "playground-tasks-detail-central-selector-trigger playground-agents-detail-execution-engine-select-trigger",
+                popupClassName: "playground-agents-detail-execution-engine-select-menu",
+              });
             const selectedVoiceId = String(draftAgent.voiceId || "eve").trim() || "eve";
             const selectedVoiceOption = PLAYGROUND_VOICE_AGENT_VOICE_OPTIONS.find((option) => option.id === selectedVoiceId);
             const selectedVoiceLabel = selectedVoiceOption?.label || selectedVoiceId;
@@ -2130,6 +2172,15 @@
                 variant: "default",
                 className: "playground-agents-detail-analytics",
                 analytics: agentDetailAnalyticsModel,
+                timeframe: {
+                  value: activeAgentDetailPerformanceRange.id,
+                  options: agentDetailPerformanceRangeOptions.map((option) => ({
+                    value: option.id,
+                    label: option.label,
+                  })),
+                  onValueChange: setAgentDetailPerformanceRange,
+                  ariaLabel: "Agent analytics time frame",
+                },
               }
             );
   
@@ -2221,6 +2272,14 @@
                     {
                       className: "is-model",
                       valueClassName: "playground-agents-detail-about-model-control playground-tasks-detail-central-selector",
+                    }
+                  ),
+                  renderAgentFactRow(
+                    "Engine",
+                    renderAgentExecutionEngineSelector(),
+                    {
+                      className: "is-execution-engine",
+                      valueClassName: "playground-agents-detail-about-execution-engine-control",
                     }
                   ),
                   renderAgentFactRow(
@@ -2781,7 +2840,6 @@
                   key: "agent-insights-threads-" + selectedAgentThreadId,
                   ariaLabel: "Threads for " + (draftAgent.name || "agent"),
                   variant: "minimalistic-ui",
-                  pagination: {},
                   sorting: {
                     value: agentDetailThreadSorting,
                     onChange: setAgentDetailThreadSorting,

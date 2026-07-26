@@ -23,39 +23,6 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
           return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Math.round(numericValue));
         }
 
-        function getProjectOverviewOutcomeReleaseIds(outcome) {
-          if (typeof normalizePlaygroundStrategyOutcomeReleaseIds === "function") {
-            return normalizePlaygroundStrategyOutcomeReleaseIds(outcome);
-          }
-          const next = [];
-          const seen = new Set();
-          const addReleaseId = (releaseId) => {
-            const normalizedReleaseId = String(releaseId || "").trim();
-            if (!normalizedReleaseId || seen.has(normalizedReleaseId)) {
-              return;
-            }
-            seen.add(normalizedReleaseId);
-            next.push(normalizedReleaseId);
-          };
-          const addReleaseIds = (releaseIds) => {
-            if (Array.isArray(releaseIds)) {
-              releaseIds.forEach(addReleaseId);
-              return;
-            }
-            if (typeof releaseIds === "string") {
-              releaseIds
-                .replaceAll(String.fromCharCode(13), "")
-                .split(new RegExp("[" + String.fromCharCode(10) + ",]+"))
-                .forEach(addReleaseId);
-            }
-          };
-          if (outcome && typeof outcome === "object" && !Array.isArray(outcome)) {
-            addReleaseIds(outcome.releaseIds || outcome.release_ids || outcome.milestoneIds || outcome.milestone_ids);
-            addReleaseId(outcome.releaseId || outcome.release_id || outcome.milestoneId || outcome.milestone_id);
-          }
-          return next;
-        }
-
         function getProjectOverviewLocalDayKey(dateLike) {
           const date = dateLike instanceof Date ? new Date(dateLike) : new Date(dateLike);
           if (Number.isNaN(date.getTime())) {
@@ -85,196 +52,6 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
           date.setHours(0, 0, 0, 0);
           date.setDate(1);
           return getProjectOverviewLocalDayKey(date);
-        }
-
-        function getProjectOverviewOutcomeProgressRingValue(value) {
-          const numericValue = Number(value || 0);
-          if (!Number.isFinite(numericValue)) {
-            return 0;
-          }
-          return Math.max(0, Math.min(100, numericValue));
-        }
-
-        function drawProjectOverviewOutcomeProgressRing(canvas, progressValue, ringId = "ring_1") {
-          if (!canvas) {
-            return;
-          }
-          const fallbackSize = typeof PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE === "number"
-            ? PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE
-            : 24;
-          const fallbackLineWidthRatio = typeof PLAYGROUND_PERMISSION_MINI_RING_ICON_LINE_WIDTH === "number"
-            ? PLAYGROUND_PERMISSION_MINI_RING_ICON_LINE_WIDTH / fallbackSize
-            : 1 / 24;
-          const fallbackPaddingRatio = typeof PLAYGROUND_PERMISSION_MINI_RING_ICON_PADDING === "number"
-            ? PLAYGROUND_PERMISSION_MINI_RING_ICON_PADDING / fallbackSize
-            : 2.9 / 24;
-          const startAngle = typeof PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE === "number"
-            ? PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE
-            : -Math.PI / 2 - 0.18;
-          const fullCapStartOffset = typeof PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_START_OFFSET === "number"
-            ? PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_START_OFFSET
-            : -0.18;
-          const fullCapEndOffset = typeof PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_END_OFFSET === "number"
-            ? PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_END_OFFSET
-            : 0.32;
-          const fullCapClipOffset = typeof PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_CLIP_OFFSET === "number"
-            ? PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_CLIP_OFFSET
-            : 0.14;
-          const normalizedRingId = typeof normalizePlaygroundPermissionRingId === "function"
-            ? normalizePlaygroundPermissionRingId(ringId, "ring_1")
-            : "ring_1";
-          const rawProgress = getProjectOverviewOutcomeProgressRingValue(progressValue) / 100;
-          const progress = rawProgress > 0 ? rawProgress : 0.05;
-          const rect = canvas.getBoundingClientRect();
-          const width = Math.max(1, Math.round(rect.width || fallbackSize));
-          const height = Math.max(1, Math.round(rect.height || fallbackSize));
-          const dpr = Math.max(1, window.devicePixelRatio || 1);
-          const targetWidth = Math.round(width * dpr);
-          const targetHeight = Math.round(height * dpr);
-          if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
-            canvas.width = targetWidth;
-            canvas.height = targetHeight;
-          }
-
-          const ctx = canvas.getContext("2d");
-          if (!ctx) {
-            return;
-          }
-
-          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-          ctx.clearRect(0, 0, width, height);
-
-          const size = Math.min(width, height);
-          const centerX = width / 2;
-          const centerY = height / 2;
-          const lineWidth = Math.max(1, size * fallbackLineWidthRatio);
-          const padding = Math.max(2, size * fallbackPaddingRatio);
-          const radius = Math.max(1, size / 2 - lineWidth / 2 - padding);
-          const miniRingGradients = typeof PLAYGROUND_PERMISSION_MINI_RING_ICON_GRADIENTS === "object"
-            ? PLAYGROUND_PERMISSION_MINI_RING_ICON_GRADIENTS
-            : undefined;
-          const makeGradient = (alpha, gradientProgress = Math.max(progress, 0.001)) => {
-            if (typeof createPlaygroundPermissionRingGradient === "function") {
-              return createPlaygroundPermissionRingGradient(ctx, width, height, normalizedRingId, alpha, gradientProgress, miniRingGradients);
-            }
-            const gradient = ctx.createLinearGradient(width / 2, 0, width / 2, height);
-            gradient.addColorStop(0, "rgba(31, 130, 72, " + alpha + ")");
-            gradient.addColorStop(1, "rgba(29, 225, 163, " + alpha + ")");
-            return gradient;
-          };
-          const getStartColor = (alpha = 1) => typeof getPlaygroundPermissionRingStartColor === "function"
-            ? getPlaygroundPermissionRingStartColor(normalizedRingId, alpha)
-            : "rgba(31, 130, 72, " + alpha + ")";
-          const getEndColor = (alpha = 1) => typeof getPlaygroundPermissionRingEndColor === "function"
-            ? getPlaygroundPermissionRingEndColor(normalizedRingId, alpha)
-            : "rgba(29, 225, 163, " + alpha + ")";
-
-          ctx.save();
-          ctx.lineWidth = lineWidth;
-          ctx.strokeStyle = makeGradient(0.1, 1);
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
-
-          if (progress <= 0) {
-            return;
-          }
-
-          const endAngle = startAngle + Math.PI * 2 * Math.min(progress, 1);
-
-          ctx.save();
-          ctx.lineWidth = lineWidth;
-          ctx.strokeStyle = makeGradient(1, progress);
-          ctx.lineCap = "butt";
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-          ctx.stroke();
-          ctx.restore();
-
-          if (progress < 0.999) {
-            const startCapX = centerX + Math.cos(startAngle) * radius;
-            const startCapY = centerY + Math.sin(startAngle) * radius;
-            const endCapX = centerX + Math.cos(endAngle) * radius;
-            const endCapY = centerY + Math.sin(endAngle) * radius;
-
-            ctx.save();
-            ctx.fillStyle = getStartColor(1);
-            ctx.beginPath();
-            ctx.arc(startCapX, startCapY, lineWidth / 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-
-            ctx.save();
-            ctx.fillStyle = getEndColor(1);
-            ctx.beginPath();
-            ctx.arc(endCapX, endCapY, lineWidth / 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            return;
-          }
-
-          const fullCapStartAngle = startAngle + fullCapStartOffset;
-          const fullCapEndAngle = startAngle + fullCapEndOffset;
-          const capClipAngle = startAngle + fullCapClipOffset;
-          const capClipX = centerX + Math.cos(capClipAngle) * radius;
-
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(capClipX + lineWidth * 0.08, 0, width - capClipX, height);
-          ctx.clip();
-          ctx.lineWidth = lineWidth;
-          ctx.lineCap = "round";
-          ctx.strokeStyle = getEndColor(1);
-          ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
-          ctx.shadowBlur = Math.max(3, lineWidth * 0.8);
-          ctx.shadowOffsetX = Math.max(1, lineWidth * 0.24);
-          ctx.shadowOffsetY = Math.max(0.5, lineWidth * 0.14);
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, fullCapStartAngle, fullCapEndAngle);
-          ctx.stroke();
-          ctx.restore();
-
-          ctx.save();
-          ctx.lineWidth = lineWidth;
-          ctx.lineCap = "round";
-          ctx.strokeStyle = getEndColor(1);
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, fullCapStartAngle, fullCapEndAngle);
-          ctx.stroke();
-          ctx.restore();
-        }
-
-        function PlaygroundProjectOverviewOutcomeProgressRing({ progress, label } = {}) {
-          const normalizedProgress = getProjectOverviewOutcomeProgressRingValue(progress);
-          const canvasRef = useRef(null);
-          const iconColor = typeof getPlaygroundPermissionRingIconColor === "function"
-            ? getPlaygroundPermissionRingIconColor("ring_1", 1)
-            : "rgba(29, 225, 163, 1)";
-
-          useEffect(() => {
-            const redraw = () => drawProjectOverviewOutcomeProgressRing(canvasRef.current, normalizedProgress, "ring_1");
-            redraw();
-            window.addEventListener("resize", redraw);
-            return () => window.removeEventListener("resize", redraw);
-          }, [normalizedProgress]);
-
-          return React.createElement("span", {
-              className: "playground-project-overview-outcome-progress-ring"
-                + (normalizedProgress >= 100 ? " is-complete" : normalizedProgress > 0 ? " is-active" : " is-empty"),
-              role: "img",
-              "aria-label": label || ("Outcome progress " + Math.round(normalizedProgress) + "%"),
-              style: {
-                "--permission-mini-ring-icon-color": iconColor,
-              },
-            },
-            React.createElement("canvas", {
-              ref: canvasRef,
-              className: "playground-project-overview-outcome-progress-ring-canvas",
-            }),
-            React.createElement(Award, { strokeWidth: 2.35 })
-          );
         }
 
         function PlaygroundProjectOverviewResponsiveSvg({ frameClassName, frameHeight, svgHeight, fallbackWidth = 960, ariaLabel, renderOverlay, children }) {
@@ -748,6 +525,9 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
           }
 
           const normalizedSelectedProjectId = String(selectedProjectId || selectedProject.id || "").trim();
+          if (String(selectedProject.id || "").trim() !== normalizedSelectedProjectId) {
+            return null;
+          }
           const projectOverviewDraft = projectDraft?.id === normalizedSelectedProjectId
             ? projectDraft
             : selectedProject;
@@ -767,7 +547,9 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
             || (String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim()
               ? "Mission Control has generated a strategy snapshot for the current project state."
               : "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.");
-          const normalizedProjectOverviewHomeTab = projectOverviewHomeTab === "rules" ? "strategy" : projectOverviewHomeTab;
+          const normalizedProjectOverviewHomeTab = projectOverviewHomeTab === "rules" || projectOverviewHomeTab === "strategy"
+            ? "general"
+            : projectOverviewHomeTab;
           const projectOverviewSettingsMetadata = projectOverviewDraft?.metadata && typeof projectOverviewDraft.metadata === "object" && !Array.isArray(projectOverviewDraft.metadata)
             ? projectOverviewDraft.metadata
             : {};
@@ -869,7 +651,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
 	          );
           const hasReducedProjectSettingsAccess = Boolean(!canManageProjectAccess && hasReducedProjectRole);
           const canViewProjectSettings = canManageProjectAccess || hasReducedProjectSettingsAccess;
-	          const activeProjectOverviewHomeTab = normalizedProjectOverviewHomeTab === "resources" || normalizedProjectOverviewHomeTab === "strategy" || (canViewProjectSettings && normalizedProjectOverviewHomeTab === "permissions")
+	          const activeProjectOverviewHomeTab = normalizedProjectOverviewHomeTab === "resources" || (canViewProjectSettings && normalizedProjectOverviewHomeTab === "permissions")
 		            ? normalizedProjectOverviewHomeTab
 		            : "general";
           function restoreProjectOverviewSidebarAfterPermissionClose() {
@@ -915,7 +697,6 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
           }
           function handleProjectOverviewHomeTabChange(nextTabId) {
             const normalizedTabId = nextTabId === "resources"
-              || nextTabId === "strategy"
               || (canViewProjectSettings && nextTabId === "permissions")
                 ? nextTabId
                 : "general";
@@ -1119,8 +900,13 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
           const maxProjectDailyCt = Math.max(...projectThreadTimeline.map((bucket) => bucket.totalCT), 1);
           const projectTotalCt = projectThreadTimeline.reduce((sum, bucket) => sum + bucket.totalCT, 0);
           const projectHasCostData = projectThreadTimeline.some((bucket) => bucket.totalCT > 0);
-          const allOverviewResourceItems = Array.isArray(projectOverviewServerResourcesState?.items)
+          const allOverviewResourceItems = String(projectOverviewServerResourcesState?.projectId || "").trim() === normalizedSelectedProjectId
+            && Array.isArray(projectOverviewServerResourcesState?.items)
             ? projectOverviewServerResourcesState.items
+            : [];
+          const scopedProjectOverviewFileActivityItems = String(projectOverviewFileActivityState?.projectId || "").trim() === normalizedSelectedProjectId
+            && Array.isArray(projectOverviewFileActivityState?.items)
+            ? projectOverviewFileActivityState.items
             : [];
           const overviewResourceItems = allOverviewResourceItems
             .filter((item) => !normalizedSearchQuery || String(item?.searchText || "").includes(normalizedSearchQuery));
@@ -1335,7 +1121,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                 path,
               });
             });
-            (projectOverviewFileActivityState?.items || []).forEach((item, index) => {
+            scopedProjectOverviewFileActivityItems.forEach((item, index) => {
               const path = normalizeHistoryPath(item?.path || item?.sourcePath || item?.workspacePath || "");
               const title = String(item?.title || item?.filename || getHistoryPathName(path) || "Untitled file").trim();
               const type = classifyProjectOverviewFileResource(item);
@@ -1404,7 +1190,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
           }
           const allOverviewProjectFileCount = (() => {
             const next = new Set();
-            (projectOverviewFileActivityState?.items || []).forEach((item) => {
+            scopedProjectOverviewFileActivityItems.forEach((item) => {
               const key = String(item?.path || item?.title || item?.id || "").trim();
               if (key) {
                 next.add(key);
@@ -1533,7 +1319,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
               }
               total += readProjectOverviewFileByteSize(record);
             }
-            (projectOverviewFileActivityState?.items || []).forEach((item, index) => addRecord(item, "activity:" + index));
+            scopedProjectOverviewFileActivityItems.forEach((item, index) => addRecord(item, "activity:" + index));
             overviewProjectAttachments.forEach((attachment, index) => addRecord(attachment, "attachment:" + index));
             return total;
           })();
@@ -1675,7 +1461,23 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                 ? compareThreadsByRecent(left, right)
                 : String(right?.updatedAt || right?.createdAt || "").localeCompare(String(left?.updatedAt || left?.createdAt || ""));
             });
-          const visibleProjectThreads = projectOverviewFilteredThreads.slice(0, Math.max(5, Number(projectOverviewVisibleThreadCount) || 5));
+          const projectOverviewThreadPageSize = Math.max(
+            1,
+            Number(projectOverviewThreadPagination?.pageSize) || 5
+          );
+          const projectOverviewThreadPageCount = Math.max(
+            1,
+            Math.ceil(projectOverviewFilteredThreads.length / projectOverviewThreadPageSize)
+          );
+          const projectOverviewThreadPageIndex = Math.min(
+            projectOverviewThreadPageCount - 1,
+            Math.max(0, Number(projectOverviewThreadPagination?.pageIndex) || 0)
+          );
+          const projectOverviewThreadPageStart = projectOverviewThreadPageIndex * projectOverviewThreadPageSize;
+          const visibleProjectThreads = projectOverviewFilteredThreads.slice(
+            projectOverviewThreadPageStart,
+            projectOverviewThreadPageStart + projectOverviewThreadPageSize
+          );
           const visibleProjectThreadIds = visibleProjectThreads
             .map((thread) => {
               const safeThread = typeof normalizeThreadItem === "function" ? normalizeThreadItem(thread) : thread;
@@ -1702,7 +1504,11 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
               return next;
             });
           };
-          const toggleVisibleProjectOverviewThreadSelection = () => {
+          const toggleVisibleProjectOverviewThreadSelection = (nextSelectedIds) => {
+            if (nextSelectedIds instanceof Set || Array.isArray(nextSelectedIds)) {
+              setSelectedProjectOverviewThreadIds(new Set(nextSelectedIds));
+              return;
+            }
             if (!visibleProjectThreadIds.length || typeof setSelectedProjectOverviewThreadIds !== "function") {
               return;
             }
@@ -1716,7 +1522,6 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
               return next;
             });
           };
-          const hasMoreProjectThreads = projectOverviewFilteredThreads.length > visibleProjectThreads.length;
           const hasProjectOverviewThreadListFilters = Boolean(
             normalizedSearchQuery
             || normalizedProjectOverviewThreadSearch
@@ -1733,7 +1538,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
             }
             return "modified";
           };
-          const filteredProjectFileActivityItems = (projectOverviewFileActivityState?.items || [])
+          const filteredProjectFileActivityItems = scopedProjectOverviewFileActivityItems
             .filter((item) => {
               if (!normalizedSearchQuery) {
                 return true;
@@ -1793,7 +1598,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
             const seen = new Set();
             const imageExtensions = /\.(avif|bmp|gif|jpe?g|png|svg|webp)$/i;
             const videoExtensions = /\.(m4v|mkv|mov|mp4|webm)$/i;
-            return (projectOverviewFileActivityState?.items || [])
+            return scopedProjectOverviewFileActivityItems
               .filter((item) => {
                 const candidate = [
                   item?.mimeType,

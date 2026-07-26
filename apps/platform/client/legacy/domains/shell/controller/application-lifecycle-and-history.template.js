@@ -1,6 +1,6 @@
   ${SETTINGS_MODAL_PAGE_SCRIPT}
   
-  ${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.setup}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.identityAndBilling}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.overview}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.members}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.resources}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.rolesAndView}
+  ${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.setup}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.identityAndBilling}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.identityAccess}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.overview}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.members}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.resources}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.rolesAndView}
   ${TEAMS_PAGE_SCRIPT_FRAGMENTS.setup}${TEAMS_PAGE_SCRIPT_FRAGMENTS.overview}${TEAMS_PAGE_SCRIPT_FRAGMENTS.members}${TEAMS_PAGE_SCRIPT_FRAGMENTS.resourcesFoundation}${IMAGINE_APP_SCRIPT_FRAGMENTS.teamResourceNavigation}
   
   ${TEAMS_PAGE_SCRIPT_FRAGMENTS.resourcesView}${TEAMS_PAGE_SCRIPT_FRAGMENTS.rolesAndView}
@@ -115,6 +115,9 @@
           useEffect(() => {
             if (!hasRealAccess) {
               setRealProjects([]);
+              return;
+            }
+            if (activePage === "tasks" || activePage === "calendar") {
               return;
             }
             const delayMs = activePage === "resources" && resourcesView === "servers" && resourcesServerKind === "database"
@@ -1113,6 +1116,14 @@
               : resourcesView;
           const activeResourcesServerKind = activeResourcesView === "servers" ? resourcesServerKind : "";
           const isResourcesPage = activePage === "resources" || activePage === "agents" || activePage === "environments";
+          const isSourceDeployableCodeContentRoute = Boolean(
+            isResourcesPage
+            && activeResourcesView === "servers"
+            && ["function", "web_app"].includes(activeResourcesServerKind)
+            && resourcesHeaderState.mode === "detail"
+            && resourcesHeaderState.resourceType === "server"
+            && resourcesHeaderState.activeSection === "code"
+          );
           const hasGuardrailsVersionsDrawerSlot = activePage === "guardrails";
           const hasEvaluationsVersionsDrawerSlot = activePage === "evaluations";
           const hasSecurityVersionsDrawerSlot = activePage === "develop-security";
@@ -1240,7 +1251,7 @@
               };
             }
   
-  ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyCapture}${MODELS_APP_SCRIPT_FRAGMENTS.historyCapture}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyCapture}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyCapture}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyCapture}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyCapture}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyCapture}
+  ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyCapture}${MODELS_APP_SCRIPT_FRAGMENTS.historyCapture}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyCapture}${TESTS_APP_SCRIPT_FRAGMENTS.historyCapture}${ASSURANCE_APP_SCRIPT_FRAGMENTS.historyCapture}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyCapture}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyCapture}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyCapture}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyCapture}
   ${INFERENCE_APP_SCRIPT_FRAGMENTS.historyCapture}
             return {
               page: activePage || "thread",
@@ -1249,12 +1260,14 @@
             activePage,
             activeResourcesServerKind,
             activeResourcesView,
+            assurancePageMode,
             contentMode,
             configureHomeTab,
             currentThreadId,
             environmentId,
             evaluationsPageMode,
             fineTuningPageMode,
+            testsPageMode,
             filesPageTopNav?.contentMode,
             filesPageTopNav?.environmentId,
             filesPageTopNav?.path,
@@ -1277,11 +1290,19 @@
             resourcesHeaderState.resourceType,
             resourceTemplateSelectedId,
             resourceTemplateTypeFilter,
+            selectedAssurancePolicyId,
+            selectedAssurancePolicyName,
+            selectedAssuranceRunId,
+            selectedAssuranceRunName,
             selectedPluginId,
             selectedGuardrailSetId,
             selectedEvaluationRunId,
             selectedEvaluationSetId,
             selectedFineTuningJobId,
+            selectedTestPlanId,
+            selectedTestPlanName,
+            selectedTestRunId,
+            selectedTestRunName,
             settingsSelectedTriggerId,
             settingsSection,
             tasksHeaderState.detailMode,
@@ -1348,6 +1369,7 @@
                 projectId: entry.projectId || "",
                 view: requestedView,
                 taskId: entry.taskId || "",
+                taskDetailMode: entry.detailMode === "task" ? "screen" : "",
                 missionControlAction: entry.detailMode === "mission-control" ? "open" : "",
                 projectComposerAction: "",
               });
@@ -1468,8 +1490,9 @@
               return;
             }
   
-  ${MODELS_APP_SCRIPT_FRAGMENTS.historyRestore}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyRestore}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyRestore}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyRestore}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyRestore}${API_KEYS_APP_SCRIPT_FRAGMENTS.historyRestore}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyRestore}
+  ${MODELS_APP_SCRIPT_FRAGMENTS.historyRestore}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyRestore}${TESTS_APP_SCRIPT_FRAGMENTS.historyRestore}${ASSURANCE_APP_SCRIPT_FRAGMENTS.historyRestore}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyRestore}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyRestore}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyRestore}${API_KEYS_APP_SCRIPT_FRAGMENTS.historyRestore}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyRestore}
   ${SECURITY_APP_SCRIPT_FRAGMENTS.historyRestore}
+  ${EVIDENCE_AGENTS_APP_SCRIPT_FRAGMENTS.historyRestore}
   ${INFERENCE_APP_SCRIPT_FRAGMENTS.historyRestore}
   ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyRestore}
             setActivePage(entry.page || "thread");
@@ -1577,7 +1600,7 @@
   ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.selectedTitle}          if (activePage === "models") {
               return "Models";
             }
-  ${MARKETPLACE_APP_SCRIPT_FRAGMENTS.selectedTitle}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.selectedTitle}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.selectedTitle}${API_KEYS_APP_SCRIPT_FRAGMENTS.selectedTitle}${SECURITY_APP_SCRIPT_FRAGMENTS.selectedTitle}          if (isResourcesPage) {
+  ${MARKETPLACE_APP_SCRIPT_FRAGMENTS.selectedTitle}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.selectedTitle}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.selectedTitle}${API_KEYS_APP_SCRIPT_FRAGMENTS.selectedTitle}${SECURITY_APP_SCRIPT_FRAGMENTS.selectedTitle}${EVIDENCE_AGENTS_APP_SCRIPT_FRAGMENTS.selectedTitle}          if (isResourcesPage) {
               return "Resources";
             }
             if (activePage === "tasks") {
@@ -1805,29 +1828,16 @@
   
             return ensurePlaygroundComposerDefaultChoices(nextAgents);
           }, [hasRealAccess, realAgents, runtimeAgentsForComposer]);
-          const closeComposerAgentUpgradeModal = useCallback(() => {
-            if (composerAgentUpgradeCheckoutLoading) {
-              return;
-            }
-            setComposerAgentUpgradeModalOpen(false);
-          }, [composerAgentUpgradeCheckoutLoading]);
-          const handleComposerAgentUpgradeCheckout = useCallback(async () => {
-            if (composerAgentUpgradeCheckoutLoading) {
-              return;
-            }
-            setComposerAgentUpgradeCheckoutLoading(true);
-            try {
-              await Promise.resolve(handleSettingsSubscribe("builder"));
-            } finally {
-              setComposerAgentUpgradeCheckoutLoading(false);
-            }
-          }, [composerAgentUpgradeCheckoutLoading]);
           const isComposerAgentSelectionBlocked = useCallback((agent) => {
             return isFreeComposerAgentPlan && isPlaygroundFreePlanLockedComposerAgent(agent);
           }, [isFreeComposerAgentPlan]);
           const handleBlockedComposerAgentSelect = useCallback(() => {
-            setComposerAgentUpgradeCheckoutLoading(false);
-            setComposerAgentUpgradeModalOpen(true);
+            requestPlatformPlanGate({
+              entitlement: "agents.custom.create",
+              requiredPlan: "builder",
+              featureName: "additional and custom agents",
+              source: "composer",
+            });
           }, []);
           const openAgentDetailsInResources = useCallback((nextAgentId, options = {}) => {
             const normalizedAgentId = String(nextAgentId || "").trim();
@@ -1937,27 +1947,84 @@
           const cachedSelectedThreadProjectRecord = selectedThreadProjectId
             ? (threadProjectRecordsById[selectedThreadProjectId] || null)
             : null;
+          const listedSelectedThreadProjectRecord = selectedThreadProjectId
+            ? (Array.isArray(realProjects) ? realProjects : [])
+                .find((project) => String(project?.id || "").trim() === selectedThreadProjectId) || null
+            : null;
           const selectedThreadProjectRecord = useMemo(() => {
             if (!selectedThreadProjectId) {
               return null;
             }
-            if (cachedSelectedThreadProjectRecord?.id === selectedThreadProjectId) {
-              return cachedSelectedThreadProjectRecord;
-            }
-            if (welcomeWidgetProject?.id === selectedThreadProjectId) {
-              return welcomeWidgetProject;
-            }
-            return null;
-          }, [cachedSelectedThreadProjectRecord, selectedThreadProjectId, welcomeWidgetProject]);
-  	        const selectedThreadProjectName = useMemo(() => {
-  	          return String(
-  	            selectedThreadProjectRecord?.name
+            const welcomeProjectRecord = welcomeWidgetProject?.id === selectedThreadProjectId
+              ? welcomeWidgetProject
+              : null;
+            const cachedProjectRecord = cachedSelectedThreadProjectRecord?.id === selectedThreadProjectId
+              ? cachedSelectedThreadProjectRecord
+              : null;
+            const listedProjectRecord = listedSelectedThreadProjectRecord?.id === selectedThreadProjectId
+              ? listedSelectedThreadProjectRecord
+              : null;
+            return mergePlaygroundProjectRecords(
+              listedProjectRecord,
+              mergePlaygroundProjectRecords(cachedProjectRecord, welcomeProjectRecord)
+            );
+          }, [cachedSelectedThreadProjectRecord, listedSelectedThreadProjectRecord, selectedThreadProjectId, welcomeWidgetProject]);
+          const selectedThreadProjectName = useMemo(() => {
+            return String(
+              selectedThreadProjectRecord?.name
               || selectedThreadCachedProjectContext?.projectName
               || rawSelectedThreadMissionControlMetadata?.projectName
               || selectedThreadTaskPreview?.projectName
-  	            || ""
-  	          ).trim();
-  	        }, [rawSelectedThreadMissionControlMetadata?.projectName, selectedThreadCachedProjectContext?.projectName, selectedThreadProjectRecord?.name, selectedThreadTaskPreview?.projectName]);
+              || selectedKnownThread?.projectName
+              || ""
+            ).trim();
+          }, [rawSelectedThreadMissionControlMetadata?.projectName, selectedKnownThread?.projectName, selectedThreadCachedProjectContext?.projectName, selectedThreadProjectRecord?.name, selectedThreadTaskPreview?.projectName]);
+          const selectedThreadProjectMetadata = selectedThreadProjectRecord?.metadata
+            && typeof selectedThreadProjectRecord.metadata === "object"
+            && !Array.isArray(selectedThreadProjectRecord.metadata)
+              ? selectedThreadProjectRecord.metadata
+              : {};
+          const selectedThreadProjectIconConfig = useMemo(() => getPlaygroundProjectIconConfig(
+            resolvePlaygroundProjectIconId(
+              selectedThreadProjectRecord,
+              selectedThreadTaskPreview?.projectIcon,
+              rawSelectedThreadMissionControlMetadata?.projectIcon,
+              selectedKnownThread?.projectIcon,
+              selectedThreadCachedProjectContext?.projectIcon
+            )
+          ), [
+            rawSelectedThreadMissionControlMetadata?.projectIcon,
+            selectedKnownThread?.projectIcon,
+            selectedThreadCachedProjectContext?.projectIcon,
+            selectedThreadProjectRecord,
+            selectedThreadTaskPreview?.projectIcon,
+          ]);
+          const selectedThreadProjectColor = String(
+            selectedThreadProjectRecord?.color
+            || selectedThreadProjectMetadata.color
+            || selectedThreadTaskPreview?.projectColor
+            || rawSelectedThreadMissionControlMetadata?.projectColor
+            || selectedKnownThread?.projectColor
+            || selectedThreadCachedProjectContext?.projectColor
+            || ""
+          ).trim();
+          const selectedThreadTaskTicketNumber = selectedThreadTaskPreview?.taskId && !selectedThreadTaskPreview?.isDeleted
+            ? formatPlaygroundProjectTicketNumber(
+                selectedThreadProjectRecord || {
+                  id: selectedThreadProjectId,
+                  name: selectedThreadProjectName,
+                },
+                selectedThreadTaskPreview.ticketNumber
+                  || selectedThreadTaskPreview?.metadata?.ticketNumber
+                  || ""
+              )
+            : "";
+          const selectedThreadTaskType = normalizePlaygroundTaskType(
+            selectedThreadTaskPreview?.taskType
+            || selectedThreadTaskPreview?.type
+            || selectedThreadTaskPreview?.metadata?.taskType
+            || "task"
+          );
   	        const selectedThreadProjectContextPrompt = useMemo(() => {
   	          const previewTaskId = typeof selectedThreadTaskPreview?.taskId === "string"
   	            ? selectedThreadTaskPreview.taskId.trim()
@@ -2534,7 +2601,7 @@
   	              projectRecord,
   	              ticketNumbersById,
   	            });
-              const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(taskToLaunch.id) + "/start-thread", {
+              const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(taskToLaunch.id) + "/run-thread", {
                 method: "POST",
                 headers: {
                   ...authRequestHeaders,
@@ -2542,6 +2609,11 @@
                 },
                 body: JSON.stringify({
                   title: taskPreview.ticketNumber + " " + taskPreview.title,
+                  executionMode: "deferred",
+                  idempotencyKey: "project-task-" + String(taskToLaunch.id || "") + "-" + (
+                    globalThis.crypto?.randomUUID?.()
+                    || Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)
+                  ),
                   environmentId: launchEnvironmentId || undefined,
                   agentId: taskToLaunch.assigneeAgentId || undefined,
                   enabledSkills: enabledSkillsPayload,
@@ -2551,6 +2623,17 @@
                   runKind: "implementation",
                   allowAdditionalThread: true,
                   taskPreview,
+                  metadata: {
+                    triggerKind: "manual",
+                    source: "project_task",
+                    runKind: "implementation",
+                    runnerPlayground: {
+                      enabledSkills: enabledSkillsPayload,
+                      githubRepo: githubRepo || undefined,
+                      connectors: launchConnectors,
+                      taskPreview,
+                    },
+                  },
                 }),
               });
               const data = await response.json().catch(() => ({}));
@@ -2769,27 +2852,72 @@
             if (!taskId || !projectId) {
               return;
             }
+            const directProjectRecord = selectedThreadProjectRecord?.id === projectId
+              ? selectedThreadProjectRecord
+              : {
+                  id: projectId,
+                  name: selectedThreadProjectName || "Project",
+                  icon: selectedThreadProjectIconConfig?.id || "",
+                  color: selectedThreadProjectColor || "",
+                };
+            const directTaskRecord = {
+              ...(selectedThreadTaskPreview && typeof selectedThreadTaskPreview === "object"
+                ? selectedThreadTaskPreview
+                : {}),
+              id: taskId,
+              projectId,
+              ticketNumber: selectedThreadTaskPreview?.ticketNumber || "",
+              title: selectedThreadTaskPreview?.title || "Untitled Task",
+              taskType: selectedThreadTaskType,
+            };
             if (threadId) {
               setThreadProjectContextById((current) => ({
                 ...current,
                 [threadId]: {
+                  ...(current[threadId] || {}),
                   projectId,
                   projectName: String(selectedThreadTaskPreview?.projectName || selectedThreadProjectName || current[threadId]?.projectName || "").trim(),
+                  projectIcon: String(selectedThreadProjectIconConfig?.id || current[threadId]?.projectIcon || "").trim(),
+                  projectColor: String(selectedThreadProjectColor || current[threadId]?.projectColor || "").trim(),
                 },
               }));
             }
+            setLatestInteractedProjectId(projectId);
             setThreadNavMenuOpen(false);
-            setThreadTaskOpenRequest({
+            setThreadTaskOpenRequest(null);
+            setTasksHeaderState({
+              mode: "project",
+              title: selectedThreadProjectName || directProjectRecord.name || "Project",
+              icon: selectedThreadProjectIconConfig?.id || directProjectRecord.icon || "",
+              color: selectedThreadProjectColor || directProjectRecord.color || "",
+              view: "overview",
+              extraActions: null,
               projectId,
               taskId,
-              threadId,
-              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              ticketNumber: selectedThreadTaskTicketNumber,
+              taskType: selectedThreadTaskType,
+              detailMode: "task",
             });
+            setTasksPageNavigationRequest({
+              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              projectId,
+              taskId,
+              view: "overview",
+              taskDetailMode: "screen",
+              projectRecord: directProjectRecord,
+              taskRecord: directTaskRecord,
+            });
+            setActivePage("tasks");
           }, [
             activeRunnerThreadId,
             currentThreadId,
             selectedThreadProjectId,
+            selectedThreadProjectColor,
+            selectedThreadProjectIconConfig,
             selectedThreadProjectName,
+            selectedThreadProjectRecord,
+            selectedThreadTaskTicketNumber,
+            selectedThreadTaskType,
             selectedThreadTaskPreview,
           ]);
           const openSelectedThreadProject = useCallback(() => {
@@ -2797,18 +2925,47 @@
             if (!projectId) {
               return;
             }
+            const directProjectRecord = selectedThreadProjectRecord?.id === projectId
+              ? selectedThreadProjectRecord
+              : {
+                  id: projectId,
+                  name: selectedThreadProjectName || "Project",
+                  icon: selectedThreadProjectIconConfig?.id || "",
+                  color: selectedThreadProjectColor || "",
+                };
             setLatestInteractedProjectId(projectId);
             setThreadNavMenuOpen(false);
             setThreadTaskOpenRequest(null);
+            setTasksHeaderState({
+              mode: "project",
+              title: selectedThreadProjectName || directProjectRecord.name || "Project",
+              icon: selectedThreadProjectIconConfig?.id || directProjectRecord.icon || "",
+              color: selectedThreadProjectColor || directProjectRecord.color || "",
+              view: "overview",
+              extraActions: null,
+              projectId,
+              taskId: "",
+              ticketNumber: "",
+              taskType: "",
+              detailMode: "",
+            });
             setTasksPageNavigationRequest({
               token: Date.now().toString(36) + Math.random().toString(36).slice(2),
               projectId,
               view: "overview",
               missionControlAction: "",
               projectComposerAction: "",
+              projectRecord: directProjectRecord,
             });
             setActivePage("tasks");
-          }, [selectedThreadProjectId, selectedThreadTaskPreview?.projectId]);
+          }, [
+            selectedThreadProjectColor,
+            selectedThreadProjectIconConfig,
+            selectedThreadProjectId,
+            selectedThreadProjectName,
+            selectedThreadProjectRecord,
+            selectedThreadTaskPreview?.projectId,
+          ]);
           const selectedThreadShellBackground = useMemo(() => {
             return "";
           }, []);
@@ -2821,11 +2978,10 @@
               || rawSelectedThreadMissionControlMetadata.projectName
               || "Project"
             ).trim() || "Project";
-            const projectIconConfig = getPlaygroundProjectIconConfig(
-              selectedThreadProjectRecord?.icon
-              || rawSelectedThreadMissionControlMetadata.projectIcon
-              || ""
-            );
+            const projectIconConfig = getPlaygroundProjectIconConfig(resolvePlaygroundProjectIconId(
+              selectedThreadProjectRecord,
+              rawSelectedThreadMissionControlMetadata.projectIcon
+            ));
             const ProjectIcon = projectIconConfig.icon;
             return {
               prompt: String(rawSelectedThreadMissionControlMetadata.userPrompt || "").trim(),
@@ -2871,12 +3027,16 @@
               || rawSelectedThreadTaskPreview?.projectName
               || ""
             ).trim();
+            const nextProjectIcon = String(selectedThreadProjectIconConfig?.id || "").trim();
+            const nextProjectColor = String(selectedThreadProjectColor || "").trim();
             setThreadProjectContextById((current) => {
               const existingContext = current[normalizedThreadId];
               if (
                 existingContext
                 && existingContext.projectId === normalizedProjectId
                 && String(existingContext.projectName || "").trim() === nextProjectName
+                && String(existingContext.projectIcon || "").trim() === nextProjectIcon
+                && String(existingContext.projectColor || "").trim() === nextProjectColor
               ) {
                 return current;
               }
@@ -2885,6 +3045,8 @@
                 [normalizedThreadId]: {
                   projectId: normalizedProjectId,
                   projectName: nextProjectName,
+                  projectIcon: nextProjectIcon,
+                  projectColor: nextProjectColor,
                 },
               };
             });
@@ -2893,6 +3055,8 @@
             rawSelectedThreadMissionControlMetadata,
             rawSelectedThreadTaskPreview,
             selectedKnownThread,
+            selectedThreadProjectColor,
+            selectedThreadProjectIconConfig,
             selectedThreadProjectRecord,
             selectedThreadTaskPreview,
           ]);
@@ -2901,7 +3065,12 @@
           const isAgentShellContext = isResourcesPage && activeResourcesView === "agents";
   
           useEffect(() => {
-            if (activePage !== "thread" || !hasRealAccess || !selectedThreadProjectId || cachedSelectedThreadProjectRecord?.id === selectedThreadProjectId) {
+            const cachedProjectIdentityIsAuthoritative = cachedSelectedThreadProjectRecord?.id === selectedThreadProjectId
+              && (
+                cachedSelectedThreadProjectRecord.__projectDetailsLoaded === true
+                || hasPlaygroundExplicitProjectIcon(cachedSelectedThreadProjectRecord)
+              );
+            if (activePage !== "thread" || !hasRealAccess || !selectedThreadProjectId || cachedProjectIdentityIsAuthoritative) {
               return undefined;
             }
   
@@ -2927,7 +3096,10 @@
                 }
                 setThreadProjectRecordsById((current) => ({
                   ...current,
-                  [selectedThreadProjectId]: nextProjectRecord,
+                  [selectedThreadProjectId]: mergePlaygroundProjectRecords({
+                    ...nextProjectRecord,
+                    __projectDetailsLoaded: true,
+                  }, current[selectedThreadProjectId]) || nextProjectRecord,
                 }));
               } catch {}
             })();

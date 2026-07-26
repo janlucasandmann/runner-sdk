@@ -9,6 +9,7 @@ This directory contains page composition and page-local interaction behavior for
 ## Contents
 
 - [`overview/`](overview/) — This directory contains overview models, analytics, tables, and page composition for the Organizations service in Configure Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
+- [`identity-access.mjs`](identity-access.mjs) — Legacy-host composition for the centralized organization Identity & Access page.
 - [`identity-and-billing.mjs`](identity-and-billing.mjs) — Focused implementation of Identity And Billing.
 - [`index.mjs`](index.mjs) — Public barrel or composition entry point.
 - [`members.mjs`](members.mjs) — Focused implementation of Members.

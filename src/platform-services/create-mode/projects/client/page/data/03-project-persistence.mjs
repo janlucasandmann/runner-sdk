@@ -16,31 +16,17 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
         }
 
 \${CALENDAR_PROJECTS_PAGE_DATA_FRAGMENTS.loading}
-        function openProjectAgentUpgradeModal() {
+        function requestProjectAgentPlanGate() {
           setTaskDetailPopover("");
           setTaskDetailSelectPopover("");
           setTaskSkillsPopoverOpen(false);
           setProjectSidebarPopover("");
-          setProjectAgentUpgradeModalOpen(true);
-        }
-
-        function closeProjectAgentUpgradeModal() {
-          if (projectAgentUpgradeCheckoutLoading) {
-            return;
-          }
-          setProjectAgentUpgradeModalOpen(false);
-        }
-
-        async function handleProjectAgentUpgradeCheckout() {
-          if (projectAgentUpgradeCheckoutLoading || typeof onUpgradeToIndividual !== "function") {
-            return;
-          }
-          setProjectAgentUpgradeCheckoutLoading(true);
-          try {
-            await Promise.resolve(onUpgradeToIndividual());
-          } finally {
-            setProjectAgentUpgradeCheckoutLoading(false);
-          }
+          requestPlatformPlanGate({
+            entitlement: "agents.custom.create",
+            requiredPlan: "builder",
+            featureName: "additional and custom agents",
+            source: "projects",
+          });
         }
 
 \${CALENDAR_PROJECTS_PAGE_DATA_FRAGMENTS.persistence}
@@ -51,24 +37,23 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
           }));
 
           try {
-            const response = await fetch(backendUrl + "/projects", {
+            const response = await fetch(backendUrl + "/projects?view=overview", {
               method: "GET",
               headers: requestHeaders,
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
+              requestPlatformPlanGateFromResponse(response, data, {
+                entitlement: "projects.use",
+                requiredPlan: "builder",
+                featureName: "projects",
+                source: "projects",
+              });
               throw new Error(data?.message || data?.error || "Projects API unavailable.");
             }
 
-            const baseProjects = sortPlaygroundProjectsByRecent(
-              parsePlaygroundProjectListResponse(data).map((project) => applyProjectLocalNameOverride(project))
-            );
             const nextProjects = sortPlaygroundProjectsByRecent(
-              await resolvePlaygroundTeamSharedProjects({
-                backendUrl,
-                headers: requestHeaders,
-                projects: baseProjects,
-              })
+              parsePlaygroundProjectListResponse(data).map((project) => applyProjectLocalNameOverride(project))
             ).map((project) => applyProjectLocalNameOverride(project));
             setProjects((current) =>
               sortPlaygroundProjectsByRecent(nextProjects.map((project) => {
@@ -273,24 +258,407 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
           return normalizedItems;
         }
 
-        async function loadProjectWorkspace(projectId) {
-          if (!projectId) {
-            projectWorkspaceLoadTokenRef.current = "";
-            clearProjectWorkspace();
-            return;
+        async function loadProjectWorkGraph(projectId) {
+          const graphResponse = await fetch(
+            backendUrl + "/projects/" + encodeURIComponent(projectId) + "/work-graph",
+            {
+              method: "GET",
+              headers: requestHeaders,
+            }
+          );
+          const graphData = await graphResponse.json().catch(() => ({}));
+          if (graphResponse.ok) {
+            return {
+              response: graphResponse,
+              data: {
+                ...graphData,
+                canonicalWorkGraph: true,
+              },
+            };
           }
 
-          const loadToken = projectId + ":" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+          // Keep mixed-version deployments usable while the canonical work
+          // graph endpoint rolls out. Legacy task data remains the source of
+          // truth until the endpoint is available.
+          if (graphResponse.status === 404) {
+            const tasksResponse = await fetch(backendUrl + buildProjectScopedPath("/tasks", projectId), {
+              method: "GET",
+              headers: requestHeaders,
+            });
+            const tasksData = await tasksResponse.json().catch(() => ({}));
+            return {
+              response: tasksResponse,
+              data: {
+                ...tasksData,
+                tasks: parsePlaygroundTaskListResponse(tasksData),
+                relations: [],
+                agentSessions: [],
+                canonicalWorkGraph: false,
+              },
+            };
+          }
+
+          return {
+            response: graphResponse,
+            data: graphData,
+          };
+        }
+
+        function projectCanonicalWorkRelationsOntoTasks(tasks, relations, isCanonical) {
+          const normalizedTasks = Array.isArray(tasks) ? tasks : [];
+          if (!isCanonical) {
+            return normalizedTasks;
+          }
+          const normalizedRelations = Array.isArray(relations)
+            ? relations.filter((relation) => relation?.sourceTaskId && relation?.targetTaskId)
+            : [];
+          const relationsByTaskId = new Map();
+          const blockerIdsByTaskId = new Map();
+          const parentIdByTaskId = new Map();
+
+          normalizedRelations.forEach((relation) => {
+            const sourceTaskId = String(relation.sourceTaskId || "").trim();
+            const targetTaskId = String(relation.targetTaskId || "").trim();
+            const relationType = String(relation.relationType || "").trim().toLowerCase();
+            if (!sourceTaskId || !targetTaskId || sourceTaskId === targetTaskId) {
+              return;
+            }
+            [sourceTaskId, targetTaskId].forEach((taskId) => {
+              const taskRelations = relationsByTaskId.get(taskId) || [];
+              taskRelations.push(relation);
+              relationsByTaskId.set(taskId, taskRelations);
+            });
+            if (relationType === "blocks") {
+              const blockerIds = blockerIdsByTaskId.get(targetTaskId) || [];
+              blockerIds.push(sourceTaskId);
+              blockerIdsByTaskId.set(targetTaskId, blockerIds);
+            } else if (relationType === "parent_of") {
+              parentIdByTaskId.set(targetTaskId, sourceTaskId);
+            }
+          });
+
+          return normalizedTasks.map((task) => {
+            const taskId = String(task?.id || "").trim();
+            if (!taskId) {
+              return task;
+            }
+            const metadata = task?.metadata && typeof task.metadata === "object"
+              ? { ...task.metadata }
+              : {};
+            const runnerPlayground = metadata.runnerPlayground && typeof metadata.runnerPlayground === "object"
+              ? { ...metadata.runnerPlayground }
+              : {};
+            const parentTaskId = parentIdByTaskId.get(taskId) || "";
+            if (parentTaskId) {
+              runnerPlayground.parentTaskId = parentTaskId;
+              if (String(runnerPlayground.taskType || "").trim().toLowerCase() !== "loop") {
+                runnerPlayground.taskType = "subtask";
+              }
+            }
+            metadata.runnerPlayground = runnerPlayground;
+            return {
+              ...task,
+              dependencyIds: Array.from(new Set(blockerIdsByTaskId.get(taskId) || [])),
+              metadata,
+              workRelations: relationsByTaskId.get(taskId) || [],
+            };
+          });
+        }
+
+        function fetchProjectOverviewTaskActivity(projectId) {
+          const activityRequestTarget = new URL(backendUrl + "/tasks/activity", window.location.origin);
+          activityRequestTarget.searchParams.set("projectId", projectId);
+          activityRequestTarget.searchParams.set("limit", "5");
+          return fetch(activityRequestTarget.toString(), {
+            method: "GET",
+            headers: requestHeaders,
+          })
+            .then(async (response) => ({
+              response,
+              data: await response.json().catch(() => ({})),
+            }))
+            .catch((error) => ({ error }));
+        }
+
+        async function settleProjectOverviewTaskActivity(projectId, nextTasks, loadToken, activityResultPromise) {
+          const activityResult = await activityResultPromise;
+          if (projectWorkspaceLoadTokenRef.current !== loadToken) {
+            return;
+          }
+          if (activityResult?.error) {
+            setProjectOverviewTaskActivityState((current) => ({
+              projectId,
+              status: "error",
+              error: activityResult.error instanceof Error
+                ? activityResult.error.message
+                : "Failed to load project activity.",
+              items: current.projectId === projectId ? current.items : [],
+            }));
+            return;
+          }
+          if (activityResult?.response?.ok) {
+            const activityRows = Array.isArray(activityResult.data?.data)
+              ? activityResult.data.data
+              : Array.isArray(activityResult.data?.items)
+                ? activityResult.data.items
+                : [];
+            setProjectOverviewTaskActivityState({
+              projectId,
+              status: "ready",
+              error: "",
+              items: normalizeProjectOverviewTaskActivityRows(activityRows, nextTasks, projectId),
+            });
+            return;
+          }
+          if (isLegacyProjectTaskActivityRoute(activityResult)) {
+            try {
+              const items = await loadLegacyProjectOverviewTaskActivity(projectId, nextTasks, loadToken);
+              if (!items || projectWorkspaceLoadTokenRef.current !== loadToken) {
+                return;
+              }
+              setProjectOverviewTaskActivityState({
+                projectId,
+                status: "ready",
+                error: "",
+                items,
+              });
+            } catch (error) {
+              if (projectWorkspaceLoadTokenRef.current !== loadToken) {
+                return;
+              }
+              setProjectOverviewTaskActivityState((current) => ({
+                projectId,
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load project activity.",
+                items: current.projectId === projectId ? current.items : [],
+              }));
+            }
+            return;
+          }
+          setProjectOverviewTaskActivityState((current) => ({
+            projectId,
+            status: "error",
+            error: activityResult?.data?.message
+              || activityResult?.data?.error
+              || "Failed to load project activity.",
+            items: current.projectId === projectId ? current.items : [],
+          }));
+        }
+
+        async function loadProjectHome(projectId) {
+          if (!projectId) {
+            projectWorkspaceLoadTokenRef.current = "";
+            projectConfigLoadTokenRef.current = "";
+            clearProjectWorkspace();
+            return false;
+          }
+
+          const loadToken = projectId + ":home:" + Date.now().toString(36) + Math.random().toString(36).slice(2);
           projectWorkspaceLoadTokenRef.current = loadToken;
+          projectConfigLoadTokenRef.current = loadToken;
           setTaskLoadState((current) => ({
             status: "loading",
             error: current.status === "ready" ? "" : current.error,
           }));
-          setProjectOverviewCostSummaryState((current) => ({
-            status: current.status === "ready" ? "loading" : "loading",
+          setProjectOverviewCostSummaryState({
+            status: "idle",
             error: "",
-            summary: current.summary,
+            summary: null,
+          });
+          setProjectOverviewTaskActivityState((current) => ({
+            projectId,
+            status: "loading",
+            error: "",
+            items: current.projectId === projectId ? current.items : [],
           }));
+
+          const activityResultPromise = fetchProjectOverviewTaskActivity(projectId);
+          try {
+            const response = await fetch(
+              backendUrl + "/projects/" + encodeURIComponent(projectId) + "/home",
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              const endpointError = String(data?.message || data?.error || "").trim().toLowerCase();
+              const endpointUnavailable = response.status === 404
+                && (
+                  !data
+                  || typeof data !== "object"
+                  || Object.keys(data).length === 0
+                  || endpointError === "not found"
+                  || endpointError.includes("cannot get")
+                  || endpointError.includes("route not found")
+                );
+              if (endpointUnavailable) {
+                return loadProjectWorkspace(projectId, { loadProjectConfig: true });
+              }
+              throw new Error(data?.message || data?.error || "Project home unavailable.");
+            }
+            if (projectWorkspaceLoadTokenRef.current !== loadToken) {
+              return false;
+            }
+
+            const snapshotProjectRecord = selectedProjectSnapshot
+              || projects.find((project) => project?.id === projectId)
+              || normalizePlaygroundProjectRecord({
+                id: projectId,
+                name: "Project",
+              });
+            const currentDetailProject = selectedProjectDetail?.project?.id === projectId
+              ? selectedProjectDetail.project
+              : null;
+            const fallbackProjectRecord = currentDetailProject
+              ? mergePlaygroundProjectRecords(currentDetailProject, snapshotProjectRecord) || currentDetailProject
+              : snapshotProjectRecord;
+            const projectRecord = getPlaygroundProjectResponseRecord(data, fallbackProjectRecord) || fallbackProjectRecord;
+            const nextSummary = {
+              ...buildEmptyPlaygroundProjectSummary(),
+              ...(data?.summary && typeof data.summary === "object" ? data.summary : {}),
+            };
+            const nextTasks = parsePlaygroundTaskListResponse(data);
+            const parsedReleases = parsePlaygroundTaskReleaseListResponse(data);
+            const nextReleases = enrichPlaygroundTaskReleasesWithLegacyStrategy(parsedReleases, projectRecord);
+            const nextSprints = parsePlaygroundTaskSprintListResponse(data);
+            const nextEnvironments = parsePlaygroundEnvironmentListResponse(data);
+            const nextThreads = Array.isArray(data?.threads)
+              ? data.threads.map(normalizeThreadItem)
+              : [];
+            const nextRecentThreads = Array.isArray(data?.recentThreads)
+              ? data.recentThreads.map(normalizeThreadItem)
+              : nextThreads.slice(0, 10);
+
+            commitLocalProjectRecord({
+              ...projectRecord,
+              summary: nextSummary,
+            }, {
+              summary: nextSummary,
+              environments: nextEnvironments,
+              recentThreads: nextRecentThreads,
+              threads: nextThreads,
+              workRelations: [],
+              agentSessions: [],
+              selectImmediately: true,
+            });
+            setTasks(nextTasks);
+            setReleases(nextReleases);
+            setSprints(nextSprints);
+            syncProjectSummary(projectId, nextTasks, nextSprints, nextReleases, nextSummary);
+            setTaskLoadState({
+              status: "ready",
+              error: "",
+            });
+            void settleProjectOverviewTaskActivity(
+              projectId,
+              nextTasks,
+              loadToken,
+              activityResultPromise
+            );
+            return true;
+          } catch (error) {
+            if (projectWorkspaceLoadTokenRef.current !== loadToken) {
+              return false;
+            }
+            setTaskLoadState({
+              status: "error",
+              error: error instanceof Error ? error.message : "Failed to load project home.",
+            });
+            setProjectOverviewTaskActivityState((current) => ({
+              projectId,
+              status: "error",
+              error: error instanceof Error ? error.message : "Failed to load project activity.",
+              items: current.projectId === projectId ? current.items : [],
+            }));
+            return false;
+          }
+        }
+
+        async function loadProjectOverviewWorkGraph(projectId, loadKey) {
+          try {
+            const workGraphResult = await loadProjectWorkGraph(projectId);
+            if (projectWorkGraphAutoLoadKeyRef.current !== loadKey) {
+              return false;
+            }
+            if (!workGraphResult.response?.ok) {
+              throw new Error(
+                workGraphResult.data?.message
+                || workGraphResult.data?.error
+                || "Project work graph unavailable."
+              );
+            }
+            const graphData = workGraphResult.data || {};
+            const graphTasks = projectCanonicalWorkRelationsOntoTasks(
+              parsePlaygroundTaskListResponse(graphData),
+              graphData?.relations,
+              graphData?.canonicalWorkGraph === true
+            );
+            setTasks(graphTasks);
+            setSelectedProjectDetail((current) => {
+              if (current?.project?.id !== projectId) {
+                return current;
+              }
+              return {
+                ...current,
+                workRelations: Array.isArray(graphData?.relations) ? graphData.relations : [],
+                agentSessions: Array.isArray(graphData?.agentSessions) ? graphData.agentSessions : [],
+              };
+            });
+            return true;
+          } catch (error) {
+            if (projectWorkGraphAutoLoadKeyRef.current === loadKey) {
+              projectWorkGraphAutoLoadKeyRef.current = "";
+            }
+            console.warn("Failed to load project work graph", error);
+            return false;
+          }
+        }
+
+        async function loadProjectWorkspace(projectId, options = {}) {
+          if (!projectId) {
+            projectWorkspaceLoadTokenRef.current = "";
+            projectConfigLoadTokenRef.current = "";
+            clearProjectWorkspace();
+            return false;
+          }
+
+          const loadToken = projectId + ":" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+          projectWorkspaceLoadTokenRef.current = loadToken;
+          const shouldLoadProjectConfig = options?.loadProjectConfig === true;
+          const projectConfigLoadToken = shouldLoadProjectConfig
+            ? [
+                backendUrl,
+                requestHeadersKey,
+                projectId,
+                Date.now().toString(36),
+                Math.random().toString(36).slice(2),
+              ].join("|")
+            : "";
+          if (projectConfigLoadToken) {
+            projectConfigLoadTokenRef.current = projectConfigLoadToken;
+          }
+          const projectDetailPromise = shouldLoadProjectConfig
+            ? fetch(backendUrl + "/projects/" + encodeURIComponent(projectId), {
+                method: "GET",
+                headers: requestHeaders,
+              })
+              .then(async (response) => ({
+                response,
+                data: await response.json().catch(() => ({})),
+              }))
+              .catch((error) => ({ error }))
+            : null;
+          setTaskLoadState((current) => ({
+            status: "loading",
+            error: current.status === "ready" ? "" : current.error,
+          }));
+          setProjectOverviewCostSummaryState({
+            status: "idle",
+            error: "",
+            summary: null,
+          });
           setProjectOverviewTaskActivityState((current) => ({
             projectId,
             status: "loading",
@@ -302,18 +670,10 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             const threadsRequestTarget = new URL(backendUrl + "/threads", window.location.origin);
             threadsRequestTarget.searchParams.set("projectId", projectId);
             threadsRequestTarget.searchParams.set("limit", "500");
-            const costSummaryRequestTarget = new URL(backendUrl + "/costs/summary", window.location.origin);
-            costSummaryRequestTarget.searchParams.set("projectId", projectId);
-            costSummaryRequestTarget.searchParams.set("period", "year");
-            const activityRequestTarget = new URL(backendUrl + "/tasks/activity", window.location.origin);
-            activityRequestTarget.searchParams.set("projectId", projectId);
-            activityRequestTarget.searchParams.set("limit", "5");
+            const activityResultPromise = fetchProjectOverviewTaskActivity(projectId);
 
-            const [tasksResponse, releasesResponse, sprintsResponse, threadsResponse, costSummaryResult, activityResult] = await Promise.all([
-              fetch(backendUrl + buildProjectScopedPath("/tasks", projectId), {
-                method: "GET",
-                headers: requestHeaders,
-              }),
+            const [workGraphResult, releasesResponse, sprintsResponse, threadsResponse] = await Promise.all([
+              loadProjectWorkGraph(projectId),
               fetch(backendUrl + buildProjectScopedPath("/tasks/releases", projectId), {
                 method: "GET",
                 headers: requestHeaders,
@@ -326,27 +686,10 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
                 method: "GET",
                 headers: requestHeaders,
               }),
-              fetch(costSummaryRequestTarget.toString(), {
-                method: "GET",
-                headers: requestHeaders,
-              })
-                .then(async (response) => ({
-                  response,
-                  data: await response.json().catch(() => ({})),
-                }))
-                .catch((error) => ({ error })),
-              fetch(activityRequestTarget.toString(), {
-                method: "GET",
-                headers: requestHeaders,
-              })
-                .then(async (response) => ({
-                  response,
-                  data: await response.json().catch(() => ({})),
-                }))
-                .catch((error) => ({ error })),
             ]);
 
-            const tasksData = await tasksResponse.json().catch(() => ({}));
+            const tasksResponse = workGraphResult.response;
+            const tasksData = workGraphResult.data || {};
             const releasesData = await releasesResponse.json().catch(() => ({}));
             const sprintsData = await sprintsResponse.json().catch(() => ({}));
             const threadsData = await threadsResponse.json().catch(() => ({}));
@@ -362,69 +705,22 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             }
 
             if (projectWorkspaceLoadTokenRef.current !== loadToken) {
-              return;
+              return false;
             }
 
-            const nextTasks = parsePlaygroundTaskListResponse(tasksData);
-            const nextReleases = parsePlaygroundTaskReleaseListResponse(releasesData);
+            const nextTasks = projectCanonicalWorkRelationsOntoTasks(
+              parsePlaygroundTaskListResponse(tasksData),
+              tasksData?.relations,
+              tasksData?.canonicalWorkGraph === true
+            );
+            const parsedReleases = parsePlaygroundTaskReleaseListResponse(releasesData);
             const nextSprints = parsePlaygroundTaskSprintListResponse(sprintsData);
-            if (activityResult?.error) {
-              setProjectOverviewTaskActivityState((current) => ({
-                projectId,
-                status: "error",
-                error: activityResult.error instanceof Error
-                  ? activityResult.error.message
-                  : "Failed to load project activity.",
-                items: current.projectId === projectId ? current.items : [],
-              }));
-            } else if (activityResult?.response?.ok) {
-              const activityRows = Array.isArray(activityResult.data?.data)
-                ? activityResult.data.data
-                : Array.isArray(activityResult.data?.items)
-                  ? activityResult.data.items
-                  : [];
-              setProjectOverviewTaskActivityState({
-                projectId,
-                status: "ready",
-                error: "",
-                items: normalizeProjectOverviewTaskActivityRows(activityRows, nextTasks, projectId),
-              });
-            } else if (isLegacyProjectTaskActivityRoute(activityResult)) {
-              void loadLegacyProjectOverviewTaskActivity(projectId, nextTasks, loadToken)
-                .then((items) => {
-                  if (!items || projectWorkspaceLoadTokenRef.current !== loadToken) {
-                    return;
-                  }
-                  setProjectOverviewTaskActivityState({
-                    projectId,
-                    status: "ready",
-                    error: "",
-                    items,
-                  });
-                })
-                .catch((error) => {
-                  if (projectWorkspaceLoadTokenRef.current !== loadToken) {
-                    return;
-                  }
-                  setProjectOverviewTaskActivityState((current) => ({
-                    projectId,
-                    status: "error",
-                    error: error instanceof Error
-                      ? error.message
-                      : "Failed to load project activity.",
-                    items: current.projectId === projectId ? current.items : [],
-                  }));
-                });
-            } else {
-              setProjectOverviewTaskActivityState((current) => ({
-                projectId,
-                status: "error",
-                error: activityResult?.data?.message
-                  || activityResult?.data?.error
-                  || "Failed to load project activity.",
-                items: current.projectId === projectId ? current.items : [],
-              }));
-            }
+            void settleProjectOverviewTaskActivity(
+              projectId,
+              nextTasks,
+              loadToken,
+              activityResultPromise
+            );
             const currentDetailProject = selectedProjectDetail?.project?.id === projectId
               ? selectedProjectDetail.project
               : null;
@@ -437,6 +733,10 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             const fallbackProjectRecord = currentDetailProject
               ? mergePlaygroundProjectRecords(currentDetailProject, snapshotProjectRecord) || currentDetailProject
               : snapshotProjectRecord;
+            const nextReleases = enrichPlaygroundTaskReleasesWithLegacyStrategy(
+              parsedReleases,
+              fallbackProjectRecord
+            );
             const fallbackSummary = {
               ...buildEmptyPlaygroundProjectSummary(),
               ...(fallbackProjectRecord?.summary && typeof fallbackProjectRecord.summary === "object" ? fallbackProjectRecord.summary : {}),
@@ -449,26 +749,6 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               : Array.isArray(threadsData?.threads)
                 ? threadsData.threads.map(normalizeThreadItem)
                 : [];
-            if (costSummaryResult?.error) {
-              setProjectOverviewCostSummaryState({
-                status: "error",
-                error: costSummaryResult.error instanceof Error ? costSummaryResult.error.message : "Failed to load project cost summary.",
-                summary: null,
-              });
-            } else if (costSummaryResult?.response?.ok) {
-              setProjectOverviewCostSummaryState({
-                status: "ready",
-                error: "",
-                summary: normalizeProjectCostSummaryResponse(costSummaryResult.data || {}),
-              });
-            } else {
-              setProjectOverviewCostSummaryState({
-                status: "error",
-                error: costSummaryResult?.data?.message || costSummaryResult?.data?.error || "Failed to load project cost summary.",
-                summary: null,
-              });
-            }
-
             commitLocalProjectRecord({
               ...fallbackProjectRecord,
               summary: fallbackSummary,
@@ -477,6 +757,8 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               environments: fallbackEnvironments,
               recentThreads: nextThreads.slice(0, 10),
               threads: nextThreads,
+              workRelations: Array.isArray(tasksData?.relations) ? tasksData.relations : [],
+              agentSessions: Array.isArray(tasksData?.agentSessions) ? tasksData.agentSessions : [],
               selectImmediately: true,
             });
 
@@ -489,57 +771,55 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               error: "",
             });
 
-            const projectDetailPromise = fetch(backendUrl + "/projects/" + encodeURIComponent(projectId), {
-                method: "GET",
-                headers: requestHeaders,
-              })
-              .then(async (response) => ({
-                response,
-                data: await response.json().catch(() => ({})),
-              }))
-              .catch((error) => ({ error }));
+            if (projectDetailPromise) {
+              void projectDetailPromise.then((projectResult) => {
+                if (projectConfigLoadTokenRef.current !== projectConfigLoadToken) {
+                  return;
+                }
+                if (projectResult?.error) {
+                  console.warn("Failed to load project config", projectResult.error);
+                  return;
+                }
+                const projectResponse = projectResult?.response;
+                const projectData = projectResult?.data || {};
+                if (!projectResponse?.ok) {
+                  console.warn("Failed to load project config", projectData?.message || projectData?.error || projectResponse?.status);
+                  return;
+                }
 
-            void projectDetailPromise.then((projectResult) => {
-              if (projectWorkspaceLoadTokenRef.current !== loadToken) {
-                return;
-              }
-              if (projectResult?.error) {
-                console.warn("Failed to refresh project detail", projectResult.error);
-                return;
-              }
-              const projectResponse = projectResult?.response;
-              const projectData = projectResult?.data || {};
-              if (!projectResponse?.ok) {
-                console.warn("Failed to refresh project detail", projectData?.message || projectData?.error || projectResponse?.status);
-                return;
-              }
+                const projectRecord = getPlaygroundProjectResponseRecord(projectData, fallbackProjectRecord) || fallbackProjectRecord;
+                const nextSummary = {
+                  ...buildEmptyPlaygroundProjectSummary(),
+                  ...(projectData?.summary && typeof projectData.summary === "object" ? projectData.summary : {}),
+                };
+                const parsedEnvironments = parsePlaygroundEnvironmentListResponse(projectData);
+                const nextEnvironments = parsedEnvironments.length > 0 ? parsedEnvironments : fallbackEnvironments;
+                const nextRecentThreads = Array.isArray(projectData?.recentThreads)
+                  ? projectData.recentThreads.map(normalizeThreadItem)
+                  : nextThreads.slice(0, 10);
+                const enrichedReleases = enrichPlaygroundTaskReleasesWithLegacyStrategy(
+                  nextReleases,
+                  projectRecord
+                );
 
-              const projectRecord = getPlaygroundProjectResponseRecord(projectData, fallbackProjectRecord) || fallbackProjectRecord;
-              const nextSummary = {
-                ...buildEmptyPlaygroundProjectSummary(),
-                ...(projectData?.summary && typeof projectData.summary === "object" ? projectData.summary : {}),
-              };
-              const parsedEnvironments = parsePlaygroundEnvironmentListResponse(projectData);
-              const nextEnvironments = parsedEnvironments.length > 0 ? parsedEnvironments : fallbackEnvironments;
-              const nextRecentThreads = Array.isArray(projectData?.recentThreads)
-                ? projectData.recentThreads.map(normalizeThreadItem)
-                : nextThreads.slice(0, 10);
-
-              commitLocalProjectRecord({
-                ...projectRecord,
-                summary: nextSummary,
-              }, {
-                summary: nextSummary,
-                environments: nextEnvironments,
-                recentThreads: nextRecentThreads,
-                threads: nextThreads,
-                selectImmediately: true,
+                commitLocalProjectRecord({
+                  ...projectRecord,
+                  summary: nextSummary,
+                }, {
+                  summary: nextSummary,
+                  environments: nextEnvironments,
+                  recentThreads: nextRecentThreads,
+                  threads: nextThreads,
+                  selectImmediately: true,
+                });
+                setReleases(enrichedReleases);
+                syncProjectSummary(projectId, nextTasks, nextSprints, enrichedReleases, nextSummary);
               });
-              syncProjectSummary(projectId, nextTasks, nextSprints, nextReleases, nextSummary);
-            });
+            }
+            return true;
           } catch (error) {
             if (projectWorkspaceLoadTokenRef.current !== loadToken) {
-              return;
+              return false;
             }
             setTaskLoadState({
               status: "error",
@@ -551,6 +831,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               error: error instanceof Error ? error.message : "Failed to load project activity.",
               items: current.projectId === projectId ? current.items : [],
             }));
+            return false;
           }
         }
 
@@ -608,7 +889,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
         }, [selectedProjectId]);
 
         useEffect(() => {
-          setProjectOverviewActivityTab("activity");
+          setProjectOverviewActivityTab("threads");
         }, [selectedProjectId]);
 
 	        useEffect(() => {
@@ -672,14 +953,6 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               window.cancelAnimationFrame(projectRuleComposerFrameRef.current);
               projectRuleComposerFrameRef.current = null;
             }
-            if (projectOverviewOutcomeEditorCloseTimerRef.current) {
-              window.clearTimeout(projectOverviewOutcomeEditorCloseTimerRef.current);
-              projectOverviewOutcomeEditorCloseTimerRef.current = null;
-            }
-            if (projectOverviewOutcomeEditorFrameRef.current) {
-              window.cancelAnimationFrame(projectOverviewOutcomeEditorFrameRef.current);
-              projectOverviewOutcomeEditorFrameRef.current = null;
-            }
             if (issueComposerCloseTimerRef.current) {
               window.clearTimeout(issueComposerCloseTimerRef.current);
               issueComposerCloseTimerRef.current = null;
@@ -696,18 +969,6 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 
           function handleProjectComposerEscape(event) {
             if (event.key !== "Escape") return;
-            if (projectOverviewOutcomeEditorState) {
-              if (projectOverviewOutcomeMilestonePickerOpen) {
-                setProjectOverviewOutcomeMilestonePickerOpen(false);
-                return;
-              }
-              closeProjectOverviewOutcomeEditor();
-              return;
-            }
-            if (missionControlSetupOutcomeMenuIndex >= 0) {
-              setMissionControlSetupOutcomeMenuIndex(-1);
-              return;
-            }
             if (missionControlSetupOpen) {
               closeMissionControlSetupModal();
               return;
@@ -733,7 +994,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 
           window.addEventListener("keydown", handleProjectComposerEscape);
           return () => window.removeEventListener("keydown", handleProjectComposerEscape);
-        }, [missionControlSetupClosing, missionControlSetupOpen, missionControlSetupOutcomeMenuIndex, projectBlueprintPickerOpen, projectComposerEnvironmentPopoverOpen, projectComposerOpen, projectEnvironmentFilePickerOpen, projectIconPickerOpen, projectOverviewOutcomeEditorState, projectOverviewOutcomeMilestonePickerOpen]);
+        }, [missionControlSetupClosing, missionControlSetupOpen, projectBlueprintPickerOpen, projectComposerEnvironmentPopoverOpen, projectComposerOpen, projectEnvironmentFilePickerOpen, projectIconPickerOpen]);
 
         useEffect(() => {
           if (!issueComposerOpen) return undefined;
@@ -843,23 +1104,6 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
           document.addEventListener("mousedown", handleProjectComposerEnvironmentPopoverPointerDown);
           return () => document.removeEventListener("mousedown", handleProjectComposerEnvironmentPopoverPointerDown);
         }, [projectComposerEnvironmentPopoverOpen]);
-
-        useEffect(() => {
-          if (missionControlSetupOutcomeMenuIndex < 0) {
-            return undefined;
-          }
-
-          function handleMissionControlOutcomeMenuPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !missionControlSetupOutcomeMenuRef.current || missionControlSetupOutcomeMenuRef.current.contains(target)) {
-              return;
-            }
-            setMissionControlSetupOutcomeMenuIndex(-1);
-          }
-
-          document.addEventListener("mousedown", handleMissionControlOutcomeMenuPointerDown);
-          return () => document.removeEventListener("mousedown", handleMissionControlOutcomeMenuPointerDown);
-        }, [missionControlSetupOutcomeMenuIndex]);
 
         useEffect(() => {
           if (!projectBlueprintPickerOpen) {
@@ -1041,27 +1285,67 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 	        useEffect(() => {
 	          if (isStandaloneCalendarMode) {
 	            projectWorkspaceAutoLoadKeyRef.current = "";
+	            projectWorkGraphAutoLoadKeyRef.current = "";
+	            projectConfigLoadTokenRef.current = "";
 	            clearProjectWorkspace({ preserveSchedule: true });
 	            return;
 	          }
 	          if (!selectedProjectId) {
 	            projectWorkspaceAutoLoadKeyRef.current = "";
+	            projectWorkGraphAutoLoadKeyRef.current = "";
+	            projectConfigLoadTokenRef.current = "";
 	            clearProjectWorkspace();
+	            return;
+	          }
+	          const workspaceMode = taskView === "overview" ? "home" : "workspace";
+	          const loadKey = [
+	            backendUrl,
+	            requestHeadersKey,
+	            selectedProjectId,
+	            workspaceMode,
+	          ].join("|");
+	          if (projectWorkspaceAutoLoadKeyRef.current === loadKey) {
+	            return;
+	          }
+	          projectWorkspaceAutoLoadKeyRef.current = loadKey;
+	          const loadPromise = workspaceMode === "home"
+	            ? loadProjectHome(selectedProjectId)
+	            : loadProjectWorkspace(selectedProjectId, {
+	                loadProjectConfig: selectedProjectDetail?.project?.id !== selectedProjectId,
+	              });
+	          void Promise.resolve(loadPromise).then((loaded) => {
+	            if (!loaded && projectWorkspaceAutoLoadKeyRef.current === loadKey) {
+	              projectWorkspaceAutoLoadKeyRef.current = "";
+	            }
+	          });
+	        }, [backendUrl, isStandaloneCalendarMode, requestHeadersKey, selectedProjectId, taskView]);
+
+	        useEffect(() => {
+	          if (
+	            !selectedProjectId
+	            || taskView !== "overview"
+	            || projectOverviewActivityTab !== "graph"
+	          ) {
 	            return;
 	          }
 	          const loadKey = [
 	            backendUrl,
 	            requestHeadersKey,
 	            selectedProjectId,
+	            "work-graph",
 	          ].join("|");
-	          if (projectWorkspaceAutoLoadKeyRef.current === loadKey) {
+	          if (projectWorkGraphAutoLoadKeyRef.current === loadKey) {
 	            return;
 	          }
-	          projectWorkspaceAutoLoadKeyRef.current = loadKey;
-	          void loadProjectWorkspace(selectedProjectId);
-	        }, [backendUrl, isStandaloneCalendarMode, requestHeadersKey, selectedProjectId]);
+	          projectWorkGraphAutoLoadKeyRef.current = loadKey;
+	          void loadProjectOverviewWorkGraph(selectedProjectId, loadKey);
+	        }, [backendUrl, projectOverviewActivityTab, requestHeadersKey, selectedProjectId, taskView]);
 
 	        useEffect(() => {
+            if (!isCalendarContext) {
+              projectSchedulesAutoLoadKeyRef.current = "";
+              return;
+            }
             const scheduleProjectId = isStandaloneCalendarMode ? "" : selectedProjectId;
 	          if (!scheduleProjectId && !isStandaloneCalendarMode) {
 	            projectSchedulesAutoLoadKeyRef.current = "";
@@ -1083,9 +1367,13 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 	          }
 	          projectSchedulesAutoLoadKeyRef.current = loadKey;
 	          void loadProjectSchedules(scheduleProjectId, visibleScheduleCalendarRange);
-	        }, [backendUrl, isStandaloneCalendarMode, requestHeadersKey, selectedProjectId, visibleScheduleCalendarRange, visibleScheduleCalendarRangeKey]);
+	        }, [backendUrl, isCalendarContext, isStandaloneCalendarMode, requestHeadersKey, selectedProjectId, visibleScheduleCalendarRange, visibleScheduleCalendarRangeKey]);
 
 	        useEffect(() => {
+            if (!isCalendarContext) {
+              projectMetronomeSchedulesAutoLoadKeyRef.current = "";
+              return;
+            }
             const scheduleProjectId = isStandaloneCalendarMode ? "" : selectedProjectId;
 	          if (!scheduleProjectId && !isStandaloneCalendarMode) {
 	            projectMetronomeSchedulesAutoLoadKeyRef.current = "";

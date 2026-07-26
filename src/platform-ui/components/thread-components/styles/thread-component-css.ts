@@ -1176,10 +1176,26 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .platform-button-selector {
+  --platform-button-selector-popup-trigger-width: 28px;
   position: relative;
   display: inline-flex;
   min-width: 0;
   transition: opacity 160ms ease;
+}
+
+.platform-button-selector.is-full-width,
+.platform-button-selector.is-full-width .platform-button-selector__group {
+  width: 100%;
+}
+
+.platform-button-selector.is-full-width
+  .platform-button-selector__action.platform-button {
+  flex: 1 1 auto;
+  padding-right: var(--platform-button-padding-inline) !important;
+  padding-left: calc(
+    var(--platform-button-padding-inline) +
+      var(--platform-button-selector-popup-trigger-width)
+  ) !important;
 }
 
 .platform-button-selector.is-disabled {
@@ -1197,20 +1213,26 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   gap: 0;
 }
 
-.platform-button-selector__group.is-secondary .platform-button-selector__action.platform-button {
+.platform-button-selector__group.is-secondary
+  .platform-button-selector__action.platform-button {
   padding-right: var(--platform-button-padding-inline) !important;
   border-right: 0 !important;
 }
 
-.platform-button-selector__group.is-secondary .platform-button-selector__popup-trigger.platform-button {
+.platform-button-selector__group.is-secondary
+  .platform-button-selector__popup-trigger.platform-button {
   border-left: 0 !important;
 }
 
-.platform-button-selector:not(.is-disabled) .platform-button-selector__group.is-primary:hover > .platform-button {
+.platform-button-selector:not(.is-disabled)
+  .platform-button-selector__group.is-primary:hover
+  > .platform-button {
   background: rgba(255, 255, 255, 0.9) !important;
 }
 
-.platform-button-selector:not(.is-disabled) .platform-button-selector__group.is-secondary:hover > .platform-button {
+.platform-button-selector:not(.is-disabled)
+  .platform-button-selector__group.is-secondary:hover
+  > .platform-button {
   background: rgba(255, 255, 255, 0.06) !important;
   color: #fff !important;
 }
@@ -1245,9 +1267,10 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   border-radius: 8px 0 0 8px !important;
 }
 
-.platform-button-selector .platform-button-selector__popup-trigger.platform-button {
-  width: 28px;
-  min-width: 28px;
+.platform-button-selector
+  .platform-button-selector__popup-trigger.platform-button {
+  width: var(--platform-button-selector-popup-trigger-width);
+  min-width: var(--platform-button-selector-popup-trigger-width);
   padding: 0 !important;
   border-radius: 0 8px 8px 0 !important;
 }
@@ -1267,7 +1290,8 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   background: rgba(0, 0, 0, 0.18);
 }
 
-.platform-button-selector.is-primary.is-disabled .platform-button-selector__divider {
+.platform-button-selector.is-primary.is-disabled
+  .platform-button-selector__divider {
   background: rgba(0, 0, 0, 0.12);
 }
 
@@ -1422,6 +1446,16 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.1);
   line-height: 1rem;
+}
+
+.platform-switch.is-full-width {
+  width: 100%;
+  min-width: 0;
+}
+
+.platform-switch.is-full-width .platform-switch__option {
+  min-width: 0;
+  flex: 1 1 0;
 }
 
 .platform-switch__option {

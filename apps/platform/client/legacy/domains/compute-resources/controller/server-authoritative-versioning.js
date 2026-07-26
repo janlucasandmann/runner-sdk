@@ -239,6 +239,17 @@
             );
           }
 
+          async function unpublishAuthoritativeServerVersionApi(serverId, versionId) {
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!normalizedVersionId) throw new Error("Missing resource version.");
+            return normalizePlaygroundServerRecord(
+              await serverVersionApiClient.unpublishServerVersion({
+                ...getServerVersionApiOptions(serverId),
+                versionId: normalizedVersionId,
+              })
+            );
+          }
+
           async function deleteAuthoritativeServerVersionApi(serverId, versionId) {
             const normalizedVersionId = String(versionId || "").trim();
             if (!normalizedVersionId) throw new Error("Missing resource version.");
@@ -528,6 +539,9 @@
                 : options.errorMessage || "Failed to save resource version.";
               setServerSaveState({ isSaving: false, error: errorMessage, message: "" });
               setServerVersionState({ status: "error", message: "", error: errorMessage });
+              if (typeof options.onError === "function") {
+                options.onError(errorMessage, error);
+              }
               return null;
             }
           }
@@ -719,6 +733,141 @@
               }),
               preferredSelectedId: targetVersion.id,
             });
+          }
+
+          async function decommissionActiveSourceServerDeployment() {
+            const serverId = String(draftServer?.id || "").trim();
+            const normalizedServerKind = canonicalizePlaygroundServerKind(draftServer?.kind);
+            const resourceLabel = formatPlaygroundServerKindLabel(normalizedServerKind).toLowerCase();
+            if (
+              !draftServer
+              || !["function", "web_app"].includes(normalizedServerKind)
+              || !serverId
+              || serverId === PLAYGROUND_SERVER_DRAFT_ID
+              || serverSaveState.isSaving
+              || serverVersionState.status === "loading"
+              || serverDeploymentState.isDeploying
+              || serverDeploymentState.isDecommissioning
+              || serverDeploymentState.isInvoking
+            ) {
+              return;
+            }
+
+            if (hasDraftServerVersionChanges()) {
+              const errorMessage = "Save or revert the current changes before decommissioning this " + resourceLabel + ".";
+              setServerVersionState({ status: "error", message: "", error: errorMessage });
+              setServerDeploymentState({
+                isDeploying: false,
+                isDecommissioning: false,
+                isInvoking: false,
+                error: errorMessage,
+                message: "",
+                lastResponseText: "",
+                deployProgress: 0,
+              });
+              return;
+            }
+
+            let activeVersion = getDraftServerActiveVersion();
+            if (!activeVersion?.id) {
+              try {
+                const versions = await fetchServerVersionsApi(serverId);
+                activeVersion = versions.find((version) => (
+                  String(version?.status || "").trim().toLowerCase() === "active"
+                  || String(version?.lifecycleState || version?.lifecycle_state || "")
+                    .trim()
+                    .toLowerCase() === "published"
+                )) || null;
+              } catch (error) {
+                const errorMessage = error instanceof Error
+                  ? error.message
+                  : "Failed to inspect the active " + resourceLabel + " deployment.";
+                setServerVersionState({ status: "error", message: "", error: errorMessage });
+                setServerDeploymentState({
+                  isDeploying: false,
+                  isDecommissioning: false,
+                  isInvoking: false,
+                  error: errorMessage,
+                  message: "",
+                  lastResponseText: "",
+                  deployProgress: 0,
+                });
+                return;
+              }
+            }
+
+            if (!activeVersion?.id) {
+              const errorMessage = "This " + resourceLabel + " does not have an active deployment.";
+              setServerVersionState({ status: "error", message: "", error: errorMessage });
+              setServerDeploymentState({
+                isDeploying: false,
+                isDecommissioning: false,
+                isInvoking: false,
+                error: errorMessage,
+                message: "",
+                lastResponseText: "",
+                deployProgress: 0,
+              });
+              return;
+            }
+
+            if (!window.confirm(
+              "Decommission this " + resourceLabel + "? The live deployment will be removed, while its source files and version history will be kept."
+            )) {
+              return;
+            }
+
+            setServerDeploymentStatusDismissed(false);
+            setServerDeploymentState({
+              isDeploying: false,
+              isDecommissioning: true,
+              isInvoking: false,
+              error: "",
+              message: "Decommissioning " + resourceLabel + "...",
+              lastResponseText: "",
+              deployProgress: 0,
+            });
+
+            const decommissionedServer = await runAuthoritativeServerVersionMutation({
+              serverId,
+              loadingMessage: "Decommissioning " + resourceLabel + "...",
+              errorMessage: "Failed to decommission " + resourceLabel + ".",
+              mutate: async () => ({
+                server: await unpublishAuthoritativeServerVersionApi(
+                  serverId,
+                  activeVersion.id
+                ),
+              }),
+              preferredSelectedId: activeVersion.id,
+              onError: (errorMessage) => {
+                setServerDeploymentState({
+                  isDeploying: false,
+                  isDecommissioning: false,
+                  isInvoking: false,
+                  error: errorMessage,
+                  message: "",
+                  lastResponseText: "",
+                  deployProgress: 0,
+                });
+              },
+            });
+            if (!decommissionedServer) {
+              return;
+            }
+
+            setServerDeploymentState({
+              isDeploying: false,
+              isDecommissioning: false,
+              isInvoking: false,
+              error: "",
+              message: formatPlaygroundServerKindLabel(normalizedServerKind) + " decommissioned",
+              lastResponseText: "",
+              deployProgress: 0,
+            });
+            void loadServerContext(serverId, { force: true });
+            void loadServerAnalytics(serverId, { force: true });
+            void loadServerDeployments(serverId, { force: true });
+            void loadServerLogs(serverId, "deployment", { force: true });
           }
 
           async function deleteAuthoritativeServerVersion(versionId) {

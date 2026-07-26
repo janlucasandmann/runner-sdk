@@ -1,4 +1,7 @@
 import { createApiKeysService } from "../../../src/platform-services/develop-mode/api-keys/index.mjs";
+import { createAgentRuntimeService } from "../../../src/platform-services/develop-mode/agent-runtime/index.mjs";
+import { createAssuranceService } from "../../../src/platform-services/configure-mode/assurance/index.mjs";
+import { createEvidenceAgentsService } from "../../../src/platform-services/develop-mode/evidence-agents/index.mjs";
 import { createSecurityService } from "../../../src/platform-services/develop-mode/security/index.mjs";
 import { createCalendarService } from "../../../src/platform-services/create-mode/calendar/index.mjs";
 import { createConfigureHomeService } from "../../../src/platform-services/configure-mode/configure-home/index.mjs";
@@ -14,6 +17,7 @@ import { createModelsService } from "../../../src/platform-services/configure-mo
 import { createOrganizationsService } from "../../../src/platform-services/configure-mode/organizations/index.mjs";
 import { createProjectsService } from "../../../src/platform-services/create-mode/projects/index.mjs";
 import { createTeamsService } from "../../../src/platform-services/configure-mode/teams/index.mjs";
+import { createTestsService } from "../../../src/platform-services/configure-mode/tests/index.mjs";
 
 import { createSystemSkillSourceService } from "./system-skill-sources.mjs";
 
@@ -21,6 +25,7 @@ export function createPlatformServices({
   gateway,
   playgroundSystemSkillsRoot,
   port,
+  executionDispatcherEnabled = false,
 }) {
   const {
     fetchAiosApi,
@@ -66,6 +71,7 @@ export function createPlatformServices({
     fetchAiosCloud,
     enrichThreadPayloadWithAgentGuardrails,
     proxyUpstreamJsonRequest,
+    durableExecutionEnabled: executionDispatcherEnabled,
   });
 
   const fineTuningService = createFineTuningService({
@@ -78,12 +84,30 @@ export function createPlatformServices({
     fetchAiosApi,
     fetchAiosCloud,
     enrichThreadPayloadWithAgentGuardrails,
+    evaluationRuns: evaluationsService.runs,
+  });
+
+  const testsService = createTestsService({
+    fetchAiosApi,
+    fetchAiosCloud,
+    hasAiosSession,
+    parseUpstreamUrl,
+    proxyUpstreamJsonRequest,
+    readOptionalApiKey,
+    withProxyOrganizationHeader,
   });
 
   const services = {
+    agentRuntimeService: createAgentRuntimeService({
+      proxyUpstreamGet,
+      proxyUpstreamJsonRequest,
+    }),
     apiKeysService: createApiKeysService({
       proxyAiosJsonRequest,
       proxyUpstreamGet,
+    }),
+    assuranceService: createAssuranceService({
+      proxyUpstreamJsonRequest,
     }),
     calendarService: createCalendarService({
       proxyUpstreamGet,
@@ -93,6 +117,10 @@ export function createPlatformServices({
       proxyUpstreamGet,
     }),
     evaluationsService,
+    evidenceAgentsService: createEvidenceAgentsService({
+      proxyUpstreamGet,
+      proxyUpstreamJsonRequest,
+    }),
     filesService: createFilesService({
       fetchAiosApi,
       fetchAiosCloud,
@@ -166,6 +194,7 @@ export function createPlatformServices({
       readRequestBody,
       sendJson,
     }),
+    testsService,
   };
 
   return Object.freeze(services);

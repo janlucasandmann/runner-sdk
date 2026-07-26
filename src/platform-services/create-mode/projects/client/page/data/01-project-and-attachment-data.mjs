@@ -638,6 +638,11 @@ export const PROJECTS_DATA_01_FRAGMENT = `        function buildProjectScopedPat
 
         function updateProjectDescriptionDraftValue(nextValue, options = {}) {
           const normalizedNextValue = String(nextValue ?? "");
+          const draftProjectId = String(selectedProjectId || projectDraft?.id || selectedProject?.id || "").trim();
+          if (draftProjectId) {
+            projectDescriptionDirtyProjectIdRef.current = draftProjectId;
+          }
+          projectDescriptionRevisionRef.current += 1;
           if (options.recordHistory !== false) {
             const previousValue = String(options.previousValue ?? projectDraft?.description ?? "");
             if (previousValue !== normalizedNextValue) {
@@ -650,10 +655,28 @@ export const PROJECTS_DATA_01_FRAGMENT = `        function buildProjectScopedPat
               }));
             }
           }
-          setProjectDraft((current) => ({
-            ...(current && typeof current === "object" ? current : buildPlaygroundDefaultProjectDraft()),
-            description: normalizedNextValue,
-          }));
+          setProjectDraft((current) => {
+            const currentProject = current
+              && typeof current === "object"
+              && (!draftProjectId || current.id === draftProjectId)
+                ? current
+                : selectedProject?.id === draftProjectId
+                  ? normalizePlaygroundProjectRecord(selectedProject)
+                  : {
+                      ...buildPlaygroundDefaultProjectDraft(),
+                      ...(draftProjectId ? { id: draftProjectId } : {}),
+                    };
+            return {
+              ...currentProject,
+              description: normalizedNextValue,
+              metadata: {
+                ...(currentProject.metadata && typeof currentProject.metadata === "object" && !Array.isArray(currentProject.metadata)
+                  ? currentProject.metadata
+                  : {}),
+                description: normalizedNextValue,
+              },
+            };
+          });
         }
 
         function focusProjectDescriptionTextareaAtEnd(value) {

@@ -13,6 +13,10 @@ Keep service ownership boundaries consistent with the modules under Create mode.
   notification center.
 - [`evaluations/`](evaluations/) — Evaluation sets, cases, versions, and runs.
 - [`fine-tuning/`](fine-tuning/) — Fine-tuning jobs and publication workflow.
+- [`tests/`](tests/) — Versioned engineering test plans, durable runs, and
+  execution evidence.
+- [`assurance/`](assurance/) — Versioned release policies that bind canonical
+  Test, Evaluation, and Agent Optimization evidence into auditable decisions.
 - [`guardrails/`](guardrails/) — Versioned guardrail policy and Agent
   integration.
 - [`inference/`](inference/) — Customer-managed inference endpoints and local

@@ -7,6 +7,7 @@ export type DevelopServerDetailTab = "usage" | "code" | "logs" | "history" | "se
 
 export interface DevelopServerDetailPageProps<TTab extends string = DevelopServerDetailTab> {
   header?: ReactNode;
+  headerActions?: ReactNode;
   tabs?: readonly PlatformDetailTab<TTab>[];
   tabBarActions?: ReactNode;
   sidebarToggle?: ReactNode;
@@ -18,9 +19,14 @@ export interface DevelopServerDetailPageProps<TTab extends string = DevelopServe
   sidebarAutoCollapseTabs?: readonly TTab[];
   sidebarPopoverOpen?: boolean;
   ariaLabel?: string;
+  tabAriaLabel?: string;
   sidebarAriaLabel?: string;
   className?: string;
+  headerClassName?: string;
+  tabBarClassName?: string;
+  tabBarActionsClassName?: string;
   contentClassName?: string;
+  sidebarClassName?: string;
 }
 
 const DEVELOP_SERVER_DETAIL_TABS = [
@@ -35,6 +41,7 @@ const DEVELOP_SERVER_SIDEBAR_AUTO_COLLAPSE_TABS: readonly DevelopServerDetailTab
 
 export function DevelopServerDetailPage<TTab extends string = DevelopServerDetailTab>({
   header,
+  headerActions,
   tabs,
   tabBarActions,
   sidebarToggle,
@@ -46,9 +53,14 @@ export function DevelopServerDetailPage<TTab extends string = DevelopServerDetai
   sidebarAutoCollapseTabs,
   sidebarPopoverOpen = false,
   ariaLabel = "Develop resource details",
+  tabAriaLabel = "Resource sections",
   sidebarAriaLabel = "Develop resource properties",
   className = "",
+  headerClassName = "",
+  tabBarClassName = "",
+  tabBarActionsClassName = "",
   contentClassName = "",
+  sidebarClassName = "",
 }: DevelopServerDetailPageProps<TTab>) {
   const resolvedTabs = (tabs ?? DEVELOP_SERVER_DETAIL_TABS) as readonly PlatformDetailTab<TTab>[];
   const resolvedSidebarAutoCollapseTabs = sidebarAutoCollapseTabs
@@ -58,6 +70,7 @@ export function DevelopServerDetailPage<TTab extends string = DevelopServerDetai
   return (
     <ResourceDetailPage<TTab>
       header={header}
+      headerActions={headerActions}
       tabs={resolvedTabs}
       activeTab={activeTab}
       onTabChange={onTabChange}
@@ -67,13 +80,14 @@ export function DevelopServerDetailPage<TTab extends string = DevelopServerDetai
       sidebarCollapsed={sidebarCollapsed}
       sidebarAutoCollapseTabs={resolvedSidebarAutoCollapseTabs}
       ariaLabel={ariaLabel}
-      tabAriaLabel="Resource sections"
+      tabAriaLabel={tabAriaLabel}
       sidebarAriaLabel={sidebarAriaLabel}
       className={`playground-server-detail-page${isCodeTab ? " is-code-tab" : ""}${className ? ` ${className}` : ""}`}
-      tabBarClassName="playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs"
-      tabBarActionsClassName="playground-agents-detail-tab-actions playground-server-detail-tab-actions"
+      headerClassName={headerClassName}
+      tabBarClassName={`playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs${tabBarClassName ? ` ${tabBarClassName}` : ""}`}
+      tabBarActionsClassName={`playground-agents-detail-tab-actions playground-server-detail-tab-actions${tabBarActionsClassName ? ` ${tabBarActionsClassName}` : ""}`}
       contentClassName={`playground-server-detail-page__content${isCodeTab ? " is-code-tab" : ""}${contentClassName ? ` ${contentClassName}` : ""}`}
-      sidebarClassName={`playground-project-overview-sidebar playground-agents-detail-sidebar playground-server-detail-sidebar${sidebarPopoverOpen ? " is-popover-open" : ""}`}
+      sidebarClassName={`playground-project-overview-sidebar playground-agents-detail-sidebar playground-server-detail-sidebar${sidebarPopoverOpen ? " is-popover-open" : ""}${sidebarClassName ? ` ${sidebarClassName}` : ""}`}
     >
       {children}
     </ResourceDetailPage>

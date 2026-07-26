@@ -205,7 +205,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_VERIFICATION_SCRIPT = String.raw`      
             instructions: String(instructions || ""),
             verifyAfter: true,
             threadId: "",
-            threadTitle: "Fine-Tune · " + normalizePlaygroundFineTuningString(targetAgent?.name || targetAgent?.label || targetAgent?.title || "Agent"),
+            threadTitle: "Agent Optimization · " + normalizePlaygroundFineTuningString(targetAgent?.name || targetAgent?.label || targetAgent?.title || "Agent"),
             beforeScore,
             afterScore: 0,
             improvementScore: 0,
@@ -221,7 +221,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_VERIFICATION_SCRIPT = String.raw`      
             createdAgentVersion: {
               id: "",
               version: getFineTuningNextAgentVersionNumber(targetAgent),
-              label: "Fine-Tuned Version",
+              label: "Optimized Version",
               status: "pending",
               snapshot: null,
               createdAt: nowIso,
@@ -285,15 +285,15 @@ export const FINE_TUNING_PAGE_CONTROLLER_VERIFICATION_SCRIPT = String.raw`      
               job: buildPlaygroundFineTuningJobReferencePayload(normalizedJob),
             }),
           });
-          const data = await readFineTuningJsonResponse(response, "Failed to save fine-tuning job.");
+          const data = await readFineTuningJsonResponse(response, "Failed to save optimization job.");
           return mergePlaygroundFineTuningJobRecords(normalizedJob, data?.job || data?.data || data);
         }
 
         function isFineTuningRuntimeJobComplete(job) {
           const normalizedJob = normalizePlaygroundFineTuningJob(job);
           const status = normalizePlaygroundFineTuningString(normalizedJob.status).toLowerCase();
-          if (new Set(["completed", "error", "failed", "cancelled", "canceled"]).has(status)) return true;
-          return false;
+          const phase = normalizePlaygroundFineTuningString(normalizedJob.phase).toLowerCase();
+          return isPlaygroundFineTuningTerminalStatus(phase || status);
         }
 
         function delayFineTuningPoll(ms) {
@@ -347,7 +347,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_VERIFICATION_SCRIPT = String.raw`      
             cache: "no-store",
             headers: requestHeaders || {},
           });
-          const data = await readFineTuningJsonResponse(response, "Failed to load fine-tuning job.");
+          const data = await readFineTuningJsonResponse(response, "Failed to load optimization job.");
           const latestJob = mergePlaygroundFineTuningJobRecords(seedJob, data?.job || data?.data || data);
           if (latestJob.id) {
             patchFineTuningJob(normalizedJobId, () => latestJob);
@@ -441,7 +441,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_VERIFICATION_SCRIPT = String.raw`      
             }
             const runRequestOptions = {
               id: createPlaygroundFineTuningId("eval_run"),
-              label: "Fine-Tune Verification",
+              label: "Optimization Verification",
               fineTuningJobId: normalizedJob.id,
               fine_tuning_job_id: normalizedJob.id,
               evaluationVersionId: normalizePlaygroundFineTuningString(set.activeVersionId),
@@ -526,6 +526,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_VERIFICATION_SCRIPT = String.raw`      
         }
 
         async function publishFineTunedAgentVersion(job, version, snapshot) {
+          throw new Error("Optimized versions can only be published by the server-controlled publication policy.");
           const normalizedJob = normalizePlaygroundFineTuningJob(job);
           const normalizedVersion = version && typeof version === "object" && !Array.isArray(version) ? version : {};
           const versionId = normalizePlaygroundFineTuningString(normalizedVersion.id || normalizedVersion.versionId || normalizedVersion.version_id);
@@ -547,7 +548,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_VERIFICATION_SCRIPT = String.raw`      
           });
           const data = await response.json().catch(() => ({}));
           if (!response.ok) {
-            throw new Error(data?.message || data?.error || "Failed to publish fine-tuned agent version.");
+            throw new Error(data?.message || data?.error || "Failed to publish optimized agent version.");
           }
           const publishedVersion = data?.version || data?.data || data?.item || data;
           return {
@@ -566,6 +567,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_VERIFICATION_SCRIPT = String.raw`      
         }
 
         async function tryPersistFineTunedAgentVersion(job) {
+          throw new Error("Implicit browser publication is disabled. Review and publish the draft through the version workflow.");
           const normalizedJob = normalizePlaygroundFineTuningJob(job);
           if (!backendUrl || !normalizedJob.agentId || !normalizedJob.createdAgentVersion?.snapshot) {
             return normalizedJob;
@@ -600,8 +602,8 @@ export const FINE_TUNING_PAGE_CONTROLLER_VERIFICATION_SCRIPT = String.raw`      
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                label: normalizedJob.createdAgentVersion.label || "Fine-Tuned Version",
-                description: normalizedJob.createdAgentVersion.description || "Generated by fine-tuning job " + normalizedJob.id,
+                label: normalizedJob.createdAgentVersion.label || "Optimized Version",
+                description: normalizedJob.createdAgentVersion.description || "Generated by optimization job " + normalizedJob.id,
                 status: "published",
                 source: "fine_tuning",
                 fineTuningJobId: normalizedJob.id,

@@ -12,7 +12,6 @@ export const IMAGINE_PAGE_VIEW_SCRIPT = String.raw`          return React.create
               skills: imagineRunnerSkills,
               skillDefaults,
               canGenerateVideo: canUseVideoGeneration,
-              onUpgradeToIndividual,
               environmentId,
               agentId,
               mediaMode: activeMediaMode,
@@ -27,8 +26,7 @@ export const IMAGINE_PAGE_VIEW_SCRIPT = String.raw`          return React.create
               favouriteTemplateIds,
               onToggleFavouriteTemplate: handleToggleFavouriteTemplate,
               onBack: () => setSelectedTemplateId(""),
-              }),
-              renderImagineVideoUpgradeModal()
+              })
             );
           }
 
@@ -259,8 +257,7 @@ export const IMAGINE_PAGE_VIEW_SCRIPT = String.raw`          return React.create
                   )
                 )
               : null
-            ),
-            renderImagineVideoUpgradeModal()
+            )
           );
         }
 `;

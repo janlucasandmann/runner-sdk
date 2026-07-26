@@ -1,0 +1,77 @@
+.platform-emoji-picker {
+  --platform-popup-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.platform-emoji-picker .platform-popup-search-header {
+  flex: 0 0 auto;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-emoji-picker__scroll {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  max-height: min(282px, calc(100vh - 132px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding: 11px 12px 13px;
+}
+
+.platform-emoji-picker__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.platform-emoji-picker__group + .platform-emoji-picker__group {
+  margin-top: 14px;
+}
+
+.platform-emoji-picker__group-title {
+  margin: 0 0 8px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.platform-emoji-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(9, 26px);
+  gap: 2px;
+}
+
+.platform-emoji-picker__emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0;
+  color: #fff;
+  background: transparent;
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+  font-size: 18px;
+  line-height: 1;
+  transition: background-color 100ms ease;
+}
+
+.platform-emoji-picker__emoji:hover,
+.platform-emoji-picker__emoji:focus-visible {
+  outline: 0;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.platform-emoji-picker__empty {
+  display: grid;
+  min-height: 140px;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 12px;
+}

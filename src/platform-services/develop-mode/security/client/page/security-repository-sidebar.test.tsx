@@ -36,7 +36,26 @@ const detail = {
 afterEach(cleanup);
 
 describe("SecurityRepositorySidebar", () => {
-  it("uses centralized cards with the direct sidebar lists and identity rows from Evaluation details", () => {
+  it("places the primary Run scan action at the bottom of Details", () => {
+    const onRunScan = vi.fn();
+    const { container } = render(
+      <SecurityRepositorySidebar detail={detail} onRunScan={onRunScan} />,
+    );
+
+    const detailsSection = container.querySelector(
+      ".playground-security-agent-detail-properties-card",
+    );
+    const runScanButton = screen.getByRole("button", { name: "Run scan" });
+    expect(runScanButton.getAttribute("data-platform-button-variant")).toBe(
+      "primary",
+    );
+    expect(detailsSection?.lastElementChild).toBe(runScanButton);
+
+    fireEvent.click(runScanButton);
+    expect(onRunScan).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses the title-free Agent Runtime properties card and shared sidebar rows", () => {
     const { container } = render(
       <aside className="playground-agents-detail-sidebar playground-ticket-detail-sidebar develop-security-detail-sidebar">
         <SecurityRepositorySidebar detail={detail} />
@@ -45,44 +64,30 @@ describe("SecurityRepositorySidebar", () => {
 
     expect(
       container.querySelectorAll("[data-platform-ui-card-variant='sidebar']"),
-    ).toHaveLength(2);
+    ).toHaveLength(1);
     expect(
       container.querySelectorAll(".platform-detail-sidebar__section"),
     ).toHaveLength(0);
+    expect(screen.queryByRole("heading")).toBeNull();
 
-    const detailsHeading = screen.getByRole("heading", {
-      name: "Details",
-      level: 2,
-    });
-    expect(
-      detailsHeading.classList.contains("platform-ui-card__sidebar-title"),
-    ).toBe(true);
-    const detailsSection = detailsHeading.closest("section");
+    const detailsSection = container.querySelector(
+      ".playground-server-detail-properties-card",
+    );
     expect(
       detailsSection?.classList.contains(
-        "playground-ticket-detail-sidebar-section",
-      ),
-    ).toBe(true);
-    expect(
-      detailsSection?.classList.contains(
-        "playground-ticket-detail-sidebar-details",
-      ),
-    ).toBe(true);
-    expect(
-      detailsSection?.classList.contains(
-        "playground-evaluations-detail-sidebar-card",
+        "playground-security-agent-detail-properties-card",
       ),
     ).toBe(true);
     expect(
       detailsSection?.querySelector(
-        ".playground-evaluations-detail-sidebar-list",
+        ".playground-project-overview-sidebar-rows",
       ),
     ).not.toBeNull();
     expect(
       detailsSection?.querySelectorAll(
-        ".playground-evaluations-detail-sidebar-row",
+        ".playground-project-overview-sidebar-row",
       ),
-    ).toHaveLength(7);
+    ).toHaveLength(10);
     expect(
       detailsSection?.querySelector(".playground-tasks-detail-facts"),
     ).toBeNull();
@@ -93,10 +98,10 @@ describe("SecurityRepositorySidebar", () => {
     expect(screen.getByLabelText("Status: active")).toBeTruthy();
     const creatorRow = screen.getByLabelText("Creator: Ada Lovelace");
     expect(
-      creatorRow.querySelector(".playground-evaluations-detail-person"),
+      creatorRow.querySelector(".resource-overview-identity"),
     ).not.toBeNull();
     expect(
-      creatorRow.querySelector(".playground-evaluations-run-agent-avatar"),
+      creatorRow.querySelector(".resource-overview-identity__visual"),
     ).not.toBeNull();
     expect(screen.getByLabelText("Default branch: main")).toBeTruthy();
     expect(screen.queryByText("Policy v3")).toBeNull();
@@ -123,28 +128,14 @@ describe("SecurityRepositorySidebar", () => {
     expect(screen.queryByRole("heading", { name: "Owner" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Properties" })).toBeNull();
     expect(container.querySelector(".develop-security-properties")).toBeNull();
-
-    const safetySection = screen
-      .getByRole("heading", { name: "Safety boundary" })
-      .closest("section");
     expect(
-      safetySection?.classList.contains(
-        "playground-ticket-detail-sidebar-section",
-      ),
-    ).toBe(true);
-    expect(
-      safetySection?.classList.contains(
-        "playground-ticket-detail-sidebar-threads",
-      ),
-    ).toBe(true);
-    expect(
-      safetySection?.querySelectorAll(
-        ".playground-evaluations-detail-sidebar-row",
-      ),
-    ).toHaveLength(3);
-    expect(
-      safetySection?.querySelector(".playground-tasks-detail-facts"),
+      screen.queryByRole("heading", { name: "Safety boundary" }),
     ).toBeNull();
+    expect(screen.getByLabelText("Checkout: Exact SHA")).toBeTruthy();
+    expect(screen.getByLabelText("Worker: Disposable")).toBeTruthy();
+    expect(
+      screen.getByLabelText("Publication: Draft PR after approval"),
+    ).toBeTruthy();
   });
 
   it("uses the signed-in identity for legacy repositories without creator metadata", () => {

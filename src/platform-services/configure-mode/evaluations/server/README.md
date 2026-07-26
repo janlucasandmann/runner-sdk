@@ -9,9 +9,24 @@ This directory contains HTTP routing and server-side domain adapters for the Eva
 ## Contents
 
 - [`domain/`](domain/) — This directory contains domain contracts, normalization, and pure transformations for the Evaluations service in Configure Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
+- [`domain/comparisons.mjs`](domain/comparisons.mjs) — Deterministic paired bootstrap evidence and slice-aware release gates.
 - [`index.mjs`](index.mjs) — Public barrel or composition entry point.
 - [`run-persistence.mjs`](run-persistence.mjs) — Ordered, retrying durable-write coordination for evaluation runs.
-- [`runtime.mjs`](runtime.mjs) — Runtime composition for this layer.
+- [`runtime.mjs`](runtime.mjs) — Lease-fenced, checkpointed execution and restart recovery, including hydration of canonical control-plane run bindings and strict per-case terminal reports.
+
+The public `runs.wake` service method hydrates an active run from its immutable
+execution snapshot, resumes only unfinished cases, waits for a terminal durable
+checkpoint, and rejects when another resource lease still owns execution. The
+platform durable dispatcher calls this method with a claim-scoped workload
+credential; no browser session is required.
+
+For a canonical control-plane run, `runs.wake` never reconstructs cases from a
+mutable client cache. It hydrates the published Evaluation snapshot and pinned
+target from `computer_agents_evaluation_run_binding_v1`, resolves the
+credential-free execution/evaluator snapshots, checkpoints each case, and
+PATCHes only the canonical report fields accepted by the control API. The
+control plane remains the sole owner of aggregate metrics, provenance,
+signatures, and the audit ledger.
 
 ## Working in this directory
 

@@ -753,6 +753,171 @@ export const PROJECT_OVERVIEW_CSS_02_FRAGMENT = String.raw`        .playground-p
         line-height: 1.45;
       }
 
+      .playground-project-overview-work-graph {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 100%;
+        min-width: 0;
+        padding-top: 4px;
+      }
+
+      .playground-project-overview-work-graph-intro {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+
+      .playground-project-overview-work-graph-title,
+      .playground-project-overview-work-graph-column-title {
+        color: #fff;
+        font-size: 12px;
+        line-height: 1.4;
+        font-weight: 500;
+      }
+
+      .playground-project-overview-work-graph-description,
+      .playground-project-overview-work-graph-empty {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .playground-project-overview-work-graph-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-work-graph-metric {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 0;
+        padding: 14px 16px;
+      }
+
+      .playground-project-overview-work-graph-metric:first-child {
+        padding-left: 0;
+      }
+
+      .playground-project-overview-work-graph-metric:not(:last-child) {
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-work-graph-metric-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .playground-project-overview-work-graph-metric-value {
+        color: #fff;
+        font-size: 20px;
+        line-height: 1.2;
+        font-weight: 400;
+      }
+
+      .playground-project-overview-work-graph-columns {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 28px;
+        min-width: 0;
+      }
+
+      .playground-project-overview-work-graph-column {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .playground-project-overview-work-graph-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .playground-project-overview-work-graph-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: calc(100% + 16px);
+        min-width: 0;
+        margin-left: -8px;
+        padding: 8px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: background 120ms ease;
+      }
+
+      .playground-project-overview-work-graph-row:hover:not(:disabled),
+      .playground-project-overview-work-graph-row:focus-visible:not(:disabled) {
+        background: rgba(255, 255, 255, 0.075);
+      }
+
+      .playground-project-overview-work-graph-row:disabled {
+        cursor: default;
+      }
+
+      .playground-project-overview-work-graph-row-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .playground-project-overview-work-graph-row-title,
+      .playground-project-overview-work-graph-row-description {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-work-graph-row-title {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .playground-project-overview-work-graph-row-description {
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 11px;
+        line-height: 1.4;
+      }
+
+      .playground-project-overview-work-graph-empty {
+        min-height: 54px;
+        padding: 10px 0;
+      }
+
+      @media (max-width: 760px) {
+        .playground-project-overview-work-graph-metrics {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .playground-project-overview-work-graph-metric:nth-child(2) {
+          border-right: 0;
+        }
+
+        .playground-project-overview-work-graph-metric:nth-child(-n + 2) {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .playground-project-overview-work-graph-metric:nth-child(3) {
+          padding-left: 0;
+        }
+      }
+
       .playground-project-overview-activity-participants {
         display: inline-flex;
         align-items: center;
@@ -795,138 +960,6 @@ export const PROJECT_OVERVIEW_CSS_02_FRAGMENT = String.raw`        .playground-p
         color: rgba(255, 255, 255, 0.82);
       }
 
-      .playground-project-overview-latest-update-card {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        padding: 14px 16px 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.02);
-      }
-
-      .playground-project-overview-latest-update-header,
-      .playground-project-overview-latest-update-meta,
-      .playground-project-overview-latest-update-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .playground-project-overview-latest-update-header {
-        justify-content: space-between;
-        gap: 16px;
-      }
-
-      .playground-project-overview-latest-update-title {
-        min-width: 0;
-        margin: 0;
-        font-size: 12px;
-        line-height: 1.35;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.5);
-      }
-
-      .playground-project-overview-latest-update-button {
-        flex: 0 0 auto;
-        appearance: none;
-        border: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.58);
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 0;
-        font: inherit;
-        font-size: 12px;
-        line-height: 1;
-        cursor: pointer;
-      }
-
-      .playground-project-overview-latest-update-button:hover {
-        color: rgba(255, 255, 255, 0.94);
-      }
-
-      .playground-project-overview-latest-update-button-icon {
-        width: 14px;
-        height: 14px;
-        flex: 0 0 auto;
-      }
-
-      .playground-project-overview-latest-update-meta {
-        flex-wrap: wrap;
-        font-size: 12px;
-        line-height: 1.35;
-        color: rgba(255, 255, 255, 0.5);
-      }
-
-      .playground-project-overview-latest-update-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: rgb(74, 222, 128);
-      }
-
-      .playground-project-overview-latest-update-status-icon {
-        width: 14px;
-        height: 14px;
-        flex: 0 0 auto;
-        border-radius: 999px;
-        color: rgb(74, 222, 128);
-      }
-
-      .playground-project-overview-latest-update-author {
-        display: inline-flex;
-        align-items: center;
-        min-width: 0;
-        gap: 7px;
-        color: rgba(255, 255, 255, 0.58);
-      }
-
-      .playground-project-overview-latest-update-author .playground-project-overview-sidebar-avatar,
-      .playground-project-overview-latest-update-author .playground-project-overview-activity-avatar {
-        width: 18px;
-        height: 18px;
-        font-size: 8px;
-      }
-
-      .playground-project-overview-latest-update-body {
-        margin: 2px 0 0;
-        white-space: pre-wrap;
-        font-size: 13px;
-        line-height: 1.55;
-        color: rgba(255, 255, 255, 0.92);
-      }
-
-      .playground-project-overview-latest-update-actions {
-        gap: 8px;
-        margin-top: 2px;
-      }
-
-      .playground-project-overview-latest-update-icon-button {
-        width: 30px;
-        height: 30px;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.02);
-        color: rgba(255, 255, 255, 0.62);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        cursor: pointer;
-      }
-
-      .playground-project-overview-latest-update-icon-button:hover {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.07);
-      }
-
-      .playground-project-overview-latest-update-icon {
-        width: 14px;
-        height: 14px;
-      }
-
       .playground-project-overview-activity-header {
         display: flex;
         align-items: center;
@@ -936,6 +969,25 @@ export const PROJECT_OVERVIEW_CSS_02_FRAGMENT = String.raw`        .playground-p
 
       .playground-project-overview-activity-tabs {
         width: 100%;
+      }
+
+      .playground-project-overview-threads-tabs-toolbar {
+        flex-wrap: nowrap;
+        align-items: center;
+      }
+
+      .playground-project-overview-threads-tabs-toolbar .platform-data-table__toolbar-leading {
+        flex: 0 1 auto;
+        overflow: hidden;
+      }
+
+      .playground-project-overview-threads-tabs-toolbar .playground-project-overview-activity-tabs {
+        width: auto;
+        max-width: 100%;
+      }
+
+      .playground-project-overview-threads-tabs-toolbar .platform-detail-tab-bar__list {
+        flex: 0 1 auto;
       }
 
       .playground-project-overview-task-activity-timeline .platform-activity-timeline__header {

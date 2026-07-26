@@ -1,6 +1,6 @@
 /** Ordered aios and admin compatibility routes. */
 export function createAiosAndAdminRoutes(bindings) {
-    const { evaluationsService, fineTuningService, handleAiosUserSessionRequest, proxyAiosJsonRequest, proxyAiosLatestBriefingHtml, proxyAiosNotionLoginRequest, proxyContactSalesSummaryGet, proxyFeedbackSummaryGet, proxyPlaygroundCustomSkills, proxyProductUsageSummaryGet, } = bindings;
+    const { assuranceService, evaluationsService, fineTuningService, testsService, handleAiosUserSessionRequest, proxyAiosJsonRequest, proxyAiosLatestBriefingHtml, proxyAiosNotionLoginRequest, proxyContactSalesSummaryGet, proxyFeedbackSummaryGet, proxyPlaygroundCustomSkills, proxyProductUsageSummaryGet, } = bindings;
     return function handleAiosAndAdminRoutes(req, res, url) {
         if (req.method === "GET" && (url.pathname === "/api/playground/custom-skills" || url.pathname === "/api/playground/skills")) {
             void proxyPlaygroundCustomSkills(req, res);
@@ -230,6 +230,12 @@ export function createAiosAndAdminRoutes(bindings) {
         }
         if (req.method === "POST" && url.pathname === "/api/aios/onedrive/disconnect") {
             void proxyAiosJsonRequest(req, res, "/api/onedrive/disconnect", "POST");
+            return true;
+        }
+        if (testsService.handleRequest(req, res, url)) {
+            return true;
+        }
+        if (assuranceService.handleRequest(req, res, url)) {
             return true;
         }
         if (evaluationsService.handleRequest(req, res, url)) {

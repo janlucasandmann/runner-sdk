@@ -156,6 +156,46 @@ export const EVALUATIONS_STYLE_DIALOGS = String.raw`
         min-width: 0;
       }
 
+      .playground-evaluations-case-editor-header-actions {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .playground-evaluations-case-editor-role-field {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-evaluations-case-editor-role-selector {
+        width: 108px;
+        min-width: 108px;
+      }
+
+      .playground-evaluations-case-editor-role-trigger.platform-selector__trigger {
+        min-height: 24px;
+        justify-content: flex-end;
+        gap: 5px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: #fff;
+        font-size: 12px;
+      }
+
+      .playground-evaluations-case-editor-role-trigger.platform-selector__trigger:hover,
+      .playground-evaluations-case-editor-role-trigger.platform-selector__trigger:focus-visible {
+        background: transparent;
+      }
+
+      .playground-evaluations-case-editor-role-popup .platform-selector__option-description {
+        white-space: normal;
+      }
+
       .playground-evaluations-case-editor-run-label {
         margin: 0;
         color: rgba(255, 255, 255, 0.54);
@@ -378,6 +418,12 @@ export const EVALUATIONS_STYLE_DIALOGS = String.raw`
       }
 
       @media (max-width: 760px) {
+        .playground-evaluations-case-editor-header-actions {
+          align-items: flex-end;
+          flex-direction: column;
+          gap: 6px;
+        }
+
         .playground-evaluations-case-source-grid {
           grid-template-columns: minmax(0, 1fr);
         }

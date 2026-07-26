@@ -45,8 +45,8 @@ describe("PlatformActivityTimeline", () => {
     expect(html.indexOf("Created")).toBeLessThan(html.indexOf("Commented"));
     expect(html).toContain("Completed");
     expect(html).toContain("platform-activity-timeline__trailing");
-    expect(html).toContain("platform-activity-timeline__content-avatar");
-    expect(html).toContain("platform-activity-timeline__composer");
+    expect(html).toContain("platform-comment-card__avatar");
+    expect(html).toContain("platform-comment-composer");
     expect(html).toContain('aria-label="Attach files"');
     expect(html).toContain("lucide-paperclip");
     expect(html).toContain("lucide-arrow-up");
@@ -57,7 +57,7 @@ describe("PlatformActivityTimeline", () => {
       <PlatformActivityTimeline items={[{ id: "created", summary: "Created" }]} />,
     );
 
-    expect(html).not.toContain("platform-activity-timeline__composer");
+    expect(html).not.toContain("platform-comment-composer");
   });
 
   it("renders comment replies and a compact reply composer", () => {
@@ -84,12 +84,12 @@ describe("PlatformActivityTimeline", () => {
       />,
     );
 
-    expect(html).toContain("platform-activity-timeline__reply-list");
+    expect(html).toContain("platform-comment-card__reply-list");
     expect(html).toContain("Reply body");
-    expect(html).toContain("platform-activity-timeline__reply-composer");
+    expect(html).toContain("platform-comment-reply-composer");
     expect(html).toContain("Leave a reply...");
     expect(html.indexOf("Reply body")).toBeLessThan(html.indexOf("Leave a reply..."));
-    expect(html.match(/class="platform-activity-timeline__reply-composer"/g)).toHaveLength(1);
+    expect(html.match(/class="platform-comment-reply-composer"/g)).toHaveLength(1);
   });
 
   it("exposes owner actions without rendering another always-visible toolbar", () => {
@@ -184,15 +184,19 @@ describe("PlatformActivityTimeline", () => {
       ),
       "utf8",
     );
+    const commentsCss = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/platform-ui/components/composite/comments/comments.css",
+      ),
+      "utf8",
+    );
 
     expect(css).toMatch(
       /\.platform-activity-timeline__item\.has-content\s*\{\s*grid-template-columns: minmax\(0, 1fr\);/,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__item\.has-content \.platform-activity-timeline__entry\s*\{\s*grid-column: 1 \/ -1;/,
-    );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__item\.has-content \.platform-activity-timeline__entry\s*\{[^}]*border: 1px solid rgba\(255, 255, 255, 0\.075\);[^}]*border-radius: 15px;[^}]*background: rgba\(255, 255, 255, 0\.075\);/s,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-card\s*\{[^}]*border: 1px solid rgba\(255, 255, 255, 0\.075\);[^}]*border-radius: var\(--platform-comment-card-radius, 15px\);[^}]*background: rgba\(255, 255, 255, 0\.075\);/s,
     );
     expect(css).toMatch(
       /\.platform-activity-timeline__list\s*\{[^}]*gap: 6px;/s,
@@ -204,44 +208,44 @@ describe("PlatformActivityTimeline", () => {
     expect(css).toMatch(
       /\.platform-activity-timeline__meta\s*\{[^}]*align-items: center;/s,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__replies\s*\{[^}]*width: calc\(100% \+ 32px\);[^}]*margin: 14px -16px -14px;/s,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-card__replies\s*\{[^}]*width: calc\(100% \+ 32px\);[^}]*margin: 14px -16px -14px;/s,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__reply \+ \.platform-activity-timeline__reply\s*\{[^}]*border-top:/s,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-card__reply \+ \.platform-comment-card__reply\s*\{[^}]*border-top:/s,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__composer\s*\{[^}]*border-radius: 15px;[^}]*background: rgba\(255, 255, 255, 0\.075\);/s,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-composer\s*\{[^}]*border-radius: var\(--platform-comment-composer-radius, 15px\);[^}]*background: rgba\(255, 255, 255, 0\.075\);/s,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__composer-actions\s*\{[^}]*position: absolute;[^}]*right: 12px;[^}]*bottom: 12px;/s,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-composer__actions\s*\{[^}]*position: absolute;[^}]*right: 12px;[^}]*bottom: 12px;/s,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__composer-actions \.platform-icon-button\s*\{[^}]*border-radius: 50%;/s,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-composer__actions \.platform-icon-button\s*\{[^}]*border-radius: 50%;/s,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__composer-submit\.platform-icon-button:disabled\s*\{[^}]*background: rgba\(255, 255, 255, 0\.075\) !important;/s,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-composer__submit\.platform-icon-button:disabled\s*\{[^}]*background: rgba\(255, 255, 255, 0\.075\) !important;/s,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__composer-submit\.platform-icon-button\s*\{[^}]*background: rgba\(255, 255, 255, 0\.15\) !important;/s,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-composer__submit\.platform-icon-button\s*\{[^}]*background: rgba\(255, 255, 255, 0\.15\) !important;/s,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__reply-composer-submit\.platform-icon-button\s*\{[^}]*background: rgba\(255, 255, 255, 0\.15\) !important;/s,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-reply-composer__submit\.platform-icon-button,\s*\.platform-comment-composer__submit\.platform-icon-button\s*\{[^}]*background: rgba\(255, 255, 255, 0\.15\) !important;/s,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__reply-composer-submit\.platform-icon-button:disabled\s*\{[^}]*background: rgba\(255, 255, 255, 0\.075\) !important;/s,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-reply-composer__submit\.platform-icon-button:disabled,\s*\.platform-comment-composer__submit\.platform-icon-button:disabled\s*\{[^}]*background: rgba\(255, 255, 255, 0\.075\) !important;/s,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__composer-input\s*\{[^}]*min-height: 48px;/s,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-composer__input\s*\{[^}]*min-height: 48px;/s,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__item-actions\.platform-popup-anchor\s*\{[^}]*opacity: 0;[^}]*visibility: hidden;[^}]*pointer-events: none;/s,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-card__actions\.platform-popup-anchor\s*\{[^}]*opacity: 0;[^}]*visibility: hidden;[^}]*pointer-events: none;/s,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__item\.has-actions:hover[\s\S]*?opacity: 1;[\s\S]*?visibility: visible;[\s\S]*?pointer-events: auto;/,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-card\.has-actions:hover[\s\S]*?opacity: 1;[\s\S]*?visibility: visible;[\s\S]*?pointer-events: auto;/,
     );
-    expect(css).toMatch(
-      /\.platform-activity-timeline__edit-input\s*\{[^}]*width: 100%;[^}]*resize: none;/s,
+    expect(commentsCss).toMatch(
+      /\.platform-comment-card__edit-input\s*\{[^}]*width: 100%;[^}]*resize: none;/s,
     );
   });
 });

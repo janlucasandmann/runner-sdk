@@ -5,9 +5,19 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
           const selectedRunIds = form.evaluationRunIds && typeof form.evaluationRunIds === "object" && !Array.isArray(form.evaluationRunIds)
             ? form.evaluationRunIds
             : {};
+          const selectedBaselineModes = form.evaluationBaselineModes && typeof form.evaluationBaselineModes === "object" && !Array.isArray(form.evaluationBaselineModes)
+            ? form.evaluationBaselineModes
+            : {};
           const selectedEvaluationSets = normalizedEvaluationSets.filter((set) => selectedSetIds.includes(set.id));
+          const customTargetAgents = normalizedAgents.filter((agent) => !isDefaultFineTuningTargetAgent(agent));
+          const selectedTargetAgentId = normalizePlaygroundFineTuningString(
+            form.targetAgentId || customTargetAgents[0]?.id || ""
+          );
+          const selectedTargetAgent = customTargetAgents.find((agent) => (
+            normalizePlaygroundFineTuningString(agent?.id) === selectedTargetAgentId
+          )) || null;
           const selectedFineTunerAgentId = normalizePlaygroundFineTuningString(
-            form.agentId || defaultAgentId || normalizedAgents[0]?.id || ""
+            form.fineTunerAgentId || form.agentId || defaultAgentId || normalizedAgents[0]?.id || ""
           );
           const selectedFineTunerAgent = normalizedAgents.find((agent) => (
             normalizePlaygroundFineTuningString(agent?.id) === selectedFineTunerAgentId
@@ -25,7 +35,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
             || selectedFineTunerAgent?.avatarUrl
             || selectedFineTunerAgent?.avatarURL
           );
-          const fineTunerAgentOptions = normalizedAgents.map((agent) => {
+          const buildAgentOption = (agent) => {
             const value = normalizePlaygroundFineTuningString(agent?.id);
             const label = normalizePlaygroundFineTuningString(agent?.name || agent?.label || agent?.title || value) || "Agent";
             const photoUrl = normalizePlaygroundFineTuningString(
@@ -41,7 +51,26 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
                 photoUrl,
               }),
             };
-          });
+          };
+          const targetAgentOptions = customTargetAgents.map(buildAgentOption);
+          const fineTunerAgentOptions = normalizedAgents.map(buildAgentOption);
+          const renderSelectedAgentValue = (agent, fallbackLabel) => {
+            const label = normalizePlaygroundFineTuningString(
+              agent?.name || agent?.label || agent?.title || agent?.id || fallbackLabel
+            );
+            const photoUrl = normalizePlaygroundFineTuningString(
+              agent?.photoUrl || agent?.photoURL || agent?.avatarUrl || agent?.avatarURL
+            );
+            return React.createElement("span", { className: "playground-fine-tuning-create-selector-value" },
+              React.createElement(AccountAvatar, {
+                className: "playground-fine-tuning-create-selector-avatar",
+                imageClassName: "playground-fine-tuning-create-selector-avatar-image",
+                fallbackLabel: getPlaygroundFineTuningInitials(label),
+                photoUrl,
+              }),
+              React.createElement("span", null, label)
+            );
+          };
           const selectedEnvironmentId = normalizePlaygroundFineTuningString(
             form.environmentId || defaultEnvironmentId || normalizedEnvironments[0]?.id || ""
           );
@@ -69,15 +98,42 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
               }),
             };
           });
+          const objectiveOptions = [
+            {
+              value: "evaluation_targets",
+              label: "Evaluation thresholds",
+              description: "Use each evaluation set's pass threshold.",
+            },
+            {
+              value: "custom",
+              label: "Custom target",
+              description: "Use the score and pass-rate targets below.",
+            },
+          ];
+          const publicationOptions = [
+            {
+              value: "manual",
+              label: "Review before publishing",
+              description: "Keep the best candidate as a draft.",
+            },
+            {
+              value: "auto_on_target",
+              label: "Publish when target is met",
+              description: "Publish only after independent verification.",
+            },
+          ];
           const toggleEvaluationSet = (setId) => {
             const normalizedSetId = normalizePlaygroundFineTuningString(setId);
             if (!normalizedSetId) return;
             if (selectedSetIds.includes(normalizedSetId)) {
               const nextRunIds = { ...selectedRunIds };
+              const nextBaselineModes = { ...selectedBaselineModes };
               delete nextRunIds[normalizedSetId];
+              delete nextBaselineModes[normalizedSetId];
               updateCreateForm({
                 evaluationSetIds: selectedSetIds.filter((id) => id !== normalizedSetId),
                 evaluationRunIds: nextRunIds,
+                evaluationBaselineModes: nextBaselineModes,
               });
               return;
             }
@@ -89,15 +145,27 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
                 ...selectedRunIds,
                 [normalizedSetId]: normalizePlaygroundFineTuningString(latestRun?.id || latestRun?.runId || latestRun?.run_id || ""),
               },
+              evaluationBaselineModes: {
+                ...selectedBaselineModes,
+                [normalizedSetId]: "fresh",
+              },
             });
           };
-          const updateEvaluationSetRun = (setId, runId) => {
+          const updateEvaluationSetBaseline = (setId, value) => {
             const normalizedSetId = normalizePlaygroundFineTuningString(setId);
             if (!normalizedSetId) return;
+            const normalizedValue = normalizePlaygroundFineTuningString(value);
+            const existingRunId = normalizedValue.startsWith("existing:")
+              ? normalizedValue.slice("existing:".length)
+              : "";
             updateCreateForm({
               evaluationRunIds: {
                 ...selectedRunIds,
-                [normalizedSetId]: normalizePlaygroundFineTuningString(runId),
+                [normalizedSetId]: existingRunId || selectedRunIds[normalizedSetId] || "",
+              },
+              evaluationBaselineModes: {
+                ...selectedBaselineModes,
+                [normalizedSetId]: existingRunId ? "existing" : "fresh",
               },
             });
           };
@@ -143,7 +211,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
               size: "medium",
               maxHeight: "min(720px, calc(100vh - 48px))",
               scrollable: true,
-              title: "New Fine-Tune",
+              title: "New Optimization",
               headerVariant: "search",
               headerSearchProps: {
                 icon: TestTubeDiagonal,
@@ -177,30 +245,49 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
                 React.createElement(PlatformPrimaryButton, {
                   size: "medium",
                   type: "submit",
-                  disabled: createBusy || !String(form.name || "").trim(),
+                  disabled: createBusy
+                    || !String(form.name || "").trim()
+                    || !selectedTargetAgentId
+                    || !selectedFineTunerAgentId
+                    || !selectedEnvironmentId
+                    || selectedSetIds.length === 0,
                   "aria-busy": createBusy || undefined,
-                }, createBusy ? "Starting..." : "Start Fine-Tune")
+                }, createBusy ? "Starting..." : "Start Optimization")
               ),
             },
               React.createElement("div", { className: "playground-mission-control-modal-body playground-project-overview-outcome-editor-shell playground-evaluations-create-modal-shell playground-fine-tuning-create-modal-shell" },
                 React.createElement("div", { className: "playground-mission-control-modal-context playground-project-overview-outcome-editor-body playground-evaluations-create-modal-body playground-fine-tuning-create-modal-body" },
                   React.createElement("div", { className: "playground-evaluations-form-grid" },
                 React.createElement("div", { className: "playground-evaluations-field" },
-                  React.createElement("span", null, "Fine-Tuner Agent"),
+                  React.createElement("span", null, "Target Agent"),
+                  React.createElement(PlatformSelector, {
+                    value: selectedTargetAgentId,
+                    options: targetAgentOptions,
+                    onValueChange: (nextValue) => updateCreateForm({ targetAgentId: nextValue }),
+                    ariaLabel: "Select agent to optimize",
+                    label: renderSelectedAgentValue(selectedTargetAgent, "Select agent"),
+                    placeholder: "Select agent",
+                    disabled: createBusy || targetAgentOptions.length === 0,
+                    alignment: "end",
+                    popupAlignment: "right",
+                    fullWidth: true,
+                    emptyContent: "No custom agents are available.",
+                    popupWidth: "min(280px, calc(100vw - 48px))",
+                    popupMaxWidth: "calc(100vw - 48px)",
+                    popupMaxHeight: "min(320px, calc(100vh - 120px))",
+                    className: "playground-tasks-detail-central-selector playground-fine-tuning-create-selector",
+                    triggerClassName: "playground-tasks-detail-central-selector-trigger playground-fine-tuning-create-selector-trigger",
+                    popupClassName: "playground-tasks-detail-central-selector-popup playground-fine-tuning-create-selector-popup",
+                  })
+                ),
+                React.createElement("div", { className: "playground-evaluations-field" },
+                  React.createElement("span", null, "Optimizer Agent"),
                   React.createElement(PlatformSelector, {
                     value: selectedFineTunerAgentId,
                     options: fineTunerAgentOptions,
-                    onValueChange: (nextValue) => updateCreateForm({ agentId: nextValue }),
-                    ariaLabel: "Select fine-tuner agent",
-                    label: React.createElement("span", { className: "playground-fine-tuning-create-selector-value" },
-                      React.createElement(AccountAvatar, {
-                        className: "playground-fine-tuning-create-selector-avatar",
-                        imageClassName: "playground-fine-tuning-create-selector-avatar-image",
-                        fallbackLabel: getPlaygroundFineTuningInitials(selectedFineTunerAgentLabel),
-                        photoUrl: selectedFineTunerAgentPhotoUrl,
-                      }),
-                      React.createElement("span", null, selectedFineTunerAgentLabel)
-                    ),
+                    onValueChange: (nextValue) => updateCreateForm({ fineTunerAgentId: nextValue }),
+                    ariaLabel: "Select optimizer agent",
+                    label: renderSelectedAgentValue(selectedFineTunerAgent, selectedFineTunerAgentLabel),
                     placeholder: "Select agent",
                     disabled: createBusy || fineTunerAgentOptions.length === 0,
                     alignment: "end",
@@ -216,12 +303,12 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
                   })
                 ),
                 React.createElement("div", { className: "playground-evaluations-field" },
-                  React.createElement("span", null, "Computer"),
+                  React.createElement("span", null, "Environment"),
                   React.createElement(PlatformSelector, {
                     value: selectedEnvironmentId,
                     options: environmentOptions,
                     onValueChange: (nextValue) => updateCreateForm({ environmentId: nextValue }),
-                    ariaLabel: "Select computer",
+                    ariaLabel: "Select environment",
                     label: React.createElement("span", { className: "playground-fine-tuning-create-selector-value" },
                       React.createElement(Monitor, {
                         width: 14,
@@ -231,12 +318,12 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
                       }),
                       React.createElement("span", null, selectedEnvironmentLabel)
                     ),
-                    placeholder: "Select computer",
+                    placeholder: "Select environment",
                     disabled: createBusy || environmentOptions.length === 0,
                     alignment: "end",
                     popupAlignment: "right",
                     fullWidth: true,
-                    emptyContent: "No computers available.",
+                    emptyContent: "No environments available.",
                     popupWidth: "min(280px, calc(100vw - 48px))",
                     popupMaxWidth: "calc(100vw - 48px)",
                     popupMaxHeight: "min(320px, calc(100vh - 120px))",
@@ -284,44 +371,51 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
                             const runs = getPlaygroundFineTuningRuns(set);
                             const latestRun = getPlaygroundFineTuningLatestRun(set);
                             const selectedRunId = normalizePlaygroundFineTuningString(selectedRunIds[set.id] || latestRun?.id || latestRun?.runId || latestRun?.run_id || "");
+                            const baselineMode = selectedBaselineModes[set.id] === "existing" && selectedRunId
+                              ? "existing"
+                              : "fresh";
+                            const baselineOptions = [
+                              {
+                                value: "fresh",
+                                label: "Fresh baseline",
+                                description: "Run this evaluation before optimization.",
+                              },
+                              ...runs.map((run) => ({
+                                value: "existing:" + run.id,
+                                label: run.label || run.id,
+                                description: "Use this completed run as the baseline.",
+                              })),
+                            ];
                             return React.createElement("div", {
                                 key: set.id,
-                                role: "button",
-                                tabIndex: 0,
                                 className: "playground-fine-tuning-evaluation-option playground-mission-control-modal-outcome-row is-selected",
-                                onClick: () => toggleEvaluationSet(set.id),
-                                onKeyDown: (event) => {
-                                  if (event.key !== "Enter" && event.key !== " ") return;
-                                  event.preventDefault();
-                                  toggleEvaluationSet(set.id);
-                                },
-                                "aria-pressed": "true",
                               },
                               React.createElement("div", { className: "playground-mission-control-modal-outcome-copy" },
                                 React.createElement("span", { className: "playground-mission-control-modal-outcome-input playground-fine-tuning-evaluation-name" }, set.name || "Untitled Evaluation")
                               ),
-                              React.createElement("select", {
-                                  className: "playground-fine-tuning-evaluation-run-select",
-                                  value: selectedRunId,
-                                  disabled: !runs.length,
-                                  onClick: (event) => event.stopPropagation(),
-                                  onPointerDown: (event) => event.stopPropagation(),
-                                  onChange: (event) => {
-                                    event.stopPropagation();
-                                    updateEvaluationSetRun(set.id, event.target.value);
-                                  },
-                                  "aria-label": "Fine-tune baseline run for " + (set.name || "evaluation set"),
-                                },
-                                runs.length
-                                  ? runs.map((run) => React.createElement("option", { key: run.id, value: run.id }, run.label || run.id))
-                                  : React.createElement("option", { value: "" }, "No runs")
-                              ),
-                              React.createElement("span", {
+                              React.createElement(PlatformSelector, {
+                                value: baselineMode === "existing" ? "existing:" + selectedRunId : "fresh",
+                                options: baselineOptions,
+                                onValueChange: (nextValue) => updateEvaluationSetBaseline(set.id, nextValue),
+                                ariaLabel: "Choose baseline for " + (set.name || "evaluation set"),
+                                label: baselineMode === "existing"
+                                  ? (runs.find((run) => run.id === selectedRunId)?.label || selectedRunId)
+                                  : "Fresh baseline",
+                                alignment: "end",
+                                popupAlignment: "right",
+                                popupWidth: "min(320px, calc(100vw - 48px))",
+                                popupMaxHeight: 280,
+                                className: "playground-tasks-detail-central-selector playground-fine-tuning-baseline-selector",
+                                triggerClassName: "playground-tasks-detail-central-selector-trigger",
+                                popupClassName: "playground-tasks-detail-central-selector-popup",
+                              }),
+                              React.createElement("button", {
+                                type: "button",
                                 className: "playground-mission-control-modal-outcome-menu-trigger",
-                                "aria-hidden": "true",
-                              },
-                                React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.9 })
-                              )
+                                onClick: () => toggleEvaluationSet(set.id),
+                                title: "Remove evaluation set",
+                                "aria-label": "Remove " + (set.name || "evaluation set"),
+                              }, React.createElement(X, { width: 14, height: 14, strokeWidth: 1.9 }))
                             );
                           })
                         : React.createElement("button", {
@@ -334,15 +428,187 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
                               : normalizedEvaluationSets.length
                                 ? "Add evaluation sets"
                                 : fineTuningEvaluationSetsError || "No evaluation sets available."
-                          )
+                      )
                     )
+                  )
+                ),
+                React.createElement("section", { className: "playground-fine-tuning-policy-section" },
+                  React.createElement("div", { className: "playground-fine-tuning-policy-title" }, "Optimization Policy"),
+                  React.createElement("div", { className: "playground-fine-tuning-policy-grid" },
+                    React.createElement("label", { className: "playground-fine-tuning-policy-field" },
+                      React.createElement("span", null, "Objective"),
+                      React.createElement(PlatformSelector, {
+                        value: form.objectiveMode === "custom" ? "custom" : "evaluation_targets",
+                        options: objectiveOptions,
+                        onValueChange: (nextValue) => updateCreateForm({ objectiveMode: nextValue }),
+                        ariaLabel: "Choose optimization objective",
+                        label: form.objectiveMode === "custom" ? "Custom target" : "Evaluation thresholds",
+                        fullWidth: true,
+                        popupAlignment: "left",
+                        className: "playground-tasks-detail-central-selector playground-fine-tuning-create-selector",
+                        triggerClassName: "playground-tasks-detail-central-selector-trigger playground-fine-tuning-create-selector-trigger",
+                        popupClassName: "playground-tasks-detail-central-selector-popup",
+                      })
+                    ),
+                    React.createElement("label", { className: "playground-fine-tuning-policy-field" },
+                      React.createElement("span", null, "Publication"),
+                      React.createElement(PlatformSelector, {
+                        value: form.publicationMode === "auto_on_target" ? "auto_on_target" : "manual",
+                        options: publicationOptions,
+                        onValueChange: (nextValue) => updateCreateForm({ publicationMode: nextValue }),
+                        ariaLabel: "Choose publication policy",
+                        label: form.publicationMode === "auto_on_target" ? "Publish when target is met" : "Review before publishing",
+                        fullWidth: true,
+                        popupAlignment: "right",
+                        className: "playground-tasks-detail-central-selector playground-fine-tuning-create-selector",
+                        triggerClassName: "playground-tasks-detail-central-selector-trigger playground-fine-tuning-create-selector-trigger",
+                        popupClassName: "playground-tasks-detail-central-selector-popup",
+                      })
+                    ),
+                    form.objectiveMode === "custom"
+                      ? React.createElement(React.Fragment, null,
+                          React.createElement("label", { className: "playground-fine-tuning-policy-field" },
+                            React.createElement("span", null, "Target score"),
+                            React.createElement("div", { className: "playground-fine-tuning-number-shell" },
+                              React.createElement("input", {
+                                type: "number",
+                                min: "0",
+                                max: "100",
+                                step: "1",
+                                value: Number(form.targetScorePercent ?? 80),
+                                onChange: (event) => updateCreateForm({ targetScorePercent: event.target.value }),
+                                disabled: createBusy,
+                              }),
+                              React.createElement("span", null, "%")
+                            )
+                          ),
+                          React.createElement("label", { className: "playground-fine-tuning-policy-field" },
+                            React.createElement("span", null, "Target pass rate"),
+                            React.createElement("div", { className: "playground-fine-tuning-number-shell" },
+                              React.createElement("input", {
+                                type: "number",
+                                min: "0",
+                                max: "100",
+                                step: "1",
+                                value: Number(form.targetPassRatePercent ?? 80),
+                                onChange: (event) => updateCreateForm({ targetPassRatePercent: event.target.value }),
+                                disabled: createBusy,
+                              }),
+                              React.createElement("span", null, "%")
+                            )
+                          )
+                        )
+                      : null,
+                    React.createElement("label", { className: "playground-fine-tuning-policy-field" },
+                      React.createElement("span", null, "Max cost increase"),
+                      React.createElement("div", { className: "playground-fine-tuning-number-shell" },
+                        React.createElement("input", {
+                          type: "number",
+                          min: "0",
+                          max: "1000",
+                          step: "1",
+                          value: form.maximumCostIncreasePercent ?? "",
+                          placeholder: "Not set",
+                          onChange: (event) => updateCreateForm({
+                            maximumCostIncreasePercent: event.target.value,
+                          }),
+                          disabled: createBusy,
+                        }),
+                        React.createElement("span", null, "%")
+                      )
+                    ),
+                    React.createElement("label", { className: "playground-fine-tuning-policy-field" },
+                      React.createElement("span", null, "Max latency increase"),
+                      React.createElement("div", { className: "playground-fine-tuning-number-shell" },
+                        React.createElement("input", {
+                          type: "number",
+                          min: "0",
+                          max: "1000",
+                          step: "1",
+                          value: form.maximumLatencyIncreasePercent ?? "",
+                          placeholder: "Not set",
+                          onChange: (event) => updateCreateForm({
+                            maximumLatencyIncreasePercent: event.target.value,
+                          }),
+                          disabled: createBusy,
+                        }),
+                        React.createElement("span", null, "%")
+                      )
+                    ),
+                    React.createElement("label", { className: "playground-fine-tuning-policy-field" },
+                      React.createElement("span", null, "Max iterations"),
+                      React.createElement("div", { className: "playground-fine-tuning-number-shell" },
+                        React.createElement("input", {
+                          type: "number",
+                          min: "1",
+                          max: "20",
+                          step: "1",
+                          value: Number(form.maxIterations ?? 3),
+                          onChange: (event) => updateCreateForm({ maxIterations: event.target.value }),
+                          disabled: createBusy,
+                        })
+                      )
+                    ),
+                    React.createElement("label", { className: "playground-fine-tuning-policy-field" },
+                      React.createElement("span", null, "Budget"),
+                      React.createElement("div", { className: "playground-fine-tuning-number-shell" },
+                        React.createElement("span", null, "$"),
+                        React.createElement("input", {
+                          type: "number",
+                          min: "0.01",
+                          step: "0.01",
+                          value: Number(form.budgetUsd ?? 10),
+                          onChange: (event) => updateCreateForm({ budgetUsd: event.target.value }),
+                          disabled: createBusy,
+                        })
+                      )
+                    ),
+                    React.createElement("label", { className: "playground-fine-tuning-policy-field" },
+                      React.createElement("span", null, "Time limit"),
+                      React.createElement("div", { className: "playground-fine-tuning-number-shell" },
+                        React.createElement("input", {
+                          type: "number",
+                          min: "5",
+                          max: "1440",
+                          step: "5",
+                          value: Number(form.maxDurationMinutes ?? 120),
+                          onChange: (event) => updateCreateForm({ maxDurationMinutes: event.target.value }),
+                          disabled: createBusy,
+                        }),
+                        React.createElement("span", null, "min")
+                      )
+                    ),
+                    React.createElement("label", { className: "playground-fine-tuning-policy-field" },
+                      React.createElement("span", null, "Plateau stop"),
+                      React.createElement("div", { className: "playground-fine-tuning-number-shell" },
+                        React.createElement("input", {
+                          type: "number",
+                          min: "1",
+                          max: "5",
+                          step: "1",
+                          value: Number(form.plateauIterations ?? 2),
+                          onChange: (event) => updateCreateForm({ plateauIterations: event.target.value }),
+                          disabled: createBusy,
+                        }),
+                        React.createElement("span", null, "iterations")
+                      )
+                    )
+                  ),
+                  React.createElement("label", { className: "playground-fine-tuning-policy-checkbox" },
+                    React.createElement("input", {
+                      type: "checkbox",
+                      checked: form.publishBestOnLimit === true,
+                      onChange: (event) => updateCreateForm({ publishBestOnLimit: event.target.checked }),
+                      disabled: createBusy,
+                    }),
+                    React.createElement("span", null, "Publish the best verified candidate if a limit is reached")
                   )
                 ),
                 React.createElement(PlatformInstructionsEditor, {
                   value: String(form.instructions || ""),
                   onChange: (value) => updateCreateForm({ instructions: String(value || "") }),
                   title: "Instructions",
-                  placeholder: "Add fine-tuning instructions here.",
+                  placeholder: "Add optimization instructions here.",
                   ariaLabel: "Fine-tuning instructions",
                   readOnly: createBusy,
                   stickyHeader: false,

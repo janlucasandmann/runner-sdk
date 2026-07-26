@@ -111,6 +111,7 @@ export const ORGANIZATIONS_PAGE_ROLES_AND_VIEW_SCRIPT = `
                           { id: "members", label: "Organization members" },
                           { id: "resources", label: "Resources" },
                           { id: "roles", label: "Roles" },
+                          { id: "identity-access", label: "Identity & Access" },
                           { id: "billing", label: "Billing" },
 	                          { id: "usage", label: "Usage" },
                         ].map((tab) => React.createElement("button", {
@@ -128,6 +129,8 @@ export const ORGANIZATIONS_PAGE_ROLES_AND_VIEW_SCRIPT = `
                       ? renderOrganizationResources()
                       : organizationPageActiveTab === "roles"
                         ? renderOrganizationRoles()
+                      : organizationPageActiveTab === "identity-access"
+                        ? renderOrganizationIdentityAccess()
 	                      : organizationPageActiveTab === "usage"
 	                        ? renderOrganizationUsageSection()
                         : organizationPageActiveTab === "billing"

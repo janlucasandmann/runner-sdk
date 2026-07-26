@@ -191,7 +191,7 @@ export function FineTuningOverviewPage({
         toolbar: {
           title: "All Fine-tuning Jobs",
           search: {
-            placeholder: "Search fine-tuning jobs",
+            placeholder: "Search optimization jobs",
             getSearchText: (row) =>
               row.searchText || `${row.name} ${row.agentLabel} ${row.conductorLabel} ${row.status}`,
           },
@@ -203,6 +203,7 @@ export function FineTuningOverviewPage({
               onChange: setStatusFilter,
               options: [
                 { id: "all", label: "All Jobs" },
+                { id: "planned", label: "Planned" },
                 { id: "completed", label: "Completed" },
                 { id: "running", label: "Running" },
                 { id: "verifying", label: "Verifying" },
@@ -210,7 +211,7 @@ export function FineTuningOverviewPage({
               ],
             },
           ],
-          primaryAction: { label: "Fine-Tune", icon: Plus, onClick: onCreate },
+          primaryAction: { label: "Optimize Agent", icon: Plus, onClick: onCreate },
         },
         getRowActions,
         onRowActivate: onOpen,
@@ -220,11 +221,11 @@ export function FineTuningOverviewPage({
         emptyState: (
           <PlatformEmptyState
             icon={TestTubeDiagonal}
-            title="No fine-tuning jobs yet"
+            title="No optimization jobs yet"
             description="Fine-tuning jobs will appear here after you improve an agent with evaluated evidence."
           />
         ),
-        noResultsState: "No fine-tuning jobs match this view.",
+        noResultsState: "No optimization jobs match this view.",
       }}
     />
   );

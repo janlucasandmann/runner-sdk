@@ -301,9 +301,6 @@ export const IMAGINE_TEMPLATE_PAGE_VIEW_SCRIPT = String.raw`          const acti
               )
             )
           );
-          return React.createElement(React.Fragment, null,
-            templatePageElement,
-            renderImagineTemplateVideoUpgradeModal()
-          );
+          return templatePageElement;
         }
 `;

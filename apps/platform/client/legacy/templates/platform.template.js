@@ -12,7 +12,7 @@
         import Chart from "chart.js/auto";
         import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
         import { browserLocalPersistence, getApps, getAuth, GoogleAuthProvider, initializeApp, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOutFirebaseAuth } from "/api/platform/auth/browser-module.js";
-        import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
+        import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
 	      import { RunnerClient } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
 	      import { PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
@@ -20,12 +20,15 @@
         import { PlatformFileExplorerBrowserModal, PlatformFileExplorerModal } from "/dist/platform-ui/components/composite/file-explorer/index.js";
         import { PlatformSubtasks } from "/dist/platform-ui/components/composite/subtasks/index.js";
         import { PlatformActivityTimeline } from "/dist/platform-ui/components/composite/activity-timeline/index.js";
+        import { PlatformCommentCard, PlatformCommentComposer } from "/dist/platform-ui/components/composite/comments/index.js";
         import { PlatformCodeEditorWorkspace } from "/dist/platform-ui/components/composite/code-editor-workspace/index.js";
   	      import { PlatformCodePreviewBox } from "/dist/platform-ui/components/composite/code-preview-box/index.js";
   	      import { PlatformDataTable } from "/dist/platform-ui/components/composite/data-table/index.js";
+          import { PlatformDeploymentMap } from "/dist/platform-ui/components/composite/deployment-map/index.js";
   	      import { PlatformDetailTabBar } from "/dist/platform-ui/components/composite/detail-tab-bar/index.js";
         import { PlatformDiffViewer } from "/dist/platform-ui/components/composite/diff-viewer/index.js";
   	      import { PlatformEmptyState } from "/dist/platform-ui/components/composite/empty-state/index.js";
+        import { PlatformEmojiPicker } from "/dist/platform-ui/components/composite/emoji-picker/index.js";
         import { PlatformVersionHistorySidebar, PlatformVersionLabel, PlatformVersionPublishControl, PlatformVersionSaveDialog, formatPlatformVersionLabel, normalizePlatformVersionNumber } from "/dist/platform-ui/components/composite/versioning/index.js";
         import { PlatformInstructionsEditor, normalizePlatformInstructionsEditorImageSource, replacePlatformInstructionsEditorImageMarkdown, serializePlatformInstructionsEditorFileMarkdown, serializePlatformInstructionsEditorImageMarkdown } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
   	      import { PlatformLoadingState } from "/dist/platform-ui/components/composite/loading-state/index.js";
@@ -40,6 +43,7 @@
         import { PLATFORM_PROFILE_IMAGE_PRESET_OPTIONS, PlatformProfileImagePicker, getPlatformProfileImageInitials } from "/dist/platform-ui/components/composite/profile-image-picker/index.js";
   	      import { PlatformModal, PlatformModalBackdrop, PlatformModalBody, PlatformModalFooter, PlatformModalHeader, PlatformModalSurface, PlatformUnsavedChangesModal } from "/dist/platform-ui/components/composite/modal/index.js";
         import { PlatformGlobalSearchModal } from "/dist/platform-shell/app-header/global-search-modal/index.js";
+        import { PlatformPlanGateModal, requestPlatformPlanGate, requestPlatformPlanGateFromResponse, subscribePlatformPlanGateRequests } from "/dist/platform-shell/plan-gate/plan-gate-modal/index.js";
 	      import { PlatformSwitch } from "/dist/platform-ui/components/ui/switch/index.js";
         import { PlatformTicketItem } from "/dist/platform-ui/components/ui/ticket-item/index.js";
 	      import { PlatformCalendarWidget, PlatformProjectWidget, PlatformProjectWidgetEmpty, PlatformProjectWidgetEmptyState, PlatformProjectWidgetTask, PlatformProjectWidgetTaskList, PlatformUsageWidget } from "/dist/platform-ui/components/composite/widgets/index.js";
@@ -73,7 +77,7 @@
   	      import { PlatformApplicationBoundary } from "/dist/platform-runtime/platform-application-boundary.js";
         import { AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, arePlatformAgentListRecordsEquivalent as arePlaygroundAgentListsEquivalent, buildPlatformAgentListScopeKey as buildPlaygroundAgentListScopeKey, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, normalizeComputerOverviewRows, normalizePlatformAgentListRecords, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, readCachedPlatformAgentList as readCachedPlaygroundAgentList, saveComputerResource, writeCachedPlatformAgentList as writeCachedPlaygroundAgentList } from "/dist/platform-shell/presentation/platform-resource-api.js";
 	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, getDevelopResourceCreatorIdentity, getDevelopResourceOwnerIdentity, initializeDevelopResourceIdentityMetadata, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-shell/presentation/platform-develop-api.js";
-        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopSecurityWorkspacePage, DevelopServerDetailPage, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationDetailPage, EvaluationsOverviewPage, FineTuningDetailPage, FineTuningOverviewPage, GuardrailDetailPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage, TeamDetailPage, TeamsOverviewPage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
+        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, AssuranceWorkspacePage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopEvidenceAgentsWorkspacePage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopSecurityWorkspacePage, DevelopServerDetailPage, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationDetailPage, EvaluationsOverviewPage, FineTuningDetailPage, FineTuningOverviewPage, GuardrailDetailPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationAccessControlPage, OrganizationsOverviewPage, ProjectDetailPage, ProjectIconPicker, ProjectSummary, ProjectSummaryDetails, SkillsOverviewPage, SourceDeployableServerDetailPage, TagDetailPage, TagsOverviewPage, TeamDetailPage, TeamsOverviewPage, TestsWorkspacePage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
 	      import { beginPlatformPluginConnection, clearPlatformPluginConnectionRedirectState, disconnectPlatformPluginConnection, fetchPlatformPluginConnectionStatus, getPlatformPluginConnectionDefinition, getPlatformPluginConnectionIdentity, readCachedPlatformPluginConnectionStatus, readPlatformPluginConnectionRedirectState, writeCachedPlatformPluginConnectionStatus, writePlatformPluginConnectionRedirectState } from "/dist/platform-resources/plugins/connections/index.js";
 	      import { PLATFORM_ALL_AGENTS_PRINCIPAL_ID, PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID, PlatformResourceAccessSettings, PlatformResourceAccessTable, buildPlatformSystemPrincipalPermissionMetadata, buildPlatformSystemPrincipalRolePermissionMetadata, buildPlatformTeamAccessMetadata, buildPlatformTeamRolePermissionMetadata, composePlatformAccessPrincipalRows, createPlatformSystemAccessPrincipalRows, getPlatformAccessPrincipalProfileImageUrl, getPlatformSharedTeamIds, getPlatformSystemAccessPrincipal, getPlatformSystemPrincipalPermissionSet, getPlatformSystemPrincipalRolePermissionSet, getPlatformTeamPermissionSet, getPlatformTeamRolePermissionSet, getPlatformTeamRolePermissionSets, isPlatformRoleScopedSystemAccessPrincipalId, isPlatformSystemAccessPrincipalId, normalizePlatformAccessPrincipalId } from "/dist/platform-resources/access-control/index.js";
   	      import { openGoogleDrivePicker } from "/dist/platform-integrations/google-drive/google-drive-picker.js";
@@ -2239,6 +2243,7 @@
               signal: controller.signal,
             });
             const data = await response.json().catch(() => ({}));
+            requestPlatformPlanGateFromResponse(response, data);
             return { response, data };
           } finally {
             window.clearTimeout(timeoutId);
@@ -3482,7 +3487,7 @@
               ariaLabel: (thread) => "Select " + readThreadContext(thread).displayThreadTitle,
               onChange: ({ selectedIds: nextIds, reason }) => {
                 if (reason === "visible") {
-                  rowOptions.onToggleVisibleSelection?.();
+                  rowOptions.onToggleVisibleSelection?.(nextIds);
                   return;
                 }
                 const changedId = Array.from(new Set([...selectedIds, ...nextIds])).find((id) => selectedIds.has(id) !== nextIds.has(id));
@@ -3932,6 +3937,24 @@
             description: "Higher-depth deep research path tuned for stronger coverage.",
           },
         ];
+        const PLAYGROUND_AGENT_EXECUTION_ENGINE_OPTIONS = [
+          {
+            id: "computer-agents-cli",
+            label: "Claude Code",
+            description: "Run the selected model with Claude Code through the standard Computer Agents runtime.",
+            iconUrl: "/img/020-engine-providers/claude-code.svg",
+          },
+          {
+            id: "grok-build",
+            label: "Grok Build",
+            description: "Run the selected model with Grok Build through its protected provider endpoint.",
+            iconUrl: "/img/020-engine-providers/grok-build.svg",
+          },
+        ];
+
+        function normalizePlaygroundAgentExecutionEngine(value) {
+          return value === "grok-build" ? "grok-build" : "computer-agents-cli";
+        }
         const PLAYGROUND_SKILL_IMAGE_MODEL_OPTIONS = [
           {
             id: "gpt-image-2",
@@ -4399,94 +4422,6 @@
   
         function isPlaygroundFreePlanLockedComposerAgent(agent) {
           return isPlaygroundDeveloperAgent(agent) || isPlaygroundResearcherAgent(agent) || getPlaygroundAgentListMode(agent) === "teams";
-        }
-  
-        function renderPlaygroundAgentUpgradeModal({
-          isOpen,
-          titleId = "playground-agent-upgrade-title",
-          onClose,
-          onCheckout,
-          checkoutLoading = false,
-          checkoutDisabled = false,
-        } = {}) {
-          if (!isOpen) {
-            return null;
-          }
-  
-          const features = [
-            { icon: Bot, title: "Forge and Foundry", copy: "Use higher-capacity default agents for implementation, synthesis, and reasoning-heavy work." },
-            { icon: Plus, title: "Custom agents", copy: "Create specialized agents with their own instructions, skills, permissions, and models." },
-            { icon: UsersRound, title: "Agent Squads", copy: "Coordinate fixed squads with orchestrators and subagents for repeatable workflows." },
-            { icon: Brain, title: "Premium models", copy: "Access the managed model catalog beyond Spark, including long-context and frontier models." },
-            { icon: Sparkles, title: "Credits included", copy: "Start with $5.00 in monthly usage credits and organization budget controls." },
-            { icon: Key, title: "API access", copy: "Use Computer Agents APIs and budget controls for production workflows." },
-          ];
-  
-          return React.createElement(PlatformModalBackdrop, {
-              className: "playground-calendar-upgrade-backdrop",
-              role: "dialog",
-              "aria-modal": "true",
-              "aria-labelledby": titleId,
-            },
-            React.createElement("button", {
-              type: "button",
-              className: "playground-files-header-icon-button is-plain playground-calendar-upgrade-close",
-              onClick: onClose,
-              "aria-label": "Close upgrade modal",
-              disabled: checkoutLoading,
-            }, React.createElement(X, { width: 18, height: 18, strokeWidth: 1.8 })),
-            React.createElement("div", { className: "playground-calendar-upgrade-shell" },
-              React.createElement("h2", {
-                id: titleId,
-                className: "playground-calendar-upgrade-headline",
-              },
-                "Unlock the full platform with ",
-                React.createElement("span", { className: "playground-calendar-upgrade-headline-price" }, "Builder")
-              ),
-              React.createElement("div", { className: "playground-calendar-upgrade-pill" }, "Custom agents, projects, workflows, resources, and API access"),
-              React.createElement(PlatformModalSurface, {
-                  className: "playground-calendar-upgrade-modal",
-                  role: "document",
-                },
-                React.createElement("div", { className: "playground-calendar-upgrade-modal-top" },
-                  React.createElement("div", { className: "playground-calendar-upgrade-modal-header" },
-                    React.createElement("div", { className: "playground-calendar-upgrade-modal-title" }, "Builder"),
-                    React.createElement("div", { className: "playground-calendar-upgrade-modal-offer" }, "$5 usage credit included")
-                  ),
-                  React.createElement("div", { className: "playground-calendar-upgrade-price-row" },
-                    React.createElement("span", { className: "playground-calendar-upgrade-price-new" }, "$24"),
-                    React.createElement("span", null, " / month")
-                  ),
-                  React.createElement("p", { className: "playground-calendar-upgrade-modal-copy" },
-                    "Use Spark on Sandbox. Upgrade to create custom agents and operate projects, workflows, and developer resources."
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-calendar-upgrade-modal-button",
-                    onClick: onCheckout,
-                    disabled: checkoutLoading || checkoutDisabled,
-                  }, checkoutLoading ? "Opening checkout..." : "Upgrade to Builder")
-                ),
-                React.createElement("div", { className: "playground-calendar-upgrade-feature-list" },
-                  features.map((feature) => {
-                    const Icon = feature.icon;
-                    return React.createElement("div", {
-                        key: feature.title,
-                        className: "playground-calendar-upgrade-modal-feature",
-                      },
-                      React.createElement("span", { className: "playground-calendar-upgrade-modal-feature-icon" },
-                        React.createElement(Icon, { width: 16, height: 16, strokeWidth: 1.8 })
-                      ),
-                      React.createElement("div", null,
-                        React.createElement("div", null, feature.title),
-                        React.createElement("small", null, feature.copy)
-                      )
-                    );
-                  })
-                )
-              )
-            )
-          );
         }
   
         function isPlaygroundDefaultNamedAgent(agent) {
@@ -5210,6 +5145,7 @@
             model: "deepseek-v4-flash",
             instructions: "",
             binary: "Claude Code CLI",
+            executionEngine: "computer-agents-cli",
             reasoningEffort: "medium",
             enabledSkills: ["frontend_design"],
             guardrailSetIds: [],
@@ -7086,6 +7022,7 @@
             model: getPlaygroundAgentModelMeta(typeof agent.model === "string" ? agent.model : "").id,
             instructions: typeof agent.instructions === "string" ? agent.instructions : draft.instructions,
             binary: typeof agent.binary === "string" && agent.binary.trim() ? agent.binary : draft.binary,
+            executionEngine: normalizePlaygroundAgentExecutionEngine(agent.executionEngine || agent.execution_engine),
             reasoningEffort,
             enabledSkills,
             guardrailSetIds,
@@ -7285,6 +7222,12 @@
                 ? snapshot.instructions
                 : "",
             binary: String(version.binary || snapshot.binary || "Claude Code CLI").trim() || "Claude Code CLI",
+            executionEngine: normalizePlaygroundAgentExecutionEngine(
+              version.executionEngine
+              || version.execution_engine
+              || snapshot.executionEngine
+              || snapshot.execution_engine
+            ),
             reasoningEffort: ["minimal", "low", "medium", "high"].includes(version.reasoningEffort)
               ? version.reasoningEffort
               : ["minimal", "low", "medium", "high"].includes(snapshot.reasoningEffort)
@@ -7410,6 +7353,7 @@
             model: getPlaygroundAgentModelMeta(normalizedAgent.model || "").id,
             instructions: typeof normalizedAgent.instructions === "string" ? normalizedAgent.instructions : "",
             binary: String(normalizedAgent.binary || "Claude Code CLI").trim() || "Claude Code CLI",
+            executionEngine: normalizePlaygroundAgentExecutionEngine(normalizedAgent.executionEngine),
             reasoningEffort: ["minimal", "low", "medium", "high"].includes(normalizedAgent.reasoningEffort)
               ? normalizedAgent.reasoningEffort
               : "medium",
@@ -8015,18 +7959,18 @@
           if (!backendUrl || !serverId) return "";
           const params = new URLSearchParams();
           params.set("limit", String(Math.max(1, Math.min(200, Number(limit) || 50))));
-          return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/runs?" + params.toString();
+          return backendUrl + "/agent-runtimes/" + encodeURIComponent(serverId) + "/runs?" + params.toString();
         }
   
         function buildPlaygroundServerRunUrl(backendUrl, serverId, runId, includeEvents = false) {
           if (!backendUrl || !serverId || !runId) return "";
-          const base = backendUrl + "/servers/" + encodeURIComponent(serverId) + "/runs/" + encodeURIComponent(runId);
+          const base = backendUrl + "/agent-runtimes/" + encodeURIComponent(serverId) + "/runs/" + encodeURIComponent(runId);
           return includeEvents ? base + "/events" : base;
         }
   
         function buildPlaygroundServerRunCancelUrl(backendUrl, serverId, runId) {
           if (!backendUrl || !serverId || !runId) return "";
-          return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/runs/" + encodeURIComponent(runId) + "/cancel";
+          return backendUrl + "/agent-runtimes/" + encodeURIComponent(serverId) + "/runs/" + encodeURIComponent(runId) + "/cancel";
         }
   
         function normalizePlaygroundRealApiBackendUrl(backendUrl) {
@@ -14591,6 +14535,10 @@
           "guardrailId",
           "evaluationId",
           "evaluationRunId",
+          "testPlanId",
+          "testPlanName",
+          "testRunId",
+          "testRunName",
           "fineTuneJobId",
           "developSection",
           "imagineView",

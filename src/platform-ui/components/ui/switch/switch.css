@@ -16,6 +16,16 @@
   line-height: 1rem;
 }
 
+.platform-switch.is-full-width {
+  width: 100%;
+  min-width: 0;
+}
+
+.platform-switch.is-full-width .platform-switch__option {
+  min-width: 0;
+  flex: 1 1 0;
+}
+
 .platform-switch__option {
   box-sizing: border-box;
   position: relative;

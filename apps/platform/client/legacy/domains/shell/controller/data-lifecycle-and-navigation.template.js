@@ -327,6 +327,7 @@
                 name: String(project.name || "").trim() || "Untitled Project",
                 description: String(project.description || "").trim(),
                 defaultEnvironmentId: String(project.defaultEnvironmentId || "").trim() || null,
+                icon: resolvePlaygroundProjectIconId(project),
                 color: project.color || null,
                 metadata: project.metadata || null,
               }));
@@ -957,7 +958,7 @@
             }
   
             try {
-              const response = await fetch(proxyBackendBase + "/projects", {
+              const response = await fetch(proxyBackendBase + "/projects?view=overview", {
                 method: "GET",
                 headers: authRequestHeaders,
               });
@@ -972,197 +973,8 @@
                 return;
               }
               const nextProjects = parsePlaygroundProjectListResponse(data);
-              const projectsById = new Map(
-                nextProjects
-                  .map((project) => [String(project?.id || "").trim(), project])
-                  .filter(([projectId]) => projectId)
-              );
-              const parseShareMetadata = (share) => {
-                const metadata = share?.metadata;
-                if (!metadata) {
-                  return {};
-                }
-                if (typeof metadata === "string") {
-                  try {
-                    const parsed = JSON.parse(metadata);
-                    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
-                  } catch {
-                    return {};
-                  }
-                }
-                return metadata && typeof metadata === "object" && !Array.isArray(metadata) ? metadata : {};
-              };
-              const getShareResourceType = (share) => {
-                const metadata = parseShareMetadata(share);
-                return String(
-                  share?.resourceType
-                  || share?.resource_type
-                  || metadata.resourceType
-                  || metadata.resource_type
-                  || metadata.resourceKind
-                  || metadata.resource_kind
-                  || metadata.kind
-                  || metadata.type
-                  || ""
-                ).trim().toLowerCase();
-              };
-              const getFallbackSharedProjectRecord = (share, team) => {
-                const metadata = parseShareMetadata(share);
-                const metadataProject = metadata.project && typeof metadata.project === "object" && !Array.isArray(metadata.project)
-                  ? metadata.project
-                  : {};
-                const projectId = String(share?.resourceId || share?.resource_id || metadata.projectId || metadata.project_id || metadataProject.id || "").trim();
-                if (!projectId) {
-                  return null;
-                }
-                const projectName = String(
-                  metadataProject.name
-                  || metadataProject.title
-                  || metadata.name
-                  || metadata.title
-                  || share?.resourceName
-                  || share?.resource_name
-                  || share?.name
-                  || "Shared project"
-                ).trim() || "Shared project";
-                const shareUpdatedAt = String(share?.updatedAt || share?.updated_at || share?.createdAt || share?.created_at || "").trim();
-                return normalizePlaygroundProjectRecord({
-                  ...metadataProject,
-                  id: projectId,
-                  name: projectName,
-                  description: String(metadataProject.description || metadata.description || "").trim(),
-                  updatedAt: shareUpdatedAt || metadataProject.updatedAt || metadata.updatedAt,
-                  createdAt: String(share?.createdAt || share?.created_at || metadataProject.createdAt || metadata.createdAt || "").trim(),
-                  metadata: {
-                    ...(metadataProject.metadata && typeof metadataProject.metadata === "object" && !Array.isArray(metadataProject.metadata) ? metadataProject.metadata : {}),
-                    ...metadata,
-                    sharedWithMe: true,
-                    teamShared: true,
-                    teamShareId: String(share?.id || "").trim(),
-                    teamId: String(team?.id || share?.teamId || share?.team_id || metadata.teamId || metadata.team_id || "").trim(),
-                    teamName: String(team?.name || metadata.teamName || metadata.team_name || "").trim(),
-                  },
-                });
-              };
-              const markProjectAsTeamShared = (project, share, team) => {
-                if (!project?.id) {
-                  return project;
-                }
-                const metadata = parseShareMetadata(share);
-                const existingMetadata = project.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
-                  ? project.metadata
-                  : {};
-                return normalizePlaygroundProjectRecord({
-                  ...project,
-                  sharedWithMe: true,
-                  isShared: true,
-                  metadata: {
-                    ...existingMetadata,
-                    sharedWithMe: true,
-                    isShared: true,
-                    teamShared: true,
-                    teamShareId: String(share?.id || existingMetadata.teamShareId || "").trim(),
-                    teamId: String(team?.id || share?.teamId || share?.team_id || metadata.teamId || metadata.team_id || existingMetadata.teamId || "").trim(),
-                    teamName: String(team?.name || metadata.teamName || metadata.team_name || existingMetadata.teamName || "").trim(),
-                  },
-                });
-              };
-              const teamsResult = await fetchJsonWithTimeout(proxyBackendBase + "/teams", {
-                method: "GET",
-                credentials: "include",
-                cache: "no-store",
-                headers: authRequestHeaders,
-              }, 8000).catch(() => null);
-              const teams = teamsResult?.response?.ok
-                ? (Array.isArray(teamsResult.data?.data) ? teamsResult.data.data : (Array.isArray(teamsResult.data?.teams) ? teamsResult.data.teams : []))
-                : [];
-              const projectShares = [];
-              if (teams.length > 0) {
-                const shareResults = await Promise.allSettled(teams.map(async (team) => {
-                  const teamId = String(team?.id || "").trim();
-                  if (!teamId) {
-                    return [];
-                  }
-                  const { response: sharesResponse, data: sharesData } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId) + "/resource-shares", {
-                    method: "GET",
-                    credentials: "include",
-                    cache: "no-store",
-                    headers: authRequestHeaders,
-                  }, 8000);
-                  if (!sharesResponse.ok) {
-                    return [];
-                  }
-                  return (Array.isArray(sharesData?.data) ? sharesData.data : [])
-                    .filter((share) => getShareResourceType(share) === "project")
-                    .map((share) => ({ share, team }));
-                }));
-                shareResults.forEach((result) => {
-                  if (result.status === "fulfilled" && Array.isArray(result.value)) {
-                    projectShares.push(...result.value);
-                  }
-                });
-              }
-              projectShares.forEach(({ share, team }) => {
-                const metadata = parseShareMetadata(share);
-                const metadataProject = metadata.project && typeof metadata.project === "object" && !Array.isArray(metadata.project)
-                  ? metadata.project
-                  : {};
-                const projectId = String(share?.resourceId || share?.resource_id || metadata.projectId || metadata.project_id || metadataProject.id || "").trim();
-                if (!projectId || !projectsById.has(projectId)) {
-                  return;
-                }
-                const sharedProject = markProjectAsTeamShared(projectsById.get(projectId), share, team);
-                if (sharedProject?.id) {
-                  projectsById.set(projectId, sharedProject);
-                }
-              });
-              const missingSharedProjectIds = Array.from(new Set(projectShares
-                .map(({ share }) => {
-                  const metadata = parseShareMetadata(share);
-                  const metadataProject = metadata.project && typeof metadata.project === "object" && !Array.isArray(metadata.project)
-                    ? metadata.project
-                    : {};
-                  return String(share?.resourceId || share?.resource_id || metadata.projectId || metadata.project_id || metadataProject.id || "").trim();
-                })
-                .filter((projectId) => projectId && !projectsById.has(projectId))));
-              if (missingSharedProjectIds.length > 0) {
-                const detailResults = await Promise.allSettled(missingSharedProjectIds.map(async (projectId) => {
-                  const detailResponse = await fetch(proxyBackendBase + "/projects/" + encodeURIComponent(projectId), {
-                    method: "GET",
-                    credentials: "include",
-                    cache: "no-store",
-                    headers: authRequestHeaders,
-                  });
-                  const detailData = await detailResponse.json().catch(() => ({}));
-                  if (!detailResponse.ok) {
-                    throw new Error(detailData?.message || detailData?.error || "Failed to load shared project.");
-                  }
-                  return getPlaygroundProjectResponseRecord(detailData, { id: projectId }) || normalizePlaygroundProjectRecord({ id: projectId });
-                }));
-                missingSharedProjectIds.forEach((projectId, index) => {
-                  const result = detailResults[index];
-                  let sharedProject = result?.status === "fulfilled" ? result.value : null;
-                  const matchingShare = projectShares.find(({ share }) => {
-                    const metadata = parseShareMetadata(share);
-                    const metadataProject = metadata.project && typeof metadata.project === "object" && !Array.isArray(metadata.project)
-                      ? metadata.project
-                      : {};
-                    return String(share?.resourceId || share?.resource_id || metadata.projectId || metadata.project_id || metadataProject.id || "").trim() === projectId;
-                  });
-                  if (!sharedProject && matchingShare) {
-                    sharedProject = getFallbackSharedProjectRecord(matchingShare.share, matchingShare.team);
-                  }
-                  if (sharedProject && matchingShare) {
-                    sharedProject = markProjectAsTeamShared(sharedProject, matchingShare.share, matchingShare.team);
-                  }
-                  if (sharedProject?.id) {
-                    projectsById.set(projectId, sharedProject);
-                  }
-                });
-              }
-              const mergedProjects = Array.from(projectsById.values());
               setRealProjects((current) =>
-                sortPlaygroundProjectsByRecent(mergedProjects.map((project) => {
+                sortPlaygroundProjectsByRecent(nextProjects.map((project) => {
                   const existingProject = current.find((currentProject) => currentProject?.id === project.id) || null;
                   return mergePlaygroundProjectRecords(project, existingProject) || project;
                 }))
@@ -1810,7 +1622,7 @@
   	          });
   
   	          try {
-  	            const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(normalizedTaskId) + "/start-thread", {
+                const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(normalizedTaskId) + "/run-thread", {
                 method: "POST",
                 headers: {
                   ...authRequestHeaders,
@@ -1818,6 +1630,11 @@
                 },
                 body: JSON.stringify({
                   title: (taskPreview.ticketNumber ? taskPreview.ticketNumber + " " : "") + "Review: " + taskPreview.title,
+                  executionMode: "deferred",
+                  idempotencyKey: "project-task-review-" + normalizedTaskId + "-" + (
+                    globalThis.crypto?.randomUUID?.()
+                    || Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)
+                  ),
                   environmentId: normalizedTask.environmentId || undefined,
                   agentId: reviewerAgentId,
                   enabledSkills: {
@@ -1830,6 +1647,19 @@
                   runKind: "review",
                   allowAdditionalThread: true,
                   taskPreview,
+                  metadata: {
+                    triggerKind: "manual",
+                    source: "project_task_review",
+                    runKind: "review",
+                    runnerPlayground: {
+                      enabledSkills: {
+                        taskManagement: true,
+                        computerAgents: true,
+                      },
+                      connectors: normalizedTask.connectors,
+                      taskPreview,
+                    },
+                  },
                 }),
   	            });
   	            const data = await response.json().catch(() => ({}));
@@ -3109,9 +2939,10 @@
           }
   
   ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.navigation}
-  ${MODELS_APP_SCRIPT_FRAGMENTS.navigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.navigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.navigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.navigation}${API_KEYS_APP_SCRIPT_FRAGMENTS.navigation}
+  ${MODELS_APP_SCRIPT_FRAGMENTS.navigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.navigation}${TESTS_APP_SCRIPT_FRAGMENTS.navigation}${ASSURANCE_APP_SCRIPT_FRAGMENTS.navigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.navigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.navigation}${API_KEYS_APP_SCRIPT_FRAGMENTS.navigation}
   ${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.navigation}
   ${SECURITY_APP_SCRIPT_FRAGMENTS.navigation}
+  ${EVIDENCE_AGENTS_APP_SCRIPT_FRAGMENTS.navigation}
   ${SECURITY_APP_SCRIPT_FRAGMENTS.setupReturnLifecycle}
           function isSidebarPageAvailableForMode(mode) {
             if (activePage === "thread") {
@@ -3125,6 +2956,8 @@
             }
             if (mode === "configure") {
               return activePage === "configure"
+                || activePage === "tests"
+                || activePage === "assurance"
                 || activePage === "models"
                 || activePage === "resource-templates"
                 || activePage === "inference"
@@ -3136,6 +2969,7 @@
               || activePage === "develop-webhooks"
               || activePage === "develop-api-keys"
               || activePage === "develop-security"
+              || activePage === "develop-evidence-agents"
               || (isResourcesPage && activeResourcesView === "servers")
               || (activePage === "tools" && toolsView === "actions");
           }

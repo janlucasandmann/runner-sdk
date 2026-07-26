@@ -52,6 +52,24 @@ const distPlatformActivityTimelineCssPath = path.join(
   "activity-timeline",
   "activity-timeline.css",
 );
+const platformCommentsCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "composite",
+  "comments",
+  "comments.css",
+);
+const distPlatformCommentsCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "composite",
+  "comments",
+  "comments.css",
+);
 const platformSubtasksCssPath = path.join(
   packageRoot,
   "src",
@@ -267,6 +285,24 @@ const distPlatformComponentsAnalyticsCssPath = path.join(
   "composite",
   "analytics",
   "analytics.css",
+);
+const platformDeploymentMapCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "composite",
+  "deployment-map",
+  "deployment-map.css",
+);
+const distPlatformDeploymentMapCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "composite",
+  "deployment-map",
+  "deployment-map.css",
 );
 const platformCodeEditorWorkspaceCssPath = path.join(
   packageRoot,
@@ -590,6 +626,22 @@ const distPlatformGlobalSearchModalCssPath = path.join(
   "global-search-modal",
   "global-search-modal.css",
 );
+const platformPlanGateModalCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-shell",
+  "plan-gate",
+  "plan-gate-modal",
+  "platform-plan-gate-modal.css",
+);
+const distPlatformPlanGateModalCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-shell",
+  "plan-gate",
+  "plan-gate-modal",
+  "platform-plan-gate-modal.css",
+);
 const platformHomePageCssPath = path.join(
   packageRoot,
   "src",
@@ -657,6 +709,16 @@ const securityPageCssPath = path.join(
   "client",
   "page",
   "security.css",
+);
+const evidenceAgentsPageCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-services",
+  "develop-mode",
+  "evidence-agents",
+  "client",
+  "page",
+  "evidence-agents.css",
 );
 const platformPermissionsPageCssPath = path.join(
   packageRoot,
@@ -734,6 +796,7 @@ async function copy() {
     cssText,
     platformAttachmentsCssText,
     platformActivityTimelineCssText,
+    platformCommentsCssText,
     platformSubtasksCssText,
     platformFileExplorerCssText,
     platformDataTableCssText,
@@ -746,6 +809,7 @@ async function copy() {
     platformLoadingStateCssText,
     platformInstructionsEditorCssText,
     platformAnalyticsCssText,
+    platformDeploymentMapCssText,
     platformCodeEditorWorkspaceCssText,
     platformCodePreviewBoxCssText,
     platformButtonCssText,
@@ -764,11 +828,13 @@ async function copy() {
     platformSwitchCssText,
     platformModalCssText,
     platformGlobalSearchModalCssText,
+    platformPlanGateModalCssText,
     platformHomePageCssText,
     platformOverviewPageCssText,
     platformDetailPageCssText,
     developServerDetailPageCssText,
     securityPageCssText,
+    evidenceAgentsPageCssText,
     platformPermissionsPageCssText,
     agentDetailCssText,
     platformResourceAccessTableCssText,
@@ -776,6 +842,7 @@ async function copy() {
     loadBundledCss(),
     fs.readFile(platformAttachmentsCssPath, "utf8"),
     fs.readFile(platformActivityTimelineCssPath, "utf8"),
+    fs.readFile(platformCommentsCssPath, "utf8"),
     fs.readFile(platformSubtasksCssPath, "utf8"),
     fs.readFile(platformFileExplorerCssPath, "utf8"),
     fs.readFile(platformDataTableCssPath, "utf8"),
@@ -788,6 +855,7 @@ async function copy() {
     fs.readFile(platformLoadingStateCssPath, "utf8"),
     fs.readFile(platformInstructionsEditorCssPath, "utf8"),
     fs.readFile(platformAnalyticsCssPath, "utf8"),
+    fs.readFile(platformDeploymentMapCssPath, "utf8"),
     fs.readFile(platformCodeEditorWorkspaceCssPath, "utf8"),
     fs.readFile(platformCodePreviewBoxCssPath, "utf8"),
     fs.readFile(platformButtonCssPath, "utf8"),
@@ -806,11 +874,13 @@ async function copy() {
     fs.readFile(platformSwitchCssPath, "utf8"),
     fs.readFile(platformModalCssPath, "utf8"),
     fs.readFile(platformGlobalSearchModalCssPath, "utf8"),
+    fs.readFile(platformPlanGateModalCssPath, "utf8"),
     fs.readFile(platformHomePageCssPath, "utf8"),
     fs.readFile(platformOverviewPageCssPath, "utf8"),
     fs.readFile(platformDetailPageCssPath, "utf8"),
     fs.readFile(developServerDetailPageCssPath, "utf8"),
     fs.readFile(securityPageCssPath, "utf8"),
+    fs.readFile(evidenceAgentsPageCssPath, "utf8"),
     fs.readFile(platformPermissionsPageCssPath, "utf8"),
     fs.readFile(agentDetailCssPath, "utf8"),
     fs.readFile(platformResourceAccessTableCssPath, "utf8"),
@@ -833,6 +903,10 @@ async function copy() {
     platformActivityTimelineCssText,
     "utf8",
   );
+  await fs.mkdir(path.dirname(distPlatformCommentsCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(distPlatformCommentsCssPath, platformCommentsCssText, "utf8");
   await fs.mkdir(path.dirname(distPlatformSubtasksCssPath), {
     recursive: true,
   });
@@ -927,6 +1001,14 @@ async function copy() {
   await fs.writeFile(
     distPlatformComponentsAnalyticsCssPath,
     platformAnalyticsCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformDeploymentMapCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformDeploymentMapCssPath,
+    platformDeploymentMapCssText,
     "utf8",
   );
   await fs.mkdir(path.dirname(distPlatformCodeEditorWorkspaceCssPath), {
@@ -1067,6 +1149,14 @@ async function copy() {
     `${platformLoadingStateCssText}\n\n${platformGlobalSearchModalCssText}`,
     "utf8",
   );
+  await fs.mkdir(path.dirname(distPlatformPlanGateModalCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformPlanGateModalCssPath,
+    `${platformModalCssText}\n\n${platformButtonCssText}\n\n${platformPlanGateModalCssText}`,
+    "utf8",
+  );
   await fs.mkdir(path.dirname(distPlatformHomePageCssPath), {
     recursive: true,
   });
@@ -1102,7 +1192,7 @@ async function copy() {
   await fs.mkdir(path.dirname(distPlatformPagesCssPath), { recursive: true });
   await fs.writeFile(
     distPlatformPagesCssPath,
-    `${platformPopupCssText}\n\n${platformProfileImagePickerCssText}\n\n${platformSelectorCssText}\n\n${platformCheckboxCssText}\n\n${platformAttachmentsCssText}\n\n${platformActivityTimelineCssText}\n\n${platformSubtasksCssText}\n\n${platformTicketItemCssText}\n\n${platformFileExplorerCssText}\n\n${platformDataTableCssText}\n\n${platformAnalyticsCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformCodeEditorWorkspaceCssText}\n\n${platformCodePreviewBoxCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformVersionLabelCssText}\n\n${platformHomePageCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformFloatingSidebarCssText}\n\n${platformVersionHistorySidebarCssText}\n\n${platformVersionSaveDialogCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformSettingsSectionCssText}\n\n${platformDetailPageCssText}\n\n${developServerDetailPageCssText}\n\n${securityPageCssText}\n\n${platformPermissionsPageCssText}\n\n${agentDetailCssText}\n\n${platformResourceAccessTableCssText}`,
+    `${platformPopupCssText}\n\n${platformProfileImagePickerCssText}\n\n${platformSelectorCssText}\n\n${platformCheckboxCssText}\n\n${platformAttachmentsCssText}\n\n${platformActivityTimelineCssText}\n\n${platformCommentsCssText}\n\n${platformSubtasksCssText}\n\n${platformTicketItemCssText}\n\n${platformFileExplorerCssText}\n\n${platformDataTableCssText}\n\n${platformAnalyticsCssText}\n\n${platformDeploymentMapCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformCodeEditorWorkspaceCssText}\n\n${platformCodePreviewBoxCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformVersionLabelCssText}\n\n${platformHomePageCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformFloatingSidebarCssText}\n\n${platformVersionHistorySidebarCssText}\n\n${platformVersionSaveDialogCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformSettingsSectionCssText}\n\n${platformDetailPageCssText}\n\n${developServerDetailPageCssText}\n\n${securityPageCssText}\n\n${evidenceAgentsPageCssText}\n\n${platformPermissionsPageCssText}\n\n${agentDetailCssText}\n\n${platformResourceAccessTableCssText}\n\n${platformPlanGateModalCssText}`,
     "utf8",
   );
   await fs.mkdir(distAssetsDir, { recursive: true });

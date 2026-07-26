@@ -14,6 +14,7 @@ const FALLBACK_CATALOG = Object.freeze({
       includedOperatorSeats: 1,
       defaultMonthlyOverageLimitUsd: 0,
       selfServe: true,
+      entitlements: ["agents.default.use", "computers.cloud.use"],
       features: ["$1 one-time usage credit", "Default agent and files", "One constrained cloud computer", "Run estimates and usage history"],
     },
     {
@@ -29,6 +30,24 @@ const FALLBACK_CATALOG = Object.freeze({
       defaultMonthlyOverageLimitUsd: 25,
       highlighted: true,
       selfServe: true,
+      entitlements: [
+        "agents.default.use",
+        "agents.custom.create",
+        "projects.use",
+        "imagine.generate",
+        "metronomes.use",
+        "tags.use",
+        "computers.cloud.use",
+        "computers.cloud.create",
+        "schedules.use",
+        "api.access",
+        "evaluations.use",
+        "tests.use",
+        "guardrails.use",
+        "fine_tuning.use",
+        "security.repositories.use",
+        "servers.deploy",
+      ],
       features: ["$5 monthly usage credit", "Custom agents and Projects", "Imagine and Metronome workflows", "Evaluations, guardrails, and fine-tuning", "Cloud computers and developer resources", "Tags, schedules, and API access"],
     },
     {
@@ -43,6 +62,29 @@ const FALLBACK_CATALOG = Object.freeze({
       includedOperatorSeats: "unlimited",
       defaultMonthlyOverageLimitUsd: 100,
       selfServe: true,
+      entitlements: [
+        "agents.default.use",
+        "agents.custom.create",
+        "projects.use",
+        "imagine.generate",
+        "metronomes.use",
+        "tags.use",
+        "computers.cloud.use",
+        "computers.cloud.create",
+        "schedules.use",
+        "api.access",
+        "evaluations.use",
+        "tests.use",
+        "guardrails.use",
+        "fine_tuning.use",
+        "security.repositories.use",
+        "servers.deploy",
+        "organizations.collaborate",
+        "squads.use",
+        "billing.pooled",
+        "governance.roles",
+        "inference.byo",
+      ],
       features: ["$15 pooled monthly usage credit", "Three builder seats", "Unlimited operators and viewers", "Shared agents, projects, and computers", "Squads, roles, and pooled billing", "Bring your own inference endpoint"],
     },
     {
@@ -57,6 +99,35 @@ const FALLBACK_CATALOG = Object.freeze({
       includedOperatorSeats: "unlimited",
       defaultMonthlyOverageLimitUsd: 500,
       selfServe: true,
+      entitlements: [
+        "agents.default.use",
+        "agents.custom.create",
+        "projects.use",
+        "imagine.generate",
+        "metronomes.use",
+        "tags.use",
+        "computers.cloud.use",
+        "computers.cloud.create",
+        "schedules.use",
+        "api.access",
+        "evaluations.use",
+        "tests.use",
+        "guardrails.use",
+        "fine_tuning.use",
+        "security.repositories.use",
+        "servers.deploy",
+        "organizations.collaborate",
+        "squads.use",
+        "billing.pooled",
+        "governance.roles",
+        "inference.byo",
+        "audit_logs.use",
+        "governance.approvals",
+        "sso.saml",
+        "scim.use",
+        "service_accounts.use",
+        "analytics.organization",
+      ],
       features: ["$40 pooled monthly usage credit", "Ten builder seats", "Audit logs and approval policies", "SAML SSO and SCIM", "Service accounts and organization analytics", "Priority support"],
     },
     {
@@ -71,6 +142,38 @@ const FALLBACK_CATALOG = Object.freeze({
       includedOperatorSeats: "unlimited",
       defaultMonthlyOverageLimitUsd: 0,
       selfServe: false,
+      entitlements: [
+        "agents.default.use",
+        "agents.custom.create",
+        "projects.use",
+        "imagine.generate",
+        "metronomes.use",
+        "tags.use",
+        "computers.cloud.use",
+        "computers.cloud.create",
+        "schedules.use",
+        "api.access",
+        "evaluations.use",
+        "tests.use",
+        "guardrails.use",
+        "fine_tuning.use",
+        "security.repositories.use",
+        "servers.deploy",
+        "organizations.collaborate",
+        "squads.use",
+        "billing.pooled",
+        "governance.roles",
+        "inference.byo",
+        "audit_logs.use",
+        "governance.approvals",
+        "sso.saml",
+        "scim.use",
+        "service_accounts.use",
+        "analytics.organization",
+        "private_networking.use",
+        "data_residency.configure",
+        "support.sla",
+      ],
       features: ["Contracted usage commitment", "Private networking and data residency", "Custom retention and dedicated capacity", "Security and architecture review", "SLA and enterprise support"],
     },
   ],
@@ -93,10 +196,10 @@ const TIER_ALIASES = Object.freeze({
   business: "business",
   enterprise: "enterprise",
   max: "enterprise",
-  company: "enterprise",
-  corporate: "enterprise",
-  organization: "enterprise",
-  org: "enterprise",
+  company: "business",
+  corporate: "business",
+  organization: "business",
+  org: "business",
   enterprise_plan: "enterprise",
 });
 
@@ -147,6 +250,19 @@ export const PLAYGROUND_BILLING_CATALOG_SCRIPT = `
           computeTokens: Math.round(includedUsageUsd * SETTINGS_CT_PER_DOLLAR),
           description: String(plan?.description || ""),
           features: Array.isArray(plan?.features) ? plan.features.map((feature) => String(feature || "")).filter(Boolean) : [],
+          entitlements: Array.isArray(plan?.entitlements)
+            ? plan.entitlements.map((entitlement) => String(entitlement || "").trim()).filter(Boolean)
+            : Object.entries(
+                plan?.entitlements && typeof plan.entitlements === "object"
+                  ? plan.entitlements
+                  : {}
+              )
+                .filter(([, entitlementValue]) => (
+                  entitlementValue === true
+                  || entitlementValue === "unlimited"
+                  || (typeof entitlementValue === "number" && entitlementValue > 0)
+                ))
+                .map(([entitlement]) => entitlement),
         };
       }
 
@@ -166,6 +282,20 @@ export const PLAYGROUND_BILLING_CATALOG_SCRIPT = `
       let settingsBillingCatalogVersion = SETTINGS_BILLING_FALLBACK_CATALOG.version;
       let SETTINGS_PLAN_CATALOG = SETTINGS_BILLING_FALLBACK_CATALOG.plans.map(mapSettingsBillingPlan);
       let SETTINGS_TOP_UP_CATALOG = SETTINGS_BILLING_FALLBACK_CATALOG.topUps.map(mapSettingsBillingTopUp);
+
+      function getSettingsPlanById(value) {
+        const normalizedTierId = normalizeSettingsTierId(value);
+        if (!normalizedTierId) return null;
+        return SETTINGS_PLAN_CATALOG.find((plan) => plan.id === normalizedTierId) || null;
+      }
+
+      function getSettingsMinimumPlanForEntitlement(value) {
+        const entitlement = String(value || "").trim();
+        if (!entitlement) return null;
+        return SETTINGS_PLAN_CATALOG.find((plan) => (
+          Array.isArray(plan?.entitlements) && plan.entitlements.includes(entitlement)
+        )) || null;
+      }
 
       function getSettingsPlanFeatures(tierId, computeTokens) {
         const normalizedTierId = normalizeSettingsTierId(tierId) || "sandbox";

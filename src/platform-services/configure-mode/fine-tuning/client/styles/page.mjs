@@ -113,6 +113,24 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         min-height: 32px;
       }
 
+      .playground-fine-tuning-detail-header-actions {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .playground-fine-tuning-publication-error {
+        max-width: 320px;
+        color: #f28b82;
+        font-size: 12px;
+        line-height: 1.35;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
       .playground-fine-tuning-detail-header-copy {
         min-width: 0;
         display: flex;
@@ -306,6 +324,80 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         display: flex;
         flex-direction: column;
         gap: 24px;
+      }
+
+      .playground-fine-tuning-execution-card.platform-ui-card {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 18px;
+      }
+
+      .playground-fine-tuning-execution-header,
+      .playground-fine-tuning-execution-meta {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-fine-tuning-execution-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-fine-tuning-execution-title {
+        color: #fff;
+        font-size: 14px;
+        line-height: 1.3;
+        font-weight: 400;
+      }
+
+      .playground-fine-tuning-execution-message,
+      .playground-fine-tuning-execution-meta {
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
+      }
+
+      .playground-fine-tuning-execution-message {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-fine-tuning-execution-progress {
+        position: relative;
+        width: 100%;
+        height: 4px;
+        overflow: hidden;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-fine-tuning-execution-progress-value {
+        position: absolute;
+        inset: 0 auto 0 0;
+        min-width: 2%;
+        border-radius: inherit;
+        background: #4da3ff;
+        transition: width 220ms ease;
+      }
+
+      .playground-fine-tuning-iterations-table,
+      .playground-fine-tuning-case-comparison-table {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-fine-tuning-iterations-table .platform-data-table__row,
+      .playground-fine-tuning-case-comparison-table .platform-data-table__row {
+        font-size: 12px;
       }
 
       .playground-fine-tuning-kpi-card.playground-project-overview-progress-combo-card {
@@ -708,7 +800,7 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
       }
 
       .playground-fine-tuning-evaluation-option.playground-mission-control-modal-outcome-row {
-        cursor: pointer;
+        cursor: default;
       }
 
       .playground-fine-tuning-evaluation-option .playground-mission-control-modal-outcome-copy {
@@ -728,6 +820,93 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
 
       .playground-fine-tuning-evaluation-option .playground-mission-control-modal-outcome-menu-trigger {
         flex: 0 0 auto;
+      }
+
+      .playground-fine-tuning-baseline-selector {
+        min-width: 150px;
+        max-width: 220px;
+        margin-left: auto;
+      }
+
+      .playground-fine-tuning-policy-section {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 4px 0 8px;
+      }
+
+      .playground-fine-tuning-policy-title {
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .playground-fine-tuning-policy-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px 16px;
+      }
+
+      .playground-fine-tuning-policy-field {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-fine-tuning-policy-field > span:first-child {
+        flex: 0 0 auto;
+      }
+
+      .playground-fine-tuning-policy-field > .platform-selector {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      .playground-fine-tuning-number-shell {
+        min-width: 92px;
+        min-height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 5px;
+        padding: 0 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-fine-tuning-number-shell input {
+        width: 62px;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: #ffffff;
+        font: inherit;
+        text-align: right;
+      }
+
+      .playground-fine-tuning-policy-checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .playground-fine-tuning-policy-checkbox input {
+        width: 14px;
+        height: 14px;
+        margin: 0;
+        accent-color: #4da3ff;
       }
 
       .playground-fine-tuning-evaluation-run-select {
@@ -913,6 +1092,10 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         }
 
         .playground-fine-tuning-create-modal .playground-evaluations-form-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .playground-fine-tuning-policy-grid {
           grid-template-columns: minmax(0, 1fr);
         }
       }

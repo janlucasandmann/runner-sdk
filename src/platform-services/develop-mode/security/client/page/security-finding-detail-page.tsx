@@ -7,31 +7,45 @@ import type { SecurityFindingDetail, SecurityFindingStatus } from "../domain/ind
 import { formatSecurityTimestamp } from "../domain/index.js";
 import { SecurityResourceDetailPage } from "./security-detail-layout.js";
 import {
-  SecurityBackHeader,
   SecurityFindingStatusLabel,
   SecurityJsonEvidence,
   SecurityPropertyList,
   SecuritySeverityLabel,
 } from "./security-presenters.js";
 
-type SecurityFindingTab = "evidence" | "occurrences" | "remediation" | "triage";
-const FINDING_TABS = [
+export type SecurityFindingTab =
+  "evidence" | "occurrences" | "remediation" | "triage";
+export const SECURITY_FINDING_TABS = [
   { id: "evidence", label: "Evidence", icon: FileCode2 },
   { id: "occurrences", label: "Occurrences", icon: ListTree },
   { id: "remediation", label: "Remediation", icon: GitPullRequest },
   { id: "triage", label: "Triage", icon: ShieldAlert },
 ] as const;
+export const SECURITY_FINDING_HEADER_SECTIONS = SECURITY_FINDING_TABS.map(
+  ({ id, label }) => ({ value: id, label }),
+);
 
 export interface SecurityFindingDetailPageProps {
   detail: SecurityFindingDetail;
+  activeTab?: SecurityFindingTab;
   busy?: boolean;
-  onBack: () => void;
   onOpenRun: (runId: string) => void;
   onTriage: (input: { status: SecurityFindingStatus; reason?: string; expiresAt?: string | null }) => void;
+  onTabChange?: (tab: SecurityFindingTab) => void;
 }
 
-export function SecurityFindingDetailPage({ detail, busy = false, onBack, onOpenRun, onTriage }: SecurityFindingDetailPageProps) {
-  const [activeTab, setActiveTab] = useState<SecurityFindingTab>("evidence");
+export function SecurityFindingDetailPage({
+  detail,
+  activeTab: controlledActiveTab,
+  busy = false,
+  onOpenRun,
+  onTriage,
+  onTabChange,
+}: SecurityFindingDetailPageProps) {
+  const [internalActiveTab, setInternalActiveTab] =
+    useState<SecurityFindingTab>("evidence");
+  const activeTab = controlledActiveTab ?? internalActiveTab;
+  const handleTabChange = onTabChange ?? setInternalActiveTab;
   const finding = detail.finding;
   const [status, setStatus] = useState<SecurityFindingStatus>(finding.status);
   const [reason, setReason] = useState(finding.resolutionReason || "");
@@ -101,14 +115,17 @@ export function SecurityFindingDetailPage({ detail, busy = false, onBack, onOpen
 
   return (
     <SecurityResourceDetailPage<SecurityFindingTab>
-      header={<SecurityBackHeader eyebrow="Security finding" title={finding.title} description={finding.repositoryFullName} onBack={onBack} />}
-      tabs={FINDING_TABS}
+      tabs={[]}
       activeTab={activeTab}
-      onTabChange={setActiveTab}
+      onTabChange={handleTabChange}
       ariaLabel={`Security finding ${finding.title}`}
       sidebar={(
-        <PlatformUiCard as="section" variant="sidebar" cardTitle="Finding properties">
-          <SecurityPropertyList items={[
+        <PlatformUiCard
+          as="section"
+          variant="sidebar"
+          className="playground-project-overview-sidebar-card playground-server-detail-properties-card playground-security-agent-detail-properties-card"
+        >
+          <SecurityPropertyList variant="sidebar" items={[
             { label: "Severity", value: <SecuritySeverityLabel severity={finding.severity} /> },
             { label: "Status", value: <SecurityFindingStatusLabel status={finding.status} /> },
             { label: "Confidence", value: `${Math.round(finding.confidence * 100)}%` },

@@ -135,6 +135,49 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
             return results.filter(Boolean);
           }
 
+          async function refreshTaskAgentSessions() {
+            try {
+              const response = await fetch(
+                backendUrl + "/tasks/" + encodeURIComponent(normalizedTaskId) + "/agent-sessions?limit=100",
+                {
+                  method: "GET",
+                  headers: requestHeaders,
+                  cache: "no-store",
+                  signal: abortController.signal,
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok || cancelled) {
+                return;
+              }
+              const sessions = Array.isArray(data?.data)
+                ? data.data
+                : Array.isArray(data?.agentSessions)
+                  ? data.agentSessions
+                  : [];
+              setSelectedProjectDetail((current) => {
+                const currentProjectId = String(current?.project?.id || "").trim();
+                const taskProjectId = String(draftTask?.projectId || selectedProjectId || "").trim();
+                if (!currentProjectId || (taskProjectId && currentProjectId !== taskProjectId)) {
+                  return current;
+                }
+                const otherTaskSessions = (Array.isArray(current.agentSessions)
+                  ? current.agentSessions
+                  : []).filter((session) => (
+                    String(session?.taskId || session?.task_id || "").trim() !== normalizedTaskId
+                  ));
+                return {
+                  ...current,
+                  agentSessions: otherTaskSessions.concat(sessions),
+                };
+              });
+            } catch (error) {
+              if (error?.name !== "AbortError") {
+                console.warn("Failed to refresh task agent sessions", error);
+              }
+            }
+          }
+
           async function refreshTaskThreadStatuses(threadIds) {
             const normalizedThreadIds = Array.from(new Set(
               threadIds.map((threadId) => String(threadId || "").trim()).filter(Boolean)
@@ -168,9 +211,10 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
                   : {
                       status: "ready",
                       error: "",
-                    }
+                  }
               ));
             }
+            await refreshTaskAgentSessions();
 
             const nextThreadIds = [];
             results.forEach((result) => {
@@ -1268,8 +1312,15 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 		          ).trim();
 			          const projectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(selectedProject, {
 			            taskRecord: normalizedTask,
+			            releaseRecords: releases,
 			          });
 			          const projectRulesSection = buildPlaygroundProjectRulesPromptSection(selectedProject);
+			          const projectDeliveryAssurance = normalizePlaygroundDeliveryAssurance(
+			            getPlaygroundProjectMissionControlRecord(selectedProject).deliveryAssurance
+			          );
+			          const projectDeliveryAssuranceSection = hasMeaningfulPlaygroundDeliveryAssurance(projectDeliveryAssurance)
+			            ? ("Project delivery-assurance gates:" + paragraphBreak + JSON.stringify(projectDeliveryAssurance, null, 2))
+			            : "";
 			          const projectResourcesSection = buildPlaygroundProjectResourcePromptSection(selectedProject, {
 			            projectId,
 			            projectName,
@@ -1340,6 +1391,7 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 			            connectorLines.length > 0 ? "Connectors:" + newline + connectorLines.join(newline) : "",
 				            projectStrategySection,
 				            projectRulesSection,
+				            projectDeliveryAssuranceSection,
 				            projectResourcesSection,
 				            [
 	              "Execution expectations:",
@@ -1348,6 +1400,8 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 	              directResponseTask ? "- This is a response-only ticket. Reply directly, do not call tools, do not inspect projects/tasks, do not update task status, and obey wording constraints such as nothing more." : "",
 	                reviewRequestBody ? "- This run is a reviewer change request. Address the latest review request before treating the ticket as complete." : "",
 	              "- If the ticket creates or changes deployable web apps, functions, databases, or integrations, deploy and smoke-test the affected resource unless the ticket explicitly excludes deployment.",
+	              "- Obey the project delivery-assurance gates above. Tests prove engineering behavior, Evaluations prove agent/workflow quality, and Agent Optimization must be backed by baseline-versus-candidate Evaluation evidence.",
+	              "- Do not claim a verification gate passed from a plan or narrative. Create or run the referenced platform resource and retain its real run/result ID before unblocking downstream work.",
 	              "- If you need user-owned inputs such as API keys, credentials, billing decisions, repository access, or product decisions, create a focused human-assigned resource request ticket instead of guessing.",
 	              "- Do not update this ticket's own status directly. The platform will move it to In Review or Done after the run. Only update subtasks, add comments, or create resource-request tickets when that is genuinely part of the work.",
 	              independentReviewerId ? "- When implementation is complete, leave the ticket ready for the configured reviewer; do not perform the review yourself." : "",
@@ -1642,30 +1696,53 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
           const strategyBrief = getPlaygroundProjectStrategyBriefRecord(project);
           const newline = String.fromCharCode(10);
           const sections = [];
+          const releaseRecords = (Array.isArray(options?.releaseRecords) ? options.releaseRecords : [])
+            .map((releaseRecord) => normalizePlaygroundTaskReleaseRecord(releaseRecord))
+            .filter((releaseRecord) => releaseRecord.id);
           if (strategyBrief.mission) {
             sections.push("Goal: " + strategyBrief.mission);
           }
-          if (strategyBrief.outcomes.length > 0) {
+          if (!options?.taskRecord && releaseRecords.length > 0) {
             sections.push([
-              "Primary outcomes:",
-              ...strategyBrief.outcomes.map((outcome, index) => {
-                const prefix = String(index + 1) + ". " + (outcome.title || "Outcome");
-                const releaseIds = normalizePlaygroundStrategyOutcomeReleaseIds(outcome);
+              "Current milestones:",
+              ...releaseRecords.map((release) => {
+                const legacyOutcome = getPlaygroundLegacyStrategyOutcomeForRelease(strategyBrief, release.id);
+                const successCriteria = release.successCriteria.length > 0
+                  ? release.successCriteria
+                  : normalizePlaygroundStrategyTextList(legacyOutcome?.successCriteria);
                 const details = [
-                  outcome.description,
-                  releaseIds.length > 0 ? "Milestones: " + releaseIds.join(", ") : "",
-                  outcome.successCriteria.length > 0 ? "Success: " + outcome.successCriteria.join("; ") : "",
+                  release.description || legacyOutcome?.description,
+                  successCriteria.length > 0 ? "Success: " + successCriteria.join("; ") : "",
                 ].filter(Boolean).join(" ");
-                return "- " + prefix + (details ? " — " + details : "");
+                return "- " + (release.name || release.id) + (details ? " — " + details : "");
               }),
             ].join(newline));
           }
           const taskOutcome = findPlaygroundStrategyOutcomeForTask(strategyBrief, options?.taskRecord);
-          if (taskOutcome) {
+          const taskReleaseId = normalizePlaygroundStrategyText(options?.taskRecord?.releaseId);
+          const taskRelease = taskReleaseId
+            ? releaseRecords.find((release) => release.id === taskReleaseId) || null
+            : null;
+          const taskMilestoneCriteria = taskRelease?.successCriteria?.length > 0
+            ? taskRelease.successCriteria
+            : normalizePlaygroundStrategyTextList(taskOutcome?.successCriteria);
+          if (taskReleaseId && (taskRelease || taskOutcome)) {
             sections.push([
-              "This task supports outcome: " + (taskOutcome.title || taskOutcome.id),
-              taskOutcome.description ? "Outcome context: " + taskOutcome.description : "",
-              taskOutcome.successCriteria.length > 0 ? "Outcome success criteria:" + newline + taskOutcome.successCriteria.map((item) => "- " + item).join(newline) : "",
+              "Milestone: " + (taskRelease?.name || taskOutcome?.title || taskReleaseId),
+              taskRelease?.description || taskOutcome?.description
+                ? "Milestone context: " + (taskRelease?.description || taskOutcome?.description)
+                : "",
+              taskMilestoneCriteria.length > 0
+                ? "Milestone success criteria:" + newline + taskMilestoneCriteria.map((item) => "- " + item).join(newline)
+                : "",
+            ].filter(Boolean).join(newline));
+          } else if (taskOutcome) {
+            sections.push([
+              "Delivery target: " + (taskOutcome.title || taskOutcome.id),
+              taskOutcome.description ? "Target context: " + taskOutcome.description : "",
+              taskOutcome.successCriteria.length > 0
+                ? "Target success criteria:" + newline + taskOutcome.successCriteria.map((item) => "- " + item).join(newline)
+                : "",
             ].filter(Boolean).join(newline));
           }
           const scopeLines = [
@@ -1723,7 +1800,17 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
             || sanitizePlaygroundMissionControlDocument(rawContent)
             || rawContent;
           const summary = String(parsedBlock?.summary || "").trim() || extractPlaygroundMissionControlSummary(document);
-	          const strategyBrief = normalizePlaygroundProjectStrategyBrief(
+	          const hasParsedStrategyBrief = Boolean(
+	            parsedBlock
+	            && typeof parsedBlock === "object"
+	            && !Array.isArray(parsedBlock)
+	            && (
+	              Object.prototype.hasOwnProperty.call(parsedBlock, "strategyBrief")
+	              || Object.prototype.hasOwnProperty.call(parsedBlock, "structuredStrategy")
+	              || Object.prototype.hasOwnProperty.call(parsedBlock, "strategy")
+	            )
+	          );
+	          const strategyBrief = normalizePlaygroundCanonicalProjectStrategyBrief(
 	            parsedBlock?.strategyBrief
 	            || parsedBlock?.structuredStrategy
 	            || parsedBlock?.strategy
@@ -1732,9 +1819,16 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 	            summary,
 	            document,
 	            strategyBrief,
+	            deliveryAssurance: normalizePlaygroundDeliveryAssurance(
+	              parsedBlock?.deliveryAssurance
+	              || parsedBlock?.delivery_assurance
+	            ),
 	            lastThreadId: "",
 	            updatedAt: new Date().toISOString(),
 	          });
+	          if (hasParsedStrategyBrief) {
+	            normalizedRecord.strategyBriefReplace = true;
+	          }
 	          if (
 	            parsedBlock
 	            && typeof parsedBlock === "object"

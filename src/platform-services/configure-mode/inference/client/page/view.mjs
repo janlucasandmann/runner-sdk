@@ -75,15 +75,13 @@ export const INFERENCE_PAGE_VIEW_SCRIPT = `                const inferenceRuntim
                       onRefreshLocalRunners: () => {
                         setSettingsLocalRunnersReloadToken((current) => current + 1);
                       },
-                      onUpgrade: () => {
-                        void handleSettingsSubscribe("team");
-                      },
                     })
                   : React.createElement(InferenceOverviewPage, {
                       endpoints: settingsInferenceEndpoints,
                       localRunners: settingsLocalRunnersState,
                       controlsPortalId: "playground-inference-overview-controls",
                       canConfigure: settingsCanConfigureBusinessFeatures,
+                      onPlanRequired: requestInferencePlanGate,
                       creatingEndpoint: settingsPlatformConfigSaving,
                       createError: settingsPlatformConfigError,
                       onOpenEndpoint: (endpointId) => openInferencePage(endpointId),

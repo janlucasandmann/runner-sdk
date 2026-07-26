@@ -37,6 +37,14 @@ export const TEAMS_LOADING_SCRIPT = `        async function loadTeamPageData(opt
             }
             if (!response.ok) {
               if (response.status === 402 || data?.requiredPlan === "team") {
+                if (response.status !== 402) {
+                  requestPlatformPlanGate({
+                    entitlement: "squads.use",
+                    requiredPlan: "team",
+                    featureName: "teams and agent squads",
+                    source: "teams",
+                  });
+                }
                 setTeamPageRequiresPlan(true);
                 setTeamPageTeams([]);
                 setTeamPageMembers([]);
@@ -135,4 +143,3 @@ export const TEAMS_LOADING_SCRIPT = `        async function loadTeamPageData(opt
         }
 
 `;
-

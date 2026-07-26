@@ -3,6 +3,7 @@ export * from "./api-keys/index.js";
 export * from "./apis/index.js";
 export * from "./authentication/index.js";
 export * from "./databases/index.js";
+export * from "./evidence-agents/index.js";
 export {
   DevelopHomeOverviewPage,
   type DevelopHomeOverviewPageProps,

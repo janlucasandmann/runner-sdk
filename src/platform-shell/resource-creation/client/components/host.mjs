@@ -23,7 +23,6 @@ export const RESOURCE_CREATION_HOST_SCRIPT = `          function renderPlatformR
                 createAgentRequestToken: creationRequest.token,
                 createAgentModelId: creationRequest.modelId || "",
                 subscriptionTierId: accountTierId || "",
-                onUpgradeToIndividual: () => handleSettingsSubscribe("builder"),
                 onAgentMutated: async () => {
                   await refreshAgents();
                 },

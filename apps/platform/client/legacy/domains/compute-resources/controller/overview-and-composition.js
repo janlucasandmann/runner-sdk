@@ -33,39 +33,44 @@
               || normalizedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID
             );
   
-            return renderPlaygroundPlatformPopup({
+            return React.createElement(PlatformButtonSelector, {
+              mode: "popup",
+              buttonVariant: "primary",
+              buttonSize: "small",
+              label: databaseExporting ? "Exporting..." : "Export",
+              leading: databaseExporting
+                ? React.createElement(Loader2, {
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                    className: "playground-files-state-loader",
+                    "aria-hidden": "true",
+                  })
+                : React.createElement(Download, {
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                    "aria-hidden": "true",
+                  }),
               open: databaseExportMenuOpen,
-              shellRef: databaseExportMenuRef,
-              shellClassName: "playground-database-export-shell",
-              menuClassName: "playground-database-export-menu",
-              trigger: React.createElement(PlatformPrimaryButton, {
-                  size: "small",
-                  active: databaseExportMenuOpen,
-                  onClick: () => {
-                    setDatabaseActionsPopoverOpen(false);
-                    setDatabaseExportMenuOpen((current) => !current);
-                  },
-                  disabled: exportDisabled,
-                  title: "Export database",
-                  "aria-label": "Export database",
-                  "aria-haspopup": "menu",
-                  "aria-expanded": databaseExportMenuOpen ? "true" : "false",
-                },
-                databaseExporting
-                  ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
-                  : React.createElement(Download, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, databaseExporting ? "Exporting..." : "Export"),
-                React.createElement("span", {
-                  className: "playground-agents-detail-publish-divider",
-                  "aria-hidden": "true",
-                }),
-                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" })
-              ),
-              menuProps: {
-                role: "menu",
-                onClick: (event) => event.stopPropagation(),
+              onOpenChange: (nextOpen) => {
+                if (nextOpen) {
+                  setDatabaseActionsPopoverOpen(false);
+                }
+                setDatabaseExportMenuOpen(nextOpen);
               },
-              children: [
+              closeOnSelect: true,
+              openOnHover: true,
+              disabled: exportDisabled,
+              popupAriaLabel: "Export database",
+              popupAlignment: "right",
+              popupRole: "menu",
+              popupVariant: "minimal",
+              popupWidth: 220,
+              className: "playground-database-export-shell",
+              popupClassName: "playground-database-export-menu",
+            },
+              [
                 { id: "json", label: "Export as JSON", Icon: Braces },
                 { id: "csv", label: "Export as CSV", Icon: FileText },
                 { id: "xml", label: "Export as XML", Icon: CodeXml },
@@ -80,8 +85,8 @@
                 React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                   React.createElement("span", null, option.label)
                 )
-              )),
-            });
+              ))
+            );
           };
           const renderDatabaseTitleActionsControl = () => {
             const activeDatabase = draftDatabase?.id === selectedDatabaseId ? draftDatabase : null;
@@ -167,10 +172,141 @@
               React.createElement("button", {
                 type: "button",
                 role: "menuitem",
-                className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+                className: "tb-popup-row",
                 onClick: () => {
                   setDatabaseActionsPopoverOpen(false);
                   void handleDeleteDatabase(normalizedDatabaseId);
+                },
+              },
+                React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Delete")
+                )
+              )
+            );
+          };
+          const renderServerTitleActionsControl = () => {
+            const activeServer = draftServer?.id === selectedServerId ? draftServer : null;
+            const normalizedServerId = String(activeServer?.id || "").trim();
+            const normalizedServerKind = canonicalizePlaygroundServerKind(activeServer?.kind);
+            const isSourceDeployableResource = ["function", "web_app"].includes(normalizedServerKind);
+            const isManagedTitleActionResource = isSourceDeployableResource
+              || ["auth", "agent_runtime", "secrets", "payments"].includes(normalizedServerKind);
+            const serverResourceLabel = formatPlaygroundServerKindLabel(normalizedServerKind);
+            const serverDocumentationPath = normalizedServerKind === "web_app"
+              ? "/developers/libraries/web-apps"
+              : normalizedServerKind === "auth"
+                ? "/developers/libraries/authentication"
+                : normalizedServerKind === "agent_runtime"
+                  ? "/developers/libraries/agent-runtimes"
+                : normalizedServerKind === "secrets"
+                  ? "/developers/libraries/secrets"
+                  : normalizedServerKind === "payments"
+                    ? "/developers/libraries/payments"
+                  : "/developers/libraries/functions";
+            const actionsDisabled = Boolean(
+              !isManagedTitleActionResource
+              || serverSaveState.isSaving
+              || serverDeploymentState.isDeploying
+              || !normalizedServerId
+              || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID
+            );
+            return React.createElement(PlatformPopup, {
+                open: serverActionsPopoverOpen && !actionsDisabled,
+                rootRef: serverActionsPopoverRef,
+                surfaceRef: serverActionsPopoverSurfaceRef,
+                rootClassName: "playground-server-title-actions-shell",
+                surfaceClassName: "playground-server-title-actions-popup",
+                surfaceProps: {
+                  role: "menu",
+                  "aria-label": serverResourceLabel + " actions",
+                  width: 280,
+                  maxWidth: "calc(100vw - 16px)",
+                  onClick: (event) => event.stopPropagation(),
+                },
+                animation: "down-in",
+                variant: "minimal",
+                portal: true,
+                placement: "bottom-start",
+                trigger: React.createElement(PlatformIconButton, {
+                  type: "button",
+                  size: "compact",
+                  active: serverActionsPopoverOpen,
+                  title: serverResourceLabel + " actions",
+                  "aria-label": serverResourceLabel + " actions",
+                  "aria-haspopup": "menu",
+                  "aria-expanded": serverActionsPopoverOpen ? "true" : "false",
+                  disabled: actionsDisabled,
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setServerActionsPopoverOpen((current) => !current);
+                  },
+                }, React.createElement(Ellipsis, { width: 14, height: 14, strokeWidth: 1.8 }))
+              },
+              React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
+                React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, serverResourceLabel + " ID"),
+                  React.createElement("span", {
+                    className: "playground-thread-nav-popup-thread-id",
+                    title: normalizedServerId,
+                  }, normalizedServerId)
+                )
+              ),
+              React.createElement("div", { className: "playground-thread-nav-popup-divider", "aria-hidden": "true" }),
+              React.createElement("button", {
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row",
+                onClick: () => {
+                  setServerActionsPopoverOpen(false);
+                  window.open("http://localhost:3001" + serverDocumentationPath, "_blank", "noopener,noreferrer");
+                },
+              },
+                React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Documentation")
+                )
+              ),
+              React.createElement("button", {
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row",
+                onClick: () => {
+                  setServerActionsPopoverOpen(false);
+                  openServerRenameDialog(activeServer);
+                },
+              },
+                React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Rename")
+                )
+              ),
+              isSourceDeployableResource
+                ? React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      setServerActionsPopoverOpen(false);
+                      void handleDeployServer();
+                    },
+                    disabled: serverDeploymentState.isDeploying,
+                  },
+                    React.createElement(Rocket, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                      React.createElement("span", null, serverDeploymentState.isDeploying ? "Deploying..." : "Deploy")
+                    )
+                  )
+                : null,
+              React.createElement("button", {
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row",
+                onClick: () => {
+                  setServerActionsPopoverOpen(false);
+                  void handleDeleteServer(normalizedServerId);
                 },
               },
                 React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
@@ -436,6 +572,12 @@
               );
             }
             if (isServersMode && !shouldShowEnvironmentHome && selectedServerId) {
+              const activeServerKind = canonicalizePlaygroundServerKind(
+                draftServer?.id === selectedServerId ? draftServer?.kind : ""
+              );
+              if (["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(activeServerKind)) {
+                return null;
+              }
               return renderCurrentResourceSettingsControl(buttonClassName);
             }
             return renderCurrentResourceCreateControl(buttonClassName);
@@ -458,6 +600,16 @@
             ? createPortal(
                 renderDatabaseTitleActionsControl(),
                 databaseTitleActionsContainer
+              )
+            : null;
+          const serverTitleActions = serverTitleActionsContainer
+            && isServersMode
+            && !shouldShowEnvironmentHome
+            && selectedServerId
+            && ["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(canonicalizePlaygroundServerKind(draftServer?.kind))
+            ? createPortal(
+                renderServerTitleActionsControl(),
+                serverTitleActionsContainer
               )
             : null;
   
@@ -1334,13 +1486,20 @@
   	          const isEmbeddedDatabaseDataTab = Boolean(isServersMode && selectedDatabaseId && !selectedServerId && normalizedEmbeddedDatabaseDetailTab === "data");
   	          const embeddedActiveServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
   	          const embeddedActiveServerKind = canonicalizePlaygroundServerKind(embeddedActiveServer?.kind);
-  	          const isEmbeddedServerCodeTab = Boolean(
-  	            isServersMode
-  	            && selectedServerId
-  	            && !selectedDatabaseId
-  	            && ["function", "web_app"].includes(embeddedActiveServerKind)
-  	            && serverDetailTab === "code"
-  	          );
+	          const isEmbeddedServerCodeTab = Boolean(
+	            isServersMode
+	            && selectedServerId
+	            && !selectedDatabaseId
+	            && ["function", "web_app"].includes(embeddedActiveServerKind)
+	            && serverDetailTab === "code"
+	          );
+	          const isEmbeddedSourceServerUsageTab = Boolean(
+	            isServersMode
+	            && selectedServerId
+	            && !selectedDatabaseId
+	            && ["function", "web_app"].includes(embeddedActiveServerKind)
+	            && serverDetailTab === "usage"
+	          );
   	          const isEmbeddedAuthUsersTab = Boolean(
   	            isServersMode
   	            && selectedServerId
@@ -1365,24 +1524,30 @@
   	            + (isServersMode ? "is-servers-view" : "is-computers-view")
   	            + (isServersMode && normalizedEmbeddedServerKind ? " is-develop-server-kind-page" : "")
   	            + (isEmbeddedResourceTypeOverview ? " playground-agents-overview-page playground-resource-type-overview-page" : "")
-  	            + (!isServersMode ? " is-develop-configure-page" : "")
-  	            + (isEmbeddedDatabaseDataTab ? " is-database-data-tab" : "")
-  	            + (isEmbeddedServerCodeTab ? " is-code-tab" : "")
-  	            + (isEmbeddedAuthUsersTab ? " is-auth-users-tab" : "")
-  	            + (isEmbeddedSecretsTab ? " is-secrets-tab" : "");
-  	          const resourcesDetailScrollClassName = "playground-environments-detail-scroll playground-settings-detail-scroll"
-  	            + (isEmbeddedDatabaseDataTab ? " is-database-data-tab" : "")
-  	            + (isEmbeddedServerCodeTab ? " is-code-tab" : "")
-  	            + (isEmbeddedAuthUsersTab ? " is-auth-users-tab" : "")
-  	            + (isEmbeddedSecretsTab ? " is-secrets-tab" : "");
-  	          const resourcesDetailContentClassName = "playground-resources-detail-content"
-  	            + (isEmbeddedDatabaseDataTab ? " is-database-data-tab" : "")
-  	            + (isEmbeddedServerCodeTab ? " is-code-tab" : "")
-  	            + (isEmbeddedAuthUsersTab ? " is-auth-users-tab" : "")
-  	            + (isEmbeddedSecretsTab ? " is-secrets-tab" : "");
+	            + (!isServersMode ? " is-develop-configure-page" : "")
+	            + (isEmbeddedDatabaseDataTab ? " is-database-data-tab" : "")
+	            + (isEmbeddedServerCodeTab ? " is-code-tab" : "")
+	            + (isEmbeddedServerCodeTab ? " is-source-server-code-tab" : "")
+	            + (isEmbeddedSourceServerUsageTab ? " is-source-server-usage-tab" : "")
+	            + (isEmbeddedAuthUsersTab ? " is-auth-users-tab" : "")
+	            + (isEmbeddedSecretsTab ? " is-secrets-tab" : "");
+	          const resourcesDetailScrollClassName = "playground-environments-detail-scroll playground-settings-detail-scroll"
+	            + (isEmbeddedDatabaseDataTab ? " is-database-data-tab" : "")
+	            + (isEmbeddedServerCodeTab ? " is-code-tab" : "")
+	            + (isEmbeddedServerCodeTab ? " is-source-server-code-tab" : "")
+	            + (isEmbeddedSourceServerUsageTab ? " is-source-server-usage-tab" : "")
+	            + (isEmbeddedAuthUsersTab ? " is-auth-users-tab" : "")
+	            + (isEmbeddedSecretsTab ? " is-secrets-tab" : "");
+	          const resourcesDetailContentClassName = "playground-resources-detail-content"
+	            + (isEmbeddedDatabaseDataTab ? " is-database-data-tab" : "")
+	            + (isEmbeddedServerCodeTab ? " is-code-tab" : "")
+	            + (isEmbeddedServerCodeTab ? " is-source-server-code-tab" : "")
+	            + (isEmbeddedAuthUsersTab ? " is-auth-users-tab" : "")
+	            + (isEmbeddedSecretsTab ? " is-secrets-tab" : "");
             return React.createElement(React.Fragment, null,
               resourcesTopNavActions,
               databaseTitleActions,
+              serverTitleActions,
               shouldShowServerCreationSetup
                 ? React.createElement("section", { className: embeddedResourcesPageClassName },
                     renderServerCreationSetupPage()
@@ -1719,7 +1884,7 @@
   	                            buildPlaygroundRunnerAgentOption(agent, preferredAgentId && agent.id === preferredAgentId ? { isDefault: true } : {})
   	                          )),
                             isAgentSelectionBlocked: (agent) => isFreeAgentPlan && isPlaygroundFreePlanLockedComposerAgent(agent),
-                            onBlockedAgentSelect: openAgentUpgradeModal,
+                            onBlockedAgentSelect: requestAgentPlanGate,
                             skills: Array.isArray(skills) ? skills : [],
                             skillDefaults: getDemoImageGenerationSkillDefaults(),
                             environmentId: preferredEnvironmentId || undefined,

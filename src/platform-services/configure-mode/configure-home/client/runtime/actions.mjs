@@ -141,9 +141,18 @@ export const CONFIGURE_HOME_NOTIFICATION_ACTIONS_SCRIPT = `        function hand
               8000
             );
             if (!response.ok) {
-              if (response.status === 402 || data?.requiredPlan === "team") {
+              if (response.status === 402) {
                 setNotificationsOpen(false);
-                openSettingsModal("costs-plan-options");
+                return;
+              }
+              if (data?.requiredPlan === "team") {
+                setNotificationsOpen(false);
+                requestPlatformPlanGate({
+                  entitlement: "squads.use",
+                  requiredPlan: "team",
+                  featureName: "team collaboration",
+                  source: "team-invitation",
+                });
                 return;
               }
               throw new Error(data?.message || data?.error || "Failed to update team invitation.");

@@ -8,7 +8,9 @@ import { resolveLegacyBrowserSourcePath } from "./legacy-source-resolution.mjs";
  * exact file being edited.
  */
 export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
+  "src/platform-shell/plan-gate/plan-gate-modal/platform-plan-gate-modal.css",
   "src/platform-ui/components/composite/activity-timeline/activity-timeline.css",
+  "src/platform-ui/components/composite/comments/comments.css",
   "src/platform-ui/components/composite/popup/popup.css",
   "src/platform-ui/components/composite/profile-image-picker/profile-image-picker.css",
   "src/platform-ui/components/ui/selector/selector.css",
@@ -17,8 +19,10 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/composite/subtasks/subtasks.css",
   "src/platform-ui/components/ui/ticket-item/ticket-item.css",
   "src/platform-ui/components/composite/data-table/data-table.css",
+  "src/platform-ui/components/composite/deployment-map/deployment-map.css",
   "src/platform-ui/components/composite/analytics/analytics.css",
   "src/platform-ui/components/composite/empty-state/empty-state.css",
+  "src/platform-ui/components/composite/emoji-picker/emoji-picker.css",
   "src/platform-ui/components/composite/loading-state/loading-state.css",
   "src/platform-ui/components/composite/code-editor-workspace/code-editor-workspace.css",
   "src/platform-ui/components/composite/code-preview-box/code-preview-box.css",
@@ -38,6 +42,7 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/pages/details/resource-detail.css",
   "src/platform-services/develop-mode/shared/client/page/develop-server-detail-page.css",
   "src/platform-services/develop-mode/security/client/page/security.css",
+  "src/platform-services/develop-mode/evidence-agents/client/page/evidence-agents.css",
   "src/platform-ui/pages/permissions/permission-page.css",
   "src/platform-resources/agents/detail/agent-publish-control.css",
   "src/platform-resources/access-control/page/platform-resource-access-table.css",

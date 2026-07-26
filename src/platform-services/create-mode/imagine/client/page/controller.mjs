@@ -18,7 +18,6 @@ export const IMAGINE_PAGE_CONTROLLER_SCRIPT = String.raw`        function Playgr
           onOpenPlansBudget,
           onRequireAuth,
           canGenerateVideo = true,
-          onUpgradeToIndividual,
           activeView,
           mediaMode,
           filterMode: externalFilterMode,
@@ -125,8 +124,6 @@ export const IMAGINE_PAGE_CONTROLLER_SCRIPT = String.raw`        function Playgr
             normalizeImagineModelId("video", storedImagineModelSettings.video || skillDefaults?.videoGeneration?.model || "seedance-2.0-fast")
           );
           const [imagineModelSelectorOpen, setImagineModelSelectorOpen] = useState(false);
-          const [videoUpgradeModalOpen, setVideoUpgradeModalOpen] = useState(false);
-          const [videoUpgradeCheckoutLoading, setVideoUpgradeCheckoutLoading] = useState(false);
           const imagineModelSelectorRef = useRef(null);
           const imagineModelSelectorButtonRef = useRef(null);
           const imagineModelMenuRef = useRef(null);
@@ -249,7 +246,12 @@ export const IMAGINE_PAGE_CONTROLLER_SCRIPT = String.raw`        function Playgr
           const setActiveMediaMode = useCallback((nextMode) => {
             const normalizedNextMode = String(nextMode || "").toLowerCase() === "video" ? "video" : "image";
             if (normalizedNextMode === "video" && !canUseVideoGeneration) {
-              setVideoUpgradeModalOpen(true);
+              requestPlatformPlanGate({
+                entitlement: "imagine.generate",
+                requiredPlan: "builder",
+                featureName: "video generation",
+                source: "imagine",
+              });
               return;
             }
             if (typeof onMediaModeChange === "function") {

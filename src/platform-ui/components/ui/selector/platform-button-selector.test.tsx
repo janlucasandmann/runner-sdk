@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { GitBranch, Rocket } from "lucide-react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -8,6 +14,7 @@ import { PlatformButtonSelector } from "./platform-button-selector.js";
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -31,11 +38,17 @@ describe("PlatformButtonSelector", () => {
     );
 
     const trigger = screen.getByRole("button", { name: "Choose version" });
-    const chevronTrigger = screen.getByRole("button", { name: "Choose version options" });
+    const chevronTrigger = screen.getByRole("button", {
+      name: "Choose version options",
+    });
     expect(trigger.dataset.platformButtonVariant).toBe("secondary");
     expect(chevronTrigger.dataset.platformButtonVariant).toBe("secondary");
-    expect(container.querySelector(".platform-button-selector.is-mode-popup")).not.toBeNull();
-    expect(container.querySelector(".platform-button-selector__divider")).not.toBeNull();
+    expect(
+      container.querySelector(".platform-button-selector.is-mode-popup"),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(".platform-button-selector__divider"),
+    ).not.toBeNull();
 
     await user.click(trigger);
 
@@ -70,7 +83,9 @@ describe("PlatformButtonSelector", () => {
     );
 
     const action = screen.getByRole("button", { name: "Save and publish" });
-    const popupTrigger = screen.getByRole("button", { name: "Version options" });
+    const popupTrigger = screen.getByRole("button", {
+      name: "Version options",
+    });
     expect(action.dataset.platformButtonVariant).toBe("primary");
     expect(popupTrigger.dataset.platformButtonVariant).toBe("primary");
 
@@ -79,7 +94,40 @@ describe("PlatformButtonSelector", () => {
     expect(screen.queryByRole("menu", { name: "Version options" })).toBeNull();
 
     await user.click(popupTrigger);
-    expect(screen.getByRole("menu", { name: "Version options" })).not.toBeNull();
+    expect(
+      screen.getByRole("menu", { name: "Version options" }),
+    ).not.toBeNull();
+  });
+
+  it("exposes centralized full-width geometry for whole-control label centering", () => {
+    const { container } = render(
+      <PlatformButtonSelector
+        mode="split-action"
+        buttonVariant="primary"
+        label="Deploy"
+        actionAriaLabel="Deploy"
+        popupAriaLabel="Deployment options"
+        onAction={vi.fn()}
+        fullWidth
+      >
+        <button type="button" role="menuitem">
+          Test Invoke
+        </button>
+      </PlatformButtonSelector>,
+    );
+
+    const selector = container.querySelector(".platform-button-selector");
+    expect(selector).not.toBeNull();
+    expect(selector?.classList.contains("is-full-width")).toBe(true);
+    expect(
+      selector?.querySelector(".platform-button-selector__group"),
+    ).not.toBeNull();
+    expect(
+      selector?.querySelector(".platform-button-selector__action"),
+    ).not.toBeNull();
+    expect(
+      selector?.querySelector(".platform-button-selector__popup-trigger"),
+    ).not.toBeNull();
   });
 
   it("dismisses the portaled popup without swallowing popup interactions", async () => {
@@ -87,7 +135,11 @@ describe("PlatformButtonSelector", () => {
     const onMenuAction = vi.fn();
     render(
       <div>
-        <PlatformButtonSelector mode="popup" label="Versions" popupAriaLabel="Choose version">
+        <PlatformButtonSelector
+          mode="popup"
+          label="Versions"
+          popupAriaLabel="Choose version"
+        >
           <button type="button" role="menuitem" onClick={onMenuAction}>
             Version 1
           </button>
@@ -114,7 +166,12 @@ describe("PlatformButtonSelector", () => {
     const user = userEvent.setup();
     const onMenuAction = vi.fn();
     render(
-      <PlatformButtonSelector mode="popup" label="New" popupAriaLabel="Create new" closeOnSelect>
+      <PlatformButtonSelector
+        mode="popup"
+        label="New"
+        popupAriaLabel="Create new"
+        closeOnSelect
+      >
         <button type="button" role="menuitem" onClick={onMenuAction}>
           Computer
         </button>
@@ -126,5 +183,39 @@ describe("PlatformButtonSelector", () => {
 
     expect(onMenuAction).toHaveBeenCalledOnce();
     expect(screen.queryByRole("menu", { name: "Create new" })).toBeNull();
+  });
+
+  it("keeps a hover-opened popup available while moving into its portaled surface", () => {
+    vi.useFakeTimers();
+    const { container } = render(
+      <PlatformButtonSelector
+        mode="popup"
+        label="Export"
+        popupAriaLabel="Export database"
+        openOnHover
+        hoverCloseDelayMs={50}
+      >
+        <button type="button" role="menuitem">
+          Export as JSON
+        </button>
+      </PlatformButtonSelector>,
+    );
+
+    const selector = container.querySelector(".platform-button-selector");
+    expect(selector).not.toBeNull();
+
+    fireEvent.mouseEnter(selector!);
+    const popup = screen.getByRole("menu", { name: "Export database" });
+
+    fireEvent.mouseLeave(selector!);
+    fireEvent.mouseEnter(popup);
+    act(() => vi.advanceTimersByTime(60));
+    expect(
+      screen.getByRole("menu", { name: "Export database" }),
+    ).not.toBeNull();
+
+    fireEvent.mouseLeave(popup);
+    act(() => vi.advanceTimersByTime(60));
+    expect(screen.queryByRole("menu", { name: "Export database" })).toBeNull();
   });
 });

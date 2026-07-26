@@ -35,18 +35,41 @@ export const FINE_TUNING_PAGE_CONTROLLER_EDITOR_SCRIPT = String.raw`        func
           const currentRunIds = currentForm.evaluationRunIds && typeof currentForm.evaluationRunIds === "object" && !Array.isArray(currentForm.evaluationRunIds)
             ? currentForm.evaluationRunIds
             : {};
+          const currentBaselineModes = currentForm.evaluationBaselineModes && typeof currentForm.evaluationBaselineModes === "object" && !Array.isArray(currentForm.evaluationBaselineModes)
+            ? currentForm.evaluationBaselineModes
+            : {};
           const defaultRunIds = {};
+          const defaultBaselineModes = {};
           defaultSetIds.forEach((setId) => {
             const set = normalizedEvaluationSets.find((item) => item.id === String(setId || "").trim()) || null;
             const latestRun = getPlaygroundFineTuningLatestRun(set);
             defaultRunIds[setId] = normalizePlaygroundFineTuningString(currentRunIds[setId] || latestRun?.id || latestRun?.runId || latestRun?.run_id || "");
+            defaultBaselineModes[setId] = currentBaselineModes[setId] === "existing" && defaultRunIds[setId]
+              ? "existing"
+              : "fresh";
           });
+          const customAgents = normalizedAgents.filter((agent) => !isDefaultFineTuningTargetAgent(agent));
           updateCreateForm({
             name: formatPlaygroundFineTuningDefaultJobName(),
-            agentId: currentForm.agentId || defaultAgentId || normalizedAgents[0]?.id || "",
+            targetAgentId: currentForm.targetAgentId || customAgents[0]?.id || "",
+            fineTunerAgentId: currentForm.fineTunerAgentId || currentForm.agentId || defaultAgentId || normalizedAgents[0]?.id || "",
             environmentId: currentForm.environmentId || defaultEnvironmentId || normalizedEnvironments[0]?.id || "",
             evaluationSetIds: defaultSetIds,
             evaluationRunIds: defaultRunIds,
+            evaluationBaselineModes: defaultBaselineModes,
+            objectiveMode: currentForm.objectiveMode || "evaluation_targets",
+            targetScorePercent: Number(currentForm.targetScorePercent ?? 80),
+            targetPassRatePercent: Number(currentForm.targetPassRatePercent ?? 80),
+            maximumCostIncreasePercent: currentForm.maximumCostIncreasePercent ?? "",
+            maximumLatencyIncreasePercent: currentForm.maximumLatencyIncreasePercent ?? "",
+            maxIterations: Number(currentForm.maxIterations ?? 3),
+            budgetUsd: Number(currentForm.budgetUsd ?? 10),
+            maxDurationMinutes: Number(currentForm.maxDurationMinutes ?? 120),
+            maxTransientRetries: Number(currentForm.maxTransientRetries ?? 2),
+            plateauIterations: Number(currentForm.plateauIterations ?? 2),
+            minimumIterationImprovementPercent: Number(currentForm.minimumIterationImprovementPercent ?? 1),
+            publicationMode: currentForm.publicationMode || "manual",
+            publishBestOnLimit: currentForm.publishBestOnLimit === true,
             instructions: currentForm.instructions || "",
             verifyAfter: true,
           });
@@ -163,6 +186,88 @@ export const FINE_TUNING_PAGE_CONTROLLER_EDITOR_SCRIPT = String.raw`        func
             patchFineTuningJob(normalizedJobId, () => nextJob, { persist: true });
           } finally {
             setFineTuningStopJobId("");
+          }
+        }
+
+        async function approveFineTuningPublication(job) {
+          const normalizedJob = normalizePlaygroundFineTuningJob(job);
+          const normalizedJobId = normalizePlaygroundFineTuningString(normalizedJob.id);
+          const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
+          const publicationDecision = readPlaygroundFineTuningPlainObject(
+            normalizedJob.publicationDecision
+          );
+          const evidenceFingerprint = normalizePlaygroundFineTuningString(
+            publicationDecision.evidenceFingerprint
+              || publicationDecision.evidence_fingerprint
+          );
+          if (
+            !normalizedJobId
+            || !normalizedBackendUrl
+            || !evidenceFingerprint
+            || fineTuningApproveJobId === normalizedJobId
+          ) return;
+          setFineTuningApproveJobId(normalizedJobId);
+          setFineTuningApprovalError("");
+          try {
+            const response = await fetch(
+              normalizedBackendUrl
+                + "/fine-tuning/jobs/"
+                + encodeURIComponent(normalizedJobId)
+                + "/publication-approval",
+              {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  ...(requestHeaders || {}),
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ evidenceFingerprint }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(
+                data?.message
+                  || data?.error
+                  || "Failed to approve the optimized agent version."
+              );
+            }
+            const nextJob = normalizePlaygroundFineTuningJob(
+              data?.job || data?.data || data
+            );
+            if (!nextJob.id) {
+              throw new Error("Publication approval returned no optimization job.");
+            }
+            upsertFineTuningJob(nextJob);
+            if (
+              normalizePlaygroundFineTuningString(
+                nextJob.agentVersionCreationStatus
+                  || nextJob.createdAgentVersion?.status
+              ).toLowerCase() === "published"
+            ) {
+              notifyFineTunedAgentVersionCreated(nextJob, nextJob.createdAgentVersion);
+              if (typeof onAgentsRefresh === "function") await onAgentsRefresh();
+            } else {
+              void waitForFineTuningRuntimeJob(normalizedJobId, nextJob)
+                .then((completedJob) => {
+                  upsertFineTuningJob(completedJob);
+                  if (
+                    normalizePlaygroundFineTuningString(
+                      completedJob.agentVersionCreationStatus
+                        || completedJob.createdAgentVersion?.status
+                    ).toLowerCase() === "published"
+                    && typeof onAgentsRefresh === "function"
+                  ) {
+                    void onAgentsRefresh();
+                  }
+                })
+                .catch(() => {});
+            }
+          } catch (error) {
+            setFineTuningApprovalError(error?.message || String(error));
+          } finally {
+            setFineTuningApproveJobId("");
           }
         }
 

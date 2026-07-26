@@ -54,7 +54,10 @@ export const EVALUATIONS_PAGE_FORMATTING_SCRIPT = String.raw`      function isEv
       }
 
       function formatPlaygroundEvaluationPercent(value) {
-        const score = Math.max(0, Math.min(1, Number(value) || 0));
+        if (value === null || value === undefined || value === "") return "-";
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) return "-";
+        const score = Math.max(0, Math.min(1, numericValue));
         return Math.round(score * 100) + "%";
       }
 
@@ -80,7 +83,9 @@ export const EVALUATIONS_PAGE_FORMATTING_SCRIPT = String.raw`      function isEv
 
       function getPlaygroundEvaluationCaseDisplayStatus(caseItem, passThreshold = 0.8) {
         const normalizedStatus = String(caseItem?.status || "").trim().toLowerCase();
-        const score = Math.max(0, Math.min(1, Number(caseItem?.score || 0)));
+        const rawScore = caseItem?.score;
+        const numericScore = rawScore === null || rawScore === undefined || rawScore === "" ? null : Number(rawScore);
+        const score = Number.isFinite(numericScore) ? Math.max(0, Math.min(1, numericScore)) : null;
         const parseStatus = String(caseItem?.evaluatorParseStatus || caseItem?.evaluator_parse_status || "").trim().toLowerCase();
         const parsedEvaluatorResult = getPlaygroundEvaluationParsedEvaluatorResult(caseItem?.evaluatorOutput)
           || getPlaygroundEvaluationParsedEvaluatorResult(caseItem?.evaluatorReason);
@@ -91,10 +96,10 @@ export const EVALUATIONS_PAGE_FORMATTING_SCRIPT = String.raw`      function isEv
           normalizedStatus === "error"
           && (
             hasScoredEvaluatorResult
-            || (score > 0 && (caseItem?.evaluatorThreadId || caseItem?.evaluatorOutput))
+            || (score !== null && score > 0 && (caseItem?.evaluatorThreadId || caseItem?.evaluatorOutput))
           )
         ) {
-          return score >= normalizePlaygroundEvaluationPassThreshold(passThreshold) ? "passed" : "failed";
+          return (score ?? 0) >= normalizePlaygroundEvaluationPassThreshold(passThreshold) ? "passed" : "failed";
         }
         return normalizedStatus || "queued";
       }

@@ -67,7 +67,7 @@ export interface EvidenceAgentsRepository {
 export function createEvidenceAgentsRepository(
   apiClient: Pick<PlatformApiClient, "get" | "post">,
 ): EvidenceAgentsRepository {
-  return Object.freeze({
+  const repository: EvidenceAgentsRepository = {
     async listServices(signal) {
       const resources = unwrapList<EvidenceServiceResource>(
         await apiClient.get("/api/real/servers?kind=function&limit=200", { signal }),
@@ -77,7 +77,7 @@ export function createEvidenceAgentsRepository(
         && resource.metadata?.service === "full-text-acquisition"
       ));
     },
-    getOverview: (serverId, signal) => apiClient.get(
+    getOverview: (serverId, signal) => apiClient.get<EvidenceReviewOverview>(
       `/api/real/evidence-agents/${id(serverId, "Evidence service id")}/overview`,
       { signal },
     ),
@@ -87,22 +87,23 @@ export function createEvidenceAgentsRepository(
       if (input.query) params.set("query", input.query);
       params.set("limit", String(input.limit || 100));
       params.set("offset", String(input.offset || 0));
-      return apiClient.get(
+      return apiClient.get<EvidenceReviewList>(
         `/api/real/evidence-agents/${id(serverId, "Evidence service id")}/reviews?${params}`,
         { signal },
       );
     },
-    getReview: (serverId, reviewTaskId, signal) => apiClient.get(
+    getReview: (serverId, reviewTaskId, signal) => apiClient.get<EvidenceReviewTaskDetail>(
       `/api/real/evidence-agents/${id(serverId, "Evidence service id")}/reviews/${id(reviewTaskId, "Review task id")}`,
       { signal },
     ),
-    approveReview: (serverId, reviewTaskId, input) => apiClient.post(
+    approveReview: (serverId, reviewTaskId, input) => apiClient.post<EvidenceReviewDecision>(
       `/api/real/evidence-agents/${id(serverId, "Evidence service id")}/reviews/${id(reviewTaskId, "Review task id")}/approve`,
       input,
     ),
-    rejectReview: (serverId, reviewTaskId, input) => apiClient.post(
+    rejectReview: (serverId, reviewTaskId, input) => apiClient.post<EvidenceReviewDecision>(
       `/api/real/evidence-agents/${id(serverId, "Evidence service id")}/reviews/${id(reviewTaskId, "Review task id")}/reject`,
       input,
     ),
-  });
+  };
+  return Object.freeze(repository);
 }

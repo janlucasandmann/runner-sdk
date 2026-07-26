@@ -1,10 +1,18 @@
 import { joinLegacyBrowserSourceFragments } from "../../../../legacy-browser-source.mjs";
+import { PROJECT_ICON_PICKER_CSS_FRAGMENT } from "../project-icon-picker/styles.mjs";
+import { PROJECT_MILESTONES_CSS_FRAGMENT } from "../project-milestones/styles.mjs";
+import { PROJECT_UPDATES_CSS_FRAGMENT } from "../project-updates/styles.mjs";
+import { PROJECT_SUMMARY_CSS_FRAGMENT } from "../project-summary/styles.mjs";
 import { PROJECT_OVERVIEW_CSS_01_FRAGMENT } from "./styles/01-foundation.mjs";
 import { PROJECT_OVERVIEW_CSS_02_FRAGMENT } from "./styles/02-analytics-and-charts.mjs";
 import { PROJECT_OVERVIEW_CSS_03_FRAGMENT } from "./styles/03-resources-and-tables.mjs";
 import { PROJECT_OVERVIEW_CSS_04_FRAGMENT } from "./styles/04-sidebar-and-responsive.mjs";
 
 export const PROJECT_OVERVIEW_CSS_FRAGMENT_PATHS = Object.freeze([
+  "../project-icon-picker/styles.mjs",
+  "../project-milestones/styles.mjs",
+  "../project-updates/styles.mjs",
+  "../project-summary/styles.mjs",
   "styles/01-foundation.mjs",
   "styles/02-analytics-and-charts.mjs",
   "styles/03-resources-and-tables.mjs",
@@ -12,6 +20,10 @@ export const PROJECT_OVERVIEW_CSS_FRAGMENT_PATHS = Object.freeze([
 ]);
 
 export const PROJECT_OVERVIEW_CSS = joinLegacyBrowserSourceFragments([
+  PROJECT_ICON_PICKER_CSS_FRAGMENT,
+  PROJECT_MILESTONES_CSS_FRAGMENT,
+  PROJECT_UPDATES_CSS_FRAGMENT,
+  PROJECT_SUMMARY_CSS_FRAGMENT,
   PROJECT_OVERVIEW_CSS_01_FRAGMENT,
   PROJECT_OVERVIEW_CSS_02_FRAGMENT,
   PROJECT_OVERVIEW_CSS_03_FRAGMENT,

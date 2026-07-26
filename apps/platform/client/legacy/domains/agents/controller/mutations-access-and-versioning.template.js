@@ -1395,6 +1395,7 @@
                 : typeof agent?.binary === "string" && agent.binary.trim()
                   ? agent.binary
                   : "Claude Code CLI",
+              executionEngine: normalizePlaygroundAgentExecutionEngine(agent?.executionEngine),
               reasoningEffort: ["minimal", "low", "medium", "high"].includes(orchestratorAgent?.reasoningEffort)
                 ? orchestratorAgent.reasoningEffort
                 : ["minimal", "low", "medium", "high"].includes(agent?.reasoningEffort)
@@ -1466,9 +1467,12 @@
             );
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
-              if (data?.code === "AGENT_PLAN_REQUIRED") {
-                openAgentUpgradeModal();
-              }
+              requestPlatformPlanGateFromResponse(response, data, {
+                entitlement: "agents.custom.create",
+                requiredPlan: "builder",
+                featureName: "custom agents and squads",
+                source: "agents",
+              });
               throw new Error(data?.message || data?.error || "Failed to save agent.");
             }
   

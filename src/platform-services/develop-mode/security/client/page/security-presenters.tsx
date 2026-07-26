@@ -66,13 +66,45 @@ export function SecurityFindingStatusLabel({ status }: { status: SecurityFinding
   return <PlatformLabel variant={variant}>{status.replace(/_/g, " ")}</PlatformLabel>;
 }
 
-export function SecurityPropertyList({ items }: { items: ReadonlyArray<{ label: string; value: ReactNode; className?: string }> }) {
+export function SecurityPropertyList({
+  items,
+  variant = "default",
+}: {
+  items: ReadonlyArray<{ label: string; value: ReactNode; className?: string }>;
+  variant?: "default" | "sidebar";
+}) {
+  const sidebar = variant === "sidebar";
   return (
-    <dl className="develop-security-properties">
+    <dl
+      className={
+        sidebar
+          ? "develop-security-properties is-sidebar playground-project-overview-sidebar-rows"
+          : "develop-security-properties"
+      }
+    >
       {items.map((item) => (
-        <div key={item.label} className={item.className}>
-          <dt>{item.label}</dt>
-          <dd>{item.value}</dd>
+        <div
+          key={item.label}
+          className={`${sidebar ? "playground-project-overview-sidebar-row" : ""}${item.className ? ` ${item.className}` : ""}`}
+        >
+          <dt
+            className={
+              sidebar
+                ? "playground-project-overview-sidebar-row-label"
+                : undefined
+            }
+          >
+            {item.label}
+          </dt>
+          <dd
+            className={
+              sidebar
+                ? "playground-project-overview-sidebar-row-value"
+                : undefined
+            }
+          >
+            {item.value}
+          </dd>
         </div>
       ))}
     </dl>

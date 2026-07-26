@@ -15,6 +15,17 @@ Configure-mode ownership for evaluation sets, versions, cases, and runs.
 
 The root `index.mjs` is the only integration surface required by the platform host.
 
+## Evidence integrity
+
+Evaluation results distinguish scored outcomes from invalid cases, grader failures,
+infrastructure failures, and cancellations. Only scored outcomes contribute to
+quality metrics. Every new run records deterministic dataset, case-selection,
+evaluator, system, and run fingerprints.
+
+Code evaluators are intentionally unavailable until the platform has an isolated,
+resource-limited grader sandbox. Never reintroduce in-process dynamic code
+execution in either the browser or server runtime.
+
 ## Working in this directory
 
 Keep changes inside this directory's stated ownership boundary and use the parent's public entry point instead of importing sibling internals. Update this guide when responsibilities, entry points, or verification commands change. Place focused tests beside the behavior they protect and promote reusable, domain-neutral presentation to `src/platform-ui`.
@@ -33,6 +44,8 @@ build output, or application composition.
 
 ## Related documentation
 
+- [Security and evidence contract](./SECURITY_AND_EVIDENCE.md)
+- [Statistical methodology](./STATISTICAL_METHODOLOGY.md)
 - [Parent directory guide](../README.md)
 - [Platform architecture](../../../../docs/platform-architecture.md)
 - [Directory README standard](../../../../docs/development/readme-standard.md)

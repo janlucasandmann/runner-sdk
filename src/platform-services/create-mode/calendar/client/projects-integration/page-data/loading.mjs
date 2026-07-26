@@ -86,32 +86,25 @@ export const CALENDAR_PROJECTS_PAGE_LOADING_SCRIPT = `
           resetScheduleSaveState("");
         }
 
-        function openCalendarUpgradeModal() {
+        function requestCalendarPlanGate() {
           setTaskDetailPopover("");
           setTaskDetailSelectPopover("");
           setTaskSkillsPopoverOpen(false);
           setProjectSidebarPopover("");
-          setCalendarUpgradeModalOpen(true);
+          requestPlatformPlanGate({
+            entitlement: "schedules.use",
+            requiredPlan: "builder",
+            featureName: "scheduled work",
+            source: "calendar",
+          });
         }
 
         function canCreateScheduledTask() {
           if (!isCalendarCreationLocked) {
             return true;
           }
-          openCalendarUpgradeModal();
+          requestCalendarPlanGate();
           return false;
-        }
-
-        async function handleCalendarUpgradeCheckout() {
-          if (calendarUpgradeCheckoutLoading || typeof onUpgradeToIndividual !== "function") {
-            return;
-          }
-          setCalendarUpgradeCheckoutLoading(true);
-          try {
-            await Promise.resolve(onUpgradeToIndividual());
-          } finally {
-            setCalendarUpgradeCheckoutLoading(false);
-          }
         }
 
 `;

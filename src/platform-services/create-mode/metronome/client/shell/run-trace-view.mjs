@@ -866,7 +866,11 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
               openToolsView("plugins");
             },
             onOpenPlansBudget: () => {
-              openSettingsModal("costs-plans");
+              requestPlatformPlanGate({
+                mode: "budget",
+                featureName: "workflow execution",
+                source: "metronome",
+              });
             },
             onThreadIdChange: (threadId) => {
               const normalizedThreadId = String(threadId || "").trim();

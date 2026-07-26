@@ -307,7 +307,10 @@ for (const consumerPath of rolePermissionsConsumers) {
     continue;
   }
   const consumerSource = await fs.readFile(absoluteConsumerPath, "utf8");
-  if (!consumerSource.includes("React.createElement(PlatformRolePermissionsPage")) {
+  if (
+    !consumerSource.includes("React.createElement(PlatformRolePermissionsPage")
+    && !consumerSource.includes("React.createElement(PlatformResourceAccessSettings")
+  ) {
     failures.push(`${consumerPath} must consume the modular PlatformRolePermissionsPage`);
   }
 }
@@ -330,7 +333,7 @@ if (
 }
 const agentAnalyticsStart = platformEntrySource.indexOf("const agentUsageChartSection = React.createElement(PlatformAnalyticsSection");
 const agentAnalyticsEnd = agentAnalyticsStart >= 0
-  ? platformEntrySource.indexOf("const renderAgentAboutRow", agentAnalyticsStart)
+  ? platformEntrySource.indexOf("const normalizedAgentDetailActionId", agentAnalyticsStart)
   : -1;
 const agentAnalyticsSource = agentAnalyticsStart >= 0 && agentAnalyticsEnd > agentAnalyticsStart
   ? platformEntrySource.slice(agentAnalyticsStart, agentAnalyticsEnd)

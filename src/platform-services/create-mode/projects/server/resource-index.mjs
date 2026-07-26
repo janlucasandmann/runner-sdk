@@ -53,10 +53,16 @@ export function readProjectResourceProjectId(record) {
   const runnerPlayground = metadata.runnerPlayground && typeof metadata.runnerPlayground === "object"
     ? metadata.runnerPlayground
     : {};
+  const project = record.project && typeof record.project === "object" && !Array.isArray(record.project)
+    ? record.project
+    : {};
   return String(
     record.projectId
     || record.project_id
-    || record.project
+    || (typeof record.project === "string" ? record.project : "")
+    || project.id
+    || project.projectId
+    || project.project_id
     || metadata.projectId
     || metadata.project_id
     || runnerPlayground.projectId
@@ -65,17 +71,50 @@ export function readProjectResourceProjectId(record) {
   ).trim();
 }
 
-export function filterProjectResourceIndexRecordsByProjectId(records, projectId) {
+export function readProjectResourceIndexResponseProjectId(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return "";
+  }
+  const metadata = getProjectResourceIndexMetadata(data);
+  const scope = data.scope && typeof data.scope === "object" && !Array.isArray(data.scope)
+    ? data.scope
+    : {};
+  const filters = data.filters && typeof data.filters === "object" && !Array.isArray(data.filters)
+    ? data.filters
+    : {};
+  const nestedData = data.data && typeof data.data === "object" && !Array.isArray(data.data)
+    ? data.data
+    : {};
+  return String(
+    data.projectId
+    || data.project_id
+    || metadata.projectId
+    || metadata.project_id
+    || scope.projectId
+    || scope.project_id
+    || filters.projectId
+    || filters.project_id
+    || nestedData.projectId
+    || nestedData.project_id
+    || ""
+  ).trim();
+}
+
+export function filterProjectResourceIndexRecordsByProjectId(records, projectId, options = {}) {
   const normalizedProjectId = String(projectId || "").trim();
   const normalizedRecords = Array.isArray(records) ? records : [];
   if (!normalizedProjectId) {
     return normalizedRecords;
   }
-  const recordsWithProjectIds = normalizedRecords.filter((record) => readProjectResourceProjectId(record));
-  if (!recordsWithProjectIds.length) {
-    return normalizedRecords;
-  }
-  return normalizedRecords.filter((record) => readProjectResourceProjectId(record) === normalizedProjectId);
+  const responseProjectId = String(options.responseProjectId || "").trim();
+  const responseProvesProjectScope = responseProjectId === normalizedProjectId;
+  return normalizedRecords.filter((record) => {
+    const recordProjectId = readProjectResourceProjectId(record);
+    if (recordProjectId) {
+      return recordProjectId === normalizedProjectId;
+    }
+    return responseProvesProjectScope;
+  });
 }
 
 export function getProjectResourceIndexConnectors(project) {
@@ -147,7 +186,17 @@ export function createProjectResourceIndexHandler({
 
     const encodedProjectId = encodeURIComponent(normalizedProjectId);
     try {
-      const projectResponse = await fetchUpstreamJsonForProxyExactPath(req, `/projects/${encodedProjectId}`, "GET");
+      const [projectResponse, serversResponse, metronomesResponse] = await Promise.all([
+        fetchUpstreamJsonForProxyExactPath(req, `/projects/${encodedProjectId}?view=metadata`, "GET"),
+        fetchUpstreamJsonForProxyExactPath(req, `/servers?projectId=${encodedProjectId}`, "GET").catch((error) => ({
+          status: 502,
+          data: { error: "Failed to load server resources", message: error instanceof Error ? error.message : String(error) },
+        })),
+        fetchUpstreamJsonForProxyExactPath(req, `/metronomes?projectId=${encodedProjectId}`, "GET").catch((error) => ({
+          status: 502,
+          data: { error: "Failed to load metronomes", message: error instanceof Error ? error.message : String(error) },
+        })),
+      ]);
       if (projectResponse.status >= 400) {
         return sendJson(res, projectResponse.status, projectResponse.data);
       }
@@ -158,22 +207,14 @@ export function createProjectResourceIndexHandler({
       const connectors = getProjectResourceIndexConnectors(project);
       const errors = [];
 
-      const [serversResponse, metronomesResponse] = await Promise.all([
-        fetchUpstreamJsonForProxyExactPath(req, `/servers?projectId=${encodedProjectId}`, "GET").catch((error) => ({
-          status: 502,
-          data: { error: "Failed to load server resources", message: error instanceof Error ? error.message : String(error) },
-        })),
-        fetchUpstreamJsonForProxyExactPath(req, `/metronomes?projectId=${encodedProjectId}`, "GET").catch((error) => ({
-          status: 502,
-          data: { error: "Failed to load metronomes", message: error instanceof Error ? error.message : String(error) },
-        })),
-      ]);
-
       let serverResources = [];
       if (serversResponse.status < 400) {
         serverResources = filterProjectResourceIndexRecordsByProjectId(
           getProjectResourceIndexArray(serversResponse.data, ["servers", "resources"]),
           normalizedProjectId,
+          {
+            responseProjectId: readProjectResourceIndexResponseProjectId(serversResponse.data),
+          },
         );
       } else {
         errors.push({
@@ -188,6 +229,9 @@ export function createProjectResourceIndexHandler({
         metronomes = filterProjectResourceIndexRecordsByProjectId(
           getProjectResourceIndexArray(metronomesResponse.data, ["metronomes", "workflows"]),
           normalizedProjectId,
+          {
+            responseProjectId: readProjectResourceIndexResponseProjectId(metronomesResponse.data),
+          },
         );
       } else {
         errors.push({

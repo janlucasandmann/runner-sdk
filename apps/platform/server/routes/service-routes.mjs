@@ -1,11 +1,14 @@
 /** Ordered service compatibility routes. */
 export function createServiceRoutes(bindings) {
-    const { apiKeysService, calendarService, configureHomeService, filesService, guardrailsService, imagineService, inferenceService, marketplaceService, metronomeService, organizationsService, platformDocumentAssets, projectsService, securityService, systemSkillSourceService, teamsService, } = bindings;
+    const { agentRuntimeService, apiKeysService, calendarService, configureHomeService, evidenceAgentsService, filesService, guardrailsService, imagineService, inferenceService, marketplaceService, metronomeService, organizationsService, platformDocumentAssets, projectsService, securityService, systemSkillSourceService, teamsService, } = bindings;
     return function handleServiceRoutes(req, res, url) {
         if (platformDocumentAssets.handleRequest(req, res, url)) {
             return true;
         }
         if (systemSkillSourceService.handleRequest(req, res, url)) {
+            return true;
+        }
+        if (agentRuntimeService.handleRequest(req, res, url)) {
             return true;
         }
         if (filesService.handleRequest(req, res, url)) {
@@ -45,6 +48,9 @@ export function createServiceRoutes(bindings) {
             return true;
         }
         if (securityService.handleRequest(req, res, url)) {
+            return true;
+        }
+        if (evidenceAgentsService.handleRequest(req, res, url)) {
             return true;
         }
         return false;

@@ -1,6 +1,76 @@
 export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 		      }
 
+		      .playground-project-create-modal.platform-modal-surface {
+		        display: flex;
+		        flex-direction: column;
+		      }
+
+		      .playground-project-create-modal > .platform-modal-header,
+		      .playground-project-create-modal > .platform-modal-footer {
+		        flex: 0 0 auto;
+		      }
+
+		      .playground-project-create-modal__body.platform-modal-body {
+		        min-height: 0;
+		        flex: 1 1 auto;
+		        display: flex;
+		        flex-direction: column;
+		        gap: 16px;
+		        overflow-x: hidden;
+		        overflow-y: auto;
+		      }
+
+		      .playground-project-create-modal__identity {
+		        min-width: 0;
+		        display: flex;
+		        align-items: center;
+		        gap: 16px;
+		      }
+
+		      .playground-project-create-modal__identity .playground-tasks-project-modal-name-row {
+		        flex: 1 1 auto;
+		      }
+
+		      .playground-project-create-modal__identity .playground-tasks-project-modal-environment-picker {
+		        flex: 0 1 240px;
+		      }
+
+		      @media (max-width: 640px) {
+		        .playground-project-create-modal__identity {
+		          align-items: stretch;
+		          flex-direction: column;
+		        }
+
+		        .playground-project-create-modal__identity .playground-tasks-project-modal-environment-picker,
+		        .playground-project-create-modal__identity .playground-tasks-detail-select-shell {
+		          width: 100%;
+		          max-width: none;
+		        }
+		      }
+
+		      .playground-project-milestone-modal.platform-modal-surface {
+		        display: flex;
+		        flex-direction: column;
+		      }
+
+		      .playground-project-milestone-modal > .platform-modal-header,
+		      .playground-project-milestone-modal > .platform-modal-footer {
+		        flex: 0 0 auto;
+		      }
+
+		      .playground-project-milestone-modal__body.platform-modal-body {
+		        min-height: 0;
+		        flex: 1 1 auto;
+		        overflow-x: hidden;
+		        overflow-y: auto;
+		      }
+
+		      .playground-project-milestone-modal__body .playground-mission-control-modal-context {
+		        overflow: visible;
+		        padding-right: 0;
+		      }
+
 		      .playground-new-issue-modal.platform-modal-surface {
 		        display: flex;
 		        flex-direction: column;
@@ -1207,6 +1277,14 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
         gap: 4px;
       }
 
+      .playground-tasks-detail-agent-runs-value {
+        gap: 8px;
+      }
+
+      .playground-tasks-detail-agent-runs-value:disabled {
+        cursor: default;
+      }
+
       .playground-tasks-detail-fact-control .playground-tasks-detail-central-selector {
         width: 100%;
         max-width: 100%;
@@ -1476,5 +1554,125 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 
       .playground-mission-control-status-segment.is-done {
         background: linear-gradient(90deg, rgba(221, 161, 252, 0.9) 0%, rgba(243, 182, 246, 0.92) 100%);
+      }
+
+      .playground-mission-control-delivery-card.platform-ui-card {
+        margin-top: 16px;
+      }
+
+      .playground-mission-control-delivery-status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        color: rgba(255, 255, 255, 0.72);
+        background: rgba(255, 255, 255, 0.09);
+        font-size: 10px;
+        line-height: 1;
+        text-transform: capitalize;
+      }
+
+      .playground-mission-control-delivery-status.is-running,
+      .playground-mission-control-delivery-status.is-queued {
+        color: #8bc2ff;
+        background: rgba(77, 163, 255, 0.14);
+      }
+
+      .playground-mission-control-delivery-status.is-passed {
+        color: #9ce5a0;
+        background: rgba(88, 194, 96, 0.14);
+      }
+
+      .playground-mission-control-delivery-status.is-blocked,
+      .playground-mission-control-delivery-status.is-failed,
+      .playground-mission-control-delivery-status.is-cancelled {
+        color: #ff9b9b;
+        background: rgba(255, 91, 91, 0.14);
+      }
+
+      .playground-mission-control-delivery-stages {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-mission-control-delivery-stage {
+        min-height: 34px;
+        display: grid;
+        grid-template-columns: 8px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-mission-control-delivery-stage:last-child {
+        border-bottom: 0;
+      }
+
+      .playground-mission-control-delivery-stage-indicator {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      .playground-mission-control-delivery-stage-indicator.is-running {
+        background: #4da3ff;
+        box-shadow: 0 0 0 3px rgba(77, 163, 255, 0.12);
+      }
+
+      .playground-mission-control-delivery-stage-indicator.is-passed {
+        background: #66cf70;
+      }
+
+      .playground-mission-control-delivery-stage-indicator.is-blocked,
+      .playground-mission-control-delivery-stage-indicator.is-failed {
+        background: #ff6868;
+      }
+
+      .playground-mission-control-delivery-stage-indicator.is-skipped {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .playground-mission-control-delivery-stage-label,
+      .playground-mission-control-delivery-stage-status,
+      .playground-mission-control-delivery-budget,
+      .playground-mission-control-delivery-empty,
+      .playground-mission-control-delivery-error {
+        font-size: 11px;
+        line-height: 1.4;
+      }
+
+      .playground-mission-control-delivery-stage-label {
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .playground-mission-control-delivery-stage-status {
+        color: rgba(255, 255, 255, 0.42);
+        text-transform: capitalize;
+      }
+
+      .playground-mission-control-delivery-budget {
+        margin-top: 12px;
+        padding-top: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.075);
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-mission-control-delivery-budget span:last-child {
+        color: rgba(255, 255, 255, 0.84);
+      }
+
+      .playground-mission-control-delivery-empty {
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      .playground-mission-control-delivery-error {
+        margin-top: 10px;
+        color: #ff8d8d;
       }
 `;

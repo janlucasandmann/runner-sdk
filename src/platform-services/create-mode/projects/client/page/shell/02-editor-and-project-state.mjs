@@ -277,10 +277,12 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
             projectOverviewFileActivityLoadKeyRef.current = "";
             setProjectOverviewThreadRecords([]);
             setProjectOverviewFileActivityState((current) => ({
-              ...current,
+              projectId: normalizedProjectId,
               status: "idle",
               error: "",
-              items: normalizedProjectId ? current.items : [],
+              items: normalizedProjectId && current?.projectId === normalizedProjectId
+                ? current.items
+                : [],
             }));
             return;
           }
@@ -301,9 +303,12 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
           projectOverviewFileActivityLoadKeyRef.current = loadKey;
 
           setProjectOverviewFileActivityState((current) => ({
-            ...current,
-            status: current?.status === "idle" ? "loading" : (current?.status || "ready"),
+            projectId: normalizedProjectId,
+            status: "loading",
             error: "",
+            items: current?.projectId === normalizedProjectId && Array.isArray(current?.items)
+              ? current.items
+              : [],
           }));
 
           const threadHeaders = {
@@ -333,10 +338,14 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
             projectThreads = projectThreads.slice(0, 12);
           }
 
+          if (projectOverviewFileActivityLoadKeyRef.current !== loadKey) {
+            return;
+          }
           setProjectOverviewThreadRecords(projectThreads);
 
           if (projectThreads.length === 0) {
             setProjectOverviewFileActivityState({
+              projectId: normalizedProjectId,
               status: "ready",
               error: "",
               items: [],
@@ -385,6 +394,9 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
             });
           }));
 
+          if (projectOverviewFileActivityLoadKeyRef.current !== loadKey) {
+            return;
+          }
           const historyItems = results
             .flatMap((result) => result.status === "fulfilled" && Array.isArray(result.value) ? result.value : [])
             .filter((row) => normalizeHistoryChangeKind(row?.operationKind) !== "deleted")
@@ -411,6 +423,7 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
             .slice(0, 40);
 
           setProjectOverviewFileActivityState({
+            projectId: normalizedProjectId,
             status: "ready",
             error: "",
             items: nextItems,
@@ -439,6 +452,7 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
                 return;
               }
               setProjectOverviewFileActivityState({
+                projectId: String(selectedProjectId || "").trim(),
                 status: "error",
                 error: error instanceof Error ? error.message : "Failed to load project file activity.",
                 items: [],
@@ -452,20 +466,20 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
 
 	        const loadProjectOverviewServerResources = useCallback(async function loadProjectOverviewServerResources() {
 	          const normalizedProjectId = String(selectedProjectId || "").trim();
-		          if (!normalizedProjectId || taskView !== "overview" || projectOverviewFilesSubview !== "resources") {
+		          if (!normalizedProjectId || taskView !== "overview") {
 		            projectOverviewServerResourcesLoadKeyRef.current = "";
 		            setProjectOverviewServerResourcesState((current) => ({
               ...current,
+              projectId: normalizedProjectId,
               status: "idle",
               error: "",
-              items: normalizedProjectId ? current.items : [],
+              items: normalizedProjectId && current?.projectId === normalizedProjectId ? current.items : [],
 	            }));
 	            return;
 	          }
 		          const loadKey = [
 		            normalizedProjectId,
 		            taskView,
-		            projectOverviewFilesSubview,
 		            backendUrl,
 		            requestHeadersKey,
 		          ].join("|");
@@ -475,25 +489,38 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
 	          projectOverviewServerResourcesLoadKeyRef.current = loadKey;
 
 	          setProjectOverviewServerResourcesState((current) => ({
-	            ...current,
+            projectId: normalizedProjectId,
             status: "loading",
             error: "",
+            items: current?.projectId === normalizedProjectId && Array.isArray(current?.items)
+              ? current.items
+              : [],
           }));
 
           try {
-            const response = await fetch(backendUrl + "/servers", {
+            const response = await fetch(
+              backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId) + "/resource-index",
+              {
               method: "GET",
               headers: requestHeaders,
-            });
+              }
+            );
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to load project resources.");
             }
 
-            const nextItems = parsePlaygroundServerListResponse(data)
-              .filter((server) => String(server?.projectId || "").trim() === normalizedProjectId)
-              .filter((server) => canonicalizePlaygroundServerKind(server?.kind) !== "database")
-              .map((server) => {
+            const readResourceIndexItems = (keys) => {
+              for (const key of keys) {
+                if (Array.isArray(data?.[key])) {
+                  return data[key];
+                }
+              }
+              return [];
+            };
+            const serverResources = readResourceIndexItems(["serverResources", "servers", "resources"]);
+            const metronomeResources = readResourceIndexItems(["metronomes", "workflows"]);
+            const normalizedServerResources = serverResources.map((server) => {
                 const normalizedKind = canonicalizePlaygroundServerKind(server?.kind);
                 const endpoint = [
                   typeof server?.customDomain === "string" ? server.customDomain.trim() : "",
@@ -502,8 +529,10 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
                 ].find(Boolean) || "";
                 const updatedAt = String(server?.updatedAt || server?.createdAt || "").trim();
                 return {
+                  ...(server && typeof server === "object" ? server : {}),
                   id: String(server?.id || "").trim(),
                   title: String(server?.name || "").trim() || "Untitled Resource",
+                  kind: normalizedKind || String(server?.kind || "").trim(),
                   type: formatPlaygroundServerKindLabel(normalizedKind),
                   endpoint,
                   status: String(server?.status || "").trim() || "draft",
@@ -517,22 +546,85 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
                     server?.id || "",
                   ].join(" ").toLowerCase(),
                 };
+              });
+            const normalizedMetronomeResources = metronomeResources.map((metronome) => {
+              const endpoint = String(
+                metronome?.endpoint
+                || metronome?.functionUrl
+                || metronome?.triggerUrl
+                || ""
+              ).trim();
+              const updatedAt = String(
+                metronome?.updatedAt
+                || metronome?.publishedAt
+                || metronome?.createdAt
+                || ""
+              ).trim();
+              return {
+                ...(metronome && typeof metronome === "object" ? metronome : {}),
+                id: String(metronome?.id || "").trim(),
+                title: String(metronome?.name || metronome?.title || "").trim() || "Untitled Workflow",
+                kind: "metronome",
+                resourceType: "metronome",
+                type: "Metronome",
+                endpoint,
+                status: String(metronome?.status || "").trim() || "draft",
+                updatedAt,
+                searchText: [
+                  metronome?.name || metronome?.title || "",
+                  "metronome",
+                  endpoint,
+                  metronome?.status || "",
+                  metronome?.id || "",
+                ].join(" ").toLowerCase(),
+              };
+            });
+            const seenResourceIds = new Set();
+            const nextItems = normalizedServerResources
+              .concat(normalizedMetronomeResources)
+              .filter((resource, index) => {
+                const resourceId = String(
+                  resource?.id
+                  || resource?.title
+                  || resource?.name
+                  || index
+                ).trim();
+                const resourceKey = String(resource?.kind || resource?.type || "resource") + ":" + resourceId;
+                if (seenResourceIds.has(resourceKey)) {
+                  return false;
+                }
+                seenResourceIds.add(resourceKey);
+                return true;
               })
-              .sort((left, right) => String(right.updatedAt || "").localeCompare(String(left.updatedAt || "")));
+              .sort((left, right) => {
+                const leftTimestamp = Date.parse(String(left?.updatedAt || left?.createdAt || "")) || 0;
+                const rightTimestamp = Date.parse(String(right?.updatedAt || right?.createdAt || "")) || 0;
+                return rightTimestamp - leftTimestamp;
+              });
 
+            if (projectOverviewServerResourcesLoadKeyRef.current !== loadKey) {
+              return;
+            }
             setProjectOverviewServerResourcesState({
+              projectId: normalizedProjectId,
               status: "ready",
               error: "",
               items: nextItems,
             });
           } catch (error) {
-            setProjectOverviewServerResourcesState({
+            if (projectOverviewServerResourcesLoadKeyRef.current !== loadKey) {
+              return;
+            }
+            setProjectOverviewServerResourcesState((current) => ({
+              projectId: normalizedProjectId,
               status: "error",
               error: error instanceof Error ? error.message : "Failed to load project resources.",
-              items: [],
-            });
+              items: current?.projectId === normalizedProjectId && Array.isArray(current?.items)
+                ? current.items
+                : [],
+            }));
           }
-		        }, [backendUrl, projectOverviewFilesSubview, requestHeaders, requestHeadersKey, selectedProjectId, taskView]);
+		        }, [backendUrl, requestHeaders, requestHeadersKey, selectedProjectId, taskView]);
 
         useEffect(() => {
           let cancelled = false;
@@ -543,6 +635,7 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
                 return;
               }
               setProjectOverviewServerResourcesState({
+                projectId: String(selectedProjectId || "").trim(),
                 status: "error",
                 error: error instanceof Error ? error.message : "Failed to load project resources.",
                 items: [],
@@ -1193,7 +1286,24 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
 	            .filter(Boolean)
 	            .join("|")
 	        ), [taskDetailThreadRecords]);
-	        const selectedTaskThreads = useMemo(() => {
+          const selectedTaskAgentSessions = useMemo(() => {
+            const normalizedTaskId = String(draftTask?.id || selectedTaskId || "").trim();
+            if (!normalizedTaskId) {
+              return [];
+            }
+            return (Array.isArray(selectedProjectDetail?.agentSessions)
+              ? selectedProjectDetail.agentSessions
+              : [])
+              .filter((session) => String(session?.taskId || session?.task_id || "").trim() === normalizedTaskId)
+              .sort((left, right) => {
+                const rightAttempt = Number(right?.attemptNumber ?? right?.attempt_number ?? 0);
+                const leftAttempt = Number(left?.attemptNumber ?? left?.attempt_number ?? 0);
+                const rightTime = Date.parse(String(right?.createdAt || right?.created_at || "")) || 0;
+                const leftTime = Date.parse(String(left?.createdAt || left?.created_at || "")) || 0;
+                return rightAttempt - leftAttempt || rightTime - leftTime;
+              });
+          }, [draftTask?.id, selectedProjectDetail?.agentSessions, selectedTaskId]);
+		        const selectedTaskThreads = useMemo(() => {
           const normalizedTaskId = String(draftTask?.id || selectedTaskId || "").trim();
           if (!normalizedTaskId) {
             return [];
@@ -1208,6 +1318,41 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
             ...(Array.isArray(selectedProjectRecentThreads) ? selectedProjectRecentThreads : []),
             ...(Array.isArray(projectOverviewThreads) ? projectOverviewThreads : []),
             ...(Array.isArray(taskDetailThreadRecords) ? taskDetailThreadRecords : []),
+            ...selectedTaskAgentSessions.map((session) => {
+              const sessionState = String(session?.state || "").trim().toLowerCase();
+              const threadStatus = sessionState === "completed"
+                ? "completed"
+                : sessionState === "failed" || sessionState === "stale"
+                  ? "failed"
+                  : sessionState === "canceled"
+                    ? "cancelled"
+                    : sessionState === "awaiting_input"
+                      ? "waiting_permission"
+                      : "running";
+              const attemptNumber = Math.max(1, Number(session?.attemptNumber ?? session?.attempt_number ?? 1) || 1);
+              return {
+                id: String(session?.threadId || session?.thread_id || "").trim(),
+                title: "Agent attempt " + attemptNumber,
+                status: threadStatus,
+                agentId: String(session?.agentId || session?.agent_id || "").trim() || undefined,
+                environmentId: String(session?.environmentId || session?.environment_id || "").trim() || undefined,
+                projectId: normalizedProjectId,
+                createdAt: session?.createdAt || session?.created_at || undefined,
+                updatedAt: session?.updatedAt || session?.updated_at || undefined,
+                completedAt: session?.completedAt || session?.completed_at || undefined,
+                metadata: {
+                  runnerPlayground: {
+                    taskAgentSessionId: String(session?.id || "").trim(),
+                    taskPreview: {
+                      taskId: normalizedTaskId,
+                      projectId: normalizedProjectId,
+                      ticketNumber: taskTicketNumber || "",
+                      title: draftTask?.title || "Untitled Task",
+                    },
+                  },
+                },
+              };
+            }),
           ]).forEach((thread) => {
             const threadId = String(thread?.id || "").trim();
             if (!threadId) {
@@ -1265,6 +1410,7 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
           projectOverviewThreads,
           selectedProjectId,
           selectedProjectRecentThreads,
+          selectedTaskAgentSessions,
           selectedTaskId,
           selectedTaskThreadIds,
           taskDetailThreadRecords,
@@ -1360,7 +1506,10 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
           return () => document.removeEventListener("mousedown", handleProjectOverviewMenusPointerDown);
         }, [projectOverviewTeamMenuId, projectOverviewMilestoneMenuId, projectOverviewResourceMenuId]);
         useEffect(() => {
-          setProjectOverviewVisibleThreadCount(5);
+          setProjectOverviewThreadPagination((current) => ({
+            pageIndex: 0,
+            pageSize: Math.max(1, Number(current?.pageSize) || 5),
+          }));
           setProjectOverviewVisibleActivityCount(5);
           setProjectOverviewSidebarPropertyPopover("");
           setProjectOverviewTeamMenuId("");

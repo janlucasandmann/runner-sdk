@@ -5,17 +5,17 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
           const latestRun = run
             ? normalizePlaygroundEvaluationRun(run)
             : normalizedSetRuns[0] || null;
-          const runPassRate = latestRun && latestRun.totalCount ? Math.round((latestRun.passedCount / latestRun.totalCount) * 100) + "%" : "-";
+          const runPassRate = latestRun && latestRun.scoredCount ? Math.round((latestRun.passedCount / latestRun.scoredCount) * 100) + "%" : "-";
           const setAnalytics = normalizedSetRuns.reduce((state, item) => {
             const cases = Array.isArray(item.cases) ? item.cases : [];
-            const completedCases = cases.filter((caseItem) => !isPlaygroundEvaluationCaseActive(caseItem) && caseItem.status !== "error");
-            if (completedCases.length > 0) {
-              state.scoreSum += completedCases.reduce((sum, caseItem) => sum + Math.max(0, Math.min(1, Number(caseItem.score || 0))), 0);
-              state.caseCount += completedCases.length;
-              state.passedCount += completedCases.filter((caseItem) => Number(caseItem.score || 0) >= normalizePlaygroundEvaluationPassThreshold(item.passThreshold)).length;
-            } else if (item.totalCount > 0) {
-              state.scoreSum += Math.max(0, Math.min(1, Number(item.averageScore || 0))) * item.totalCount;
-              state.caseCount += item.totalCount;
+            const scoredCases = cases.filter((caseItem) => ["completed", "passed", "failed"].includes(caseItem.status) && Number.isFinite(caseItem.score));
+            if (scoredCases.length > 0) {
+              state.scoreSum += scoredCases.reduce((sum, caseItem) => sum + Math.max(0, Math.min(1, caseItem.score)), 0);
+              state.caseCount += scoredCases.length;
+              state.passedCount += scoredCases.filter((caseItem) => caseItem.score >= normalizePlaygroundEvaluationPassThreshold(item.passThreshold)).length;
+            } else if (item.scoredCount > 0 && item.averageScore !== null) {
+              state.scoreSum += Math.max(0, Math.min(1, Number(item.averageScore))) * item.scoredCount;
+              state.caseCount += item.scoredCount;
               state.passedCount += Math.max(0, Number(item.passedCount || 0));
             }
             state.costUsd += normalizePlaygroundEvaluationUsdCost(item.costUsd);
@@ -622,6 +622,12 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                     const caseNumber = String(index + 1).padStart(3, "0");
                     const inputText = String(row.input || "").trim();
                     const runCount = normalizePlaygroundEvaluationCaseRunCount(row.runCount);
+                    const optimizationRole = normalizePlaygroundEvaluationOptimizationRole(row.optimizationRole);
+                    const optimizationRoleVariant = optimizationRole === "holdout"
+                      ? "yellow"
+                      : optimizationRole === "validation"
+                        ? "blue"
+                        : "gray";
                     return React.createElement("div", {
                         key: row.id,
                         className: "playground-tasks-backlog-item playground-project-overview-outcome-preview playground-evaluations-data-row-preview",
@@ -647,6 +653,14 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                           )
                         ),
                         React.createElement("div", { className: "playground-tasks-backlog-meta" },
+                          React.createElement(PlatformLabel, {
+                            variant: optimizationRoleVariant,
+                            title: optimizationRole === "holdout"
+                              ? "Sealed until final verification"
+                              : optimizationRole === "validation"
+                                ? "Used for candidate selection without optimizer answer leakage"
+                                : "Used during optimization",
+                          }, getPlaygroundEvaluationOptimizationRoleLabel(optimizationRole)),
                           row.sourceThreadId
                             ? React.createElement("span", {
                                 className: "playground-evaluations-source-thread-pill",

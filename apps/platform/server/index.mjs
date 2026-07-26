@@ -18,6 +18,7 @@ import { createPlatformConfig } from "./platform-config.mjs";
 import { createIdentityService } from "./identity/create-identity-service.mjs";
 import { createPlatformServices } from "./platform-services.mjs";
 import { createAdminPageRenderers } from "./admin/pages.mjs";
+import { createExecutionDispatcher } from "./execution-dispatch/dispatcher.mjs";
 import {
   createLegacyPlatformApplicationSources,
 } from "../client/legacy/create-legacy-platform-application.mjs";
@@ -46,6 +47,10 @@ const {
   shouldForwardLocalCloudApiOverride,
   xlsxRoot,
   identityProvider,
+  executionDispatcher,
+  platformControlPlaneSecret,
+  platformPrincipalAssertionAudience,
+  platformPrincipalAssertionIssuer,
 } = platformConfig;
 const identityService = createIdentityService(platformConfig);
 const {
@@ -102,6 +107,19 @@ const platformServices = createPlatformServices({
   gateway: platformGateway,
   playgroundSystemSkillsRoot,
   port,
+  executionDispatcherEnabled: executionDispatcher.enabled,
+});
+const executionDispatcherRuntime = createExecutionDispatcher({
+  ...executionDispatcher,
+  secret: platformControlPlaneSecret,
+  issuer: platformPrincipalAssertionIssuer,
+  audience: platformPrincipalAssertionAudience,
+  workerId: executionDispatcher.workerId || undefined,
+  upstreamOrigin: defaultUpstreamOrigin,
+  platformLocalOrigin: `http://127.0.0.1:${port}`,
+  evaluationsService: platformServices.evaluationsService,
+  fineTuningService: platformServices.fineTuningService,
+  testsService: platformServices.testsService,
 });
 
 const server = http.createServer(createPlatformRequestHandler({
@@ -140,4 +158,34 @@ server.listen(port, bindAddress, () => {
     + `css=${platformDocumentAssets.metrics.cssBytes}B `
     + `client=${platformDocumentAssets.metrics.moduleBytes}B`,
   );
+  executionDispatcherRuntime.start();
+});
+
+let shutdownStarted = false;
+async function shutdownPlatform(signal) {
+  if (shutdownStarted) return;
+  shutdownStarted = true;
+  console.log(`[platform] Received ${signal}; stopping execution dispatch and HTTP intake.`);
+  await executionDispatcherRuntime.stop({ wait: false });
+  const forceExitTimer = setTimeout(() => {
+    console.error("[platform] Graceful shutdown timed out.");
+    process.exit(1);
+  }, 10_000);
+  forceExitTimer.unref?.();
+  server.close((error) => {
+    clearTimeout(forceExitTimer);
+    if (error) {
+      console.error("[platform] HTTP server shutdown failed.", error);
+      process.exit(1);
+      return;
+    }
+    process.exit(0);
+  });
+}
+
+process.once("SIGTERM", () => {
+  void shutdownPlatform("SIGTERM");
+});
+process.once("SIGINT", () => {
+  void shutdownPlatform("SIGINT");
 });

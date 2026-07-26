@@ -36,7 +36,7 @@ export const EVALUATIONS_PAGE_RUNS_SCRIPT = String.raw`      function parsePlayg
             projectId: source.projectId || source.project_id || fallback.projectId || "",
             projectName: source.projectName || source.project_name || fallback.projectName || "",
           }, index);
-          if (run.status !== "completed" && run.status !== "failed") return;
+          if (!["completed", "completed_with_errors", "failed"].includes(run.status) || run.averageScore === null) return;
           const agentKey = run.targetAgentId || "agent:" + String(run.targetAgentName || "Agent").trim().toLowerCase();
           const environmentResourceId = run.environmentType === "project"
             ? run.projectId || run.projectName
@@ -108,6 +108,8 @@ export const EVALUATIONS_PAGE_RUNS_SCRIPT = String.raw`      function parsePlayg
             threadId: "eval_thread_" + Date.now().toString(36) + "_" + index,
             input: row.input,
             expectedOutput: expected,
+            evaluationGuidance: row.evaluationGuidance,
+            optimizationRole: row.optimizationRole,
             actualOutput: actual,
             score,
             status: score >= passThreshold ? "passed" : "failed",
@@ -141,6 +143,7 @@ export const EVALUATIONS_PAGE_RUNS_SCRIPT = String.raw`      function parsePlayg
           input: row.input,
           expectedOutput: row.expectedOutput,
           evaluationGuidance: row.evaluationGuidance,
+          optimizationRole: row.optimizationRole,
           actualOutput: "",
           score: 0,
           status: "queued",

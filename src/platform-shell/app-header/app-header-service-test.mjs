@@ -204,5 +204,39 @@ assert.doesNotMatch(platformEntrySource, /function renderUnifiedTopNav\(/);
 assert.doesNotMatch(platformEntrySource, /function renderThreadSearchPalette\(/);
 assert.doesNotMatch(platformEntrySource, /function renderNotificationMenu\(/);
 assert.doesNotMatch(platformEntrySource, /renderAppHeaderSidebarToggle\(\)/);
+assert.match(platformEntrySource, /function getThreadPagePathItems\(\)/);
+assert.match(
+  platformEntrySource,
+  /label: selectedThreadProjectName,[\s\S]*?className: "playground-project-breadcrumb-icon"[\s\S]*?onClick: openSelectedThreadProject/,
+);
+assert.match(
+  platformEntrySource,
+  /label: selectedThreadTaskTicketNumber,[\s\S]*?className: "playground-tasks-backlog-project-icon is-" \+ selectedThreadTaskType[\s\S]*?onClick: openSelectedThreadTaskDetail/,
+);
+assert.match(
+  platformEntrySource,
+  /const selectedThreadTaskTicketNumber = selectedThreadTaskPreview\?\.taskId[\s\S]*?formatPlaygroundProjectTicketNumber\([\s\S]*?name: selectedThreadProjectName/,
+);
+assert.match(platformEntrySource, /pathItems: getThreadPagePathItems\(\)/);
+assert.match(
+  platformEntrySource,
+  /setTasksPageNavigationRequest\(\{[\s\S]*?taskId,[\s\S]*?taskDetailMode: "screen",[\s\S]*?\}\);[\s\S]*?setActivePage\("tasks"\)/,
+);
+assert.match(
+  platformEntrySource,
+  /setTasksHeaderState\(\{[\s\S]*?projectId,[\s\S]*?taskId,[\s\S]*?detailMode: "task",[\s\S]*?\}\);[\s\S]*?setTasksPageNavigationRequest/,
+);
+assert.match(
+  platformEntrySource,
+  /taskDetailMode: "screen",[\s\S]*?projectRecord: directProjectRecord,[\s\S]*?taskRecord: directTaskRecord/,
+);
+assert.match(
+  platformEntrySource,
+  /const openSelectedThreadProject = useCallback\(\(\) => \{[\s\S]*?setTasksHeaderState\(\{[\s\S]*?projectId,[\s\S]*?taskId: "",[\s\S]*?detailMode: "",[\s\S]*?\}\);[\s\S]*?setTasksPageNavigationRequest\(\{[\s\S]*?projectRecord: directProjectRecord,[\s\S]*?\}\);[\s\S]*?setActivePage\("tasks"\)/,
+);
+assert.match(
+  platformEntrySource,
+  /taskId: entry\.taskId \|\| "",[\s\S]*?taskDetailMode: entry\.detailMode === "task" \? "screen" : ""/,
+);
 
 console.log("App Header component ownership, styles, icon contract, and browser syntax passed.");

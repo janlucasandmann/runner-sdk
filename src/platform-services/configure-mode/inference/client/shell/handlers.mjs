@@ -12,11 +12,21 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
           return { collection, selectedEndpoint };
         }, [settingsBillingPreferences]);
 
+        const requestInferencePlanGate = useCallback(() => {
+          setSettingsPlatformConfigError("");
+          setSettingsPlatformConfigSuccess("");
+          requestPlatformPlanGate({
+            entitlement: "inference.byo",
+            requiredPlan: "team",
+            featureName: "custom inference endpoints",
+            source: "inference",
+          });
+          return false;
+        }, []);
+
         const handleSettingsInferenceCreateEndpoint = useCallback(async (endpointInputValue = null) => {
           if (!settingsCanConfigureBusinessFeatures) {
-            setSettingsPlatformConfigError("Upgrade to Team to configure inference.");
-            setSettingsPlatformConfigSuccess("");
-            return false;
+            return requestInferencePlanGate();
           }
 
           const endpointInput = endpointInputValue && typeof endpointInputValue === "object"
@@ -59,6 +69,14 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
                 }),
               });
               const data = await response.json().catch(() => ({}));
+              if (requestPlatformPlanGateFromResponse(response, data, {
+                entitlement: "inference.byo",
+                requiredPlan: "team",
+                featureName: "custom inference endpoints",
+                source: "inference",
+              })) {
+                return false;
+              }
               if (!response.ok) {
                 throw new Error(data?.message || data?.error || "Failed to create inference endpoint.");
               }
@@ -102,15 +120,15 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
           hasRealAccess,
           persistInferenceEndpointCollection,
           proxyBackendBase,
+          requestInferencePlanGate,
           settingsCanConfigureBusinessFeatures,
           settingsInferenceEndpoints,
         ]);
 
         const handleSettingsInferenceSave = useCallback(async (inferenceSettingsOverride = null, options = null) => {
           if (!settingsCanConfigureBusinessFeatures) {
-            setSettingsPlatformConfigError("Upgrade to Team to configure inference.");
-            setSettingsPlatformConfigSuccess("");
-            return;
+            requestInferencePlanGate();
+            return false;
           }
           const endpointId = String(settingsInferenceSelectedEndpointId || "").trim();
           if (!endpointId || endpointId.startsWith("local-inference:")) {
@@ -183,6 +201,14 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
                 }
               );
               const data = await response.json().catch(() => ({}));
+              if (requestPlatformPlanGateFromResponse(response, data, {
+                entitlement: "inference.byo",
+                requiredPlan: "team",
+                featureName: "custom inference endpoints",
+                source: "inference",
+              })) {
+                return false;
+              }
               if (!response.ok) {
                 throw new Error(data?.message || data?.error || "Failed to save inference endpoint.");
               }
@@ -207,6 +233,7 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
           hasRealAccess,
           persistInferenceEndpointCollection,
           proxyBackendBase,
+          requestInferencePlanGate,
           settingsCanConfigureBusinessFeatures,
           settingsClearInferenceApiKey,
           settingsInferenceApiKeyInput,
@@ -223,7 +250,10 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
             settingsInferenceAutosaveTimerRef.current = null;
           }
           const normalizedInferenceSettings = normalizeDemoInferenceEndpoint(nextInferenceSettings);
-          if (!settingsCanConfigureBusinessFeatures) return;
+          if (!settingsCanConfigureBusinessFeatures) {
+            requestInferencePlanGate();
+            return;
+          }
           if (options.immediate) {
             void handleSettingsInferenceSave(normalizedInferenceSettings, options);
             return;
@@ -232,13 +262,12 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
             settingsInferenceAutosaveTimerRef.current = null;
             void handleSettingsInferenceSave(normalizedInferenceSettings, options);
           }, 520);
-        }, [handleSettingsInferenceSave, settingsCanConfigureBusinessFeatures]);
+        }, [handleSettingsInferenceSave, requestInferencePlanGate, settingsCanConfigureBusinessFeatures]);
 
         const handleSettingsInferenceConnectionTest = useCallback(async () => {
           const endpointId = String(settingsInferenceSelectedEndpointId || "").trim();
           if (!settingsCanConfigureBusinessFeatures) {
-            setSettingsPlatformConfigError("Upgrade to Team to configure inference.");
-            setSettingsPlatformConfigSuccess("");
+            requestInferencePlanGate();
             return;
           }
           const trimmedBaseUrl = String(settingsInferenceSettings.baseUrl || "").trim();
@@ -289,6 +318,14 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
                 }
               );
               const data = await response.json().catch(() => ({}));
+              if (requestPlatformPlanGateFromResponse(response, data, {
+                entitlement: "inference.byo",
+                requiredPlan: "team",
+                featureName: "custom inference endpoints",
+                source: "inference",
+              })) {
+                return;
+              }
               if (!response.ok) {
                 throw new Error(data?.message || data?.error || "Connection test failed.");
               }
@@ -346,6 +383,7 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
           hasRealAccess,
           persistInferenceEndpointCollection,
           proxyBackendBase,
+          requestInferencePlanGate,
           settingsCanConfigureBusinessFeatures,
           settingsClearInferenceApiKey,
           settingsInferenceApiKeyInput,
@@ -403,6 +441,14 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
                 }
               );
               const data = await response.json().catch(() => ({}));
+              if (requestPlatformPlanGateFromResponse(response, data, {
+                entitlement: "inference.byo",
+                requiredPlan: "team",
+                featureName: "custom inference endpoints",
+                source: "inference",
+              })) {
+                return;
+              }
               if (!response.ok) {
                 throw new Error(data?.message || data?.error || "Failed to remove inference endpoint.");
               }
@@ -426,6 +472,7 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
           hasRealAccess,
           persistInferenceEndpointCollection,
           proxyBackendBase,
+          requestInferencePlanGate,
           settingsInferenceEndpoints,
           settingsInferenceSelectedEndpointId,
         ]);

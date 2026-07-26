@@ -10,6 +10,8 @@ Selector surfaces are portal-positioned by default, so table, panel, and sidebar
 
 `PlatformButtonSelector` provides the same portaled selector popup with a centralized primary or secondary button trigger. Use `mode="popup"` when the entire button opens the popup, or `mode="split-action"` when the main segment runs an action and only the chevron segment opens the popup.
 
+Use `fullWidth` when the selector should fill its parent. The shared layout centers the leading content and label against the complete control width, including the chevron segment, while preserving separate action and popup hit targets.
+
 `popupAlignment` controls which horizontal edge is anchored. It defaults to `"left"`; use `"right"` when the popup should end where the selector column ends. This is independent from `alignment`, which controls the trigger label layout.
 
 Set `closeOnSelect` for action menus whose popup should close as soon as a button, link, menu item, or option is selected. The selected child action still runs before the popup is dismissed.
@@ -36,6 +38,7 @@ The component owns controlled or uncontrolled popup state, outside-click and Esc
   label="Save & Publish"
   popupAriaLabel="Version save options"
   onAction={publish}
+  fullWidth
 >
   {versionActions}
 </PlatformButtonSelector>

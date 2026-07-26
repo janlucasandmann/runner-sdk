@@ -301,28 +301,6 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
 
           const renderEmpty = (text) => React.createElement("div", { className: "playground-team-empty" }, text);
 
-          if (teamPageRequiresPlan) {
-            return React.createElement("div", { className: "playground-team-page" },
-              React.createElement("div", { className: "playground-team-shell is-plan-empty" },
-                React.createElement("div", { className: "playground-team-plan-empty" },
-                  React.createElement("img", {
-                    className: "playground-team-plan-empty-visual",
-                    src: "/img/empty-state/no-users-yet.avif",
-                    alt: "",
-                    draggable: false,
-                  }),
-                  React.createElement("h1", { className: "playground-team-plan-empty-title" }, "Teams are available on the Team plan"),
-                  React.createElement("p", { className: "playground-team-plan-empty-copy" }, "Upgrade to invite people, share projects, computers, agents, and Imagine templates, and keep everyone working inside one shared workspace."),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-team-plan-empty-button",
-                    onClick: () => openSettingsModal("costs-plans"),
-                  }, "View plans")
-                )
-              )
-            );
-          }
-
           const openTeamDetail = (teamId) => {
             const normalizedTeamId = String(teamId || "").trim();
             if (!normalizedTeamId) {

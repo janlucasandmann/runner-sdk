@@ -246,15 +246,101 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
         return true;
       }
 
-      function getPlaygroundProjectIconId(value) {
-        const normalized = String(value || "").trim().toLowerCase();
+      function getPlaygroundProjectIconCandidate(value) {
+        const rawValue = String(value || "").trim();
+        if (rawValue.toLowerCase().startsWith("emoji:")) {
+          const emoji = rawValue.slice("emoji:".length).trim();
+          if (emoji && !/[\\r\\n]/.test(emoji) && Array.from(emoji).length <= 16) {
+            return "emoji:" + emoji;
+          }
+        }
+        const normalized = rawValue.toLowerCase();
         return PLAYGROUND_PROJECT_ICON_OPTIONS.some((option) => option.id === normalized)
           ? normalized
-          : PLAYGROUND_PROJECT_ICON_OPTIONS[0].id;
+          : "";
+      }
+
+      function hasPlaygroundExplicitProjectIcon(projectRecord) {
+        if (!projectRecord || typeof projectRecord !== "object" || Array.isArray(projectRecord)) {
+          return false;
+        }
+        const metadata = projectRecord.metadata
+          && typeof projectRecord.metadata === "object"
+          && !Array.isArray(projectRecord.metadata)
+            ? projectRecord.metadata
+            : {};
+        if (
+          Object.prototype.hasOwnProperty.call(metadata, "icon")
+          && Boolean(getPlaygroundProjectIconCandidate(metadata.icon))
+        ) {
+          return true;
+        }
+        if (projectRecord.__projectIconExplicit === true) {
+          return true;
+        }
+        if (projectRecord.__projectIconExplicit === false) {
+          return false;
+        }
+        return Object.prototype.hasOwnProperty.call(projectRecord, "icon")
+          && Boolean(getPlaygroundProjectIconCandidate(projectRecord.icon));
+      }
+
+      function getPlaygroundProjectIconId(value) {
+        return getPlaygroundProjectIconCandidate(value)
+          || PLAYGROUND_PROJECT_ICON_OPTIONS[0].id;
+      }
+
+      function resolvePlaygroundProjectIconId(projectRecord, ...fallbackValues) {
+        const metadata = projectRecord?.metadata
+          && typeof projectRecord.metadata === "object"
+          && !Array.isArray(projectRecord.metadata)
+            ? projectRecord.metadata
+            : {};
+        if (hasPlaygroundExplicitProjectIcon(projectRecord)) {
+          return getPlaygroundProjectIconId(metadata.icon || projectRecord?.icon);
+        }
+        for (const fallbackValue of fallbackValues) {
+          const candidate = getPlaygroundProjectIconCandidate(fallbackValue);
+          if (candidate) {
+            return candidate;
+          }
+        }
+        return getPlaygroundProjectIconId(metadata.icon || projectRecord?.icon);
       }
 
       function getPlaygroundProjectIconConfig(iconId) {
-        return PLAYGROUND_PROJECT_ICON_OPTIONS.find((option) => option.id === getPlaygroundProjectIconId(iconId))
+        const normalizedIconId = getPlaygroundProjectIconId(iconId);
+        if (normalizedIconId.startsWith("emoji:")) {
+          const emoji = normalizedIconId.slice("emoji:".length);
+          return {
+            id: normalizedIconId,
+            label: "Emoji",
+            emoji,
+            icon: function PlaygroundProjectEmojiIcon(props = {}) {
+              const {
+                width = 16,
+                height = 16,
+                strokeWidth,
+                style,
+                ...elementProps
+              } = props;
+              return React.createElement("span", {
+                ...elementProps,
+                style: {
+                  ...style,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width,
+                  height,
+                  fontSize: Math.max(12, Math.min(Number(width) || 16, Number(height) || 16) - 1),
+                  lineHeight: 1,
+                },
+              }, emoji);
+            },
+          };
+        }
+        return PLAYGROUND_PROJECT_ICON_OPTIONS.find((option) => option.id === normalizedIconId)
           || PLAYGROUND_PROJECT_ICON_OPTIONS[0];
       }
 
@@ -439,6 +525,8 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           projectId: null,
           name: "",
           description: "",
+          successCriteria: [],
+          successCriteriaInput: "",
           startAt: null,
           endAt: null,
           sortOrder: Date.now(),
@@ -482,6 +570,7 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           wallpaperId: blueprint.wallpaperId,
           useCardBackgroundAsWallpaper: true,
           color: blueprint.color,
+          status: "backlog",
           priority: "medium",
           defaultEnvironmentId: null,
           leadUserId: "",
@@ -493,7 +582,12 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
 		          connectors: buildPlaygroundDefaultTaskConnectors(),
 	          projectRules: "",
 	          missionControl: buildEmptyPlaygroundProjectMissionControl(),
-	          metadata: buildPlaygroundProjectBlueprintMetadata(blueprint),
+	          metadata: {
+	            ...buildPlaygroundProjectBlueprintMetadata(blueprint),
+	            status: "backlog",
+	            teamAccessIds: [],
+	            teamAccessRemovedIds: [],
+	          },
 	          summary: buildEmptyPlaygroundProjectSummary(),
           createdAt: now,
           updatedAt: now,
@@ -506,6 +600,10 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           document: "",
           instructions: "",
           strategyBrief: buildEmptyPlaygroundProjectStrategyBrief(),
+          deliveryContract: null,
+          deliveryPlan: null,
+          deliveryExecution: null,
+          deliveryAssurance: buildEmptyPlaygroundDeliveryAssurance(),
           comments: [],
           lastThreadId: "",
           updatedAt: "",
@@ -522,6 +620,200 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           risks: [],
           decisions: [],
         };
+      }
+
+      function buildEmptyPlaygroundDeliveryAssurance() {
+        return {
+          schemaVersion: "mission_control_delivery_assurance_v1",
+          testPlan: {
+            required: false,
+            title: "",
+            testPlanId: "",
+            caseKinds: [],
+            acceptanceCriteria: [],
+            linkedTaskIds: [],
+            releaseIds: [],
+          },
+          evaluationPlan: {
+            required: false,
+            evaluationSetIds: [],
+            target: "",
+            metrics: [],
+            passThreshold: null,
+            linkedTaskIds: [],
+          },
+          optimizationPolicy: {
+            enabled: false,
+            fineTuningJobId: "",
+            targetMetric: "",
+            targetValue: null,
+            maxIterations: 0,
+            stopConditions: [],
+            linkedTaskIds: [],
+          },
+          canonicalAssurance: {
+            policyId: "",
+            policyVersionId: "",
+            runId: "",
+          },
+          completionPolicy: {
+            requireTestsPassing: true,
+            requireEvaluationPassing: false,
+            requireOptimizationProof: false,
+            humanApprovalRequired: false,
+            taskIds: [],
+          },
+          gates: [],
+        };
+      }
+
+      function normalizePlaygroundDeliveryAssuranceNumber(value, options = {}) {
+        if (value === null || value === undefined || value === "") {
+          return null;
+        }
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) {
+          return null;
+        }
+        const minimum = Number.isFinite(Number(options.minimum)) ? Number(options.minimum) : -Number.MAX_SAFE_INTEGER;
+        const maximum = Number.isFinite(Number(options.maximum)) ? Number(options.maximum) : Number.MAX_SAFE_INTEGER;
+        const clamped = Math.max(minimum, Math.min(maximum, numeric));
+        return options.integer === true ? Math.round(clamped) : clamped;
+      }
+
+      function normalizePlaygroundDeliveryAssuranceGate(value, index) {
+        const source = value && typeof value === "object" && !Array.isArray(value)
+          ? value
+          : {};
+        const allowedKinds = new Set(["build", "test", "evaluation", "optimization", "release"]);
+        const allowedStatuses = new Set(["planned", "ready", "passed", "failed", "blocked"]);
+        const kind = String(source.kind || "").trim().toLowerCase();
+        const status = String(source.status || "").trim().toLowerCase();
+        return {
+          id: String(source.id || ("gate-" + String(index + 1))).trim(),
+          kind: allowedKinds.has(kind) ? kind : "test",
+          title: normalizePlaygroundStrategyText(source.title || source.name),
+          dependsOn: normalizePlaygroundStrategyTextList(source.dependsOn || source.depends_on),
+          requiredEvidence: normalizePlaygroundStrategyTextList(source.requiredEvidence || source.required_evidence),
+          taskIds: normalizePlaygroundStrategyTextList(source.taskIds || source.task_ids),
+          resourceIds: normalizePlaygroundStrategyTextList(source.resourceIds || source.resource_ids),
+          status: allowedStatuses.has(status) ? status : "planned",
+        };
+      }
+
+      function normalizePlaygroundDeliveryAssurance(value) {
+        const source = value && typeof value === "object" && !Array.isArray(value)
+          ? value
+          : {};
+        const testPlan = source.testPlan && typeof source.testPlan === "object" && !Array.isArray(source.testPlan)
+          ? source.testPlan
+          : {};
+        const evaluationPlan = source.evaluationPlan && typeof source.evaluationPlan === "object" && !Array.isArray(source.evaluationPlan)
+          ? source.evaluationPlan
+          : {};
+        const optimizationPolicy = source.optimizationPolicy && typeof source.optimizationPolicy === "object" && !Array.isArray(source.optimizationPolicy)
+          ? source.optimizationPolicy
+          : {};
+        const completionPolicy = source.completionPolicy && typeof source.completionPolicy === "object" && !Array.isArray(source.completionPolicy)
+          ? source.completionPolicy
+          : {};
+        const canonicalAssurance = source.canonicalAssurance && typeof source.canonicalAssurance === "object" && !Array.isArray(source.canonicalAssurance)
+          ? source.canonicalAssurance
+          : source.canonical_assurance && typeof source.canonical_assurance === "object" && !Array.isArray(source.canonical_assurance)
+            ? source.canonical_assurance
+            : {};
+        const allowedCaseKinds = new Set(["command", "contract", "integration", "browser", "agent", "security", "custom"]);
+        return {
+          schemaVersion: "mission_control_delivery_assurance_v1",
+          testPlan: {
+            required: testPlan.required === true,
+            title: normalizePlaygroundStrategyText(testPlan.title || testPlan.name),
+            testPlanId: normalizePlaygroundStrategyText(testPlan.testPlanId || testPlan.test_plan_id),
+            caseKinds: normalizePlaygroundStrategyTextList(testPlan.caseKinds || testPlan.case_kinds)
+              .map((kind) => kind.toLowerCase())
+              .filter((kind) => allowedCaseKinds.has(kind)),
+            acceptanceCriteria: normalizePlaygroundStrategyTextList(testPlan.acceptanceCriteria || testPlan.acceptance_criteria),
+            linkedTaskIds: normalizePlaygroundStrategyTextList(testPlan.linkedTaskIds || testPlan.linked_task_ids),
+            releaseIds: normalizePlaygroundStrategyTextList(testPlan.releaseIds || testPlan.release_ids),
+          },
+          evaluationPlan: {
+            required: evaluationPlan.required === true,
+            evaluationSetIds: normalizePlaygroundStrategyTextList(evaluationPlan.evaluationSetIds || evaluationPlan.evaluation_set_ids),
+            target: normalizePlaygroundStrategyText(evaluationPlan.target),
+            metrics: normalizePlaygroundStrategyTextList(evaluationPlan.metrics),
+            passThreshold: normalizePlaygroundDeliveryAssuranceNumber(
+              evaluationPlan.passThreshold ?? evaluationPlan.pass_threshold,
+              { minimum: 0, maximum: 100 }
+            ),
+            linkedTaskIds: normalizePlaygroundStrategyTextList(evaluationPlan.linkedTaskIds || evaluationPlan.linked_task_ids),
+          },
+          optimizationPolicy: {
+            enabled: optimizationPolicy.enabled === true,
+            fineTuningJobId: normalizePlaygroundStrategyText(optimizationPolicy.fineTuningJobId || optimizationPolicy.fine_tuning_job_id),
+            targetMetric: normalizePlaygroundStrategyText(optimizationPolicy.targetMetric || optimizationPolicy.target_metric),
+            targetValue: normalizePlaygroundDeliveryAssuranceNumber(optimizationPolicy.targetValue ?? optimizationPolicy.target_value),
+            maxIterations: normalizePlaygroundDeliveryAssuranceNumber(
+              optimizationPolicy.maxIterations ?? optimizationPolicy.max_iterations,
+              { minimum: 0, maximum: 100, integer: true }
+            ) || 0,
+            stopConditions: normalizePlaygroundStrategyTextList(optimizationPolicy.stopConditions || optimizationPolicy.stop_conditions),
+            linkedTaskIds: normalizePlaygroundStrategyTextList(optimizationPolicy.linkedTaskIds || optimizationPolicy.linked_task_ids),
+          },
+          canonicalAssurance: {
+            policyId: normalizePlaygroundStrategyText(
+              canonicalAssurance.policyId
+              || canonicalAssurance.policy_id
+              || source.assurancePolicyId
+              || source.assurance_policy_id
+            ),
+            policyVersionId: normalizePlaygroundStrategyText(
+              canonicalAssurance.policyVersionId
+              || canonicalAssurance.policy_version_id
+              || canonicalAssurance.versionId
+              || canonicalAssurance.version_id
+              || source.assurancePolicyVersionId
+              || source.assurance_policy_version_id
+            ),
+            runId: normalizePlaygroundStrategyText(
+              canonicalAssurance.runId
+              || canonicalAssurance.run_id
+              || source.assuranceRunId
+              || source.assurance_run_id
+            ),
+          },
+          completionPolicy: {
+            requireTestsPassing: completionPolicy.requireTestsPassing !== false,
+            requireEvaluationPassing: completionPolicy.requireEvaluationPassing === true,
+            requireOptimizationProof: completionPolicy.requireOptimizationProof === true,
+            humanApprovalRequired: completionPolicy.humanApprovalRequired === true,
+            taskIds: normalizePlaygroundStrategyTextList(
+              completionPolicy.taskIds
+              || completionPolicy.task_ids
+              || source.completionTaskIds
+              || source.completion_task_ids
+            ),
+          },
+          gates: (Array.isArray(source.gates) ? source.gates : [])
+            .slice(0, 100)
+            .map((gate, index) => normalizePlaygroundDeliveryAssuranceGate(gate, index)),
+        };
+      }
+
+      function hasMeaningfulPlaygroundDeliveryAssurance(value) {
+        const assurance = normalizePlaygroundDeliveryAssurance(value);
+        return Boolean(
+          assurance.testPlan.required
+          || assurance.testPlan.testPlanId
+          || assurance.testPlan.caseKinds.length > 0
+          || assurance.evaluationPlan.required
+          || assurance.evaluationPlan.evaluationSetIds.length > 0
+          || assurance.optimizationPolicy.enabled
+          || assurance.optimizationPolicy.fineTuningJobId
+          || assurance.canonicalAssurance.policyId
+          || assurance.canonicalAssurance.runId
+          || assurance.completionPolicy.taskIds.length > 0
+          || assurance.gates.length > 0
+        );
       }
 
       function normalizePlaygroundStrategyText(value) {
@@ -615,6 +907,64 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
         };
       }
 
+      function normalizePlaygroundCanonicalProjectStrategyBrief(value) {
+        const strategy = normalizePlaygroundProjectStrategyBrief(value);
+        return {
+          mission: strategy.mission,
+          inScope: strategy.inScope,
+          outOfScope: strategy.outOfScope,
+          successCriteria: strategy.successCriteria,
+          risks: strategy.risks,
+          decisions: strategy.decisions,
+        };
+      }
+
+      function serializePlaygroundMilestoneSuccessCriteria(value) {
+        return normalizePlaygroundStrategyTextList(value).join(String.fromCharCode(10));
+      }
+
+      function getPlaygroundLegacyStrategyOutcomeForRelease(strategyBrief, releaseId) {
+        const normalizedReleaseId = normalizePlaygroundStrategyText(releaseId);
+        if (!normalizedReleaseId) {
+          return null;
+        }
+        return normalizePlaygroundProjectStrategyBrief(strategyBrief).outcomes.find((outcome) =>
+          normalizePlaygroundStrategyOutcomeReleaseIds(outcome).includes(normalizedReleaseId)
+        ) || null;
+      }
+
+      function enrichPlaygroundTaskReleasesWithLegacyStrategy(releaseRecords, projectRecord) {
+        const missionControl = getPlaygroundProjectMissionControlRecord(projectRecord);
+        const strategyBrief = normalizePlaygroundProjectStrategyBrief(missionControl.strategyBrief);
+        return (Array.isArray(releaseRecords) ? releaseRecords : []).map((releaseRecord) => {
+          const release = normalizePlaygroundTaskReleaseRecord(releaseRecord);
+          if (!release.id) {
+            return release;
+          }
+          const legacyOutcome = getPlaygroundLegacyStrategyOutcomeForRelease(strategyBrief, release.id);
+          if (!legacyOutcome) {
+            return release;
+          }
+          const legacyDescription = normalizePlaygroundStrategyText(legacyOutcome.description);
+          const legacySuccessCriteria = normalizePlaygroundStrategyTextList(legacyOutcome.successCriteria);
+          const shouldUseLegacyDescription = !normalizePlaygroundStrategyText(release.description) && Boolean(legacyDescription);
+          const shouldUseLegacySuccessCriteria = release.successCriteria.length === 0 && legacySuccessCriteria.length > 0;
+          if (!shouldUseLegacyDescription && !shouldUseLegacySuccessCriteria) {
+            return release;
+          }
+          const successCriteria = shouldUseLegacySuccessCriteria
+            ? legacySuccessCriteria
+            : release.successCriteria;
+          return {
+            ...release,
+            description: shouldUseLegacyDescription ? legacyDescription : release.description,
+            successCriteria,
+            successCriteriaInput: serializePlaygroundMilestoneSuccessCriteria(successCriteria),
+            legacyStrategyOutcomeId: legacyOutcome.id,
+          };
+        });
+      }
+
       function hasMeaningfulPlaygroundProjectStrategyBrief(value) {
         const strategy = normalizePlaygroundProjectStrategyBrief(value);
         return Boolean(
@@ -639,6 +989,25 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           document: typeof missionControl.document === "string" ? missionControl.document : "",
           instructions: typeof missionControl.instructions === "string" ? missionControl.instructions : "",
           strategyBrief: normalizePlaygroundProjectStrategyBrief(rawStrategyBrief),
+          deliveryContract: clonePlaygroundProjectBlueprintValue(
+            missionControl.deliveryContract
+            || missionControl.delivery_contract,
+            null
+          ),
+          deliveryPlan: clonePlaygroundProjectBlueprintValue(
+            missionControl.deliveryPlan
+            || missionControl.delivery_plan,
+            null
+          ),
+          deliveryExecution: clonePlaygroundProjectBlueprintValue(
+            missionControl.deliveryExecution
+            || missionControl.delivery_execution,
+            null
+          ),
+          deliveryAssurance: normalizePlaygroundDeliveryAssurance(
+            missionControl.deliveryAssurance
+            || missionControl.delivery_assurance
+          ),
           comments: normalizePlaygroundTaskCommentList(missionControl.comments),
           lastThreadId: typeof missionControl.lastThreadId === "string" ? missionControl.lastThreadId : "",
           updatedAt: typeof missionControl.updatedAt === "string" ? missionControl.updatedAt : "",
@@ -687,8 +1056,24 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           || String(missionControl.instructions || "").trim()
           || String(missionControl.lastThreadId || "").trim()
           || String(missionControl.updatedAt || "").trim()
+          || (
+            missionControl.deliveryContract
+            && typeof missionControl.deliveryContract === "object"
+            && !Array.isArray(missionControl.deliveryContract)
+          )
+          || (
+            missionControl.deliveryPlan
+            && typeof missionControl.deliveryPlan === "object"
+            && !Array.isArray(missionControl.deliveryPlan)
+          )
+          || (
+            missionControl.deliveryExecution
+            && typeof missionControl.deliveryExecution === "object"
+            && !Array.isArray(missionControl.deliveryExecution)
+          )
           || normalizePlaygroundTaskCommentList(missionControl.comments).length > 0
           || hasMeaningfulPlaygroundProjectStrategyBrief(strategyBrief)
+          || hasMeaningfulPlaygroundDeliveryAssurance(missionControl.deliveryAssurance)
         );
       }
 
@@ -848,30 +1233,53 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
 	        const strategyBrief = getPlaygroundProjectStrategyBriefRecord(project);
 	        const newline = String.fromCharCode(10);
 	        const sections = [];
+	        const releaseRecords = (Array.isArray(options?.releaseRecords) ? options.releaseRecords : [])
+	          .map((releaseRecord) => normalizePlaygroundTaskReleaseRecord(releaseRecord))
+	          .filter((releaseRecord) => releaseRecord.id);
 	        if (strategyBrief.mission) {
 	          sections.push("Goal: " + strategyBrief.mission);
 	        }
-	        if (strategyBrief.outcomes.length > 0) {
+	        if (!options?.taskRecord && releaseRecords.length > 0) {
 	          sections.push([
-	            "Primary outcomes:",
-	            ...strategyBrief.outcomes.map((outcome, index) => {
-	              const prefix = String(index + 1) + ". " + (outcome.title || "Outcome");
-	              const releaseIds = normalizePlaygroundStrategyOutcomeReleaseIds(outcome);
+	            "Current milestones:",
+	            ...releaseRecords.map((release) => {
+	              const legacyOutcome = getPlaygroundLegacyStrategyOutcomeForRelease(strategyBrief, release.id);
+	              const successCriteria = release.successCriteria.length > 0
+	                ? release.successCriteria
+	                : normalizePlaygroundStrategyTextList(legacyOutcome?.successCriteria);
 	              const details = [
-	                outcome.description,
-	                releaseIds.length > 0 ? "Milestones: " + releaseIds.join(", ") : "",
-	                outcome.successCriteria.length > 0 ? "Success: " + outcome.successCriteria.join("; ") : "",
+	                release.description || legacyOutcome?.description,
+	                successCriteria.length > 0 ? "Success: " + successCriteria.join("; ") : "",
 	              ].filter(Boolean).join(" ");
-	              return "- " + prefix + (details ? " — " + details : "");
+	              return "- " + (release.name || release.id) + (details ? " — " + details : "");
 	            }),
 	          ].join(newline));
 	        }
 	        const taskOutcome = findPlaygroundStrategyOutcomeForTask(strategyBrief, options?.taskRecord);
-	        if (taskOutcome) {
+	        const taskReleaseId = normalizePlaygroundStrategyText(options?.taskRecord?.releaseId);
+	        const taskRelease = taskReleaseId
+	          ? releaseRecords.find((release) => release.id === taskReleaseId) || null
+	          : null;
+	        const taskMilestoneCriteria = taskRelease?.successCriteria?.length > 0
+	          ? taskRelease.successCriteria
+	          : normalizePlaygroundStrategyTextList(taskOutcome?.successCriteria);
+	        if (taskReleaseId && (taskRelease || taskOutcome)) {
 	          sections.push([
-	            "This task supports outcome: " + (taskOutcome.title || taskOutcome.id),
-	            taskOutcome.description ? "Outcome context: " + taskOutcome.description : "",
-	            taskOutcome.successCriteria.length > 0 ? "Outcome success criteria:" + newline + taskOutcome.successCriteria.map((item) => "- " + item).join(newline) : "",
+	            "Milestone: " + (taskRelease?.name || taskOutcome?.title || taskReleaseId),
+	            taskRelease?.description || taskOutcome?.description
+	              ? "Milestone context: " + (taskRelease?.description || taskOutcome?.description)
+	              : "",
+	            taskMilestoneCriteria.length > 0
+	              ? "Milestone success criteria:" + newline + taskMilestoneCriteria.map((item) => "- " + item).join(newline)
+	              : "",
+	          ].filter(Boolean).join(newline));
+	        } else if (taskOutcome) {
+	          sections.push([
+	            "Delivery target: " + (taskOutcome.title || taskOutcome.id),
+	            taskOutcome.description ? "Target context: " + taskOutcome.description : "",
+	            taskOutcome.successCriteria.length > 0
+	              ? "Target success criteria:" + newline + taskOutcome.successCriteria.map((item) => "- " + item).join(newline)
+	              : "",
 	          ].filter(Boolean).join(newline));
 	        }
 	        const scopeLines = [

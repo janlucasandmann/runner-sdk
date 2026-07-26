@@ -122,115 +122,30 @@
               array: "Array",
             };
 
-            const canUndoDatabaseDescription = Array.isArray(databaseDescriptionHistory.past) && databaseDescriptionHistory.past.length > 0;
-            const canRedoDatabaseDescription = Array.isArray(databaseDescriptionHistory.future) && databaseDescriptionHistory.future.length > 0;
-            const renderDatabaseDescriptionToolbarButton = (action) =>
-              React.createElement("button", {
-                key: action.id,
-                type: "button",
-                className: "playground-tasks-detail-format-button",
-                title: action.label,
-                "aria-label": action.label,
-                disabled: isDatabaseTemplatePreview || Boolean(action.disabled),
-                onMouseDown: (event) => event.preventDefault(),
-                onClick: action.onClick || (() => handleDatabaseDescriptionFormat(action.id)),
-              }, React.createElement(action.icon, {
-                width: 14,
-                height: 14,
-                strokeWidth: action.strokeWidth || 1.8,
-              }));
-            const databaseDescriptionFormatActions = React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-              renderDatabaseDescriptionToolbarButton({
-                id: "undo",
-                label: "Undo",
-                icon: Undo2,
-                disabled: !canUndoDatabaseDescription,
-                onClick: handleDatabaseDescriptionUndo,
-              }),
-              renderDatabaseDescriptionToolbarButton({
-                id: "redo",
-                label: "Redo",
-                icon: Redo2,
-                disabled: !canRedoDatabaseDescription,
-                onClick: handleDatabaseDescriptionRedo,
-              }),
-              React.createElement("span", {
-                className: "playground-agents-detail-instructions-toolbar-divider",
-                "aria-hidden": "true",
-              }),
-              [
-                { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
-                { id: "italic", label: "Italic", icon: Italic },
-                { id: "underline", label: "Underline", icon: Underline },
-              ].map(renderDatabaseDescriptionToolbarButton),
-              React.createElement("span", {
-                className: "playground-agents-detail-instructions-toolbar-divider",
-                "aria-hidden": "true",
-              }),
-              [
-                { id: "list", label: "List", icon: List },
-                { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
-              ].map(renderDatabaseDescriptionToolbarButton),
-              React.createElement("span", {
-                className: "playground-agents-detail-instructions-toolbar-divider",
-                "aria-hidden": "true",
-              }),
-              [
-                { id: "code", label: "Code", icon: CodeXml },
-                { id: "link", label: "Link", icon: Link2 },
-              ].map(renderDatabaseDescriptionToolbarButton)
-            );
-            const databaseDescriptionEditor = React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isDatabaseDescriptionEditing ? " is-editing" : " is-preview") },
-              !isDatabaseDescriptionEditing
-                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                    String(draftDatabase.description || "").trim()
-                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                          content: draftDatabase.description,
-                          className: "playground-tasks-detail-description-preview tb-message-markdown",
-                        })
-                      : React.createElement("div", {
-                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                        }, "Add Description here")
-                  )
-                : null,
-              React.createElement("textarea", {
-                ref: databaseDescriptionTextareaRef,
-                className: "playground-tasks-detail-description-input " + (isDatabaseDescriptionEditing ? "is-editing" : "is-preview"),
-                rows: 1,
-                placeholder: isDatabaseDescriptionEditing ? "Add Description here" : "",
-                value: draftDatabase.description || "",
-                readOnly: isDatabaseTemplatePreview,
-                "aria-readonly": isDatabaseTemplatePreview ? "true" : "false",
-                onFocus: () => {
-                  if (!isDatabaseTemplatePreview) {
-                    setIsDatabaseDescriptionEditing(true);
-                  }
-                },
-                onChange: (event) => {
-                  if (isDatabaseTemplatePreview) {
-                    return;
-                  }
-                  updateDatabaseDescriptionValue(event.target.value);
-                  resizeEnvironmentDescriptionTextarea(event.currentTarget);
-                },
-                onBlur: () => {
-                  setIsDatabaseDescriptionEditing(false);
-                  if (!isDatabaseTemplatePreview && String(draftDatabase.name || "").trim()) {
-                    void handleDatabaseSave();
-                  }
-                },
-              })
-            );
-            const databaseDescriptionSection = React.createElement("div", {
-                className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-database-description-section",
-                key: "database-description",
+            const databaseDescriptionSection = React.createElement(PlatformInstructionsEditor, {
+              key: "database-description",
+              value: draftDatabase.description || "",
+              onChange: (value) => updateDatabaseField("description", value),
+              title: "Description",
+              placeholder: "Add Description here",
+              ariaLabel: "Database description",
+              readOnly: isDatabaseTemplatePreview,
+              stickyHeader: false,
+              historyKey: "database-description:" + (draftDatabase.id || "draft"),
+              variant: "minimalistic-ui",
+              className: "playground-database-description-section",
+              onEditingChange: (editing) => {
+                if (!editing && !isDatabaseTemplatePreview && String(draftDatabase.name || "").trim()) {
+                  void handleDatabaseSave();
+                }
               },
-              React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                databaseDescriptionFormatActions
-              ),
-              databaseDescriptionEditor
-            );
+            });
+            const databaseDeploymentMapSection = React.createElement(PlatformDeploymentMap, {
+              key: "database-deployment-map",
+              regionCode: draftDatabase.location || "eur3",
+              title: "Deployment region",
+              className: "playground-database-deployment-map",
+            });
   
             const databaseDetailsSection = React.createElement(PlatformAnalyticsSection, {
               variant: "default",
@@ -918,27 +833,6 @@
                       : null
               )
             );
-  	          const databaseDangerSection = isDatabaseTemplatePreview ? null : React.createElement("section", { className: "playground-server-danger-section playground-database-danger-section playground-server-details-card" },
-  	            React.createElement("div", { className: "playground-server-danger-copy-row" },
-  	              React.createElement("span", { className: "playground-server-danger-icon", "aria-hidden": "true" },
-  	                React.createElement(AlertCircle, { width: 15, height: 15, strokeWidth: 2 })
-  	              ),
-  	              React.createElement("div", { className: "playground-server-danger-copy" },
-  	                React.createElement("div", { className: "playground-server-danger-title" }, "Delete this database"),
-  	                React.createElement("div", { className: "playground-server-danger-text" },
-  	                  "Make sure you have copied anything you need before deleting this database and its documents."
-  	                )
-  	              )
-  	            ),
-  	            React.createElement("button", {
-  	              type: "button",
-  	              className: "playground-server-danger-delete-button",
-  	              onClick: () => void handleDeleteDatabase(draftDatabase.id),
-  	              disabled: databaseSaveState.isSaving
-  	                || !draftDatabase.id
-  	                || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
-  	            }, "Delete database")
-	          );
 	          const normalizedDatabaseDetailTab = ["data", "usage", "settings"].includes(databaseDetailTab) ? databaseDetailTab : "data";
   	          const databaseApiBaseUrl = "https://api.computer-agents.com/v1";
   	          const databaseApiResourceUrl = databaseApiBaseUrl + "/databases/" + encodeURIComponent(draftDatabase.id || "database_id") + "/collections";
@@ -1324,11 +1218,11 @@
   	          const databaseSettingsOverviewContent = React.createElement("section", {
   	              className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root playground-database-settings-root",
   	            },
+	            databaseDeploymentMapSection,
 	            databaseDescriptionSection,
 	            React.createElement("div", { className: "playground-database-access-section-group" },
 	              databaseTeamAccessPlatformSection
-	            ),
-	            databaseDangerSection
+	            )
 	          );
 	          const selectedDatabaseRoleDefinition = getPlaygroundTeamRoleDefinition(databasePermissionRoleId);
 	          const selectedDatabaseRolePermissionSet = selectedDatabasePermissionTeam && !isPlatformSystemAccessPrincipalId(selectedDatabasePermissionTeam.id)

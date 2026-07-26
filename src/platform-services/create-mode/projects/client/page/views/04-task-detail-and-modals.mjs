@@ -306,15 +306,9 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
           }
 
           function renderTaskActivitySection() {
-            const taskAgentReviewStartPending = taskAgentReviewStartPendingId === draftTask.id;
             const normalizedDraftTaskStatus = String(draftTask.status || "").trim().toLowerCase();
             const isHumanReviewerForTask = isPlaygroundHumanAssigneeId(draftTask.reviewerAgentId);
-            const reviewerAgentId = String(draftTask.reviewerAgentId || "").trim();
-            const isAgentReviewerForTask = Boolean(reviewerAgentId && !isHumanReviewerForTask);
             const canHumanReviewTask = normalizedDraftTaskStatus === "in_review" && isHumanReviewerForTask;
-            const canAgentReviewTask = normalizedDraftTaskStatus === "in_review" && isAgentReviewerForTask;
-            const canRequestTaskChanges = (isHumanReviewerForTask || isAgentReviewerForTask)
-              && (normalizedDraftTaskStatus === "in_review" || normalizedDraftTaskStatus === "done");
             const activitySubscriptionMatchesTask = taskActivitySubscriptionState.taskId === draftTask.id;
             const activitySubscribed = activitySubscriptionMatchesTask
               && Boolean(taskActivitySubscriptionState.subscribed);
@@ -470,14 +464,6 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                       "aria-hidden": "true",
                     }),
                     activitySubscribed ? "Unsubscribe" : "Subscribe"),
-                    canRequestTaskChanges
-                      ? React.createElement(PlatformSecondaryButton, {
-                          type: "button",
-                          size: "small",
-                          disabled: saveState.isSaving,
-                          onClick: activateTaskReviewCommentMode,
-                        }, "Request Changes")
-                      : null,
                     canHumanReviewTask
                       ? React.createElement(PlatformPrimaryButton, {
                           type: "button",
@@ -485,16 +471,6 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                           disabled: saveState.isSaving,
                           onClick: () => void handleApproveTaskReview(),
                         }, "Approve")
-                      : null,
-                    canAgentReviewTask
-                      ? React.createElement(PlatformPrimaryButton, {
-                          type: "button",
-                          size: "small",
-                          disabled: saveState.isSaving
-                            || taskAgentReviewStartPending
-                            || typeof onStartAgentReviewThread !== "function",
-                          onClick: () => void handleStartSelectedTaskAgentReview(),
-                        }, taskAgentReviewStartPending ? "Starting..." : "Start Agent Review")
                       : null
                   ),
               composer: {
@@ -677,6 +653,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   popupVariant: "minimal",
                   popupAlignment: "left",
                   matchTriggerWidth: true,
+                  fullWidth: true,
                   closeOnSelect: true,
                   actionDisabled: mainActionDisabled,
                   popupDisabled: false,
@@ -743,7 +720,29 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                 !normalizedTaskPrioritySearchQuery
                 || option.label.toLowerCase().includes(normalizedTaskPrioritySearchQuery)
               ));
-
+            const latestTaskAgentSession = selectedTaskAgentSessions[0] || null;
+            const latestTaskAgentSessionState = String(latestTaskAgentSession?.state || "").trim().toLowerCase();
+            const taskAgentSessionPresentation = latestTaskAgentSession
+              ? latestTaskAgentSessionState === "completed"
+                ? { label: "Completed", variant: "green" }
+                : latestTaskAgentSessionState === "failed"
+                  ? { label: "Failed", variant: "red" }
+                  : latestTaskAgentSessionState === "canceled"
+                    ? { label: "Canceled", variant: "gray" }
+                    : latestTaskAgentSessionState === "stale"
+                      ? { label: "Stale", variant: "gray" }
+                      : latestTaskAgentSessionState === "awaiting_input"
+                        ? { label: "Needs input", variant: "yellow" }
+                        : latestTaskAgentSessionState === "queued"
+                          ? { label: "Queued", variant: "blue" }
+                          : { label: "Running", variant: "blue" }
+              : null;
+            const latestTaskAgentSessionThread = latestTaskAgentSession
+              ? selectedTaskThreads.find((thread) => (
+                  String(thread?.id || "").trim()
+                  === String(latestTaskAgentSession?.threadId || latestTaskAgentSession?.thread_id || "").trim()
+                )) || null
+              : null;
             function renderTaskDetailTypeBadge(taskType) {
               const normalizedTaskType = normalizePlaygroundTaskType(taskType);
               const TaskTypeIcon = normalizedTaskType === "subtask"
@@ -806,6 +805,33 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                     })
                   )
                 ),
+                React.createElement("div", { className: "playground-tasks-detail-fact is-agent-runs" },
+                      React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Agent runs"),
+                      React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                        React.createElement("button", {
+                            type: "button",
+                            className: "playground-tasks-detail-fact-button playground-tasks-detail-agent-runs-value",
+                            disabled: !latestTaskAgentSessionThread,
+                            onClick: () => {
+                              if (latestTaskAgentSessionThread) {
+                                openTaskDetailThread(latestTaskAgentSessionThread, "chat");
+                              }
+                            },
+                            title: latestTaskAgentSessionThread ? "Open latest agent run" : undefined,
+                          },
+                          React.createElement("span", null,
+                            selectedTaskAgentSessions.length
+                              + " attempt"
+                              + (selectedTaskAgentSessions.length === 1 ? "" : "s")
+                          ),
+                          taskAgentSessionPresentation
+                            ? React.createElement(PlatformLabel, {
+                                variant: taskAgentSessionPresentation.variant,
+                              }, taskAgentSessionPresentation.label)
+                            : React.createElement(PlatformLabel, { variant: "gray" }, "No runs")
+                        )
+                      )
+                    ),
                 activeTaskStatus === "blocked"
                   ? React.createElement("div", { className: "playground-tasks-detail-fact" },
                       React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Blocked by"),
@@ -1429,6 +1455,28 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
           && selectedTaskId
           && (taskView === "overview" || taskView === "backlog" || taskView === "board")
         );
+        const directTaskNavigationProjectId = String(navigationRequest?.projectId || "").trim();
+        const directTaskNavigationTaskId = String(navigationRequest?.taskId || "").trim();
+        const isDirectTaskNavigationPending = Boolean(
+          (
+            navigationRequest?.taskDetailMode === "screen"
+            && directTaskNavigationProjectId
+            && directTaskNavigationTaskId
+            && (
+              selectedProjectId !== directTaskNavigationProjectId
+              || selectedTaskId !== directTaskNavigationTaskId
+              || !isProjectTaskDetailScreenOpen
+            )
+          )
+          || (
+            pendingExternalTaskOpenRequest?.screen === true
+            && (
+              selectedProjectId !== pendingExternalTaskOpenRequest.projectId
+              || selectedTaskId !== pendingExternalTaskOpenRequest.taskId
+              || !isProjectTaskDetailScreenOpen
+            )
+          )
+        );
         const isTaskDetailOpen = Boolean(
           selectedProjectId
           && selectedTaskId
@@ -1468,8 +1516,6 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             renderProjectIssueComposerDialog(),
             renderProjectComposerDialog(),
             renderReleaseComposerDialog(),
-            renderCalendarUpgradeModal(),
-            renderProjectAgentUpgradeModal(),
             renderProjectEnvironmentFilePicker()
           );
         }
@@ -1545,6 +1591,12 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   : null,
                 isStandaloneCalendarMode
                   ? renderStandaloneCalendarWorkspace()
+                  : isDirectTaskNavigationPending
+                    ? React.createElement(PlatformLoadingState, {
+                        className: "playground-projects-loading-state",
+                        message: "Loading ticket...",
+                        centered: true,
+                      })
                   : projectComposerOpen && !selectedProject && !isProjectInitialSetupModalOpen
                     ? renderProjectComposerSetupWorkspace()
                     : selectedProject
@@ -1567,8 +1619,6 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
           renderProjectIssueComposerDialog(),
           renderProjectComposerDialog(),
           renderReleaseComposerDialog(),
-          renderCalendarUpgradeModal(),
-          renderProjectAgentUpgradeModal(),
           renderProjectEnvironmentFilePicker()
         );
       }

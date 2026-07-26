@@ -32,6 +32,7 @@
           embeddedServerKind = "",
           topNavActionsPortalId = "",
           databaseTitleActionsPortalId = "",
+          serverTitleActionsPortalId = "",
           onResourcesHeaderChange,
           backRequestToken = 0,
           resourceBillingPreferences = SETTINGS_DEFAULT_BILLING_PREFERENCES,
@@ -78,10 +79,11 @@
           const environmentDetailMainRef = useRef(null);
           const serverDetailMainRef = useRef(null);
           const serverDescriptionTextareaRef = useRef(null);
-          const databaseDescriptionTextareaRef = useRef(null);
-          const serverSecretDescriptionTextareaRef = useRef(null);
+          const serverSecretNameInputRef = useRef(null);
           const serverAgentRuntimeRunPromptTextareaRef = useRef(null);
           const serverActionsPopoverRef = useRef(null);
+          const serverActionsPopoverSurfaceRef = useRef(null);
+          const serverAuthUserEmailInputRef = useRef(null);
           const resourceOverviewTopNavMenuRef = useRef(null);
           const serverFileActionsPopoverRef = useRef(null);
           const serverDeployProgressTimerRef = useRef(null);
@@ -126,9 +128,9 @@
           const serverOwnerTransferModalCloseTimerRef = useRef(null);
           const databaseOwnerTransferModalCloseTimerRef = useRef(null);
           const databaseOwnerTransferModalFrameRef = useRef(null);
-          const databaseExportMenuRef = useRef(null);
           const databaseRenameInputRef = useRef(null);
           const agentRuntimeSkillsActionsRef = useRef(null);
+          const agentRuntimeSkillsPopupSurfaceRef = useRef(null);
           const serverAutosaveTimerRef = useRef(null);
           const serverAutosaveQueuedRef = useRef(null);
           const serverAutosaveInFlightRef = useRef(false);
@@ -211,6 +213,7 @@
           const [isHomeViewActive, setIsHomeViewActive] = useState(true);
           const [topNavActionsContainer, setTopNavActionsContainer] = useState(null);
           const [databaseTitleActionsContainer, setDatabaseTitleActionsContainer] = useState(null);
+          const [serverTitleActionsContainer, setServerTitleActionsContainer] = useState(null);
           const handledBackRequestTokenRef = useRef(backRequestToken);
           const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(initialEnvironmentId || "");
           const [selectedServerId, setSelectedServerId] = useState("");
@@ -329,8 +332,6 @@
           const [databaseExportMenuOpen, setDatabaseExportMenuOpen] = useState(false);
           const [isServerDescriptionEditing, setIsServerDescriptionEditing] = useState(false);
           const [serverDescriptionHistory, setServerDescriptionHistory] = useState({ past: [], future: [] });
-          const [isDatabaseDescriptionEditing, setIsDatabaseDescriptionEditing] = useState(false);
-          const [databaseDescriptionHistory, setDatabaseDescriptionHistory] = useState({ past: [], future: [] });
           const [environmentDetailsCollapsed, setEnvironmentDetailsCollapsed] = useState(false);
           const [serverDetailsCollapsed, setServerDetailsCollapsed] = useState(false);
           const [databaseDetailsCollapsed, setDatabaseDetailsCollapsed] = useState(false);
@@ -582,6 +583,7 @@
           const [serverFileEditorHistoryByKey, setServerFileEditorHistoryByKey] = useState({});
           const [serverDeploymentState, setServerDeploymentState] = useState({
             isDeploying: false,
+            isDecommissioning: false,
             isInvoking: false,
             error: "",
             message: "",
@@ -594,6 +596,8 @@
             rollingBackDeploymentId: "",
           });
           const [serverDetailTab, setServerDetailTab] = useState("usage");
+          const [serverUsageActivityTab, setServerUsageActivityTab] = useState("logs");
+          const [sourceServerSettingsTableTab, setSourceServerSettingsTableTab] = useState("access");
           const [serverInvokeSnippetTab, setServerInvokeSnippetTab] = useState("curl");
           const [copiedFunctionServiceUrl, setCopiedFunctionServiceUrl] = useState("");
           const [serverAnalyticsView, setServerAnalyticsView] = useState("editor");
@@ -629,7 +633,6 @@
             error: "",
             isSaving: false,
           });
-          const [isServerSecretDescriptionEditing, setIsServerSecretDescriptionEditing] = useState(false);
           const [serverAuthUserComposerState, setServerAuthUserComposerState] = useState({
             open: false,
             email: "",
@@ -1530,18 +1533,42 @@
             const nextContainer = document.getElementById(databaseTitleActionsPortalId);
             setDatabaseTitleActionsContainer((current) => current === nextContainer ? current : nextContainer);
           });
+
+          useLayoutEffect(() => {
+            if (!serverTitleActionsPortalId || typeof document === "undefined") {
+              setServerTitleActionsContainer((current) => current === null ? current : null);
+              return;
+            }
+            const nextContainer = document.getElementById(serverTitleActionsPortalId);
+            setServerTitleActionsContainer((current) => current === nextContainer ? current : nextContainer);
+          });
   
           useEffect(() => {
   	          if (!embeddedInResources || typeof onResourcesHeaderChange !== "function") {
   	            return;
   	          }
-            const isSourcePreviewOpen = resourceMode === "servers" && Boolean(serverFileEditorState.path) && serverDetailTab !== "code";
             const selectedResourcesDetailId = resourceMode === "servers"
               ? String(selectedDatabaseId || selectedServerId || "").trim()
               : String(selectedEnvironmentId || "").trim();
             const selectedResourcesDetailType = resourceMode === "servers"
               ? (selectedDatabaseId ? "database" : "server")
               : "computer";
+            const isSourceDeployableResourcesDetail = selectedResourcesDetailType === "server"
+              && ["function", "web_app"].includes(
+                canonicalizePlaygroundServerKind(draftServer?.kind || normalizedEmbeddedServerKind)
+              );
+            const isAuthenticationResourcesDetail = selectedResourcesDetailType === "server"
+              && canonicalizePlaygroundServerKind(draftServer?.kind || normalizedEmbeddedServerKind) === "auth";
+            const isAgentRuntimeResourcesDetail = selectedResourcesDetailType === "server"
+              && canonicalizePlaygroundServerKind(draftServer?.kind || normalizedEmbeddedServerKind) === "agent_runtime";
+            const isSecretsResourcesDetail = selectedResourcesDetailType === "server"
+              && canonicalizePlaygroundServerKind(draftServer?.kind || normalizedEmbeddedServerKind) === "secrets";
+            const isPaymentsResourcesDetail = selectedResourcesDetailType === "server"
+              && canonicalizePlaygroundServerKind(draftServer?.kind || normalizedEmbeddedServerKind) === "payments";
+            const isSourcePreviewOpen = resourceMode === "servers"
+              && !isSourceDeployableResourcesDetail
+              && Boolean(serverFileEditorState.path)
+              && serverDetailTab !== "code";
             const isResourceCreateViewOpen = Boolean(serverComposerOpen && isServersMode && normalizedEmbeddedServerKind);
             const shouldUseDetailHeader = !isHomeViewActive || isResourceCreateViewOpen;
             const environmentDetailVersions = resourceMode === "computers"
@@ -1628,12 +1655,122 @@
                           },
                         }
                       : {}),
+                    ...(isSourceDeployableResourcesDetail
+                      ? {
+                          activeSection: ["usage", "code", "settings"].includes(serverDetailTab)
+                            ? serverDetailTab
+                            : "usage",
+                          onSectionChange: (nextSection) => {
+                            const normalizedNextSection = ["usage", "code", "settings"].includes(nextSection)
+                              ? nextSection
+                              : "usage";
+                            handleSourceServerDetailTabChange(normalizedNextSection);
+                          },
+                        }
+                      : {}),
+                    ...(isAuthenticationResourcesDetail
+                      ? {
+                          activeSection: ["users", "usage", "settings"].includes(authDetailTab)
+                            ? authDetailTab
+                            : "users",
+                          onSectionChange: (nextSection) => {
+                            const normalizedNextSection = ["users", "usage", "settings"].includes(nextSection)
+                              ? nextSection
+                              : "users";
+                            setServerOwnerPopoverOpen(false);
+                            setAuthDetailTab(normalizedNextSection);
+                            if (normalizedNextSection === "usage" && draftServer?.id) {
+                              void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
+                            }
+                            if (normalizedNextSection === "settings") {
+                              if (draftServer?.id) void loadServerContext(draftServer.id);
+                              if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
+                                onWorkspaceTeamsRequest({});
+                              }
+                            }
+                          },
+                        }
+                      : {}),
+                    ...(isAgentRuntimeResourcesDetail
+                      ? {
+                          activeSection: ["usage", "threads", "settings"].includes(agentRuntimeDetailTab)
+                            ? agentRuntimeDetailTab
+                            : "usage",
+                          onSectionChange: (nextSection) => {
+                            const normalizedNextSection = ["usage", "threads", "settings"].includes(nextSection)
+                              ? nextSection
+                              : "usage";
+                            setServerOwnerPopoverOpen(false);
+                            setAgentRuntimeDetailTab(normalizedNextSection);
+                            if (normalizedNextSection === "usage" && draftServer?.id) {
+                              void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
+                            }
+                            if (normalizedNextSection === "threads" && draftServer?.id) {
+                              void loadServerAgentRuntimeRuns(draftServer.id);
+                            }
+                            if (normalizedNextSection === "settings") {
+                              if (draftServer?.id) void loadServerContext(draftServer.id);
+                              if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
+                                onWorkspaceTeamsRequest({});
+                              }
+                            }
+                          },
+                        }
+                      : {}),
+                    ...(isSecretsResourcesDetail
+                      ? {
+                          activeSection: ["secrets", "usage", "settings"].includes(secretsDetailTab)
+                            ? secretsDetailTab
+                            : "secrets",
+                          onSectionChange: (nextSection) => {
+                            const normalizedNextSection = ["secrets", "usage", "settings"].includes(nextSection)
+                              ? nextSection
+                              : "secrets";
+                            setServerOwnerPopoverOpen(false);
+                            setSecretsDetailTab(normalizedNextSection);
+                            if (normalizedNextSection === "usage" && draftServer?.id) {
+                              void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
+                            }
+                            if (normalizedNextSection === "settings") {
+                              if (draftServer?.id) void loadServerContext(draftServer.id);
+                              if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
+                                onWorkspaceTeamsRequest({});
+                              }
+                            }
+                          },
+                        }
+                      : {}),
+                    ...(isPaymentsResourcesDetail
+                      ? {
+                          activeSection: ["usage", "settings"].includes(serverDetailTab)
+                            ? serverDetailTab
+                            : "usage",
+                          onSectionChange: (nextSection) => {
+                            const normalizedNextSection = ["usage", "settings"].includes(nextSection)
+                              ? nextSection
+                              : "usage";
+                            setServerOwnerPopoverOpen(false);
+                            setServerDetailTab(normalizedNextSection);
+                            if (normalizedNextSection === "usage" && draftServer?.id) {
+                              void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
+                            }
+                            if (normalizedNextSection === "settings") {
+                              if (draftServer?.id) void loadServerContext(draftServer.id);
+                              if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
+                                onWorkspaceTeamsRequest({});
+                              }
+                            }
+                          },
+                        }
+                      : {}),
                   }
                 : { mode: "overview", title: "", sideDetailOpen: isSourcePreviewOpen, resourceMode, resourceId: "", resourceType: selectedResourcesDetailType }
             );
           }, [
             draftEnvironment,
             draftServer,
+            agentRuntimeDetailTab,
+            authDetailTab,
             databaseDetailTab,
             embeddedInResources,
             environmentComposerOpen,
@@ -1654,6 +1791,7 @@
             serverFileEditorState.path,
             serverSaveState.isSaving,
             serverVersionState.status,
+            secretsDetailTab,
           ]);
   
           useEffect(() => {
@@ -1963,6 +2101,7 @@
             });
             setServerDeploymentState({
               isDeploying: false,
+              isDecommissioning: false,
               isInvoking: false,
               error: "",
               message: "",
@@ -1987,6 +2126,8 @@
             });
             setServerFileEditorHistoryByKey({});
             setServerDetailTab("usage");
+            setServerUsageActivityTab("logs");
+            setSourceServerSettingsTableTab("access");
             setServerDescriptionHistory({ past: [], future: [] });
             setServerAnalyticsView("editor");
             setServerLogsState({
@@ -2401,7 +2542,6 @@
             });
             setDatabaseDocumentViewMode("preview");
             setDatabaseDetailTab("data");
-            setDatabaseDescriptionHistory({ past: [], future: [] });
             setDatabasePermissionTeamId("");
   	      setDatabasePermissionRoleId("member");
             setDatabaseTeamMenuId("");

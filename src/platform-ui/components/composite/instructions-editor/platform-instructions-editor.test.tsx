@@ -1276,7 +1276,7 @@ describe("PlatformInstructionsEditor", () => {
       /\.platform-instructions-editor\.is-minimalistic-ui \.platform-instructions-editor__body\s*\{[\s\S]*width:\s*100%;[\s\S]*margin-left:\s*0;[\s\S]*border:\s*none;/,
     );
     expect(css).toMatch(
-      /\.platform-instructions-editor\.is-minimalistic-ui \.platform-instructions-editor__prosemirror\s*\{[\s\S]*padding:\s*0;/,
+      /\.platform-instructions-editor\.is-minimalistic-ui \.platform-instructions-editor__prosemirror\s*\{[\s\S]*padding:\s*12px 0 0;/,
     );
     expect(css).toMatch(
       /\.platform-instructions-editor__prosemirror pre\s*\{[\s\S]*padding:\s*0;[\s\S]*background:\s*transparent;/,

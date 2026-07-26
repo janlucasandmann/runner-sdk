@@ -63,16 +63,16 @@ describe("FineTuningOverviewPage", () => {
     ).toBe("20");
     expect(screen.getByText("1-1 of 1")).not.toBeNull();
     expect(screen.getByText("All Fine-tuning Jobs")).not.toBeNull();
-    expect(screen.getByPlaceholderText("Search fine-tuning jobs")).not.toBeNull();
+    expect(screen.getByPlaceholderText("Search optimization jobs")).not.toBeNull();
 
-    await user.click(await screen.findByRole("button", { name: "Fine-Tune" }));
+    await user.click(await screen.findByRole("button", { name: "Optimize Agent" }));
     expect(onCreate).toHaveBeenCalledOnce();
 
     await user.click(screen.getByText("Improve Support Agent"));
     expect(onOpen).toHaveBeenCalledWith(rows[0]);
   });
 
-  it("uses the centralized empty state when no fine-tuning jobs exist", () => {
+  it("uses the centralized empty state when no optimization jobs exist", () => {
     const { container } = render(
       <FineTuningOverviewPage
         rows={[]}
@@ -87,7 +87,7 @@ describe("FineTuningOverviewPage", () => {
       screen.getByRole("navigation", { name: "Fine-tuning jobs pagination" }),
     ).not.toBeNull();
     expect(screen.getByText("0-0 of 0")).not.toBeNull();
-    expect(screen.getByText("No fine-tuning jobs yet")).not.toBeNull();
+    expect(screen.getByText("No optimization jobs yet")).not.toBeNull();
     expect(
       screen.getByText(
         "Fine-tuning jobs will appear here after you improve an agent with evaluated evidence.",

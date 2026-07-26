@@ -199,7 +199,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
               const nextOwner = options.find((option) => option.value === nextValue)?.candidate;
               if (nextOwner) updateFineTuningOwner(job, nextOwner);
             },
-            ariaLabel: "Choose fine-tuning owner",
+            ariaLabel: "Choose optimization owner",
             label: React.createElement("span", { className: "playground-fine-tuning-owner-value" },
               React.createElement(AccountAvatar, {
                 className: "playground-team-member-avatar playground-fine-tuning-owner-avatar",
@@ -369,14 +369,14 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
                   metadata: {
                     resourceType: "fine_tuning",
                     resourceKind: "fine_tuning",
-                    resourceName: job.name || "Untitled Fine-Tune",
+                    resourceName: job.name || "Untitled Optimization",
                     sharedTeamId: teamId,
                     sharedTeamName: team?.name || "",
                     owner,
                   },
                 }),
               },
-              "Failed to give the team access to this fine-tuning job."
+              "Failed to give the team access to this optimization job."
             ).catch((error) => {
               if (Number(error?.status) === 409) return {};
               throw error;
@@ -520,7 +520,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
             placement: "bottom-end",
             portalOffset: 6,
             animation: "down-in",
-            surfaceProps: { role: "menu", "aria-label": "Add teams to fine-tuning job" },
+            surfaceProps: { role: "menu", "aria-label": "Add teams to optimization job" },
             trigger: React.createElement(PlatformSecondaryButton, {
               type: "button",
               size: "small",

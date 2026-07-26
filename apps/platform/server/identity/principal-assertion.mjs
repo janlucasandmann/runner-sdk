@@ -9,7 +9,9 @@ export function createPrincipalAssertionSigner({
   audience,
   clock = Date.now,
 }) {
-  const key = encoder.encode(secret);
+  const normalizedSecret = String(secret || "")
+    .replace(/(?:\r\n|\r|\n)+$/, "");
+  const key = encoder.encode(normalizedSecret);
 
   return Object.freeze({
     async sign(principal) {

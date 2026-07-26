@@ -304,6 +304,9 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
 
           const requestedProjectId = String(navigationRequest?.projectId || "").trim();
           const requestedTaskId = String(navigationRequest?.taskId || "").trim();
+          const requestedTaskDetailMode = navigationRequest?.taskDetailMode === "screen"
+            ? "screen"
+            : "default";
           const requestedView = navigationRequest?.view === "calendar"
             ? "calendar"
             : navigationRequest?.view === "overview"
@@ -330,6 +333,17 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
           const matchingRequestedProjectRecord = requestedProjectRecord?.id && requestedProjectRecord.id === requestedProjectId
             ? requestedProjectRecord
             : null;
+          const requestedTaskRecord = navigationRequest?.taskRecord && typeof navigationRequest.taskRecord === "object" && !Array.isArray(navigationRequest.taskRecord)
+            ? normalizePlaygroundTaskRecord({
+                ...navigationRequest.taskRecord,
+                id: requestedTaskId,
+                projectId: requestedProjectId,
+              })
+            : null;
+          const matchingRequestedTaskRecord = requestedTaskRecord?.id === requestedTaskId
+            && requestedTaskRecord.projectId === requestedProjectId
+              ? requestedTaskRecord
+              : null;
           const requestedProjectComposerConnectorRestoreState = requestedProjectComposerAction === "restore-connector"
             ? normalizePlaygroundProjectComposerConnectorRestoreState(navigationRequest?.projectComposerConnectorRestoreState)
             : null;
@@ -358,17 +372,22 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
                 selectImmediately: true,
               });
             }
-            handleSelectProject(requestedProjectId);
+            handleSelectProject(requestedProjectId, {
+              taskRecord: matchingRequestedTaskRecord,
+              taskView: nextView,
+              openTaskScreen: requestedTaskDetailMode === "screen",
+            });
           } else {
             handleSelectProject("");
           }
 
           setTaskView(nextView);
           setPendingExternalTaskOpenRequest(
-            requestedProjectId && requestedTaskId
+            requestedProjectId && requestedTaskId && !matchingRequestedTaskRecord
               ? {
                   projectId: requestedProjectId,
                   taskId: requestedTaskId,
+                  screen: requestedTaskDetailMode === "screen",
                 }
               : null
           );
@@ -420,7 +439,10 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
         }, [isStandaloneCalendarMode, navigationRequest, onNavigationRequestHandled]);
 
         useEffect(() => {
-          setProjectOverviewVisibleThreadCount(5);
+          setProjectOverviewThreadPagination((current) => ({
+            pageIndex: 0,
+            pageSize: Math.max(1, Number(current?.pageSize) || 5),
+          }));
           setProjectOverviewVisibleActivityCount(5);
         }, [selectedProjectId, taskView]);
 
@@ -586,7 +608,9 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
           if (!tasksById[pendingExternalTaskOpenRequest.taskId]) {
             return;
           }
-          handleSelectTask(pendingExternalTaskOpenRequest.taskId);
+          handleSelectTask(pendingExternalTaskOpenRequest.taskId, {
+            screen: pendingExternalTaskOpenRequest.screen === true,
+          });
           setPendingExternalTaskOpenRequest(null);
         }, [pendingExternalTaskOpenRequest, selectedProjectId, tasksById]);
 
@@ -1219,18 +1243,6 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
 	        ]);
 
         useEffect(() => {
-          if (isMissionControlSetupOutcomesEditing) {
-            return;
-          }
-          const nextStrategyBrief = normalizePlaygroundProjectStrategyBrief(missionControlStrategyDraft);
-          setMissionControlSetupOutcomesDraft(serializeMissionControlSetupOutcomesForInput(nextStrategyBrief.outcomes));
-        }, [
-          isMissionControlSetupOutcomesEditing,
-          missionControlStrategyDraft,
-          selectedProjectId,
-        ]);
-
-        useEffect(() => {
           if (!missionControlSetupOpen) {
             return undefined;
           }
@@ -1240,7 +1252,6 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
           return () => window.cancelAnimationFrame(frame);
         }, [
           missionControlSetupOpen,
-          missionControlSetupOutcomesDraft,
           projectDraft.description,
         ]);
 
