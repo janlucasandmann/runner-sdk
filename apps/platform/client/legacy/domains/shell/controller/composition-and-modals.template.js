@@ -2081,11 +2081,17 @@
                 strokeWidth: 1.8,
               })
             );
-            const activeProjectView = tasksHeaderState.view === "board"
+            const activeProjectWorkspaceView = tasksHeaderState.view === "board"
               ? "board"
               : tasksHeaderState.view === "backlog"
                 ? "backlog"
-                : "overview";
+                : tasksHeaderState.view === "activity"
+                  ? "activity"
+                  : "overview";
+            const activeProjectView = activeProjectWorkspaceView === "board"
+              ? "backlog"
+              : activeProjectWorkspaceView;
+            const activeProjectSectionId = String(tasksHeaderState.sectionId || "").trim().toLowerCase();
             const activeTicketNumber = String(tasksHeaderState.ticketNumber || "").trim();
             const activeTicketType = tasksHeaderState.taskType === "subtask"
               ? "subtask"
@@ -2101,6 +2107,11 @@
               isProjectDetailView
               && tasksHeaderState.detailMode === "task"
               && activeTicketNumber
+            );
+            const isProjectMilestonesView = Boolean(
+              isProjectDetailView
+              && !isProjectTaskDetailView
+              && activeProjectSectionId === "milestones"
             );
             const activeTicketNavigation = isProjectTaskDetailView
               && tasksHeaderState.ticketNavigation
@@ -2235,7 +2246,7 @@
                             leading: projectBreadcrumbLeading,
                             trailing: projectBreadcrumbTrailing,
                             onClick: () => setTasksProjectViewRequest({
-                              view: activeProjectView,
+                              view: activeProjectWorkspaceView,
                               token: Date.now().toString(36) + Math.random().toString(36).slice(2),
                             }),
                           },
@@ -2254,11 +2265,19 @@
                             }),
                           },
                         ]
-                      : [{
-                          label: projectTitle,
-                          leading: projectBreadcrumbLeading,
-                          trailing: projectBreadcrumbTrailing,
-                        }]),
+                      : [
+                          {
+                            label: projectTitle,
+                            leading: projectBreadcrumbLeading,
+                            trailing: projectBreadcrumbTrailing,
+                            onClick: isProjectMilestonesView
+                              ? () => navigateToProjectSection("general")
+                              : undefined,
+                          },
+                          ...(isProjectMilestonesView
+                            ? [{ label: "Milestones" }]
+                            : []),
+                        ]),
                   ]
                 : [{ label: "Create" }, { label: "Projects" }],
               center: isProjectDetailView
@@ -2267,16 +2286,17 @@
                   : React.createElement(PlatformSwitch, {
                       className: "playground-tasks-nav playground-tasks-project-nav-switch",
                       value: activeProjectView,
-                      options: PLAYGROUND_PROJECT_VIEW_OPTIONS
-                        .filter((item) => item.id === "overview" || item.id === "backlog" || item.id === "board")
-                        .map((item) => ({
-                          value: item.id,
-                          label: item.label,
-                        })),
-                      onValueChange: (nextView) => setTasksProjectViewRequest({
-                        view: nextView,
-                        token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                      }),
+                      options: [
+                        { value: "overview", label: "General" },
+                        { value: "backlog", label: "Backlog" },
+                        { value: "activity", label: "Activity" },
+                      ],
+                      onValueChange: (nextView) => {
+                        setTasksProjectViewRequest({
+                          view: nextView,
+                          token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                        });
+                      },
                       ariaLabel: "Project view",
                     })
                 : React.createElement(PlatformSwitch, {
@@ -2292,7 +2312,11 @@
                   }),
               extraActions: isProjectDetailView
                 ? React.createElement(React.Fragment, null,
-                    (activeProjectView === "backlog" || activeProjectView === "board") && !isProjectTaskDetailView
+                    (
+                      activeProjectWorkspaceView === "backlog"
+                      || activeProjectWorkspaceView === "board"
+                      || activeProjectWorkspaceView === "activity"
+                    ) && !isProjectTaskDetailView
                       ? tasksHeaderState.extraActions || null
                       : null,
                     activeTicketNavigation

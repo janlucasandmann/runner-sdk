@@ -98,6 +98,11 @@ describe("security service repository", () => {
       5,
       "/api/real/security/repositories/repository%20%2F%201/runs",
       {},
+      {
+        headers: {
+          "Idempotency-Key": expect.stringMatching(/^security-run-/),
+        },
+      },
     );
     expect(get).toHaveBeenNthCalledWith(
       6,
@@ -159,6 +164,130 @@ describe("security service repository", () => {
     });
     expect(() => repository.getRun(" ")).toThrow("Run id is required");
     expect(get).not.toHaveBeenCalled();
+  });
+
+  it("creates one idempotent run remediation and reconciles its GitHub state", async () => {
+    const post = vi
+      .fn()
+      .mockResolvedValueOnce({
+        id: "security_remediation_1",
+        findingIds: ["finding_1", "finding_2"],
+        lifecycle: "queued",
+      })
+      .mockResolvedValueOnce({
+        id: "security_remediation_1",
+        findingIds: ["finding_1", "finding_2"],
+        lifecycle: "pull_request_open",
+      });
+    const repository = createSecurityServiceRepository({
+      get: vi.fn(),
+      post,
+      put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    });
+
+    await repository.createRunRemediation("run / 1", {
+      findingIds: ["finding_1", "finding_2"],
+    });
+    await repository.reconcileRemediation("security_remediation / 1");
+
+    expect(post).toHaveBeenNthCalledWith(
+      1,
+      "/api/real/security/runs/run%20%2F%201/remediations",
+      { findingIds: ["finding_1", "finding_2"] },
+      {
+        headers: {
+          "Idempotency-Key": expect.stringMatching(
+            /^security-remediation-/,
+          ),
+        },
+      },
+    );
+    expect(post).toHaveBeenNthCalledWith(
+      2,
+      "/api/real/security/remediations/security_remediation%20%2F%201/reconcile",
+      {},
+    );
+  });
+
+  it("retries transient idempotent reads without retrying mutations", async () => {
+    vi.useFakeTimers();
+    try {
+      const transientError = Object.assign(new Error("Bad gateway"), {
+        status: 502,
+      });
+      const get = vi
+        .fn()
+        .mockRejectedValueOnce(transientError)
+        .mockRejectedValueOnce(transientError)
+        .mockResolvedValueOnce({ run: { id: "run_1" } });
+      const repository = createSecurityServiceRepository({
+        get,
+        post: vi.fn(),
+        put: vi.fn(),
+        patch: vi.fn(),
+        delete: vi.fn(),
+      });
+
+      const resultPromise = repository.getRun("run_1");
+      await vi.runAllTimersAsync();
+
+      await expect(resultPromise).resolves.toEqual({ run: { id: "run_1" } });
+      expect(get).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("does not retry permanent read failures", async () => {
+    const permanentError = Object.assign(new Error("Repository not found"), {
+      status: 404,
+    });
+    const get = vi.fn().mockRejectedValue(permanentError);
+    const repository = createSecurityServiceRepository({
+      get,
+      post: vi.fn(),
+      put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    });
+
+    await expect(repository.getRepository("repository_1")).rejects.toBe(
+      permanentError,
+    );
+    expect(get).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops retrying an idempotent read when its navigation signal aborts", async () => {
+    vi.useFakeTimers();
+    try {
+      const transientError = Object.assign(new Error("Bad gateway"), {
+        status: 502,
+      });
+      const get = vi.fn().mockRejectedValue(transientError);
+      const repository = createSecurityServiceRepository({
+        get,
+        post: vi.fn(),
+        put: vi.fn(),
+        patch: vi.fn(),
+        delete: vi.fn(),
+      });
+      const controller = new AbortController();
+
+      const resultPromise = repository.getOverview(controller.signal);
+      const rejection = expect(resultPromise).rejects.toMatchObject({
+        name: "AbortError",
+      });
+      await Promise.resolve();
+      controller.abort();
+      await vi.runAllTimersAsync();
+
+      await rejection;
+      expect(get).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("uses the shared resource-version route contract for repository configuration", async () => {

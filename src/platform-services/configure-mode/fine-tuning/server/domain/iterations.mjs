@@ -130,6 +130,25 @@ export function normalizeFineTuningEvaluationTarget(rawTarget = {}, fallbackInde
         || evaluationSetSnapshot.activeVersionLabel
         || evaluationSetSnapshot.active_version_label,
     ),
+    datasetAssetId: normalizeString(
+      source.datasetAssetId
+        || source.dataset_asset_id
+        || evaluationSetSnapshot.datasetAssetId
+        || evaluationSetSnapshot.dataset_asset_id,
+    ),
+    datasetBundleSha256: normalizeString(
+      source.datasetBundleSha256
+        || source.dataset_bundle_sha256
+        || evaluationSetSnapshot.datasetBundleSha256
+        || evaluationSetSnapshot.dataset_bundle_sha256,
+    ),
+    sourceAssetCount: Math.max(0, Number(
+      source.sourceAssetCount
+        || source.source_asset_count
+        || evaluationSetSnapshot.sourceAssetCount
+        || evaluationSetSnapshot.source_asset_count
+        || 0,
+    ) || 0),
     baselineMode,
     baselineRunId: normalizeString(
       source.baselineRunId

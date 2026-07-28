@@ -162,7 +162,6 @@ describe("SecurityRepositoryDetailPage", () => {
         onRemoveTeamAccess={vi.fn()}
         onSaveTeamRolePermissionSet={vi.fn()}
         onSetStatus={vi.fn()}
-        onDelete={vi.fn()}
       />,
     );
 
@@ -194,7 +193,6 @@ describe("SecurityRepositoryDetailPage", () => {
         onRemoveTeamAccess={vi.fn()}
         onSaveTeamRolePermissionSet={vi.fn()}
         onSetStatus={vi.fn()}
-        onDelete={vi.fn()}
       />,
     );
 

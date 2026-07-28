@@ -1,4 +1,4 @@
-import type { ElementType, ReactNode } from "react";
+import { useState, type ElementType, type ReactNode } from "react";
 
 import {
   PlatformCommentCard,
@@ -35,9 +35,12 @@ export interface PlatformActivityItem {
   replies?: readonly PlatformActivityReply[];
   replyComposer?: PlatformActivityReplyComposerProps;
   actions?: PlatformActivityItemActions;
+  preview?: ReactNode;
+  inspectorAction?: ReactNode;
 }
 
 export type PlatformActivityComposerProps = PlatformCommentComposerProps;
+export type PlatformActivityTimelineLayout = "timeline" | "inspector";
 
 export interface PlatformActivityTimelineProps {
   title?: ReactNode;
@@ -48,6 +51,13 @@ export interface PlatformActivityTimelineProps {
   emptyDescription?: ReactNode;
   emptyIcon?: ElementType;
   className?: string;
+  layout?: PlatformActivityTimelineLayout;
+  inspectorTitle?: ReactNode;
+  inspectorHeaderActions?: ReactNode;
+  inspectorEmptyTitle?: ReactNode;
+  selectedItemId?: string;
+  defaultSelectedItemId?: string;
+  onSelectedItemChange?: (itemId: string) => void;
 }
 
 function joinClassNames(...classNames: Array<string | false | null | undefined>) {
@@ -60,9 +70,22 @@ function joinClassNames(...classNames: Array<string | false | null | undefined>)
     .join(" ");
 }
 
-function PlatformActivityTimelineItem({ item }: { item: PlatformActivityItem }) {
+function PlatformActivityTimelineItem({
+  item,
+  selectionMode = false,
+  selected = false,
+  onSelect,
+}: {
+  item: PlatformActivityItem;
+  selectionMode?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
+}) {
   const Icon = item.icon;
-  const interactive = typeof item.onActivate === "function";
+  const interactive =
+    selectionMode ||
+    typeof item.onActivate === "function";
+  const handleActivate = selectionMode ? onSelect : item.onActivate;
 
   if (item.content) {
     return (
@@ -88,12 +111,13 @@ function PlatformActivityTimelineItem({ item }: { item: PlatformActivityItem }) 
 
   return (
     <li
-      className={joinClassNames(
-        "platform-activity-timeline__item",
-        `is-${item.tone || "neutral"}`,
-        interactive && "is-interactive",
-      )}
-    >
+        className={joinClassNames(
+          "platform-activity-timeline__item",
+          `is-${item.tone || "neutral"}`,
+          interactive && "is-interactive",
+          selected && "is-selected",
+        )}
+      >
       <div className="platform-activity-timeline__rail" aria-hidden="true">
         <span className="platform-activity-timeline__marker">
           {item.avatar || (Icon ? (
@@ -105,12 +129,22 @@ function PlatformActivityTimelineItem({ item }: { item: PlatformActivityItem }) 
         className="platform-activity-timeline__entry"
         role={interactive ? "button" : undefined}
         tabIndex={interactive ? 0 : undefined}
-        aria-label={interactive ? item.ariaLabel : undefined}
-        onClick={item.onActivate}
+        aria-label={
+          interactive
+            ? item.ariaLabel || `Inspect activity ${item.id}`
+            : undefined
+        }
+        aria-pressed={selectionMode ? selected : undefined}
+        onClick={handleActivate}
+        onDoubleClick={
+          selectionMode && typeof item.onActivate === "function"
+            ? item.onActivate
+            : undefined
+        }
         onKeyDown={interactive ? (event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            item.onActivate?.();
+            handleActivate?.();
           }
         } : undefined}
       >
@@ -137,7 +171,133 @@ export function PlatformActivityTimeline({
   emptyDescription,
   emptyIcon,
   className = "",
+  layout = "timeline",
+  inspectorTitle = "Inspector",
+  inspectorHeaderActions,
+  inspectorEmptyTitle = "Select an activity",
+  selectedItemId,
+  defaultSelectedItemId = "",
+  onSelectedItemChange,
 }: PlatformActivityTimelineProps) {
+  const [internalSelectedItemId, setInternalSelectedItemId] = useState(
+    defaultSelectedItemId,
+  );
+  const requestedSelectedItemId =
+    selectedItemId === undefined
+      ? internalSelectedItemId
+      : selectedItemId;
+  const selectedItem =
+    items.find((item) => item.id === requestedSelectedItemId) ||
+    items[0] ||
+    null;
+  const selectedInspectorAction =
+    selectedItem?.inspectorAction || inspectorHeaderActions;
+
+  function selectItem(itemId: string) {
+    if (selectedItemId === undefined) {
+      setInternalSelectedItemId(itemId);
+    }
+    onSelectedItemChange?.(itemId);
+  }
+
+  if (layout === "inspector") {
+    return (
+      <section
+        className={joinClassNames(
+          "platform-activity-timeline",
+          "is-inspector",
+          className,
+        )}
+      >
+        <div className="platform-activity-timeline__inspector-header">
+          <div className="platform-activity-timeline__pane-header is-list">
+            <h2 className="platform-activity-timeline__title">{title}</h2>
+            {headerActions ? (
+              <div className="platform-activity-timeline__header-actions">
+                {headerActions}
+              </div>
+            ) : null}
+          </div>
+          <div className="platform-activity-timeline__pane-header is-preview">
+            <h2 className="platform-activity-timeline__title">
+              {inspectorTitle}
+            </h2>
+            {selectedInspectorAction ? (
+              <div className="platform-activity-timeline__header-actions">
+                {selectedInspectorAction}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="platform-activity-timeline__inspector-body">
+          <div className="platform-activity-timeline__list-pane">
+            {items.length > 0 ? (
+              <ol className="platform-activity-timeline__list">
+                {items.map((item) => (
+                  <PlatformActivityTimelineItem
+                    key={item.id}
+                    item={item}
+                    selectionMode
+                    selected={selectedItem?.id === item.id}
+                    onSelect={() => selectItem(item.id)}
+                  />
+                ))}
+              </ol>
+            ) : (
+              <PlatformEmptyState
+                className="platform-activity-timeline__empty"
+                icon={emptyIcon}
+                title={emptyTitle}
+                description={emptyDescription}
+              />
+            )}
+          </div>
+
+          <div
+            className="platform-activity-timeline__preview-pane"
+            aria-live="polite"
+          >
+            {selectedItem ? (
+              selectedItem.preview || (
+                <div className="platform-activity-timeline__default-preview">
+                  <div className="platform-activity-timeline__default-preview-heading">
+                    {selectedItem.avatar ? (
+                      <span className="platform-activity-timeline__default-preview-avatar">
+                        {selectedItem.avatar}
+                      </span>
+                    ) : null}
+                    <div>
+                      <div className="platform-activity-timeline__default-preview-summary">
+                        {selectedItem.summary}
+                      </div>
+                      {selectedItem.timestamp ? (
+                        <div className="platform-activity-timeline__default-preview-timestamp">
+                          {selectedItem.timestamp}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                  {selectedItem.trailing ? (
+                    <div className="platform-activity-timeline__default-preview-content">
+                      {selectedItem.trailing}
+                    </div>
+                  ) : null}
+                </div>
+              )
+            ) : (
+              <PlatformEmptyState
+                className="platform-activity-timeline__empty"
+                icon={emptyIcon}
+                title={inspectorEmptyTitle}
+              />
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className={joinClassNames("platform-activity-timeline", className)}>
       <header className="platform-activity-timeline__header">

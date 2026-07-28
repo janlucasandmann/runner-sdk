@@ -46,6 +46,9 @@ export {
   ProjectSummary,
   ProjectSummaryDetails,
 } from "../../platform-services/create-mode/projects/client/project-summary/index.js";
+export {
+  ProjectMilestonesOverviewPage,
+} from "../../platform-services/create-mode/projects/client/project-milestones/index.js";
 export const TicketDetailPage = lazyNamed(
   () => import("../../platform-services/create-mode/projects/client/detail/ticket-detail-page.js"),
   "TicketDetailPage",
@@ -60,6 +63,10 @@ export const MetronomesOverviewPage = lazyNamed(
 export const SkillsOverviewPage = lazyNamed(
   () => import("../../platform-resources/skills/overview/skills-overview-page.js"),
   "SkillsOverviewPage",
+);
+export const SkillDetailPage = lazyNamed(
+  () => import("../../platform-resources/skills/detail/skill-detail-page.js"),
+  "SkillDetailPage",
 );
 export const TagsOverviewPage = lazyNamed(
   () => import("../../platform-resources/tags/overview/tags-overview-page.js"),

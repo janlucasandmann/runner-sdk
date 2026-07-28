@@ -325,6 +325,115 @@ describe("PlatformDataTable", () => {
     ).toBeNull();
   });
 
+  it("exposes the catalog UI variant with a full toolbar stack and roomier rows", () => {
+    const { container } = renderTable({
+      variant: "catalog-ui",
+      toolbar: {
+        leading: <nav aria-label="Catalog categories">Categories</nav>,
+        search: { placeholder: "Search catalog" },
+      },
+    });
+    const root = container.querySelector<HTMLElement>(
+      ".platform-data-table.is-catalog-ui",
+    );
+    const toolbar = container.querySelector(".platform-data-table__toolbar");
+    const leading = container.querySelector(
+      ".platform-data-table__toolbar-leading",
+    );
+    const controls = container.querySelector(
+      ".platform-data-table__toolbar-controls",
+    );
+    const search = screen.getByRole("searchbox", { name: "Search catalog" });
+
+    expect(root).not.toBeNull();
+    expect(root?.style.getPropertyValue("--platform-data-table-row-min-height")).toBe(
+      "72px",
+    );
+    expect(toolbar?.classList.contains("has-title-line")).toBe(true);
+    expect(toolbar?.firstElementChild).toBe(leading);
+    expect(controls?.contains(search)).toBe(true);
+  });
+
+  it("renders ordered row groups that can be expanded and collapsed", async () => {
+    const user = userEvent.setup();
+    const onExpandedChange = vi.fn();
+    const { container } = renderTable({
+      rowGrouping: {
+        groups: [
+          {
+            id: "published",
+            label: "Published",
+            ariaLabel: "Published",
+            color: "#4da3ff",
+          },
+          {
+            id: "draft",
+            label: "Draft",
+            ariaLabel: "Draft",
+            color: "#7effff",
+          },
+        ],
+        getGroupId: (row) => row.status.toLowerCase(),
+        onExpandedChange,
+      },
+    });
+    const table = screen.getByRole("table", { name: "Test resources" });
+    const groupButtons = within(table).getAllByRole("button", {
+      name: /Collapse (Published|Draft)/,
+    });
+    const publishedButton = within(table).getByRole("button", {
+      name: "Collapse Published",
+    });
+
+    expect(groupButtons.map((button) => button.textContent)).toEqual([
+      "Published1",
+      "Draft1",
+    ]);
+    expect(
+      publishedButton.style.getPropertyValue(
+        "--platform-data-table-row-group-color",
+      ),
+    ).toBe("#4da3ff");
+    expect(table.getAttribute("aria-rowcount")).toBe("5");
+    expect(
+      container.querySelectorAll(".platform-data-table__group-header"),
+    ).toHaveLength(2);
+    const alphaRow = screen.getByRole("row", { name: "Alpha" });
+    const betaRow = screen.getByRole("row", { name: "Beta" });
+    expect(alphaRow).not.toBeNull();
+    expect(betaRow).not.toBeNull();
+    expect(alphaRow.parentElement?.classList.contains("is-section-end")).toBe(
+      true,
+    );
+    expect(betaRow.parentElement?.classList.contains("is-section-end")).toBe(
+      true,
+    );
+    expect(alphaRow.parentElement?.classList.contains("is-grouped-row")).toBe(
+      true,
+    );
+    expect(
+      alphaRow.parentElement?.classList.contains("has-group-indicator"),
+    ).toBe(true);
+
+    await user.click(publishedButton);
+
+    expect(screen.queryByRole("row", { name: "Alpha" })).toBeNull();
+    expect(screen.getByRole("row", { name: "Beta" })).not.toBeNull();
+    expect(
+      within(table).getByRole("button", { name: "Expand Published" }),
+    ).not.toBeNull();
+    expect(onExpandedChange).toHaveBeenLastCalledWith(new Set(["draft"]));
+
+    await user.click(
+      within(table).getByRole("button", { name: "Expand Published" }),
+    );
+
+    expect(screen.getByRole("row", { name: "Alpha" })).not.toBeNull();
+    expect(onExpandedChange).toHaveBeenLastCalledWith(
+      new Set(["published", "draft"]),
+    );
+  });
+
   it("supports embedded minimal tables without toolbar, footer, or pagination chrome", () => {
     const { container } = renderTable({
       variant: "minimalistic-ui",
@@ -422,6 +531,56 @@ describe("PlatformDataTable", () => {
     );
     const latestChange = onChange.mock.calls.at(-1)?.[0];
     expect([...latestChange.selectedIds].sort()).toEqual(["row-a", "row-b"]);
+  });
+
+  it("expands and contracts checkbox selection with Shift+Arrow", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    renderTable({
+      selection: {
+        enabled: true,
+        onChange,
+        ariaLabel: (row) => `Select ${row.name}`,
+      },
+    });
+
+    const betaCheckbox = screen.getByRole("checkbox", {
+      name: "Select Beta",
+    });
+    const alphaCheckbox = screen.getByRole("checkbox", {
+      name: "Select Alpha",
+    });
+
+    await user.click(alphaCheckbox);
+    await user.keyboard("{Shift>}{ArrowUp}{/Shift}");
+
+    expect([
+      ...(onChange.mock.calls.at(-1)?.[0].selectedIds || []),
+    ].sort()).toEqual(["row-a", "row-b"]);
+    expect(document.activeElement).toBe(betaCheckbox);
+
+    await user.keyboard("{Shift>}{ArrowDown}{/Shift}");
+
+    expect([
+      ...(onChange.mock.calls.at(-1)?.[0].selectedIds || []),
+    ].sort()).toEqual(["row-a"]);
+    expect(document.activeElement).toBe(alphaCheckbox);
+
+    await user.click(alphaCheckbox);
+    await user.click(betaCheckbox);
+    await user.keyboard("{Shift>}{ArrowDown}{/Shift}");
+
+    expect([
+      ...(onChange.mock.calls.at(-1)?.[0].selectedIds || []),
+    ].sort()).toEqual(["row-a", "row-b"]);
+    expect(document.activeElement).toBe(alphaCheckbox);
+
+    await user.keyboard("{Shift>}{ArrowUp}{/Shift}");
+
+    expect([
+      ...(onChange.mock.calls.at(-1)?.[0].selectedIds || []),
+    ].sort()).toEqual(["row-b"]);
+    expect(document.activeElement).toBe(betaCheckbox);
   });
 
   it("passes selected rows to the shared portal action menu", async () => {

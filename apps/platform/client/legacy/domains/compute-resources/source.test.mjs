@@ -141,13 +141,38 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const sourceServerCodeTabBarActions = React\.createElement\(PlatformButtonSelector,[\s\S]{0,500}label: "Add File"[\s\S]{0,500}buttonVariant: "primary"[\s\S]{0,300}buttonSize: "compact"[\s\S]{0,300}popupVariant: "minimal"/,
-  "Source code workspaces must use the shared primary Add File selector and minimal popup.",
+  /onCreateFile: handleCreateServerFile,[\s\S]{0,120}onUploadFiles: openServerFileUploadPicker,[\s\S]{0,120}onCreateFolder: handleCreateServerFolder/,
+  "Source code workspaces must delegate file and folder creation to the shared workspace header.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /tabBarActions: sourceServerCodeTabBarActions/,
-  "The source-code Add File selector must render at the end of the shared editor tab bar.",
+  /async function handleCreateServerFolder\(\)[\s\S]*?const markerPath = normalizeHistoryPath\(normalizedPath \+ "\/\.gitkeep"\);/,
+  "Source code workspaces must persist newly created folders through a hidden marker file.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /async function handleCreateServerFolder\(\)[\s\S]*?setServerSourceExpandedFolders\(\(current\) => \{/,
+  "Source code workspaces must reveal newly created folders after persistence.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /normalizePlaygroundEnvironmentInventory\([\s\S]{0,120}includeFolderMarkers: true/,
+  "Source code inventories must retain hidden folder markers while building the file tree.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /async function handleServerEntriesMove\(entries, destinationFolder = null\)[\s\S]*?formData\.append\("path", getServerSourcePathParent\(move\.targetPath\)\)/,
+  "Source code drag moves must preserve nested binary file paths.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /onFilesMove: \(\{ files, destinationFolder \}\) => handleServerEntriesMove/,
+  "Source code workspaces must persist shared drag-and-drop move operations.",
+);
+assert.doesNotMatch(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /sourceServerCodeTabBarActions|tabBarActions: sourceServerCodeTabBarActions/,
+  "Source code workspaces must not recreate the removed editor tab bar actions.",
 );
 assert.doesNotMatch(
   COMPUTE_RESOURCES_PAGE_SCRIPT,

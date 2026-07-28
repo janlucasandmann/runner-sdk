@@ -57,4 +57,5 @@ export interface PlatformAnalyticsSectionProps extends PlatformAnalyticsChartPro
   variant?: PlatformAnalyticsSectionVariant;
   title?: ReactNode;
   timeframe?: PlatformAnalyticsTimeframeControl;
+  showChart?: boolean;
 }

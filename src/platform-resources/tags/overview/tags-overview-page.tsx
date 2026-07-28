@@ -1,5 +1,4 @@
 import type { ComponentProps } from "react";
-import { PlatformDetailTabBar } from "../../../platform-ui/components/composite/detail-tab-bar/index.js";
 import { ConnectionOverviewPage } from "../../shared/connections/connection-overview-page.js";
 import type { ConnectionOverviewRow } from "../../shared/connections/connection-overview-page.js";
 import { TagsOverviewGuide } from "./tags-overview-guide.js";
@@ -14,10 +13,12 @@ export type TagsOverviewPageProps = Omit<
   | "pageClassName"
   | "toolbarLeading"
   | "toolbarTitle"
+  | "tableVariant"
+  | "showStatusFilter"
+  | "selectionEnabled"
+  | "rowGrouping"
   | "pagination"
 > & {
-  mode: "tags" | "plugins";
-  onModeChange: (mode: "tags" | "plugins") => void;
   tagRows: readonly ConnectionOverviewRow[];
   pluginRows: readonly ConnectionOverviewRow[];
   onOpenTag: (row: ConnectionOverviewRow) => void;
@@ -25,49 +26,63 @@ export type TagsOverviewPageProps = Omit<
 };
 
 export function TagsOverviewPage({
-  mode,
-  onModeChange,
   tagRows,
   pluginRows,
   onOpenTag,
   onOpenPlugin,
   ...props
 }: TagsOverviewPageProps) {
-  const rows = mode === "plugins" ? pluginRows : tagRows;
-  const onOpen = mode === "plugins" ? onOpenPlugin : onOpenTag;
-  const modeTabs = (
-    <PlatformDetailTabBar<"tags" | "plugins">
-      ariaLabel="Tag and plugin categories"
-      value={mode}
-      tabs={[
-        { id: "tags", label: "Tags" },
-        { id: "plugins", label: "Plugins" },
-      ]}
-      onValueChange={onModeChange}
-      variant="minimal"
-      className="tags-overview-tab-bar"
-    />
-  );
+  const rows: ConnectionOverviewRow[] = [
+    ...pluginRows.map((row) => ({
+      ...row,
+      tableRowId: `plugins:${row.id}`,
+      resourceKind: "plugins" as const,
+    })),
+    ...tagRows.map((row) => ({
+      ...row,
+      tableRowId: `tags:${row.id}`,
+      resourceKind: "tags" as const,
+    })),
+  ];
+  const sourceRows = new Map<string, ConnectionOverviewRow>([
+    ...pluginRows.map((row) => [`plugins:${row.id}`, row] as const),
+    ...tagRows.map((row) => [`tags:${row.id}`, row] as const),
+  ]);
+  const onOpen = (row: ConnectionOverviewRow) => {
+    const sourceRow = sourceRows.get(row.tableRowId || "") || row;
+    if (row.resourceKind === "tags") onOpenTag(sourceRow);
+    else onOpenPlugin(sourceRow);
+  };
 
   return (
     <ConnectionOverviewPage
       {...props}
-      kind={mode}
+      kind="connections"
       rows={rows}
       onOpen={onOpen}
       showPeriodSelector={false}
       pageClassName="is-tags is-tags-and-plugins"
-      toolbarLeading={modeTabs}
       toolbarTitle={false}
+      tableVariant="catalog-ui"
+      showStatusFilter={false}
+      selectionEnabled={false}
+      rowGrouping={{
+        groups: [
+          {
+            id: "plugins",
+            label: "Plugins",
+            ariaLabel: "Plugins",
+          },
+          {
+            id: "tags",
+            label: "Tags",
+            ariaLabel: "Tags",
+          },
+        ],
+        getGroupId: (row) => row.resourceKind || "plugins",
+      }}
       pagination={false}
-      heroContent={(
-        <TagsOverviewGuide
-          tagRows={tagRows}
-          pluginRows={pluginRows}
-          onOpenTag={onOpenTag}
-          onOpenPlugin={onOpenPlugin}
-        />
-      )}
+      heroContent={<TagsOverviewGuide />}
     />
   );
 }

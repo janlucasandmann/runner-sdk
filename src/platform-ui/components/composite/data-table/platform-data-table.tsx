@@ -58,6 +58,7 @@ import type {
   PlatformDataTableIcon,
   PlatformDataTablePaginationState,
   PlatformDataTableProps,
+  PlatformDataTableRowGroup,
   PlatformDataTableSortState,
 } from "./data-table-types.js";
 
@@ -208,6 +209,7 @@ export function PlatformDataTable<TData>({
   selection,
   pagination,
   toolbar,
+  rowGrouping,
   getRowActions,
   renderRowMenu,
   onRowActionTrigger,
@@ -232,12 +234,20 @@ export function PlatformDataTable<TData>({
   variant = "default",
   sticky = true,
   stickyTop = 0,
-  rowMinHeight = 58,
+  rowMinHeight,
   style,
 }: PlatformDataTableProps<TData>): ReactNode {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const rowMenuRef = useRef<HTMLDivElement | null>(null);
   const toolbarMenuRef = useRef<HTMLDivElement | null>(null);
+  const rowSelectionControlRefs = useRef(
+    new Map<string, HTMLButtonElement>(),
+  );
+  const rowSelectionRangeRef = useRef<{
+    anchorId: string;
+    cursorId: string;
+    baselineIds: Set<string>;
+  } | null>(null);
   const paginationClampRequestRef = useRef("");
   const [containerWidth, setContainerWidth] = useState(
     Number.POSITIVE_INFINITY,
@@ -256,6 +266,15 @@ export function PlatformDataTable<TData>({
   const [internalSearchValue, setInternalSearchValue] = useState(
     toolbar?.search?.defaultValue || "",
   );
+  const [internallyCollapsedGroupIds, setInternallyCollapsedGroupIds] =
+    useState<Set<string>>(
+      () =>
+        new Set(
+          (rowGrouping?.groups || [])
+            .filter((group) => group.defaultExpanded === false)
+            .map((group) => group.id),
+        ),
+    );
   const [rowMenu, setRowMenu] = useState<RowMenuState | null>(null);
   const [toolbarMenu, setToolbarMenu] = useState<ToolbarMenuState | null>(null);
   const [rowMenuPosition, setRowMenuPosition] = useState({
@@ -293,6 +312,23 @@ export function PlatformDataTable<TData>({
   const hasSelection = Boolean(selection?.enabled);
   const hasActions = Boolean(
     getRowActions || renderRowMenu || onRowActionTrigger,
+  );
+  const rowGroupExpansionControlled = rowGrouping?.expandedIds !== undefined;
+  const expandedRowGroupIds = useMemo(
+    () =>
+      rowGroupExpansionControlled
+        ? normalizePlatformDataTableIds(rowGrouping?.expandedIds)
+        : new Set(
+            (rowGrouping?.groups || [])
+              .filter((group) => !internallyCollapsedGroupIds.has(group.id))
+              .map((group) => group.id),
+          ),
+    [
+      internallyCollapsedGroupIds,
+      rowGroupExpansionControlled,
+      rowGrouping?.expandedIds,
+      rowGrouping?.groups,
+    ],
   );
 
   useLayoutEffect(() => {
@@ -509,6 +545,18 @@ export function PlatformDataTable<TData>({
   );
 
   const renderedRows = table.getRowModel().rows;
+  const renderedRowGroupIds = rowGrouping
+    ? new Set(
+        renderedRows.map((tableRow) =>
+          rowGrouping.getGroupId(tableRow.original),
+        ),
+      )
+    : null;
+  const renderedRowGroupCount = rowGrouping
+    ? rowGrouping.groups.filter((group) =>
+        renderedRowGroupIds?.has(group.id),
+      ).length
+    : 0;
   const showEmptyStateRow =
     !loading && !error && (!data.length || !renderedRows.length);
   const totalRowCount = paginationConfig?.manual
@@ -548,6 +596,14 @@ export function PlatformDataTable<TData>({
     paginationEnabled
       ? `${resolvedPageIndex}:${activePagination.pageSize}:${totalRowCount}`
       : "unpaginated",
+    rowGrouping
+      ? rowGrouping.groups
+          .map(
+            (group) =>
+              `${group.id}:${expandedRowGroupIds.has(group.id) ? "expanded" : "collapsed"}`,
+          )
+          .join(",")
+      : "ungrouped",
     footer ? "footer" : "no-footer",
   ].join("|");
   const surfaceRef = useAnimatedHeight<HTMLDivElement>({
@@ -602,15 +658,24 @@ export function PlatformDataTable<TData>({
 
   const toggleRowSelection = useCallback(
     (rowId: string) => {
-      commitSelection(
-        togglePlatformDataTableSelection(selectedIds, rowId),
-        "row",
+      const nextSelectedIds = togglePlatformDataTableSelection(
+        selectedIds,
+        rowId,
       );
+      rowSelectionRangeRef.current = nextSelectedIds.has(rowId)
+        ? {
+            anchorId: rowId,
+            cursorId: rowId,
+            baselineIds: new Set(nextSelectedIds),
+          }
+        : null;
+      commitSelection(nextSelectedIds, "row");
     },
     [commitSelection, selectedIds],
   );
 
   const toggleVisibleSelection = useCallback(() => {
+    rowSelectionRangeRef.current = null;
     commitSelection(
       togglePlatformDataTableVisibleSelection(
         selectedIds,
@@ -620,6 +685,82 @@ export function PlatformDataTable<TData>({
       "visible",
     );
   }, [allVisibleSelected, commitSelection, selectedIds, visibleSelectableIds]);
+
+  const handleRowSelectionKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLButtonElement>, rowId: string) => {
+      if (
+        !event.shiftKey ||
+        (event.key !== "ArrowUp" && event.key !== "ArrowDown") ||
+        !selectedIds.has(rowId)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      let range = rowSelectionRangeRef.current;
+      if (
+        !range ||
+        range.cursorId !== rowId ||
+        !selectedIds.has(range.anchorId) ||
+        !visibleSelectableIds.includes(range.anchorId)
+      ) {
+        range = {
+          anchorId: rowId,
+          cursorId: rowId,
+          baselineIds: new Set(selectedIds),
+        };
+        rowSelectionRangeRef.current = range;
+      }
+
+      const currentIndex = visibleSelectableIds.indexOf(range.cursorId);
+      if (currentIndex < 0) return;
+      const nextIndex =
+        currentIndex + (event.key === "ArrowDown" ? 1 : -1);
+      const nextRowId = visibleSelectableIds[nextIndex];
+      if (!nextRowId) return;
+
+      const anchorIndex = visibleSelectableIds.indexOf(range.anchorId);
+      if (anchorIndex < 0) return;
+      const rangeStart = Math.min(anchorIndex, nextIndex);
+      const rangeEnd = Math.max(anchorIndex, nextIndex);
+      const nextSelectedIds = new Set(range.baselineIds);
+      visibleSelectableIds
+        .slice(rangeStart, rangeEnd + 1)
+        .forEach((visibleRowId) => nextSelectedIds.add(visibleRowId));
+
+      range.cursorId = nextRowId;
+      commitSelection(nextSelectedIds, "row");
+      rowSelectionControlRefs.current.get(nextRowId)?.focus();
+    },
+    [commitSelection, selectedIds, visibleSelectableIds],
+  );
+
+  const toggleRowGroup = useCallback(
+    (groupId: string) => {
+      const nextExpandedIds = new Set(expandedRowGroupIds);
+      if (nextExpandedIds.has(groupId)) nextExpandedIds.delete(groupId);
+      else nextExpandedIds.add(groupId);
+
+      if (!rowGroupExpansionControlled) {
+        setInternallyCollapsedGroupIds(
+          new Set(
+            (rowGrouping?.groups || [])
+              .filter((group) => !nextExpandedIds.has(group.id))
+              .map((group) => group.id),
+          ),
+        );
+      }
+      rowGrouping?.onExpandedChange?.(nextExpandedIds);
+    },
+    [
+      expandedRowGroupIds,
+      rowGroupExpansionControlled,
+      rowGrouping?.groups,
+      rowGrouping?.onExpandedChange,
+    ],
+  );
 
   const updateSearch = useCallback(
     (value: string) => {
@@ -742,7 +883,10 @@ export function PlatformDataTable<TData>({
   const rootStyle = {
     ...style,
     "--platform-data-table-columns": gridTemplateColumns,
-    "--platform-data-table-row-min-height": `${Math.max(36, rowMinHeight)}px`,
+    "--platform-data-table-row-min-height": `${Math.max(
+      36,
+      rowMinHeight ?? (variant === "catalog-ui" ? 72 : 58),
+    )}px`,
     "--platform-data-table-sticky-top":
       typeof stickyTop === "number" ? `${stickyTop}px` : stickyTop,
   } as CSSProperties;
@@ -753,6 +897,7 @@ export function PlatformDataTable<TData>({
     label: string,
     onClick: () => void,
     disabled = false,
+    rowId?: string,
   ) =>
     createElement(PlatformCheckbox, {
       className: joinClassNames("platform-data-table__checkbox"),
@@ -760,9 +905,20 @@ export function PlatformDataTable<TData>({
       indeterminate: partial,
       "aria-label": label,
       disabled,
-      onClick: (event: ReactMouseEvent) => {
+      ref: rowId
+        ? (element: HTMLButtonElement | null) => {
+            if (element) rowSelectionControlRefs.current.set(rowId, element);
+            else rowSelectionControlRefs.current.delete(rowId);
+          }
+        : undefined,
+      onKeyDown: rowId
+        ? (event: KeyboardEvent<HTMLButtonElement>) =>
+            handleRowSelectionKeyDown(event, rowId)
+        : undefined,
+      onClick: (event: ReactMouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
         event.stopPropagation();
+        event.currentTarget.focus();
         onClick();
       },
     });
@@ -771,6 +927,9 @@ export function PlatformDataTable<TData>({
     if (!toolbar) return null;
     const filters = toolbar.filters || [];
     const viewOptions = toolbar.view?.options || [];
+    const hasTitleLine = Boolean(
+      toolbar.title || toolbar.leading || filters.length,
+    );
     const hasContent = Boolean(
       toolbar.title ||
       toolbar.leading ||
@@ -787,6 +946,7 @@ export function PlatformDataTable<TData>({
       {
         className: joinClassNames(
           "platform-data-table__toolbar",
+          hasTitleLine && "has-title-line",
           toolbar.className,
         ),
       },
@@ -1183,12 +1343,156 @@ export function PlatformDataTable<TData>({
       );
     }
 
+    const indexedRows = renderedRows.map((tableRow, renderedIndex) => ({
+      tableRow,
+      renderedIndex,
+    }));
+    const bodyEntries: Array<
+      | {
+          kind: "group";
+          group: PlatformDataTableRowGroup;
+          rowCount: number;
+        }
+      | {
+          kind: "row";
+          tableRow: (typeof renderedRows)[number];
+          renderedIndex: number;
+          group?: PlatformDataTableRowGroup;
+        }
+    > = [];
+
+    if (rowGrouping?.groups.length) {
+      const rowsByGroupId = new Map<string, typeof indexedRows>();
+      indexedRows.forEach((indexedRow) => {
+        const groupId = rowGrouping.getGroupId(indexedRow.tableRow.original);
+        const groupRows = rowsByGroupId.get(groupId) || [];
+        groupRows.push(indexedRow);
+        rowsByGroupId.set(groupId, groupRows);
+      });
+
+      rowGrouping.groups.forEach((group) => {
+        const groupRows = rowsByGroupId.get(group.id) || [];
+        if (!groupRows.length) return;
+        bodyEntries.push({
+          kind: "group",
+          group,
+          rowCount: groupRows.length,
+        });
+        if (expandedRowGroupIds.has(group.id)) {
+          bodyEntries.push(
+            ...groupRows.map((indexedRow) => ({
+              kind: "row" as const,
+              ...indexedRow,
+              group,
+            })),
+          );
+        }
+        rowsByGroupId.delete(group.id);
+      });
+
+      rowsByGroupId.forEach((groupRows) => {
+        bodyEntries.push(
+          ...groupRows.map((indexedRow) => ({
+            kind: "row" as const,
+            ...indexedRow,
+          })),
+        );
+      });
+    } else {
+      bodyEntries.push(
+        ...indexedRows.map((indexedRow) => ({
+          kind: "row" as const,
+          ...indexedRow,
+        })),
+      );
+    }
+
+    const columnCount =
+      visibleColumns.length + (hasSelection ? 1 : 0) + (hasActions ? 1 : 0);
+
     return createElement(
       "div",
       { className: "platform-data-table__body", role: "rowgroup" },
-      renderedRows.map((tableRow, renderedIndex) => {
+      bodyEntries.map((entry, bodyEntryIndex) => {
+        if (entry.kind === "group") {
+          const expanded = expandedRowGroupIds.has(entry.group.id);
+          const groupAccessibleLabel =
+            entry.group.ariaLabel ||
+            (typeof entry.group.label === "string"
+              ? entry.group.label
+              : "row group");
+          return createElement(
+            "div",
+            {
+              key: `group:${entry.group.id}`,
+              className: joinClassNames(
+                "platform-data-table__group-header",
+                expanded ? "is-expanded" : "is-collapsed",
+              ),
+              role: "row",
+              "aria-rowindex": bodyEntryIndex + 2,
+            },
+            createElement(
+              "div",
+              {
+                className: "platform-data-table__group-cell",
+                role: "cell",
+                "aria-colspan": columnCount,
+              },
+              createElement(
+                "button",
+                {
+                  type: "button",
+                  className: "platform-data-table__group-toggle",
+                  "aria-expanded": expanded ? "true" : "false",
+                  "aria-label": `${expanded ? "Collapse" : "Expand"} ${groupAccessibleLabel}`,
+                  onClick: () => toggleRowGroup(entry.group.id),
+                  style: entry.group.color
+                    ? ({
+                        "--platform-data-table-row-group-color":
+                          entry.group.color,
+                      } as CSSProperties)
+                    : undefined,
+                },
+                createElement(ChevronDown, {
+                  className: "platform-data-table__group-chevron",
+                  width: 15,
+                  height: 15,
+                  strokeWidth: 1.8,
+                  "aria-hidden": true,
+                }),
+                entry.group.color
+                  ? createElement("span", {
+                      className: "platform-data-table__group-indicator",
+                      "aria-hidden": true,
+                    })
+                  : null,
+                createElement(
+                  "span",
+                  { className: "platform-data-table__group-label" },
+                  entry.group.label,
+                ),
+                createElement(
+                  "span",
+                  { className: "platform-data-table__group-count" },
+                  String(entry.rowCount),
+                ),
+              ),
+            ),
+          );
+        }
+
+        const { tableRow, renderedIndex } = entry;
         const row = tableRow.original;
         const rowId = tableRow.id;
+        const isSectionEnd =
+          Boolean(rowGrouping?.groups.length) &&
+          (bodyEntryIndex === bodyEntries.length - 1 ||
+            bodyEntries[bodyEntryIndex + 1]?.kind === "group");
+        const groupedRowClassNames = [
+          entry.group && "is-grouped-row",
+          entry.group?.color && "has-group-indicator",
+        ];
         const disabled = Boolean(isRowDisabled?.(row));
         const selected = selectedIds.has(rowId);
         const actions = resolveRowActions(row, rowId).filter(
@@ -1231,9 +1535,9 @@ export function PlatformDataTable<TData>({
             role: "row",
             "aria-rowindex": paginationEnabled
               ? resolvedPageIndex * activePagination.pageSize +
-                renderedIndex +
+                bodyEntryIndex +
                 2
-              : renderedIndex + 2,
+              : bodyEntryIndex + 2,
             tabIndex: onRowActivate && !disabled ? 0 : undefined,
             "aria-selected": hasSelection
               ? selected
@@ -1269,6 +1573,7 @@ export function PlatformDataTable<TData>({
                     `${selected ? "Deselect" : "Select"} row`,
                   () => toggleRowSelection(rowId),
                   !tableRow.getCanSelect(),
+                  rowId,
                 ),
               )
             : null,
@@ -1359,14 +1664,25 @@ export function PlatformDataTable<TData>({
         if (expandedContent == null)
           return createElement(
             "div",
-            { key: rowId, className: "platform-data-table__row-group" },
+            {
+              key: rowId,
+              className: joinClassNames(
+                "platform-data-table__row-group",
+                isSectionEnd && "is-section-end",
+                ...groupedRowClassNames,
+              ),
+            },
             rowElement,
           );
         return createElement(
           "div",
           {
             key: rowId,
-            className: "platform-data-table__row-group is-expanded",
+            className: joinClassNames(
+              "platform-data-table__row-group is-expanded",
+              isSectionEnd && "is-section-end",
+              ...groupedRowClassNames,
+            ),
           },
           rowElement,
           createElement(
@@ -1567,6 +1883,7 @@ export function PlatformDataTable<TData>({
         `is-${surface}`,
         `is-${layout}-layout`,
         variant === "minimalistic-ui" && "is-minimalistic-ui",
+        variant === "catalog-ui" && "is-catalog-ui",
         paginationEnabled && "has-pagination",
         sticky && "has-sticky-header",
         className,
@@ -1590,7 +1907,9 @@ export function PlatformDataTable<TData>({
             Math.max(
               paginationEnabled ? totalRowCount : renderedRows.length,
               showEmptyStateRow ? 1 : 0,
-            ) + 1,
+            ) +
+            renderedRowGroupCount +
+            1,
           "aria-colcount":
             visibleColumns.length +
             (hasSelection ? 1 : 0) +

@@ -112,6 +112,28 @@ describe("PlatformAnalyticsSection", () => {
     expect(screen.getByRole("status", { name: "Loading analytics" })).not.toBeNull();
   });
 
+  it("supports the centralized KPI composition without mounting a chart", () => {
+    const { container } = render(
+      <PlatformAnalyticsSection
+        showChart={false}
+        analytics={{
+          ariaLabel: "Run summary metrics",
+          metrics: [
+            { id: "findings", label: "Findings", value: "3", color: "#4da3ff" },
+            { id: "artifacts", label: "Artifacts", value: "2", color: "#85df7b" },
+          ],
+          labels: [],
+          series: [],
+        }}
+      />,
+    );
+
+    expect(screen.getByLabelText("Run summary metrics")).not.toBeNull();
+    expect(container.querySelectorAll(".platform-analytics__metric")).toHaveLength(2);
+    expect(container.querySelector(".platform-analytics__chart")).toBeNull();
+    expect(container.querySelector(".platform-analytics-empty-state")).toBeNull();
+  });
+
   it("renders the compact sidebar composition with its title and three KPIs", () => {
     const { container } = render(
       <PlatformAnalyticsSection

@@ -4,6 +4,10 @@ export const PROJECT_SUMMARY_CSS_FRAGMENT = `
         min-width: 0;
       }
 
+      .platform-project-summary-shell > .playground-project-overview-work-graph {
+        margin-top: 24px;
+      }
+
       .platform-project-summary {
         width: 100%;
         min-width: 0;
@@ -33,10 +37,9 @@ export const PROJECT_SUMMARY_CSS_FRAGMENT = `
         box-sizing: border-box;
         width: min(100%, 560px);
         min-height: 22px;
-        max-height: 72px;
         margin: 8px 0 0;
         padding: 0;
-        overflow-y: auto;
+        overflow: hidden;
         border: 0;
         border-radius: 0;
         outline: 0;
@@ -157,36 +160,6 @@ export const PROJECT_SUMMARY_CSS_FRAGMENT = `
         white-space: nowrap;
       }
 
-      .platform-project-summary-details__team-avatar {
-        position: relative;
-        box-sizing: border-box;
-        width: 20px;
-        height: 20px;
-        flex: 0 0 20px;
-        display: inline-grid;
-        place-items: center;
-        overflow: hidden;
-        border: 0;
-        border-radius: 50%;
-        object-fit: cover;
-        background: rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.82);
-        font-size: 8px;
-        line-height: 1;
-        font-weight: 500;
-        letter-spacing: 0;
-      }
-
-      .platform-project-summary-details__team-avatar-image {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        border: 0;
-        border-radius: inherit;
-        object-fit: cover;
-      }
-
       .platform-project-summary-details__resource-icon {
         width: 18px;
         height: 18px;
@@ -207,6 +180,20 @@ export const PROJECT_SUMMARY_CSS_FRAGMENT = `
         width: 18px;
         height: 18px;
         object-fit: cover;
+      }
+
+      .platform-project-summary-details__milestone-ring {
+        box-sizing: border-box;
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at center, #000 52%, transparent 54%),
+          conic-gradient(
+            #636bdc 0 var(--project-milestone-progress, 0%),
+            rgba(255, 255, 255, 0.12) var(--project-milestone-progress, 0%) 100%
+          );
       }
 
       .platform-project-summary-details__loading,

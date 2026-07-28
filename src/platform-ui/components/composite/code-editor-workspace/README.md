@@ -7,20 +7,17 @@
 `PlatformCodeEditorWorkspace` is the canonical multi-file editing surface. It owns:
 
 - the file navigation rail and active-file presentation;
-- a VS Code-style tab strip with persistent open files, keyboard navigation, close controls, and dirty-state markers;
-- a compact Explorer search header and file rows aligned with the app-sidebar navigation rhythm;
-- file filtering through the shared `PlatformSearch` primitive;
+- a compact `Files` sidebar header with shared create-file, upload, and create-folder actions;
+- one active-file header instead of persistent editor tabs;
 - file multi-selection through the shared `PlatformCheckbox` primitive;
+- hierarchical file and folder rows with drag-and-drop moves into folders or back to the root;
 - single-file rename/delete and multi-file delete menus through the shared minimal `PlatformPopup`;
 - centered file-loading feedback through the shared `PlatformLoadingState`;
-- nested-file disclosure and optional actions aligned to the right of the editor tab strip;
+- nested-file disclosure and optional sidebar actions;
 - the editor content region and empty states;
-- the status footer;
-- Undo and Redo controls rendered through the shared icon-button primitive.
+- Undo and Redo controls rendered through the shared icon-button primitive in the active-file header.
 
 The caller remains responsible for file data, editor implementation, draft state, and persistence.
-Set `openInTab={false}` on navigational file rows such as folders. File rows can expose
-`dirty`, `closable`, `tabLabel`, and `tabIcon` metadata for the editor tab strip.
 Use `variant="full-screen"` when the workspace should occupy the complete width and height exposed by its content container.
 
 ```tsx
@@ -31,9 +28,11 @@ Use `variant="full-screen"` when the workspace should occupy the complete width 
   onFileSelect={setActiveFileId}
   onFileRename={renameFile}
   onFilesDelete={deleteFiles}
-  tabBarActions={<AddFileSelector />}
+  onFilesMove={moveFiles}
+  onCreateFile={createFile}
+  onUploadFiles={uploadFiles}
+  onCreateFolder={createFolder}
   editor={<Editor value={source} onChange={setSource} />}
-  status="Unsaved changes"
   historyControls={{
     onUndo: undo,
     onRedo: redo,

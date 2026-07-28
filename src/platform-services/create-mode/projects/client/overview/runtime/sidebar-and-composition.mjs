@@ -758,6 +758,35 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             const isMissionControlRunning = typeof isSelectedProjectMissionControlRunning !== "undefined"
               && Boolean(isSelectedProjectMissionControlRunning);
             const canOpenMissionControl = typeof openMissionControlComposer === "function";
+            const fullAutoStatus = String(projectFullAutoState?.status || "idle").trim().toLowerCase();
+            const fullAutoIsActive = fullAutoStatus === "queued" || fullAutoStatus === "running";
+            const fullAutoIsResumable = fullAutoStatus === "paused" || fullAutoStatus === "failed";
+            const fullAutoIsPending = Boolean(
+              projectFullAutoState?.isLoading || projectFullAutoState?.isSaving,
+            );
+            const fullAutoActionLabel = fullAutoIsActive
+              ? "Pause Full Auto"
+              : fullAutoStatus === "failed"
+                ? "Retry Full Auto"
+                : fullAutoIsResumable
+                  ? "Resume Full Auto"
+                  : "Full Auto";
+            const fullAutoActionDisabled = fullAutoIsPending
+              || (!fullAutoIsActive && !fullAutoIsResumable && !canStartThreads);
+            const handleFullAutoAction = () => {
+              if (fullAutoActionDisabled) {
+                return;
+              }
+              if (fullAutoIsActive) {
+                stopProjectFullAutoMode();
+                return;
+              }
+              if (fullAutoIsResumable) {
+                resumeProjectFullAutoMode();
+                return;
+              }
+              void startProjectFullAutoMode();
+            };
             const renderProjectStatusIcon = (option) => {
               const StatusIcon = option?.icon || Circle;
               return React.createElement(StatusIcon, {
@@ -910,17 +939,36 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                         }
                       ),
                     }),
-                    React.createElement(PlatformPrimaryButton, {
-                      type: "button",
-                      size: "small",
+                    React.createElement(PlatformButtonSelector, {
+                      mode: "split-action",
+                      buttonVariant: "primary",
+                      buttonSize: "small",
+                      label: isMissionControlRunning ? "Running Mission Control" : "Mission Control",
+                      actionAriaLabel: "Run Mission Control",
+                      popupAriaLabel: "Project automation options",
+                      popupRole: "menu",
+                      popupVariant: "minimal",
+                      popupAlignment: "left",
+                      matchTriggerWidth: true,
+                      fullWidth: true,
+                      closeOnSelect: true,
                       className: "playground-project-overview-sidebar-mission-button",
-                      disabled: !canOpenMissionControl || isMissionControlRunning,
-                      onClick: () => {
+                      actionDisabled: !canOpenMissionControl || isMissionControlRunning,
+                      popupDisabled: false,
+                      onAction: () => {
                         if (canOpenMissionControl) {
                           openMissionControlComposer();
                         }
                       },
-                    }, isMissionControlRunning ? "Running Mission Control" : "Mission Control")
+                    },
+                      React.createElement("button", {
+                        type: "button",
+                        role: "menuitem",
+                        className: "tb-popup-row",
+                        disabled: fullAutoActionDisabled,
+                        onClick: handleFullAutoAction,
+                      }, fullAutoActionLabel)
+                    )
                   )
                 )
               ),
@@ -1591,6 +1639,8 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 
             const projectOverviewActivePanel = activeProjectOverviewHomeTab === "resources"
                 ? renderProjectOverviewResourcesPanel()
+                : activeProjectOverviewHomeTab === "milestones"
+                    ? renderProjectOverviewMilestonesPanel()
                 : activeProjectOverviewHomeTab === "permissions"
                     ? renderProjectOverviewPermissionsPanel()
                     : renderProjectOverviewGeneralPanel();

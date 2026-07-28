@@ -112,6 +112,24 @@ function normalizeHealthChecks(value) {
   return checks;
 }
 
+function expectedAgentDeclaredResourceIds(metadataValue) {
+  const metadata = asRecord(metadataValue);
+  const topologyResources = Array.isArray(metadata.topologyResources)
+    ? metadata.topologyResources.map(asRecord)
+    : [];
+  if (topologyResources.length > 0) {
+    return [...new Set(
+      topologyResources
+        .filter((resource) => (
+          stringValue(resource.lifecycle, 100).toLowerCase() === "managed"
+        ))
+        .map((resource) => stringValue(resource.resourceId, 300))
+        .filter(Boolean),
+    )].sort();
+  }
+  return [...new Set(stringList(metadata.resourceIds))].sort();
+}
+
 export function normalizeProjectDeliveryTaskEvidence(value, metadataValue) {
   const metadata = asRecord(metadataValue);
   const stage = stringValue(metadata.deliveryStageId, 100).toLowerCase();
@@ -137,7 +155,7 @@ export function normalizeProjectDeliveryTaskEvidence(value, metadataValue) {
       throw new Error("Build evidence requires a valid Git commit SHA.");
     }
     const resources = normalizeResources(source.resources);
-    const expectedResourceIds = stringList(metadata.resourceIds);
+    const expectedResourceIds = expectedAgentDeclaredResourceIds(metadata);
     const present = new Set(resources.map((resource) => resource.id));
     const missing = expectedResourceIds.filter((id) => !present.has(id));
     if (missing.length) {
@@ -194,7 +212,7 @@ export function normalizeProjectDeliveryTaskEvidence(value, metadataValue) {
       throw new Error("Handoff evidence requires a summary and handoff items.");
     }
     const resources = normalizeResources(source.resources);
-    const expectedResourceIds = stringList(metadata.resourceIds);
+    const expectedResourceIds = expectedAgentDeclaredResourceIds(metadata);
     const present = new Set(resources.map((resource) => resource.id));
     const missing = expectedResourceIds.filter((id) => !present.has(id));
     if (missing.length) {
@@ -219,9 +237,94 @@ export function buildProjectDeliveryTaskPrompt(metadataValue) {
   const stage = stringValue(metadata.deliveryStageId, 100).toLowerCase();
   const goal = stringValue(metadata.goal, 10_000);
   if (stage === "build") {
+    const repairEpisode = asRecord(metadata.repairEpisode);
+    const isRepair = (
+      repairEpisode.schemaVersion
+        === "computer_agents_project_delivery_repair_episode_v1"
+      && stringValue(repairEpisode.id, 300)
+    );
+    const repairSourceStage = stringValue(
+      repairEpisode.sourceStage,
+      100,
+    ) || "test";
+    const failedRunLabel = repairSourceStage === "test"
+      ? "Failed Test Run"
+      : "Failed Evaluation Run";
+    const pinnedGateLabel = repairSourceStage === "test"
+      ? `Pinned Test Plan version: ${stringValue(repairEpisode.testPlanVersionId, 300)}`
+      : `Pinned Evaluation version: ${stringValue(repairEpisode.evaluationVersionId, 300)}`;
+    const repairInstructions = isRepair
+      ? [
+          `This is autonomous repair attempt ${Number(repairEpisode.repairAttempt) || 1} of ${Number(repairEpisode.maximumAttempts) || 1}.`,
+          `Repair episode: ${stringValue(repairEpisode.id, 300)}`,
+          `Failed gate: ${repairSourceStage}`,
+          `Trusted diagnostic fingerprint: ${stringValue(repairEpisode.diagnosticFingerprint, 300)}`,
+          `${failedRunLabel}: ${stringValue(repairEpisode.failedRunId, 300)}`,
+          pinnedGateLabel,
+          `Allowed target resource keys: ${JSON.stringify(
+            Array.isArray(repairEpisode.allowedResourceKeys)
+              ? repairEpisode.allowedResourceKeys.slice(0, 100)
+              : [],
+          )}`,
+          `Previous release fingerprint: ${stringValue(repairEpisode.previousReleaseFingerprint, 300) || "unavailable"}`,
+          repairSourceStage === "test"
+            ? ""
+            : `Trusted scores: average=${String(repairEpisode.averageScore ?? "unknown")} (minimum ${String(repairEpisode.minimumAverageScore ?? "unknown")}), pass rate=${String(repairEpisode.passRate ?? "unknown")} (minimum ${String(repairEpisode.minimumPassRate ?? "unknown")}), target fingerprint=${stringValue(repairEpisode.failedTargetFingerprint, 300)}`,
+          `Trusted failing cases: ${JSON.stringify(
+            Array.isArray(repairEpisode.failedCases)
+              ? repairEpisode.failedCases.slice(0, 100)
+              : [],
+          )}`,
+          `Trusted diagnostic artifacts: ${JSON.stringify(
+            Array.isArray(repairEpisode.artifacts)
+              ? repairEpisode.artifacts.slice(0, 100)
+              : [],
+          )}`,
+          "Diagnose the trusted failure evidence and change the implementation that caused it.",
+          "Do not edit, weaken, skip, replace, or reclassify the pinned Test Plan, Evaluation datasets, graders, Guardrails, acceptance thresholds, or failure evidence.",
+          "Publish a genuinely changed immutable revision for an allowed target resource only. Reusing the previous release fingerprint, leaving the failed Evaluation target unchanged, or changing an out-of-scope resource fails closed.",
+        ]
+      : [];
+    const topologyResources = Array.isArray(metadata.topologyResources)
+      ? metadata.topologyResources.slice(0, 500)
+      : [];
+    const workflowAcceptanceTarget = asRecord(
+      metadata.workflowAcceptanceTarget,
+    );
+    const declaredResourceIds =
+      expectedAgentDeclaredResourceIds(metadata);
+    const hasPinnedAcceptanceAgent = (
+      stringValue(workflowAcceptanceTarget.kind, 100)
+        === "service_topology"
+      && topologyResources.some((resourceValue) => {
+        const resource = asRecord(resourceValue);
+        return (
+          stringValue(resource.kind, 100) === "agent"
+          && stringValue(resource.resourceId, 300)
+            === stringValue(metadata.targetAgentId, 300)
+          && Array.isArray(workflowAcceptanceTarget.resourceKeys)
+          && workflowAcceptanceTarget.resourceKeys.includes(resource.key)
+        );
+      })
+    );
     return [
-      "Execute this Mission Control build ticket autonomously.",
+      isRepair
+        ? "Execute this Mission Control repair ticket autonomously."
+        : "Execute this Mission Control build ticket autonomously.",
       goal ? `Project goal: ${goal}` : "",
+      topologyResources.length
+        ? `Bound topology resources: ${JSON.stringify(topologyResources)}`
+        : "",
+      Object.keys(workflowAcceptanceTarget).length
+        ? `Workflow acceptance target: ${JSON.stringify(workflowAcceptanceTarget)}`
+        : "",
+      hasPinnedAcceptanceAgent
+        ? `The workflow-acceptance Metronome must invoke target Agent ${stringValue(metadata.targetAgentId, 300)} by exact Agent ID. Acceptance pins its immutable candidate version and fails closed if no executed workflow node uses that pin.`
+        : "",
+      `Agent-declared build resources: ${JSON.stringify(declaredResourceIds)}. Include exactly these managed topology resources in build evidence. Existing resources, pinned versions, source assets, and Guardrails are verified independently by the control plane and must not be fabricated as Agent-declared resources.`,
+      "Published Metronome versions are immutable. If the bound managed Metronome version is already published and the workflow needs changes, create and publish a successor version under that same bound Metronome. Do not try to patch a published version. Mission Control authoritatively resolves the latest canonical published deployment after the build.",
+      "After publishing, run a real bounded smoke check through the managed Function invoke or managed Metronome test-run endpoint. Use a no-paper smoke input that cannot promote evidence; production Metronome runs remain outside the build credential.",
+      ...repairInstructions,
       "Implement and deploy every bound project resource, run real health checks, and retain immutable artifact references.",
       "Do not claim success from plans, comments, or simulated output.",
       "Finish with exactly one fenced project_delivery_build_json block using this strict shape:",
@@ -230,12 +333,12 @@ export function buildProjectDeliveryTaskPrompt(metadataValue) {
         schemaVersion: BUILD_SCHEMA_VERSION,
         summary: "What was built and verified.",
         commitSha: "full Git commit SHA",
-        resources: [{
-          id: "bound resource id",
+        resources: declaredResourceIds.map((id) => ({
+          id,
           revision: "immutable deployed revision",
           status: "deployed",
           url: "https://optional-health-url.example",
-        }],
+        })),
         healthChecks: [{
           name: "health check",
           status: "passed",
@@ -251,10 +354,13 @@ export function buildProjectDeliveryTaskPrompt(metadataValue) {
     ].filter(Boolean).join("\n\n");
   }
   if (stage === "deliver") {
+    const declaredResourceIds =
+      expectedAgentDeclaredResourceIds(metadata);
     return [
       "Prepare the final operational handoff for this Mission Control delivery.",
       goal ? `Project goal: ${goal}` : "",
       `Canonical Assurance Run: ${stringValue(metadata.assuranceRunId, 300)}`,
+      `Agent-declared delivered resources: ${JSON.stringify(declaredResourceIds)}. Existing resources, pinned versions, source assets, and Guardrails are verified independently by the control plane.`,
       "Inspect the delivered resources and canonical evidence. Record deployment, operation, rollback, ownership, and residual-risk guidance.",
       "Finish with exactly one fenced project_delivery_handoff_json block using this strict shape:",
       "```project_delivery_handoff_json",
@@ -262,7 +368,7 @@ export function buildProjectDeliveryTaskPrompt(metadataValue) {
         schemaVersion: HANDOFF_SCHEMA_VERSION,
         summary: "Delivery summary.",
         assuranceRunId: stringValue(metadata.assuranceRunId, 300),
-        resources: stringList(metadata.resourceIds).map((id) => ({
+        resources: declaredResourceIds.map((id) => ({
           id,
           revision: "immutable delivered revision",
           status: "deployed",

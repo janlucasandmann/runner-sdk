@@ -1127,6 +1127,202 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         display: flex;
         flex-direction: column;
         gap: 14px;
+        transition: width 220ms ease, max-width 220ms ease;
+      }
+
+      .playground-project-workspace-inner.is-backlog-work-view {
+        width: min(100%, var(--playground-thread-content-max-width));
+        max-width: var(--playground-thread-content-max-width);
+      }
+
+      .playground-project-workspace-inner.is-board-work-view {
+        width: min(100%, var(--playground-centered-page-max-width));
+        max-width: var(--playground-centered-page-max-width);
+      }
+
+      .playground-content-body.is-tasks-page
+        .playground-environments-page.playground-tasks-project-workspace
+        .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-activity {
+        padding: 0 !important;
+        gap: 0;
+      }
+
+      .playground-project-workspace-inner.is-activity-work-view {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        gap: 0;
+      }
+
+      .playground-project-activity-page,
+      .playground-project-workspace-inner.is-activity-work-view
+        > .playground-project-activity-page {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+      }
+
+      .playground-project-activity-page {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 100%;
+        background: #000;
+      }
+
+      .playground-project-activity-feed {
+        box-sizing: border-box;
+        display: flex;
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+        min-height: 360px;
+        padding: 0;
+      }
+
+      .playground-project-activity-feed-loading {
+        flex: 1 1 auto;
+        min-height: 220px;
+      }
+
+      .platform-activity-timeline.is-inspector.playground-project-activity-timeline {
+        flex: 1 1 auto;
+        width: 100%;
+        max-width: none;
+        height: auto;
+      }
+
+      .playground-project-activity-preview {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-width: 0;
+        gap: 28px;
+      }
+
+      .playground-project-activity-preview-heading {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        gap: 12px;
+      }
+
+      .playground-project-activity-preview-avatar {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        overflow: hidden;
+        border-radius: 50%;
+      }
+
+      .playground-project-activity-preview-avatar > * {
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      .playground-project-activity-preview-avatar img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: inherit;
+      }
+
+      .playground-project-activity-preview-heading-copy {
+        min-width: 0;
+      }
+
+      .playground-project-activity-preview-summary {
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.45;
+      }
+
+      .playground-project-activity-preview-summary strong {
+        color: #fff;
+        font-weight: 400;
+      }
+
+      .playground-project-activity-preview-time {
+        display: block;
+        margin-top: 3px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        line-height: 1.4;
+      }
+
+      .playground-project-activity-preview-details {
+        display: grid;
+        grid-template-columns: minmax(96px, 140px) minmax(0, 1fr);
+        align-items: center;
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+      }
+
+      .playground-project-activity-preview-row {
+        display: contents;
+      }
+
+      .playground-project-activity-preview-row dt,
+      .playground-project-activity-preview-row dd {
+        box-sizing: border-box;
+        min-width: 0;
+        margin: 0;
+        padding: 11px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .playground-project-activity-preview-row dt {
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-project-activity-preview-row dd {
+        overflow-wrap: anywhere;
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .playground-project-activity-preview-row.is-code dd {
+        color: rgba(255, 255, 255, 0.58);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 11px;
+      }
+
+      .playground-project-activity-preview-ticket {
+        max-width: 100%;
+        padding: 0;
+        overflow: hidden;
+        border: 0;
+        color: #fff;
+        background: transparent;
+        font: inherit;
+        text-align: left;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .playground-project-activity-preview-ticket:hover,
+      .playground-project-activity-preview-ticket:focus-visible {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 760px) {
+        .playground-project-activity-feed {
+          padding: 0;
+        }
+
+        .playground-project-activity-preview-details {
+          grid-template-columns: 92px minmax(0, 1fr);
+        }
+      }
+
+      .playground-project-workspace-inner.is-backlog-work-view > .playground-tasks-backlog-view {
+        width: 100%;
+        max-width: 100%;
       }
 
       .playground-project-workspace-inner > .playground-tasks-view-section,
@@ -1149,6 +1345,11 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
 
       .playground-tasks-backlog-header.is-board-list-header {
         gap: 0;
+      }
+
+      .playground-project-work-view-tabs.platform-detail-tab-bar {
+        width: auto;
+        flex: 0 0 auto;
       }
 
       .playground-tasks-backlog-header.is-backlog-list-header

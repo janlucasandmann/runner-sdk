@@ -405,6 +405,39 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           error: "",
           items: [],
         });
+        const [projectOverviewTaskActivityFilterMode, setProjectOverviewTaskActivityFilterMode] = useState("all");
+        const [projectOverviewTaskActivityToolbarPopover, setProjectOverviewTaskActivityToolbarPopover] = useState("");
+        const projectOverviewTaskActivityFilterPopupRef = useRef(null);
+        const projectOverviewTaskActivityFilterSurfaceRef = useRef(null);
+        useEffect(() => {
+          if (projectOverviewTaskActivityToolbarPopover !== "filter") {
+            return undefined;
+          }
+          const handleProjectActivityFilterPointerDown = (event) => {
+            const target = event.target instanceof Node ? event.target : null;
+            if (
+              target
+              && (
+                projectOverviewTaskActivityFilterPopupRef.current?.contains(target)
+                || projectOverviewTaskActivityFilterSurfaceRef.current?.contains(target)
+              )
+            ) {
+              return;
+            }
+            setProjectOverviewTaskActivityToolbarPopover("");
+          };
+          const handleProjectActivityFilterKeyDown = (event) => {
+            if (event.key === "Escape") {
+              setProjectOverviewTaskActivityToolbarPopover("");
+            }
+          };
+          document.addEventListener("pointerdown", handleProjectActivityFilterPointerDown);
+          window.addEventListener("keydown", handleProjectActivityFilterKeyDown);
+          return () => {
+            document.removeEventListener("pointerdown", handleProjectActivityFilterPointerDown);
+            window.removeEventListener("keydown", handleProjectActivityFilterKeyDown);
+          };
+        }, [projectOverviewTaskActivityToolbarPopover]);
         const [projectOverviewThreadRecords, setProjectOverviewThreadRecords] = useState([]);
         const [projectOverviewCostSummaryState, setProjectOverviewCostSummaryState] = useState({
           status: "idle",
@@ -463,9 +496,14 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        });
 	        const [projectFullAutoState, setProjectFullAutoState] = useState({
 	          projectId: "",
-	          enabled: false,
-	          runningTaskId: "",
+	          runId: "",
+	          status: "idle",
+	          steps: [],
 	          startedCount: 0,
+	          completedCount: 0,
+	          failedCount: 0,
+	          isLoading: false,
+	          isSaving: false,
 	          error: "",
 	        });
         const isCalendarContext = isStandaloneCalendarMode || taskView === "calendar";
@@ -624,6 +662,14 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           execution: null,
           error: "",
         });
+        const [missionControlDeliveryActionState, setMissionControlDeliveryActionState] = useState({
+          action: "",
+          error: "",
+        });
+        const [
+          missionControlDeliveryApprovalOpen,
+          setMissionControlDeliveryApprovalOpen,
+        ] = useState(false);
         const missionControlAgentSavePromiseRef = useRef(null);
         const [missionControlSetupOpen, setMissionControlSetupOpen] = useState(false);
         const [missionControlSetupVisible, setMissionControlSetupVisible] = useState(false);
@@ -1091,6 +1137,11 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         useEffect(() => {
           setMissionControlSetupOpen(false);
           setMissionControlAgentError("");
+          setMissionControlDeliveryApprovalOpen(false);
+          setMissionControlDeliveryActionState({
+            action: "",
+            error: "",
+          });
         }, [selectedProjectId]);
 
         useEffect(() => {

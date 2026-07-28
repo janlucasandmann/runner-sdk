@@ -129,8 +129,6 @@ describe("resource overview pages", () => {
       "tags",
       () => (
         <TagsOverviewPage
-          mode="tags"
-          onModeChange={vi.fn()}
           tagRows={[
             {
               id: "tag-1",
@@ -223,7 +221,7 @@ describe("resource overview pages", () => {
     }
     expect(
       container.querySelector(
-        ".platform-data-table.is-fill-layout.is-minimalistic-ui",
+        `.platform-data-table.is-fill-layout.${isGuideOverview ? "is-catalog-ui" : "is-minimalistic-ui"}`,
       ),
     ).not.toBeNull();
     if (isGuideOverview) {
@@ -235,22 +233,41 @@ describe("resource overview pages", () => {
         screen.getByRole("navigation", { name: /pagination/ }),
       ).not.toBeNull();
     }
-    if (kind === "agents" || kind === "tags" || kind === "skills") {
+    if (kind === "agents") {
       const tabBar = screen.getByRole("navigation", {
-        name:
-          kind === "agents"
-            ? "Agent categories"
-            : kind === "tags"
-              ? "Tag and plugin categories"
-              : "Skill categories",
+        name: "Agent categories",
       });
       expect(tabBar.getAttribute("data-platform-detail-tab-bar-variant")).toBe(
         "minimal",
       );
       expect(
         screen.queryByRole("heading", {
-          name: `All ${kind === "agents" ? "Agents" : kind === "tags" ? "Tags" : "Skills"}`,
+          name: "All Agents",
           level: 2,
+        }),
+      ).toBeNull();
+    } else if (kind === "tags") {
+      expect(
+        screen.getByRole("heading", {
+          name: "Connect agents everywhere",
+          level: 1,
+        }),
+      ).not.toBeNull();
+      expect(
+        screen.queryByRole("navigation", {
+          name: "Tag and plugin categories",
+        }),
+      ).toBeNull();
+    } else if (kind === "skills") {
+      expect(
+        screen.getByRole("heading", {
+          name: "Give agents reusable expertise",
+          level: 1,
+        }),
+      ).not.toBeNull();
+      expect(
+        screen.queryByRole("navigation", {
+          name: "Skill categories",
         }),
       ).toBeNull();
     } else {
@@ -388,7 +405,7 @@ describe("resource overview pages", () => {
     expect(container.querySelectorAll(".platform-label")).toHaveLength(4);
   });
 
-  it("renders the Tags guide, compact icons, and shared connection labels", async () => {
+  it("renders Tags and Plugins in one grouped catalog without selection", async () => {
     const user = userEvent.setup();
     const onOpen = vi.fn();
     const onOpenPlugin = vi.fn();
@@ -403,6 +420,13 @@ describe("resource overview pages", () => {
       {
         id: "telegram",
         name: "Telegram",
+        connected: false,
+        identityLabel: "Not connected",
+        providerLabel: "Channel",
+      },
+      {
+        id: "discord",
+        name: "Discord",
         connected: false,
         identityLabel: "Not connected",
         providerLabel: "Channel",
@@ -424,6 +448,13 @@ describe("resource overview pages", () => {
         providerLabel: "Knowledge",
       },
       {
+        id: "gitlab",
+        name: "GitLab",
+        connected: false,
+        identityLabel: "Not connected",
+        providerLabel: "Source control",
+      },
+      {
         id: "google-drive",
         name: "Google Drive",
         connected: false,
@@ -433,8 +464,6 @@ describe("resource overview pages", () => {
     ];
     const { container } = render(
       <TagsOverviewPage
-        mode="tags"
-        onModeChange={vi.fn()}
         tagRows={rows}
         pluginRows={pluginRows}
         period="month"
@@ -449,15 +478,64 @@ describe("resource overview pages", () => {
       container.querySelectorAll(
         ".resource-overview-identity__visual.is-connection.is-size-compact",
       ),
-    ).toHaveLength(2);
+    ).toHaveLength(3);
     expect(
-      screen.getByText("Connected").getAttribute("data-platform-label-variant"),
+      within(screen.getByRole("row", { name: "Email" }))
+        .getByText("Connected")
+        .getAttribute("data-platform-label-variant"),
     ).toBe("green");
     expect(
-      screen
+      within(screen.getByRole("row", { name: "Telegram" }))
         .getByText("Not Connected")
         .getAttribute("data-platform-label-variant"),
     ).toBe("gray");
+    expect(
+      within(screen.getByRole("row", { name: "GitHub" }))
+        .getByText("Connected")
+        .getAttribute("data-platform-label-variant"),
+    ).toBe("green");
+    expect(
+      within(screen.getByRole("row", { name: "Notion" }))
+        .getByText("Not Connected")
+        .getAttribute("data-platform-label-variant"),
+    ).toBe("gray");
+    expect(
+      container.querySelectorAll(
+        ".resource-overview-identity__visual.is-plugin",
+      ),
+    ).toHaveLength(4);
+    expect(
+      screen
+        .getByRole("row", { name: "GitLab" })
+        .querySelector(
+          ".resource-overview-identity__visual.is-plugin.is-gitlab",
+        ),
+    ).not.toBeNull();
+    expect(
+      screen
+        .getByRole("row", { name: "Email" })
+        .querySelector(".resource-overview-identity__visual.is-plugin"),
+    ).toBeNull();
+    expect(
+      container.querySelectorAll(
+        ".resource-overview-identity__visual.is-tag",
+      ),
+    ).toHaveLength(3);
+    expect(
+      screen
+        .getByRole("row", { name: "Discord" })
+        .querySelector(".resource-overview-identity__visual.is-discord"),
+    ).not.toBeNull();
+    expect(
+      screen
+        .getByRole("row", { name: "Email" })
+        .querySelector(".resource-overview-identity__visual.is-email"),
+    ).not.toBeNull();
+    expect(
+      screen
+        .getByRole("row", { name: "Telegram" })
+        .querySelector(".resource-overview-identity__visual.is-telegram"),
+    ).not.toBeNull();
     expect(screen.queryByRole("button", { name: "New Custom Tag" })).toBeNull();
     expect(
       container.querySelector("[data-platform-page-hero='true']"),
@@ -469,108 +547,101 @@ describe("resource overview pages", () => {
       }),
     ).not.toBeNull();
     expect(
-      screen.getByRole("heading", { name: "Tags", level: 2 }),
-    ).not.toBeNull();
-    expect(
-      screen.getByRole("heading", { name: "Plugins", level: 2 }),
-    ).not.toBeNull();
-    expect(
       container.querySelectorAll(
         ".platform-ui-card.is-feature[data-platform-ui-card-variant='feature']",
       ),
-    ).toHaveLength(2);
+    ).toHaveLength(0);
     expect(
       container.querySelector(".platform-data-table__pagination"),
     ).toBeNull();
+    const catalogTable = container.querySelector(
+      ".platform-data-table.is-catalog-ui",
+    );
+    const catalogToolbar = catalogTable?.querySelector(
+      ".platform-data-table__toolbar",
+    );
+    const catalogLeading = catalogTable?.querySelector(
+      ".platform-data-table__toolbar-leading",
+    );
+    const catalogControls = catalogTable?.querySelector(
+      ".platform-data-table__toolbar-controls",
+    );
+    const table = screen.getByRole("table", { name: "Tags and Plugins" });
+    const search = screen.getByRole("searchbox", {
+      name: "Search tags and plugins",
+    });
+    const guide = screen.getByRole("region", {
+      name: "Get started with Tags and Plugins",
+    });
+    expect(catalogTable).not.toBeNull();
     expect(
-      screen.getByText(
+      catalogTable?.parentElement?.classList.contains(
+        "has-full-bleed-table",
+      ),
+    ).toBe(true);
+    expect(catalogToolbar?.classList.contains("has-title-line")).toBe(false);
+    expect(catalogLeading).toBeNull();
+    expect(catalogControls?.contains(search)).toBe(true);
+    expect(screen.queryByRole("button", { name: "Filter" })).toBeNull();
+    expect(
+      within(guide).queryByRole("navigation", {
+        name: "Tag and plugin categories",
+      }),
+    ).toBeNull();
+    expect(
+      within(guide).queryByText(
         "Use Tags to invoke agents from communication channels and Plugins to connect the external services agents use while working.",
       ),
-    ).not.toBeNull();
+    ).toBeNull();
+    expect(within(table).queryByRole("checkbox")).toBeNull();
     expect(
-      screen.getByText(/Give agents identities in communication channels/),
-    ).not.toBeNull();
+      within(table).queryByRole("columnheader", { name: /Provider/ }),
+    ).toBeNull();
     expect(
-      screen.getByText(
-        /Connect repositories, knowledge bases, and cloud storage/,
-      ),
-    ).not.toBeNull();
+      within(table)
+        .getAllByRole("button", { name: /Collapse (Plugins|Tags)/ })
+        .map((button) => button.getAttribute("aria-label")),
+    ).toEqual(["Collapse Plugins", "Collapse Tags"]);
+    expect(
+      table.querySelector(".platform-data-table__group-indicator"),
+    ).toBeNull();
+    const githubRow = screen.getByRole("row", { name: "GitHub" });
+    expect(githubRow).not.toBeNull();
+    expect(githubRow.parentElement?.classList.contains("is-grouped-row")).toBe(
+      true,
+    );
+    expect(
+      githubRow.parentElement?.classList.contains("has-group-indicator"),
+    ).toBe(false);
+    expect(screen.getByRole("row", { name: "Email" })).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "Explore Email" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Explore GitHub" })).toBeNull();
 
-    await user.click(screen.getByRole("button", { name: "Explore Email" }));
-    expect(onOpen).toHaveBeenCalledWith(rows[0]);
-    await user.click(screen.getByRole("button", { name: "Explore GitHub" }));
+    await user.click(
+      within(table).getByRole("button", { name: "Collapse Plugins" }),
+    );
+    expect(screen.queryByRole("row", { name: "GitHub" })).toBeNull();
+    expect(screen.getByRole("row", { name: "Email" })).not.toBeNull();
+
+    await user.click(
+      within(table).getByRole("button", { name: "Expand Plugins" }),
+    );
+    await user.click(screen.getByRole("row", { name: "GitHub" }));
     expect(onOpenPlugin).toHaveBeenCalledWith(pluginRows[0]);
+    await user.click(screen.getByRole("row", { name: "Email" }));
+    expect(onOpen).toHaveBeenCalledWith(rows[0]);
   });
 
-  it("uses the shared minimal tab bar for tag and plugin modes", async () => {
-    const user = userEvent.setup();
-    const onModeChange = vi.fn();
-    const sharedProps = {
-      onModeChange,
-      tagRows: [
-        {
-          id: "email",
-          name: "Email",
-          connected: true,
-          identityLabel: "mail@example.com",
-          providerLabel: "Channel",
-        },
-      ],
-      pluginRows: [
-        {
-          id: "github",
-          name: "GitHub",
-          connected: true,
-          identityLabel: "computer-agents",
-          providerLabel: "Integration",
-        },
-      ],
-      period: "month" as const,
-      onPeriodChange: vi.fn(),
-      analytics,
-      onOpenTag: vi.fn(),
-      onOpenPlugin: vi.fn(),
-    };
-    const { rerender } = render(
-      <TagsOverviewPage mode="tags" {...sharedProps} />,
-    );
-
-    const tabBar = screen.getByRole("navigation", {
-      name: "Tag and plugin categories",
-    });
-    expect(tabBar.getAttribute("data-platform-detail-tab-bar-variant")).toBe(
-      "minimal",
-    );
-    expect(tabBar.classList.contains("has-divider")).toBe(false);
-    expect(
-      within(tabBar)
-        .getByRole("tab", { name: "Tags" })
-        .getAttribute("aria-selected"),
-    ).toBe("true");
-    expect(screen.getByText("Email")).not.toBeNull();
-    expect(screen.queryByText("GitHub")).toBeNull();
-    await user.click(within(tabBar).getByRole("tab", { name: "Plugins" }));
-    expect(onModeChange).toHaveBeenCalledWith("plugins");
-
-    rerender(<TagsOverviewPage mode="plugins" {...sharedProps} />);
-    expect(
-      within(tabBar)
-        .getByRole("tab", { name: "Plugins" })
-        .getAttribute("aria-selected"),
-    ).toBe("true");
-    expect(screen.getByText("GitHub")).not.toBeNull();
-    expect(screen.queryByText("Email")).toBeNull();
-    expect(screen.queryByRole("group", { name: "Plugin category" })).toBeNull();
-  });
-
-  it("renders the Skills guide and switches between system and custom skills", async () => {
+  it("renders Skills in one grouped full-screen catalog", async () => {
     const user = userEvent.setup();
     const onModeChange = vi.fn();
     const onCreate = vi.fn();
+    const onOpen = vi.fn();
     const rows = [
       {
-        id: "browser",
-        name: "Browser",
+        id: "computer_agents",
+        name: "Computer Agents Skill",
+        description: "Browse and interact with websites.",
         isActive: true,
         isCustom: false,
         updatedLabel: "System",
@@ -578,8 +649,11 @@ describe("resource overview pages", () => {
       {
         id: "audit",
         name: "Audit",
+        description: "Apply the organization audit workflow.",
         isActive: true,
         isCustom: true,
+        creatorName: "Jane Doe",
+        creatorAvatarUrl: "/img/people/jane.jpg",
         updatedLabel: "Today",
       },
     ];
@@ -589,13 +663,13 @@ describe("resource overview pages", () => {
       period: "month" as const,
       onPeriodChange: vi.fn(),
       analytics,
-      onOpen: vi.fn(),
+      onOpen,
       onCreate,
       onEdit: vi.fn(),
       onRename: vi.fn(),
       onDelete: vi.fn(),
     };
-    const { container, rerender } = render(
+    const { container } = render(
       <SkillsOverviewPage mode="system" {...sharedProps} />,
     );
 
@@ -606,34 +680,93 @@ describe("resource overview pages", () => {
       }),
     ).not.toBeNull();
     expect(
-      screen.getByRole("heading", { name: "System Skills", level: 2 }),
-    ).not.toBeNull();
-    expect(
-      screen.getByRole("heading", { name: "Custom Skills", level: 2 }),
-    ).not.toBeNull();
-    expect(
       container.querySelectorAll(
         ".platform-ui-card.is-feature[data-platform-ui-card-variant='feature']",
       ),
-    ).toHaveLength(2);
-    expect(screen.getByText("Browser")).not.toBeNull();
-    expect(screen.queryByText("Audit")).toBeNull();
-    expect(screen.getAllByText("1 skill")).toHaveLength(2);
+    ).toHaveLength(0);
+    expect(
+      screen.queryByText(
+        "Use maintained system skills or create custom guidance that gives agents repeatable workflows, tool knowledge, and execution standards.",
+      ),
+    ).toBeNull();
+    expect(screen.getByText("Computer Agents Skill")).not.toBeNull();
+    expect(screen.getByText("Audit")).not.toBeNull();
+    expect(screen.getByText("Browse and interact with websites.")).not.toBeNull();
+    expect(
+      container.querySelector(".platform-data-table.is-catalog-ui"),
+    ).not.toBeNull();
+    expect(
+      container
+        .querySelector(".platform-data-table.is-catalog-ui")
+        ?.parentElement?.classList.contains("has-full-bleed-table"),
+    ).toBe(true);
     expect(
       container.querySelector(".platform-data-table__pagination"),
     ).toBeNull();
+    expect(
+      screen.queryByRole("navigation", { name: "Skill categories" }),
+    ).toBeNull();
+    expect(screen.queryByRole("button", { name: "Filter" })).toBeNull();
+    const table = screen.getByRole("table", { name: "Skills" });
+    expect(within(table).queryByRole("checkbox")).toBeNull();
+    expect(
+      within(table).queryByRole("columnheader", { name: "Type" }),
+    ).toBeNull();
+    expect(
+      within(table).queryByRole("columnheader", { name: "Status" }),
+    ).toBeNull();
+    expect(
+      within(table).getByRole("columnheader", { name: "Creator" }),
+    ).not.toBeNull();
+    expect(
+      within(screen.getByRole("row", { name: "Computer Agents Skill" }))
+        .getByText("Computer Agents")
+        ?.closest(".resource-overview-identity")
+        ?.querySelector("img")
+        ?.getAttribute("src"),
+    ).toBe("/img/agent-profile-pics/ca-profilepic.jpg");
+    expect(
+      within(screen.getByRole("row", { name: "Audit" }))
+        .getByText("Jane Doe")
+        ?.closest(".resource-overview-identity")
+        ?.querySelector("img")
+        ?.getAttribute("src"),
+    ).toBe("/img/people/jane.jpg");
+    expect(
+      screen
+        .getByRole("row", { name: "Computer Agents Skill" })
+        .querySelector(
+          ".resource-overview-identity__visual.is-skill.is-computer-agents",
+        ),
+    ).not.toBeNull();
+    expect(
+      container.querySelectorAll(
+        ".resource-overview-identity__visual.is-skill",
+      ),
+    ).toHaveLength(2);
+    expect(
+      within(table)
+        .getAllByRole("button", {
+          name: /Collapse (System Skills|Custom Skills)/,
+        })
+        .map((button) => button.getAttribute("aria-label")),
+    ).toEqual(["Collapse System Skills", "Collapse Custom Skills"]);
 
-    const tabBar = screen.getByRole("navigation", { name: "Skill categories" });
     await user.click(
-      within(tabBar).getByRole("tab", { name: "Custom Skills" }),
+      within(table).getByRole("button", { name: "Collapse Custom Skills" }),
     );
-    expect(onModeChange).toHaveBeenCalledWith("custom");
-    await user.click(screen.getByRole("button", { name: "Create a Skill" }));
-    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("row", { name: "Audit" })).toBeNull();
+    expect(
+      screen.getByRole("row", { name: "Computer Agents Skill" }),
+    ).not.toBeNull();
 
-    rerender(<SkillsOverviewPage mode="custom" {...sharedProps} />);
-    expect(screen.getByText("Audit")).not.toBeNull();
-    expect(screen.queryByText("Browser")).toBeNull();
+    await user.click(
+      within(table).getByRole("button", { name: "Expand Custom Skills" }),
+    );
+    await user.click(screen.getByRole("row", { name: "Audit" }));
+    expect(onOpen).toHaveBeenCalledWith(rows[1]);
+    expect(onModeChange).not.toHaveBeenCalled();
+    expect(onCreate).not.toHaveBeenCalled();
   });
 
   it("routes period changes through the common selector", async () => {

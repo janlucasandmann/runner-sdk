@@ -189,7 +189,7 @@
           const [agentsHomeActiveCreationCommand, setAgentsHomeActiveCreationCommand] = useState("");
           const [agentListMode, setAgentListMode] = useState(() => {
             const initialSelectedAgent = agents.find((agent) => agent?.id === initialAgentId) || null;
-            return getPlaygroundAgentListMode(initialSelectedAgent);
+            return getPlaygroundAgentOverviewMode(initialSelectedAgent);
           });
           const [agentAnalyticsById, setAgentAnalyticsById] = useState({});
           const agentAnalyticsByIdRef = useRef(agentAnalyticsById);
@@ -356,7 +356,7 @@
                     ...current,
                     [savedAgent.id]: savedAgent,
                   }));
-                  setAgentListMode(getPlaygroundAgentListMode(savedAgent));
+                  setAgentListMode(getPlaygroundAgentOverviewMode(savedAgent));
                   if (shouldKeepAgentSelected) {
                     setSelectedAgentId(savedAgent.id);
                     setDraftAgent((current) => {
@@ -652,11 +652,14 @@
           }, [agentApiDefaultEnvironmentId, agentApiEnvironmentId, orderedAgentApiEnvironments]);
   
           const filteredOrderedAgents = useMemo(() => {
-            return orderedAgents.filter((agent) => (
-              getPlaygroundAgentListMode(agent) === agentListMode
-              && !isPlaygroundAgentCreatorAgent(agent)
-              && !isPlaygroundMissionControlAgent(agent)
-            ));
+            return orderedAgents.filter((agent) => {
+              if (agentListMode === "functional") {
+                return isPlaygroundFunctionalAgent(agent);
+              }
+              return getPlaygroundAgentListMode(agent) === agentListMode
+                && !isPlaygroundAgentCreatorAgent(agent)
+                && !isPlaygroundFunctionalAgent(agent);
+            });
           }, [agentListMode, orderedAgents]);
   
           const selectedAgentListPreview = useMemo(() => {
@@ -674,7 +677,9 @@
             return selectedAgentSnapshot;
           }, [draftAgent, selectedAgentId, selectedAgentSnapshot]);
   
-          const selectedAgentListPreviewMode = selectedAgentListPreview ? getPlaygroundAgentListMode(selectedAgentListPreview) : "agents";
+          const selectedAgentListPreviewMode = selectedAgentListPreview
+            ? getPlaygroundAgentOverviewMode(selectedAgentListPreview)
+            : "agents";
   
           const displayAgents = useMemo(() => {
             const items = [...filteredOrderedAgents];
@@ -695,14 +700,28 @@
             return items;
           }, [agentListMode, filteredOrderedAgents, selectedAgentListPreview, selectedAgentListPreviewMode]);
           const selectedResourcesDetailTitle = useMemo(() => {
+            const fallbackTitle = agentListMode === "teams"
+              ? "Squad"
+              : agentListMode === "functional"
+                ? "Functional Agent"
+                : "Agent";
             if (selectedAgentId) {
-              return String(draftAgent?.name || selectedAgentSnapshot?.name || (agentListMode === "teams" ? "Squad" : "Agent")).trim()
-                || (agentListMode === "teams" ? "Squad" : "Agent");
+              return String(draftAgent?.name || selectedAgentSnapshot?.name || fallbackTitle).trim()
+                || fallbackTitle;
             }
-            return agentListMode === "teams" ? "Squad" : "Agent";
+            return fallbackTitle;
           }, [agentListMode, draftAgent?.name, selectedAgentId, selectedAgentSnapshot?.name]);
-  
+
           const groupedDisplayAgents = useMemo(() => {
+            if (agentListMode === "functional") {
+              return displayAgents.length > 0
+                ? [{
+                    key: "functional",
+                    title: "Functional Agents",
+                    items: displayAgents,
+                  }]
+                : [];
+            }
             const systemItems = [];
             const customItems = [];
             displayAgents.forEach((agent) => {
@@ -757,7 +776,7 @@
             draftAgent
             && (
               draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID
-              || (draftAgent.isSystem !== true && draftAgent.isDefault !== true)
+              || canVersionPlaygroundAgent(draftAgent)
             )
           );
           function getAgentMetadataRecord(agentRecord) {
@@ -1494,9 +1513,7 @@
             && !agentCreationSetupOpen
             && draftAgent?.id
             && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
-            && !draftAgent.isSystem
-            && !draftAgent.isDefault
-            && !isPlaygroundDefaultAgentConfigurationLocked(draftAgent)
+            && canVersionPlaygroundAgent(draftAgent)
           );
   
           useLayoutEffect(() => {
@@ -3572,7 +3589,7 @@
                 || null;
   
               if (focusedAgent) {
-                setAgentListMode(getPlaygroundAgentListMode(focusedAgent));
+                setAgentListMode(getPlaygroundAgentOverviewMode(focusedAgent));
               }
               setIsHomeViewActive(false);
               setAgentCreationSetupOpen(false);
@@ -3725,7 +3742,10 @@
               lastInitializedAgentSelectionRef.current = normalizedSelectedAgentId;
               resetEditorAuxiliaryState();
             }
-            if (seedAgent?.isSystem || seedAgent?.isDefault) {
+            if (
+              (seedAgent?.isSystem || seedAgent?.isDefault)
+              && !isPlaygroundFunctionalAgent(seedAgent)
+            ) {
               setAgentAssistantOpen(false);
             }
             const normalizedSeedAgent = seedAgent ? normalizePlaygroundAgentRecord(seedAgent) : null;
@@ -3743,10 +3763,8 @@
               return;
             }
             if (
-              draftAgent.isSystem !== true
-              && draftAgent.isDefault !== true
+              canVersionPlaygroundAgent(draftAgent)
               && !agentCreationSetupOpen
-              && !isPlaygroundDefaultAgentConfigurationLocked(draftAgent)
             ) {
               return;
             }

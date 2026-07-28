@@ -27463,8 +27463,24 @@
           grid-template-columns: minmax(90px, 0.85fr) minmax(0, 1.35fr);
         }
   
-        .playground-agents-detail-sidebar.playground-project-overview-sidebar {
+        .playground-ticket-detail-sidebar.playground-agents-detail-sidebar.playground-project-overview-sidebar {
+          position: sticky;
+          top: 24px;
+          z-index: 10;
+          align-self: start;
+          height: fit-content;
+          max-height: none;
           overflow: visible;
+        }
+
+        @media (max-width: 1180px) {
+          .playground-ticket-detail-sidebar.playground-agents-detail-sidebar.playground-project-overview-sidebar {
+            position: static;
+            top: auto;
+            z-index: auto;
+            height: auto;
+            max-height: none;
+          }
         }
   
         .playground-agents-detail-sidebar-controls {
@@ -30195,6 +30211,15 @@
           width: 272px;
           min-width: 272px;
         }
+
+        .playground-tasks-toolbar-popup-shell .playground-tags-plugins-title-menu {
+          top: calc(100% + 6px);
+          right: auto;
+          left: 0;
+          width: 220px;
+          min-width: 220px;
+          transform-origin: top left;
+        }
   
         .playground-tasks-toolbar-popup-shell .playground-tasks-release-picker-menu {
           width: min(360px, calc(100vw - 24px));
@@ -32833,4 +32858,118 @@
   __PLATFORM_COMPATIBILITY_BINDING_058__
   __PLATFORM_COMPATIBILITY_BINDING_059__
   __PLATFORM_COMPATIBILITY_BINDING_060__
+
+        .playground-tag-plugin-detail-page {
+          --resource-detail-section-gap: 42px;
+        }
+
+        .playground-tag-plugin-detail-content,
+        .playground-tag-plugin-settings-list,
+        .playground-tag-plugin-settings-section {
+          min-width: 0;
+        }
+
+        .playground-tag-plugin-detail-header-actions {
+          display: inline-flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 8px;
+        }
+
+        .playground-tag-plugin-settings-list.platform-settings-section-list {
+          gap: 42px;
+        }
+
+        .playground-tag-plugin-capability-grid,
+        .playground-plugin-detail-tutorial-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+        }
+
+        .playground-tag-plugin-capability-card.platform-ui-card,
+        .playground-tag-plugin-setup-card.platform-ui-card {
+          min-height: 0;
+          padding: 18px;
+        }
+
+        .playground-tag-plugin-capability-icon {
+          width: 30px;
+          height: 30px;
+          margin-bottom: 18px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: rgba(255, 255, 255, 0.72);
+        }
+
+        .playground-tag-plugin-capability-title {
+          color: #fff;
+          font-size: 14px;
+          line-height: 1.35;
+          font-weight: 400;
+        }
+
+        .playground-tag-plugin-capability-description {
+          margin-top: 8px;
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 12px;
+          line-height: 1.55;
+          font-weight: 400;
+        }
+
+        .playground-tag-plugin-permission-card.platform-ui-card {
+          padding: 2px 18px;
+        }
+
+        .playground-tag-plugin-detail-page .playground-plugin-detail-permission-row {
+          padding: 14px 0;
+        }
+
+        .playground-tag-plugin-detail-page .playground-plugin-detail-permission-row + .playground-plugin-detail-permission-row {
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .playground-tag-plugin-sidebar-link {
+          min-width: 0;
+          max-width: 100%;
+          margin-left: auto;
+        }
+
+        .playground-tags-detail-environment-selector-label {
+          min-width: 0;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .playground-tags-detail-environment-selector-label > span {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .playground-tags-detail-environment-selector-trigger.platform-selector__trigger {
+          min-height: 28px;
+          padding-left: 0;
+          padding-right: 0;
+          border: 0;
+          background: transparent;
+        }
+
+        .playground-tags-detail-environment-selector-popup.platform-selector__popup {
+          width: min(280px, calc(100vw - 32px));
+        }
+
+        .playground-tags-detail-environment-selector-header {
+          padding: 10px;
+        }
+
+        @media (max-width: 760px) {
+          .playground-tag-plugin-capability-grid,
+          .playground-plugin-detail-tutorial-grid {
+            grid-template-columns: minmax(0, 1fr);
+          }
+        }
       

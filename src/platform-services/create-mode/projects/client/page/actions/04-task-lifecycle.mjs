@@ -89,62 +89,18 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
           };
         }
 
-        async function alignMissionControlAgentModel(agentRecord) {
-          const normalizedAgent = normalizePlaygroundAgentRecord(agentRecord);
-          if (!normalizedAgent?.id || normalizedAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
-            return normalizedAgent;
-          }
-
-          const desiredModelId = resolvePlaygroundMissionControlAgentModelId(PLAYGROUND_AGENT_MODEL_OPTIONS, subscriptionTierId);
-          if (!desiredModelId || normalizedAgent.model === desiredModelId) {
-            return normalizedAgent;
-          }
-
-          try {
-            const payload = buildMissionControlAgentPayload({
-              ...normalizedAgent,
-              model: desiredModelId,
-            }, PLAYGROUND_AGENT_MODEL_OPTIONS, subscriptionTierId);
-            const response = await fetch(backendUrl + "/agents/" + encodeURIComponent(normalizedAgent.id), {
-              method: "PATCH",
-              headers: {
-                ...requestHeaders,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(payload),
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to update Mission Control.");
-            }
-            return normalizePlaygroundAgentRecord(getPlaygroundAgentResponseRecord(data) || {
-              ...normalizedAgent,
-              ...payload,
-              id: normalizedAgent.id,
-              updatedAt: new Date().toISOString(),
-            });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to update Mission Control.";
-            if (!isPlaygroundPaidModelSubscriptionError(errorMessage)) {
-              console.warn("Failed to align Mission Control model", error);
-            }
-            return normalizedAgent;
-          }
-        }
-
         async function ensureMissionControlAgent() {
           const existingLocalAgent = missionControlAgent?.id && missionControlAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
             ? normalizePlaygroundAgentRecord(missionControlAgent)
             : null;
           if (existingLocalAgent?.id) {
-            const alignedAgent = await alignMissionControlAgentModel(existingLocalAgent);
-            setMissionControlAgent(alignedAgent);
-            return alignedAgent;
+            setMissionControlAgent(existingLocalAgent);
+            return existingLocalAgent;
           }
 
           const existingPropAgent = (Array.isArray(agents) ? agents : []).find((agent) => isPlaygroundMissionControlAgent(agent)) || null;
           if (existingPropAgent?.id && existingPropAgent.id !== PLAYGROUND_AGENT_DRAFT_ID) {
-            const normalizedExistingAgent = await alignMissionControlAgentModel(existingPropAgent);
+            const normalizedExistingAgent = normalizePlaygroundAgentRecord(existingPropAgent);
             setMissionControlAgent(normalizedExistingAgent);
             setMissionControlAgentError("");
             return normalizedExistingAgent;
@@ -170,7 +126,7 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
             } catch {}
 
             if (existingRemoteAgent?.id && existingRemoteAgent.id !== PLAYGROUND_AGENT_DRAFT_ID) {
-              const normalizedExistingAgent = await alignMissionControlAgentModel(existingRemoteAgent);
+              const normalizedExistingAgent = normalizePlaygroundAgentRecord(existingRemoteAgent);
               setMissionControlAgent(normalizedExistingAgent);
               return normalizedExistingAgent;
             }

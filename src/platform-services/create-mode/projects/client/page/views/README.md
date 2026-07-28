@@ -12,6 +12,8 @@ This directory contains focused view renderers for the Projects service in Creat
 - [`02-project-details-and-calendar.mjs`](02-project-details-and-calendar.mjs) — Focused implementation of 02 Project Details And Calendar.
 - [`03-overview-and-task-previews.mjs`](03-overview-and-task-previews.mjs) — Focused implementation of 03 Overview And Task Previews.
 - [`04-task-detail-and-modals.mjs`](04-task-detail-and-modals.mjs) — Focused implementation of 04 Task Detail And Modals.
+- [`project-activity-filter.mjs`](project-activity-filter.mjs) — Project activity action groups, matching, and the shared minimal filter control.
+- [`project-activity-list.mjs`](project-activity-list.mjs) — Compact project activity list sentences and ticket identifier normalization.
 
 ## Working in this directory
 

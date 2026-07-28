@@ -23,10 +23,12 @@ describe("runner voice realtime protocol", () => {
       threadId: " thread_1 ",
       environmentId: " env_1 ",
       agentName: " Reviewer ",
+      communicatorMode: true,
     })).toEqual({
       threadId: "thread_1",
       environmentId: "env_1",
       title: "Voice session with Reviewer",
+      communicatorMode: true,
     });
     expect(readRunnerVoiceSessionConnection({
       voiceSession: { id: "voice_1", threadId: "thread_1" },
@@ -35,11 +37,21 @@ describe("runner voice realtime protocol", () => {
         websocketProtocol: "realtime",
         sessionUpdate: { session: {} },
       },
+      communicator: {
+        enabled: true,
+        groundingUrl: "/voice-agents/sessions/voice_1/grounding",
+        refreshIntervalMs: 7000,
+      },
     })).toMatchObject({
       sessionId: "voice_1",
       threadId: "thread_1",
       realtimeUrl: "wss://voice.example.test",
       websocketProtocol: "realtime",
+      communicator: {
+        enabled: true,
+        groundingUrl: "/voice-agents/sessions/voice_1/grounding",
+        refreshIntervalMs: 7000,
+      },
     });
     expect(() => readRunnerVoiceSessionConnection({})).toThrow(
       "Voice session was created without realtime credentials.",

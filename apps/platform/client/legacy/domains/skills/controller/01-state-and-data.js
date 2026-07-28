@@ -1,4 +1,4 @@
-        function PlaygroundSkillsPage({
+	        function PlaygroundSkillsPage({
           skills,
           fetchSkills,
           backendUrl,
@@ -7,38 +7,26 @@
           projectId,
           apiKey,
           upstreamUrl,
+          currentUserId = "",
+          currentUserName = "",
+          currentUserEmail = "",
+          currentUserAvatarUrl = "",
           topNavActionsPortalId,
           onToolsSkillsHeaderChange,
           backRequestToken,
           openSkillRequest = null,
           enabledSkillIds = [],
           onSkillsChange = null,
-        }) {
-          const searchPopupInputRef = useRef(null);
+	          workspaceTeams = [],
+	        }) {
+	          const PLAYGROUND_CUSTOM_SKILL_DRAFT_ID = "__custom_skill_draft__";
+	          const searchPopupInputRef = useRef(null);
           const skillCodeFileInputRef = useRef(null);
-          const skillComposerCodeFileInputRef = useRef(null);
           const skillActionsPopoverRef = useRef(null);
           const skillDetailIconPickerRef = useRef(null);
-          const skillDeepResearchModelPopoverRef = useRef(null);
-          const skillDeepResearchModelTriggerRef = useRef(null);
-          const skillImageGenerationModelPopoverRef = useRef(null);
-          const skillImageGenerationModelTriggerRef = useRef(null);
-          const skillImageGenerationQualityPopoverRef = useRef(null);
-          const skillImageGenerationQualityTriggerRef = useRef(null);
-          const skillVideoGenerationModelPopoverRef = useRef(null);
-          const skillVideoGenerationModelTriggerRef = useRef(null);
           const skillRenameInputRef = useRef(null);
           const skillEditTitleInputRef = useRef(null);
           const skillEditDescriptionTextareaRef = useRef(null);
-          const skillComposerDescriptionTextareaRef = useRef(null);
-          function buildPlaygroundDefaultSkillComposerDraft() {
-            return {
-              name: "New Skill",
-              description: "",
-              icon: getPlaygroundSkillIconId("code"),
-              codeFiles: [],
-            };
-          }
           const [toolbarPopover, setToolbarPopover] = useState("");
           const [searchPopupQuery, setSearchPopupQuery] = useState("");
           const [skillListMode, setSkillListMode] = useState("system");
@@ -56,16 +44,24 @@
           const [skillsLoading, setSkillsLoading] = useState(false);
           const [skillsLoaded, setSkillsLoaded] = useState(false);
           const [skillsError, setSkillsError] = useState("");
-          const [skillComposerOpen, setSkillComposerOpen] = useState(false);
-          const [skillComposerDraft, setSkillComposerDraft] = useState(() => buildPlaygroundDefaultSkillComposerDraft());
-          const [skillComposerSaveState, setSkillComposerSaveState] = useState({
-            isSaving: false,
-            error: "",
-          });
-          const [topNavActionsContainer, setTopNavActionsContainer] = useState(null);
+	          const [topNavActionsContainer, setTopNavActionsContainer] = useState(null);
           const [skillsPageMode, setSkillsPageMode] = useState("overview");
           const [skillsOverviewChartTimescale, setSkillsOverviewChartTimescale] = useState("month");
-          const [skillDetailTab, setSkillDetailTab] = useState("general");
+          const [skillDetailTab, setSkillDetailTab] = useState("code");
+          const [skillAccessPrincipalId, setSkillAccessPrincipalId] = useState("");
+          const [skillAccessRoleId, setSkillAccessRoleId] = useState("member");
+          const [skillAccessTeamMenuOpen, setSkillAccessTeamMenuOpen] = useState(false);
+          const [skillAccessSelectedTeamIds, setSkillAccessSelectedTeamIds] = useState(() => new Set());
+          const [skillVersionsOpen, setSkillVersionsOpen] = useState(false);
+          const [skillPublishMenuOpen, setSkillPublishMenuOpen] = useState(false);
+          const [skillVersionState, setSkillVersionState] = useState({
+            skillId: "",
+            status: "idle",
+            error: "",
+            versions: [],
+            currentVersionId: "",
+            publishedVersionId: "",
+          });
           const [SkillCodeEditorComponent, setSkillCodeEditorComponent] = useState(null);
           const [skillCodeEditorState, setSkillCodeEditorState] = useState({
             fileId: "",
@@ -75,10 +71,7 @@
             error: "",
             message: "",
           });
-          const [isSkillComposerDescriptionEditing, setIsSkillComposerDescriptionEditing] = useState(false);
-          const [skillComposerIconPickerOpen, setSkillComposerIconPickerOpen] = useState(false);
           const [skillDetailIconPickerOpen, setSkillDetailIconPickerOpen] = useState(false);
-          const [isSkillComposerCodeDragging, setIsSkillComposerCodeDragging] = useState(false);
           const [skillListActionMenuState, setSkillListActionMenuState] = useState(null);
           const [skillSaveState, setSkillSaveState] = useState({
             isSaving: false,
@@ -97,14 +90,6 @@
             examplePrompts: false,
           });
           const [isSkillCodeDragging, setIsSkillCodeDragging] = useState(false);
-          const [skillDeepResearchModelPopoverOpen, setSkillDeepResearchModelPopoverOpen] = useState(false);
-          const [skillDeepResearchDefaultModel, setSkillDeepResearchDefaultModel] = useState(() => getDemoDefaultDeepResearchModel(readDemoSettingsPlatformConfig()));
-          const [skillImageGenerationModelPopoverOpen, setSkillImageGenerationModelPopoverOpen] = useState(false);
-          const [skillImageGenerationDefaultModel, setSkillImageGenerationDefaultModel] = useState(() => getDemoDefaultImageGenerationModel(readDemoSettingsPlatformConfig()));
-          const [skillImageGenerationQualityPopoverOpen, setSkillImageGenerationQualityPopoverOpen] = useState(false);
-          const [skillImageGenerationDefaultQuality, setSkillImageGenerationDefaultQuality] = useState(() => getDemoDefaultImageGenerationQuality(readDemoSettingsPlatformConfig()));
-          const [skillVideoGenerationModelPopoverOpen, setSkillVideoGenerationModelPopoverOpen] = useState(false);
-          const [skillVideoGenerationDefaultModel, setSkillVideoGenerationDefaultModel] = useState(() => getDemoDefaultVideoGenerationModel(readDemoSettingsPlatformConfig()));
           const [skillEnvironmentFilePickerOpen, setSkillEnvironmentFilePickerOpen] = useState(false);
           const [skillEnvironmentFilePickerInventory, setSkillEnvironmentFilePickerInventory] = useState([]);
           const [skillEnvironmentFilePickerState, setSkillEnvironmentFilePickerState] = useState({
@@ -530,6 +515,21 @@
               .filter(Boolean);
           }
   
+          function readSkillCreatorString(sources, keys) {
+            for (const source of sources) {
+              if (!source || typeof source !== "object" || Array.isArray(source)) {
+                continue;
+              }
+              for (const key of keys) {
+                const value = source[key];
+                if (typeof value === "string" && value.trim()) {
+                  return value.trim();
+                }
+              }
+            }
+            return "";
+          }
+
           const normalizeSkillRecord = useCallback((skill) => {
             const rawSkillId = typeof skill?.id === "string" ? skill.id.trim() : "";
             const skillId = rawSkillId ? (PLAYGROUND_RUNNER_SKILL_ID_ALIASES[rawSkillId] || rawSkillId) : "";
@@ -537,10 +537,90 @@
               return null;
             }
   
-            const skillFamilyId = getPlaygroundSkillFamilyId(rawSkillId || skillId);
-            const meta = skillCatalogMetaById[skillFamilyId] || skillCatalogMetaById[skillId] || {};
-            const isSystemSkill = skill?.isSystem === true || skill?.isDefault === true;
-            const isCustomSkill = !isSystemSkill;
+	            const skillFamilyId = getPlaygroundSkillFamilyId(rawSkillId || skillId);
+	            const meta = skillCatalogMetaById[skillFamilyId] || skillCatalogMetaById[skillId] || {};
+	            const isSystemSkill = skill?.isSystem === true || skill?.isDefault === true;
+	            const isCustomSkill = !isSystemSkill;
+	            const isDraft = skill?.isDraft === true;
+              const skillMetadata = skill?.metadata
+                && typeof skill.metadata === "object"
+                && !Array.isArray(skill.metadata)
+                ? skill.metadata
+                : {};
+              const nestedCreator = skill?.creator
+                && typeof skill.creator === "object"
+                && !Array.isArray(skill.creator)
+                ? skill.creator
+                : skill?.createdBy
+                  && typeof skill.createdBy === "object"
+                  && !Array.isArray(skill.createdBy)
+                  ? skill.createdBy
+                  : skillMetadata.creator
+                    && typeof skillMetadata.creator === "object"
+                    && !Array.isArray(skillMetadata.creator)
+                    ? skillMetadata.creator
+                    : skillMetadata.createdBy
+                      && typeof skillMetadata.createdBy === "object"
+                      && !Array.isArray(skillMetadata.createdBy)
+                      ? skillMetadata.createdBy
+                      : {};
+              const explicitCreatorId =
+                readSkillCreatorString([nestedCreator], [
+                  "id",
+                  "userId",
+                  "user_id",
+                ])
+                || readSkillCreatorString([skill, skillMetadata], [
+                  "creatorId",
+                  "creator_id",
+                  "createdById",
+                  "created_by_id",
+                ]);
+              const normalizedCreatorId = explicitCreatorId.toLowerCase();
+              const currentCreatorIds = [
+                String(currentUserId || "").trim().toLowerCase(),
+                String(currentUserEmail || "").trim().toLowerCase(),
+              ].filter(Boolean);
+              const isCurrentUserCreator = !normalizedCreatorId
+                || currentCreatorIds.includes(normalizedCreatorId);
+              const explicitCreatorName =
+                readSkillCreatorString([nestedCreator], [
+                  "name",
+                  "displayName",
+                  "display_name",
+                ])
+                || readSkillCreatorString([skill, skillMetadata], [
+                  "creatorName",
+                  "creator_name",
+                  "createdByName",
+                  "created_by_name",
+                ]);
+              const explicitCreatorAvatarUrl =
+                readSkillCreatorString([nestedCreator], [
+                  "avatarUrl",
+                  "avatar_url",
+                  "photoUrl",
+                  "photoURL",
+                ])
+                || readSkillCreatorString([skill, skillMetadata], [
+                  "creatorAvatarUrl",
+                  "creator_avatar_url",
+                  "createdByAvatarUrl",
+                  "created_by_avatar_url",
+                ]);
+              const creatorName = isSystemSkill
+                ? "Computer Agents"
+                : explicitCreatorName
+                  || (isCurrentUserCreator
+                    ? String(currentUserName || currentUserEmail || "").trim()
+                    : explicitCreatorId)
+                  || "You";
+              const creatorAvatarUrl = isSystemSkill
+                ? COMPUTER_AGENTS_CREATOR_PROFILE_URL
+                : explicitCreatorAvatarUrl
+                  || (isCurrentUserCreator
+                    ? String(currentUserAvatarUrl || "").trim()
+                    : "");
   
             const rawMarkdown = typeof skill?.markdown === "string" ? skill.markdown : "";
             const parsedRawMarkdownSections = parsePlaygroundSkillMarkdownSections(rawMarkdown);
@@ -557,8 +637,10 @@
               projectId: typeof skill?.projectId === "string" && skill.projectId.trim()
                 ? skill.projectId.trim()
                 : String(projectId || "__runner_playground__").trim() || "__runner_playground__",
-              name: typeof skill?.name === "string" && skill.name.trim()
-                ? skill.name.trim()
+	              name: isDraft && typeof skill?.name === "string"
+	                ? skill.name
+	                : typeof skill?.name === "string" && skill.name.trim()
+	                ? skill.name.trim()
                 : typeof meta.name === "string" && meta.name.trim()
                   ? meta.name.trim()
                   : skillId,
@@ -574,15 +656,36 @@
                 : typeof meta.icon === "string"
                   ? meta.icon
                   : "",
-              isCustom: isCustomSkill,
-              isSystem: isSystemSkill,
+	              isCustom: isCustomSkill,
+	              isSystem: isSystemSkill,
+	              isDraft,
               statusLabel: isCustomSkill ? "Custom" : "System",
               category: typeof skill?.category === "string" && skill.category.trim() ? skill.category.trim() : "",
+              metadata: skillMetadata,
+              permissionSet: skill?.permissionSet && typeof skill.permissionSet === "object" && !Array.isArray(skill.permissionSet)
+                ? skill.permissionSet
+                : null,
+              accessControl: skill?.accessControl && typeof skill.accessControl === "object" && !Array.isArray(skill.accessControl)
+                ? skill.accessControl
+                : null,
+              creatorId: explicitCreatorId,
+              creatorName,
+              creatorAvatarUrl,
+              ownerId: typeof skill?.ownerId === "string" ? skill.ownerId : "",
+              currentVersionId: typeof skill?.currentVersionId === "string" ? skill.currentVersionId : "",
+              publishedVersionId: typeof skill?.publishedVersionId === "string" ? skill.publishedVersionId : "",
               isActive: skill?.isActive !== false,
               createdAt: typeof skill?.createdAt === "string" ? skill.createdAt : "",
               updatedAt: typeof skill?.updatedAt === "string" ? skill.updatedAt : "",
             };
-          }, [projectId, skillCatalogMetaById]);
+          }, [
+            currentUserAvatarUrl,
+            currentUserEmail,
+            currentUserId,
+            currentUserName,
+            projectId,
+            skillCatalogMetaById,
+          ]);
   
           const mergeSkillRecords = useCallback((baseSkill, nextSkill) => {
             const normalizedBase = normalizeSkillRecord(baseSkill);
@@ -605,9 +708,22 @@
               markdown: String(normalizedNext.markdown || "").trim() || normalizedBase.markdown,
               icon: String(normalizedNext.icon || "").trim() || normalizedBase.icon,
               category: String(normalizedNext.category || "").trim() || normalizedBase.category,
+              metadata: {
+                ...(normalizedBase.metadata || {}),
+                ...(normalizedNext.metadata || {}),
+              },
+              permissionSet: normalizedNext.permissionSet || normalizedBase.permissionSet || null,
+              accessControl: normalizedNext.accessControl || normalizedBase.accessControl || null,
+              creatorId: normalizedNext.creatorId || normalizedBase.creatorId,
+              creatorName: normalizedNext.creatorName || normalizedBase.creatorName,
+              creatorAvatarUrl: normalizedNext.creatorAvatarUrl || normalizedBase.creatorAvatarUrl,
+              ownerId: normalizedNext.ownerId || normalizedBase.ownerId,
+              currentVersionId: normalizedNext.currentVersionId || normalizedBase.currentVersionId,
+              publishedVersionId: normalizedNext.publishedVersionId || normalizedBase.publishedVersionId,
               codeFiles: normalizedNext.codeFiles.length > 0 ? normalizedNext.codeFiles : normalizedBase.codeFiles,
-              isCustom: normalizedBase.isCustom && normalizedNext.isCustom,
-              isSystem: normalizedBase.isSystem || normalizedNext.isSystem,
+	              isCustom: normalizedBase.isCustom && normalizedNext.isCustom,
+	              isSystem: normalizedBase.isSystem || normalizedNext.isSystem,
+	              isDraft: normalizedBase.isDraft || normalizedNext.isDraft,
               statusLabel: normalizedBase.isCustom && normalizedNext.isCustom ? "Custom" : "System",
               isActive: normalizedNext.isActive !== false,
               createdAt: normalizedNext.createdAt || normalizedBase.createdAt,
@@ -737,7 +853,13 @@
           }, [selectedSkill?.markdown]);
   
           useEffect(() => {
-            setSkillDetailTab("general");
+            setSkillDetailTab("code");
+            setSkillAccessPrincipalId("");
+            setSkillAccessRoleId("member");
+            setSkillAccessTeamMenuOpen(false);
+            setSkillAccessSelectedTeamIds(new Set());
+            setSkillVersionsOpen(false);
+            setSkillPublishMenuOpen(false);
           }, [selectedSkillId]);
   
           useEffect(() => {
@@ -748,7 +870,7 @@
           }, [loadSystemSkillSource, selectedSkill?.id, selectedSkill?.isSystem, selectedSkill?.systemFamilyId]);
   
           useEffect(() => {
-            if (skillDetailTab !== "sourceFiles") {
+            if (skillDetailTab !== "code") {
               return;
             }
             let cancelled = false;
@@ -768,6 +890,21 @@
               cancelled = true;
             };
           }, [skillDetailTab]);
+
+          useEffect(() => {
+	            if (!selectedSkill?.id || !selectedSkill.isCustom || selectedSkill.isDraft || skillsPageMode !== "detail") {
+              setSkillVersionState({
+                skillId: selectedSkill?.id || "",
+                status: "idle",
+                error: "",
+                versions: [],
+                currentVersionId: selectedSkill?.currentVersionId || "",
+                publishedVersionId: selectedSkill?.publishedVersionId || "",
+              });
+              return;
+            }
+            void loadSelectedSkillVersions(selectedSkill);
+	          }, [selectedSkill?.id, selectedSkill?.isCustom, selectedSkill?.isDraft, skillsPageMode]);
   
           useEffect(() => {
             const files = normalizeSkillCodeFiles(selectedSkill?.codeFiles);
@@ -864,10 +1001,21 @@
               const normalizedSkills = (Array.isArray(nextSkills) ? nextSkills : [])
                 .map((skill) => normalizeSkillRecord(skill))
                 .filter(Boolean);
-              setLoadedSkills(normalizedSkills);
+              setLoadedSkills((current) => {
+                const localDraft = current.find((skill) =>
+                  skill?.id === PLAYGROUND_CUSTOM_SKILL_DRAFT_ID && skill?.isDraft
+                );
+                return localDraft
+                  ? [localDraft, ...normalizedSkills.filter((skill) => skill.id !== localDraft.id)]
+                  : normalizedSkills;
+              });
               setSkillsLoaded(true);
             } catch (error) {
-              setLoadedSkills([]);
+              setLoadedSkills((current) =>
+                current.filter((skill) =>
+                  skill?.id === PLAYGROUND_CUSTOM_SKILL_DRAFT_ID && skill?.isDraft
+                )
+              );
               setSkillsLoaded(true);
               setSkillsError(error instanceof Error ? error.message : "Failed to load skills.");
             } finally {
@@ -918,13 +1066,6 @@
             const frame = window.requestAnimationFrame(updateContainer);
             return () => window.cancelAnimationFrame(frame);
           }, [topNavActionsPortalId]);
-  
-          useLayoutEffect(() => {
-            if (!skillComposerOpen) {
-              return;
-            }
-            resizeSkillTextarea(skillComposerDescriptionTextareaRef.current);
-          }, [skillComposerDraft.description, skillComposerOpen]);
   
           useEffect(() => {
             if (!skillActionsPopoverOpen) {
@@ -980,138 +1121,6 @@
             };
           }, [skillDetailIconPickerOpen]);
   
-          useEffect(() => {
-            if (!skillDeepResearchModelPopoverOpen) {
-              return undefined;
-            }
-  
-            function handleSkillDeepResearchModelPopoverPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (!target) {
-                return;
-              }
-              if (skillDeepResearchModelPopoverRef.current && skillDeepResearchModelPopoverRef.current.contains(target)) {
-                return;
-              }
-              if (skillDeepResearchModelTriggerRef.current && skillDeepResearchModelTriggerRef.current.contains(target)) {
-                return;
-              }
-              setSkillDeepResearchModelPopoverOpen(false);
-            }
-  
-            function handleSkillDeepResearchModelPopoverEscape(event) {
-              if (event.key === "Escape") {
-                setSkillDeepResearchModelPopoverOpen(false);
-              }
-            }
-  
-            document.addEventListener("mousedown", handleSkillDeepResearchModelPopoverPointerDown);
-            window.addEventListener("keydown", handleSkillDeepResearchModelPopoverEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleSkillDeepResearchModelPopoverPointerDown);
-              window.removeEventListener("keydown", handleSkillDeepResearchModelPopoverEscape);
-            };
-          }, [skillDeepResearchModelPopoverOpen]);
-  
-          useEffect(() => {
-            if (!skillImageGenerationModelPopoverOpen) {
-              return undefined;
-            }
-  
-            function handleSkillImageGenerationModelPopoverPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (!target) {
-                return;
-              }
-              if (skillImageGenerationModelPopoverRef.current && skillImageGenerationModelPopoverRef.current.contains(target)) {
-                return;
-              }
-              if (skillImageGenerationModelTriggerRef.current && skillImageGenerationModelTriggerRef.current.contains(target)) {
-                return;
-              }
-              setSkillImageGenerationModelPopoverOpen(false);
-            }
-  
-            function handleSkillImageGenerationModelPopoverEscape(event) {
-              if (event.key === "Escape") {
-                setSkillImageGenerationModelPopoverOpen(false);
-              }
-            }
-  
-            document.addEventListener("mousedown", handleSkillImageGenerationModelPopoverPointerDown);
-            window.addEventListener("keydown", handleSkillImageGenerationModelPopoverEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleSkillImageGenerationModelPopoverPointerDown);
-              window.removeEventListener("keydown", handleSkillImageGenerationModelPopoverEscape);
-            };
-          }, [skillImageGenerationModelPopoverOpen]);
-  
-          useEffect(() => {
-            if (!skillImageGenerationQualityPopoverOpen) {
-              return undefined;
-            }
-  
-            function handleSkillImageGenerationQualityPopoverPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (!target) {
-                return;
-              }
-              if (skillImageGenerationQualityPopoverRef.current && skillImageGenerationQualityPopoverRef.current.contains(target)) {
-                return;
-              }
-              if (skillImageGenerationQualityTriggerRef.current && skillImageGenerationQualityTriggerRef.current.contains(target)) {
-                return;
-              }
-              setSkillImageGenerationQualityPopoverOpen(false);
-            }
-  
-            function handleSkillImageGenerationQualityPopoverEscape(event) {
-              if (event.key === "Escape") {
-                setSkillImageGenerationQualityPopoverOpen(false);
-              }
-            }
-  
-            document.addEventListener("mousedown", handleSkillImageGenerationQualityPopoverPointerDown);
-            window.addEventListener("keydown", handleSkillImageGenerationQualityPopoverEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleSkillImageGenerationQualityPopoverPointerDown);
-              window.removeEventListener("keydown", handleSkillImageGenerationQualityPopoverEscape);
-            };
-          }, [skillImageGenerationQualityPopoverOpen]);
-  
-          useEffect(() => {
-            if (!skillVideoGenerationModelPopoverOpen) {
-              return undefined;
-            }
-  
-            function handleSkillVideoGenerationModelPopoverPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (!target) {
-                return;
-              }
-              if (skillVideoGenerationModelPopoverRef.current && skillVideoGenerationModelPopoverRef.current.contains(target)) {
-                return;
-              }
-              if (skillVideoGenerationModelTriggerRef.current && skillVideoGenerationModelTriggerRef.current.contains(target)) {
-                return;
-              }
-              setSkillVideoGenerationModelPopoverOpen(false);
-            }
-  
-            function handleSkillVideoGenerationModelPopoverEscape(event) {
-              if (event.key === "Escape") {
-                setSkillVideoGenerationModelPopoverOpen(false);
-              }
-            }
-  
-            document.addEventListener("mousedown", handleSkillVideoGenerationModelPopoverPointerDown);
-            window.addEventListener("keydown", handleSkillVideoGenerationModelPopoverEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleSkillVideoGenerationModelPopoverPointerDown);
-              window.removeEventListener("keydown", handleSkillVideoGenerationModelPopoverEscape);
-            };
-  	        }, [skillVideoGenerationModelPopoverOpen]);
-  
   	        useEffect(() => {
             if (skillsPageMode !== "detail") {
               return;
@@ -1121,43 +1130,38 @@
             }
             setSkillsPageMode("overview");
           }, [selectedSkill, skillsPageMode]);
-  
-          useEffect(() => {
-            const selectedSkillFamilyId = String(selectedSkill?.systemFamilyId || selectedSkill?.id || "").trim().toLowerCase();
-            if (selectedSkillFamilyId !== "deep_research" && selectedSkillFamilyId !== "research") {
-              return;
-            }
-            setSkillDeepResearchDefaultModel(getDemoDefaultDeepResearchModel(readDemoSettingsPlatformConfig()));
-          }, [selectedSkill?.id, selectedSkill?.systemFamilyId]);
-  
-          useEffect(() => {
-            const selectedSkillFamilyId = String(selectedSkill?.systemFamilyId || selectedSkill?.id || "").trim().toLowerCase();
-            if (selectedSkillFamilyId !== "image_generation") {
-              return;
-            }
-            const currentConfig = readDemoSettingsPlatformConfig();
-            setSkillImageGenerationDefaultModel(getDemoDefaultImageGenerationModel(currentConfig));
-            setSkillImageGenerationDefaultQuality(getDemoDefaultImageGenerationQuality(currentConfig));
-          }, [selectedSkill?.id, selectedSkill?.systemFamilyId]);
-  
-          useEffect(() => {
-            const selectedSkillFamilyId = String(selectedSkill?.systemFamilyId || selectedSkill?.id || "").trim().toLowerCase();
-            if (selectedSkillFamilyId !== "video_generation") {
-              return;
-            }
-            setSkillVideoGenerationDefaultModel(getDemoDefaultVideoGenerationModel(readDemoSettingsPlatformConfig()));
-          }, [selectedSkill?.id, selectedSkill?.systemFamilyId]);
-  
           useEffect(() => {
             if (typeof onToolsSkillsHeaderChange !== "function") {
               return;
             }
             onToolsSkillsHeaderChange(
-              skillsPageMode === "detail"
-                ? {
-                    mode: "detail",
-                    title: String(selectedSkill?.name || "Skill").trim() || "Skill",
-                    skillId: String(selectedSkill?.id || selectedSkillId || "").trim(),
+	              skillsPageMode === "detail"
+	                ? {
+	                    mode: "detail",
+	                    title: selectedSkill?.isDraft
+	                      ? "New Skill"
+	                      : String(selectedSkill?.name || "Skill").trim() || "Skill",
+	                    skillId: selectedSkill?.isDraft
+	                      ? ""
+	                      : String(selectedSkill?.id || selectedSkillId || "").trim(),
+	                    activeTab: skillDetailTab,
+	                    onTabChange: setSkillDetailTab,
+	                    isSystem: selectedSkill?.isSystem === true,
+	                    versionNumber: Number(
+	                      selectedSkill?.isDraft
+	                        ? 0
+	                        : skillVersionState.versions.find((version) =>
+	                        String(version?.id || "") === String(skillVersionState.currentVersionId || selectedSkill?.currentVersionId || "")
+	                      )?.version
+	                      || skillVersionState.versions[0]?.version
+	                      || (selectedSkill?.isCustom ? 1 : 0)
+	                    ),
+	                    versionQualifier: selectedSkill?.isDraft
+	                      ? "Draft"
+	                      : selectedSkill?.isSystem ? "System" : "Latest",
+	                    onOpenVersions: selectedSkill?.isDraft
+	                      ? undefined
+	                      : () => setSkillVersionsOpen(true),
                   }
                 : {
                     mode: "overview",
@@ -1165,7 +1169,20 @@
                     skillId: "",
                   }
             );
-          }, [onToolsSkillsHeaderChange, selectedSkill?.id, selectedSkill?.name, selectedSkillId, skillsPageMode]);
+          }, [
+            onToolsSkillsHeaderChange,
+            selectedSkill?.currentVersionId,
+	            selectedSkill?.id,
+	            selectedSkill?.isCustom,
+	            selectedSkill?.isDraft,
+	            selectedSkill?.isSystem,
+            selectedSkill?.name,
+            selectedSkillId,
+            skillDetailTab,
+            skillVersionState.currentVersionId,
+            skillVersionState.versions,
+            skillsPageMode,
+          ]);
   
           useEffect(() => {
             if (handledBackRequestTokenRef.current === backRequestToken) {
@@ -1180,7 +1197,7 @@
           useEffect(() => {
             const requestedAction = String(openSkillRequest?.action || "").trim();
             if (requestedAction === "create") {
-              openSkillComposer();
+              void createAndOpenCustomSkill();
               return;
             }
             const requestedSkillId = String(openSkillRequest?.skillId || "").trim();
@@ -1213,10 +1230,6 @@
               examplePrompts: false,
             });
             setSkillDetailIconPickerOpen(false);
-            setSkillImageGenerationModelPopoverOpen(false);
-            setSkillImageGenerationQualityPopoverOpen(false);
-            setSkillDeepResearchModelPopoverOpen(false);
-            setSkillVideoGenerationModelPopoverOpen(false);
             setSkillSaveState({
               isSaving: false,
               error: "",

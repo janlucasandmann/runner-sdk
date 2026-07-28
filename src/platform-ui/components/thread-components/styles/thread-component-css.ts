@@ -3284,25 +3284,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   white-space: normal;
 }
 
-.tb-runner-chat .tb-canonical-compatibility {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 22px;
-}
-
-.tb-runner-chat .tb-canonical-compatibility.is-history {
-  margin-bottom: 22px;
-}
-
-.tb-runner-chat .tb-canonical-compatibility.is-tail {
-  margin-top: 22px;
-}
-
-.tb-runner-chat .tb-canonical-compatibility:empty {
-  display: none;
-}
-
 .tb-runner-chat .tb-log-scroll {
   width: 100%;
   flex: 1 1 auto;
@@ -5721,6 +5702,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 
 .tb-runner-chat .tb-log-group-stack {
   display: flex;

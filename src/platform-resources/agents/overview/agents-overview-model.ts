@@ -1,13 +1,12 @@
-import type {
-  AgentsOverviewAnalyticsResource,
-} from "./agents-overview-analytics-client.js";
+import type { AgentsOverviewAnalyticsResource } from "./agents-overview-analytics-client.js";
 import type { AgentOverviewRow } from "./agents-overview-page.js";
+import { isThreadFunctionalAgentRole } from "./functional-agent-catalog.js";
 
 type UnknownRecord = Record<string, unknown>;
 
 function asRecord(value: unknown): UnknownRecord {
   return value && typeof value === "object" && !Array.isArray(value)
-    ? value as UnknownRecord
+    ? (value as UnknownRecord)
     : {};
 }
 
@@ -39,38 +38,62 @@ function formatDate(value: string): string {
 }
 
 function getInitials(value: string): string {
-  return value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("") || "A";
+  return (
+    value
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join("") || "A"
+  );
 }
 
 function isSquadAgent(agent: UnknownRecord): boolean {
   const metadata = asRecord(agent.metadata);
   const team = asRecord(metadata.team);
-  return ["team", "squad"].includes(
-    firstString([
-      agent.agentType,
-      agent.agent_type,
-      metadata.agentType,
-      metadata.agent_type,
-      metadata.type,
-    ]).toLowerCase(),
-  ) || Object.keys(team).length > 0
-    || Boolean(metadata.agentTeam || metadata.agent_team);
+  return (
+    ["team", "squad"].includes(
+      firstString([
+        agent.agentType,
+        agent.agent_type,
+        metadata.agentType,
+        metadata.agent_type,
+        metadata.type,
+      ]).toLowerCase(),
+    ) ||
+    Object.keys(team).length > 0 ||
+    Boolean(metadata.agentTeam || metadata.agent_team)
+  );
+}
+
+export function isFunctionalAgent(agent: UnknownRecord): boolean {
+  const metadata = asRecord(agent.metadata);
+  const runnerPlayground = asRecord(
+    metadata.runnerPlayground || metadata.runner_playground,
+  );
+  const role = firstString([
+    runnerPlayground.role,
+    runnerPlayground.agentRole,
+    runnerPlayground.agent_role,
+    metadata.agentRole,
+    metadata.agent_role,
+  ]).toLowerCase();
+  return role === "mission_control" || isThreadFunctionalAgentRole(role);
 }
 
 function isSystemAgent(agent: UnknownRecord): boolean {
   const id = asString(agent.id);
-  return agent.isDefault === true
-    || agent.isSystem === true
-    || /^agent-(?:default|research|assistant|computer-use)-/.test(id);
+  return (
+    agent.isDefault === true ||
+    agent.isSystem === true ||
+    isFunctionalAgent(agent) ||
+    /^agent-(?:default|research|assistant|computer-use)-/.test(id)
+  );
 }
 
 function readAgentAvatarUrl(agent: UnknownRecord): string {
   const metadata = asRecord(agent.metadata);
+  const profile = asRecord(metadata.profile);
   return firstString([
     agent.avatarUrl,
     agent.avatar_url,
@@ -82,6 +105,11 @@ function readAgentAvatarUrl(agent: UnknownRecord): string {
     metadata.photoURL,
     metadata.profilePhotoUrl,
     metadata.profile_photo_url,
+    profile.avatarUrl,
+    profile.avatar_url,
+    profile.photoUrl,
+    profile.photoURL,
+    profile.picture,
   ]);
 }
 
@@ -106,15 +134,16 @@ function readAgentCreator(agent: UnknownRecord): {
         ? asRecord(metadata.creator)
         : asRecord(metadata.createdBy);
   return {
-    name: firstString([
-      creator.name,
-      creator.displayName,
-      creator.display_name,
-      agent.creatorName,
-      agent.createdByName,
-      metadata.creatorName,
-      metadata.createdByName,
-    ]) || "Unknown",
+    name:
+      firstString([
+        creator.name,
+        creator.displayName,
+        creator.display_name,
+        agent.creatorName,
+        agent.createdByName,
+        metadata.creatorName,
+        metadata.createdByName,
+      ]) || "Unknown",
     avatarUrl: firstString([
       creator.avatarUrl,
       creator.avatar_url,
@@ -142,16 +171,18 @@ export function normalizeAgentOverviewRows(
     if (!id || id === "__playground_new_agent__") return [];
     const metadata = asRecord(agent.metadata);
     const isSquad = isSquadAgent(agent);
-    const name = asString(agent.name)
-      || (isSquad ? "Untitled Squad" : "Untitled Agent");
-    const model = firstString([
-      agent.modelLabel,
-      agent.model,
-      agent.modelId,
-      agent.model_id,
-      metadata.modelLabel,
-      metadata.model,
-    ]) || "Selected model";
+    const isFunctional = isFunctionalAgent(agent);
+    const name =
+      asString(agent.name) || (isSquad ? "Untitled Squad" : "Untitled Agent");
+    const model =
+      firstString([
+        agent.modelLabel,
+        agent.model,
+        agent.modelId,
+        agent.model_id,
+        metadata.modelLabel,
+        metadata.model,
+      ]) || "Selected model";
     const analytics = usageById.get(id);
     const lastUsedValue = firstString([
       analytics?.lastUsedAt,
@@ -163,35 +194,38 @@ export function normalizeAgentOverviewRows(
       agent.updated_at,
     ]);
     const creator = readAgentCreator(agent);
-    return [{
-      id,
-      name,
-      usageTokens: analytics?.tokenCount || 0,
-      searchText: [
+    return [
+      {
+        id,
         name,
-        asString(agent.description),
-        asString(agent.instructions),
-        model,
-        creator.name,
-      ].join(" "),
-      avatarUrl: readAgentAvatarUrl(agent),
-      avatarFallback: getInitials(name),
-      isSquad,
-      isSystem: isSystemAgent(agent),
-      modelLabel: model,
-      modelIconUrl: firstString([
-        agent.modelIconUrl,
-        agent.model_icon_url,
-        metadata.modelIconUrl,
-      ]),
-      modelIconClassName: asString(agent.modelIconClassName),
-      creatorName: creator.name,
-      creatorAvatarUrl: creator.avatarUrl,
-      creatorFallback: getInitials(creator.name),
-      creatorIsSystem: creator.isSystem,
-      lastUsedAt: parseTimestamp(lastUsedValue),
-      lastUsedLabel: lastUsedValue ? formatDate(lastUsedValue) : "Never",
-      lastUsedTitle: lastUsedValue,
-    }];
+        usageTokens: analytics?.tokenCount || 0,
+        searchText: [
+          name,
+          asString(agent.description),
+          asString(agent.instructions),
+          model,
+          creator.name,
+        ].join(" "),
+        avatarUrl: readAgentAvatarUrl(agent),
+        avatarFallback: getInitials(name),
+        isSquad,
+        isFunctional,
+        isSystem: isSystemAgent(agent),
+        modelLabel: model,
+        modelIconUrl: firstString([
+          agent.modelIconUrl,
+          agent.model_icon_url,
+          metadata.modelIconUrl,
+        ]),
+        modelIconClassName: asString(agent.modelIconClassName),
+        creatorName: creator.name,
+        creatorAvatarUrl: creator.avatarUrl,
+        creatorFallback: getInitials(creator.name),
+        creatorIsSystem: creator.isSystem,
+        lastUsedAt: parseTimestamp(lastUsedValue),
+        lastUsedLabel: lastUsedValue ? formatDate(lastUsedValue) : "Never",
+        lastUsedTitle: lastUsedValue,
+      },
+    ];
   });
 }

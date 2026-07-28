@@ -49,16 +49,70 @@ assert.match(
 );
 assert.match(
   fragments.navigationItems,
-  /id: "tags"[\s\S]*label: "Tags and Plugins"[\s\S]*toolsView === "tags" \|\| toolsView === "plugins"/,
+  /id: "tags"[\s\S]*label: "Connectors"[\s\S]*searchAliases: \["Tags", "Plugins", "Tags and Plugins"\][\s\S]*Icon: Plug[\s\S]*toolsView === "tags" \|\| toolsView === "plugins"/,
 );
 assert.doesNotMatch(fragments.navigationItems, /id: "plugins"/);
 assert.match(
   fragments.navigationItems,
   /id: "develop-agent-services-label"[\s\S]*label: "Agent Services"[\s\S]*\.\.\.agentDevelopServerPageItems[\s\S]*id: "security-agents-test"[\s\S]*label: "Security Agents"/,
 );
+assert.match(
+  fragments.navigationItems,
+  /function getSidebarNavigationItemsForMode\(targetMode = sidebarWorkspaceMode\)/,
+);
+assert.match(
+  fragments.navigationItems,
+  /function getGlobalServiceNavigationItems\(searchQuery = ""\)/,
+);
+const normalizeGlobalServiceSearchValueSource = fragments.navigationItems.match(
+  /function normalizeGlobalServiceSearchValue\(value\) \{[\s\S]*?\n        \}/,
+)?.[0];
+const getGlobalServiceSearchMatchRankSource = fragments.navigationItems.match(
+  /function getGlobalServiceSearchMatchRank\(searchQuery, itemLabel, itemId\) \{[\s\S]*?\n        \}/,
+)?.[0];
+assert.ok(normalizeGlobalServiceSearchValueSource);
+assert.ok(getGlobalServiceSearchMatchRankSource);
+const getGlobalServiceSearchMatchRank = new Function(
+  `${normalizeGlobalServiceSearchValueSource}
+  ${getGlobalServiceSearchMatchRankSource}
+  return getGlobalServiceSearchMatchRank;
+  `,
+)();
+assert.equal(getGlobalServiceSearchMatchRank("agents", "Agents", "agents"), 0);
+assert.equal(getGlobalServiceSearchMatchRank("webapp", "Web Apps", "server-web-apps"), 1);
+assert.equal(
+  getGlobalServiceSearchMatchRank("fine tuning", "Agent Optimization", "fine-tuning"),
+  0,
+);
+assert.equal(getGlobalServiceSearchMatchRank("plugins", "Tags and Plugins", "tags"), 3);
+assert.equal(getGlobalServiceSearchMatchRank("missing", "Agents", "agents"), null);
+assert.match(
+  fragments.navigationItems,
+  /getSidebarNavigationItemsForMode\(modeOption\.id\)/,
+);
+assert.match(
+  fragments.navigationItems,
+  /const excludedIds = new Set\(\["new-thread", "configure-home", "develop-home"\]\)/,
+);
+assert.match(
+  fragments.navigationItems,
+  /globalSearchId: "service:" \+ modeOption\.id \+ ":" \+ item\.id/,
+);
+assert.match(
+  fragments.navigationItems,
+  /function handleGlobalServiceNavigationItemClick\(globalSearchId\)/,
+);
+assert.match(
+  fragments.navigationItems,
+  /setSidebarWorkspaceMode\(serviceItem\.workspaceMode\)[\s\S]*serviceItem\.onClick\?\.\(\)/,
+);
 assert.match(fragments.navigationItems, /function handleSidebarNavigationItemClick\(item\)/);
 assert.match(fragments.navigationItems, /requestPlatformNavigation\(item\?\.onClick\)/);
 assert.doesNotMatch(fragments.navigationItems, /if \(item\.active\)/);
+assert.match(
+  fragments.navigationItems,
+  /id: "skills",[\s\S]{0,100}Icon: SquareMousePointer/,
+);
 assert.match(fragments.threadList, /variant: "minimal"/);
 assert.match(fragments.threadList, /const contextualActions = Array\.isArray\(threadActionMenuState\.menuActions\)/);
 assert.match(fragments.threadList, /className: "tb-popup-row sidebar-thread-popup-row"/);
@@ -95,6 +149,79 @@ assert.doesNotThrow(() => new Function(`
     ${Object.values(fragments).join("\n")}
   }
 `));
+const runtimeEvents = [];
+const StubIcon = () => null;
+const globalServiceRuntime = new Function(
+  "scope",
+  `with (scope) {
+    ${fragments.navigationItems}
+    return {
+      getGlobalServiceNavigationItems,
+      handleGlobalServiceNavigationItemClick,
+    };
+  }`,
+)({
+  sidebarWorkspaceMode: "work",
+  activePage: "",
+  configureHomeTab: "",
+  isResourcesPage: false,
+  activeResourcesView: "",
+  activeResourcesServerKind: "",
+  toolsView: "",
+  showInitialThreadWelcome: false,
+  hasShellAccess: true,
+  Bot: StubIcon,
+  Monitor: StubIcon,
+  Plug: StubIcon,
+  Tag: StubIcon,
+  Layers: StubIcon,
+  SquareMousePointer: StubIcon,
+  SquarePen: StubIcon,
+  Rocket: StubIcon,
+  FolderOpen: StubIcon,
+  Metronome: StubIcon,
+  CalendarIcon: StubIcon,
+  Circle: StubIcon,
+  handleOpenAgentsShortcut: () => runtimeEvents.push("agents"),
+  handleOpenEnvironmentsShortcut: () => runtimeEvents.push("computers"),
+  handleOpenTagsShortcut: () => runtimeEvents.push("tags"),
+  handleOpenSkillsShortcut: () => runtimeEvents.push("skills"),
+  handleNewThread: () => runtimeEvents.push("thread"),
+  handleSignInWithComputerAgents: () => runtimeEvents.push("sign-in"),
+  handleOpenTasksShortcut: () => runtimeEvents.push("projects"),
+  handleOpenFilesShortcut: () => runtimeEvents.push("files"),
+  openMetronomeOverviewPage: () => runtimeEvents.push("metronome"),
+  openCalendarOverviewPage: () => runtimeEvents.push("calendar"),
+  getDevelopServerPageItems: () => [
+    { id: "functions", kind: "function", label: "Functions", Icon: StubIcon },
+  ],
+  openResourcesView: (view, options) => runtimeEvents.push(
+    `${view}:${options?.serverKind || ""}`,
+  ),
+  requestPlatformNavigation: (callback) => callback?.(),
+  setSidebarWorkspaceMode: (mode) => runtimeEvents.push(`mode:${mode}`),
+  setSidebarWorkspaceMenuOpen: () => undefined,
+});
+assert.equal(globalServiceRuntime.getGlobalServiceNavigationItems("agents")[0]?.label, "Agents");
+assert.equal(
+  globalServiceRuntime.getGlobalServiceNavigationItems("agents")[0]?.workspaceMode,
+  "configure",
+);
+assert.equal(
+  globalServiceRuntime.getGlobalServiceNavigationItems("plugins")[0]?.label,
+  "Connectors",
+);
+assert.equal(
+  globalServiceRuntime.getGlobalServiceNavigationItems("functions")[0]?.globalSearchId,
+  "service:develop:server-functions",
+);
+assert.equal(
+  globalServiceRuntime.handleGlobalServiceNavigationItemClick(
+    "service:develop:server-functions",
+  ),
+  true,
+);
+assert.deepEqual(runtimeEvents.slice(-2), ["mode:develop", "servers:function"]);
 
 const styles = createAppSidebarStyleFragments({ metronomeSidebarCss: ".metronome-test {}" });
 assert.deepEqual(Object.keys(styles), ["foundation", "responsive"]);

@@ -34,22 +34,54 @@
   flex-direction: column;
   overflow: hidden;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
 }
 
 .platform-code-editor-workspace__sidebar-header {
-  min-height: 0;
-  padding: 8px 12px;
-  display: block;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 42px;
+  flex: 0 0 42px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
 }
 
-.platform-code-editor-workspace__sidebar-search.platform-search {
+.platform-code-editor-workspace__sidebar-title {
   min-width: 0;
-  max-width: none;
-  width: 100%;
-  height: 30px;
-  min-height: 30px;
-  padding-inline: 10px;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-code-editor-workspace__sidebar-actions,
+.platform-code-editor-workspace__header-actions {
+  min-width: 0;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.platform-code-editor-workspace__create-menu-anchor {
+  display: inline-flex;
+}
+
+.platform-code-editor-workspace__create-menu.platform-popup-surface {
+  --platform-popup-padding: 4px;
+  --platform-popup-radius: 10px;
+  --platform-popup-font-size: 12px;
+  --platform-popup-icon-size: 14px;
+  z-index: 12062;
 }
 
 .platform-code-editor-workspace__file-list {
@@ -59,8 +91,14 @@
   flex-direction: column;
   gap: 4px;
   overflow: auto;
-  padding: 0 10px 12px;
+  padding: 8px 10px 12px;
   scrollbar-width: none;
+  transition: background-color 160ms ease;
+}
+
+.platform-code-editor-workspace__sidebar-header.is-drop-target,
+.platform-code-editor-workspace__file-list.is-drop-target {
+  background: rgba(77, 163, 255, 0.08);
 }
 
 .platform-code-editor-workspace__file-list.is-loading {
@@ -95,7 +133,20 @@
   text-align: left;
   cursor: pointer;
   box-sizing: border-box;
-  transition: background-color 160ms ease, color 160ms ease;
+  transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+.platform-code-editor-workspace__file[draggable="true"] {
+  cursor: grab;
+}
+
+.platform-code-editor-workspace__file.is-dragging {
+  opacity: 0.45;
+}
+
+.platform-code-editor-workspace__file.is-drop-target {
+  background: rgba(77, 163, 255, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(77, 163, 255, 0.5);
 }
 
 .platform-code-editor-workspace__file:hover,
@@ -221,6 +272,32 @@
   flex-direction: column;
   overflow: hidden;
   background: #000;
+}
+
+.platform-code-editor-workspace__editor-header {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  flex: 0 0 42px;
+  padding: 0 10px 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+}
+
+.platform-code-editor-workspace__editor-title {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .platform-code-editor-tab-bar {
@@ -421,44 +498,4 @@
 
 .platform-code-editor-workspace__empty.is-editor {
   flex: 1;
-}
-
-.platform-code-editor-workspace__footer {
-  min-height: 42px;
-  flex: 0 0 auto;
-  padding: 6px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.platform-code-editor-workspace__status {
-  min-width: 0;
-  overflow: hidden;
-  color: rgba(255, 255, 255, 0.48);
-  font-size: 12px;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.platform-code-editor-workspace__status.is-success {
-  color: #6ee7b7;
-}
-
-.platform-code-editor-workspace__status.is-error {
-  color: #ff9a9a;
-}
-
-.platform-code-editor-workspace__status.is-loading {
-  color: #66a6ff;
-}
-
-.platform-code-editor-workspace__actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
 }

@@ -3259,17 +3259,14 @@
             && !agentCreationSetupOpen
             && draftAgent?.id
             && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
-            && !draftAgent.isSystem
-            && !draftAgent.isDefault
+            && canVersionPlaygroundAgent(draftAgent)
           );
           const canShowAgentVersions = Boolean(
             !shouldShowAgentsHome
             && !agentCreationSetupOpen
             && draftAgent?.id
             && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
-            && !draftAgent.isSystem
-            && !draftAgent.isDefault
-            && !isPlaygroundDefaultAgentConfigurationLocked(draftAgent)
+            && canVersionPlaygroundAgent(draftAgent)
           );
           useEffect(() => {
             if (!canShowAgentVersions) {
@@ -3314,7 +3311,14 @@
           ]);
           const isAgentActionTargetConfigurationLocked =
             isPlaygroundDefaultAgentConfigurationLocked(draftAgent);
-          const isProtectedAgentActionTarget = Boolean(
+          const isProtectedAgentRenameTarget = Boolean(
+            isAgentActionTargetConfigurationLocked
+            || (
+              (draftAgent?.isDefault || draftAgent?.isSystem)
+              && !isPlaygroundFunctionalAgent(draftAgent)
+            )
+          );
+          const isProtectedAgentDeleteTarget = Boolean(
             draftAgent?.isDefault
             || draftAgent?.isSystem
             || isAgentActionTargetConfigurationLocked
@@ -3416,7 +3420,7 @@
                       setAgentActionsPopoverOpen(false);
                       openAgentRenameDialog(draftAgent);
                     },
-                    disabled: saveState.isSaving || isProtectedAgentActionTarget,
+                    disabled: saveState.isSaving || isProtectedAgentRenameTarget,
                   },
                     React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                     React.createElement("span", { className: "tb-popup-label" }, "Rename")
@@ -3429,7 +3433,7 @@
                       setAgentActionsPopoverOpen(false);
                       void handleDeleteAgent(draftAgent.id);
                     },
-                    disabled: saveState.isSaving || isProtectedAgentActionTarget,
+                    disabled: saveState.isSaving || isProtectedAgentDeleteTarget,
                   },
                     React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
                     React.createElement("span", { className: "tb-popup-label" }, "Delete")

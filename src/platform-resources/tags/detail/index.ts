@@ -1,4 +1,7 @@
 export {
+  type TagDetailConnectionAction,
+  type TagDetailIncludedItem,
+  type TagDetailInformationRow,
   TagDetailPage,
   type TagDetailPageProps,
   type TagDetailTab,

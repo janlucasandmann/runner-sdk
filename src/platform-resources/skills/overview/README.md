@@ -4,7 +4,9 @@
 
 ## Purpose
 
-This directory contains overview models, analytics, tables, and page composition for the shared Skills resource. Resource-independent UI belongs in `src/platform-ui`.
+This directory contains overview models and the full-screen grouped catalog
+composition for the shared Skills resource. System and custom Skills share one
+collapsible table, while resource-independent UI belongs in `src/platform-ui`.
 
 ## Contents
 

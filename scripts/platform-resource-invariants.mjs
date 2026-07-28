@@ -186,6 +186,17 @@ const tagDetailPageSource = await fs.readFile(
   path.join(packageRoot, "src", "platform-resources", "tags", "detail", "tag-detail-page.tsx"),
   "utf8",
 );
+const platformResourceAccessSettingsSource = await fs.readFile(
+  path.join(
+    packageRoot,
+    "src",
+    "platform-resources",
+    "access-control",
+    "page",
+    "platform-resource-access-settings.tsx",
+  ),
+  "utf8",
+);
 for (const retiredIdentifier of [
   "setAgentInstructionsHistory",
   "setIsAgentInstructionsEditing",
@@ -290,6 +301,7 @@ if (!restoreAgentVersionSource.includes("setDraftAgent(result.resource)")) {
 if (
   !platformEntrySource.includes("React.createElement(PlatformPermissionsPage")
   && !tagDetailPageSource.includes("<PlatformPermissionsPage")
+  && !platformResourceAccessSettingsSource.includes("<PlatformPermissionsPage")
 ) {
   failures.push("the platform application must consume the modular PlatformPermissionsPage");
 }
@@ -532,8 +544,11 @@ for (const retiredComputerDetailRenderer of [
 if (!tagDetailPageSource.includes("ResourceDetailPage")) {
   failures.push("TagDetailPage must compose the shared ResourceDetailPage");
 }
-if (!tagDetailPageSource.includes("PlatformPermissionsPage")) {
-  failures.push("TagDetailPage must own its permissions-tab composition");
+if (
+  !tagDetailPageSource.includes("permissions?: ReactNode")
+  || !tagDetailPageSource.includes("{permissions}")
+) {
+  failures.push("TagDetailPage must own its centralized permissions-tab composition");
 }
 const tagDetailControllerSource = await fs.readFile(
   path.join(packageRoot, "apps", "platform", "client", "legacy", "domains", "shell", "controller", "settings-tools-and-rendering.template.js"),

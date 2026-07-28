@@ -1586,9 +1586,105 @@
             return metadata ? String(metadata.environmentId || "").trim() : "";
           }
   
+          function getTagPluginPermissionSubjectTypes(tagId, requestedKind = "") {
+            const normalizedTagId = String(tagId || "").trim().toLowerCase();
+            const normalizedKind = String(requestedKind || "").trim().toLowerCase();
+            const isTag = normalizedKind === "tag"
+              || (normalizedKind !== "plugin" && ["email", "discord", "telegram"].includes(normalizedTagId));
+            return isTag
+              ? { subjectType: "tag", teamSubjectType: "tag_team_role" }
+              : { subjectType: "plugin", teamSubjectType: "plugin_team_role" };
+          }
+
+          function getTagPluginAccessActionDefinitions(resourceId, subjectType) {
+            const normalizedResourceId = String(resourceId || "").trim().toLowerCase();
+            const normalizedSubjectType = subjectType === "tag" ? "tag" : "plugin";
+            const pluginActionIdsByResource = {
+              github: [
+                "plugin_view",
+                "plugin_use_read",
+                "plugin_activity_view",
+                "plugin_use_write",
+                "plugin_webhooks_manage",
+                "plugin_connection_manage",
+                "plugin_access_manage",
+                "plugin_disconnect",
+              ],
+              gitlab: [
+                "plugin_view",
+                "plugin_activity_view",
+                "plugin_use_write",
+                "plugin_webhooks_manage",
+                "plugin_connection_manage",
+                "plugin_access_manage",
+                "plugin_disconnect",
+              ],
+              gmail: [
+                "plugin_view",
+                "plugin_use_read",
+                "plugin_activity_view",
+                "plugin_use_write",
+                "plugin_notifications_send",
+                "plugin_connection_manage",
+                "plugin_access_manage",
+                "plugin_disconnect",
+              ],
+              notion: [
+                "plugin_view",
+                "plugin_use_read",
+                "plugin_activity_view",
+                "plugin_connection_manage",
+                "plugin_access_manage",
+                "plugin_disconnect",
+              ],
+              "google-drive": [
+                "plugin_view",
+                "plugin_use_read",
+                "plugin_activity_view",
+                "plugin_connection_manage",
+                "plugin_access_manage",
+                "plugin_disconnect",
+              ],
+              "one-drive": [
+                "plugin_view",
+                "plugin_use_read",
+                "plugin_activity_view",
+                "plugin_connection_manage",
+                "plugin_access_manage",
+                "plugin_disconnect",
+              ],
+            };
+            const allowedActionIds = normalizedSubjectType === "tag"
+              ? [
+                  "tag_view",
+                  "tag_invoke",
+                  "tag_activity_view",
+                  "tag_configure",
+                  "tag_attachment_ingest",
+                  "tag_reply",
+                  "tag_connection_manage",
+                  "tag_access_manage",
+                  "tag_disconnect",
+                ]
+              : pluginActionIdsByResource[normalizedResourceId] || [
+                  "plugin_view",
+                  "plugin_use_read",
+                  "plugin_activity_view",
+                  "plugin_connection_manage",
+                  "plugin_access_manage",
+                  "plugin_disconnect",
+                ];
+            return PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter((action) =>
+              allowedActionIds.includes(action.id)
+              && Array.isArray(action.subjectTypes)
+              && action.subjectTypes.includes(normalizedSubjectType)
+            );
+          }
+
           function createDefaultTagDetailConfig(tagId) {
             const normalizedTagId = String(tagId || "").trim().toLowerCase();
             const defaultEnvironment = getDefaultTagEnvironmentRecord();
+            const { subjectType } = getTagPluginPermissionSubjectTypes(normalizedTagId);
             return {
               tagId: normalizedTagId,
               linked: false,
@@ -1599,7 +1695,8 @@
               defaultProjectId: "",
               defaultProjectName: "",
               instructions: "",
-              permissionSet: createPlaygroundFullAccessPermissionSet("agent"),
+              permissionSet: createPlaygroundFullAccessPermissionSet(subjectType),
+              accessControl: {},
               updatedAt: "",
             };
           }
@@ -1610,6 +1707,7 @@
             const permissionSetSource = source.permissionSet && typeof source.permissionSet === "object" && !Array.isArray(source.permissionSet)
               ? source.permissionSet
               : fallback.permissionSet;
+            const { subjectType } = getTagPluginPermissionSubjectTypes(tagId);
             return {
               ...fallback,
               ...source,
@@ -1624,7 +1722,10 @@
               defaultAgentId: String(source.defaultAgentId || ""),
               defaultAgentName: String(source.defaultAgentName || ""),
               instructions: String(source.instructions || ""),
-              permissionSet: normalizePlaygroundPermissionSet(permissionSetSource, "agent"),
+              permissionSet: normalizePlaygroundPermissionSet(permissionSetSource, subjectType),
+              accessControl: source.accessControl && typeof source.accessControl === "object" && !Array.isArray(source.accessControl)
+                ? source.accessControl
+                : fallback.accessControl,
               updatedAt: String(source.updatedAt || ""),
             };
           }
@@ -1656,10 +1757,14 @@
             }
             setTagDetailSaveState(normalizedTagId, { status: "saving", error: "" });
             try {
+              const { subjectType } = getTagPluginPermissionSubjectTypes(normalizedTagId);
               const response = await fetch("/api/aios/user/tags/" + encodeURIComponent(normalizedTagId), {
                 method: "PATCH",
                 credentials: "include",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                  ...authRequestHeaders,
+                  "Content-Type": "application/json",
+                },
                 body: JSON.stringify({
                   instructions: config.instructions || "",
                   defaultEnvironmentId: config.defaultEnvironmentId || "",
@@ -1668,7 +1773,10 @@
                   defaultProjectName: config.defaultProjectName || "",
                   defaultAgentId: config.defaultAgentId || "",
                   defaultAgentName: config.defaultAgentName || "",
-                  permissionSet: normalizePlaygroundPermissionSet(config.permissionSet, "agent"),
+                  permissionSet: normalizePlaygroundPermissionSet(config.permissionSet, subjectType),
+                  accessControl: config.accessControl && typeof config.accessControl === "object"
+                    ? config.accessControl
+                    : {},
                 }),
               });
               const data = await response.json().catch(() => ({}));
@@ -1765,6 +1873,7 @@
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
+                headers: authRequestHeaders,
               });
               const data = await response.json().catch(() => ({}));
               if (!response.ok) {
@@ -1790,6 +1899,74 @@
             } finally {
               setTagDetailLoadingId((current) => current === normalizedTagId ? "" : current);
             }
+          }
+
+          function renderTagPluginAccessSettings({
+            resourceId,
+            resourceLabel,
+            resourceKind,
+          }) {
+            const normalizedResourceId = String(resourceId || "").trim().toLowerCase();
+            const normalizedResourceLabel = String(resourceLabel || resourceKind || "Connection").trim();
+            const {
+              subjectType,
+              teamSubjectType,
+            } = getTagPluginPermissionSubjectTypes(normalizedResourceId, resourceKind);
+            const currentConfig = getCurrentTagDetailConfig(normalizedResourceId);
+            const selectedPrincipalId = normalizePlatformAccessPrincipalId(tagPluginAccessPrincipalId);
+            const systemPermissionSet = getPlatformSystemPrincipalPermissionSet(
+              currentConfig,
+              PLATFORM_ALL_AGENTS_PRINCIPAL_ID,
+              subjectType,
+              currentConfig.permissionSet,
+            );
+            const systemRolePermissionSet = getPlatformSystemPrincipalRolePermissionSet(
+              currentConfig,
+              PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID,
+              tagPluginAccessRoleId,
+              teamSubjectType,
+            );
+
+            return React.createElement(PlatformResourceAccessSettings, {
+              teams: [],
+              resourceLabel: normalizedResourceLabel,
+              selectedPrincipalId,
+              onSelectedPrincipalIdChange: setTagPluginAccessPrincipalId,
+              subjectType,
+              teamSubjectType,
+              systemPermissionSet,
+              onSystemPermissionSetChange: (permissionSet) => {
+                updateTagDetailConfig(normalizedResourceId, (config) =>
+                  buildPlatformSystemPrincipalPermissionMetadata(
+                    config,
+                    PLATFORM_ALL_AGENTS_PRINCIPAL_ID,
+                    permissionSet,
+                    subjectType,
+                  )
+                );
+              },
+              systemRolePermissionSet,
+              onSystemRolePermissionSetChange: (roleId, permissionSet) => {
+                updateTagDetailConfig(normalizedResourceId, (config) =>
+                  buildPlatformSystemPrincipalRolePermissionMetadata(
+                    config,
+                    PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID,
+                    roleId,
+                    permissionSet,
+                    teamSubjectType,
+                  )
+                );
+              },
+              selectedRoleId: tagPluginAccessRoleId,
+              onSelectedRoleIdChange: setTagPluginAccessRoleId,
+              actionDefinitions: getTagPluginAccessActionDefinitions(
+                normalizedResourceId,
+                subjectType,
+              ),
+              animationKey: normalizedResourceId + ":" + tagPluginAccessRoleId,
+              backLabel: "Access",
+              className: "playground-tags-detail-access-settings",
+            });
           }
   
           function updateTagPermissionRingAccess(tagId, ringId, access) {
@@ -1908,9 +2085,8 @@
             const tagId = String(selectedTag.id || "").trim().toLowerCase();
             const tagConfig = getCurrentTagDetailConfig(tagId);
             const tagSaveState = getTagDetailSaveState(tagId);
-            const tagManifest = getPluginIntegrationManifest(tagId);
             const isTagLoading = tagDetailLoadingId === tagId;
-            const normalizedPermissionSet = normalizePlaygroundPermissionSet(tagConfig.permissionSet, "agent");
+            const normalizedPermissionSet = normalizePlaygroundPermissionSet(tagConfig.permissionSet, "tag");
             const getLinkLabel = (url) => {
               const value = String(url || "").trim();
               if (!value) {
@@ -1934,19 +2110,6 @@
                     : Layers;
               return React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.8 });
             };
-            const renderTagProfileLogo = () => {
-              if (selectedTag.logoUrl) {
-                return React.createElement("img", {
-                  className: "profile-editor-avatar-image",
-                  src: selectedTag.logoUrl,
-                  alt: selectedTag.label || "Tag",
-                  draggable: "false",
-                });
-              }
-              const Icon = selectedTag.icon || Tag;
-              return React.createElement(Icon, { width: 23, height: 23, strokeWidth: 1.8 });
-            };
-            const tagHeaderButtonClass = "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button playground-plugin-detail-connect-button";
             const getTagConnectionButtonState = () => {
               if (tagId === "email") {
                 return settingsEmailStatus?.linked && settingsEmailStatus?.verified
@@ -1995,22 +2158,6 @@
               }
               return null;
             };
-            const renderTagConnectionButton = () => {
-              const buttonState = getTagConnectionButtonState();
-              if (!buttonState) {
-                return null;
-              }
-              const ButtonComponent = buttonState.tone === "primary"
-                ? PlatformPrimaryButton
-                : PlatformSecondaryButton;
-              return React.createElement(ButtonComponent, {
-                type: "button",
-                size: "small",
-                className: tagHeaderButtonClass + (buttonState.tone === "destructive" ? " is-destructive" : ""),
-                onClick: buttonState.onClick,
-                disabled: buttonState.disabled,
-              }, React.createElement("span", null, buttonState.label));
-            };
             const renderTagSidebarToggleButton = () => React.createElement("button", {
                 type: "button",
                 className: "playground-project-overview-sidebar-toggle",
@@ -2024,23 +2171,6 @@
                 height: 15,
                 strokeWidth: 1.8,
               })
-            );
-            const tagProfileSection = React.createElement("div", { className: "playground-agents-profile-section playground-tags-detail-profile-section" },
-              React.createElement("div", { className: "profile-editor-avatar-wrap playground-agents-profile-avatar-wrap" },
-                React.createElement("div", { className: "profile-editor-avatar playground-agents-profile-avatar playground-tags-detail-profile-avatar" },
-                  React.createElement("div", { className: "profile-editor-avatar-surface playground-tags-detail-avatar-surface" },
-                    renderTagProfileLogo()
-                  )
-                )
-              ),
-              React.createElement("div", { className: "playground-agents-profile-copy" },
-                React.createElement("div", { className: "playground-agents-profile-name-wrap" },
-                  React.createElement("h1", {
-                    className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-agents-profile-name-input playground-tags-detail-profile-title",
-                    title: selectedTag.label || "Tag",
-                  }, selectedTag.label || "Tag")
-                )
-              )
             );
             const readThreadMetadata = (thread) => (
               thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
@@ -2199,19 +2329,9 @@
               loading: isThreadsLoading,
             };
             const analyticsSection = React.createElement(PlatformAnalyticsSection, {
-              variant: "framed",
-              className: "playground-tags-detail-analytics",
+              variant: "default",
+              className: "playground-tags-detail-analytics playground-server-detail-analytics",
               analytics: tagAnalyticsModel,
-              title: "Analytics",
-              timeframe: {
-                value: activeTagPerformanceRange.id,
-                options: tagDetailPerformanceRangeOptions.map((option) => ({
-                  value: option.id,
-                  label: option.label,
-                })),
-                onValueChange: setTagDetailPerformanceRange,
-                ariaLabel: "Tag analytics time frame",
-              },
             });
   
             const instructionsSection = React.createElement(React.Fragment, null,
@@ -2221,8 +2341,10 @@
                 title: "Instructions",
                 placeholder: "Add custom instructions that will be sent to the agent every time a thread is invoked from this tag.",
                 ariaLabel: selectedTag.label + " instructions",
-                stickyHeader: true,
+                stickyHeader: false,
                 historyKey: tagId,
+                variant: "minimalistic-ui",
+                className: "playground-tags-detail-instructions-editor",
               }),
               tagSaveState.status === "saving" || tagSaveState.status === "saved" || tagSaveState.error
                 ? React.createElement("div", { className: "playground-environments-muted" },
@@ -2331,125 +2453,102 @@
                 }, defaultEnvironmentHelpText)
               )
             );
-            const defaultEnvironmentSelect = renderPlaygroundPlatformPopup({
+            const defaultEnvironmentSelectorValue = selectedDefaultProject
+              ? "project:" + selectedDefaultProject.id
+              : selectedDefaultEnvironment
+                ? "computer:" + selectedDefaultEnvironment.id
+                : "";
+            const defaultEnvironmentSelectorOptions = currentTagDefaultEnvironmentMode === "projects"
+              ? defaultProjectChoices.map((project) => {
+                  const projectEnvironmentId = getTagProjectEnvironmentId(project) || String(project.defaultEnvironmentId || "").trim();
+                  return {
+                    value: "project:" + project.id,
+                    label: project.name || project.id,
+                    description: project.description || "Project",
+                    leading: React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.75 }),
+                    disabled: !projectEnvironmentId,
+                    title: !projectEnvironmentId ? "This project has no linked computer." : project.name || project.id,
+                  };
+                })
+              : defaultEnvironmentChoices.map((environment) => ({
+                  value: "computer:" + environment.id,
+                  label: environment.name || environment.id,
+                  description: environment.description || "Computer",
+                  leading: React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.75 }),
+                }));
+            const defaultEnvironmentSelect = React.createElement(PlatformSelector, {
+              value: defaultEnvironmentSelectorValue,
+              options: defaultEnvironmentSelectorOptions,
+              label: React.createElement("span", { className: "playground-tags-detail-environment-selector-label" },
+                React.createElement(DefaultEnvironmentIcon, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, defaultEnvironmentLabel)
+              ),
+              placeholder: "Select environment",
+              ariaLabel: "Environment: " + defaultEnvironmentLabel,
+              fullWidth: true,
+              alignment: "end",
+              popupAlignment: "right",
               open: defaultEnvironmentPopoverOpen,
-              shellRef: defaultEnvironmentPopoverOpen ? tagDetailPropertyPopoverRef : null,
-              shellClassName: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup playground-tags-detail-computer-popup playground-tags-detail-environment-popup",
-              menuClassName: "tb-popup-menu-inline tb-popup-menu-inline-right tb-popup-menu-inline-workspace playground-tags-detail-environment-menu",
-              trigger: React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-runtime-value-button playground-agents-model-picker-trigger" + (selectedDefaultEnvironment || selectedDefaultProject ? "" : " is-empty"),
-                  onClick: () => {
-                    setTagDefaultEnvironmentMode(tagConfig.defaultProjectId ? "projects" : "computers");
-                    setTagDetailPropertyPopover((current) => current === "environment" ? "" : "environment");
-                  },
-                  title: defaultEnvironmentLabel,
-                  "aria-label": "Environment: " + defaultEnvironmentLabel,
-                  "aria-expanded": defaultEnvironmentPopoverOpen ? "true" : "false",
-                },
-                React.createElement("span", { className: "playground-agents-model-picker-trigger-copy" },
-                  React.createElement("span", { className: "playground-agents-model-provider-icon-shell", "aria-hidden": "true" },
-                    React.createElement(DefaultEnvironmentIcon, { width: 14, height: 14, strokeWidth: 1.8 })
-                  ),
-                  React.createElement("span", { className: "playground-agents-model-picker-trigger-labels" },
-                    React.createElement("span", { className: "playground-environments-runtime-value-label" }, defaultEnvironmentLabel)
-                  )
-                ),
-                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-              ),
-              children: React.createElement(React.Fragment, null,
-                React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
-                  React.createElement(PlatformSwitch, {
-                    ariaLabel: "Environment source",
-                    value: currentTagDefaultEnvironmentMode,
-                    options: [
-                      { value: "computers", label: "Computers" },
-                      { value: "projects", label: "Projects" },
-                    ],
-                    onValueChange: setTagDefaultEnvironmentMode,
-                  })
-                ),
-                React.createElement("div", { className: "tb-popup-menu-inline-body tb-popup-menu-inline-body-agent tb-popup-menu-inline-body-workspace" },
-                  currentTagDefaultEnvironmentMode === "projects"
-                    ? (
-                        defaultProjectChoices.length > 0
-                          ? defaultProjectChoices.map((project) => {
-                              const projectEnvironmentId = getTagProjectEnvironmentId(project) || String(project.defaultEnvironmentId || "").trim();
-                              const projectEnvironmentName = environmentNameById.get(projectEnvironmentId) || project.defaultEnvironmentName || projectEnvironmentId;
-                              const isSelectedProject = Boolean(tagConfig.defaultProjectId) && project.id === tagConfig.defaultProjectId;
-                              return React.createElement("button", {
-                                  key: project.id,
-                                  type: "button",
-                                  className: "tb-popup-row tb-popup-row-select tb-popup-row-agent tb-popup-row-workspace" + (isSelectedProject ? " selected" : ""),
-                                  onClick: () => {
-                                    if (!projectEnvironmentId) {
-                                      return;
-                                    }
-                                    updateTagDetailConfig(tagId, {
-                                      defaultEnvironmentId: projectEnvironmentId,
-                                      defaultEnvironmentName: projectEnvironmentName || projectEnvironmentId,
-                                      defaultProjectId: project.id,
-                                      defaultProjectName: project.name || project.id,
-                                    });
-                                    setTagDetailPropertyPopover("");
-                                  },
-                                  disabled: !projectEnvironmentId,
-                                  title: !projectEnvironmentId ? "This project has no linked computer." : project.name || project.id,
-                                },
-                                React.createElement(Rocket, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.75 }),
-                                React.createElement("span", { className: "tb-popup-label" }, project.name || project.id),
-                                React.createElement("span", { className: "tb-popup-check-slot" },
-                                  isSelectedProject
-                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                    : null
-                                )
-                              );
-                            })
-                          : React.createElement("div", { className: "tb-popup-menu-inline-empty" },
-                              React.createElement("div", { className: "tb-popup-empty-state" }, "No projects available.")
-                            )
-                      )
-                    : (
-                        defaultEnvironmentChoices.length > 0
-                          ? defaultEnvironmentChoices.map((environment) => {
-                              const isSelectedEnvironment = !tagConfig.defaultProjectId && environment.id === tagConfig.defaultEnvironmentId;
-                              return React.createElement("button", {
-                                  key: environment.id,
-                                  type: "button",
-                                  className: "tb-popup-row tb-popup-row-select tb-popup-row-agent tb-popup-row-workspace" + (isSelectedEnvironment ? " selected" : ""),
-                                  onClick: () => {
-                                    updateTagDetailConfig(tagId, {
-                                      defaultEnvironmentId: environment.id,
-                                      defaultEnvironmentName: environment.name || environment.id,
-                                      defaultProjectId: "",
-                                      defaultProjectName: "",
-                                    });
-                                    setTagDetailPropertyPopover("");
-                                  },
-                                },
-                                React.createElement(Monitor, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.75 }),
-                                React.createElement("span", { className: "tb-popup-label" }, environment.name || environment.id),
-                                React.createElement("span", { className: "tb-popup-check-slot" },
-                                  isSelectedEnvironment
-                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                    : null
-                                )
-                              );
-                            })
-                          : React.createElement("div", { className: "tb-popup-menu-inline-empty" },
-                              React.createElement("div", { className: "tb-popup-empty-state" }, "No computers available.")
-                            )
-                      )
-                )
-              ),
+              onOpenChange: (open) => {
+                if (open) {
+                  setTagDefaultEnvironmentMode(tagConfig.defaultProjectId ? "projects" : "computers");
+                }
+                setTagDetailPropertyPopover(open ? "environment" : "");
+              },
+              popupHeader: React.createElement(PlatformSwitch, {
+                ariaLabel: "Environment source",
+                value: currentTagDefaultEnvironmentMode,
+                options: [
+                  { value: "computers", label: "Computers" },
+                  { value: "projects", label: "Projects" },
+                ],
+                onValueChange: setTagDefaultEnvironmentMode,
+              }),
+              popupHeaderClassName: "playground-tags-detail-environment-selector-header",
+              popupClassName: "playground-tags-detail-environment-selector-popup",
+              triggerClassName: "playground-tags-detail-environment-selector-trigger",
+              emptyContent: currentTagDefaultEnvironmentMode === "projects"
+                ? "No projects available."
+                : "No computers available.",
+              onValueChange: (nextValue) => {
+                const [kind, selectionId] = String(nextValue || "").split(":");
+                if (!selectionId) {
+                  return;
+                }
+                if (kind === "project") {
+                  const project = defaultProjectChoices.find((candidate) => candidate.id === selectionId);
+                  const projectEnvironmentId = getTagProjectEnvironmentId(project) || String(project?.defaultEnvironmentId || "").trim();
+                  if (!project || !projectEnvironmentId) {
+                    return;
+                  }
+                  const projectEnvironmentName = environmentNameById.get(projectEnvironmentId) || project.defaultEnvironmentName || projectEnvironmentId;
+                  updateTagDetailConfig(tagId, {
+                    defaultEnvironmentId: projectEnvironmentId,
+                    defaultEnvironmentName: projectEnvironmentName || projectEnvironmentId,
+                    defaultProjectId: project.id,
+                    defaultProjectName: project.name || project.id,
+                  });
+                  return;
+                }
+                const environment = defaultEnvironmentChoices.find((candidate) => candidate.id === selectionId);
+                if (!environment) {
+                  return;
+                }
+                updateTagDetailConfig(tagId, {
+                  defaultEnvironmentId: environment.id,
+                  defaultEnvironmentName: environment.name || environment.id,
+                  defaultProjectId: "",
+                  defaultProjectName: "",
+                });
+              },
             });
             const sidebar = React.createElement(React.Fragment, null,
-              React.createElement("section", {
+              React.createElement(PlatformUiCard, {
+                  as: "section",
+                  variant: "sidebar",
+                  cardTitle: undefined,
                   className: "playground-project-overview-sidebar-card playground-tags-detail-properties-card" + (defaultEnvironmentPopoverOpen ? " is-computer-popup-open is-environment-popup-open" : ""),
                 },
-                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
-                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties")
-                ),
                 React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
                   renderSidebarRow("Connected Identity", renderSidebarValue(tagConfig.connectedIdentity || selectedTag.statusCopy || "Not connected")),
                   renderSidebarRow("Environment", defaultEnvironmentSelect, {
@@ -2464,10 +2563,12 @@
                   })
                 )
               ),
-              React.createElement("section", { className: "playground-project-overview-sidebar-card playground-tags-detail-included-actions-card" },
-                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
-                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Included Actions")
-                ),
+              React.createElement(PlatformUiCard, {
+                  as: "section",
+                  variant: "sidebar",
+                  cardTitle: "Included Actions",
+                  className: "playground-project-overview-sidebar-card playground-tags-detail-included-actions-card",
+                },
                 React.createElement("div", { className: "playground-tags-detail-sidebar-actions" },
                   (selectedTag.features || []).map((feature) =>
                     React.createElement("div", { key: feature.id, className: "playground-tags-detail-sidebar-action" },
@@ -2484,10 +2585,12 @@
                   )
                 )
               ),
-              React.createElement("section", { className: "playground-project-overview-sidebar-card" },
-                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
-                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Provider Information")
-                ),
+              React.createElement(PlatformUiCard, {
+                  as: "section",
+                  variant: "sidebar",
+                  cardTitle: "Provider Information",
+                  className: "playground-project-overview-sidebar-card playground-tags-detail-provider-card",
+                },
                 React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
                   [
                     { label: "Website", href: selectedTag.websiteUrl },
@@ -2521,7 +2624,7 @@
                       React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
                     )
                   : settingsEmailStatus?.linked && settingsEmailStatus?.verified
-                    ? React.createElement("div", { className: "playground-settings-integration-notice is-success" }, "Email is linked and ready to receive tasks.")
+                    ? null
                     : settingsShowEmailVerificationInput || (settingsEmailStatus?.linked && !settingsEmailStatus?.verified)
                       ? React.createElement(React.Fragment, null,
                           React.createElement("div", { className: "playground-settings-integration-notice is-warning" }, "A verification code has been sent to your email. Enter it below to complete linking."),
@@ -2579,7 +2682,7 @@
               if (tagId === "telegram") {
                 return React.createElement(React.Fragment, null,
                   settingsTelegramStatus?.linked && settingsTelegramStatus?.verified
-                    ? React.createElement("div", { className: "playground-settings-integration-notice is-success" }, "Telegram is linked and ready to receive tasks.")
+                    ? null
                     : React.createElement(React.Fragment, null,
                         React.createElement("ul", { className: "playground-plugin-modal-list" },
                           React.createElement("li", null, "Open Telegram and search for @aios_agent_bot."),
@@ -2610,75 +2713,98 @@
                   renderSettingsIntegrationMessage("success", settingsTelegramSuccess)
                 );
               }
-              return React.createElement(React.Fragment, null,
-                selectedTag.connected
-                  ? React.createElement("div", { className: "playground-settings-integration-notice is-success" }, selectedTag.label + " is connected and ready to receive tasks.")
-                  : React.createElement("div", { className: "playground-settings-integration-notice" }, "Connect " + selectedTag.label + " to receive external requests."),
-                renderSettingsIntegrationMessage("error", settingsDiscordError),
-                renderSettingsIntegrationMessage("success", settingsDiscordSuccess)
-              );
-            })();
-            const setupSection = React.createElement("div", { className: "playground-plugin-detail-tutorial" },
-              React.createElement("section", { className: "playground-plugin-detail-section" },
-                React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Setup"),
-                React.createElement("div", { className: "playground-plugin-detail-tutorial-grid" },
-                  [
-                    { id: "connect", title: "1. Connect " + selectedTag.label, copy: "Link the external identity that can start or continue work through this tag." },
-                    { id: "route", title: "2. Choose defaults", copy: "Select the default computer and permissions that should apply to incoming requests." },
-                    { id: "use", title: "3. Send a request", copy: tagManifest.workflowDescription || "Start work from the external service and ACP will route it into an agent thread." },
-                  ].map((step) =>
-                    React.createElement("div", { key: step.id, className: "playground-plugin-detail-surface playground-plugin-detail-tutorial-card" },
-                      React.createElement("div", { className: "playground-plugin-detail-tutorial-title" }, step.title),
-                      React.createElement("div", { className: "playground-plugin-detail-tutorial-copy" }, step.copy)
-                    )
+              return settingsDiscordError || settingsDiscordSuccess
+                ? React.createElement(React.Fragment, null,
+                    renderSettingsIntegrationMessage("error", settingsDiscordError),
+                    renderSettingsIntegrationMessage("success", settingsDiscordSuccess)
                   )
-                )
-              ),
-              React.createElement("section", { className: "playground-plugin-detail-section playground-plugin-detail-setup" },
-                React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Connection"),
-                setupContent
-              )
-            );
+                : null;
+            })();
             const normalizedTagDetailTab = pluginDetailTab === "permissions"
               ? "permissions"
               : pluginDetailTab === "tutorial"
-                ? "setup"
-                : "general";
-            const activeSection = normalizedTagDetailTab === "permissions"
-              ? null
-              : normalizedTagDetailTab === "setup"
-                ? setupSection
-                : React.createElement(React.Fragment, null,
-                    analyticsSection,
-                    instructionsSection
-                  );
-            const tagDetailContent = isTagLoading
+                ? "authentication"
+                : "overview";
+            const accessSection = renderTagPluginAccessSettings({
+              resourceId: tagId,
+              resourceLabel: selectedTag.label || "Tag",
+              resourceKind: "tag",
+            });
+            const tagOverviewContent = isTagLoading
               ? React.createElement(PlatformLoadingState, {
                   centered: true,
                   message: "Loading tag...",
                 })
-              : activeSection;
+              : React.createElement(React.Fragment, null,
+                  analyticsSection,
+                  instructionsSection
+                );
+            const tagConnectionAction = getTagConnectionButtonState();
+            const isTagAuthenticationConnected = tagId === "email"
+              ? Boolean(settingsEmailStatus?.linked && settingsEmailStatus?.verified)
+              : tagId === "telegram"
+                ? Boolean(settingsTelegramStatus?.linked && settingsTelegramStatus?.verified)
+                : tagId === "discord"
+                  ? Boolean(settingsDiscordStatus?.linked && settingsDiscordStatus?.verified)
+                  : Boolean(selectedTag.connected);
+            const isTagAuthenticationLoading = tagId === "email"
+              ? Boolean(settingsEmailLoading)
+              : tagId === "telegram"
+                ? Boolean(settingsTelegramLoading)
+                : false;
+            const tagFeatures = Array.isArray(selectedTag.features) ? selectedTag.features : [];
+            const tagOverviewInformation = [
+              { id: "visibility", label: "Visibility", value: "Organization" },
+              { id: "authentication", label: "Authentication", value: getPluginDetailAuthMethod(tagId) },
+              {
+                id: "origin",
+                label: "Origin",
+                value: selectedTag.categoryLabel || selectedTag.category || "Computer Agents",
+              },
+              {
+                id: "functions",
+                label: "Functions",
+                value: tagFeatures.length
+                  ? tagFeatures.length + (tagFeatures.length === 1 ? " action" : " actions")
+                  : "None",
+              },
+              { id: "name", label: "Tag name", value: selectedTag.label || tagId },
+              { id: "id", label: "Tag ID", value: tagId },
+            ];
+            const tagOverviewIncludedItems = tagFeatures.map((feature, index) => ({
+              id: String(feature.id || index),
+              title: feature.title || feature.label || "Action",
+              description: feature.description || "",
+              icon: renderFeatureIcon(feature),
+            }));
 
             return React.createElement(TagDetailPage, {
-                header: tagProfileSection,
-                tabBarActions: renderTagConnectionButton(),
-                sidebarToggle: renderTagSidebarToggleButton(),
+                identityIcon: renderPluginRowLogo(selectedTag),
+                identityTitle: selectedTag.label || "Tag",
+                identityDescription: selectedTag.description || "Route external work into an agent thread.",
+                connectionAction: tagConnectionAction,
+                authentication: isTagAuthenticationConnected ? null : setupContent,
+                authenticationConnected: isTagAuthenticationConnected,
+                authenticationLoading: isTagAuthenticationLoading,
+                authenticationIdentity: tagConfig.connectedIdentity || selectedTag.statusCopy || "",
+                authenticationMethod: getPluginDetailAuthMethod(tagId),
+                authenticationEmptyDescription: "Connect " + (selectedTag.label || "this tag") + " to receive and continue agent work from this channel.",
+                overviewInformation: tagOverviewInformation,
+                overviewIncludedItems: tagOverviewIncludedItems,
                 sidebar,
+                sidebarToggle: renderTagSidebarToggleButton(),
                 activeTab: normalizedTagDetailTab,
-                onTabChange: (tab) => setPluginDetailTab(tab === "setup" ? "tutorial" : tab),
+                onTabChange: (tab) => setPluginDetailTab(
+                  tab === "authentication" ? "tutorial" : tab === "overview" ? "general" : tab
+                ),
                 sidebarCollapsed: tagDetailSidebarCollapsed,
                 sidebarPopoverOpen: defaultEnvironmentPopoverOpen,
-                permissions: {
-                  permissionSet: normalizedPermissionSet,
-                  subjectType: "agent",
-                  onRingAccessChange: (ringId, access) => updateTagPermissionRingAccess(tagId, ringId, access),
-                  onActionRingChange: (actionId, ringId) => updateTagPermissionActionRing(tagId, actionId, ringId),
-                  onActionAccessChange: (actionId, access) => updateTagPermissionActionAccess(tagId, actionId, access),
-                },
+                permissions: accessSection,
                 ariaLabel: selectedTag.label + " tag details",
                 sidebarAriaLabel: selectedTag.label + " tag settings",
+                className: "is-tag-detail",
               },
-              tagDetailContent
+              tagOverviewContent
             );
           }
   
@@ -2686,6 +2812,74 @@
             if (!selectedPlugin) {
               return null;
             }
+
+            const pluginId = String(selectedPlugin.id || "").trim().toLowerCase();
+            const isPluginAccessLoading = tagDetailLoadingId === pluginId;
+            const getPluginConnectionButtonState = () => {
+              if (pluginId === "email") {
+                return settingsEmailStatus?.linked && settingsEmailStatus?.verified
+                  ? {
+                      label: settingsIsUnlinkingEmail ? "Disconnecting..." : "Disconnect",
+                      tone: "destructive",
+                      disabled: settingsIsUnlinkingEmail,
+                      onClick: () => { void handleSettingsUnlinkEmail(); },
+                    }
+                  : {
+                      label: "Connect",
+                      tone: "primary",
+                      disabled: false,
+                      onClick: () => setPluginDetailTab("tutorial"),
+                    };
+              }
+              if (pluginId === "telegram") {
+                return settingsTelegramStatus?.linked && settingsTelegramStatus?.verified
+                  ? {
+                      label: settingsIsUnlinkingTelegram ? "Disconnecting..." : "Disconnect",
+                      tone: "destructive",
+                      disabled: settingsIsUnlinkingTelegram,
+                      onClick: () => { void handleSettingsUnlinkTelegram(); },
+                    }
+                  : {
+                      label: "Connect",
+                      tone: "primary",
+                      disabled: false,
+                      onClick: () => setPluginDetailTab("tutorial"),
+                    };
+              }
+              const actions = Array.isArray(selectedPlugin.actions) ? selectedPlugin.actions : [];
+              const preferredAction = actions.find((action) => action?.tone === "destructive")
+                || actions.find((action) => action?.tone === "primary")
+                || actions[0]
+                || null;
+              if (!preferredAction) {
+                return null;
+              }
+              const disabled = pluginId === "discord"
+                ? Boolean(
+                    (preferredAction.tone === "destructive" && settingsIsUnlinkingDiscord)
+                    || (preferredAction.tone === "primary" && settingsIsLinkingDiscord)
+                  )
+                : false;
+              const label = pluginId === "discord"
+                && preferredAction.tone === "destructive"
+                && settingsIsUnlinkingDiscord
+                ? "Disconnecting..."
+                : pluginId === "discord"
+                  && preferredAction.tone === "primary"
+                  && settingsIsLinkingDiscord
+                  ? "Connecting..."
+                  : preferredAction.label;
+              return {
+                label,
+                tone: preferredAction.tone === "primary"
+                  ? "primary"
+                  : preferredAction.tone === "destructive"
+                    ? "destructive"
+                    : "secondary",
+                disabled,
+                onClick: preferredAction.onClick,
+              };
+            };
   
             const getLinkLabel = (url) => {
               const value = String(url || "").trim();
@@ -2711,15 +2905,6 @@
                     : Layers;
               return React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.8 });
             };
-  
-            const infoRows = [
-              { id: "category", label: "Category", value: selectedPlugin.categoryLabel || selectedPlugin.category || "Workspace Integration" },
-              { id: "functions", label: "Functions", value: selectedPlugin.functionsLabel || "Connect" },
-              { id: "built-by", label: "Built by", value: "Computer Agents" },
-              { id: "website", label: "Website", href: selectedPlugin.websiteUrl },
-              { id: "terms", label: "Terms of Use", href: selectedPlugin.termsUrl },
-              { id: "privacy", label: "Data Protection", href: selectedPlugin.privacyUrl },
-            ];
   
             let setupContent = null;
             if (selectedPlugin.id === "email") {
@@ -2836,20 +3021,6 @@
   	          const capabilityCards = getPluginDetailCapabilityCards(selectedPlugin).filter((card) =>
   	            card && card.supported !== false && !card.planned
   	          );
-  	          const permissionRows = getPluginDetailPermissionRows(selectedPlugin);
-            const getPermissionStatus = () => {
-              if (connectionState.id === "connected") {
-                return { label: "Enabled", tone: "connected" };
-              }
-              if (connectionState.id === "pending") {
-                return { label: "Pending", tone: "pending" };
-              }
-              if (connectionState.id === "webhook") {
-                return { label: "Configure", tone: "available" };
-              }
-              return { label: "Disabled", tone: "inactive" };
-            };
-            const permissionStatus = getPermissionStatus();
             const connectionRows = [
               { id: "status", label: "Status", value: connectionState.label },
   	            { id: "account", label: "Account", value: selectedPlugin.statusCopy || connectionState.copy },
@@ -2860,6 +3031,78 @@
               { id: "terms", label: "Terms", href: selectedPlugin.termsUrl },
               { id: "privacy", label: "Privacy", href: selectedPlugin.privacyUrl },
             ];
+            const renderPluginSidebarValue = (row) => {
+              if (row.href) {
+                return React.createElement("a", {
+                    className: "playground-plugin-detail-info-link playground-tag-plugin-sidebar-link",
+                    href: row.href,
+                    target: "_blank",
+                    rel: "noreferrer",
+                  },
+                  React.createElement("span", { className: "playground-plugin-detail-info-link-text" }, getLinkLabel(row.href)),
+                  React.createElement(ExternalLink, { width: 12, height: 12, strokeWidth: 1.8 })
+                );
+              }
+              return React.createElement("span", {
+                className: "playground-environments-editor-fact-value",
+                title: String(row.value || ""),
+              }, row.value || "Not set");
+            };
+            const renderPluginSidebarRow = (row) =>
+              React.createElement("div", {
+                  key: row.id,
+                  className: "playground-project-overview-sidebar-row",
+                },
+                React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, row.label),
+                React.createElement("div", { className: "playground-project-overview-sidebar-row-value" },
+                  renderPluginSidebarValue(row)
+                )
+              );
+            const pluginSidebar = React.createElement(React.Fragment, null,
+              React.createElement(PlatformUiCard, {
+                  as: "section",
+                  variant: "sidebar",
+                  className: "playground-project-overview-sidebar-card playground-tag-plugin-details-card",
+                },
+                React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
+                  connectionRows
+                    .filter((row) => ["status", "account", "auth", "mode", "category"].includes(row.id))
+                    .map(renderPluginSidebarRow)
+                )
+              ),
+              React.createElement(PlatformUiCard, {
+                  as: "section",
+                  variant: "sidebar",
+                  cardTitle: "Included Actions",
+                  className: "playground-project-overview-sidebar-card playground-tag-plugin-actions-card",
+                },
+                React.createElement("div", { className: "playground-tags-detail-sidebar-actions" },
+                  (selectedPlugin.features || []).map((feature) =>
+                    React.createElement("div", { key: feature.id, className: "playground-tags-detail-sidebar-action" },
+                      React.createElement("span", {
+                        className: "playground-tags-detail-sidebar-action-icon playground-plugin-detail-feature-icon",
+                      }, renderFeatureIcon(feature)),
+                      React.createElement("div", { className: "playground-tags-detail-sidebar-action-copy" },
+                        React.createElement("div", { className: "playground-plugin-detail-feature-title" }, feature.title),
+                        React.createElement("div", { className: "playground-plugin-detail-feature-description" }, feature.description)
+                      )
+                    )
+                  )
+                )
+              ),
+              React.createElement(PlatformUiCard, {
+                  as: "section",
+                  variant: "sidebar",
+                  cardTitle: "Provider Information",
+                  className: "playground-project-overview-sidebar-card playground-tag-plugin-provider-card",
+                },
+                React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
+                  connectionRows
+                    .filter((row) => ["website", "terms", "privacy"].includes(row.id) && row.href)
+                    .map(renderPluginSidebarRow)
+                )
+              )
+            );
   
   	          const normalizedCapabilityCards = capabilityCards.length
   	            ? capabilityCards
@@ -2870,105 +3113,6 @@
   	                icon: Layers,
   	                supported: true,
   	              }];
-  	          const normalizedCapabilityIndex = ((pluginDetailCapabilityIndex % normalizedCapabilityCards.length) + normalizedCapabilityCards.length) % normalizedCapabilityCards.length;
-  	          const activeCapability = normalizedCapabilityCards[normalizedCapabilityIndex] || normalizedCapabilityCards[0];
-  	          const outgoingCapability = pluginDetailCapabilityOutgoingIndex === null
-  	            ? null
-  	            : normalizedCapabilityCards[((pluginDetailCapabilityOutgoingIndex % normalizedCapabilityCards.length) + normalizedCapabilityCards.length) % normalizedCapabilityCards.length];
-  	          const showCapabilityAt = (nextIndex, directionOverride = null) => {
-  	            const count = normalizedCapabilityCards.length || 1;
-  	            const normalizedNextIndex = ((nextIndex % count) + count) % count;
-  	            if (normalizedNextIndex === normalizedCapabilityIndex) {
-  	              return;
-  	            }
-  	            const direction = directionOverride || (normalizedNextIndex > normalizedCapabilityIndex ? 1 : -1);
-  	            setPluginDetailCapabilityOutgoingIndex(normalizedCapabilityIndex);
-  	            setPluginDetailCapabilityDirection(direction > 0 ? 1 : -1);
-  	            setPluginDetailCapabilityIndex(normalizedNextIndex);
-  	            setPluginDetailCapabilityTransitionKey((current) => current + 1);
-  	            window.setTimeout(() => {
-  	              setPluginDetailCapabilityOutgoingIndex(null);
-  	            }, 360);
-  	          };
-  	          const advanceCapability = (direction) => {
-  	            const count = normalizedCapabilityCards.length || 1;
-  	            showCapabilityAt(normalizedCapabilityIndex + direction + count, direction >= 0 ? 1 : -1);
-            };
-            const renderPermissionsPanel = () =>
-              React.createElement("div", { className: "playground-plugin-detail-surface playground-plugin-detail-permission-panel" },
-  	              React.createElement("div", { className: "playground-plugin-detail-permission-list" },
-  	                permissionRows.map((row) =>
-  	                  React.createElement("div", { key: row.id, className: "playground-plugin-detail-permission-row" },
-  	                    React.createElement("span", { className: "playground-plugin-detail-permission-icon is-" + permissionStatus.tone },
-  	                      permissionStatus.tone === "connected"
-  	                        ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 2 })
-  	                        : React.createElement(Shield, { width: 13, height: 13, strokeWidth: 1.8 })
-  	                    ),
-  	                    React.createElement("div", { className: "playground-plugin-detail-permission-copy" },
-  	                      React.createElement("div", { className: "playground-plugin-detail-permission-name" }, row.title),
-  	                      React.createElement("div", { className: "playground-plugin-detail-permission-description" }, row.description)
-  	                    )
-  	                  )
-  	                )
-  	              )
-  	            );
-  	          const renderConnectionDetailsPanel = () =>
-  	            React.createElement("section", { className: "playground-plugin-detail-section" },
-  	              React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Connection"),
-  	              React.createElement("div", { className: "playground-plugin-detail-surface playground-plugin-detail-connection-panel" },
-  	                React.createElement("div", { className: "playground-plugin-detail-info-compact" },
-  	                  connectionRows
-  	                    .filter((row) => row.id !== "status" && (row.href || row.value))
-  	                    .map((row) =>
-  	                      React.createElement("div", { key: row.id, className: "playground-plugin-detail-info-row" },
-  	                        React.createElement("div", { className: "playground-plugin-detail-info-label" }, row.label),
-  	                        React.createElement("div", { className: "playground-plugin-detail-info-value" },
-  	                          row.href
-  	                            ? React.createElement("a", {
-  	                                className: "playground-plugin-detail-info-link",
-  	                                href: row.href,
-  	                                target: "_blank",
-  	                                rel: "noreferrer",
-  	                              },
-  	                                React.createElement("span", { className: "playground-plugin-detail-info-link-text" }, getLinkLabel(row.href)),
-  	                                React.createElement(ExternalLink, { width: 12, height: 12, strokeWidth: 1.8 })
-  	                              )
-  	                            : row.value
-  	                        )
-  	                      )
-  	                    )
-  	                )
-  	              )
-  	            );
-  	          const renderIncludedActions = () =>
-  	            React.createElement("section", { className: "playground-plugin-detail-section playground-plugin-detail-included-actions" },
-  	              React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Included actions"),
-  	              React.createElement("div", { className: "playground-plugin-detail-surface playground-plugin-detail-table" },
-  	                (selectedPlugin.features || []).map((feature) =>
-  	                  React.createElement("div", { key: feature.id, className: "playground-plugin-detail-table-row" },
-  	                    React.createElement("div", { className: "playground-plugin-detail-feature-main" },
-  	                      React.createElement("span", { className: "playground-plugin-detail-feature-icon" }, renderFeatureIcon(feature)),
-  	                      React.createElement("div", { className: "playground-plugin-detail-feature-copy" },
-  	                        React.createElement("div", { className: "playground-plugin-detail-feature-title-row" },
-  	                          React.createElement("span", { className: "playground-plugin-detail-feature-title" }, feature.title),
-  	                          feature.kind
-  	                            ? React.createElement("span", { className: "playground-plugin-detail-feature-kind" }, feature.kind)
-  	                            : null
-  	                        ),
-  	                        React.createElement("div", { className: "playground-plugin-detail-feature-description" }, feature.description)
-  	                      )
-  	                    )
-  	                  )
-  	                )
-  	              )
-  	            );
-            const renderSetupSection = () =>
-              setupContent
-                ? React.createElement("section", { className: "playground-plugin-detail-section playground-plugin-detail-setup" },
-                    React.createElement("h3", { className: "playground-plugin-detail-section-title" }, "Setup"),
-                    setupContent
-                  )
-                : null;
   	          const getCapabilityDescription = (capability) => {
   	            const base = String(capability?.description || "Use this capability to connect external work with ACP.").trim();
   	            const followUps = {
@@ -2979,119 +3123,126 @@
   	            };
   	            return [base, followUps[capability?.id] || pluginManifest.workflowDescription || ""].filter(Boolean).join(" ");
   	          };
-  	          const getPluginTutorialSteps = () => {
-  	            const pluginLabel = selectedPlugin.label || "Plugin";
-  	            const isExternalChannel = ["discord", "telegram", "email"].includes(selectedPlugin.id);
-  	            const isWebhookPlugin = ["gitlab"].includes(selectedPlugin.id);
-  	            const connectCopy = isWebhookPlugin
-  	              ? "Create the webhook endpoint, copy the generated URL and secret, and paste both into " + pluginLabel + " so events can be routed into ACP."
-  	              : isExternalChannel
-  	                ? "Start the " + pluginLabel + " connection flow, complete verification, and choose the default agent and environment that should receive incoming requests."
-  	                : "Click Connect " + pluginLabel + ", complete the authorization flow, and grant only the workspaces, files, repositories, or scopes ACP should be allowed to use.";
-  	            const permissionCopy = "Review the permissions below, confirm what agents can read, write, trigger, or notify, and keep the connection scoped to the work this plugin should support.";
-  	            const useCopy = isExternalChannel || isWebhookPlugin
-  	              ? "Send a command or trigger an event from " + pluginLabel + ". ACP will create or continue a thread with the external request attached as context, then return updates through the configured channel."
-  	              : "Open a thread, task, or project and reference " + pluginLabel + " context when asking an agent to work. The agent can inspect connected data and perform the supported actions during the run.";
-  	            return [
-  	              { id: "connect", title: "1. Connect " + pluginLabel, copy: connectCopy },
-  	              { id: "permissions", title: "2. Confirm permissions", copy: permissionCopy },
-  	              { id: "use", title: "3. Use it in agent work", copy: useCopy },
-  	            ];
-  	          };
-  	          const renderTutorialPanel = () =>
-  	            React.createElement("div", { className: "playground-plugin-detail-tutorial" },
-  	              React.createElement("section", { className: "playground-plugin-detail-section" },
-  	                React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Tutorial"),
-  	                React.createElement("div", { className: "playground-plugin-detail-tutorial-grid" },
-  	                  getPluginTutorialSteps().map((step) =>
-  	                    React.createElement("div", { key: step.id, className: "playground-plugin-detail-surface playground-plugin-detail-tutorial-card" },
-  	                      React.createElement("div", { className: "playground-plugin-detail-tutorial-title" }, step.title),
-  	                      React.createElement("div", { className: "playground-plugin-detail-tutorial-copy" }, step.copy)
-  	                    )
-  	                  )
-  	                )
-  	              ),
-  	              setupContent
-  	                ? React.createElement("section", { className: "playground-plugin-detail-section playground-plugin-detail-setup" },
-  	                    React.createElement("h3", { className: "playground-plugin-detail-section-title playground-plugin-detail-surface-title" }, "Setup flow"),
-  	                    setupContent
-  	                  )
-  	                : null
-  	            );
-            const renderCapabilitySlide = (capability, index, variant) => {
-  	            const directionClass = pluginDetailCapabilityDirection > 0
-  	              ? " is-forward"
-  	              : pluginDetailCapabilityDirection < 0
-  	                ? " is-backward"
-  	                : "";
-  	            const variantClass = variant ? " is-" + variant : "";
-  	            return React.createElement("div", {
-  	              key: (capability?.id || index) + ":" + variant + ":" + pluginDetailCapabilityTransitionKey,
-  	              className: "playground-plugin-detail-carousel-slide" + variantClass + directionClass,
-  	            },
-  	              React.createElement("div", { className: "playground-plugin-detail-carousel-copy" },
-  	                React.createElement("h3", { className: "playground-plugin-detail-carousel-title" }, capability.title),
-  	                React.createElement("p", { className: "playground-plugin-detail-carousel-description" }, getCapabilityDescription(capability)),
-  	                React.createElement("button", {
-  	                  type: "button",
-  	                  className: "playground-plugin-detail-carousel-learn",
-  	                  onClick: () => setPluginDetailTab("tutorial"),
-  	                }, "Learn more")
-  	              )
-  	            );
-  	          };
-  	          const renderCapabilityCarousel = () =>
-  	            React.createElement("section", { className: "playground-plugin-detail-carousel" },
-  	              React.createElement("div", { className: "playground-plugin-detail-carousel-stage" },
-  	                outgoingCapability
-  	                  ? renderCapabilitySlide(outgoingCapability, pluginDetailCapabilityOutgoingIndex, "outgoing")
-  	                  : null,
-  	                renderCapabilitySlide(activeCapability, normalizedCapabilityIndex, pluginDetailCapabilityDirection === 0 ? "" : "incoming")
-  	              ),
-  	              React.createElement("div", { className: "playground-plugin-detail-carousel-dots" },
-  	                normalizedCapabilityCards.map((card, index) =>
-  	                  React.createElement("button", {
-  	                    key: card.id || index,
-  	                    type: "button",
-  	                    className: "playground-plugin-detail-carousel-dot" + (index === normalizedCapabilityIndex ? " is-active" : ""),
-  	                    onClick: () => showCapabilityAt(index),
-  	                    "aria-label": "Show " + (card.title || "capability"),
-  	                  })
-  	                )
-  	              ),
-  	              React.createElement("div", { className: "playground-plugin-detail-carousel-controls" },
-  	                React.createElement("button", {
-  	                  type: "button",
-  	                  className: "playground-plugin-detail-carousel-nav",
-  	                  onClick: () => advanceCapability(-1),
-  	                  "aria-label": "Previous capability",
-  	                }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
-  	                React.createElement("button", {
-  	                  type: "button",
-  	                  className: "playground-plugin-detail-carousel-nav",
-  	                  onClick: () => advanceCapability(1),
-  	                  "aria-label": "Next capability",
-  	                }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
-  	              )
-  	            );
-  
-  	          return React.createElement("div", { className: "playground-plugin-detail-stack" },
-  	            pluginDetailTab === "permissions"
-  	              ? React.createElement(React.Fragment, null,
-  	                  React.createElement("section", { className: "playground-plugin-detail-section" },
-  	                    renderPermissionsPanel()
-  	                  )
-  	                )
-  	              : pluginDetailTab === "tutorial"
-  	                ? React.createElement(React.Fragment, null,
-  	                    renderTutorialPanel()
-  	                )
-  	              : React.createElement(React.Fragment, null,
-  	                  renderCapabilityCarousel(),
-  	                  renderConnectionDetailsPanel(),
-  	                  renderIncludedActions()
-  	                )
-  	          );
+            const generalSection = React.createElement(PlatformSettingsSectionList, {
+                className: "playground-tag-plugin-settings-list playground-plugin-detail-general",
+              },
+              React.createElement(PlatformSettingsSection, {
+                  title: "Capabilities",
+                  className: "playground-tag-plugin-settings-section",
+                },
+                React.createElement("div", { className: "playground-tag-plugin-capability-grid" },
+                  normalizedCapabilityCards.map((capability, index) => {
+                    const CapabilityIcon = capability.icon || Layers;
+                    return React.createElement(PlatformUiCard, {
+                        key: capability.id || index,
+                        className: "playground-tag-plugin-capability-card",
+                      },
+                      React.createElement("span", { className: "playground-tag-plugin-capability-icon", "aria-hidden": "true" },
+                        React.createElement(CapabilityIcon, { width: 16, height: 16, strokeWidth: 1.8 })
+                      ),
+                      React.createElement("div", { className: "playground-tag-plugin-capability-title" }, capability.title),
+                      React.createElement("div", { className: "playground-tag-plugin-capability-description" },
+                        getCapabilityDescription(capability)
+                      )
+                    );
+                  })
+                )
+              )
+            );
+            const permissionsSection = isPluginAccessLoading
+              ? React.createElement(PlatformLoadingState, {
+                  centered: true,
+                  message: "Loading plugin access...",
+                })
+              : renderTagPluginAccessSettings({
+                  resourceId: pluginId,
+                  resourceLabel: selectedPlugin.label || "Plugin",
+                  resourceKind: "plugin",
+                });
+            const normalizedPluginDetailTab = pluginDetailTab === "permissions"
+              ? "permissions"
+              : pluginDetailTab === "tutorial"
+                ? "authentication"
+                : "overview";
+            const pluginSidebarToggle = React.createElement("button", {
+                type: "button",
+                className: "playground-project-overview-sidebar-toggle",
+                onClick: () => setTagDetailSidebarCollapsed((current) => !current),
+                title: tagDetailSidebarCollapsed ? "Show plugin sidebar" : "Hide plugin sidebar",
+                "aria-label": tagDetailSidebarCollapsed ? "Show plugin sidebar" : "Hide plugin sidebar",
+                "aria-pressed": tagDetailSidebarCollapsed ? "true" : "false",
+              },
+              React.createElement(PanelRight, { width: 15, height: 15, strokeWidth: 1.8 })
+            );
+            const pluginConnectionAction = getPluginConnectionButtonState();
+            const isPluginAuthenticationLoading = pluginId === "email"
+              ? Boolean(settingsEmailLoading)
+              : pluginId === "telegram"
+                ? Boolean(settingsTelegramLoading)
+                : false;
+            const pluginOverviewInformation = [
+              { id: "visibility", label: "Visibility", value: "Organization" },
+              { id: "authentication", label: "Authentication", value: getPluginDetailAuthMethod(pluginId) },
+              {
+                id: "origin",
+                label: "Origin",
+                value: selectedPlugin.categoryLabel || selectedPlugin.category || "Computer Agents",
+              },
+              {
+                id: "functions",
+                label: "Functions",
+                value: normalizedCapabilityCards.length
+                  ? normalizedCapabilityCards.length + (normalizedCapabilityCards.length === 1 ? " action" : " actions")
+                  : "None",
+              },
+              { id: "name", label: "Connector name", value: pluginId },
+              {
+                id: "id",
+                label: "Connector ID",
+                value: selectedPlugin.connectorId || selectedPlugin.id || pluginId,
+              },
+            ];
+            const pluginOverviewIncludedItems = normalizedCapabilityCards.map((capability, index) => {
+              const CapabilityIcon = capability.icon || Layers;
+              return {
+                id: String(capability.id || index),
+                title: capability.title || "Action",
+                description: getCapabilityDescription(capability),
+                icon: React.createElement(CapabilityIcon, {
+                  width: 14,
+                  height: 14,
+                  strokeWidth: 1.8,
+                }),
+              };
+            });
+
+            return React.createElement(TagDetailPage, {
+                identityIcon: renderPluginRowLogo(selectedPlugin),
+                identityTitle: selectedPlugin.label || "Plugin",
+                identityDescription: selectedPlugin.description || "Connect this integration to extend agent work.",
+                connectionAction: pluginConnectionAction,
+                authentication: connectionState.id === "connected" ? null : setupContent,
+                authenticationConnected: connectionState.id === "connected",
+                authenticationLoading: isPluginAuthenticationLoading,
+                authenticationIdentity: selectedPlugin.statusCopy || connectionState.copy,
+                authenticationMethod: getPluginDetailAuthMethod(pluginId),
+                authenticationEmptyDescription: "Connect " + (selectedPlugin.label || "this plugin") + " to use its protected data and actions.",
+                overviewInformation: pluginOverviewInformation,
+                overviewIncludedItems: pluginOverviewIncludedItems,
+                sidebar: pluginSidebar,
+                sidebarToggle: pluginSidebarToggle,
+                activeTab: normalizedPluginDetailTab,
+                onTabChange: (tab) => setPluginDetailTab(
+                  tab === "authentication" ? "tutorial" : tab === "overview" ? "general" : tab
+                ),
+                sidebarCollapsed: tagDetailSidebarCollapsed,
+                permissions: permissionsSection,
+                ariaLabel: selectedPlugin.label + " plugin details",
+                sidebarAriaLabel: selectedPlugin.label + " plugin settings",
+                className: "is-plugin-detail",
+              },
+              generalSection
+            );
           }
   
           function renderWebhookActionsPanel(options = {}) {
@@ -3641,54 +3792,28 @@
             const selectedPlugin = toolsView === "plugins" || isTagsView
               ? currentToolsCatalog.find((plugin) => plugin.id === selectedPluginId) || null
               : null;
-            const handleDisconnectAllPlugins = async () => {
-              const hasConnectedPlugin = isTagsView
-                ? Boolean(
-                    (settingsEmailStatus?.linked && settingsEmailStatus?.verified)
-                    || (settingsDiscordStatus?.linked && settingsDiscordStatus?.verified)
-                    || (settingsTelegramStatus?.linked && settingsTelegramStatus?.verified)
-                  )
-                : Boolean(
-                    githubStatus?.connected
-                    || gmailStatus?.connected
-                    || googleDriveStatus?.connected
-                    || oneDriveStatus?.connected
-                    || notionStatus?.connected
-                  );
-              if (!hasConnectedPlugin) {
+            const handleDisconnectAllTags = async () => {
+              const hasConnectedTag = Boolean(
+                (settingsEmailStatus?.linked && settingsEmailStatus?.verified)
+                || (settingsDiscordStatus?.linked && settingsDiscordStatus?.verified)
+                || (settingsTelegramStatus?.linked && settingsTelegramStatus?.verified)
+              );
+              if (!hasConnectedTag) {
                 setPluginsNavPopover("");
                 return;
               }
-              if (!window.confirm("Disconnect all connected " + (isTagsView ? "tags" : "plugins") + " from this account?")) {
+              if (!window.confirm("Disconnect all connected tags from this account?")) {
                 return;
               }
               setPluginsNavPopover("");
-              if (isTagsView) {
-                if (settingsEmailStatus?.linked && settingsEmailStatus?.verified) {
-                  await handleSettingsUnlinkEmail();
-                }
-                if (settingsDiscordStatus?.linked && settingsDiscordStatus?.verified) {
-                  await handleSettingsUnlinkDiscord();
-                }
-                if (settingsTelegramStatus?.linked && settingsTelegramStatus?.verified) {
-                  await handleSettingsUnlinkTelegram();
-                }
-              } else {
-                if (githubStatus?.connected) {
-                  await handleGithubAuthDisconnect();
-                }
-                if (googleDriveStatus?.connected) {
-                  await handleGoogleDriveAuthDisconnect();
-                }
-                if (gmailStatus?.connected) {
-                  await handleGmailAuthDisconnect();
-                }
-                if (oneDriveStatus?.connected) {
-                  await handleOneDriveAuthDisconnect();
-                }
-                if (notionStatus?.connected) {
-                  await handleNotionAuthDisconnect();
-                }
+              if (settingsEmailStatus?.linked && settingsEmailStatus?.verified) {
+                await handleSettingsUnlinkEmail();
+              }
+              if (settingsDiscordStatus?.linked && settingsDiscordStatus?.verified) {
+                await handleSettingsUnlinkDiscord();
+              }
+              if (settingsTelegramStatus?.linked && settingsTelegramStatus?.verified) {
+                await handleSettingsUnlinkTelegram();
               }
             };
   
@@ -3711,13 +3836,131 @@
             const isActionsView = toolsView === "actions";
             const isPluginsDetailView = (isPluginsView || isTagsView) && Boolean(selectedPlugin);
             const isSkillsDetailView = isSkillsView && toolsSkillsHeaderState.mode === "detail";
-            const hasMenu = ((isPluginsView || isTagsView) && !isPluginsDetailView) || isActionsView;
+            const hasMenu = isActionsView;
             const toolsOverviewTitle = isActionsView
               ? "Actions"
               : isSkillsView
                 ? "Skills"
-                : "Tags and Plugins";
+                : "Connectors";
             const toolsWorkspaceRoot = isActionsView ? "Develop" : "Configure";
+            const normalizedConnectionDetailTab = pluginDetailTab === "permissions"
+              ? "permissions"
+              : pluginDetailTab === "tutorial"
+                ? "authentication"
+                : "overview";
+            const skillDetailVersionLabel = isSkillsDetailView
+              ? React.createElement(PlatformVersionLabel, {
+                  version: Number.isFinite(Number(toolsSkillsHeaderState.versionNumber))
+                    ? Number(toolsSkillsHeaderState.versionNumber)
+                    : (toolsSkillsHeaderState.isSystem ? 0 : 1),
+                  qualifier: toolsSkillsHeaderState.versionQualifier || (
+                    toolsSkillsHeaderState.isSystem ? "System" : "Latest"
+                  ),
+                  className: "skill-detail-header__version-label",
+                  "aria-label": toolsSkillsHeaderState.isSystem
+                    ? "System skill version"
+                    : "Open skill version history",
+                  disabled: Boolean(toolsSkillsHeaderState.isSystem),
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (typeof toolsSkillsHeaderState.onOpenVersions === "function") {
+                      toolsSkillsHeaderState.onOpenVersions();
+                    }
+                  },
+                })
+              : null;
+            const tagsAndPluginsOverviewMenu =
+              (isPluginsView || isTagsView) && !isPluginsDetailView
+                ? React.createElement(PlatformPopup, {
+                    open: pluginsNavPopover === "menu",
+                    rootRef: pluginsNavActionsRef,
+                    rootClassName: "playground-tasks-toolbar-popup-shell playground-tags-plugins-title-actions",
+                    surfaceClassName: "playground-tasks-toolbar-popup-menu playground-tags-plugins-title-menu",
+                    surfaceProps: {
+                      role: "menu",
+                      "aria-label": "Connectors actions",
+                      width: 220,
+                    },
+                    animation: "down-in",
+                    variant: "minimal",
+                    trigger: React.createElement(PlatformIconButton, {
+                      type: "button",
+                      size: "compact",
+                      active: pluginsNavPopover === "menu",
+                      title: "Connectors actions",
+                      "aria-label": "Connectors actions",
+                      "aria-haspopup": "menu",
+                      "aria-expanded": pluginsNavPopover === "menu" ? "true" : "false",
+                      onClick: () => setPluginsNavPopover((current) => current === "menu" ? "" : "menu"),
+                    }, React.createElement(Ellipsis, { width: 14, height: 14, strokeWidth: 1.8 })),
+                  },
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      void handleDisconnectAllTags();
+                    },
+                  },
+                    React.createElement(Unlink, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "tb-popup-label" }, "Disconnect all tags")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      setPluginsNavPopover("");
+                      openDocsPage();
+                    },
+                  },
+                    React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "tb-popup-label" }, "Documentation")
+                  )
+                )
+                : null;
+            const skillsOverviewMenu =
+              isSkillsView && !isSkillsDetailView
+                ? React.createElement(PlatformPopup, {
+                    open: pluginsNavPopover === "skills-menu",
+                    rootRef: pluginsNavActionsRef,
+                    rootClassName: "playground-tasks-toolbar-popup-shell playground-tags-plugins-title-actions playground-skills-title-actions",
+                    surfaceClassName: "playground-tasks-toolbar-popup-menu playground-tags-plugins-title-menu playground-skills-title-menu",
+                    surfaceProps: {
+                      role: "menu",
+                      "aria-label": "Skills actions",
+                      width: 220,
+                    },
+                    animation: "down-in",
+                    variant: "minimal",
+                    trigger: React.createElement(PlatformIconButton, {
+                      type: "button",
+                      size: "compact",
+                      active: pluginsNavPopover === "skills-menu",
+                      title: "Skills actions",
+                      "aria-label": "Skills actions",
+                      "aria-haspopup": "menu",
+                      "aria-expanded": pluginsNavPopover === "skills-menu" ? "true" : "false",
+                      onClick: () => setPluginsNavPopover((current) =>
+                        current === "skills-menu" ? "" : "skills-menu"
+                      ),
+                    }, React.createElement(Ellipsis, { width: 14, height: 14, strokeWidth: 1.8 })),
+                  },
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      setPluginsNavPopover("");
+                      openDocsPage();
+                    },
+                  },
+                    React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "tb-popup-label" }, "Documentation")
+                  )
+                )
+                : null;
   
             return renderAppHeader({
               pathItems: isPluginsDetailView
@@ -3730,12 +3973,52 @@
                   ? [
                       { label: toolsWorkspaceRoot },
                       { label: toolsOverviewTitle, onClick: () => setToolsSkillsBackRequestToken((current) => current + 1) },
-                      { label: toolsSkillsHeaderState.title || "Skill" },
+                      {
+                        label: toolsSkillsHeaderState.title || "Skill",
+                        trailing: skillDetailVersionLabel,
+                      },
                     ]
-                  : [{ label: toolsWorkspaceRoot }, { label: toolsOverviewTitle }],
-              rightRef: pluginsNavActionsRef,
-              includeSearchDivider: isSkillsView || ((isPluginsView || isTagsView) && !isPluginsDetailView),
+                  : [
+                      { label: toolsWorkspaceRoot },
+                      {
+                        label: toolsOverviewTitle,
+                        trailing: isSkillsView
+                          ? skillsOverviewMenu
+                          : tagsAndPluginsOverviewMenu,
+                      },
+                    ],
+              center: isSkillsDetailView
+                  ? React.createElement(PlatformSwitch, {
+                      className: "skill-detail-header__switch",
+                      value: toolsSkillsHeaderState.activeTab === "settings" ? "settings" : "code",
+                      options: [
+                        { value: "code", label: "Code" },
+                        { value: "settings", label: "Settings" },
+                      ],
+                      onValueChange: (nextTab) => {
+                        if (typeof toolsSkillsHeaderState.onTabChange === "function") {
+                          toolsSkillsHeaderState.onTabChange(nextTab === "settings" ? "settings" : "code");
+                        }
+                      },
+                      ariaLabel: "Skill section",
+                    })
+                : null,
+              rightRef: isActionsView ? pluginsNavActionsRef : null,
+              includeSearchDivider: isSkillsView || isPluginsView || isTagsView,
               extraActions: React.createElement(React.Fragment, null,
+                isPluginsDetailView && isTagsView && normalizedConnectionDetailTab === "overview"
+                  ? React.createElement(PlatformSwitch, {
+                      className: "playground-tag-detail-header-timeframe",
+                      value: tagDetailPerformanceRange,
+                      options: [
+                        { value: "day", label: "24H" },
+                        { value: "week", label: "7D" },
+                        { value: "month", label: "30D" },
+                      ],
+                      onValueChange: setTagDetailPerformanceRange,
+                      ariaLabel: "Tag analytics time frame",
+                    })
+                  : null,
                 isActionsView && !settingsSelectedTrigger
                   ? React.createElement(React.Fragment, null,
                       React.createElement("div", { className: "playground-files-toolbar-anchor" },
@@ -3766,6 +4049,14 @@
                       className: "playground-tools-overview-controls-slot",
                     })
                   : null,
+                (isPluginsView || isTagsView) && !isPluginsDetailView
+                  ? React.createElement(PlatformPrimaryButton, {
+                      type: "button",
+                      size: "small",
+                      className: "playground-tags-plugins-custom-webhooks-action",
+                      onClick: () => requestPlatformNavigation(() => openDevelopWebhooksPage()),
+                    }, "Custom Webhooks")
+                  : null,
                 isSkillsView
                   ? React.createElement("div", {
                       id: "playground-tools-skills-nav-actions",
@@ -3786,30 +4077,17 @@
                         ? React.createElement(PlatformPopupSurface, {
                             className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
                           },
-                            isPluginsView || isTagsView
-                              ? React.createElement("button", {
-                                  type: "button",
-                                  className: "tb-popup-row",
-                                  onClick: () => {
-                                    void handleDisconnectAllPlugins();
-                                  },
-                                },
-                                  React.createElement(Unlink, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                    React.createElement("span", null, "Disconnect all " + (isTagsView ? "tags" : "plugins"))
-                                  )
-                                )
-                              : React.createElement("button", {
-                                  type: "button",
-                                  className: "tb-popup-row playground-tasks-detail-menu-item-danger",
-                                  onClick: () => {
-                                    void handleDeleteAllWebhooks();
-                                  },
-                                },
-                                  React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                    React.createElement("span", null, "Remove all webhooks")
-                                  )
+                            React.createElement("button", {
+                              type: "button",
+                              className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+                              onClick: () => {
+                                void handleDeleteAllWebhooks();
+                              },
+                            },
+                              React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                                React.createElement("span", null, "Remove all webhooks")
+                              )
                                 )
                           )
                         : null
@@ -3830,12 +4108,17 @@
                 projectId: settingsProjectRoutingId,
                 apiKey: effectiveApiKey,
                 upstreamUrl: resolvedUpstreamUrl,
+                currentUserId: hasSessionAuth ? (sessionState.userId || "") : "",
+                currentUserName: hasSessionAuth ? accountName : "Me",
+                currentUserEmail: hasSessionAuth ? accountEmail : "",
+                currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                 topNavActionsPortalId: "playground-tools-skills-nav-actions",
                 onToolsSkillsHeaderChange: setToolsSkillsHeaderState,
                 backRequestToken: toolsSkillsBackRequestToken,
                 openSkillRequest: toolsSkillsOpenRequest,
                 enabledSkillIds: runnerEnabledSkillIds,
                 onSkillsChange: setRunnerEnabledSkillIds,
+                workspaceTeams: teamPageTeams,
               });
             }
   
@@ -3886,11 +4169,6 @@
               const tagRows = buildConnectionOverviewRows(tagsCatalog, "tags");
               const pluginRows = buildConnectionOverviewRows(pluginCatalog, "plugins");
               const overviewPage = React.createElement(TagsOverviewPage, {
-                mode: isTagsView ? "tags" : "plugins",
-                onModeChange: (mode) => {
-                  setSelectedPluginId("");
-                  setToolsView(mode);
-                },
                 tagRows,
                 pluginRows,
                 period: connectionsOverviewChartTimescale,
@@ -3910,108 +4188,12 @@
                 className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-tags-overview-page is-develop-configure-page",
               }, overviewPage);
             }
-  	          if (selectedPlugin) {
-              const pluginHeaderButtonClass = "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button playground-plugin-detail-connect-button";
-              const pluginHeaderAction = (() => {
-                if (selectedPlugin.id === "email") {
-                  return settingsEmailStatus?.linked && settingsEmailStatus?.verified
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: pluginHeaderButtonClass + " is-destructive",
-                        onClick: () => {
-                          void handleSettingsUnlinkEmail();
-                        },
-                        disabled: settingsIsUnlinkingEmail,
-                      }, settingsIsUnlinkingEmail ? "Disconnecting..." : "Disconnect")
-                    : null;
-                }
-                if (selectedPlugin.id === "telegram") {
-                  return settingsTelegramStatus?.linked && settingsTelegramStatus?.verified
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: pluginHeaderButtonClass + " is-destructive",
-                        onClick: () => {
-                          void handleSettingsUnlinkTelegram();
-                        },
-                        disabled: settingsIsUnlinkingTelegram,
-                      }, settingsIsUnlinkingTelegram ? "Disconnecting..." : "Disconnect")
-                    : null;
-                }
-  
-                const actions = Array.isArray(selectedPlugin.actions) ? selectedPlugin.actions : [];
-                const preferredAction = actions.find((action) => action?.tone === "destructive")
-                  || actions.find((action) => action?.tone === "primary")
-                  || actions[0]
-                  || null;
-                if (!preferredAction) {
-                  return null;
-                }
-                const disabled = selectedPlugin.id === "discord"
-                  ? Boolean((preferredAction.tone === "destructive" && settingsIsUnlinkingDiscord) || (preferredAction.tone === "primary" && settingsIsLinkingDiscord))
-                  : false;
-                const label = selectedPlugin.id === "discord" && preferredAction.tone === "destructive" && settingsIsUnlinkingDiscord
-                  ? "Disconnecting..."
-                  : selectedPlugin.id === "discord" && preferredAction.tone === "primary" && settingsIsLinkingDiscord
-                    ? "Connecting..."
-                    : preferredAction.label;
-                return React.createElement("button", {
-                  type: "button",
-                  className: pluginHeaderButtonClass + (preferredAction.tone === "destructive" ? " is-destructive" : ""),
-                  onClick: preferredAction.onClick,
-                  disabled,
-                }, label);
-              })();
-  
-              if (isTagsView) {
-                return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page" },
-                  React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                    React.createElement("div", { className: "playground-plugin-detail-page playground-plugin-detail-content playground-agents-detail-content playground-tags-detail-content is-agent-overview-general" },
-                      renderTagDetailBody(selectedPlugin)
-                    )
-                  )
-                );
-              }
-  
+            if (selectedPlugin) {
               return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page" },
                 React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                    React.createElement("div", { className: "playground-plugin-detail-page playground-plugin-detail-content" + (isTagsView ? " playground-agents-detail-content is-agent-overview-general" : "") },
-                    React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-plugin-detail-title-row" },
-                      React.createElement("div", { className: "playground-plugin-detail-title-main" },
-                        React.createElement("div", { className: "playground-plugin-detail-header-icon-shell" }, renderPluginRowLogo(selectedPlugin)),
-                        React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-plugin-detail-title" }, selectedPlugin.label)
-                      ),
-                      pluginHeaderAction
-                        ? React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
-                            pluginHeaderAction
-                          )
-                        : null
-                    ),
-                    React.createElement("div", { className: "playground-agents-overview-tabs playground-plugin-detail-tabs" },
-                      React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-project-overview-chart-tab" + (pluginDetailTab === "general" ? " is-active" : ""),
-                          onClick: () => setPluginDetailTab("general"),
-                          "aria-pressed": pluginDetailTab === "general" ? "true" : "false",
-                        }, "General"),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-project-overview-chart-tab" + (pluginDetailTab === "permissions" ? " is-active" : ""),
-                          onClick: () => setPluginDetailTab("permissions"),
-                          "aria-pressed": pluginDetailTab === "permissions" ? "true" : "false",
-                        }, "Permissions"),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-project-overview-chart-tab" + (pluginDetailTab === "tutorial" ? " is-active" : ""),
-                          onClick: () => setPluginDetailTab("tutorial"),
-                          "aria-pressed": pluginDetailTab === "tutorial" ? "true" : "false",
-                        }, isTagsView ? "Setup" : "Tutorial")
-                        )
-                    ),
                     isTagsView
                       ? renderTagDetailBody(selectedPlugin)
                       : renderPluginDetailBody(selectedPlugin)
-                  )
                 )
               );
             }

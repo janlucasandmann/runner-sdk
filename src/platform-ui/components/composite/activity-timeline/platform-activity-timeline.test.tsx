@@ -60,6 +60,56 @@ describe("PlatformActivityTimeline", () => {
     expect(html).not.toContain("platform-comment-composer");
   });
 
+  it("supports a selectable list and preview inspector layout", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <PlatformActivityTimeline
+        layout="inspector"
+        title="Activity"
+        inspectorTitle="Inspector"
+        items={[
+          {
+            id: "created",
+            summary: "Created the issue",
+            preview: <div>Created event details</div>,
+            inspectorAction: <button type="button">Open created event</button>,
+          },
+          {
+            id: "status",
+            summary: "Moved to In Progress",
+            preview: <div>Status event details</div>,
+            inspectorAction: <button type="button">Open status event</button>,
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Activity" })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Inspector" })).not.toBeNull();
+    expect(screen.getByText("Created event details")).not.toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Open created event" }),
+    ).not.toBeNull();
+
+    await user.click(
+      screen.getByRole("button", { name: "Inspect activity status" }),
+    );
+
+    expect(screen.getByText("Status event details")).not.toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Open status event" }),
+    ).not.toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Open created event" }),
+    ).toBeNull();
+    expect(
+      screen
+        .getByRole("button", { name: "Inspect activity status" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+  });
+
   it("renders comment replies and a compact reply composer", () => {
     const html = renderToStaticMarkup(
       <PlatformActivityTimeline

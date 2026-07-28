@@ -145,7 +145,13 @@ export function ResourceOverviewPage<TData>({
           heroContent
         )}
 
-        <section className="resource-overview-page__table-section">
+        <section
+          className={`resource-overview-page__table-section${
+            resolvedTable.variant === "catalog-ui"
+              ? " has-full-bleed-table"
+              : ""
+          }`}
+        >
           <PlatformDataTable<TData>
             {...resolvedTable}
             surface={resolvedTable.surface || "plain"}

@@ -1,3 +1,4 @@
+export * from "./activity-overview/index.js";
 export * from "./activity-timeline/index.js";
 export * from "./analytics/index.js";
 export * from "./attachments/index.js";

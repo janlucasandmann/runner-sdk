@@ -81,8 +81,10 @@ export interface PlatformGlobalSearchResultItem {
   icon?: ReactNode;
   iconClassName?: string;
   active?: boolean;
+  openInNewTabDisabled?: boolean;
   renameDisabled?: boolean;
   deleteDisabled?: boolean;
+  actionsHidden?: boolean;
 }
 
 export interface PlatformGlobalSearchResultGroup {
@@ -174,6 +176,7 @@ function GlobalSearchShortcut({ children }: { children: ReactNode }) {
 interface GlobalSearchResultRowProps {
   item: PlatformGlobalSearchResultItem;
   defaultIcon: ReactNode;
+  selected: boolean;
   editing: boolean;
   onEditingChange: (editing: boolean) => void;
   onTargetChange: (resultId: string) => void;
@@ -186,6 +189,7 @@ interface GlobalSearchResultRowProps {
 function GlobalSearchResultRow({
   item,
   defaultIcon,
+  selected,
   editing,
   onEditingChange,
   onTargetChange,
@@ -198,6 +202,7 @@ function GlobalSearchResultRow({
   const [renameValue, setRenameValue] = useState(item.title);
   const [pendingAction, setPendingAction] = useState<"" | "open" | "rename">("");
   const [actionError, setActionError] = useState("");
+  const canOpenInNewTab = Boolean(onOpenInNewTab) && !item.openInNewTabDisabled;
   const canRename = Boolean(onRename) && !item.renameDisabled;
   const canDelete = Boolean(onDeleteRequest) && !item.deleteDisabled;
   const busy = Boolean(pendingAction);
@@ -253,11 +258,13 @@ function GlobalSearchResultRow({
       className={joinClassNames(
         "platform-global-search-modal__result",
         item.active && "is-active",
+        selected && "is-selected",
         editing && "is-editing",
         busy && "is-busy",
         actionError && "has-error",
       )}
       aria-busy={busy || undefined}
+      data-search-result-id={item.id}
       title={actionError || undefined}
       onMouseEnter={() => onTargetChange(item.id)}
       onMouseLeave={() => onTargetChange("")}
@@ -336,7 +343,7 @@ function GlobalSearchResultRow({
             aria-current={item.active ? "page" : undefined}
             onClick={(event) => {
               onTargetChange(item.id);
-              if ((event.metaKey || event.ctrlKey) && onOpenInNewTab) {
+              if ((event.metaKey || event.ctrlKey) && canOpenInNewTab && onOpenInNewTab) {
                 void runAction("open", () => onOpenInNewTab(item.id));
                 return;
               }
@@ -365,45 +372,51 @@ function GlobalSearchResultRow({
               <span className="platform-global-search-modal__result-meta">{item.meta}</span>
             ) : null}
           </button>
-          <span className="platform-global-search-modal__result-actions">
-            <PlatformIconButton
-              aria-label={`Open ${item.title} in a new tab`}
-              onClick={() => {
-                onTargetChange(item.id);
-                if (!onOpenInNewTab) return;
-                void runAction("open", () => onOpenInNewTab(item.id));
-              }}
-              disabled={!onOpenInNewTab || busy}
-              title="Open in new tab"
-            >
-              <SquareArrowOutUpRight strokeWidth={1.8} aria-hidden="true" />
-            </PlatformIconButton>
-            <PlatformIconButton
-              aria-label={`Rename ${item.title}`}
-              onClick={() => {
-                onTargetChange(item.id);
-                setRenameValue(item.title);
-                setActionError("");
-                onEditingChange(true);
-              }}
-              disabled={!canRename || busy}
-              title={item.renameDisabled ? "This item cannot be renamed" : "Rename"}
-            >
-              <Pencil strokeWidth={1.8} aria-hidden="true" />
-            </PlatformIconButton>
-            <PlatformIconButton
-              aria-label={`Delete ${item.title}`}
-              onClick={() => {
-                onTargetChange(item.id);
-                if (!onDeleteRequest || !canDelete) return;
-                onDeleteRequest(item);
-              }}
-              disabled={!canDelete || busy}
-              title={item.deleteDisabled ? "This item cannot be deleted" : "Delete"}
-            >
-              <Trash2 strokeWidth={1.8} aria-hidden="true" />
-            </PlatformIconButton>
-          </span>
+          {!item.actionsHidden ? (
+            <span className="platform-global-search-modal__result-actions">
+              <PlatformIconButton
+                aria-label={`Open ${item.title} in a new tab`}
+                onClick={() => {
+                  onTargetChange(item.id);
+                  if (!onOpenInNewTab || !canOpenInNewTab) return;
+                  void runAction("open", () => onOpenInNewTab(item.id));
+                }}
+                disabled={!canOpenInNewTab || busy}
+                title={
+                  item.openInNewTabDisabled
+                    ? "This item cannot be opened in a new tab"
+                    : "Open in new tab"
+                }
+              >
+                <SquareArrowOutUpRight strokeWidth={1.8} aria-hidden="true" />
+              </PlatformIconButton>
+              <PlatformIconButton
+                aria-label={`Rename ${item.title}`}
+                onClick={() => {
+                  onTargetChange(item.id);
+                  setRenameValue(item.title);
+                  setActionError("");
+                  onEditingChange(true);
+                }}
+                disabled={!canRename || busy}
+                title={item.renameDisabled ? "This item cannot be renamed" : "Rename"}
+              >
+                <Pencil strokeWidth={1.8} aria-hidden="true" />
+              </PlatformIconButton>
+              <PlatformIconButton
+                aria-label={`Delete ${item.title}`}
+                onClick={() => {
+                  onTargetChange(item.id);
+                  if (!onDeleteRequest || !canDelete) return;
+                  onDeleteRequest(item);
+                }}
+                disabled={!canDelete || busy}
+                title={item.deleteDisabled ? "This item cannot be deleted" : "Delete"}
+              >
+                <Trash2 strokeWidth={1.8} aria-hidden="true" />
+              </PlatformIconButton>
+            </span>
+          ) : null}
         </>
       )}
     </div>
@@ -459,15 +472,10 @@ export function PlatformGlobalSearchModal({
     () => resultGroups.reduce((count, group) => count + group.items.length, 0),
     [resultGroups],
   );
-  const resultItems = useMemo(
-    () => resultGroups.flatMap((group) => group.items),
-    [resultGroups],
-  );
+  const resultItems = useMemo(() => resultGroups.flatMap((group) => group.items), [resultGroups]);
   const shortcutTargetResult =
     resultItems.find((item) => item.id === shortcutTargetResultId) ?? resultItems[0] ?? null;
-  const footerActionTarget = resultItems.find(
-    (item) => item.id === shortcutTargetResultId,
-  ) ?? null;
+  const footerActionTarget = shortcutTargetResult;
   const resolvedResultCount = resultCount ?? resultItemCount;
   const defaultResultIcon = useMemo(() => getDefaultResultIcon(mode), [mode]);
   const emptyStateIcon = useMemo(() => getModeIcon(mode), [mode]);
@@ -507,13 +515,7 @@ export function PlatformGlobalSearchModal({
   }, [modeMenuOpen]);
 
   useEffect(() => {
-    if (
-      !open ||
-      modeMenuOpen ||
-      deleteCandidate ||
-      editingResultId ||
-      !shortcutTargetResult
-    ) {
+    if (!open || modeMenuOpen || deleteCandidate || editingResultId || !shortcutTargetResult) {
       return undefined;
     }
 
@@ -536,6 +538,31 @@ export function PlatformGlobalSearchModal({
       const normalizedKey = event.key.toLowerCase();
 
       if (
+        (event.key === "ArrowDown" || event.key === "ArrowUp") &&
+        !event.altKey &&
+        !event.shiftKey &&
+        !modifierPressed &&
+        resultItems.length > 0
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        const currentIndex = Math.max(
+          0,
+          resultItems.findIndex((item) => item.id === shortcutTargetResult.id),
+        );
+        const direction = event.key === "ArrowDown" ? 1 : -1;
+        const nextIndex = (currentIndex + direction + resultItems.length) % resultItems.length;
+        setShortcutTargetResultId(resultItems[nextIndex].id);
+        window.requestAnimationFrame(() => {
+          const rows = document.querySelectorAll<HTMLElement>(
+            ".platform-global-search-modal__result",
+          );
+          rows[nextIndex]?.scrollIntoView?.({ block: "nearest" });
+        });
+        return;
+      }
+
+      if (
         event.key === "Enter" &&
         !event.altKey &&
         !event.shiftKey &&
@@ -543,7 +570,7 @@ export function PlatformGlobalSearchModal({
       ) {
         event.preventDefault();
         event.stopPropagation();
-        if (modifierPressed && onResultOpenInNewTab) {
+        if (modifierPressed && onResultOpenInNewTab && !shortcutTargetResult.openInNewTabDisabled) {
           void Promise.resolve(onResultOpenInNewTab(shortcutTargetResult.id)).catch(
             () => undefined,
           );
@@ -592,6 +619,7 @@ export function PlatformGlobalSearchModal({
     onResultRename,
     onResultSelect,
     open,
+    resultItems,
     shortcutTargetResult,
   ]);
 
@@ -839,6 +867,7 @@ export function PlatformGlobalSearchModal({
                     key={resultItem.id}
                     item={resultItem}
                     defaultIcon={defaultResultIcon}
+                    selected={shortcutTargetResult?.id === resultItem.id}
                     editing={editingResultId === resultItem.id}
                     onEditingChange={(editing) => {
                       setEditingResultId(editing ? resultItem.id : "");

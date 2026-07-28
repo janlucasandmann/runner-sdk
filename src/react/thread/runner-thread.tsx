@@ -23,6 +23,7 @@ export interface RunnerThreadProps {
   emptyState?: ReactNode;
   composer?: ReactNode;
   renderMessageContent?: (message: RunnerThreadMessage) => ReactNode;
+  renderUserMessageContent?: (message: RunnerThreadMessage) => ReactNode;
   renderEvent?: (event: RunnerThreadEvent) => ReactNode;
   renderAction?: RunnerThreadActionRenderer;
   runDetailStates?: Record<string, RunnerThreadDetailLoadState>;
@@ -45,6 +46,7 @@ export function RunnerThread({
   emptyState,
   composer,
   renderMessageContent,
+  renderUserMessageContent,
   renderEvent,
   renderAction,
   runDetailStates,
@@ -90,6 +92,7 @@ export function RunnerThread({
               projection={projection}
               maxMountedItems={maxMountedTimelineItems}
               renderMessageContent={renderMessageContent}
+              renderUserMessageContent={renderUserMessageContent}
               renderEvent={renderEvent}
               renderAction={renderAction}
               runDetailStates={runDetailStates}

@@ -1315,8 +1315,22 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
             );
           }
 
+          function renderProjectOverviewThreadsEmptyState(hasFilters = false) {
+            return React.createElement(PlatformEmptyState, {
+              className: "playground-project-overview-threads-empty",
+              icon: MessageCircle,
+              title: hasFilters ? "No matching threads" : "No threads yet",
+              description: hasFilters
+                ? "Try changing your search or filters."
+                : "Threads started from this project will appear here.",
+            });
+          }
+
           function renderProjectOverviewThreadsSection(options = {}) {
             const isEmbedded = options?.embedded === true;
+            const emptyState = renderProjectOverviewThreadsEmptyState(
+              hasProjectOverviewThreadListFilters
+            );
             return React.createElement("section", {
                 className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-agents-overview-table-section"
                   + (isEmbedded ? " is-embedded" : ""),
@@ -1358,8 +1372,8 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
                       },
                     ],
                   },
-                  emptyState: hasProjectOverviewThreadListFilters ? "No matching project threads." : "No project threads yet.",
-                  noResultsState: "No matching project threads.",
+                  emptyState,
+                  noResultsState: renderProjectOverviewThreadsEmptyState(true),
                   pagination: {
                     value: projectOverviewThreadPagination,
                     onChange: setProjectOverviewThreadPagination,

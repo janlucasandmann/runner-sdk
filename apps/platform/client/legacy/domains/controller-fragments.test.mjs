@@ -65,12 +65,28 @@ const shellDataLifecycleSource = await fs.readFile(
   path.join(domainsRoot, "shell/controller/data-lifecycle-and-navigation.template.js"),
   "utf8",
 );
+const shellSettingsToolsSource = await fs.readFile(
+  path.join(domainsRoot, "shell/controller/settings-tools-and-rendering.template.js"),
+  "utf8",
+);
 const shellApplicationLifecycleSource = await fs.readFile(
   path.join(domainsRoot, "shell/controller/application-lifecycle-and-history.template.js"),
   "utf8",
 );
 const shellCompositionSource = await fs.readFile(
   path.join(domainsRoot, "shell/controller/composition-and-modals.template.js"),
+  "utf8",
+);
+const skillRenderingSource = await fs.readFile(
+  path.join(domainsRoot, "skills/controller/03-rendering-and-composition.js"),
+  "utf8",
+);
+const skillStateSource = await fs.readFile(
+  path.join(domainsRoot, "skills/controller/01-state-and-data.js"),
+  "utf8",
+);
+const skillActionsSource = await fs.readFile(
+  path.join(domainsRoot, "skills/controller/02-actions-and-editors.js"),
   "utf8",
 );
 const platformTemplateSource = await fs.readFile(
@@ -80,6 +96,124 @@ const platformTemplateSource = await fs.readFile(
 const platformTemplateCss = await fs.readFile(
   path.join(domainsRoot, "../templates/platform.template.css"),
   "utf8",
+);
+
+assert.match(
+  shellSettingsToolsSource,
+  /const tagsAndPluginsOverviewMenu =[\s\S]{0,600}React\.createElement\(PlatformPopup,[\s\S]{0,900}variant: "minimal"[\s\S]{0,1400}"Disconnect all tags"[\s\S]{0,900}"Documentation"/,
+  "Connector overview actions must use the centralized minimal popup beside the app-header title.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /label: toolsOverviewTitle,[\s\S]{0,180}trailing: isSkillsView[\s\S]{0,120}: tagsAndPluginsOverviewMenu/,
+  "The Connectors action menu must trail its app-header title.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /openDocsPage\(\)[\s\S]{0,300}"Documentation"/,
+  "The Connectors documentation action must open the configured developer docs.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /function renderPluginsPageNav\(\)[\s\S]{0,1200}handleSettingsUnlinkEmail\(\)[\s\S]{0,300}handleSettingsUnlinkDiscord\(\)[\s\S]{0,300}handleSettingsUnlinkTelegram\(\)/,
+  "Disconnect all tags must reuse every channel disconnect flow.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /\(isPluginsView \|\| isTagsView\) && !isPluginsDetailView[\s\S]{0,300}React\.createElement\(PlatformPrimaryButton,[\s\S]{0,400}playground-tags-plugins-custom-webhooks-action[\s\S]{0,300}requestPlatformNavigation\(\(\) => openDevelopWebhooksPage\(\)\)[\s\S]{0,200}"Custom Webhooks"/,
+  "The Connectors overview must link its app-header primary action to Develop Webhooks.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /const toolsOverviewTitle =[\s\S]{0,180}: "Connectors";/,
+  "The connector page must use the Connectors app-header label.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /surfaceProps: \{[\s\S]{0,180}"aria-label": "Connectors actions"/,
+  "The Connectors title action must use the matching accessible label.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-tasks-toolbar-popup-shell \.playground-tags-plugins-title-menu\s*\{[\s\S]{0,260}left: 0;[\s\S]{0,160}min-width: 220px;/,
+  "The Tags and Plugins title menu must open below and toward the content side of its trigger.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /const skillsOverviewMenu =[\s\S]{0,700}React\.createElement\(PlatformPopup,[\s\S]{0,900}variant: "minimal"[\s\S]{0,1200}"Skills actions"[\s\S]{0,1200}openDocsPage\(\)[\s\S]{0,300}"Documentation"/,
+  "The Skills overview must expose its documentation in a minimal app-header title menu.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /label: toolsOverviewTitle,[\s\S]{0,180}trailing: isSkillsView[\s\S]{0,100}\? skillsOverviewMenu/,
+  "The Skills action menu must trail the app-header title.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /React\.createElement\(PlaygroundSkillsPage,[\s\S]{0,700}currentUserName: hasSessionAuth \? accountName : "Me"[\s\S]{0,250}currentUserAvatarUrl: hasSessionAuth \? accountAvatarUrl : ""/,
+  "The Skills overview must receive the signed-in creator identity.",
+);
+
+assert.match(
+  skillRenderingSource,
+  /function renderSkillsOverviewPage\(\)\s*\{[\s\S]{0,300}createPortal\(renderSkillsCreateAction\(\), topNavActionsContainer\)[\s\S]{0,2400}skillsTopNavActions,[\s\S]{0,180}React\.createElement\(SkillsOverviewPage/,
+  "The Skills overview must mount its Custom Skill primary action in the app header.",
+);
+assert.match(
+  skillRenderingSource,
+  /isComputerAgents: systemSkillFamilyId === "computer_agents"[\s\S]{0,400}creatorName: String\([\s\S]{0,260}currentUserName \|\| currentUserEmail \|\| "You"[\s\S]{0,500}creatorAvatarUrl: String\([\s\S]{0,260}currentUserAvatarUrl/,
+  "The Skills overview must distinguish the Computer Agents icon and render custom creator provenance.",
+);
+assert.match(
+  skillStateSource,
+  /const creatorName = isSystemSkill[\s\S]{0,500}"Computer Agents"[\s\S]{0,500}currentUserName \|\| currentUserEmail[\s\S]{0,500}const creatorAvatarUrl = isSystemSkill[\s\S]{0,500}currentUserAvatarUrl/,
+  "Custom Skills must retain their creator identity instead of inheriting the system creator.",
+);
+const createCustomSkillDraftSource = skillActionsSource.match(
+  /function createAndOpenCustomSkill\(\)[\s\S]*?(?=\n\s*function handleSkillSelect)/,
+)?.[0] || "";
+assert.match(
+  createCustomSkillDraftSource,
+  /PLAYGROUND_CUSTOM_SKILL_DRAFT_ID[\s\S]*?isDraft: true[\s\S]*?setSkillsPageMode\("detail"\)/,
+  "Creating a custom Skill must immediately open an unpersisted detail-page draft.",
+);
+assert.doesNotMatch(
+  createCustomSkillDraftSource,
+  /\bfetch\(/,
+  "Opening a new custom Skill must not persist it before the first Save.",
+);
+const persistCustomSkillDraftSource = skillActionsSource.match(
+  /if \(selectedSkill\.isDraft\) \{[\s\S]*?(?=\n\s*if \(activeFile)/,
+)?.[0] || "";
+assert.match(
+  persistCustomSkillDraftSource,
+  /\/skills"[\s\S]*?method: "POST"[\s\S]*?setSelectedSkillId\(createdSkill\.id\)/,
+  "The first Save must create the draft Skill and continue on its persisted detail page.",
+);
+assert.doesNotMatch(
+  persistCustomSkillDraftSource,
+  /\/versions/,
+  "The first Save must not create a redundant second Skill version.",
+);
+assert.match(
+  skillStateSource,
+  /const localDraft = current\.find\([\s\S]{0,240}PLAYGROUND_CUSTOM_SKILL_DRAFT_ID[\s\S]{0,240}\[localDraft, \.\.\.normalizedSkills/,
+  "An in-flight Skills fetch must not discard an open local draft.",
+);
+assert.match(
+  skillRenderingSource,
+  /menuDisabled: skillSaveState\.isSaving \|\| skillCodeFilesTransferState\.isProcessing/,
+  "Skill drafts must never disable only the menu segment of Save Changes.",
+);
+assert.match(
+  skillRenderingSource,
+  /label: skillSaveState\.isSaving \? "Saving\.\.\." : "Save Changes"[\s\S]{0,180}leading: React\.createElement\(Bookmark/,
+  "Skills must use the standard Save Changes label and icon.",
+);
+assert.match(
+  skillRenderingSource,
+  /className: "skill-detail-page__access-table",[\s\S]{0,100}title: "Manage Skill Access"/,
+  "Skill settings must label the centralized access table.",
 );
 
 assert.match(
@@ -497,6 +631,21 @@ assert.match(
   agentDialogsSource,
   /const isAgentActionTargetConfigurationLocked =\s*isPlaygroundDefaultAgentConfigurationLocked\(draftAgent\);/,
   "The agent title action menu must derive its lock state from the shared default-agent helper.",
+);
+assert.match(
+  platformTemplateSource,
+  /function canVersionPlaygroundAgent\(agent\)[\s\S]{0,500}isPlaygroundFunctionalAgent\(agent\)[\s\S]{0,160}agent\.isSystem !== true && agent\.isDefault !== true/,
+  "Functional agents must use the complete editable and versioned Agent workflow despite being system-owned.",
+);
+assert.match(
+  agentDialogsSource,
+  /const canShowAgentVersions = Boolean\([\s\S]{0,320}canVersionPlaygroundAgent\(draftAgent\)/,
+  "Functional agents must expose version history and Save Changes controls.",
+);
+assert.match(
+  agentBootstrapSource,
+  /const canEditAgentProfilePhoto = Boolean\([\s\S]{0,260}canVersionPlaygroundAgent\(draftAgent\)/,
+  "Functional agents must allow profile image changes.",
 );
 assert.match(
   agentDialogsSource,

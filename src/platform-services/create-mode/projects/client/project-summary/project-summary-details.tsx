@@ -1,14 +1,8 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { PlatformSecondaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
 import { DotLoader } from "../../../../../platform-ui/components/ui/dot-loader/index.js";
 
 const PROJECT_SUMMARY_ITEM_LIMIT = 3;
-
-export interface ProjectSummaryTeamItem {
-  id: string;
-  name: string;
-  imageUrl?: string;
-}
 
 export interface ProjectSummaryResourceItem {
   id: string;
@@ -17,14 +11,22 @@ export interface ProjectSummaryResourceItem {
   source?: unknown;
 }
 
+export interface ProjectSummaryMilestoneItem {
+  id: string;
+  name: string;
+  progressPercent: number;
+  source?: unknown;
+}
+
 export interface ProjectSummaryDetailsProps {
-  teams: readonly ProjectSummaryTeamItem[];
   resources: readonly ProjectSummaryResourceItem[];
-  teamsLoading?: boolean;
+  milestones?: readonly ProjectSummaryMilestoneItem[];
   resourcesLoading?: boolean;
-  onTeamsSelect?: () => void;
+  milestonesLoading?: boolean;
   onResourcesSelect?: () => void;
+  onMilestonesSelect?: () => void;
   onResourceSelect?: (resource: ProjectSummaryResourceItem) => void;
+  onMilestoneSelect?: (milestone: ProjectSummaryMilestoneItem) => void;
   className?: string;
 }
 
@@ -36,16 +38,6 @@ function joinClassNames(...classNames: Array<string | false | null | undefined>)
     )
     .map((className) => className.trim())
     .join(" ");
-}
-
-function getInitials(name: string) {
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  return (
-    words
-      .slice(0, 2)
-      .map((word) => word.charAt(0).toUpperCase())
-      .join("") || "T"
-  );
 }
 
 function ProjectSummaryRow({
@@ -105,53 +97,21 @@ function ProjectSummaryRow({
 }
 
 export function ProjectSummaryDetails({
-  teams,
   resources,
-  teamsLoading = false,
+  milestones = [],
   resourcesLoading = false,
-  onTeamsSelect,
+  milestonesLoading = false,
   onResourcesSelect,
+  onMilestonesSelect,
   onResourceSelect,
+  onMilestoneSelect,
   className = "",
 }: ProjectSummaryDetailsProps) {
   return (
     <section
       className={joinClassNames("platform-project-summary-details", className)}
-      aria-label="Project access and resources"
+      aria-label="Project resources and milestones"
     >
-      <ProjectSummaryRow
-        label="Teams"
-        loading={teamsLoading}
-        emptyLabel="No teams have access"
-        onSelect={onTeamsSelect}
-      >
-        {teams.length
-          ? teams.slice(0, PROJECT_SUMMARY_ITEM_LIMIT).map((team) => (
-              <span
-                className="platform-project-summary-details__item is-team"
-                key={team.id}
-                title={team.name}
-              >
-                <span className="platform-project-summary-details__team-avatar" aria-hidden="true">
-                  {getInitials(team.name)}
-                  {team.imageUrl ? (
-                    <img
-                      className="platform-project-summary-details__team-avatar-image"
-                      src={team.imageUrl}
-                      alt=""
-                      draggable={false}
-                      onError={(event) => {
-                        event.currentTarget.hidden = true;
-                      }}
-                    />
-                  ) : null}
-                </span>
-                <span className="platform-project-summary-details__item-label">{team.name}</span>
-              </span>
-            ))
-          : null}
-      </ProjectSummaryRow>
-
       <ProjectSummaryRow
         label="Resources"
         loading={resourcesLoading}
@@ -190,6 +150,56 @@ export function ProjectSummaryDetails({
                   className="platform-project-summary-details__item is-resource"
                   key={resource.id}
                   title={resource.name}
+                >
+                  {content}
+                </span>
+              );
+            })
+          : null}
+      </ProjectSummaryRow>
+
+      <ProjectSummaryRow
+        label="Milestones"
+        loading={milestonesLoading}
+        emptyLabel="No milestones yet"
+        onSelect={onMilestonesSelect}
+      >
+        {milestones.length
+          ? milestones.slice(0, PROJECT_SUMMARY_ITEM_LIMIT).map((milestone) => {
+              const normalizedPercent = Math.max(
+                0,
+                Math.min(100, Math.round(milestone.progressPercent || 0)),
+              );
+              const content = (
+                <>
+                  <span
+                    className="platform-project-summary-details__milestone-ring"
+                    style={{
+                      "--project-milestone-progress": `${normalizedPercent}%`,
+                    } as CSSProperties}
+                    aria-hidden="true"
+                  />
+                  <span className="platform-project-summary-details__item-label">
+                    {milestone.name}
+                  </span>
+                </>
+              );
+              return onMilestoneSelect ? (
+                <button
+                  type="button"
+                  className="platform-project-summary-details__item is-milestone"
+                  key={milestone.id}
+                  title={`${milestone.name} - ${normalizedPercent}% complete`}
+                  aria-label={`${milestone.name}, ${normalizedPercent}% complete`}
+                  onClick={() => onMilestoneSelect(milestone)}
+                >
+                  {content}
+                </button>
+              ) : (
+                <span
+                  className="platform-project-summary-details__item is-milestone"
+                  key={milestone.id}
+                  title={`${milestone.name} - ${normalizedPercent}% complete`}
                 >
                   {content}
                 </span>

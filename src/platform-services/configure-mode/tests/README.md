@@ -23,7 +23,10 @@ uses Evaluation evidence after the software and workflow Test gates pass.
 The control API persists plans, versions, leases, results, artifacts, and
 dispatch state. The runner executes the immutable plan snapshot inside a
 selected Computer Agents environment through a hidden executor thread. User
-commands never execute in the platform web process or control API.
+commands never execute in the platform web process or control API. A narrowly
+allowlisted built-in `control_plane_readiness` contract is executed directly by
+the durable platform worker; it checks only the canonical readiness endpoint
+and cannot carry a user command.
 
 ## Lifecycle
 
@@ -37,7 +40,9 @@ evidence is fingerprinted by the control API after case results and the
 artifact manifest are persisted. Evidence also carries an explicit provenance
 classification. The current hidden-thread executor is self-reported; only an
 independently verified execution-worker attestation can satisfy a trusted
-Assurance gate.
+Assurance gate. The built-in readiness contract supplies that attestation, and
+the control API validates it against the active dispatch lease and credential
+plus the exact immutable plan, commit, results, and artifacts.
 
 ## Mission Control
 

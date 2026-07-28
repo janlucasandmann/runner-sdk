@@ -112,7 +112,27 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
             };
           });
 
-          const resultGroups = threadSearchMode === "threads"
+          const globalServiceNavigationItems = isGlobalServiceSearchQuery
+            ? getGlobalServiceNavigationItems(globalServiceSearchQuery)
+            : [];
+          const globalServiceItems = globalServiceNavigationItems.map((serviceItem) => {
+            const ServiceIcon = getPlaygroundSafeIconComponent(serviceItem.Icon, Circle);
+            return {
+              id: serviceItem.globalSearchId,
+              title: serviceItem.label || "Untitled service",
+              meta: serviceItem.workspaceLabel,
+              icon: React.createElement(ServiceIcon, {
+                width: 16,
+                height: 16,
+                strokeWidth: 1.85,
+              }),
+              renameDisabled: true,
+              deleteDisabled: true,
+              openInNewTabDisabled: true,
+              actionsHidden: true,
+            };
+          });
+          const modeResultGroups = threadSearchMode === "threads"
             ? threadGroups
             : threadSearchMode === "files"
               ? (fileItems.length > 0 ? [{ id: "files", label: "Files", items: fileItems }] : [])
@@ -121,6 +141,13 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                 : threadSearchMode === "agents"
                   ? (agentItems.length > 0 ? [{ id: "agents", label: "Agents", items: agentItems }] : [])
                   : (workflowItems.length > 0 ? [{ id: "workflows", label: "Workflows", items: workflowItems }] : []);
+          const resultGroups = isGlobalServiceSearchQuery
+            ? (
+                globalServiceItems.length > 0
+                  ? [{ id: "services", label: "Services", items: globalServiceItems }]
+                  : []
+              )
+            : modeResultGroups;
           const selectedModeLabel = ({
             threads: "Threads",
             files: "Files",
@@ -128,11 +155,21 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
             agents: "Agents",
             workflows: "Workflows",
           })[threadSearchMode] || "Results";
-          const emptyStateCopy = threadSearchSelectedModeError
+          const emptyStateCopy = isGlobalServiceSearchQuery
+            ? {
+                title: "No services found",
+                description: "Try a different service name after the slash.",
+              }
+            : threadSearchSelectedModeError
             ? {
                 title: "Unable to load " + selectedModeLabel.toLowerCase(),
                 description: threadSearchSelectedModeError,
               }
+            : exactThreadSearchId && threadSearchMode === "threads"
+              ? {
+                  title: "Thread not found",
+                  description: "Check the thread ID and try again.",
+                }
             : normalizedThreadSearchQuery
               ? {
                   title: "No " + selectedModeLabel.toLowerCase() + " found",
@@ -160,7 +197,9 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                     description: "Metronome workflows will appear here.",
                   },
                 })[threadSearchMode];
-          const actions = threadSearchMode === "threads"
+          const actions = isGlobalServiceSearchQuery
+            ? []
+            : threadSearchMode === "threads"
             ? [
                 {
                   id: "create-chat",
@@ -246,7 +285,17 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
           return React.createElement(PlatformGlobalSearchModal, {
             open: threadSearchOpen,
             query: threadSearchQuery,
-            onQueryChange: setThreadSearchQuery,
+            onQueryChange: (nextQuery) => {
+              setThreadSearchQuery(nextQuery);
+              if (
+                resolveGlobalServiceSearchQuery(nextQuery) === null
+                && resolveExactThreadSearchId(nextQuery)
+                && threadSearchMode !== "threads"
+              ) {
+                setThreadSearchMode("threads");
+                setThreadSearchAllActionsVisible(false);
+              }
+            },
             onClose: closeThreadSearch,
             mode: threadSearchMode,
             onModeChange: (nextMode) => {
@@ -257,30 +306,43 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
             actions,
             onActionSelect: handleThreadSearchAction,
             onShowAllActions: threadSearchMode === "threads" && !threadSearchAllActionsVisible
+              && !isGlobalServiceSearchQuery
               ? () => setThreadSearchAllActionsVisible(true)
               : undefined,
             resultGroups,
             resultsLoading: isThreadSearchSelectedModeLoading,
-            onResultOpenInNewTab: (resultId) => {
-              try {
-                openThreadSearchResultInNewTab(threadSearchMode, resultId);
-              } catch (error) {
-                window.alert(error instanceof Error ? error.message : "Failed to open result in a new tab.");
-                throw error;
-              }
-            },
-            onResultRename: async (resultId, nextTitle) => {
-              try {
-                await renameThreadSearchResult(threadSearchMode, resultId, nextTitle);
-              } catch (error) {
-                window.alert(error instanceof Error ? error.message : "Failed to rename result.");
-                throw error;
-              }
-            },
-            onResultDelete: async (resultId) => {
-              await deleteThreadSearchResult(threadSearchMode, resultId);
-            },
+            onResultOpenInNewTab: isGlobalServiceSearchQuery
+              ? undefined
+              : (resultId) => {
+                  try {
+                    openThreadSearchResultInNewTab(threadSearchMode, resultId);
+                  } catch (error) {
+                    window.alert(error instanceof Error ? error.message : "Failed to open result in a new tab.");
+                    throw error;
+                  }
+                },
+            onResultRename: isGlobalServiceSearchQuery
+              ? undefined
+              : async (resultId, nextTitle) => {
+                  try {
+                    await renameThreadSearchResult(threadSearchMode, resultId, nextTitle);
+                  } catch (error) {
+                    window.alert(error instanceof Error ? error.message : "Failed to rename result.");
+                    throw error;
+                  }
+                },
+            onResultDelete: isGlobalServiceSearchQuery
+              ? undefined
+              : async (resultId) => {
+                  await deleteThreadSearchResult(threadSearchMode, resultId);
+                },
             onResultSelect: (resultId) => {
+              if (isGlobalServiceSearchQuery) {
+                if (handleGlobalServiceNavigationItemClick(resultId)) {
+                  closeThreadSearch();
+                }
+                return;
+              }
               if (threadSearchMode === "threads") {
                 handleThreadSearchSelect(resultId);
                 return;
@@ -311,8 +373,12 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                 handleThreadSearchWorkflowSelect(workflow);
               }
             },
-            resultCount: threadSearchTotalResultCount,
-            loadingLabel: "Loading " + selectedModeLabel.toLowerCase() + "...",
+            resultCount: isGlobalServiceSearchQuery
+              ? globalServiceItems.length
+              : threadSearchTotalResultCount,
+            loadingLabel: isGlobalServiceSearchQuery
+              ? "Loading services..."
+              : "Loading " + selectedModeLabel.toLowerCase() + "...",
             emptyTitle: emptyStateCopy.title,
             emptyDescription: emptyStateCopy.description,
           });

@@ -50,6 +50,14 @@ import {
   parseEvaluatorResult,
 } from "./domain/scoring.mjs";
 import {
+  executeEvaluationTarget,
+  hydrateEvaluationSourceAssets,
+  normalizeEvaluationTargetBinding,
+} from "./domain/targets.mjs";
+import {
+  runDeterministicGrader,
+} from "./domain/deterministic-graders.mjs";
+import {
   buildProxyPromptAdaptationsFromGuardrails,
   normalizeProxyGuardrailSets,
 } from "../../guardrails/server/enrichment.mjs";
@@ -74,8 +82,10 @@ const TERMINAL_EVALUATION_RUN_STATUSES = new Set([
   "failed",
   "cancelled",
 ]);
-const CANONICAL_EVALUATION_RUN_BINDING_SCHEMA_VERSION =
-  "computer_agents_evaluation_run_binding_v1";
+const CANONICAL_EVALUATION_RUN_BINDING_SCHEMA_VERSIONS = new Set([
+  "computer_agents_evaluation_run_binding_v1",
+  "computer_agents_evaluation_run_binding_v2",
+]);
 
 function readPlainObject(value) {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -266,6 +276,73 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     throw createRuntimeError("Sign in to Computer Agents or provide an API key.", 401);
   }
 
+  async function requestBackendBytes(
+    record,
+    path,
+    fallbackMessage = "Backend asset request failed.",
+  ) {
+    const { requestContext, upstreamUrl, apiKey, body } = record;
+    let response;
+    if (apiKey) {
+      response = await fetchImpl(`${upstreamUrl}${path}`, {
+        method: "GET",
+        headers: withProxyOrganizationHeader(requestContext, body, {
+          "X-API-Key": apiKey,
+        }),
+      });
+    } else if (hasAiosSession(requestContext)) {
+      response = await fetchAiosApi(requestContext, `/api${path}`, {
+        method: "GET",
+      });
+    } else {
+      throw createRuntimeError(
+        "Sign in to Computer Agents or provide an API key.",
+        401,
+      );
+    }
+    if (!response.ok) {
+      await readJsonResponse(response, fallbackMessage);
+    }
+    return Buffer.from(await response.arrayBuffer());
+  }
+
+  function evaluationTargetCreateRequest(run) {
+    const binding = run?.targetBinding
+      && typeof run.targetBinding === "object"
+      && !Array.isArray(run.targetBinding)
+      ? run.targetBinding
+      : null;
+    if (!binding || binding.kind === "none") return null;
+    if (binding.kind === "service_topology") {
+      const snapshot = readPlainObject(binding.snapshot);
+      const resources = Array.isArray(snapshot.resources)
+        ? snapshot.resources.map((resource) => {
+            const source = readPlainObject(resource);
+            return {
+              key: normalizeString(source.key),
+              kind: normalizeString(source.kind),
+              id: normalizeString(source.id),
+              versionId: normalizeString(source.versionId) || undefined,
+            };
+          })
+        : [];
+      return {
+        kind: "service_topology",
+        entrypoint: normalizeString(snapshot.entrypoint),
+        resources,
+        environmentId: binding.environmentId || undefined,
+        invocation: binding.invocation || undefined,
+      };
+    }
+    return {
+      kind: binding.kind,
+      id: binding.targetId,
+      versionId: binding.targetVersionId || undefined,
+      environmentId: binding.environmentId || undefined,
+      invocation: binding.invocation || undefined,
+    };
+  }
+
   function buildEvaluationRunCreatePayload(run) {
     const normalizedRun = recomputeRun(run);
     const metadata = {
@@ -281,8 +358,10 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       targetGuardrailId: normalizedRun.targetGuardrailId,
       targetGuardrailVersionId: normalizedRun.targetGuardrailVersionId,
     };
+    const target = evaluationTargetCreateRequest(normalizedRun);
     return {
       id: normalizedRun.id,
+      ...(target ? { target } : {}),
       agentId: normalizedRun.targetAgentId,
       environmentId: normalizedRun.environmentId,
       versionId: normalizedRun.evaluationVersionId,
@@ -344,6 +423,15 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         failureStage: normalizeString(
           caseItem?.failureStage || caseItem?.failure_stage,
         ) || null,
+        targetExecution:
+          caseItem?.targetExecution
+          || caseItem?.target_execution
+          || null,
+        sourceAssets: Array.isArray(
+          caseItem?.sourceAssets || caseItem?.source_assets,
+        )
+          ? (caseItem.sourceAssets || caseItem.source_assets)
+          : [],
         executionAttempt: Math.max(
           0,
           Number(caseItem?.executionAttempt || caseItem?.execution_attempt || 0) || 0,
@@ -400,7 +488,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     try {
       const persisted = await requestBackendJson(
         record,
-        `/evaluations/runs/${encodeURIComponent(normalizedRun.id)}`,
+        `/evaluations/runs/${encodeURIComponent(normalizedRun.id)}?view=status`,
         {
           method: "PATCH",
           headers: { "content-type": "application/json" },
@@ -1193,6 +1281,9 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     const startedAtIso = normalizeString(caseRun.startedAt) || new Date().toISOString();
     const startedAtMs = Date.parse(startedAtIso) || Date.now();
     const previousExecutionStage = normalizeString(caseRun.executionStage);
+    const targetType = normalizeString(run.targetType).toLowerCase()
+      || (run.targetAgentId ? "agent" : "none");
+    const agentTarget = targetType === "agent";
     let caseThreadId = normalizeString(caseRun.threadId);
     await patchRunCaseDurably(run.id, caseRun.id, {
       status: "running",
@@ -1200,57 +1291,138 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       failureStage: "",
       startedAt: startedAtIso,
       executionAttempt: Math.max(0, Number(caseRun.executionAttempt || 0) || 0) + 1,
-      executionStage: caseThreadId ? previousExecutionStage || "case_thread_ready" : "creating_case_thread",
+      executionStage: agentTarget
+        ? (caseThreadId ? previousExecutionStage || "case_thread_ready" : "creating_case_thread")
+        : previousExecutionStage || "hydrating_target_input",
     });
     assertRunLease(run.id);
 
-    if (!caseThreadId && previousExecutionStage === "creating_case_thread") {
-      const recoveredThread = await findExistingEvaluationThread(record, {
+    let actualOutput = "";
+    let targetExecution = null;
+    let sourceAssets = [];
+    let snapshot;
+    if (agentTarget) {
+      if (!caseThreadId && previousExecutionStage === "creating_case_thread") {
+        const recoveredThread = await findExistingEvaluationThread(record, {
+          runId: run.id,
+          caseId: caseRun.id,
+          kind: "case",
+        });
+        caseThreadId = normalizeString(recoveredThread?.id);
+      }
+      if (!caseThreadId) {
+        const caseThread = await createHiddenThread(record, {
+          title,
+          agentId: run.targetAgentId,
+          agentVersionId: run.targetAgentVersionId,
+          environmentId: run.environmentId,
+          projectId: run.projectId,
+          metadata: buildCaseMetadata({ evaluationSet, run, caseRun, row, kind: "case" }),
+          guardrail: record.targetGuardrail || null,
+        });
+        caseThreadId = caseThread.id;
+      }
+      await patchRunCaseDurably(run.id, caseRun.id, {
+        threadId: caseThreadId,
+        status: "running_case",
+        executionStage: "case_thread_ready",
+        actualOutput: "Thread started.",
+      });
+      assertRunLease(run.id);
+      const latestBeforeCaseDispatch = runsById.get(run.id)?.run?.cases?.find((item) => item.id === caseRun.id);
+      await patchRunCaseDurably(run.id, caseRun.id, {
+        status: "running_case",
+        executionStage: "dispatching_case_message",
+        caseMessageDispatchedAt: normalizeString(latestBeforeCaseDispatch?.caseMessageDispatchedAt) || new Date().toISOString(),
+      });
+      assertRunLease(run.id);
+      actualOutput = await executeThreadMessageOnce(
+        record,
+        caseThreadId,
+        row.input,
+      );
+      await patchRunCaseDurably(run.id, caseRun.id, {
+        status: "waiting_for_case_summary",
+        executionStage: "collecting_case_summary",
+        actualOutput: actualOutput || "Thread completed. Open the thread to inspect the run summary.",
+      });
+      assertRunLease(run.id);
+      snapshot = await buildThreadSnapshot(record, {
+        threadId: caseThreadId,
+        row,
+        evaluationSet,
+        actualOutput,
+      });
+    } else {
+      const targetBinding = normalizeEvaluationTargetBinding(
+        run.targetBinding || evaluationSet.targetBinding,
+      );
+      const evaluationBinding = readCanonicalEvaluationRunBinding(run)
+        || readCanonicalEvaluationRunBinding(record.run)
+        || {
+          evaluationId: evaluationSet.id,
+          snapshot: { metadata: evaluationSet.metadata || {} },
+        };
+      const hydrated = await hydrateEvaluationSourceAssets({
+        evaluationBinding,
+        caseInput: row.input,
+        caseMetadata: row.metadata,
+        requestBytes: (path, fallbackMessage) => requestBackendBytes(
+          record,
+          path,
+          fallbackMessage,
+        ),
+        maximumBytes: Number(deps.maximumEvaluationSourceBytes)
+          || 150 * 1024 * 1024,
+      });
+      sourceAssets = hydrated.sourceAssets;
+      await patchRunCaseDurably(run.id, caseRun.id, {
+        status: "running_case",
+        executionStage: "dispatching_target",
+        sourceAssets,
+      });
+      assertRunLease(run.id);
+      const targetResult = await executeEvaluationTarget({
+        binding: targetBinding,
+        caseInput: hydrated.input,
         runId: run.id,
         caseId: caseRun.id,
-        kind: "case",
+        requestJson: (path, options, fallbackMessage) => requestBackendJson(
+          record,
+          path,
+          options,
+          fallbackMessage,
+        ),
+        pollAttempts: deps.metronomeEvaluationPollAttempts,
+        pollMs: deps.metronomeEvaluationPollMs,
       });
-      caseThreadId = normalizeString(recoveredThread?.id);
-    }
-    if (!caseThreadId) {
-      const caseThread = await createHiddenThread(record, {
-        title,
-        agentId: run.targetAgentId,
-        agentVersionId: run.targetAgentVersionId,
-        environmentId: run.environmentId,
-        projectId: run.projectId,
-        metadata: buildCaseMetadata({ evaluationSet, run, caseRun, row, kind: "case" }),
-        guardrail: record.targetGuardrail || null,
+      actualOutput = targetResult.actualOutput;
+      targetExecution = targetResult.execution;
+      await patchRunCaseDurably(run.id, caseRun.id, {
+        status: "waiting_for_case_summary",
+        executionStage: "collecting_target_output",
+        actualOutput,
+        targetExecution,
       });
-      caseThreadId = caseThread.id;
+      assertRunLease(run.id);
+      snapshot = {
+        version: "evaluation_target_snapshot_v1",
+        generatedAt: new Date().toISOString(),
+        threadId: "",
+        costTokens: 0,
+        costUsd: 0,
+        target: targetExecution,
+        input: row.input,
+        expectedOutput: row.expectedOutput,
+        datasetGuidance: evaluationSet.evaluationGuidance || "",
+        rowGuidance: row.evaluationGuidance || "",
+        sourceAssets,
+        finalSummary: actualOutput,
+        messages: [],
+        steps: [],
+        logs: [],
+      };
     }
-    await patchRunCaseDurably(run.id, caseRun.id, {
-      threadId: caseThreadId,
-      status: "running_case",
-      executionStage: "case_thread_ready",
-      actualOutput: "Thread started.",
-    });
-    assertRunLease(run.id);
-    const latestBeforeCaseDispatch = runsById.get(run.id)?.run?.cases?.find((item) => item.id === caseRun.id);
-    await patchRunCaseDurably(run.id, caseRun.id, {
-      status: "running_case",
-      executionStage: "dispatching_case_message",
-      caseMessageDispatchedAt: normalizeString(latestBeforeCaseDispatch?.caseMessageDispatchedAt) || new Date().toISOString(),
-    });
-    assertRunLease(run.id);
-    const actualOutput = await executeThreadMessageOnce(record, caseThreadId, row.input);
-    await patchRunCaseDurably(run.id, caseRun.id, {
-      status: "waiting_for_case_summary",
-      executionStage: "collecting_case_summary",
-      actualOutput: actualOutput || "Thread completed. Open the thread to inspect the run summary.",
-    });
-    assertRunLease(run.id);
-    const snapshot = await buildThreadSnapshot(record, {
-      threadId: caseThreadId,
-      row,
-      evaluationSet,
-      actualOutput,
-    });
     const expected = String(row.expectedOutput || "");
     const evaluator = normalizeEvaluator(run.evaluator || evaluationSet.evaluator);
     const passThreshold = normalizePassThreshold(run.passThreshold ?? evaluationSet.passThreshold ?? 0.8);
@@ -1278,6 +1450,26 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       evaluatorParseStatus = "sandbox_required";
       score = null;
       status = "grader_error";
+    } else if (evaluator.type === "deterministic") {
+      await patchRunCaseDurably(run.id, caseRun.id, {
+        executionStage: "scoring",
+      });
+      const graderResult = runDeterministicGrader({
+        graderId: evaluator.graderId,
+        actualOutput: snapshot.finalSummary,
+        expectedOutput: expected,
+        configuration: evaluator.configuration,
+      });
+      score = graderResult.score;
+      evaluatorReason = graderResult.reason;
+      evaluatorParseStatus = graderResult.parseStatus;
+      evaluatorOutput = JSON.stringify({
+        graderId: graderResult.graderId,
+        score: graderResult.score,
+        reason: graderResult.reason,
+        details: graderResult.details,
+      });
+      status = score >= passThreshold ? "passed" : "failed";
     } else if (evaluator.type === "agent") {
       const evaluatorAgentId = normalizeString(evaluator.agentId);
       if (!evaluatorAgentId) {
@@ -1305,7 +1497,14 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
           agentVersionId: evaluator.agentVersionId,
           environmentId: run.environmentId,
           projectId: run.projectId,
-          metadata: buildCaseMetadata({ evaluationSet, run, caseRun, row, kind: "evaluator", sourceThreadId: caseThreadId }),
+          metadata: buildCaseMetadata({
+            evaluationSet,
+            run,
+            caseRun,
+            row,
+            kind: "evaluator",
+            sourceThreadId: caseThreadId,
+          }),
         });
         evaluatorThreadId = evaluatorThread.id;
       }
@@ -1352,15 +1551,23 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     await patchRunCaseDurably(run.id, caseRun.id, {
       threadId: caseThreadId,
       evaluatorThreadId,
-      actualOutput: snapshot.finalSummary || actualOutput || "Thread completed. Open the thread to inspect the run summary.",
+      actualOutput: snapshot.finalSummary
+        || actualOutput
+        || (
+          agentTarget
+            ? "Thread completed. Open the thread to inspect the run summary."
+            : "Evaluation target completed without an output."
+        ),
       evaluatorOutput,
       evaluatorReason,
       evaluatorParseStatus,
       snapshotVersion: snapshot.version,
+      targetExecution,
+      sourceAssets,
       score,
       costTokens,
       costUsd,
-      costSource: "thread_usage_ct",
+      costSource: agentTarget ? "thread_usage_ct" : "target_runtime",
       status,
       executionStage: "",
       failureStage: "",
@@ -1641,6 +1848,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         evaluationGuidance: evaluationSet.evaluationGuidance,
         passThreshold: evaluationSet.passThreshold,
         evaluator: evaluationSet.evaluator,
+        targetBinding: run.targetBinding || evaluationSet.targetBinding || null,
         targetAgentId: run.targetAgentId,
         environmentType: run.environmentType,
         environmentId: run.environmentId,
@@ -1653,6 +1861,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
           optimizationRole: row.optimizationRole,
           runCount: row.runCount,
           sliceIds: row.sliceIds,
+          metadata: row.metadata || null,
         })),
       },
       targetGuardrail: targetGuardrail || null,
@@ -1978,8 +2187,9 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       embeddedMetadata.evaluation_snapshot,
     ];
     return candidates.find((candidate) => (
-      readPlainObject(candidate).schemaVersion
-      === CANONICAL_EVALUATION_RUN_BINDING_SCHEMA_VERSION
+      CANONICAL_EVALUATION_RUN_BINDING_SCHEMA_VERSIONS.has(
+        readPlainObject(candidate).schemaVersion,
+      )
     )) || null;
   }
 
@@ -2005,6 +2215,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       passThreshold:
         metadata.passThreshold ?? metadata.pass_threshold ?? 0.8,
       evaluator: Object.keys(evaluator).length ? evaluator : { type: "exact" },
+      targetBinding: target,
       targetAgentId: normalizeString(target.agentId),
       environmentType:
         normalizeString(metadata.environmentType || metadata.environment_type)
@@ -2070,6 +2281,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
           0,
           Number(canonicalBinding.versionNumber || 0) || 0,
         ),
+        targetBinding: target,
         targetAgentId: normalizeString(target.agentId),
         targetAgentVersionId: normalizeString(target.agentVersionId),
         targetAgentVersionNumber: Math.max(
@@ -2094,9 +2306,26 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         },
       };
       let run = createEvaluationRun(evaluationSet, runOptions);
-      if (!run.targetAgentId || !run.environmentId) {
+      if (
+        run.targetType === "agent"
+        && (!run.targetAgentId || !run.environmentId)
+      ) {
         throw createRuntimeError(
           "The canonical Evaluation run is missing its target Agent or environment binding.",
+          409,
+        );
+      }
+      if (
+        ["function", "metronome", "service_topology"].includes(run.targetType)
+      ) {
+        normalizeEvaluationTargetBinding(run.targetBinding);
+      }
+      if (
+        run.evaluator.type === "agent"
+        && !run.environmentId
+      ) {
+        throw createRuntimeError(
+          "An evaluator Agent requires an environment binding.",
           409,
         );
       }
@@ -2144,6 +2373,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         run,
         evaluationSet: {
           ...evaluationSet,
+          targetBinding: run.targetBinding,
           targetAgentId: run.targetAgentId,
           environmentType: run.environmentType,
           environmentId: run.environmentId,
@@ -2173,7 +2403,8 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       ...requestRecord,
       run,
       evaluationSet: {
-        ...evaluationSet,
+      ...evaluationSet,
+        targetBinding: run.targetBinding,
         targetAgentId: run.targetAgentId,
         environmentType: run.environmentType,
         environmentId: run.environmentId,
@@ -2259,11 +2490,34 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         }
       }
     }
-    if (!run.targetAgentId || !run.environmentId) {
-      throw createRuntimeError("Select an agent and environment before running this evaluation.", 400);
+    if (run.targetType === "agent" && (!run.targetAgentId || !run.environmentId)) {
+      throw createRuntimeError(
+        "Select an agent and environment before running this evaluation.",
+        400,
+      );
+    }
+    if (["function", "metronome", "service_topology"].includes(run.targetType)) {
+      normalizeEvaluationTargetBinding(run.targetBinding);
+    } else if (run.targetType !== "agent") {
+      throw createRuntimeError(
+        "Select an Agent, Function, Metronome, or service topology before running this Evaluation.",
+        400,
+      );
     }
     if (run.evaluator.type === "agent" && !run.evaluator.agentId) {
       throw createRuntimeError("Select an evaluator agent before running this evaluation.", 400);
+    }
+    if (run.evaluator.type === "agent" && !run.environmentId) {
+      throw createRuntimeError(
+        "An evaluator Agent requires an environment binding.",
+        400,
+      );
+    }
+    if (run.evaluator.type === "deterministic" && !run.evaluator.graderId) {
+      throw createRuntimeError(
+        "Select a registered deterministic grader before running this Evaluation.",
+        400,
+      );
     }
     if (run.evaluator.type === "code") {
       throw createRuntimeError(
@@ -2321,6 +2575,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       run: executionRun,
       evaluationSet: {
         ...evaluationSet,
+        targetBinding: executionRun.targetBinding,
         targetAgentId: executionRun.targetAgentId,
         environmentType: executionRun.environmentType,
         environmentId: executionRun.environmentId,

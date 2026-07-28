@@ -1,6 +1,17 @@
-import { Bot, Copy, Layers, Plus, SquarePen, Trash2, UsersRound } from "lucide-react";
+import {
+  Bot,
+  Copy,
+  Layers,
+  Plus,
+  SquarePen,
+  Trash2,
+  UsersRound,
+} from "lucide-react";
 import { useMemo, useState } from "react";
-import type { PlatformDataTableAction, PlatformDataTableColumn } from "../../../platform-ui/components/composite/data-table/index.js";
+import type {
+  PlatformDataTableAction,
+  PlatformDataTableColumn,
+} from "../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformDetailTabBar } from "../../../platform-ui/components/composite/detail-tab-bar/index.js";
 import {
   ResourceOverviewIdentityCell,
@@ -9,6 +20,8 @@ import {
   type ResourceOverviewAnalyticsModel,
   type ResourceOverviewPeriod,
 } from "../../../platform-ui/pages/overview/index.js";
+
+export type AgentOverviewMode = "agents" | "squads" | "functional";
 
 export interface AgentOverviewRow {
   id: string;
@@ -19,6 +32,7 @@ export interface AgentOverviewRow {
   avatarFallback?: string;
   isSquad?: boolean;
   isSystem?: boolean;
+  isFunctional?: boolean;
   modelLabel: string;
   modelIconUrl?: string;
   modelIconClassName?: string;
@@ -33,8 +47,8 @@ export interface AgentOverviewRow {
 
 export interface AgentsOverviewPageProps {
   rows: readonly AgentOverviewRow[];
-  mode: "agents" | "squads";
-  onModeChange: (mode: "agents" | "squads") => void;
+  mode: AgentOverviewMode;
+  onModeChange: (mode: AgentOverviewMode) => void;
   period: ResourceOverviewPeriod;
   onPeriodChange: (period: ResourceOverviewPeriod) => void;
   analytics: ResourceOverviewAnalyticsModel;
@@ -73,114 +87,190 @@ export function AgentsOverviewPage({
   onDelete,
 }: AgentsOverviewPageProps) {
   const [typeFilter, setTypeFilter] = useState("all");
-  const filteredRows = useMemo(() => rows.filter((row) => {
-    if (typeFilter === "system") return row.isSystem;
-    if (typeFilter === "custom") return !row.isSystem;
-    return true;
-  }), [rows, typeFilter]);
+  const filteredRows = useMemo(
+    () =>
+      rows.filter((row) => {
+        if (mode === "functional") return true;
+        if (typeFilter === "system") return row.isSystem;
+        if (typeFilter === "custom") return !row.isSystem;
+        return true;
+      }),
+    [mode, rows, typeFilter],
+  );
 
-  const columns = useMemo<PlatformDataTableColumn<AgentOverviewRow>[]>(() => [
-    {
-      id: "name",
-      header: "Name",
-      accessor: "name",
-      sortable: true,
-      width: "minmax(220px, 1.35fr)",
-      cell: ({ row }) => (
-        <ResourceOverviewIdentityCell
-          title={row.name}
-          imageUrl={row.avatarUrl}
-          fallback={row.avatarFallback}
-          icon={row.isSquad ? Layers : row.avatarUrl ? undefined : Bot}
-          iconClassName={row.isSquad ? "is-squad" : "is-agent"}
-        />
-      ),
-    },
-    {
-      id: "usage",
-      header: "Token Usage",
-      accessor: "usageTokens",
-      sortable: true,
-      sortDescFirst: true,
-      width: "minmax(110px, 0.52fr)",
-      cell: ({ row }) => {
-        const formattedTokens = Math.max(0, Math.round(Number(row.usageTokens) || 0)).toLocaleString("en-US");
-        return <ResourceOverviewValue title={`${formattedTokens} tokens`}>{formattedTokens}</ResourceOverviewValue>;
+  const columns = useMemo<PlatformDataTableColumn<AgentOverviewRow>[]>(
+    () => [
+      {
+        id: "name",
+        header: "Name",
+        accessor: "name",
+        sortable: true,
+        width: "minmax(220px, 1.35fr)",
+        cell: ({ row }) => (
+          <ResourceOverviewIdentityCell
+            title={row.name}
+            imageUrl={row.avatarUrl}
+            fallback={row.avatarFallback}
+            icon={row.isSquad ? Layers : row.avatarUrl ? undefined : Bot}
+            iconClassName={row.isSquad ? "is-squad" : "is-agent"}
+          />
+        ),
       },
-    },
-    {
-      id: "model",
-      header: "Model",
-      accessor: "modelLabel",
-      sortable: true,
-      width: "minmax(220px, 1fr)",
-      hideBelow: 760,
-      cell: ({ row }) => (
-        <ResourceOverviewIdentityCell
-          title={row.modelLabel}
-          imageUrl={row.modelIconUrl}
-          imageClassName={row.modelIconClassName}
-          icon={row.modelIconUrl ? undefined : Bot}
-          iconClassName="is-model"
-          size="compact"
-        />
-      ),
-    },
-    {
-      id: "creator",
-      header: "Creator",
-      accessor: "creatorName",
-      sortable: true,
-      width: "minmax(180px, 0.82fr)",
-      hideBelow: 940,
-      cell: ({ row }) => (
-        <ResourceOverviewIdentityCell
-          title={row.creatorName}
-          imageUrl={row.creatorAvatarUrl}
-          fallback={row.creatorFallback}
-          iconClassName="is-creator"
-        />
-      ),
-    },
-    {
-      id: "lastUsed",
-      header: "Last used",
-      accessor: (row) => row.lastUsedAt || 0,
-      sortable: true,
-      sortDescFirst: true,
-      width: "minmax(110px, 0.46fr)",
-      cell: ({ row }) => <ResourceOverviewValue title={row.lastUsedTitle}>{row.lastUsedLabel}</ResourceOverviewValue>,
-    },
-  ], []);
+      {
+        id: "usage",
+        header: "Token Usage",
+        accessor: "usageTokens",
+        sortable: true,
+        sortDescFirst: true,
+        width: "minmax(110px, 0.52fr)",
+        cell: ({ row }) => {
+          const formattedTokens = Math.max(
+            0,
+            Math.round(Number(row.usageTokens) || 0),
+          ).toLocaleString("en-US");
+          return (
+            <ResourceOverviewValue title={`${formattedTokens} tokens`}>
+              {formattedTokens}
+            </ResourceOverviewValue>
+          );
+        },
+      },
+      {
+        id: "model",
+        header: "Model",
+        accessor: "modelLabel",
+        sortable: true,
+        width: "minmax(220px, 1fr)",
+        hideBelow: 760,
+        cell: ({ row }) => (
+          <ResourceOverviewIdentityCell
+            title={row.modelLabel}
+            imageUrl={row.modelIconUrl}
+            imageClassName={row.modelIconClassName}
+            icon={row.modelIconUrl ? undefined : Bot}
+            iconClassName="is-model"
+            size="compact"
+          />
+        ),
+      },
+      {
+        id: "creator",
+        header: "Creator",
+        accessor: "creatorName",
+        sortable: true,
+        width: "minmax(180px, 0.82fr)",
+        hideBelow: 940,
+        cell: ({ row }) => (
+          <ResourceOverviewIdentityCell
+            title={row.creatorName}
+            imageUrl={row.creatorAvatarUrl}
+            fallback={row.creatorFallback}
+            iconClassName="is-creator"
+          />
+        ),
+      },
+      {
+        id: "lastUsed",
+        header: "Last used",
+        accessor: (row) => row.lastUsedAt || 0,
+        sortable: true,
+        sortDescFirst: true,
+        width: "minmax(110px, 0.46fr)",
+        cell: ({ row }) => (
+          <ResourceOverviewValue title={row.lastUsedTitle}>
+            {row.lastUsedLabel}
+          </ResourceOverviewValue>
+        ),
+      },
+    ],
+    [],
+  );
 
-  const getRowActions = (row: AgentOverviewRow, state: { targetRows: readonly AgentOverviewRow[] }): readonly PlatformDataTableAction<AgentOverviewRow>[] => {
+  const getRowActions = (
+    row: AgentOverviewRow,
+    state: { targetRows: readonly AgentOverviewRow[] },
+  ): readonly PlatformDataTableAction<AgentOverviewRow>[] => {
+    if (mode === "functional" || row.isFunctional) return [];
     const targets = state.targetRows.length ? state.targetRows : [row];
     const bulk = targets.length > 1;
     const deletable = targets.filter((target) => !target.isSystem);
     const squadEligible = targets.filter((target) => !target.isSquad);
     if (bulk) {
       return [
-        { id: "share", label: "Share selected with Team", icon: UsersRound, disabled: mutating, onSelect: () => onShare(targets) },
-        { id: "squad", label: "Add selected to Agent Squad", icon: Layers, disabled: mutating || !squadEligible.length, onSelect: () => onAddToSquad(squadEligible) },
-        { id: "delete", label: "Delete selected", icon: Trash2, danger: true, separatorBefore: true, disabled: mutating || !deletable.length, onSelect: () => onDelete(deletable) },
+        {
+          id: "share",
+          label: "Share selected with Team",
+          icon: UsersRound,
+          disabled: mutating,
+          onSelect: () => onShare(targets),
+        },
+        {
+          id: "squad",
+          label: "Add selected to Agent Squad",
+          icon: Layers,
+          disabled: mutating || !squadEligible.length,
+          onSelect: () => onAddToSquad(squadEligible),
+        },
+        {
+          id: "delete",
+          label: "Delete selected",
+          icon: Trash2,
+          danger: true,
+          separatorBefore: true,
+          disabled: mutating || !deletable.length,
+          onSelect: () => onDelete(deletable),
+        },
       ];
     }
     return [
-      { id: "rename", label: "Rename", icon: SquarePen, disabled: mutating || row.isSystem, onSelect: () => onRename(row) },
-      { id: "share", label: "Share with Team", icon: UsersRound, disabled: mutating, onSelect: () => onShare([row]) },
-      { id: "squad", label: "Add to Agent Squad", icon: Layers, disabled: mutating || row.isSquad, onSelect: () => onAddToSquad([row]) },
-      { id: "copy", label: "Copy", icon: Copy, disabled: mutating, onSelect: () => onCopy(row) },
-      { id: "delete", label: "Delete", icon: Trash2, danger: true, separatorBefore: true, disabled: mutating || row.isSystem, onSelect: () => onDelete([row]) },
+      {
+        id: "rename",
+        label: "Rename",
+        icon: SquarePen,
+        disabled: mutating || row.isSystem,
+        onSelect: () => onRename(row),
+      },
+      {
+        id: "share",
+        label: "Share with Team",
+        icon: UsersRound,
+        disabled: mutating,
+        onSelect: () => onShare([row]),
+      },
+      {
+        id: "squad",
+        label: "Add to Agent Squad",
+        icon: Layers,
+        disabled: mutating || row.isSquad,
+        onSelect: () => onAddToSquad([row]),
+      },
+      {
+        id: "copy",
+        label: "Copy",
+        icon: Copy,
+        disabled: mutating,
+        onSelect: () => onCopy(row),
+      },
+      {
+        id: "delete",
+        label: "Delete",
+        icon: Trash2,
+        danger: true,
+        separatorBefore: true,
+        disabled: mutating || row.isSystem,
+        onSelect: () => onDelete([row]),
+      },
     ];
   };
 
   const modeTabs = (
-    <PlatformDetailTabBar<"agents" | "squads">
+    <PlatformDetailTabBar<AgentOverviewMode>
       ariaLabel="Agent categories"
       value={mode}
       tabs={[
         { id: "agents", label: "Agents" },
         { id: "squads", label: "Squads" },
+        { id: "functional", label: "Functional Agents" },
       ]}
       onValueChange={onModeChange}
       variant="minimal"
@@ -188,7 +278,13 @@ export function AgentsOverviewPage({
     />
   );
 
-  const entity = mode === "squads" ? "Squads" : "Agents";
+  const isFunctionalMode = mode === "functional";
+  const entity =
+    mode === "squads"
+      ? "Squads"
+      : isFunctionalMode
+        ? "Functional Agents"
+        : "Agents";
   return (
     <ResourceOverviewPage<AgentOverviewRow>
       period={period}
@@ -204,28 +300,55 @@ export function AgentsOverviewPage({
         ariaLabel: entity,
         className: "resource-overview-table is-agents",
         sorting: { defaultValue: { id: "usage", direction: "desc" } },
-        selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
+        selection: isFunctionalMode
+          ? undefined
+          : { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
         toolbar: {
           leading: modeTabs,
-          search: { placeholder: mode === "squads" ? "Search squads" : "Search agents", getSearchText: (row) => row.searchText || `${row.name} ${row.modelLabel} ${row.creatorName}` },
-          filters: [{
-            id: "type",
-            label: "Type",
-            value: typeFilter,
-            onChange: setTypeFilter,
-            options: [
-              { id: "all", label: `All ${entity}` },
-              { id: "system", label: `System ${entity}` },
-              { id: "custom", label: `Custom ${entity}` },
-            ],
-          }],
-          primaryAction: { label: mode === "squads" ? "Squad" : "Agent", icon: Plus, onClick: mode === "squads" ? onCreateSquad : onCreateAgent },
+          search: {
+            placeholder:
+              mode === "squads"
+                ? "Search squads"
+                : isFunctionalMode
+                  ? "Search functional agents"
+                  : "Search agents",
+            getSearchText: (row) =>
+              row.searchText ||
+              `${row.name} ${row.modelLabel} ${row.creatorName}`,
+          },
+          filters: isFunctionalMode
+            ? undefined
+            : [
+                {
+                  id: "type",
+                  label: "Type",
+                  value: typeFilter,
+                  onChange: setTypeFilter,
+                  options: [
+                    { id: "all", label: `All ${entity}` },
+                    { id: "system", label: `System ${entity}` },
+                    { id: "custom", label: `Custom ${entity}` },
+                  ],
+                },
+              ],
+          primaryAction: isFunctionalMode
+            ? undefined
+            : {
+                label: mode === "squads" ? "Squad" : "Agent",
+                icon: Plus,
+                onClick: mode === "squads" ? onCreateSquad : onCreateAgent,
+              },
         },
-        getRowActions,
+        getRowActions: isFunctionalMode ? undefined : getRowActions,
         onRowActivate: onOpen,
         getRowAriaLabel: (row) => row.name,
         loading,
-        emptyState: mode === "squads" ? "No squads available." : "No agents available.",
+        emptyState:
+          mode === "squads"
+            ? "No squads available."
+            : isFunctionalMode
+              ? "No functional agents available."
+              : "No agents available.",
       }}
     />
   );

@@ -26,15 +26,6 @@ export const PROJECT_UPDATES_CSS_FRAGMENT = `
         gap: 16px;
       }
 
-      .platform-project-update-card__title {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 12px;
-        line-height: 1.4;
-        font-weight: 400;
-        letter-spacing: 0;
-      }
-
       .platform-project-update-card__action.platform-button.is-secondary {
         min-height: 28px;
         padding: 0;

@@ -30,6 +30,7 @@ export interface RunnerThreadTimelineProps {
   fallbackRunWorkspaceName?: string | null;
   maxMountedItems?: number;
   renderMessageContent?: (message: RunnerThreadMessage) => ReactNode;
+  renderUserMessageContent?: (message: RunnerThreadMessage) => ReactNode;
   renderEvent?: (event: RunnerThreadEvent) => ReactNode;
   renderAction?: RunnerThreadActionRenderer;
   runDetailStates?: Record<string, RunnerThreadDetailLoadState>;
@@ -70,6 +71,7 @@ export function RunnerThreadTimeline({
   fallbackRunWorkspaceName,
   maxMountedItems = 200,
   renderMessageContent,
+  renderUserMessageContent,
   renderEvent,
   renderAction,
   runDetailStates,
@@ -203,6 +205,7 @@ export function RunnerThreadTimeline({
               participant={projection.participantsById[item.authorParticipantId]}
               receipt={getMessageReceipt(projection, item)}
               renderContent={renderMessageContent}
+              renderUserContent={renderUserMessageContent}
               onCorrectRoute={onCorrectRoute}
             />
           );

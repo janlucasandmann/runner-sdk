@@ -14,7 +14,9 @@ This directory contains overview models, analytics, tables, and page composition
 - [`agents-overview-analytics.ts`](agents-overview-analytics.ts) — Focused implementation of Agents Overview Analytics.
 - [`agents-overview-model.test.ts`](agents-overview-model.test.ts) — Regression coverage for Agents Overview Model.
 - [`agents-overview-model.ts`](agents-overview-model.ts) — State and projection logic for Agents Overview Model.
+- [`agents-overview-page.test.tsx`](agents-overview-page.test.tsx) — Regression coverage for the Agents, Squads, and Functional Agents overview modes.
 - [`agents-overview-page.tsx`](agents-overview-page.tsx) — Presentation composition for Agents Overview Page.
+- [`functional-agent-catalog.ts`](functional-agent-catalog.ts) — Shared role identifiers for persisted, editable functional agents.
 - [`index.ts`](index.ts) — Public barrel or composition entry point.
 
 ## Working in this directory

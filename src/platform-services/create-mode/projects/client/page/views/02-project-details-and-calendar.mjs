@@ -681,7 +681,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
         }
 
         function renderProjectAppHeaderMilestoneSelector() {
-          const isBoardMilestoneSelector = taskView === "board";
+          const isBoardMilestoneSelector = taskView === "board" || taskView === "activity";
           return React.createElement(PlatformButtonSelector, {
               mode: "popup",
               buttonVariant: "secondary",
@@ -761,8 +761,38 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
           );
         }
 
+        function handleProjectWorkViewChange(nextView) {
+          const normalizedView = nextView === "board"
+            ? "board"
+            : "backlog";
+          if (normalizedView === taskView) {
+            return;
+          }
+          setBacklogToolbarPopover("");
+          setBoardToolbarPopover("");
+          setProjectSidebarPopover("");
+          setTaskView(normalizedView);
+        }
+
+        function renderProjectWorkViewTabs() {
+          return React.createElement(PlatformDetailTabBar, {
+            value: taskView === "board"
+              ? "board"
+              : "backlog",
+            tabs: [
+              { id: "backlog", label: "Backlog" },
+              { id: "board", label: "Board" },
+            ],
+            onValueChange: handleProjectWorkViewChange,
+            variant: "minimal",
+            ariaLabel: "Project work view",
+            className: "playground-project-work-view-tabs",
+          });
+        }
+
         function renderBacklogTaskListView({
           headerTitle,
+          headerLeading = null,
           openTaskCount,
           headerAction = null,
           toolbarRef,
@@ -1158,7 +1188,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
                 },
                 React.createElement("div", { className: "playground-tasks-backlog-header-row" },
                   React.createElement("div", { className: "playground-tasks-backlog-header-main" },
-                    React.createElement("div", { className: "playground-tasks-backlog-heading" }, headerTitle),
+                    headerLeading || React.createElement("div", { className: "playground-tasks-backlog-heading" }, headerTitle),
                     React.createElement(PlatformPopup, {
                         open: toolbarPopover === "filter",
                         rootClassName: "playground-tasks-backlog-filter-shell is-central-popup",
@@ -1307,6 +1337,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
             : null;
           return renderBacklogTaskListView({
             headerTitle: backlogHeaderTitle,
+            headerLeading: renderProjectWorkViewTabs(),
             openTaskCount: openScopedBacklogTaskCount,
             headerAction: backlogHeaderAction,
             toolbarRef: backlogToolbarActionsRef,

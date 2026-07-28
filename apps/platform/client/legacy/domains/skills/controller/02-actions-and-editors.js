@@ -28,64 +28,43 @@
             setToolbarPopover((current) => current === nextValue ? "" : nextValue);
           }
   
-  	        function openSkillComposer() {
-  	          setToolbarPopover("");
-  	          setSkillListActionMenuState(null);
-  	          setSkillListMode("custom");
-            setSkillsPageMode("overview");
-            setSkillComposerDraft(buildPlaygroundDefaultSkillComposerDraft());
-            setSkillComposerSaveState({
-              isSaving: false,
-              error: "",
-            });
-            setSkillCodeFilesTransferState({
-              isProcessing: false,
-              error: "",
-            });
-            setIsSkillComposerDescriptionEditing(false);
-            setSkillComposerIconPickerOpen(false);
-            setIsSkillComposerCodeDragging(false);
-            setSkillEnvironmentFilePickerOpen(false);
-            setSkillEnvironmentPopoverOpen(false);
-            setSkillEnvironmentFilePickerSelectedPaths([]);
-            setSkillEnvironmentFilePickerSearch("");
-            setSkillEnvironmentFilePickerTarget("detail");
-            setSkillComposerOpen(true);
+          function getSkillApiRequestHeaders() {
+            return {
+              "Content-Type": "application/json",
+              ...(apiKey && String(apiKey).trim() ? { "X-API-Key": String(apiKey).trim() } : {}),
+              ...(upstreamUrl ? { "X-Runner-Upstream-Url": upstreamUrl } : {}),
+            };
           }
-  
-          function closeSkillComposer() {
-            if (skillComposerSaveState.isSaving) {
-              return;
-            }
-            setSkillComposerOpen(false);
-            setSkillComposerDraft(buildPlaygroundDefaultSkillComposerDraft());
-            setSkillComposerSaveState({
-              isSaving: false,
-              error: "",
+
+          function createAndOpenCustomSkill() {
+            if (skillSaveState.isSaving) return;
+            const draftSkill = normalizeSkillRecord({
+              id: PLAYGROUND_CUSTOM_SKILL_DRAFT_ID,
+              projectId: baseSkillProjectId || "__runner_playground__",
+              name: "",
+              description: "",
+              markdown: "",
+              codeFiles: [{
+                id: "skill-md",
+                name: "SKILL.md",
+                content: "",
+                language: "markdown",
+              }],
+              icon: "code",
+              category: "custom",
+              isActive: true,
+              isDraft: true,
             });
-            setSkillCodeFilesTransferState({
-              isProcessing: false,
-              error: "",
-            });
-            setIsSkillComposerDescriptionEditing(false);
-            setSkillComposerIconPickerOpen(false);
-            setIsSkillComposerCodeDragging(false);
-            setSkillEnvironmentFilePickerOpen(false);
-            setSkillEnvironmentPopoverOpen(false);
-            setSkillEnvironmentFilePickerSelectedPaths([]);
-            setSkillEnvironmentFilePickerSearch("");
-            setSkillEnvironmentFilePickerTarget("detail");
-          }
-  
-          function updateSkillComposerField(field, value) {
-            setSkillComposerDraft((current) => ({
-              ...current,
-              [field]: value,
-            }));
-            setSkillComposerSaveState((current) => ({
-              ...current,
-              error: "",
-            }));
+            setLoadedSkills((current) => [
+              draftSkill,
+              ...current.filter((skill) => skill.id !== PLAYGROUND_CUSTOM_SKILL_DRAFT_ID),
+            ]);
+            setSkillListMode("custom");
+            setSelectedSkillId(PLAYGROUND_CUSTOM_SKILL_DRAFT_ID);
+            setSkillTitleDraft("");
+            setSkillDetailTab("code");
+            setSkillSaveState({ isSaving: false, error: "" });
+            setSkillsPageMode("detail");
           }
   
   	        function handleSkillSelect(skillId) {
@@ -104,9 +83,15 @@
   
           function handleBackToSkillsOverview() {
             setToolbarPopover("");
-  	          setSkillActionsPopoverOpen(false);
-  	          setSkillDetailIconPickerOpen(false);
-  	          setSkillsPageMode("overview");
+	          setSkillActionsPopoverOpen(false);
+	          setSkillDetailIconPickerOpen(false);
+	          if (selectedSkill?.isDraft) {
+	            setLoadedSkills((current) =>
+	              current.filter((skill) => skill.id !== PLAYGROUND_CUSTOM_SKILL_DRAFT_ID)
+	            );
+	            setSelectedSkillId("");
+	          }
+	          setSkillsPageMode("overview");
           }
   
           function closeSkillListActionMenu() {
@@ -265,90 +250,6 @@
             return formatSettingsComputeTokens(computeTokens) + " / image";
           }
   
-          function renderSkillPopoverMenu(anchorRef, popoverRef, content) {
-            if (!content) {
-              return null;
-            }
-            if (typeof document === "undefined" || !document.body) {
-              return content;
-            }
-            const anchorElement = anchorRef?.current;
-            if (!anchorElement || typeof anchorElement.getBoundingClientRect !== "function") {
-              return content;
-            }
-            const rect = anchorElement.getBoundingClientRect();
-            const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1280;
-            const menuWidth = Math.min(320, Math.max(240, rect.width || 280));
-            const left = Math.max(20, Math.min(viewportWidth - menuWidth - 20, rect.right - menuWidth));
-            const top = rect.bottom + 8;
-            return createPortal(
-              React.createElement("div", {
-                  ref: popoverRef,
-                  className: "playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal",
-                  style: { top: top + "px", left: left + "px" },
-                },
-                content
-              ),
-              document.body
-            );
-          }
-  
-          function updateSkillDeepResearchDefaultModel(nextModelId) {
-            const normalizedModelId = getSkillDeepResearchModelMeta(nextModelId)?.id || PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS[0].id;
-            const currentConfig = readDemoSettingsPlatformConfig();
-            writeDemoSettingsPlatformConfig({
-              ...currentConfig,
-              skills: {
-                ...(currentConfig?.skills && typeof currentConfig.skills === "object" ? currentConfig.skills : {}),
-                deepResearchModel: normalizedModelId,
-              },
-            });
-            setSkillDeepResearchDefaultModel(normalizedModelId);
-            setSkillDeepResearchModelPopoverOpen(false);
-          }
-  
-          function updateSkillImageGenerationDefaultModel(nextModelId) {
-            const normalizedModelId = getSkillImageGenerationModelMeta(nextModelId)?.id || PLAYGROUND_SKILL_IMAGE_MODEL_OPTIONS[0].id;
-            const currentConfig = readDemoSettingsPlatformConfig();
-            writeDemoSettingsPlatformConfig({
-              ...currentConfig,
-              skills: {
-                ...(currentConfig?.skills && typeof currentConfig.skills === "object" ? currentConfig.skills : {}),
-                imageGenerationModel: normalizedModelId,
-              },
-            });
-            setSkillImageGenerationDefaultModel(normalizedModelId);
-            setSkillImageGenerationModelPopoverOpen(false);
-          }
-  
-          function updateSkillImageGenerationDefaultQuality(nextQualityId) {
-            const normalizedQualityId = getSkillImageGenerationQualityMeta(nextQualityId)?.id || "medium";
-            const currentConfig = readDemoSettingsPlatformConfig();
-            writeDemoSettingsPlatformConfig({
-              ...currentConfig,
-              skills: {
-                ...(currentConfig?.skills && typeof currentConfig.skills === "object" ? currentConfig.skills : {}),
-                imageGenerationQuality: normalizedQualityId,
-              },
-            });
-            setSkillImageGenerationDefaultQuality(normalizedQualityId);
-            setSkillImageGenerationQualityPopoverOpen(false);
-          }
-  
-          function updateSkillVideoGenerationDefaultModel(nextModelId) {
-            const normalizedModelId = getSkillVideoGenerationModelMeta(nextModelId)?.id || PLAYGROUND_SKILL_VIDEO_MODEL_OPTIONS[0].id;
-            const currentConfig = readDemoSettingsPlatformConfig();
-            writeDemoSettingsPlatformConfig({
-              ...currentConfig,
-              skills: {
-                ...(currentConfig?.skills && typeof currentConfig.skills === "object" ? currentConfig.skills : {}),
-                videoGenerationModel: normalizedModelId,
-              },
-            });
-            setSkillVideoGenerationDefaultModel(normalizedModelId);
-            setSkillVideoGenerationModelPopoverOpen(false);
-          }
-  
           function buildPlaygroundSkillCodeFileRecord(name, content, language = "") {
             const normalizedName = String(name || "").trim();
             return {
@@ -370,48 +271,6 @@
             return Array.from(mergedByName.values()).sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")));
           }
   
-          function applySkillComposerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-            updateSkillComposerField("description", nextValue);
-            window.requestAnimationFrame(() => {
-              const textarea = skillComposerDescriptionTextareaRef.current;
-              if (!textarea) {
-                return;
-              }
-              const maxLength = nextValue.length;
-              const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
-              const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
-              textarea.focus();
-              textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
-              resizeSkillTextarea(textarea);
-            });
-          }
-  
-          function handleSkillComposerDescriptionFormat(formatType) {
-            const textarea = skillComposerDescriptionTextareaRef.current;
-            if (!textarea) {
-              return;
-            }
-            const currentValue = String(skillComposerDraft.description || "");
-            const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : currentValue.length;
-            const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
-            let edit = null;
-            if (formatType === "bold") {
-              edit = buildWrappedSkillMarkdownEdit(currentValue, selectionStart, selectionEnd, "**");
-            } else if (formatType === "italic") {
-              edit = buildWrappedSkillMarkdownEdit(currentValue, selectionStart, selectionEnd, "*");
-            } else if (formatType === "underline") {
-              edit = buildWrappedSkillMarkdownEdit(currentValue, selectionStart, selectionEnd, "++");
-            } else if (formatType === "list") {
-              edit = buildSkillMarkdownListEdit(currentValue, selectionStart, selectionEnd);
-            }
-  
-            if (!edit) {
-              return;
-            }
-  
-            applySkillComposerDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
-          }
-  
           function updateLoadedSkillRecord(skillId, nextSkill) {
             setLoadedSkills((current) => {
               let replaced = false;
@@ -424,115 +283,6 @@
               });
               return replaced ? next : next.concat(nextSkill);
             });
-          }
-  
-          async function handleSkillComposerSubmit(event) {
-            event.preventDefault();
-            const nextName = String(skillComposerDraft.name || "").trim().replace(/\s+/g, " ");
-            if (!nextName) {
-              setSkillComposerSaveState({
-                isSaving: false,
-                error: "Skill name cannot be empty.",
-              });
-              return;
-            }
-  
-            if (!baseSkillProjectId) {
-              setSkillComposerSaveState({
-                isSaving: false,
-                error: "Project scope is unavailable for skill creation.",
-              });
-              return;
-            }
-  
-            setSkillComposerSaveState({
-              isSaving: true,
-              error: "",
-            });
-  
-            try {
-              const response = await fetch(
-                "/api/aios/projects/" + encodeURIComponent(baseSkillProjectId) + "/skills",
-                {
-                  method: "POST",
-                  credentials: "include",
-                  headers: {
-                    "Content-Type": "application/json",
-                    ...(apiKey && String(apiKey).trim() ? { "X-API-Key": String(apiKey).trim() } : {}),
-                    ...(upstreamUrl ? { "X-Runner-Upstream-Url": upstreamUrl } : {}),
-                  },
-                  body: JSON.stringify({
-                    name: nextName,
-                    description: String(skillComposerDraft.description || ""),
-                    markdown: computePlaygroundSkillMarkdownFromSections(nextName, {
-                      usage: "Describe when this skill should be invoked...",
-                      process: "1. Step one\n2. Step two",
-                      outputFormat: "Describe what this skill should return...",
-                      configuration: "Add configuration notes here...",
-                      examplePrompts: "- Example prompt",
-                    }),
-                    codeFiles: normalizeSkillCodeFiles(skillComposerDraft.codeFiles).map((file) => ({
-                      id: file.id,
-                      name: file.name,
-                      content: file.content,
-                      language: file.language,
-                    })),
-                    icon: getPlaygroundSkillIconId(skillComposerDraft.icon),
-                    category: "custom",
-                    isActive: true,
-                  }),
-                }
-              );
-              const data = await response.json().catch(() => ({}));
-              if (!response.ok) {
-                throw new Error(data?.message || data?.error || "Failed to create skill.");
-              }
-  
-              const normalizedCreatedSkill = normalizeSkillRecord(data?.skill || {
-                id: data?.id,
-                projectId: baseSkillProjectId,
-                name: nextName,
-                description: String(skillComposerDraft.description || ""),
-                category: "custom",
-                icon: getPlaygroundSkillIconId(skillComposerDraft.icon),
-                codeFiles: normalizeSkillCodeFiles(skillComposerDraft.codeFiles),
-                isActive: true,
-                isSystem: false,
-                isDefault: false,
-              });
-              if (!normalizedCreatedSkill) {
-                throw new Error("Skill creation response was empty.");
-              }
-  
-              setLoadedSkills((current) => [normalizedCreatedSkill, ...current.filter((skill) => skill.id !== normalizedCreatedSkill.id)]);
-              setSkillListMode("custom");
-              setSelectedSkillId(normalizedCreatedSkill.id);
-              setSkillsPageMode("detail");
-              setSkillComposerOpen(false);
-              setSkillComposerDraft(buildPlaygroundDefaultSkillComposerDraft());
-              setSkillComposerSaveState({
-                isSaving: false,
-                error: "",
-              });
-              setSkillCodeFilesTransferState({
-                isProcessing: false,
-                error: "",
-              });
-              setIsSkillComposerDescriptionEditing(false);
-              setSkillComposerIconPickerOpen(false);
-              setIsSkillComposerCodeDragging(false);
-              setSkillEnvironmentFilePickerOpen(false);
-              setSkillEnvironmentPopoverOpen(false);
-              setSkillEnvironmentFilePickerSelectedPaths([]);
-              setSkillEnvironmentFilePickerSearch("");
-              setSkillEnvironmentFilePickerTarget("detail");
-              void loadSkills({ force: true });
-            } catch (error) {
-              setSkillComposerSaveState({
-                isSaving: false,
-                error: error instanceof Error ? error.message : "Failed to create skill.",
-              });
-            }
           }
   
           function updateSelectedSkillLocal(updater) {
@@ -629,9 +379,226 @@
             }
             return normalizedUpdatedSkill;
           }
+
+          async function loadSelectedSkillVersions(targetSkill = selectedSkill) {
+            if (!targetSkill?.id || !targetSkill.isCustom || targetSkill.isDraft) {
+              return [];
+            }
+            const targetProjectId = String(targetSkill.projectId || selectedSkillProjectId || "").trim();
+            setSkillVersionState((current) => ({
+              ...current,
+              skillId: targetSkill.id,
+              status: "loading",
+              error: "",
+            }));
+            try {
+              const response = await fetch(
+                "/api/aios/projects/" + encodeURIComponent(targetProjectId) + "/skills/"
+                  + encodeURIComponent(targetSkill.id) + "/versions",
+                {
+                  method: "GET",
+                  credentials: "include",
+                  headers: getSkillApiRequestHeaders(),
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load skill versions.");
+              }
+              const versions = Array.isArray(data?.versions) ? data.versions : [];
+              setSkillVersionState({
+                skillId: targetSkill.id,
+                status: "ready",
+                error: "",
+                versions,
+                currentVersionId: String(data?.currentVersionId || targetSkill.currentVersionId || ""),
+                publishedVersionId: String(data?.publishedVersionId || targetSkill.publishedVersionId || ""),
+              });
+              return versions;
+            } catch (error) {
+              setSkillVersionState((current) => ({
+                ...current,
+                skillId: targetSkill.id,
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load skill versions.",
+              }));
+              return [];
+            }
+          }
+
+          async function saveAndPublishSelectedSkillVersion() {
+            if (!selectedSkill?.id || !selectedSkill.isCustom || skillSaveState.isSaving) {
+              return null;
+            }
+            setSkillPublishMenuOpen(false);
+            setSkillSaveState({ isSaving: true, error: "" });
+            try {
+              const currentFiles = normalizeSkillCodeFiles(selectedSkill.codeFiles);
+              const activeFile = currentFiles
+                .find((file) => file.id === skillCodeEditorState.fileId);
+              const nextFiles = activeFile && skillCodeEditorState.value !== skillCodeEditorState.initialValue
+                ? currentFiles.map((file) =>
+                    file.id === activeFile.id
+                      ? { ...file, content: skillCodeEditorState.value }
+                      : file
+                  )
+                : currentFiles;
+              if (selectedSkill.isDraft) {
+                const markdownFile = nextFiles.find((file) =>
+                  normalizeHistoryPath(file.name).toLowerCase() === "skill.md"
+                );
+                const response = await fetch(
+                  "/api/aios/projects/" + encodeURIComponent(selectedSkillProjectId) + "/skills",
+                  {
+                    method: "POST",
+                    credentials: "include",
+                    headers: getSkillApiRequestHeaders(),
+                    body: JSON.stringify({
+                      name: String(skillTitleDraft || selectedSkill.name || "").trim() || "Untitled Skill",
+                      description: String(selectedSkill.description || ""),
+                      markdown: markdownFile?.content ?? String(selectedSkill.markdown || ""),
+                      codeFiles: nextFiles,
+                      icon: selectedSkill.icon || "code",
+                      category: selectedSkill.category || "custom",
+                      metadata: selectedSkill.metadata || {},
+                      permissionSet: selectedSkill.permissionSet || undefined,
+                      accessControl: selectedSkill.accessControl || undefined,
+                      isActive: selectedSkill.isActive !== false,
+                    }),
+                  }
+                );
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                  throw new Error(data?.message || data?.error || "Failed to create skill.");
+                }
+                const createdSkill = normalizeSkillRecord(data?.skill || data);
+                if (!createdSkill?.id) {
+                  throw new Error("Skill creation response was empty.");
+                }
+                setLoadedSkills((current) => [
+                  createdSkill,
+                  ...current.filter((skill) =>
+                    skill.id !== PLAYGROUND_CUSTOM_SKILL_DRAFT_ID
+                    && skill.id !== createdSkill.id
+                  ),
+                ]);
+                setSelectedSkillId(createdSkill.id);
+                setSkillTitleDraft(createdSkill.name);
+                setSkillCodeEditorState((current) => ({
+                  ...current,
+                  initialValue: current.value,
+                  isSaving: false,
+                  error: "",
+                  message: "Published",
+                }));
+                setSkillSaveState({ isSaving: false, error: "" });
+                return createdSkill;
+              }
+              if (activeFile && skillCodeEditorState.value !== skillCodeEditorState.initialValue) {
+                const didSaveFiles = await saveSelectedSkillCodeFiles(nextFiles);
+                if (!didSaveFiles) {
+                  throw new Error("Failed to save skill source before publishing.");
+                }
+              }
+              const response = await fetch(
+                "/api/aios/projects/" + encodeURIComponent(selectedSkillProjectId) + "/skills/"
+                  + encodeURIComponent(selectedSkill.id) + "/versions",
+                {
+                  method: "POST",
+                  credentials: "include",
+                  headers: getSkillApiRequestHeaders(),
+                  body: JSON.stringify({ publish: true }),
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to publish skill version.");
+              }
+              const version = data?.version || null;
+              if (version) {
+                setSkillVersionState((current) => ({
+                  ...current,
+                  skillId: selectedSkill.id,
+                  status: "ready",
+                  error: "",
+                  versions: [version, ...current.versions.filter((entry) => entry.id !== version.id)],
+                  currentVersionId: String(data?.currentVersionId || version.id || ""),
+                  publishedVersionId: String(data?.publishedVersionId || version.id || ""),
+                }));
+                updateSelectedSkillLocal((current) => ({
+                  ...current,
+                  currentVersionId: String(data?.currentVersionId || version.id || ""),
+                  publishedVersionId: String(data?.publishedVersionId || version.id || ""),
+                }));
+              }
+              setSkillCodeEditorState((current) => ({
+                ...current,
+                initialValue: current.value,
+                isSaving: false,
+                error: "",
+                message: "Published",
+              }));
+              setSkillSaveState({ isSaving: false, error: "" });
+              return version;
+            } catch (error) {
+              setSkillSaveState({
+                isSaving: false,
+                error: error instanceof Error ? error.message : "Failed to publish skill version.",
+              });
+              return null;
+            }
+          }
+
+          async function restoreSelectedSkillVersion(versionId) {
+            if (!selectedSkill?.id || !selectedSkill.isCustom || !versionId) {
+              return;
+            }
+            setSkillSaveState({ isSaving: true, error: "" });
+            try {
+              const response = await fetch(
+                "/api/aios/projects/" + encodeURIComponent(selectedSkillProjectId) + "/skills/"
+                  + encodeURIComponent(selectedSkill.id) + "/versions/" + encodeURIComponent(versionId),
+                {
+                  method: "PATCH",
+                  credentials: "include",
+                  headers: getSkillApiRequestHeaders(),
+                  body: JSON.stringify({ operation: "restore" }),
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to restore skill version.");
+              }
+              const restored = normalizeSkillRecord(data?.skill);
+              if (restored) updateLoadedSkillRecord(selectedSkill.id, restored);
+              setSkillVersionState((current) => ({
+                ...current,
+                currentVersionId: versionId,
+              }));
+              setSkillSaveState({ isSaving: false, error: "" });
+            } catch (error) {
+              setSkillSaveState({
+                isSaving: false,
+                error: error instanceof Error ? error.message : "Failed to restore skill version.",
+              });
+            }
+          }
+
+          async function updateSelectedSkillAccessMetadata(nextMetadata) {
+            if (!selectedSkill?.isCustom) return;
+            const normalizedMetadata = nextMetadata && typeof nextMetadata === "object"
+              ? nextMetadata
+              : {};
+            updateSelectedSkillLocal((current) => ({ ...current, metadata: normalizedMetadata }));
+            await saveSelectedSkillFields({ metadata: normalizedMetadata });
+          }
   
           async function saveSelectedSkillFields(partial) {
             if (!selectedSkill || !selectedSkill.isCustom) {
+              return;
+            }
+            if (selectedSkill.isDraft) {
+              updateSelectedSkillLocal((current) => ({ ...current, ...partial }));
               return;
             }
   
@@ -997,6 +964,13 @@
             if (!selectedSkill || !selectedSkill.isCustom) {
               return false;
             }
+            if (selectedSkill.isDraft) {
+              updateSelectedSkillLocal((current) => ({
+                ...current,
+                codeFiles: normalizeSkillCodeFiles(nextCodeFiles),
+              }));
+              return true;
+            }
   
             setSkillCodeFilesTransferState({
               isProcessing: true,
@@ -1077,52 +1051,9 @@
             }
           }
   
-          async function handleSkillComposerCodeFileSelection(fileList) {
-            if (!fileList?.length) {
-              return;
-            }
-  
-            setSkillCodeFilesTransferState({
-              isProcessing: true,
-              error: "",
-            });
-  
-            try {
-              const nextFiles = await Promise.all(
-                Array.from(fileList).map(async (file) => {
-                  const content = await file.text();
-                  return buildPlaygroundSkillCodeFileRecord(file.name, content);
-                })
-              );
-              setSkillComposerDraft((current) => ({
-                ...(current || buildPlaygroundDefaultSkillComposerDraft()),
-                codeFiles: mergePlaygroundSkillCodeFiles(current?.codeFiles || [], nextFiles),
-              }));
-              setSkillCodeFilesTransferState({
-                isProcessing: false,
-                error: "",
-              });
-            } catch (error) {
-              setSkillCodeFilesTransferState({
-                isProcessing: false,
-                error: error instanceof Error ? error.message : "Failed to add code files.",
-              });
-            }
-          }
-  
           async function handleSkillCodeFileInputChange(event) {
             try {
               await handleSkillCodeFileSelection(event.target.files);
-            } finally {
-              if (event.target) {
-                event.target.value = "";
-              }
-            }
-          }
-  
-          async function handleSkillComposerCodeFileInputChange(event) {
-            try {
-              await handleSkillComposerCodeFileSelection(event.target.files);
             } finally {
               if (event.target) {
                 event.target.value = "";
@@ -1139,18 +1070,8 @@
             await handleSkillCodeFileSelection(event.dataTransfer?.files);
           }
   
-          async function handleSkillComposerCodeFileDrop(event) {
-            event.preventDefault();
-            setIsSkillComposerCodeDragging(false);
-            if (skillCodeFilesTransferState.isProcessing) {
-              return;
-            }
-            await handleSkillComposerCodeFileSelection(event.dataTransfer?.files);
-          }
-  
           async function handleAttachSkillEnvironmentFiles() {
-            const isComposerTarget = skillEnvironmentFilePickerTarget === "composer";
-            if (!selectedSkillEnvironment?.id || (!isComposerTarget && (!selectedSkill || !selectedSkill.isCustom))) {
+            if (!selectedSkillEnvironment?.id || !selectedSkill || !selectedSkill.isCustom) {
               return;
             }
   
@@ -1184,19 +1105,8 @@
                   return buildPlaygroundSkillCodeFileRecord(entry.path, content);
                 })
               );
-              if (isComposerTarget) {
-                setSkillComposerDraft((current) => ({
-                  ...(current || buildPlaygroundDefaultSkillComposerDraft()),
-                  codeFiles: mergePlaygroundSkillCodeFiles(current?.codeFiles || [], nextCodeFiles),
-                }));
-                setSkillCodeFilesTransferState({
-                  isProcessing: false,
-                  error: "",
-                });
-              } else {
-                const mergedFiles = mergePlaygroundSkillCodeFiles(selectedSkill.codeFiles, nextCodeFiles);
-                await saveSelectedSkillCodeFiles(mergedFiles);
-              }
+              const mergedFiles = mergePlaygroundSkillCodeFiles(selectedSkill.codeFiles, nextCodeFiles);
+              await saveSelectedSkillCodeFiles(mergedFiles);
               setSkillEnvironmentFilePickerOpen(false);
               setSkillEnvironmentPopoverOpen(false);
               setSkillEnvironmentFilePickerSelectedPaths([]);
@@ -1218,17 +1128,6 @@
             void saveSelectedSkillCodeFiles(nextCodeFiles);
           }
   
-          function handleRemoveSkillComposerCodeFile(codeFileId) {
-            setSkillComposerDraft((current) => ({
-              ...(current || buildPlaygroundDefaultSkillComposerDraft()),
-              codeFiles: normalizeSkillCodeFiles(current?.codeFiles).filter((file) => file.id !== codeFileId),
-            }));
-            setSkillCodeFilesTransferState((current) => ({
-              ...current,
-              error: "",
-            }));
-          }
-  
           function openSkillCodeFilePicker() {
             if (!isSelectedSkillCodeFilesEditable || skillCodeFilesTransferState.isProcessing) {
               return;
@@ -1241,15 +1140,6 @@
               return;
             }
             setSkillEnvironmentFilePickerTarget("detail");
-            setSkillEnvironmentFilePickerSearch("");
-            setSkillEnvironmentFilePickerOpen(true);
-          }
-  
-          function openSkillComposerEnvironmentFilePicker() {
-            if (skillCodeFilesTransferState.isProcessing || availableSkillEnvironments.length === 0) {
-              return;
-            }
-            setSkillEnvironmentFilePickerTarget("composer");
             setSkillEnvironmentFilePickerSearch("");
             setSkillEnvironmentFilePickerOpen(true);
           }

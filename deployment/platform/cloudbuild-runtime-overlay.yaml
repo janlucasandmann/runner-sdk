@@ -1,0 +1,16 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "--build-arg"
+      - "BASE_IMAGE=${_BASE_IMAGE}"
+      - "-t"
+      - "${_IMAGE_URI}"
+      - "-f"
+      - "repos/runner-web-sdk/deployment/platform/Dockerfile.runtime-overlay"
+      - "."
+images:
+  - "${_IMAGE_URI}"
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -3,6 +3,6 @@ export const SECURITY_SIDEBAR_ENTRY_SCRIPT = `              {
                 label: "Security Agents",
                 Icon: Shield,
                 active: activePage === "develop-security",
-                onClick: () => openDevelopSecurityPage(),
+                onClick: () => openDevelopSecurityPage({ forceOverview: true }),
               },
 `;

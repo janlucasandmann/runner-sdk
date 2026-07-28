@@ -36,7 +36,7 @@ function joinClassNames(...classNames: Array<string | false | null | undefined>)
 function resizeSummaryTextarea(textarea: HTMLTextAreaElement | null) {
   if (!textarea) return;
   textarea.style.height = "auto";
-  textarea.style.height = `${Math.min(textarea.scrollHeight, 72)}px`;
+  textarea.style.height = `${textarea.scrollHeight}px`;
 }
 
 export function ProjectSummary({

@@ -12,13 +12,14 @@
         import Chart from "chart.js/auto";
         import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
         import { browserLocalPersistence, getApps, getAuth, GoogleAuthProvider, initializeApp, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOutFirebaseAuth } from "/api/platform/auth/browser-module.js";
-        import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
+        import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plug, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquareMousePointer, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
 	      import { RunnerClient } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
 	      import { PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
         import { PlatformAttachmentActionMenu, PlatformAttachments } from "/dist/platform-ui/components/composite/attachments/index.js";
         import { PlatformFileExplorerBrowserModal, PlatformFileExplorerModal } from "/dist/platform-ui/components/composite/file-explorer/index.js";
         import { PlatformSubtasks } from "/dist/platform-ui/components/composite/subtasks/index.js";
+        import { PlatformActivityOverview } from "/dist/platform-ui/components/composite/activity-overview/index.js";
         import { PlatformActivityTimeline } from "/dist/platform-ui/components/composite/activity-timeline/index.js";
         import { PlatformCommentCard, PlatformCommentComposer } from "/dist/platform-ui/components/composite/comments/index.js";
         import { PlatformCodeEditorWorkspace } from "/dist/platform-ui/components/composite/code-editor-workspace/index.js";
@@ -75,9 +76,9 @@
   	        updatePlatformPermissionRingAccess as updatePlaygroundPermissionRingAccess,
   	      } from "/dist/platform-ui/pages/permissions/index.js";
   	      import { PlatformApplicationBoundary } from "/dist/platform-runtime/platform-application-boundary.js";
-        import { AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, arePlatformAgentListRecordsEquivalent as arePlaygroundAgentListsEquivalent, buildPlatformAgentListScopeKey as buildPlaygroundAgentListScopeKey, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, normalizeComputerOverviewRows, normalizePlatformAgentListRecords, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, readCachedPlatformAgentList as readCachedPlaygroundAgentList, saveComputerResource, writeCachedPlatformAgentList as writeCachedPlaygroundAgentList } from "/dist/platform-shell/presentation/platform-resource-api.js";
+        import { AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, arePlatformAgentListRecordsEquivalent as arePlaygroundAgentListsEquivalent, buildPlatformAgentListScopeKey as buildPlaygroundAgentListScopeKey, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, isThreadFunctionalAgentRole, normalizeComputerOverviewRows, normalizePlatformAgentListRecords, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, readCachedPlatformAgentList as readCachedPlaygroundAgentList, saveComputerResource, writeCachedPlatformAgentList as writeCachedPlaygroundAgentList } from "/dist/platform-shell/presentation/platform-resource-api.js";
 	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, getDevelopResourceCreatorIdentity, getDevelopResourceOwnerIdentity, initializeDevelopResourceIdentityMetadata, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-shell/presentation/platform-develop-api.js";
-        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, AssuranceWorkspacePage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopEvidenceAgentsWorkspacePage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopSecurityWorkspacePage, DevelopServerDetailPage, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationDetailPage, EvaluationsOverviewPage, FineTuningDetailPage, FineTuningOverviewPage, GuardrailDetailPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationAccessControlPage, OrganizationsOverviewPage, ProjectDetailPage, ProjectIconPicker, ProjectSummary, ProjectSummaryDetails, SkillsOverviewPage, SourceDeployableServerDetailPage, TagDetailPage, TagsOverviewPage, TeamDetailPage, TeamsOverviewPage, TestsWorkspacePage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
+        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, AssuranceWorkspacePage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopEvidenceAgentsWorkspacePage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopSecurityWorkspacePage, DevelopServerDetailPage, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationDetailPage, EvaluationsOverviewPage, FineTuningDetailPage, FineTuningOverviewPage, GuardrailDetailPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationAccessControlPage, OrganizationsOverviewPage, ProjectDetailPage, ProjectIconPicker, ProjectMilestonesOverviewPage, ProjectSummary, ProjectSummaryDetails, SkillDetailPage, SkillsOverviewPage, SourceDeployableServerDetailPage, TagDetailPage, TagsOverviewPage, TeamDetailPage, TeamsOverviewPage, TestsWorkspacePage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
 	      import { beginPlatformPluginConnection, clearPlatformPluginConnectionRedirectState, disconnectPlatformPluginConnection, fetchPlatformPluginConnectionStatus, getPlatformPluginConnectionDefinition, getPlatformPluginConnectionIdentity, readCachedPlatformPluginConnectionStatus, readPlatformPluginConnectionRedirectState, writeCachedPlatformPluginConnectionStatus, writePlatformPluginConnectionRedirectState } from "/dist/platform-resources/plugins/connections/index.js";
 	      import { PLATFORM_ALL_AGENTS_PRINCIPAL_ID, PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID, PlatformResourceAccessSettings, PlatformResourceAccessTable, buildPlatformSystemPrincipalPermissionMetadata, buildPlatformSystemPrincipalRolePermissionMetadata, buildPlatformTeamAccessMetadata, buildPlatformTeamRolePermissionMetadata, composePlatformAccessPrincipalRows, createPlatformSystemAccessPrincipalRows, getPlatformAccessPrincipalProfileImageUrl, getPlatformSharedTeamIds, getPlatformSystemAccessPrincipal, getPlatformSystemPrincipalPermissionSet, getPlatformSystemPrincipalRolePermissionSet, getPlatformTeamPermissionSet, getPlatformTeamRolePermissionSet, getPlatformTeamRolePermissionSets, isPlatformRoleScopedSystemAccessPrincipalId, isPlatformSystemAccessPrincipalId, normalizePlatformAccessPrincipalId } from "/dist/platform-resources/access-control/index.js";
   	      import { openGoogleDrivePicker } from "/dist/platform-integrations/google-drive/google-drive-picker.js";
@@ -3729,6 +3730,9 @@
         const PLAYGROUND_AGENT_CREATOR_DESCRIPTION = "Creates and improves ACP agent instructions from a requested use case.";
         const PLAYGROUND_AGENT_CREATOR_PROFILE_URL = "/img/agent-profile-pics/assistantastro-1.webp";
         const PLAYGROUND_MISSION_CONTROL_AGENT_METADATA_ROLE = "mission_control";
+        const PLAYGROUND_FUNCTIONAL_AGENT_METADATA_ROLES = [
+          PLAYGROUND_MISSION_CONTROL_AGENT_METADATA_ROLE,
+        ];
         const PLAYGROUND_MISSION_CONTROL_AGENT_NAME = "Mission Control";
         const PLAYGROUND_MISSION_CONTROL_AGENT_DESCRIPTION = "Runs project strategy, backlog planning, and delivery alignment for a selected project.";
         const PLAYGROUND_MISSION_CONTROL_AGENT_PROFILE_URL = "/img/agent-profile-pics/assistantastro-1.webp";
@@ -4362,6 +4366,23 @@
             && enabledSkills.includes("computer_agents")
             && normalizedInstructions.includes("internal mission control");
         }
+
+        function isPlaygroundFunctionalAgent(agent) {
+          if (!agent || typeof agent !== "object") {
+            return false;
+          }
+
+          const role = getPlaygroundAgentCreatorRole(agent);
+          return PLAYGROUND_FUNCTIONAL_AGENT_METADATA_ROLES.includes(role)
+            || isThreadFunctionalAgentRole(role)
+            || isPlaygroundMissionControlAgent(agent);
+        }
+
+        function getPlaygroundAgentOverviewMode(agent) {
+          return isPlaygroundFunctionalAgent(agent)
+            ? "functional"
+            : getPlaygroundAgentListMode(agent);
+        }
   
         function isPlaygroundDeveloperAgent(agent) {
           const normalizedName = String(agent?.name || "").trim().toLowerCase();
@@ -4401,6 +4422,9 @@
           if (!agent || getPlaygroundAgentListMode(agent) === "teams" || agent?.agentType === "team") {
             return false;
           }
+          if (isPlaygroundFunctionalAgent(agent)) {
+            return false;
+          }
           const normalizedName = String(agent?.name || "").trim().toLowerCase();
           const normalizedId = String(agent?.id || "").trim().toLowerCase();
           const hasDefaultMarker = agent?.isDefault === true || agent?.isSystem === true;
@@ -4418,6 +4442,17 @@
             || normalizedId === "agent-assistant"
             || normalizedId.startsWith("agent-assistant-");
           return hasDefaultIdentity && (hasDefaultMarker || hasBuiltinName || hasBuiltinId);
+        }
+
+        function canVersionPlaygroundAgent(agent) {
+          if (!agent || agent.id === PLAYGROUND_AGENT_DRAFT_ID) {
+            return false;
+          }
+          if (isPlaygroundDefaultAgentConfigurationLocked(agent)) {
+            return false;
+          }
+          return isPlaygroundFunctionalAgent(agent)
+            || (agent.isSystem !== true && agent.isDefault !== true);
         }
   
         function isPlaygroundFreePlanLockedComposerAgent(agent) {
@@ -4480,13 +4515,13 @@
         }
   
         function getPlaygroundAgentProfilePhotoUrl(agent) {
-          if (isPlaygroundMissionControlAgent(agent)) {
-            return PLAYGROUND_MISSION_CONTROL_AGENT_PROFILE_URL;
-          }
-  
           const profileMetadata = getPlaygroundAgentProfileMetadata(agent?.metadata);
           if (profileMetadata?.photoURL) {
             return profileMetadata.photoURL;
+          }
+
+          if (isPlaygroundMissionControlAgent(agent)) {
+            return PLAYGROUND_MISSION_CONTROL_AGENT_PROFILE_URL;
           }
   
           if (isPlaygroundDeveloperAgent(agent)) {
@@ -4513,10 +4548,6 @@
         }
   
         function getPlaygroundAgentRunnerPhotoUrl(agent) {
-          if (isPlaygroundMissionControlAgent(agent)) {
-            return normalizeSessionPhotoUrl(PLAYGROUND_MISSION_CONTROL_AGENT_PROFILE_URL);
-          }
-  
           const explicitPhotoUrl = normalizeSessionPhotoUrl(
             agent?.photoUrl
             || agent?.photoURL
@@ -4530,13 +4561,7 @@
         }
   
         function buildPlaygroundRunnerAgentOption(agent, overrides = {}) {
-          const baseAgent = isPlaygroundMissionControlAgent(agent)
-            ? {
-                ...agent,
-                name: PLAYGROUND_MISSION_CONTROL_AGENT_NAME,
-                description: String(agent?.description || "").trim() || PLAYGROUND_MISSION_CONTROL_AGENT_DESCRIPTION,
-              }
-            : agent;
+          const baseAgent = agent;
           const photoUrl = getPlaygroundAgentRunnerPhotoUrl(baseAgent);
           return {
             ...baseAgent,

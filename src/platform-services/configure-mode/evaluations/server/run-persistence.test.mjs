@@ -228,7 +228,7 @@ test("evaluation run creation is not acknowledged before the initial run is dura
   assert.equal(responseSettled, false);
   assert.deepEqual(backendWrites.filter(({ path }) => path.startsWith("/api/evaluations")).slice(0, 3), [
     { path: "/api/evaluations/runs/run_durable", method: "GET" },
-    { path: "/api/evaluations/runs/run_durable", method: "PATCH" },
+    { path: "/api/evaluations/runs/run_durable?view=status", method: "PATCH" },
     { path: "/api/evaluations/evaluation_1/runs", method: "POST" },
   ]);
 
@@ -246,7 +246,7 @@ test("evaluation execution preserves its thread and completes summary collection
     fetchAiosApi: async (_requestContext, path, init = {}) => {
       const leaseResponse = maybeEvaluationLeaseResponse(path, init, "run_success");
       if (leaseResponse) return leaseResponse;
-      if (init.method === "PATCH" && path === "/api/evaluations/runs/run_success") {
+      if (init.method === "PATCH" && path === "/api/evaluations/runs/run_success?view=status") {
         const payload = JSON.parse(String(init.body || "{}"));
         latestPersistedReport = payload;
         return new Response(JSON.stringify({ run: payload }), {
@@ -365,7 +365,7 @@ test("agent evaluation persists candidate and evaluator threads with the parsed 
     fetchAiosApi: async (_requestContext, path, init = {}) => {
       const leaseResponse = maybeEvaluationLeaseResponse(path, init, "run_agent");
       if (leaseResponse) return leaseResponse;
-      if (init.method === "PATCH" && path === "/api/evaluations/runs/run_agent") {
+      if (init.method === "PATCH" && path === "/api/evaluations/runs/run_agent?view=status") {
         const payload = JSON.parse(String(init.body || "{}"));
         latestPersistedReport = payload;
         return new Response(JSON.stringify({ run: payload }), {
@@ -565,7 +565,7 @@ test("an active persisted run resumes from its durable thread without duplicatin
           headers: { "content-type": "application/json" },
         });
       }
-      if (path === "/api/evaluations/runs/run_resume" && init.method === "PATCH") {
+      if (path === "/api/evaluations/runs/run_resume?view=status" && init.method === "PATCH") {
         const payload = JSON.parse(String(init.body || "{}"));
         latestPersistedReport = payload;
         return new Response(JSON.stringify({ run: payload }), {
@@ -833,7 +833,7 @@ test("a control-plane queued run hydrates immutable canonical cases and reports 
           headers: { "content-type": "application/json" },
         });
       }
-      if (path === `/api/evaluations/runs/${runId}` && init.method === "PATCH") {
+      if (path === `/api/evaluations/runs/${runId}?view=status` && init.method === "PATCH") {
         const report = JSON.parse(String(init.body || "{}"));
         if (report.status !== "running") {
           terminalReport = report;
@@ -958,5 +958,162 @@ test("a control-plane queued run hydrates immutable canonical cases and reports 
   assert.equal(
     terminalReport?.executionLease?.token,
     `lease-token-${runId}`,
+  );
+});
+
+test("a control-plane Function Evaluation executes its pinned revision without creating an Agent thread", async () => {
+  const runId = "run_function_target";
+  let terminalReport = null;
+  let functionInvocation = null;
+  let threadRequests = 0;
+  const persistedRun = {
+    id: runId,
+    evaluationId: "evaluation_function",
+    evaluationSetId: "evaluation_function",
+    versionId: "evaluation_version_2",
+    targetType: "function",
+    targetId: "function_equal_care",
+    targetVersionId: "function_version_4",
+    status: "queued",
+    createdAt: new Date().toISOString(),
+    metadata: {
+      evaluationSnapshot: {
+        schemaVersion: "computer_agents_evaluation_run_binding_v2",
+        evaluationId: "evaluation_function",
+        versionId: "evaluation_version_2",
+        versionNumber: 2,
+        evaluationFingerprint: `sha256:${"d".repeat(64)}`,
+        datasetFingerprint: `sha256:${"e".repeat(64)}`,
+        snapshot: {
+          schemaVersion: "computer_agents_evaluation_v1",
+          name: "Function target",
+          description: "",
+          cases: [{
+            id: "function_case_1",
+            name: "Structured response",
+            input: JSON.stringify({ pmid: "123" }),
+            expectedOutput: "",
+            evaluationGuidance: "",
+            weight: 1,
+            optimizationRole: "holdout",
+            metadata: null,
+          }],
+          metadata: {
+            evaluator: {
+              type: "deterministic",
+              graderId: "json_contract_v1",
+              configuration: {
+                requiredPaths: ["publication.pmid"],
+                types: { "publication.pmid": "string" },
+              },
+            },
+            passThreshold: 1,
+          },
+        },
+        target: {
+          bindingStatus: "control_plane_pinned",
+          kind: "function",
+          targetId: "function_equal_care",
+          targetVersionId: "function_version_4",
+          targetVersionNumber: 4,
+          agentId: null,
+          agentVersionId: null,
+          agentVersionNumber: null,
+          agentVersionStatus: null,
+          targetFingerprint: `sha256:${"f".repeat(64)}`,
+          environmentId: null,
+          invocation: {
+            method: "POST",
+            path: "/extract",
+            timeoutMs: 30_000,
+          },
+          snapshot: {
+            source: "function_version",
+            kind: "function",
+            functionId: "function_equal_care",
+            versionId: "function_version_4",
+            versionNumber: 4,
+            deployment: {
+              revision: "function-revision-4",
+            },
+            invocation: {
+              method: "POST",
+              path: "/extract",
+              timeoutMs: 30_000,
+            },
+          },
+        },
+      },
+    },
+  };
+  const runtime = createPlaygroundEvaluationsRuntime({
+    durableExecutionEnabled: true,
+    executionOwnerId: "function-worker",
+    fetchImpl: async (url, init = {}) => {
+      const path = new URL(String(url)).pathname.replace(/^\/v1/, "");
+      const leaseResponse = maybeEvaluationLeaseResponse(
+        `/api${path}`,
+        init,
+        runId,
+      );
+      if (leaseResponse) return leaseResponse;
+      if (
+        path === `/evaluations/runs/${runId}`
+        && (init.method || "GET") === "GET"
+      ) {
+        return new Response(JSON.stringify({ run: persistedRun }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      if (
+        path === `/evaluations/runs/${runId}`
+        && init.method === "PATCH"
+      ) {
+        const report = JSON.parse(String(init.body || "{}"));
+        if (report.status !== "running") terminalReport = report;
+        return new Response(JSON.stringify({ run: report }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      if (
+        path === "/servers/function_equal_care/invoke"
+        && init.method === "POST"
+      ) {
+        functionInvocation = JSON.parse(String(init.body || "{}"));
+        return new Response(JSON.stringify({
+          ok: true,
+          status: 200,
+          deploymentRevision: "function-revision-4",
+          body: { publication: { pmid: "123" } },
+        }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      if (path.startsWith("/threads")) threadRequests += 1;
+      return new Response(JSON.stringify({ error: "Unexpected request" }), {
+        status: 500,
+        headers: { "content-type": "application/json" },
+      });
+    },
+    hasAiosSession: () => false,
+    parseUpstreamUrl: () => "https://runner.example.test/v1",
+    readOptionalApiKey: () => "dispatch-key",
+    withProxyOrganizationHeader: (_req, _body, headers) => headers,
+  });
+
+  const completed = await runtime.runs.wake({ headers: {} }, runId);
+
+  assert.equal(completed.status, "completed");
+  assert.equal(functionInvocation.expectedRevision, "function-revision-4");
+  assert.deepEqual(functionInvocation.body, { pmid: "123" });
+  assert.equal(threadRequests, 0);
+  assert.equal(terminalReport.status, "completed");
+  assert.equal(terminalReport.results[0].status, "passed");
+  assert.equal(
+    terminalReport.results[0].metadata.targetExecution.deploymentRevision,
+    "function-revision-4",
   );
 });

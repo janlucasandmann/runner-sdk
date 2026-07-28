@@ -13,6 +13,8 @@ export type {
   PlatformDataTablePaginationState,
   PlatformDataTablePrimaryAction,
   PlatformDataTableProps,
+  PlatformDataTableRowGroup,
+  PlatformDataTableRowGroupingConfig,
   PlatformDataTableRowMenuContext,
   PlatformDataTableRowActionState,
   PlatformDataTableSearchConfig,

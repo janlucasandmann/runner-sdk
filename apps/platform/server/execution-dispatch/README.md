@@ -21,12 +21,16 @@ authority; this process only claims, heartbeats, executes, and settles work.
   remain the final write fence.
 - Project delivery task claims can run and update only their exact task. Their
   model response is rejected unless it carries closed-schema build or handoff
-  evidence bound to the expected resources or passed Assurance Run.
+  evidence bound to the managed topology resources or passed Assurance Run.
+  Existing resources, pinned versions, source assets, and Guardrails are
+  verified authoritatively by the control plane rather than duplicated in
+  model-authored evidence.
 
 ## Runtime behavior
 
 `dispatcher.mjs` polls with bounded concurrency, renews claims during execution,
-classifies operational failures for retry, and acknowledges terminal work.
+recovers transient blocking-request failures through idempotent replay, and
+acknowledges terminal work.
 `worker-assertion.mjs` owns the internal signed-identity contract. The worker
 starts after the platform HTTP server is listening, allowing optimization jobs
 to invoke local Evaluation endpoints safely.

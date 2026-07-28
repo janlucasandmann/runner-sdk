@@ -14,8 +14,13 @@
   color: #fff;
 }
 
-.resource-overview-page.is-tags,
-.resource-overview-page.is-skills,
+.resource-overview-page.is-tags-and-plugins,
+.resource-overview-page.is-skills {
+  width: 100%;
+  max-width: none;
+  padding: 24px;
+}
+
 .resource-overview-page.is-teams,
 .resource-overview-page.is-organizations,
 .resource-overview-page.is-marketplace,
@@ -71,6 +76,10 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.resource-overview-page__table-section.has-full-bleed-table {
+  overflow: visible;
 }
 
 .resource-overview-page.is-inference {
@@ -180,6 +189,119 @@
   color: #fff;
   font-weight: 400;
 }
+
+.resource-overview-identity.is-catalog {
+  gap: 12px;
+}
+
+.resource-overview-identity__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resource-overview-identity__description {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resource-overview-table.is-catalog-ui .resource-overview-identity__visual,
+.resource-overview-table.is-catalog-ui .resource-overview-identity__visual.is-size-compact {
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.resource-overview-table.is-catalog-ui .resource-overview-identity__visual.is-connection > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.resource-overview-table.is-skills.is-catalog-ui
+  .resource-overview-identity__visual.is-skill {
+  border: 0;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.resource-overview-table.is-skills.is-catalog-ui
+  .resource-overview-identity__visual.is-skill.is-computer-agents {
+  padding: 0;
+  background: #fff;
+}
+
+.resource-overview-table.is-skills.is-catalog-ui
+  .resource-overview-identity__visual.is-creator {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .resource-overview-identity__visual.is-plugin {
+  border: 0;
+  background: #fff;
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .resource-overview-identity__visual.is-plugin.is-gitlab {
+  background: #f7f5e3;
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .resource-overview-identity__visual.is-tag {
+  border: 0;
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .resource-overview-identity__visual.is-tag.is-discord {
+  background: #5765ed;
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .resource-overview-identity__visual.is-tag.is-email {
+  background: linear-gradient(to top, #307ef7, #55b7ec);
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .resource-overview-identity__visual.is-tag.is-telegram {
+  background: #26a2e1;
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .resource-overview-identity__visual.is-tag.is-telegram > :is(img, svg) {
+  width: 20px;
+  height: 20px;
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .resource-overview-identity__visual.is-plugin > svg {
+  color: #111;
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .resource-overview-identity__visual.is-plugin
+  .playground-plugin-row-logo.is-github {
+  filter: none;
+}
+
+.resource-overview-table.is-catalog-ui .resource-overview-identity__title {
+  font-size: 12px;
+  font-weight: 400;
+}
+
 .resource-overview-value {
   color: rgba(255, 255, 255, 0.62);
   font-weight: 400;
@@ -207,8 +329,6 @@
 }
 
 .resource-overview-guide__cards,
-.tags-overview-guide__cards,
-.skills-overview-guide__cards,
 .teams-overview-guide__cards,
 .organizations-overview-guide__cards,
 .guardrails-overview-guide__cards,
@@ -223,8 +343,6 @@
 }
 
 @media (max-width: 900px) {
-  .resource-overview-page.is-tags,
-  .resource-overview-page.is-skills,
   .resource-overview-page.is-teams,
   .resource-overview-page.is-organizations,
   .resource-overview-page.is-marketplace,
@@ -236,8 +354,6 @@
   }
 
   .resource-overview-guide__cards,
-  .tags-overview-guide__cards,
-  .skills-overview-guide__cards,
   .teams-overview-guide__cards,
   .organizations-overview-guide__cards,
   .guardrails-overview-guide__cards,
@@ -255,8 +371,6 @@
 }
 
 @media (max-width: 700px) {
-  .resource-overview-page.is-tags,
-  .resource-overview-page.is-skills,
   .resource-overview-page.is-teams,
   .resource-overview-page.is-organizations,
   .resource-overview-page.is-marketplace,
@@ -268,8 +382,6 @@
   }
 
   .resource-overview-guide__cards,
-  .tags-overview-guide__cards,
-  .skills-overview-guide__cards,
   .teams-overview-guide__cards,
   .organizations-overview-guide__cards,
   .guardrails-overview-guide__cards,

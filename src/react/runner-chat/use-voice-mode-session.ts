@@ -113,6 +113,8 @@ export function useRunnerVoiceModeSession(
   const sessionGenerationRef = useRef(0);
   const sessionThreadIdRef = useRef("");
   const currentThreadIdRef = useRef("");
+  const groundingRefreshTimerRef =
+    useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(true);
 
   optionsRef.current = options;
@@ -147,6 +149,10 @@ export function useRunnerVoiceModeSession(
   }, []);
 
   const releaseResources = useCallback(() => {
+    if (groundingRefreshTimerRef.current) {
+      clearInterval(groundingRefreshTimerRef.current);
+      groundingRefreshTimerRef.current = null;
+    }
     const { audioContext, mediaStream, processor, source, websocket } = takeResources();
     if (websocket && websocket.readyState !== WebSocket.CLOSED && websocket.readyState !== WebSocket.CLOSING) {
       try {
@@ -472,6 +478,7 @@ export function useRunnerVoiceModeSession(
             threadId: current.currentThreadId,
             environmentId: current.environmentId,
             agentName: selectedAgent?.name,
+            communicatorMode: Boolean(current.currentThreadId),
           })),
         },
       );
@@ -553,6 +560,53 @@ export function useRunnerVoiceModeSession(
         websocket.send(JSON.stringify(
           buildRunnerVoiceSessionUpdate(connection.sessionUpdate, selectedAgent),
         ));
+        if (
+          connection.communicator.enabled
+          && connection.communicator.groundingUrl
+        ) {
+          const refreshGrounding = async () => {
+            const latest = optionsRef.current;
+            const groundingUrl =
+              connection.communicator.groundingUrl.startsWith("/")
+                ? `${latest.backendUrl}${connection.communicator.groundingUrl}`
+                : connection.communicator.groundingUrl;
+            try {
+              const response = await fetch(groundingUrl, {
+                method: "GET",
+                credentials: "include",
+                headers: buildRunnerVoiceHeaders(
+                  latest.requestHeaders,
+                  latest.apiKey,
+                ),
+              });
+              const payload = await response.json().catch(() => null) as {
+                sessionUpdate?: unknown;
+              } | null;
+              if (
+                !response.ok
+                || !payload?.sessionUpdate
+                || websocketRef.current !== websocket
+                || websocket.readyState !== WebSocket.OPEN
+                || !isStartCurrent()
+              ) {
+                return;
+              }
+              websocket.send(JSON.stringify(
+                buildRunnerVoiceSessionUpdate(
+                  payload.sessionUpdate,
+                  selectedAgent,
+                ),
+              ));
+            } catch {
+              // A stale refresh must not interrupt an otherwise healthy voice
+              // transport. The next bounded interval retries with fresh state.
+            }
+          };
+          groundingRefreshTimerRef.current = setInterval(
+            () => void refreshGrounding(),
+            connection.communicator.refreshIntervalMs,
+          );
+        }
 
         const source = audioContext.createMediaStreamSource(mediaStream);
         const processor = audioContext.createScriptProcessor(4096, 1, 1);

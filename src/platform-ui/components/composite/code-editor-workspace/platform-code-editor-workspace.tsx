@@ -1,6 +1,16 @@
-import { EllipsisVertical, Redo2, SquarePen, Trash2, Undo2 } from "lucide-react";
+import {
+  ArrowUpFromLine,
+  EllipsisVertical,
+  FilePlus2,
+  FolderPlus,
+  Plus,
+  Redo2,
+  SquarePen,
+  Trash2,
+  Undo2,
+} from "lucide-react";
 import type {
-  ChangeEvent,
+  DragEvent as ReactDragEvent,
   DragEventHandler,
   KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent,
@@ -13,11 +23,6 @@ import { PlatformLoadingState } from "../loading-state/index.js";
 import { PlatformPopup } from "../popup/index.js";
 import { PlatformCheckbox } from "../../ui/checkbox/index.js";
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
-import { PlatformSearch } from "../../ui/search/index.js";
-import {
-  PlatformCodeEditorTabBar,
-  type PlatformCodeEditorTab,
-} from "./platform-code-editor-tab-bar.js";
 
 export type PlatformCodeEditorStatusTone = "default" | "success" | "error" | "loading";
 export type PlatformCodeEditorWorkspaceVariant = "default" | "full-screen";
@@ -39,11 +44,20 @@ export interface PlatformCodeEditorFile {
   selectable?: boolean;
   renameDisabled?: boolean;
   deleteDisabled?: boolean;
+  isFolder?: boolean;
+  parentId?: string | null;
+  moveDisabled?: boolean;
+  dropDisabled?: boolean;
 }
 
 export interface PlatformCodeEditorFileSelectionChange {
   selectedIds: ReadonlySet<string>;
   selectedFiles: readonly PlatformCodeEditorFile[];
+}
+
+export interface PlatformCodeEditorFileMove {
+  files: readonly PlatformCodeEditorFile[];
+  destinationFolder: PlatformCodeEditorFile | null;
 }
 
 export interface PlatformCodeEditorHistoryControls {
@@ -62,28 +76,43 @@ export interface PlatformCodeEditorWorkspaceProps {
   onFileSelectionChange?: (change: PlatformCodeEditorFileSelectionChange) => void;
   onFileRename?: (file: PlatformCodeEditorFile) => void | Promise<void>;
   onFilesDelete?: (files: readonly PlatformCodeEditorFile[]) => void | Promise<void>;
-  /** @deprecated The Explorer heading is no longer rendered. */
+  onFilesMove?: (move: PlatformCodeEditorFileMove) => void | Promise<void>;
+  onCreateFile?: () => void | Promise<void>;
+  onUploadFiles?: () => void | Promise<void>;
+  onCreateFolder?: () => void | Promise<void>;
+  fileCreationDisabled?: boolean;
   sidebarTitle?: ReactNode;
-  /** @deprecated Use tabBarActions. */
   sidebarActions?: ReactNode;
+  /** @deprecated Use sidebarActions. */
   tabBarActions?: ReactNode;
+  /** @deprecated File search is no longer rendered in the workspace sidebar. */
   fileSearchValue?: string;
+  /** @deprecated File search is no longer rendered in the workspace sidebar. */
   defaultFileSearchValue?: string;
+  /** @deprecated File search is no longer rendered in the workspace sidebar. */
   fileSearchPlaceholder?: string;
+  /** @deprecated File search is no longer rendered in the workspace sidebar. */
   fileSearchAriaLabel?: string;
+  /** @deprecated File search is no longer rendered in the workspace sidebar. */
   onFileSearchChange?: (value: string) => void;
   isLoadingFiles?: boolean;
   loadingFilesMessage?: ReactNode;
+  /** @deprecated The workspace renders one active-file header instead of tabs. */
   showTabBar?: boolean;
+  /** @deprecated The workspace renders one active-file header instead of tabs. */
   defaultOpenFileIds?: readonly string[];
+  /** @deprecated The workspace renders one active-file header instead of tabs. */
   onFileClose?: (fileId: string) => void;
   editor?: ReactNode;
   emptyFiles?: ReactNode;
   emptySearchResults?: ReactNode;
   emptyEditor?: ReactNode;
+  /** @deprecated The workspace footer has been removed. */
   status?: ReactNode;
+  /** @deprecated The workspace footer has been removed. */
   statusTone?: PlatformCodeEditorStatusTone;
   historyControls?: PlatformCodeEditorHistoryControls;
+  /** @deprecated The workspace footer has been removed. */
   showFooter?: boolean;
   variant?: PlatformCodeEditorWorkspaceVariant;
   ariaLabel?: string;
@@ -116,6 +145,8 @@ function normalizeFileSelection(
       .filter(Boolean),
   );
 }
+
+const PLATFORM_CODE_EDITOR_FILE_DRAG_TYPE = "application/x-platform-code-editor-files";
 
 function renderHistoryControls(historyControls: PlatformCodeEditorHistoryControls) {
   return (
@@ -151,26 +182,20 @@ export function PlatformCodeEditorWorkspace({
   onFileSelectionChange,
   onFileRename,
   onFilesDelete,
+  onFilesMove,
+  onCreateFile,
+  onUploadFiles,
+  onCreateFolder,
+  fileCreationDisabled = false,
+  sidebarTitle = "Files",
   sidebarActions = null,
-  tabBarActions,
-  fileSearchValue,
-  defaultFileSearchValue = "",
-  fileSearchPlaceholder = "Search files",
-  fileSearchAriaLabel = "Search code files",
-  onFileSearchChange,
+  tabBarActions = null,
   isLoadingFiles = false,
   loadingFilesMessage = "Loading files...",
-  showTabBar = true,
-  defaultOpenFileIds = [],
-  onFileClose,
   editor = null,
   emptyFiles = "No code files.",
-  emptySearchResults = "No matching files.",
   emptyEditor = "Select a file to edit.",
-  status = null,
-  statusTone = "default",
   historyControls,
-  showFooter = true,
   variant = "default",
   ariaLabel = "Code editor",
   className = "",
@@ -178,29 +203,20 @@ export function PlatformCodeEditorWorkspace({
   onDragLeave,
   onDrop,
 }: PlatformCodeEditorWorkspaceProps) {
-  const [internalFileSearchValue, setInternalFileSearchValue] = useState(
-    defaultFileSearchValue,
-  );
   const [internalSelectedFileIds, setInternalSelectedFileIds] = useState<Set<string>>(
     () => normalizeFileSelection(defaultSelectedFileIds),
   );
+  const [createFileMenuOpen, setCreateFileMenuOpen] = useState(false);
+  const [draggedFileIds, setDraggedFileIds] = useState<readonly string[]>([]);
+  const [dropTargetId, setDropTargetId] = useState<string | null | undefined>(undefined);
   const [fileMenu, setFileMenu] = useState<{
     fileId: string;
     x: number;
     y: number;
     alignment: "start" | "end";
   } | null>(null);
-  const [openFileIds, setOpenFileIds] = useState<string[]>(() =>
-    Array.from(
-      new Set(
-        [...defaultOpenFileIds, activeFileId]
-          .map((fileId) => String(fileId || "").trim())
-          .filter(Boolean),
-      ),
-    ),
-  );
-  const closedActiveFileIdRef = useRef("");
-  const previousActiveFileIdRef = useRef("");
+  const createFileMenuRootRef = useRef<HTMLDivElement | null>(null);
+  const createFileMenuSurfaceRef = useRef<HTMLDivElement | null>(null);
   const fileMenuSurfaceRef = useRef<HTMLDivElement | null>(null);
   const selectionControlled = selectedFileIds !== undefined;
   const resolvedSelectedFileIds = useMemo(
@@ -215,74 +231,17 @@ export function PlatformCodeEditorWorkspace({
   );
   const fileActionsEnabled = Boolean(onFileRename || onFilesDelete);
   const fileSelectionEnabled = Boolean(onFilesDelete);
-  const resolvedFileSearchValue =
-    fileSearchValue === undefined ? internalFileSearchValue : fileSearchValue;
-  const normalizedFileSearchValue = resolvedFileSearchValue.trim().toLocaleLowerCase();
-  const visibleFiles = useMemo(() => {
-    if (!normalizedFileSearchValue) return files;
-    return files.filter((file) => {
-      const labelText = typeof file.label === "string" ? file.label : "";
-      return [file.id, labelText, file.searchText]
-        .filter((value): value is string => typeof value === "string" && Boolean(value))
-        .some((value) => value.toLocaleLowerCase().includes(normalizedFileSearchValue));
-    });
-  }, [files, normalizedFileSearchValue]);
-  const handleFileSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const nextValue = event.currentTarget.value;
-    if (fileSearchValue === undefined) setInternalFileSearchValue(nextValue);
-    onFileSearchChange?.(nextValue);
-  };
-  const tabbableFiles = useMemo(
-    () => files.filter((file) => file.openInTab !== false && !file.disabled),
-    [files],
+  const fileMoveEnabled = Boolean(onFilesMove);
+  const fileCreationMenuEnabled = Boolean(onCreateFile || onUploadFiles);
+  const creationControlsDisabled = fileCreationDisabled || isLoadingFiles;
+  const activeFile = fileById.get(activeFileId);
+  const activeFileTitle = activeFile?.tabLabel ?? activeFile?.label ?? activeFile?.id ?? "";
+  const draggedFiles = useMemo(
+    () => draggedFileIds
+      .map((fileId) => fileById.get(fileId))
+      .filter((file): file is PlatformCodeEditorFile => Boolean(file)),
+    [draggedFileIds, fileById],
   );
-  const tabbableFileById = useMemo(
-    () => new Map(tabbableFiles.map((file) => [file.id, file])),
-    [tabbableFiles],
-  );
-  const openTabs = useMemo<PlatformCodeEditorTab[]>(
-    () =>
-      openFileIds
-        .flatMap((fileId): PlatformCodeEditorTab[] => {
-          const file = tabbableFileById.get(fileId);
-          if (!file) return [];
-          return [
-            {
-              id: file.id,
-              label: file.tabLabel ?? file.label ?? file.id,
-              icon: file.tabIcon ?? file.icon,
-              dirty: file.dirty,
-              closable: file.closable,
-              ariaLabel: file.ariaLabel,
-            },
-          ];
-        }),
-    [openFileIds, tabbableFileById],
-  );
-
-  useEffect(() => {
-    const activeFileChanged = previousActiveFileIdRef.current !== activeFileId;
-    previousActiveFileIdRef.current = activeFileId;
-
-    setOpenFileIds((current) => {
-      let next = isLoadingFiles
-        ? current
-        : current.filter((fileId) => tabbableFileById.has(fileId));
-      const shouldOpenActiveFile =
-        Boolean(activeFileId) &&
-        tabbableFileById.has(activeFileId) &&
-        (activeFileChanged || closedActiveFileIdRef.current !== activeFileId);
-      if (shouldOpenActiveFile && !next.includes(activeFileId)) {
-        next = [...next, activeFileId];
-      }
-      if (activeFileChanged && closedActiveFileIdRef.current !== activeFileId) {
-        closedActiveFileIdRef.current = "";
-      }
-      return next.length === current.length && next.every((fileId, index) => fileId === current[index])
-        ? current
-        : next;
-    });
-  }, [activeFileId, isLoadingFiles, tabbableFileById]);
 
   useEffect(() => {
     if (selectionControlled) return;
@@ -322,6 +281,33 @@ export function PlatformCodeEditorWorkspace({
       window.removeEventListener("scroll", closeFileMenu, true);
     };
   }, [fileMenu]);
+
+  useEffect(() => {
+    if (!createFileMenuOpen) return;
+    const closeCreateFileMenu = () => setCreateFileMenuOpen(false);
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (
+        target
+        && (
+          createFileMenuRootRef.current?.contains(target)
+          || createFileMenuSurfaceRef.current?.contains(target)
+        )
+      ) {
+        return;
+      }
+      closeCreateFileMenu();
+    };
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") closeCreateFileMenu();
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [createFileMenuOpen]);
 
   const commitFileSelection = useCallback((next: Set<string>) => {
     if (!selectionControlled) setInternalSelectedFileIds(next);
@@ -376,6 +362,7 @@ export function PlatformCodeEditorWorkspace({
 
   const runFileAction = useCallback((action: () => void | Promise<void>) => {
     setFileMenu(null);
+    setCreateFileMenuOpen(false);
     try {
       const result = action();
       if (result && typeof result.catch === "function") {
@@ -387,34 +374,96 @@ export function PlatformCodeEditorWorkspace({
   }, []);
 
   const openFile = (file: PlatformCodeEditorFile) => {
-    if (file.openInTab !== false && !file.disabled) {
-      closedActiveFileIdRef.current = "";
-      setOpenFileIds((current) =>
-        current.includes(file.id) ? current : [...current, file.id],
-      );
-    }
     onFileSelect?.(file.id);
   };
-
-  const selectOpenFile = (fileId: string) => {
-    closedActiveFileIdRef.current = "";
-    onFileSelect?.(fileId);
-  };
-
-  const closeOpenFile = (fileId: string) => {
-    const closingIndex = openFileIds.indexOf(fileId);
-    if (closingIndex < 0) return;
-    const next = openFileIds.filter((currentFileId) => currentFileId !== fileId);
-    setOpenFileIds(next);
-    if (fileId === activeFileId) {
-      closedActiveFileIdRef.current = fileId;
-      const nextActiveFileId = next[closingIndex] ?? next[closingIndex - 1] ?? "";
-      if (nextActiveFileId) onFileSelect?.(nextActiveFileId);
+  const clearFileDrag = useCallback(() => {
+    setDraggedFileIds([]);
+    setDropTargetId(undefined);
+  }, []);
+  const destinationAcceptsDraggedFiles = useCallback((
+    destinationFolder: PlatformCodeEditorFile | null,
+  ) => {
+    if (!fileMoveEnabled || draggedFiles.length === 0) return false;
+    if (destinationFolder && (!destinationFolder.isFolder || destinationFolder.dropDisabled)) {
+      return false;
     }
-    onFileClose?.(fileId);
-  };
-
-  const activeFileIsOpen = !activeFileId || openFileIds.includes(activeFileId);
+    const destinationId = destinationFolder?.id ?? null;
+    if (draggedFiles.every((file) => (file.parentId ?? null) === destinationId)) {
+      return false;
+    }
+    for (const draggedFile of draggedFiles) {
+      if (!destinationFolder) continue;
+      if (
+        destinationFolder.id === draggedFile.id
+        || destinationFolder.id.startsWith(`${draggedFile.id}/`)
+      ) {
+        return false;
+      }
+      let ancestorId = destinationFolder.parentId ?? null;
+      while (ancestorId) {
+        if (ancestorId === draggedFile.id) return false;
+        ancestorId = fileById.get(ancestorId)?.parentId ?? null;
+      }
+    }
+    return true;
+  }, [draggedFiles, fileById, fileMoveEnabled]);
+  const startFileDrag = useCallback((
+    event: ReactDragEvent<HTMLElement>,
+    file: PlatformCodeEditorFile,
+  ) => {
+    if (!fileMoveEnabled || file.moveDisabled) {
+      event.preventDefault();
+      return;
+    }
+    const moveFiles = (
+      resolvedSelectedFileIds.has(file.id) && resolvedSelectedFileIds.size > 1
+        ? files.filter((candidate) => resolvedSelectedFileIds.has(candidate.id))
+        : [file]
+    ).filter((candidate) => !candidate.moveDisabled);
+    if (moveFiles.length === 0) {
+      event.preventDefault();
+      return;
+    }
+    const nextDraggedFileIds = moveFiles.map((candidate) => candidate.id);
+    setDraggedFileIds(nextDraggedFileIds);
+    setDropTargetId(undefined);
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData(
+      PLATFORM_CODE_EDITOR_FILE_DRAG_TYPE,
+      JSON.stringify(nextDraggedFileIds),
+    );
+    event.stopPropagation();
+  }, [fileMoveEnabled, files, resolvedSelectedFileIds]);
+  const dragFilesOverDestination = useCallback((
+    event: ReactDragEvent<HTMLElement>,
+    destinationFolder: PlatformCodeEditorFile | null,
+  ) => {
+    if (!destinationAcceptsDraggedFiles(destinationFolder)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = "move";
+    setDropTargetId(destinationFolder?.id ?? null);
+  }, [destinationAcceptsDraggedFiles]);
+  const dropFilesAtDestination = useCallback((
+    event: ReactDragEvent<HTMLElement>,
+    destinationFolder: PlatformCodeEditorFile | null,
+  ) => {
+    if (!destinationAcceptsDraggedFiles(destinationFolder) || !onFilesMove) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const filesToMove = draggedFiles;
+    clearFileDrag();
+    runFileAction(() => onFilesMove({
+      files: filesToMove,
+      destinationFolder,
+    }));
+  }, [
+    clearFileDrag,
+    destinationAcceptsDraggedFiles,
+    draggedFiles,
+    onFilesMove,
+    runFileAction,
+  ]);
   const fileMenuPopup = typeof document !== "undefined" && document.body
     ? createPortal(
         <PlatformPopup
@@ -480,6 +529,60 @@ export function PlatformCodeEditorWorkspace({
         document.body,
       )
     : null;
+  const resolvedSidebarActions = sidebarActions ?? tabBarActions;
+  const createFileMenu = fileCreationMenuEnabled ? (
+    <PlatformPopup
+      open={createFileMenuOpen}
+      rootRef={createFileMenuRootRef}
+      surfaceRef={createFileMenuSurfaceRef}
+      rootClassName="platform-code-editor-workspace__create-menu-anchor"
+      surfaceClassName="platform-code-editor-workspace__create-menu"
+      surfaceProps={{ role: "menu", width: 180 }}
+      animation="down-in"
+      variant="minimal"
+      portal
+      placement="bottom-end"
+      trigger={({ open }) => (
+        <PlatformIconButton
+          size="compact"
+          active={open}
+          aria-label="Add file"
+          title="Add file"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          disabled={creationControlsDisabled}
+          onClick={() => setCreateFileMenuOpen((current) => !current)}
+        >
+          <Plus aria-hidden="true" />
+        </PlatformIconButton>
+      )}
+    >
+      {onCreateFile ? (
+        <button
+          type="button"
+          role="menuitem"
+          className="tb-popup-row"
+          disabled={creationControlsDisabled}
+          onClick={() => runFileAction(onCreateFile)}
+        >
+          <FilePlus2 className="tb-popup-icon" aria-hidden="true" />
+          <span className="tb-popup-label">Create File</span>
+        </button>
+      ) : null}
+      {onUploadFiles ? (
+        <button
+          type="button"
+          role="menuitem"
+          className="tb-popup-row"
+          disabled={creationControlsDisabled}
+          onClick={() => runFileAction(onUploadFiles)}
+        >
+          <ArrowUpFromLine className="tb-popup-icon" aria-hidden="true" />
+          <span className="tb-popup-label">Upload Files</span>
+        </button>
+      ) : null}
+    </PlatformPopup>
+  ) : null;
 
   return (
     <section
@@ -498,21 +601,41 @@ export function PlatformCodeEditorWorkspace({
       onKeyUp={stopEditorKeyboardPropagation}
     >
       <aside className="platform-code-editor-workspace__sidebar">
-        <div className="platform-code-editor-workspace__sidebar-header">
-          <PlatformSearch
-            className="platform-code-editor-workspace__sidebar-search"
-            value={resolvedFileSearchValue}
-            placeholder={fileSearchPlaceholder}
-            aria-label={fileSearchAriaLabel}
-            onChange={handleFileSearchChange}
-            disabled={isLoadingFiles}
-          />
+        <div
+          className={joinClassNames(
+            "platform-code-editor-workspace__sidebar-header",
+            dropTargetId === null && "is-drop-target",
+          )}
+          onDragOver={(event) => dragFilesOverDestination(event, null)}
+          onDrop={(event) => dropFilesAtDestination(event, null)}
+        >
+          <span className="platform-code-editor-workspace__sidebar-title">
+            {sidebarTitle}
+          </span>
+          <div className="platform-code-editor-workspace__sidebar-actions">
+            {createFileMenu}
+            {onCreateFolder ? (
+              <PlatformIconButton
+                size="compact"
+                aria-label="Create folder"
+                title="Create folder"
+                disabled={creationControlsDisabled}
+                onClick={() => runFileAction(onCreateFolder)}
+              >
+                <FolderPlus aria-hidden="true" />
+              </PlatformIconButton>
+            ) : null}
+            {resolvedSidebarActions}
+          </div>
         </div>
         <div
           className={joinClassNames(
             "platform-code-editor-workspace__file-list",
             isLoadingFiles && "is-loading",
+            dropTargetId === null && "is-drop-target",
           )}
+          onDragOver={(event) => dragFilesOverDestination(event, null)}
+          onDrop={(event) => dropFilesAtDestination(event, null)}
         >
           {isLoadingFiles ? (
             <PlatformLoadingState
@@ -520,8 +643,8 @@ export function PlatformCodeEditorWorkspace({
               message={loadingFilesMessage}
               centered
             />
-          ) : visibleFiles.length > 0 ? (
-            visibleFiles.map((file) => {
+          ) : files.length > 0 ? (
+            files.map((file) => {
               const isActive = file.id === activeFileId;
               const isSelected = resolvedSelectedFileIds.has(file.id);
               const fileSelectable = fileSelectionEnabled
@@ -535,7 +658,30 @@ export function PlatformCodeEditorWorkspace({
                     isActive && "is-active",
                     isSelected && "is-selected",
                     fileMenu?.fileId === file.id && "is-menu-open",
+                    draggedFileIds.includes(file.id) && "is-dragging",
+                    dropTargetId === file.id && "is-drop-target",
                   )}
+                  style={{
+                    paddingInlineStart: `${12 + Math.max(0, Number(file.depth || 0)) * 16}px`,
+                  }}
+                  draggable={fileMoveEnabled && !file.moveDisabled}
+                  aria-grabbed={
+                    fileMoveEnabled && !file.moveDisabled
+                      ? draggedFileIds.includes(file.id)
+                      : undefined
+                  }
+                  onDragStart={(event) => startFileDrag(event, file)}
+                  onDragEnd={clearFileDrag}
+                  onDragOver={
+                    file.isFolder
+                      ? (event) => dragFilesOverDestination(event, file)
+                      : undefined
+                  }
+                  onDrop={
+                    file.isFolder
+                      ? (event) => dropFilesAtDestination(event, file)
+                      : undefined
+                  }
                   onContextMenu={(event) => openFileMenu(event, file, true)}
                 >
                   {fileSelectionEnabled ? (
@@ -589,45 +735,28 @@ export function PlatformCodeEditorWorkspace({
             })
           ) : (
             <div className="platform-code-editor-workspace__empty">
-              {normalizedFileSearchValue ? emptySearchResults : emptyFiles}
+              {emptyFiles}
             </div>
           )}
         </div>
       </aside>
 
       <div className="platform-code-editor-workspace__editor">
-        {showTabBar ? (
-          <PlatformCodeEditorTabBar
-            tabs={openTabs}
-            activeTabId={activeFileId}
-            onTabSelect={selectOpenFile}
-            onTabClose={closeOpenFile}
-            endActions={tabBarActions ?? sidebarActions}
-          />
-        ) : null}
+        <div className="platform-code-editor-workspace__editor-header">
+          <span className="platform-code-editor-workspace__editor-title">
+            {activeFileTitle}
+          </span>
+          {historyControls ? (
+            <div className="platform-code-editor-workspace__header-actions">
+              {renderHistoryControls(historyControls)}
+            </div>
+          ) : null}
+        </div>
         <div className="platform-code-editor-workspace__editor-body">
-          {activeFileIsOpen && editor ? editor : (
+          {editor ? editor : (
             <div className="platform-code-editor-workspace__empty is-editor">{emptyEditor}</div>
           )}
         </div>
-        {showFooter ? (
-          <div className="platform-code-editor-workspace__footer">
-            <div
-              className={joinClassNames(
-                "platform-code-editor-workspace__status",
-                statusTone !== "default" && `is-${statusTone}`,
-              )}
-              role={statusTone === "error" ? "alert" : undefined}
-            >
-              {status}
-            </div>
-            {historyControls ? (
-              <div className="platform-code-editor-workspace__actions">
-                {renderHistoryControls(historyControls)}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
       </div>
 
       {fileMenuPopup}

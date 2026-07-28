@@ -1006,7 +1006,8 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
               icon: selectedProject.icon || selectedProject.metadata?.icon || "",
               color: selectedProject.color || selectedProject.metadata?.color || "",
               view: taskView,
-              extraActions: taskView === "backlog" || taskView === "board"
+              sectionId: taskView === "overview" ? projectOverviewHomeTab : "",
+              extraActions: taskView === "backlog" || taskView === "board" || taskView === "activity"
                 ? renderProjectAppHeaderMilestoneSelector()
                 : null,
               projectId: selectedProject.id,
@@ -1030,6 +1031,7 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
               mode: isStandaloneCalendarMode ? "calendar" : "overview",
               title: isStandaloneCalendarMode ? "Calendar" : "Projects",
               view: isStandaloneCalendarMode ? "calendar" : "overview",
+              sectionId: "",
               extraActions: null,
               projectId: selectedProjectId,
               taskId: selectedTaskId,
@@ -1049,6 +1051,7 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           isStandaloneCalendarMode,
           missionControlStrategyOpen,
           onTasksHeaderChange,
+          projectOverviewHomeTab,
           selectedProject?.id,
           selectedProject?.icon,
           selectedProject?.color,
@@ -1089,7 +1092,9 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
             ? "board"
             : projectNavViewRequest?.view === "backlog"
               ? "backlog"
-              : "overview";
+              : projectNavViewRequest?.view === "activity"
+                ? "activity"
+                : "overview";
           setMissionControlSetupOpen(false);
           setTaskView(requestedView);
           setSelectedTaskId("");
@@ -1098,6 +1103,7 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           setProjectSidebarPopover("");
           const requestedSectionId = String(projectNavViewRequest?.sectionId || "").trim();
           const requestedHomeTab = requestedSectionId === "resources"
+            || requestedSectionId === "milestones"
             || (selectedProjectHeaderCanViewSettings && requestedSectionId === "permissions")
               ? requestedSectionId
               : "general";

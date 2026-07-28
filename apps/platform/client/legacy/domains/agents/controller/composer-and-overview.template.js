@@ -36,7 +36,13 @@
             setToolbarPopover("");
             setSearchPopupQuery("");
             setAgentListActionMenuState(null);
-            setAgentListMode(nextMode === "teams" ? "teams" : "agents");
+            setAgentListMode(
+              nextMode === "teams"
+                ? "teams"
+                : nextMode === "functional"
+                  ? "functional"
+                  : "agents"
+            );
           }
   
           function buildAgentComposerSeedDraft(kind, draftOverrides = null) {
@@ -94,7 +100,10 @@
           }
   
   	        function openAgentAssistant(commandType = "") {
-  	          if (draftAgent?.isSystem || draftAgent?.isDefault) {
+            if (
+              (draftAgent?.isSystem || draftAgent?.isDefault)
+              && !isPlaygroundFunctionalAgent(draftAgent)
+            ) {
   	            setAgentAssistantOpen(false);
   	            return;
   	          }

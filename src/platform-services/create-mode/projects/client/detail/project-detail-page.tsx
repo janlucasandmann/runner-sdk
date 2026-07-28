@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import { ResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
 
-export type ProjectDetailTab = "general" | "resources" | "permissions";
+export type ProjectDetailTab =
+  | "general"
+  | "resources"
+  | "milestones"
+  | "permissions";
 
 export interface ProjectDetailPageProps {
   header?: ReactNode;

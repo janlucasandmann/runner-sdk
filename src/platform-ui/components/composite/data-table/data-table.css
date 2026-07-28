@@ -9,6 +9,9 @@
   --platform-data-table-border: rgba(255, 255, 255, 0.075);
   --platform-data-table-sticky-background: transparent;
   --platform-data-table-minimal-inline-padding: 6px;
+  --platform-data-table-row-group-gap: 10px;
+  --platform-data-table-row-group-chevron-size: 15px;
+  --platform-data-table-row-group-indicator-size: 8px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -371,6 +374,7 @@
 
 .platform-data-table__column-sort-button:focus-visible,
 .platform-data-table__action-button:focus-visible,
+.platform-data-table__group-toggle:focus-visible,
 .platform-data-table__checkbox:focus-visible,
 .platform-data-table__toolbar-button:focus-visible,
 .platform-data-table__primary-action:focus-visible,
@@ -439,6 +443,81 @@
 .platform-data-table.has-pagination .platform-data-table__body,
 .platform-data-table.has-pagination .platform-data-table__footer {
   border-radius: 0;
+}
+
+.platform-data-table__group-header,
+.platform-data-table__group-cell {
+  min-width: 0;
+  width: 100%;
+}
+
+.platform-data-table__group-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--platform-data-table-row-background);
+}
+
+.platform-data-table__group-toggle {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--platform-data-table-row-group-gap);
+  width: 100%;
+  min-height: 54px;
+  padding: 0 18px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.platform-data-table__group-toggle:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.platform-data-table__group-chevron {
+  width: var(--platform-data-table-row-group-chevron-size);
+  height: var(--platform-data-table-row-group-chevron-size);
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.46);
+  transition: transform 140ms ease;
+}
+
+.platform-data-table__group-header.is-collapsed
+  .platform-data-table__group-chevron {
+  transform: rotate(-90deg);
+}
+
+.platform-data-table__group-indicator {
+  width: var(--platform-data-table-row-group-indicator-size);
+  height: var(--platform-data-table-row-group-indicator-size);
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--platform-data-table-row-group-color, #4da3ff);
+}
+
+.platform-data-table__group-label {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-data-table__group-count {
+  min-width: 18px;
+  padding: 2px 5px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.075);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+  text-align: center;
 }
 
 .platform-data-table__row {
@@ -603,6 +682,168 @@
 .platform-data-table.is-minimalistic-ui .platform-data-table__pagination {
   padding-right: var(--platform-data-table-minimal-inline-padding);
   padding-left: var(--platform-data-table-minimal-inline-padding);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+  background: #000;
+}
+
+.platform-data-table.is-catalog-ui {
+  --platform-data-table-catalog-viewport-gutter: 24px;
+  --platform-data-table-catalog-column-inset: 8px;
+  --platform-data-table-catalog-inline-padding: calc(
+    var(--platform-data-table-catalog-viewport-gutter) +
+      var(--platform-data-table-catalog-column-inset)
+  );
+  width: calc(
+    100% + var(--platform-data-table-catalog-viewport-gutter) +
+      var(--platform-data-table-catalog-viewport-gutter)
+  );
+  margin-right: calc(
+    0px - var(--platform-data-table-catalog-viewport-gutter)
+  );
+  margin-left: calc(
+    0px - var(--platform-data-table-catalog-viewport-gutter)
+  );
+  gap: 16px;
+}
+
+.platform-data-table.is-catalog-ui .platform-data-table__toolbar {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 0;
+  padding-right: var(--platform-data-table-catalog-viewport-gutter);
+  padding-left: var(--platform-data-table-catalog-viewport-gutter);
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 10px;
+  row-gap: 12px;
+}
+
+.platform-data-table.is-catalog-ui .platform-data-table__toolbar-controls {
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: none;
+  justify-content: stretch;
+}
+
+.platform-data-table.is-catalog-ui
+  .platform-data-table__toolbar:not(.has-title-line) {
+  row-gap: 0;
+}
+
+.platform-data-table.is-catalog-ui
+  .platform-data-table__toolbar:not(.has-title-line)
+  .platform-data-table__toolbar-spacer {
+  display: none;
+}
+
+.platform-data-table.is-catalog-ui .platform-data-table__search {
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  min-height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-data-table.is-catalog-ui .platform-data-table__surface {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.platform-data-table.is-fill-layout.is-catalog-ui > .platform-data-table__surface {
+  background: #000;
+}
+
+.platform-data-table.is-catalog-ui .platform-data-table__sticky,
+.platform-data-table.is-catalog-ui .platform-data-table__header-group {
+  border-radius: 0;
+  background: #000;
+}
+
+.platform-data-table.is-catalog-ui .platform-data-table__header {
+  min-height: 44px;
+  padding-right: var(--platform-data-table-catalog-inline-padding);
+  padding-left: var(--platform-data-table-catalog-inline-padding);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: #000;
+}
+
+.platform-data-table.is-catalog-ui .platform-data-table__scroll {
+  width: 100%;
+  margin-right: 0;
+  margin-left: 0;
+  border-radius: 0;
+}
+
+.platform-data-table.is-catalog-ui .platform-data-table__body,
+.platform-data-table.is-catalog-ui .platform-data-table__row,
+.platform-data-table.is-catalog-ui .platform-data-table__expanded-row {
+  border-radius: 0;
+  border-bottom: 0;
+}
+
+.platform-data-table.is-catalog-ui .platform-data-table__row,
+.platform-data-table.is-catalog-ui .platform-data-table__expanded-row {
+  padding-right: var(--platform-data-table-catalog-inline-padding);
+  padding-left: var(--platform-data-table-catalog-inline-padding);
+}
+
+.platform-data-table.is-catalog-ui .platform-data-table__group-toggle {
+  min-height: 48px;
+  padding-right: var(--platform-data-table-catalog-inline-padding);
+  padding-left: var(--platform-data-table-catalog-inline-padding);
+}
+
+.platform-data-table.is-catalog-ui
+  .platform-data-table__row-group.is-grouped-row
+  > .platform-data-table__row,
+.platform-data-table.is-catalog-ui
+  .platform-data-table__row-group.is-grouped-row
+  > .platform-data-table__expanded-row {
+  padding-left: calc(
+    var(--platform-data-table-catalog-inline-padding) +
+      var(--platform-data-table-row-group-chevron-size) +
+      var(--platform-data-table-row-group-gap)
+  );
+}
+
+.platform-data-table.is-catalog-ui
+  .platform-data-table__row-group.is-grouped-row.has-group-indicator
+  > .platform-data-table__row,
+.platform-data-table.is-catalog-ui
+  .platform-data-table__row-group.is-grouped-row.has-group-indicator
+  > .platform-data-table__expanded-row {
+  padding-left: calc(
+    var(--platform-data-table-catalog-inline-padding) +
+      var(--platform-data-table-row-group-chevron-size) +
+      var(--platform-data-table-row-group-gap) +
+      var(--platform-data-table-row-group-indicator-size) +
+      var(--platform-data-table-row-group-gap)
+  );
+}
+
+.platform-data-table.is-catalog-ui
+  .platform-data-table__row-group.is-section-end:not(.is-expanded)
+  > .platform-data-table__row,
+.platform-data-table.is-catalog-ui
+  .platform-data-table__row-group.is-section-end
+  > .platform-data-table__expanded-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.platform-data-table.is-catalog-ui .platform-data-table__row {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.platform-data-table.is-catalog-ui .platform-data-table__footer,
+.platform-data-table.is-catalog-ui .platform-data-table__pagination {
+  padding-right: var(--platform-data-table-catalog-inline-padding);
+  padding-left: var(--platform-data-table-catalog-inline-padding);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0;
   background: #000;

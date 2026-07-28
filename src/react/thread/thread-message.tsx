@@ -13,6 +13,7 @@ export interface RunnerThreadMessageViewProps {
   participant?: RunnerThreadParticipant | null;
   receipt?: RunnerThreadRoutingReceipt | null;
   renderContent?: (message: RunnerThreadMessage) => ReactNode;
+  renderUserContent?: (message: RunnerThreadMessage) => ReactNode;
   onCorrectRoute?: (receipt: RunnerThreadRoutingReceipt) => void;
 }
 
@@ -84,26 +85,42 @@ export function RunnerThreadMessageView({
   participant,
   receipt,
   renderContent,
+  renderUserContent,
   onCorrectRoute,
 }: RunnerThreadMessageViewProps) {
   const participantKind = participant?.kind || "system";
   const displayName = participant?.displayName || (participantKind === "human" ? "You" : "Communicator");
   const isHuman = participantKind === "human";
 
-  return (
-    <article className={`tb-thread-message is-${participantKind} ${isHuman ? "is-human" : "is-agent"}`}>
-      {isHuman ? <RunnerThreadUserMessageTime value={message.createdAt} /> : null}
-      {!isHuman ? <RunnerThreadParticipantAvatar participant={participant} /> : null}
-      <div className="tb-thread-message-main">
-        {!isHuman ? (
-          <div className="tb-thread-message-meta">
-            <span className="tb-thread-message-author">{displayName}</span>
-            {message.modality !== "text" ? (
-              <span className="tb-thread-message-modality">{message.modality.replaceAll("_", " ")}</span>
-            ) : null}
-            <RunnerThreadMessageTime value={message.createdAt} />
+  if (isHuman) {
+    return (
+      <article className="tb-turn tb-turn-user">
+        <RunnerThreadUserMessageTime value={message.createdAt} />
+        <div className="tb-user-turn-shell">
+          <div className="task-prompt-in-session-context">
+            {renderUserContent
+              ? renderUserContent(message)
+              : renderContent
+                ? renderContent(message)
+                : message.content}
           </div>
-        ) : null}
+          {receipt ? <RunnerThreadRoutingReceiptView receipt={receipt} onCorrectRoute={onCorrectRoute} /> : null}
+        </div>
+      </article>
+    );
+  }
+
+  return (
+    <article className={`tb-thread-message is-${participantKind} is-agent`}>
+      <RunnerThreadParticipantAvatar participant={participant} />
+      <div className="tb-thread-message-main">
+        <div className="tb-thread-message-meta">
+          <span className="tb-thread-message-author">{displayName}</span>
+          {message.modality !== "text" ? (
+            <span className="tb-thread-message-modality">{message.modality.replaceAll("_", " ")}</span>
+          ) : null}
+          <RunnerThreadMessageTime value={message.createdAt} />
+        </div>
         <div className="tb-thread-message-content">
           {renderContent ? renderContent(message) : message.content}
         </div>

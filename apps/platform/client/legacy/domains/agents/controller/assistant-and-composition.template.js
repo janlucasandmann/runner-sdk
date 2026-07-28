@@ -277,9 +277,7 @@
               && !agentCreationSetupOpen
               && draftAgent?.id
               && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
-              && !draftAgent.isSystem
-              && !draftAgent.isDefault
-              && !isPlaygroundDefaultAgentConfigurationLocked(draftAgent)
+              && canVersionPlaygroundAgent(draftAgent)
             );
             if (!canShowPublish) {
               return null;
@@ -672,7 +670,10 @@
               : (agentsHomeThreadsError || compactAnalyticsError);
   
             const analytics = createAgentsOverviewAnalytics({
-              agentCount: allOverviewAgents.filter((agent) => !isPlaygroundTeamAgent(agent)).length,
+              agentCount: allOverviewAgents.filter((agent) => (
+                !isPlaygroundTeamAgent(agent)
+                && !isPlaygroundFunctionalAgent(agent)
+              )).length,
               squadCount: squadAgentIds.size,
               loading: analyticsLoading,
               error: analyticsError || null,
@@ -709,8 +710,11 @@
               .filter((agent) => agent?.id && agent.id !== PLAYGROUND_AGENT_DRAFT_ID)
               .map((agent) => {
                 const name = String(agent?.name || (isPlaygroundTeamAgent(agent) ? "Untitled Squad" : "Untitled Agent")).trim();
+                const isFunctional = isPlaygroundFunctionalAgent(agent);
                 const modelMeta = getPlaygroundAgentModelMeta(agent?.model || "claude-haiku-4-5", resolvedAgentModelOptions);
-                const modelIcon = getPlaygroundAgentModelProviderIcon(modelMeta);
+                const modelIcon = modelMeta
+                  ? getPlaygroundAgentModelProviderIcon(modelMeta)
+                  : null;
                 const creator = getCreator(agent);
                 const profilePhotoUrl = normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(agent));
                 const lastUsed = latestActivityByAgentId.get(String(agent.id || "").trim())?.value || agent?.lastRunAt || agent?.metadata?.lastRunAt || "";
@@ -723,8 +727,9 @@
                   avatarUrl: canRenderAvatarImage(profilePhotoUrl) ? profilePhotoUrl : "",
                   avatarFallback: name.charAt(0).toUpperCase() || "A",
                   isSquad: isPlaygroundTeamAgent(agent),
-                  isSystem: Boolean(agent?.isDefault || agent?.isSystem),
-                  modelLabel: String(modelMeta?.label || modelMeta?.id || agent?.model || "Selected model"),
+                  isFunctional,
+                  isSystem: Boolean(agent?.isDefault || agent?.isSystem || isFunctional),
+                  modelLabel: String(agent?.modelLabel || modelMeta?.label || modelMeta?.id || agent?.model || "Selected model"),
                   modelIconUrl: modelIcon?.src || "",
                   modelIconClassName: modelIcon?.className || "",
                   creatorName: creator.name,
@@ -739,8 +744,18 @@
             const resolveSourceAgent = (row) => displayAgents.find((agent) => String(agent?.id || "") === row.id) || null;
             return React.createElement(AgentsOverviewPage, {
               rows: agentRows,
-              mode: agentListMode === "teams" ? "squads" : "agents",
-              onModeChange: (mode) => handleAgentListModeChange(mode === "squads" ? "teams" : "agents"),
+              mode: agentListMode === "teams"
+                ? "squads"
+                : agentListMode === "functional"
+                  ? "functional"
+                  : "agents",
+              onModeChange: (mode) => handleAgentListModeChange(
+                mode === "squads"
+                  ? "teams"
+                  : mode === "functional"
+                    ? "functional"
+                    : "agents"
+              ),
               period: agentsHomeChartTimescale,
               onPeriodChange: setAgentsHomeChartTimescale,
               analytics,
@@ -877,12 +892,20 @@
                           type: "button",
                           className: "playground-files-header-icon-button is-plain" + (toolbarPopover === "search" ? " is-active" : ""),
                           onClick: () => toggleToolbarPopover("search"),
-                          title: agentListMode === "teams" ? "Search squads" : "Search agents",
+                          title: agentListMode === "teams"
+                            ? "Search squads"
+                            : agentListMode === "functional"
+                              ? "Search functional agents"
+                              : "Search agents",
                         }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
                         toolbarPopover === "search"
                           ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-project-search-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
                               React.createElement("div", { className: "playground-tasks-project-search-header" },
-                                React.createElement("div", { className: "playground-tasks-project-search-title" }, agentListMode === "teams" ? "Search Squads" : "Search Agents"),
+                                React.createElement("div", { className: "playground-tasks-project-search-title" }, agentListMode === "teams"
+                                  ? "Search Squads"
+                                  : agentListMode === "functional"
+                                    ? "Search Functional Agents"
+                                    : "Search Agents"),
                                 React.createElement("button", {
                                   type: "button",
                                   className: "playground-tasks-project-search-close",
@@ -898,7 +921,9 @@
                                     className: "playground-files-search-field-input",
                                     placeholder: agentListMode === "teams"
                                       ? "Search squads by name, description, or instructions..."
-                                      : "Search agents by name, description, or instructions...",
+                                      : agentListMode === "functional"
+                                        ? "Search functional agents by name or purpose..."
+                                        : "Search agents by name, description, or instructions...",
                                     value: searchPopupQuery,
                                     onChange: (event) => setSearchPopupQuery(event.target.value),
                                   })
@@ -923,26 +948,36 @@
                                               )
                                             )
                                         )
-                                      : React.createElement("div", { className: "playground-files-search-empty" }, agentListMode === "teams" ? "No matching squads found." : "No matching agents found.")
-                                  : React.createElement("div", { className: "playground-tasks-project-search-hint" }, agentListMode === "teams" ? "Type a squad name, description, or instruction to search." : "Type an agent name, description, or instruction to search.")
+                                      : React.createElement("div", { className: "playground-files-search-empty" }, agentListMode === "teams"
+                                        ? "No matching squads found."
+                                        : agentListMode === "functional"
+                                          ? "No matching functional agents found."
+                                          : "No matching agents found.")
+                                  : React.createElement("div", { className: "playground-tasks-project-search-hint" }, agentListMode === "teams"
+                                    ? "Type a squad name, description, or instruction to search."
+                                    : agentListMode === "functional"
+                                      ? "Type a functional agent name or purpose to search."
+                                      : "Type an agent name, description, or instruction to search.")
                               )
                             )
                           : null
                       ),
-                      React.createElement("div", { className: "playground-files-toolbar-anchor" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-header-icon-button" + (agentComposerOpen ? " is-active" : ""),
-                          onClick: () => {
-                            if (agentListMode === "teams") {
-                              handleCreateTeam();
-                            } else {
-                              handleCreateAgent();
-                            }
-                          },
-                          title: "Create agent or squad",
-                        }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })),
-                      )
+                      agentListMode !== "functional"
+                        ? React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                            React.createElement("button", {
+                              type: "button",
+                              className: "playground-files-header-icon-button" + (agentComposerOpen ? " is-active" : ""),
+                              onClick: () => {
+                                if (agentListMode === "teams") {
+                                  handleCreateTeam();
+                                } else {
+                                  handleCreateAgent();
+                                }
+                              },
+                              title: "Create agent or squad",
+                            }, React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })),
+                          )
+                        : null
                     )
                   ),
                   React.createElement("div", { className: "playground-agents-list-switch-row" },
@@ -958,7 +993,13 @@
                         className: "content-mode-button" + (agentListMode === "teams" ? " is-active" : ""),
                         onClick: () => handleAgentListModeChange("teams"),
                         "aria-pressed": agentListMode === "teams",
-                      }, "Squads")
+                      }, "Squads"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "content-mode-button" + (agentListMode === "functional" ? " is-active" : ""),
+                        onClick: () => handleAgentListModeChange("functional"),
+                        "aria-pressed": agentListMode === "functional",
+                      }, "Functional Agents")
                     )
                   )
                 ),
@@ -983,7 +1024,7 @@
                                 const teamMetadata = getPlaygroundAgentTeamMetadata(agent.metadata);
                                 const isTeamListItem = agent?.agentType === "team" || Boolean(teamMetadata);
                                 const isActive = !shouldShowAgentsHome && selectedAgentId === agent.id;
-                                const hasActions = !agent.isDefault && !agent.isSystem;
+                                const hasActions = !agent.isDefault && !agent.isSystem && !isPlaygroundFunctionalAgent(agent);
                                 const isMenuOpen = agentListActionMenuState?.agentId === agent.id;
                                 return React.createElement("div", {
                                     key: agent.id,
@@ -1020,31 +1061,39 @@
                         )
                       )
                     : React.createElement("div", { className: "playground-environments-empty-state" },
-                        React.createElement("div", { className: "playground-environments-empty-title" }, agentListMode === "teams" ? "No squads" : "No agents"),
+                        React.createElement("div", { className: "playground-environments-empty-title" }, agentListMode === "teams"
+                          ? "No squads"
+                          : agentListMode === "functional"
+                            ? "No functional agents"
+                            : "No agents"),
                         React.createElement("div", { className: "playground-environments-empty-copy" }, agentListMode === "teams"
                           ? "Create a fixed orchestrator plus subagent squad here. If you have not created any member agents yet, switch back to Agents first."
-                          : "Create single agents first, then assemble them into fixed squads when you need an orchestrator plus subagents."
+                          : agentListMode === "functional"
+                            ? "Task-specific agents supplied by platform services will appear here."
+                            : "Create single agents first, then assemble them into fixed squads when you need an orchestrator plus subagents."
                         ),
-                        React.createElement("div", { className: "playground-agents-empty-actions" },
-                          React.createElement(PlatformPrimaryButton, {
-                            size: "medium",
-                            type: "button",
-                            className: "playground-environments-action-button" + (agentListMode === "teams" ? " is-primary" : ""),
-                            onClick: handleCreateTeam,
-                          },
-                            React.createElement(Layers, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "New Squad")
-                          ),
-                          React.createElement(PlatformPrimaryButton, {
-                            size: "medium",
-                            type: "button",
-                            className: "playground-environments-action-button" + (agentListMode === "agents" ? " is-primary" : ""),
-                            onClick: handleCreateAgent,
-                          },
-                            React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "New Agent")
+                        agentListMode !== "functional"
+                          ? React.createElement("div", { className: "playground-agents-empty-actions" },
+                              React.createElement(PlatformPrimaryButton, {
+                                size: "medium",
+                                type: "button",
+                                className: "playground-environments-action-button" + (agentListMode === "teams" ? " is-primary" : ""),
+                                onClick: handleCreateTeam,
+                              },
+                                React.createElement(Layers, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("span", null, "New Squad")
+                              ),
+                              React.createElement(PlatformPrimaryButton, {
+                                size: "medium",
+                                type: "button",
+                                className: "playground-environments-action-button" + (agentListMode === "agents" ? " is-primary" : ""),
+                                onClick: handleCreateAgent,
+                              },
+                                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                                React.createElement("span", null, "New Agent")
+                              )
                           )
-                        )
+                          : null
                       )
                 )
               ),

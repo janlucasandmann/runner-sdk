@@ -1597,12 +1597,20 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
       }
 
       .playground-mission-control-delivery-stage {
-        min-height: 34px;
+        min-width: 0;
+        padding: 9px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-mission-control-delivery-stage-heading {
+        min-width: 0;
         display: grid;
-        grid-template-columns: 8px minmax(0, 1fr) auto;
+        grid-template-columns: 8px minmax(0, 1fr) auto auto;
         align-items: center;
         gap: 10px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       }
 
       .playground-mission-control-delivery-stage:last-child {
@@ -1635,7 +1643,6 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
       }
 
       .playground-mission-control-delivery-stage-label,
-      .playground-mission-control-delivery-stage-status,
       .playground-mission-control-delivery-budget,
       .playground-mission-control-delivery-empty,
       .playground-mission-control-delivery-error {
@@ -1647,9 +1654,48 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
         color: rgba(255, 255, 255, 0.82);
       }
 
-      .playground-mission-control-delivery-stage-status {
+      .playground-mission-control-delivery-stage-attempt {
         color: rgba(255, 255, 255, 0.42);
-        text-transform: capitalize;
+        font-size: 10px;
+        white-space: nowrap;
+      }
+
+      .playground-mission-control-delivery-evidence {
+        min-width: 0;
+        padding-left: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 10px;
+        line-height: 1.35;
+      }
+
+      .playground-mission-control-delivery-evidence > span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-mission-control-delivery-evidence strong {
+        color: rgba(255, 255, 255, 0.78);
+        font-weight: 500;
+      }
+
+      .playground-mission-control-delivery-evidence code {
+        margin-left: auto;
+        color: rgba(255, 255, 255, 0.58);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 9px;
+        white-space: nowrap;
+      }
+
+      .playground-mission-control-delivery-stage-error {
+        padding-left: 18px;
+        color: #ff8d8d;
+        font-size: 10px;
+        line-height: 1.4;
       }
 
       .playground-mission-control-delivery-budget {
@@ -1668,11 +1714,111 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
       }
 
       .playground-mission-control-delivery-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
         color: rgba(255, 255, 255, 0.48);
       }
 
       .playground-mission-control-delivery-error {
         margin-top: 10px;
         color: #ff8d8d;
+      }
+
+      .playground-mission-control-delivery-approval {
+        margin-top: 12px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        border: 1px solid rgba(255, 196, 0, 0.22);
+        border-radius: 8px;
+        background: rgba(255, 196, 0, 0.07);
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 10px;
+        line-height: 1.45;
+      }
+
+      .playground-mission-control-delivery-approval strong {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .playground-mission-control-delivery-actions {
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .playground-mission-control-delivery-actions .platform-button {
+        flex: 1 1 auto;
+        justify-content: center;
+      }
+
+      .playground-mission-control-delivery-events {
+        margin-top: 12px;
+        padding-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        border-top: 1px solid rgba(255, 255, 255, 0.075);
+      }
+
+      .playground-mission-control-delivery-events-title {
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 10px;
+        font-weight: 500;
+      }
+
+      .playground-mission-control-delivery-event {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 10px;
+        line-height: 1.35;
+      }
+
+      .playground-mission-control-delivery-event > span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-mission-control-delivery-event time {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.34);
+      }
+
+      .playground-mission-control-delivery-approval-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .playground-mission-control-delivery-approval-copy p {
+        margin: 0;
+      }
+
+      .playground-mission-control-delivery-approval-copy code {
+        display: block;
+        padding: 10px 12px;
+        overflow-wrap: anywhere;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.82);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
       }
 `;

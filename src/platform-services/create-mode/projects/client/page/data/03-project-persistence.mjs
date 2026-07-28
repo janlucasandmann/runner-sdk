@@ -154,8 +154,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               const leftTime = Date.parse(String(left.createdAt || "")) || 0;
               const rightTime = Date.parse(String(right.createdAt || "")) || 0;
               return rightTime - leftTime || String(right.id).localeCompare(String(left.id));
-            })
-            .slice(0, 5);
+            });
         }
 
         function isLegacyProjectTaskActivityRoute(result) {
@@ -236,10 +235,10 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             );
             const nextTask = orderedTasks[offset + batch.length] || null;
             if (
-              normalizedItems.length >= 5
+              normalizedItems.length >= 50
               && (
                 !nextTask
-                || (Date.parse(String(normalizedItems[4]?.createdAt || "")) || 0)
+                || (Date.parse(String(normalizedItems[49]?.createdAt || "")) || 0)
                   >= readProjectTaskActivityUpperBound(nextTask)
               )
             ) {
@@ -368,7 +367,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
         function fetchProjectOverviewTaskActivity(projectId) {
           const activityRequestTarget = new URL(backendUrl + "/tasks/activity", window.location.origin);
           activityRequestTarget.searchParams.set("projectId", projectId);
-          activityRequestTarget.searchParams.set("limit", "5");
+          activityRequestTarget.searchParams.set("limit", "50");
           return fetch(activityRequestTarget.toString(), {
             method: "GET",
             headers: requestHeaders,
@@ -1324,7 +1323,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 	          if (
 	            !selectedProjectId
 	            || taskView !== "overview"
-	            || projectOverviewActivityTab !== "graph"
+	            || taskLoadState?.status !== "ready"
 	          ) {
 	            return;
 	          }
@@ -1339,7 +1338,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 	          }
 	          projectWorkGraphAutoLoadKeyRef.current = loadKey;
 	          void loadProjectOverviewWorkGraph(selectedProjectId, loadKey);
-	        }, [backendUrl, projectOverviewActivityTab, requestHeadersKey, selectedProjectId, taskView]);
+	        }, [backendUrl, requestHeadersKey, selectedProjectId, taskLoadState?.status, taskView]);
 
 	        useEffect(() => {
             if (!isCalendarContext) {

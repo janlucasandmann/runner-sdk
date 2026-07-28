@@ -1134,133 +1134,233 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
 	          await saveProjectRules(nextRules);
 	        }
 
-	        function getProjectFullAutoEligibleTasks() {
-	          if (!selectedProjectId) {
-	            return [];
-	          }
-	          return tasks
-	            .map((task) => normalizePlaygroundTaskRecord(task))
-	            .filter((task) => task?.id && (task.projectId || selectedProjectId) === selectedProjectId)
-	            .filter((task) => !isHumanAssignedTask(task))
-	            .filter((task) => !isTaskThreadLaunchLocked(task))
-	            .filter((task) => getTaskBoardStatus(task) === "todo")
-	            .filter((task) => normalizePlaygroundIdList(task.dependencyIds).length === 0)
-	            .sort((left, right) => {
-              const leftTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[left.id] || left.ticketNumber);
-              const rightTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[right.id] || right.ticketNumber);
-              if (leftTicketNumber !== rightTicketNumber) {
-                return leftTicketNumber - rightTicketNumber;
-              }
-              return String(left.title || "").localeCompare(String(right.title || ""));
-	            });
+	        function normalizeProjectFullAutoRun(run, projectId = selectedProjectId) {
+	          const source = run && typeof run === "object" && !Array.isArray(run) ? run : {};
+	          const normalizedStatus = String(source.status || "idle").trim().toLowerCase() || "idle";
+	          return {
+	            projectId: String(source.projectId || projectId || "").trim(),
+	            runId: String(source.id || "").trim(),
+	            status: normalizedStatus,
+	            steps: Array.isArray(source.steps) ? source.steps : [],
+	            startedCount: Math.max(0, Number(source.startedCount) || 0),
+	            completedCount: Math.max(0, Number(source.completedCount) || 0),
+	            failedCount: Math.max(0, Number(source.failedCount) || 0),
+	            isLoading: false,
+	            isSaving: false,
+	            error: String(source.lastErrorMessage || "").trim(),
+	          };
 	        }
 
-	        function startProjectFullAutoMode() {
-	          if (!selectedProjectId) {
+	        async function refreshProjectFullAutoRun(projectId, runId = "", options = {}) {
+	          const normalizedProjectId = String(projectId || "").trim();
+	          const normalizedRunId = String(runId || "").trim();
+	          if (!normalizedProjectId) {
+	            return null;
+	          }
+	          if (!options?.silent) {
+	            setProjectFullAutoState((current) => ({
+	              ...current,
+	              projectId: normalizedProjectId,
+	              isLoading: true,
+	              error: "",
+	            }));
+	          }
+	          try {
+	            const path = normalizedRunId
+	              ? (
+	                  "/projects/" + encodeURIComponent(normalizedProjectId)
+	                  + "/automation-runs/" + encodeURIComponent(normalizedRunId)
+	                )
+	              : (
+	                  "/projects/" + encodeURIComponent(normalizedProjectId)
+	                  + "/automation-runs/latest"
+	                );
+	            const response = await fetch(backendUrl + path, {
+	              method: "GET",
+	              headers: requestHeaders,
+	            });
+	            if (response.status === 404) {
+	              const emptyState = {
+	                projectId: normalizedProjectId,
+	                runId: "",
+	                status: "idle",
+	                steps: [],
+	                startedCount: 0,
+	                completedCount: 0,
+	                failedCount: 0,
+	                isLoading: false,
+	                isSaving: false,
+	                error: "",
+	              };
+	              setProjectFullAutoState(emptyState);
+	              return null;
+	            }
+	            const data = await response.json().catch(() => ({}));
+	            if (!response.ok) {
+	              throw new Error(data?.message || data?.error || "Failed to load Full Auto.");
+	            }
+	            const nextState = normalizeProjectFullAutoRun(data?.automationRun, normalizedProjectId);
+	            setProjectFullAutoState(nextState);
+	            if (["completed", "failed", "cancelled"].includes(nextState.status)) {
+	              void loadProjectWorkspace(normalizedProjectId);
+	            }
+	            return data?.automationRun || null;
+	          } catch (error) {
+	            setProjectFullAutoState((current) => ({
+	              ...current,
+	              projectId: normalizedProjectId,
+	              isLoading: false,
+	              isSaving: false,
+	              error: error instanceof Error ? error.message : "Failed to load Full Auto.",
+	            }));
+	            return null;
+	          }
+	        }
+
+	        async function startProjectFullAutoMode() {
+	          if (!selectedProjectId || projectFullAutoState.isSaving) {
 	            return;
 	          }
 	          if (!canStartThreads) {
 	            if (onRequireAuth) {
-              onRequireAuth();
+	              onRequireAuth();
 	            }
 	            return;
 	          }
-	          const nextTask = getProjectFullAutoEligibleTasks()[0] || null;
-	          if (!nextTask) {
-	            setSaveState({
-              isSaving: false,
-              error: "",
-              message: "No runnable tasks are ready.",
-	            });
-	            setProjectFullAutoState({
-              projectId: selectedProjectId,
-              enabled: false,
-              runningTaskId: "",
-              startedCount: 0,
-              error: "No runnable tasks are ready.",
-	            });
+	          setProjectFullAutoState((current) => ({
+	            ...current,
+	            projectId: selectedProjectId,
+	            isSaving: true,
+	            error: "",
+	          }));
+	          try {
+	            const idempotencyKey = "project-full-auto-"
+	              + selectedProjectId + "-"
+	              + (
+	                globalThis.crypto?.randomUUID?.()
+	                || Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)
+	              );
+	            const response = await fetch(
+	              backendUrl + "/projects/" + encodeURIComponent(selectedProjectId) + "/automation-runs",
+	              {
+	                method: "POST",
+	                headers: {
+	                  ...requestHeaders,
+	                  "Content-Type": "application/json",
+	                  "Idempotency-Key": idempotencyKey,
+	                },
+	                body: JSON.stringify({
+	                  maxTasks: 100,
+	                  stopOnFailure: true,
+	                  idempotencyKey,
+	                }),
+	              },
+	            );
+	            const data = await response.json().catch(() => ({}));
+	            if (!response.ok) {
+	              throw new Error(data?.message || data?.error || "Failed to start Full Auto.");
+	            }
+	            setProjectFullAutoState(
+	              normalizeProjectFullAutoRun(data?.automationRun, selectedProjectId),
+	            );
+	          } catch (error) {
+	            setProjectFullAutoState((current) => ({
+	              ...current,
+	              isSaving: false,
+	              error: error instanceof Error ? error.message : "Failed to start Full Auto.",
+	            }));
+	          }
+	        }
+
+	        async function performProjectFullAutoAction(action) {
+	          const normalizedAction = String(action || "").trim().toLowerCase();
+	          const runId = String(projectFullAutoState.runId || "").trim();
+	          if (
+	            !selectedProjectId
+	            || !runId
+	            || !["pause", "resume", "cancel"].includes(normalizedAction)
+	            || projectFullAutoState.isSaving
+	          ) {
 	            return;
 	          }
-	          setProjectFullAutoState({
-	            projectId: selectedProjectId,
-	            enabled: true,
-	            runningTaskId: "",
-	            startedCount: 0,
+	          setProjectFullAutoState((current) => ({
+	            ...current,
+	            isSaving: true,
 	            error: "",
-	          });
-	          setSaveState({
-	            isSaving: false,
-	            error: "",
-	            message: "Full Auto started",
-	          });
+	          }));
+	          try {
+	            const response = await fetch(
+	              backendUrl + "/projects/" + encodeURIComponent(selectedProjectId)
+	                + "/automation-runs/" + encodeURIComponent(runId)
+	                + "/" + normalizedAction,
+	              {
+	                method: "POST",
+	                headers: {
+	                  ...requestHeaders,
+	                  "Content-Type": "application/json",
+	                },
+	                body: "{}",
+	              },
+	            );
+	            const data = await response.json().catch(() => ({}));
+	            if (!response.ok) {
+	              throw new Error(
+	                data?.message || data?.error || "Failed to update Full Auto.",
+	              );
+	            }
+	            setProjectFullAutoState(
+	              normalizeProjectFullAutoRun(data?.automationRun, selectedProjectId),
+	            );
+	          } catch (error) {
+	            setProjectFullAutoState((current) => ({
+	              ...current,
+	              isSaving: false,
+	              error: error instanceof Error ? error.message : "Failed to update Full Auto.",
+	            }));
+	          }
 	        }
 
 	        function stopProjectFullAutoMode() {
-	          setProjectFullAutoState((current) => ({
-	            ...current,
-	            enabled: false,
-	            runningTaskId: "",
-	          }));
-	          setSaveState({
-	            isSaving: false,
-	            error: "",
-	            message: "Full Auto stopped",
-	          });
+	          void performProjectFullAutoAction("pause");
+	        }
+
+	        function resumeProjectFullAutoMode() {
+	          void performProjectFullAutoAction("resume");
+	        }
+
+	        function cancelProjectFullAutoMode() {
+	          void performProjectFullAutoAction("cancel");
 	        }
 
 	        useEffect(() => {
-	          if (!projectFullAutoState.enabled || projectFullAutoState.projectId !== selectedProjectId) {
+	          if (!selectedProjectId) {
 	            return;
 	          }
+	          void refreshProjectFullAutoRun(selectedProjectId);
+	        }, [selectedProjectId]);
 
-	          const runningTaskId = String(projectFullAutoState.runningTaskId || "").trim();
-	          if (runningTaskId) {
-	            const phase = String(taskRunStates[runningTaskId]?.phase || "").trim().toLowerCase();
-	            if (phase === "finished" || phase === "in_review") {
-              setProjectFullAutoState((current) => ({
-                ...current,
-                runningTaskId: "",
-                startedCount: current.startedCount + 1,
-              }));
-              return;
-	            }
-	            if (phase === "failed" || phase === "cancelled" || phase === "waiting_subtasks") {
-              const errorMessage = taskRunStates[runningTaskId]?.error || "Full Auto paused.";
-              setSaveState({
-                isSaving: false,
-                error: errorMessage,
-                message: "",
-              });
-              setProjectFullAutoState((current) => ({
-                ...current,
-                enabled: false,
-                error: errorMessage,
-              }));
-	            }
-	            return;
+	        useEffect(() => {
+	          const runId = String(projectFullAutoState.runId || "").trim();
+	          if (
+	            !selectedProjectId
+	            || projectFullAutoState.projectId !== selectedProjectId
+	            || !runId
+	            || !["queued", "running"].includes(projectFullAutoState.status)
+	          ) {
+	            return undefined;
 	          }
-
-	          const nextTask = getProjectFullAutoEligibleTasks()[0] || null;
-	          if (!nextTask) {
-	            setSaveState({
-              isSaving: false,
-              error: "",
-              message: "Full Auto complete",
+	          const intervalId = window.setInterval(() => {
+	            void refreshProjectFullAutoRun(selectedProjectId, runId, {
+	              silent: true,
 	            });
-	            setProjectFullAutoState((current) => ({
-              ...current,
-              enabled: false,
-              error: "",
-	            }));
-	            return;
-	          }
-
-	          setProjectFullAutoState((current) => ({
-	            ...current,
-	            runningTaskId: nextTask.id,
-	          }));
-	          void handleStartTaskThread(nextTask);
-	        }, [projectFullAutoState, selectedProjectId, taskRunStates, tasks]);
+	          }, 2500);
+	          return () => window.clearInterval(intervalId);
+	        }, [
+	          projectFullAutoState.projectId,
+	          projectFullAutoState.runId,
+	          projectFullAutoState.status,
+	          selectedProjectId,
+	        ]);
 
 	        function getDraftTaskConnectorSelection(source, taskRecord = draftTask) {
           const connectorKey = getPlaygroundTaskConnectorKey(source);

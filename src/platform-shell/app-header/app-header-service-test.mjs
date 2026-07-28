@@ -42,6 +42,47 @@ assert.match(fragments.searchProjection, /const loadThreadSearchResourceMode = u
 assert.match(fragments.searchProjection, /threadSearchMode !== "files"/);
 assert.match(fragments.searchProjection, /fetchMetronomeWorkflowsFromApi/);
 assert.match(fragments.searchProjection, /proxyBackendBase \+ "\/threads\/search"/);
+assert.match(fragments.searchProjection, /function resolveGlobalServiceSearchQuery\(value\)/);
+assert.match(fragments.searchProjection, /normalizedValue\.startsWith\("\/"\)/);
+assert.match(fragments.searchProjection, /const isGlobalServiceSearchQuery = globalServiceSearchQuery !== null/);
+assert.match(fragments.searchProjection, /\|\| isGlobalServiceSearchQuery[\s\S]*?loadThreadSearchResourceMode/);
+assert.match(fragments.searchProjection, /&& !isGlobalServiceSearchQuery[\s\S]*?&& searchQuery/);
+const serviceQueryResolverSource = fragments.searchProjection.match(
+  /function resolveGlobalServiceSearchQuery\(value\) \{[\s\S]*?\n        \}/,
+)?.[0];
+assert.ok(serviceQueryResolverSource);
+const resolveGlobalServiceSearchQuery = new Function(
+  `${serviceQueryResolverSource}
+  return resolveGlobalServiceSearchQuery;
+  `,
+)();
+assert.equal(resolveGlobalServiceSearchQuery("agents"), null);
+assert.equal(resolveGlobalServiceSearchQuery("/"), "");
+assert.equal(resolveGlobalServiceSearchQuery(" /  agent runtime "), "agent runtime");
+assert.match(fragments.searchProjection, /function resolveExactThreadSearchId\(value\)/);
+assert.match(fragments.searchProjection, /\/\^thread_\[A-Za-z0-9_-\]\+\$\//);
+assert.match(
+  fragments.searchProjection,
+  /proxyBackendBase \+ "\/threads\/" \+ encodeURIComponent\(exactThreadId\)/,
+);
+assert.match(
+  fragments.searchProjection,
+  /!\(exactThreadId && response\.status === 404\)/,
+);
+assert.match(fragments.searchProjection, /exactThreadId \? 0 : 180/);
+const exactThreadIdResolverSource = fragments.searchProjection.match(
+  /function resolveExactThreadSearchId\(value\) \{[\s\S]*?\n        \}/,
+)?.[0];
+assert.ok(exactThreadIdResolverSource);
+const resolveExactThreadSearchId = new Function(
+  `${exactThreadIdResolverSource}
+  return resolveExactThreadSearchId;
+  `,
+)();
+assert.equal(resolveExactThreadSearchId("thread_abc-123_XYZ"), "thread_abc-123_XYZ");
+assert.equal(resolveExactThreadSearchId("  thread_abc-123_XYZ  "), "thread_abc-123_XYZ");
+assert.equal(resolveExactThreadSearchId("thread_"), "");
+assert.equal(resolveExactThreadSearchId("https://example.com/thread_abc"), "");
 assert.match(fragments.searchProjection, /const THREAD_SEARCH_RESULT_LIMIT = 20/);
 assert.match(fragments.searchProjection, /limit: THREAD_SEARCH_RESULT_LIMIT/);
 assert.match(fragments.searchProjection, /\.slice\(0, THREAD_SEARCH_RESULT_LIMIT\)/);
@@ -110,6 +151,16 @@ assert.doesNotMatch(fragments.notificationsPopup, /className: "notification-menu
 assert.match(fragments.searchModal, /function renderAppHeaderSearchModal/);
 assert.match(fragments.searchModal, /React\.createElement\(PlatformGlobalSearchModal,/);
 assert.match(fragments.searchModal, /mode: threadSearchMode/);
+assert.match(fragments.searchModal, /getGlobalServiceNavigationItems\(globalServiceSearchQuery\)/);
+assert.match(fragments.searchModal, /id: serviceItem\.globalSearchId/);
+assert.match(fragments.searchModal, /label: "Services"/);
+assert.match(fragments.searchModal, /actionsHidden: true/);
+assert.match(fragments.searchModal, /handleGlobalServiceNavigationItemClick\(resultId\)/);
+assert.match(fragments.searchModal, /title: "No services found"/);
+assert.match(
+  fragments.searchModal,
+  /resolveExactThreadSearchId\(nextQuery\)[\s\S]*?threadSearchMode !== "threads"/,
+);
 assert.match(fragments.searchModal, /resultGroups,/);
 assert.match(fragments.searchModal, /React\.createElement\(PlaygroundFileIcon,/);
 assert.match(fragments.searchModal, /getPlaygroundAgentProfilePhotoUrl\(agent\)/);
@@ -125,6 +176,8 @@ assert.match(fragments.searchModal, /id: "create-workflow"/);
 assert.match(fragments.searchModal, /id: "sign-out"/);
 assert.match(fragments.searchModal, /emptyTitle: emptyStateCopy\.title/);
 assert.match(fragments.searchModal, /emptyDescription: emptyStateCopy\.description/);
+assert.match(fragments.searchModal, /title: "Thread not found"/);
+assert.match(fragments.searchModal, /description: "Check the thread ID and try again\."/);
 assert.match(fragments.searchModal, /onResultOpenInNewTab:/);
 assert.match(fragments.searchModal, /onResultRename:/);
 assert.match(fragments.searchModal, /onResultDelete:/);
@@ -218,6 +271,14 @@ assert.match(
   /const selectedThreadTaskTicketNumber = selectedThreadTaskPreview\?\.taskId[\s\S]*?formatPlaygroundProjectTicketNumber\([\s\S]*?name: selectedThreadProjectName/,
 );
 assert.match(platformEntrySource, /pathItems: getThreadPagePathItems\(\)/);
+assert.match(
+  platformEntrySource,
+  /const activeProjectSectionId = String\(tasksHeaderState\.sectionId \|\| ""\)\.trim\(\)\.toLowerCase\(\);[\s\S]*?activeProjectSectionId === "milestones"/,
+);
+assert.match(
+  platformEntrySource,
+  /onClick: isProjectMilestonesView[\s\S]*?navigateToProjectSection\("general"\)[\s\S]*?\[\{ label: "Milestones" \}\]/,
+);
 assert.match(
   platformEntrySource,
   /setTasksPageNavigationRequest\(\{[\s\S]*?taskId,[\s\S]*?taskDetailMode: "screen",[\s\S]*?\}\);[\s\S]*?setActivePage\("tasks"\)/,

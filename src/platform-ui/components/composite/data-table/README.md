@@ -10,6 +10,7 @@
 
 - Responsive grid columns and alignment
 - Controlled or uncontrolled sorting, search, and selection
+- Anchored `Shift+ArrowUp` and `Shift+ArrowDown` range selection that expands and contracts in visible row order
 - Optional search, filter, view, leading-control, and primary-action toolbar outside the table surface
 - Keyboard row activation and accessible table semantics
 - Portal-based row and context menus, including multi-selection actions
@@ -17,6 +18,7 @@
 - Persistent, sticky column header and row surface
 - Content-sized and available-height layouts
 - Controlled or uncontrolled client and server pagination
+- Ordered, controlled or uncontrolled expandable row groups with labels, indicators, and counts
 - Expandable detail rows
 
 ## Usage
@@ -49,6 +51,10 @@ leaving it undefined retains the default plus icon.
 `layout="content"` is the default and grows with its rows. `layout="fill"` uses its intrinsic content height up to a constrained flex parent's remaining height and animates between intrinsic heights as its rendered rows change. Once that maximum is reached, only the row body scrolls; the toolbar, column header, and pagination remain outside the scroll viewport. Every parent in a fill-height chain must provide `min-height: 0`.
 
 `variant="minimalistic-ui"` provides the flat header, borderless rows, expanded row viewport, and compact footer treatment used by resource overview pages. `ResourceOverviewPage` selects this variant by default; pass `variant="default"` in its table configuration when a resource requires the standard framed table.
+
+`variant="catalog-ui"` is the full-screen catalog treatment: it bleeds the table surface and divider lines through the standard 24px page gutter, then restores that gutter inside the toolbar and adds the table's 8px column inset so controls and cell content stay aligned. It also provides a stacked toolbar with a full-width search field, flat surfaces, and roomier rows for logo-and-description identities. Its host must allow horizontal overflow; `ResourceOverviewPage` does this automatically for catalog tables. Override `--platform-data-table-catalog-viewport-gutter` only when a full-screen host uses a different page gutter.
+
+Use `rowGrouping` when one table needs ordered, collapsible sections without changing its columns or toolbar. Configure the section order in `groups`, return a group ID from `getGroupId`, and use `expandedIds` with `onExpandedChange` when expansion state must be controlled. Groups are expanded by default unless `defaultExpanded` is `false`.
 
 Passing `pagination={{}}` enables client pagination with 20 rows per page and 10, 20, and 50-row options. Use `value` and `onChange` for controlled state. For server pagination, set `manual: true` and provide `totalCount`. Resource overview pages enable pagination by default; pass `pagination={false}` through their table configuration to opt out.
 

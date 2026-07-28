@@ -16,12 +16,12 @@ export function createAiosGateway(bindings) {
             const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
             const upstreamTarget = new URL(`${aiosOrigin}${upstreamPath}`);
             upstreamTarget.search = requestUrl.search;
-            const headers = {
+            const headers = withProxyOrganizationHeader(req, {}, {
                 cookie: req.headers.cookie || "",
                 authorization: req.headers.authorization || "",
                 "x-api-key": req.headers["x-api-key"] || "",
                 "content-type": req.headers["content-type"] || "application/json",
-            };
+            });
             const init = {
                 method,
                 headers,

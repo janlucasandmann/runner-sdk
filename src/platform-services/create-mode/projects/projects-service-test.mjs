@@ -62,7 +62,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "2b212783ae9921c734a13132fcf1a7c537122c8924b275e4405663dc9155249a",
+    expectedSha256: "9e5a2401b2eb29ed83e3f7406d5ce6c67628f3c1464e056d4aa673a8ee7a8500",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -74,7 +74,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview styles",
     source: PROJECT_OVERVIEW_CSS,
-    expectedSha256: "a9a51dffeb86556a269fecef2855a9bc7473631cb274244fc44bc30cb6cbd8d1",
+    expectedSha256: "ab6a128ab2f124b64c651e7fc85a26870990827d741636b0d21479600e7cf60a",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -86,7 +86,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects actions runtime",
     source: PROJECTS_PAGE_ACTIONS_SCRIPT,
-    expectedSha256: "6abe141eb300ee3a6f4c6051d45603c1b2de9f4cad6c4285d2370667b75ec9fd",
+    expectedSha256: "3969b15cb0f1c24274b5f795ae69d3aea568b9284b69d066b36faef4f279d994",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -98,7 +98,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects data runtime",
     source: PROJECTS_PAGE_DATA_SCRIPT,
-  expectedSha256: "6b6764caa71a9b3ee7d6ce5e98353dba255b991fb8288a523079d341003a0c28",
+    expectedSha256: "eed5eca965bf81d6222621c0ba18a47af113204a52d4733541026b07db994dcf",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -110,7 +110,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects shell runtime",
     source: PROJECTS_PAGE_SHELL_SCRIPT,
-    expectedSha256: "44db805772b49afa4927b0ecf3300223bbd1366fe7404b80faa5511abff25e58",
+    expectedSha256: "8f185dfeb76ea6f3416e822dd90ce5ec23db6ba1c6b8e776ab8d8fe50cf4cb75",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -122,7 +122,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "4f8747052a15be9f7c4d5cb5518817f1920b97ea57628efc2dc22d958a7a3712",
+    expectedSha256: "407acc8af1c328745c5366f3a45638849c780f3215cc93a5bc5342dfdb1148c7",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -134,7 +134,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects core styles",
     source: PROJECTS_CORE_CSS,
-    expectedSha256: "6b7c3f4c9aa301ab4fa5f37d08b8d1668b3a604c1ece884ef88980535ea60e94",
+    expectedSha256: "5b9efa196fc79e496741e40c77a858bcd255fcbfe990abd0569519276aa05308",
     fragmentGroups: [
       {
         baseUrl: projectsStylesUrl,
@@ -255,6 +255,14 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
+  /taskView !== "overview"[\s\S]*?taskLoadState\?\.status !== "ready"[\s\S]*?loadProjectOverviewWorkGraph\(selectedProjectId, loadKey\)/,
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /projectOverviewActivityTab !== "graph"/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
   /workRelations: Array\.isArray\(tasksData\?\.relations\)[\s\S]*?agentSessions: Array\.isArray\(tasksData\?\.agentSessions\)/,
 );
 assert.match(
@@ -320,6 +328,35 @@ assert.match(PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT, /createPlaygroundProjectTeamR
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function PlaygroundTasksPage/);
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function renderProjectOverviewView/);
 assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /const \[projectFullAutoState, setProjectFullAutoState\] = useState\(\{[\s\S]*?runId: ""[\s\S]*?status: "idle"[\s\S]*?steps: \[\][\s\S]*?completedCount: 0[\s\S]*?failedCount: 0/,
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /async function startProjectFullAutoMode\(\)[\s\S]*?\/automation-runs[\s\S]*?"Idempotency-Key": idempotencyKey/,
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /async function performProjectFullAutoAction\(action\)[\s\S]*?\["pause", "resume", "cancel"\]/,
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /async function requestMissionControlDeliveryAction\(action\)[\s\S]*?\["start", "reconcile", "retry", "cancel"\][\s\S]*?\/delivery-plan\/execution\//,
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /async function approveMissionControlDeliveryAssurance\(\)[\s\S]*?evidenceFingerprint[\s\S]*?\/assurance\/runs\/[\s\S]*?\/approve[\s\S]*?\/delivery-plan\/execution\/reconcile/,
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /function getProjectFullAutoEligibleTasks\(\)/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /React\.createElement\(PlatformButtonSelector, \{\s*mode: "split-action",\s*buttonVariant: "primary",[\s\S]*?label: isMissionControlRunning \? "Running Mission Control" : "Mission Control",[\s\S]*?popupVariant: "minimal",[\s\S]*?fullWidth: true,[\s\S]*?onAction: \(\) => \{[\s\S]*?openMissionControlComposer\(\);[\s\S]*?fullAutoActionLabel/,
+);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /renderProjectFullAutoSidebarCard/);
+assert.match(
   PROJECTS_PAGE_ACTIONS_SCRIPT,
   /const shouldRefreshBaseProjectBeforePatch = options\.refreshBaseProject !== false;/,
 );
@@ -329,15 +366,31 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_SHELL_SCRIPT,
-  /canonical project-delivery provisioner[\s\S]*?computer_agents_project_delivery_contract_v1[\s\S]*?projects delivery apply/,
+  /canonical project-delivery provisioner[\s\S]*?computer_agents_project_delivery_contract_v3[\s\S]*?evaluations import-dataset[\s\S]*?datasetAssetId[\s\S]*?services\.workflowAcceptance[\s\S]*?services\.guardrails[\s\S]*?projects delivery preview[\s\S]*?Only after a successful preview[\s\S]*?projects delivery apply/,
 );
 assert.match(
   PROJECTS_PAGE_SHELL_SCRIPT,
-  /projects delivery execute[\s\S]*?projects delivery status[\s\S]*?server-owned supervisor is the only authority/,
+  /enable repairPolicy[\s\S]*?maximumAttempts[\s\S]*?repairableStages from test, evaluate, and acceptance_evaluate[\s\S]*?requireChangedResourceRevision true[\s\S]*?attestation failures fail closed/,
+);
+assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /projects delivery execute[\s\S]*?projects delivery status[\s\S]*?projects delivery retry[\s\S]*?server-owned supervisor is the only authority/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /React\.createElement\(PlatformUiCard, \{[\s\S]*?cardTitle: "Delivery execution"[\s\S]*?Verified cost/,
+  /React\.createElement\(PlatformUiCard, \{[\s\S]*?cardTitle: "Delivery execution"[\s\S]*?stage\.retryCount[\s\S]*?Verified cost[\s\S]*?"Approve evidence"[\s\S]*?requestMissionControlDeliveryAction\("retry"\)/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /re_evaluate: "Re-evaluate",[\s\S]*?acceptance_evaluate: "Workflow acceptance"[\s\S]*?stageId === "acceptance_evaluate" \? "skipped"[\s\S]*?retryableDeliveryStageIds[\s\S]*?"acceptance_evaluate"/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /deliveryRepairEpisode[\s\S]*?deliveryRepairStatus[\s\S]*?"Autonomous repair passed"[\s\S]*?"Autonomous repair exhausted"[\s\S]*?"Autonomous repair failed"[\s\S]*?diagnosticFingerprint[\s\S]*?allowedResourceKeys/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /React\.createElement\(PlatformModal, \{[\s\S]*?title: "Approve delivery evidence"[\s\S]*?approveMissionControlDeliveryAssurance[\s\S]*?assuranceEvidenceFingerprint/,
 );
 assert.match(
   PROJECTS_PAGE_SHELL_SCRIPT,
@@ -375,6 +428,10 @@ assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
   /const requestedSectionId = String\(projectNavViewRequest\?\.sectionId \|\| ""\)\.trim\(\);[\s\S]*?setProjectOverviewHomeTab\(requestedHomeTab\);/,
 );
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /sectionId: taskView === "overview" \? projectOverviewHomeTab : ""/,
+);
 assert.doesNotMatch(
   PROJECTS_PAGE_DATA_SCRIPT,
   /handleProjectOverviewHomeTabChange\(projectNavViewRequest\?\.sectionId\)/,
@@ -397,7 +454,7 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_SHELL_SCRIPT,
-  /The returned delivery plan is the sole authority for Function, Metronome, Test Plan\/version, Evaluation\/version, planned fine-tuning job, Assurance Policy\/version, and task IDs/,
+  /The returned delivery plan is the sole authority for Function, Metronome, Test Plan\/version, component Evaluation\/version, workflow-acceptance Evaluation\/version, planned Agent Optimization job, Assurance Policy\/version, and task IDs/,
 );
 assert.match(
   PROJECTS_PAGE_SHELL_SCRIPT,
@@ -515,7 +572,11 @@ assert.doesNotMatch(
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /tabs: \[\s*\{ id: "threads", label: "Threads" \},\s*\{ id: "graph", label: "Work Graph" \},\s*\{ id: "activity", label: "Activity" \},\s*\{ id: "strategy", label: "Strategy" \},\s*\]/,
+  /tabs: \[\s*\{ id: "threads", label: "Threads" \},\s*\{ id: "activity", label: "Activity" \},\s*\{ id: "strategy", label: "Strategy" \},\s*\]/,
+);
+assert.doesNotMatch(
+  PROJECT_OVERVIEW_SCRIPT,
+  /\{ id: "graph", label: "Work Graph" \}/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
@@ -597,11 +658,19 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
-  /new URL\(backendUrl \+ "\/tasks\/activity", window\.location\.origin\)[\s\S]*?searchParams\.set\("projectId", projectId\)[\s\S]*?searchParams\.set\("limit", "5"\)/,
+  /new URL\(backendUrl \+ "\/tasks\/activity", window\.location\.origin\)[\s\S]*?searchParams\.set\("projectId", projectId\)[\s\S]*?searchParams\.set\("limit", "50"\)/,
 );
 assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
   /normalizedEvent\.eventType === "comment_added"[\s\S]*?normalizedEvent\.eventType === "field_changed" && fieldName === "description"/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function renderProjectWorkActivityListSummary\(event, ticketNumber\)[\s\S]*?" created "[\s\S]*?ticket/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /summary: renderProjectWorkActivityListSummary\(\s*event,\s*ticketNumber\s*\),\s*avatar:/,
 );
 assert.match(
   PROJECT_OVERVIEW_CSS,
@@ -628,7 +697,7 @@ assert.match(
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /React\.createElement\(PlatformPrimaryButton, \{[\s\S]*?className: "playground-project-overview-sidebar-mission-button"[\s\S]*?"Mission Control"\)/,
+  /className: "playground-project-overview-sidebar-mission-button",[\s\S]*?actionDisabled: !canOpenMissionControl \|\| isMissionControlRunning,[\s\S]*?popupDisabled: false/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
@@ -780,16 +849,46 @@ assert.match(
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /onTeamsSelect: \(\) => setProjectOverviewHomeTab\("permissions"\),\s*onResourcesSelect: \(\) => setProjectOverviewHomeTab\("resources"\)/,
+  /function getProjectOverviewCreationUpdate\(projectRecord = projectOverviewDraft \|\| selectedProject\)[\s\S]*?resolveProjectOverviewUpdateAuthorIdentity\(\{[\s\S]*?body: authorIdentity\.name \+ " created this project\."[\s\S]*?authorAvatarUrl: authorIdentity\.avatarUrl[\s\S]*?kind: "project_created"[\s\S]*?isSynthetic: false/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /function getProjectSummaryTeams\(projectRecord\)[\s\S]*?composePlatformAccessPrincipalRows\(workspaceTeamRows\)/,
+  /function getProjectOverviewLatestUpdateInfo\(\) \{\s*return getProjectOverviewUpdateRecords\(\)\[0\]\s*\|\| getProjectOverviewCreationUpdate\(\)\s*\|\| null;/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /function getProjectSummaryTeams\(projectRecord\)[\s\S]*?getPlatformSharedTeamIds\(metadata\)[\s\S]*?!sharedTeamIds\.has\(teamId\)/,
+  /function resolveProjectOverviewUpdateAuthorIdentity\(value = \{\}\)[\s\S]*?storedAuthorName\.includes\("@"\)[\s\S]*?getTaskWorkspaceMemberByUserId\(authorUserId\)[\s\S]*?memberAvatarUrl[\s\S]*?normalizeSessionPhotoUrl\(rawAvatarUrl\)/,
 );
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /const updateAuthorIdentity = resolveProjectOverviewUpdateAuthorIdentity\(update\);[\s\S]*?renderProjectOverviewSidebarAvatar\(\s*actorName,\s*updateAuthorIdentity\.avatarUrl\s*\)/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /className: "platform-project-update-card__header"[\s\S]*?className: "platform-project-update-card__meta"[\s\S]*?renderProjectOverviewUpdateStatus\(update\.status\)[\s\S]*?className: "platform-project-update-card__action"/,
+);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /"Latest update"/);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /className: "platform-project-update-card__interaction-actions"[\s\S]*?PlatformIconButton[\s\S]*?PlatformEmojiPicker/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /async function persistProjectOverviewUpdateMutationFallback\(nextUpdate\)[\s\S]*?isSynthetic: false[\s\S]*?persistProjectOverviewSidebarProjectUpdate/,
+);
+assert.doesNotMatch(
+  PROJECT_OVERVIEW_SCRIPT,
+  /No project updates have been posted yet\./,
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /const projectCreatorEmailName = projectCreatorEmail[\s\S]*?formatAccountDisplayName\([\s\S]*?const projectCreationUpdate = isEditMode[\s\S]*?kind: "project_created"[\s\S]*?projectUpdates: \[projectCreationUpdate\],[\s\S]*?latestUpdate: projectCreationUpdate/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /onResourcesSelect: \(\) => setProjectOverviewHomeTab\("resources"\),\s*onMilestonesSelect: \(\) => setProjectOverviewHomeTab\("milestones"\)/,
+);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /function getProjectSummaryTeams\(/);
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
   /const projectSharedTeamIds = new Set\([\s\S]*?getPlatformSharedTeamIds\(projectMetadata\)[\s\S]*?const unsharedWorkspaceTeams = availableWorkspaceTeams/,
@@ -1156,7 +1255,7 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
-  /extraActions: taskView === "backlog" \|\| taskView === "board"\s*\? renderProjectAppHeaderMilestoneSelector\(\)\s*: null/,
+  /extraActions: taskView === "backlog" \|\| taskView === "board" \|\| taskView === "activity"\s*\? renderProjectAppHeaderMilestoneSelector\(\)\s*: null/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -1767,15 +1866,36 @@ assert.match(
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /\{ id: "graph", label: "Work Graph" \}[\s\S]*?function renderProjectOverviewWorkGraphPanel\(\)[\s\S]*?"Project execution graph"[\s\S]*?"Relationships"[\s\S]*?"Agent execution"/,
+  /function renderProjectOverviewWorkGraphPanel\(\)[\s\S]*?label: "Tasks"[\s\S]*?label: "Relations"[\s\S]*?label: "Active runs"[\s\S]*?label: "Resources"/,
+);
+assert.doesNotMatch(
+  PROJECT_OVERVIEW_SCRIPT,
+  /Project execution graph|Track structural dependencies and every durable agent attempt|Relationships|Agent execution/,
+);
+assert.doesNotMatch(
+  PROJECT_OVERVIEW_SCRIPT,
+  /No task relationships yet|No agent runs yet/,
+);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /relationRows|sessionRows|missionControlDeliveryStageId/);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /const activeSessionStates = new Set\(\["queued", "active", "awaiting_input"\]\)[\s\S]*?const resourceCount = Array\.isArray\(projectOverviewAllResourceRows\)[\s\S]*?label: "Active runs"[\s\S]*?label: "Resources"/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /label: "Active runs"[\s\S]*?label: "Completed runs"[\s\S]*?missionControlDeliveryStageId/,
+  /function renderProjectOverviewSummaryHeader\(\)[\s\S]*?React\.createElement\(ProjectSummary, \{[\s\S]*?renderProjectOverviewWorkGraphPanel\(\),\s*React\.createElement\(ProjectSummaryDetails, \{/,
 );
 assert.match(
   PROJECT_OVERVIEW_CSS,
-  /\.playground-project-overview-work-graph\s*\{[\s\S]*?\.playground-project-overview-work-graph-columns\s*\{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/,
+  /\.playground-project-overview-work-graph\s*\{[\s\S]*?\.playground-project-overview-work-graph-metrics\s*\{[\s\S]*?@media \(max-width: 760px\)[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/,
+);
+assert.doesNotMatch(
+  PROJECT_OVERVIEW_CSS,
+  /playground-project-overview-work-graph-(?:columns|column|list|row)/,
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.playground-project-overview-general-grid > \.playground-project-overview-activity-card\.is-main\s*\{\s*margin-bottom: 42px;/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
@@ -1789,39 +1909,39 @@ assert.doesNotMatch(
 assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /renderProjectOverviewOutcomesSection/);
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /function renderProjectOverviewGeneralPanel\(\)[\s\S]*?return React\.createElement\("div", \{ className: "playground-project-overview-general-grid" \},\s*renderProjectOverviewActivitySection\(\),\s*renderProjectOverviewMilestonesSection\(\),\s*renderProjectOverviewSetupSection\(\)/,
+  /function renderProjectOverviewGeneralPanel\(\)[\s\S]*?return React\.createElement\("div", \{ className: "playground-project-overview-general-grid" \},\s*renderProjectOverviewActivitySection\(\),\s*renderProjectOverviewSetupSection\(\)/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /function renderProjectOverviewMilestonesSection\(\)[\s\S]*?normalizePlaygroundTaskReleaseRecord\(release\)[\s\S]*?openReleaseComposer\(\)[\s\S]*?openReleaseComposerForEdit\(release\)/,
+  /function getProjectOverviewMilestoneRecords\(\)[\s\S]*?normalizePlaygroundTaskReleaseRecord\(release\)[\s\S]*?compareTaskReleaseOrder/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /React\.createElement\(PlatformEmptyState, \{\s*className: "playground-project-overview-milestones-empty",\s*icon: Flag,\s*title: "No milestones yet",/,
+  /function renderProjectOverviewMilestonesPanel\(\)[\s\S]*?React\.createElement\(ProjectMilestonesOverviewPage, \{[\s\S]*?openReleaseComposer\(\)[\s\S]*?openReleaseComposerForEdit\(row\.source\)/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /const hasMilestones = \(Array\.isArray\(releases\) && releases\.length > 0\)[\s\S]*?&& !hasMilestones/,
+  /milestones: summaryMilestones,[\s\S]*?onMilestonesSelect: \(\) => setProjectOverviewHomeTab\("milestones"\)/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /progress\.completed \+ " of " \+ progress\.total \+ " tickets completed"[\s\S]*?successCriteriaCount \+ " success "/,
+  /function buildProjectOverviewMilestoneSeries\(release, bucketEndTimes, color, seriesIndex\)[\s\S]*?valueKind: "percent"[\s\S]*?function buildProjectOverviewMilestonesAnalytics\(milestoneRecords\)[\s\S]*?series: milestoneRecords\.map\(/,
 );
 assert.match(
   PROJECT_OVERVIEW_CSS,
-  /\.playground-project-overview-milestones\s*\{[\s\S]*?\.playground-project-overview-milestone-row\s*\{[\s\S]*?grid-template-columns: 24px minmax\(0, 1fr\) minmax\(100px, 132px\) auto;/,
+  /\.platform-project-milestones-overview-page\s*\{[\s\S]*?\.platform-project-milestone-progress__ring\s*\{[\s\S]*?conic-gradient/,
 );
-assert.doesNotMatch(
-  PROJECT_OVERVIEW_CSS,
-  /\.playground-project-overview-milestone-row\s*\{[^}]*border-bottom:/,
-);
-assert.doesNotMatch(
-  PROJECT_OVERVIEW_CSS,
-  /\.playground-project-overview-milestones-empty\.platform-empty-state\s*\{[^}]*border-bottom:/,
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /normalizedProjectOverviewHomeTab === "resources"[\s\S]*?normalizedProjectOverviewHomeTab === "milestones"[\s\S]*?activeProjectOverviewHomeTab === "milestones"[\s\S]*?renderProjectOverviewMilestonesPanel\(\)/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
   /function renderProjectOverviewThreadsSection\(options = \{\}\)[\s\S]*?const isEmbedded = options\?\.embedded === true[\s\S]*?className: isEmbedded[\s\S]*?playground-project-overview-threads-tabs-toolbar[\s\S]*?leading: options\?\.toolbarLeading \|\| null[\s\S]*?filters: isEmbedded \? \[\] : \[/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /function renderProjectOverviewThreadsEmptyState\(hasFilters = false\)[\s\S]*?React\.createElement\(PlatformEmptyState, \{[\s\S]*?icon: MessageCircle,[\s\S]*?title: hasFilters \? "No matching threads" : "No threads yet"[\s\S]*?Threads started from this project will appear here\./,
 );
 assert.match(
   PROJECT_OVERVIEW_CSS,
@@ -1846,7 +1966,11 @@ assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /"Strategy Notes"/);
 assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /historyKey: "full-strategy:" \+ selectedProject\.id/);
 assert.match(
   PROJECT_OVERVIEW_CSS,
-  /\.platform-project-summary__input\s*\{[\s\S]*?background: transparent;[\s\S]*?font-size: 14px;/,
+  /\.platform-project-summary__input\s*\{[\s\S]*?overflow: hidden;[\s\S]*?background: transparent;[\s\S]*?font-size: 14px;/,
+);
+assert.doesNotMatch(
+  PROJECT_OVERVIEW_CSS,
+  /\.platform-project-summary__input\s*\{[^}]*max-height:\s*72px;/,
 );
 assert.match(
   PROJECT_OVERVIEW_CSS,
@@ -1900,7 +2024,55 @@ assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(ListFilter/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /variant: "minimal"/);
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /function renderProjectAppHeaderMilestoneSelector\(\) \{\s*const isBoardMilestoneSelector = taskView === "board";\s*return React\.createElement\(PlatformButtonSelector, \{\s*mode: "popup",\s*buttonVariant: "secondary"[\s\S]*?label: "Milestones"[\s\S]*?popupVariant: "minimal"/,
+  /function renderProjectWorkViewTabs\(\)[\s\S]*?React\.createElement\(PlatformDetailTabBar, \{\s*value: taskView === "board"\s*\? "board"\s*: "backlog",\s*tabs: \[\s*\{ id: "backlog", label: "Backlog" \},\s*\{ id: "board", label: "Board" \},\s*\],[\s\S]*?variant: "minimal"/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /headerLeading: renderProjectWorkViewTabs\(\)/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /className: "playground-tasks-backlog-header is-board-list-header"[\s\S]*?renderProjectWorkViewTabs\(\)/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /view: taskView,\s*sectionId: taskView === "overview" \? projectOverviewHomeTab : ""/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function renderProjectAppHeaderMilestoneSelector\(\) \{\s*const isBoardMilestoneSelector = taskView === "board" \|\| taskView === "activity";\s*return React\.createElement\(PlatformButtonSelector, \{\s*mode: "popup",\s*buttonVariant: "secondary"[\s\S]*?label: "Milestones"[\s\S]*?popupVariant: "minimal"/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function buildProjectWorkActivityOverviewItems\(scopedTasks\)[\s\S]*?function renderProjectActivityOverviewView\(\)[\s\S]*?className: "playground-project-activity-page"[\s\S]*?React\.createElement\(PlatformActivityOverview, \{[\s\S]*?React\.createElement\(PlatformActivityTimeline, \{[\s\S]*?layout: "inspector"[\s\S]*?title: "Activity"[\s\S]*?inspectorTitle: "Inspector"/,
+);
+assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /const \[projectOverviewTaskActivityFilterMode, setProjectOverviewTaskActivityFilterMode\] = useState\("all"\);[\s\S]*?projectOverviewTaskActivityFilterPopupRef = useRef\(null\);[\s\S]*?projectOverviewTaskActivityFilterSurfaceRef = useRef\(null\);[\s\S]*?projectOverviewTaskActivityToolbarPopover !== "filter"[\s\S]*?setProjectOverviewTaskActivityToolbarPopover\(""\)/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const projectWorkActivityFilterOptions = \[[\s\S]*?id: "lifecycle"[\s\S]*?id: "agent_work"[\s\S]*?id: "assignments"[\s\S]*?id: "planning"[\s\S]*?id: "other_changes"[\s\S]*?function matchesProjectWorkActivityFilter\(event, filterMode\)[\s\S]*?function renderProjectWorkActivityFilter\(\)[\s\S]*?variant: "minimal"[\s\S]*?portal: true,[\s\S]*?placement: "bottom-end"[\s\S]*?React\.createElement\(ListFilter,[\s\S]*?headerActions: renderProjectWorkActivityFilter\(\)/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const filteredProjectActivityEvents = projectActivityEvents\.filter\([\s\S]*?projectOverviewTaskActivityFilterMode[\s\S]*?const projectActivityTimelineItems = buildProjectWorkActivityTimelineItems\(\s*filteredProjectActivityEvents\s*\)/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function renderProjectWorkActivityEventPreview\(event, task, ticketLabel\)[\s\S]*?function getProjectWorkActivityInspectorTarget\(event, task, ticketLabel\)[\s\S]*?function renderProjectWorkActivityInspectorAction\(target\)[\s\S]*?function buildProjectWorkActivityTimelineItems\(events\)[\s\S]*?preview: renderProjectWorkActivityEventPreview\([\s\S]*?inspectorAction: renderProjectWorkActivityInspectorAction\([\s\S]*?const projectActivityTimelineItems = buildProjectWorkActivityTimelineItems\(/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const isComputerAgentsActor = event\?\.actorType === "system";[\s\S]*?COMPUTER_AGENTS_CREATOR_PROFILE_URL/,
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const projectActivityTimelineItems = buildProjectOverviewTaskActivityTimelineItems\(/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /taskView === "activity"\s*\? renderProjectActivityOverviewView\(\)/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -2054,11 +2226,11 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
-  /if \(!selectedTaskId \|\| \(taskView !== "overview" && taskView !== "backlog" && taskView !== "board"\)\) \{\s*setProjectTaskDetailScreenOpen\(false\);/,
+  /if \(\s*!selectedTaskId[\s\S]*?taskView !== "overview"[\s\S]*?taskView !== "backlog"[\s\S]*?taskView !== "board"[\s\S]*?taskView !== "activity"[\s\S]*?\) \{\s*setProjectTaskDetailScreenOpen\(false\);/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /const isProjectTaskDetailScreenOpen = Boolean\(\s*projectTaskDetailScreenOpen\s*&& selectedProjectId\s*&& selectedTaskId\s*&& \(taskView === "overview" \|\| taskView === "backlog" \|\| taskView === "board"\)\s*\);/,
+  /const isProjectTaskDetailScreenOpen = Boolean\(\s*projectTaskDetailScreenOpen\s*&& selectedProjectId\s*&& selectedTaskId\s*&& \(taskView === "overview" \|\| taskView === "backlog" \|\| taskView === "board" \|\| taskView === "activity"\)\s*\);/,
 );
 assert.match(
   PROJECTS_CORE_CSS,
@@ -2096,8 +2268,44 @@ assert.match(
   PROJECTS_CORE_CSS,
   /\.playground-tasks-backlog-central-search\.platform-search,\s*\.playground-tasks-board-central-search\.platform-search\s*\{\s*width: 300px;\s*min-width: 300px;\s*flex: 0 0 300px;/,
 );
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-project-workspace-inner\s*\{[\s\S]*?transition: width 220ms ease, max-width 220ms ease;/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-project-workspace-inner\.is-backlog-work-view\s*\{\s*width: min\(100%, var\(--playground-thread-content-max-width\)\);\s*max-width: var\(--playground-thread-content-max-width\);/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-project-workspace-inner\.is-board-work-view\s*\{\s*width: min\(100%, var\(--playground-centered-page-max-width\)\);\s*max-width: var\(--playground-centered-page-max-width\);/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-activity\s*\{\s*padding: 0 !important;\s*gap: 0;/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-project-workspace-inner\.is-activity-work-view\s*\{\s*width: 100%;\s*max-width: none;\s*margin: 0;\s*gap: 0;/,
+);
 
 const platformEntrySource = await readPlatformCompositionSource();
+assert.match(
+  platformEntrySource,
+  /const activeProjectWorkspaceView = tasksHeaderState\.view === "board"[\s\S]*?: tasksHeaderState\.view === "activity"\s*\? "activity"[\s\S]*?const activeProjectView = activeProjectWorkspaceView === "board"\s*\? "backlog"/,
+);
+assert.match(
+  platformEntrySource,
+  /const activeProjectSectionId = String\(tasksHeaderState\.sectionId \|\| ""\)\.trim\(\)\.toLowerCase\(\);[\s\S]*?const isProjectMilestonesView = Boolean\([\s\S]*?activeProjectSectionId === "milestones"/,
+);
+assert.match(
+  platformEntrySource,
+  /options: \[\s*\{ value: "overview", label: "General" \},\s*\{ value: "backlog", label: "Backlog" \},\s*\{ value: "activity", label: "Activity" \},\s*\]/,
+);
+assert.doesNotMatch(
+  platformEntrySource,
+  /if \(nextView === "settings"\) \{\s*navigateToProjectSection\("permissions"\);\s*return;/,
+);
 const platformProjectRefreshStart = platformEntrySource.indexOf("const refreshProjects = useCallback");
 const platformProjectRefreshEnd = platformEntrySource.indexOf(
   "const handleShowMoreThreads = useCallback",
@@ -2212,7 +2420,11 @@ assert.match(
 );
 assert.match(
   platformEntrySource,
-  /\(activeProjectView === "backlog" \|\| activeProjectView === "board"\) && !isProjectTaskDetailView\s*\? tasksHeaderState\.extraActions \|\| null/,
+  /label: projectTitle,\s*leading: projectBreadcrumbLeading,\s*trailing: projectBreadcrumbTrailing,\s*onClick: isProjectMilestonesView[\s\S]*?navigateToProjectSection\("general"\)[\s\S]*?\[\{ label: "Milestones" \}\]/,
+);
+assert.match(
+  platformEntrySource,
+  /activeProjectWorkspaceView === "backlog"[\s\S]*?\|\| activeProjectWorkspaceView === "board"[\s\S]*?\|\| activeProjectWorkspaceView === "activity"[\s\S]*?\) && !isProjectTaskDetailView\s*\? tasksHeaderState\.extraActions \|\| null/,
 );
 assert.match(
   platformEntrySource,
@@ -2285,6 +2497,11 @@ assert.equal(result.call.adapter, "json");
 assert.equal(result.call.args[2], "/projects/project%201/delivery-plan");
 assert.equal(result.call.args[3], "PUT");
 
+result = dispatch("POST", "/api/real/projects/project%201/delivery-plan/preview");
+assert.equal(result.call.adapter, "json");
+assert.equal(result.call.args[2], "/projects/project%201/delivery-plan/preview");
+assert.equal(result.call.args[3], "POST");
+
 result = dispatch("POST", "/api/real/projects/project%201/delivery-plan/provision");
 assert.equal(result.call.adapter, "json");
 assert.equal(result.call.args[2], "/projects/project%201/delivery-plan/provision");
@@ -2294,7 +2511,7 @@ result = dispatch("GET", "/api/real/projects/project%201/delivery-plan/execution
 assert.equal(result.call.adapter, "get");
 assert.equal(result.call.args[2], "/projects/project%201/delivery-plan/execution");
 
-for (const action of ["start", "reconcile", "cancel"]) {
+for (const action of ["start", "reconcile", "retry", "cancel"]) {
   result = dispatch(
     "POST",
     `/api/real/projects/project%201/delivery-plan/execution/${action}`,
@@ -2303,6 +2520,48 @@ for (const action of ["start", "reconcile", "cancel"]) {
   assert.equal(
     result.call.args[2],
     `/projects/project%201/delivery-plan/execution/${action}`,
+  );
+  assert.equal(result.call.args[3], "POST");
+}
+
+result = dispatch("POST", "/api/real/projects/project%201/automation-runs");
+assert.equal(result.call.adapter, "json");
+assert.equal(result.call.args[2], "/projects/project%201/automation-runs");
+assert.equal(result.call.args[3], "POST");
+
+result = dispatch("GET", "/api/real/projects/project%201/automation-runs/latest");
+assert.equal(result.call.adapter, "get");
+assert.equal(result.call.args[2], "/projects/project%201/automation-runs/latest");
+
+result = dispatch("GET", "/api/real/projects/project%201/automation-runs/run%202");
+assert.equal(result.call.adapter, "get");
+assert.equal(
+  result.call.args[2],
+  "/projects/project%201/automation-runs/run%202",
+);
+
+for (const action of ["next", "pause", "resume", "cancel"]) {
+  result = dispatch(
+    "POST",
+    `/api/real/projects/project%201/automation-runs/run%202/${action}`,
+  );
+  assert.equal(result.call.adapter, "json");
+  assert.equal(
+    result.call.args[2],
+    `/projects/project%201/automation-runs/run%202/${action}`,
+  );
+  assert.equal(result.call.args[3], "POST");
+}
+
+for (const action of ["complete", "fail"]) {
+  result = dispatch(
+    "POST",
+    `/api/real/projects/project%201/automation-runs/run%202/steps/step%203/${action}`,
+  );
+  assert.equal(result.call.adapter, "json");
+  assert.equal(
+    result.call.args[2],
+    `/projects/project%201/automation-runs/run%202/steps/step%203/${action}`,
   );
   assert.equal(result.call.args[3], "POST");
 }

@@ -28,6 +28,869 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
           });
         }
 
+        function parseProjectWorkActivityTimestamp(...values) {
+          for (const value of values) {
+            if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+              return value;
+            }
+            if (typeof value !== "string" || !value.trim()) {
+              continue;
+            }
+            const timestamp = Date.parse(value.trim());
+            if (Number.isFinite(timestamp)) {
+              return timestamp;
+            }
+          }
+          return null;
+        }
+
+        function getProjectWorkActivityStatus(value) {
+          const normalizedStatus = String(value || "").trim().toLowerCase();
+          if (["done", "completed", "complete", "success", "succeeded"].includes(normalizedStatus)) {
+            return "success";
+          }
+          if (["blocked", "canceled", "cancelled", "failed", "error", "stale"].includes(normalizedStatus)) {
+            return "error";
+          }
+          if (["in_progress", "in_review", "running", "starting", "awaiting_input", "waiting_permission"].includes(normalizedStatus)) {
+            return "running";
+          }
+          return "default";
+        }
+
+        function getProjectWorkActivityColor(value) {
+          const status = getProjectWorkActivityStatus(value);
+          if (status === "success") return "#85df7b";
+          if (status === "error") return "#ff5757";
+          if (status === "running") return "#4da3ff";
+          return "#c980ff";
+        }
+
+        function getProjectWorkActivityFieldLabel(value) {
+          const normalizedField = String(value || "").trim().toLowerCase();
+          const labels = {
+            assignee_agent_id: "Assignee",
+            due_at: "Due date",
+            priority: "Priority",
+            release_id: "Milestone",
+            reviewer_agent_id: "Reviewer",
+            status: "Status",
+            task_type: "Type",
+          };
+          if (labels[normalizedField]) {
+            return labels[normalizedField];
+          }
+          return normalizedField
+            .replaceAll("_", " ")
+            .split(" ")
+            .map((part) => part
+              ? part.charAt(0).toUpperCase() + part.slice(1)
+              : "")
+            .join(" ");
+        }
+
+        function buildProjectWorkActivityOverviewItems(scopedTasks) {
+          const currentTimestamp = Date.now();
+          const activityTasks = (Array.isArray(scopedTasks) ? scopedTasks : [])
+            .filter((task) => task?.id && matchesTaskSearch(task));
+          const activityTaskIds = new Set(activityTasks.map((task) => String(task.id)));
+          const activityTasksById = new Map(activityTasks.map((task) => [String(task.id), task]));
+          const timelineItems = [];
+          const representedThreadIds = new Set();
+
+          activityTasks.forEach((task) => {
+            const taskId = String(task.id);
+            const ticketNumber = String(
+              taskTicketNumbersById[taskId] || task.ticketNumber || "000"
+            ).trim();
+            const taskStatus = String(task.status || "").trim().toLowerCase();
+            const startTime = parseProjectWorkActivityTimestamp(
+              task.createdAt,
+              task.created_at,
+              task.metadata?.createdAt
+            );
+            const terminalTask = isPlaygroundTaskTerminalStatus(taskStatus);
+            const endTime = parseProjectWorkActivityTimestamp(
+              task.completedAt,
+              task.completed_at,
+              terminalTask ? task.updatedAt : null,
+              task.updatedAt,
+              task.updated_at,
+              startTime
+            );
+            const taskIsActive = ["in_progress", "in_review"].includes(taskStatus);
+            timelineItems.push({
+              id: "task:" + taskId,
+              label: ticketNumber + " " + String(task.title || "Untitled Task").trim(),
+              startAt: startTime,
+              endAt: taskIsActive ? currentTimestamp : endTime,
+              kind: task.taskType === "subtask" || task.taskType === "loop"
+                ? "subflow"
+                : "activity",
+              status: getProjectWorkActivityStatus(taskStatus),
+              icon: task.taskType === "subtask" || task.taskType === "loop"
+                ? GitBranch
+                : Bookmark,
+              color: task.taskType === "subtask" || task.taskType === "loop"
+                ? "#ffd65c"
+                : getProjectWorkActivityColor(taskStatus),
+              ariaLabel: "Open " + ticketNumber + " " + String(task.title || "Untitled Task").trim(),
+              onActivate: () => openProjectTaskDetailScreen(taskId),
+            });
+
+            (Array.isArray(task.activity) ? task.activity : []).forEach((event) => {
+              const eventType = String(event?.eventType || "").trim().toLowerCase();
+              const fieldName = String(event?.fieldName || "").trim().toLowerCase();
+              if (
+                !event?.id
+                || eventType === "created"
+                || eventType === "comment_added"
+                || (eventType === "field_changed" && fieldName === "description")
+              ) {
+                return;
+              }
+              const eventTime = parseProjectWorkActivityTimestamp(event.createdAt);
+              if (!eventTime) {
+                return;
+              }
+              const nextStatus = eventType === "status_changed"
+                ? String(event.nextValue || "").trim()
+                : "";
+              const eventLabel = eventType === "status_changed"
+                ? ticketNumber + " · " + getPlaygroundTaskStatusLabel(nextStatus)
+                : eventType === "thread_started"
+                  ? ticketNumber + " · Thread started"
+                  : ticketNumber + " · " + getProjectWorkActivityFieldLabel(fieldName) + " changed";
+              timelineItems.push({
+                id: "event:" + taskId + ":" + event.id,
+                label: eventLabel,
+                startAt: eventTime,
+                kind: "signal",
+                status: nextStatus
+                  ? getProjectWorkActivityStatus(nextStatus)
+                  : eventType === "thread_started"
+                    ? "running"
+                    : "default",
+                color: nextStatus
+                  ? getProjectWorkActivityColor(nextStatus)
+                  : eventType === "thread_started"
+                    ? "#4da3ff"
+                    : "#c980ff",
+                ariaLabel: "Open " + ticketNumber,
+                onActivate: () => openProjectTaskDetailScreen(taskId),
+              });
+            });
+          });
+
+          (Array.isArray(selectedProjectRecentThreads) ? selectedProjectRecentThreads : []).forEach((threadRecord) => {
+            const thread = normalizeThreadItem(threadRecord);
+            const taskPreview = getThreadTaskPreview(thread);
+            const taskId = String(taskPreview?.taskId || "").trim();
+            if (!thread?.id || !taskId || !activityTaskIds.has(taskId)) {
+              return;
+            }
+            const startTime = parseProjectWorkActivityTimestamp(
+              thread.startedAt,
+              thread.createdAt,
+              thread.updatedAt
+            );
+            if (!startTime) {
+              return;
+            }
+            const threadStatus = String(thread.status || "").trim().toLowerCase();
+            const threadIsActive = ["running", "starting", "waiting_permission", "awaiting_input"].includes(threadStatus);
+            const endTime = parseProjectWorkActivityTimestamp(
+              thread.completedAt,
+              thread.finishedAt,
+              thread.endedAt,
+              thread.updatedAt,
+              startTime
+            );
+            const task = activityTasksById.get(taskId);
+            const ticketNumber = String(
+              taskTicketNumbersById[taskId] || task?.ticketNumber || "000"
+            ).trim();
+            representedThreadIds.add(String(thread.id));
+            timelineItems.push({
+              id: "thread:" + String(thread.id),
+              label: ticketNumber + " · " + String(thread.title || "Agent work").trim(),
+              startAt: startTime,
+              endAt: threadIsActive ? currentTimestamp : endTime,
+              kind: "activity",
+              status: getProjectWorkActivityStatus(threadStatus),
+              icon: Bot,
+              color: "#4da3ff",
+              ariaLabel: "Open thread " + String(thread.title || ""),
+              onActivate: () => {
+                if (typeof handleThreadSelect === "function") {
+                  handleThreadSelect(String(thread.id));
+                } else {
+                  openProjectTaskDetailScreen(taskId);
+                }
+              },
+            });
+          });
+
+          (Array.isArray(selectedProjectDetail?.agentSessions)
+            ? selectedProjectDetail.agentSessions
+            : []).forEach((session, index) => {
+              const taskId = String(session?.taskId || session?.task_id || "").trim();
+              const threadId = String(session?.threadId || session?.thread_id || "").trim();
+              if (
+                !taskId
+                || !activityTaskIds.has(taskId)
+                || (threadId && representedThreadIds.has(threadId))
+              ) {
+                return;
+              }
+              const startTime = parseProjectWorkActivityTimestamp(
+                session?.startedAt,
+                session?.started_at,
+                session?.createdAt,
+                session?.created_at
+              );
+              if (!startTime) {
+                return;
+              }
+              const sessionState = String(session?.state || "").trim().toLowerCase();
+              const sessionIsActive = ["running", "starting", "awaiting_input"].includes(sessionState);
+              const endTime = parseProjectWorkActivityTimestamp(
+                session?.completedAt,
+                session?.completed_at,
+                session?.finishedAt,
+                session?.finished_at,
+                session?.updatedAt,
+                session?.updated_at,
+                startTime
+              );
+              const task = activityTasksById.get(taskId);
+              const ticketNumber = String(
+                taskTicketNumbersById[taskId] || task?.ticketNumber || "000"
+              ).trim();
+              const attemptNumber = Math.max(
+                1,
+                Number(session?.attemptNumber ?? session?.attempt_number ?? index + 1) || 1
+              );
+              timelineItems.push({
+                id: "session:" + String(session?.id || threadId || taskId + ":" + index),
+                label: ticketNumber + " · Agent attempt " + attemptNumber,
+                startAt: startTime,
+                endAt: sessionIsActive ? currentTimestamp : endTime,
+                kind: "subflow",
+                status: getProjectWorkActivityStatus(sessionState),
+                icon: GitBranch,
+                color: "#ffd65c",
+                ariaLabel: "Open agent attempt " + attemptNumber + " for " + ticketNumber,
+                onActivate: () => {
+                  if (threadId && typeof handleThreadSelect === "function") {
+                    handleThreadSelect(threadId);
+                  } else {
+                    openProjectTaskDetailScreen(taskId);
+                  }
+                },
+              });
+            });
+
+          return timelineItems;
+        }
+
+        function getProjectWorkActivityActorName(event) {
+          const actorName = String(event?.actorName || "").trim();
+          if (actorName) {
+            return actorName;
+          }
+          const actorAgentId = String(event?.actorAgentId || "").trim();
+          if (actorAgentId) {
+            return getTaskAssigneeName(actorAgentId, actorAgentId);
+          }
+          return event?.actorType === "system" ? "Computer Agents" : "User";
+        }
+
+        function renderProjectWorkActivityActorAvatar(
+          event,
+          className = "playground-tasks-activity-avatar"
+        ) {
+          const isComputerAgentsActor = event?.actorType === "system";
+          const actorName = getProjectWorkActivityActorName(event);
+          const actorAvatarUrl = event?.actorAvatarUrl
+            || (isComputerAgentsActor ? COMPUTER_AGENTS_CREATOR_PROFILE_URL : "");
+          if (typeof renderTaskCommentAvatar === "function") {
+            return renderTaskCommentAvatar({
+              id: event?.id || "",
+              authorType: event?.actorType || "user",
+              authorAgentId: event?.actorAgentId || undefined,
+              authorUserId: event?.actorUserId || undefined,
+              authorName: actorName,
+              authorAvatarUrl: actorAvatarUrl || undefined,
+            }, className);
+          }
+          return renderAgentNameAvatar(
+            actorName,
+            className,
+            actorAvatarUrl
+          );
+        }
+
+        function formatProjectWorkActivityFieldValue(fieldName, value) {
+          const normalizedValue = value === null || value === undefined
+            ? ""
+            : String(value).trim();
+          if (!normalizedValue) {
+            return "";
+          }
+          if (fieldName === "status") {
+            return getPlaygroundTaskStatusLabel(normalizedValue);
+          }
+          if (fieldName === "priority") {
+            return PLAYGROUND_TASK_PRIORITY_OPTIONS.find(
+              (option) => option.id === normalizedValue
+            )?.label || normalizedValue;
+          }
+          if (fieldName === "assigneeAgentId" || fieldName === "reviewerAgentId") {
+            return getTaskAssigneeName(normalizedValue, normalizedValue);
+          }
+          if (fieldName === "releaseId" || fieldName === "milestoneId") {
+            return releasesById[normalizedValue]?.name || normalizedValue;
+          }
+          if (fieldName === "sprintId") {
+            return sprintsById[normalizedValue]?.name || normalizedValue;
+          }
+          if (["dueAt", "scheduledStartAt", "scheduledEndAt"].includes(fieldName)) {
+            return formatPlaygroundFileDate(normalizedValue) || normalizedValue;
+          }
+          return normalizedValue;
+        }
+
+        function renderProjectWorkActivityEventSummary(event) {
+          const actor = React.createElement(
+            "strong",
+            null,
+            getProjectWorkActivityActorName(event)
+          );
+          if (event?.eventType === "created") {
+            return React.createElement(React.Fragment, null, actor, " created the issue");
+          }
+          if (event?.eventType === "status_changed") {
+            const previousStatus = formatProjectWorkActivityFieldValue(
+              "status",
+              event.previousValue
+            );
+            const nextStatus = formatProjectWorkActivityFieldValue(
+              "status",
+              event.nextValue
+            );
+            return React.createElement(
+              React.Fragment,
+              null,
+              actor,
+              " moved from ",
+              React.createElement("strong", null, previousStatus || "Unknown"),
+              " to ",
+              React.createElement("strong", null, nextStatus || "Unknown")
+            );
+          }
+          if (event?.eventType === "thread_started") {
+            const threadTitle = String(
+              event.thread?.title
+                || event.metadata?.threadTitle
+                || event.task?.title
+                || "Untitled thread"
+            ).trim();
+            return React.createElement(
+              React.Fragment,
+              null,
+              actor,
+              " started ",
+              React.createElement("strong", null, threadTitle)
+            );
+          }
+          if (event?.eventType === "field_changed") {
+            const fieldName = String(event.fieldName || "").trim();
+            const nextValue = formatProjectWorkActivityFieldValue(
+              fieldName,
+              event.nextValue
+            );
+            const previousValue = formatProjectWorkActivityFieldValue(
+              fieldName,
+              event.previousValue
+            );
+            if (fieldName === "title") {
+              return React.createElement(
+                React.Fragment,
+                null,
+                actor,
+                " renamed the issue to ",
+                React.createElement("strong", null, nextValue)
+              );
+            }
+            if (fieldName === "dueAt") {
+              return React.createElement(
+                React.Fragment,
+                null,
+                actor,
+                nextValue ? " set the due date to " : " cleared the due date",
+                nextValue ? React.createElement("strong", null, nextValue) : null
+              );
+            }
+            if (fieldName === "assigneeAgentId") {
+              return React.createElement(
+                React.Fragment,
+                null,
+                actor,
+                nextValue ? " assigned the issue to " : " removed the assignee",
+                nextValue ? React.createElement("strong", null, nextValue) : null
+              );
+            }
+            if (fieldName === "reviewerAgentId") {
+              return React.createElement(
+                React.Fragment,
+                null,
+                actor,
+                nextValue ? " assigned review to " : " removed the reviewer",
+                nextValue ? React.createElement("strong", null, nextValue) : null
+              );
+            }
+            if (fieldName === "releaseId" || fieldName === "milestoneId") {
+              return React.createElement(
+                React.Fragment,
+                null,
+                actor,
+                nextValue ? " changed milestone to " : " cleared milestone",
+                nextValue ? React.createElement("strong", null, nextValue) : null
+              );
+            }
+            if (fieldName === "dependencyIds") {
+              return React.createElement(
+                React.Fragment,
+                null,
+                actor,
+                " updated the issue blockers"
+              );
+            }
+            const fieldLabel = fieldName
+              .replace(/Id$/, "")
+              .replace(/([a-z])([A-Z])/g, "$1 $2")
+              .toLowerCase();
+            return React.createElement(
+              React.Fragment,
+              null,
+              actor,
+              " changed ",
+              fieldLabel || "the issue",
+              previousValue ? " from " : " to ",
+              previousValue ? React.createElement("strong", null, previousValue) : null,
+              previousValue ? " to " : null,
+              React.createElement("strong", null, nextValue || "None")
+            );
+          }
+          return actor;
+        }
+
+        function getProjectWorkActivityEventLabel(event) {
+          if (event?.eventType === "created") {
+            return "Issue created";
+          }
+          if (event?.eventType === "status_changed") {
+            return "Status changed";
+          }
+          if (event?.eventType === "thread_started") {
+            return "Thread started";
+          }
+          if (event?.eventType === "field_changed") {
+            const fieldName = String(event.fieldName || "").trim();
+            const fieldLabel = fieldName
+              .replace(/Id$/, "")
+              .replace(/([a-z])([A-Z])/g, "$1 $2")
+              .toLowerCase();
+            return fieldLabel
+              ? fieldLabel.charAt(0).toUpperCase() + fieldLabel.slice(1) + " changed"
+              : "Issue changed";
+          }
+          return "Activity";
+        }
+
+        function renderProjectWorkActivityPreviewRow(label, value, className = "") {
+          if (value === null || value === undefined || value === "") {
+            return null;
+          }
+          return React.createElement("div", {
+              className: "playground-project-activity-preview-row"
+                + (className ? " " + className : ""),
+            },
+            React.createElement("dt", null, label),
+            React.createElement("dd", null, value)
+          );
+        }
+
+        function renderProjectWorkActivityEventPreview(event, task, ticketLabel) {
+          const taskId = String(event?.taskId || task?.id || "").trim();
+          const fieldName = event?.eventType === "status_changed"
+            ? "status"
+            : String(event?.fieldName || "").trim();
+          const previousValue = formatProjectWorkActivityFieldValue(
+            fieldName,
+            event?.previousValue
+          );
+          const nextValue = formatProjectWorkActivityFieldValue(
+            fieldName,
+            event?.nextValue
+          );
+          const threadTitle = event?.eventType === "thread_started"
+            ? String(
+                event.thread?.title
+                  || event.metadata?.threadTitle
+                  || task?.title
+                  || "Untitled thread"
+              ).trim()
+            : "";
+          const exactTimestamp = event?.createdAt
+            ? new Date(event.createdAt).toLocaleString()
+            : "";
+          const ticketControl = ticketLabel
+            ? React.createElement("button", {
+                type: "button",
+                className: "playground-project-activity-preview-ticket",
+                onClick: taskId && typeof openProjectTaskDetailScreen === "function"
+                  ? () => openProjectTaskDetailScreen(taskId)
+                  : undefined,
+              }, ticketLabel)
+            : null;
+          return React.createElement("div", {
+              className: "playground-project-activity-preview",
+            },
+            React.createElement("div", {
+                className: "playground-project-activity-preview-heading",
+              },
+              React.createElement("span", {
+                  className: "playground-project-activity-preview-avatar",
+                },
+                renderProjectWorkActivityActorAvatar(event)
+              ),
+              React.createElement("div", {
+                  className: "playground-project-activity-preview-heading-copy",
+                },
+                React.createElement("div", {
+                    className: "playground-project-activity-preview-summary",
+                  },
+                  renderProjectWorkActivityEventSummary(event)
+                ),
+                exactTimestamp
+                  ? React.createElement("time", {
+                      className: "playground-project-activity-preview-time",
+                      dateTime: event.createdAt,
+                    }, exactTimestamp)
+                  : null
+              )
+            ),
+            React.createElement("dl", {
+                className: "playground-project-activity-preview-details",
+              },
+              renderProjectWorkActivityPreviewRow("Ticket", ticketControl),
+              renderProjectWorkActivityPreviewRow(
+                "Activity",
+                getProjectWorkActivityEventLabel(event)
+              ),
+              renderProjectWorkActivityPreviewRow(
+                "Actor",
+                getProjectWorkActivityActorName(event)
+              ),
+              renderProjectWorkActivityPreviewRow("Previous", previousValue),
+              renderProjectWorkActivityPreviewRow("Current", nextValue),
+              renderProjectWorkActivityPreviewRow("Thread", threadTitle),
+              renderProjectWorkActivityPreviewRow(
+                "Event ID",
+                String(event?.id || "").trim(),
+                "is-code"
+              )
+            )
+          );
+        }
+
+        function getProjectWorkActivityInspectorTarget(event, task, ticketLabel) {
+          const threadId = String(
+            event?.threadId
+              || event?.thread?.id
+              || event?.metadata?.threadId
+              || ""
+          ).trim();
+          if (
+            event?.eventType === "thread_started"
+            && threadId
+            && typeof handleThreadSelect === "function"
+          ) {
+            return {
+              label: "Open Thread",
+              ariaLabel: "Open thread " + String(
+                event?.thread?.title
+                  || event?.metadata?.threadTitle
+                  || task?.title
+                  || threadId
+              ).trim(),
+              onActivate: () => handleThreadSelect(threadId),
+            };
+          }
+
+          const metadata = event?.metadata && typeof event.metadata === "object"
+            ? event.metadata
+            : {};
+          const metadataResource = metadata.resource && typeof metadata.resource === "object"
+            ? metadata.resource
+            : {};
+          const eventResource = event?.resource && typeof event.resource === "object"
+            ? event.resource
+            : {};
+          const resource = {
+            ...metadataResource,
+            ...eventResource,
+          };
+          const resourceId = String(
+            event?.resourceId
+              || metadata.resourceId
+              || resource.id
+              || ""
+          ).trim();
+          const resourcePath = String(
+            event?.resourcePath
+              || metadata.resourcePath
+              || resource.path
+              || resource.sourcePath
+              || resource.workspacePath
+              || ""
+          ).trim();
+          const resourceType = String(
+            event?.resourceType
+              || metadata.resourceType
+              || resource.type
+              || resource.kind
+              || ""
+          ).trim();
+          if (
+            (resourceId || resourcePath)
+            && typeof openProjectOverviewResourceRow === "function"
+          ) {
+            const resourceTitle = String(
+              resource.title
+                || resource.name
+                || resource.label
+                || metadata.resourceTitle
+                || resourcePath
+                || resourceId
+            ).trim();
+            return {
+              label: "Open Resource",
+              ariaLabel: "Open resource " + resourceTitle,
+              onActivate: () => openProjectOverviewResourceRow({
+                id: resourceId,
+                type: resourceType,
+                kind: resource.kind || resourceType,
+                title: resourceTitle,
+                path: resourcePath,
+                record: {
+                  ...resource,
+                  id: resourceId || resource.id,
+                  type: resourceType || resource.type,
+                  path: resourcePath || resource.path,
+                },
+              }),
+            };
+          }
+
+          const taskId = String(event?.taskId || task?.id || "").trim();
+          if (taskId && typeof openProjectTaskDetailScreen === "function") {
+            return {
+              label: "Open Ticket",
+              ariaLabel: ticketLabel
+                ? "Open ticket " + ticketLabel
+                : "Open ticket",
+              onActivate: () => openProjectTaskDetailScreen(taskId),
+            };
+          }
+          return null;
+        }
+
+        function renderProjectWorkActivityInspectorAction(target) {
+          if (!target?.onActivate) {
+            return null;
+          }
+          return React.createElement(PlatformSecondaryButton, {
+              type: "button",
+              size: "small",
+              className: "playground-project-activity-inspector-open",
+              "aria-label": target.ariaLabel || target.label,
+              onClick: target.onActivate,
+            },
+            React.createElement(ExternalLink, {
+              width: 13,
+              height: 13,
+              strokeWidth: 1.8,
+              "aria-hidden": true,
+            }),
+            target.label
+          );
+        }
+
+\${PROJECT_ACTIVITY_LIST_SCRIPT}
+
+        function buildProjectWorkActivityTimelineItems(events) {
+          return (Array.isArray(events) ? events : [])
+            .filter((event) => {
+              const fieldName = String(event?.fieldName || "").trim().toLowerCase();
+              return event?.eventType !== "comment_added"
+                && !(event?.eventType === "field_changed" && fieldName === "description");
+            })
+            .map((event, index) => {
+              const isThread = event?.eventType === "thread_started";
+              const isStatus = event?.eventType === "status_changed";
+              const isFieldChange = event?.eventType === "field_changed";
+              const fieldName = String(event?.fieldName || "").trim();
+              const isPriorityChange = isFieldChange && fieldName === "priority";
+              const isMilestoneChange = isFieldChange
+                && ["releaseId", "milestoneId"].includes(fieldName);
+              const isScheduleChange = isFieldChange && [
+                "dueAt",
+                "scheduledStartAt",
+                "scheduledEndAt",
+                "scheduleType",
+                "cronExpression",
+                "scheduleTimezone",
+                "scheduleEnabled",
+              ].includes(fieldName);
+              const taskId = String(event?.taskId || event?.task?.id || "").trim();
+              const task = event?.task || (taskId ? tasksById[taskId] || null : null);
+              const ticketNumber = taskId
+                ? String(
+                    taskTicketNumbersById[taskId] || task?.ticketNumber || ""
+                  ).trim()
+                : "";
+              const ticketLabel = [ticketNumber, task?.title || ""]
+                .filter(Boolean)
+                .join(" ");
+              const inspectorTarget = getProjectWorkActivityInspectorTarget(
+                event,
+                task,
+                ticketLabel
+              );
+              return {
+                id: String(event?.id || taskId + ":" + index),
+                tone: isThread ? "thread" : isStatus ? "status" : "created",
+                summary: renderProjectWorkActivityListSummary(
+                  event,
+                  ticketNumber
+                ),
+                avatar: isStatus
+                  ? renderPlaygroundTaskStatusGlyph(
+                      event?.nextValue,
+                      "platform-activity-timeline__status-icon"
+                    )
+                  : isPriorityChange
+                    ? renderPlaygroundTaskPriorityIcon(
+                        event?.nextValue,
+                        "platform-activity-timeline__priority-icon"
+                      )
+                    : isFieldChange
+                      ? null
+                      : renderProjectWorkActivityActorAvatar(event),
+                icon: isMilestoneChange
+                  ? Flag
+                  : isScheduleChange
+                    ? CalendarIcon
+                    : isFieldChange
+                      ? PencilRuler
+                      : undefined,
+                onActivate: inspectorTarget?.onActivate,
+                ariaLabel: inspectorTarget?.ariaLabel,
+                preview: renderProjectWorkActivityEventPreview(
+                  event,
+                  task,
+                  ticketLabel
+                ),
+                inspectorAction: renderProjectWorkActivityInspectorAction(
+                  inspectorTarget
+                ),
+              };
+            });
+        }
+
+\${PROJECT_ACTIVITY_FILTER_SCRIPT}
+
+        function renderProjectActivityOverviewView() {
+          const activityTasks = selectedRelease ? projectReleaseTasks : tasks;
+          const activityItems = buildProjectWorkActivityOverviewItems(activityTasks);
+          const visibleTaskIds = new Set(
+            (Array.isArray(activityTasks) ? activityTasks : [])
+              .filter((task) => task?.id && matchesTaskSearch(task))
+              .map((task) => String(task.id))
+          );
+          const projectActivityEvents = (projectOverviewTaskActivityState?.items || [])
+            .filter((event) => visibleTaskIds.has(String(event?.taskId || event?.task?.id || "").trim()))
+            .sort((left, right) => {
+              const leftTime = Date.parse(String(left?.createdAt || "")) || 0;
+              const rightTime = Date.parse(String(right?.createdAt || "")) || 0;
+              return leftTime - rightTime || String(left?.id || "").localeCompare(String(right?.id || ""));
+            });
+          const filteredProjectActivityEvents = projectActivityEvents.filter((event) =>
+            matchesProjectWorkActivityFilter(
+              event,
+              projectOverviewTaskActivityFilterMode
+            )
+          );
+          const projectActivityTimelineItems = buildProjectWorkActivityTimelineItems(
+            filteredProjectActivityEvents
+          );
+          const hasActivityFilter = projectOverviewTaskActivityFilterMode !== "all";
+          return React.createElement("div", {
+              className: "playground-project-activity-page",
+            },
+            React.createElement(PlatformActivityOverview, {
+              className: "playground-project-activity-overview",
+              items: activityItems,
+              emptyTitle: normalizedSearchQuery
+                ? "No matching activity"
+                : selectedRelease
+                  ? "No milestone activity yet"
+                  : "No project activity yet",
+              emptyDescription: normalizedSearchQuery
+                ? "Clear the search to show all ticket work."
+                : "Ticket work and agent runs will appear here over time.",
+              minTimelineWidth: 1480,
+              ariaLabel: "Project ticket activity over time",
+            }),
+            React.createElement("section", {
+                className: "playground-project-activity-feed",
+              },
+              projectOverviewTaskActivityState?.status === "loading"
+                && projectActivityTimelineItems.length === 0
+                ? React.createElement(PlatformLoadingState, {
+                    className: "playground-project-activity-feed-loading",
+                    message: "Loading activity...",
+                    centered: true,
+                  })
+                : React.createElement(PlatformActivityTimeline, {
+                    className: "playground-project-activity-timeline",
+                    layout: "inspector",
+                    title: "Activity",
+                    headerActions: renderProjectWorkActivityFilter(),
+                    inspectorTitle: "Inspector",
+                    items: projectActivityTimelineItems,
+                    emptyTitle: projectOverviewTaskActivityState?.status === "error"
+                      ? "Activity unavailable"
+                      : normalizedSearchQuery
+                        ? "No matching activity"
+                        : hasActivityFilter
+                          ? "No matching actions"
+                        : "No activity yet",
+                    emptyDescription: projectOverviewTaskActivityState?.status === "error"
+                      ? projectOverviewTaskActivityState.error
+                      : normalizedSearchQuery
+                        ? "Clear the search to show all project activity."
+                        : hasActivityFilter
+                          ? "Choose another action filter to show more activity."
+                        : "Ticket actions and agent work will appear here.",
+                  })
+            )
+          );
+        }
+
         function renderBoardView() {
           const boardTasks = boardVisibleTasks;
           const draggingBoardTask = boardDraggingTaskId ? tasksById[boardDraggingTaskId] || null : null;
@@ -50,7 +913,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
               },
               React.createElement("div", { className: "playground-tasks-backlog-header-row" },
                 React.createElement("div", { className: "playground-tasks-backlog-header-main" },
-                  React.createElement("div", { className: "playground-tasks-backlog-heading" }, "Board"),
+                  renderProjectWorkViewTabs(),
                   React.createElement(PlatformPopup, {
                       open: boardToolbarPopover === "filter",
                       rootClassName: "playground-tasks-board-filter-shell is-central-popup",
@@ -561,7 +1424,8 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
 	          const projectWorkspaceScrollClassName = "playground-environments-detail-scroll playground-tasks-project-workspace-scroll"
 	            + (taskView === "overview" ? " is-overview" : "")
 	            + (taskView === "backlog" ? " is-backlog" : "")
-            + (taskView === "board" ? " is-board" : "");
+            + (taskView === "board" ? " is-board" : "")
+            + (taskView === "activity" ? " is-activity" : "");
           const projectWorkspaceScrollStyle = undefined;
 
           return React.createElement("div", {
@@ -711,7 +1575,12 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                 className: projectWorkspaceScrollClassName,
                 style: projectWorkspaceScrollStyle,
               },
-                React.createElement("div", { className: "playground-project-workspace-inner" },
+                React.createElement("div", {
+                  className: "playground-project-workspace-inner"
+                    + (taskView === "backlog" ? " is-backlog-work-view" : "")
+                    + (taskView === "board" ? " is-board-work-view" : "")
+                    + (taskView === "activity" ? " is-activity-work-view" : ""),
+                },
                   taskLoadState.status === "error" && tasks.length > 0
                     ? React.createElement("div", { className: "playground-environments-error" },
                         React.createElement("span", null, taskLoadState.error || "Failed to refresh project tasks."),
@@ -743,7 +1612,9 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                             ? renderProjectOverviewView()
                             : taskView === "board"
                               ? renderBoardView()
-                              : renderBacklogView()
+                              : taskView === "activity"
+                                ? renderProjectActivityOverviewView()
+                                : renderBacklogView()
                         )
                 )
               )
@@ -850,6 +1721,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
               evaluate: "Evaluate",
               optimize: "Optimize",
               re_evaluate: "Re-evaluate",
+              acceptance_evaluate: "Workflow acceptance",
               assure: "Assure",
               deliver: "Deliver",
             };
@@ -858,12 +1730,120 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
               return {
                 id: stageId,
                 label: deliveryStageLabels[stageId],
-                status: String(stage?.status || "pending").toLowerCase(),
+                status: String(
+                  stage?.status
+                  || (stageId === "acceptance_evaluate" ? "skipped" : "pending"),
+                ).toLowerCase(),
+                retryCount: Math.max(0, Number(stage?.retryCount) || 0),
+                evidence: stage?.evidence
+                  && typeof stage.evidence === "object"
+                  && !Array.isArray(stage.evidence)
+                  ? stage.evidence
+                  : {},
+                error: String(stage?.error || "").trim(),
               };
             });
             const deliveryExecutionStatus = String(deliveryExecution?.status || "").toLowerCase();
             const deliveryCostUsd = Number(deliveryExecution?.costUsd);
             const deliveryBudgetUsd = Number(deliveryExecution?.budgetUsd);
+            const deliveryCurrentStageId = String(
+              deliveryExecution?.currentStage || "",
+            ).trim();
+            const deliveryCurrentStage = deliveryStages.find(
+              (stage) => stage.id === deliveryCurrentStageId,
+            ) || null;
+            const deliveryExecutionEvents = Array.isArray(deliveryExecution?.events)
+              ? deliveryExecution.events.slice(-5).reverse()
+              : [];
+            const deliveryPlanStatus = String(
+              selectedProjectMissionControl?.deliveryPlan?.status || "",
+            ).trim().toLowerCase();
+            const deliveryActionPending = Boolean(
+              missionControlDeliveryActionState.action,
+            );
+            const assuranceEvidenceFingerprint = String(
+              deliveryExecution?.stages?.assure?.evidence?.evidenceFingerprint || "",
+            ).trim();
+            const assuranceRunId = String(
+              deliveryExecution?.bindings?.assuranceRunId || "",
+            ).trim();
+            const deliveryRepairEpisode = deliveryExecution?.bindings?.repairEpisode
+              && typeof deliveryExecution.bindings.repairEpisode === "object"
+              && !Array.isArray(deliveryExecution.bindings.repairEpisode)
+              ? deliveryExecution.bindings.repairEpisode
+              : null;
+            const deliveryRepairStatus = String(
+              deliveryExecution?.bindings?.repairStatus || "",
+            ).trim().toLowerCase();
+            const deliveryApprovalRequired = Boolean(
+              deliveryExecutionStatus === "blocked"
+              && deliveryCurrentStageId === "assure"
+              && assuranceRunId
+              && assuranceEvidenceFingerprint,
+            );
+            const retryableDeliveryStageIds = new Set([
+              "build",
+              "test",
+              "evaluate",
+              "re_evaluate",
+              "acceptance_evaluate",
+              "assure",
+              "deliver",
+            ]);
+            const deliveryRetryable = Boolean(
+              deliveryExecutionStatus === "failed"
+              && retryableDeliveryStageIds.has(deliveryCurrentStageId),
+            );
+            const deliveryNeedsRevision = Boolean(
+              ["failed", "cancelled"].includes(deliveryExecutionStatus)
+              && !deliveryRetryable,
+            );
+            const deliveryStatusVariants = {
+              queued: "blue",
+              running: "blue",
+              blocked: "yellow",
+              passed: "green",
+              failed: "red",
+              cancelled: "gray",
+              pending: "gray",
+              skipped: "gray",
+            };
+            const formatDeliveryEvidenceFingerprint = (value) => {
+              const normalized = String(value || "").trim().replace(/^sha256:/i, "");
+              return normalized.length > 16
+                ? normalized.slice(0, 8) + "…" + normalized.slice(-8)
+                : normalized;
+            };
+            const getDeliveryStageEvidenceSummary = (stage) => {
+              const evidence = stage?.evidence || {};
+              const fingerprint = String(
+                evidence.evidenceFingerprint
+                || evidence.runFingerprint
+                || evidence.decisionFingerprint
+                || evidence.publicationEvidenceFingerprint
+                || evidence.commitSha
+                || "",
+              ).trim();
+              const reference = String(
+                evidence.testRunId
+                || evidence.evaluationRunId
+                || evidence.optimizationJobId
+                || evidence.assuranceRunId
+                || evidence.dispatchId
+                || "",
+              ).trim();
+              const averageScore = Number(evidence.averageScore);
+              const passRate = Number(evidence.passRate);
+              return {
+                fingerprint,
+                reference,
+                score: Number.isFinite(averageScore)
+                  ? Math.round(averageScore * 100) + "%"
+                  : Number.isFinite(passRate)
+                    ? Math.round(passRate * 100) + "%"
+                    : "",
+              };
+            };
             return React.createElement("div", { className: "playground-tasks-detail-shell" },
               React.createElement("div", { className: "playground-tasks-detail-main" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
                 React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
@@ -981,27 +1961,115 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                         cardTitle: "Delivery execution",
                         className: "playground-mission-control-delivery-card",
                         headerActions: deliveryExecution
-                          ? React.createElement("span", {
-                              className: "playground-mission-control-delivery-status is-" + (deliveryExecutionStatus || "queued"),
+                          ? React.createElement(PlatformLabel, {
+                              variant: deliveryStatusVariants[deliveryExecutionStatus] || "gray",
                             }, deliveryExecutionStatus.replaceAll("_", " ") || "Queued")
                           : null,
                       },
                       deliveryExecution
                         ? React.createElement(React.Fragment, null,
-                            React.createElement("div", { className: "playground-mission-control-delivery-stages" },
-                              deliveryStages.map((stage) =>
-                                React.createElement("div", {
-                                    key: stage.id,
-                                    className: "playground-mission-control-delivery-stage",
-                                  },
-                                  React.createElement("span", {
-                                    className: "playground-mission-control-delivery-stage-indicator is-" + stage.status,
-                                    "aria-hidden": "true",
-                                  }),
-                                  React.createElement("span", { className: "playground-mission-control-delivery-stage-label" }, stage.label),
-                                  React.createElement("span", { className: "playground-mission-control-delivery-stage-status" }, stage.status.replaceAll("_", " "))
+                            deliveryRepairEpisode
+                              ? React.createElement("div", {
+                                  className: "playground-mission-control-delivery-approval",
+                                },
+                                React.createElement("strong", null,
+                                  deliveryRepairStatus === "passed"
+                                    ? "Autonomous repair passed"
+                                    : deliveryRepairStatus === "exhausted"
+                                      ? "Autonomous repair exhausted"
+                                      : deliveryRepairStatus === "failed"
+                                        ? "Autonomous repair failed"
+                                        : "Autonomous repair active"
+                                ),
+                                React.createElement("span", null,
+                                  "Attempt "
+                                  + String(deliveryRepairEpisode.repairAttempt || 0)
+                                  + " of "
+                                  + String(deliveryRepairEpisode.maximumAttempts || 0)
+                                  + " · "
+                                  + String(deliveryRepairEpisode.sourceStage || "test")
+                                  + " · "
+                                  + formatDeliveryEvidenceFingerprint(
+                                    deliveryRepairEpisode.diagnosticFingerprint,
+                                  )
+                                  + (
+                                    Array.isArray(deliveryRepairEpisode.allowedResourceKeys)
+                                    && deliveryRepairEpisode.allowedResourceKeys.length
+                                      ? " · targets "
+                                        + deliveryRepairEpisode.allowedResourceKeys.join(", ")
+                                      : ""
+                                  )
+                                  + (
+                                    Number.isFinite(Number(deliveryRepairEpisode.averageScore))
+                                    && Number.isFinite(Number(deliveryRepairEpisode.minimumAverageScore))
+                                      ? " · score "
+                                        + Number(deliveryRepairEpisode.averageScore).toFixed(2)
+                                        + "/"
+                                        + Number(deliveryRepairEpisode.minimumAverageScore).toFixed(2)
+                                      : ""
+                                  )
                                 )
                               )
+                              : null,
+                            React.createElement("div", { className: "playground-mission-control-delivery-stages" },
+                              deliveryStages.map((stage) => {
+                                const evidenceSummary = getDeliveryStageEvidenceSummary(stage);
+                                const showEvidence = Boolean(
+                                  evidenceSummary.reference
+                                  || evidenceSummary.fingerprint
+                                  || evidenceSummary.score,
+                                );
+                                return React.createElement("div", {
+                                    key: stage.id,
+                                    className: "playground-mission-control-delivery-stage is-" + stage.status,
+                                  },
+                                  React.createElement("div", {
+                                      className: "playground-mission-control-delivery-stage-heading",
+                                    },
+                                    React.createElement("span", {
+                                      className: "playground-mission-control-delivery-stage-indicator is-" + stage.status,
+                                      "aria-hidden": "true",
+                                    }),
+                                    React.createElement("span", {
+                                      className: "playground-mission-control-delivery-stage-label",
+                                    }, stage.label),
+                                    stage.retryCount > 0
+                                      ? React.createElement("span", {
+                                          className: "playground-mission-control-delivery-stage-attempt",
+                                        }, "Retry " + stage.retryCount)
+                                      : null,
+                                    React.createElement(PlatformLabel, {
+                                      variant: deliveryStatusVariants[stage.status] || "gray",
+                                    }, stage.status.replaceAll("_", " "))
+                                  ),
+                                  showEvidence
+                                    ? React.createElement("div", {
+                                        className: "playground-mission-control-delivery-evidence",
+                                      },
+                                      evidenceSummary.reference
+                                        ? React.createElement("span", {
+                                            title: evidenceSummary.reference,
+                                          }, evidenceSummary.reference)
+                                        : null,
+                                      evidenceSummary.score
+                                        ? React.createElement("strong", null, evidenceSummary.score)
+                                        : null,
+                                      evidenceSummary.fingerprint
+                                        ? React.createElement("code", {
+                                            title: evidenceSummary.fingerprint,
+                                          }, formatDeliveryEvidenceFingerprint(
+                                            evidenceSummary.fingerprint,
+                                          ))
+                                        : null
+                                    )
+                                    : null,
+                                  stage.error
+                                    ? React.createElement("div", {
+                                        className: "playground-mission-control-delivery-stage-error",
+                                      }, stage.error)
+                                    : null
+                                );
+                              })
                             ),
                             React.createElement("div", { className: "playground-mission-control-delivery-budget" },
                               React.createElement("span", null, "Verified cost"),
@@ -1021,14 +2089,122 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                             ),
                             deliveryExecution.lastError
                               ? React.createElement("div", { className: "playground-mission-control-delivery-error" }, String(deliveryExecution.lastError))
-                              : null
+                              : null,
+                            deliveryApprovalRequired
+                              ? React.createElement("div", {
+                                  className: "playground-mission-control-delivery-approval",
+                                },
+                                React.createElement("strong", null, "Evidence approval required"),
+                                React.createElement("span", null,
+                                  "Approval is bound to "
+                                  + formatDeliveryEvidenceFingerprint(
+                                    assuranceEvidenceFingerprint,
+                                  )
+                                  + "."
+                                )
+                              )
+                              : null,
+                            missionControlDeliveryActionState.error
+                              ? React.createElement("div", {
+                                  className: "playground-mission-control-delivery-error",
+                                }, missionControlDeliveryActionState.error)
+                              : null,
+                            deliveryExecutionEvents.length > 0
+                              ? React.createElement("div", {
+                                  className: "playground-mission-control-delivery-events",
+                                },
+                                React.createElement("div", {
+                                  className: "playground-mission-control-delivery-events-title",
+                                }, "Audit trail"),
+                                deliveryExecutionEvents.map((event) =>
+                                  React.createElement("div", {
+                                      key: event.id,
+                                      className: "playground-mission-control-delivery-event",
+                                    },
+                                    React.createElement("span", null,
+                                      String(event.type || "event").replaceAll(".", " ")
+                                    ),
+                                    React.createElement("time", {
+                                      dateTime: event.createdAt || undefined,
+                                    }, formatRelativeThreadTime(event.createdAt)
+                                      || formatPlaygroundFileDate(event.createdAt))
+                                  )
+                                )
+                              )
+                              : null,
+                            React.createElement("div", {
+                                className: "playground-mission-control-delivery-actions",
+                              },
+                              deliveryApprovalRequired
+                                ? React.createElement(PlatformPrimaryButton, {
+                                    type: "button",
+                                    size: "small",
+                                    disabled: deliveryActionPending,
+                                    onClick: () => setMissionControlDeliveryApprovalOpen(true),
+                                  }, "Approve evidence")
+                                : null,
+                              deliveryRetryable
+                                ? React.createElement(PlatformPrimaryButton, {
+                                    type: "button",
+                                    size: "small",
+                                    disabled: deliveryActionPending,
+                                    onClick: () => void requestMissionControlDeliveryAction("retry"),
+                                  }, missionControlDeliveryActionState.action === "retry"
+                                    ? "Retrying…"
+                                    : "Retry " + (deliveryCurrentStage?.label || "stage"))
+                                : null,
+                              ["queued", "running", "blocked"].includes(deliveryExecutionStatus)
+                                ? React.createElement(PlatformSecondaryButton, {
+                                    type: "button",
+                                    size: "small",
+                                    disabled: deliveryActionPending,
+                                    onClick: () => void requestMissionControlDeliveryAction("reconcile"),
+                                  }, missionControlDeliveryActionState.action === "reconcile"
+                                    ? "Checking…"
+                                    : "Check now")
+                                : null,
+                              ["queued", "running", "blocked"].includes(deliveryExecutionStatus)
+                                ? React.createElement(PlatformSecondaryButton, {
+                                    type: "button",
+                                    size: "small",
+                                    disabled: deliveryActionPending,
+                                    onClick: () => void requestMissionControlDeliveryAction("cancel"),
+                                  }, missionControlDeliveryActionState.action === "cancel"
+                                    ? "Cancelling…"
+                                    : "Cancel")
+                                : null,
+                              deliveryNeedsRevision
+                                ? React.createElement(PlatformSecondaryButton, {
+                                    type: "button",
+                                    size: "small",
+                                    disabled: deliveryActionPending || isSelectedProjectMissionControlRunning,
+                                    onClick: () => openMissionControlComposer({
+                                      keepStrategyOpen: true,
+                                    }),
+                                  }, "Revise with Mission Control")
+                                : null
+                            )
                           )
                         : React.createElement("div", { className: "playground-mission-control-delivery-empty" },
-                            missionControlDeliveryExecutionState.status === "loading"
-                              ? "Loading the canonical execution…"
-                              : missionControlDeliveryExecutionState.error
-                                ? missionControlDeliveryExecutionState.error
-                                : "No delivery execution has started for this project."
+                            React.createElement("span", null,
+                              missionControlDeliveryExecutionState.status === "loading"
+                                ? "Loading the canonical execution…"
+                                : missionControlDeliveryExecutionState.error
+                                  ? missionControlDeliveryExecutionState.error
+                                  : deliveryPlanStatus === "ready"
+                                    ? "The verified delivery graph is ready to run."
+                                    : "Run Mission Control to create and provision the delivery graph."
+                            ),
+                            deliveryPlanStatus === "ready"
+                              ? React.createElement(PlatformPrimaryButton, {
+                                  type: "button",
+                                  size: "small",
+                                  disabled: deliveryActionPending,
+                                  onClick: () => void requestMissionControlDeliveryAction("start"),
+                                }, missionControlDeliveryActionState.action === "start"
+                                  ? "Starting…"
+                                  : "Start delivery")
+                              : null
                           )
                     ),
                     React.createElement("div", { className: "playground-tasks-comments" },
@@ -1111,6 +2287,52 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                       })
                     )
                   : null
+              ),
+              React.createElement(PlatformModal, {
+                  open: missionControlDeliveryApprovalOpen,
+                  visible: missionControlDeliveryApprovalOpen,
+                  size: "medium",
+                  title: "Approve delivery evidence",
+                  className: "playground-mission-control-delivery-approval-modal",
+                  closeButtonDisabled: deliveryActionPending,
+                  onClose: () => {
+                    if (!deliveryActionPending) {
+                      setMissionControlDeliveryApprovalOpen(false);
+                    }
+                  },
+                  footer: React.createElement(React.Fragment, null,
+                    React.createElement(PlatformSecondaryButton, {
+                      type: "button",
+                      size: "medium",
+                      disabled: deliveryActionPending,
+                      onClick: () => setMissionControlDeliveryApprovalOpen(false),
+                    }, "Cancel"),
+                    React.createElement(PlatformPrimaryButton, {
+                      type: "button",
+                      size: "medium",
+                      disabled: deliveryActionPending
+                        || !deliveryApprovalRequired,
+                      onClick: async () => {
+                        const approved = await approveMissionControlDeliveryAssurance();
+                        if (approved) {
+                          setMissionControlDeliveryApprovalOpen(false);
+                        }
+                      },
+                    }, missionControlDeliveryActionState.action === "approve"
+                      ? "Approving…"
+                      : "Approve evidence")
+                  ),
+                },
+                React.createElement("div", {
+                    className: "playground-mission-control-delivery-approval-copy",
+                  },
+                  React.createElement("p", null,
+                    "This approval is permanently bound to the exact canonical evidence fingerprint below. Changed evidence requires a new approval."
+                  ),
+                  React.createElement("code", {
+                    title: assuranceEvidenceFingerprint,
+                  }, assuranceEvidenceFingerprint || "Evidence unavailable")
+                )
               )
             );
           }

@@ -9,12 +9,7 @@ import { RunnerMarkdown, stripRunnerSystemTags } from "../runner-markdown.js";
 import type { RunnerThreadActionRenderer } from "../thread/activity-action-list.js";
 import type { RunnerThreadDetailLoadState } from "../thread/run-detail-hydration.js";
 import { RunnerThreadTimeline } from "../thread/thread-timeline.js";
-import type { RunnerTurn } from "./turn-types.js";
-
-export interface RunnerCanonicalCompatibilityEntry {
-  projection: RunnerThreadProjection;
-  turn: Pick<RunnerTurn, "id">;
-}
+import { CollapsibleRunnerUserPrompt } from "./run-summary-content.js";
 
 export interface RunnerCanonicalThreadSurfaceProps {
   activityGroupActionStates?: Record<string, RunnerThreadDetailLoadState>;
@@ -23,7 +18,6 @@ export interface RunnerCanonicalThreadSurfaceProps {
   fallbackRunAgentName?: string | null;
   fallbackRunWorkspaceName?: string | null;
   hasContent: boolean;
-  historyEntries?: RunnerCanonicalCompatibilityEntry[];
   loading: boolean;
   onControlRun?: (
     run: RunnerThreadRun,
@@ -46,7 +40,6 @@ export interface RunnerCanonicalThreadSurfaceProps {
   reconnecting: boolean;
   renderAction?: RunnerThreadActionRenderer;
   runDetailStates?: Record<string, RunnerThreadDetailLoadState>;
-  tailEntries?: RunnerCanonicalCompatibilityEntry[];
 }
 
 function renderCanonicalMessage(message: { content: string }) {
@@ -59,25 +52,11 @@ function renderCanonicalMessage(message: { content: string }) {
   );
 }
 
-function CompatibilityTimeline({
-  entry,
-  fallbackRunAgentName,
-  fallbackRunWorkspaceName,
-  renderAction,
-}: {
-  entry: RunnerCanonicalCompatibilityEntry;
-  fallbackRunAgentName?: string | null;
-  fallbackRunWorkspaceName?: string | null;
-  renderAction?: RunnerThreadActionRenderer;
-}) {
+function renderCanonicalUserMessage(message: { content: string }) {
   return (
-    <RunnerThreadTimeline
-      projection={entry.projection}
-      fallbackRunAgentName={fallbackRunAgentName}
-      fallbackRunWorkspaceName={fallbackRunWorkspaceName}
-      maxMountedItems={12}
-      renderAction={renderAction}
-      renderMessageContent={renderCanonicalMessage}
+    <CollapsibleRunnerUserPrompt
+      content={stripRunnerSystemTags(message.content)}
+      className="tb-message-markdown tb-message-markdown-user"
     />
   );
 }
@@ -89,7 +68,6 @@ export function RunnerCanonicalThreadSurface({
   fallbackRunAgentName,
   fallbackRunWorkspaceName,
   hasContent,
-  historyEntries = [],
   loading,
   onControlRun,
   onLoadActivityGroupActions,
@@ -102,7 +80,6 @@ export function RunnerCanonicalThreadSurface({
   reconnecting,
   renderAction,
   runDetailStates,
-  tailEntries = [],
 }: RunnerCanonicalThreadSurfaceProps) {
   return (
     <div className="tb-canonical-thread-surface" data-connected={connected ? "true" : "false"}>
@@ -129,23 +106,6 @@ export function RunnerCanonicalThreadSurface({
         <div className="runner-log-empty">No activity yet. Send a message to start this thread.</div>
       ) : null}
 
-      {historyEntries.length > 0 ? (
-        <section
-          className="tb-canonical-compatibility is-history"
-          aria-label="Earlier compatible thread activity"
-        >
-          {historyEntries.map((entry) => (
-            <CompatibilityTimeline
-              key={`legacy-compatibility:${entry.turn.id}`}
-              entry={entry}
-              fallbackRunAgentName={fallbackRunAgentName}
-              fallbackRunWorkspaceName={fallbackRunWorkspaceName}
-              renderAction={renderAction}
-            />
-          ))}
-        </section>
-      ) : null}
-
       <RunnerThreadTimeline
         projection={projection}
         fallbackRunAgentName={fallbackRunAgentName}
@@ -157,28 +117,12 @@ export function RunnerCanonicalThreadSurface({
         onLoadActivityGroupActions={onLoadActivityGroupActions}
         renderAction={renderAction}
         renderMessageContent={renderCanonicalMessage}
+        renderUserMessageContent={renderCanonicalUserMessage}
         onLoadEarlier={onLoadEarlier}
         onControlRun={onControlRun}
         onOpenChanges={onOpenChanges}
         onPermissionDecision={onPermissionDecision}
       />
-
-      {tailEntries.length > 0 ? (
-        <section
-          className="tb-canonical-compatibility is-tail"
-          aria-label="Locally queued thread activity"
-        >
-          {tailEntries.map((entry) => (
-            <CompatibilityTimeline
-              key={`legacy-compatibility-tail:${entry.turn.id}`}
-              entry={entry}
-              fallbackRunAgentName={fallbackRunAgentName}
-              fallbackRunWorkspaceName={fallbackRunWorkspaceName}
-              renderAction={renderAction}
-            />
-          ))}
-        </section>
-      ) : null}
     </div>
   );
 }

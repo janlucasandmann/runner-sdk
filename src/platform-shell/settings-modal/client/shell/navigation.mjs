@@ -37,7 +37,11 @@ export const SETTINGS_MODAL_NAVIGATION_SCRIPT = String.raw`        function clos
             return;
           }
 
-          setSettingsSection("profile");
+          setSettingsSection(
+            ["profile", "password", "delete"].includes(normalizedSectionId)
+              ? normalizedSectionId
+              : "profile"
+          );
           setSettingsModalOpen(true);
         }
 `;

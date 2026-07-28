@@ -1,23 +1,30 @@
-import { ChevronRight, Plus, Sparkles, SquarePen, Trash2 } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { ChevronRight, Sparkles, SquarePen, Trash2 } from "lucide-react";
+import { useMemo, type ReactNode } from "react";
 import type { PlatformDataTableAction, PlatformDataTableColumn } from "../../../platform-ui/components/composite/data-table/index.js";
-import { PlatformDetailTabBar } from "../../../platform-ui/components/composite/detail-tab-bar/index.js";
 import {
+  ResourceOverviewIdentityCell,
   ResourceOverviewPage,
-  ResourceOverviewStatus,
   ResourceOverviewValue,
   type ResourceOverviewAnalyticsModel,
   type ResourceOverviewPeriod,
 } from "../../../platform-ui/pages/overview/index.js";
 import { SkillsOverviewGuide } from "./skills-overview-guide.js";
 
+const COMPUTER_AGENTS_CREATOR_NAME = "Computer Agents";
+const COMPUTER_AGENTS_CREATOR_PROFILE_URL =
+  "/img/agent-profile-pics/ca-profilepic.jpg";
+
 export interface SkillOverviewRow {
   id: string;
   name: string;
+  description?: string;
   searchText?: string;
   icon?: ReactNode;
+  isComputerAgents?: boolean;
   isActive: boolean;
   isCustom: boolean;
+  creatorName?: string;
+  creatorAvatarUrl?: string;
   updatedAt?: number;
   updatedLabel: string;
   updatedTitle?: string;
@@ -41,10 +48,22 @@ export interface SkillsOverviewPageProps {
   onDelete: (rows: readonly SkillOverviewRow[]) => void;
 }
 
+function getCreatorName(row: SkillOverviewRow): string {
+  return row.creatorName?.trim()
+    || (row.isCustom ? "You" : COMPUTER_AGENTS_CREATOR_NAME);
+}
+
+function getCreatorFallback(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
+}
+
 export function SkillsOverviewPage({
   rows,
-  mode,
-  onModeChange,
   period,
   onPeriodChange,
   analytics,
@@ -53,54 +72,62 @@ export function SkillsOverviewPage({
   mutating = false,
   headerActions,
   onOpen,
-  onCreate,
   onEdit,
   onRename,
   onDelete,
 }: SkillsOverviewPageProps) {
-  const [statusFilter, setStatusFilter] = useState("all");
-  const systemSkillCount = useMemo(() => rows.filter((row) => !row.isCustom).length, [rows]);
-  const customSkillCount = rows.length - systemSkillCount;
-  const filteredRows = useMemo(() => rows.filter((row) => {
-    if (mode === "system" && row.isCustom) return false;
-    if (mode === "custom" && !row.isCustom) return false;
-    if (statusFilter === "active") return row.isActive;
-    if (statusFilter === "disabled") return !row.isActive;
-    return true;
-  }), [mode, rows, statusFilter]);
-
   const columns = useMemo<PlatformDataTableColumn<SkillOverviewRow>[]>(() => [
     {
       id: "name",
       header: "Name",
       accessor: "name",
       sortable: true,
-      width: "minmax(220px, 1.35fr)",
+      width: "minmax(320px, 1.8fr)",
       cell: ({ row }) => (
-        <div className="resource-overview-identity">
-          <span className="resource-overview-identity__visual is-skill" aria-hidden="true">
+        <div className="resource-overview-identity is-catalog">
+          <span
+            className={`resource-overview-identity__visual is-skill${
+              row.isComputerAgents
+                || row.id.trim().toLowerCase() === "computer_agents"
+                ? " is-computer-agents"
+                : ""
+            }`}
+            aria-hidden="true"
+          >
             {row.icon || <Sparkles width={16} height={16} strokeWidth={1.8} />}
           </span>
-          <span className="resource-overview-identity__title">{row.name}</span>
+          <span className="resource-overview-identity__copy">
+            <span className="resource-overview-identity__title">{row.name}</span>
+            {row.description ? (
+              <span className="resource-overview-identity__description">
+                {row.description}
+              </span>
+            ) : null}
+          </span>
         </div>
       ),
     },
     {
-      id: "status",
-      header: "Status",
-      accessor: (row) => row.isActive ? "Active" : "Disabled",
-      sortable: true,
-      width: "minmax(110px, 0.58fr)",
-      cell: ({ row }) => <ResourceOverviewStatus active={row.isActive} activeLabel="Active" inactiveLabel="Disabled" />,
-    },
-    {
-      id: "type",
-      header: "Type",
-      accessor: (row) => row.isCustom ? "Custom" : "System",
-      sortable: true,
-      width: "minmax(105px, 0.55fr)",
-      hideBelow: 760,
-      cell: ({ row }) => <ResourceOverviewValue>{row.isCustom ? "Custom" : "System"}</ResourceOverviewValue>,
+      id: "creator",
+      header: "Creator",
+      accessor: getCreatorName,
+      width: "minmax(160px, 0.62fr)",
+      cell: ({ row }) => {
+        const creatorName = getCreatorName(row);
+        return (
+          <ResourceOverviewIdentityCell
+            title={creatorName}
+            imageUrl={
+              row.creatorAvatarUrl
+              || (row.isCustom
+                ? undefined
+                : COMPUTER_AGENTS_CREATOR_PROFILE_URL)
+            }
+            fallback={getCreatorFallback(creatorName)}
+            iconClassName="is-creator"
+          />
+        );
+      },
     },
     {
       id: "updated",
@@ -108,7 +135,7 @@ export function SkillsOverviewPage({
       accessor: (row) => row.updatedAt || 0,
       sortable: true,
       sortDescFirst: true,
-      width: "minmax(120px, 0.62fr)",
+      width: "minmax(120px, 0.48fr)",
       hideBelow: 900,
       cell: ({ row }) => <ResourceOverviewValue title={row.updatedTitle}>{row.updatedLabel}</ResourceOverviewValue>,
     },
@@ -135,68 +162,52 @@ export function SkillsOverviewPage({
     ];
   };
 
-  const modeTabs = (
-    <PlatformDetailTabBar<"system" | "custom">
-      ariaLabel="Skill categories"
-      value={mode}
-      tabs={[
-        { id: "system", label: "System Skills" },
-        { id: "custom", label: "Custom Skills" },
-      ]}
-      onValueChange={onModeChange}
-      variant="minimal"
-      className="skills-overview-tab-bar"
-    />
-  );
-
   return (
     <ResourceOverviewPage<SkillOverviewRow>
       period={period}
       onPeriodChange={onPeriodChange}
       analytics={analytics}
-      heroContent={(
-        <SkillsOverviewGuide
-          systemSkillCount={systemSkillCount}
-          customSkillCount={customSkillCount}
-          onBrowseSystem={() => onModeChange("system")}
-          onBrowseCustom={() => onModeChange("custom")}
-          onCreate={onCreate}
-        />
-      )}
+      heroContent={<SkillsOverviewGuide />}
       showPeriodSelector={false}
       controlsPortalId={controlsPortalId}
       headerActions={headerActions}
       className="is-skills"
       table={{
-        rows: filteredRows,
+        rows,
         columns,
         getRowId: (row) => row.id,
         ariaLabel: "Skills",
         className: "resource-overview-table is-skills",
+        variant: "catalog-ui",
         sorting: { defaultValue: { id: "updated", direction: "desc" } },
-        selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
+        rowGrouping: {
+          groups: [
+            {
+              id: "system",
+              label: "System Skills",
+              ariaLabel: "System Skills",
+            },
+            {
+              id: "custom",
+              label: "Custom Skills",
+              ariaLabel: "Custom Skills",
+            },
+          ],
+          getGroupId: (row) => row.isCustom ? "custom" : "system",
+        },
         pagination: false,
         toolbar: {
-          leading: modeTabs,
-          search: { placeholder: "Search skills", getSearchText: (row) => row.searchText || row.name },
-          filters: [{
-            id: "status",
-            label: "Status",
-            value: statusFilter,
-            onChange: setStatusFilter,
-            options: [
-              { id: "all", label: "All Status" },
-              { id: "active", label: "Active" },
-              { id: "disabled", label: "Disabled" },
-            ],
-          }],
-          primaryAction: { label: "Skill", icon: Plus, onClick: onCreate },
+          search: {
+            placeholder: "Search skills",
+            getSearchText: (row) =>
+              `${row.searchText || row.name} ${getCreatorName(row)}`,
+          },
         },
         getRowActions,
         onRowActivate: onOpen,
         getRowAriaLabel: (row) => row.name,
         loading,
-        emptyState: mode === "custom" ? "No custom skills yet." : "No system skills available.",
+        emptyState: "No skills available.",
         noResultsState: "No skills match this view.",
       }}
     />

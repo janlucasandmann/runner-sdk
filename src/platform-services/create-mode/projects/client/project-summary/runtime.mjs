@@ -47,51 +47,6 @@ export const PROJECT_SUMMARY_RUNTIME_FRAGMENT = `
             return 0;
           }
 
-          function getProjectSummaryTeams(projectRecord) {
-            const metadata = projectRecord?.metadata
-              && typeof projectRecord.metadata === "object"
-              && !Array.isArray(projectRecord.metadata)
-                ? projectRecord.metadata
-                : {};
-            const sharedTeamIds = new Set(
-              getPlatformSharedTeamIds(metadata)
-                .map((teamId) => String(teamId || "").trim())
-                .filter(Boolean)
-            );
-            const removedTeamIds = new Set(
-              (Array.isArray(metadata.teamAccessRemovedIds) ? metadata.teamAccessRemovedIds : [])
-                .map((teamId) => String(teamId || "").trim())
-                .filter(Boolean)
-            );
-            const workspaceTeamRows = (Array.isArray(workspaceTeams) ? workspaceTeams : [])
-              .map((team) => {
-                const teamId = String(team?.id || "").trim();
-                if (
-                  !teamId
-                  || isPlatformSystemAccessPrincipalId(teamId)
-                  || !sharedTeamIds.has(teamId)
-                  || removedTeamIds.has(teamId)
-                ) {
-                  return null;
-                }
-                return {
-                  id: teamId,
-                  name: String(team?.name || "Untitled team").trim() || "Untitled team",
-                  kind: "team",
-                  profileImageUrl: getPlatformAccessPrincipalProfileImageUrl(team),
-                };
-              })
-              .filter(Boolean);
-            return composePlatformAccessPrincipalRows(workspaceTeamRows)
-              .map((principal) => ({
-                id: String(principal?.id || "").trim(),
-                name: String(principal?.name || "Untitled team").trim() || "Untitled team",
-                imageUrl: getPlatformAccessPrincipalProfileImageUrl(principal),
-              }))
-              .filter((principal) => principal.id)
-              .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")));
-          }
-
           function getProjectSummaryResources() {
             return (Array.isArray(projectOverviewAllResourceRows) ? projectOverviewAllResourceRows : [])
               .map((row, index) => {
@@ -122,8 +77,17 @@ export const PROJECT_SUMMARY_RUNTIME_FRAGMENT = `
               || metadata.color
               || PLAYGROUND_PROJECT_ACCENT_COLORS[0]
             ).trim() || PLAYGROUND_PROJECT_ACCENT_COLORS[0];
-            const summaryTeams = getProjectSummaryTeams(projectRecord);
             const summaryResources = getProjectSummaryResources();
+            const summaryMilestones = getProjectOverviewMilestoneRecords()
+              .map((release) => {
+                const progress = getProjectOverviewMilestoneProgress(release);
+                return {
+                  id: String(release.id),
+                  name: String(release.name || "Untitled Milestone").trim() || "Untitled Milestone",
+                  progressPercent: progress.percent,
+                  source: release,
+                };
+              });
             return React.createElement("div", { className: "platform-project-summary-shell" },
               React.createElement(ProjectSummary, {
                 projectName,
@@ -153,19 +117,28 @@ export const PROJECT_SUMMARY_RUNTIME_FRAGMENT = `
                 onSummaryCommit: (nextSummary) => saveProjectOverviewDescription(nextSummary),
                 onSummaryEditingChange: setProjectDescriptionEditing,
               }),
+              renderProjectOverviewWorkGraphPanel(),
               React.createElement(ProjectSummaryDetails, {
-                teams: summaryTeams,
                 resources: summaryResources,
-                teamsLoading: Boolean(workspaceTeamsLoading && summaryTeams.length === 0),
+                milestones: summaryMilestones,
                 resourcesLoading: Boolean(
                   projectOverviewServerResourcesState?.status === "loading"
                   && summaryResources.length === 0
                 ),
-                onTeamsSelect: () => setProjectOverviewHomeTab("permissions"),
+                milestonesLoading: Boolean(
+                  taskLoadState?.status === "loading"
+                  && summaryMilestones.length === 0
+                ),
                 onResourcesSelect: () => setProjectOverviewHomeTab("resources"),
+                onMilestonesSelect: () => setProjectOverviewHomeTab("milestones"),
                 onResourceSelect: (resource) => {
                   if (resource?.source) {
                     openProjectOverviewResourceRow(resource.source);
+                  }
+                },
+                onMilestoneSelect: (milestone) => {
+                  if (milestone?.source && typeof openReleaseComposerForEdit === "function") {
+                    openReleaseComposerForEdit(milestone.source);
                   }
                 },
               }),

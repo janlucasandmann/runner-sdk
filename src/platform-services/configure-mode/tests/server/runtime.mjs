@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 const RUN_LEASE_TTL_MS = 90_000;
 const RUN_HEARTBEAT_MS = 25_000;
 const TERMINAL_THREAD_STATUSES = new Set(["completed", "failed", "cancelled"]);
@@ -17,6 +19,365 @@ function asArray(value) {
 
 function text(value, maximum = 20_000) {
   return String(value || "").trim().slice(0, maximum);
+}
+
+function stableJson(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => stableJson(entry)).join(",")}]`;
+  }
+  if (value && typeof value === "object") {
+    const source = value;
+    return `{${Object.keys(source).sort().map(
+      (key) => `${JSON.stringify(key)}:${stableJson(source[key])}`,
+    ).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function sha256(value) {
+  return createHash("sha256").update(stableJson(value)).digest("hex");
+}
+
+function boundedInteger(value, fallback, minimum, maximum) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return fallback;
+  return Math.max(minimum, Math.min(maximum, Math.round(numeric)));
+}
+
+function normalizeRequestedTopology(value) {
+  const source = asRecord(value);
+  const entrypoint = text(source.entrypoint, 200);
+  const resourceIds = Array.isArray(source.resourceIds)
+    ? source.resourceIds
+        .slice(0, 50)
+        .map((entry) => text(entry, 300))
+        .filter(Boolean)
+    : [];
+  if (
+    text(source.kind, 100).toLowerCase() !== "service_topology"
+    || !entrypoint
+    || resourceIds.length === 0
+  ) {
+    return null;
+  }
+  return {
+    kind: "service_topology",
+    entrypoint,
+    resourceIds,
+  };
+}
+
+function normalizeDeterministicContractRequest(value) {
+  const source = asRecord(value);
+  const structuredTarget = asRecord(source.target);
+  if (text(structuredTarget.kind, 100).toLowerCase() === "service_topology") {
+    const resources = Array.isArray(structuredTarget.resources)
+      ? structuredTarget.resources.slice(0, 50).map(asRecord)
+      : [];
+    const entrypointKey = text(
+      structuredTarget.entrypoint || structuredTarget.entrypointResourceKey,
+      200,
+    );
+    const entrypoint = resources.find(
+      (resource) => text(resource.key, 200) === entrypointKey,
+    );
+    const entrypointKind = text(entrypoint?.kind, 100).toLowerCase();
+    const entrypointId = text(entrypoint?.id || entrypoint?.resourceId, 300);
+    if (!entrypointKey || !entrypointId) return null;
+    const invocation = asRecord(source.invocation || structuredTarget.invocation);
+    if (entrypointKind === "metronome") {
+      return {
+        target: "metronome_workflow",
+        workflowId: entrypointId,
+        workflowVersionId: text(
+          entrypoint.versionId || entrypoint.version_id,
+          300,
+        ) || null,
+        input: source.input ?? source.body ?? null,
+        timeoutMs: boundedInteger(
+          source.timeoutMs || invocation.timeoutMs,
+          5 * 60_000,
+          1_000,
+          30 * 60_000,
+        ),
+        requestedTopology: {
+          kind: "service_topology",
+          entrypoint: entrypointKey,
+          resourceIds: resources
+            .map((resource) => text(resource.id || resource.resourceId, 300))
+            .filter(Boolean),
+        },
+      };
+    }
+    if (entrypointKind === "function") {
+      const method = text(invocation.method || source.method || "POST", 20)
+        .toUpperCase();
+      const requestPath = text(invocation.path || source.path || "/", 2_000);
+      if (
+        !["GET", "POST", "PUT", "PATCH", "DELETE"].includes(method)
+        || !requestPath.startsWith("/")
+        || requestPath.startsWith("//")
+        || requestPath.includes("\\")
+      ) {
+        return null;
+      }
+      return {
+        target: "computer_agents_function",
+        functionId: entrypointId,
+        method,
+        path: requestPath,
+        body: source.input ?? source.body ?? null,
+        timeoutMs: boundedInteger(
+          source.timeoutMs || invocation.timeoutMs,
+          120_000,
+          1_000,
+          10 * 60_000,
+        ),
+        requestedTopology: {
+          kind: "service_topology",
+          entrypoint: entrypointKey,
+          resourceIds: resources
+            .map((resource) => text(resource.id || resource.resourceId, 300))
+            .filter(Boolean),
+        },
+      };
+    }
+    return null;
+  }
+  const target = text(source.target, 100).toLowerCase();
+  if (target === "control_plane_readiness") {
+    return {
+      target,
+      requireDatabase: source.requireDatabase === true,
+      requireAgentRuntime: source.requireAgentRuntime === true,
+    };
+  }
+  if (target === "computer_agents_function") {
+    const functionId = text(source.functionId, 300);
+    const method = text(source.method || "POST", 20).toUpperCase();
+    const requestPath = text(source.path || "/", 2_000);
+    if (
+      !functionId
+      || !["GET", "POST", "PUT", "PATCH", "DELETE"].includes(method)
+      || !requestPath.startsWith("/")
+      || requestPath.startsWith("//")
+      || requestPath.includes("\\")
+    ) {
+      return null;
+    }
+    const requestedTopology = normalizeRequestedTopology(
+      source.requestedTopology,
+    );
+    return {
+      target,
+      functionId,
+      method,
+      path: requestPath,
+      body: source.body ?? null,
+      timeoutMs: boundedInteger(
+        source.timeoutMs,
+        120_000,
+        1_000,
+        10 * 60_000,
+      ),
+      ...(requestedTopology ? { requestedTopology } : {}),
+    };
+  }
+  if (target === "service_topology") {
+    if (!Array.isArray(source.steps) || source.steps.length === 0 || source.steps.length > 50) {
+      return null;
+    }
+    const steps = source.steps.map((entry) => {
+      const step = asRecord(entry);
+      const id = text(step.id, 200);
+      const request = normalizeDeterministicContractRequest(step.request);
+      if (
+        !id
+        || !/^[a-z][a-z0-9_-]*$/.test(id)
+        || !request
+        || request.target === "service_topology"
+      ) {
+        return null;
+      }
+      return {
+        id,
+        name: text(step.name || id, 500),
+        request,
+        assertions: Array.isArray(step.assertions)
+          ? step.assertions.slice(0, 100).map(asRecord)
+          : [],
+      };
+    });
+    if (
+      steps.some((step) => !step)
+      || new Set(steps.map((step) => step.id)).size !== steps.length
+    ) {
+      return null;
+    }
+    return {
+      target,
+      steps,
+      stopOnFailure: source.stopOnFailure !== false,
+    };
+  }
+  if (target === "metronome_workflow") {
+    const workflowId = text(source.workflowId, 300);
+    if (!workflowId) return null;
+    const requestedTopology = normalizeRequestedTopology(
+      source.requestedTopology,
+    );
+    return {
+      target,
+      workflowId,
+      workflowVersionId: text(
+        source.workflowVersionId || source.workflow_version_id,
+        300,
+      ) || null,
+      input: source.input ?? null,
+      timeoutMs: boundedInteger(
+        source.timeoutMs,
+        5 * 60_000,
+        1_000,
+        30 * 60_000,
+      ),
+      ...(requestedTopology ? { requestedTopology } : {}),
+    };
+  }
+  return null;
+}
+
+function redactEvidenceValue(value, key = "", depth = 0) {
+  if (depth > 8) return "[truncated]";
+  if (/secret|token|password|authorization|api[_-]?key|cookie/i.test(key)) {
+    return "[redacted]";
+  }
+  if (Array.isArray(value)) {
+    return value.slice(0, 100).map(
+      (entry) => redactEvidenceValue(entry, "", depth + 1),
+    );
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .slice(0, 200)
+        .map(([entryKey, entry]) => [
+          entryKey,
+          redactEvidenceValue(entry, entryKey, depth + 1),
+        ]),
+    );
+  }
+  if (typeof value === "string") return value.slice(0, 20_000);
+  return value ?? null;
+}
+
+function resolveAssertionPath(value, pathValue) {
+  const path = text(pathValue, 1_000)
+    .replace(/\[(\d+)\]/g, ".$1")
+    .split(".")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  let current = value;
+  for (const segment of path) {
+    if (["__proto__", "prototype", "constructor"].includes(segment)) {
+      return { found: false, value: undefined };
+    }
+    if (
+      current === null
+      || current === undefined
+      || (typeof current !== "object" && !Array.isArray(current))
+      || !Object.hasOwn(current, segment)
+    ) {
+      return { found: false, value: undefined };
+    }
+    current = current[segment];
+  }
+  return { found: true, value: current };
+}
+
+function valuesEqual(left, right) {
+  return stableJson(left) === stableJson(right);
+}
+
+function safePattern(value) {
+  const pattern = text(value, 256);
+  if (
+    !pattern
+    || /\(\?/.test(pattern)
+    || /\\[1-9]/.test(pattern)
+    || /(?:\*|\+|\{[^}]+\})(?:\*|\+|\{)/.test(pattern)
+  ) {
+    return null;
+  }
+  try {
+    return new RegExp(pattern);
+  } catch {
+    return null;
+  }
+}
+
+function evaluateAssertions(response, assertionsValue) {
+  const assertions = Array.isArray(assertionsValue) ? assertionsValue : [];
+  return assertions.map((assertionValue, index) => {
+    const assertion = asRecord(assertionValue);
+    const path = text(assertion.path, 1_000);
+    const shorthandOperator = [
+      "equals",
+      "not_equals",
+      "contains",
+      "matches",
+      "gte",
+      "lte",
+    ].find((candidate) => Object.hasOwn(assertion, candidate));
+    const operator = text(
+      assertion.operator || shorthandOperator || "equals",
+      100,
+    ).toLowerCase();
+    const resolved = resolveAssertionPath(response, path);
+    const expected = Object.hasOwn(assertion, "expected")
+      ? assertion.expected
+      : shorthandOperator
+        ? assertion[shorthandOperator]
+        : undefined;
+    let passed = false;
+    if (operator === "exists") passed = resolved.found;
+    else if (operator === "truthy") passed = resolved.found && Boolean(resolved.value);
+    else if (operator === "equals") {
+      passed = resolved.found && valuesEqual(resolved.value, expected);
+    } else if (operator === "not_equals") {
+      passed = resolved.found && !valuesEqual(resolved.value, expected);
+    } else if (operator === "contains") {
+      passed = resolved.found && (
+        typeof resolved.value === "string"
+          ? resolved.value.includes(String(expected ?? ""))
+          : Array.isArray(resolved.value)
+            ? resolved.value.some((entry) => valuesEqual(entry, expected))
+            : false
+      );
+    } else if (operator === "matches") {
+      const pattern = safePattern(expected);
+      passed = Boolean(
+        resolved.found
+        && pattern
+        && pattern.test(text(resolved.value, 20_000)),
+      );
+    } else if (operator === "gte") {
+      passed = resolved.found
+        && Number.isFinite(Number(resolved.value))
+        && Number(resolved.value) >= Number(expected);
+    } else if (operator === "lte") {
+      passed = resolved.found
+        && Number.isFinite(Number(resolved.value))
+        && Number(resolved.value) <= Number(expected);
+    }
+    return {
+      index,
+      path,
+      operator,
+      passed,
+      expected: redactEvidenceValue(expected),
+      actual: redactEvidenceValue(resolved.value),
+    };
+  });
 }
 
 function createRuntimeError(message, status = 500) {
@@ -278,12 +639,13 @@ export function createTestsRuntime(deps = {}) {
   const activeExecutions = new Map();
   const workerId = text(deps.executionOwnerId, 300)
     || `tests-worker:${process.pid}`;
+  const fetchImpl = typeof deps.fetch === "function" ? deps.fetch : fetch;
 
   async function backendRequest(record, path, options = {}) {
     const { requestContext, upstreamUrl, apiKey, body } = record;
     let response;
     if (apiKey) {
-      response = await fetch(`${upstreamUrl}${path}`, {
+      response = await fetchImpl(`${upstreamUrl}${path}`, {
         method: options.method || "GET",
         headers: withProxyOrganizationHeader(requestContext, body, {
           ...(options.headers || {}),
@@ -301,6 +663,337 @@ export function createTestsRuntime(deps = {}) {
       throw createRuntimeError("Sign in to Computer Agents or provide an API key.", 401);
     }
     return await readJsonResponse(response, options.fallbackMessage || "Tests API request failed.");
+  }
+
+  function deterministicContractCases(definition) {
+    const enabledCases = asArray(asRecord(definition).cases)
+      .map(asRecord)
+      .filter((testCase) => testCase.enabled !== false);
+    if (
+      enabledCases.length === 0
+      || enabledCases.some((testCase) => (
+        text(testCase.kind, 100).toLowerCase() !== "contract"
+        || !normalizeDeterministicContractRequest(testCase.request)
+      ))
+    ) {
+      return null;
+    }
+    return enabledCases;
+  }
+
+  async function waitForMetronomeRun(record, workflowId, runId, timeoutMs) {
+    const deadline = Date.now() + timeoutMs;
+    const pollMs = Math.max(50, Number(deps.contractPollMs) || 1_000);
+    while (Date.now() <= deadline) {
+      const payload = await backendRequest(
+        record,
+        `/metronomes/${encodeURIComponent(workflowId)}/runs/${
+          encodeURIComponent(runId)
+        }`,
+        { fallbackMessage: "The Metronome test run could not be inspected." },
+      );
+      const metronomeRun = asRecord(payload.data || payload.run);
+      const status = text(metronomeRun.status, 100).toLowerCase();
+      if (["completed", "failed", "cancelled"].includes(status)) {
+        return metronomeRun;
+      }
+      await new Promise((resolve) => setTimeout(resolve, pollMs));
+    }
+    throw createRuntimeError("The Metronome contract timed out.", 504);
+  }
+
+  async function executeDeterministicContractRequest(
+    record,
+    testCase,
+    request,
+    run,
+  ) {
+    if (request.target === "service_topology") {
+      const stepResults = [];
+      const failures = [];
+      for (const step of request.steps) {
+        const startedAt = new Date().toISOString();
+        try {
+          const execution = await executeDeterministicContractRequest(
+            record,
+            testCase,
+            step.request,
+            run,
+          );
+          const assertions = evaluateAssertions(
+            execution.response,
+            step.assertions,
+          );
+          const stepFailures = [
+            ...execution.defaultFailures,
+            ...assertions
+              .filter((assertion) => !assertion.passed)
+              .map((assertion) => (
+                `assertion ${assertion.index + 1} failed at ${assertion.path}`
+              )),
+          ];
+          const status = stepFailures.length === 0 ? "passed" : "failed";
+          stepResults.push({
+            id: step.id,
+            name: step.name,
+            target: step.request.target,
+            status,
+            response: execution.response,
+            assertions,
+            failures: stepFailures,
+            reference: execution.reference,
+            method: execution.method,
+            startedAt,
+            completedAt: new Date().toISOString(),
+          });
+          failures.push(...stepFailures.map((failure) => `${step.id}: ${failure}`));
+          if (stepFailures.length > 0 && request.stopOnFailure) break;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          stepResults.push({
+            id: step.id,
+            name: step.name,
+            target: step.request.target,
+            status: "error",
+            response: {},
+            assertions: [],
+            failures: [message],
+            reference: "",
+            method: "",
+            startedAt,
+            completedAt: new Date().toISOString(),
+          });
+          failures.push(`${step.id}: ${message}`);
+          if (request.stopOnFailure) break;
+        }
+      }
+      const skippedSteps = request.steps.slice(stepResults.length);
+      for (const step of skippedSteps) {
+        stepResults.push({
+          id: step.id,
+          name: step.name,
+          target: step.request.target,
+          status: "skipped",
+          response: {},
+          assertions: [],
+          failures: ["Skipped after an earlier topology step failed."],
+          reference: "",
+          method: "",
+          startedAt: null,
+          completedAt: null,
+        });
+      }
+      return {
+        response: {
+          steps: stepResults,
+          passedCount: stepResults.filter((step) => step.status === "passed").length,
+          failedCount: stepResults.filter((step) => (
+            step.status === "failed" || step.status === "error"
+          )).length,
+          skippedCount: stepResults.filter((step) => step.status === "skipped").length,
+        },
+        defaultFailures: failures,
+        reference: "computer-agents://tests/service-topology",
+        method: "COMPOSITE",
+      };
+    }
+    if (request.target === "control_plane_readiness") {
+      const readiness = asRecord(await backendRequest(
+        record,
+        "/ready",
+        { fallbackMessage: "The control-plane readiness check failed." },
+      ));
+      const agentRuntime = asRecord(readiness.agentRuntime);
+      const failures = [];
+      if (text(readiness.status, 100).toLowerCase() !== "ready") {
+        failures.push("control plane is not ready");
+      }
+      if (request.requireDatabase === true && !text(readiness.database, 200)) {
+        failures.push("database readiness is missing");
+      }
+      if (
+        request.requireAgentRuntime === true
+        && text(agentRuntime.status, 100).toLowerCase() !== "available"
+      ) {
+        failures.push("agent runtime is unavailable");
+      }
+      return {
+        response: readiness,
+        defaultFailures: failures,
+        reference: `${record.upstreamUrl}/ready`,
+        method: "GET",
+      };
+    }
+    if (request.target === "computer_agents_function") {
+      const response = asRecord(await backendRequest(
+        record,
+        `/servers/${encodeURIComponent(request.functionId)}/invoke`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            method: request.method,
+            path: request.path,
+            body: request.body,
+          }),
+          fallbackMessage: "The Computer Agents Function invocation failed.",
+        },
+      ));
+      return {
+        response,
+        defaultFailures: response.ok === true
+          ? []
+          : [`function returned HTTP ${Number(response.status) || "error"}`],
+        reference: `/servers/${request.functionId}/invoke`,
+        method: request.method,
+      };
+    }
+    let pinnedDefinition;
+    if (request.workflowVersionId) {
+      const versionPayload = await backendRequest(
+        record,
+        `/metronomes/${encodeURIComponent(request.workflowId)}/versions`,
+        {
+          fallbackMessage:
+            "The pinned Metronome contract version could not be loaded.",
+        },
+      );
+      const pinnedVersion = asArray(versionPayload).map(asRecord).find(
+        (version) => text(version.id, 300) === request.workflowVersionId,
+      );
+      pinnedDefinition = asRecord(pinnedVersion?.definition);
+      if (!pinnedVersion || !Object.keys(pinnedDefinition).length) {
+        throw createRuntimeError(
+          "The pinned Metronome contract version is unavailable.",
+          409,
+        );
+      }
+    }
+    const created = await backendRequest(
+      record,
+      `/metronomes/${encodeURIComponent(request.workflowId)}/test-run`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          ...(pinnedDefinition ? { definition: pinnedDefinition } : {}),
+          input: request.input,
+          idempotencyKey: `test-service:${run.id}:${text(testCase.id, 300)}`,
+          timeoutMs: request.timeoutMs,
+          attachedProjectId: run.projectId || null,
+          attachedTicketId: run.taskId || null,
+        }),
+        fallbackMessage: "The Metronome contract could not be started.",
+      },
+    );
+    const createdRun = asRecord(created.data || created.run);
+    const metronomeRunId = text(createdRun.id, 300);
+    if (!metronomeRunId) {
+      throw createRuntimeError(
+        "The Metronome contract returned no run id.",
+        502,
+      );
+    }
+    const completed = await waitForMetronomeRun(
+      record,
+      request.workflowId,
+      metronomeRunId,
+      request.timeoutMs,
+    );
+    return {
+      response: completed,
+      defaultFailures: text(completed.status, 100).toLowerCase() === "completed"
+        ? []
+        : [`workflow ended with status ${
+          text(completed.status, 100) || "unknown"
+        }`],
+      reference:
+        `/metronomes/${request.workflowId}/runs/${metronomeRunId}`,
+      method: "POST",
+    };
+  }
+
+  async function executeDeterministicContractPlan(record, definition, run) {
+    const testCases = deterministicContractCases(definition);
+    if (!testCases) return null;
+    const results = [];
+    for (const [index, testCase] of testCases.entries()) {
+      const startedAt = new Date().toISOString();
+      const startedMs = Date.now();
+      const request = normalizeDeterministicContractRequest(testCase.request);
+      let response = {};
+      let status = "error";
+      let summary = "";
+      let diagnostics = {};
+      let reference = "";
+      let method = "";
+      try {
+        const execution = await executeDeterministicContractRequest(
+          record,
+          testCase,
+          request,
+          run,
+        );
+        response = execution.response;
+        reference = execution.reference;
+        method = execution.method;
+        const assertions = evaluateAssertions(response, testCase.assertions);
+        const assertionFailures = assertions.filter(
+          (assertion) => !assertion.passed,
+        );
+        const failures = [
+          ...execution.defaultFailures,
+          ...assertionFailures.map(
+            (assertion) => (
+              `assertion ${assertion.index + 1} failed at ${assertion.path}`
+            ),
+          ),
+        ];
+        status = failures.length === 0 ? "passed" : "failed";
+        summary = failures.length === 0
+          ? "The deterministic contract passed."
+          : `Deterministic contract failed: ${failures.join("; ")}.`;
+        diagnostics = {
+          target: request.target,
+          assertions,
+          failures,
+        };
+      } catch (error) {
+        summary = error instanceof Error ? error.message : String(error);
+        diagnostics = {
+          target: request?.target || null,
+          httpStatus: Number(error?.status || 0) || null,
+        };
+      }
+      const completedAt = new Date().toISOString();
+      results.push(normalizeResult({
+        caseId: text(testCase.id, 300) || `case-${index + 1}`,
+        name: text(testCase.name, 500) || "Deterministic contract",
+        kind: "contract",
+        status,
+        attempt: 1,
+        durationMs: Math.max(0, Date.now() - startedMs),
+        exitCode: null,
+        summary,
+        diagnostics,
+        evidence: {
+          target: request?.target || null,
+          method,
+          reference,
+          requestFingerprint: request ? sha256(request) : null,
+          response: redactEvidenceValue(response),
+          redacted: true,
+        },
+        startedAt,
+        completedAt,
+      }, index));
+    }
+    return {
+      results,
+      artifacts: [],
+      summary: "Deterministic platform contracts completed.",
+      executionMode: "deterministic_contract_worker_v2",
+    };
   }
 
   async function createHiddenThread(record, { run, plan, agentId }) {
@@ -331,7 +1024,7 @@ export function createTestsRuntime(deps = {}) {
     const { requestContext, upstreamUrl, apiKey, body } = record;
     let response;
     if (apiKey) {
-      response = await fetch(`${upstreamUrl}/threads`, {
+      response = await fetchImpl(`${upstreamUrl}/threads`, {
         method: "POST",
         headers: withProxyOrganizationHeader(requestContext, body, {
           "content-type": "application/json",
@@ -366,7 +1059,7 @@ export function createTestsRuntime(deps = {}) {
     const payload = JSON.stringify({ content: prompt, task: prompt });
     let response;
     if (apiKey) {
-      response = await fetch(`${upstreamUrl}/threads/${encodeURIComponent(threadId)}/messages`, {
+      response = await fetchImpl(`${upstreamUrl}/threads/${encodeURIComponent(threadId)}/messages`, {
         method: "POST",
         headers: withProxyOrganizationHeader(requestContext, body, {
           "content-type": "application/json",
@@ -572,59 +1265,78 @@ export function createTestsRuntime(deps = {}) {
     const timer = startHeartbeat(record, runId, lease);
     const startedAt = text(run.startedAt, 100) || new Date().toISOString();
     let threadId = text(asRecord(run.metadata).executorThreadId, 300);
+    let agentId = "";
+    let executionMode = "computer_agents_thread_v1";
     try {
-      if (!run.environmentId) {
-        throw createRuntimeError(
-          "Select a Computer Agents environment before running this test plan.",
-          409,
-        );
-      }
-      const agentId = await resolveExecutorAgent(record, run);
       const definition = asRecord(
         asRecord(asRecord(run.metadata).testPlanSnapshot).definition
         || plan.definition,
       );
-      const prompt = buildExecutionPrompt({ plan, run });
       let output = null;
-      if (!threadId) {
-        const thread = await createHiddenThread(record, { run, plan, agentId });
-        threadId = thread.id;
+      if (deterministicContractCases(definition)) {
+        executionMode = "deterministic_contract_worker_v2";
         await patchRun(record, runId, lease, {
           status: "running",
           startedAt,
           metadata: {
             ...asRecord(run.metadata),
-            executorThreadId: threadId,
-            executorAgentId: agentId,
-            executionMode: "computer_agents_thread_v1",
-            evidenceProvenance: selfReportedExecutionProvenance(threadId),
+            executionMode,
           },
         });
-        const fallback = await executeThreadMessage(record, threadId, prompt);
-        output = await waitForThread(record, threadId, fallback);
+        output = await executeDeterministicContractPlan(
+          record,
+          definition,
+          run,
+        );
       } else {
-        const inspection = await inspectThread(record, threadId);
-        const parsed = parseTestRunOutput(inspection.records);
-        if (parsed && TERMINAL_THREAD_STATUSES.has(inspection.status)) {
-          output = { ...parsed, records: inspection.records };
-        } else if (["failed", "cancelled"].includes(inspection.status)) {
+        if (!run.environmentId) {
           throw createRuntimeError(
-            `The existing test executor thread ended with status ${inspection.status}.`,
-            502,
+            "Select a Computer Agents environment before running this test plan.",
+            409,
           );
-        } else if (inspection.status === "completed") {
-          throw createRuntimeError(
-            "The existing test executor thread completed without structured test results.",
-            502,
-          );
-        } else {
-          const promptWasSubmitted = inspection.records.some((entry) => (
-            readRecordText(entry).includes(`Test run id: ${run.id}`)
-          ));
-          const fallback = promptWasSubmitted
-            ? ""
-            : await executeThreadMessage(record, threadId, prompt);
+        }
+        agentId = await resolveExecutorAgent(record, run);
+        const prompt = buildExecutionPrompt({ plan, run });
+        if (!threadId) {
+          const thread = await createHiddenThread(record, { run, plan, agentId });
+          threadId = thread.id;
+          await patchRun(record, runId, lease, {
+            status: "running",
+            startedAt,
+            metadata: {
+              ...asRecord(run.metadata),
+              executorThreadId: threadId,
+              executorAgentId: agentId,
+              executionMode,
+              evidenceProvenance: selfReportedExecutionProvenance(threadId),
+            },
+          });
+          const fallback = await executeThreadMessage(record, threadId, prompt);
           output = await waitForThread(record, threadId, fallback);
+        } else {
+          const inspection = await inspectThread(record, threadId);
+          const parsed = parseTestRunOutput(inspection.records);
+          if (parsed && TERMINAL_THREAD_STATUSES.has(inspection.status)) {
+            output = { ...parsed, records: inspection.records };
+          } else if (["failed", "cancelled"].includes(inspection.status)) {
+            throw createRuntimeError(
+              `The existing test executor thread ended with status ${inspection.status}.`,
+              502,
+            );
+          } else if (inspection.status === "completed") {
+            throw createRuntimeError(
+              "The existing test executor thread completed without structured test results.",
+              502,
+            );
+          } else {
+            const promptWasSubmitted = inspection.records.some((entry) => (
+              readRecordText(entry).includes(`Test run id: ${run.id}`)
+            ));
+            const fallback = promptWasSubmitted
+              ? ""
+              : await executeThreadMessage(record, threadId, prompt);
+            output = await waitForThread(record, threadId, fallback);
+          }
         }
       }
       const results = reconcileExpectedResults(definition, output.results);
@@ -653,8 +1365,11 @@ export function createTestsRuntime(deps = {}) {
           completedAt: result.completedAt || completedAt,
           evidence: {
             ...asRecord(result.evidence),
-            executorThreadId: threadId,
-            provenance: selfReportedExecutionProvenance(threadId),
+            executionMode,
+            ...(threadId ? {
+              executorThreadId: threadId,
+              provenance: selfReportedExecutionProvenance(threadId),
+            } : {}),
           },
         })),
         artifacts: output.artifacts,
@@ -662,8 +1377,10 @@ export function createTestsRuntime(deps = {}) {
           ...asRecord(run.metadata),
           executorThreadId: threadId,
           executorAgentId: agentId,
-          executionMode: "computer_agents_thread_v1",
-          evidenceProvenance: selfReportedExecutionProvenance(threadId),
+          executionMode,
+          ...(threadId ? {
+            evidenceProvenance: selfReportedExecutionProvenance(threadId),
+          } : {}),
           summary: output.summary,
         },
       });
@@ -687,7 +1404,11 @@ export function createTestsRuntime(deps = {}) {
             summary: error instanceof Error ? error.message : String(error),
             diagnostics: {
               status: Number(error?.status || 0),
-              stage: threadId ? "executor_thread" : "executor_setup",
+              stage: threadId
+                ? "executor_thread"
+                : executionMode.startsWith("deterministic_contract_worker_")
+                  ? "deterministic_contract"
+                  : "executor_setup",
             },
             evidence: {
               executorThreadId: threadId || null,
@@ -700,8 +1421,10 @@ export function createTestsRuntime(deps = {}) {
           metadata: {
             ...asRecord(run.metadata),
             executorThreadId: threadId || "",
-            executionMode: "computer_agents_thread_v1",
-            evidenceProvenance: selfReportedExecutionProvenance(threadId),
+            executionMode,
+            ...(threadId ? {
+              evidenceProvenance: selfReportedExecutionProvenance(threadId),
+            } : {}),
             executionError: error instanceof Error ? error.message : String(error),
           },
         }).catch(() => {});

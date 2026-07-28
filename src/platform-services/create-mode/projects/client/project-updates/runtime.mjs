@@ -122,6 +122,8 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                     authorName: "",
                     authorEmail: "",
                     authorAvatarUrl: "",
+                    kind: "",
+                    isSynthetic: false,
                   }
                 : null;
             }
@@ -195,6 +197,211 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                   || author.photoUrl
                   || ""
               ).trim(),
+              kind: String(
+                value.kind
+                  || value.eventType
+                  || value.event_type
+                  || value.type
+                  || ""
+              ).trim(),
+              isSynthetic: value.isSynthetic === true,
+            };
+          }
+
+          function resolveProjectOverviewUpdateAuthorIdentity(value = {}) {
+            const authorUserId = String(value?.authorUserId || "").trim();
+            const storedAuthorName = String(value?.authorName || "").trim();
+            const authorEmail = String(
+              value?.authorEmail
+                || (storedAuthorName.includes("@") ? storedAuthorName : "")
+                || ""
+            ).trim();
+            const viewerUserId = String(currentUserId || "").trim();
+            const viewerEmail = String(currentUserEmail || "").trim().toLowerCase();
+            const isCurrentUser = Boolean(
+              (authorUserId && viewerUserId && authorUserId === viewerUserId)
+              || (authorEmail && viewerEmail && authorEmail.toLowerCase() === viewerEmail)
+            );
+            let workspaceMember = typeof getTaskWorkspaceMemberByUserId === "function"
+              ? getTaskWorkspaceMemberByUserId(authorUserId)
+              : null;
+            if (
+              !workspaceMember
+              && authorEmail
+              && Array.isArray(workspaceTeamMembers)
+              && typeof readTaskCommentMemberIdentityValue === "function"
+            ) {
+              workspaceMember = workspaceTeamMembers.find((member) => (
+                readTaskCommentMemberIdentityValue(member, [
+                  "email",
+                  "emailAddress",
+                  "email_address",
+                ]).toLowerCase() === authorEmail.toLowerCase()
+              )) || null;
+            }
+            const readMemberValue = (keys) => (
+              typeof readTaskCommentMemberIdentityValue === "function"
+                ? readTaskCommentMemberIdentityValue(workspaceMember, keys)
+                : ""
+            );
+            const memberName = readMemberValue([
+              "displayName",
+              "display_name",
+              "name",
+              "fullName",
+              "full_name",
+            ]);
+            const memberAvatarUrl = readMemberValue([
+              "photoURL",
+              "photoUrl",
+              "photo_url",
+              "avatarURL",
+              "avatarUrl",
+              "avatar_url",
+              "avatar",
+              "picture",
+              "imageUrl",
+              "image_url",
+            ]);
+            const rawName = String(
+              (isCurrentUser ? currentUserName : "")
+                || memberName
+                || (storedAuthorName.includes("@") ? "" : storedAuthorName)
+                || ""
+            ).trim();
+            const fallbackNameSource = rawName || authorEmail;
+            const derivedName = fallbackNameSource.includes("@")
+              ? fallbackNameSource
+                  .split("@")[0]
+                  .replace(/[._-]+/g, " ")
+                  .replace(/\b\w/g, (character) => character.toUpperCase())
+              : fallbackNameSource;
+            const name = typeof formatAccountDisplayName === "function"
+              ? formatAccountDisplayName(rawName, authorEmail, derivedName || "Project member")
+              : (derivedName || "Project member");
+            const rawAvatarUrl = String(
+              (isCurrentUser ? currentUserAvatarUrl : "")
+                || memberAvatarUrl
+                || value?.authorAvatarUrl
+                || ""
+            ).trim();
+            return {
+              userId: authorUserId,
+              name,
+              email: authorEmail,
+              avatarUrl: typeof normalizeSessionPhotoUrl === "function"
+                ? normalizeSessionPhotoUrl(rawAvatarUrl)
+                : rawAvatarUrl,
+            };
+          }
+
+          function getProjectOverviewCreationUpdate(projectRecord = projectOverviewDraft || selectedProject) {
+            const projectId = String(projectRecord?.id || "").trim();
+            if (!projectId) {
+              return null;
+            }
+            const metadata = projectRecord?.metadata
+              && typeof projectRecord.metadata === "object"
+              && !Array.isArray(projectRecord.metadata)
+                ? projectRecord.metadata
+                : {};
+            const identityCandidates = [
+              projectRecord?.createdBy,
+              projectRecord?.creator,
+              metadata.createdBy,
+              metadata.creator,
+              projectRecord?.owner,
+              metadata.owner,
+            ].filter((candidate) => (
+              candidate
+              && typeof candidate === "object"
+              && !Array.isArray(candidate)
+            ));
+            const readIdentityValue = (keys, fallbackValues = []) => {
+              for (const candidate of identityCandidates) {
+                for (const key of keys) {
+                  const value = String(candidate?.[key] || "").trim();
+                  if (value) return value;
+                }
+              }
+              for (const fallbackValue of fallbackValues) {
+                const value = String(fallbackValue || "").trim();
+                if (value) return value;
+              }
+              return "";
+            };
+            const authorUserId = readIdentityValue(
+              ["userId", "user_id", "id", "uid"],
+              [
+                projectRecord?.createdByUserId,
+                projectRecord?.creatorUserId,
+                metadata.createdByUserId,
+                metadata.creatorUserId,
+                projectRecord?.ownerUserId,
+                metadata.ownerUserId,
+              ]
+            );
+            const authorName = readIdentityValue(
+              ["name", "displayName", "display_name"],
+              [
+                projectRecord?.createdByName,
+                projectRecord?.creatorName,
+                metadata.createdByName,
+                metadata.creatorName,
+                projectRecord?.ownerName,
+                metadata.ownerName,
+                projectRecord?.leadName,
+                metadata.leadName,
+              ]
+            );
+            const authorEmail = readIdentityValue(
+              ["email"],
+              [
+                projectRecord?.createdByEmail,
+                projectRecord?.creatorEmail,
+                metadata.createdByEmail,
+                metadata.creatorEmail,
+                projectRecord?.ownerEmail,
+                metadata.ownerEmail,
+              ]
+            );
+            const authorAvatarUrl = readIdentityValue(
+              ["avatarUrl", "avatar_url", "photoUrl", "photo_url", "picture"],
+              [
+                projectRecord?.createdByAvatarUrl,
+                projectRecord?.creatorAvatarUrl,
+                metadata.createdByAvatarUrl,
+                metadata.creatorAvatarUrl,
+                projectRecord?.ownerAvatarUrl,
+                metadata.ownerAvatarUrl,
+              ]
+            );
+            const rawCreatedAt = projectRecord?.createdAt || metadata.createdAt || "";
+            const numericCreatedAt = Number(rawCreatedAt);
+            const createdAt = Number.isFinite(numericCreatedAt) && numericCreatedAt > 0
+              ? new Date(numericCreatedAt < 100000000000 ? numericCreatedAt * 1000 : numericCreatedAt).toISOString()
+              : String(rawCreatedAt || "").trim();
+            const authorIdentity = resolveProjectOverviewUpdateAuthorIdentity({
+              authorUserId,
+              authorName,
+              authorEmail,
+              authorAvatarUrl,
+            });
+            return {
+              id: "project_created_" + projectId,
+              body: authorIdentity.name + " created this project.",
+              status: "on_track",
+              attachments: [],
+              comments: [],
+              reactions: [],
+              createdAt,
+              updatedAt: createdAt,
+              authorUserId: authorIdentity.userId,
+              authorName: authorIdentity.name,
+              authorEmail: authorIdentity.email,
+              authorAvatarUrl: authorIdentity.avatarUrl,
+              kind: "project_created",
+              isSynthetic: false,
             };
           }
 
@@ -237,25 +444,53 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
           }
 
           function getProjectOverviewLatestUpdateInfo() {
-            return getProjectOverviewUpdateRecords()[0] || null;
+            return getProjectOverviewUpdateRecords()[0]
+              || getProjectOverviewCreationUpdate()
+              || null;
+          }
+
+          function getProjectOverviewUpdateRecordById(updateId) {
+            const normalizedUpdateId = String(updateId || "").trim();
+            if (!normalizedUpdateId) {
+              return null;
+            }
+            const storedUpdate = getProjectOverviewUpdateRecords().find(
+              (record) => record.id === normalizedUpdateId
+            );
+            if (storedUpdate) {
+              return storedUpdate;
+            }
+            const creationUpdate = getProjectOverviewCreationUpdate();
+            return creationUpdate?.id === normalizedUpdateId
+              ? creationUpdate
+              : null;
           }
 
           function buildProjectOverviewUpdateActivityEvents() {
-            return getProjectOverviewUpdateRecords().map((record, index) => ({
-              id: record.id || "project-update-" + index + "-" + String(record.createdAt || ""),
-              eventType: "project_update_posted",
-              createdAt: record.createdAt || record.updatedAt,
-              actorType: "user",
-              actorUserId: record.authorUserId,
-              actorName: record.authorName || record.authorEmail || "Project member",
-              actorAvatarUrl: record.authorAvatarUrl,
-              projectUpdate: record,
-            }));
+            return getProjectOverviewUpdateRecords().map((record, index) => {
+              const authorIdentity = resolveProjectOverviewUpdateAuthorIdentity(record);
+              return {
+                id: record.id || "project-update-" + index + "-" + String(record.createdAt || ""),
+                eventType: "project_update_posted",
+                createdAt: record.createdAt || record.updatedAt,
+                actorType: "user",
+                actorUserId: authorIdentity.userId,
+                actorName: authorIdentity.name,
+                actorAvatarUrl: authorIdentity.avatarUrl,
+                projectUpdate: record,
+              };
+            });
           }
 
           function createProjectOverviewUpdateClientRecord(draft) {
             const now = new Date().toISOString();
             const randomPart = Math.random().toString(36).slice(2, 10);
+            const authorIdentity = resolveProjectOverviewUpdateAuthorIdentity({
+              authorUserId: currentUserId,
+              authorName: currentUserName,
+              authorEmail: currentUserEmail,
+              authorAvatarUrl: currentUserAvatarUrl,
+            });
             return {
               id: "project_update_" + Date.now().toString(36) + randomPart,
               body: String(draft?.body || "").trim(),
@@ -265,10 +500,10 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
               reactions: [],
               createdAt: now,
               updatedAt: now,
-              authorUserId: String(currentUserId || "").trim(),
-              authorName: String(currentUserName || currentUserEmail || "Project member").trim(),
-              authorEmail: String(currentUserEmail || "").trim(),
-              authorAvatarUrl: String(currentUserAvatarUrl || "").trim(),
+              authorUserId: authorIdentity.userId,
+              authorName: authorIdentity.name,
+              authorEmail: authorIdentity.email,
+              authorAvatarUrl: authorIdentity.avatarUrl,
             };
           }
 
@@ -470,9 +705,7 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
           }
 
           function buildProjectOverviewUpdateMutationRecord(updateId, mutation) {
-            const currentRecord = getProjectOverviewUpdateRecords().find(
-              (record) => record.id === String(updateId || "").trim()
-            );
+            const currentRecord = getProjectOverviewUpdateRecordById(updateId);
             if (!currentRecord) {
               return null;
             }
@@ -516,7 +749,11 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
           }
 
           async function persistProjectOverviewUpdateMutationFallback(nextUpdate) {
-            const nextProject = commitProjectOverviewUpdateLocalRecord(nextUpdate);
+            const materializedUpdate = normalizeProjectOverviewUpdateRecord({
+              ...nextUpdate,
+              isSynthetic: false,
+            });
+            const nextProject = commitProjectOverviewUpdateLocalRecord(materializedUpdate);
             if (!nextProject?.id) return null;
             const metadata = nextProject.metadata
               && typeof nextProject.metadata === "object"
@@ -600,6 +837,12 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                   })
                 : [];
               const attachments = normalizePlaygroundTaskAttachmentList(uploadedAttachments);
+              const commentAuthorIdentity = resolveProjectOverviewUpdateAuthorIdentity({
+                authorUserId: currentUserId,
+                authorName: currentUserName,
+                authorEmail: currentUserEmail,
+                authorAvatarUrl: currentUserAvatarUrl,
+              });
               const clientComment = normalizeProjectOverviewUpdateComment({
                 id: clientCommentId,
                 parentCommentId: normalizedParentCommentId,
@@ -609,10 +852,10 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                 createdAt: now,
                 updatedAt: now,
                 author: {
-                  userId: currentUserId,
-                  name: currentUserName || currentUserEmail || "Project member",
-                  email: currentUserEmail,
-                  avatarUrl: currentUserAvatarUrl,
+                  userId: commentAuthorIdentity.userId,
+                  name: commentAuthorIdentity.name,
+                  email: commentAuthorIdentity.email,
+                  avatarUrl: commentAuthorIdentity.avatarUrl,
                 },
               }, false);
               let parentCommentFound = !normalizedParentCommentId;
@@ -753,9 +996,7 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                   : "The comment could not be updated."
               );
             }
-            const currentRecord = getProjectOverviewUpdateRecords().find(
-              (record) => record.id === normalizedUpdateId
-            );
+            const currentRecord = getProjectOverviewUpdateRecordById(normalizedUpdateId);
             const currentComment = (Array.isArray(currentRecord?.comments)
               ? currentRecord.comments
               : []
@@ -880,9 +1121,7 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
             const normalizedEmoji = String(emoji || "").trim();
             const projectId = String(selectedProjectId || selectedProject?.id || "").trim();
             if (!normalizedUpdateId || !normalizedEmoji || !projectId) return;
-            const currentRecord = getProjectOverviewUpdateRecords().find(
-              (record) => record.id === normalizedUpdateId
-            );
+            const currentRecord = getProjectOverviewUpdateRecordById(normalizedUpdateId);
             if (!currentRecord) return;
             const previousRecord = currentRecord;
             const currentReactions = Array.isArray(currentRecord.reactions) ? currentRecord.reactions : [];
@@ -1068,12 +1307,8 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
               && Boolean(projectOverviewUpdateInteractionState?.commentOpen);
             const emojiPickerOpen = updateInteractionActive
               && Boolean(projectOverviewUpdateInteractionState?.emojiOpen);
-            const actorName = String(
-              update?.authorName
-                || update?.authorEmail
-                || currentUserName
-                || "Project member"
-            ).trim();
+            const updateAuthorIdentity = resolveProjectOverviewUpdateAuthorIdentity(update);
+            const actorName = updateAuthorIdentity.name;
             const timeLabel = update?.createdAt && typeof formatRelativeThreadTime === "function"
               ? formatRelativeThreadTime(update.createdAt)
               : "";
@@ -1082,7 +1317,19 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                   className: "platform-project-update-card" + (updateBody ? "" : " is-empty"),
                 },
                 React.createElement("div", { className: "platform-project-update-card__header" },
-                  React.createElement("h2", { className: "platform-project-update-card__title" }, "Latest update"),
+                  React.createElement("div", { className: "platform-project-update-card__meta" },
+                    renderProjectOverviewUpdateStatus(update.status),
+                    React.createElement("span", { className: "platform-project-update-card__author" },
+                      renderProjectOverviewSidebarAvatar(
+                        actorName,
+                        updateAuthorIdentity.avatarUrl
+                      ),
+                      React.createElement("span", null, actorName)
+                    ),
+                    timeLabel
+                      ? React.createElement("span", { className: "platform-project-update-card__time" }, timeLabel)
+                      : null
+                  ),
                   React.createElement(PlatformSecondaryButton, {
                     type: "button",
                     size: "small",
@@ -1095,16 +1342,6 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                 ),
                 updateBody
                   ? React.createElement(React.Fragment, null,
-                      React.createElement("div", { className: "platform-project-update-card__meta" },
-                        renderProjectOverviewUpdateStatus(update.status),
-                        React.createElement("span", { className: "platform-project-update-card__author" },
-                          renderProjectOverviewSidebarAvatar(actorName, update.authorAvatarUrl),
-                          React.createElement("span", null, actorName)
-                        ),
-                        timeLabel
-                          ? React.createElement("span", { className: "platform-project-update-card__time" }, timeLabel)
-                          : null
-                      ),
                       React.createElement(PlatformInstructionsEditor, {
                         value: resolveTaskDescriptionAttachmentFiles(updateBody, update.attachments),
                         onChange: () => {},
@@ -1316,9 +1553,7 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                           }, projectOverviewUpdateInteractionState.error)
                         : null
                     )
-                  : React.createElement("p", { className: "platform-project-update-card__empty-copy" },
-                      "No project updates have been posted yet."
-                    )
+                  : null
               ),
               renderProjectOverviewUpdateComposerModal()
             );

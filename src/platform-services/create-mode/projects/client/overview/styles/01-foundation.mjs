@@ -7,7 +7,8 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
         gap: 24px;
       }
 
-      .playground-project-overview-view.is-general {
+      .playground-project-overview-view.is-general,
+      .playground-project-overview-view.is-milestones {
         width: 100%;
         max-width: none;
       }
@@ -217,10 +218,9 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
         width: min(280px, calc(100vw - 48px));
       }
 
-      .playground-project-overview-sidebar-mission-button.platform-button {
+      .playground-project-overview-sidebar-mission-button {
         width: 100%;
         margin-top: 8px;
-        justify-content: center;
       }
 
       .playground-project-overview-sidebar-progress-card {

@@ -5,7 +5,7 @@ export type PlatformDataTableSortDirection = "asc" | "desc";
 export type PlatformDataTableAlignment = "start" | "center" | "end";
 export type PlatformDataTableSurface = "default" | "plain" | "glass";
 export type PlatformDataTableLayout = "content" | "fill";
-export type PlatformDataTableVariant = "default" | "minimalistic-ui";
+export type PlatformDataTableVariant = "default" | "minimalistic-ui" | "catalog-ui";
 
 export interface PlatformDataTableSortState {
   id: string;
@@ -140,6 +140,21 @@ export interface PlatformDataTableToolbarConfig<TData> {
   className?: string;
 }
 
+export interface PlatformDataTableRowGroup {
+  id: string;
+  label: ReactNode;
+  ariaLabel?: string;
+  color?: string;
+  defaultExpanded?: boolean;
+}
+
+export interface PlatformDataTableRowGroupingConfig<TData> {
+  groups: readonly PlatformDataTableRowGroup[];
+  getGroupId: (row: TData) => string;
+  expandedIds?: ReadonlySet<string> | readonly string[];
+  onExpandedChange?: (expandedIds: ReadonlySet<string>) => void;
+}
+
 export interface PlatformDataTableActionContext<TData> {
   row: TData;
   rowId: string;
@@ -183,6 +198,7 @@ export interface PlatformDataTableProps<TData> {
   selection?: PlatformDataTableSelectionConfig<TData>;
   pagination?: PlatformDataTablePaginationConfig | false;
   toolbar?: PlatformDataTableToolbarConfig<TData>;
+  rowGrouping?: PlatformDataTableRowGroupingConfig<TData>;
   getRowActions?: (row: TData, state: PlatformDataTableRowActionState<TData>) => readonly PlatformDataTableAction<TData>[];
   renderRowMenu?: (context: PlatformDataTableRowMenuContext<TData>) => ReactNode;
   onRowActionTrigger?: (event: MouseEvent, row: TData) => void;

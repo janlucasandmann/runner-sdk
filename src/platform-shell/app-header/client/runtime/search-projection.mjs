@@ -6,6 +6,15 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
         const threadSearchResourceScopeKey = useMemo(() => (
           proxyBackendBase + "|" + requestHeadersSignature
         ), [proxyBackendBase, requestHeadersSignature]);
+        function resolveGlobalServiceSearchQuery(value) {
+          const normalizedValue = String(value || "").trimStart();
+          if (!normalizedValue.startsWith("/")) {
+            return null;
+          }
+          return normalizedValue.slice(1).trim();
+        }
+        const globalServiceSearchQuery = resolveGlobalServiceSearchQuery(threadSearchQuery);
+        const isGlobalServiceSearchQuery = globalServiceSearchQuery !== null;
 
         useEffect(() => {
           if (threadSearchFileInventoryScopeKeyRef.current === threadSearchResourceScopeKey) {
@@ -254,6 +263,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
         useEffect(() => {
           if (
             !threadSearchOpen
+            || isGlobalServiceSearchQuery
             || !["agents", "tickets", "workflows"].includes(threadSearchMode)
           ) {
             return;
@@ -261,6 +271,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           void loadThreadSearchResourceMode(threadSearchMode);
         }, [
           loadThreadSearchResourceMode,
+          isGlobalServiceSearchQuery,
           threadSearchMode,
           threadSearchOpen,
         ]);
@@ -279,13 +290,23 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           return Array.from(uniqueThreads.values());
         }, [baseThreadItems]);
 
+        function resolveExactThreadSearchId(value) {
+          const normalizedValue = String(value || "").trim();
+          return /^thread_[A-Za-z0-9_-]+$/.test(normalizedValue)
+            ? normalizedValue
+            : "";
+        }
+
+        const exactThreadSearchId = resolveExactThreadSearchId(threadSearchQuery);
         const normalizedThreadSearchQuery = threadSearchQuery.trim().toLowerCase();
         useEffect(() => {
           const searchQuery = String(threadSearchQuery || "").trim();
+          const exactThreadId = resolveExactThreadSearchId(searchQuery);
           const shouldSearchRemotely = Boolean(
             threadSearchOpen
             && threadSearchMode === "threads"
             && hasRealAccess
+            && !isGlobalServiceSearchQuery
             && searchQuery
           );
 
@@ -308,7 +329,10 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           }
 
           const normalizedQuery = searchQuery.toLowerCase();
-          const requestKey = "threads|" + threadSearchResourceScopeKey + "|" + normalizedQuery;
+          const requestIdentity = exactThreadId
+            ? "id:" + exactThreadId
+            : "query:" + normalizedQuery;
+          const requestKey = "threads|" + threadSearchResourceScopeKey + "|" + requestIdentity;
           const cachedResult = threadSearchThreadResultsCacheRef.current.get(requestKey);
           threadSearchResourceLatestRequestKeyRef.current.threads = requestKey;
 
@@ -350,38 +374,68 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
 
           const debounceTimer = window.setTimeout(async () => {
             try {
-              const response = await fetch(proxyBackendBase + "/threads/search", {
-                method: "POST",
-                headers: {
-                  ...authRequestHeaders,
-                  "Content-Type": "application/json",
-                },
-                credentials: "include",
-                cache: "no-store",
-                signal: controller.signal,
-                body: JSON.stringify({
-                  query: searchQuery,
-                  limit: THREAD_SEARCH_RESULT_LIMIT,
-                  offset: 0,
-                  includeMessages: false,
-                }),
-              });
+              const response = exactThreadId
+                ? await fetch(
+                    proxyBackendBase + "/threads/" + encodeURIComponent(exactThreadId),
+                    {
+                      method: "GET",
+                      headers: authRequestHeaders,
+                      credentials: "include",
+                      cache: "no-store",
+                      signal: controller.signal,
+                    }
+                  )
+                : await fetch(proxyBackendBase + "/threads/search", {
+                    method: "POST",
+                    headers: {
+                      ...authRequestHeaders,
+                      "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                    cache: "no-store",
+                    signal: controller.signal,
+                    body: JSON.stringify({
+                      query: searchQuery,
+                      limit: THREAD_SEARCH_RESULT_LIMIT,
+                      offset: 0,
+                      includeMessages: false,
+                    }),
+                  });
               const data = await response.json().catch(() => ({}));
-              if (!response.ok) {
+              if (!response.ok && !(exactThreadId && response.status === 404)) {
                 throw new Error(data?.message || data?.error || "Failed to search threads.");
               }
 
-              const rawResults = Array.isArray(data?.results) ? data.results : [];
+              const directThreadRecord = exactThreadId && response.ok
+                ? (
+                    data?.thread
+                    || data?.data?.thread
+                    || data?.data
+                    || data
+                  )
+                : null;
+              const rawResults = exactThreadId
+                ? (
+                    directThreadRecord
+                    && typeof directThreadRecord === "object"
+                    && !Array.isArray(directThreadRecord)
+                      ? [directThreadRecord]
+                      : []
+                  )
+                : (Array.isArray(data?.results) ? data.results : []);
               const items = normalizeThreadList(
                 rawResults.map((result) => result?.thread || result)
               ).filter((thread) => (
                 !isPrivateThreadRecord(thread)
                 && !privateThreadIdsRef.current.has(String(thread?.id || "").trim())
+                && (!exactThreadId || String(thread?.id || "").trim() === exactThreadId)
               )).slice(0, THREAD_SEARCH_RESULT_LIMIT);
               const parsedTotal = Number(data?.total);
-              const total = Number.isFinite(parsedTotal)
-                ? Math.max(items.length, parsedTotal)
-                : items.length;
+              const total = exactThreadId
+                ? items.length
+                : Number.isFinite(parsedTotal)
+                  ? Math.max(items.length, parsedTotal)
+                  : items.length;
               const nextResult = {
                 scopeKey: threadSearchResourceScopeKey,
                 query: normalizedQuery,
@@ -429,7 +483,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
                 threadSearchThreadAbortControllerRef.current = null;
               }
             }
-          }, 180);
+          }, exactThreadId ? 0 : 180);
 
           return () => {
             window.clearTimeout(debounceTimer);
@@ -438,6 +492,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
         }, [
           authRequestHeaders,
           hasRealAccess,
+          isGlobalServiceSearchQuery,
           proxyBackendBase,
           threadSearchMode,
           threadSearchOpen,
@@ -459,6 +514,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
             !threadSearchOpen
             || threadSearchMode !== "files"
             || !hasRealAccess
+            || isGlobalServiceSearchQuery
             || !normalizedThreadSearchQuery
           ) {
             return;
@@ -468,6 +524,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           });
         }, [
           hasRealAccess,
+          isGlobalServiceSearchQuery,
           loadThreadSearchFileInventory,
           normalizedThreadSearchQuery,
           threadSearchFileEnvironmentItems,
@@ -684,7 +741,9 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           threadSearchMode,
         ]);
 
-        const isThreadSearchSelectedModeLoading = threadSearchMode === "threads"
+        const isThreadSearchSelectedModeLoading = isGlobalServiceSearchQuery
+          ? false
+          : threadSearchMode === "threads"
           ? (
               normalizedThreadSearchQuery
                 ? Boolean(threadSearchResourceLoadingByMode.threads)

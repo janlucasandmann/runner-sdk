@@ -199,6 +199,56 @@ describe("PlatformGlobalSearchModal", () => {
     expect(onResultSelect).toHaveBeenLastCalledWith("file-1");
   });
 
+  it("selects the best result by default and supports keyboard result navigation", () => {
+    const onResultSelect = vi.fn();
+
+    render(
+      <PlatformGlobalSearchModal
+        {...defaultProps}
+        query="/agents"
+        resultGroups={[
+          {
+            id: "services",
+            label: "Services",
+            items: [
+              {
+                id: "service:configure:agents",
+                title: "Agents",
+                meta: "Configure",
+                actionsHidden: true,
+              },
+              {
+                id: "service:develop:agent-runtime",
+                title: "Agent Runtime",
+                meta: "Develop",
+                actionsHidden: true,
+              },
+            ],
+          },
+        ]}
+        onResultSelect={onResultSelect}
+      />,
+    );
+
+    const agentsRow = screen
+      .getByRole("button", { name: /^Agents Configure$/i })
+      .closest(".platform-global-search-modal__result");
+    const runtimeRow = screen
+      .getByRole("button", { name: /^Agent Runtime Develop$/i })
+      .closest(".platform-global-search-modal__result");
+
+    expect(agentsRow?.classList.contains("is-selected")).toBe(true);
+    expect(runtimeRow?.classList.contains("is-selected")).toBe(false);
+    expect(screen.queryByRole("button", { name: "Rename Agents" })).toBeNull();
+
+    fireEvent.keyDown(document, { key: "ArrowDown" });
+    expect(agentsRow?.classList.contains("is-selected")).toBe(false);
+    expect(runtimeRow?.classList.contains("is-selected")).toBe(true);
+
+    fireEvent.keyDown(document, { key: "Enter" });
+    expect(onResultSelect).toHaveBeenCalledWith("service:develop:agent-runtime");
+  });
+
   it("provides reusable open, inline rename, and delete controls for results", async () => {
     const onResultOpenInNewTab = vi.fn();
     const onResultRename = vi.fn();

@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -42,6 +43,9 @@ export interface SecurityRepositoryHeaderState {
   versionIsLatest?: boolean;
   versionBusy?: boolean;
   onVersionClick?: () => void;
+  actionsOpen?: boolean;
+  onActionsOpenChange?: (open: boolean) => void;
+  onDelete?: () => void;
   onOverviewClick?: () => void;
 }
 
@@ -64,6 +68,7 @@ export interface SecurityRepositoryVersionControlProps {
   onSectionChange?: (section: string) => void;
   headerLeadingControls?: ReactNode;
   onReload: () => Promise<SecurityRepositoryDetail | null>;
+  onDelete: () => void;
   onHeaderChange?: (state: SecurityRepositoryHeaderState) => void;
   onVersionsSidebarOpenChange?: (open: boolean) => void;
   onNavigationGuardChange?: (guard: Record<string, unknown> | null) => void;
@@ -183,6 +188,7 @@ export function SecurityRepositoryVersionControl({
   onSectionChange,
   headerLeadingControls,
   onReload,
+  onDelete,
   onHeaderChange,
   onVersionsSidebarOpenChange,
   onNavigationGuardChange,
@@ -198,6 +204,7 @@ export function SecurityRepositoryVersionControl({
   const [versionError, setVersionError] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [publishMenuOpen, setPublishMenuOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
   const [saveDialog, setSaveDialog] = useState<{
     mode: "current" | "new";
     key: string;
@@ -212,6 +219,8 @@ export function SecurityRepositoryVersionControl({
     null,
   );
   const [drawerTarget, setDrawerTarget] = useState<HTMLElement | null>(null);
+  const onDeleteRef = useRef(onDelete);
+  onDeleteRef.current = onDelete;
 
   const selectedVersion = useMemo(
     () =>
@@ -293,9 +302,20 @@ export function SecurityRepositoryVersionControl({
   }, [historyOpen, onVersionsSidebarOpenChange]);
 
   const openHistory = useCallback(() => {
+    setActionsOpen(false);
     setPublishMenuOpen(false);
     setHistoryOpen(true);
   }, []);
+  const handleDelete = useCallback(() => onDeleteRef.current(), []);
+
+  useEffect(() => {
+    if (!actionsOpen) return undefined;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setActionsOpen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [actionsOpen]);
 
   useEffect(() => {
     if (!onHeaderChange) return undefined;
@@ -315,15 +335,20 @@ export function SecurityRepositoryVersionControl({
         Number.isFinite(versionNumber) && versionNumber === latestVersionNumber,
       versionBusy: isBusy,
       onVersionClick: openHistory,
+      actionsOpen,
+      onActionsOpenChange: setActionsOpen,
+      onDelete: handleDelete,
       onOverviewClick: onBack,
     });
   }, [
     detail.repository.fullName,
     activeSection,
+    actionsOpen,
     isBusy,
     latestVersionNumber,
     onBack,
     onHeaderChange,
+    handleDelete,
     onSectionChange,
     openHistory,
     repositoryId,

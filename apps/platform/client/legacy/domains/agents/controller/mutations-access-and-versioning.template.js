@@ -1647,7 +1647,7 @@
                 [savedAgent.id]: savedAgent,
               }));
               setSelectedAgentId(savedAgent.id);
-              setAgentListMode(getPlaygroundAgentListMode(savedAgent));
+              setAgentListMode(getPlaygroundAgentOverviewMode(savedAgent));
               setDraftAgent(savedAgent);
               setAgentComposerOpen(false);
               setAgentComposerDraft(buildPlaygroundDefaultAgentDraft());
@@ -2232,7 +2232,7 @@
               ...current,
               [normalizedAgentId]: authoritativeAgent,
             }));
-            setAgentListMode(getPlaygroundAgentListMode(authoritativeAgent));
+            setAgentListMode(getPlaygroundAgentOverviewMode(authoritativeAgent));
             setSelectedAgentId(normalizedAgentId);
             setDraftAgent(selectedAgent);
             rememberAgentVersionBaseline(selectedAgent, { force: true });

@@ -651,7 +651,9 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
 	          );
           const hasReducedProjectSettingsAccess = Boolean(!canManageProjectAccess && hasReducedProjectRole);
           const canViewProjectSettings = canManageProjectAccess || hasReducedProjectSettingsAccess;
-	          const activeProjectOverviewHomeTab = normalizedProjectOverviewHomeTab === "resources" || (canViewProjectSettings && normalizedProjectOverviewHomeTab === "permissions")
+	          const activeProjectOverviewHomeTab = normalizedProjectOverviewHomeTab === "resources"
+              || normalizedProjectOverviewHomeTab === "milestones"
+              || (canViewProjectSettings && normalizedProjectOverviewHomeTab === "permissions")
 		            ? normalizedProjectOverviewHomeTab
 		            : "general";
           function restoreProjectOverviewSidebarAfterPermissionClose() {
@@ -697,6 +699,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
           }
           function handleProjectOverviewHomeTabChange(nextTabId) {
             const normalizedTabId = nextTabId === "resources"
+              || nextTabId === "milestones"
               || (canViewProjectSettings && nextTabId === "permissions")
                 ? nextTabId
                 : "general";

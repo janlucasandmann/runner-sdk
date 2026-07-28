@@ -1344,6 +1344,164 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
           } catch {}
         }
 
+        function commitMissionControlDeliveryExecution(execution) {
+          const normalizedProjectId = String(selectedProjectId || "").trim();
+          const normalizedExecution = execution
+            && typeof execution === "object"
+            && !Array.isArray(execution)
+            ? execution
+            : null;
+          setMissionControlDeliveryExecutionState({
+            projectId: normalizedProjectId,
+            status: "ready",
+            execution: normalizedExecution,
+            error: "",
+          });
+          return normalizedExecution;
+        }
+
+        async function requestMissionControlDeliveryAction(action) {
+          const normalizedProjectId = String(selectedProjectId || "").trim();
+          const normalizedAction = String(action || "").trim().toLowerCase();
+          if (
+            !normalizedProjectId
+            || !["start", "reconcile", "retry", "cancel"].includes(normalizedAction)
+            || missionControlDeliveryActionState.action
+          ) {
+            return null;
+          }
+          setMissionControlDeliveryActionState({
+            action: normalizedAction,
+            error: "",
+          });
+          try {
+            const response = await fetch(
+              backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId)
+                + "/delivery-plan/execution/" + normalizedAction,
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: "{}",
+              },
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(
+                data?.message
+                || data?.error
+                || "Failed to update the delivery execution.",
+              );
+            }
+            const execution = commitMissionControlDeliveryExecution(
+              data?.deliveryExecution,
+            );
+            setMissionControlDeliveryActionState({
+              action: "",
+              error: "",
+            });
+            return execution;
+          } catch (error) {
+            setMissionControlDeliveryActionState({
+              action: "",
+              error: error instanceof Error
+                ? error.message
+                : "Failed to update the delivery execution.",
+            });
+            return null;
+          }
+        }
+
+        async function approveMissionControlDeliveryAssurance() {
+          const normalizedProjectId = String(selectedProjectId || "").trim();
+          const deliveryExecution = selectedProjectDeliveryExecution
+            && typeof selectedProjectDeliveryExecution === "object"
+            && !Array.isArray(selectedProjectDeliveryExecution)
+            ? selectedProjectDeliveryExecution
+            : {};
+          const assuranceStage = deliveryExecution?.stages?.assure
+            && typeof deliveryExecution.stages.assure === "object"
+            ? deliveryExecution.stages.assure
+            : {};
+          const assuranceRunId = String(
+            deliveryExecution?.bindings?.assuranceRunId || "",
+          ).trim();
+          const evidenceFingerprint = String(
+            assuranceStage?.evidence?.evidenceFingerprint || "",
+          ).trim();
+          if (
+            !assuranceRunId
+            || !evidenceFingerprint
+            || !normalizedProjectId
+            || missionControlDeliveryActionState.action
+          ) {
+            return null;
+          }
+          setMissionControlDeliveryActionState({
+            action: "approve",
+            error: "",
+          });
+          try {
+            const approvalResponse = await fetch(
+              backendUrl + "/assurance/runs/" + encodeURIComponent(assuranceRunId) + "/approve",
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ evidenceFingerprint }),
+              },
+            );
+            const approvalData = await approvalResponse.json().catch(() => ({}));
+            if (!approvalResponse.ok) {
+              throw new Error(
+                approvalData?.message
+                || approvalData?.error
+                || "Failed to approve the Assurance evidence.",
+              );
+            }
+            const reconcileResponse = await fetch(
+              backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId)
+                + "/delivery-plan/execution/reconcile",
+              {
+                method: "POST",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: "{}",
+              },
+            );
+            const reconcileData = await reconcileResponse.json().catch(() => ({}));
+            if (!reconcileResponse.ok) {
+              throw new Error(
+                reconcileData?.message
+                || reconcileData?.error
+                || "Approval was recorded, but delivery reconciliation failed.",
+              );
+            }
+            const execution = commitMissionControlDeliveryExecution(
+              reconcileData?.deliveryExecution,
+            );
+            setMissionControlDeliveryActionState({
+              action: "",
+              error: "",
+            });
+            return execution;
+          } catch (error) {
+            setMissionControlDeliveryActionState({
+              action: "",
+              error: error instanceof Error
+                ? error.message
+                : "Failed to approve the Assurance evidence.",
+            });
+            return null;
+          }
+        }
+
         function serializePlaygroundStrategyListForInput(values) {
           return normalizePlaygroundStrategyTextList(values).join(String.fromCharCode(10));
         }

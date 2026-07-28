@@ -5,6 +5,6 @@ export {
 export {
   ProjectSummaryDetails,
   type ProjectSummaryDetailsProps,
+  type ProjectSummaryMilestoneItem,
   type ProjectSummaryResourceItem,
-  type ProjectSummaryTeamItem,
 } from "./project-summary-details.js";

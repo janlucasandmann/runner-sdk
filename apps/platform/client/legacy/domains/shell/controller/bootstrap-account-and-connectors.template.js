@@ -383,6 +383,8 @@
           const [tagDetailPropertyPopover, setTagDetailPropertyPopover] = useState("");
           const [tagDefaultEnvironmentMode, setTagDefaultEnvironmentMode] = useState("computers");
           const [tagDetailSidebarCollapsed, setTagDetailSidebarCollapsed] = useState(false);
+          const [tagPluginAccessPrincipalId, setTagPluginAccessPrincipalId] = useState("");
+          const [tagPluginAccessRoleId, setTagPluginAccessRoleId] = useState("member");
           const tagDetailPropertyPopoverRef = useRef(null);
           const tagDetailAutosaveTimersRef = useRef({});
           const [toolsSkillsOpenRequest, setToolsSkillsOpenRequest] = useState(null);
@@ -400,6 +402,13 @@
           const [toolsSkillsHeaderState, setToolsSkillsHeaderState] = useState({
             mode: "overview",
             title: "",
+            skillId: "",
+            activeTab: "code",
+            isSystem: false,
+            versionNumber: 0,
+            versionQualifier: "",
+            onTabChange: null,
+            onOpenVersions: null,
           });
           const [toolsSkillsBackRequestToken, setToolsSkillsBackRequestToken] = useState(0);
           const [resourcesHeaderState, setResourcesHeaderState] = useState({
@@ -447,10 +456,6 @@
             tasksProjectIssueCreateHandlerRef.current = typeof handler === "function" ? handler : null;
           }, []);
           const [pluginDetailTab, setPluginDetailTab] = useState("general");
-          const [pluginDetailCapabilityIndex, setPluginDetailCapabilityIndex] = useState(0);
-          const [pluginDetailCapabilityOutgoingIndex, setPluginDetailCapabilityOutgoingIndex] = useState(null);
-          const [pluginDetailCapabilityDirection, setPluginDetailCapabilityDirection] = useState(0);
-          const [pluginDetailCapabilityTransitionKey, setPluginDetailCapabilityTransitionKey] = useState(0);
           const [pendingThreadComposerPlusOpen, setPendingThreadComposerPlusOpen] = useState(false);
           const [pluginsNavPopover, setPluginsNavPopover] = useState("");
           const [settingsCheckoutLoading, setSettingsCheckoutLoading] = useState(false);

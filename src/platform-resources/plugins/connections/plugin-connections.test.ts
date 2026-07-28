@@ -32,6 +32,15 @@ function createStorage(): Storage {
 }
 
 describe("plugin connection registry", () => {
+  it("exposes the catalog logo sources for Gmail and OneDrive", () => {
+    expect(getPlatformPluginConnectionDefinition("gmail").logoUrl).toBe(
+      "/img/plugins/gmail.svg",
+    );
+    expect(getPlatformPluginConnectionDefinition("one-drive").logoUrl).toBe(
+      "https://upload.wikimedia.org/wikipedia/commons/e/e7/Microsoft_OneDrive_Icon_%282025_-_present%29.svg",
+    );
+  });
+
   it("owns provider endpoints and normalizes connected identities", async () => {
     const request = vi.fn(
       async () =>

@@ -19,38 +19,47 @@ const SYSTEM_SKILL_SOURCE_DIRECTORIES = Object.freeze({
 });
 
 const TEXT_FILE_EXTENSIONS = new Set([
+  ".css",
+  ".html",
   ".js",
   ".json",
   ".md",
   ".mjs",
   ".py",
+  ".sh",
+  ".toml",
   ".ts",
   ".tsx",
   ".txt",
+  ".xml",
+  ".xsd",
+  ".yaml",
+  ".yml",
 ]);
 
 function getSourceLanguage(relativePath) {
   const extension = path.extname(relativePath).toLowerCase();
+  if (extension === ".css") return "css";
+  if (extension === ".html") return "html";
   if (extension === ".js" || extension === ".mjs") return "javascript";
   if (extension === ".json") return "json";
   if (extension === ".md") return "markdown";
   if (extension === ".py") return "python";
+  if (extension === ".sh") return "shell";
+  if (extension === ".toml") return "ini";
   if (extension === ".ts" || extension === ".tsx") return "typescript";
+  if (extension === ".xml" || extension === ".xsd") return "xml";
+  if (extension === ".yaml" || extension === ".yml") return "yaml";
   return "plaintext";
 }
 
-function shouldIncludeSourceFile(relativePath, skillId) {
+function shouldIncludeSourceFile(relativePath) {
   const normalizedPath = relativePath.split(path.sep).join("/");
   const extension = path.extname(normalizedPath).toLowerCase();
   if (!TEXT_FILE_EXTENSIONS.has(extension)) return false;
   if (normalizedPath.includes("__pycache__/") || normalizedPath.endsWith(".pyc")) return false;
   if (normalizedPath === "LICENSE.txt") return false;
-  if (normalizedPath === "SKILL.md") return true;
-  if (normalizedPath.startsWith("scripts/")) return true;
-  if (skillId === "frontend_design" && normalizedPath.startsWith("references/") && extension === ".md") {
-    return true;
-  }
-  return (skillId === "pdf" || skillId === "pptx") && extension === ".md";
+  return true;
 }
 
 async function listSourceFiles(root, skillId, relativeBase = "") {
@@ -68,7 +77,7 @@ async function listSourceFiles(root, skillId, relativeBase = "") {
       if (entry.name !== "__pycache__") {
         files.push(...await listSourceFiles(root, skillId, relativePath));
       }
-    } else if (entry.isFile() && shouldIncludeSourceFile(relativePath, skillId)) {
+    } else if (entry.isFile() && shouldIncludeSourceFile(relativePath)) {
       files.push(relativePath);
     }
   }
@@ -145,4 +154,3 @@ export function createSystemSkillSourceService({ root, sendJson }) {
     },
   });
 }
-

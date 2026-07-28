@@ -482,95 +482,54 @@
   	            : menuElement;
   	        }
   
-          function renderCurrentSkillDetail() {
-            const skillsSearchAction = React.createElement("div", {
-                className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-environments-search-shell",
-              },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-files-header-icon-button is-plain" + (toolbarPopover === "search" ? " is-active" : ""),
-                onClick: () => toggleToolbarPopover("search"),
-                title: skillListMode === "custom" ? "Search custom skills" : skillListMode === "system" ? "Search system skills" : "Search skills",
-                "aria-label": skillListMode === "custom" ? "Search custom skills" : skillListMode === "system" ? "Search system skills" : "Search skills",
-              }, React.createElement(Search, { width: 16, height: 16, strokeWidth: 1.8 })),
-              toolbarPopover === "search"
-                ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-project-search-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                    React.createElement("div", { className: "playground-tasks-project-search-header" },
-                      React.createElement("div", { className: "playground-tasks-project-search-title" }, skillListMode === "custom" ? "Search Custom Skills" : skillListMode === "system" ? "Search System Skills" : "Search Skills"),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-tasks-project-search-close",
-                        onClick: () => setToolbarPopover(""),
-                      }, React.createElement(X, { strokeWidth: 1.8, width: 14, height: 14 }))
-                    ),
-                    React.createElement("div", { className: "playground-tasks-project-search-body" },
-                      React.createElement("div", { className: "playground-files-search-field" },
-                        React.createElement(Search, { className: "playground-files-search-field-icon", strokeWidth: 1.8 }),
-                        React.createElement("input", {
-                          ref: searchPopupInputRef,
-                          type: "text",
-                          className: "playground-files-search-field-input",
-                          placeholder: skillListMode === "custom"
-                            ? "Search custom skills by name or description..."
-                            : skillListMode === "system"
-                              ? "Search system skills by name or description..."
-                              : "Search skills by name or description...",
-                          value: searchPopupQuery,
-                          onChange: (event) => setSearchPopupQuery(event.target.value),
-                        })
-                      ),
-                      searchPopupQuery.trim()
-                        ? searchResults.length > 0
-                          ? React.createElement("div", { className: "playground-files-search-results" },
-                              searchResults.map((skill) =>
-                                React.createElement("button", {
-                                    key: skill.id,
-                                    type: "button",
-                                    className: "playground-files-search-result",
-                                    onClick: () => handleSkillSelect(skill.id),
-                                  },
-                                    renderSkillIcon(skill, "playground-files-entry-icon"),
-                                    React.createElement("div", { className: "playground-files-search-result-copy" },
-                                      React.createElement("div", { className: "playground-files-search-result-name" }, skill.name || skill.id),
-                                      React.createElement("div", { className: "playground-files-search-result-path" }, skill.description || skill.id)
-                                    )
-                                  )
-                              )
-                            )
-                          : React.createElement("div", { className: "playground-files-search-empty" }, skillListMode === "custom" ? "No matching custom skills found." : skillListMode === "system" ? "No matching system skills found." : "No matching skills found.")
-                        : React.createElement("div", { className: "playground-tasks-project-search-hint" }, skillListMode === "custom" ? "Type a custom skill name or description to search." : skillListMode === "system" ? "Type a system skill name or description to search." : "Type a skill name or description to search.")
-                    )
-                  )
-                : null
-            );
-            const skillsCreateAction = React.createElement("button", {
-              type: "button",
-              className: "playground-top-nav-private-chat-button playground-skills-top-nav-action-button",
-              onClick: openSkillComposer,
-              title: "Create custom skill",
-              "aria-label": "Create custom skill",
-              disabled: skillComposerSaveState.isSaving || !baseSkillProjectId,
-            },
-              React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-              React.createElement("span", null, "Skill")
-            );
-            const skillDetailTopNavAction = !selectedSkill || !selectedSkill.isCustom
-              ? null
-              : React.createElement("button", {
+          function renderSkillsCreateAction() {
+            return React.createElement(PlatformPrimaryButton, {
                   type: "button",
-                  className: "playground-top-nav-private-chat-button playground-skills-top-nav-action-button",
-                  onClick: () => openSkillEditDialog(selectedSkill),
-                  title: "Edit skill",
-                  "aria-label": "Edit skill",
+                  size: "small",
+                  className: "playground-skills-top-nav-action-button",
+                  onClick: () => void createAndOpenCustomSkill(),
+                  title: "Create custom skill",
+                  "aria-label": "Create custom skill",
                   disabled: skillSaveState.isSaving,
                 },
-                  React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Edit")
+                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Custom Skill")
                 );
+          }
+
+          function renderCurrentSkillDetail() {
+            const skillDetailTopNavAction = skillsPageMode !== "detail"
+              || !selectedSkill
+              || !selectedSkill.isCustom
+              ? null
+              : React.createElement(PlatformVersionPublishControl, {
+                  open: skillPublishMenuOpen,
+                  onOpenChange: setSkillPublishMenuOpen,
+                  onPublish: () => void saveAndPublishSelectedSkillVersion(),
+                  active: selectedSkill.isDraft || skillCodeEditorState.value !== skillCodeEditorState.initialValue,
+                  disabled: skillSaveState.isSaving || skillCodeFilesTransferState.isProcessing,
+                  menuDisabled: skillSaveState.isSaving || skillCodeFilesTransferState.isProcessing,
+                  actions: selectedSkill.isDraft ? [{
+                    id: "discard-draft",
+                    label: "Discard draft",
+                    icon: Trash2,
+                    onClick: handleBackToSkillsOverview,
+                  }] : [
+                    {
+                      id: "version-history",
+                      label: "Version history",
+                      icon: History,
+                      onClick: () => setSkillVersionsOpen(true),
+                    },
+                  ],
+                  label: skillSaveState.isSaving ? "Saving..." : "Save Changes",
+                  leading: React.createElement(Bookmark, { strokeWidth: 1.8 }),
+                  publishAriaLabel: "Save skill changes",
+                  className: "playground-skills-publish-control",
+                });
             const skillsTopNavActions = topNavActionsContainer
               ? createPortal(React.createElement(React.Fragment, null,
-                  skillsPageMode === "detail" ? skillDetailTopNavAction : null,
-                  skillsCreateAction
+                  skillsPageMode === "detail" ? skillDetailTopNavAction : renderSkillsCreateAction()
                 ), topNavActionsContainer)
               : null;
   
@@ -593,22 +552,7 @@
             }
   
             const selectedSkillFamilyId = String(selectedSkill.systemFamilyId || selectedSkill.id || "").trim().toLowerCase();
-            const selectedSkillToggleId = normalizePlaygroundEnabledSkillIds([selectedSkill.systemFamilyId || selectedSkill.id])[0] || selectedSkillFamilyId;
-            const normalizedEnabledSkillIds = normalizePlaygroundEnabledSkillIds(enabledSkillIds);
-            const isSelectedSkillEnabled = selectedSkillToggleId
-              ? normalizedEnabledSkillIds.includes(selectedSkillToggleId)
-              : Boolean(selectedSkill.isActive);
-            function handleToggleSelectedSkillEnabled() {
-              if (!selectedSkillToggleId || typeof onSkillsChange !== "function") {
-                return;
-              }
-              const currentEnabledSkillIds = normalizePlaygroundEnabledSkillIds(enabledSkillIds);
-              const nextEnabledSkillIds = currentEnabledSkillIds.includes(selectedSkillToggleId)
-                ? currentEnabledSkillIds.filter((skillId) => skillId !== selectedSkillToggleId)
-                : [...currentEnabledSkillIds, selectedSkillToggleId];
-              onSkillsChange(nextEnabledSkillIds);
-            }
-  	          const selectedSkillCodeFiles = normalizeSkillCodeFiles(selectedSkill.codeFiles);
+	          const selectedSkillCodeFiles = normalizeSkillCodeFiles(selectedSkill.codeFiles);
             const activeSkillCodeFile = selectedSkillCodeFiles.find((file) => file.id === skillCodeEditorState.fileId) || selectedSkillCodeFiles[0] || null;
             const activeSkillCodeFileEntry = activeSkillCodeFile
               ? { name: activeSkillCodeFile.name, path: activeSkillCodeFile.name, isFolder: false, mimeType: "" }
@@ -674,22 +618,6 @@
               }));
             }
   
-            function renderSkillCodeFileRow(codeFile) {
-              const isActive = activeSkillCodeFile?.id === codeFile.id;
-              return React.createElement("button", {
-                  key: codeFile.id,
-                  type: "button",
-                  className: "playground-servers-code-file-row" + (isActive ? " is-active" : ""),
-                  onClick: () => selectSkillCodeFile(codeFile.id),
-                },
-                React.createElement("span", { className: "playground-servers-code-file-chevron", "aria-hidden": "true" }),
-                React.createElement("span", { className: "playground-servers-code-file-icon", "aria-hidden": "true" },
-                  React.createElement(PlaygroundFileIcon, { entry: { name: codeFile.name, path: codeFile.name, isFolder: false }, className: "playground-skills-code-file-icon" })
-                ),
-                React.createElement("span", { className: "playground-servers-code-file-name" }, codeFile.name || "Untitled")
-              );
-            }
-  
             function renderSkillCodeEditorBody() {
               if (!activeSkillCodeFile) {
                 return React.createElement("div", { className: "playground-servers-code-empty" },
@@ -737,23 +665,316 @@
               });
             }
   
-            const skillSourceFilesSection = React.createElement("div", {
-                className: "playground-servers-code-workspace playground-skills-code-workspace" + (isSkillCodeDragging ? " is-dragging" : ""),
-                onDragOver: (event) => {
-                  event.preventDefault();
-                  if (!isSelectedSkillCodeFilesEditable || skillCodeFilesTransferState.isProcessing) {
-                    return;
+            const skillResourceMetadata = {
+              permissionSet: selectedSkill.permissionSet || null,
+              accessControl: selectedSkill.accessControl || null,
+              ...(selectedSkill.metadata && typeof selectedSkill.metadata === "object"
+                ? selectedSkill.metadata
+                : {}),
+            };
+            const explicitSkillSourceFolders = Array.from(new Set(
+              (Array.isArray(skillResourceMetadata.sourceFolders)
+                ? skillResourceMetadata.sourceFolders
+                : [])
+                .map((folderPath) => normalizeHistoryPath(folderPath))
+                .filter(Boolean)
+            ));
+            const skillWorkspaceSourceById = new Map();
+            const skillWorkspaceFolderPaths = new Set(explicitSkillSourceFolders);
+            selectedSkillCodeFiles.forEach((codeFile) => {
+              const normalizedPath = normalizeHistoryPath(codeFile.name);
+              const pathParts = normalizedPath.split("/").filter(Boolean);
+              pathParts.pop();
+              let currentPath = "";
+              pathParts.forEach((pathPart) => {
+                currentPath = currentPath ? currentPath + "/" + pathPart : pathPart;
+                skillWorkspaceFolderPaths.add(currentPath);
+              });
+            });
+            const sortedSkillWorkspaceFolderPaths = Array.from(skillWorkspaceFolderPaths)
+              .sort((left, right) => {
+                const depthDelta = left.split("/").length - right.split("/").length;
+                return depthDelta || left.localeCompare(right);
+              });
+            const skillWorkspaceFiles = [];
+            sortedSkillWorkspaceFolderPaths.forEach((folderPath) => {
+              const pathParts = folderPath.split("/").filter(Boolean);
+              const parentPath = pathParts.slice(0, -1).join("/");
+              const entry = {
+                id: "skill-folder:" + folderPath,
+                label: pathParts[pathParts.length - 1] || folderPath,
+                tabLabel: folderPath,
+                path: folderPath,
+                parentId: parentPath ? "skill-folder:" + parentPath : null,
+                depth: Math.max(0, pathParts.length - 1),
+                isFolder: true,
+                selectable: isSelectedSkillCodeFilesEditable,
+                renameDisabled: !isSelectedSkillCodeFilesEditable,
+                deleteDisabled: !isSelectedSkillCodeFilesEditable,
+                moveDisabled: !isSelectedSkillCodeFilesEditable,
+                dropDisabled: !isSelectedSkillCodeFilesEditable,
+              };
+              skillWorkspaceFiles.push(entry);
+              skillWorkspaceSourceById.set(entry.id, entry);
+            });
+            selectedSkillCodeFiles
+              .slice()
+              .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
+              .forEach((codeFile) => {
+                const normalizedPath = normalizeHistoryPath(codeFile.name);
+                const pathParts = normalizedPath.split("/").filter(Boolean);
+                const parentPath = pathParts.slice(0, -1).join("/");
+                const entry = {
+                  id: codeFile.id,
+                  label: pathParts[pathParts.length - 1] || codeFile.name,
+                  tabLabel: codeFile.name,
+                  path: normalizedPath,
+                  parentId: parentPath ? "skill-folder:" + parentPath : null,
+                  depth: Math.max(0, pathParts.length - 1),
+                  isFolder: false,
+                  selectable: isSelectedSkillCodeFilesEditable,
+                  renameDisabled: !isSelectedSkillCodeFilesEditable,
+                  deleteDisabled: !isSelectedSkillCodeFilesEditable,
+                  moveDisabled: !isSelectedSkillCodeFilesEditable,
+                };
+                skillWorkspaceFiles.push(entry);
+                skillWorkspaceSourceById.set(entry.id, {
+                  ...entry,
+                  codeFile,
+                });
+              });
+
+            async function persistSkillSourceFolders(nextFolderPaths) {
+              const normalizedFolderPaths = Array.from(new Set(
+                (Array.isArray(nextFolderPaths) ? nextFolderPaths : [])
+                  .map((folderPath) => normalizeHistoryPath(folderPath))
+                  .filter(Boolean)
+              )).sort();
+              await updateSelectedSkillAccessMetadata({
+                ...skillResourceMetadata,
+                sourceFolders: normalizedFolderPaths,
+              });
+            }
+
+            async function createSkillSourceFile() {
+              if (!isSelectedSkillCodeFilesEditable) return;
+              const requestedPath = window.prompt("File path", "file.js");
+              const normalizedPath = normalizeHistoryPath(requestedPath);
+              if (!normalizedPath) return;
+              if (selectedSkillCodeFiles.some((file) => normalizeHistoryPath(file.name) === normalizedPath)) {
+                setSkillCodeFilesTransferState({
+                  isProcessing: false,
+                  error: "A source file with this path already exists.",
+                });
+                return;
+              }
+              const nextFile = buildPlaygroundSkillCodeFileRecord(normalizedPath, "");
+              const didSave = await saveSelectedSkillCodeFiles([...selectedSkillCodeFiles, nextFile]);
+              if (didSave) {
+                setSkillCodeEditorState({
+                  fileId: nextFile.id,
+                  value: "",
+                  initialValue: "",
+                  isSaving: false,
+                  error: "",
+                  message: "",
+                });
+              }
+            }
+
+            async function createSkillSourceFolder() {
+              if (!isSelectedSkillCodeFilesEditable) return;
+              const requestedPath = window.prompt("Folder path", "scripts");
+              const normalizedPath = normalizeHistoryPath(requestedPath);
+              if (!normalizedPath || skillWorkspaceFolderPaths.has(normalizedPath)) return;
+              await persistSkillSourceFolders([...explicitSkillSourceFolders, normalizedPath]);
+            }
+
+            async function renameSkillWorkspaceEntry(workspaceFile) {
+              if (!isSelectedSkillCodeFilesEditable || !workspaceFile) return;
+              const sourceEntry = skillWorkspaceSourceById.get(workspaceFile.id);
+              if (!sourceEntry) return;
+              const currentPath = normalizeHistoryPath(sourceEntry.path);
+              const requestedPath = window.prompt(
+                sourceEntry.isFolder ? "Rename folder" : "Rename file",
+                currentPath
+              );
+              const nextPath = normalizeHistoryPath(requestedPath);
+              if (!nextPath || nextPath === currentPath) return;
+              if (sourceEntry.isFolder) {
+                const nextFiles = selectedSkillCodeFiles.map((codeFile) => {
+                  const filePath = normalizeHistoryPath(codeFile.name);
+                  if (filePath !== currentPath && !filePath.startsWith(currentPath + "/")) {
+                    return codeFile;
                   }
-                  setIsSkillCodeDragging(true);
-                },
-                onDragLeave: (event) => {
-                  if (event.currentTarget.contains(event.relatedTarget)) {
-                    return;
-                  }
-                  setIsSkillCodeDragging(false);
-                },
-                onDrop: (event) => void handleSkillCodeFileDrop(event),
+                  return {
+                    ...codeFile,
+                    name: nextPath + filePath.slice(currentPath.length),
+                  };
+                });
+                const nextFolders = explicitSkillSourceFolders.map((folderPath) =>
+                  folderPath === currentPath || folderPath.startsWith(currentPath + "/")
+                    ? nextPath + folderPath.slice(currentPath.length)
+                    : folderPath
+                );
+                const didSave = await saveSelectedSkillCodeFiles(nextFiles);
+                if (didSave) await persistSkillSourceFolders(nextFolders);
+                return;
+              }
+              const nextFiles = selectedSkillCodeFiles.map((codeFile) =>
+                codeFile.id === sourceEntry.codeFile?.id
+                  ? {
+                      ...codeFile,
+                      name: nextPath,
+                      language: getPlaygroundCodeEditorLanguage({
+                        name: nextPath,
+                        path: nextPath,
+                        isDirectory: false,
+                        mimeType: "",
+                      }) || codeFile.language,
+                    }
+                  : codeFile
+              );
+              await saveSelectedSkillCodeFiles(nextFiles);
+            }
+
+            async function deleteSkillWorkspaceEntries(workspaceFiles) {
+              if (!isSelectedSkillCodeFilesEditable || !Array.isArray(workspaceFiles)) return;
+              const selectedFolderPaths = workspaceFiles
+                .map((workspaceFile) => skillWorkspaceSourceById.get(workspaceFile.id))
+                .filter((entry) => entry?.isFolder)
+                .map((entry) => normalizeHistoryPath(entry.path));
+              const selectedFileIds = new Set(
+                workspaceFiles
+                  .map((workspaceFile) => skillWorkspaceSourceById.get(workspaceFile.id))
+                  .filter((entry) => entry && !entry.isFolder && entry.codeFile?.id)
+                  .map((entry) => entry.codeFile.id)
+              );
+              const nextFiles = selectedSkillCodeFiles.filter((codeFile) => {
+                const filePath = normalizeHistoryPath(codeFile.name);
+                if (selectedFileIds.has(codeFile.id)) return false;
+                return !selectedFolderPaths.some((folderPath) =>
+                  filePath === folderPath || filePath.startsWith(folderPath + "/")
+                );
+              });
+              const nextFolders = explicitSkillSourceFolders.filter((folderPath) =>
+                !selectedFolderPaths.some((selectedFolderPath) =>
+                  folderPath === selectedFolderPath || folderPath.startsWith(selectedFolderPath + "/")
+                )
+              );
+              const didSave = await saveSelectedSkillCodeFiles(nextFiles);
+              if (didSave) await persistSkillSourceFolders(nextFolders);
+            }
+
+            async function moveSkillWorkspaceEntries({ files, destinationFolder }) {
+              if (!isSelectedSkillCodeFilesEditable || !Array.isArray(files)) return;
+              const destinationEntry = destinationFolder
+                ? skillWorkspaceSourceById.get(destinationFolder.id)
+                : null;
+              const destinationPath = destinationEntry?.isFolder
+                ? normalizeHistoryPath(destinationEntry.path)
+                : "";
+              const movingEntries = files
+                .map((workspaceFile) => skillWorkspaceSourceById.get(workspaceFile.id))
+                .filter(Boolean);
+              const movingFolderPaths = movingEntries
+                .filter((entry) => entry.isFolder)
+                .map((entry) => normalizeHistoryPath(entry.path));
+              if (movingFolderPaths.some((folderPath) =>
+                destinationPath === folderPath || destinationPath.startsWith(folderPath + "/")
+              )) {
+                return;
+              }
+              const pathMoves = movingEntries.map((entry) => {
+                const currentPath = normalizeHistoryPath(entry.path);
+                const baseName = currentPath.split("/").filter(Boolean).pop() || currentPath;
+                return {
+                  entry,
+                  currentPath,
+                  nextPath: destinationPath ? destinationPath + "/" + baseName : baseName,
+                };
+              });
+              const nextFiles = selectedSkillCodeFiles.map((codeFile) => {
+                const currentFilePath = normalizeHistoryPath(codeFile.name);
+                const enclosingFolderMove = pathMoves.find(({ entry, currentPath }) =>
+                  entry.isFolder
+                  && (currentFilePath === currentPath || currentFilePath.startsWith(currentPath + "/"))
+                );
+                if (enclosingFolderMove) {
+                  return {
+                    ...codeFile,
+                    name: enclosingFolderMove.nextPath
+                      + currentFilePath.slice(enclosingFolderMove.currentPath.length),
+                  };
+                }
+                const directFileMove = pathMoves.find(({ entry }) =>
+                  !entry.isFolder && entry.codeFile?.id === codeFile.id
+                );
+                return directFileMove
+                  ? { ...codeFile, name: directFileMove.nextPath }
+                  : codeFile;
+              });
+              const nextFolders = explicitSkillSourceFolders.map((folderPath) => {
+                const enclosingFolderMove = pathMoves.find(({ entry, currentPath }) =>
+                  entry.isFolder
+                  && (folderPath === currentPath || folderPath.startsWith(currentPath + "/"))
+                );
+                return enclosingFolderMove
+                  ? enclosingFolderMove.nextPath + folderPath.slice(enclosingFolderMove.currentPath.length)
+                  : folderPath;
+              });
+              const didSave = await saveSelectedSkillCodeFiles(nextFiles);
+              if (didSave) await persistSkillSourceFolders(nextFolders);
+            }
+
+            async function selectSkillWorkspaceFile(fileId) {
+              const sourceEntry = skillWorkspaceSourceById.get(fileId);
+              if (!sourceEntry || sourceEntry.isFolder) return;
+              if (skillCodeEditorIsDirty) {
+                await handleSkillCodeEditorSave();
+              }
+              selectSkillCodeFile(sourceEntry.codeFile?.id || fileId);
+            }
+
+            const isSystemSkillSourceLoading = Boolean(
+              selectedSkill.isSystem
+              && !systemSkillSourceCatalog[selectedSkillFamilyId]
+            );
+            const skillMetadataSection = React.createElement("section", {
+                className: "skill-detail-page__identity",
+                "aria-label": "Skill identity",
               },
+              React.createElement("input", {
+                type: "text",
+                className: "skill-detail-page__name-input",
+                value: skillTitleDraft,
+                onChange: (event) => setSkillTitleDraft(event.target.value),
+                onBlur: handleSelectedSkillTitleCommit,
+                placeholder: selectedSkill.isDraft ? "new-skill" : undefined,
+                readOnly: !selectedSkill.isCustom,
+                "aria-label": "Skill name",
+              }),
+              React.createElement("textarea", {
+                className: "skill-detail-page__description-input",
+                value: selectedSkill.description || "",
+                onChange: selectedSkill.isCustom
+                  ? (event) => updateSelectedSkillLocal((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }))
+                  : undefined,
+                onBlur: selectedSkill.isCustom
+                  ? (event) => void saveSelectedSkillFields({
+                      description: event.target.value,
+                    })
+                  : undefined,
+                readOnly: !selectedSkill.isCustom,
+                rows: 2,
+                placeholder: "Describe when agents should use this skill.",
+                "aria-label": "Skill description",
+              })
+            );
+            const skillCodeWorkspace = React.createElement(React.Fragment, null,
               isSelectedSkillCodeFilesEditable
                 ? React.createElement("input", {
                     ref: skillCodeFileInputRef,
@@ -763,305 +984,340 @@
                     onChange: (event) => void handleSkillCodeFileInputChange(event),
                   })
                 : null,
-              React.createElement("aside", { className: "playground-servers-code-sidebar" },
-                React.createElement("div", { className: "playground-servers-code-sidebar-header" },
-                  React.createElement("div", { className: "playground-servers-code-sidebar-title" }, "Files"),
-                  isSelectedSkillCodeFilesEditable
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button playground-servers-code-add-file-button",
-                        onClick: openSkillCodeFilePicker,
-                        disabled: skillCodeFilesTransferState.isProcessing,
-                      },
-                        React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Add File")
-                      )
-                    : null
-                ),
-                React.createElement("div", { className: "playground-servers-code-file-list" },
-                  selectedSkillCodeFiles.length > 0
-                    ? selectedSkillCodeFiles.map((codeFile) => renderSkillCodeFileRow(codeFile))
-                    : React.createElement("div", { className: "playground-servers-code-empty" },
-                        isSelectedSkillCodeFilesEditable ? "No source files yet." : "No source files."
-                      )
-                )
-              ),
-              React.createElement("section", { className: "playground-servers-code-editor-main" },
-                React.createElement("div", { className: "playground-servers-code-editor-body" }, renderSkillCodeEditorBody()),
-                React.createElement("div", { className: "playground-servers-code-editor-statusbar" },
-                  React.createElement("div", {
-                      className: "playground-servers-source-preview-status" + ((skillCodeEditorState.error || skillCodeFilesTransferState.error) ? " is-error" : ""),
-                    },
-                    skillCodeEditorState.error
-                      || skillCodeFilesTransferState.error
-                      || (skillCodeEditorState.isSaving || skillCodeFilesTransferState.isProcessing
-                        ? "Saving..."
-                        : skillCodeEditorState.message
-                          ? skillCodeEditorState.message
-                          : activeSkillCodeFile
-                            ? (isSelectedSkillCodeFilesEditable
-                              ? (skillCodeEditorIsDirty ? "Unsaved changes" : formatPlaygroundCodeEditorLanguageLabel(activeSkillCodeFileEntry))
-                              : "Read-only")
-                            : "")
+              React.createElement(PlatformCodeEditorWorkspace, {
+                className: "skill-detail-page__code-workspace" + (isSkillCodeDragging ? " is-dragging" : ""),
+                ariaLabel: (selectedSkill.name || "Skill") + " source editor",
+                variant: "full-screen",
+                files: skillWorkspaceFiles,
+                activeFileId: activeSkillCodeFile?.id || "",
+                onFileSelect: selectSkillWorkspaceFile,
+                onFileRename: isSelectedSkillCodeFilesEditable ? renameSkillWorkspaceEntry : undefined,
+                onFilesDelete: isSelectedSkillCodeFilesEditable ? deleteSkillWorkspaceEntries : undefined,
+                onFilesMove: isSelectedSkillCodeFilesEditable ? moveSkillWorkspaceEntries : undefined,
+                onCreateFile: isSelectedSkillCodeFilesEditable ? createSkillSourceFile : undefined,
+                onUploadFiles: isSelectedSkillCodeFilesEditable ? openSkillCodeFilePicker : undefined,
+                onCreateFolder: isSelectedSkillCodeFilesEditable ? createSkillSourceFolder : undefined,
+                fileCreationDisabled: skillCodeFilesTransferState.isProcessing || skillSaveState.isSaving,
+                isLoadingFiles: isSystemSkillSourceLoading,
+                loadingFilesMessage: "Loading skill source...",
+                emptyFiles: selectedSkill.isSystem
+                  ? "No source files are exposed for this system skill."
+                  : "No source files yet.",
+                editor: renderSkillCodeEditorBody(),
+                historyControls: isSelectedSkillCodeFilesEditable
+                  ? {
+                      onUndo: () => {},
+                      onRedo: () => {},
+                      undoDisabled: true,
+                      redoDisabled: true,
+                    }
+                  : undefined,
+                onDragOver: (event) => {
+                  event.preventDefault();
+                  if (!isSelectedSkillCodeFilesEditable || skillCodeFilesTransferState.isProcessing) return;
+                  setIsSkillCodeDragging(true);
+                },
+                onDragLeave: (event) => {
+                  if (event.currentTarget.contains(event.relatedTarget)) return;
+                  setIsSkillCodeDragging(false);
+                },
+                onDrop: (event) => void handleSkillCodeFileDrop(event),
+              })
+            );
+            const skillCodeTabContent = React.createElement("div", {
+                className: "skill-detail-page__code",
+              },
+              skillMetadataSection,
+              skillSaveState.error || skillCodeFilesTransferState.error
+                ? React.createElement("div", {
+                    className: "playground-environments-error playground-environments-editor-notice",
+                    role: "alert",
+                  }, skillSaveState.error || skillCodeFilesTransferState.error)
+                : null,
+              skillCodeWorkspace
+            );
+
+            const normalizedWorkspaceTeams = (Array.isArray(workspaceTeams) ? workspaceTeams : [])
+              .map((team) => {
+                const id = String(team?.id || team?.teamId || "").trim();
+                if (!id) return null;
+                return {
+                  ...team,
+                  id,
+                  name: String(team?.name || team?.title || "Team").trim() || "Team",
+                  kind: "team",
+                  roleId: String(team?.roleId || "member"),
+                  roleLabel: String(team?.roleLabel || team?.role || "Member"),
+                  createdAt: String(team?.createdAt || ""),
+                  profileImageUrl: String(
+                    team?.profileImageUrl
+                    || team?.imageUrl
+                    || team?.avatarUrl
+                    || ""
                   ),
-                  isSelectedSkillCodeFilesEditable
-                    ? React.createElement("div", { className: "playground-servers-code-editor-status-actions" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button",
-                          onClick: handleSkillCodeEditorRevert,
-                          disabled: !skillCodeEditorIsDirty || skillCodeEditorState.isSaving || skillCodeFilesTransferState.isProcessing,
-                        }, React.createElement("span", null, "Revert")),
-                        React.createElement(PlatformPrimaryButton, {
-                          size: "medium",
-                          type: "button",
-                          className: "playground-environments-action-button is-primary",
-                          onClick: () => void handleSkillCodeEditorSave(),
-                          disabled: !skillCodeEditorIsDirty || skillCodeEditorState.isSaving || skillCodeFilesTransferState.isProcessing,
+                };
+              })
+              .filter(Boolean);
+            const sharedSkillTeamIds = getPlatformSharedTeamIds(skillResourceMetadata);
+            const sharedSkillTeamIdSet = new Set(sharedSkillTeamIds);
+            const skillWorkspaceTeamById = new Map(
+              normalizedWorkspaceTeams.map((team) => [String(team.id), team])
+            );
+            const skillAccessTeams = sharedSkillTeamIds.map((teamId) =>
+              skillWorkspaceTeamById.get(String(teamId))
+              || {
+                id: String(teamId),
+                name: "Team",
+                kind: "team",
+                roleId: "member",
+                roleLabel: "Member",
+                createdAt: "",
+                profileImageUrl: "",
+              }
+            );
+            const availableSkillAccessTeams = normalizedWorkspaceTeams.filter(
+              (team) => !sharedSkillTeamIdSet.has(String(team.id))
+            );
+            const selectedSkillSystemPrincipal = getPlatformSystemAccessPrincipal(skillAccessPrincipalId);
+            const selectedSkillAccessTeam = skillAccessPrincipalId && !selectedSkillSystemPrincipal
+              ? skillAccessTeams.find((team) => String(team.id) === String(skillAccessPrincipalId)) || null
+              : null;
+            const skillAccessAddTeamsControl = selectedSkill.isCustom
+              ? React.createElement(PlatformButtonSelector, {
+                  mode: "popup",
+                  buttonVariant: "secondary",
+                  buttonSize: "small",
+                  label: "Add Teams",
+                  leading: React.createElement(Plus, {
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                    "aria-hidden": "true",
+                  }),
+                  open: skillAccessTeamMenuOpen,
+                  onOpenChange: setSkillAccessTeamMenuOpen,
+                  closeOnSelect: true,
+                  popupAriaLabel: "Add teams with skill access",
+                  popupAlignment: "right",
+                  popupRole: "menu",
+                  popupVariant: "minimal",
+                  popupWidth: 240,
+                  disabled: skillSaveState.isSaving,
+                },
+                availableSkillAccessTeams.length
+                  ? availableSkillAccessTeams.map((team) =>
+                      React.createElement("button", {
+                        key: team.id,
+                        type: "button",
+                        role: "menuitem",
+                        className: "platform-data-table__menu-item",
+                        onClick: () => {
+                          setSkillAccessTeamMenuOpen(false);
+                          void updateSelectedSkillAccessMetadata(
+                            buildPlatformTeamAccessMetadata(
+                              skillResourceMetadata,
+                              team.id,
+                              true,
+                              "skill_team_role"
+                            )
+                          );
                         },
-                          skillCodeEditorState.isSaving || skillCodeFilesTransferState.isProcessing
-                            ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
-                            : React.createElement(HardDrive, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, skillCodeEditorState.isSaving || skillCodeFilesTransferState.isProcessing ? "Saving..." : "Save")
-                        )
+                      },
+                        React.createElement(Users, {
+                          className: "platform-data-table__menu-icon",
+                          width: 14,
+                          height: 14,
+                          strokeWidth: 1.8,
+                        }),
+                        React.createElement("span", {
+                          className: "platform-data-table__menu-copy",
+                        }, team.name)
                       )
-                    : null
-                )
+                    )
+                  : React.createElement("div", {
+                      className: "playground-project-teams-menu-empty",
+                    }, "All available teams have access.")
               )
-            );
-  
-            const skillHeroPreview = React.createElement("section", { className: "playground-plugin-detail-carousel playground-skills-detail-hero-preview" },
-              React.createElement("div", { className: "playground-plugin-detail-carousel-copy" },
-                React.createElement("span", { className: "playground-plugin-detail-carousel-eyebrow" }, selectedSkill.isCustom ? "Custom Skill" : "System Skill"),
-                React.createElement("h3", { className: "playground-plugin-detail-carousel-title" }, selectedSkill.name || "Skill workspace"),
-                React.createElement("p", { className: "playground-plugin-detail-carousel-description" },
-                  selectedSkill.description || "Use this skill to extend what agents can do during a run."
+              : null;
+            const skillPermissionActionDefinitions = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter(
+              (definition) => Array.isArray(definition?.subjectTypes)
+                && definition.subjectTypes.some((subjectType) =>
+                  subjectType === "skill" || subjectType === "skill_team_role"
                 )
-              )
             );
-  
-            function renderSkillDefaultOptionsMenu(options, currentId, onSelect) {
-              return React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                options.map((option) =>
-                  React.createElement("button", {
-                      key: option.id,
-                      type: "button",
-                      className: "tb-popup-row tb-popup-row-select" + (currentId === option.id ? " selected" : ""),
-                      onClick: () => onSelect(option.id),
-                    },
-                    React.createElement("span", { className: "tb-popup-check-slot" },
-                      currentId === option.id
-                        ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                        : null
-                    ),
-                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                      React.createElement("span", null, option.label || option.id),
-                      option.description
-                        ? React.createElement("small", null, option.description)
-                        : null
+            const skillSettingsTabContent = React.createElement(PlatformResourceAccessSettings, {
+              teams: skillAccessTeams,
+              resourceLabel: "Skill",
+              selectedPrincipalId: skillAccessPrincipalId,
+              onSelectedPrincipalIdChange: (principalId) => {
+                setSkillAccessRoleId("member");
+                setSkillAccessPrincipalId(String(principalId || ""));
+              },
+              subjectType: "skill",
+              teamSubjectType: "skill_team_role",
+              systemPermissionSet: getPlatformSystemPrincipalPermissionSet(
+                skillResourceMetadata,
+                selectedSkillSystemPrincipal?.id || PLATFORM_ALL_AGENTS_PRINCIPAL_ID,
+                "skill",
+                skillResourceMetadata.permissionSet
+              ),
+              onSystemPermissionSetChange: selectedSkill.isCustom
+                ? (permissionSet) => void updateSelectedSkillAccessMetadata(
+                    buildPlatformSystemPrincipalPermissionMetadata(
+                      skillResourceMetadata,
+                      selectedSkillSystemPrincipal?.id || PLATFORM_ALL_AGENTS_PRINCIPAL_ID,
+                      permissionSet,
+                      "skill"
                     )
                   )
-                )
-              );
-            }
-  
-            function renderSkillDefaultSelectRow({ label, value, currentId, triggerRef, popoverRef, isOpen, setOpen, options, onSelect }) {
-              return React.createElement("div", { key: label, className: "playground-tasks-detail-fact playground-skills-defaults-row" },
-                React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
-                React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                  React.createElement("button", {
-                      ref: triggerRef,
-                      type: "button",
-                      className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger",
-                      onClick: () => setOpen((current) => !current),
-                    },
-                    React.createElement("span", null, value),
-                    React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                  ),
-                  isOpen
-                    ? renderSkillPopoverMenu(
-                        triggerRef,
-                        popoverRef,
-                        renderSkillDefaultOptionsMenu(options, currentId, onSelect)
-                      )
-                    : null
-                )
-              );
-            }
-  
-            function renderSkillDefaultModelSettings() {
-              if (selectedSkillFamilyId !== "image_generation" && selectedSkillFamilyId !== "video_generation" && selectedSkillFamilyId !== "deep_research" && selectedSkillFamilyId !== "research") {
-                return null;
-              }
-              const deepResearchMeta = getSkillDeepResearchModelMeta(skillDeepResearchDefaultModel);
-              const imageModelMeta = getSkillImageGenerationModelMeta(skillImageGenerationDefaultModel);
-              const imageQualityMeta = getSkillImageGenerationQualityMeta(skillImageGenerationDefaultQuality);
-              const videoModelMeta = getSkillVideoGenerationModelMeta(skillVideoGenerationDefaultModel);
-              const rows = [];
-              if (selectedSkillFamilyId === "image_generation") {
-                rows.push(renderSkillDefaultSelectRow({
-                  label: "Default Model",
-                  value: imageModelMeta?.label || skillImageGenerationDefaultModel,
-                  currentId: imageModelMeta?.id || skillImageGenerationDefaultModel,
-                  triggerRef: skillImageGenerationModelTriggerRef,
-                  popoverRef: skillImageGenerationModelPopoverRef,
-                  isOpen: skillImageGenerationModelPopoverOpen,
-                  setOpen: setSkillImageGenerationModelPopoverOpen,
-                  options: PLAYGROUND_SKILL_IMAGE_MODEL_OPTIONS,
-                  onSelect: updateSkillImageGenerationDefaultModel,
-                }));
-                rows.push(renderSkillDefaultSelectRow({
-                  label: "Default Quality",
-                  value: imageQualityMeta?.label || skillImageGenerationDefaultQuality,
-                  currentId: imageQualityMeta?.id || skillImageGenerationDefaultQuality,
-                  triggerRef: skillImageGenerationQualityTriggerRef,
-                  popoverRef: skillImageGenerationQualityPopoverRef,
-                  isOpen: skillImageGenerationQualityPopoverOpen,
-                  setOpen: setSkillImageGenerationQualityPopoverOpen,
-                  options: PLAYGROUND_SKILL_IMAGE_QUALITY_OPTIONS,
-                  onSelect: updateSkillImageGenerationDefaultQuality,
-                }));
-              } else if (selectedSkillFamilyId === "video_generation") {
-                rows.push(renderSkillDefaultSelectRow({
-                  label: "Default Model",
-                  value: videoModelMeta?.label || skillVideoGenerationDefaultModel,
-                  currentId: videoModelMeta?.id || skillVideoGenerationDefaultModel,
-                  triggerRef: skillVideoGenerationModelTriggerRef,
-                  popoverRef: skillVideoGenerationModelPopoverRef,
-                  isOpen: skillVideoGenerationModelPopoverOpen,
-                  setOpen: setSkillVideoGenerationModelPopoverOpen,
-                  options: PLAYGROUND_SKILL_VIDEO_MODEL_OPTIONS,
-                  onSelect: updateSkillVideoGenerationDefaultModel,
-                }));
-              } else {
-                rows.push(renderSkillDefaultSelectRow({
-                  label: "Default Model",
-                  value: deepResearchMeta?.label || skillDeepResearchDefaultModel,
-                  currentId: deepResearchMeta?.id || skillDeepResearchDefaultModel,
-                  triggerRef: skillDeepResearchModelTriggerRef,
-                  popoverRef: skillDeepResearchModelPopoverRef,
-                  isOpen: skillDeepResearchModelPopoverOpen,
-                  setOpen: setSkillDeepResearchModelPopoverOpen,
-                  options: PLAYGROUND_AGENT_DEEP_RESEARCH_MODEL_OPTIONS,
-                  onSelect: updateSkillDeepResearchDefaultModel,
-                }));
-              }
-              return React.createElement("section", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card playground-skills-defaults-card" },
-                React.createElement("div", { className: "playground-tasks-detail-facts-body playground-skills-defaults-body" },
-                  React.createElement("div", { className: "playground-skills-defaults-heading" },
-                    React.createElement("div", null,
-                      React.createElement("h3", { className: "playground-skills-defaults-title" }, "Default generation settings"),
-                      React.createElement("p", { className: "playground-skills-defaults-description" },
-                        "Agents use these defaults unless a thread prompt asks for another model or quality."
-                      )
-                    )
-                  ),
-                  ...rows
-                )
-              );
-            }
-  
-  	          const skillDetailTabs = [
-  	            { id: "general", label: "General" },
-  	            { id: "sourceFiles", label: "Source Files" },
-  	          ];
-            const skillDetailTabsElement = React.createElement("div", {
-                className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs playground-skills-detail-tabs",
-              },
-              React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-                skillDetailTabs.map((tab) =>
-                  React.createElement("button", {
-                    key: tab.id,
-                    type: "button",
-                    className: "playground-project-overview-chart-tab" + (skillDetailTab === tab.id ? " is-active" : ""),
-                    onClick: () => setSkillDetailTab(tab.id),
-                  }, tab.label)
-                )
-              )
-            );
-  
-  	          const generalTabContent = React.createElement(React.Fragment, null,
-  	            skillHeroPreview,
-  	            renderSkillDefaultModelSettings(),
-  	            renderSkillMarkdownSection({
-  	              sectionId: "usage",
-  	              title: "Usage",
-                content: selectedSkillSections.usage,
-                emptyLabel: "Add Usage here",
-              }),
-              renderSkillMarkdownSection({
-                sectionId: "process",
-                title: "Process",
-                content: selectedSkillSections.process,
-                emptyLabel: "Add Process here",
-              }),
-              renderSkillMarkdownSection({
-                sectionId: "outputFormat",
-                title: "Output",
-                content: selectedSkillSections.outputFormat,
-                emptyLabel: "Add Output guidance here",
-              }),
-              renderSkillMarkdownSection({
-                sectionId: "configuration",
-                title: "Config",
-                content: selectedSkillSections.configuration,
-                emptyLabel: "Add Config here",
-              }),
-              renderSkillMarkdownSection({
-                sectionId: "examplePrompts",
-                title: "Examples",
-                content: selectedSkillSections.examplePrompts,
-                emptyLabel: "Add Examples here",
-  	            })
-  	          );
-  	          const activeSkillDetailTabContent = skillDetailTab === "sourceFiles"
-  	            ? skillSourceFilesSection
-  	            : generalTabContent;
-  
-  	          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main playground-skills-detail-page" + (skillDetailTab === "sourceFiles" ? " is-source-files-tab" : "") },
-  	            skillsTopNavActions,
-  	            React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-  	              React.createElement("div", { className: "playground-skills-detail-content" },
-  	                React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-plugin-detail-title-row" },
-  	                  React.createElement("div", { className: "playground-plugin-detail-title-main" },
-  	                    React.createElement("div", { className: "playground-plugin-detail-header-icon-shell playground-skills-detail-header-icon-shell" },
-  	                      renderSkillIcon(selectedSkill, "playground-skills-detail-header-icon")
-  	                    ),
-  	                    React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-plugin-detail-title" }, selectedSkill.name || selectedSkill.id || "Untitled skill")
-  	                  ),
-  	                  React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
-  	                    React.createElement(PlatformSecondaryButton, {
-  	                      type: "button",
-  	                      className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button playground-plugin-detail-connect-button playground-skills-detail-enable-button" + (isSelectedSkillEnabled ? " is-destructive" : ""),
-  	                      onClick: handleToggleSelectedSkillEnabled,
-  	                      disabled: !selectedSkillToggleId || typeof onSkillsChange !== "function",
-  	                    }, isSelectedSkillEnabled ? "Disable" : "Enable")
-  	                  )
-  	                ),
-                  skillsError && skillListMode === "custom"
-                    ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, skillsError)
-                    : null,
-                  skillSaveState.error
-                    ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, skillSaveState.error)
-                    : null,
-                  skillDetailTabsElement,
-                  activeSkillDetailTabContent
-                )
+                : undefined,
+              systemRolePermissionSet: getPlatformSystemPrincipalRolePermissionSet(
+                skillResourceMetadata,
+                PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID,
+                skillAccessRoleId,
+                "skill_team_role"
               ),
+              onSystemRolePermissionSetChange: selectedSkill.isCustom
+                ? (roleId, permissionSet) => void updateSelectedSkillAccessMetadata(
+                    buildPlatformSystemPrincipalRolePermissionMetadata(
+                      skillResourceMetadata,
+                      PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID,
+                      roleId,
+                      permissionSet,
+                      "skill_team_role"
+                    )
+                  )
+                : undefined,
+              selectedRoleId: skillAccessRoleId,
+              onSelectedRoleIdChange: setSkillAccessRoleId,
+              teamPermissionSet: selectedSkillAccessTeam
+                ? getPlatformTeamRolePermissionSet(
+                    skillResourceMetadata,
+                    selectedSkillAccessTeam.id,
+                    skillAccessRoleId,
+                    "skill_team_role"
+                  )
+                : null,
+              onTeamPermissionSetChange: selectedSkill.isCustom && selectedSkillAccessTeam
+                ? (roleId, permissionSet) => void updateSelectedSkillAccessMetadata(
+                    buildPlatformTeamRolePermissionMetadata(
+                      skillResourceMetadata,
+                      selectedSkillAccessTeam.id,
+                      roleId,
+                      permissionSet,
+                      "skill_team_role"
+                    )
+                  )
+                : undefined,
+              actionDefinitions: skillPermissionActionDefinitions,
+              animationKey: selectedSkill.id + ":" + skillAccessRoleId,
+              disabled: !selectedSkill.isCustom,
+              backLabel: "Settings",
+              className: "skill-detail-page__access-settings",
+              tableProps: {
+                className: "skill-detail-page__access-table",
+                title: "Manage Skill Access",
+                titleTooltip: "Controls which agents, organization roles, and teams can view, use, update, publish, or manage this skill.",
+                trailing: skillAccessAddTeamsControl,
+                selectedIds: skillAccessSelectedTeamIds,
+                onSelectedIdsChange: setSkillAccessSelectedTeamIds,
+                pagination: {},
+                busy: skillSaveState.isSaving,
+                onRemoveTeams: selectedSkill.isCustom
+                  ? (teams) => {
+                      let nextMetadata = skillResourceMetadata;
+                      teams.forEach((team) => {
+                        nextMetadata = buildPlatformTeamAccessMetadata(
+                          nextMetadata,
+                          team.id,
+                          false,
+                          "skill_team_role"
+                        );
+                      });
+                      setSkillAccessPrincipalId("");
+                      setSkillAccessSelectedTeamIds(new Set());
+                      void updateSelectedSkillAccessMetadata(nextMetadata);
+                    }
+                  : undefined,
+                getTeamProfileImageUrl: (team) => String(team.profileImageUrl || ""),
+                formatCreatedAt: (value) => value
+                  ? formatRelativeThreadTime(value)
+                  : "—",
+                error: skillSaveState.error || null,
+              },
+            });
+            const skillVersionsSidebar = selectedSkill.isCustom && !selectedSkill.isDraft
+              ? React.createElement(PlatformVersionHistorySidebar, {
+                  open: skillVersionsOpen,
+                  title: "Version history",
+                  sectionTitle: "All Versions",
+                  className: "skill-detail-page__versions-sidebar",
+                  width: "var(--playground-thread-task-detail-width)",
+                  portal: true,
+                  versions: skillVersionState.versions,
+                  activeVersionId: skillVersionState.publishedVersionId,
+                  selectedVersionId: skillVersionState.currentVersionId,
+                  loading: skillVersionState.status === "loading",
+                  loadingMessage: "Loading versions",
+                  error: skillVersionState.error || null,
+                  emptyDescription: "Publish this skill to create its first version.",
+                  busy: skillSaveState.isSaving,
+                  onClose: () => setSkillVersionsOpen(false),
+                  onCreateVersion: () => void saveAndPublishSelectedSkillVersion(),
+                  onSelectVersion: (versionId) => void restoreSelectedSkillVersion(versionId),
+                  getVersionCreatedAt: (version) => formatRelativeThreadTime(
+                    version?.createdAt || version?.updatedAt || version?.publishedAt
+                  ) || "—",
+                })
+              : null;
+
+            return React.createElement(React.Fragment, null,
+              skillsTopNavActions,
+              React.createElement(SkillDetailPage, {
+                activeTab: skillDetailTab,
+                code: skillCodeTabContent,
+                settings: skillSettingsTabContent,
+                className: "playground-skills-detail-page",
+              }),
+              skillVersionsSidebar
             );
           }
   
           function renderSkillsOverviewPage() {
+            const skillsTopNavActions = topNavActionsContainer
+              ? createPortal(renderSkillsCreateAction(), topNavActionsContainer)
+              : null;
             const rows = allSkills.map((skill) => {
               const updatedAt = Date.parse(String(skill?.updatedAt || skill?.createdAt || ""));
+              const systemSkillFamilyId = String(
+                skill?.systemFamilyId
+                || getPlaygroundSkillFamilyId(skill?.id)
+                || skill?.id
+                || ""
+              ).trim().toLowerCase();
               return {
                 ...skill,
                 id: String(skill?.id || ""),
                 name: String(skill?.name || skill?.id || "Skill"),
+                description: String(skill?.description || ""),
                 searchText: [skill?.name, skill?.description, skill?.id].filter(Boolean).join(" "),
                 icon: renderSkillIcon(skill, "playground-environments-list-item-icon"),
+                isComputerAgents: systemSkillFamilyId === "computer_agents",
                 isActive: skill?.isActive !== false,
                 isCustom: Boolean(skill?.isCustom),
+                creatorName: String(
+                  skill?.creatorName
+                  || (skill?.isCustom
+                    ? currentUserName || currentUserEmail || "You"
+                    : "Computer Agents")
+                ).trim(),
+                creatorAvatarUrl: String(
+                  skill?.creatorAvatarUrl
+                  || (skill?.isCustom
+                    ? currentUserAvatarUrl
+                    : COMPUTER_AGENTS_CREATOR_PROFILE_URL)
+                  || ""
+                ).trim(),
                 updatedAt: Number.isFinite(updatedAt) ? updatedAt : 0,
                 updatedLabel: formatRelativeThreadTime(skill?.updatedAt || skill?.createdAt) || (skill?.isCustom ? "Recently" : "System"),
               };
@@ -1070,6 +1326,7 @@
             return React.createElement("section", {
                 className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-skills-overview-page is-develop-configure-page",
               },
+              skillsTopNavActions,
               React.createElement(SkillsOverviewPage, {
                 rows,
                 mode: skillListMode,
@@ -1078,9 +1335,9 @@
                 onPeriodChange: setSkillsOverviewChartTimescale,
                 controlsPortalId: "playground-tools-overview-controls",
                 loading: skillsLoading && !skillsLoaded,
-                mutating: skillSaveState.isSaving || skillComposerSaveState.isSaving,
+                mutating: skillSaveState.isSaving,
                 onOpen: (skill) => handleSkillSelect(skill.id),
-                onCreate: openSkillComposer,
+                onCreate: () => void createAndOpenCustomSkill(),
                 onEdit: openSkillEditDialog,
                 onRename: openSkillRenameDialog,
                 onDelete: (skillsToDelete) => {
@@ -1089,234 +1346,6 @@
                 },
               })
             );
-          }
-  
-          function renderSkillComposerDialog() {
-            if (!skillComposerOpen) {
-              return null;
-            }
-  
-            const selectedSkillComposerIcon = getPlaygroundSkillIconConfig(skillComposerDraft.icon);
-            const SelectedSkillComposerIcon = selectedSkillComposerIcon.icon;
-            const composerCodeFiles = normalizeSkillCodeFiles(skillComposerDraft.codeFiles);
-  
-            return React.createElement(PlatformModalBackdrop, {
-                className: "playground-tasks-project-modal-backdrop",
-                onClick: () => {
-                  if (!skillComposerSaveState.isSaving) {
-                    closeSkillComposer();
-                  }
-                },
-              },
-                React.createElement(PlatformModalSurface, {
-                    as: "form",
-                    className: "playground-tasks-project-modal playground-skill-composer-modal",
-                    onClick: (event) => event.stopPropagation(),
-                    onKeyDown: handleComposerSubmitShortcut,
-                    onSubmit: (event) => void handleSkillComposerSubmit(event),
-                  },
-                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-tasks-project-modal-icon-trigger" + (skillComposerIconPickerOpen ? " is-active" : ""),
-                        onClick: (event) => {
-                          event.preventDefault();
-                          setSkillComposerIconPickerOpen((current) => !current);
-                        },
-                        title: "Choose skill icon",
-                      },
-                        React.createElement(SelectedSkillComposerIcon, { width: 18, height: 18, strokeWidth: 1.9 })
-                      ),
-                      React.createElement("input", {
-                        className: "playground-tasks-project-modal-name-input",
-                        value: skillComposerDraft.name,
-                        onChange: (event) => updateSkillComposerField("name", event.target.value),
-                        placeholder: "Skill name",
-                        autoFocus: true,
-                        disabled: skillComposerSaveState.isSaving,
-                      }),
-                      skillComposerIconPickerOpen
-                        ? React.createElement("div", { className: "playground-tasks-project-icon-picker" },
-                            PLAYGROUND_SKILL_ICON_OPTIONS.map((option) => {
-                              const Icon = option.icon;
-                              const isActive = getPlaygroundSkillIconId(skillComposerDraft.icon) === option.id;
-                              return React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                className: "playground-tasks-project-icon-option" + (isActive ? " is-active" : ""),
-                                title: option.label,
-                                onClick: (event) => {
-                                  event.preventDefault();
-                                  updateSkillComposerField("icon", option.id);
-                                  setSkillComposerIconPickerOpen(false);
-                                },
-                              },
-                                React.createElement(Icon, { width: 18, height: 18, strokeWidth: 1.9 })
-                              );
-                            })
-                          )
-                        : null
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: closeSkillComposer,
-                      title: "Close",
-                      disabled: skillComposerSaveState.isSaving,
-                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                  ),
-                  React.createElement("div", { className: "playground-skill-composer-modal-body" },
-                    React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
-                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                        React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                          [
-                            { id: "bold", label: "Bold", icon: Bold },
-                            { id: "italic", label: "Italic", icon: Italic },
-                            { id: "underline", label: "Underline", icon: Underline },
-                            { id: "list", label: "List", icon: List },
-                          ].map((action) =>
-                            React.createElement("button", {
-                              key: action.id,
-                              type: "button",
-                              className: "playground-tasks-detail-format-button",
-                              title: action.label,
-                              "aria-label": action.label,
-                              disabled: skillComposerSaveState.isSaving,
-                              onMouseDown: (event) => event.preventDefault(),
-                              onClick: () => handleSkillComposerDescriptionFormat(action.id),
-                            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                          )
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isSkillComposerDescriptionEditing ? " is-editing" : " is-preview") },
-                        !isSkillComposerDescriptionEditing
-                          ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                              String(skillComposerDraft.description || "").trim()
-                                ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                    content: skillComposerDraft.description,
-                                    className: "playground-tasks-detail-description-preview tb-message-markdown",
-                                  })
-                                : React.createElement("div", {
-                                    className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                  }, "Add a short description for this custom skill.")
-                            )
-                          : null,
-                        React.createElement("textarea", {
-                          ref: skillComposerDescriptionTextareaRef,
-                          className: "playground-tasks-detail-description-input " + (isSkillComposerDescriptionEditing ? "is-editing" : "is-preview"),
-                          rows: 1,
-                          placeholder: isSkillComposerDescriptionEditing ? "Add a short description for this custom skill." : "",
-                          value: skillComposerDraft.description,
-                          disabled: skillComposerSaveState.isSaving,
-                          onFocus: () => setIsSkillComposerDescriptionEditing(true),
-                          onChange: (event) => {
-                            updateSkillComposerField("description", event.target.value);
-                            resizeSkillTextarea(event.currentTarget);
-                          },
-                          onBlur: () => setIsSkillComposerDescriptionEditing(false),
-                        })
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-tasks-attachments" },
-                      React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Code Files"),
-                        React.createElement("div", { className: "playground-tasks-attachments-actions" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-environments-action-button playground-tasks-attachments-environment-button",
-                            onClick: openSkillComposerEnvironmentFilePicker,
-                            disabled: skillCodeFilesTransferState.isProcessing || availableSkillEnvironments.length === 0,
-                            title: availableSkillEnvironments.length > 0
-                              ? "Add files from " + (selectedSkillEnvironment?.name || "an environment")
-                              : "No environments available",
-  	                        }, "From Environment")
-                        )
-                      ),
-                      React.createElement("input", {
-                        ref: skillComposerCodeFileInputRef,
-                        type: "file",
-                        multiple: true,
-                        hidden: true,
-                        onChange: (event) => void handleSkillComposerCodeFileInputChange(event),
-                      }),
-                      React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
-                        React.createElement("div", {
-                          className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (isSkillComposerCodeDragging ? " dragging" : "") + (composerCodeFiles.length > 0 ? " is-filled" : ""),
-                          onDragOver: (event) => {
-                            event.preventDefault();
-                            if (skillCodeFilesTransferState.isProcessing) {
-                              return;
-                            }
-                            setIsSkillComposerCodeDragging(true);
-                          },
-                          onDragLeave: (event) => {
-                            if (event.currentTarget.contains(event.relatedTarget)) {
-                              return;
-                            }
-                            setIsSkillComposerCodeDragging(false);
-                          },
-                          onDrop: (event) => void handleSkillComposerCodeFileDrop(event),
-                        },
-                          composerCodeFiles.length > 0
-                            ? React.createElement(React.Fragment, null,
-                                React.createElement("div", { className: "playground-tasks-attachments-topline" },
-                                  React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
-                                  React.createElement("span", null, isSkillComposerCodeDragging ? "Drop files here" : "Drop files to attach, or"),
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-tasks-attachments-browse",
-                                    disabled: skillCodeFilesTransferState.isProcessing,
-                                    onClick: () => skillComposerCodeFileInputRef.current?.click?.(),
-                                  }, "browse.")
-                                ),
-                                React.createElement("div", { className: "runner-attachments" },
-                                  composerCodeFiles.map((codeFile) => renderSkillCodeFileChip(codeFile, {
-                                    removable: true,
-                                    onRemove: handleRemoveSkillComposerCodeFile,
-                                  }))
-                                )
-                              )
-                            : React.createElement("button", {
-                                type: "button",
-                                className: "playground-tasks-attachments-empty-button",
-                                disabled: skillCodeFilesTransferState.isProcessing,
-                                onClick: () => skillComposerCodeFileInputRef.current?.click?.(),
-                              },
-                                React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
-                                React.createElement("span", { className: "tb-popup-dropzone-title" }, isSkillComposerCodeDragging ? "Drop files here" : "Drag & drop files here"),
-                                React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
-                              )
-                        )
-                      ),
-                      skillCodeFilesTransferState.isProcessing
-                        ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Adding code files...")
-                        : null,
-                      skillCodeFilesTransferState.error
-                        ? React.createElement("div", { className: "playground-environments-error" }, skillCodeFilesTransferState.error)
-                        : null
-                    )
-                  ),
-                  skillComposerSaveState.error
-                    ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, skillComposerSaveState.error)
-                    : null,
-                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button",
-                      onClick: closeSkillComposer,
-                      disabled: skillComposerSaveState.isSaving,
-                    }, "Cancel"),
-                    React.createElement(PlatformPrimaryButton, {
-                      size: "medium",
-                      type: "submit",
-                      className: "playground-environments-action-button is-primary",
-                      disabled: skillComposerSaveState.isSaving || !String(skillComposerDraft.name || "").trim() || !baseSkillProjectId,
-                    }, skillComposerSaveState.isSaving ? "Creating..." : "Create Skill")
-                  )
-                )
-              );
           }
   
           return React.createElement(React.Fragment, null,
@@ -1334,8 +1363,7 @@
             renderSkillListActionMenu(),
             renderSkillRenameModal(),
             renderSkillEditModal(),
-            renderSkillEnvironmentFilePicker(),
-            renderSkillComposerDialog()
+            renderSkillEnvironmentFilePicker()
           );
         }
   

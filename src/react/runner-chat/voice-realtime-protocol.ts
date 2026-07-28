@@ -21,6 +21,7 @@ export interface RunnerVoiceSessionRequestOptions {
   threadId?: string | null;
   environmentId?: string | null;
   agentName?: string | null;
+  communicatorMode?: boolean;
 }
 
 export interface RunnerVoiceSessionConnection {
@@ -29,6 +30,11 @@ export interface RunnerVoiceSessionConnection {
   realtimeUrl: string;
   websocketProtocol: string;
   sessionUpdate: unknown;
+  communicator: {
+    enabled: boolean;
+    groundingUrl: string;
+    refreshIntervalMs: number;
+  };
 }
 
 export type RunnerVoiceRealtimeEvent =
@@ -74,6 +80,7 @@ export function buildRunnerVoiceSessionRequest(
     ...(threadId ? { threadId } : {}),
     ...(environmentId ? { environmentId } : {}),
     title: `Voice session with ${agentName}`,
+    ...(options.communicatorMode ? { communicatorMode: true } : {}),
   };
 }
 
@@ -85,6 +92,7 @@ export function readRunnerVoiceSessionConnection(
   const voiceSession = asRecord(record.voiceSession);
   const thread = asRecord(record.thread);
   const realtime = asRecord(record.xai);
+  const communicator = asRecord(record.communicator);
   const sessionId = asString(voiceSession.id) || asString(record.voiceSessionId);
   const threadId = asString(thread.id)
     || asString(voiceSession.threadId)
@@ -102,6 +110,16 @@ export function readRunnerVoiceSessionConnection(
     realtimeUrl,
     websocketProtocol,
     sessionUpdate: realtime.sessionUpdate,
+    communicator: {
+      enabled: communicator.enabled === true,
+      groundingUrl: asString(communicator.groundingUrl),
+      refreshIntervalMs: Number.isFinite(Number(communicator.refreshIntervalMs))
+        ? Math.max(2_000, Math.min(
+            60_000,
+            Math.round(Number(communicator.refreshIntervalMs)),
+          ))
+        : 5_000,
+    },
   };
 }
 

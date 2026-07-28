@@ -8,7 +8,6 @@ import {
   Settings2,
   ShieldAlert,
   ShieldCheck,
-  Trash2,
 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import {
@@ -26,10 +25,7 @@ import {
   PlatformSettingsSectionList,
 } from "../../../../../platform-ui/components/composite/settings-section/index.js";
 import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
-import {
-  PlatformPrimaryButton,
-  PlatformSecondaryButton,
-} from "../../../../../platform-ui/components/ui/button/index.js";
+import { PlatformSecondaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformCheckbox } from "../../../../../platform-ui/components/ui/checkbox/index.js";
 import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
 import { type PlatformPermissionSet } from "../../../../../platform-ui/pages/permissions/index.js";
@@ -98,7 +94,6 @@ export interface SecurityRepositoryDetailPageProps {
   ) => void;
   onRunScan?: () => void;
   onSetStatus: (status: "active" | "paused") => void;
-  onDelete: () => void;
   onTabChange?: (tab: SecurityRepositoryTab) => void;
 }
 
@@ -776,8 +771,9 @@ function PolicyEditor({
         <div>
           <strong>Non-overridable publication guardrails</strong>
           <span>
-            Fixes remain draft pull requests, workflow-file changes are blocked,
-            and no policy can authorize automatic merging.
+            Manual fixes remain draft pull requests, workflow files are limited
+            to exact finding evidence paths, and no policy can authorize
+            automatic merging.
           </span>
         </div>
       </PlatformUiCard>
@@ -870,7 +866,6 @@ export function SecurityRepositoryDetailPage({
   onSaveTeamRolePermissionSet,
   onRunScan,
   onSetStatus,
-  onDelete,
   onTabChange,
 }: SecurityRepositoryDetailPageProps) {
   const [internalActiveTab, setInternalActiveTab] =
@@ -950,25 +945,6 @@ export function SecurityRepositoryDetailPage({
               Current state: <strong>{repository.status}</strong>. Suspending or
               removing the GitHub connection forces the repository into
               disconnected state.
-            </p>
-          </PlatformSettingsSection>
-          <PlatformSettingsSection
-            title="Delete security repository"
-            description="Deletes policies, threat models, runs, findings, artifacts, and repository audit references. The GitHub connection is retained."
-            icon={<Trash2 width={18} height={18} />}
-            actions={
-              <PlatformPrimaryButton
-                size="small"
-                className="is-destructive"
-                disabled={busy}
-                onClick={onDelete}
-              >
-                <Trash2 width={14} height={14} /> Delete
-              </PlatformPrimaryButton>
-            }
-          >
-            <p className="develop-security-muted">
-              This operation cannot be undone from the platform.
             </p>
           </PlatformSettingsSection>
         </PlatformSettingsSectionList>

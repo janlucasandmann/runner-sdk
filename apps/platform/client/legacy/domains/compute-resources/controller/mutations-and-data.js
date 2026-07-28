@@ -2461,6 +2461,399 @@
               });
             }
           }
+
+          async function handleCreateServerFolder() {
+            if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isSelectedServerTemplatePreview) {
+              return;
+            }
+            const rawPath = window.prompt("New folder path", "src");
+            const normalizedPath = normalizeHistoryPath(rawPath || "");
+            if (!normalizedPath) {
+              return;
+            }
+            const markerPath = normalizeHistoryPath(normalizedPath + "/.gitkeep");
+
+            setServerFileTransferState({
+              isUploading: false,
+              error: "",
+              message: "",
+            });
+
+            try {
+              const response = await fetch(
+                buildPlaygroundServerFileContentUrl(backendUrl, draftServer.id, markerPath),
+                {
+                  method: "PUT",
+                  headers: {
+                    ...requestHeaders,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    content: "",
+                  }),
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to create source folder.");
+              }
+
+              await loadServerFiles(draftServer.id);
+              setServerSourceExpandedFolders((current) => {
+                const next = new Set(current);
+                next.add(normalizedPath);
+                return next;
+              });
+              serverVersionDraftTouchedRef.current = true;
+              setServerFileTransferState({
+                isUploading: false,
+                error: "",
+                message: "Created " + normalizedPath,
+              });
+            } catch (error) {
+              setServerFileTransferState({
+                isUploading: false,
+                error: error instanceof Error ? error.message : "Failed to create source folder.",
+                message: "",
+              });
+            }
+          }
+
+          function getServerSourcePathParent(path) {
+            const normalizedPath = normalizeHistoryPath(path);
+            if (!normalizedPath) return "";
+            const segments = normalizedPath.split("/").filter(Boolean);
+            segments.pop();
+            return segments.join("/");
+          }
+
+          function getServerSourcePathName(path) {
+            const normalizedPath = normalizeHistoryPath(path);
+            return normalizedPath.split("/").filter(Boolean).pop() || "";
+          }
+
+          function encodeServerSourcePath(path) {
+            return normalizeHistoryPath(path)
+              .split("/")
+              .filter(Boolean)
+              .map((segment) => encodeURIComponent(segment))
+              .join("/");
+          }
+
+          async function handleServerEntriesMove(entries, destinationFolder = null) {
+            if (
+              !draftServer?.id
+              || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
+              || isSelectedServerTemplatePreview
+            ) {
+              return;
+            }
+            const destinationPath = destinationFolder?.isFolder
+              ? normalizeHistoryPath(destinationFolder.path)
+              : "";
+            const candidateEntries = Array.from(new Map(
+              (Array.isArray(entries) ? entries : [])
+                .filter((entry) => entry?.path)
+                .map((entry) => [normalizeHistoryPath(entry.path), entry])
+            ).values());
+            const sourceEntries = candidateEntries.filter((entry) => {
+              const entryPath = normalizeHistoryPath(entry.path);
+              return !candidateEntries.some((candidate) => {
+                const candidatePath = normalizeHistoryPath(candidate.path);
+                return candidate !== entry
+                  && candidate.isFolder
+                  && entryPath.startsWith(candidatePath + "/");
+              });
+            });
+            if (!sourceEntries.length) return;
+
+            const moveRoots = sourceEntries.map((entry) => {
+              const sourcePath = normalizeHistoryPath(entry.path);
+              const targetPath = normalizeHistoryPath(
+                [destinationPath, getServerSourcePathName(sourcePath)].filter(Boolean).join("/")
+              );
+              return { entry, sourcePath, targetPath };
+            }).filter((move) => move.sourcePath && move.targetPath !== move.sourcePath);
+            if (!moveRoots.length) return;
+            const invalidNestedMove = moveRoots.find((move) =>
+              move.entry.isFolder
+              && (
+                destinationPath === move.sourcePath
+                || destinationPath.startsWith(move.sourcePath + "/")
+              )
+            );
+            if (invalidNestedMove) {
+              setServerFileTransferState((current) => ({
+                ...current,
+                error: "A folder cannot be moved into itself.",
+                message: "",
+              }));
+              return;
+            }
+
+            const inventoryFiles = currentServerFiles.filter((entry) =>
+              entry?.path && !entry.isFolder
+            );
+            const sourceFilePaths = new Set();
+            const fileMoves = [];
+            moveRoots.forEach((move) => {
+              const nestedFiles = move.entry.isFolder
+                ? inventoryFiles.filter((entry) => {
+                    const filePath = normalizeHistoryPath(entry.path);
+                    return filePath.startsWith(move.sourcePath + "/");
+                  })
+                : inventoryFiles.filter((entry) =>
+                    normalizeHistoryPath(entry.path) === move.sourcePath
+                  );
+              const filesToMove = nestedFiles.length
+                ? nestedFiles
+                : move.entry.isFolder
+                  ? [{
+                      path: move.sourcePath + "/.gitkeep",
+                      name: ".gitkeep",
+                      isFolder: false,
+                      isSyntheticFolderMarker: true,
+                    }]
+                  : [move.entry];
+              filesToMove.forEach((entry) => {
+                const sourcePath = normalizeHistoryPath(entry.path);
+                if (!sourcePath || sourceFilePaths.has(sourcePath)) return;
+                const suffix = move.entry.isFolder
+                  ? sourcePath.slice(move.sourcePath.length)
+                  : "";
+                const targetPath = normalizeHistoryPath(move.targetPath + suffix);
+                sourceFilePaths.add(sourcePath);
+                fileMoves.push({
+                  entry,
+                  sourcePath,
+                  targetPath,
+                  synthetic: entry.isSyntheticFolderMarker === true,
+                });
+              });
+            });
+
+            const targetPaths = new Set();
+            const existingPaths = new Set(
+              currentServerFiles
+                .map((entry) => normalizeHistoryPath(entry?.path))
+                .filter(Boolean)
+            );
+            const conflictingMove = fileMoves.find((move) => {
+              if (
+                !move.targetPath
+                || targetPaths.has(move.targetPath)
+                || (existingPaths.has(move.targetPath) && !sourceFilePaths.has(move.targetPath))
+              ) {
+                return true;
+              }
+              targetPaths.add(move.targetPath);
+              return false;
+            });
+            if (conflictingMove) {
+              setServerFileTransferState((current) => ({
+                ...current,
+                error: 'Cannot move items because "' + (conflictingMove.targetPath || "the destination") + '" already exists.',
+                message: "",
+              }));
+              return;
+            }
+
+            setServerFileTransferState({
+              isUploading: true,
+              error: "",
+              message: "",
+            });
+
+            const serverId = String(draftServer.id);
+            const writtenTargetPaths = [];
+            try {
+              const preparedMoves = await Promise.all(fileMoves.map(async (move) => {
+                const draftKey = serverId + "|" + move.sourcePath;
+                if (move.synthetic) {
+                  return { ...move, content: "", blob: null };
+                }
+                if (serverSourceDraftContentsRef.current.has(draftKey)) {
+                  return {
+                    ...move,
+                    content: String(serverSourceDraftContentsRef.current.get(draftKey) || ""),
+                    blob: null,
+                  };
+                }
+                const response = await fetch(
+                  backendUrl
+                    + "/servers/"
+                    + encodeURIComponent(serverId)
+                    + "/files/download/"
+                    + encodeServerSourcePath(move.sourcePath),
+                  {
+                    method: "GET",
+                    headers: requestHeaders,
+                  }
+                );
+                if (!response.ok) {
+                  const data = await response.json().catch(() => ({}));
+                  throw new Error(data?.message || data?.error || ("Failed to read " + move.sourcePath + "."));
+                }
+                return { ...move, content: null, blob: await response.blob() };
+              }));
+
+              for (const move of preparedMoves) {
+                if (typeof move.content === "string") {
+                  const response = await fetch(
+                    buildPlaygroundServerFileContentUrl(backendUrl, serverId, move.targetPath),
+                    {
+                      method: "PUT",
+                      headers: {
+                        ...requestHeaders,
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({ content: move.content }),
+                    }
+                  );
+                  const data = await response.json().catch(() => ({}));
+                  if (!response.ok) {
+                    throw new Error(data?.message || data?.error || ("Failed to write " + move.targetPath + "."));
+                  }
+                } else {
+                  const formData = new FormData();
+                  formData.append(
+                    "file",
+                    move.blob,
+                    getServerSourcePathName(move.targetPath)
+                  );
+                  formData.append("path", getServerSourcePathParent(move.targetPath));
+                  const response = await fetch(
+                    backendUrl + "/servers/" + encodeURIComponent(serverId) + "/files/upload",
+                    {
+                      method: "POST",
+                      headers: requestHeaders,
+                      body: formData,
+                    }
+                  );
+                  const data = await response.json().catch(() => ({}));
+                  if (!response.ok) {
+                    throw new Error(data?.message || data?.error || ("Failed to write " + move.targetPath + "."));
+                  }
+                }
+                writtenTargetPaths.push(move.targetPath);
+              }
+            } catch (error) {
+              await Promise.all(writtenTargetPaths.map(async (targetPath) => {
+                await fetch(
+                  backendUrl
+                    + "/servers/"
+                    + encodeURIComponent(serverId)
+                    + "/files/"
+                    + encodeServerSourcePath(targetPath),
+                  {
+                    method: "DELETE",
+                    headers: requestHeaders,
+                  }
+                ).catch(() => undefined);
+              }));
+              setServerFileTransferState({
+                isUploading: false,
+                error: error instanceof Error ? error.message : "Failed to move source items.",
+                message: "",
+              });
+              return;
+            }
+
+            const explicitFolderPaths = new Set(
+              currentServerFiles
+                .filter((entry) => entry?.isFolder)
+                .map((entry) => normalizeHistoryPath(entry.path))
+                .filter(Boolean)
+            );
+            const deletePaths = Array.from(new Set([
+              ...fileMoves.filter((move) => !move.synthetic).map((move) => move.sourcePath),
+              ...moveRoots
+                .filter((move) => move.entry.isFolder && explicitFolderPaths.has(move.sourcePath))
+                .map((move) => move.sourcePath),
+            ])).sort((left, right) => right.split("/").length - left.split("/").length);
+            const failedDeletePaths = [];
+            for (const sourcePath of deletePaths) {
+              const response = await fetch(
+                backendUrl
+                  + "/servers/"
+                  + encodeURIComponent(serverId)
+                  + "/files/"
+                  + encodeServerSourcePath(sourcePath),
+                {
+                  method: "DELETE",
+                  headers: requestHeaders,
+                }
+              );
+              if (!response.ok && response.status !== 404) {
+                failedDeletePaths.push(sourcePath);
+              }
+            }
+
+            fileMoves.forEach((move) => {
+              const sourceDraftKey = serverId + "|" + move.sourcePath;
+              const targetDraftKey = serverId + "|" + move.targetPath;
+              if (serverSourceDraftContentsRef.current.has(sourceDraftKey)) {
+                serverSourceDraftContentsRef.current.set(
+                  targetDraftKey,
+                  serverSourceDraftContentsRef.current.get(sourceDraftKey)
+                );
+                serverSourceDraftContentsRef.current.delete(sourceDraftKey);
+              }
+            });
+            setServerFileEditorHistoryByKey((current) => {
+              let changed = false;
+              const next = { ...current };
+              fileMoves.forEach((move) => {
+                const sourceHistoryKey = serverId + "|" + move.sourcePath;
+                const targetHistoryKey = serverId + "|" + move.targetPath;
+                if (!Object.prototype.hasOwnProperty.call(next, sourceHistoryKey)) return;
+                next[targetHistoryKey] = next[sourceHistoryKey];
+                delete next[sourceHistoryKey];
+                changed = true;
+              });
+              return changed ? next : current;
+            });
+            const activeFileMove = fileMoves.find((move) =>
+              move.sourcePath === normalizeHistoryPath(serverFileEditorState.path)
+            );
+            if (activeFileMove) {
+              setServerFileEditorState((current) => ({
+                ...current,
+                path: activeFileMove.targetPath,
+                saveMessage: "Moved",
+                saveError: "",
+              }));
+            }
+            setServerSourceExpandedFolders((current) => {
+              const next = new Set(current);
+              moveRoots.forEach((move) => {
+                for (const expandedPath of Array.from(next)) {
+                  if (
+                    expandedPath === move.sourcePath
+                    || expandedPath.startsWith(move.sourcePath + "/")
+                  ) {
+                    next.delete(expandedPath);
+                  }
+                }
+                if (move.entry.isFolder) next.add(move.targetPath);
+              });
+              if (destinationPath) next.add(destinationPath);
+              return next;
+            });
+            serverVersionDraftTouchedRef.current = true;
+            await loadServerFiles(serverId);
+            setServerFileTransferState({
+              isUploading: false,
+              error: failedDeletePaths.length
+                ? "Moved items, but some original paths could not be removed: " + failedDeletePaths.join(", ")
+                : "",
+              message: failedDeletePaths.length
+                ? ""
+                : moveRoots.length === 1
+                  ? "Moved " + getServerSourcePathName(moveRoots[0].sourcePath)
+                  : "Moved " + moveRoots.length + " items",
+            });
+          }
   
           async function createDefaultServerSourceFiles(serverId, starterFiles, options = {}) {
             const normalizedServerId = String(serverId || "").trim();

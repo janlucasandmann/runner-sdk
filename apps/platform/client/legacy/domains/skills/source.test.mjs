@@ -16,11 +16,11 @@ assert.deepEqual(
 );
 assert.equal(
   createHash("sha256").update(SKILLS_PAGE_SCRIPT).digest("hex"),
-  "c28a6116fcac75cb324cc109995d1ac487de182f13f5c9f7118522878713c54f",
+  "02549e000220b1a91339eef4c40033610a6abcceaf60428b13f845c6b6c72a08",
   "The Skills fragment composition must remain byte-compatible with the reviewed controller.",
 );
 assert.match(SKILLS_PAGE_SCRIPT, /requestedAction === "create"/);
-assert.match(SKILLS_PAGE_SCRIPT, /openSkillComposer\(\)/);
+assert.match(SKILLS_PAGE_SCRIPT, /createAndOpenCustomSkill\(\)/);
 assert.match(
   SKILLS_PAGE_SCRIPT,
   /systemSkillFamilyId === "computer_agents"[\s\S]*src: COMPUTER_AGENTS_CREATOR_PROFILE_URL/,

@@ -42,7 +42,7 @@ const APP_HEADER_BREADCRUMB_BAR_TEMPLATE = `        function renderAppHeaderBrea
                       title: label,
                     }, itemContent);
               const itemWithTrailing = item.trailing
-                ? React.createElement("span", {
+                ? React.createElement("div", {
                     className: "playground-top-nav-path-item-group" + (isCurrent ? " is-current" : ""),
                   },
                     itemNode,

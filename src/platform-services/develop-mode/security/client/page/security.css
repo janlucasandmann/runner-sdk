@@ -106,6 +106,33 @@
   color: #dc2626;
 }
 
+.develop-security-request-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(245, 59, 58, 0.2);
+  border-radius: 10px;
+  background: rgba(245, 59, 58, 0.08);
+  color: #fff;
+  font-size: 12px;
+}
+
+.develop-security-request-notice > svg {
+  flex: 0 0 auto;
+  color: #f53b3a;
+}
+
+.develop-security-request-notice > span {
+  flex: 1 1 auto;
+  overflow-wrap: anywhere;
+}
+
+.develop-security-request-notice > button {
+  flex: 0 0 auto;
+}
+
 .develop-security-detail-heading > span {
   color: var(--develop-security-muted);
   font-size: 10px;
@@ -202,6 +229,12 @@
   gap: 7px;
 }
 
+.playground-security-repository-title-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .develop-security-table-stack {
   display: grid;
   align-items: start;
@@ -216,6 +249,15 @@
   max-width: 100%;
   color: var(--develop-security-muted);
   font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.develop-security-finding-title {
+  overflow: hidden;
+  max-width: 100%;
+  color: #fff;
+  font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -345,6 +387,32 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.develop-security-run-narrative-section {
+  display: grid;
+  gap: 12px;
+}
+
+.develop-security-run-kpis .platform-analytics__metrics {
+  padding-bottom: 0;
+}
+
+.develop-security-run-narrative-section h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.develop-security-narrative {
+  margin: 0;
+  max-width: 92ch;
+  color: rgba(255, 255, 255, 0.82) !important;
+  font-size: 13px !important;
+  line-height: 1.65 !important;
+  white-space: pre-wrap;
 }
 
 .develop-security-content-card {
@@ -674,9 +742,10 @@
 .develop-security-timeline {
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 1fr));
-  padding: 16px;
-  border: 1px solid var(--develop-security-border);
-  border-radius: 12px;
+  margin-top: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
   list-style: none;
 }
 
@@ -714,7 +783,7 @@
 .develop-security-timeline small {
   overflow: hidden;
   max-width: 100%;
-  font-size: 8px;
+  font-size: 12px;
   text-overflow: ellipsis;
 }
 

@@ -5,6 +5,7 @@ import { readPlatformCompositionSource } from "../../../../apps/platform/testing
 import {
   createSecurityService,
   SECURITY_APP_SCRIPT_FRAGMENTS,
+  createSecurityAppScriptFragments,
 } from "./index.mjs";
 
 assert.deepEqual(Object.keys(SECURITY_APP_SCRIPT_FRAGMENTS), [
@@ -21,12 +22,24 @@ assert.match(
   /function openDevelopSecurityPage/,
 );
 assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.navigation,
+  /options\.forceOverview === true/,
+);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.navigation,
+  /computer-agents:security-workspace-route-change/,
+);
+assert.match(
   SECURITY_APP_SCRIPT_FRAGMENTS.sidebarEntry,
   /id: "develop-security"/,
 );
 assert.match(
   SECURITY_APP_SCRIPT_FRAGMENTS.sidebarEntry,
   /label: "Security Agents"/,
+);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  /openDevelopSecurityPage\(\{ forceOverview: true \}\)/,
 );
 assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: Shield/);
 assert.match(
@@ -41,6 +54,21 @@ assert.match(
   SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation,
   /PlatformVersionLabel/,
 );
+assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation, /PlatformPopup/);
+assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation, /variant: "minimal"/);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation,
+  /React\.createElement\(Ellipsis,/,
+);
+assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation, /Resource ID/);
+assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation, /Documentation/);
+assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation, /"Delete"/);
+assert.match(
+  createSecurityAppScriptFragments({
+    documentationUrl: "https://example.test/developers/security",
+  }).topNavigation,
+  /https:\/\/example\.test\/developers\/security/,
+);
 assert.match(
   SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation,
   /resourcesHeaderState\.title/,
@@ -54,6 +82,60 @@ const securitySidebarEntry = new Function(
 )(securitySidebarIcon, "develop-security", () => undefined);
 assert.equal(securitySidebarEntry.Icon, securitySidebarIcon);
 assert.equal(securitySidebarEntry.active, true);
+{
+  const calls = [];
+  const dispatchedEvents = [];
+  const securityWindow = {
+    location: {
+      href: "https://platform.test/?security_repository=repository_1&keep=1",
+    },
+    history: {
+      state: { existing: true },
+      pushState(state, _title, url) {
+        this.state = state;
+        securityWindow.location.href = url.toString();
+      },
+    },
+    dispatchEvent(event) {
+      dispatchedEvents.push(event.type);
+      return true;
+    },
+  };
+  const openDevelopSecurityPage = new Function(
+    "setAccountMenuOpen",
+    "setProfileEditorOpen",
+    "setSidebarWorkspaceMode",
+    "setResourcesHeaderState",
+    "setIsAgentVersionsDetailOpen",
+    "setActivePage",
+    "window",
+    "Event",
+    `${SECURITY_APP_SCRIPT_FRAGMENTS.navigation}
+return openDevelopSecurityPage;`,
+  )(
+    (value) => calls.push(["account-menu", value]),
+    (value) => calls.push(["profile-editor", value]),
+    (value) => calls.push(["sidebar-mode", value]),
+    (value) => calls.push(["header", value]),
+    (value) => calls.push(["versions-detail", value]),
+    (value) => calls.push(["active-page", value]),
+    securityWindow,
+    Event,
+  );
+
+  openDevelopSecurityPage({ forceOverview: true });
+
+  const recoveredUrl = new URL(securityWindow.location.href);
+  assert.equal(recoveredUrl.searchParams.get("keep"), "1");
+  assert.equal(recoveredUrl.searchParams.has("security_repository"), false);
+  assert.deepEqual(securityWindow.history.state.developSecurityRoute, {
+    kind: "overview",
+  });
+  assert.deepEqual(dispatchedEvents, [
+    "computer-agents:security-workspace-route-change",
+  ]);
+  assert.deepEqual(calls.at(-1), ["active-page", "develop-security"]);
+}
 assert.match(
   SECURITY_APP_SCRIPT_FRAGMENTS.pageView,
   /DevelopSecurityWorkspacePage/,
@@ -218,6 +300,13 @@ assert.match(pageSources, /PlatformVersionPublishControl/);
 assert.match(pageSources, /PlatformVersionSaveDialog/);
 assert.match(pageSources, /PlatformDiffViewer/);
 assert.match(pageSources, /SecurityDetailPageFrame/);
+assert.doesNotMatch(
+  repositoryDetailSource,
+  /Delete security repository/,
+  "Repository deletion must live in the app-header action menu, not Settings.",
+);
+assert.match(repositoryVersionControlSource, /onActionsOpenChange/);
+assert.match(repositoryVersionControlSource, /onDelete/);
 assert.match(
   pageSources,
   /<PlatformLoadingState[\s\S]*className="develop-security-detail-loading-state"/,
@@ -225,7 +314,7 @@ assert.match(
 );
 assert.match(
   pageSources,
-  /if \(loading\)[\s\S]*<SecurityDetailLoadingState/,
+  /if \(loading && !hasCurrentDetail\)[\s\S]*<SecurityDetailLoadingState/,
   "Security detail routes must keep the centered detail loading frame mounted.",
 );
 assert.match(repositoryDetailSource, /id: "runs", label: "Runs"/);

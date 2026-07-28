@@ -12,6 +12,7 @@ import {
   RunnerThreadActivityGroupTree,
   RunnerThreadRunActivityCard,
 } from "../dist/react/index.js";
+import { RunnerCanonicalThreadSurface } from "../dist/react/runner-chat/canonical-thread-surface.js";
 import {
   compactRunnerThreadLiveProjection,
   createRunnerThreadDetailRequestRegistry,
@@ -25,6 +26,7 @@ import {
 } from "../dist/react/thread/run-activity-card.js";
 import { RunnerPageQueueReceipt } from "../dist/react/runner-chat/execution/page-queue-receipt.js";
 import { isRunnerThreadProjectionRequestCurrent } from "../dist/react/thread/use-runner-thread-projection.js";
+import { shouldUseRunnerCanonicalThreadSurface } from "../dist/react/thread/thread-surface-mode.js";
 import {
   adaptRunnerThreadActionToRunnerLog,
   describeRunnerThreadAction,
@@ -68,8 +70,13 @@ assert.equal(
 );
 assert.equal(
   (canonicalThreadSurfaceSource.match(/renderAction=\{renderAction\}/g) || []).length,
-  4,
-  "the canonical surface must carry its typed renderer through main and compatibility timelines",
+  1,
+  "the canonical surface must have one authoritative typed timeline",
+);
+assert.doesNotMatch(
+  canonicalThreadSurfaceSource,
+  /CompatibilityTimeline|historyEntries|tailEntries/,
+  "the canonical surface must not mix legacy compatibility timelines with authoritative runs",
 );
 
 assert.equal(describeRunnerThreadAction({
@@ -291,6 +298,16 @@ const projection = reduceRunnerThreadEvents(
 const collapsedMarkup = renderToStaticMarkup(React.createElement(RunnerThread, { projection }));
 assert.match(collapsedMarkup, /class="tb-thread-user-message-time"/);
 assert.match(collapsedMarkup, /dateTime="2026-07-10T08:00:00.000Z"/);
+assert.match(
+  collapsedMarkup,
+  /class="tb-turn tb-turn-user"[\s\S]*class="tb-user-turn-shell"[\s\S]*class="task-prompt-in-session-context"/,
+  "canonical human messages must retain the established user-turn shell",
+);
+assert.doesNotMatch(
+  collapsedMarkup,
+  /tb-thread-message is-human/,
+  "canonical human messages must not use the replacement thread-message bubble",
+);
 assert.ok(
   collapsedMarkup.indexOf("tb-thread-user-message-time") < collapsedMarkup.indexOf("Fix authentication without changing the public API"),
   "the centered user timestamp must render above its message",
@@ -855,12 +872,54 @@ assert.match(boundedMarkup, /Load earlier activity/);
 
 const canonicalRunnerChatMarkup = renderToStaticMarkup(React.createElement(RunnerChat, {
   backendUrl: "https://runner.invalid",
-  apiKey: "test-key",
+  apiKey: "",
   threadId: "canonical-thread",
   threadViewMode: "canonical",
 }));
-assert.match(canonicalRunnerChatMarkup, /Loading conversation…/, "RunnerChat must mount the canonical Thread v2 surface in canonical mode");
+assert.match(
+  canonicalRunnerChatMarkup,
+  /Loading conversation…/,
+  "session-authenticated hosts must mount the canonical Thread v2 surface without exposing an API key to the browser",
+);
 assert.doesNotMatch(canonicalRunnerChatMarkup, /No logs yet/, "the legacy turn placeholder must not leak into the canonical surface");
+
+const canonicalSurfaceMarkup = renderToStaticMarkup(React.createElement(RunnerCanonicalThreadSurface, {
+  activityGroupActionStates: {},
+  connected: true,
+  hasContent: true,
+  loading: false,
+  projection,
+  reconnecting: false,
+  runDetailStates: {},
+}));
+assert.match(
+  canonicalSurfaceMarkup,
+  /class="tb-turn tb-turn-user"[\s\S]*class="tb-user-turn-collapsible-copy"[\s\S]*tb-message-markdown-user/,
+  "the canonical grouped surface must render user messages with the original collapsible prompt component",
+);
+assert.equal(
+  (canonicalSurfaceMarkup.match(/class="tb-thread-run-card/g) || []).length,
+  1,
+  "one canonical run must render one agent/environment card and one collapsible section",
+);
+assert.doesNotMatch(
+  canonicalSurfaceMarkup,
+  /tb-canonical-compatibility/,
+  "legacy compatibility blocks must never duplicate an authoritative canonical run",
+);
+
+assert.equal(shouldUseRunnerCanonicalThreadSurface({
+  canonicalThreadEnabled: true,
+  canonicalProjectionMatchesThread: true,
+  threadViewMode: "auto",
+  hasCanonicalTimelineContent: true,
+}), true, "auto mode must hand an authoritative worker run to the canonical grouped surface");
+assert.equal(shouldUseRunnerCanonicalThreadSurface({
+  canonicalThreadEnabled: true,
+  canonicalProjectionMatchesThread: true,
+  threadViewMode: "auto",
+  hasCanonicalTimelineContent: false,
+}), false, "auto mode must retain the compatibility surface until canonical data is authoritative");
 
 const compatibleRunnerChatMarkup = renderToStaticMarkup(React.createElement(RunnerChat, {
   backendUrl: "https://runner.invalid",

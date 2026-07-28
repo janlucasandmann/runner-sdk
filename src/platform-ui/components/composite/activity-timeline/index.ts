@@ -5,6 +5,7 @@ export {
   type PlatformActivityItemActions,
   type PlatformActivityReply,
   type PlatformActivityReplyComposerProps,
+  type PlatformActivityTimelineLayout,
   type PlatformActivityTimelineProps,
   type PlatformActivityTone,
 } from "./platform-activity-timeline.js";

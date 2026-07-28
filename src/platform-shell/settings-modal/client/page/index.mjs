@@ -14,9 +14,7 @@ export function createSettingsModalPageScript(options = {}) {
           const hideSettingsHeader = options.hideHeader === true;
           const isOrganizationBillingSurface = options.organizationBilling === true;
           const requestedSettingsSection = options.section || settingsSection;
-          const normalizedSettingsSection = requestedSettingsSection === "password" || requestedSettingsSection === "delete"
-            ? "profile"
-            : requestedSettingsSection;
+          const normalizedSettingsSection = requestedSettingsSection;
 	          const billingSectionIds = ["costs-plans", "costs-plan-options", "costs-records", "costs-overview"];
           const effectiveSettingsSection = normalizedSettingsSection === "api"
             ? "profile"
@@ -27,7 +25,9 @@ export function createSettingsModalPageScript(options = {}) {
 	            ? options.onSectionChange
 	            : setSettingsSection;
 	          const settingsTabs = [
-	            { id: "profile", label: "Profile", title: "Profile" },
+	            { id: "profile", label: "Account", title: "Account" },
+	            { id: "password", label: "Password", title: "Password" },
+	            { id: "delete", label: "Delete Account", title: "Delete Account" },
 	          ];
 
 	          const selectedSection = effectiveSettingsSection === "inference"
@@ -2422,119 +2422,13 @@ ${apiKeysLegacySettingsCase}            case "design":
                           : null
                       )
                     ),
-                    !accountEmail && settingsVerificationError
-                      ? renderSettingsInlineStatus("error", settingsVerificationError)
-                      : null,
-                    renderSettingsInlineStatus("error", settingsMarketingConsentError),
-                    renderSettingsInlineStatus("success", settingsMarketingConsentSuccess),
-	                    React.createElement("div", { className: "playground-settings-account-divider" },
-	                      React.createElement("h3", { className: "playground-settings-records-title" }, "Password"),
-	                      React.createElement("p", { className: "playground-settings-records-subtitle" }, "Update your account password")
-	                    ),
-	                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
-	                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-current" }, "Current Password"),
-	                      React.createElement("input", {
-	                        id: "settings-password-current",
-	                        type: "password",
-	                        className: "playground-settings-input",
-	                        value: settingsPasswordForm.currentPassword,
-	                        onChange: (event) => setSettingsPasswordForm((current) => ({ ...current, currentPassword: event.target.value })),
-	                        placeholder: "••••••••",
-	                      })
-	                    ),
-	                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
-	                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-new" }, "New Password"),
-	                      React.createElement("input", {
-	                        id: "settings-password-new",
-	                        type: "password",
-	                        className: "playground-settings-input",
-	                        value: settingsPasswordForm.newPassword,
-	                        onChange: (event) => setSettingsPasswordForm((current) => ({ ...current, newPassword: event.target.value })),
-	                        placeholder: "••••••••",
-	                      })
-	                    ),
-	                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
-	                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-confirm" }, "Confirm New Password"),
-	                      React.createElement("input", {
-	                        id: "settings-password-confirm",
-	                        type: "password",
-	                        className: "playground-settings-input",
-	                        value: settingsPasswordForm.confirmPassword,
-	                        onChange: (event) => setSettingsPasswordForm((current) => ({ ...current, confirmPassword: event.target.value })),
-	                        placeholder: "••••••••",
-	                      })
-	                    ),
-	                    renderSettingsInlineStatus("error", settingsPasswordError),
-	                    renderSettingsInlineStatus("success", settingsPasswordSuccess),
-	                    React.createElement(PlatformPrimaryButton, {
-	                      size: "large",
-	                      type: "button",
-	                      className: "playground-settings-app-primary-button",
-	                      disabled: settingsPasswordLoading || !settingsPasswordForm.currentPassword || !settingsPasswordForm.newPassword || !settingsPasswordForm.confirmPassword,
-	                      onClick: () => {
-	                        void handleSettingsPasswordChange();
-	                      },
-	                    }, settingsPasswordLoading
-	                      ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-settings-records-spinner" })
-	                      : "Update Password"),
-	                    React.createElement("div", { className: "playground-settings-account-divider" },
-	                      React.createElement("h3", { className: "playground-settings-records-title" }, "Delete Account"),
-	                      React.createElement("p", { className: "playground-settings-records-subtitle" }, "Permanently remove the signed-in account and purge associated cloud data")
-	                    ),
-	                    renderSettingsNote(
-	                      "Warning",
-	                      React.createElement("span", null,
-	                        "This action permanently deletes threads, integrations, billing references, and account data. It cannot be undone."
-	                      ),
-	                      null,
-	                      { isDanger: true }
-	                    ),
-	                    renderSettingsBanner("error", settingsDeleteError),
-	                    React.createElement("div", { className: "playground-environments-summary-grid" },
-	                      renderSettingsSectionCard(
-	                        "Delete this account",
-	                        "Confirm the account password and type DELETE to continue.",
-	                        React.createElement("div", { className: "playground-settings-card-stack" },
-	                          React.createElement("div", { className: "playground-settings-field" },
-	                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-delete-confirm" }, "Type DELETE"),
-	                            React.createElement("input", {
-	                              id: "settings-delete-confirm",
-	                              className: "playground-settings-input playground-settings-input-danger",
-	                              value: settingsDeleteConfirmation,
-	                              onChange: (event) => setSettingsDeleteConfirmation(event.target.value),
-	                              placeholder: "DELETE",
-	                            })
-	                          ),
-	                          React.createElement("div", { className: "playground-settings-field" },
-	                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-delete-password" }, "Account Password"),
-	                            React.createElement("input", {
-	                              id: "settings-delete-password",
-	                              type: "password",
-	                              className: "playground-settings-input playground-settings-input-danger",
-	                              value: settingsDeletePassword,
-	                              onChange: (event) => setSettingsDeletePassword(event.target.value),
-	                              placeholder: "••••••••",
-	                            })
-	                          )
-	                        ),
-	                        React.createElement("button", {
-	                          type: "button",
-	                          className: "playground-settings-danger-button",
-	                          disabled: settingsDeleteLoading,
-	                          onClick: () => {
-	                            void handleSettingsDeleteAccount();
-	                          },
-	                        }, settingsDeleteLoading ? "Deleting..." : "Delete My Account")
-	                      ),
-	                      renderSettingsSummaryCard("Account at Risk", [
-	                        { label: "Name", value: accountName || "Unknown account" },
-	                        { label: "Email", value: accountEmail || "No email on file" },
-	                        { label: "Plan", value: formatSubscriptionTier(settingsCurrentTierId) },
-	                        { label: "Project", value: activeProjectId || "No project selected" },
-	                      ])
-	                    )
-	                  )
-	                )
+	                    !accountEmail && settingsVerificationError
+	                      ? renderSettingsInlineStatus("error", settingsVerificationError)
+	                      : null,
+	                    renderSettingsInlineStatus("error", settingsMarketingConsentError),
+	                    renderSettingsInlineStatus("success", settingsMarketingConsentSuccess)
+		                  )
+		                )
 	              );
               break;
             case "password":
@@ -2715,6 +2609,12 @@ ${apiKeysLegacySettingsCase}            case "design":
 
 
         function renderSettingsModal() {
+          const modalSections = [
+            { id: "profile", label: "Account", Icon: UserRound },
+            { id: "password", label: "Password", Icon: KeyRound },
+            { id: "delete", label: "Delete Account", Icon: Trash2, isDanger: true },
+          ];
+
           return React.createElement(PlatformModal, {
               open: settingsModalOpen,
               onClose: closeSettingsModal,
@@ -2726,10 +2626,53 @@ ${apiKeysLegacySettingsCase}            case "design":
               closeButtonLabel: "Close settings",
             },
             React.createElement(PlatformModalBody, { className: "playground-shell-settings-modal-body" },
-              renderSettingsSurface({
-                embedded: true,
-                section: settingsSection,
-              })
+              React.createElement("div", {
+                  className: "platform-modal-split-layout playground-shell-settings-modal-layout",
+                },
+                React.createElement("aside", {
+                    className: "platform-modal-sidebar playground-shell-settings-modal-sidebar",
+                    "aria-label": "Settings sections",
+                  },
+                  React.createElement("div", {
+                      className: "platform-modal-sidebar__body playground-shell-settings-modal-sidebar-body",
+                    },
+                    React.createElement("nav", { className: "playground-shell-settings-modal-navigation" },
+                      modalSections.map((section) =>
+                        React.createElement("button", {
+                            key: section.id,
+                            type: "button",
+                            className: "playground-shell-settings-modal-navigation-item"
+                              + (settingsSection === section.id ? " is-active" : "")
+                              + (section.isDanger ? " is-danger" : ""),
+                            onClick: () => setSettingsSection(section.id),
+                            "aria-current": settingsSection === section.id ? "page" : undefined,
+                          },
+                          React.createElement(section.Icon, {
+                            className: "playground-shell-settings-modal-navigation-icon",
+                            width: 15,
+                            height: 15,
+                            strokeWidth: 1.75,
+                            "aria-hidden": "true",
+                          }),
+                          React.createElement("span", null, section.label)
+                        )
+                      )
+                    )
+                  )
+                ),
+                React.createElement("section", {
+                    className: "platform-modal-content playground-shell-settings-modal-content",
+                  },
+                  React.createElement("div", {
+                      className: "platform-modal-content__body playground-shell-settings-modal-content-body",
+                    },
+                    renderSettingsSurface({
+                      embedded: true,
+                      section: settingsSection,
+                    })
+                  )
+                )
+              )
             )
           );
         }

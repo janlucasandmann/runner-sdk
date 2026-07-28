@@ -273,7 +273,8 @@ export const FILES_PREVIEW_DOMAIN_SCRIPT = `
         return labels[language] || "Text";
       }
 
-      function normalizePlaygroundEnvironmentInventory(items) {
+      function normalizePlaygroundEnvironmentInventory(items, options = {}) {
+        const includeFolderMarkers = options?.includeFolderMarkers === true;
         return (Array.isArray(items) ? items : [])
           .map((item) => {
             const rawPath = String(item?.path || "").trim();
@@ -281,7 +282,10 @@ export const FILES_PREVIEW_DOMAIN_SCRIPT = `
 
             const normalizedPath = normalizeHistoryPath(rawPath.replace(/\\/+$/, ""));
             if (!normalizedPath) return null;
-            if (normalizedPath.split("/").some((part) => part.startsWith("."))) return null;
+            const pathParts = normalizedPath.split("/").filter(Boolean);
+            const isFolderMarker = includeFolderMarkers
+              && pathParts[pathParts.length - 1] === ".gitkeep";
+            if (!isFolderMarker && pathParts.some((part) => part.startsWith("."))) return null;
 
             const isFolder =
               item?.isDirectory === true ||

@@ -107,7 +107,7 @@ import {
   API_KEYS_STYLE_FRAGMENTS,
 } from "../../../../src/platform-services/develop-mode/api-keys/index.mjs";
 import {
-  SECURITY_APP_SCRIPT_FRAGMENTS,
+  createSecurityAppScriptFragments,
 } from "../../../../src/platform-services/develop-mode/security/index.mjs";
 import {
   EVIDENCE_AGENTS_APP_SCRIPT_FRAGMENTS,
@@ -197,6 +197,10 @@ export function createLegacyPlatformApplicationBindings({
   const DEVELOP_HOME_PAGE_SCRIPT = createDevelopHomePageScript({
     aiosOrigin,
     inferenceEntry: INFERENCE_APP_SCRIPT_FRAGMENTS.configureHomeEntry,
+  });
+
+  const SECURITY_APP_SCRIPT_FRAGMENTS = createSecurityAppScriptFragments({
+    documentationUrl: aiosOrigin + "/developers",
   });
 
   const SETTINGS_MODAL_PAGE_SCRIPT = createSettingsModalPageScript({

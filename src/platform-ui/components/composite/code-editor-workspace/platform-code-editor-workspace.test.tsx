@@ -7,9 +7,9 @@ import { PlatformCodeEditorWorkspace } from "./platform-code-editor-workspace.js
 afterEach(cleanup);
 
 describe("PlatformCodeEditorWorkspace", () => {
-  it("owns file selection, editor content, and the status footer", () => {
+  it("owns file selection, editor content, and the active-file header", () => {
     const onFileSelect = vi.fn();
-    render(
+    const { container } = render(
       <PlatformCodeEditorWorkspace
         ariaLabel="Workflow code"
         files={[
@@ -28,13 +28,17 @@ describe("PlatformCodeEditorWorkspace", () => {
       "page",
     );
     expect(screen.getByLabelText("Source code")).not.toBeNull();
-    expect(screen.getByText("Unsaved changes")).not.toBeNull();
+    expect(
+      container.querySelector(".platform-code-editor-workspace__editor-title")?.textContent,
+    ).toBe("main.py");
+    expect(screen.queryByText("Unsaved changes")).toBeNull();
+    expect(container.querySelector(".platform-code-editor-workspace__footer")).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "requirements.txt" }));
     expect(onFileSelect).toHaveBeenCalledWith("requirements.txt");
   });
 
-  it("renders history controls through the shared icon-button primitive", () => {
+  it("renders history controls in the active-file header through the shared icon buttons", () => {
     const onUndo = vi.fn();
     const onRedo = vi.fn();
     render(
@@ -52,6 +56,9 @@ describe("PlatformCodeEditorWorkspace", () => {
     const undoButton = screen.getByRole("button", { name: "Undo" });
     const redoButton = screen.getByRole("button", { name: "Redo" });
     expect(undoButton.classList.contains("platform-icon-button")).toBe(true);
+    expect(
+      undoButton.closest(".platform-code-editor-workspace__editor-header"),
+    ).not.toBeNull();
     expect((redoButton as HTMLButtonElement).disabled).toBe(true);
 
     fireEvent.click(undoButton);
@@ -59,7 +66,10 @@ describe("PlatformCodeEditorWorkspace", () => {
     expect(onRedo).not.toHaveBeenCalled();
   });
 
-  it("places editor actions in the tab bar and keeps nested file disclosures", () => {
+  it("moves file creation into the Files header and keeps nested file disclosures", () => {
+    const onCreateFile = vi.fn();
+    const onUploadFiles = vi.fn();
+    const onCreateFolder = vi.fn();
     const { container } = render(
       <PlatformCodeEditorWorkspace
         files={[
@@ -70,38 +80,143 @@ describe("PlatformCodeEditorWorkspace", () => {
             depth: 2,
           },
         ]}
-        tabBarActions={<button type="button">Add file</button>}
+        onCreateFile={onCreateFile}
+        onUploadFiles={onUploadFiles}
+        onCreateFolder={onCreateFolder}
       />,
     );
 
-    const addFileButton = screen.getByRole("button", { name: "Add file" });
-    expect(
-      addFileButton.closest(".platform-code-editor-tab-bar__actions"),
-    ).not.toBeNull();
-    expect(container.querySelector(".platform-code-editor-workspace__sidebar-heading")).toBeNull();
-    expect(screen.queryByText("Explorer")).toBeNull();
-    expect(screen.getByRole("searchbox", { name: "Search code files" })).not.toBeNull();
+    expect(screen.getByText("Files")).not.toBeNull();
+    expect(screen.queryByRole("searchbox")).toBeNull();
+    expect(container.querySelector(".platform-code-editor-tab-bar")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Add file" }));
+    expect(screen.getByRole("menu").classList.contains("is-minimal")).toBe(true);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Create File" }));
+    expect(onCreateFile).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Add file" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Upload Files" }));
+    expect(onUploadFiles).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Create folder" }));
+    expect(onCreateFolder).toHaveBeenCalledTimes(1);
+
     const file = screen.getByRole("button", { name: "src" });
-    expect(file.style.paddingInlineStart).toBe("");
+    expect(file.closest(".platform-code-editor-workspace__file")?.getAttribute("style")).toContain(
+      "padding-inline-start: 44px",
+    );
     expect(screen.getByText("Open")).not.toBeNull();
   });
 
-  it("filters code files through the shared search primitive", () => {
-    render(
+  it("moves dragged files into folders and back to the sidebar root", () => {
+    const onFilesMove = vi.fn();
+    const dataTransfer = {
+      dropEffect: "none",
+      effectAllowed: "none",
+      setData: vi.fn(),
+    };
+    const { container } = render(
       <PlatformCodeEditorWorkspace
         files={[
-          { id: "src/main.ts", label: "main.ts" },
-          { id: "README.md", label: "README.md" },
+          {
+            id: "src",
+            label: "src",
+            ariaLabel: "src",
+            isFolder: true,
+            parentId: null,
+          },
+          {
+            id: "index.ts",
+            label: "index.ts",
+            ariaLabel: "index.ts",
+            parentId: null,
+          },
+          {
+            id: "src/config.ts",
+            label: "config.ts",
+            ariaLabel: "config.ts",
+            parentId: "src",
+            depth: 1,
+          },
         ]}
+        onFilesMove={onFilesMove}
       />,
     );
 
-    fireEvent.change(screen.getByRole("searchbox", { name: "Search code files" }), {
-      target: { value: "main" },
+    const indexRow = screen
+      .getByRole("button", { name: "index.ts" })
+      .closest(".platform-code-editor-workspace__file");
+    const sourceRow = screen
+      .getByRole("button", { name: "src" })
+      .closest(".platform-code-editor-workspace__file");
+    expect(indexRow?.getAttribute("draggable")).toBe("true");
+
+    fireEvent.dragStart(indexRow as Element, { dataTransfer });
+    fireEvent.dragOver(sourceRow as Element, { dataTransfer });
+    expect(sourceRow?.classList.contains("is-drop-target")).toBe(true);
+    fireEvent.drop(sourceRow as Element, { dataTransfer });
+    expect(onFilesMove).toHaveBeenLastCalledWith({
+      files: [expect.objectContaining({ id: "index.ts" })],
+      destinationFolder: expect.objectContaining({ id: "src" }),
     });
 
-    expect(screen.getByRole("button", { name: "main.ts" })).not.toBeNull();
-    expect(screen.queryByRole("button", { name: "README.md" })).toBeNull();
+    const nestedRow = screen
+      .getByRole("button", { name: "config.ts" })
+      .closest(".platform-code-editor-workspace__file");
+    const sidebarHeader = container.querySelector(
+      ".platform-code-editor-workspace__sidebar-header",
+    );
+    fireEvent.dragStart(nestedRow as Element, { dataTransfer });
+    fireEvent.dragOver(sidebarHeader as Element, { dataTransfer });
+    fireEvent.drop(sidebarHeader as Element, { dataTransfer });
+    expect(onFilesMove).toHaveBeenLastCalledWith({
+      files: [expect.objectContaining({ id: "src/config.ts" })],
+      destinationFolder: null,
+    });
+  });
+
+  it("does not allow a folder to be dropped into its own descendant", () => {
+    const onFilesMove = vi.fn();
+    const dataTransfer = {
+      dropEffect: "none",
+      effectAllowed: "none",
+      setData: vi.fn(),
+    };
+    render(
+      <PlatformCodeEditorWorkspace
+        files={[
+          {
+            id: "src",
+            label: "src",
+            ariaLabel: "src",
+            isFolder: true,
+            parentId: null,
+          },
+          {
+            id: "src/nested",
+            label: "nested",
+            ariaLabel: "nested",
+            isFolder: true,
+            parentId: "src",
+            depth: 1,
+          },
+        ]}
+        onFilesMove={onFilesMove}
+      />,
+    );
+
+    const sourceRow = screen
+      .getByRole("button", { name: "src" })
+      .closest(".platform-code-editor-workspace__file");
+    const nestedRow = screen
+      .getByRole("button", { name: "nested" })
+      .closest(".platform-code-editor-workspace__file");
+    fireEvent.dragStart(sourceRow as Element, { dataTransfer });
+    fireEvent.dragOver(nestedRow as Element, { dataTransfer });
+    fireEvent.drop(nestedRow as Element, { dataTransfer });
+
+    expect(onFilesMove).not.toHaveBeenCalled();
   });
 
   it("uses shared checkboxes and minimal popup actions for single and multi-file operations", () => {
@@ -147,9 +262,9 @@ describe("PlatformCodeEditorWorkspace", () => {
     ]);
   });
 
-  it("opens explorer files as persistent editor tabs and keeps folders explorer-only", () => {
+  it("keeps a single selected-file header without opening persistent tabs", () => {
     const onFileSelect = vi.fn();
-    render(
+    const { container, rerender } = render(
       <PlatformCodeEditorWorkspace
         files={[
           { id: "src", label: "src", openInTab: false },
@@ -162,37 +277,17 @@ describe("PlatformCodeEditorWorkspace", () => {
       />,
     );
 
-    expect(screen.getByRole("tab", { name: "main.ts" })).not.toBeNull();
-    expect(screen.queryByRole("tab", { name: "src" })).toBeNull();
+    expect(container.querySelector(".platform-code-editor-tab-bar")).toBeNull();
+    expect(
+      container.querySelector(".platform-code-editor-workspace__editor-title")?.textContent,
+    ).toBe("main.ts");
 
     fireEvent.click(screen.getByRole("button", { name: "styles.css" }));
-    expect(screen.getByRole("tab", { name: "main.ts" })).not.toBeNull();
-    expect(screen.getByRole("tab", { name: "styles.css" })).not.toBeNull();
     expect(onFileSelect).toHaveBeenLastCalledWith("styles.css");
-
-    fireEvent.click(screen.getByRole("button", { name: "src" }));
-    expect(screen.queryByRole("tab", { name: "src" })).toBeNull();
-    expect(onFileSelect).toHaveBeenLastCalledWith("src");
-  });
-
-  it("moves to the adjacent file after closing the active tab", () => {
-    const onFileSelect = vi.fn();
-    const { rerender } = render(
-      <PlatformCodeEditorWorkspace
-        files={[
-          { id: "main.ts", label: "main.ts" },
-          { id: "styles.css", label: "styles.css" },
-        ]}
-        activeFileId="main.ts"
-        onFileSelect={onFileSelect}
-        editor={<textarea aria-label="Source code" />}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "styles.css" }));
     rerender(
       <PlatformCodeEditorWorkspace
         files={[
+          { id: "src", label: "src", openInTab: false },
           { id: "main.ts", label: "main.ts" },
           { id: "styles.css", label: "styles.css" },
         ]}
@@ -201,43 +296,12 @@ describe("PlatformCodeEditorWorkspace", () => {
         editor={<textarea aria-label="Source code" />}
       />,
     );
-
-    fireEvent.click(screen.getByRole("button", { name: "Close styles.css" }));
-    expect(screen.queryByRole("tab", { name: "styles.css" })).toBeNull();
-    expect(onFileSelect).toHaveBeenLastCalledWith("main.ts");
-  });
-
-  it("supports VS Code-style keyboard navigation, middle-click close, and dirty markers", () => {
-    const onFileSelect = vi.fn();
-    const { container } = render(
-      <PlatformCodeEditorWorkspace
-        files={[
-          { id: "main.ts", label: "main.ts", dirty: true },
-          { id: "styles.css", label: "styles.css" },
-        ]}
-        defaultOpenFileIds={["styles.css"]}
-        activeFileId="main.ts"
-        onFileSelect={onFileSelect}
-        editor={<textarea aria-label="Source code" />}
-      />,
-    );
-
-    const mainTab = screen.getByRole("tab", { name: "main.ts" });
-    fireEvent.keyDown(mainTab, { key: "ArrowRight" });
-    expect(onFileSelect).toHaveBeenLastCalledWith("styles.css");
     expect(
-      container.querySelector(".platform-code-editor-tab-bar__item.is-dirty"),
-    ).not.toBeNull();
+      container.querySelector(".platform-code-editor-workspace__editor-title")?.textContent,
+    ).toBe("styles.css");
 
-    const stylesTabItem = screen
-      .getByRole("tab", { name: "styles.css" })
-      .closest(".platform-code-editor-tab-bar__item");
-    expect(stylesTabItem).not.toBeNull();
-    fireEvent(
-      stylesTabItem as Element,
-      new MouseEvent("auxclick", { bubbles: true, button: 1 }),
-    );
-    expect(screen.queryByRole("tab", { name: "styles.css" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "src" }));
+    expect(onFileSelect).toHaveBeenLastCalledWith("src");
   });
 
   it("centers the shared loading indicator while files are loading", () => {
@@ -246,6 +310,7 @@ describe("PlatformCodeEditorWorkspace", () => {
         files={[{ id: "main.ts", label: "main.ts" }]}
         isLoadingFiles
         loadingFilesMessage="Loading source files..."
+        onCreateFile={() => undefined}
       />,
     );
 
@@ -253,14 +318,15 @@ describe("PlatformCodeEditorWorkspace", () => {
       screen.getByRole("status", { name: "Loading source files..." }),
     ).not.toBeNull();
     expect(screen.queryByRole("button", { name: "main.ts" })).toBeNull();
-    expect(
-      (screen.getByRole("searchbox", { name: "Search code files" }) as HTMLInputElement)
-        .disabled,
-    ).toBe(true);
+    expect((screen.getByRole("button", { name: "Add file" }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
   });
 
-  it("can omit the footer for embedded editor surfaces", () => {
-    const { container } = render(<PlatformCodeEditorWorkspace files={[]} showFooter={false} />);
+  it("never renders the removed footer", () => {
+    const { container } = render(
+      <PlatformCodeEditorWorkspace files={[]} status="Ready" showFooter />,
+    );
 
     expect(container.querySelector(".platform-code-editor-workspace__footer")).toBeNull();
   });

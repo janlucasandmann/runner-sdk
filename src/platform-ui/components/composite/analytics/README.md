@@ -10,7 +10,7 @@ Overview pages render line charts by passing `chartType="line"`. Other platform 
 
 Use `variant="framed"` for detail-page analytics cards that need a title, a right-aligned timeframe control, KPIs, and a chart inside the canonical analytics surface. Pass `title` and the typed `timeframe` configuration for the top line. The timeframe configuration is rendered with the centralized `PlatformSwitch`.
 
-Both variants always render `PlatformAnalyticsChart`. Framing is strictly presentational, so chart styling and behavior stay synchronized across overview and detail pages.
+Analytics sections render `PlatformAnalyticsChart` by default. Set `showChart={false}` for KPI-only surfaces that still need the canonical analytics metric composition without mounting Chart.js. Framing is strictly presentational, so chart styling and behavior stay synchronized across overview and detail pages.
 
 Line series use the canonical smooth area treatment by default: layered blue fills, a purple contour, and dashed horizontal guides. Set `fill: false` on a series only when the data must be presented as an unfilled line.
 

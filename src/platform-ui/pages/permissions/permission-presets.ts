@@ -304,6 +304,62 @@ function createManagedResourceRolePermissionSet(
   return permissionSet;
 }
 
+function createConnectionRolePermissionSet(
+  subjectType: "tag" | "tag_team_role" | "plugin" | "plugin_team_role",
+  roleId: string,
+): PlatformPermissionSet {
+  if (roleId === "owner" || roleId === "admin") {
+    return createAdminPermissionSet(subjectType);
+  }
+  const permissionSet = createPlatformDefaultPermissionSet(subjectType);
+  const actionIds = getSubjectActionIds(subjectType);
+  const isContributor = roleId === "contributor" || roleId === "developer";
+  const isViewer = roleId === "viewer" || roleId === "billing";
+  const readActionIds = actionIds.filter(
+    (id) => id.endsWith("_view") || id.endsWith("_use_read"),
+  );
+  const invocationActionIds = actionIds.filter((id) => id.endsWith("_invoke"));
+  const operationalActionIds = actionIds.filter(
+    (id) =>
+      id.endsWith("_configure")
+      || id.endsWith("_attachment_ingest")
+      || id.endsWith("_reply")
+      || id.endsWith("_use_write")
+      || id.endsWith("_notifications_send")
+      || id.endsWith("_webhooks_manage"),
+  );
+  const connectionActionIds = actionIds.filter((id) => id.endsWith("_connection_manage"));
+  const administrativeActionIds = actionIds.filter(
+    (id) => id.endsWith("_access_manage") || id.endsWith("_disconnect"),
+  );
+
+  setRingAccess(permissionSet, "ring_1", isContributor ? "full_access" : "read_only");
+  setRingAccess(
+    permissionSet,
+    "ring_2",
+    isContributor ? "full_access" : isViewer ? "no_access" : "ask_for_permission",
+  );
+  setRingAccess(permissionSet, "ring_3", "no_access");
+  applyAccess(permissionSet, readActionIds, isContributor ? "full_access" : "read_only");
+  applyAccess(
+    permissionSet,
+    invocationActionIds,
+    isViewer ? "no_access" : "full_access",
+  );
+  applyAccess(
+    permissionSet,
+    operationalActionIds,
+    isContributor ? "full_access" : isViewer ? "no_access" : "ask_for_permission",
+  );
+  applyAccess(
+    permissionSet,
+    connectionActionIds,
+    isContributor ? "ask_for_permission" : "no_access",
+  );
+  applyAccess(permissionSet, administrativeActionIds, "no_access");
+  return permissionSet;
+}
+
 function createGuardrailRolePermissionSet(roleId: string): PlatformPermissionSet {
   if (roleId === "owner" || roleId === "admin")
     return createAdminPermissionSet("guardrail_team_role");
@@ -632,6 +688,14 @@ export function createPlatformRolePermissionSet(
   if (subjectType === "organization_role")
     return createOrganizationRolePermissionSet(normalizedRoleId);
   if (subjectType === "database") return createDatabaseRolePermissionSet(normalizedRoleId);
+  if (
+    subjectType === "tag"
+    || subjectType === "tag_team_role"
+    || subjectType === "plugin"
+    || subjectType === "plugin_team_role"
+  ) {
+    return createConnectionRolePermissionSet(subjectType, normalizedRoleId);
+  }
   if (subjectType === "guardrail" || subjectType === "guardrail_team_role") {
     const permissionSet = createGuardrailRolePermissionSet(normalizedRoleId);
     permissionSet.subjectType = subjectType;

@@ -26,6 +26,21 @@ export function createAiosAndAdminRoutes(bindings) {
             void proxyAiosJsonRequest(req, res, "/api/user/profile", "GET");
             return true;
         }
+        const aiosProjectSkillsMatch = url.pathname.match(
+            /^\/api\/aios\/projects\/([^/]+)\/skills(?:\/.*)?$/,
+        );
+        if (
+            aiosProjectSkillsMatch
+            && ["GET", "POST", "PUT", "PATCH", "DELETE"].includes(req.method)
+        ) {
+            void proxyAiosJsonRequest(
+                req,
+                res,
+                url.pathname.replace(/^\/api\/aios/, "/api"),
+                req.method,
+            );
+            return true;
+        }
         if (req.method === "GET" && url.pathname === "/api/aios/user/streaming-key") {
             void proxyAiosJsonRequest(req, res, "/api/user/streaming-key", "GET");
             return true;

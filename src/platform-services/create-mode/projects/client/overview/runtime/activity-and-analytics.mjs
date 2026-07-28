@@ -592,19 +592,16 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
             const activityTimelineItems = buildProjectOverviewTaskActivityTimelineItems(activityEvents);
             const activeProjectOverviewSectionTab = projectOverviewActivityTab === "activity"
               || projectOverviewActivityTab === "strategy"
-              || projectOverviewActivityTab === "graph"
                 ? projectOverviewActivityTab
                 : "threads";
             const isThreadsTab = activeProjectOverviewSectionTab === "threads";
             const isActivityTab = activeProjectOverviewSectionTab === "activity";
             const isStrategyTab = activeProjectOverviewSectionTab === "strategy";
-            const isGraphTab = activeProjectOverviewSectionTab === "graph";
             const projectOverviewSectionTabs = React.createElement(PlatformDetailTabBar, {
               ariaLabel: "Project activity",
               value: activeProjectOverviewSectionTab,
               tabs: [
                 { id: "threads", label: "Threads" },
-                { id: "graph", label: "Work Graph" },
                 { id: "activity", label: "Activity" },
                 { id: "strategy", label: "Strategy" },
               ],
@@ -650,35 +647,8 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
                   )
                 : isStrategyTab
                   ? renderProjectOverviewDescriptionEditor(projectOverviewSectionTabs)
-                  : isGraphTab
-                    ? React.createElement(React.Fragment, null,
-                        React.createElement(
-                          "div",
-                          { className: "playground-project-overview-activity-header" },
-                          projectOverviewSectionTabs
-                        ),
-                        renderProjectOverviewWorkGraphPanel()
-                      )
                   : null
             );
-          }
-
-          function formatProjectOverviewWorkGraphLabel(value) {
-            return String(value || "")
-              .trim()
-              .replaceAll("_", " ")
-              .replace(/\b\w/g, (character) => character.toUpperCase());
-          }
-
-          function getProjectOverviewAgentSessionPresentation(state) {
-            const normalizedState = String(state || "").trim().toLowerCase();
-            if (normalizedState === "completed") return { label: "Completed", variant: "green" };
-            if (normalizedState === "failed") return { label: "Failed", variant: "red" };
-            if (normalizedState === "canceled") return { label: "Canceled", variant: "gray" };
-            if (normalizedState === "stale") return { label: "Stale", variant: "gray" };
-            if (normalizedState === "awaiting_input") return { label: "Needs input", variant: "yellow" };
-            if (normalizedState === "queued") return { label: "Queued", variant: "blue" };
-            return { label: "Running", variant: "blue" };
           }
 
           function renderProjectOverviewWorkGraphPanel() {
@@ -691,35 +661,22 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
               ));
             const agentSessions = (Array.isArray(selectedProjectDetail?.agentSessions)
               ? selectedProjectDetail.agentSessions
-              : [])
-              .slice()
-              .sort((left, right) => (
-                (Date.parse(String(right?.updatedAt || right?.updated_at || right?.createdAt || right?.created_at || "")) || 0)
-                - (Date.parse(String(left?.updatedAt || left?.updated_at || left?.createdAt || left?.created_at || "")) || 0)
-              ));
+              : []);
             const activeSessionStates = new Set(["queued", "active", "awaiting_input"]);
             const activeSessionCount = agentSessions.filter((session) => (
               activeSessionStates.has(String(session?.state || "").trim().toLowerCase())
             )).length;
-            const completedSessionCount = agentSessions.filter((session) => (
-              String(session?.state || "").trim().toLowerCase() === "completed"
-            )).length;
-            const relationRows = relations.slice(0, 6);
-            const sessionRows = agentSessions.slice(0, 6);
+            const resourceCount = Array.isArray(projectOverviewAllResourceRows)
+              ? projectOverviewAllResourceRows.length
+              : 0;
             const metrics = [
               { id: "tasks", label: "Tasks", value: normalizedOverviewTasks.length },
               { id: "relations", label: "Relations", value: relations.length },
               { id: "active-runs", label: "Active runs", value: activeSessionCount },
-              { id: "completed-runs", label: "Completed runs", value: completedSessionCount },
+              { id: "resources", label: "Resources", value: resourceCount },
             ];
 
             return React.createElement("div", { className: "playground-project-overview-work-graph" },
-              React.createElement("div", { className: "playground-project-overview-work-graph-intro" },
-                React.createElement("div", { className: "playground-project-overview-work-graph-title" }, "Project execution graph"),
-                React.createElement("div", { className: "playground-project-overview-work-graph-description" },
-                  "Track structural dependencies and every durable agent attempt from one canonical project view."
-                )
-              ),
               React.createElement("div", { className: "playground-project-overview-work-graph-metrics" },
                 metrics.map((metric) =>
                   React.createElement("div", {
@@ -729,94 +686,6 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
                     React.createElement("span", { className: "playground-project-overview-work-graph-metric-label" }, metric.label),
                     React.createElement("span", { className: "playground-project-overview-work-graph-metric-value" }, String(metric.value))
                   )
-                )
-              ),
-              React.createElement("div", { className: "playground-project-overview-work-graph-columns" },
-                React.createElement("section", { className: "playground-project-overview-work-graph-column" },
-                  React.createElement("div", { className: "playground-project-overview-work-graph-column-title" }, "Relationships"),
-                  relationRows.length > 0
-                    ? React.createElement("div", { className: "playground-project-overview-work-graph-list" },
-                        relationRows.map((relation) => {
-                          const sourceTaskId = String(relation?.sourceTaskId || relation?.source_task_id || "").trim();
-                          const targetTaskId = String(relation?.targetTaskId || relation?.target_task_id || "").trim();
-                          const sourceTask = normalizedOverviewTasksById[sourceTaskId] || null;
-                          const targetTask = normalizedOverviewTasksById[targetTaskId] || null;
-                          const sourceTicket = sourceTask
-                            ? (taskTicketNumbersById[sourceTaskId] || sourceTask.ticketNumber || "000")
-                            : "000";
-                          const targetTicket = targetTask
-                            ? (taskTicketNumbersById[targetTaskId] || targetTask.ticketNumber || "000")
-                            : "000";
-                          const relationType = String(relation?.relationType || relation?.relation_type || "relates_to").trim().toLowerCase();
-                          const relationLabel = relationType === "parent_of"
-                            ? "Parent"
-                            : relationType === "blocks"
-                              ? "Blocks"
-                              : relationType === "duplicates"
-                                ? "Duplicates"
-                                : "Related";
-                          return React.createElement("button", {
-                              key: String(relation?.id || sourceTaskId + ":" + targetTaskId + ":" + relationType),
-                              type: "button",
-                              className: "playground-project-overview-work-graph-row",
-                              onClick: () => targetTaskId && openProjectTaskDetailScreen(targetTaskId),
-                            },
-                            React.createElement("span", { className: "playground-project-overview-work-graph-row-copy" },
-                              React.createElement("span", { className: "playground-project-overview-work-graph-row-title" },
-                                sourceTicket + " " + relationLabel.toLowerCase() + " " + targetTicket
-                              ),
-                              React.createElement("span", { className: "playground-project-overview-work-graph-row-description" },
-                                (sourceTask?.title || "Untitled task") + " -> " + (targetTask?.title || "Untitled task")
-                              )
-                            ),
-                            React.createElement(PlatformLabel, { variant: "gray" }, relationLabel)
-                          );
-                        })
-                      )
-                    : React.createElement("div", { className: "playground-project-overview-work-graph-empty" },
-                        "No task relationships yet. Blockers and parent-child links will appear here."
-                      )
-                ),
-                React.createElement("section", { className: "playground-project-overview-work-graph-column" },
-                  React.createElement("div", { className: "playground-project-overview-work-graph-column-title" }, "Agent execution"),
-                  sessionRows.length > 0
-                    ? React.createElement("div", { className: "playground-project-overview-work-graph-list" },
-                        sessionRows.map((session) => {
-                          const taskId = String(session?.taskId || session?.task_id || "").trim();
-                          const task = normalizedOverviewTasksById[taskId] || null;
-                          const ticketNumber = task
-                            ? (taskTicketNumbersById[taskId] || task.ticketNumber || "000")
-                            : "000";
-                          const threadId = String(session?.threadId || session?.thread_id || "").trim();
-                          const attemptNumber = Math.max(1, Number(session?.attemptNumber ?? session?.attempt_number ?? 1) || 1);
-                          const sessionMetadata = session?.metadata && typeof session.metadata === "object"
-                            ? session.metadata
-                            : {};
-                          const deliveryStage = String(sessionMetadata.missionControlDeliveryStageId || "").trim();
-                          const presentation = getProjectOverviewAgentSessionPresentation(session?.state);
-                          return React.createElement("button", {
-                              key: String(session?.id || threadId || taskId + ":" + attemptNumber),
-                              type: "button",
-                              className: "playground-project-overview-work-graph-row",
-                              disabled: !threadId,
-                              onClick: () => threadId && onThreadStarted && onThreadStarted(threadId),
-                            },
-                            React.createElement("span", { className: "playground-project-overview-work-graph-row-copy" },
-                              React.createElement("span", { className: "playground-project-overview-work-graph-row-title" },
-                                ticketNumber + " - " + (task?.title || "Agent task")
-                              ),
-                              React.createElement("span", { className: "playground-project-overview-work-graph-row-description" },
-                                (deliveryStage ? formatProjectOverviewWorkGraphLabel(deliveryStage) + " · " : "")
-                                + "Attempt " + attemptNumber
-                              )
-                            ),
-                            React.createElement(PlatformLabel, { variant: presentation.variant }, presentation.label)
-                          );
-                        })
-                      )
-                    : React.createElement("div", { className: "playground-project-overview-work-graph-empty" },
-                        "No agent runs yet. Starting a ticket with an agent creates a durable attempt here."
-                      )
                 )
               )
             );

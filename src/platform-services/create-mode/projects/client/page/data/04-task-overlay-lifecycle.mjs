@@ -9,7 +9,15 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
         }, [selectedTaskId]);
 
         useEffect(() => {
-          if (!selectedTaskId || (taskView !== "overview" && taskView !== "backlog" && taskView !== "board")) {
+          if (
+            !selectedTaskId
+            || (
+              taskView !== "overview"
+              && taskView !== "backlog"
+              && taskView !== "board"
+              && taskView !== "activity"
+            )
+          ) {
             setProjectTaskDetailScreenOpen(false);
           }
         }, [selectedTaskId, taskView]);
@@ -38,9 +46,17 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
             ? boardNavigationTaskIds
             : taskView === "backlog"
               ? backlogNavigationTaskIds
-              : [];
+              : taskView === "activity"
+                ? backlogNavigationTaskIds
+                : [];
 
-          if ((taskView !== "board" && taskView !== "backlog") || !selectedProjectId || !selectedTaskId || activeTaskNavigationIds.length < 2 || isTaskKeyboardNavigationBlocked) {
+          if (
+            (taskView !== "board" && taskView !== "backlog" && taskView !== "activity")
+            || !selectedProjectId
+            || !selectedTaskId
+            || activeTaskNavigationIds.length < 2
+            || isTaskKeyboardNavigationBlocked
+          ) {
             return undefined;
           }
 

@@ -95,10 +95,23 @@ export function selectRunnerThreadActivityGroups(
   projection: RunnerThreadProjection,
   options: { runId?: string | null; parentGroupId?: string | null; includeSuperseded?: boolean } = {},
 ): RunnerThreadActivityGroup[] {
-  return Object.values(projection.activityGroupsById)
-    .filter((group) => !options.runId || group.runId === options.runId)
+  const runScoped = Object.values(projection.activityGroupsById)
+    .filter((group) => !options.runId || group.runId === options.runId);
+  const observerStatus = (group: RunnerThreadActivityGroup): string => {
+    const metadata = group.metadata;
+    if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return "";
+    return String(metadata.observerStatus || "");
+  };
+  const groundedRunIds = new Set(runScoped
+    .filter((group) => observerStatus(group) === "grounded")
+    .map((group) => group.runId));
+  return runScoped
     .filter((group) => options.parentGroupId === undefined || group.parentGroupId === options.parentGroupId)
     .filter((group) => options.includeSuperseded || group.status !== "superseded")
+    .filter((group) => (
+      !groundedRunIds.has(group.runId)
+      || observerStatus(group) === "grounded"
+    ))
     .sort((left, right) => left.startSequence - right.startSequence || left.version - right.version || left.id.localeCompare(right.id));
 }
 

@@ -1,0 +1,18 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+# Incident-safe runtime overlays are intentionally limited to the durable
+# execution modules. The immutable base image remains the complete, previously
+# promoted platform artifact.
+COPY repos/runner-web-sdk/apps/platform/server/execution-dispatch/dispatcher.mjs \
+  /app/repos/runner-web-sdk/apps/platform/server/execution-dispatch/dispatcher.mjs
+COPY repos/runner-web-sdk/apps/platform/server/execution-dispatch/project-delivery-task.mjs \
+  /app/repos/runner-web-sdk/apps/platform/server/execution-dispatch/project-delivery-task.mjs
+COPY repos/runner-web-sdk/src/platform-services/configure-mode/tests/server/runtime.mjs \
+  /app/repos/runner-web-sdk/src/platform-services/configure-mode/tests/server/runtime.mjs
+COPY repos/runner-web-sdk/src/platform-services/configure-mode/evaluations/server/runtime.mjs \
+  /app/repos/runner-web-sdk/src/platform-services/configure-mode/evaluations/server/runtime.mjs
+COPY repos/runner-web-sdk/src/platform-services/configure-mode/evaluations/server/domain/targets.mjs \
+  /app/repos/runner-web-sdk/src/platform-services/configure-mode/evaluations/server/domain/targets.mjs
+COPY repos/runner-web-sdk/src/platform-services/create-mode/metronome/client/shell/sidebar-state.mjs \
+  /app/repos/runner-web-sdk/src/platform-services/create-mode/metronome/client/shell/sidebar-state.mjs

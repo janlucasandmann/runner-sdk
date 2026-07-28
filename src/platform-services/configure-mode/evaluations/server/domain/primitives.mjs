@@ -13,6 +13,12 @@ export function normalizeString(value) {
   return String(value || "").trim();
 }
 
+export function createRuntimeError(message, status = 500) {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+}
+
 function normalizeFingerprintValue(value, seen = new WeakSet()) {
   if (value === null) return null;
   if (value === undefined || typeof value === "function" || typeof value === "symbol") return undefined;
@@ -62,8 +68,13 @@ export function createEvaluationFingerprint(namespace, value) {
 export function normalizeEvaluator(rawEvaluator = {}) {
   const source = rawEvaluator && typeof rawEvaluator === "object" && !Array.isArray(rawEvaluator) ? rawEvaluator : {};
   const rawType = normalizeString(source.type || source.evaluatorType).toLowerCase();
+  const configuration = source.configuration
+    && typeof source.configuration === "object"
+    && !Array.isArray(source.configuration)
+    ? source.configuration
+    : {};
   return {
-    type: ["agent", "code", "exact"].includes(rawType) ? rawType : "exact",
+    type: ["agent", "code", "deterministic", "exact"].includes(rawType) ? rawType : "exact",
     agentId: normalizeString(source.agentId || source.agent_id),
     agentVersionId: normalizeString(
       source.agentVersionId
@@ -95,6 +106,12 @@ export function normalizeEvaluator(rawEvaluator = {}) {
         || source.revision_id,
     ),
     code: String(source.code || ""),
+    graderId: normalizeString(
+      source.graderId
+        || source.grader_id
+        || source.name,
+    ).toLowerCase(),
+    configuration,
   };
 }
 

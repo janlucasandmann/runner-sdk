@@ -158,6 +158,7 @@ export interface SecurityRun {
   scannerVersions: Record<string, unknown> | null;
   coverage: Record<string, unknown> | null;
   summary: Record<string, unknown> | null;
+  narrativeSummary?: string;
   error: Record<string, unknown> | null;
   findingCount: number;
   checkRunUrl: string | null;
@@ -177,6 +178,7 @@ export interface SecurityFinding {
   ruleId: string;
   title: string;
   summary: string;
+  narrativeSummary?: string;
   severity: SecuritySeverity;
   confidence: number;
   exploitability: string;
@@ -215,9 +217,12 @@ export interface SecurityAuditEvent {
 
 export interface SecurityRemediation {
   id: string;
+  repositoryId?: string;
   findingId: string | null;
-  runId?: string | null;
+  findingIds: string[];
+  runId: string | null;
   status: string;
+  lifecycle: string;
   patchDigest: string;
   validation: Record<string, unknown> | null;
   approvedByUserId: string | null;
@@ -225,6 +230,9 @@ export interface SecurityRemediation {
   branchName: string | null;
   pullRequestId: string | null;
   pullRequestUrl: string | null;
+  workerThreadId: string | null;
+  sourceSha: string | null;
+  metadata: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -256,6 +264,7 @@ export interface SecurityFindingDetail {
     evidence: Record<string, unknown> | null;
     validation: Record<string, unknown> | null;
     provenance: Record<string, unknown> | null;
+    narrativeSummary?: string;
     createdAt: string;
   }>;
   remediations: SecurityRemediation[];

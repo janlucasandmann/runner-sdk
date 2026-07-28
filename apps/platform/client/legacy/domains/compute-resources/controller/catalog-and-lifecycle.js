@@ -537,7 +537,10 @@
                 throw new Error(data?.message || data?.error || "Failed to load source files.");
               }
 
-              const files = normalizePlaygroundEnvironmentInventory(data?.files || []);
+              const files = normalizePlaygroundEnvironmentInventory(
+                data?.files || [],
+                { includeFolderMarkers: true }
+              );
               setServerFilesById((current) => ({
                 ...current,
                 [serverId]: files,

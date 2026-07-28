@@ -473,6 +473,59 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
             const normalizedProjectAttachments = normalizePlaygroundTaskAttachmentList(projectDraft.attachments);
             const normalizedProjectConnectors = normalizePlaygroundTaskConnectorSelections(projectDraft.connectors);
             const isEditMode = mode === "edit" && projectDraft?.id;
+            const projectCreatorEmail = String(currentUserEmail || "").trim();
+            const projectCreatorEmailName = projectCreatorEmail
+              ? projectCreatorEmail
+                  .split("@")[0]
+                  .replace(/[._-]+/g, " ")
+                  .replace(/\b\w/g, (character) => character.toUpperCase())
+              : "";
+            const projectCreatorName = typeof formatAccountDisplayName === "function"
+              ? formatAccountDisplayName(
+                  currentUserName,
+                  projectCreatorEmail,
+                  projectCreatorEmailName || "Project member"
+                )
+              : String(
+                  currentUserName
+                    || projectCreatorEmailName
+                    || "Project member"
+                ).trim();
+            const projectCreationTimestamp = new Date().toISOString();
+            const projectCreationUpdate = isEditMode
+              ? null
+              : {
+                  id: "project_update_creation_" + Date.now().toString(36)
+                    + Math.random().toString(36).slice(2, 10),
+                  body: projectCreatorName + " created this project.",
+                  status: "on_track",
+                  kind: "project_created",
+                  attachments: [],
+                  comments: [],
+                  reactions: [],
+                  createdAt: projectCreationTimestamp,
+                  updatedAt: projectCreationTimestamp,
+                  authorUserId: String(currentUserId || "").trim(),
+                  authorName: projectCreatorName,
+                  authorEmail: projectCreatorEmail,
+                  authorAvatarUrl: String(currentUserAvatarUrl || "").trim(),
+                };
+            const projectCreationMetadata = projectCreationUpdate
+              ? {
+                  createdByUserId: projectCreationUpdate.authorUserId,
+                  createdByName: projectCreationUpdate.authorName,
+                  createdByEmail: projectCreationUpdate.authorEmail,
+                  createdByAvatarUrl: projectCreationUpdate.authorAvatarUrl,
+                  createdBy: {
+                    userId: projectCreationUpdate.authorUserId,
+                    name: projectCreationUpdate.authorName,
+                    email: projectCreationUpdate.authorEmail,
+                    avatarUrl: projectCreationUpdate.authorAvatarUrl,
+                  },
+                  projectUpdates: [projectCreationUpdate],
+                  latestUpdate: projectCreationUpdate,
+                }
+              : {};
             const projectBlueprint = getPlaygroundProjectBlueprint(
               projectDraft.projectType
               || projectDraft.type
@@ -543,9 +596,10 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
 	                  defaultEnvironmentId: projectDraft.defaultEnvironmentId || null,
 	                  attachments: normalizedProjectAttachments,
 		                  connectors: normalizedProjectConnectors,
-		                  projectRules: String(projectDraft.projectRules || ""),
-		                  permissionSet: normalizedProjectPermissionSet,
-		                  ...buildPlaygroundProjectMissionControlMetadataFragment(projectDraftMetadataSource),
+                  projectRules: String(projectDraft.projectRules || ""),
+                  permissionSet: normalizedProjectPermissionSet,
+                  ...projectCreationMetadata,
+                  ...buildPlaygroundProjectMissionControlMetadataFragment(projectDraftMetadataSource),
 	                },
 	              }),
             });
@@ -582,6 +636,7 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
 	                lead: nextLead,
 		                projectRules: String(projectDraft.projectRules || ""),
 		                permissionSet: normalizedProjectPermissionSet,
+                    ...projectCreationMetadata,
 		                ...buildPlaygroundProjectMissionControlMetadataFragment(projectDraftMetadataSource),
 	              },
 	            });
@@ -618,6 +673,7 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
                     leadAvatarUrl: nextLeadAvatarUrl,
                     lead: nextLead,
 		                projectRules: committedProjectRules,
+                    ...projectCreationMetadata,
 		                ...buildPlaygroundProjectMissionControlMetadataFragment(savedProject, projectDraftMetadataSource),
 		              },
 	              summary: savedProject.summary || (isEditMode ? selectedProjectSummary : savedProject.summary),

@@ -5,8 +5,13 @@ export function createAppSidebarNavigationScript(options = {}) {
   const developPrimaryEntries = String(options.developPrimaryEntries || "");
   const developAgentServiceEntries = String(options.developAgentServiceEntries || "");
   const createPrimaryEntries = String(options.createPrimaryEntries || "");
-  return `        function getSidebarNavigationItems() {
-          if (sidebarWorkspaceMode === "configure") {
+  return `        function getSidebarNavigationItemsForMode(targetMode = sidebarWorkspaceMode) {
+          const normalizedTargetMode = targetMode === "develop"
+            ? "develop"
+            : targetMode === "configure"
+              ? "configure"
+              : "work";
+          if (normalizedTargetMode === "configure") {
             return [
 ${configurePrimaryEntries}              {
                 id: "configure-resources-label",
@@ -29,15 +34,16 @@ ${configurePrimaryEntries}              {
               },
               {
                 id: "tags",
-                label: "Tags and Plugins",
-                Icon: Tag,
+                label: "Connectors",
+                searchAliases: ["Tags", "Plugins", "Tags and Plugins"],
+                Icon: Plug,
                 active: activePage === "tools" && (toolsView === "tags" || toolsView === "plugins"),
                 onClick: handleOpenTagsShortcut,
               },
               {
                 id: "skills",
                 label: "Skills",
-                Icon: Layers,
+                Icon: SquareMousePointer,
                 active: activePage === "tools" && toolsView === "skills",
                 onClick: handleOpenSkillsShortcut,
               },
@@ -55,7 +61,7 @@ ${configureGovernanceEntries}
 ${configureInfrastructureEntries}            ];
           }
 
-          if (sidebarWorkspaceMode === "develop") {
+          if (normalizedTargetMode === "develop") {
             const developServerPageItems = getDevelopServerPageItems().filter((item) => item.kind !== "api");
             const buildDevelopServerSidebarItem = (item) => ({
               id: "server-" + item.id,
@@ -125,6 +131,134 @@ ${createPrimaryEntries}
               onClick: openCalendarOverviewPage,
             },
           ];
+        }
+
+        function getSidebarNavigationItems() {
+          return getSidebarNavigationItemsForMode(sidebarWorkspaceMode);
+        }
+
+        function normalizeGlobalServiceSearchValue(value) {
+          return String(value || "")
+            .toLowerCase()
+            .replace(/&/g, " and ")
+            .replace(/[^a-z0-9]+/g, " ")
+            .trim()
+            .replace(/\\s+/g, " ");
+        }
+
+        function getGlobalServiceSearchMatchRank(searchQuery, itemLabel, itemId) {
+          const normalizedQuery = normalizeGlobalServiceSearchValue(searchQuery);
+          if (!normalizedQuery) {
+            return 0;
+          }
+          const compactQuery = normalizedQuery.replace(/\\s+/g, "");
+          const normalizedLabel = normalizeGlobalServiceSearchValue(itemLabel);
+          const normalizedId = normalizeGlobalServiceSearchValue(itemId);
+          const compactLabel = normalizedLabel.replace(/\\s+/g, "");
+          const compactId = normalizedId.replace(/\\s+/g, "");
+          if (
+            normalizedLabel === normalizedQuery
+            || normalizedId === normalizedQuery
+            || compactLabel === compactQuery
+            || compactId === compactQuery
+          ) {
+            return 0;
+          }
+          if (
+            normalizedLabel.startsWith(normalizedQuery)
+            || compactLabel.startsWith(compactQuery)
+          ) {
+            return 1;
+          }
+          if (
+            normalizedId.startsWith(normalizedQuery)
+            || compactId.startsWith(compactQuery)
+          ) {
+            return 2;
+          }
+          if (
+            normalizedLabel.includes(normalizedQuery)
+            || compactLabel.includes(compactQuery)
+          ) {
+            return 3;
+          }
+          if (
+            normalizedId.includes(normalizedQuery)
+            || compactId.includes(compactQuery)
+          ) {
+            return 4;
+          }
+          return null;
+        }
+
+        function getGlobalServiceNavigationItems(searchQuery = "") {
+          const normalizedQuery = normalizeGlobalServiceSearchValue(searchQuery);
+          const modeOptions = [
+            { id: "work", label: "Create" },
+            { id: "configure", label: "Configure" },
+            { id: "develop", label: "Develop" },
+          ];
+          const excludedIds = new Set(["new-thread", "configure-home", "develop-home"]);
+          const serviceItems = modeOptions.flatMap((modeOption) => (
+            getSidebarNavigationItemsForMode(modeOption.id)
+              .filter((item) => (
+                item
+                && !item.type
+                && !excludedIds.has(String(item.id || "").trim())
+              ))
+              .map((item, itemIndex) => {
+                const matchRanks = [
+                  item.label,
+                  ...(Array.isArray(item.searchAliases) ? item.searchAliases : []),
+                ]
+                  .map((candidateLabel) => getGlobalServiceSearchMatchRank(
+                    normalizedQuery,
+                    candidateLabel,
+                    item.id
+                  ))
+                  .filter((rank) => rank !== null);
+                const matchRank = matchRanks.length
+                  ? Math.min(...matchRanks)
+                  : null;
+                if (matchRank === null) {
+                  return null;
+                }
+                return {
+                  ...item,
+                  globalSearchId: "service:" + modeOption.id + ":" + item.id,
+                  workspaceMode: modeOption.id,
+                  workspaceLabel: modeOption.label,
+                  matchRank,
+                  sourceOrder: modeOptions.indexOf(modeOption) * 100 + itemIndex,
+                };
+              })
+              .filter(Boolean)
+          ));
+          return serviceItems.sort((left, right) => (
+            left.matchRank - right.matchRank
+            || left.sourceOrder - right.sourceOrder
+            || String(left.label || "").localeCompare(
+              String(right.label || ""),
+              undefined,
+              { sensitivity: "base" }
+            )
+          ));
+        }
+
+        function handleGlobalServiceNavigationItemClick(globalSearchId) {
+          const normalizedGlobalSearchId = String(globalSearchId || "").trim();
+          const serviceItem = getGlobalServiceNavigationItems().find(
+            (item) => item.globalSearchId === normalizedGlobalSearchId
+          );
+          if (!serviceItem) {
+            return false;
+          }
+          requestPlatformNavigation(() => {
+            setSidebarWorkspaceMode(serviceItem.workspaceMode);
+            setSidebarWorkspaceMenuOpen(false);
+            serviceItem.onClick?.();
+          });
+          return true;
         }
 
         function getSidebarFooterNavigationItems() {

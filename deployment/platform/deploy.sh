@@ -16,6 +16,8 @@ RELEASE_OUTPUT_FILE="${RELEASE_OUTPUT_FILE:-}"
 HARDENED_DEPLOYMENT="${HARDENED_DEPLOYMENT:-0}"
 CLOUD_RUN_SECRET_BINDINGS="${CLOUD_RUN_SECRET_BINDINGS:-}"
 CLOUD_RUN_SERVICE_ACCOUNT="${CLOUD_RUN_SERVICE_ACCOUNT:-}"
+PLATFORM_MIN_INSTANCES="${PLATFORM_MIN_INSTANCES:-1}"
+PLATFORM_CPU_ALWAYS_ALLOCATED="${PLATFORM_CPU_ALWAYS_ALLOCATED:-1}"
 APP_ORIGIN="${APP_ORIGIN:-https://computer-agents.com}"
 PLATFORM_ORIGIN="${PLATFORM_ORIGIN:-https://platform.computer-agents.com}"
 API_ORIGIN="${API_ORIGIN:-https://api.computer-agents.com}"
@@ -30,6 +32,8 @@ else
   STAGE_ENV_SOURCE="${ROOT_DIR}/web/hosting/.env.${DEPLOYMENT_STAGE}"
 fi
 CLOUDBUILD_SUBMIT_VIA_VM="${CLOUDBUILD_SUBMIT_VIA_VM:-0}"
+CLOUDBUILD_STAGE_VIA_VM="${CLOUDBUILD_STAGE_VIA_VM:-0}"
+CLOUD_BUILD_SOURCE_URI="${CLOUD_BUILD_SOURCE_URI:-}"
 TMP_BUILD_DIR="$(mktemp -d)"
 TMP_ENV_FILE="$(mktemp)"
 TMP_SOURCE_ARCHIVE="$(mktemp -t platform-source.XXXXXX).tar.gz"
@@ -216,7 +220,36 @@ if [[ "${DEPLOY_ACTION}" != "deploy" ]]; then
   COPYFILE_DISABLE=1 tar -czf "${TMP_SOURCE_ARCHIVE}" -C "${TMP_BUILD_DIR}" .
   SOURCE_SIZE="$(wc -c < "${TMP_SOURCE_ARCHIVE}" | tr -d '[:space:]')"
 fi
-if [[ "${DEPLOY_ACTION}" != "deploy" && "${CLOUDBUILD_SUBMIT_VIA_VM:-0}" == "1" ]]; then
+if [[ "${DEPLOY_ACTION}" != "deploy" && "${CLOUDBUILD_STAGE_VIA_VM}" == "1" ]]; then
+  if [[ ! "${CLOUD_BUILD_SOURCE_URI}" =~ ^gs://[^/]+/.+\.(tar\.gz|tgz|zip)$ ]]; then
+    echo "CLOUD_BUILD_SOURCE_URI must be an explicit gs:// archive when CLOUDBUILD_STAGE_VIA_VM=1." >&2
+    exit 1
+  fi
+  BUILD_SUBMIT_VM_NAME="${BUILD_SUBMIT_VM_NAME:-testbase-mig-d25h}"
+  BUILD_SUBMIT_VM_ZONE="${BUILD_SUBMIT_VM_ZONE:-us-central1-a}"
+  REMOTE_ARCHIVE="/tmp/${SOURCE_ARCHIVE_NAME}"
+
+  echo "Staging platform build source through ${BUILD_SUBMIT_VM_NAME} (${SOURCE_SIZE} bytes)..."
+  deploy_stream_file_to_vm "${PROJECT_ID}" "${BUILD_SUBMIT_VM_ZONE}" "${BUILD_SUBMIT_VM_NAME}" "${TMP_SOURCE_ARCHIVE}" "${REMOTE_ARCHIVE}" "platform source archive"
+  gcloud compute ssh "${BUILD_SUBMIT_VM_NAME}" \
+    --project "${PROJECT_ID}" \
+    --zone "${BUILD_SUBMIT_VM_ZONE}" \
+    --quiet \
+    --command="
+      set -e
+      trap 'rm -f \"${REMOTE_ARCHIVE}\"' EXIT
+      gcloud storage cp \
+        --if-generation-match=0 \
+        '${REMOTE_ARCHIVE}' \
+        '${CLOUD_BUILD_SOURCE_URI}'
+    "
+  echo "Submitting platform Cloud Build from immutable source: ${CLOUD_BUILD_SOURCE_URI}"
+  gcloud builds submit \
+    --project "${PROJECT_ID}" \
+    --config "${ROOT_DIR}/repos/runner-web-sdk/deployment/platform/cloudbuild.yaml" \
+    --substitutions "_IMAGE_URI=${IMAGE_URI}" \
+    "${CLOUD_BUILD_SOURCE_URI}"
+elif [[ "${DEPLOY_ACTION}" != "deploy" && "${CLOUDBUILD_SUBMIT_VIA_VM:-0}" == "1" ]]; then
   BUILD_SUBMIT_VM_NAME="${BUILD_SUBMIT_VM_NAME:-testbase-mig-d25h}"
   BUILD_SUBMIT_VM_ZONE="${BUILD_SUBMIT_VM_ZONE:-us-central1-a}"
   REMOTE_ARCHIVE="/tmp/${SOURCE_ARCHIVE_NAME}"
@@ -268,9 +301,15 @@ DEPLOY_ARGS=(
   --port 8080 \
   --memory 1Gi \
   --cpu 1 \
+  --min-instances "${PLATFORM_MIN_INSTANCES}" \
   --labels "deployment-stage=${DEPLOYMENT_STAGE},release-id=${RELEASE_LABEL}" \
   --env-vars-file "${TMP_ENV_FILE}"
 )
+if [[ "${PLATFORM_CPU_ALWAYS_ALLOCATED}" == "1" ]]; then
+  DEPLOY_ARGS+=(--no-cpu-throttling)
+else
+  DEPLOY_ARGS+=(--cpu-throttling)
+fi
 if [[ -n "${CLOUD_RUN_SECRET_BINDINGS}" ]]; then
   DEPLOY_ARGS+=(--set-secrets "${CLOUD_RUN_SECRET_BINDINGS}")
 fi

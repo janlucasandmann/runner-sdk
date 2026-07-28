@@ -1,5 +1,5 @@
 import { AlertTriangle, RefreshCw, ShieldCheck } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   beginPlatformPluginConnection,
   disconnectPlatformPluginConnection,
@@ -15,6 +15,7 @@ import {
   type PlatformSystemAccessPrincipalId,
 } from "../../../../../platform-resources/access-control/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
+import { PlatformSecondaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformSwitch } from "../../../../../platform-ui/components/ui/switch/index.js";
 import {
   createPlatformDefaultPermissionSet,
@@ -47,6 +48,7 @@ import {
   getSecurityRepositorySharedTeamIds,
   normalizeSecurityWorkspaceTeam,
   readSecurityWorkspaceRoute,
+  SECURITY_WORKSPACE_ROUTE_CHANGE_EVENT,
   writeSecurityWorkspaceRoute,
 } from "../domain/index.js";
 import {
@@ -97,11 +99,17 @@ function getErrorMessage(error: unknown): string {
     : String(error || "Security service request failed.");
 }
 
+function getSecurityRouteKey(route: SecurityWorkspaceRoute): string {
+  return route.kind === "overview" ? route.kind : `${route.kind}:${route.id}`;
+}
+
 function SecurityLoadError({
   message,
+  onBack,
   onRetry,
 }: {
   message: string;
+  onBack: () => void;
   onRetry: () => void;
 }) {
   return (
@@ -116,6 +124,28 @@ function SecurityLoadError({
           onClick: onRetry,
         }}
       />
+      <PlatformSecondaryButton type="button" size="small" onClick={onBack}>
+        Back to Security Agents
+      </PlatformSecondaryButton>
+    </div>
+  );
+}
+
+function SecurityRequestNotice({
+  message,
+  onDismiss,
+}: {
+  message: string;
+  onDismiss: () => void;
+}) {
+  if (!message) return null;
+  return (
+    <div className="develop-security-request-notice" role="alert">
+      <AlertTriangle width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+      <span>{message}</span>
+      <PlatformSecondaryButton type="button" size="small" onClick={onDismiss}>
+        Dismiss
+      </PlatformSecondaryButton>
     </div>
   );
 }
@@ -159,6 +189,7 @@ export function DevelopSecurityWorkspacePage({
     useState<SecurityFindingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [busyId, setBusyId] = useState("");
   const [repositoryTab, setRepositoryTab] =
     useState<SecurityRepositoryTab>("runs");
@@ -166,21 +197,42 @@ export function DevelopSecurityWorkspacePage({
   const [findingTab, setFindingTab] = useState<SecurityFindingTab>("evidence");
   const [analyticsTimeframe, setAnalyticsTimeframe] =
     useState<SecurityRepositoryAnalyticsTimeframe>("30d");
+  const activeRouteKeyRef = useRef(getSecurityRouteKey(route));
+  const loadRequestIdRef = useRef(0);
+  activeRouteKeyRef.current = getSecurityRouteKey(route);
+
+  const prepareRoute = useCallback((nextRoute: SecurityWorkspaceRoute) => {
+    activeRouteKeyRef.current = getSecurityRouteKey(nextRoute);
+    loadRequestIdRef.current += 1;
+    setRoute(nextRoute);
+    setLoading(true);
+    setError("");
+    setActionError("");
+  }, []);
 
   const navigate = useCallback(
     (nextRoute: SecurityWorkspaceRoute, mode: "push" | "replace" = "push") => {
       writeSecurityWorkspaceRoute(nextRoute, mode);
-      setRoute(nextRoute);
-      setError("");
     },
     [],
   );
 
   useEffect(() => {
-    const handlePopState = () => setRoute(readSecurityWorkspaceRoute());
+    const handleRouteChange = () => prepareRoute(readSecurityWorkspaceRoute());
+    const handlePopState = () => handleRouteChange();
     window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+    window.addEventListener(
+      SECURITY_WORKSPACE_ROUTE_CHANGE_EVENT,
+      handleRouteChange,
+    );
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener(
+        SECURITY_WORKSPACE_ROUTE_CHANGE_EVENT,
+        handleRouteChange,
+      );
+    };
+  }, [prepareRoute]);
 
   useEffect(() => {
     if (shellGitHubConnectionStatus)
@@ -202,15 +254,26 @@ export function DevelopSecurityWorkspacePage({
 
   const loadOverview = useCallback(
     async (signal?: AbortSignal) => {
+      const routeKey = "overview";
+      const requestId = ++loadRequestIdRef.current;
+      const isCurrent = () =>
+        !signal?.aborted &&
+        activeRouteKeyRef.current === routeKey &&
+        loadRequestIdRef.current === requestId;
       setLoading(true);
       setError("");
       try {
-        setOverview(await repository.getOverview(signal));
+        const nextOverview = await repository.getOverview(signal);
+        if (isCurrent()) setOverview(nextOverview);
       } catch (nextError) {
-        if ((nextError as { name?: string })?.name !== "AbortError")
+        if (
+          (nextError as { name?: string })?.name !== "AbortError" &&
+          isCurrent()
+        ) {
           setError(getErrorMessage(nextError));
+        }
       } finally {
-        if (!signal?.aborted) setLoading(false);
+        if (isCurrent()) setLoading(false);
       }
     },
     [repository],
@@ -323,18 +386,32 @@ export function DevelopSecurityWorkspacePage({
 
   const loadRepository = useCallback(
     async (repositoryId: string, signal?: AbortSignal, quiet = false) => {
-      if (!quiet) setLoading(true);
-      if (!quiet) setError("");
+      const routeKey = `repository:${repositoryId}`;
+      const requestId = ++loadRequestIdRef.current;
+      const isCurrent = () =>
+        !signal?.aborted &&
+        activeRouteKeyRef.current === routeKey &&
+        loadRequestIdRef.current === requestId;
+      if (!quiet && isCurrent()) setLoading(true);
+      if (!quiet && isCurrent()) setError("");
       try {
         const nextDetail = await repository.getRepository(repositoryId, signal);
-        setRepositoryDetail(nextDetail);
+        if (isCurrent()) {
+          setRepositoryDetail(nextDetail);
+          setError("");
+        }
         return nextDetail;
       } catch (nextError) {
-        if ((nextError as { name?: string })?.name !== "AbortError")
+        if (
+          (nextError as { name?: string })?.name !== "AbortError" &&
+          !quiet &&
+          isCurrent()
+        ) {
           setError(getErrorMessage(nextError));
+        }
         return null;
       } finally {
-        if (!signal?.aborted && !quiet) setLoading(false);
+        if (!quiet && isCurrent()) setLoading(false);
       }
     },
     [repository],
@@ -342,15 +419,30 @@ export function DevelopSecurityWorkspacePage({
 
   const loadRun = useCallback(
     async (runId: string, signal?: AbortSignal, quiet = false) => {
-      if (!quiet) setLoading(true);
-      if (!quiet) setError("");
+      const routeKey = `run:${runId}`;
+      const requestId = ++loadRequestIdRef.current;
+      const isCurrent = () =>
+        !signal?.aborted &&
+        activeRouteKeyRef.current === routeKey &&
+        loadRequestIdRef.current === requestId;
+      if (!quiet && isCurrent()) setLoading(true);
+      if (!quiet && isCurrent()) setError("");
       try {
-        setRunDetail(await repository.getRun(runId, signal));
+        const nextDetail = await repository.getRun(runId, signal);
+        if (isCurrent()) {
+          setRunDetail(nextDetail);
+          setError("");
+        }
       } catch (nextError) {
-        if ((nextError as { name?: string })?.name !== "AbortError" && !quiet)
+        if (
+          (nextError as { name?: string })?.name !== "AbortError" &&
+          !quiet &&
+          isCurrent()
+        ) {
           setError(getErrorMessage(nextError));
+        }
       } finally {
-        if (!signal?.aborted && !quiet) setLoading(false);
+        if (!quiet && isCurrent()) setLoading(false);
       }
     },
     [repository],
@@ -358,15 +450,29 @@ export function DevelopSecurityWorkspacePage({
 
   const loadFinding = useCallback(
     async (findingId: string, signal?: AbortSignal) => {
-      setLoading(true);
-      setError("");
+      const routeKey = `finding:${findingId}`;
+      const requestId = ++loadRequestIdRef.current;
+      const isCurrent = () =>
+        !signal?.aborted &&
+        activeRouteKeyRef.current === routeKey &&
+        loadRequestIdRef.current === requestId;
+      if (isCurrent()) setLoading(true);
+      if (isCurrent()) setError("");
       try {
-        setFindingDetail(await repository.getFinding(findingId, signal));
+        const nextDetail = await repository.getFinding(findingId, signal);
+        if (isCurrent()) {
+          setFindingDetail(nextDetail);
+          setError("");
+        }
       } catch (nextError) {
-        if ((nextError as { name?: string })?.name !== "AbortError")
+        if (
+          (nextError as { name?: string })?.name !== "AbortError" &&
+          isCurrent()
+        ) {
           setError(getErrorMessage(nextError));
+        }
       } finally {
-        if (!signal?.aborted) setLoading(false);
+        if (isCurrent()) setLoading(false);
       }
     },
     [repository],
@@ -393,28 +499,60 @@ export function DevelopSecurityWorkspacePage({
   ]);
 
   useEffect(() => {
-    if (
-      route.kind !== "run" ||
-      !runDetail ||
-      !["queued", "running", "waiting_approval"].includes(runDetail.run.status)
-    )
-      return undefined;
+    if (route.kind !== "run" || !runDetail) return undefined;
+    const runActive = ["queued", "running", "waiting_approval"].includes(
+      runDetail.run.status,
+    );
+    const latestRemediation = [...runDetail.remediations].sort(
+      (left, right) => (
+        Date.parse(right.updatedAt || right.createdAt || "")
+        - Date.parse(left.updatedAt || left.createdAt || "")
+      ),
+    )[0] || null;
+    const lifecycle = String(
+      latestRemediation?.lifecycle
+      || latestRemediation?.validation?.lifecycle
+      || latestRemediation?.status
+      || "",
+    );
+    const remediationActive = [
+      "queued",
+      "generating",
+      "agent_running",
+      "pull_request_open",
+      "merged",
+      "verifying",
+    ].includes(lifecycle);
+    if (!runActive && !remediationActive) return undefined;
+    const shouldReconcile = [
+      "pull_request_open",
+      "merged",
+      "verifying",
+    ].includes(lifecycle);
+    const refresh = async () => {
+      if (shouldReconcile && latestRemediation?.id) {
+        await repository
+          .reconcileRemediation(latestRemediation.id)
+          .catch(() => undefined);
+      }
+      await loadRun(route.id, undefined, true);
+    };
     const timer = window.setInterval(
-      () => void loadRun(route.id, undefined, true),
-      5_000,
+      () => void refresh(),
+      shouldReconcile ? 15_000 : 5_000,
     );
     return () => window.clearInterval(timer);
-  }, [loadRun, route, runDetail]);
+  }, [loadRun, repository, route, runDetail]);
 
   const runMutation = useCallback(
     async (id: string, operation: () => Promise<void>): Promise<boolean> => {
       setBusyId(id);
-      setError("");
+      setActionError("");
       try {
         await operation();
         return true;
       } catch (nextError) {
-        setError(getErrorMessage(nextError));
+        setActionError(getErrorMessage(nextError));
         return false;
       } finally {
         setBusyId("");
@@ -493,7 +631,7 @@ export function DevelopSecurityWorkspacePage({
         githubRepositories={githubRepositories}
         controlsPortalId={controlsPortalId}
         loading={loading}
-        error={error}
+        error={error || actionError}
         busyId={busyId}
         onRefresh={() => {
           void loadOverview();
@@ -566,7 +704,13 @@ export function DevelopSecurityWorkspacePage({
     );
   }
 
-  if (loading) {
+  const hasCurrentDetail =
+    (route.kind === "repository" &&
+      repositoryDetail?.repository.id === route.id) ||
+    (route.kind === "run" && runDetail?.run.id === route.id) ||
+    (route.kind === "finding" && findingDetail?.finding.id === route.id);
+
+  if (loading && !hasCurrentDetail) {
     return (
       <SecurityDetailLoadingState
         message={
@@ -579,20 +723,40 @@ export function DevelopSecurityWorkspacePage({
       />
     );
   }
-  if (error) {
+  if (error && !hasCurrentDetail) {
     const retry =
       route.kind === "repository"
         ? () => void loadRepository(route.id)
         : route.kind === "run"
           ? () => void loadRun(route.id)
           : () => void loadFinding(route.id);
-    return <SecurityLoadError message={error} onRetry={retry} />;
+    return (
+      <SecurityLoadError
+        message={error}
+        onBack={backToSecurityOverview}
+        onRetry={retry}
+      />
+    );
   }
 
-  if (route.kind === "repository" && repositoryDetail) {
+  const requestNotice = (
+    <SecurityRequestNotice
+      message={actionError || error}
+      onDismiss={() => {
+        setActionError("");
+        setError("");
+      }}
+    />
+  );
+
+  if (
+    route.kind === "repository" &&
+    repositoryDetail?.repository.id === route.id
+  ) {
     const refresh = () => loadRepository(route.id, undefined, true);
     return (
       <SecurityDetailPageFrame>
+        {requestNotice}
         <SecurityRepositoryVersionControl
           detail={repositoryDetail}
           repository={repository}
@@ -625,6 +789,18 @@ export function DevelopSecurityWorkspacePage({
             ) : null
           }
           onReload={refresh}
+          onDelete={() => {
+            if (
+              !window.confirm(
+                `Delete all retained security data for ${repositoryDetail.repository.fullName}?`,
+              )
+            )
+              return;
+            void runMutation(route.id, async () => {
+              await repository.deleteRepository(route.id);
+              navigate({ kind: "overview" });
+            });
+          }}
           onHeaderChange={onResourcesHeaderChange}
           onVersionsSidebarOpenChange={onVersionsSidebarOpenChange}
           onNavigationGuardChange={onNavigationGuardChange}
@@ -815,18 +991,6 @@ export function DevelopSecurityWorkspacePage({
                   await refresh();
                 })
               }
-              onDelete={() => {
-                if (
-                  !window.confirm(
-                    `Delete all retained security data for ${versionedDetail.repository.fullName}?`,
-                  )
-                )
-                  return;
-                void runMutation(route.id, async () => {
-                  await repository.deleteRepository(route.id);
-                  navigate({ kind: "overview" });
-                });
-              }}
               onTabChange={setRepositoryTab}
             />
           )}
@@ -835,9 +999,10 @@ export function DevelopSecurityWorkspacePage({
     );
   }
 
-  if (route.kind === "run" && runDetail) {
+  if (route.kind === "run" && runDetail?.run.id === route.id) {
     return (
       <SecurityDetailPageFrame>
+        {requestNotice}
         <SecurityRunDetailPage
           detail={runDetail}
           activeTab={runTab}
@@ -850,6 +1015,15 @@ export function DevelopSecurityWorkspacePage({
               await loadRun(route.id);
             })
           }
+          onFixFindings={() =>
+            void runMutation(`remediation:${route.id}`, async () => {
+              await repository.createRunRemediation(route.id);
+              await loadRun(route.id);
+            })
+          }
+          onOpenPullRequest={(url) => {
+            window.open(url, "_blank", "noopener,noreferrer");
+          }}
           onOpenFinding={(finding) =>
             navigate({ kind: "finding", id: finding.id })
           }
@@ -859,9 +1033,10 @@ export function DevelopSecurityWorkspacePage({
     );
   }
 
-  if (route.kind === "finding" && findingDetail) {
+  if (route.kind === "finding" && findingDetail?.finding.id === route.id) {
     return (
       <SecurityDetailPageFrame>
+        {requestNotice}
         <SecurityFindingDetailPage
           detail={findingDetail}
           activeTab={findingTab}

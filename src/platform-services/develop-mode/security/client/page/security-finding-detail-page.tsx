@@ -58,10 +58,11 @@ export function SecurityFindingDetailPage({
 
   let content = (
     <div className="develop-security-detail-stack">
-      <PlatformUiCard as="section" className="develop-security-callout is-danger"><ShieldAlert width={18} height={18} /><div><strong>{finding.title}</strong><span>{finding.summary || "No finding summary was recorded."}</span></div></PlatformUiCard>
+      <PlatformUiCard as="section" className="develop-security-callout is-danger"><ShieldAlert width={18} height={18} /><div><strong>{finding.title}</strong><span>{finding.narrativeSummary || finding.summary || "No finding summary was recorded."}</span></div></PlatformUiCard>
       {detail.occurrences.map((occurrence) => (
         <PlatformUiCard key={occurrence.id} as="section" className="develop-security-content-card">
           <div className="develop-security-card-heading"><GitCommitHorizontal width={18} height={18} /><div><strong>Evidence at {occurrence.commitSha.slice(0, 12) || "unknown commit"}</strong><PlatformSecondaryButton size="compact" onClick={() => onOpenRun(occurrence.runId)}>Open run</PlatformSecondaryButton></div></div>
+          <p className="develop-security-narrative">{occurrence.narrativeSummary || finding.narrativeSummary || finding.summary}</p>
           {occurrence.locations.length ? (
             <div className="develop-security-location-list">
               {occurrence.locations.map((location) => <SecurityJsonEvidence key={`${occurrence.id}:${JSON.stringify(location)}`} value={location} />)}
@@ -78,6 +79,7 @@ export function SecurityFindingDetailPage({
       {detail.occurrences.map((occurrence) => (
         <PlatformUiCard key={occurrence.id} as="article" className="develop-security-content-card">
           <div className="develop-security-card-heading"><GitCommitHorizontal width={18} height={18} /><div><strong>{occurrence.commitSha.slice(0, 12) || "Unknown commit"}</strong><span>{formatSecurityTimestamp(occurrence.createdAt)}</span></div></div>
+          <p className="develop-security-narrative">{occurrence.narrativeSummary || finding.narrativeSummary || finding.summary}</p>
           <SecurityPropertyList items={[{ label: "Run", value: <PlatformSecondaryButton size="compact" onClick={() => onOpenRun(occurrence.runId)}>{occurrence.runId}</PlatformSecondaryButton> }, { label: "Locations", value: occurrence.locations.length }]} />
           <SecurityJsonEvidence value={occurrence.provenance} empty="No scanner provenance was recorded." />
         </PlatformUiCard>

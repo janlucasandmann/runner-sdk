@@ -109,6 +109,13 @@
       "types": "./dist/platform-ui/components/composite/index.d.ts",
       "default": "./dist/platform-ui/components/composite/index.js"
     },
+    "./platform-ui/components/composite/activity-overview": {
+      "types": "./dist/platform-ui/components/composite/activity-overview/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/activity-overview/index.js"
+    },
+    "./platform-ui/components/composite/activity-overview/styles.css": {
+      "default": "./dist/platform-ui/components/composite/activity-overview/activity-overview.css"
+    },
     "./platform-ui/components/composite/activity-timeline": {
       "types": "./dist/platform-ui/components/composite/activity-timeline/index.d.ts",
       "default": "./dist/platform-ui/components/composite/activity-timeline/index.js"
@@ -457,11 +464,11 @@
     "configure-home-service-test": "node ./src/platform-services/configure-mode/configure-home/configure-home-service-test.mjs && vitest run src/platform-services/configure-mode/configure-home/client/page",
     "develop-home-service-test": "node ./src/platform-services/develop-mode/develop-home/develop-home-service-test.mjs && vitest run src/platform-services/develop-mode/develop-home/client/page",
     "api-keys-service-test": "node ./src/platform-services/develop-mode/api-keys/api-keys-service-test.mjs",
-    "security-service-test": "node ./src/platform-services/develop-mode/security/security-service-test.mjs && vitest run src/platform-resources/plugins/connections src/platform-services/develop-mode/security/client/api src/platform-services/develop-mode/security/client/domain src/platform-services/develop-mode/security/client/page/security-overview-page.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-access-settings.test.tsx src/platform-services/develop-mode/security/client/page/security-detail-layout.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-detail-page.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-sidebar.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-version-control.test.tsx",
+    "security-service-test": "node ./src/platform-services/develop-mode/security/security-service-test.mjs && vitest run src/platform-resources/plugins/connections src/platform-services/develop-mode/security/client/api src/platform-services/develop-mode/security/client/domain src/platform-services/develop-mode/security/client/page/security-overview-page.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-access-settings.test.tsx src/platform-services/develop-mode/security/client/page/security-detail-layout.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-detail-page.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-sidebar.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-version-control.test.tsx src/platform-services/develop-mode/security/client/page/security-run-detail-page.test.tsx",
     "evidence-agents-service-test": "node ./src/platform-services/develop-mode/evidence-agents/evidence-agents-service-test.mjs && vitest run src/platform-services/develop-mode/evidence-agents/client",
     "evaluations-service-test": "node ./src/platform-services/configure-mode/evaluations/evaluations-service-test.mjs && node --test ./src/platform-services/configure-mode/evaluations/server/run-persistence.test.mjs ./src/platform-services/configure-mode/evaluations/server/domain/comparisons.test.mjs && vitest run ./src/platform-services/configure-mode/evaluations/client/page/detail",
     "files-service-test": "node ./src/platform-services/create-mode/files/files-service-test.mjs",
-    "fine-tuning-service-test": "node ./src/platform-services/configure-mode/fine-tuning/fine-tuning-service-test.mjs && node --test ./src/platform-services/configure-mode/fine-tuning/server/job-persistence.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/domain/policies.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/domain/publication.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/application/job-orchestrator.test.mjs",
+    "fine-tuning-service-test": "node ./src/platform-services/configure-mode/fine-tuning/fine-tuning-service-test.mjs && node --test ./src/platform-services/configure-mode/fine-tuning/server/job-persistence.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/domain/policies.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/domain/publication.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/application/job-orchestrator.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/application/mission-control-job.test.mjs",
     "assurance-service-test": "node ./src/platform-services/configure-mode/assurance/assurance-service-test.mjs",
     "guardrails-service-test": "node ./src/platform-services/configure-mode/guardrails/guardrails-service-test.mjs",
     "imagine-service-test": "node ./src/platform-services/create-mode/imagine/imagine-service-test.mjs",
@@ -479,7 +486,7 @@
     "plan-gate-service-test": "node ./src/platform-shell/plan-gate/plan-gate-service-test.mjs && vitest run src/platform-shell/plan-gate/plan-gate-modal",
     "projects-service-test": "node ./src/platform-services/create-mode/projects/projects-service-test.mjs",
     "teams-service-test": "node ./src/platform-services/configure-mode/teams/teams-service-test.mjs",
-    "tests-service-test": "node ./src/platform-services/configure-mode/tests/tests-service-test.mjs",
+    "tests-service-test": "node ./src/platform-services/configure-mode/tests/tests-service-test.mjs && node --test ./src/platform-services/configure-mode/tests/server/runtime.test.mjs",
     "thread-domain-test": "npm run build && node ./tests/thread-domain.test.mjs",
     "thread-ui-test": "npm run build && vitest run src/react/runner-chat/execution/active-run-instruction.test.ts src/react/runner-chat/legacy-timeline.test.ts && node ./tests/thread-ui.test.mjs",
     "thread-proxy-test": "node ./apps/platform/server/routes/thread-proxy-contract.test.mjs",
@@ -513,7 +520,7 @@
     "platform:legacy-source-test": "node ./src/platform-services/legacy-browser-source.test.mjs",
     "platform:compute-source-test": "node ./apps/platform/client/legacy/domains/compute-resources/source.test.mjs",
     "platform:legacy-controller-test": "node ./apps/platform/client/legacy/domains/controller-fragments.test.mjs && npm run platform:compute-source-test",
-    "platform:skill-source-test": "node ./apps/platform/server/system-skill-sources.test.mjs",
+    "platform:skill-source-test": "node ./apps/platform/server/system-skill-sources.test.mjs && node ./apps/platform/server/routes/aios-and-admin-routes.test.mjs && vitest run ./src/platform-resources/skills/detail",
     "platform:static-asset-test": "node ./apps/platform/server/static-assets.test.mjs",
     "platform:admin-page-test": "node ./apps/platform/server/admin/admin-pages.test.mjs",
     "platform:router-test": "node ./apps/platform/server/routes/request-router.test.mjs",

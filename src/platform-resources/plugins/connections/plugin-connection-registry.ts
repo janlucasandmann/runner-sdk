@@ -38,7 +38,7 @@ const CONNECTIONS: Readonly<
     id: "gmail",
     label: "Gmail",
     category: "Channels",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg",
+    logoUrl: "/img/plugins/gmail.svg",
     statusPath: "/api/aios/gmail/user",
     loginPath: "/api/aios/gmail/login",
     disconnectPath: "/api/aios/gmail/disconnect",
@@ -48,7 +48,7 @@ const CONNECTIONS: Readonly<
     label: "OneDrive",
     category: "Storage",
     logoUrl:
-      "https://upload.wikimedia.org/wikipedia/commons/5/59/Microsoft_Office_OneDrive_%282019%E2%80%932025%29.svg",
+      "https://upload.wikimedia.org/wikipedia/commons/e/e7/Microsoft_OneDrive_Icon_%282025_-_present%29.svg",
     statusPath: "/api/aios/onedrive/user",
     loginPath: "/api/aios/onedrive/login",
     disconnectPath: "/api/aios/onedrive/disconnect",

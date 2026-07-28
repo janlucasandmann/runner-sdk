@@ -1,5 +1,8 @@
 import type { SecuritySeverity, SecurityWorkspaceRoute } from "./security-types.js";
 
+export const SECURITY_WORKSPACE_ROUTE_CHANGE_EVENT =
+  "computer-agents:security-workspace-route-change";
+
 export function formatSecurityTimestamp(value: string | null | undefined, fallback = "—"): string {
   const timestamp = Date.parse(String(value || ""));
   if (!Number.isFinite(timestamp)) return fallback;
@@ -40,5 +43,5 @@ export function writeSecurityWorkspaceRoute(route: SecurityWorkspaceRoute, mode:
     "",
     url,
   );
+  window.dispatchEvent(new Event(SECURITY_WORKSPACE_ROUTE_CHANGE_EVENT));
 }
-

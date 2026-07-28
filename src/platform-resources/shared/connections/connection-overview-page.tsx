@@ -16,7 +16,10 @@ import {
 
 export interface ConnectionOverviewRow {
   id: string;
+  tableRowId?: string;
   name: string;
+  description?: string;
+  resourceKind?: "tags" | "plugins";
   searchText?: string;
   logoUrl?: string;
   logoClassName?: string;
@@ -33,7 +36,7 @@ export interface ConnectionOverviewRow {
 }
 
 export interface ConnectionOverviewPageProps {
-  kind: "tags" | "plugins";
+  kind: "tags" | "plugins" | "connections";
   rows: readonly ConnectionOverviewRow[];
   period: ResourceOverviewPeriod;
   onPeriodChange: (period: ResourceOverviewPeriod) => void;
@@ -46,15 +49,30 @@ export interface ConnectionOverviewPageProps {
   pageClassName?: string;
   toolbarLeading?: ReactNode;
   toolbarTitle?: ReactNode | false;
+  tableVariant?: PlatformDataTableProps<ConnectionOverviewRow>["variant"];
+  showStatusFilter?: boolean;
+  selectionEnabled?: boolean;
+  rowGrouping?: PlatformDataTableProps<ConnectionOverviewRow>["rowGrouping"];
   pagination?: PlatformDataTableProps<ConnectionOverviewRow>["pagination"];
   onOpen: (row: ConnectionOverviewRow) => void;
 }
 
-function createFallbackAnalytics(kind: "tags" | "plugins", rows: readonly ConnectionOverviewRow[]): ResourceOverviewAnalyticsModel {
+function createFallbackAnalytics(
+  kind: "tags" | "plugins" | "connections",
+  rows: readonly ConnectionOverviewRow[],
+): ResourceOverviewAnalyticsModel {
   const connected = rows.filter((row) => row.connected).length;
-  const label = kind === "tags" ? "Tags" : "Plugins";
+  const label =
+    kind === "connections"
+      ? "Tags and Plugins"
+      : kind === "tags"
+        ? "Tags"
+        : "Plugins";
   return {
-    title: `${label.slice(0, -1)} activity`,
+    title:
+      kind === "connections"
+        ? "Connection activity"
+        : `${label.slice(0, -1)} activity`,
     ariaLabel: `${label} activity overview`,
     metrics: [
       { id: "total", label, value: String(rows.length), color: "#8fc4ff" },
@@ -81,6 +99,10 @@ export function ConnectionOverviewPage({
   pageClassName,
   toolbarLeading,
   toolbarTitle,
+  tableVariant,
+  showStatusFilter = true,
+  selectionEnabled = true,
+  rowGrouping,
   pagination,
   onOpen,
 }: ConnectionOverviewPageProps) {
@@ -91,8 +113,13 @@ export function ConnectionOverviewPage({
     return true;
   }), [rows, statusFilter]);
   const resolvedAnalytics = analytics || createFallbackAnalytics(kind, rows);
-  const entity = kind === "tags" ? "Tags" : "Plugins";
-
+  const entity =
+    kind === "connections"
+      ? "Tags and Plugins"
+      : kind === "tags"
+        ? "Tags"
+        : "Plugins";
+  const usesCatalogLayout = tableVariant === "catalog-ui";
   const columns = useMemo<PlatformDataTableColumn<ConnectionOverviewRow>[]>(() => [
     {
       id: "name",
@@ -100,14 +127,34 @@ export function ConnectionOverviewPage({
       accessor: "name",
       sortable: true,
       width: "minmax(220px, 1.25fr)",
-      cell: ({ row }) => (
-        <div className="resource-overview-identity">
-          <span className={`resource-overview-identity__visual is-connection${kind === "tags" ? " is-size-compact" : ""}`} aria-hidden="true">
-            {row.logoUrl ? <img src={row.logoUrl} alt="" className={row.logoClassName} /> : row.icon || <Cable width={17} height={17} strokeWidth={1.8} />}
-          </span>
-          <span className="resource-overview-identity__title">{row.name}</span>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const rowKind =
+          row.resourceKind || (kind === "connections" ? "plugins" : kind);
+        const normalizedRowId = row.id.toLowerCase();
+        const isGitLab =
+          rowKind === "plugins" && normalizedRowId === "gitlab";
+        const tagIconClassName =
+          rowKind === "tags"
+            ? ` is-size-compact is-tag${normalizedRowId === "email" ? " is-email" : ""}${normalizedRowId === "discord" ? " is-discord" : ""}${normalizedRowId === "telegram" ? " is-telegram" : ""}`
+            : "";
+        return (
+          <div className={`resource-overview-identity${usesCatalogLayout ? " is-catalog" : ""}`}>
+            <span className={`resource-overview-identity__visual is-connection${tagIconClassName || " is-plugin"}${isGitLab ? " is-gitlab" : ""}`} aria-hidden="true">
+              {row.logoUrl ? <img src={row.logoUrl} alt="" className={row.logoClassName} /> : row.icon || <Cable width={17} height={17} strokeWidth={1.8} />}
+            </span>
+            {usesCatalogLayout ? (
+              <span className="resource-overview-identity__copy">
+                <span className="resource-overview-identity__title">{row.name}</span>
+                {row.description ? (
+                  <span className="resource-overview-identity__description">{row.description}</span>
+                ) : null}
+              </span>
+            ) : (
+              <span className="resource-overview-identity__title">{row.name}</span>
+            )}
+          </div>
+        );
+      },
     },
     {
       id: "connected",
@@ -115,9 +162,13 @@ export function ConnectionOverviewPage({
       accessor: (row) => row.connected ? 1 : 0,
       sortable: true,
       width: "minmax(125px, 0.62fr)",
-      cell: ({ row }) => kind === "tags"
-        ? <PlatformLabel variant={row.connected ? "green" : "gray"}>{row.connected ? "Connected" : "Not Connected"}</PlatformLabel>
-        : <ResourceOverviewStatus active={row.connected} activeLabel="Connected" inactiveLabel="Not Connected" />,
+      cell: ({ row }) => {
+        const rowKind =
+          row.resourceKind || (kind === "connections" ? "plugins" : kind);
+        return rowKind === "tags" || kind === "connections"
+          ? <PlatformLabel variant={row.connected ? "green" : "gray"}>{row.connected ? "Connected" : "Not Connected"}</PlatformLabel>
+          : <ResourceOverviewStatus active={row.connected} activeLabel="Connected" inactiveLabel="Not Connected" />;
+      },
     },
     {
       id: "identity",
@@ -128,7 +179,7 @@ export function ConnectionOverviewPage({
       hideBelow: 760,
       cell: ({ row }) => <ResourceOverviewValue>{row.identityLabel}</ResourceOverviewValue>,
     },
-    {
+    ...(kind === "connections" ? [] : [{
       id: "provider",
       header: "Provider",
       accessor: "providerLabel",
@@ -136,8 +187,8 @@ export function ConnectionOverviewPage({
       width: "minmax(120px, 0.62fr)",
       hideBelow: 960,
       cell: ({ row }) => <ResourceOverviewValue>{row.providerLabel}</ResourceOverviewValue>,
-    },
-  ], [kind]);
+    } satisfies PlatformDataTableColumn<ConnectionOverviewRow>]),
+  ], [kind, usesCatalogLayout]);
 
   const getRowActions = (row: ConnectionOverviewRow): readonly PlatformDataTableAction<ConnectionOverviewRow>[] => [
     { id: "open", label: "Open", icon: ChevronRight, onSelect: () => onOpen(row) },
@@ -164,17 +215,29 @@ export function ConnectionOverviewPage({
       table={{
         rows: filteredRows,
         columns,
-        getRowId: (row) => row.id,
+        getRowId: (row) => row.tableRowId || row.id,
         ariaLabel: entity,
         className: `resource-overview-table is-${kind}`,
+        variant: tableVariant,
         sorting: { defaultValue: { id: "name", direction: "asc" } },
-        selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
+        selection: selectionEnabled
+          ? { enabled: true, ariaLabel: (row) => `Select ${row.name}` }
+          : undefined,
+        rowGrouping,
         pagination: pagination === undefined ? (kind === "tags" ? false : undefined) : pagination,
         toolbar: {
           title: toolbarTitle === false ? undefined : toolbarTitle || `All ${entity}`,
           leading: toolbarLeading,
-          search: { placeholder: `Search ${kind}`, getSearchText: (row) => row.searchText || `${row.name} ${row.identityLabel} ${row.providerLabel}` },
-          filters: [{
+          search: {
+            placeholder:
+              kind === "connections"
+                ? "Search tags and plugins"
+                : `Search ${kind}`,
+            getSearchText: (row) =>
+              row.searchText ||
+              `${row.name} ${row.description || ""} ${row.identityLabel} ${row.providerLabel}`,
+          },
+          filters: showStatusFilter ? [{
             id: "status",
             label: "Status",
             value: statusFilter,
@@ -184,13 +247,16 @@ export function ConnectionOverviewPage({
               { id: "connected", label: "Connected" },
               { id: "disconnected", label: "Not Connected" },
             ],
-          }],
+          }] : undefined,
         },
         getRowActions,
         onRowActivate: onOpen,
         getRowAriaLabel: (row) => row.name,
         loading,
-        emptyState: `No ${kind} match this view.`,
+        emptyState:
+          kind === "connections"
+            ? "No tags or plugins match this view."
+            : `No ${kind} match this view.`,
       }}
     />
   );

@@ -134,11 +134,9 @@
   
           useEffect(() => {
             setPluginDetailTab("general");
-            setPluginDetailCapabilityIndex(0);
-            setPluginDetailCapabilityOutgoingIndex(null);
-            setPluginDetailCapabilityDirection(0);
-            setPluginDetailCapabilityTransitionKey(0);
             setTagDetailPropertyPopover("");
+            setTagPluginAccessPrincipalId("");
+            setTagPluginAccessRoleId("member");
           }, [selectedPluginId]);
   
           useEffect(() => () => {
@@ -151,7 +149,11 @@
           }, []);
   
           useEffect(() => {
-            if (activePage !== "tools" || toolsView !== "tags" || !selectedPluginId) {
+            if (
+              activePage !== "tools"
+              || (toolsView !== "tags" && toolsView !== "plugins")
+              || !selectedPluginId
+            ) {
               return;
             }
             void loadTagDetailConfig(selectedPluginId);

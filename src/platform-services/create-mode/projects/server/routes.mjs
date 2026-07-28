@@ -135,6 +135,64 @@ export function createProjectsRequestHandler({
       ));
     }
 
+    const projectAutomationRunsMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/automation-runs$/,
+    );
+    if (method === "POST" && projectAutomationRunsMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectAutomationRunsMatch[1])}/automation-runs`,
+        "POST",
+      ));
+    }
+
+    const projectAutomationLatestMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/automation-runs\/latest$/,
+    );
+    if (method === "GET" && projectAutomationLatestMatch) {
+      return startRequest(proxyUpstreamGet(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectAutomationLatestMatch[1])}/automation-runs/latest`,
+      ));
+    }
+
+    const projectAutomationStepActionMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/automation-runs\/([^/]+)\/steps\/([^/]+)\/(complete|fail)$/,
+    );
+    if (method === "POST" && projectAutomationStepActionMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectAutomationStepActionMatch[1])}/automation-runs/${encodePathSegment(projectAutomationStepActionMatch[2])}/steps/${encodePathSegment(projectAutomationStepActionMatch[3])}/${projectAutomationStepActionMatch[4]}`,
+        "POST",
+      ));
+    }
+
+    const projectAutomationActionMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/automation-runs\/([^/]+)\/(next|pause|resume|cancel)$/,
+    );
+    if (method === "POST" && projectAutomationActionMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectAutomationActionMatch[1])}/automation-runs/${encodePathSegment(projectAutomationActionMatch[2])}/${projectAutomationActionMatch[3]}`,
+        "POST",
+      ));
+    }
+
+    const projectAutomationRunMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/automation-runs\/([^/]+)$/,
+    );
+    if (method === "GET" && projectAutomationRunMatch) {
+      return startRequest(proxyUpstreamGet(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectAutomationRunMatch[1])}/automation-runs/${encodePathSegment(projectAutomationRunMatch[2])}`,
+      ));
+    }
+
     const projectAgentSessionsMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/agent-sessions$/);
     if (method === "GET" && projectAgentSessionsMatch) {
       return startRequest(proxyUpstreamGet(
@@ -185,6 +243,16 @@ export function createProjectsRequestHandler({
         : startRequest(proxyUpstreamJsonRequest(req, res, upstreamPath, "POST"));
     }
 
+    const projectDeliveryPreviewMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/delivery-plan\/preview$/);
+    if (method === "POST" && projectDeliveryPreviewMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectDeliveryPreviewMatch[1])}/delivery-plan/preview`,
+        "POST",
+      ));
+    }
+
     const projectDeliveryProvisionMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/delivery-plan\/provision$/);
     if (method === "POST" && projectDeliveryProvisionMatch) {
       return startRequest(proxyUpstreamJsonRequest(
@@ -196,7 +264,7 @@ export function createProjectsRequestHandler({
     }
 
     const projectDeliveryExecutionActionMatch = pathname.match(
-      /^\/api\/real\/projects\/([^/]+)\/delivery-plan\/execution\/(start|reconcile|cancel)$/,
+      /^\/api\/real\/projects\/([^/]+)\/delivery-plan\/execution\/(start|reconcile|retry|cancel)$/,
     );
     if (method === "POST" && projectDeliveryExecutionActionMatch) {
       return startRequest(proxyUpstreamJsonRequest(

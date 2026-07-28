@@ -867,7 +867,6 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             }
             return React.createElement("div", { className: "playground-project-overview-general-grid" },
               renderProjectOverviewActivitySection(),
-              renderProjectOverviewMilestonesSection(),
               renderProjectOverviewSetupSection()
             );
           }

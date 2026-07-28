@@ -60,4 +60,31 @@ describe("ProjectSummary", () => {
     fireEvent.blur(summary);
     expect(onSummaryCommit).toHaveBeenLastCalledWith("");
   });
+
+  it("grows to the full summary content height", () => {
+    render(
+      <ProjectSummary
+        projectName="Computer Agents"
+        summary="Initial summary"
+        icon="rocket"
+        color="#79d0ff"
+        iconOptions={[{ id: "rocket", label: "Rocket", icon: Rocket }]}
+        colorOptions={["#79d0ff"]}
+        onIdentityChange={vi.fn()}
+        onSummaryChange={vi.fn()}
+      />,
+    );
+
+    const summary = screen.getByRole("textbox", { name: "Project summary" });
+    Object.defineProperty(summary, "scrollHeight", {
+      configurable: true,
+      value: 144,
+    });
+
+    fireEvent.change(summary, {
+      target: { value: "A summary that spans enough lines to exceed the previous height cap." },
+    });
+
+    expect(summary.style.height).toBe("144px");
+  });
 });

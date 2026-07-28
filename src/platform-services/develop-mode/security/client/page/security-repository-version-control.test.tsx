@@ -114,6 +114,7 @@ describe("SecurityRepositoryVersionControl", () => {
       listRepositoryVersions: vi.fn().mockResolvedValue([version]),
     } as unknown as SecurityServiceRepository;
     const onHeaderChange = vi.fn();
+    const onDelete = vi.fn();
     const onNavigationGuardChange = vi.fn();
     const onVersionsSidebarOpenChange = vi.fn();
 
@@ -125,6 +126,7 @@ describe("SecurityRepositoryVersionControl", () => {
         versionsDrawerPortalId="security-version-drawer"
         onBack={vi.fn()}
         onReload={vi.fn().mockResolvedValue(detail)}
+        onDelete={onDelete}
         onHeaderChange={onHeaderChange}
         onNavigationGuardChange={onNavigationGuardChange}
         onVersionsSidebarOpenChange={onVersionsSidebarOpenChange}
@@ -156,6 +158,8 @@ describe("SecurityRepositoryVersionControl", () => {
           resourceType: "security_repository",
           versionNumber: 1,
           versionIsLatest: true,
+          actionsOpen: false,
+          onDelete: expect.any(Function),
         }),
       );
     });
@@ -163,6 +167,17 @@ describe("SecurityRepositoryVersionControl", () => {
     const detailHeader = onHeaderChange.mock.calls
       .map(([state]) => state)
       .find((state) => state.mode === "detail" && state.versionNumber === 1);
+    act(() => detailHeader.onDelete());
+    expect(onDelete).toHaveBeenCalledOnce();
+    act(() => detailHeader.onActionsOpenChange(true));
+    await waitFor(() => {
+      expect(onHeaderChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          actionsOpen: true,
+          onDelete: expect.any(Function),
+        }),
+      );
+    });
     await act(async () => detailHeader.onVersionClick());
     expect(await screen.findByText("Version history")).toBeTruthy();
     expect(onVersionsSidebarOpenChange).toHaveBeenCalledWith(true);

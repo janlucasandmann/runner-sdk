@@ -5,8 +5,8 @@
 ## Purpose
 
 This directory is the shared resource boundary for Skills. It owns the typed
-repository client, normalized overview model, overview guide and page, and
-public exports.
+repository client, normalized overview model, overview guide and page, the
+shared Code/Settings detail shell, and public exports.
 
 ## Usage
 
@@ -18,6 +18,7 @@ callbacks.
 ## Contents
 
 - [`client/`](client/) — This directory contains browser-side public composition and integration for the shared Skills resource. Resource-independent UI belongs in `src/platform-ui`.
+- [`detail/`](detail/) — This directory contains the shared two-tab Skills detail shell and its layout contract.
 - [`overview/`](overview/) — This directory contains overview models, analytics, tables, and page composition for the shared Skills resource. Resource-independent UI belongs in `src/platform-ui`.
 - [`index.ts`](index.ts) — Public barrel or composition entry point.
 
@@ -31,6 +32,7 @@ Run the narrowest relevant checks from the repository root:
 
 ```bash
 npm run platform-resource-overview-test
+npm run platform:skill-source-test
 npm run check:static
 ```
 

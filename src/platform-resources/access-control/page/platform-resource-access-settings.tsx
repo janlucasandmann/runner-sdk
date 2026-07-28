@@ -9,6 +9,7 @@ import {
   updatePlatformPermissionActionRing,
   updatePlatformPermissionRingAccess,
   type PlatformPermissionAccess,
+  type PlatformPermissionActionDefinition,
   type PlatformPermissionActionPresentation,
   type PlatformPermissionRole,
   type PlatformPermissionSet,
@@ -45,6 +46,39 @@ export const PLATFORM_RESOURCE_ACCESS_ROLES: readonly PlatformPermissionRole<str
   },
 ] as const;
 
+export const PLATFORM_ORGANIZATION_ACCESS_ROLES: readonly PlatformPermissionRole<string>[] = [
+  {
+    id: "owner",
+    label: "Owner",
+    description: "Has permanent full control of the organization and this resource.",
+  },
+  {
+    id: "admin",
+    label: "Admin",
+    description: "Can administer organization resources and their access policies.",
+  },
+  {
+    id: "developer",
+    label: "Developer",
+    description: "Can use and configure operational resources without changing administrative access.",
+  },
+  {
+    id: "member",
+    label: "Member",
+    description: "Can use this resource, with elevated operations routed through approval.",
+  },
+  {
+    id: "billing",
+    label: "Billing",
+    description: "Can inspect this resource but cannot invoke or configure it.",
+  },
+  {
+    id: "viewer",
+    label: "Viewer",
+    description: "Has read-only visibility into this resource.",
+  },
+] as const;
+
 export interface PlatformResourceAccessSettingsProps<TTeam extends PlatformAccessPrincipal> {
   teams: readonly TTeam[];
   resourceLabel: string;
@@ -68,6 +102,7 @@ export interface PlatformResourceAccessSettingsProps<TTeam extends PlatformAcces
   onSelectedRoleIdChange?: (roleId: string) => void;
   teamPermissionSet?: PlatformPermissionSet | null;
   onTeamPermissionSetChange?: (roleId: string, permissionSet: PlatformPermissionSet) => void;
+  actionDefinitions?: readonly PlatformPermissionActionDefinition[];
   actionPresentation?: Readonly<Record<string, PlatformPermissionActionPresentation | undefined>>;
   animationKey?: string | number;
   disabled?: boolean;
@@ -124,11 +159,12 @@ export function PlatformResourceAccessSettings<TTeam extends PlatformAccessPrinc
   onSystemPermissionSetChange,
   systemRolePermissionSet,
   onSystemRolePermissionSetChange,
-  roles = PLATFORM_RESOURCE_ACCESS_ROLES,
+  roles,
   selectedRoleId = "member",
   onSelectedRoleIdChange,
   teamPermissionSet,
   onTeamPermissionSetChange,
+  actionDefinitions,
   actionPresentation,
   animationKey = 0,
   disabled = false,
@@ -148,11 +184,16 @@ export function PlatformResourceAccessSettings<TTeam extends PlatformAccessPrinc
     teamPermissionSet,
     teamSubjectType,
   );
-  const activeRoleId = roles.some((role) => role.id === selectedRoleId)
-    ? selectedRoleId
-    : roles[0]?.id || "member";
   const isRoleScopedSystemPrincipal =
     isPlatformRoleScopedSystemAccessPrincipalId(systemPrincipal?.id);
+  const resolvedRoles = roles || (
+    isRoleScopedSystemPrincipal
+      ? PLATFORM_ORGANIZATION_ACCESS_ROLES
+      : PLATFORM_RESOURCE_ACCESS_ROLES
+  );
+  const activeRoleId = resolvedRoles.some((role) => role.id === selectedRoleId)
+    ? selectedRoleId
+    : resolvedRoles[0]?.id || "member";
   const rolePermissionSet = isRoleScopedSystemPrincipal
     ? normalizePlatformRolePermissionSet(
         systemRolePermissionSet,
@@ -233,6 +274,7 @@ export function PlatformResourceAccessSettings<TTeam extends PlatformAccessPrinc
         <PlatformPermissionsPage
           permissionSet={normalizedSystemPermissionSet}
           subjectType={subjectType}
+          actionDefinitions={actionDefinitions}
           actionPresentation={actionPresentation}
           animationKey={animationKey}
           disabled={!canEditSystemPermissions}
@@ -275,7 +317,7 @@ export function PlatformResourceAccessSettings<TTeam extends PlatformAccessPrinc
         />
       ) : (
         <PlatformRolePermissionsPage
-          roles={roles}
+          roles={resolvedRoles}
           value={activeRoleId}
           onValueChange={(roleId) => onSelectedRoleIdChange?.(roleId)}
           roleAriaLabel={
@@ -300,6 +342,7 @@ export function PlatformResourceAccessSettings<TTeam extends PlatformAccessPrinc
           permissionHeaderClassName="platform-resource-access-settings__permission-header playground-project-team-role-permission-header"
           permissionSet={rolePermissionSet}
           subjectType={teamSubjectType}
+          actionDefinitions={actionDefinitions}
           actionPresentation={actionPresentation}
           animationKey={animationKey}
           disabled={!canEditRolePermissions}

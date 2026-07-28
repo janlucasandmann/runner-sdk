@@ -4,6 +4,11 @@ export {
   getAgentPermissionSummary,
 } from "../../platform-resources/agents/detail/agent-permissions-page.js";
 export { AgentPublishControl } from "../../platform-resources/agents/detail/agent-publish-control.js";
+export {
+  THREAD_COMMUNICATOR_FUNCTIONAL_AGENT_ROLE,
+  THREAD_ORCHESTRATOR_FUNCTIONAL_AGENT_ROLE,
+  isThreadFunctionalAgentRole,
+} from "../../platform-resources/agents/overview/functional-agent-catalog.js";
 export { createAgentsOverviewAnalytics } from "../../platform-resources/agents/overview/agents-overview-analytics.js";
 export {
   AgentsOverviewAnalyticsRequestError,

@@ -2387,23 +2387,20 @@
                 )
               : null;
             const sourceServerCodeWorkspaceRowById = new Map();
-            const sourceServerCodeWorkspaceFiles = visibleServerSourceFileRows.map((row) => {
+            const sourceServerCodeWorkspaceFiles = visibleServerSourceFileRows
+              .filter((row) => String(row?.entry?.name || "").trim() !== ".gitkeep")
+              .map((row) => {
               const entry = row?.entry || {};
               const normalizedPath = String(entry?.path || entry?.name || "").trim();
               const isExpandedSourceFolder = entry.isFolder && serverSourceExpandedFolders.has(entry.path);
               const canOpenSourceFile = !entry.isFolder && isPlaygroundTextPreviewable(entry);
-              const canExpandSourceFolder = entry.isFolder && (
-                entry.hasChildren
-                || isExpandedSourceFolder
-                || (Array.isArray(entry.children) && entry.children.length > 0)
-              );
               const id = String(normalizedPath || entry.id || "").trim();
               sourceServerCodeWorkspaceRowById.set(id, { entry, canOpenSourceFile });
               return {
                 id,
                 label: entry.name || normalizedPath || "Untitled",
                 icon: React.createElement(PlaygroundFileIcon, { entry }),
-                leading: canExpandSourceFolder
+                leading: entry.isFolder
                   ? React.createElement(isExpandedSourceFolder ? ChevronDown : ChevronRight, {
                       width: 14,
                       height: 14,
@@ -2411,6 +2408,8 @@
                     })
                   : null,
                 depth: Number(row?.level || 0),
+                isFolder: Boolean(entry.isFolder),
+                parentId: getPlaygroundEntryParentPath(entry.path) || null,
                 disabled: !entry.isFolder && !canOpenSourceFile,
                 openInTab: canOpenSourceFile,
                 dirty: canOpenSourceFile
@@ -2422,6 +2421,8 @@
                 selectable: !isServerTemplatePreview,
                 renameDisabled: isServerTemplatePreview || entry.isFolder,
                 deleteDisabled: isServerTemplatePreview,
+                moveDisabled: isServerTemplatePreview || serverFileTransferState.isUploading,
+                dropDisabled: isServerTemplatePreview || serverFileTransferState.isUploading,
                 ariaLabel: entry.name || normalizedPath || "Untitled",
               };
             });
@@ -2503,65 +2504,6 @@
                 wrap: serverFileEditorState.wordWrap ? "soft" : "off",
               });
             };
-            const sourceServerCodeTabBarActions = React.createElement(PlatformButtonSelector, {
-                mode: "popup",
-                label: "Add File",
-                leading: React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.8 }),
-                popupAriaLabel: "Add file options",
-                buttonVariant: "primary",
-                buttonSize: "compact",
-                popupVariant: "minimal",
-                popupAlignment: "right",
-                open: serverCodeAddFileMenuOpen,
-                onOpenChange: setServerCodeAddFileMenuOpen,
-                closeOnSelect: true,
-                disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
-              },
-              React.createElement("button", {
-                type: "button",
-                className: "tb-popup-row",
-                onClick: () => {
-                  setServerCodeAddFileMenuOpen(false);
-                  void handleCreateServerFile();
-                },
-                disabled: isServerTemplatePreview,
-              },
-                React.createElement(FilePlus2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Create File")
-                )
-              ),
-              React.createElement("button", {
-                type: "button",
-                className: "tb-popup-row",
-                onClick: () => {
-                  setServerCodeAddFileMenuOpen(false);
-                  openServerFileUploadPicker();
-                },
-                disabled: isServerTemplatePreview,
-              },
-                React.createElement(ArrowUpFromLine, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Upload Files")
-                )
-              )
-            );
-            const sourceServerCodeStatus = serverFileTransferState.error
-              || ((serverFileEditorState.status === "ready" && (
-                serverFileEditorIsDirty
-                || serverFileEditorState.isSaving
-                || serverFileEditorState.saveError
-                || serverFileEditorState.saveMessage
-              ))
-                ? serverFileEditorStatusText
-                : (serverFileTransferState.message || serverFileEditorStatusText));
-            const sourceServerCodeStatusTone = serverFileTransferState.error || serverFileEditorState.saveError
-              ? "error"
-              : serverFileEditorState.isSaving
-                ? "loading"
-                : serverFileEditorState.saveMessage
-                  ? "success"
-                  : "default";
             const sourceFilesSection = React.createElement(React.Fragment, null,
               React.createElement("input", {
                 ref: serverFileUploadInputRef,
@@ -2587,15 +2529,27 @@
                     .map((file) => sourceServerCodeWorkspaceRowById.get(file.id)?.entry)
                     .filter(Boolean)
                 ),
-                tabBarActions: sourceServerCodeTabBarActions,
+                onFilesMove: ({ files, destinationFolder }) => handleServerEntriesMove(
+                  files
+                    .map((file) => sourceServerCodeWorkspaceRowById.get(file.id)?.entry)
+                    .filter(Boolean),
+                  destinationFolder
+                    ? sourceServerCodeWorkspaceRowById.get(destinationFolder.id)?.entry || null
+                    : null
+                ),
+                onCreateFile: handleCreateServerFile,
+                onUploadFiles: openServerFileUploadPicker,
+                onCreateFolder: handleCreateServerFolder,
+                fileCreationDisabled: !draftServer.id
+                  || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID
+                  || isServerTemplatePreview
+                  || serverFileTransferState.isUploading,
                 isLoadingFiles: isLoadingCurrentServerFiles,
                 loadingFilesMessage: "Loading files...",
                 emptyFiles: draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
                   ? "No source files yet."
                   : "Create this " + serverKindLabel.toLowerCase() + " first.",
                 editor: renderServerCodeEditorBody(),
-                status: sourceServerCodeStatus,
-                statusTone: sourceServerCodeStatusTone,
                 historyControls: {
                   onUndo: handleServerFileEditorUndo,
                   onRedo: handleServerFileEditorRedo,
@@ -2628,7 +2582,6 @@
                   if (!droppedFiles.length || isServerTemplatePreview) {
                     return;
                   }
-                  setServerCodeAddFileMenuOpen(false);
                   void handleServerFileUploadFiles(droppedFiles);
                 },
               })

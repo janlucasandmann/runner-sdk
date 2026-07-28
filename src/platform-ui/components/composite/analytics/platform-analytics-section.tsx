@@ -9,6 +9,7 @@ export function PlatformAnalyticsSection({
   variant = "default",
   title,
   timeframe,
+  showChart = true,
 }: PlatformAnalyticsSectionProps) {
   const resolvedTitle = title ?? analytics.title;
   const showTitle = (variant === "framed" || variant === "compact")
@@ -53,13 +54,15 @@ export function PlatformAnalyticsSection({
           </div>
         ))}
       </div>
-      <div className="platform-analytics__chart">
-        <PlatformAnalyticsChart
-          analytics={analytics}
-          chartType={chartType}
-          compact={variant === "compact"}
-        />
-      </div>
+      {showChart ? (
+        <div className="platform-analytics__chart">
+          <PlatformAnalyticsChart
+            analytics={analytics}
+            chartType={chartType}
+            compact={variant === "compact"}
+          />
+        </div>
+      ) : null}
     </section>
   );
 }

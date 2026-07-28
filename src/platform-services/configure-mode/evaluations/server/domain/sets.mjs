@@ -367,6 +367,15 @@ export function normalizeDataRow(row, fallbackIndex = 0) {
 export function normalizeEvaluationSet(record = {}) {
   const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
   const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata) ? source.metadata : null;
+  const targetBinding = source.targetBinding
+    && typeof source.targetBinding === "object"
+    && !Array.isArray(source.targetBinding)
+    ? source.targetBinding
+    : source.target_binding
+      && typeof source.target_binding === "object"
+      && !Array.isArray(source.target_binding)
+      ? source.target_binding
+      : null;
   const creator = getCreatorIdentity(source);
   const dataRows = Array.isArray(source.dataRows)
     ? source.dataRows
@@ -384,6 +393,7 @@ export function normalizeEvaluationSet(record = {}) {
     evaluationGuidance: String(source.evaluationGuidance || source.evaluation_guidance || source.scoringGuidance || source.scoring_guidance || source.rubric || ""),
     passThreshold: normalizePassThreshold(source.passThreshold ?? source.pass_threshold ?? source.threshold ?? 0.8),
     evaluator: normalizeEvaluator(source.evaluator),
+    targetBinding,
     targetAgentId: normalizeString(source.targetAgentId || source.target_agent_id || source.agentId || source.agent_id),
     environmentType: normalizeString(source.environmentType || source.environment_type).toLowerCase() === "project" ? "project" : "computer",
     environmentId: normalizeString(source.environmentId || source.environment_id || source.computerId || source.computer_id),
@@ -394,6 +404,108 @@ export function normalizeEvaluationSet(record = {}) {
     metadata,
     createdAt: normalizeString(source.createdAt || source.created_at),
     updatedAt: normalizeString(source.updatedAt || source.updated_at),
+  };
+}
+
+function normalizeEvaluationExecutionTarget(evaluationSet, options = {}) {
+  const requested = options.targetBinding
+    || options.target_binding
+    || options.executionTarget
+    || options.execution_target
+    || evaluationSet.targetBinding
+    || null;
+  const source = requested
+    && typeof requested === "object"
+    && !Array.isArray(requested)
+    ? requested
+    : {};
+  const requestedKind = normalizeString(
+    source.kind
+      || options.targetKind
+      || options.target_kind,
+  ).toLowerCase();
+  const legacyAgentId = normalizeString(
+    options.targetAgentId
+      || options.target_agent_id
+      || evaluationSet.targetAgentId,
+  );
+  const kind = ["agent", "function", "metronome", "service_topology", "none"].includes(requestedKind)
+    ? requestedKind
+    : legacyAgentId
+      ? "agent"
+      : "none";
+  const snapshot = source.snapshot
+    && typeof source.snapshot === "object"
+    && !Array.isArray(source.snapshot)
+    ? source.snapshot
+    : {};
+  const invocation = source.invocation
+    && typeof source.invocation === "object"
+    && !Array.isArray(source.invocation)
+    ? source.invocation
+    : null;
+  const targetId = normalizeString(
+    source.targetId
+      || source.target_id
+      || source.id
+      || options.targetId
+      || options.target_id
+      || (kind === "agent" ? legacyAgentId : ""),
+  );
+  const targetVersionId = normalizeString(
+    source.targetVersionId
+      || source.target_version_id
+      || source.versionId
+      || source.version_id
+      || options.targetVersionId
+      || options.target_version_id
+      || (kind === "agent"
+        ? options.targetAgentVersionId
+          || options.target_agent_version_id
+          || options.agentVersionId
+          || options.agent_version_id
+        : ""),
+  );
+  const targetVersionNumber = Math.max(
+    0,
+    Number(
+      source.targetVersionNumber
+        || source.target_version_number
+        || source.versionNumber
+        || source.version_number
+        || options.targetVersionNumber
+        || options.target_version_number
+        || (kind === "agent"
+          ? options.targetAgentVersionNumber
+            || options.target_agent_version_number
+            || options.agentVersionNumber
+            || options.agent_version_number
+          : 0),
+    ) || 0,
+  );
+  return {
+    bindingStatus: normalizeString(
+      source.bindingStatus || source.binding_status,
+    ),
+    kind,
+    targetId,
+    targetVersionId,
+    targetVersionNumber,
+    targetFingerprint: normalizeString(
+      source.targetFingerprint
+        || source.target_fingerprint
+        || options.controlPlaneTargetFingerprint
+        || options.control_plane_target_fingerprint,
+    ),
+    snapshot,
+    invocation,
+    environmentId: normalizeString(
+      source.environmentId
+        || source.environment_id
+        || options.environmentId
+        || options.environment_id
+        || evaluationSet.environmentId,
+    ),
   };
 }
 
@@ -469,6 +581,20 @@ export function normalizeRunCase(rawCase = {}, fallbackIndex = 0) {
     evaluatorReason: String(source.evaluatorReason || source.evaluator_reason || ""),
     evaluatorParseStatus: String(source.evaluatorParseStatus || source.evaluator_parse_status || ""),
     snapshotVersion: String(source.snapshotVersion || source.snapshot_version || ""),
+    targetExecution: source.targetExecution
+      && typeof source.targetExecution === "object"
+      && !Array.isArray(source.targetExecution)
+      ? source.targetExecution
+      : source.target_execution
+        && typeof source.target_execution === "object"
+        && !Array.isArray(source.target_execution)
+        ? source.target_execution
+        : null,
+    sourceAssets: Array.isArray(source.sourceAssets)
+      ? source.sourceAssets
+      : Array.isArray(source.source_assets)
+        ? source.source_assets
+        : [],
     executionStage: normalizeString(source.executionStage || source.execution_stage),
     failureStage: normalizeString(source.failureStage || source.failure_stage),
     executionAttempt: Math.max(0, Number(source.executionAttempt || source.execution_attempt || 0) || 0),
@@ -581,15 +707,26 @@ export function createEvaluationRun(evaluationSet, options = {}) {
   const evaluationRows = optimizationRoles.length
     ? evaluationSet.dataRows.filter((row) => optimizationRoles.includes(row.optimizationRole))
     : evaluationSet.dataRows;
+  const executionTarget = normalizeEvaluationExecutionTarget(
+    evaluationSet,
+    options,
+  );
   const targetSnapshot = {
-    agentId: normalizeString(options.targetAgentId || evaluationSet.targetAgentId),
-    agentVersionId: normalizeString(options.targetAgentVersionId || options.target_agent_version_id || options.agentVersionId || options.agent_version_id),
-    agentVersionNumber: Math.max(0, Number(options.targetAgentVersionNumber || options.target_agent_version_number || options.agentVersionNumber || options.agent_version_number || 0) || 0),
+    executionTarget,
+    agentId: executionTarget.kind === "agent"
+      ? executionTarget.targetId
+      : "",
+    agentVersionId: executionTarget.kind === "agent"
+      ? executionTarget.targetVersionId
+      : "",
+    agentVersionNumber: executionTarget.kind === "agent"
+      ? executionTarget.targetVersionNumber
+      : 0,
     agentVersionRevisionId: normalizeString(options.targetAgentVersionRevisionId || options.target_agent_version_revision_id || options.agentVersionRevisionId || options.agent_version_revision_id),
     guardrailId: normalizeString(options.targetGuardrailId || options.target_guardrail_id || options.guardrailId || options.guardrail_id),
     guardrailVersionId: normalizeString(options.targetGuardrailVersionId || options.target_guardrail_version_id || options.guardrailVersionId || options.guardrail_version_id),
     environmentType: normalizeString(options.environmentType || evaluationSet.environmentType).toLowerCase() === "project" ? "project" : "computer",
-    environmentId: normalizeString(options.environmentId || evaluationSet.environmentId),
+    environmentId: executionTarget.environmentId,
     projectId: normalizeString(options.projectId || evaluationSet.projectId),
   };
   targetSnapshot.systemSnapshot = buildEvaluationSystemSnapshot(options, targetSnapshot);
@@ -637,6 +774,7 @@ export function createEvaluationRun(evaluationSet, options = {}) {
     optimizationRole: row.optimizationRole,
     runCount: row.runCount,
     sliceIds: row.sliceIds,
+    metadata: row.metadata || null,
   }));
   const datasetFingerprint = createEvaluationFingerprint("evaluation_dataset", {
     schemaVersion: "evaluation_dataset_v1",
@@ -652,13 +790,17 @@ export function createEvaluationRun(evaluationSet, options = {}) {
     rows: fingerprintRows(evaluationRows),
   });
   const evaluatorFingerprint = createEvaluationFingerprint("evaluation_evaluator", {
-    schemaVersion: "evaluation_evaluator_v2",
+    schemaVersion: "evaluation_evaluator_v3",
     type: evaluator.type,
     agentId: evaluator.agentId,
     agentVersionId: evaluator.agentVersionId,
     agentVersionRevisionId: evaluator.agentVersionRevisionId,
     systemSnapshot: evaluatorSystemSnapshot,
     code: evaluator.type === "code" ? evaluator.code : "",
+    graderId: evaluator.type === "deterministic" ? evaluator.graderId : "",
+    configuration: evaluator.type === "deterministic"
+      ? evaluator.configuration
+      : null,
   });
   const systemFingerprint = createEvaluationFingerprint("evaluation_system", {
     schemaVersion: "evaluation_system_v1",
@@ -690,6 +832,13 @@ export function createEvaluationRun(evaluationSet, options = {}) {
     targetAgentVersionNumber: targetSnapshot.agentVersionNumber,
     targetAgentVersionLabel: normalizeString(options.targetAgentVersionLabel || options.target_agent_version_label || options.agentVersionLabel || options.agent_version_label),
     targetAgentVersionRevisionId: targetSnapshot.agentVersionRevisionId,
+    targetType: executionTarget.kind,
+    targetId: executionTarget.targetId,
+    targetVersionId: executionTarget.targetVersionId,
+    targetVersionNumber: executionTarget.targetVersionNumber,
+    targetFingerprint: executionTarget.targetFingerprint,
+    targetInvocation: executionTarget.invocation,
+    targetBinding: executionTarget,
     targetGuardrailId: targetSnapshot.guardrailId,
     targetGuardrailName: normalizeString(options.targetGuardrailName || options.target_guardrail_name || options.guardrailName || options.guardrail_name),
     targetGuardrailVersionId: targetSnapshot.guardrailVersionId,

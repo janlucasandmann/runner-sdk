@@ -494,7 +494,6 @@
           const [serverVersionChangesState, setServerVersionChangesState] = useState(null);
           const [openServerVersionMenuId, setOpenServerVersionMenuId] = useState("");
           const [serverFileActionsPopoverOpen, setServerFileActionsPopoverOpen] = useState(false);
-          const [serverCodeAddFileMenuOpen, setServerCodeAddFileMenuOpen] = useState(false);
           const [serverSourceFileMenuPath, setServerSourceFileMenuPath] = useState("");
           const [serverSourceExpandedFolders, setServerSourceExpandedFolders] = useState(() => new Set());
           const serverSourceDraftContentsRef = useRef(new Map());

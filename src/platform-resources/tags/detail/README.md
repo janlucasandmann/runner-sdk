@@ -4,13 +4,19 @@
 
 ## Purpose
 
-`TagDetailPage` owns the Tag-specific composition of the shared
-`ResourceDetailPage`, including the General, Permissions, and Setup tabs.
+`TagDetailPage` owns the Tag and Plugin composition of the shared
+`ResourceDetailPage`, including the connector identity header and the Overview,
+Authentication, and Permissions views. The local page navigation is
+authoritative so connector credentials, access roles, and provider context stay
+stable across every shell consumer. The Overview view owns the shared connector
+information and included-action surfaces while allowing each resource to append
+its operational analytics or capability content.
 
-Tag connection state, setup flows, analytics data, and persistence remain in
-the Tag resource controller. Shared page structure, tab navigation, sidebar
-transitions, analytics, instructions editing, loading, and permissions UI must
-use the centralized platform components.
+Connection state, authentication flows, analytics data, and persistence remain
+in the resource controller. Shared page structure, navigation, sidebar
+transitions, authentication empty/loading states, analytics, instructions
+editing, selectors, cards, and permissions UI must use the centralized platform
+components.
 
 ## Working in this directory
 

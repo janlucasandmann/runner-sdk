@@ -12,6 +12,8 @@ import { createEnvironmentHtmlPreviewProxy } from "./server/html-preview.mjs";
 import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.match(FILES_DOMAIN_FRAGMENTS.preview, /function getPlaygroundFileKind/);
+assert.match(FILES_DOMAIN_FRAGMENTS.preview, /includeFolderMarkers/);
+assert.match(FILES_DOMAIN_FRAGMENTS.preview, /pathParts\[pathParts\.length - 1\] === "\.gitkeep"/);
 assert.match(FILES_DOMAIN_FRAGMENTS.inventory, /function buildPlaygroundEnvironmentTree/);
 assert.match(FILES_DOMAIN_FRAGMENTS.transfer, /function createPlaygroundZipBlob/);
 assert.match(FILES_DOMAIN_FRAGMENTS.filename, /function buildPlaygroundProtectedFilename/);

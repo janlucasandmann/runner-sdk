@@ -9,6 +9,7 @@ import { resolveLegacyBrowserSourcePath } from "./legacy-source-resolution.mjs";
  */
 export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-shell/plan-gate/plan-gate-modal/platform-plan-gate-modal.css",
+  "src/platform-ui/components/composite/activity-overview/activity-overview.css",
   "src/platform-ui/components/composite/activity-timeline/activity-timeline.css",
   "src/platform-ui/components/composite/comments/comments.css",
   "src/platform-ui/components/composite/popup/popup.css",
@@ -45,6 +46,8 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-services/develop-mode/evidence-agents/client/page/evidence-agents.css",
   "src/platform-ui/pages/permissions/permission-page.css",
   "src/platform-resources/agents/detail/agent-publish-control.css",
+  "src/platform-resources/skills/detail/skill-detail-page.css",
+  "src/platform-resources/tags/detail/tag-detail-page.css",
   "src/platform-resources/access-control/page/platform-resource-access-table.css",
 ]);
 

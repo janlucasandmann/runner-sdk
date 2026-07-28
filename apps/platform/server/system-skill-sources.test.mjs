@@ -7,8 +7,11 @@ import { createSystemSkillSourceService } from "./system-skill-sources.mjs";
 
 const root = await fs.mkdtemp(path.join(os.tmpdir(), "platform-skill-source-"));
 await fs.mkdir(path.join(root, "browser", "scripts"), { recursive: true });
+await fs.mkdir(path.join(root, "browser", "references"), { recursive: true });
 await fs.writeFile(path.join(root, "browser", "SKILL.md"), "# Browser\n");
 await fs.writeFile(path.join(root, "browser", "scripts", "inspect.ts"), "export const inspect = true;\n");
+await fs.writeFile(path.join(root, "browser", "references", "contract.md"), "# Contract\n");
+await fs.writeFile(path.join(root, "browser", "references", "schema.xsd"), "<schema />\n");
 await fs.writeFile(path.join(root, "browser", "ignored.bin"), "ignored");
 
 const responses = [];
@@ -26,7 +29,13 @@ assert.equal(first.markdown, "# Browser\n");
 assert.deepEqual(first.codeFiles.map((file) => file.name), [
   "SKILL.md",
   "scripts/inspect.ts",
+  "references/contract.md",
+  "references/schema.xsd",
 ]);
+assert.equal(
+  first.codeFiles.find((file) => file.name === "references/schema.xsd")?.language,
+  "xml",
+);
 
 assert.equal(
   service.handleRequest(

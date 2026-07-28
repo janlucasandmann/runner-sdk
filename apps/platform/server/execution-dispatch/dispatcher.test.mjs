@@ -244,7 +244,9 @@ test("project delivery task claims execute the bound task and persist strict evi
       metadata: {
         deliveryExecutionId: "delivery_execution_1",
         deliveryStageId: "build",
+        deliveryStageRetryCount: 2,
         executionAgentId: "agent_builder",
+        executionAgentVersionId: "agent_version_builder_1",
         environmentId: "environment_1",
         resourceIds: ["function_1"],
         goal: "Build and verify the MVP.",
@@ -342,9 +344,14 @@ test("project delivery task claims execute the bound task and persist strict evi
   assert.equal(workloadRequests[0].method, "POST");
   assert.match(workloadRequests[0].body.message, /project_delivery_build_json/);
   assert.equal(workloadRequests[0].body.agentId, "agent_builder");
+  assert.equal(workloadRequests[0].body.executionMode, "blocking");
   assert.equal(
     workloadRequests[0].body.idempotencyKey,
-    `project-delivery:${claim.dispatch.id}`,
+    `project-delivery:${claim.dispatch.id}:stage-retry:2`,
+  );
+  assert.equal(
+    workloadRequests[0].body.metadata.agentVersionId,
+    "agent_version_builder_1",
   );
   assert.equal(workloadRequests[0].body.metadata.triggerKind, "automation");
   assert.equal(
@@ -366,6 +373,556 @@ test("project delivery task claims execute the bound task and persist strict evi
     "d".repeat(40),
   );
   assert.equal(workloadRequests[0].apiKey, claim.credential.key);
+  assert.equal(settlements[0].outcome, "completed");
+});
+
+test("project delivery recovers long blocking requests through idempotent replay", async () => {
+  const claim = makeClaim({
+    dispatch: {
+      kind: "project_delivery_task",
+      resourceId: "task_build_1",
+      metadata: {
+        deliveryExecutionId: "delivery_execution_1",
+        deliveryStageId: "build",
+        deliveryStageRetryCount: 3,
+        executionAgentId: "agent_builder",
+        executionAgentVersionId: "agent_version_builder_1",
+        environmentId: "environment_1",
+        resourceIds: ["function_1"],
+        goal: "Build and verify the MVP.",
+      },
+    },
+  });
+  const workloadRequests = [];
+  const settlements = [];
+  const warnings = [];
+  let claimDelivered = false;
+  let runRequestCount = 0;
+  const fetchImpl = async (url, init) => {
+    const parsed = new URL(url);
+    const body = JSON.parse(init.body || "{}");
+    if (parsed.hostname === "control.example.test") {
+      if (parsed.pathname.endsWith("/claims")) {
+        if (claimDelivered) return jsonResponse({ claims: [] });
+        claimDelivered = true;
+        return jsonResponse({ claims: [claim] });
+      }
+      if (parsed.pathname.endsWith("/complete")) {
+        settlements.push(body);
+        return jsonResponse({
+          dispatch: { ...claim.dispatch, status: "completed" },
+        });
+      }
+      return jsonResponse({ dispatch: claim.dispatch });
+    }
+    workloadRequests.push({
+      method: init.method,
+      path: parsed.pathname,
+      body,
+    });
+    if (parsed.pathname.endsWith("/tasks/task_build_1/run-thread")) {
+      runRequestCount += 1;
+      if (runRequestCount === 1) {
+        return jsonResponse({
+          code: "DATABASE_UNAVAILABLE",
+          message: "The platform data service is temporarily unavailable.",
+        }, 503);
+      }
+      if (runRequestCount === 2) {
+        throw new TypeError("fetch failed", {
+          cause: { code: "UND_ERR_HEADERS_TIMEOUT" },
+        });
+      }
+      if (runRequestCount === 3) {
+        return jsonResponse({
+          error: "idempotency_execution_in_progress",
+          message: "The original idempotent task execution is still active.",
+        }, 409);
+      }
+      return jsonResponse({
+        task: {
+          id: "task_build_1",
+          status: "in_progress",
+          metadata: {},
+        },
+        execution: {
+          success: true,
+          response: [
+            "```project_delivery_build_json",
+            JSON.stringify({
+              schemaVersion: "computer_agents_project_delivery_build_evidence_v1",
+              summary: "Recovered and verified.",
+              commitSha: "e".repeat(40),
+              resources: [{
+                id: "function_1",
+                revision: "version-2",
+                status: "deployed",
+                url: null,
+              }],
+              healthChecks: [{
+                name: "Smoke test",
+                status: "passed",
+                url: null,
+              }],
+              artifacts: [],
+            }),
+            "```",
+          ].join("\n"),
+        },
+      });
+    }
+    if (parsed.pathname.endsWith("/tasks/task_build_1")) {
+      return jsonResponse({
+        task: {
+          id: "task_build_1",
+          status: "done",
+          metadata: body.metadata,
+        },
+      });
+    }
+    return jsonResponse({ error: "not found" }, 404);
+  };
+  const dispatcher = createExecutionDispatcher({
+    controlOrigin: "https://control.example.test",
+    upstreamOrigin: "https://api.example.test/v1",
+    platformLocalOrigin: "http://127.0.0.1:4177",
+    secret,
+    issuer,
+    audience,
+    fetchImpl,
+    projectDeliveryReplayPollMs: 10,
+    projectDeliveryReplayTimeoutMs: 2_000,
+    evaluationsService: { runs: { async wake() {} } },
+    fineTuningService: { jobs: { async wake() {} } },
+    testsService: { runs: { async wake() {} } },
+    logger: {
+      info() {},
+      warn: (...args) => warnings.push(args),
+      error() {},
+    },
+  });
+
+  await dispatcher.pollNow();
+  await waitForIdle(dispatcher);
+
+  assert.equal(runRequestCount, 4);
+  assert.equal(
+    new Set(workloadRequests
+      .filter((request) => request.path.endsWith("/run-thread"))
+      .map((request) => request.body.idempotencyKey)).size,
+    1,
+  );
+  assert.equal(warnings.length, 3);
+  assert.equal(settlements[0].outcome, "completed");
+});
+
+test("project automation claims execute the server-selected task snapshot", async () => {
+  const claim = makeClaim({
+    dispatch: {
+      kind: "project_automation",
+      resourceId: "project_auto_1",
+      parentResourceId: "project_1",
+      attemptCount: 1,
+      maxAttempts: 8,
+      metadata: {
+        allowedTaskIds: ["task_1"],
+      },
+    },
+  });
+  const workloadRequests = [];
+  const settlements = [];
+  let claimDelivered = false;
+  const fetchImpl = async (url, init) => {
+    const parsed = new URL(url);
+    const body = JSON.parse(init.body || "{}");
+    if (parsed.hostname === "control.example.test") {
+      if (parsed.pathname.endsWith("/claims")) {
+        if (claimDelivered) return jsonResponse({ claims: [] });
+        claimDelivered = true;
+        return jsonResponse({ claims: [claim] });
+      }
+      if (parsed.pathname.endsWith("/complete")) {
+        settlements.push(body);
+        return jsonResponse({
+          dispatch: { ...claim.dispatch, status: "completed" },
+        });
+      }
+      return jsonResponse({ dispatch: claim.dispatch });
+    }
+    workloadRequests.push({
+      method: init.method,
+      path: parsed.pathname,
+      body,
+      apiKey: init.headers["x-api-key"],
+    });
+    if (parsed.pathname.endsWith("/project_auto_1/next")) {
+      return jsonResponse({
+        run: { id: "project_auto_1", status: "running" },
+        step: {
+          id: "step_1",
+          taskId: "task_1",
+          status: "running",
+          attemptCount: 1,
+        },
+        task: {
+          id: "task_1",
+          title: "Build the MVP",
+          assigneeAgentId: "agent_builder",
+          idempotencyKey: "project-automation:project_auto_1:step_1:1",
+        },
+      });
+    }
+    if (parsed.pathname.endsWith("/tasks/task_1/run-thread")) {
+      return jsonResponse({
+        task: { id: "task_1", status: "in_progress" },
+        agentSession: { id: "session_1", state: "completed" },
+        execution: { success: true },
+      }, 201);
+    }
+    if (parsed.pathname.endsWith("/steps/step_1/complete")) {
+      return jsonResponse({
+        automationRun: {
+          id: "project_auto_1",
+          status: "completed",
+          completedCount: 1,
+        },
+      });
+    }
+    return jsonResponse({ error: "not found" }, 404);
+  };
+  const dispatcher = createExecutionDispatcher({
+    controlOrigin: "https://control.example.test",
+    upstreamOrigin: "https://api.example.test/v1",
+    platformLocalOrigin: "http://127.0.0.1:4177",
+    secret,
+    issuer,
+    audience,
+    fetchImpl,
+    evaluationsService: { runs: { async wake() {} } },
+    fineTuningService: { jobs: { async wake() {} } },
+    testsService: { runs: { async wake() {} } },
+    logger: { info() {}, warn() {}, error() {} },
+  });
+
+  await dispatcher.pollNow();
+  await waitForIdle(dispatcher);
+
+  assert.deepEqual(
+    workloadRequests.map((request) => request.path),
+    [
+      "/v1/projects/project_1/automation-runs/project_auto_1/next",
+      "/v1/tasks/task_1/run-thread",
+      "/v1/projects/project_1/automation-runs/project_auto_1/steps/step_1/complete",
+    ],
+  );
+  assert.equal(workloadRequests[1].body.executionMode, "blocking");
+  assert.equal(
+    workloadRequests[1].body.idempotencyKey,
+    "project-automation:project_auto_1:step_1:1",
+  );
+  assert.equal(workloadRequests[1].body.metadata.source, "project_full_auto");
+  assert.equal(workloadRequests[1].apiKey, claim.credential.key);
+  assert.equal(settlements[0].outcome, "completed");
+});
+
+test("thread resume claims call only the exact fenced resume endpoint", async () => {
+  const claim = makeClaim({
+    dispatch: {
+      kind: "thread_resume",
+      resourceId: "run_parked_1",
+      parentResourceId: "thread_1",
+    },
+  });
+  const workloadRequests = [];
+  const settlements = [];
+  let claimDelivered = false;
+  const fetchImpl = async (url, init) => {
+    const parsed = new URL(url);
+    const body = JSON.parse(init.body || "{}");
+    if (parsed.hostname === "control.example.test") {
+      if (parsed.pathname.endsWith("/claims")) {
+        if (claimDelivered) return jsonResponse({ claims: [] });
+        claimDelivered = true;
+        return jsonResponse({ claims: [claim] });
+      }
+      if (parsed.pathname.endsWith("/complete")) {
+        settlements.push(body);
+        return jsonResponse({
+          dispatch: { ...claim.dispatch, status: "completed" },
+        });
+      }
+      return jsonResponse({ dispatch: claim.dispatch });
+    }
+    workloadRequests.push({
+      method: init.method,
+      path: parsed.pathname,
+      body,
+      apiKey: init.headers["x-api-key"],
+    });
+    return jsonResponse({
+      object: "thread.run.resume_dispatch",
+      resumedRunId: "run_resumed_1",
+    });
+  };
+  const dispatcher = createExecutionDispatcher({
+    controlOrigin: "https://control.example.test",
+    upstreamOrigin: "https://api.example.test/v1",
+    platformLocalOrigin: "http://127.0.0.1:4177",
+    secret,
+    issuer,
+    audience,
+    fetchImpl,
+    evaluationsService: { runs: { async wake() {} } },
+    fineTuningService: { jobs: { async wake() {} } },
+    testsService: { runs: { async wake() {} } },
+    logger: { info() {}, warn() {}, error() {} },
+  });
+
+  await dispatcher.pollNow();
+  await waitForIdle(dispatcher);
+
+  assert.deepEqual(workloadRequests, [{
+    method: "POST",
+    path: "/v1/threads/thread_1/runs/run_parked_1/resume-dispatch",
+    body: { dispatchId: claim.dispatch.id },
+    apiKey: claim.credential.key,
+  }]);
+  assert.equal(settlements.length, 1);
+  assert.equal(settlements[0].outcome, "completed");
+});
+
+test("security run claims call only the attested execution endpoint", async () => {
+  const claim = makeClaim({
+    dispatch: {
+      kind: "security_run",
+      resourceId: "security_run_1",
+      parentResourceId: "security_repository_1",
+    },
+  });
+  const workloadRequests = [];
+  const settlements = [];
+  let claimDelivered = false;
+  const fetchImpl = async (url, init) => {
+    const parsed = new URL(url);
+    const body = JSON.parse(init.body || "{}");
+    if (parsed.hostname === "control.example.test") {
+      if (parsed.pathname.endsWith("/claims")) {
+        if (claimDelivered) return jsonResponse({ claims: [] });
+        claimDelivered = true;
+        return jsonResponse({ claims: [claim] });
+      }
+      if (parsed.pathname.endsWith("/complete")) {
+        settlements.push(body);
+        return jsonResponse({
+          dispatch: { ...claim.dispatch, status: "completed" },
+        });
+      }
+      return jsonResponse({ dispatch: claim.dispatch });
+    }
+    workloadRequests.push({
+      method: init.method,
+      path: parsed.pathname,
+      body,
+      apiKey: init.headers["x-api-key"],
+    });
+    return jsonResponse({
+      run: { id: "security_run_1", status: "succeeded" },
+    });
+  };
+  const dispatcher = createExecutionDispatcher({
+    controlOrigin: "https://control.example.test",
+    upstreamOrigin: "https://api.example.test/v1",
+    platformLocalOrigin: "http://127.0.0.1:4177",
+    secret,
+    issuer,
+    audience,
+    fetchImpl,
+    evaluationsService: { runs: { async wake() {} } },
+    fineTuningService: { jobs: { async wake() {} } },
+    testsService: { runs: { async wake() {} } },
+    logger: { info() {}, warn() {}, error() {} },
+  });
+
+  await dispatcher.pollNow();
+  await waitForIdle(dispatcher);
+
+  assert.deepEqual(workloadRequests, [{
+    method: "POST",
+    path: "/v1/security/runs/security_run_1/execute",
+    body: { dispatchId: claim.dispatch.id },
+    apiKey: claim.credential.key,
+  }]);
+  assert.equal(settlements.length, 1);
+  assert.equal(settlements[0].outcome, "completed");
+});
+
+test("security remediation claims create one hidden agent thread and publish one evidence result", async () => {
+  const claim = makeClaim({
+    dispatch: {
+      kind: "security_remediation",
+      resourceId: "security_remediation_1",
+      parentResourceId: "security_repository_1",
+    },
+  });
+  const workloadRequests = [];
+  const settlements = [];
+  let claimDelivered = false;
+  let remediationPromptPosted = false;
+  const evidence = [
+    "Fix completed.",
+    "```security_remediation_json",
+    JSON.stringify({
+      schemaVersion: "computer_agents_security_remediation_v1",
+      remediationId: "security_remediation_1",
+      pullRequestUrl:
+        "https://github.com/computer-agents/platform/pull/42",
+      pullRequestNumber: 42,
+      branchName: "computer-agents/security/test",
+      commitSha: "b".repeat(40),
+      summary: "Restricted the workflow token permissions.",
+      changedFiles: [".github/workflows/validate.yml"],
+      validation: [{
+        command: "npm test",
+        status: "passed",
+        summary: "Focused tests passed.",
+      }],
+    }),
+    "```",
+  ].join("\n");
+  const fetchImpl = async (url, init = {}) => {
+    const parsed = new URL(url);
+    const body = JSON.parse(init.body || "{}");
+    if (parsed.hostname === "control.example.test") {
+      if (parsed.pathname.endsWith("/claims")) {
+        if (claimDelivered) return jsonResponse({ claims: [] });
+        claimDelivered = true;
+        return jsonResponse({ claims: [claim] });
+      }
+      if (parsed.pathname.endsWith("/complete")) {
+        settlements.push(body);
+        return jsonResponse({
+          dispatch: { ...claim.dispatch, status: "completed" },
+        });
+      }
+      return jsonResponse({ dispatch: claim.dispatch });
+    }
+    workloadRequests.push({
+      method: init.method || "GET",
+      path: `${parsed.pathname}${parsed.search}`,
+      body,
+      apiKey: init.headers?.["x-api-key"],
+    });
+    if (
+      parsed.pathname
+        .endsWith("/security/remediations/security_remediation_1/execute")
+    ) {
+      return jsonResponse({
+        terminal: false,
+        remediationId: "security_remediation_1",
+        runId: "security_run_1",
+        repositoryId: "security_repository_1",
+        repositoryFullName: "computer-agents/platform",
+        defaultBranch: "main",
+        sourceSha: "a".repeat(40),
+        sourceRef: "refs/heads/main",
+        branchName: "computer-agents/security/test",
+        workerThreadId: null,
+        agentId: "agent_forge",
+        message: "Fix one security finding.",
+        prompt: "Create one draft pull request. security_remediation_1",
+      });
+    }
+    if (parsed.pathname.endsWith("/threads") && init.method === "POST") {
+      return jsonResponse({ thread: { id: "thread_remediation_1" } });
+    }
+    if (
+      parsed.pathname.endsWith(
+        "/security/remediations/security_remediation_1/thread",
+      )
+    ) {
+      return jsonResponse({
+        id: "security_remediation_1",
+        workerThreadId: "thread_remediation_1",
+      });
+    }
+    if (
+      parsed.pathname.endsWith("/threads/thread_remediation_1/messages")
+      && init.method === "POST"
+    ) {
+      remediationPromptPosted = true;
+      return jsonResponse({ id: "message_1" });
+    }
+    if (
+      parsed.pathname.endsWith("/threads/thread_remediation_1/messages")
+    ) {
+      return jsonResponse({
+        data: remediationPromptPosted
+          ? [{ role: "assistant", content: evidence }]
+          : [],
+      });
+    }
+    if (parsed.pathname.endsWith("/threads/thread_remediation_1")) {
+      return jsonResponse({
+        thread: {
+          id: "thread_remediation_1",
+          status: remediationPromptPosted ? "completed" : "running",
+        },
+      });
+    }
+    if (
+      parsed.pathname.endsWith(
+        "/security/remediations/security_remediation_1/complete",
+      )
+    ) {
+      return jsonResponse({
+        id: "security_remediation_1",
+        lifecycle: "pull_request_open",
+      });
+    }
+    return jsonResponse({ error: "not found" }, 404);
+  };
+  const dispatcher = createExecutionDispatcher({
+    controlOrigin: "https://control.example.test",
+    upstreamOrigin: "https://api.example.test/v1",
+    platformLocalOrigin: "http://127.0.0.1:4177",
+    secret,
+    issuer,
+    audience,
+    fetchImpl,
+    evaluationsService: { runs: { async wake() {} } },
+    fineTuningService: { jobs: { async wake() {} } },
+    testsService: { runs: { async wake() {} } },
+    logger: { info() {}, warn() {}, error() {} },
+  });
+
+  await dispatcher.pollNow();
+  await waitForIdle(dispatcher);
+
+  assert.equal(
+    workloadRequests.filter(
+      (request) =>
+        request.method === "POST" && request.path === "/v1/threads",
+    ).length,
+    1,
+  );
+  const messageRequest = workloadRequests.find(
+    (request) =>
+      request.method === "POST"
+      && request.path === "/v1/threads/thread_remediation_1/messages",
+  );
+  assert.equal(
+    messageRequest.body.executionContent,
+    "Create one draft pull request. security_remediation_1",
+  );
+  assert.equal(messageRequest.body.persistFileChanges, true);
+  const completion = workloadRequests.find(
+    (request) =>
+      request.path
+        === "/v1/security/remediations/security_remediation_1/complete",
+  );
+  assert.equal(completion.body.threadId, "thread_remediation_1");
+  assert.match(completion.body.output, /security_remediation_json/);
+  assert.equal(settlements.length, 1);
   assert.equal(settlements[0].outcome, "completed");
 });
 

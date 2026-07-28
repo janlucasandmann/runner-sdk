@@ -294,7 +294,7 @@ export const METRONOME_APP_SIDEBAR_STATE_SCRIPT = `
             await Promise.all(candidates.map(async (entry) => {
               try {
                 const { response, data } = await fetchJsonWithTimeout(
-                  proxyBackendBase + "/metronomes/" + encodeURIComponent(entry.metronomeId) + "/runs/" + encodeURIComponent(entry.runId),
+                  proxyBackendBase + "/metronomes/" + encodeURIComponent(entry.metronomeId) + "/runs/" + encodeURIComponent(entry.runId) + "?view=status",
                   { method: "GET", headers: authRequestHeaders, signal: requestController.signal },
                   10000
                 );

@@ -65,6 +65,7 @@ import { mountRunnerChatStyles } from "./runner-chat-styles.js";
 import { RunnerThreadRunActivityCard } from "./thread/run-activity-card.js";
 import { RunnerThreadUserMessageTime } from "./thread/thread-message.js";
 import { useRunnerThreadProjection } from "./thread/use-runner-thread-projection.js";
+import { shouldUseRunnerCanonicalThreadSurface } from "./thread/thread-surface-mode.js";
 import { useRunnerLogAutoScroll } from "./runner-chat/use-log-auto-scroll.js";
 import { useRunnerThreadHistoryRail } from "./runner-chat/use-thread-history-rail.js";
 import { RunnerDocumentPreviewDrawer } from "./runner-document-preview-drawer.js";
@@ -96,8 +97,6 @@ import {
 } from "./runner-chat/email-presentation.js";
 import {
   getRecordNumber,
-  getRecordObject,
-  getRecordString,
   normalizeRecordObject,
 } from "./runner-chat/record-utils.js";
 import {
@@ -1560,7 +1559,7 @@ export function RunnerChat({
   );
   const canonicalThreadId = String(currentThreadId || "").trim();
   const canonicalThreadEnabled = Boolean(
-    threadViewMode !== "legacy" && canonicalThreadId && normalizedBackendUrl && hasApiKey
+    threadViewMode !== "legacy" && canonicalThreadId && normalizedBackendUrl
   );
   const canonicalThread = useRunnerThreadProjection({
     threadId: canonicalThreadId,
@@ -1615,37 +1614,12 @@ export function RunnerChat({
     },
     [canonicalProjectionMatchesThread, canonicalThread.projection.timeline, substantiveLegacyTurnCount]
   );
-  const hasLegacyOnlyThreadAffordances = useMemo(() => (
-    Boolean(
-      threadTaskPreview
-      || threadMissionControlPreview
-      || renderUserPromptContent
-      || renderRunSummaryJsonSegment
-      || followUpActions.length > 0
-      || followUpError
-    )
-    || turns.some((turn) => (
-      (turn.presentation === "btw" && turn.messageMetadata?.source !== "thread_v2_communicator")
-      || (turn.presentation === "context-action-notice" && !isVoiceModeNoticeTurn(turn))
-      || Boolean(turn.quotedSelection)
-      || Boolean(turn.attachments?.length)
-      || Boolean(turn.slideCreationCommand || turn.researchCreationCommand || turn.scrapeCreationCommand || turn.parseCreationCommand || turn.adCreationCommand)
-      || isRunnerEmailMetadata(turn.messageMetadata)
-      || turn.messageMetadata?.canonicalPersistenceFailed === true
-    ))
-  ), [
-    followUpActions.length,
-    followUpError,
-    renderRunSummaryJsonSegment,
-    renderUserPromptContent,
-    threadMissionControlPreview,
-    threadTaskPreview,
-    turns,
-  ]);
-  const shouldUseCanonicalThreadSurface = canonicalThreadEnabled && canonicalProjectionMatchesThread && (
-    threadViewMode === "canonical"
-    || (threadViewMode === "auto" && hasCanonicalTimelineContent && !hasLegacyOnlyThreadAffordances)
-  );
+  const shouldUseCanonicalThreadSurface = shouldUseRunnerCanonicalThreadSurface({
+    canonicalThreadEnabled,
+    canonicalProjectionMatchesThread,
+    threadViewMode,
+    hasCanonicalTimelineContent,
+  });
   const shouldUseLegacyVoiceTranscriptFallback = threadViewMode === "legacy"
     || (substantiveLegacyTurnCount > 0 && !shouldUseCanonicalThreadSurface);
   const activeCanonicalRun = canonicalProjectionMatchesThread
@@ -1654,72 +1628,7 @@ export function RunnerChat({
       .sort((left, right) => (right.updatedAt || right.createdAt).localeCompare(left.updatedAt || left.createdAt))[0] || null
     : null;
   const hasRoutableActiveRun = hasRunningTurn || Boolean(activeCanonicalRun);
-  const legacyCompatibilityEntries = useMemo(() => {
-    if (!canonicalProjectionMatchesThread) return [];
-    const canonicalMessageIds = new Set(Object.keys(canonicalThread.projection.messagesById));
-    const canonicalUserMessages = Object.values(canonicalThread.projection.messagesById)
-      .filter((message) => canonicalThread.projection.participantsById[message.authorParticipantId]?.kind === "human");
-    const matchedMessageIds = new Set<string>();
-    const compatibility: Array<{ turn: RunnerTurn; projection: RunnerThreadProjection }> = [];
-    for (const turn of turns) {
-      if (turn.presentation === "btw" || turn.presentation === "context-action-notice") continue;
-      const workflowMetadata = turn.logs
-        .map((log) => getRecordObject(log.metadata as Record<string, unknown> | null | undefined, ["metronomeWorkflow", "metronome_workflow"]))
-        .find(Boolean) || getRecordObject(turn.messageMetadata, ["metronomeWorkflow", "metronome_workflow"]);
-      const workflowRunId = getRecordString(workflowMetadata, ["runId", "run_id", "workflowRunId", "workflow_run_id"]);
-      const workflowNodeId = getRecordString(workflowMetadata, ["nodeId", "node_id", "activeNodeId", "active_node_id"]);
-      if (workflowRunId && Object.values(canonicalThread.projection.runsById).some((run) => (
-        String(run.metadata?.workflowRunId || run.metadata?.runId || "") === workflowRunId
-        && (!workflowNodeId || String(run.metadata?.workflowNodeId || run.metadata?.nodeId || "") === workflowNodeId)
-      ))) continue;
-      const prompt = turn.prompt.trim();
-      if (!prompt) continue;
-      const projection = legacyTurnProjectionsById.get(turn.id);
-      if (!projection) continue;
-      if (Object.keys(projection.runsById).some((runId) => Boolean(canonicalThread.projection.runsById[runId]))) continue;
-      const exactSourceId = String(turn.sourceMessageId || "").trim();
-      if (exactSourceId && canonicalMessageIds.has(exactSourceId)) {
-        matchedMessageIds.add(exactSourceId);
-        continue;
-      }
-      const matchedMessage = canonicalUserMessages.find((message) => {
-        if (matchedMessageIds.has(message.id)) return false;
-        if (exactSourceId && message.id === exactSourceId) return true;
-        if (message.content.trim() !== prompt) return false;
-        const messageTime = Date.parse(message.createdAt);
-        return Number.isFinite(messageTime) && Math.abs(messageTime - turn.startedAtMs) <= 30_000;
-      });
-      if (matchedMessage) matchedMessageIds.add(matchedMessage.id);
-      else compatibility.push({ turn, projection });
-    }
-    return compatibility;
-  }, [
-    canonicalProjectionMatchesThread,
-    canonicalThread.projection.messagesById,
-    canonicalThread.projection.participantsById,
-    canonicalThread.projection.runsById,
-    legacyTurnProjectionsById,
-    turns,
-  ]);
-  const [legacyCompatibilityHistoryEntries, legacyCompatibilityTailEntries] = useMemo(() => {
-    const canonicalAnchorTimes = canonicalThread.projection.timeline
-      .filter((reference) => reference.kind === "message" || reference.kind === "run")
-      .map((reference) => Date.parse(reference.createdAt))
-      .filter(Number.isFinite);
-    const earliestCanonicalTime = canonicalAnchorTimes.length > 0 ? Math.min(...canonicalAnchorTimes) : Number.POSITIVE_INFINITY;
-    const history: typeof legacyCompatibilityEntries = [];
-    const tail: typeof legacyCompatibilityEntries = [];
-    for (const entry of legacyCompatibilityEntries) {
-      if (
-        entry.turn.status === "queued"
-        || entry.turn.status === "running"
-        || entry.turn.startedAtMs >= earliestCanonicalTime
-      ) tail.push(entry);
-      else history.push(entry);
-    }
-    return [history, tail];
-  }, [canonicalThread.projection.timeline, legacyCompatibilityEntries]);
-  const hasCanonicalSurfaceContent = canonicalThread.projection.timeline.length > 0 || legacyCompatibilityEntries.length > 0;
+  const hasCanonicalSurfaceContent = canonicalThread.projection.timeline.length > 0;
   const workspaceItems = hasApiKey ? remoteWorkspaceItems : workspaceConfig?.items || [];
   const availableEnvironments = useMemo(
     () =>
@@ -5941,8 +5850,6 @@ export function RunnerChat({
                 loading={canonicalThread.loading}
                 error={canonicalThread.error}
                 hasContent={hasCanonicalSurfaceContent}
-                historyEntries={legacyCompatibilityHistoryEntries}
-                tailEntries={legacyCompatibilityTailEntries}
                 fallbackRunAgentName={displayedAgentLabel}
                 fallbackRunWorkspaceName={displayedWorkspaceLabel}
                 runDetailStates={canonicalThread.runDetailStates}
