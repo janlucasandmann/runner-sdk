@@ -58,13 +58,43 @@ const {
   createPlaygroundEvaluationSetDraft: createClientEvaluationSetDraft,
   normalizePlaygroundEvaluationDataRow: normalizeClientEvaluationDataRow,
   normalizePlaygroundEvaluationRun: normalizeClientEvaluationRun,
+  normalizePlaygroundEvaluationSet: normalizeOwnershipEvaluationSet,
 } = new Function(
-  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.foundation + "; return { createPlaygroundEvaluationSetDraft, normalizePlaygroundEvaluationDataRow, normalizePlaygroundEvaluationRun };",
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.foundation + "; return { createPlaygroundEvaluationSetDraft, normalizePlaygroundEvaluationDataRow, normalizePlaygroundEvaluationRun, normalizePlaygroundEvaluationSet };",
 )();
 assert.deepEqual(createClientEvaluationSetDraft().dataRows, []);
 assert.equal(normalizeClientEvaluationDataRow({ split: "holdout" }).optimizationRole, "holdout");
 assert.equal(normalizeClientEvaluationDataRow({ optimization_role: "validation" }).optimizationRole, "validation");
 assert.equal(normalizeClientEvaluationDataRow({ optimizationRole: "unexpected" }).optimizationRole, "train");
+assert.equal(normalizeClientEvaluationDataRow({ title: "Greeting", description: "Basic greeting case" }).title, "Greeting");
+assert.equal(normalizeClientEvaluationDataRow({ title: "Greeting", description: "Basic greeting case" }).description, "Basic greeting case");
+const evaluationWithCaseMetadata = normalizeEvaluationSet({
+  id: "evaluation_case_metadata",
+  dataRows: [{
+    id: "case_1",
+    title: "Greeting",
+    description: "Basic greeting case",
+    input: "Say hello.",
+    expectedOutput: "Hello.",
+  }],
+});
+assert.equal(evaluationWithCaseMetadata.dataRows[0].title, "Greeting");
+assert.equal(evaluationWithCaseMetadata.dataRows[0].description, "Basic greeting case");
+const evaluationWithUnknownCreator = normalizeOwnershipEvaluationSet({
+  id: "evaluation_unknown_creator",
+  userId: "resource_scope_user",
+  organizationId: "organization_1",
+});
+assert.equal(evaluationWithUnknownCreator.creator.id, "");
+assert.equal(evaluationWithUnknownCreator.creator.userId, "");
+assert.equal(evaluationWithUnknownCreator.organizationId, "organization_1");
+const evaluationWithKnownCreator = normalizeOwnershipEvaluationSet({
+  id: "evaluation_known_creator",
+  organizationId: "organization_1",
+  createdByUserId: "creator_1",
+});
+assert.equal(evaluationWithKnownCreator.creator.userId, "creator_1");
+assert.equal(evaluationWithKnownCreator.createdByUserId, "creator_1");
 const historicalClientRun = normalizeClientEvaluationRun({
   id: "historical_run_1",
   evaluationId: "evaluation_1",
@@ -181,7 +211,13 @@ assert.match(
 );
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /hasData: hasRecordedChartData/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformAnalyticsSection, \{[\s\S]*?variant: "default"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /showXAxisLabels: Boolean\(run\)/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /timeframe:\s*run\s*\?/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /variant: run \? "framed"/);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs,
+  /evaluationDetailTab !== "cases"[\s\S]*?evaluationDetailTab !== "settings"[\s\S]*?React\.createElement\(PlatformSwitch,[\s\S]*?ariaLabel: "Evaluation analytics time frame"[\s\S]*?renderEvaluationPublishSplitButton\(\)/,
+);
 assert.match(
   EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables,
   /cell: \(\{ row: caseItem \}\) => renderEvaluationThreadButton\(caseItem\.threadId, caseItem\.threadId\)/,
@@ -337,8 +373,24 @@ assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /\bteamPageTeams\b
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /\bteamPageLoading\b/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /\bloadTeamPageData\b/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /workspaceTeams = \[\]/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /organizations = \[\]/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /activeOrganizationId = ""/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /evaluationOrganizationOwnerStateById/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /onWorkspaceTeamsRequest/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /workspaceTeams: teamPageTeams/);
+assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /organizations: organizationPageOrganizations/);
+assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /activeOrganizationId/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /getEvaluationOrganizationOwnerIdentity/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /currentOrganizationRole === "owner"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /"\/organizations\/" \+ encodeURIComponent\(organizationId\) \+ "\/members"/);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access,
+  /if \(hasEvaluationPersonIdentity\(creator\)\) return creator;[\s\S]*?return getEvaluationOrganizationOwnerIdentity\(set\);/,
+);
+assert.doesNotMatch(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access,
+  /set\?\.creator \|\| set\?\.createdBy \|\| currentEvaluationCreator/,
+);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /composePlatformAccessPrincipalRows\(evaluationSharedTeams\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /readOnly: selectedRole\.id === "owner"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /renderEvaluationRenameModal/);
@@ -421,28 +473,47 @@ assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /Select historica
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /playground-evaluations-thread-picker-list/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /playground-evaluations-run-action/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /onRefreshThreadRecords: \(\) => refreshThreads\(40,/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /function renderEvaluationCaseEditorModal\(\)[\s\S]*?React\.createElement\(PlatformModal/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /className: "playground-evaluations-case-editor-modal"/);
-assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /className: "playground-tasks-project-modal playground-tasks-issue-modal[^"]*playground-evaluations-case-editor-modal"/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /React\.createElement\(PlatformUiCard/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /function renderEvaluationDatasetCaseDetail\(\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /React\.createElement\(EvaluationCaseDetailPage/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /React\.createElement\(PlatformCodeEditorWorkspace/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /id: "input"[\s\S]*?label: "Input"[\s\S]*?editorMode: "markdown"[\s\S]*?id: "expectedOutput"[\s\S]*?label: "Expected Output"[\s\S]*?editorMode: "markdown"[\s\S]*?id: "evaluationGuidance"[\s\S]*?label: "Evaluator Guidance"[\s\S]*?editorMode: "markdown"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /markdownEditor: \{[\s\S]*?historyKey: "evaluation-case:" \+ draft\.id \+ ":" \+ activeFileId/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /evaluationCaseCodeEditorComponent|React\.createElement\(PlatformInstructionsEditor/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /React\.createElement\("section", \{[\s\S]*?className: "playground-evaluations-dataset-case-configuration"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /React\.createElement\(PlatformPermissionHelpTooltip,[\s\S]*?ariaLabel: "About optimization role"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /React\.createElement\(PlatformPermissionHelpTooltip,[\s\S]*?ariaLabel: "About runs per evaluation"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /title: typeof row\?\.title === "string" \? row\.title : normalized\.title/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /description: typeof row\?\.description === "string" \? row\.description : normalized\.description/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /handleEvaluationCaseSaveShortcut[\s\S]*?saveEvaluationCaseEditor\(event\)[\s\S]*?addEventListener\("keydown", handleEvaluationCaseSaveShortcut, true\)/);
+const {
+  buildEvaluationCaseEditorDraft: buildClientEvaluationCaseEditorDraft,
+} = new Function(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.foundation
+  + EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases
+  + "; return { buildEvaluationCaseEditorDraft };",
+)();
+const whitespacePreservingCaseDraft = buildClientEvaluationCaseEditorDraft({
+  title: "Case title ",
+  description: "Case description ",
+});
+assert.equal(whitespacePreservingCaseDraft.title, "Case title ");
+assert.equal(whitespacePreservingCaseDraft.description, "Case description ");
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /ariaLabel: "Select case optimization role"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /value: "train"[\s\S]*?value: "validation"[\s\S]*?value: "holdout"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /normalizedMode === "dataset-case" \? renderEvaluationDatasetCaseDetail\(\)/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /renderEvaluationCaseEditorModal\(\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /isEvaluationDatasetCasePage && evaluationTopNavActionsContainer[\s\S]*?"Save Changes"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /function openEvaluationCaseEditor[\s\S]*?setEvaluationsPageMode\("dataset-case"\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /function saveEvaluationCaseEditor/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /isEvaluationCaseEditorDirty\(evaluationCaseEditorState\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /React\.createElement\(PlatformUiCard/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /function renderEvaluationCaseGuidanceTitle/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /Evaluator guidance information/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /accept: "\.txt,text\/plain"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /const normalizedRunEvaluator = normalizePlaygroundEvaluationEvaluator\(run\?\.evaluator\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /normalizedRunEvaluator\.type === "agent" && !normalizedRunEvaluator\.agentId/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /accessor: \(\) => runEvaluatorLabel/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /cell: \(\) => renderRunEvaluatorCell\(\)/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /playground-evaluations-case-source-grid/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /playground-evaluations-case-focused-editor/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /ariaLabel: "Select case optimization role"/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /value: "train"[\s\S]*?value: "validation"[\s\S]*?value: "holdout"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /getPlaygroundEvaluationOptimizationRoleLabel\(optimizationRole\)/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /playground-evaluations-case-focused-editor",[\s\S]*?autoFocus: true/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /React\.createElement\(ArrowLeft/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /onClick: returnFromEvaluationCaseFocusedEditor/);
-assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /description: focusedEditor\.description/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /function returnFromEvaluationCaseFocusedEditor/);
-assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /"Discard"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /React\.createElement\(PlatformVersionHistorySidebar/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /React\.createElement\(PlatformVersionPublishControl/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /React\.createElement\(PlatformVersionSaveDialog/);
@@ -531,6 +602,19 @@ assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationIm
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /accept: "\.jsonl,application\/x-ndjson,application\/jsonl"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /onClick: openEvaluationJsonlFilePicker/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /onClick: \(\) => openEvaluationJsonlWorkspacePicker\(set\)/);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables,
+  /function renderDataTable\(set\)[\s\S]*?React\.createElement\(PlatformDataTable, \{[\s\S]*?ariaLabel: "Evaluation dataset cases"[\s\S]*?variant: "minimalistic-ui"/,
+);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables,
+  /ariaLabel: "Evaluation dataset cases"[\s\S]*?toolbar: \{[\s\S]*?title: "Cases"[\s\S]*?trailing: caseToolbarActions/,
+);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /playground-evaluations-case-preview-list/);
+assert.match(
+  EVALUATIONS_STYLE_FRAGMENTS.tables,
+  /\.playground-evaluations-dataset-cases-platform-table \{[\s\S]*?--platform-data-table-surface: transparent;/,
+);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /title: "No evaluation runs yet"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /title: "Run history is unavailable"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /icon: ChartColumnIncreasing/);
@@ -585,11 +669,12 @@ assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyCapture, /evaluationRunId/)
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.page === "evaluations"/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.lifecycle, /selectedEvaluationSetId/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderEvaluationsPageNav/);
-assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Evaluations",\s*onClick: openEvaluationsOverviewPage/);
+assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Evaluations",[\s\S]*?onClick: \(\) => requestPlatformNavigation\(openEvaluationsOverviewPage\)/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /evaluationsPageMode === "run" \|\| evaluationsPageMode === "case"/);
-assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /onClick: evaluationsPageMode === "run" \|\| evaluationsPageMode === "case"\s*\? \(\) => openEvaluationDetailPage\(activeEvaluationSet\.id\)/);
+assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /onClick: evaluationsPageMode === "run" \|\| evaluationsPageMode === "case" \|\| isEvaluationDatasetCase[\s\S]*?requestPlatformNavigation/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /setSelectedEvaluationCaseId\(""\);[\s\S]*?setEvaluationsPageMode\("run"\)/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /evaluationsPathItems\.push\(\{ label: activeEvaluationCaseTitle \}\)/);
+assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /evaluationsPathItems\.push\(\{ label: activeEvaluationDatasetCaseTitle \}\)/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-evaluations-overview-controls/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformVersionLabel/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /setEvaluationVersionsSidebarRequestToken/);
@@ -597,7 +682,7 @@ assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /id: "playground-ev
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /id: "playground-evaluation-run-breadcrumb-actions"/);
 assert.match(
   EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation,
-  /center: showEvaluationSetActions[\s\S]*?React\.createElement\(PlatformSwitch,[\s\S]*?\{ value: "general", label: "General" \},[\s\S]*?\{ value: "cases", label: "Cases" \},[\s\S]*?\{ value: "settings", label: "Settings" \},[\s\S]*?ariaLabel: "Evaluation section"/,
+  /center: isEvaluationDatasetCase[\s\S]*?\{ value: "code", label: "Code" \},[\s\S]*?\{ value: "settings", label: "Settings" \},[\s\S]*?showEvaluationSetActions[\s\S]*?\{ value: "general", label: "General" \},[\s\S]*?\{ value: "cases", label: "Cases" \},[\s\S]*?\{ value: "settings", label: "Settings" \},[\s\S]*?ariaLabel: "Evaluation section"/,
 );
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /setEvaluationDetailTab\("cases"\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /function handleDeleteEvaluations\(setIds\)/);
@@ -606,6 +691,7 @@ assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /function renderEvaluati
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /versionsSidebarRequestToken: evaluationVersionsSidebarRequestToken/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /breadcrumbActionsPortalId: evaluationsPageMode === "detail"/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /evaluationsPageMode === "run"[\s\S]*?"playground-evaluation-run-breadcrumb-actions"/);
+assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /evaluationsPageMode === "dataset-case"[\s\S]*?"playground-evaluation-case-nav-actions"/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /onNavigationGuardChange: registerPlatformNavigationGuard/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /onNavigationRequest: requestPlatformNavigation/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "evaluations"/);

@@ -9,20 +9,27 @@ import {
   XCircle,
 } from "lucide-react";
 import { createPortal } from "react-dom";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { PlatformAnalyticsSection } from "../../../../../platform-ui/components/composite/analytics/index.js";
 import {
   PlatformDataTable,
   type PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
-import { PlatformDetailSidebarSection } from "../../../../../platform-ui/components/composite/detail-sidebar/index.js";
 import {
   PlatformSettingsSection,
   PlatformSettingsSectionList,
 } from "../../../../../platform-ui/components/composite/settings-section/index.js";
 import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
-import { PlatformSecondaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
-import { ResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
+import {
+  PlatformPrimaryButton,
+  PlatformSecondaryButton,
+} from "../../../../../platform-ui/components/ui/button/index.js";
+import {
+  PlatformServiceDetailPage,
+  PlatformServiceDetailProperty,
+  PlatformServiceDetailPropertyList,
+} from "../../../../../platform-ui/pages/details/index.js";
 import type {
   TestCaseResult,
   TestPlan,
@@ -30,8 +37,6 @@ import type {
   TestRunArtifact,
   TestWorkspaceResourceOption,
 } from "../domain/index.js";
-
-type TestRunTab = "results" | "evidence";
 
 interface TestRunDetailPageProps {
   run: TestRun;
@@ -42,6 +47,7 @@ interface TestRunDetailPageProps {
   controlsPortalId?: string;
   refreshing?: boolean;
   onRefresh: () => void;
+  onRunAgain: () => void;
 }
 
 function formatTimestamp(value: string | null | undefined): string {
@@ -93,15 +99,6 @@ function usePortalTarget(id: string | undefined): HTMLElement | null {
   return target;
 }
 
-function PropertyRow({ label, children }: { label: ReactNode; children: ReactNode }) {
-  return (
-    <div className="tests-sidebar-property">
-      <span>{label}</span>
-      <strong>{children}</strong>
-    </div>
-  );
-}
-
 export function TestRunDetailPage({
   run,
   plan,
@@ -111,8 +108,8 @@ export function TestRunDetailPage({
   controlsPortalId,
   refreshing = false,
   onRefresh,
+  onRunAgain,
 }: TestRunDetailPageProps) {
-  const [activeTab, setActiveTab] = useState<TestRunTab>("results");
   const portalTarget = usePortalTarget(controlsPortalId);
   const results = Array.isArray(run.results) ? run.results : [];
   const artifacts = Array.isArray(run.artifacts) ? run.artifacts : [];
@@ -255,6 +252,103 @@ export function TestRunDetailPage({
     [],
   );
 
+  const resultAnalytics = {
+    ariaLabel: "Test run analytics",
+    metrics: [
+      {
+        id: "total",
+        label: "Cases",
+        value: String(run.totalCount),
+        color: "#8fc4ff",
+      },
+      {
+        id: "passed",
+        label: "Passed",
+        value: String(run.passedCount),
+        color: "#9ff6ce",
+      },
+      {
+        id: "failed",
+        label: "Failed",
+        value: String(run.failedCount + run.errorCount),
+        color: "#ff9b9b",
+      },
+      {
+        id: "duration",
+        label: "Duration",
+        value: formatDuration(run.durationMs),
+        color: "#7657ff",
+      },
+    ],
+    labels: results.map((result) => result.name),
+    hasData: results.length > 0,
+    series: [
+      {
+        id: "outcome",
+        label: "Case outcome",
+        values: results.map((result) => result.status === "passed" ? 100 : 0),
+        color: "#8fc4ff",
+        valueKind: "percent" as const,
+      },
+      {
+        id: "duration",
+        label: "Duration",
+        values: results.map((result) => Math.max(0, Number(result.durationMs) || 0)),
+        color: "#9ff6ce",
+        axis: "secondary" as const,
+        valueKind: "duration" as const,
+      },
+    ],
+  };
+  const properties = (
+    <PlatformServiceDetailPropertyList>
+      <PlatformServiceDetailProperty label="Status">
+        <span className={`tests-status-label is-${run.status}`}>
+          {formatStatus(run.status)}
+        </span>
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Environment">
+        {environmentLabel}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Executor">
+        {agentLabel}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Project">
+        {projectLabel}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Trigger">
+        {formatStatus(run.triggerType)}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Evidence">
+        <span className={`tests-status-label ${trustedEvidence ? "is-passed" : "is-warning"}`}>
+          {trustedEvidence ? "Worker verified" : "Self-reported"}
+        </span>
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Plan version" title={run.versionId || ""}>
+        {run.versionId || "Unknown"}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Commit" title={run.commitSha || ""}>
+        {run.commitSha || "Not pinned"}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Thread" title={executorThreadId}>
+        {executorThreadId || "Pending"}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Started">
+        {formatTimestamp(run.startedAt)}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Duration">
+        {formatDuration(run.durationMs)}
+      </PlatformServiceDetailProperty>
+      <PlatformPrimaryButton
+        size="small"
+        fullWidth
+        className="tests-detail-run-button"
+        onClick={onRunAgain}
+      >
+        Run Again
+      </PlatformPrimaryButton>
+    </PlatformServiceDetailPropertyList>
+  );
   const headerActions = (
     <PlatformSecondaryButton
       size="small"
@@ -274,143 +368,23 @@ export function TestRunDetailPage({
   return (
     <>
       {portalTarget ? createPortal(headerActions, portalTarget) : null}
-      <ResourceDetailPage<TestRunTab>
-        tabs={[
-          { id: "results", label: "Results" },
-          { id: "evidence", label: "Evidence" },
-        ]}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        sidebar={(
-          <>
-            <PlatformDetailSidebarSection title="Run details">
-              <div className="tests-sidebar-properties">
-                <PropertyRow label="Status">
-                  <span className={`tests-status-label is-${run.status}`}>
-                    {formatStatus(run.status)}
-                  </span>
-                </PropertyRow>
-                <PropertyRow label="Project">{projectLabel}</PropertyRow>
-                <PropertyRow label="Environment">{environmentLabel}</PropertyRow>
-                <PropertyRow label="Executor">{agentLabel}</PropertyRow>
-                <PropertyRow label="Trigger">{formatStatus(run.triggerType)}</PropertyRow>
-                <PropertyRow label="Attempt">{run.execution?.attempt || 1}</PropertyRow>
-                <PropertyRow label="Started">{formatTimestamp(run.startedAt)}</PropertyRow>
-                <PropertyRow label="Duration">{formatDuration(run.durationMs)}</PropertyRow>
-              </div>
-            </PlatformDetailSidebarSection>
-            <PlatformDetailSidebarSection title="Traceability">
-              <div className="tests-sidebar-properties">
-                <PropertyRow label="Plan version">{run.versionId || "Unknown"}</PropertyRow>
-                <PropertyRow label="Commit">{run.commitSha || "Not pinned"}</PropertyRow>
-                <PropertyRow label="Task">{run.taskId || "Not linked"}</PropertyRow>
-                <PropertyRow label="Release">{run.releaseId || "Not linked"}</PropertyRow>
-                <PropertyRow label="Executor thread">{executorThreadId || "Pending"}</PropertyRow>
-                <PropertyRow label="Evidence trust">
-                  <span className={`tests-status-label ${trustedEvidence ? "is-passed" : "is-warning"}`}>
-                    {trustedEvidence ? "Worker verified" : "Self-reported"}
-                  </span>
-                </PropertyRow>
-              </div>
-            </PlatformDetailSidebarSection>
-          </>
-        )}
+      <PlatformServiceDetailPage
+        variant="run"
+        properties={properties}
         ariaLabel={`${plan.name} test run`}
-        tabAriaLabel="Test run sections"
         sidebarAriaLabel="Test run information"
         className="tests-detail-page is-run"
-        tabBarClassName="tests-detail-tabs"
         contentClassName="tests-detail-content"
         sidebarClassName="tests-detail-sidebar"
+        propertiesCardClassName="tests-detail-sidebar-card"
       >
-        {activeTab === "results" ? (
-          <div className="tests-detail-stack">
-            <div className="tests-kpi-grid">
-              <PlatformUiCard as="article" className="tests-kpi-card">
-                <span>Total</span>
-                <strong>{run.totalCount}</strong>
-                <small>Final case results</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="tests-kpi-card is-success">
-                <span>Passed</span>
-                <strong>{run.passedCount}</strong>
-                <small>Verified successfully</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="tests-kpi-card is-danger">
-                <span>Failed</span>
-                <strong>{run.failedCount + run.errorCount}</strong>
-                <small>{run.errorCount} execution errors</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="tests-kpi-card">
-                <span>Duration</span>
-                <strong>{formatDuration(run.durationMs)}</strong>
-                <small>{run.skippedCount} skipped</small>
-              </PlatformUiCard>
-            </div>
-
-            <PlatformDataTable
-              rows={results}
-              columns={resultColumns}
-              getRowId={(result) => result.id}
-              ariaLabel="Test case results"
-              className="tests-results-table"
-              variant="minimalistic-ui"
-              surface="plain"
-              sticky={false}
-              pagination={false}
-              sorting={{ defaultValue: { id: "case", direction: "asc" } }}
-              emptyState={(
-                <PlatformEmptyState
-                  icon={Clock3}
-                  title={["queued", "running"].includes(run.status) ? "Test execution in progress" : "No case results"}
-                  description={
-                    ["queued", "running"].includes(run.status)
-                      ? "The durable worker will add case-level evidence as execution completes."
-                      : "This run did not retain case-level results."
-                  }
-                />
-              )}
-            />
-
-            {results.length > 0 ? (
-              <PlatformSettingsSectionList>
-                {results.map((result) => (
-                  <PlatformSettingsSection
-                    key={result.id}
-                    title={result.name}
-                    description={result.summary || `${formatStatus(result.status)} on attempt ${result.attempt}.`}
-                    icon={result.status === "passed"
-                      ? <CheckCircle2 width={17} height={17} />
-                      : <XCircle width={17} height={17} />}
-                  >
-                    <div className="tests-result-evidence-grid">
-                      <div>
-                        <span>Command</span>
-                        <pre>{String(result.evidence?.command || "Not recorded")}</pre>
-                      </div>
-                      <div>
-                        <span>Standard output</span>
-                        <pre>{String(result.evidence?.stdout || "No output retained")}</pre>
-                      </div>
-                      <div>
-                        <span>Standard error</span>
-                        <pre>{String(result.evidence?.stderr || "No error output retained")}</pre>
-                      </div>
-                      <div>
-                        <span>Diagnostics</span>
-                        <pre>{JSON.stringify(result.diagnostics || {}, null, 2)}</pre>
-                      </div>
-                    </div>
-                  </PlatformSettingsSection>
-                ))}
-              </PlatformSettingsSectionList>
-            ) : null}
-          </div>
-        ) : null}
-
-        {activeTab === "evidence" ? (
-          <div className="tests-detail-stack">
-            <div className={`tests-evidence-banner ${fingerprint && !trustedEvidence ? "is-untrusted" : ""}`}>
+        <div className="tests-detail-stack">
+          <PlatformUiCard
+            as="section"
+            cardTitle="Execution evidence"
+            className={`tests-run-evidence-card ${fingerprint && !trustedEvidence ? "is-untrusted" : trustedEvidence ? "is-trusted" : "is-pending"}`}
+          >
+            <div className="tests-evidence-banner-copy">
               <ShieldCheck width={21} height={21} aria-hidden="true" />
               <div>
                 <strong>
@@ -429,20 +403,94 @@ export function TestRunDetailPage({
                 </span>
               </div>
             </div>
+            <dl className="tests-run-evidence-grid">
+              <div><dt>Evidence</dt><dd title={fingerprint}>{fingerprint || "Pending"}</dd></div>
+              <div><dt>Plan</dt><dd title={planFingerprint}>{planFingerprint || plan.planFingerprint || "Unknown"}</dd></div>
+              <div><dt>Trust</dt><dd>{formatStatus(evidenceTrustLevel)}</dd></div>
+              <div><dt>Verification</dt><dd>{formatStatus(evidenceVerificationStatus)}</dd></div>
+            </dl>
+          </PlatformUiCard>
+
+          <PlatformAnalyticsSection
+            variant="default"
+            title="Analytics"
+            analytics={resultAnalytics}
+            className="tests-detail-analytics"
+            showXAxisLabels
+          />
+
+          <PlatformDataTable
+            rows={results}
+            columns={resultColumns}
+            getRowId={(result) => result.id}
+            ariaLabel="Test case results"
+            className="tests-results-table"
+            variant="minimalistic-ui"
+            surface="plain"
+            sticky={false}
+            pagination={false}
+            sorting={{ defaultValue: { id: "case", direction: "asc" } }}
+            emptyState={(
+              <PlatformEmptyState
+                icon={Clock3}
+                title={["queued", "running"].includes(run.status) ? "Test execution in progress" : "No case results"}
+                description={
+                  ["queued", "running"].includes(run.status)
+                    ? "The durable worker will add case-level evidence as execution completes."
+                    : "This run did not retain case-level results."
+                }
+              />
+            )}
+          />
+
+          {results.length > 0 ? (
             <PlatformSettingsSectionList>
-              <PlatformSettingsSection title="Evidence identity">
-                <dl className="tests-evidence-identity">
-                  <div><dt>Run fingerprint</dt><dd>{fingerprint || "Pending"}</dd></div>
-                  <div><dt>Plan fingerprint</dt><dd>{planFingerprint || plan.planFingerprint || "Unknown"}</dd></div>
-                  <div><dt>Published version</dt><dd>{run.versionId || "Unknown"}</dd></div>
-                  <div><dt>Commit SHA</dt><dd>{run.commitSha || "Not pinned"}</dd></div>
-                  <div><dt>Evidence source</dt><dd>{formatStatus(String(provenance.source || "legacy import"))}</dd></div>
-                  <div><dt>Trust level</dt><dd>{formatStatus(evidenceTrustLevel)}</dd></div>
-                  <div><dt>Verification</dt><dd>{formatStatus(evidenceVerificationStatus)}</dd></div>
-                  <div><dt>Attestation</dt><dd>{String(attestation.attestationId || "None")}</dd></div>
-                  <div><dt>Generated</dt><dd>{formatTimestamp(String(run.evidence?.generatedAt || run.completedAt || ""))}</dd></div>
-                </dl>
-              </PlatformSettingsSection>
+              {results.map((result) => (
+                <PlatformSettingsSection
+                  key={result.id}
+                  title={result.name}
+                  description={result.summary || `${formatStatus(result.status)} on attempt ${result.attempt}.`}
+                  icon={result.status === "passed"
+                    ? <CheckCircle2 width={17} height={17} />
+                    : <XCircle width={17} height={17} />}
+                >
+                  <div className="tests-result-evidence-grid">
+                    <div>
+                      <span>Command</span>
+                      <pre>{String(result.evidence?.command || "Not recorded")}</pre>
+                    </div>
+                    <div>
+                      <span>Standard output</span>
+                      <pre>{String(result.evidence?.stdout || "No output retained")}</pre>
+                    </div>
+                    <div>
+                      <span>Standard error</span>
+                      <pre>{String(result.evidence?.stderr || "No error output retained")}</pre>
+                    </div>
+                    <div>
+                      <span>Diagnostics</span>
+                      <pre>{JSON.stringify(result.diagnostics || {}, null, 2)}</pre>
+                    </div>
+                  </div>
+                </PlatformSettingsSection>
+              ))}
+            </PlatformSettingsSectionList>
+          ) : null}
+
+          <PlatformSettingsSectionList>
+            <PlatformSettingsSection title="Evidence identity">
+              <dl className="tests-evidence-identity">
+                <div><dt>Run fingerprint</dt><dd>{fingerprint || "Pending"}</dd></div>
+                <div><dt>Plan fingerprint</dt><dd>{planFingerprint || plan.planFingerprint || "Unknown"}</dd></div>
+                <div><dt>Published version</dt><dd>{run.versionId || "Unknown"}</dd></div>
+                <div><dt>Commit SHA</dt><dd>{run.commitSha || "Not pinned"}</dd></div>
+                <div><dt>Evidence source</dt><dd>{formatStatus(String(provenance.source || "legacy import"))}</dd></div>
+                <div><dt>Trust level</dt><dd>{formatStatus(evidenceTrustLevel)}</dd></div>
+                <div><dt>Verification</dt><dd>{formatStatus(evidenceVerificationStatus)}</dd></div>
+                <div><dt>Attestation</dt><dd>{String(attestation.attestationId || "None")}</dd></div>
+                <div><dt>Generated</dt><dd>{formatTimestamp(String(run.evidence?.generatedAt || run.completedAt || ""))}</dd></div>
+              </dl>
+            </PlatformSettingsSection>
               <PlatformSettingsSection
                 title="Artifacts"
                 description="Durable logs, screenshots, traces, and reports produced by this run."
@@ -472,10 +520,9 @@ export function TestRunDetailPage({
               >
                 <pre className="tests-evidence-json">{JSON.stringify(run.evidence || {}, null, 2)}</pre>
               </PlatformSettingsSection>
-            </PlatformSettingsSectionList>
-          </div>
-        ) : null}
-      </ResourceDetailPage>
+          </PlatformSettingsSectionList>
+        </div>
+      </PlatformServiceDetailPage>
     </>
   );
 }

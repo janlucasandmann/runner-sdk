@@ -69,7 +69,11 @@ export const FILES_CONTENT_CSS = `
         overflow: hidden;
       }
 
-      .playground-files-browser-body.is-changes-view {
+      .playground-files-page .playground-files-browser-body.is-changes-view {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
         overflow: hidden;
       }
 

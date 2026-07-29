@@ -968,6 +968,7 @@
               gmail: gmailStatus,
               "one-drive": oneDriveStatus,
               notion: notionStatus,
+              jira: jiraStatus,
             };
             if (Object.hasOwn(reusablePluginStatuses, pluginId)) {
               return getPlatformPluginConnectionIdentity(pluginId, reusablePluginStatuses[pluginId]);
@@ -979,6 +980,19 @@
           }
   
   	        function getPluginStaticDetail(pluginId) {
+              const catalogEntry = getPlatformConnectorCatalogEntry(pluginId);
+              if (catalogEntry) {
+                return {
+                  categoryLabel: catalogEntry.categoryLabel,
+                  functionsLabel: catalogEntry.functionsLabel,
+                  samplePrompt: catalogEntry.samplePrompt,
+                  whenToUse: catalogEntry.whenToUse,
+                  websiteUrl: catalogEntry.websiteUrl,
+                  termsUrl: catalogEntry.termsUrl,
+                  privacyUrl: catalogEntry.privacyUrl,
+                  features: catalogEntry.features,
+                };
+              }
   	          switch (String(pluginId || "").trim().toLowerCase()) {
               case "github":
                 return {
@@ -1129,6 +1143,111 @@
                 };
   	          }
   	        }
+
+            function getPluginFunctionCatalog(pluginId) {
+              const sharedCatalog = PLATFORM_CONNECTOR_CAPABILITIES[
+                String(pluginId || "").trim().toLowerCase()
+              ];
+              if (Array.isArray(sharedCatalog)) {
+                return sharedCatalog;
+              }
+              const catalogs = {
+                gitlab: [
+                  { id: "read_merge_request_context", title: "read_merge_request_context", description: "Read merge request metadata carried by a webhook event.", access: "read-only", iconKey: "skill" },
+                  { id: "receive_webhook_event", title: "receive_webhook_event", description: "Receive push, merge request, note, and pipeline events.", access: "interactive", iconKey: "workflow" },
+                  { id: "start_thread_from_event", title: "start_thread_from_event", description: "Start an agent thread from an accepted GitLab event.", access: "interactive", iconKey: "workflow" },
+                  { id: "post_merge_request_comment", title: "post_merge_request_comment", description: "Post a structured follow-up to a merge request.", access: "interactive", iconKey: "workflow" },
+                ],
+                notion: [
+                  { id: "search_pages", title: "search_pages", description: "Search connected Notion pages by title and content.", access: "read-only", iconKey: "skill" },
+                  { id: "retrieve_page", title: "retrieve_page", description: "Retrieve the content and properties of a Notion page.", access: "read-only", iconKey: "skill" },
+                  { id: "query_database", title: "query_database", description: "Query records from a connected Notion database.", access: "read-only", iconKey: "skill" },
+                  { id: "retrieve_database", title: "retrieve_database", description: "Retrieve a Notion database schema and metadata.", access: "read-only", iconKey: "skill" },
+                ],
+                "google-drive": [
+                  { id: "list_files", title: "list_files", description: "List files and folders from the connected Drive account.", access: "read-only", iconKey: "skill" },
+                  { id: "get_file_metadata", title: "get_file_metadata", description: "Read metadata for a selected Google Drive file.", access: "read-only", iconKey: "skill" },
+                  { id: "download_file", title: "download_file", description: "Download an authorized Drive file for agent context.", access: "read-only", iconKey: "skill" },
+                  { id: "import_file_to_workspace", title: "import_file_to_workspace", description: "Import a selected Drive file into the active workspace.", access: "interactive", iconKey: "workflow" },
+                ],
+                gmail: [
+                  { id: "search_messages", title: "search_messages", description: "Search messages in the connected Gmail account.", access: "read-only", iconKey: "skill" },
+                  { id: "get_message_thread", title: "get_message_thread", description: "Retrieve a Gmail conversation and its message context.", access: "read-only", iconKey: "skill" },
+                  { id: "send_message", title: "send_message", description: "Send an approved message from the connected Gmail account.", access: "interactive", iconKey: "workflow" },
+                  { id: "reply_to_thread", title: "reply_to_thread", description: "Reply to an existing Gmail conversation.", access: "interactive", iconKey: "workflow" },
+                ],
+                "one-drive": [
+                  { id: "list_drive_items", title: "list_drive_items", description: "List files and folders from the connected OneDrive account.", access: "read-only", iconKey: "skill" },
+                  { id: "get_drive_item", title: "get_drive_item", description: "Retrieve metadata for a selected OneDrive item.", access: "read-only", iconKey: "skill" },
+                  { id: "download_drive_item", title: "download_drive_item", description: "Download an authorized OneDrive file for agent context.", access: "read-only", iconKey: "skill" },
+                  { id: "import_drive_item", title: "import_drive_item", description: "Import a selected OneDrive item into the active workspace.", access: "interactive", iconKey: "workflow" },
+                ],
+                discord: [
+                  { id: "get_run_status", title: "get_run_status", description: "Read the current status of an agent run.", access: "read-only", iconKey: "skill" },
+                  { id: "list_agents", title: "list_agents", description: "List agents available to the connected Discord identity.", access: "read-only", iconKey: "skill" },
+                  { id: "list_environments", title: "list_environments", description: "List environments available for externally started work.", access: "read-only", iconKey: "skill" },
+                  { id: "start_thread_from_command", title: "start_thread_from_command", description: "Start an agent thread from a Discord command or message.", access: "interactive", iconKey: "channel" },
+                  { id: "continue_thread", title: "continue_thread", description: "Continue an existing agent thread from Discord.", access: "interactive", iconKey: "channel" },
+                  { id: "send_run_update", title: "send_run_update", description: "Deliver run progress and completion updates to Discord.", access: "interactive", iconKey: "channel" },
+                ],
+                telegram: [
+                  { id: "get_run_status", title: "get_run_status", description: "Read the current status of an agent run.", access: "read-only", iconKey: "skill" },
+                  { id: "list_agents", title: "list_agents", description: "List agents available to the connected Telegram identity.", access: "read-only", iconKey: "skill" },
+                  { id: "list_environments", title: "list_environments", description: "List environments available for externally started work.", access: "read-only", iconKey: "skill" },
+                  { id: "start_thread_from_message", title: "start_thread_from_message", description: "Start an agent thread from a Telegram message.", access: "interactive", iconKey: "channel" },
+                  { id: "continue_thread", title: "continue_thread", description: "Continue an existing agent thread from Telegram.", access: "interactive", iconKey: "channel" },
+                  { id: "send_run_update", title: "send_run_update", description: "Deliver run progress and completion updates to Telegram.", access: "interactive", iconKey: "channel" },
+                ],
+                email: [
+                  { id: "resolve_agent_recipient", title: "resolve_agent_recipient", description: "Resolve an agent inbox address to the correct agent.", access: "read-only", iconKey: "skill" },
+                  { id: "start_thread_from_email", title: "start_thread_from_email", description: "Start an agent thread from an incoming email.", access: "interactive", iconKey: "channel" },
+                  { id: "continue_thread_by_reply", title: "continue_thread_by_reply", description: "Continue the existing thread when the sender replies.", access: "interactive", iconKey: "channel" },
+                  { id: "ingest_email_attachments", title: "ingest_email_attachments", description: "Attach incoming email files to the current agent turn.", access: "interactive", iconKey: "workflow" },
+                  { id: "send_run_summary", title: "send_run_summary", description: "Send the latest run summary back to the originating email thread.", access: "interactive", iconKey: "channel" },
+                ],
+              };
+              return catalogs[String(pluginId || "").trim().toLowerCase()] || [];
+            }
+
+            function getPluginConcreteFunctions(plugin) {
+              const providedFunctions = [
+                plugin?.functions,
+                plugin?.includedFunctions,
+                plugin?.tools,
+              ].find((value) => Array.isArray(value) && value.length);
+              const functions = providedFunctions || getPluginFunctionCatalog(plugin?.id);
+              return functions.map((item, index) => {
+                const id = String(item?.id || item?.name || item?.title || index).trim();
+                const access = item?.access === "read-only"
+                  || item?.readOnly === true
+                  || item?.interactive === false
+                  ? "read-only"
+                  : "interactive";
+                return {
+                  ...item,
+                  id,
+                  title: String(item?.title || item?.name || id || "function"),
+                  description: String(item?.description || item?.summary || ""),
+                  access,
+                };
+              });
+            }
+
+            function renderPluginFunctionAccessLabels(functions) {
+              const hasInteractive = functions.some((item) => item.access !== "read-only");
+              const hasReadOnly = functions.some((item) => item.access === "read-only");
+              if (!hasInteractive && !hasReadOnly) {
+                return "None";
+              }
+              return React.createElement("div", { className: "tag-detail-page__function-access-labels" },
+                hasInteractive
+                  ? React.createElement(PlatformLabel, { variant: "gray" }, "Interactive")
+                  : null,
+                hasReadOnly
+                  ? React.createElement(PlatformLabel, { variant: "gray" }, "Read only")
+                  : null
+              );
+            }
   
   	        function getPluginIntegrationManifest(pluginId) {
   	          const normalizedId = String(pluginId || "").trim().toLowerCase();
@@ -1434,6 +1553,25 @@
                   ? [{ label: "Disconnect OneDrive", onClick: () => { void handleOneDriveAuthDisconnect(); }, tone: "destructive" }]
                   : [{ label: "Connect OneDrive", onClick: () => { void handleOneDriveAuthConnect(); }, tone: "primary" }],
               },
+              {
+                id: "jira",
+                label: "Jira",
+                shortLabel: "JR",
+                logoUrl: getPlatformConnectorCatalogEntry("jira")?.logoUrl,
+                description: "Plan, inspect, and update Jira projects, issues, comments, worklogs, and sprints.",
+                connected: Boolean(jiraStatus?.connected),
+                statusCopy: getPluginConnectionSummary("jira"),
+                category: "Project management",
+                ...getPluginStaticDetail("jira"),
+                capabilities: [
+                  "Search and inspect projects, issues, fields, users, and agile boards.",
+                  "Create and update issues, comments, worklogs, links, and sprint assignments.",
+                  "Route every Jira action through connector-specific organization access policies.",
+                ],
+                actions: jiraStatus?.connected
+                  ? [{ label: "Disconnect Jira", onClick: () => { void handleJiraAuthDisconnect(); }, tone: "destructive" }]
+                  : [{ label: "Connect Jira", onClick: () => { void handleJiraAuthConnect(); }, tone: "primary" }],
+              },
             ];
           }
   
@@ -1589,6 +1727,12 @@
           function getTagPluginPermissionSubjectTypes(tagId, requestedKind = "") {
             const normalizedTagId = String(tagId || "").trim().toLowerCase();
             const normalizedKind = String(requestedKind || "").trim().toLowerCase();
+            const connectorSubjectTypes = getPlatformConnectorPermissionSubjectTypes(
+              normalizedTagId,
+            );
+            if (connectorSubjectTypes) {
+              return connectorSubjectTypes;
+            }
             const isTag = normalizedKind === "tag"
               || (normalizedKind !== "plugin" && ["email", "discord", "telegram"].includes(normalizedTagId));
             return isTag
@@ -1598,7 +1742,57 @@
 
           function getTagPluginAccessActionDefinitions(resourceId, subjectType) {
             const normalizedResourceId = String(resourceId || "").trim().toLowerCase();
-            const normalizedSubjectType = subjectType === "tag" ? "tag" : "plugin";
+            const catalogEntry = getPlatformConnectorCatalogEntry(normalizedResourceId);
+            const normalizedSubjectType = String(
+              subjectType
+              || catalogEntry?.permissionSubjectType
+              || (catalogEntry?.kind === "tag" ? "tag" : "plugin"),
+            ).trim();
+            if (catalogEntry) {
+              const administrativeActionIds = catalogEntry.kind === "tag"
+                ? [
+                    "tag_view",
+                    "tag_activity_view",
+                    "tag_connection_manage",
+                    "tag_access_manage",
+                    "tag_disconnect",
+                  ]
+                : [
+                    "plugin_view",
+                    "plugin_activity_view",
+                    "plugin_connection_manage",
+                    "plugin_access_manage",
+                    "plugin_disconnect",
+                  ];
+              const administrativeActions = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter(
+                (action) =>
+                  administrativeActionIds.includes(action.id)
+                  && Array.isArray(action.subjectTypes)
+                  && action.subjectTypes.includes(normalizedSubjectType)
+              );
+              const capabilityActions = catalogEntry.capabilities.flatMap(
+                (capability) => {
+                  const actionId = getPlatformConnectorPermissionActionId(
+                    normalizedResourceId,
+                    capability.id,
+                  );
+                  const canonicalAction = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.find(
+                    (action) =>
+                      action.id === actionId
+                      && Array.isArray(action.subjectTypes)
+                      && action.subjectTypes.includes(normalizedSubjectType)
+                  );
+                  return canonicalAction
+                    ? [{
+                        ...canonicalAction,
+                        label: capability.title,
+                        description: capability.description,
+                      }]
+                    : [];
+                },
+              );
+              return [...administrativeActions, ...capabilityActions];
+            }
             const pluginActionIdsByResource = {
               github: [
                 "plugin_view",
@@ -1695,6 +1889,7 @@
               defaultProjectId: "",
               defaultProjectName: "",
               instructions: "",
+              credentials: [],
               permissionSet: createPlaygroundFullAccessPermissionSet(subjectType),
               accessControl: {},
               updatedAt: "",
@@ -1722,6 +1917,7 @@
               defaultAgentId: String(source.defaultAgentId || ""),
               defaultAgentName: String(source.defaultAgentName || ""),
               instructions: String(source.instructions || ""),
+              credentials: normalizePlatformConnectionCredentials(source.credentials),
               permissionSet: normalizePlaygroundPermissionSet(permissionSetSource, subjectType),
               accessControl: source.accessControl && typeof source.accessControl === "object" && !Array.isArray(source.accessControl)
                 ? source.accessControl
@@ -1773,6 +1969,7 @@
                   defaultProjectName: config.defaultProjectName || "",
                   defaultAgentId: config.defaultAgentId || "",
                   defaultAgentName: config.defaultAgentName || "",
+                  credentials: normalizePlatformConnectionCredentials(config.credentials),
                   permissionSet: normalizePlaygroundPermissionSet(config.permissionSet, subjectType),
                   accessControl: config.accessControl && typeof config.accessControl === "object"
                     ? config.accessControl
@@ -1783,7 +1980,12 @@
               if (!response.ok) {
                 throw new Error(data?.error || data?.message || "Failed to save tag settings.");
               }
-              const normalized = normalizeTagDetailConfig(normalizedTagId, data);
+              const normalized = normalizeTagDetailConfig(normalizedTagId, {
+                ...data,
+                credentials: Array.isArray(data?.credentials)
+                  ? data.credentials
+                  : config.credentials,
+              });
               setTagDetailConfigsById((current) => ({
                 ...current,
                 [normalizedTagId]: normalized,
@@ -1801,11 +2003,13 @@
                   };
                 });
               }, 1600);
+              return normalized;
             } catch (error) {
               setTagDetailSaveState(normalizedTagId, {
                 status: "error",
                 error: error instanceof Error ? error.message : "Failed to save tag settings.",
               });
+              return null;
             }
           }
   
@@ -1850,6 +2054,73 @@
               : { ...currentConfig, ...(updater || {}) };
             commitTagDetailConfig(normalizedTagId, nextConfig, options);
           }
+
+          function getVerifiedCustomTagCredentialConnection(resourceId) {
+            const normalizedResourceId = String(resourceId || "").trim().toLowerCase();
+            if (
+              normalizedResourceId === "email"
+              && settingsEmailStatus?.linked
+              && settingsEmailStatus?.verified
+            ) {
+              return {
+                identity: String(settingsEmailStatus.email || "").trim(),
+                method: "Verification code",
+              };
+            }
+            if (
+              normalizedResourceId === "discord"
+              && settingsDiscordStatus?.linked
+              && settingsDiscordStatus?.verified
+            ) {
+              return {
+                identity: String(
+                  settingsDiscordStatus.discordUsername
+                  || settingsDiscordStatus.discordId
+                  || "",
+                ).trim(),
+                method: "OAuth 2.0",
+              };
+            }
+            if (
+              normalizedResourceId === "telegram"
+              && settingsTelegramStatus?.linked
+              && settingsTelegramStatus?.verified
+            ) {
+              return {
+                identity: String(
+                  settingsTelegramStatus.telegramUsername
+                  || settingsTelegramStatus.telegramId
+                  || "",
+                ).trim(),
+                method: "Verification code",
+              };
+            }
+            return null;
+          }
+
+          function reconcileLoadedTagPluginCredentials(tagId, config) {
+            const normalizedTagId = String(tagId || "").trim().toLowerCase();
+            const connection = getVerifiedCustomTagCredentialConnection(normalizedTagId);
+            const credentials = normalizePlatformConnectionCredentials(config?.credentials);
+            const pendingCredential = credentials.find(
+              (credential) => credential.status === "pending",
+            );
+            if (!connection || !pendingCredential) {
+              return normalizeTagDetailConfig(normalizedTagId, config);
+            }
+            return normalizeTagDetailConfig(normalizedTagId, {
+              ...config,
+              credentials: finalizePlatformConnectionCredential(
+                credentials,
+                pendingCredential.id,
+                {
+                  identity: connection.identity,
+                  method: connection.method,
+                  lastCheckedAt: new Date().toISOString(),
+                },
+              ),
+            });
+          }
   
           async function loadTagDetailConfig(tagId, options = {}) {
             const normalizedTagId = String(tagId || "").trim().toLowerCase();
@@ -1879,11 +2150,23 @@
               if (!response.ok) {
                 throw new Error(data?.error || data?.message || "Failed to load tag settings.");
               }
-              const normalized = normalizeTagDetailConfig(normalizedTagId, data);
+              const loadedConfig = normalizeTagDetailConfig(normalizedTagId, data);
+              const normalized = reconcileLoadedTagPluginCredentials(
+                normalizedTagId,
+                loadedConfig,
+              );
               setTagDetailConfigsById((current) => ({
                 ...current,
                 [normalizedTagId]: normalized,
               }));
+              if (
+                JSON.stringify(normalized.credentials)
+                !== JSON.stringify(loadedConfig.credentials)
+              ) {
+                void saveTagDetailConfig(normalizedTagId, normalized).catch((error) => {
+                  console.error("Failed to finalize loaded connector credentials:", error);
+                });
+              }
               return normalized;
             } catch (error) {
               setTagDetailSaveState(normalizedTagId, {
@@ -1899,6 +2182,312 @@
             } finally {
               setTagDetailLoadingId((current) => current === normalizedTagId ? "" : current);
             }
+          }
+
+          function getTagPluginCredentials(resourceId) {
+            const normalizedResourceId = String(resourceId || "").trim().toLowerCase();
+            const currentConfig = getCurrentTagDetailConfig(normalizedResourceId);
+            const configuredCredentials = normalizePlatformConnectionCredentials(
+              currentConfig.credentials,
+            );
+            const statusCredentials = normalizePlatformConnectionCredentials(
+              getConnectorStatusRecord(normalizedResourceId)?.credentials,
+            );
+            if (!Array.isArray(getConnectorStatusRecord(normalizedResourceId)?.credentials)) {
+              return configuredCredentials;
+            }
+            return reconcilePlatformConnectionCredentials(
+              configuredCredentials,
+              statusCredentials,
+            );
+          }
+
+          async function persistTagPluginCredentials(resourceId, credentials) {
+            const normalizedResourceId = String(resourceId || "").trim().toLowerCase();
+            const currentConfig = getCurrentTagDetailConfig(normalizedResourceId);
+            const nextConfig = normalizeTagDetailConfig(normalizedResourceId, {
+              ...currentConfig,
+              credentials: normalizePlatformConnectionCredentials(credentials),
+            });
+            commitTagDetailConfig(normalizedResourceId, nextConfig, { save: false });
+            if (!hasSessionAuth) {
+              return nextConfig;
+            }
+            const savedConfig = await saveTagDetailConfig(normalizedResourceId, nextConfig);
+            if (!savedConfig) {
+              throw new Error("Unable to save connector credentials.");
+            }
+            return savedConfig;
+          }
+
+          async function beginTagPluginCredentialConnection(
+            resourceId,
+            credentialName,
+            beginConnection,
+            options = {},
+          ) {
+            const normalizedResourceId = String(resourceId || "").trim().toLowerCase();
+            const normalizedName = String(credentialName || "").trim();
+            if (!normalizedResourceId || !normalizedName || typeof beginConnection !== "function") {
+              return;
+            }
+            const pendingCredential = createPlatformConnectionCredential({
+              name: normalizedName,
+              method: String(options.method || "OAuth 2.0"),
+              status: "pending",
+              isDefault: getTagPluginCredentials(normalizedResourceId).length === 0,
+            });
+            const previousCredentials = getTagPluginCredentials(normalizedResourceId);
+            await persistTagPluginCredentials(
+              normalizedResourceId,
+              upsertPlatformConnectionCredential(previousCredentials, pendingCredential),
+            );
+            try {
+              const connectionStarted = await beginConnection({
+                credentialId: pendingCredential.id,
+                credentialName: pendingCredential.name,
+                organizationId: String(
+                  billingOrganizationId || settingsBudgetStatus?.organizationId || "",
+                ).trim(),
+                returnTarget: {
+                  toolsView: toolsView === "tags" ? "tags" : "plugins",
+                  resourceId: normalizedResourceId,
+                  tab: "authentication",
+                },
+              });
+              if (connectionStarted === false) {
+                throw new Error("Unable to start connector authorization.");
+              }
+            } catch (error) {
+              await persistTagPluginCredentials(
+                normalizedResourceId,
+                removePlatformConnectionCredential(
+                  getTagPluginCredentials(normalizedResourceId),
+                  pendingCredential.id,
+                ),
+              ).catch(() => undefined);
+              throw error;
+            }
+          }
+
+          async function finalizeTagPluginCredentialFromRedirect(provider, redirectState) {
+            const normalizedProvider = String(provider || "").trim().toLowerCase();
+            const credentialId = String(redirectState?.credentialId || "").trim();
+            if (!normalizedProvider || !credentialId) {
+              return;
+            }
+            const loadedConfig = await loadTagDetailConfig(normalizedProvider);
+            const currentConfig = loadedConfig || getCurrentTagDetailConfig(normalizedProvider);
+            const status = getConnectorStatusRecord(normalizedProvider);
+            const statusCredentials = normalizePlatformConnectionCredentials(status?.credentials);
+            const statusCredential = statusCredentials.find(
+              (credential) => credential.id === credentialId,
+            );
+            const configuredCredentials = normalizePlatformConnectionCredentials(
+              currentConfig.credentials,
+            );
+            const credentialName = String(
+              redirectState?.credentialName
+              || statusCredential?.name
+              || configuredCredentials.find((credential) => credential.id === credentialId)?.name
+              || "Connected account",
+            ).trim();
+            const identity = getPlatformPluginConnectionIdentity(normalizedProvider, status);
+            let nextCredentials = configuredCredentials;
+            if (statusCredentials.length) {
+              nextCredentials = reconcilePlatformConnectionCredentials(
+                configuredCredentials,
+                statusCredentials,
+              );
+            }
+            if (statusCredential) {
+              nextCredentials = upsertPlatformConnectionCredential(nextCredentials, {
+                ...statusCredential,
+                name: credentialName,
+                identity: statusCredential.identity || identity,
+                status: "valid",
+                lastCheckedAt: statusCredential.lastCheckedAt || new Date().toISOString(),
+              });
+            } else {
+              nextCredentials = finalizePlatformConnectionCredential(
+                nextCredentials,
+                credentialId,
+                {
+                  name: credentialName,
+                  identity: identity === "Not connected" ? "" : identity,
+                  method: "OAuth 2.0",
+                  lastCheckedAt: new Date().toISOString(),
+                },
+              );
+            }
+            await persistTagPluginCredentials(normalizedProvider, nextCredentials);
+          }
+
+          async function discardTagPluginCredentialFromRedirect(provider, redirectState) {
+            const normalizedProvider = String(provider || "").trim().toLowerCase();
+            const credentialId = String(redirectState?.credentialId || "").trim();
+            if (!normalizedProvider || !credentialId) {
+              return;
+            }
+            const loadedConfig = await loadTagDetailConfig(normalizedProvider);
+            const currentConfig = loadedConfig || getCurrentTagDetailConfig(normalizedProvider);
+            await persistTagPluginCredentials(
+              normalizedProvider,
+              removePlatformConnectionCredential(
+                normalizePlatformConnectionCredentials(currentConfig.credentials),
+                credentialId,
+              ),
+            );
+          }
+
+          function restoreTagPluginConnectionReturnTarget(value) {
+            const returnTarget = normalizePlatformPluginConnectionReturnTarget(value);
+            if (!returnTarget) {
+              return false;
+            }
+            connectorAuthReturnTargetRef.current = returnTarget;
+            openToolsView(returnTarget.toolsView);
+            setSelectedPluginId(returnTarget.resourceId);
+            setPluginDetailTab("tutorial");
+            window.requestAnimationFrame(() => {
+              const pendingTarget = connectorAuthReturnTargetRef.current;
+              if (
+                pendingTarget
+                && pendingTarget.toolsView === returnTarget.toolsView
+                && pendingTarget.resourceId === returnTarget.resourceId
+              ) {
+                setPluginDetailTab("tutorial");
+                connectorAuthReturnTargetRef.current = null;
+              }
+            });
+            return true;
+          }
+
+          async function finalizePendingTagPluginCredential(
+            resourceId,
+            identity,
+            method,
+          ) {
+            const normalizedResourceId = String(resourceId || "").trim().toLowerCase();
+            const currentCredentials = getTagPluginCredentials(normalizedResourceId);
+            const pendingCredential = currentCredentials.find(
+              (credential) => credential.status === "pending",
+            );
+            if (!pendingCredential) {
+              return;
+            }
+            await persistTagPluginCredentials(
+              normalizedResourceId,
+              finalizePlatformConnectionCredential(
+                currentCredentials,
+                pendingCredential.id,
+                {
+                  identity: String(identity || "").trim(),
+                  method: String(method || pendingCredential.method || "Connection flow").trim(),
+                  lastCheckedAt: new Date().toISOString(),
+                },
+              ),
+            );
+          }
+
+          async function disconnectTagPluginCredential(resourceId, credentialId) {
+            const normalizedResourceId = String(resourceId || "").trim().toLowerCase();
+            const normalizedCredentialId = String(credentialId || "").trim();
+            if (!normalizedResourceId || !normalizedCredentialId) {
+              return;
+            }
+            const provider = getPlaygroundIntegrationProvider(normalizedResourceId);
+            const currentCredentials = getTagPluginCredentials(normalizedResourceId);
+            let nextCredentials = removePlatformConnectionCredential(
+              currentCredentials,
+              normalizedCredentialId,
+            );
+            if (provider) {
+              const status = getConnectorStatusRecord(provider);
+              const supportsCredentialSelection = normalizePlatformConnectionCredentials(
+                status?.credentials,
+              ).length > 0;
+              await disconnectPlatformPluginConnection(provider, {
+                credentialId: normalizedCredentialId,
+              });
+              if (!supportsCredentialSelection) {
+                nextCredentials = [];
+              }
+              const refreshStatus = getConnectorStatusRefresh(provider);
+              if (typeof refreshStatus === "function") {
+                await refreshStatus({ clearPendingOnFailure: true });
+              }
+            } else if (normalizedResourceId === "email") {
+              await handleSettingsUnlinkEmail();
+              nextCredentials = [];
+            } else if (normalizedResourceId === "discord") {
+              await handleSettingsUnlinkDiscord();
+              nextCredentials = [];
+            } else if (normalizedResourceId === "telegram") {
+              await handleSettingsUnlinkTelegram();
+              nextCredentials = [];
+            }
+            await persistTagPluginCredentials(normalizedResourceId, nextCredentials);
+          }
+
+          function getTagPluginCredentialConnectionAction(resourceId, fallbackAction = null) {
+            const normalizedResourceId = String(resourceId || "").trim().toLowerCase();
+            const provider = getPlaygroundIntegrationProvider(normalizedResourceId);
+            let beginConnection = null;
+            let disabled = false;
+
+            if (provider === "github") {
+              beginConnection = handleGithubAuthConnect;
+            } else if (provider === "notion") {
+              beginConnection = handleNotionAuthConnect;
+            } else if (provider === "google-drive") {
+              beginConnection = handleGoogleDriveAuthConnect;
+            } else if (provider === "gmail") {
+              beginConnection = handleGmailAuthConnect;
+            } else if (provider === "one-drive") {
+              beginConnection = handleOneDriveAuthConnect;
+            } else if (provider === "jira") {
+              beginConnection = handleJiraAuthConnect;
+            } else if (normalizedResourceId === "discord") {
+              beginConnection = handleSettingsLinkDiscord;
+              disabled = settingsIsLinkingDiscord;
+            } else if (
+              normalizedResourceId === "email"
+              || normalizedResourceId === "telegram"
+            ) {
+              beginConnection = async () => {
+                setPluginDetailTab("tutorial");
+                return true;
+              };
+            } else if (
+              fallbackAction
+              && typeof fallbackAction.onClick === "function"
+              && fallbackAction.tone !== "destructive"
+            ) {
+              beginConnection = fallbackAction.onClick;
+              disabled = Boolean(fallbackAction.disabled);
+            }
+
+            if (typeof beginConnection !== "function") {
+              return {
+                label: "Add Credentials",
+                tone: "primary",
+                disabled: true,
+                onClick: () => undefined,
+              };
+            }
+
+            return {
+              label: "Add Credentials",
+              tone: "primary",
+              disabled,
+              onClick: (credentialName) => beginTagPluginCredentialConnection(
+                normalizedResourceId,
+                credentialName,
+                beginConnection,
+                { method: getPluginDetailAuthMethod(normalizedResourceId) },
+              ),
+            };
           }
 
           function renderTagPluginAccessSettings({
@@ -2110,54 +2699,8 @@
                     : Layers;
               return React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.8 });
             };
-            const getTagConnectionButtonState = () => {
-              if (tagId === "email") {
-                return settingsEmailStatus?.linked && settingsEmailStatus?.verified
-                  ? {
-                      label: settingsIsUnlinkingEmail ? "Disconnecting..." : "Disconnect",
-                      tone: "destructive",
-                      disabled: settingsIsUnlinkingEmail,
-                      onClick: () => { void handleSettingsUnlinkEmail(); },
-                    }
-                  : {
-                      label: "Connect",
-                      tone: "primary",
-                      disabled: false,
-                      onClick: () => setPluginDetailTab("tutorial"),
-                    };
-              }
-              if (tagId === "telegram") {
-                return settingsTelegramStatus?.linked && settingsTelegramStatus?.verified
-                  ? {
-                      label: settingsIsUnlinkingTelegram ? "Disconnecting..." : "Disconnect",
-                      tone: "destructive",
-                      disabled: settingsIsUnlinkingTelegram,
-                      onClick: () => { void handleSettingsUnlinkTelegram(); },
-                    }
-                  : {
-                      label: "Connect",
-                      tone: "primary",
-                      disabled: false,
-                      onClick: () => setPluginDetailTab("tutorial"),
-                    };
-              }
-              if (tagId === "discord") {
-                return settingsDiscordStatus?.linked && settingsDiscordStatus?.verified
-                  ? {
-                      label: settingsIsUnlinkingDiscord ? "Disconnecting..." : "Disconnect",
-                      tone: "destructive",
-                      disabled: settingsIsUnlinkingDiscord,
-                      onClick: () => { void handleSettingsUnlinkDiscord(); },
-                    }
-                  : {
-                      label: settingsIsLinkingDiscord ? "Connecting..." : "Connect",
-                      tone: "primary",
-                      disabled: settingsIsLinkingDiscord,
-                      onClick: () => { void handleSettingsLinkDiscord(); },
-                    };
-              }
-              return null;
-            };
+            const getTagConnectionButtonState = () =>
+              getTagPluginCredentialConnectionAction(tagId);
             const renderTagSidebarToggleButton = () => React.createElement("button", {
                 type: "button",
                 className: "playground-project-overview-sidebar-toggle",
@@ -2752,42 +3295,51 @@
               : tagId === "telegram"
                 ? Boolean(settingsTelegramLoading)
                 : false;
-            const tagFeatures = Array.isArray(selectedTag.features) ? selectedTag.features : [];
+            const tagFunctions = getPluginConcreteFunctions(selectedTag);
             const tagOverviewInformation = [
               { id: "visibility", label: "Visibility", value: "Organization" },
               { id: "authentication", label: "Authentication", value: getPluginDetailAuthMethod(tagId) },
               {
                 id: "origin",
                 label: "Origin",
-                value: selectedTag.categoryLabel || selectedTag.category || "Computer Agents",
+                value: selectedTag.originLabel || "Recommended",
               },
               {
                 id: "functions",
                 label: "Functions",
-                value: tagFeatures.length
-                  ? tagFeatures.length + (tagFeatures.length === 1 ? " action" : " actions")
-                  : "None",
+                value: renderPluginFunctionAccessLabels(tagFunctions),
               },
-              { id: "name", label: "Tag name", value: selectedTag.label || tagId },
-              { id: "id", label: "Tag ID", value: tagId },
+              {
+                id: "id",
+                label: "Connector ID",
+                value: selectedTag.connectorId || tagId,
+                monospace: true,
+              },
             ];
-            const tagOverviewIncludedItems = tagFeatures.map((feature, index) => ({
-              id: String(feature.id || index),
-              title: feature.title || feature.label || "Action",
-              description: feature.description || "",
-              icon: renderFeatureIcon(feature),
+            const tagOverviewIncludedItems = tagFunctions.map((item, index) => ({
+              id: String(item.id || index),
+              title: item.title || item.name || "function",
+              description: item.description || "",
+              icon: renderFeatureIcon(item),
+              access: item.access,
+              inputSchema: item.inputSchema,
             }));
 
             return React.createElement(TagDetailPage, {
                 identityIcon: renderPluginRowLogo(selectedTag),
+                identityKind: "tags",
+                identityId: tagId,
                 identityTitle: selectedTag.label || "Tag",
                 identityDescription: selectedTag.description || "Route external work into an agent thread.",
                 connectionAction: tagConnectionAction,
                 authentication: isTagAuthenticationConnected ? null : setupContent,
                 authenticationConnected: isTagAuthenticationConnected,
                 authenticationLoading: isTagAuthenticationLoading,
-                authenticationIdentity: tagConfig.connectedIdentity || selectedTag.statusCopy || "",
+                authenticationIdentity: tagConfig.connectedIdentity || selectedTag.label || tagId,
                 authenticationMethod: getPluginDetailAuthMethod(tagId),
+                credentials: getTagPluginCredentials(tagId),
+                onCredentialDisconnect: (credentialId) =>
+                  disconnectTagPluginCredential(tagId, credentialId),
                 authenticationEmptyDescription: "Connect " + (selectedTag.label || "this tag") + " to receive and continue agent work from this channel.",
                 overviewInformation: tagOverviewInformation,
                 overviewIncludedItems: tagOverviewIncludedItems,
@@ -2816,69 +3368,11 @@
             const pluginId = String(selectedPlugin.id || "").trim().toLowerCase();
             const isPluginAccessLoading = tagDetailLoadingId === pluginId;
             const getPluginConnectionButtonState = () => {
-              if (pluginId === "email") {
-                return settingsEmailStatus?.linked && settingsEmailStatus?.verified
-                  ? {
-                      label: settingsIsUnlinkingEmail ? "Disconnecting..." : "Disconnect",
-                      tone: "destructive",
-                      disabled: settingsIsUnlinkingEmail,
-                      onClick: () => { void handleSettingsUnlinkEmail(); },
-                    }
-                  : {
-                      label: "Connect",
-                      tone: "primary",
-                      disabled: false,
-                      onClick: () => setPluginDetailTab("tutorial"),
-                    };
-              }
-              if (pluginId === "telegram") {
-                return settingsTelegramStatus?.linked && settingsTelegramStatus?.verified
-                  ? {
-                      label: settingsIsUnlinkingTelegram ? "Disconnecting..." : "Disconnect",
-                      tone: "destructive",
-                      disabled: settingsIsUnlinkingTelegram,
-                      onClick: () => { void handleSettingsUnlinkTelegram(); },
-                    }
-                  : {
-                      label: "Connect",
-                      tone: "primary",
-                      disabled: false,
-                      onClick: () => setPluginDetailTab("tutorial"),
-                    };
-              }
               const actions = Array.isArray(selectedPlugin.actions) ? selectedPlugin.actions : [];
-              const preferredAction = actions.find((action) => action?.tone === "destructive")
-                || actions.find((action) => action?.tone === "primary")
-                || actions[0]
+              const preferredAction = actions.find((action) => action?.tone === "primary")
+                || actions.find((action) => action?.tone !== "destructive")
                 || null;
-              if (!preferredAction) {
-                return null;
-              }
-              const disabled = pluginId === "discord"
-                ? Boolean(
-                    (preferredAction.tone === "destructive" && settingsIsUnlinkingDiscord)
-                    || (preferredAction.tone === "primary" && settingsIsLinkingDiscord)
-                  )
-                : false;
-              const label = pluginId === "discord"
-                && preferredAction.tone === "destructive"
-                && settingsIsUnlinkingDiscord
-                ? "Disconnecting..."
-                : pluginId === "discord"
-                  && preferredAction.tone === "primary"
-                  && settingsIsLinkingDiscord
-                  ? "Connecting..."
-                  : preferredAction.label;
-              return {
-                label,
-                tone: preferredAction.tone === "primary"
-                  ? "primary"
-                  : preferredAction.tone === "destructive"
-                    ? "destructive"
-                    : "secondary",
-                disabled,
-                onClick: preferredAction.onClick,
-              };
+              return getTagPluginCredentialConnectionAction(pluginId, preferredAction);
             };
   
             const getLinkLabel = (url) => {
@@ -3180,52 +3674,54 @@
               : pluginId === "telegram"
                 ? Boolean(settingsTelegramLoading)
                 : false;
+            const pluginFunctions = getPluginConcreteFunctions(selectedPlugin);
             const pluginOverviewInformation = [
               { id: "visibility", label: "Visibility", value: "Organization" },
               { id: "authentication", label: "Authentication", value: getPluginDetailAuthMethod(pluginId) },
               {
                 id: "origin",
                 label: "Origin",
-                value: selectedPlugin.categoryLabel || selectedPlugin.category || "Computer Agents",
+                value: selectedPlugin.originLabel || "Recommended",
               },
               {
                 id: "functions",
                 label: "Functions",
-                value: normalizedCapabilityCards.length
-                  ? normalizedCapabilityCards.length + (normalizedCapabilityCards.length === 1 ? " action" : " actions")
-                  : "None",
+                value: renderPluginFunctionAccessLabels(pluginFunctions),
               },
-              { id: "name", label: "Connector name", value: pluginId },
               {
                 id: "id",
                 label: "Connector ID",
                 value: selectedPlugin.connectorId || selectedPlugin.id || pluginId,
+                monospace: true,
               },
             ];
-            const pluginOverviewIncludedItems = normalizedCapabilityCards.map((capability, index) => {
-              const CapabilityIcon = capability.icon || Layers;
-              return {
-                id: String(capability.id || index),
-                title: capability.title || "Action",
-                description: getCapabilityDescription(capability),
-                icon: React.createElement(CapabilityIcon, {
-                  width: 14,
-                  height: 14,
-                  strokeWidth: 1.8,
-                }),
-              };
-            });
+            const pluginOverviewIncludedItems = pluginFunctions.map((item, index) => ({
+              id: String(item.id || index),
+              title: item.title || item.name || "function",
+              description: item.description || "",
+              icon: renderFeatureIcon(item),
+              access: item.access,
+              inputSchema: item.inputSchema,
+            }));
 
             return React.createElement(TagDetailPage, {
                 identityIcon: renderPluginRowLogo(selectedPlugin),
+                identityKind: "plugins",
+                identityId: pluginId,
                 identityTitle: selectedPlugin.label || "Plugin",
                 identityDescription: selectedPlugin.description || "Connect this integration to extend agent work.",
                 connectionAction: pluginConnectionAction,
                 authentication: connectionState.id === "connected" ? null : setupContent,
                 authenticationConnected: connectionState.id === "connected",
                 authenticationLoading: isPluginAuthenticationLoading,
-                authenticationIdentity: selectedPlugin.statusCopy || connectionState.copy,
+                authenticationIdentity: selectedPlugin.connectedIdentity
+                  || selectedPlugin.accountName
+                  || selectedPlugin.label
+                  || pluginId,
                 authenticationMethod: getPluginDetailAuthMethod(pluginId),
+                credentials: getTagPluginCredentials(pluginId),
+                onCredentialDisconnect: (credentialId) =>
+                  disconnectTagPluginCredential(pluginId, credentialId),
                 authenticationEmptyDescription: "Connect " + (selectedPlugin.label || "this plugin") + " to use its protected data and actions.",
                 overviewInformation: pluginOverviewInformation,
                 overviewIncludedItems: pluginOverviewIncludedItems,
@@ -3975,7 +4471,13 @@
                       { label: toolsOverviewTitle, onClick: () => setToolsSkillsBackRequestToken((current) => current + 1) },
                       {
                         label: toolsSkillsHeaderState.title || "Skill",
-                        trailing: skillDetailVersionLabel,
+                        trailing: React.createElement(React.Fragment, null,
+                          skillDetailVersionLabel,
+                          React.createElement("div", {
+                            id: "playground-skill-title-actions",
+                            className: "playground-agent-title-actions-root playground-skill-title-actions-root",
+                          })
+                        ),
                       },
                     ]
                   : [
@@ -4113,6 +4615,9 @@
                 currentUserEmail: hasSessionAuth ? accountEmail : "",
                 currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                 topNavActionsPortalId: "playground-tools-skills-nav-actions",
+                titleActionsPortalId: "playground-skill-title-actions",
+                versionsDrawerPortalId: "playground-agent-versions-drawer-root",
+                onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
                 onToolsSkillsHeaderChange: setToolsSkillsHeaderState,
                 backRequestToken: toolsSkillsBackRequestToken,
                 openSkillRequest: toolsSkillsOpenRequest,

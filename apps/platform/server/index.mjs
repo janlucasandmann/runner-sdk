@@ -1,5 +1,6 @@
 import http from "node:http";
 import { handleGithubApiRequest, isGithubApiRequestPath } from "./integrations/github-oauth.mjs";
+import { handleJiraApiRequest, isJiraApiRequestPath } from "./integrations/jira-oauth.mjs";
 import {
   matchPlaygroundBillingProxyRoute,
 } from "../shared/billing/playground-billing-catalog.mjs";
@@ -35,8 +36,8 @@ const {
   distRoot,
   feedbackSummaryAdminEnvFileCandidates,
   feedbackSummaryAllowedEmail,
-  githubOauthAllowedOrigins,
-  githubOauthEnvFileCandidates,
+  connectorOauthAllowedOrigins,
+  connectorOauthEnvFileCandidates,
   noVncNextRoot,
   notionOauthCallbackUri,
   packageRoot,
@@ -127,10 +128,12 @@ const server = http.createServer(createPlatformRequestHandler({
   ...platformServices,
   identityService,
   aiosOrigin,
-  githubOauthAllowedOrigins,
-  githubOauthEnvFileCandidates,
+  connectorOauthAllowedOrigins,
+  connectorOauthEnvFileCandidates,
   handleGithubApiRequest,
+  handleJiraApiRequest,
   isGithubApiRequestPath,
+  isJiraApiRequestPath,
   matchPlaygroundBillingProxyRoute,
   matchThreadProxyRoute,
   noVncNextRoot,

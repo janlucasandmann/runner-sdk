@@ -97,16 +97,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
             title: "Analytics",
             analytics,
             className: "playground-evaluations-analytics-card",
-            timeframe: run ? undefined : {
-              value: evaluationAnalyticsTimeframe,
-              options: [
-                { value: "day", label: "24H" },
-                { value: "week", label: "7D" },
-                { value: "month", label: "30D" },
-              ],
-              onValueChange: setEvaluationAnalyticsTimeframe,
-              ariaLabel: "Evaluation analytics time frame",
-            },
+            showXAxisLabels: Boolean(run),
           });
         }
 
@@ -503,53 +494,172 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
           const pendingRows = Array.isArray(evaluationPendingThreadCasesBySetId?.[set?.id])
             ? evaluationPendingThreadCasesBySetId[set.id]
             : [];
-          const hasCaseRows = pendingRows.length > 0 || rows.length > 0;
-          return React.createElement("section", { className: "playground-evaluations-cases-editor-section" },
-            React.createElement("div", { className: "playground-evaluations-cases-editor-header" },
-              React.createElement("h2", { className: "playground-evaluations-cases-title" }, "Cases"),
-              React.createElement("div", { className: "playground-evaluations-cases-actions" },
-                React.createElement(PlatformSecondaryButton, {
+          const tableRows = [
+            ...pendingRows.map((pending, index) => {
+              const isError = pending.status === "error";
+              const sourceTitle = String(pending.title || pending.threadId || "").trim();
+              const statusText = isError
+                ? (pending.error || pending.message || "Case creation failed")
+                : (pending.message || "Creating case from thread");
+              return {
+                id: "pending:" + String(pending.id || pending.threadId || index),
+                kind: "pending",
+                pending,
+                isError,
+                caseNumber: "",
+                caseTitle: sourceTitle ? "Refining " + sourceTitle : "Refining selected thread",
+                caseLabel: isError ? "Case failed" : "Creating case",
+                runCount: 0,
+                optimizationRole: "",
+                optimizationRoleLabel: "-",
+                optimizationRoleVariant: "gray",
+                sourceThreadId: String(pending.threadId || "").trim(),
+                sourceThreadTitle: sourceTitle,
+                statusText,
+              };
+            }),
+            ...rows.map((row, index) => {
+              const caseNumber = String(index + 1).padStart(3, "0");
+              const inputText = String(row.input || "").trim();
+              const caseTitle = String(row.title || "").trim() || inputText;
+              const optimizationRole = normalizePlaygroundEvaluationOptimizationRole(row.optimizationRole);
+              return {
+                id: "case:" + String(row.id || index),
+                kind: "case",
+                row,
+                index,
+                caseNumber,
+                caseTitle: caseTitle || "Untitled case",
+                caseLabel: "Case " + caseNumber,
+                runCount: normalizePlaygroundEvaluationCaseRunCount(row.runCount),
+                optimizationRole,
+                optimizationRoleLabel: getPlaygroundEvaluationOptimizationRoleLabel(optimizationRole),
+                optimizationRoleVariant: optimizationRole === "holdout"
+                  ? "yellow"
+                  : optimizationRole === "validation"
+                    ? "blue"
+                    : "gray",
+                sourceThreadId: String(row.sourceThreadId || "").trim(),
+                sourceThreadTitle: String(row.sourceThreadTitle || "").trim(),
+                statusText: "",
+              };
+            }),
+          ];
+          const caseToolbarActions = React.createElement("div", {
+              className: "playground-evaluations-cases-actions",
+            },
+            React.createElement(PlatformSecondaryButton, {
+              type: "button",
+              size: "small",
+              onClick: () => openEvaluationThreadCaseModal(set),
+            }, React.createElement(MessageSquare, { width: 15, height: 15, strokeWidth: 1.8 }), React.createElement("span", null, "From Threads")),
+            React.createElement(PlatformButtonSelector, {
+                mode: "split-action",
+                buttonVariant: "primary",
+                buttonSize: "small",
+                label: "Case",
+                leading: React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
+                actionAriaLabel: "Add case",
+                popupAriaLabel: "Case import options",
+                onAction: () => openNewEvaluationCaseEditor(set),
+                closeOnSelect: true,
+                popupAlignment: "right",
+                popupRole: "menu",
+                popupVariant: "minimal",
+                popupWidth: 230,
+                popupClassName: "playground-evaluations-case-import-menu",
+              },
+              React.createElement("button", {
                   type: "button",
-                  size: "small",
-                  onClick: () => openEvaluationThreadCaseModal(set),
-                }, React.createElement(MessageSquare, { width: 15, height: 15, strokeWidth: 1.8 }), React.createElement("span", null, "From Threads")),
-                React.createElement(PlatformButtonSelector, {
-                    mode: "split-action",
-                    buttonVariant: "primary",
-                    buttonSize: "small",
-                    label: "Case",
-                    leading: React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
-                    actionAriaLabel: "Add case",
-                    popupAriaLabel: "Case import options",
-                    onAction: () => openNewEvaluationCaseEditor(set),
-                    closeOnSelect: true,
-                    popupAlignment: "right",
-                    popupRole: "menu",
-                    popupVariant: "minimal",
-                    popupWidth: 230,
-                    popupClassName: "playground-evaluations-case-import-menu",
-                  },
-                  React.createElement("button", {
-                      type: "button",
-                      role: "menuitem",
-                      className: "platform-data-table__menu-item",
-                      onClick: openEvaluationJsonlFilePicker,
-                    },
-                    React.createElement(FileText, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Upload JSONL file")
-                  ),
-                  React.createElement("button", {
-                      type: "button",
-                      role: "menuitem",
-                      className: "platform-data-table__menu-item",
-                      onClick: () => openEvaluationJsonlWorkspacePicker(set),
-                    },
-                    React.createElement(FolderOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Upload from Workspace")
-                  )
-                )
+                  role: "menuitem",
+                  className: "platform-data-table__menu-item",
+                  onClick: openEvaluationJsonlFilePicker,
+                },
+                React.createElement(FileText, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Upload JSONL file")
+              ),
+              React.createElement("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "platform-data-table__menu-item",
+                  onClick: () => openEvaluationJsonlWorkspacePicker(set),
+                },
+                React.createElement(FolderOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("span", null, "Upload from Workspace")
               )
-            ),
+            )
+          );
+          const caseColumns = [
+            {
+              id: "case",
+              header: "Case",
+              accessor: (record) => record.caseLabel + " " + record.caseTitle,
+              sortable: true,
+              width: "minmax(260px, 1.6fr)",
+              cell: ({ row: record }) => React.createElement("div", {
+                  className: "playground-evaluations-dataset-case-table-title-cell" + (record.kind === "pending" ? " is-pending" + (record.isError ? " is-error" : "") : ""),
+                  title: record.statusText || record.caseTitle,
+                },
+                record.kind === "pending"
+                  ? React.createElement("span", {
+                      className: "playground-evaluations-pending-case-icon" + (record.isError ? " is-error" : ""),
+                      "aria-hidden": "true",
+                    }, record.isError
+                      ? React.createElement(AlertCircle, { width: 13, height: 13, strokeWidth: 1.9 })
+                      : React.createElement(Loader2, { className: "playground-evaluations-pending-case-spinner", width: 13, height: 13, strokeWidth: 1.9 }))
+                  : null,
+                React.createElement("span", { className: "playground-evaluations-dataset-case-table-copy" },
+                  React.createElement("span", { className: "playground-evaluations-dataset-case-table-label" }, record.caseLabel),
+                  React.createElement("span", { className: "playground-evaluations-dataset-case-table-title" }, record.caseTitle)
+                )
+              ),
+            },
+            {
+              id: "runs",
+              header: "Runs",
+              accessor: (record) => record.runCount,
+              sortable: true,
+              width: "minmax(72px, 0.42fr)",
+              cell: ({ row: record }) => React.createElement("span", {
+                className: "playground-evaluations-dataset-case-table-value",
+              }, record.kind === "pending" ? "-" : String(record.runCount)),
+            },
+            {
+              id: "split",
+              header: "Split",
+              accessor: (record) => record.optimizationRoleLabel,
+              sortable: true,
+              width: "minmax(110px, 0.62fr)",
+              cell: ({ row: record }) => record.kind === "pending"
+                ? React.createElement("span", { className: "playground-evaluations-dataset-case-table-value" }, "-")
+                : React.createElement(PlatformLabel, {
+                    variant: record.optimizationRoleVariant,
+                    title: record.optimizationRole === "holdout"
+                      ? "Sealed until final verification"
+                      : record.optimizationRole === "validation"
+                        ? "Used for candidate selection without optimizer answer leakage"
+                        : "Used during optimization",
+                  }, record.optimizationRoleLabel),
+            },
+            {
+              id: "source",
+              header: "Source",
+              accessor: (record) => record.sourceThreadTitle || record.sourceThreadId || "Manual",
+              sortable: true,
+              width: "minmax(120px, 0.72fr)",
+              hideBelow: 760,
+              cell: ({ row: record }) => record.sourceThreadId
+                ? React.createElement("span", {
+                    className: "playground-evaluations-source-thread-pill",
+                    title: record.sourceThreadTitle || record.sourceThreadId,
+                  },
+                    React.createElement(MessageSquare, { width: 12, height: 12, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Thread")
+                  )
+                : React.createElement("span", { className: "playground-evaluations-dataset-case-table-value" }, "Manual"),
+            },
+          ];
+          return React.createElement("section", { className: "playground-evaluations-cases-editor-section" },
             React.createElement("input", {
               ref: evaluationJsonlFileInputRef,
               type: "file",
@@ -572,129 +682,61 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                     role: "status",
                   }, evaluationJsonlFileImportMessage)
                 : null,
-            hasCaseRows
-              ? React.createElement("div", { className: "playground-evaluations-case-preview-list" },
-                  pendingRows.map((pending) => {
-                    const isError = pending.status === "error";
-                    const title = String(pending.title || pending.threadId || "").trim();
-                    const statusText = isError
-                      ? (pending.error || pending.message || "Case creation failed")
-                      : (pending.message || "Creating case from thread");
-                    return React.createElement("div", {
-                        key: pending.id,
-                        className: "playground-tasks-backlog-item playground-project-overview-outcome-preview playground-evaluations-data-row-preview is-pending" + (isError ? " is-pending-error" : ""),
-                        "aria-busy": isError ? undefined : "true",
-                      },
-                      React.createElement("div", { className: "playground-tasks-backlog-item-content" },
-                        React.createElement("div", { className: "playground-tasks-backlog-leading" },
-                          React.createElement("span", { className: "playground-evaluations-pending-case-icon" + (isError ? " is-error" : ""), "aria-hidden": "true" },
-                            isError
-                              ? React.createElement(AlertCircle, { width: 13, height: 13, strokeWidth: 1.9 })
-                              : React.createElement(Loader2, { className: "playground-evaluations-pending-case-spinner", width: 13, height: 13, strokeWidth: 1.9 })
-                          ),
-                          React.createElement("div", { className: "playground-tasks-backlog-main" },
-                            React.createElement("span", { className: "playground-tasks-backlog-ticket" }, isError ? "Case failed" : "Creating case"),
-                            React.createElement("span", {
-                              className: "playground-tasks-backlog-title",
-                              title: title || statusText,
-                            }, title ? "Refining " + title : "Refining selected thread")
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-tasks-backlog-meta" },
-                          pending.threadId
-                            ? React.createElement("span", {
-                                className: "playground-evaluations-source-thread-pill",
-                                title: pending.threadId,
-                              },
-                                React.createElement(MessageSquare, { width: 12, height: 12, strokeWidth: 1.8 }),
-                                React.createElement("span", null, "Thread")
-                              )
-                            : null,
-                          React.createElement("span", {
-                            className: "playground-evaluations-pending-case-status" + (isError ? " is-error" : ""),
-                            title: statusText,
-                          }, isError ? "Failed" : "Creating")
-                        )
-                      )
-                    );
-                  }),
-                  rows.map((row, index) => {
-                    const caseNumber = String(index + 1).padStart(3, "0");
-                    const inputText = String(row.input || "").trim();
-                    const runCount = normalizePlaygroundEvaluationCaseRunCount(row.runCount);
-                    const optimizationRole = normalizePlaygroundEvaluationOptimizationRole(row.optimizationRole);
-                    const optimizationRoleVariant = optimizationRole === "holdout"
-                      ? "yellow"
-                      : optimizationRole === "validation"
-                        ? "blue"
-                        : "gray";
-                    return React.createElement("div", {
-                        key: row.id,
-                        className: "playground-tasks-backlog-item playground-project-overview-outcome-preview playground-evaluations-data-row-preview",
-                        role: "button",
-                        tabIndex: 0,
-                        onClick: () => openEvaluationCaseEditor(set.id, row, index, false),
-                        onKeyDown: (event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            openEvaluationCaseEditor(set.id, row, index, false);
-                          }
-                        },
-                      },
-                      React.createElement("div", { className: "playground-tasks-backlog-item-content" },
-                        React.createElement("div", { className: "playground-tasks-backlog-leading" },
-                          React.createElement(PlaygroundEvaluationCaseRunRing, { runCount }),
-                          React.createElement("div", { className: "playground-tasks-backlog-main" },
-                            React.createElement("span", { className: "playground-tasks-backlog-ticket" }, "Case " + caseNumber),
-                            React.createElement("span", {
-                              className: "playground-tasks-backlog-title" + (inputText ? "" : " is-empty"),
-                              title: inputText || "Empty input",
-                            }, inputText || "Empty input")
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-tasks-backlog-meta" },
-                          React.createElement(PlatformLabel, {
-                            variant: optimizationRoleVariant,
-                            title: optimizationRole === "holdout"
-                              ? "Sealed until final verification"
-                              : optimizationRole === "validation"
-                                ? "Used for candidate selection without optimizer answer leakage"
-                                : "Used during optimization",
-                          }, getPlaygroundEvaluationOptimizationRoleLabel(optimizationRole)),
-                          row.sourceThreadId
-                            ? React.createElement("span", {
-                                className: "playground-evaluations-source-thread-pill",
-                                title: row.sourceThreadTitle || row.sourceThreadId,
-                              },
-                                React.createElement(MessageSquare, { width: 12, height: 12, strokeWidth: 1.8 }),
-                                React.createElement("span", null, "Thread")
-                              )
-                            : null,
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-evaluations-case-delete-button",
-                            "aria-label": "Delete case " + caseNumber,
-                            title: "Delete case",
-                            onClick: (event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              updateEvaluationSet(set.id, (current) => ({
-                                ...current,
-                                dataRows: current.dataRows.filter((item) => item.id !== row.id),
-                              }));
-                            },
-                          }, React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }))
-                        )
-                      )
-                    );
-                  })
-                )
-		              : React.createElement(PlatformEmptyState, {
-		                  icon: ListTodo,
-		                  title: "No cases yet",
-		                  description: "Add a case or refine an existing thread to build this evaluation dataset.",
-		                })
-		          );
+            React.createElement(PlatformDataTable, {
+              rows: tableRows,
+              columns: caseColumns,
+              getRowId: (record) => record.id,
+              ariaLabel: "Evaluation dataset cases",
+              className: "playground-evaluations-dataset-cases-platform-table",
+              surface: "plain",
+              variant: "minimalistic-ui",
+              sticky: false,
+              pagination: false,
+              rowMinHeight: 62,
+              toolbar: {
+                title: "Cases",
+                trailing: caseToolbarActions,
+              },
+              emptyState: React.createElement(PlatformEmptyState, {
+                icon: ListTodo,
+                title: "No cases yet",
+                description: "Add a case or refine an existing thread to build this evaluation dataset.",
+              }),
+              isRowDisabled: (record) => record.kind === "pending",
+              getRowClassName: (record) => record.kind === "pending"
+                ? "playground-evaluations-dataset-cases-table-row is-pending" + (record.isError ? " is-error" : "")
+                : "playground-evaluations-dataset-cases-table-row",
+              getRowAriaLabel: (record) => record.kind === "pending"
+                ? record.caseLabel + ": " + record.caseTitle
+                : "Open " + record.caseLabel + ": " + record.caseTitle,
+              onRowActivate: (record) => {
+                if (record.kind === "case") {
+                  openEvaluationCaseEditor(set.id, record.row, record.index, false);
+                }
+              },
+              getRowActions: (record) => record.kind === "case"
+                ? [
+                    {
+                      id: "open",
+                      label: "Open",
+                      icon: SquarePen,
+                      onSelect: () => openEvaluationCaseEditor(set.id, record.row, record.index, false),
+                    },
+                    {
+                      id: "delete",
+                      label: "Delete",
+                      icon: Trash2,
+                      danger: true,
+                      separatorBefore: true,
+                      onSelect: () => updateEvaluationSet(set.id, (current) => ({
+                        ...current,
+                        dataRows: current.dataRows.filter((item) => item.id !== record.row.id),
+                      })),
+                    },
+                  ]
+                : [],
+            })
+          );
         }
 
         function renderEvaluationThreadButton(threadId, label) {

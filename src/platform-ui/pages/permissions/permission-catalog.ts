@@ -2,6 +2,14 @@ import type {
   PlatformPermissionActionDefinition,
   PlatformPermissionRingDefinition,
 } from "./permission-types.js";
+import {
+  getPlatformConnectorCatalogEntry,
+  getPlatformConnectorPermissionActionId,
+  listPlatformConnectorCatalogEntries,
+  listPlatformConnectorPermissionActionDescriptors,
+  PLATFORM_CONNECTOR_PERMISSION_SUBJECT_TYPES,
+  PLATFORM_CONNECTOR_TEAM_PERMISSION_SUBJECT_TYPES,
+} from "../../../platform-integrations/connectors/index.js";
 
 export const PLATFORM_PERMISSION_RING_DEFINITIONS: readonly PlatformPermissionRingDefinition[] = [
   {
@@ -416,13 +424,73 @@ const PLATFORM_MANAGED_RESOURCE_PERMISSION_ACTIONS: readonly PlatformPermissionA
   }),
 ];
 
+export const PLATFORM_GITHUB_CONNECTOR_PERMISSION_ACTION_PREFIX =
+  "github_action_";
+
+const PLATFORM_GITHUB_CONNECTOR = getPlatformConnectorCatalogEntry("github");
+
+export const PLATFORM_GITHUB_CONNECTOR_INTERACTIVE_CAPABILITY_IDS =
+  Object.freeze(
+    PLATFORM_GITHUB_CONNECTOR?.capabilities
+      .filter((capability) => capability.access === "interactive")
+      .map((capability) => capability.id) || [],
+  );
+
+export const PLATFORM_GITHUB_CONNECTOR_READ_ONLY_CAPABILITY_IDS =
+  Object.freeze(
+    PLATFORM_GITHUB_CONNECTOR?.capabilities
+      .filter((capability) => capability.access === "read-only")
+      .map((capability) => capability.id) || [],
+  );
+
+export function getPlatformGitHubConnectorPermissionActionId(
+  capabilityId: string,
+): string {
+  return getPlatformConnectorPermissionActionId("github", capabilityId);
+}
+
+const PLATFORM_EXACT_CONNECTOR_PERMISSION_ACTIONS: readonly PlatformPermissionActionDefinition[] =
+  listPlatformConnectorPermissionActionDescriptors().map((action) => ({
+    id: action.id,
+    ringId: action.ringId,
+    label: action.label,
+    description: action.description,
+    subjectTypes: action.subjectTypes,
+  }));
+
+const PLATFORM_PLUGIN_CONNECTOR_SUBJECT_TYPES = listPlatformConnectorCatalogEntries(
+  "plugin",
+).flatMap((connector) => [
+  connector.permissionSubjectType,
+  connector.permissionTeamSubjectType,
+]);
+
+const PLATFORM_TAG_CONNECTOR_SUBJECT_TYPES = listPlatformConnectorCatalogEntries(
+  "tag",
+).flatMap((connector) => [
+  connector.permissionSubjectType,
+  connector.permissionTeamSubjectType,
+]);
+
+const PLATFORM_PLUGIN_ADMINISTRATIVE_SUBJECT_TYPES = [
+  "plugin",
+  "plugin_team_role",
+  ...PLATFORM_PLUGIN_CONNECTOR_SUBJECT_TYPES,
+];
+
+const PLATFORM_TAG_ADMINISTRATIVE_SUBJECT_TYPES = [
+  "tag",
+  "tag_team_role",
+  ...PLATFORM_TAG_CONNECTOR_SUBJECT_TYPES,
+];
+
 const PLATFORM_CONNECTION_PERMISSION_ACTIONS: readonly PlatformPermissionActionDefinition[] = [
   {
     id: "tag_view",
     ringId: "ring_1",
     label: "View tag",
     description: "View this tag's connection, routing defaults, instructions, activity, and access settings.",
-    subjectTypes: ["tag", "tag_team_role"],
+    subjectTypes: PLATFORM_TAG_ADMINISTRATIVE_SUBJECT_TYPES,
   },
   {
     id: "tag_invoke",
@@ -436,7 +504,7 @@ const PLATFORM_CONNECTION_PERMISSION_ACTIONS: readonly PlatformPermissionActionD
     ringId: "ring_1",
     label: "View tag activity",
     description: "View threads, analytics, delivery status, and usage attributed to this tag.",
-    subjectTypes: ["tag", "tag_team_role"],
+    subjectTypes: PLATFORM_TAG_ADMINISTRATIVE_SUBJECT_TYPES,
   },
   {
     id: "tag_configure",
@@ -464,28 +532,28 @@ const PLATFORM_CONNECTION_PERMISSION_ACTIONS: readonly PlatformPermissionActionD
     ringId: "ring_2",
     label: "Manage connection",
     description: "Connect, verify, refresh, or change the external identity used by this tag.",
-    subjectTypes: ["tag", "tag_team_role"],
+    subjectTypes: PLATFORM_TAG_ADMINISTRATIVE_SUBJECT_TYPES,
   },
   {
     id: "tag_access_manage",
     ringId: "ring_3",
     label: "Manage tag access",
     description: "Change which organization roles and agents can use or administer this tag.",
-    subjectTypes: ["tag", "tag_team_role"],
+    subjectTypes: PLATFORM_TAG_ADMINISTRATIVE_SUBJECT_TYPES,
   },
   {
     id: "tag_disconnect",
     ringId: "ring_3",
     label: "Disconnect tag",
     description: "Revoke the external connection and stop new work from entering through this tag.",
-    subjectTypes: ["tag", "tag_team_role"],
+    subjectTypes: PLATFORM_TAG_ADMINISTRATIVE_SUBJECT_TYPES,
   },
   {
     id: "plugin_view",
     ringId: "ring_1",
     label: "View plugin",
     description: "View this plugin's connection, capabilities, activity, and access settings.",
-    subjectTypes: ["plugin", "plugin_team_role"],
+    subjectTypes: PLATFORM_PLUGIN_ADMINISTRATIVE_SUBJECT_TYPES,
   },
   {
     id: "plugin_use_read",
@@ -499,7 +567,7 @@ const PLATFORM_CONNECTION_PERMISSION_ACTIONS: readonly PlatformPermissionActionD
     ringId: "ring_1",
     label: "View plugin activity",
     description: "View usage, operations, delivery status, and activity attributed to this plugin.",
-    subjectTypes: ["plugin", "plugin_team_role"],
+    subjectTypes: PLATFORM_PLUGIN_ADMINISTRATIVE_SUBJECT_TYPES,
   },
   {
     id: "plugin_use_write",
@@ -527,22 +595,23 @@ const PLATFORM_CONNECTION_PERMISSION_ACTIONS: readonly PlatformPermissionActionD
     ringId: "ring_2",
     label: "Manage connection",
     description: "Connect, authorize, refresh, or change the external identity and granted scopes.",
-    subjectTypes: ["plugin", "plugin_team_role"],
+    subjectTypes: PLATFORM_PLUGIN_ADMINISTRATIVE_SUBJECT_TYPES,
   },
   {
     id: "plugin_access_manage",
     ringId: "ring_3",
     label: "Manage plugin access",
     description: "Change which organization roles and agents can use or administer this plugin.",
-    subjectTypes: ["plugin", "plugin_team_role"],
+    subjectTypes: PLATFORM_PLUGIN_ADMINISTRATIVE_SUBJECT_TYPES,
   },
   {
     id: "plugin_disconnect",
     ringId: "ring_3",
     label: "Disconnect plugin",
     description: "Revoke provider authorization and stop all new operations through this plugin.",
-    subjectTypes: ["plugin", "plugin_team_role"],
+    subjectTypes: PLATFORM_PLUGIN_ADMINISTRATIVE_SUBJECT_TYPES,
   },
+  ...PLATFORM_EXACT_CONNECTOR_PERMISSION_ACTIONS,
 ];
 
 export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermissionActionDefinition[] = [
@@ -1441,6 +1510,8 @@ export const PLATFORM_PERMISSION_SUBJECT_TYPES = [
   "tag_team_role",
   "plugin",
   "plugin_team_role",
+  ...PLATFORM_CONNECTOR_PERMISSION_SUBJECT_TYPES,
+  ...PLATFORM_CONNECTOR_TEAM_PERMISSION_SUBJECT_TYPES,
   "guardrail",
   "guardrail_team_role",
   "evaluation",
@@ -1479,6 +1550,8 @@ export const PLATFORM_SCOPED_PERMISSION_SUBJECT_TYPES = [
   "tag_team_role",
   "plugin",
   "plugin_team_role",
+  ...PLATFORM_CONNECTOR_PERMISSION_SUBJECT_TYPES,
+  ...PLATFORM_CONNECTOR_TEAM_PERMISSION_SUBJECT_TYPES,
   "guardrail",
   "guardrail_team_role",
   "evaluation",

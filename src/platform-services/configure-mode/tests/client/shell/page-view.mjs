@@ -9,6 +9,9 @@ export const TESTS_APP_PAGE_VIEW_SCRIPT = String.raw`        function renderTest
             controlsPortalId: testsPageMode === "overview"
               ? "playground-tests-overview-controls"
               : "playground-tests-nav-actions",
+            sectionControlsPortalId: testsPageMode === "detail"
+              ? "playground-tests-section-controls"
+              : undefined,
             defaultProjectId: latestInteractedProjectId || "",
             defaultEnvironmentId: resolvedEnvironmentId || environmentId || "",
             defaultAgentId: resolvedComposerAgentId || resolvedPreferredAgentId || "",

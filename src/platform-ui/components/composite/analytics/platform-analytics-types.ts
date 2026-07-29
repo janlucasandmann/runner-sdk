@@ -41,6 +41,7 @@ export interface PlatformAnalyticsChartProps {
   analytics: PlatformAnalyticsModel;
   chartType?: PlatformAnalyticsChartType;
   compact?: boolean;
+  showXAxisLabels?: boolean;
 }
 
 export interface PlatformAnalyticsTimeframeControl {

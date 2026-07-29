@@ -2,7 +2,10 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PlatformCodeEditorWorkspace } from "./platform-code-editor-workspace.js";
+import {
+  isPlatformCodeEditorMarkdownFile,
+  PlatformCodeEditorWorkspace,
+} from "./platform-code-editor-workspace.js";
 
 afterEach(cleanup);
 
@@ -66,6 +69,65 @@ describe("PlatformCodeEditorWorkspace", () => {
     expect(onRedo).not.toHaveBeenCalled();
   });
 
+  it("detects Markdown paths without treating ordinary source files as Markdown", () => {
+    expect(isPlatformCodeEditorMarkdownFile({ id: "input", label: "Input", editorMode: "markdown" })).toBe(true);
+    expect(isPlatformCodeEditorMarkdownFile({ id: "README.md", editorMode: "code" })).toBe(false);
+    expect(isPlatformCodeEditorMarkdownFile({ id: "skill-1", tabLabel: "SKILL.md" })).toBe(true);
+    expect(isPlatformCodeEditorMarkdownFile({ id: "docs/guide.markdown" })).toBe(true);
+    expect(isPlatformCodeEditorMarkdownFile({ id: "README.md?version=2" })).toBe(true);
+    expect(isPlatformCodeEditorMarkdownFile({ id: "main.ts", label: "main.ts" })).toBe(false);
+    expect(isPlatformCodeEditorMarkdownFile({ id: "docs", isFolder: true })).toBe(false);
+  });
+
+  it("uses the centralized instructions editor for Markdown and keeps source files on the code editor", () => {
+    const onMarkdownChange = vi.fn();
+    const files = [
+      { id: "skill-file", label: "SKILL.md", tabLabel: "SKILL.md" },
+      { id: "main.ts", label: "main.ts" },
+    ];
+    const { container, rerender } = render(
+      <PlatformCodeEditorWorkspace
+        files={files}
+        activeFileId="skill-file"
+        editor={<textarea aria-label="Source code" />}
+        markdownEditor={{
+          value: "# Skill instructions",
+          onChange: onMarkdownChange,
+          ariaLabel: "Skill Markdown",
+          historyKey: "skill-file",
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("toolbar", { name: "Markdown formatting" })).not.toBeNull();
+    expect(screen.getByRole("textbox", { name: "Skill Markdown" })).not.toBeNull();
+    expect(screen.queryByLabelText("Source code")).toBeNull();
+    expect(
+      container.querySelector(".platform-code-editor-workspace__editor.is-markdown"),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(".platform-instructions-editor__title")?.textContent,
+    ).toBe("SKILL.md");
+
+    rerender(
+      <PlatformCodeEditorWorkspace
+        files={files}
+        activeFileId="main.ts"
+        editor={<textarea aria-label="Source code" />}
+        markdownEditor={{
+          value: "# Skill instructions",
+          onChange: onMarkdownChange,
+        }}
+      />,
+    );
+
+    expect(screen.getByLabelText("Source code")).not.toBeNull();
+    expect(screen.queryByRole("toolbar", { name: "Markdown formatting" })).toBeNull();
+    expect(
+      container.querySelector(".platform-code-editor-workspace__editor.is-markdown"),
+    ).toBeNull();
+  });
+
   it("moves file creation into the Files header and keeps nested file disclosures", () => {
     const onCreateFile = vi.fn();
     const onUploadFiles = vi.fn();
@@ -78,6 +140,7 @@ describe("PlatformCodeEditorWorkspace", () => {
             label: "src",
             leading: <span>Open</span>,
             depth: 2,
+            isFolder: true,
           },
         ]}
         onCreateFile={onCreateFile}
@@ -107,6 +170,15 @@ describe("PlatformCodeEditorWorkspace", () => {
       "padding-inline-start: 44px",
     );
     expect(screen.getByText("Open")).not.toBeNull();
+    const folderIcon = file.querySelector(
+      ".platform-code-editor-workspace__folder-icon",
+    );
+    const fileLabel = file.querySelector(
+      ".platform-code-editor-workspace__file-label",
+    );
+    expect(folderIcon?.tagName.toLowerCase()).toBe("svg");
+    expect(folderIcon?.getAttribute("aria-hidden")).toBe("true");
+    expect(fileLabel?.previousElementSibling).toBe(folderIcon);
   });
 
   it("moves dragged files into folders and back to the sidebar root", () => {

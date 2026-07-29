@@ -212,7 +212,10 @@
 }
 
 .resource-overview-table.is-catalog-ui .resource-overview-identity__visual,
-.resource-overview-table.is-catalog-ui .resource-overview-identity__visual.is-size-compact {
+.resource-overview-table.is-catalog-ui
+  .resource-overview-identity__visual.is-size-compact,
+.connection-identity-icon.is-catalog,
+.connection-identity-icon.is-catalog.is-size-compact {
   box-sizing: border-box;
   width: 40px;
   height: 40px;
@@ -222,7 +225,10 @@
   background: rgba(255, 255, 255, 0.045);
 }
 
-.resource-overview-table.is-catalog-ui .resource-overview-identity__visual.is-connection > svg {
+.resource-overview-table.is-catalog-ui
+  .resource-overview-identity__visual.is-connection
+  > svg,
+.connection-identity-icon.is-catalog > svg {
   width: 20px;
   height: 20px;
 }
@@ -250,51 +256,80 @@
 }
 
 .resource-overview-table.is-connections.is-catalog-ui
-  .resource-overview-identity__visual.is-plugin {
+  .resource-overview-identity__visual.is-plugin,
+.connection-identity-icon.is-catalog.is-plugin {
   border: 0;
   background: #fff;
 }
 
 .resource-overview-table.is-connections.is-catalog-ui
-  .resource-overview-identity__visual.is-plugin.is-gitlab {
+  .resource-overview-identity__visual.is-plugin.is-gitlab,
+.connection-identity-icon.is-catalog.is-plugin.is-gitlab {
   background: #f7f5e3;
 }
 
 .resource-overview-table.is-connections.is-catalog-ui
-  .resource-overview-identity__visual.is-tag {
+  .resource-overview-identity__visual.is-tag,
+.connection-identity-icon.is-catalog.is-tag {
   border: 0;
 }
 
 .resource-overview-table.is-connections.is-catalog-ui
-  .resource-overview-identity__visual.is-tag.is-discord {
+  .resource-overview-identity__visual.is-tag.is-discord,
+.connection-identity-icon.is-catalog.is-tag.is-discord {
   background: #5765ed;
 }
 
 .resource-overview-table.is-connections.is-catalog-ui
-  .resource-overview-identity__visual.is-tag.is-email {
+  .resource-overview-identity__visual.is-tag.is-email,
+.connection-identity-icon.is-catalog.is-tag.is-email {
   background: linear-gradient(to top, #307ef7, #55b7ec);
 }
 
 .resource-overview-table.is-connections.is-catalog-ui
-  .resource-overview-identity__visual.is-tag.is-telegram {
+  .resource-overview-identity__visual.is-tag.is-telegram,
+.connection-identity-icon.is-catalog.is-tag.is-telegram {
   background: #26a2e1;
 }
 
 .resource-overview-table.is-connections.is-catalog-ui
-  .resource-overview-identity__visual.is-tag.is-telegram > :is(img, svg) {
+  .resource-overview-identity__visual.is-tag.is-telegram
+  > :is(img, svg),
+.connection-identity-icon.is-catalog.is-tag.is-telegram > :is(img, svg) {
   width: 20px;
   height: 20px;
 }
 
 .resource-overview-table.is-connections.is-catalog-ui
-  .resource-overview-identity__visual.is-plugin > svg {
+  .resource-overview-identity__visual.is-plugin
+  > svg,
+.connection-identity-icon.is-catalog.is-plugin > svg {
   color: #111;
 }
 
 .resource-overview-table.is-connections.is-catalog-ui
   .resource-overview-identity__visual.is-plugin
+  .playground-plugin-row-logo.is-github,
+.connection-identity-icon.is-catalog.is-plugin
   .playground-plugin-row-logo.is-github {
   filter: none;
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .platform-data-table__row-group.is-grouped-row
+  > .platform-data-table__row {
+  padding-left: var(--platform-data-table-catalog-inline-padding);
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .platform-data-table__row-group.is-grouped-row
+  > .platform-data-table__row
+  > .platform-data-table__cell[data-column-id="name"] {
+  box-sizing: border-box;
+  padding-left: calc(
+    var(--platform-data-table-row-group-chevron-size) +
+      var(--platform-data-table-row-group-gap)
+  );
 }
 
 .resource-overview-table.is-catalog-ui .resource-overview-identity__title {

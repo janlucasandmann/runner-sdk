@@ -131,7 +131,7 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
       }
 
       .playground-evaluations-thread-case-modal-body {
-        flex: 1 1 auto;
+        flex: 1 1 0;
         min-height: 0;
         display: flex;
         flex-direction: column;
@@ -157,7 +157,7 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
       }
 
       .playground-evaluations-thread-picker-table.platform-data-table.is-fill-layout {
-        flex: 1 1 auto;
+        flex: 1 1 0;
         height: 100%;
         max-height: 100%;
       }
@@ -566,9 +566,192 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         min-width: 0;
       }
 
+      .playground-evaluations-dataset-case-page-body {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        min-height: 0;
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        padding: 0 !important;
+        overflow: hidden;
+      }
+
+      .playground-evaluations-dataset-case-page {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        min-height: 0;
+        flex: 1 1 0;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .playground-evaluations-dataset-case-loading {
+        min-height: 320px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-evaluations-dataset-case-identity {
+        box-sizing: border-box;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-evaluations-dataset-case-title-input {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        font: inherit;
+        letter-spacing: 0;
+      }
+
+      .playground-evaluations-dataset-case-title-input {
+        font-size: 20px;
+        line-height: 1.3;
+        font-weight: 400;
+      }
+
+      .playground-evaluations-dataset-case-description-input {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .playground-evaluations-dataset-case-title-input::placeholder,
+      .playground-evaluations-dataset-case-description-input::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+      }
+
+      .playground-evaluations-dataset-case-workspace {
+        min-height: 0;
+        flex: 1 1 0;
+      }
+
+      .playground-evaluations-dataset-case-editor-shell {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 0;
+        flex: 1 1 0;
+        border: 0;
+        outline: 0;
+        border-radius: 0;
+        background: #000;
+        color: rgba(255, 255, 255, 0.92);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        resize: none;
+      }
+
+      textarea.playground-evaluations-dataset-case-editor-shell {
+        padding: 16px 18px;
+      }
+
+      .playground-evaluations-dataset-case-settings-content {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 42px;
+      }
+
+      .playground-evaluations-dataset-case-guidance .platform-instructions-editor__title {
+        font-size: 14px;
+        font-weight: 400;
+      }
+
+      .playground-evaluations-dataset-case-configuration {
+        min-width: 0;
+      }
+
+      .playground-evaluations-dataset-case-configuration-row {
+        min-width: 0;
+        min-height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .playground-evaluations-dataset-case-configuration-row + .playground-evaluations-dataset-case-configuration-row {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-evaluations-dataset-case-configuration-label {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 400;
+      }
+
+      .playground-evaluations-dataset-case-setting-tooltip {
+        flex: 0 0 auto;
+      }
+
+      .playground-evaluations-dataset-case-role-selector {
+        min-width: 160px;
+      }
+
+      .playground-evaluations-dataset-case-run-input {
+        box-sizing: border-box;
+        width: 64px;
+        min-height: 28px;
+        padding: 3px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        outline: 0;
+        background: transparent;
+        color: #fff;
+        font: inherit;
+        text-align: center;
+      }
+
+      .playground-evaluations-dataset-case-sidebar-card.platform-ui-card {
+        min-width: 0;
+      }
+
+      .playground-evaluations-dataset-case-delete-button {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
       @media (max-width: 760px) {
         .playground-evaluations-page .playground-guardrails-browser-body.is-detail-page {
           padding: 16px;
+        }
+
+        .playground-evaluations-page .playground-guardrails-browser-body.playground-evaluations-dataset-case-page-body {
+          padding: 0 !important;
+        }
+
+        .playground-evaluations-dataset-case-identity {
+          padding: 20px;
         }
 
         .playground-evaluations-run-evidence-grid {

@@ -170,20 +170,10 @@ export function RunnerThreadTimeline({
     focusTarget?.focus({ preventScroll: true });
   };
 
-  const selectLiveRun = (run: RunnerThreadRun) => {
-    if (typeof document === "undefined") return;
-    document.getElementById(`tb-thread-run-${run.id}`)
-      ?.scrollIntoView({ behavior: "smooth", block: "center" });
-  };
-
   return (
     <div className="tb-thread-timeline">
       <RunnerThreadLiveSupervisionDock
         projection={projection}
-        onSelectRun={selectLiveRun}
-        onCancelRun={onControlRun
-          ? (run) => onControlRun(run, "cancel")
-          : undefined}
         onPermissionDecision={onPermissionDecision}
       />
 

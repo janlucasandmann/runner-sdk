@@ -253,6 +253,82 @@ export function createProjectsRequestHandler({
       ));
     }
 
+    const projectDeliveryDesignPreviewMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/delivery-design\/preview$/,
+    );
+    if (method === "POST" && projectDeliveryDesignPreviewMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectDeliveryDesignPreviewMatch[1])}/delivery-design/preview`,
+        "POST",
+      ));
+    }
+
+    const projectDeliveryDesignApplyMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/delivery-design\/apply$/,
+    );
+    if (method === "POST" && projectDeliveryDesignApplyMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectDeliveryDesignApplyMatch[1])}/delivery-design/apply`,
+        "POST",
+      ));
+    }
+
+    const projectDeliveryDesignMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/delivery-design$/,
+    );
+    if (["GET", "PUT"].includes(method) && projectDeliveryDesignMatch) {
+      const upstreamPath =
+        `/projects/${encodePathSegment(projectDeliveryDesignMatch[1])}/delivery-design`;
+      return method === "GET"
+        ? startRequest(proxyUpstreamGet(req, res, upstreamPath))
+        : startRequest(proxyUpstreamJsonRequest(req, res, upstreamPath, "PUT"));
+    }
+
+    if (pathname === "/api/real/optimization-campaigns" && ["GET", "POST"].includes(method)) {
+      return method === "GET"
+        ? startRequest(proxyUpstreamGet(req, res, `/optimization-campaigns${url.search || ""}`))
+        : startRequest(proxyUpstreamJsonRequest(req, res, "/optimization-campaigns", "POST"));
+    }
+
+    const optimizationCampaignActionMatch = pathname.match(
+      /^\/api\/real\/optimization-campaigns\/([^/]+)\/(start|cancel)$/,
+    );
+    if (method === "POST" && optimizationCampaignActionMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/optimization-campaigns/${encodePathSegment(optimizationCampaignActionMatch[1])}/${optimizationCampaignActionMatch[2]}`,
+        "POST",
+      ));
+    }
+
+    const optimizationCampaignPromoteMatch = pathname.match(
+      /^\/api\/real\/optimization-campaigns\/([^/]+)\/attempts\/([^/]+)\/promote$/,
+    );
+    if (method === "POST" && optimizationCampaignPromoteMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/optimization-campaigns/${encodePathSegment(optimizationCampaignPromoteMatch[1])}/attempts/${encodePathSegment(optimizationCampaignPromoteMatch[2])}/promote`,
+        "POST",
+      ));
+    }
+
+    const optimizationCampaignDetailMatch = pathname.match(
+      /^\/api\/real\/optimization-campaigns\/([^/]+)$/,
+    );
+    if (method === "GET" && optimizationCampaignDetailMatch) {
+      return startRequest(proxyUpstreamGet(
+        req,
+        res,
+        `/optimization-campaigns/${encodePathSegment(optimizationCampaignDetailMatch[1])}`,
+      ));
+    }
+
     const projectDeliveryProvisionMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/delivery-plan\/provision$/);
     if (method === "POST" && projectDeliveryProvisionMatch) {
       return startRequest(proxyUpstreamJsonRequest(

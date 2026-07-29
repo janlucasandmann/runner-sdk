@@ -266,7 +266,11 @@ export function PlatformResourceAccessSettings<TTeam extends PlatformAccessPrinc
           <ArrowLeft width={13} height={13} strokeWidth={1.9} />
           <span>{backLabel}</span>
         </button>
-        <div className="playground-project-team-permissions-title">{principalName} Permissions</div>
+        {!isRoleScopedSystemPrincipal ? (
+          <div className="playground-project-team-permissions-title">
+            {principalName} Permissions
+          </div>
+        ) : null}
         {permissionHeaderAction}
       </div>
 
@@ -327,7 +331,7 @@ export function PlatformResourceAccessSettings<TTeam extends PlatformAccessPrinc
           }
           roleKicker={
             isRoleScopedSystemPrincipal
-              ? "Organization member role"
+              ? undefined
               : `${resourceLabel} role`
           }
           roleDescription={

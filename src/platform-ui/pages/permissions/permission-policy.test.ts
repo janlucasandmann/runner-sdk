@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  PLATFORM_GITHUB_CONNECTOR_INTERACTIVE_CAPABILITY_IDS,
+  PLATFORM_GITHUB_CONNECTOR_READ_ONLY_CAPABILITY_IDS,
   PLATFORM_PERMISSION_ACTION_DEFINITIONS,
+  getPlatformGitHubConnectorPermissionActionId,
   type PlatformPermissionSubjectType,
 } from "./permission-catalog.js";
 import { shouldShowPlatformPermissionAction } from "./permission-model.js";
@@ -134,6 +137,97 @@ describe("permission policy", () => {
       expect(visibleActionIds).not.toContain("server_invoke");
     },
   );
+
+  it.each(["github_plugin", "github_plugin_team_role"] as const)(
+    "registers every GitHub connector capability for %s subjects",
+    (subjectType) => {
+      const visibleActionIds = PLATFORM_PERMISSION_ACTION_DEFINITIONS.filter(
+        (action) => shouldShowPlatformPermissionAction(action, subjectType),
+      ).map((action) => action.id);
+      const capabilityActionIds = [
+        ...PLATFORM_GITHUB_CONNECTOR_INTERACTIVE_CAPABILITY_IDS,
+        ...PLATFORM_GITHUB_CONNECTOR_READ_ONLY_CAPABILITY_IDS,
+      ].map(getPlatformGitHubConnectorPermissionActionId);
+
+      expect(visibleActionIds).toEqual([
+        "plugin_view",
+        "plugin_activity_view",
+        "plugin_connection_manage",
+        "plugin_access_manage",
+        "plugin_disconnect",
+        ...capabilityActionIds,
+      ]);
+      expect(capabilityActionIds).toHaveLength(44);
+      expect(visibleActionIds).not.toContain("plugin_use_read");
+      expect(visibleActionIds).not.toContain("plugin_use_write");
+    },
+  );
+
+  it("preserves action-level GitHub overrides through normalization", () => {
+    const actionId = getPlatformGitHubConnectorPermissionActionId(
+      "merge_pull_request",
+    );
+    const normalized = normalizePlatformPermissionSet(
+      {
+        subjectType: "github_plugin",
+        actions: {
+          [actionId]: {
+            ringId: "ring_3",
+            access: "ask_for_permission",
+          },
+        },
+      },
+      "github_plugin",
+    );
+
+    expect(normalized.actions?.[actionId]).toEqual({
+      ringId: "ring_3",
+      access: "ask_for_permission",
+    });
+  });
+
+  it("applies conservative GitHub connector role presets", () => {
+    const readActionId = getPlatformGitHubConnectorPermissionActionId(
+      "list_commits",
+    );
+    const writeActionId = getPlatformGitHubConnectorPermissionActionId(
+      "merge_pull_request",
+    );
+    const contributor = createPlatformRolePermissionSet(
+      "github_plugin_team_role",
+      "contributor",
+    );
+    const member = createPlatformRolePermissionSet(
+      "github_plugin_team_role",
+      "member",
+    );
+    const admin = createPlatformRolePermissionSet(
+      "github_plugin_team_role",
+      "admin",
+    );
+
+    expect(
+      getPlatformPermissionActionAccessByDefinition(
+        contributor,
+        readActionId,
+      ),
+    ).toBe("full_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(
+        contributor,
+        writeActionId,
+      ),
+    ).toBe("ask_for_permission");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(member, readActionId),
+    ).toBe("read_only");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(member, writeActionId),
+    ).toBe("no_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(admin, writeActionId),
+    ).toBe("full_access");
+  });
 
   it.each([
     [

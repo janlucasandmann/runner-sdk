@@ -126,7 +126,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               .filter((task) => task?.id)
               .map((task) => [task.id, task])
           );
-          return (Array.isArray(rows) ? rows : [])
+          const normalizedEvents = (Array.isArray(rows) ? rows : [])
             .map((row) => {
               const normalizedEvent = normalizePlaygroundTaskActivityRecord(row);
               if (!normalizedEvent || normalizedEvent.eventType === "comment_added") {
@@ -149,7 +149,36 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
                 task,
               };
             })
-            .filter(Boolean)
+            .filter(Boolean);
+          const eventsByKey = new Map();
+          normalizedEvents.forEach((event) => {
+            const key = event.eventType === "created"
+              ? event.taskId + ":created"
+              : event.taskId + ":" + event.eventType + ":" + event.sourceId;
+            const existingEvent = eventsByKey.get(key);
+            const actorPriority = event.actorType === "system"
+              ? 1
+              : event.actorType === "agent"
+                ? (event.actorAgentId ? 4 : 3)
+                : (event.actorUserId ? 4 : 3);
+            const existingActorPriority = existingEvent?.actorType === "system"
+              ? 1
+              : existingEvent?.actorType === "agent"
+                ? (existingEvent.actorAgentId ? 4 : 3)
+                : existingEvent
+                  ? (existingEvent.actorUserId ? 4 : 3)
+                  : 0;
+            if (
+              !existingEvent
+              || (
+                event.eventType === "created"
+                && actorPriority > existingActorPriority
+              )
+            ) {
+              eventsByKey.set(key, event);
+            }
+          });
+          return [...eventsByKey.values()]
             .sort((left, right) => {
               const leftTime = Date.parse(String(left.createdAt || "")) || 0;
               const rightTime = Date.parse(String(right.createdAt || "")) || 0;

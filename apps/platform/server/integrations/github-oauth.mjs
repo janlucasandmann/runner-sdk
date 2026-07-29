@@ -1,4 +1,11 @@
-import { createCipheriv, createDecipheriv, createPrivateKey, createSign, randomBytes } from "node:crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  createPrivateKey,
+  createSign,
+  randomBytes,
+} from "node:crypto";
 import fs from "node:fs";
 
 const GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize";
@@ -121,6 +128,8 @@ async function handleGithubLogin(req, res, { platformOrigin, envFileCandidates, 
   const overrideRedirectUri = await resolveOAuthCallbackUrl(platformOrigin, envFileCandidates);
   const hasRedirectUriOverride = Boolean(overrideRedirectUri);
   const state = randomBytes(16).toString("hex");
+  const pkceVerifier = randomBytes(48).toString("base64url");
+  const pkceChallenge = createGithubPkceChallenge(pkceVerifier);
   const scope = typeof body?.scope === "string" && body.scope.trim()
     ? body.scope.trim()
     : "repo read:user read:org workflow admin:repo_hook project admin:org";
@@ -129,19 +138,24 @@ async function handleGithubLogin(req, res, { platformOrigin, envFileCandidates, 
     provider: "github",
     uid: verifiedUser.uid,
     redirectTarget,
+    callbackHandler: "platform",
+    callbackTarget: new URL("/api/github/callback", `${platformOrigin}/`).toString(),
+    credentialId: normalizeGithubCredentialId(body?.credentialId),
+    credentialName: normalizeGithubCredentialName(body?.credentialName),
+    organizationId: normalizeGithubOrganizationId(body?.organizationId),
+    pkceVerifier,
   }, envFileCandidates);
 
-  const authUrl = new URL(GITHUB_AUTHORIZE_URL);
-  authUrl.searchParams.set("client_id", clientId);
-  if (hasRedirectUriOverride) {
-    authUrl.searchParams.set("redirect_uri", overrideRedirectUri);
-  }
-  authUrl.searchParams.set("state", state);
-  authUrl.searchParams.set("scope", scope);
-  authUrl.searchParams.set("allow_signup", "false");
+  const authUrl = buildGithubAuthorizationUrl({
+    clientId,
+    ...(hasRedirectUriOverride ? { redirectUri: overrideRedirectUri } : {}),
+    state,
+    scope,
+    pkceChallenge,
+  });
 
   return sendGithubJson(req, res, 200, {
-    authUrl: authUrl.toString(),
+    authUrl,
     state,
     uid: verifiedUser.uid,
   }, allowedOrigins);
@@ -149,8 +163,7 @@ async function handleGithubLogin(req, res, { platformOrigin, envFileCandidates, 
 
 async function handleGithubCallback(req, res, { platformOrigin, envFileCandidates, allowedOrigins }) {
   const stateParam = urlSearchParam(req, "state");
-  const code = urlSearchParam(req, "code");
-  if (!stateParam || !code) {
+  if (!stateParam) {
     return sendGithubJson(req, res, 400, {
       error: "Invalid OAuth callback",
     }, allowedOrigins);
@@ -161,6 +174,36 @@ async function handleGithubCallback(req, res, { platformOrigin, envFileCandidate
     return sendGithubJson(req, res, 400, {
       error: "Invalid or expired OAuth state. Please try again.",
     }, allowedOrigins);
+  }
+
+  const providerError = normalizeGithubOAuthError(
+    urlSearchParam(req, "error") || urlSearchParam(req, "error_description"),
+  );
+  if (providerError) {
+    return sendRedirect(
+      req,
+      res,
+      302,
+      appendGithubOAuthResultToRedirectTarget(stateData.redirectTarget, {
+        result: "error",
+        error: providerError,
+      }),
+      allowedOrigins,
+    );
+  }
+
+  const code = urlSearchParam(req, "code");
+  if (!code) {
+    return sendRedirect(
+      req,
+      res,
+      302,
+      appendGithubOAuthResultToRedirectTarget(stateData.redirectTarget, {
+        result: "error",
+        error: "authorization_code_missing",
+      }),
+      allowedOrigins,
+    );
   }
 
   const clientId = await getRuntimeEnvValue("GITHUB_OAUTH_CLIENT_ID", envFileCandidates);
@@ -179,6 +222,9 @@ async function handleGithubCallback(req, res, { platformOrigin, envFileCandidate
     client_secret: clientSecret,
     code,
   });
+  if (stateData.pkceVerifier) {
+    tokenRequestBody.set("code_verifier", stateData.pkceVerifier);
+  }
   if (hasRedirectUriOverride) {
     tokenRequestBody.set("redirect_uri", redirectUri);
   }
@@ -190,45 +236,165 @@ async function handleGithubCallback(req, res, { platformOrigin, envFileCandidate
   });
   const token = await response.json().catch(() => ({}));
   if (!response.ok || token?.error || !token?.access_token) {
-    return sendGithubJson(req, res, 500, {
-      error: token?.error_description || token?.error || "Failed to connect GitHub",
-    }, allowedOrigins);
+    return sendRedirect(
+      req,
+      res,
+      302,
+      appendGithubOAuthResultToRedirectTarget(stateData.redirectTarget, {
+        result: "error",
+        error: normalizeGithubOAuthError(token?.error) || "token_exchange_failed",
+      }),
+      allowedOrigins,
+    );
   }
 
-  await saveGithubToken(stateData.uid, {
-    accessToken: token.access_token,
-    refreshToken: token.refresh_token,
-    scope: token.scope,
-    tokenType: token.token_type,
-    expiresIn: token.expires_in,
-    obtainedAt: Date.now(),
-  }, envFileCandidates);
+  try {
+    const profile = await githubFetchJson("/user", token.access_token);
+    await saveGithubToken(stateData.uid, {
+      accessToken: token.access_token,
+      refreshToken: token.refresh_token,
+      scope: token.scope,
+      tokenType: token.token_type,
+      expiresIn: token.expires_in,
+      obtainedAt: Date.now(),
+      credentialId: stateData.credentialId,
+      credentialName: stateData.credentialName,
+      organizationId: stateData.organizationId,
+      profile,
+    }, envFileCandidates);
+  } catch {
+    return sendRedirect(
+      req,
+      res,
+      302,
+      appendGithubOAuthResultToRedirectTarget(stateData.redirectTarget, {
+        result: "error",
+        error: "credential_save_failed",
+      }),
+      allowedOrigins,
+    );
+  }
 
-  return sendRedirect(req, res, 302, stateData.redirectTarget, allowedOrigins);
+  return sendRedirect(
+    req,
+    res,
+    302,
+    appendGithubOAuthResultToRedirectTarget(stateData.redirectTarget, {
+      result: "success",
+    }),
+    allowedOrigins,
+  );
+}
+
+export function createGithubPkceChallenge(verifier) {
+  const normalizedVerifier = String(verifier || "").trim();
+  if (!/^[A-Za-z0-9._~-]{43,128}$/.test(normalizedVerifier)) {
+    throw new TypeError("GitHub PKCE verifier must contain 43 to 128 valid characters.");
+  }
+  return createHash("sha256").update(normalizedVerifier, "ascii").digest("base64url");
+}
+
+export function buildGithubAuthorizationUrl({
+  clientId,
+  redirectUri = "",
+  state,
+  scope,
+  pkceChallenge,
+}) {
+  const authUrl = new URL(GITHUB_AUTHORIZE_URL);
+  authUrl.searchParams.set("client_id", String(clientId || "").trim());
+  if (String(redirectUri || "").trim()) {
+    authUrl.searchParams.set("redirect_uri", String(redirectUri).trim());
+  }
+  authUrl.searchParams.set("state", String(state || "").trim());
+  authUrl.searchParams.set("scope", String(scope || "").trim());
+  authUrl.searchParams.set("allow_signup", "false");
+  authUrl.searchParams.set("prompt", "select_account");
+  authUrl.searchParams.set("code_challenge", String(pkceChallenge || "").trim());
+  authUrl.searchParams.set("code_challenge_method", "S256");
+  return authUrl.toString();
+}
+
+export function appendGithubOAuthResultToRedirectTarget(
+  redirectTarget,
+  { result, error = "" },
+) {
+  try {
+    const url = new URL(String(redirectTarget || ""));
+    if (url.searchParams.get("connectorAuthReturn") !== "1") {
+      return url.toString();
+    }
+    url.searchParams.set("connectorAuthResult", result === "success" ? "success" : "error");
+    const normalizedError = normalizeGithubOAuthError(error);
+    if (result !== "success" && normalizedError) {
+      url.searchParams.set("connectorAuthError", normalizedError);
+    } else {
+      url.searchParams.delete("connectorAuthError");
+    }
+    return url.toString();
+  } catch {
+    return String(redirectTarget || "");
+  }
+}
+
+function normalizeGithubOAuthError(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 120);
 }
 
 async function handleGithubUser(req, res, { envFileCandidates, allowedOrigins }) {
   try {
     const verifiedUser = await verifyRequestUser(req, envFileCandidates);
-    const token = await loadGithubToken(verifiedUser.uid, envFileCandidates);
+    const requestedCredentialId = urlSearchParam(req, "credentialId");
+    const token = await loadGithubToken(
+      verifiedUser.uid,
+      envFileCandidates,
+      requestedCredentialId,
+    );
     if (!token) {
-      return sendGithubJson(req, res, 200, { connected: false }, allowedOrigins);
+      return sendGithubJson(req, res, 200, {
+        connected: false,
+        credentials: [],
+      }, allowedOrigins);
     }
 
     try {
       const profile = await githubFetchJson("/user", token.accessToken);
+      const store = await updateGithubCredentialMetadata(
+        verifiedUser.uid,
+        token.credentialId,
+        {
+          profile,
+          identity: getGithubProfileIdentity(profile),
+          lastCheckedAt: Date.now(),
+          status: "valid",
+        },
+        envFileCandidates,
+      );
       return sendGithubJson(req, res, 200, {
         connected: true,
         profile,
+        credentials: listPublicGithubCredentials(store),
+        defaultCredentialId: store.defaultCredentialId || undefined,
         scope: token.scope || "",
         tokenType: token.tokenType || "bearer",
         expiresAt: token.expiresAt ?? null,
       }, allowedOrigins);
     } catch (error) {
       if (error?.status === 401) {
-        await deleteGithubToken(verifiedUser.uid, envFileCandidates);
+        const store = await deleteGithubToken(
+          verifiedUser.uid,
+          envFileCandidates,
+          token.credentialId,
+        );
         return sendGithubJson(req, res, 200, {
-          connected: false,
+          connected: Object.keys(store.credentials).length > 0,
+          credentials: listPublicGithubCredentials(store),
+          defaultCredentialId: store.defaultCredentialId || undefined,
           reason: "token_revoked",
         }, allowedOrigins);
       }
@@ -236,7 +402,10 @@ async function handleGithubUser(req, res, { envFileCandidates, allowedOrigins })
     }
   } catch (error) {
     if (error?.code === "unauthorized") {
-      return sendGithubJson(req, res, 200, { connected: false }, allowedOrigins);
+      return sendGithubJson(req, res, 200, {
+        connected: false,
+        credentials: [],
+      }, allowedOrigins);
     }
     throw error;
   }
@@ -244,8 +413,19 @@ async function handleGithubUser(req, res, { envFileCandidates, allowedOrigins })
 
 async function handleGithubDisconnect(req, res, { envFileCandidates, allowedOrigins }) {
   const verifiedUser = await verifyRequestUser(req, envFileCandidates);
-  await deleteGithubToken(verifiedUser.uid, envFileCandidates);
-  return sendGithubJson(req, res, 200, { success: true }, allowedOrigins);
+  const body = await readRequestBody(req);
+  const credentialId = normalizeGithubCredentialId(body?.credentialId);
+  const store = await deleteGithubToken(
+    verifiedUser.uid,
+    envFileCandidates,
+    credentialId,
+  );
+  return sendGithubJson(req, res, 200, {
+    success: true,
+    connected: Object.keys(store.credentials).length > 0,
+    credentials: listPublicGithubCredentials(store),
+    defaultCredentialId: store.defaultCredentialId || undefined,
+  }, allowedOrigins);
 }
 
 async function handleGithubRepos(req, res, url, { envFileCandidates, allowedOrigins }) {
@@ -285,7 +465,11 @@ async function handleGithubRepos(req, res, url, { envFileCandidates, allowedOrig
     }, allowedOrigins);
   } catch (error) {
     if (error?.status === 401) {
-      await deleteGithubToken(verifiedUser.uid, envFileCandidates);
+      await deleteGithubToken(
+        verifiedUser.uid,
+        envFileCandidates,
+        token.credentialId,
+      );
       return sendGithubJson(req, res, 401, {
         error: "GitHub token revoked",
       }, allowedOrigins);
@@ -381,7 +565,11 @@ async function handleGithubRepoDetail(req, res, url, normalizedPathname, { envFi
     }, allowedOrigins);
   } catch (error) {
     if (error?.status === 401) {
-      await deleteGithubToken(verifiedUser.uid, envFileCandidates);
+      await deleteGithubToken(
+        verifiedUser.uid,
+        envFileCandidates,
+        token.credentialId,
+      );
       return sendGithubJson(req, res, 401, {
         error: "GitHub token revoked",
       }, allowedOrigins);
@@ -592,6 +780,12 @@ async function saveOAuthState(state, data, envFileCandidates) {
     redirectTarget: { stringValue: data.redirectTarget },
     provider: { stringValue: data.provider },
     uid: { stringValue: data.uid },
+    callbackHandler: { stringValue: data.callbackHandler || "" },
+    callbackTarget: { stringValue: data.callbackTarget || "" },
+    credentialId: { stringValue: data.credentialId || "" },
+    credentialName: { stringValue: data.credentialName || "" },
+    organizationId: { stringValue: data.organizationId || "" },
+    pkceVerifier: { stringValue: data.pkceVerifier || "" },
     createdAt: { integerValue: String(now) },
     expiresAt: { integerValue: String(now + 600_000) },
   }, [], envFileCandidates);
@@ -613,12 +807,210 @@ async function getOAuthState(state, provider, envFileCandidates) {
   return {
     uid: getFirestoreString(fields?.uid) || "",
     redirectTarget: getFirestoreString(fields?.redirectTarget) || "",
+    credentialId: normalizeGithubCredentialId(getFirestoreString(fields?.credentialId)),
+    credentialName: normalizeGithubCredentialName(getFirestoreString(fields?.credentialName)),
+    organizationId: normalizeGithubOrganizationId(getFirestoreString(fields?.organizationId)),
+    pkceVerifier: normalizeGithubPkceVerifier(getFirestoreString(fields?.pkceVerifier)),
   };
 }
 
+function normalizeGithubPkceVerifier(value) {
+  const normalized = String(value || "").trim();
+  return /^[A-Za-z0-9._~-]{43,128}$/.test(normalized) ? normalized : "";
+}
+
+function normalizeGithubCredentialId(value) {
+  const normalized = String(value || "").trim();
+  return /^[A-Za-z0-9_-]{1,120}$/.test(normalized) ? normalized : "";
+}
+
+function createGithubCredentialId() {
+  return `github_${randomBytes(12).toString("base64url")}`;
+}
+
+function normalizeGithubCredentialName(value) {
+  return String(value || "").trim().replace(/\s+/g, " ").slice(0, 120);
+}
+
+function normalizeGithubOrganizationId(value) {
+  return String(value || "").trim().slice(0, 200);
+}
+
+function sanitizeGithubProfile(profile) {
+  if (!profile || typeof profile !== "object" || Array.isArray(profile)) {
+    return {};
+  }
+  return {
+    id: typeof profile.id === "number" ? profile.id : undefined,
+    login: typeof profile.login === "string" ? profile.login : "",
+    name: typeof profile.name === "string" ? profile.name : "",
+    email: typeof profile.email === "string" ? profile.email : "",
+    avatar_url: typeof profile.avatar_url === "string" ? profile.avatar_url : "",
+    html_url: typeof profile.html_url === "string" ? profile.html_url : "",
+  };
+}
+
+function getGithubProfileIdentity(profile) {
+  return [
+    profile?.login,
+    profile?.email,
+    profile?.name,
+  ].find((value) => typeof value === "string" && value.trim())?.trim() || "";
+}
+
+function normalizeStoredGithubCredential(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const id = normalizeGithubCredentialId(value.id);
+  const encryptedToken = String(value.encryptedToken || "").trim();
+  if (!id || !encryptedToken) {
+    return null;
+  }
+  const createdAt = Math.max(0, Number(value.createdAt || 0)) || Date.now();
+  return {
+    id,
+    name: normalizeGithubCredentialName(value.name) || "GitHub account",
+    identity: String(value.identity || "").trim().slice(0, 200),
+    organizationId: normalizeGithubOrganizationId(value.organizationId),
+    encryptedToken,
+    profile: sanitizeGithubProfile(value.profile),
+    status: value.status === "invalid" ? "invalid" : "valid",
+    createdAt,
+    updatedAt: Math.max(createdAt, Number(value.updatedAt || 0)) || createdAt,
+    lastCheckedAt: Math.max(0, Number(value.lastCheckedAt || 0)),
+  };
+}
+
+function parseGithubCredentialStore(document) {
+  const fields = document?.fields || {};
+  let parsed = {};
+  try {
+    parsed = JSON.parse(getFirestoreString(fields.githubCredentialsJson) || "{}");
+  } catch {
+    parsed = {};
+  }
+  const rawCredentials =
+    parsed?.credentials && typeof parsed.credentials === "object" && !Array.isArray(parsed.credentials)
+      ? parsed.credentials
+      : {};
+  const credentials = Object.values(rawCredentials).reduce((result, value) => {
+    const credential = normalizeStoredGithubCredential(value);
+    if (credential) {
+      result[credential.id] = credential;
+    }
+    return result;
+  }, {});
+  let defaultCredentialId = normalizeGithubCredentialId(
+    getFirestoreString(fields.githubDefaultCredentialId)
+      || parsed?.defaultCredentialId,
+  );
+  let migrated = false;
+
+  if (Object.keys(credentials).length === 0) {
+    const legacyFields = fields?.github?.mapValue?.fields || {};
+    const legacyEncryptedToken = getFirestoreString(legacyFields.encryptedToken);
+    if (legacyEncryptedToken) {
+      const legacyUpdatedAt = getFirestoreInteger(legacyFields.updatedAt) || Date.now();
+      const legacyCredential = normalizeStoredGithubCredential({
+        id: "github_legacy_default",
+        name: "GitHub account",
+        encryptedToken: legacyEncryptedToken,
+        createdAt: legacyUpdatedAt,
+        updatedAt: legacyUpdatedAt,
+        lastCheckedAt: 0,
+        status: "valid",
+      });
+      if (legacyCredential) {
+        credentials[legacyCredential.id] = legacyCredential;
+        defaultCredentialId = legacyCredential.id;
+        migrated = true;
+      }
+    }
+  }
+
+  if (!credentials[defaultCredentialId]) {
+    defaultCredentialId = Object.keys(credentials)[0] || "";
+  }
+
+  return {
+    credentials,
+    defaultCredentialId,
+    migrated,
+  };
+}
+
+async function readGithubCredentialStore(uid, envFileCandidates) {
+  const document = await firestoreGetDocument(
+    `${FIRESTORE_TOKEN_COLLECTION}/${encodeURIComponent(uid)}`,
+    envFileCandidates,
+  );
+  const store = parseGithubCredentialStore(document);
+  if (store.migrated) {
+    await writeGithubCredentialStore(uid, store, envFileCandidates);
+    store.migrated = false;
+  }
+  return store;
+}
+
+async function writeGithubCredentialStore(uid, store, envFileCandidates) {
+  const credentialIds = Object.keys(store.credentials);
+  const defaultCredentialId = store.credentials[store.defaultCredentialId]
+    ? store.defaultCredentialId
+    : credentialIds[0] || "";
+  const defaultCredential = store.credentials[defaultCredentialId] || null;
+  const serializedStore = {
+    version: 1,
+    defaultCredentialId,
+    credentials: store.credentials,
+  };
+  await firestorePatchDocument(`${FIRESTORE_TOKEN_COLLECTION}/${encodeURIComponent(uid)}`, {
+    githubCredentialsJson: { stringValue: JSON.stringify(serializedStore) },
+    githubDefaultCredentialId: { stringValue: defaultCredentialId },
+    github: defaultCredential
+      ? {
+          mapValue: {
+            fields: {
+              encryptedToken: { stringValue: defaultCredential.encryptedToken },
+              updatedAt: { integerValue: String(defaultCredential.updatedAt || Date.now()) },
+            },
+          },
+        }
+      : { nullValue: null },
+  }, ["githubCredentialsJson", "githubDefaultCredentialId", "github"], envFileCandidates);
+  return {
+    credentials: store.credentials,
+    defaultCredentialId,
+    migrated: false,
+  };
+}
+
+function listPublicGithubCredentials(store) {
+  return Object.values(store?.credentials || {})
+    .sort((left, right) => {
+      if (left.id === store.defaultCredentialId) return -1;
+      if (right.id === store.defaultCredentialId) return 1;
+      return left.createdAt - right.createdAt;
+    })
+    .map((credential) => ({
+      id: credential.id,
+      name: credential.name,
+      identity: credential.identity || getGithubProfileIdentity(credential.profile),
+      method: "OAuth 2.0",
+      status: credential.status || "valid",
+      isDefault: credential.id === store.defaultCredentialId,
+      createdAt: new Date(credential.createdAt).toISOString(),
+      updatedAt: new Date(credential.updatedAt).toISOString(),
+      lastCheckedAt: credential.lastCheckedAt
+        ? new Date(credential.lastCheckedAt).toISOString()
+        : undefined,
+    }));
+}
+
 async function saveGithubToken(uid, payload, envFileCandidates) {
+  const now = payload.obtainedAt ?? Date.now();
   const expiresAt = payload.expiresIn && payload.expiresIn > 0
-    ? (payload.obtainedAt ?? Date.now()) + (payload.expiresIn * 1000)
+    ? now + (payload.expiresIn * 1000)
     : undefined;
   const encryptedToken = await encryptToken(JSON.stringify({
     accessToken: payload.accessToken,
@@ -626,37 +1018,95 @@ async function saveGithubToken(uid, payload, envFileCandidates) {
     tokenType: payload.tokenType || "bearer",
     scope: payload.scope || "",
     expiresAt,
-    updatedAt: payload.obtainedAt ?? Date.now(),
+    updatedAt: now,
   }), envFileCandidates);
-  await firestorePatchDocument(`${FIRESTORE_TOKEN_COLLECTION}/${encodeURIComponent(uid)}`, {
-    github: {
-      mapValue: {
-        fields: {
-          encryptedToken: { stringValue: encryptedToken },
-          updatedAt: { integerValue: String(Date.now()) },
-        },
-      },
-    },
-  }, ["github"], envFileCandidates);
+  const store = await readGithubCredentialStore(uid, envFileCandidates);
+  const credentialId = normalizeGithubCredentialId(payload.credentialId)
+    || createGithubCredentialId();
+  const existing = store.credentials[credentialId];
+  const profile = sanitizeGithubProfile(payload.profile);
+  store.credentials[credentialId] = {
+    id: credentialId,
+    name: normalizeGithubCredentialName(payload.credentialName)
+      || existing?.name
+      || getGithubProfileIdentity(profile)
+      || "GitHub account",
+    identity: getGithubProfileIdentity(profile) || existing?.identity || "",
+    organizationId: normalizeGithubOrganizationId(payload.organizationId)
+      || existing?.organizationId
+      || "",
+    encryptedToken,
+    profile,
+    status: "valid",
+    createdAt: existing?.createdAt || now,
+    updatedAt: now,
+    lastCheckedAt: now,
+  };
+  if (!store.defaultCredentialId || !store.credentials[store.defaultCredentialId]) {
+    store.defaultCredentialId = credentialId;
+  }
+  return writeGithubCredentialStore(uid, store, envFileCandidates);
 }
 
-async function loadGithubToken(uid, envFileCandidates) {
-  const document = await firestoreGetDocument(`${FIRESTORE_TOKEN_COLLECTION}/${encodeURIComponent(uid)}`, envFileCandidates);
-  const encryptedToken = getFirestoreString(document?.fields?.github?.mapValue?.fields?.encryptedToken);
-  if (!encryptedToken) {
+async function loadGithubToken(uid, envFileCandidates, credentialId = "") {
+  const store = await readGithubCredentialStore(uid, envFileCandidates);
+  const selectedCredentialId = normalizeGithubCredentialId(credentialId)
+    || store.defaultCredentialId;
+  const credential = store.credentials[selectedCredentialId];
+  if (!credential?.encryptedToken) {
     return null;
   }
   try {
-    return JSON.parse(await decryptToken(encryptedToken, envFileCandidates));
+    return {
+      ...JSON.parse(await decryptToken(credential.encryptedToken, envFileCandidates)),
+      credentialId: selectedCredentialId,
+    };
   } catch {
     return null;
   }
 }
 
-async function deleteGithubToken(uid, envFileCandidates) {
-  await firestorePatchDocument(`${FIRESTORE_TOKEN_COLLECTION}/${encodeURIComponent(uid)}`, {
-    github: { nullValue: null },
-  }, ["github"], envFileCandidates);
+async function updateGithubCredentialMetadata(
+  uid,
+  credentialId,
+  metadata,
+  envFileCandidates,
+) {
+  const store = await readGithubCredentialStore(uid, envFileCandidates);
+  const normalizedCredentialId = normalizeGithubCredentialId(credentialId);
+  const current = store.credentials[normalizedCredentialId];
+  if (!current) {
+    return store;
+  }
+  store.credentials[normalizedCredentialId] = {
+    ...current,
+    ...(metadata.profile ? { profile: sanitizeGithubProfile(metadata.profile) } : {}),
+    ...(typeof metadata.identity === "string"
+      ? { identity: metadata.identity.trim().slice(0, 200) }
+      : {}),
+    ...(metadata.status === "invalid" || metadata.status === "valid"
+      ? { status: metadata.status }
+      : {}),
+    ...(Number(metadata.lastCheckedAt) > 0
+      ? { lastCheckedAt: Number(metadata.lastCheckedAt) }
+      : {}),
+    updatedAt: Date.now(),
+  };
+  return writeGithubCredentialStore(uid, store, envFileCandidates);
+}
+
+async function deleteGithubToken(uid, envFileCandidates, credentialId = "") {
+  const store = await readGithubCredentialStore(uid, envFileCandidates);
+  const normalizedCredentialId = normalizeGithubCredentialId(credentialId);
+  if (normalizedCredentialId) {
+    delete store.credentials[normalizedCredentialId];
+  } else {
+    store.credentials = {};
+  }
+  if (!store.credentials[store.defaultCredentialId]) {
+    store.defaultCredentialId = Object.keys(store.credentials)[0] || "";
+  }
+  return writeGithubCredentialStore(uid, store, envFileCandidates);
 }
 
 async function firestoreGetDocument(documentPath, envFileCandidates) {

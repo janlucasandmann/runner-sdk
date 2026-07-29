@@ -1,0 +1,52 @@
+.connection-identity-icon.is-catalog,
+.connection-identity-icon.is-catalog.is-size-compact {
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.connection-identity-icon.is-catalog > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.connection-identity-icon.is-catalog.is-plugin {
+  border: 0;
+  color: #111;
+  background: #fff;
+}
+
+.connection-identity-icon.is-catalog.is-plugin.is-gitlab {
+  background: #f7f5e3;
+}
+
+.connection-identity-icon.is-catalog.is-tag {
+  border: 0;
+  color: #fff;
+}
+
+.connection-identity-icon.is-catalog.is-tag.is-discord {
+  background: #5765ed;
+}
+
+.connection-identity-icon.is-catalog.is-tag.is-email {
+  background: linear-gradient(to top, #307ef7, #55b7ec);
+}
+
+.connection-identity-icon.is-catalog.is-tag.is-telegram {
+  background: #26a2e1;
+}
+
+.connection-identity-icon.is-catalog.is-tag.is-telegram > :is(img, svg) {
+  width: 20px;
+  height: 20px;
+}
+
+.connection-identity-icon.is-catalog.is-plugin .playground-plugin-row-logo.is-github {
+  filter: none;
+}

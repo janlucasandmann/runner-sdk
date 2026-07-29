@@ -10,6 +10,7 @@ export const EVALUATIONS_APP_NAVIGATION_SCRIPT = `        function openEvaluatio
           });
           const requestedEvaluationId = String(options.evaluationId || "").trim();
           const requestedRunId = String(options.evaluationRunId || "").trim();
+          const requestedCaseId = String(options.evaluationCaseId || "").trim();
           const sourceReturnTarget = options.returnTarget && typeof options.returnTarget === "object" && !Array.isArray(options.returnTarget)
             ? options.returnTarget
             : null;
@@ -28,9 +29,14 @@ export const EVALUATIONS_APP_NAVIGATION_SCRIPT = `        function openEvaluatio
           if (requestedRunId) {
             setSelectedEvaluationRunId(requestedRunId);
           }
+          if (requestedCaseId) {
+            setSelectedEvaluationCaseId(requestedCaseId);
+          }
           setEvaluationsPageMode(
             options.mode === "run" || requestedRunId
               ? "run"
+              : options.mode === "dataset-case" || requestedCaseId
+                ? "dataset-case"
               : options.mode === "detail" || requestedEvaluationId
                 ? "detail"
                 : "overview"
@@ -56,6 +62,22 @@ export const EVALUATIONS_APP_NAVIGATION_SCRIPT = `        function openEvaluatio
           setSelectedEvaluationCaseId("");
           setEvaluationRunReturnTarget(null);
           setEvaluationDetailTab("general");
+          openEvaluationsPage({
+            mode: "detail",
+            evaluationId: normalizedEvaluationId,
+          });
+        }
+
+        function openEvaluationCasesPage(evaluationId) {
+          const normalizedEvaluationId = String(evaluationId || "").trim();
+          if (!normalizedEvaluationId) {
+            openEvaluationsOverviewPage();
+            return;
+          }
+          setSelectedEvaluationRunId("");
+          setSelectedEvaluationCaseId("");
+          setEvaluationRunReturnTarget(null);
+          setEvaluationDetailTab("cases");
           openEvaluationsPage({
             mode: "detail",
             evaluationId: normalizedEvaluationId,

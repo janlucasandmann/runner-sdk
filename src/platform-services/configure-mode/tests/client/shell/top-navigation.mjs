@@ -23,6 +23,12 @@ export const TESTS_APP_TOP_NAVIGATION_SCRIPT = `        function renderTestsPage
           return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems,
+            center: testsPageMode === "detail"
+              ? React.createElement("div", {
+                  id: "playground-tests-section-controls",
+                  className: "playground-tests-section-controls",
+                })
+              : null,
             includeSearchDivider: true,
             extraActions: React.createElement("div", {
               id: isOverview

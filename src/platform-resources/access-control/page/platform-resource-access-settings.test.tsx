@@ -176,6 +176,10 @@ describe("PlatformResourceAccessSettings", () => {
         "[data-platform-resource-access-settings] [data-platform-role-sidebar]",
       ),
     ).not.toBeNull();
+    expect(
+      screen.queryByText("All Organization Members Permissions"),
+    ).toBeNull();
+    expect(screen.queryByText("Organization member role")).toBeNull();
     expect(screen.getByText("Use agent")).not.toBeNull();
 
     fireEvent.click(screen.getByRole("tab", { name: /Admin/ }));

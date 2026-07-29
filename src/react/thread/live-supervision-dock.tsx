@@ -3,7 +3,6 @@ import type {
   RunnerThreadProjection,
   RunnerThreadRun,
 } from "../../thread/types.js";
-import { RunnerThreadActiveRunsDock } from "./active-runs-dock.js";
 import { RunnerThreadPendingPermissionsDock } from "./pending-permissions-dock.js";
 
 export interface RunnerThreadLiveSupervisionDockProps {
@@ -17,36 +16,24 @@ export interface RunnerThreadLiveSupervisionDockProps {
 }
 
 /**
- * One sticky, current-state projection for live runs and unresolved asks.
- * Historical timeline entries remain causal evidence, not the control surface.
+ * Keeps unresolved permission asks actionable above the historical timeline.
+ * Live run status remains in the causal run card instead of a sticky label.
  */
 export function RunnerThreadLiveSupervisionDock({
   projection,
-  onCancelRun,
   onPermissionDecision,
-  onSelectRun,
 }: RunnerThreadLiveSupervisionDockProps) {
-  const runs = Object.values(projection.runsById);
-  const hasActiveRuns = runs.some((run) => (
-    ["queued", "pending", "running", "parked", "waiting", "waiting_permission", "requires_action"]
-      .includes(run.status)
-  ));
-  const hasPendingPermissions = Object.values(projection.permissionsById)
-    .some((permission) => permission.status === "pending");
-  if (!hasActiveRuns && !hasPendingPermissions) return null;
+  const hasPendingPermissions = Object.values(projection.permissionsById).some(
+    (permission) => permission.status === "pending",
+  );
+  if (!hasPendingPermissions) return null;
 
   return (
-    <div className="tb-thread-live-supervision" aria-label="Live thread supervision">
-      <RunnerThreadActiveRunsDock
-        runs={runs}
-        projection={projection}
-        onSelectRun={onSelectRun}
-        onCancelRun={onCancelRun}
-      />
+    <section className="tb-thread-live-supervision" aria-label="Live thread supervision">
       <RunnerThreadPendingPermissionsDock
         projection={projection}
         onDecision={onPermissionDecision}
       />
-    </div>
+    </section>
   );
 }

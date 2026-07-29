@@ -1,6 +1,7 @@
 import { PROJECT_OVERVIEW_CSS } from "./overview/index.mjs";
 import { PROJECTS_CONNECTOR_BROWSER_CSS } from "./styles/connector-browser.mjs";
 import { PROJECTS_CORE_CSS } from "./styles/core.mjs";
+import { PROJECT_DELIVERY_WORKSPACE_CSS } from "./delivery/styles.mjs";
 
 /**
  * Project-owned styles injected into the demo application's shared stylesheet.
@@ -11,6 +12,7 @@ import { PROJECTS_CORE_CSS } from "./styles/core.mjs";
 export const PROJECTS_STYLE_FRAGMENTS = Object.freeze({
   connectorBrowser: PROJECTS_CONNECTOR_BROWSER_CSS,
   core: PROJECTS_CORE_CSS,
+  delivery: PROJECT_DELIVERY_WORKSPACE_CSS,
   overview: PROJECT_OVERVIEW_CSS,
 });
 

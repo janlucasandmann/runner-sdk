@@ -82,7 +82,8 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
   }
 
   .tests-detail-page {
-    min-height: calc(100vh - var(--playground-navbar-height, 68px));
+    width: 100%;
+    min-height: 0;
   }
 
   .tests-detail-content {
@@ -93,81 +94,25 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     display: grid;
     align-content: start;
     gap: 24px;
-    padding: 24px 28px 48px;
+    padding: 0;
   }
 
   .tests-detail-sidebar {
-    padding-top: 24px;
+    padding-top: 0;
   }
 
-  .tests-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
+  .tests-detail-analytics {
+    width: 100%;
   }
 
-  .tests-kpi-card {
-    display: grid;
-    min-height: 126px;
-    align-content: center;
-    gap: 8px;
-    padding: 20px;
+  .tests-detail-run-button.platform-button {
+    width: 100%;
+    margin-top: 8px;
   }
 
-  .tests-kpi-card > span {
-    color: rgba(255, 255, 255, 0.52);
-    font-size: 12px;
-    font-weight: 650;
-    letter-spacing: 0.02em;
-  }
-
-  .tests-kpi-card > strong {
-    color: #f7f7f7;
-    font-size: 28px;
-    font-weight: 650;
-    letter-spacing: -0.035em;
-  }
-
-  .tests-kpi-card > small {
-    color: rgba(255, 255, 255, 0.45);
-    font-size: 11px;
-  }
-
-  .tests-kpi-card.is-success {
-    border-color: rgba(73, 198, 105, 0.25);
-  }
-
-  .tests-kpi-card.is-danger {
-    border-color: rgba(255, 91, 91, 0.23);
-  }
-
-  .tests-sidebar-properties {
-    display: grid;
-    gap: 15px;
-  }
-
-  .tests-sidebar-property {
-    display: grid;
-    grid-template-columns: minmax(92px, 0.8fr) minmax(0, 1.2fr);
-    align-items: start;
-    gap: 16px;
-    font-size: 13px;
-  }
-
-  .tests-sidebar-property > span:first-child {
-    color: rgba(255, 255, 255, 0.46);
-  }
-
-  .tests-sidebar-property > strong {
+  .playground-tests-section-controls,
+  .tests-detail-header-switch {
     min-width: 0;
-    color: rgba(255, 255, 255, 0.82);
-    font-weight: 500;
-    text-align: right;
-    overflow-wrap: anywhere;
-  }
-
-  .tests-sidebar-property .tests-status-label {
-    justify-self: end;
   }
 
   .tests-form-grid {
@@ -288,7 +233,7 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
   }
 
   .tests-inline-error {
-    margin: 20px 28px 0;
+    margin: 0;
     padding: 13px 15px;
     color: #ff9b9b;
     border-color: rgba(255, 91, 91, 0.25);
@@ -367,36 +312,91 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     overflow-wrap: anywhere;
   }
 
-  .tests-evidence-banner {
+  .tests-run-evidence-card.platform-ui-card {
+    width: 100%;
+  }
+
+  .tests-run-evidence-card.is-trusted {
+    border-color: rgba(74, 222, 128, 0.28);
+  }
+
+  .tests-run-evidence-card.is-untrusted {
+    border-color: rgba(250, 204, 21, 0.28);
+  }
+
+  .tests-evidence-banner-copy {
     display: flex;
-    align-items: center;
-    gap: 13px;
-    padding: 17px 19px;
-    border: 1px solid rgba(74, 167, 255, 0.22);
-    border-radius: 10px;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .tests-evidence-banner-copy > svg {
+    flex: 0 0 auto;
+    margin-top: 1px;
     color: #8cc7ff;
-    background: rgba(42, 117, 190, 0.09);
   }
 
-  .tests-evidence-banner.is-untrusted {
+  .tests-run-evidence-card.is-trusted .tests-evidence-banner-copy > svg {
+    color: #86e29d;
+  }
+
+  .tests-run-evidence-card.is-untrusted .tests-evidence-banner-copy > svg {
     color: #f4c978;
-    border-color: rgba(232, 177, 70, 0.24);
-    background: rgba(155, 104, 18, 0.1);
   }
 
-  .tests-evidence-banner > div {
+  .tests-evidence-banner-copy > div {
     display: grid;
     gap: 4px;
   }
 
-  .tests-evidence-banner strong {
-    color: rgba(255, 255, 255, 0.88);
+  .tests-evidence-banner-copy strong {
+    color: rgba(255, 255, 255, 0.9);
     font-size: 13px;
+    font-weight: 600;
   }
 
-  .tests-evidence-banner span {
-    color: rgba(255, 255, 255, 0.5);
+  .tests-evidence-banner-copy span {
+    color: rgba(255, 255, 255, 0.62);
     font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .tests-run-evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 24px;
+    margin: 18px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .tests-run-evidence-grid > div {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .tests-run-evidence-grid dt,
+  .tests-run-evidence-grid dd {
+    min-width: 0;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .tests-run-evidence-grid dt {
+    color: rgba(255, 255, 255, 0.52);
+  }
+
+  .tests-run-evidence-grid dd {
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .tests-evidence-identity {
@@ -442,16 +442,11 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     gap: 7px;
   }
 
-  @media (max-width: 1080px) {
-    .tests-kpi-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
   @media (max-width: 780px) {
     .tests-overview-guide__cards,
     .tests-form-grid,
-    .tests-result-evidence-grid {
+    .tests-result-evidence-grid,
+    .tests-run-evidence-grid {
       grid-template-columns: minmax(0, 1fr);
     }
 
@@ -459,18 +454,5 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
       grid-column: auto;
     }
 
-    .tests-detail-stack {
-      padding-inline: 18px;
-    }
-
-    .tests-inline-error {
-      margin-inline: 18px;
-    }
-  }
-
-  @media (max-width: 560px) {
-    .tests-kpi-grid {
-      grid-template-columns: minmax(0, 1fr);
-    }
   }
 `;

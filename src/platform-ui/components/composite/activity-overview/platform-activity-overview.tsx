@@ -1,6 +1,6 @@
 import {
   useCallback,
-  useLayoutEffect,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -42,6 +42,7 @@ export type PlatformActivityOverviewTimestamp =
 export interface PlatformActivityOverviewItem {
   id: string;
   label: ReactNode;
+  content?: ReactNode;
   startAt: PlatformActivityOverviewTimestamp;
   endAt?: PlatformActivityOverviewTimestamp | null;
   kind?: PlatformActivityOverviewItemKind;
@@ -53,6 +54,13 @@ export interface PlatformActivityOverviewItem {
   onActivate?: () => void;
 }
 
+export interface PlatformActivityOverviewTimeRange {
+  startAt: number;
+  endAt: number;
+  startPercent: number;
+  endPercent: number;
+}
+
 export interface PlatformActivityOverviewProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   items?: readonly PlatformActivityOverviewItem[];
@@ -62,8 +70,16 @@ export interface PlatformActivityOverviewProps
   emptyDescription?: ReactNode;
   emptyIcon?: ElementType;
   minTimelineWidth?: number;
+  timelineLayout?: "fit" | "scroll";
   tickCount?: number;
   ariaLabel?: string;
+  minimumRangePercent?: number;
+  onTimeRangeChange?: (range: PlatformActivityOverviewTimeRange) => void;
+  resizable?: boolean;
+  minResizeHeight?: number;
+  maxResizeHeight?: number;
+  minSiblingHeight?: number;
+  onHeightChange?: (height: number) => void;
 }
 
 interface NormalizedActivityOverviewItem
@@ -77,17 +93,37 @@ interface NormalizedActivityOverviewItem
   rowIndex: number;
 }
 
-interface ViewportWindow {
-  left: number;
-  width: number;
+interface TimeRangeWindow {
+  start: number;
+  end: number;
+}
+
+interface TimeRangeDrag {
+  pointerId: number;
+  mode: "start" | "end" | "window";
+  startClientX: number;
+  startPercent: number;
+  endPercent: number;
+  trackWidth: number;
+}
+
+interface HeightResizeDrag {
+  pointerId: number;
+  startClientY: number;
+  startHeight: number;
+  minHeight: number;
+  maxHeight: number;
 }
 
 const DEFAULT_MIN_TIMELINE_WIDTH = 1480;
 const DEFAULT_TICK_COUNT = 6;
+const DEFAULT_MINIMUM_RANGE_PERCENT = 2;
+const DEFAULT_RESIZE_HEIGHT = 460;
+const DEFAULT_MIN_RESIZE_HEIGHT = 240;
+const DEFAULT_MIN_SIBLING_HEIGHT = 220;
 const ROW_HEIGHT = 58;
 const PLOT_TOP_PADDING = 18;
 const PLOT_BOTTOM_PADDING = 22;
-const AXIS_HEIGHT = 34;
 
 function joinClassNames(
   ...classNames: Array<string | false | null | undefined>
@@ -188,19 +224,15 @@ function resolveStatusIcon(status: PlatformActivityOverviewItemStatus) {
 }
 
 function buildDomain(items: readonly PlatformActivityOverviewItem[]) {
-  const timestamps: number[] = [];
+  const startTimestamps: number[] = [];
   items.forEach((item) => {
     const startTime = readTimestamp(item.startAt);
-    const endTime = readTimestamp(item.endAt);
     if (startTime !== null) {
-      timestamps.push(startTime);
-    }
-    if (endTime !== null) {
-      timestamps.push(endTime);
+      startTimestamps.push(startTime);
     }
   });
 
-  if (timestamps.length === 0) {
+  if (startTimestamps.length === 0) {
     const now = Date.now();
     return {
       start: now,
@@ -208,15 +240,27 @@ function buildDomain(items: readonly PlatformActivityOverviewItem[]) {
     };
   }
 
-  const minimum = Math.min(...timestamps);
-  const maximum = Math.max(...timestamps);
-  const rawRange = Math.max(1, maximum - minimum);
-  const fallbackRange = rawRange <= 1 ? 1_000 : rawRange;
-  const padding = Math.max(1, fallbackRange * 0.035);
+  const minimum = Math.min(...startTimestamps);
+  const maximum = Math.max(...startTimestamps);
+  const rawRange = maximum - minimum;
   return {
-    start: minimum - padding,
-    end: maximum + padding,
+    start: minimum,
+    end: rawRange > 0 ? maximum : minimum + 1_000,
   };
+}
+
+function itemIntersectsTimeRange(
+  item: PlatformActivityOverviewItem,
+  rangeStart: number,
+  rangeEnd: number,
+) {
+  const startTime = readTimestamp(item.startAt);
+  if (startTime === null) {
+    return false;
+  }
+  const requestedEndTime = readTimestamp(item.endAt);
+  const endTime = Math.max(startTime, requestedEndTime ?? startTime);
+  return startTime <= rangeEnd && endTime >= rangeStart;
 }
 
 function normalizeItems(
@@ -271,6 +315,34 @@ function normalizeItems(
     }));
 }
 
+function buildTicks(
+  tickCount: number,
+  domainStart: number,
+  domainEnd: number,
+) {
+  return Array.from({ length: tickCount }, (_, index) => {
+    const progress = index / (tickCount - 1);
+    const timestamp = domainStart + (domainEnd - domainStart) * progress;
+    return {
+      id: `${index}:${timestamp}`,
+      progress,
+      label: formatTickLabel(
+        timestamp,
+        domainStart,
+        domainEnd,
+        index,
+      ),
+    };
+  });
+}
+
+function formatRangeValue(timestamp: number) {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(timestamp));
+}
+
 function ActivityOverviewItem({
   item,
 }: {
@@ -288,6 +360,30 @@ function ActivityOverviewItem({
     "--platform-activity-overview-item-width": `${item.widthPercent}%`,
     "--platform-activity-overview-item-color": item.color || undefined,
   } as CSSProperties;
+
+  if (item.content !== undefined && item.content !== null) {
+    return (
+      <div
+        className={joinClassNames(
+          "platform-activity-overview__row",
+          "has-custom-content",
+          `is-${item.kind}`,
+          `is-${item.status}`,
+        )}
+        style={{
+          top: `${PLOT_TOP_PADDING + item.rowIndex * ROW_HEIGHT}px`,
+        }}
+        role="listitem"
+      >
+        <div
+          className="platform-activity-overview__custom-item"
+          style={itemStyle}
+        >
+          {item.content}
+        </div>
+      </div>
+    );
+  }
 
   if (item.kind === "signal") {
     const signalContent = (
@@ -405,40 +501,92 @@ export function PlatformActivityOverview({
   emptyDescription = "Work on this resource will appear here over time.",
   emptyIcon = Workflow,
   minTimelineWidth = DEFAULT_MIN_TIMELINE_WIDTH,
+  timelineLayout = "fit",
   tickCount = DEFAULT_TICK_COUNT,
   ariaLabel = "Activity over time",
+  minimumRangePercent = DEFAULT_MINIMUM_RANGE_PERCENT,
+  onTimeRangeChange,
+  resizable = false,
+  minResizeHeight = DEFAULT_MIN_RESIZE_HEIGHT,
+  maxResizeHeight,
+  minSiblingHeight = DEFAULT_MIN_SIBLING_HEIGHT,
+  onHeightChange,
   className = "",
+  style,
   ...props
 }: PlatformActivityOverviewProps) {
-  const viewportRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const minimapRef = useRef<HTMLDivElement>(null);
-  const [viewportWindow, setViewportWindow] = useState<ViewportWindow>({
-    left: 0,
-    width: 100,
+  const timeRangeDragRef = useRef<TimeRangeDrag | null>(null);
+  const heightResizeDragRef = useRef<HeightResizeDrag | null>(null);
+  const onTimeRangeChangeRef = useRef(onTimeRangeChange);
+  const [timeRangeWindow, setTimeRangeWindow] = useState<TimeRangeWindow>({
+    start: 0,
+    end: 100,
   });
+  const [internalHeight, setInternalHeight] = useState<number | null>(null);
   const domain = useMemo(() => buildDomain(items), [items]);
-  const normalizedItems = useMemo(
+  const domainRange = Math.max(1, domain.end - domain.start);
+  const normalizedMinimumRangePercent = clamp(
+    Number(minimumRangePercent) || DEFAULT_MINIMUM_RANGE_PERCENT,
+    0.5,
+    50,
+  );
+  const visibleTimeRange = useMemo<PlatformActivityOverviewTimeRange>(
+    () => ({
+      startAt:
+        domain.start + domainRange * (timeRangeWindow.start / 100),
+      endAt: domain.start + domainRange * (timeRangeWindow.end / 100),
+      startPercent: timeRangeWindow.start,
+      endPercent: timeRangeWindow.end,
+    }),
+    [
+      domain.start,
+      domainRange,
+      timeRangeWindow.end,
+      timeRangeWindow.start,
+    ],
+  );
+  const minimapItems = useMemo(
     () => normalizeItems(items, domain.start, domain.end),
     [domain.end, domain.start, items],
+  );
+  const visibleItems = useMemo(
+    () =>
+      items.filter((item) =>
+        itemIntersectsTimeRange(
+          item,
+          visibleTimeRange.startAt,
+          visibleTimeRange.endAt,
+        ),
+      ),
+    [items, visibleTimeRange.endAt, visibleTimeRange.startAt],
+  );
+  const normalizedItems = useMemo(
+    () =>
+      normalizeItems(
+        visibleItems,
+        visibleTimeRange.startAt,
+        visibleTimeRange.endAt,
+      ),
+    [visibleItems, visibleTimeRange.endAt, visibleTimeRange.startAt],
   );
   const normalizedTickCount = Math.max(2, Math.floor(tickCount));
   const ticks = useMemo(
     () =>
-      Array.from({ length: normalizedTickCount }, (_, index) => {
-        const progress = index / (normalizedTickCount - 1);
-        const timestamp =
-          domain.start + (domain.end - domain.start) * progress;
-        return {
-          id: `${index}:${timestamp}`,
-          progress,
-          label: formatTickLabel(
-            timestamp,
-            domain.start,
-            domain.end,
-            index,
-          ),
-        };
-      }),
+      buildTicks(
+        normalizedTickCount,
+        visibleTimeRange.startAt,
+        visibleTimeRange.endAt,
+      ),
+    [
+      normalizedTickCount,
+      visibleTimeRange.endAt,
+      visibleTimeRange.startAt,
+    ],
+  );
+  const navigatorTicks = useMemo(
+    () => buildTicks(normalizedTickCount, domain.start, domain.end),
     [domain.end, domain.start, normalizedTickCount],
   );
   const plotHeight = Math.max(
@@ -447,106 +595,322 @@ export function PlatformActivityOverview({
       normalizedItems.length * ROW_HEIGHT +
       PLOT_BOTTOM_PADDING,
   );
+  const fitTimeline = timelineLayout !== "scroll";
   const timelineStyle = {
-    minWidth: `${Math.max(720, minTimelineWidth)}px`,
-    height: `${plotHeight + AXIS_HEIGHT}px`,
+    width: "100%",
+    maxWidth: "100%",
+    minWidth: fitTimeline
+      ? "0"
+      : `${Math.max(720, minTimelineWidth)}px`,
+    height: `${plotHeight}px`,
   } as CSSProperties;
 
-  const syncViewportWindow = useCallback(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) {
-      return;
-    }
-    const scrollWidth = Math.max(1, viewport.scrollWidth);
-    const clientWidth = Math.max(0, viewport.clientWidth);
-    const nextWidth = clamp((clientWidth / scrollWidth) * 100, 0, 100);
-    const maxScrollLeft = Math.max(0, scrollWidth - clientWidth);
-    const nextLeft =
-      maxScrollLeft > 0
-        ? clamp((viewport.scrollLeft / scrollWidth) * 100, 0, 100 - nextWidth)
-        : 0;
-    setViewportWindow((current) =>
-      Math.abs(current.left - nextLeft) < 0.05 &&
-      Math.abs(current.width - nextWidth) < 0.05
-        ? current
-        : { left: nextLeft, width: nextWidth },
-    );
-  }, []);
+  useEffect(() => {
+    onTimeRangeChangeRef.current = onTimeRangeChange;
+  }, [onTimeRangeChange]);
 
-  useLayoutEffect(() => {
-    const viewport = viewportRef.current;
-    if (!viewport || loading || normalizedItems.length === 0) {
-      return undefined;
-    }
-    syncViewportWindow();
-    viewport.addEventListener("scroll", syncViewportWindow, {
-      passive: true,
-    });
-    const resizeObserver =
-      typeof ResizeObserver === "function"
-        ? new ResizeObserver(syncViewportWindow)
-        : null;
-    resizeObserver?.observe(viewport);
-    window.addEventListener("resize", syncViewportWindow);
-    return () => {
-      viewport.removeEventListener("scroll", syncViewportWindow);
-      resizeObserver?.disconnect();
-      window.removeEventListener("resize", syncViewportWindow);
-    };
-  }, [loading, normalizedItems.length, syncViewportWindow]);
+  useEffect(() => {
+    onTimeRangeChangeRef.current?.(visibleTimeRange);
+  }, [visibleTimeRange]);
 
-  const updateViewportFromMinimap = useCallback(
-    (clientX: number) => {
-      const minimap = minimapRef.current;
-      const viewport = viewportRef.current;
-      if (!minimap || !viewport) {
-        return;
-      }
-      const bounds = minimap.getBoundingClientRect();
-      if (bounds.width <= 0) {
-        return;
-      }
-      const ratio = clamp((clientX - bounds.left) / bounds.width, 0, 1);
-      const maxScrollLeft = Math.max(
-        0,
-        viewport.scrollWidth - viewport.clientWidth,
-      );
-      viewport.scrollLeft = clamp(
-        ratio * viewport.scrollWidth - viewport.clientWidth / 2,
-        0,
-        maxScrollLeft,
-      );
-      syncViewportWindow();
+  const commitTimeRange = useCallback(
+    (
+      requestedStart: number,
+      requestedEnd: number,
+      anchor: TimeRangeDrag["mode"] = "window",
+    ) => {
+      setTimeRangeWindow((current) => {
+        let nextStart = current.start;
+        let nextEnd = current.end;
+        if (anchor === "start") {
+          nextStart = clamp(
+            requestedStart,
+            0,
+            current.end - normalizedMinimumRangePercent,
+          );
+        } else if (anchor === "end") {
+          nextEnd = clamp(
+            requestedEnd,
+            current.start + normalizedMinimumRangePercent,
+            100,
+          );
+        } else {
+          const requestedWidth = clamp(
+            requestedEnd - requestedStart,
+            normalizedMinimumRangePercent,
+            100,
+          );
+          nextStart = clamp(requestedStart, 0, 100 - requestedWidth);
+          nextEnd = nextStart + requestedWidth;
+        }
+        return Math.abs(current.start - nextStart) < 0.001 &&
+          Math.abs(current.end - nextEnd) < 0.001
+          ? current
+          : { start: nextStart, end: nextEnd };
+      });
     },
-    [syncViewportWindow],
+    [normalizedMinimumRangePercent],
   );
 
-  function handleMinimapPointer(
+  function handleMinimapPointerDown(
     event: PointerEvent<HTMLDivElement>,
   ) {
-    event.currentTarget.setPointerCapture?.(event.pointerId);
-    updateViewportFromMinimap(event.clientX);
-  }
-
-  function handleMinimapKeyDown(
-    event: KeyboardEvent<HTMLDivElement>,
-  ) {
-    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+    if (event.button !== 0) {
       return;
     }
-    const viewport = viewportRef.current;
-    if (!viewport) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    if (bounds.width <= 0) {
+      return;
+    }
+    const target = event.target instanceof Element ? event.target : null;
+    const handle = target?.closest<HTMLElement>(
+      "[data-activity-range-handle]",
+    );
+    const rangeWindow = target?.closest<HTMLElement>(
+      "[data-activity-range-window]",
+    );
+    let nextWindow = timeRangeWindow;
+    let mode: TimeRangeDrag["mode"] = "window";
+
+    if (handle?.dataset.activityRangeHandle === "start") {
+      mode = "start";
+    } else if (handle?.dataset.activityRangeHandle === "end") {
+      mode = "end";
+    } else if (!rangeWindow) {
+      const pointerPercent = clamp(
+        ((event.clientX - bounds.left) / bounds.width) * 100,
+        0,
+        100,
+      );
+      const currentWidth = timeRangeWindow.end - timeRangeWindow.start;
+      const nextStart = clamp(
+        pointerPercent - currentWidth / 2,
+        0,
+        100 - currentWidth,
+      );
+      nextWindow = {
+        start: nextStart,
+        end: nextStart + currentWidth,
+      };
+      commitTimeRange(nextWindow.start, nextWindow.end);
+    }
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    timeRangeDragRef.current = {
+      pointerId: event.pointerId,
+      mode,
+      startClientX: event.clientX,
+      startPercent: nextWindow.start,
+      endPercent: nextWindow.end,
+      trackWidth: bounds.width,
+    };
+  }
+
+  function handleMinimapPointerMove(
+    event: PointerEvent<HTMLDivElement>,
+  ) {
+    const drag = timeRangeDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) {
       return;
     }
     event.preventDefault();
-    viewport.scrollLeft += event.key === "ArrowLeft" ? -120 : 120;
-    syncViewportWindow();
+    const deltaPercent =
+      ((event.clientX - drag.startClientX) / drag.trackWidth) * 100;
+    if (drag.mode === "start") {
+      commitTimeRange(
+        drag.startPercent + deltaPercent,
+        drag.endPercent,
+        "start",
+      );
+      return;
+    }
+    if (drag.mode === "end") {
+      commitTimeRange(
+        drag.startPercent,
+        drag.endPercent + deltaPercent,
+        "end",
+      );
+      return;
+    }
+    const width = drag.endPercent - drag.startPercent;
+    const nextStart = clamp(
+      drag.startPercent + deltaPercent,
+      0,
+      100 - width,
+    );
+    commitTimeRange(nextStart, nextStart + width);
   }
+
+  function handleMinimapPointerEnd(
+    event: PointerEvent<HTMLDivElement>,
+  ) {
+    if (timeRangeDragRef.current?.pointerId !== event.pointerId) {
+      return;
+    }
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    timeRangeDragRef.current = null;
+  }
+
+  function handleRangeHandleKeyDown(
+    side: "start" | "end",
+    event: KeyboardEvent<HTMLElement>,
+  ) {
+    const direction =
+      event.key === "ArrowLeft"
+        ? -1
+        : event.key === "ArrowRight"
+          ? 1
+          : 0;
+    if (!direction && event.key !== "Home" && event.key !== "End") {
+      return;
+    }
+    event.preventDefault();
+    const step = event.shiftKey ? 5 : 1;
+    if (side === "start") {
+      const nextStart =
+        event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? timeRangeWindow.end - normalizedMinimumRangePercent
+            : timeRangeWindow.start + direction * step;
+      commitTimeRange(nextStart, timeRangeWindow.end, "start");
+      return;
+    }
+    const nextEnd =
+      event.key === "End"
+        ? 100
+        : event.key === "Home"
+          ? timeRangeWindow.start + normalizedMinimumRangePercent
+          : timeRangeWindow.end + direction * step;
+    commitTimeRange(timeRangeWindow.start, nextEnd, "end");
+  }
+
+  const commitHeight = useCallback(
+    (height: number) => {
+      const roundedHeight = Math.round(height);
+      if (!Number.isFinite(roundedHeight)) {
+        return;
+      }
+      setInternalHeight(roundedHeight);
+      onHeightChange?.(roundedHeight);
+    },
+    [onHeightChange],
+  );
+
+  function resolveHeightResizeBounds() {
+    const section = sectionRef.current;
+    const parentHeight =
+      section?.parentElement?.getBoundingClientRect().height || 0;
+    const normalizedMinHeight = Math.max(
+      160,
+      Number(minResizeHeight) || DEFAULT_MIN_RESIZE_HEIGHT,
+    );
+    const availableMaxHeight =
+      parentHeight > 0
+        ? Math.max(
+            normalizedMinHeight,
+            parentHeight -
+              Math.max(
+                120,
+                Number(minSiblingHeight) || DEFAULT_MIN_SIBLING_HEIGHT,
+              ),
+          )
+        : Number.POSITIVE_INFINITY;
+    const configuredMaxHeight = Number(maxResizeHeight);
+    const normalizedMaxHeight = Number.isFinite(configuredMaxHeight)
+      ? Math.max(normalizedMinHeight, configuredMaxHeight)
+      : availableMaxHeight;
+    return {
+      minHeight: normalizedMinHeight,
+      maxHeight: Math.min(availableMaxHeight, normalizedMaxHeight),
+    };
+  }
+
+  function handleResizePointerDown(
+    event: PointerEvent<HTMLDivElement>,
+  ) {
+    if (event.button !== 0 || !sectionRef.current) {
+      return;
+    }
+    const bounds = resolveHeightResizeBounds();
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    heightResizeDragRef.current = {
+      pointerId: event.pointerId,
+      startClientY: event.clientY,
+      startHeight: sectionRef.current.getBoundingClientRect().height,
+      ...bounds,
+    };
+  }
+
+  function handleResizePointerMove(
+    event: PointerEvent<HTMLDivElement>,
+  ) {
+    const drag = heightResizeDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) {
+      return;
+    }
+    event.preventDefault();
+    commitHeight(
+      clamp(
+        drag.startHeight + event.clientY - drag.startClientY,
+        drag.minHeight,
+        drag.maxHeight,
+      ),
+    );
+  }
+
+  function handleResizePointerEnd(
+    event: PointerEvent<HTMLDivElement>,
+  ) {
+    if (heightResizeDragRef.current?.pointerId !== event.pointerId) {
+      return;
+    }
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    heightResizeDragRef.current = null;
+  }
+
+  function handleResizeKeyDown(
+    event: KeyboardEvent<HTMLDivElement>,
+  ) {
+    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") {
+      return;
+    }
+    const section = sectionRef.current;
+    if (!section) {
+      return;
+    }
+    event.preventDefault();
+    const bounds = resolveHeightResizeBounds();
+    const direction = event.key === "ArrowUp" ? -1 : 1;
+    const step = event.shiftKey ? 40 : 12;
+    commitHeight(
+      clamp(
+        section.getBoundingClientRect().height + direction * step,
+        bounds.minHeight,
+        bounds.maxHeight,
+      ),
+    );
+  }
+
+  const sectionStyle = {
+    ...style,
+    ...(internalHeight !== null
+      ? {
+          height: `${internalHeight}px`,
+          minHeight: `${Math.min(internalHeight, minResizeHeight)}px`,
+          maxHeight: "100%",
+        }
+      : null),
+  } as CSSProperties;
 
   if (loading) {
     return (
       <section
         {...props}
+        ref={sectionRef}
+        style={sectionStyle}
         className={joinClassNames(
           "platform-activity-overview",
           "is-loading",
@@ -563,10 +927,12 @@ export function PlatformActivityOverview({
     );
   }
 
-  if (normalizedItems.length === 0) {
+  if (minimapItems.length === 0) {
     return (
       <section
         {...props}
+        ref={sectionRef}
+        style={sectionStyle}
         className={joinClassNames(
           "platform-activity-overview",
           "is-empty",
@@ -587,13 +953,17 @@ export function PlatformActivityOverview({
   return (
     <section
       {...props}
-      className={joinClassNames("platform-activity-overview", className)}
+      ref={sectionRef}
+      style={sectionStyle}
+      className={joinClassNames(
+        "platform-activity-overview",
+        fitTimeline && "is-fit-timeline",
+        resizable && "is-resizable",
+        className,
+      )}
       aria-label={ariaLabel}
     >
-      <div
-        ref={viewportRef}
-        className="platform-activity-overview__viewport"
-      >
+      <div className="platform-activity-overview__viewport">
         <div
           className="platform-activity-overview__timeline"
           style={timelineStyle}
@@ -619,71 +989,130 @@ export function PlatformActivityOverview({
             {normalizedItems.map((item) => (
               <ActivityOverviewItem key={item.id} item={item} />
             ))}
+            {normalizedItems.length === 0 ? (
+              <PlatformEmptyState
+                className="platform-activity-overview__range-empty"
+                icon={emptyIcon}
+                title="No activity in this time range"
+                description="Expand or move the selected range to show activity."
+              />
+            ) : null}
           </div>
+        </div>
+      </div>
 
+      <div className="platform-activity-overview__navigator">
+        <div
+          ref={minimapRef}
+          className="platform-activity-overview__minimap"
+          role="group"
+          aria-label="Filter activity timeline by time range"
+          onPointerDown={handleMinimapPointerDown}
+          onPointerMove={handleMinimapPointerMove}
+          onPointerUp={handleMinimapPointerEnd}
+          onPointerCancel={handleMinimapPointerEnd}
+          onLostPointerCapture={handleMinimapPointerEnd}
+        >
           <div
-            className="platform-activity-overview__axis"
+            className="platform-activity-overview__minimap-bars"
             aria-hidden="true"
           >
-            {ticks.map((tick) => (
+            {minimapItems.map((item) => (
               <span
-                key={tick.id}
-                className="platform-activity-overview__tick"
-                style={{ left: `${tick.progress * 100}%` }}
-              >
-                {tick.label}
-              </span>
+                key={item.id}
+                className={joinClassNames(
+                  "platform-activity-overview__minimap-bar",
+                  `is-${item.kind}`,
+                  `is-${item.status}`,
+                )}
+                style={{ left: `${item.leftPercent}%` }}
+              />
             ))}
           </div>
+          <div
+            className="platform-activity-overview__minimap-window"
+            data-activity-range-window="true"
+            style={{
+              left: `${timeRangeWindow.start}%`,
+              width: `${timeRangeWindow.end - timeRangeWindow.start}%`,
+            }}
+          >
+            <span
+              className="platform-activity-overview__minimap-handle is-start"
+              data-activity-range-handle="start"
+              role="slider"
+              aria-label="Activity range start"
+              aria-valuemin={0}
+              aria-valuemax={Math.round(
+                timeRangeWindow.end - normalizedMinimumRangePercent,
+              )}
+              aria-valuenow={Math.round(timeRangeWindow.start)}
+              aria-valuetext={formatRangeValue(visibleTimeRange.startAt)}
+              aria-orientation="horizontal"
+              tabIndex={0}
+              onKeyDown={(event) =>
+                handleRangeHandleKeyDown("start", event)
+              }
+            />
+            <span
+              className="platform-activity-overview__minimap-handle is-end"
+              data-activity-range-handle="end"
+              role="slider"
+              aria-label="Activity range end"
+              aria-valuemin={Math.round(
+                timeRangeWindow.start + normalizedMinimumRangePercent,
+              )}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(timeRangeWindow.end)}
+              aria-valuetext={formatRangeValue(visibleTimeRange.endAt)}
+              aria-orientation="horizontal"
+              tabIndex={0}
+              onKeyDown={(event) =>
+                handleRangeHandleKeyDown("end", event)
+              }
+            />
+          </div>
         </div>
-      </div>
 
-      <div
-        ref={minimapRef}
-        className="platform-activity-overview__minimap"
-        role="scrollbar"
-        aria-label="Navigate activity timeline"
-        aria-orientation="horizontal"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(viewportWindow.left)}
-        tabIndex={0}
-        onPointerDown={handleMinimapPointer}
-        onPointerMove={(event) => {
-          if (event.buttons === 1) {
-            updateViewportFromMinimap(event.clientX);
-          }
-        }}
-        onKeyDown={handleMinimapKeyDown}
-      >
         <div
-          className="platform-activity-overview__minimap-bars"
+          className="platform-activity-overview__axis"
           aria-hidden="true"
         >
-          {normalizedItems.map((item) => (
+          {navigatorTicks.map((tick) => (
             <span
-              key={item.id}
-              className={joinClassNames(
-                "platform-activity-overview__minimap-bar",
-                `is-${item.kind}`,
-                `is-${item.status}`,
-              )}
-              style={{ left: `${item.leftPercent}%` }}
-            />
+              key={tick.id}
+              className="platform-activity-overview__tick"
+              style={{ left: `${tick.progress * 100}%` }}
+            >
+              {tick.label}
+            </span>
           ))}
         </div>
-        <span
-          className="platform-activity-overview__minimap-window"
-          style={{
-            left: `${viewportWindow.left}%`,
-            width: `${viewportWindow.width}%`,
-          }}
-          aria-hidden="true"
-        >
-          <span className="platform-activity-overview__minimap-handle is-start" />
-          <span className="platform-activity-overview__minimap-handle is-end" />
-        </span>
       </div>
+      {resizable ? (
+        <div
+          className="platform-activity-overview__resize-handle"
+          role="separator"
+          aria-label="Resize activity chart"
+          aria-orientation="horizontal"
+          aria-valuemin={Math.max(160, minResizeHeight)}
+          aria-valuemax={
+            Number.isFinite(Number(maxResizeHeight))
+              ? Math.max(minResizeHeight, Number(maxResizeHeight))
+              : 2_000
+          }
+          aria-valuenow={Math.round(
+            internalHeight ?? DEFAULT_RESIZE_HEIGHT,
+          )}
+          tabIndex={0}
+          onPointerDown={handleResizePointerDown}
+          onPointerMove={handleResizePointerMove}
+          onPointerUp={handleResizePointerEnd}
+          onPointerCancel={handleResizePointerEnd}
+          onLostPointerCapture={handleResizePointerEnd}
+          onKeyDown={handleResizeKeyDown}
+        />
+      ) : null}
     </section>
   );
 }

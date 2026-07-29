@@ -95,7 +95,7 @@ export const PROJECT_ACTIVITY_FILTER_SCRIPT = `        const projectWorkActivity
               animation: "down-in",
               variant: "minimal",
               portal: true,
-              placement: "bottom-end",
+              placement: "bottom-start",
               portalOffset: 6,
               trigger: React.createElement("button", {
                 type: "button",

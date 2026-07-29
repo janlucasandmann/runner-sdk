@@ -6,17 +6,31 @@ export const EVALUATIONS_APP_TOP_NAVIGATION_SCRIPT = `        function renderEva
           const activeEvaluationCaseIndex = Array.isArray(activeEvaluationRun?.cases)
             ? activeEvaluationRun.cases.findIndex((caseItem) => caseItem?.id === selectedEvaluationCaseId)
             : -1;
-          const activeEvaluationCase = activeEvaluationCaseIndex >= 0
-            ? activeEvaluationRun.cases[activeEvaluationCaseIndex]
-            : null;
+	          const activeEvaluationCase = activeEvaluationCaseIndex >= 0
+	            ? activeEvaluationRun.cases[activeEvaluationCaseIndex]
+	            : null;
           const activeEvaluationCaseTitle = activeEvaluationCase
             ? String(
                 activeEvaluationCase.title
                 || activeEvaluationCase.label
                 || activeEvaluationCase.name
                 || ""
-              ).trim() || ("Case " + (activeEvaluationCaseIndex + 1))
-            : "";
+	              ).trim() || ("Case " + (activeEvaluationCaseIndex + 1))
+	            : "";
+	          const activeEvaluationDatasetCaseIndex = Array.isArray(activeEvaluationSet?.dataRows)
+	            ? activeEvaluationSet.dataRows.findIndex((caseItem) => caseItem?.id === selectedEvaluationCaseId)
+	            : -1;
+	          const activeEvaluationDatasetCase = activeEvaluationDatasetCaseIndex >= 0
+	            ? activeEvaluationSet.dataRows[activeEvaluationDatasetCaseIndex]
+	            : null;
+	          const activeEvaluationDatasetCaseTitle = String(
+	            activeEvaluationDatasetCase?.title
+	            || activeEvaluationDatasetCase?.name
+	            || activeEvaluationDatasetCase?.input
+	            || ""
+	          ).trim() || (activeEvaluationDatasetCaseIndex >= 0
+	            ? "Case " + (activeEvaluationDatasetCaseIndex + 1)
+	            : "New Case");
           const evaluationVersions = activeEvaluationSet ? readPlaygroundEvaluationVersions(activeEvaluationSet) : [];
           const evaluationVersionMetadata = activeEvaluationSet?.metadata && typeof activeEvaluationSet.metadata === "object"
             ? activeEvaluationSet.metadata
@@ -38,22 +52,25 @@ export const EVALUATIONS_APP_TOP_NAVIGATION_SCRIPT = `        function renderEva
           }, -1);
           const evaluationsPathItems = [
             { label: "Configure" },
-            {
-              label: "Evaluations",
-              onClick: openEvaluationsOverviewPage,
-            },
+	            {
+	              label: "Evaluations",
+	              onClick: () => requestPlatformNavigation(openEvaluationsOverviewPage),
+	            },
           ];
-          const isEvaluationsOverview = evaluationsPageMode === "overview";
-          const showEvaluationSetActions = evaluationsPageMode === "detail" && Boolean(activeEvaluationSet?.id) && !isResourcesVersionsDrawerOpen;
-          if (
-            (evaluationsPageMode === "detail" || evaluationsPageMode === "run" || evaluationsPageMode === "case")
-            && activeEvaluationSet?.name
-          ) {
-            evaluationsPathItems.push({
-              label: activeEvaluationSet.name,
-              onClick: evaluationsPageMode === "run" || evaluationsPageMode === "case"
-                ? () => openEvaluationDetailPage(activeEvaluationSet.id)
-                : undefined,
+	          const isEvaluationsOverview = evaluationsPageMode === "overview";
+	          const isEvaluationDatasetCase = evaluationsPageMode === "dataset-case" && Boolean(activeEvaluationSet?.id);
+	          const showEvaluationSetActions = evaluationsPageMode === "detail" && Boolean(activeEvaluationSet?.id) && !isResourcesVersionsDrawerOpen;
+	          if (
+	            (evaluationsPageMode === "detail" || evaluationsPageMode === "run" || evaluationsPageMode === "case" || isEvaluationDatasetCase)
+	            && activeEvaluationSet?.name
+	          ) {
+	            evaluationsPathItems.push({
+	              label: activeEvaluationSet.name,
+	              onClick: evaluationsPageMode === "run" || evaluationsPageMode === "case" || isEvaluationDatasetCase
+	                ? () => requestPlatformNavigation(() => isEvaluationDatasetCase
+	                  ? openEvaluationCasesPage(activeEvaluationSet.id)
+	                  : openEvaluationDetailPage(activeEvaluationSet.id))
+	                : undefined,
               trailing: evaluationsPageMode === "detail"
                 ? React.createElement("span", {
                     className: "playground-evaluations-breadcrumb-actions",
@@ -98,15 +115,31 @@ export const EVALUATIONS_APP_TOP_NAVIGATION_SCRIPT = `        function renderEva
                 : null,
             });
           }
-          if (evaluationsPageMode === "case" && activeEvaluationCaseTitle) {
-            evaluationsPathItems.push({ label: activeEvaluationCaseTitle });
-          }
-          return renderAppHeader({
+	          if (evaluationsPageMode === "case" && activeEvaluationCaseTitle) {
+	            evaluationsPathItems.push({ label: activeEvaluationCaseTitle });
+	          }
+	          if (isEvaluationDatasetCase) {
+	            evaluationsPathItems.push({ label: activeEvaluationDatasetCaseTitle });
+	          }
+	          return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems: evaluationsPathItems,
-            center: showEvaluationSetActions
-              ? React.createElement(PlatformSwitch, {
-                  className: "playground-evaluations-detail-header-switch",
+	            center: isEvaluationDatasetCase
+	              ? React.createElement(PlatformSwitch, {
+	                  className: "playground-evaluations-case-detail-header-switch",
+	                  value: evaluationCaseDetailTab === "settings" ? "settings" : "code",
+	                  options: [
+	                    { value: "code", label: "Code" },
+	                    { value: "settings", label: "Settings" },
+	                  ],
+	                  onValueChange: (nextTab) => setEvaluationCaseDetailTab(
+	                    nextTab === "settings" ? "settings" : "code"
+	                  ),
+	                  ariaLabel: "Evaluation case section",
+	                })
+	              : showEvaluationSetActions
+	                ? React.createElement(PlatformSwitch, {
+	                  className: "playground-evaluations-detail-header-switch",
                   value: evaluationDetailTab === "cases" || evaluationDetailTab === "data"
                     ? "cases"
                     : (evaluationDetailTab === "settings" ? "settings" : "general"),
@@ -121,20 +154,25 @@ export const EVALUATIONS_APP_TOP_NAVIGATION_SCRIPT = `        function renderEva
                       : (nextTab === "settings" ? "settings" : "general")
                   ),
                   ariaLabel: "Evaluation section",
-                })
-              : null,
-            includeSearchDivider: isEvaluationsOverview || showEvaluationSetActions,
+	                })
+	                : null,
+	            includeSearchDivider: isEvaluationsOverview || showEvaluationSetActions || isEvaluationDatasetCase,
             extraActions: isEvaluationsOverview
               ? React.createElement("div", {
                   id: "playground-evaluations-overview-controls",
                   className: "playground-tools-overview-controls-slot",
                 })
-              : showEvaluationSetActions
-                ? React.createElement("div", {
-                    id: "playground-evaluations-nav-actions",
-                    className: "playground-evaluations-nav-actions",
-                  })
-                : null,
+	              : showEvaluationSetActions
+	                ? React.createElement("div", {
+	                    id: "playground-evaluations-nav-actions",
+	                    className: "playground-evaluations-nav-actions",
+	                  })
+	                : isEvaluationDatasetCase
+	                  ? React.createElement("div", {
+	                      id: "playground-evaluation-case-nav-actions",
+	                      className: "playground-evaluations-nav-actions",
+	                    })
+	                  : null,
             hideCommonActions: isResourcesVersionsDrawerOpen,
           });
         }

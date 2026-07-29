@@ -12,6 +12,8 @@ export const EVALUATIONS_APP_PAGE_VIEW_SCRIPT = `        function renderEvaluati
             currentUserName: hasSessionAuth ? accountName : "Me",
             currentUserEmail: hasSessionAuth ? accountEmail : "",
             currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
+            organizations: organizationPageOrganizations,
+            activeOrganizationId,
             workspaceTeams: teamPageTeams,
             workspaceTeamsLoading: teamPageLoading,
             onWorkspaceTeamsRequest: (options = {}) => {
@@ -66,6 +68,8 @@ export const EVALUATIONS_APP_PAGE_VIEW_SCRIPT = `        function renderEvaluati
             },
             evaluationDetailTab,
             setEvaluationDetailTab,
+            evaluationCaseDetailTab,
+            setEvaluationCaseDetailTab,
             evaluationCreateModalOpen,
             setEvaluationCreateModalOpen,
             evaluationCreateForm,
@@ -79,7 +83,9 @@ export const EVALUATIONS_APP_PAGE_VIEW_SCRIPT = `        function renderEvaluati
             versionsSidebarRequestToken: evaluationVersionsSidebarRequestToken,
             topNavActionsPortalId: evaluationsPageMode === "detail"
               ? "playground-evaluations-nav-actions"
-              : "",
+              : evaluationsPageMode === "dataset-case"
+                ? "playground-evaluation-case-nav-actions"
+                : "",
             breadcrumbActionsPortalId: evaluationsPageMode === "detail"
               ? "playground-evaluations-breadcrumb-actions"
               : evaluationsPageMode === "run"

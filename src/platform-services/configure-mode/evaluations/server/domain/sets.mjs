@@ -341,6 +341,8 @@ export function normalizeDataRow(row, fallbackIndex = 0) {
           : "";
   return {
     id: normalizeString(source.id || source.caseId || source.case_id) || createEvaluationId("eval_case"),
+    title: normalizeString(source.title || source.name || source.caseTitle || source.case_title),
+    description: normalizeString(source.description || source.summary),
     input,
     expectedOutput,
     evaluationGuidance: String(source.evaluationGuidance || source.evaluation_guidance || source.scoringGuidance || source.scoring_guidance || source.rubric || ""),
@@ -398,6 +400,8 @@ export function normalizeEvaluationSet(record = {}) {
     environmentType: normalizeString(source.environmentType || source.environment_type).toLowerCase() === "project" ? "project" : "computer",
     environmentId: normalizeString(source.environmentId || source.environment_id || source.computerId || source.computer_id),
     projectId: normalizeString(source.projectId || source.project_id),
+    organizationId: normalizeString(source.organizationId || source.organization_id || metadata?.organizationId || metadata?.organization_id),
+    createdByUserId: normalizeString(source.createdByUserId || source.created_by_user_id || metadata?.createdByUserId || metadata?.created_by_user_id || creator.userId || creator.id),
     dataRows: dataRows.map((row, index) => normalizeDataRow(row, index)),
     creator,
     createdBy: creator,
@@ -768,6 +772,8 @@ export function createEvaluationRun(evaluationSet, options = {}) {
     : null;
   const fingerprintRows = (rows) => rows.map((row) => ({
     id: row.id,
+    title: row.title,
+    description: row.description,
     input: row.input,
     expectedOutput: row.expectedOutput,
     evaluationGuidance: row.evaluationGuidance,

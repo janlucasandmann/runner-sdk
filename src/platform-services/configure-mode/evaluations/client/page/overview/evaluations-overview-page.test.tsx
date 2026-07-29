@@ -69,20 +69,39 @@ describe("EvaluationsOverviewPage", () => {
       />,
     );
 
-    expect(container.querySelector(".resource-overview-page.is-evaluations")).not.toBeNull();
-    expect(container.querySelector("[data-platform-page-hero='true']")).not.toBeNull();
     expect(
-      screen.getByRole("heading", { name: "Measure agent performance with confidence" }),
+      container.querySelector(".resource-overview-page.is-evaluations"),
+    ).not.toBeNull();
+    expect(
+      container.querySelector("[data-platform-page-hero='true']"),
+    ).not.toBeNull();
+    expect(
+      screen.getByRole("heading", {
+        name: "Measure agent performance with confidence",
+      }),
     ).not.toBeNull();
     expect(container.querySelectorAll(".platform-ui-card")).toHaveLength(2);
     expect(screen.getByRole("table", { name: "Evaluations" })).not.toBeNull();
-    expect(container.querySelector(".platform-data-table.is-minimalistic-ui")).not.toBeNull();
+    expect(
+      container.querySelector(".platform-data-table.is-minimalistic-ui"),
+    ).not.toBeNull();
     expect(container.querySelector(".platform-data-table__footer")).toBeNull();
     expect(screen.getByText("All Evaluations")).not.toBeNull();
     expect(screen.getByPlaceholderText("Search evaluations")).not.toBeNull();
     expect(
       screen.getByRole("checkbox", { name: "Select all visible rows" }),
     ).not.toBeNull();
+    const supportRow = screen.getByRole("row", { name: "Support Quality" });
+    const evaluationCell = supportRow.querySelector(
+      '.platform-data-table__cell[data-column-id="name"]',
+    );
+    expect(
+      evaluationCell?.querySelector(".resource-overview-identity__visual"),
+    ).toBeNull();
+    expect(
+      evaluationCell?.querySelector(".resource-overview-identity__title")
+        ?.textContent,
+    ).toBe("Support Quality");
 
     await user.click(await screen.findByRole("button", { name: "Evaluation" }));
     expect(onCreate).toHaveBeenCalledOnce();
@@ -90,8 +109,12 @@ describe("EvaluationsOverviewPage", () => {
     await user.click(screen.getByText("Support Quality"));
     expect(onOpen).toHaveBeenCalledWith(rows[0]);
 
-    await user.click(screen.getByRole("checkbox", { name: "Select Support Quality" }));
-    await user.click(screen.getByRole("checkbox", { name: "Select Code Quality" }));
+    await user.click(
+      screen.getByRole("checkbox", { name: "Select Support Quality" }),
+    );
+    await user.click(
+      screen.getByRole("checkbox", { name: "Select Code Quality" }),
+    );
     await user.click(
       screen.getByRole("button", { name: "Open actions for Support Quality" }),
     );
@@ -99,7 +122,9 @@ describe("EvaluationsOverviewPage", () => {
 
     expect(onDeleteMany).toHaveBeenCalledOnce();
     expect(
-      onDeleteMany.mock.calls[0]?.[0].map((row: EvaluationOverviewRow) => row.id).sort(),
+      onDeleteMany.mock.calls[0]?.[0]
+        .map((row: EvaluationOverviewRow) => row.id)
+        .sort(),
     ).toEqual(["evaluation-code", "evaluation-support"]);
   });
 });

@@ -1,6 +1,7 @@
 export { EVALUATIONS_PAGE_CONTROLLER_ACTIONS_SCRIPT } from "./actions.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT } from "./access.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_CASE_DETAIL_SCRIPT } from "./case-detail.mjs";
+export { EVALUATIONS_PAGE_CONTROLLER_DATASET_CASE_DETAIL_SCRIPT } from "./dataset-case-detail.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_CHARTS_SCRIPT } from "./charts.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT } from "./dialogs.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_EDITORS_SCRIPT } from "./editors.mjs";

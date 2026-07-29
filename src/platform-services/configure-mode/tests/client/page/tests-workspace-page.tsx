@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
 import { PlatformConfirmationModal } from "../../../../../platform-ui/components/composite/modal/index.js";
+import { PlatformServiceDetailFrame } from "../../../../../platform-ui/pages/details/index.js";
 import { TestsApi } from "../api/index.js";
 import {
   normalizeTestWorkspaceOption,
@@ -29,6 +30,7 @@ export interface TestsWorkspacePageProps {
   selectedTestPlanId?: string;
   selectedTestRunId?: string;
   controlsPortalId?: string;
+  sectionControlsPortalId?: string;
   defaultProjectId?: string;
   defaultEnvironmentId?: string;
   defaultAgentId?: string;
@@ -73,6 +75,7 @@ export function TestsWorkspacePage({
   selectedTestPlanId = "",
   selectedTestRunId = "",
   controlsPortalId,
+  sectionControlsPortalId,
   defaultProjectId = "",
   defaultEnvironmentId = "",
   defaultAgentId = "",
@@ -292,18 +295,21 @@ export function TestsWorkspacePage({
     }
     return (
       <>
-        <TestPlanDetailPage
-          plan={activePlan}
-          api={api}
-          projects={normalizedProjects}
-          environments={normalizedEnvironments}
-          workspaceTeams={workspaceTeams}
-          controlsPortalId={controlsPortalId}
-          onPlanChange={replacePlan}
-          onReload={() => loadPlan(activePlan.id)}
-          onRun={setRunPlan}
-          onOpenRun={(run) => onOpenRun(activePlan.id, run.id, activePlan.name)}
-        />
+        <PlatformServiceDetailFrame className="tests-detail-frame">
+          <TestPlanDetailPage
+            plan={activePlan}
+            api={api}
+            projects={normalizedProjects}
+            environments={normalizedEnvironments}
+            workspaceTeams={workspaceTeams}
+            controlsPortalId={controlsPortalId}
+            sectionControlsPortalId={sectionControlsPortalId}
+            onPlanChange={replacePlan}
+            onReload={() => loadPlan(activePlan.id)}
+            onRun={setRunPlan}
+            onOpenRun={(run) => onOpenRun(activePlan.id, run.id, activePlan.name)}
+          />
+        </PlatformServiceDetailFrame>
         <TestRunCreateModal
           open={Boolean(runPlan)}
           plan={runPlan}
@@ -334,16 +340,31 @@ export function TestsWorkspacePage({
       );
     }
     return (
-      <TestRunDetailPage
-        run={activeRun}
-        plan={activeRunPlan}
-        projects={normalizedProjects}
-        environments={normalizedEnvironments}
-        agents={normalizedAgents}
-        controlsPortalId={controlsPortalId}
-        refreshing={refreshingRun}
-        onRefresh={() => void loadRun(activeRun.id, true)}
-      />
+      <>
+        <PlatformServiceDetailFrame className="tests-detail-frame">
+          <TestRunDetailPage
+            run={activeRun}
+            plan={activeRunPlan}
+            projects={normalizedProjects}
+            environments={normalizedEnvironments}
+            agents={normalizedAgents}
+            controlsPortalId={controlsPortalId}
+            refreshing={refreshingRun}
+            onRefresh={() => void loadRun(activeRun.id, true)}
+            onRunAgain={() => setRunPlan(activeRunPlan)}
+          />
+        </PlatformServiceDetailFrame>
+        <TestRunCreateModal
+          open={Boolean(runPlan)}
+          plan={runPlan}
+          environments={normalizedEnvironments}
+          agents={normalizedAgents}
+          defaultEnvironmentId={defaultEnvironmentId}
+          defaultAgentId={defaultAgentId}
+          onClose={() => setRunPlan(null)}
+          onRun={startRun}
+        />
+      </>
     );
   }
 

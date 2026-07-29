@@ -381,6 +381,67 @@ export const EVALUATIONS_STYLE_TABLES = String.raw`        line-height: 1.35;
         overflow: visible;
       }
 
+      .playground-evaluations-dataset-cases-platform-table {
+        min-width: 0;
+        --platform-data-table-surface: transparent;
+        --platform-data-table-body-background: transparent;
+        --platform-data-table-row-background: transparent;
+        --platform-data-table-header-background: transparent;
+        --platform-data-table-sticky-background: transparent;
+      }
+
+      .playground-evaluations-dataset-case-table-title-cell {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .playground-evaluations-dataset-case-table-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .playground-evaluations-dataset-case-table-label {
+        color: rgba(255, 255, 255, 0.46);
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      .playground-evaluations-dataset-case-table-title {
+        min-width: 0;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        line-height: 1.35;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-evaluations-dataset-case-table-value {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+      }
+
+      .playground-evaluations-dataset-cases-platform-table
+        .platform-data-table__row.is-disabled.playground-evaluations-dataset-cases-table-row.is-pending {
+        opacity: 1;
+      }
+
+      .playground-evaluations-dataset-cases-table-row.is-pending
+        .playground-evaluations-dataset-case-table-title {
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-evaluations-dataset-cases-table-row.is-pending.is-error
+        .playground-evaluations-dataset-case-table-label,
+      .playground-evaluations-dataset-cases-table-row.is-pending.is-error
+        .playground-evaluations-dataset-case-table-title {
+        color: rgba(255, 135, 135, 0.9);
+      }
+
       .playground-evaluations-cases-editor-header {
         display: flex;
         align-items: center;

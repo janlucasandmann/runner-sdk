@@ -26,6 +26,12 @@ export const ASSURANCE_APP_TOP_NAVIGATION_SCRIPT = `        function renderAssur
           return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems,
+            center: assurancePageMode === "detail"
+              ? React.createElement("div", {
+                  id: "playground-assurance-section-controls",
+                  className: "playground-assurance-section-controls",
+                })
+              : null,
             includeSearchDivider: true,
             extraActions: React.createElement("div", {
               id: isOverview

@@ -32,6 +32,7 @@ import {
   Pencil as LucidePencil,
   Presentation as LucidePresentation,
   Plus as LucidePlus,
+  Plug as LucidePlug,
   RefreshCw as LucideRefreshCw,
   Split as LucideSplit,
   Star as LucideStar,
@@ -419,7 +420,18 @@ import {
   formatRunnerScheduleChipLabel,
   useRunnerScheduleController,
 } from "./runner-chat/use-schedule-controller.js";
+import {
+  buildRunnerConnectorPayload,
+  filterRunnerConnectorOptions,
+  mergeRunnerConnectorPayloads,
+  normalizeRunnerConnectorOptions,
+  normalizeRunnerSelectedConnectorIds,
+  replaceRunnerConnectorMention,
+  resolveRunnerConnectorMentionInputState,
+  type RunnerConnectorMentionInputState,
+} from "./runner-chat/composer-connectors.js";
 import type {
+  RunnerChatConnectorOption,
   RunnerChatFollowUpAction,
   RunnerChatProps,
 } from "./runner-chat/public-types.js";
@@ -427,6 +439,7 @@ export type {
   RunnerChatActionSummaryClickPayload,
   RunnerChatAgentTurnClickPayload,
   RunnerChatComputerAgentsConfig,
+  RunnerChatConnectorOption,
   RunnerChatDriveConfig,
   RunnerChatExternalFileBrowserRequest,
   RunnerChatExternalRunRequest,
@@ -707,6 +720,7 @@ export function RunnerChat({
   skillCreationCommand = null,
   skillCreationCommandHiddenPrompt,
   onSkillCreationCommandChange,
+  onOpenPluginsOverview,
   onOpenPlansBudget,
   onBacklogMissionControlSubmit,
   followUpActions = [],
@@ -716,6 +730,12 @@ export function RunnerChat({
 }: RunnerChatProps) {
   const [input, setInput] = useState(initialTask);
   const [inputSelectionStart, setInputSelectionStart] = useState(() => initialTask.length);
+  const [localSelectedConnectorIds, setLocalSelectedConnectorIds] = useState<string[]>(() =>
+    normalizeRunnerSelectedConnectorIds(computerAgents?.selectedConnectorIds),
+  );
+  const [activeConnectorOptionIndex, setActiveConnectorOptionIndex] = useState(0);
+  const [connectingConnectorId, setConnectingConnectorId] = useState("");
+  const [dismissedConnectorMentionKey, setDismissedConnectorMentionKey] = useState("");
   const {
     selection: composerQuotedSelection,
     setSelection: setComposerQuotedSelection,
@@ -1417,6 +1437,97 @@ export function RunnerChat({
     }
     return resolveRunnerSlashCommandInputState(input, inputSelectionStart);
   }, [hasStagedComposerCommand, input, inputSelectionStart]);
+  const availableConnectorOptions = useMemo(() => {
+    if (computerAgents?.connectors?.length) {
+      return normalizeRunnerConnectorOptions(computerAgents.connectors);
+    }
+
+    return normalizeRunnerConnectorOptions([
+      {
+        id: "github",
+        name: "GitHub",
+        description: "Repositories, issues, pull requests, and delivery workflows",
+        connected: computerAgents?.github?.connected,
+        onConnect: computerAgents?.github?.onConnect,
+      },
+      {
+        id: "notion",
+        name: "Notion",
+        description: "Pages, databases, and workspace knowledge",
+        connected: computerAgents?.notion?.connected,
+        onConnect: computerAgents?.notion?.onConnect,
+      },
+      {
+        id: "google-drive",
+        name: "Google Drive",
+        description: "Files and folders from Google Drive",
+        connected: computerAgents?.googleDrive?.connected,
+        onConnect: computerAgents?.googleDrive?.onConnect,
+      },
+      {
+        id: "one-drive",
+        name: "OneDrive",
+        description: "Files and folders from Microsoft OneDrive",
+        connected: computerAgents?.oneDrive?.connected,
+        onConnect: computerAgents?.oneDrive?.onConnect,
+      },
+    ]);
+  }, [computerAgents]);
+  const selectedConnectorIds = useMemo(
+    () =>
+      normalizeRunnerSelectedConnectorIds(
+        computerAgents?.selectedConnectorIds === undefined
+          ? localSelectedConnectorIds
+          : computerAgents.selectedConnectorIds,
+        availableConnectorOptions,
+      ),
+    [
+      availableConnectorOptions,
+      computerAgents?.selectedConnectorIds,
+      localSelectedConnectorIds,
+    ],
+  );
+  const selectedConnectorOptions = useMemo(() => {
+    const selectedIds = new Set(selectedConnectorIds);
+    return availableConnectorOptions.filter((option) => selectedIds.has(option.id));
+  }, [availableConnectorOptions, selectedConnectorIds]);
+  const selectedConnectorPayload = useMemo(
+    () => buildRunnerConnectorPayload(selectedConnectorIds),
+    [selectedConnectorIds],
+  );
+  const connectorMentionInputState = useMemo(() => {
+    if (hasStagedComposerCommand) {
+      return null;
+    }
+    return resolveRunnerConnectorMentionInputState(input, inputSelectionStart);
+  }, [hasStagedComposerCommand, input, inputSelectionStart]);
+  const connectorMentionKey = connectorMentionInputState
+    ? [
+        connectorMentionInputState.start,
+        connectorMentionInputState.end,
+        connectorMentionInputState.query,
+      ].join(":")
+    : "";
+  const filteredConnectorOptions = useMemo(
+    () =>
+      connectorMentionInputState
+        ? filterRunnerConnectorOptions(
+            availableConnectorOptions,
+            connectorMentionInputState.query,
+          )
+        : [],
+    [availableConnectorOptions, connectorMentionInputState],
+  );
+  const showConnectorMentionPopup = Boolean(
+    inputMode === "computer-agents"
+    && !activeInputPopup
+    && connectorMentionInputState
+    && connectorMentionKey !== dismissedConnectorMentionKey
+    && availableConnectorOptions.length > 0
+  );
+  useEffect(() => {
+    setActiveConnectorOptionIndex(0);
+  }, [connectorMentionKey]);
   const availableSlashCommandItems = useMemo(() => {
     const items: Array<{
       id: string;
@@ -1523,6 +1634,7 @@ export function RunnerChat({
   const showSlashCommandPopup = Boolean(
     inputMode === "computer-agents"
     && !activeInputPopup
+    && !showConnectorMentionPopup
     && slashCommandInputState
     && availableSlashCommandItems.length > 0
   );
@@ -2014,7 +2126,86 @@ export function RunnerChat({
     setActiveInputPopup("context");
   }
 
-  function clearComposerDraft(options?: { preserveStagedCommand?: boolean; preserveQuotedSelection?: boolean }) {
+  function updateSelectedConnectorIds(nextIds: readonly string[]) {
+    const normalizedIds = normalizeRunnerSelectedConnectorIds(
+      nextIds,
+      availableConnectorOptions,
+    );
+    if (computerAgents?.selectedConnectorIds === undefined) {
+      setLocalSelectedConnectorIds(normalizedIds);
+    }
+    computerAgents?.onSelectedConnectorsChange?.(normalizedIds);
+  }
+
+  function removeSelectedConnector(connectorId: string) {
+    updateSelectedConnectorIds(
+      selectedConnectorIds.filter((id) => id !== connectorId),
+    );
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
+  }
+
+  function replaceActiveConnectorMention(
+    mention: RunnerConnectorMentionInputState,
+  ) {
+    const replacement = replaceRunnerConnectorMention(input, mention);
+    applyComposerInputValue(replacement.value, replacement.selectionStart);
+    setDismissedConnectorMentionKey("");
+    window.requestAnimationFrame(() => {
+      const textarea = textareaRef.current;
+      if (!textarea) {
+        return;
+      }
+      textarea.focus();
+      textarea.setSelectionRange(
+        replacement.selectionStart,
+        replacement.selectionStart,
+      );
+    });
+  }
+
+  async function selectComposerConnector(
+    option: RunnerChatConnectorOption,
+    mention: RunnerConnectorMentionInputState,
+  ) {
+    if (option.disabled || connectingConnectorId) {
+      return;
+    }
+
+    if (option.connected === false) {
+      if (!option.onConnect) {
+        onOpenPluginsOverview?.();
+        return;
+      }
+      setConnectingConnectorId(option.id);
+      try {
+        const didConnect = await option.onConnect();
+        if (didConnect === true) {
+          updateSelectedConnectorIds([...selectedConnectorIds, option.id]);
+          replaceActiveConnectorMention(mention);
+        }
+      } catch (error) {
+        const normalizedError =
+          error instanceof Error ? error : new Error(String(error));
+        setInlineError(
+          normalizedError.message || `Failed to connect ${option.name}.`,
+        );
+      } finally {
+        setConnectingConnectorId("");
+      }
+      return;
+    }
+
+    updateSelectedConnectorIds([...selectedConnectorIds, option.id]);
+    replaceActiveConnectorMention(mention);
+  }
+
+  function clearComposerDraft(options?: {
+    preserveQuotedSelection?: boolean;
+    preserveSelectedConnectors?: boolean;
+    preserveStagedCommand?: boolean;
+  }) {
     setInput("");
     if (!options?.preserveStagedCommand) {
       clearAllStagedCommands();
@@ -2024,6 +2215,9 @@ export function RunnerChat({
     }
     currentInputRef.current = "";
     resetSpeechDraft("");
+    if (!options?.preserveSelectedConnectors) {
+      updateSelectedConnectorIds([]);
+    }
   }
 
   function clearQuotedSelectionPopup() {
@@ -3375,6 +3569,9 @@ export function RunnerChat({
           : undefined,
         githubRepoOverride: request.githubRepo ?? undefined,
         enabledSkillsOverride: request.enabledSkills ?? undefined,
+        connectorsOverride: request.connectors === undefined
+          ? undefined
+          : request.connectors,
         displayPromptOverride: typeof request.displayPrompt === "string"
           ? request.displayPrompt
           : undefined,
@@ -4239,6 +4436,10 @@ export function RunnerChat({
       const scrapeCreationCommand = stagedScrapeCreationCommand;
       const parseCreationCommand = stagedParseCreationCommand;
       const adCreationCommand = stagedAdCreationCommand ? buildStagedRunnerAdCreationCommand(adCreationSettings) : null;
+      const runConnectorPayload = mergeRunnerConnectorPayloads(
+        backlogTaskConnectors,
+        selectedConnectorPayload,
+      );
       if (stagedThreadContextCommand) {
         const stagedPrompt = textareaAllowsPromptAfterStagedCommand ? taskText : "";
         const shouldPreserveComposerState = stagedThreadContextCommand === "fork";
@@ -4294,6 +4495,7 @@ export function RunnerChat({
           reasoningEffort: effectiveReasoningEffort,
           githubRepo: githubRepo || null,
           enabledSkills: enabledSkillsPayload || null,
+          connectors: runConnectorPayload,
           quotedSelection,
         });
         if (didHandleProjectTask !== false) {
@@ -4342,6 +4544,7 @@ export function RunnerChat({
               }
             : {}),
           ...(enabledSkillsPayload ? { enabledSkills: enabledSkillsPayload } : {}),
+          ...(runConnectorPayload ? { connectors: runConnectorPayload } : {}),
         });
         return;
       }
@@ -4439,6 +4642,7 @@ export function RunnerChat({
             scrapeCreationCommand,
             parseCreationCommand,
             adCreationCommand,
+            connectors: runConnectorPayload,
           },
         ]);
         setPendingQueuedMessages((prev) => [
@@ -4478,6 +4682,7 @@ export function RunnerChat({
           scrapeCreationCommand,
           parseCreationCommand,
           adCreationCommand,
+          connectorsOverride: runConnectorPayload,
           extraResolvedAttachments: previewImageRunAttachments,
           displayPromptOverride: executionTaskText === taskText ? undefined : taskText,
         });
@@ -4520,6 +4725,7 @@ export function RunnerChat({
             nextQueuedMessage.extraResolvedAttachments,
           displayPromptOverride: nextQueuedMessage.displayPrompt,
           reasoningEffortOverride: nextQueuedMessage.reasoningEffort,
+          connectorsOverride: nextQueuedMessage.connectors,
         },
       );
     },
@@ -4601,6 +4807,54 @@ export function RunnerChat({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (
+      showConnectorMentionPopup
+      && connectorMentionInputState
+      && filteredConnectorOptions.length > 0
+    ) {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        const direction = event.key === "ArrowDown" ? 1 : -1;
+        setActiveConnectorOptionIndex((current) => {
+          const optionCount = filteredConnectorOptions.length;
+          return (current + direction + optionCount) % optionCount;
+        });
+        return;
+      }
+      if (event.key === "Enter" || event.key === "Tab") {
+        event.preventDefault();
+        const selectedOption =
+          filteredConnectorOptions[
+            Math.min(
+              activeConnectorOptionIndex,
+              filteredConnectorOptions.length - 1,
+            )
+          ];
+        if (selectedOption) {
+          void selectComposerConnector(
+            selectedOption,
+            connectorMentionInputState,
+          );
+        }
+        return;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setDismissedConnectorMentionKey(connectorMentionKey);
+        return;
+      }
+    }
+    if (
+      event.key === "Backspace"
+      && input.length === 0
+      && selectedConnectorIds.length > 0
+    ) {
+      event.preventDefault();
+      removeSelectedConnector(
+        selectedConnectorIds[selectedConnectorIds.length - 1],
+      );
+      return;
+    }
     if (
       event.key === "Backspace"
       && input.length === 0
@@ -6766,7 +7020,7 @@ export function RunnerChat({
               ) : null}
 
               <div
-                className={`tb-composer-textarea-shell ${hasStagedComposerCommand ? "tb-composer-textarea-shell-staged" : ""}`.trim()}
+                className={`tb-composer-textarea-shell ${hasStagedComposerCommand ? "tb-composer-textarea-shell-staged" : ""} ${selectedConnectorOptions.length > 0 ? "tb-composer-textarea-shell-connectors" : ""}`.trim()}
                 style={
                   hasStagedComposerCommand
                     ? ({
@@ -6775,6 +7029,112 @@ export function RunnerChat({
                     : undefined
                 }
               >
+                {showConnectorMentionPopup && connectorMentionInputState ? (
+                  <PlatformPopupSurface
+                    className="tb-popup-menu-main tb-popup-menu-connector-mention"
+                    animation="up-in"
+                    role="listbox"
+                    aria-label="Connectors"
+                  >
+                    <div className="tb-connector-mention-header">
+                      <span>Connectors</span>
+                      <span>{filteredConnectorOptions.length}</span>
+                    </div>
+                    <div className="tb-connector-mention-list">
+                      {filteredConnectorOptions.length > 0 ? (
+                        filteredConnectorOptions.map((option, index) => {
+                          const isSelected = selectedConnectorIds.includes(
+                            option.id,
+                          );
+                          const isConnecting =
+                            connectingConnectorId === option.id;
+                          return (
+                            <button
+                              key={option.id}
+                              type="button"
+                              role="option"
+                              aria-selected={isSelected}
+                              className={`tb-connector-mention-row ${index === activeConnectorOptionIndex ? "is-active" : ""} ${isSelected ? "is-selected" : ""}`.trim()}
+                              disabled={Boolean(
+                                option.disabled || connectingConnectorId,
+                              )}
+                              onMouseDown={(event) => event.preventDefault()}
+                              onMouseEnter={() =>
+                                setActiveConnectorOptionIndex(index)
+                              }
+                              onClick={() =>
+                                void selectComposerConnector(
+                                  option,
+                                  connectorMentionInputState,
+                                )
+                              }
+                            >
+                              <span className="tb-connector-mention-icon-shell">
+                                {option.logoUrl ? (
+                                  <img
+                                    className="tb-connector-mention-logo"
+                                    src={option.logoUrl}
+                                    alt=""
+                                  />
+                                ) : (
+                                  <LucidePlug
+                                    className="tb-connector-mention-icon"
+                                    strokeWidth={1.7}
+                                  />
+                                )}
+                              </span>
+                              <span className="tb-connector-mention-copy">
+                                <span className="tb-connector-mention-name">
+                                  {option.name}
+                                </span>
+                                {option.description ? (
+                                  <span className="tb-connector-mention-description">
+                                    {option.description}
+                                  </span>
+                                ) : null}
+                              </span>
+                              <span className="tb-connector-mention-status">
+                                {isConnecting ? (
+                                  <LucideLoaderCircle
+                                    className="tb-connector-mention-spinner"
+                                    strokeWidth={1.7}
+                                  />
+                                ) : isSelected ? (
+                                  <LucideCheck
+                                    className="tb-connector-mention-check"
+                                    strokeWidth={1.9}
+                                  />
+                                ) : option.connected === false ? (
+                                  "Connect"
+                                ) : null}
+                              </span>
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="tb-connector-mention-empty">
+                          No connectors match that input.
+                        </div>
+                      )}
+                    </div>
+                    {onOpenPluginsOverview ? (
+                      <button
+                        type="button"
+                        className="tb-connector-mention-manage"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => {
+                          setDismissedConnectorMentionKey(
+                            connectorMentionKey,
+                          );
+                          onOpenPluginsOverview();
+                        }}
+                      >
+                        <LucidePlug strokeWidth={1.7} />
+                        <span>Manage connectors</span>
+                      </button>
+                    ) : null}
+                  </PlatformPopupSurface>
+                ) : null}
                 {showSlashCommandPopup ? (
                   <PlatformPopupSurface className="tb-popup-menu-main tb-popup-menu-slash" animation="up-in">
                     {filteredSlashCommandItems.length > 0 ? (
@@ -6812,10 +7172,49 @@ export function RunnerChat({
                     {stagedComposerLabel}
                   </span>
                 ) : null}
+                {selectedConnectorOptions.length > 0 ? (
+                  <div
+                    className="tb-composer-selected-connectors"
+                    aria-label="Selected connectors"
+                  >
+                    {selectedConnectorOptions.map((option) => (
+                      <span
+                        key={option.id}
+                        className="tb-composer-selected-connector"
+                      >
+                        <span className="tb-composer-selected-connector-icon-shell">
+                          {option.logoUrl ? (
+                            <img
+                              className="tb-composer-selected-connector-logo"
+                              src={option.logoUrl}
+                              alt=""
+                            />
+                          ) : (
+                            <LucidePlug
+                              className="tb-composer-selected-connector-icon"
+                              strokeWidth={1.7}
+                            />
+                          )}
+                        </span>
+                        <span className="tb-composer-selected-connector-name">
+                          {option.name}
+                        </span>
+                        <button
+                          type="button"
+                          className="tb-composer-selected-connector-remove"
+                          aria-label={`Remove ${option.name}`}
+                          onClick={() => removeSelectedConnector(option.id)}
+                        >
+                          <LucideX strokeWidth={1.8} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 <textarea
                   ref={textareaRef}
                   rows={1}
-                  className={`sidebar-textarea ${hasStagedComposerCommand ? "sidebar-textarea-staged" : ""}`.trim()}
+                  className={`sidebar-textarea ${hasStagedComposerCommand ? "sidebar-textarea-staged" : ""} ${selectedConnectorOptions.length > 0 ? "sidebar-textarea-connectors" : ""}`.trim()}
                   value={input}
                   onChange={handleInputChange}
                   onPaste={handleInputPaste}

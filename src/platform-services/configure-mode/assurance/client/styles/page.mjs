@@ -81,7 +81,8 @@ export const PLAYGROUND_ASSURANCE_CSS = String.raw`
   }
 
   .assurance-detail-page {
-    min-height: calc(100vh - var(--playground-navbar-height, 68px));
+    width: 100%;
+    min-height: 0;
   }
 
   .assurance-detail-content {
@@ -92,85 +93,25 @@ export const PLAYGROUND_ASSURANCE_CSS = String.raw`
     display: grid;
     align-content: start;
     gap: 24px;
-    padding: 24px 28px 48px;
+    padding: 0;
   }
 
   .assurance-detail-sidebar {
-    padding-top: 24px;
+    padding-top: 0;
   }
 
-  .assurance-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
+  .assurance-detail-analytics {
+    width: 100%;
   }
 
-  .assurance-kpi-card {
-    display: grid;
-    min-height: 126px;
-    align-content: center;
-    gap: 8px;
-    padding: 20px;
+  .assurance-detail-run-button.platform-button {
+    width: 100%;
+    margin-top: 8px;
   }
 
-  .assurance-kpi-card > span {
-    color: rgba(255, 255, 255, 0.52);
-    font-size: 12px;
-    font-weight: 650;
-    letter-spacing: 0.02em;
-  }
-
-  .assurance-kpi-card > strong {
-    color: #f7f7f7;
-    font-size: 28px;
-    font-weight: 650;
-    letter-spacing: -0.035em;
-  }
-
-  .assurance-kpi-card > small {
-    color: rgba(255, 255, 255, 0.45);
-    font-size: 11px;
-  }
-
-  .assurance-kpi-card.is-success {
-    border-color: rgba(73, 198, 105, 0.25);
-  }
-
-  .assurance-kpi-card.is-danger {
-    border-color: rgba(255, 91, 91, 0.23);
-  }
-
-  .assurance-kpi-card.is-warning {
-    border-color: rgba(244, 173, 61, 0.25);
-  }
-
-  .assurance-sidebar-properties {
-    display: grid;
-    gap: 15px;
-  }
-
-  .assurance-sidebar-property {
-    display: grid;
-    grid-template-columns: minmax(92px, 0.8fr) minmax(0, 1.2fr);
-    align-items: start;
-    gap: 16px;
-    font-size: 13px;
-  }
-
-  .assurance-sidebar-property > span:first-child {
-    color: rgba(255, 255, 255, 0.46);
-  }
-
-  .assurance-sidebar-property > strong {
+  .playground-assurance-section-controls,
+  .assurance-detail-header-switch {
     min-width: 0;
-    color: rgba(255, 255, 255, 0.82);
-    font-weight: 500;
-    text-align: right;
-    overflow-wrap: anywhere;
-  }
-
-  .assurance-sidebar-property .assurance-status-label {
-    justify-self: end;
   }
 
   .assurance-form-grid {
@@ -307,7 +248,7 @@ export const PLAYGROUND_ASSURANCE_CSS = String.raw`
   }
 
   .assurance-inline-error {
-    margin: 20px 28px 0;
+    margin: 0;
     padding: 13px 15px;
     color: #ff9b9b;
     border-color: rgba(255, 91, 91, 0.25);
@@ -330,8 +271,7 @@ export const PLAYGROUND_ASSURANCE_CSS = String.raw`
     font-size: 12px;
   }
 
-  .assurance-decision-banner,
-  .assurance-evidence-banner {
+  .assurance-decision-banner {
     display: flex;
     align-items: center;
     gap: 13px;
@@ -361,22 +301,98 @@ export const PLAYGROUND_ASSURANCE_CSS = String.raw`
     background: rgba(164, 105, 21, 0.1);
   }
 
-  .assurance-decision-banner > div,
-  .assurance-evidence-banner > div {
+  .assurance-decision-banner > div {
     display: grid;
     gap: 4px;
   }
 
-  .assurance-decision-banner strong,
-  .assurance-evidence-banner strong {
+  .assurance-decision-banner strong {
     color: rgba(255, 255, 255, 0.9);
     font-size: 13px;
   }
 
-  .assurance-decision-banner span,
-  .assurance-evidence-banner span {
+  .assurance-decision-banner span {
     color: rgba(255, 255, 255, 0.52);
     font-size: 12px;
+  }
+
+  .assurance-run-evidence-card.platform-ui-card {
+    width: 100%;
+  }
+
+  .assurance-run-evidence-card.is-trusted {
+    border-color: rgba(74, 222, 128, 0.28);
+  }
+
+  .assurance-run-evidence-summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .assurance-run-evidence-summary > svg {
+    flex: 0 0 auto;
+    margin-top: 1px;
+    color: #b6aaff;
+  }
+
+  .assurance-run-evidence-card.is-trusted .assurance-run-evidence-summary > svg {
+    color: #86e29d;
+  }
+
+  .assurance-run-evidence-summary > div {
+    display: grid;
+    gap: 4px;
+  }
+
+  .assurance-run-evidence-summary strong {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .assurance-run-evidence-summary span {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .assurance-run-evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 24px;
+    margin: 18px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .assurance-run-evidence-grid > div {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .assurance-run-evidence-grid dt,
+  .assurance-run-evidence-grid dd {
+    min-width: 0;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .assurance-run-evidence-grid dt {
+    color: rgba(255, 255, 255, 0.52);
+  }
+
+  .assurance-run-evidence-grid dd {
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .assurance-evidence-identity {
@@ -439,15 +455,10 @@ export const PLAYGROUND_ASSURANCE_CSS = String.raw`
     to { transform: rotate(360deg); }
   }
 
-  @media (max-width: 1080px) {
-    .assurance-kpi-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
   @media (max-width: 780px) {
     .assurance-overview-guide__cards,
-    .assurance-form-grid {
+    .assurance-form-grid,
+    .assurance-run-evidence-grid {
       grid-template-columns: minmax(0, 1fr);
     }
 
@@ -455,23 +466,9 @@ export const PLAYGROUND_ASSURANCE_CSS = String.raw`
       grid-column: auto;
     }
 
-    .assurance-detail-stack {
-      padding-inline: 18px;
-    }
-
-    .assurance-inline-error {
-      margin-inline: 18px;
-    }
-
     .assurance-evidence-identity > div {
       grid-template-columns: minmax(0, 1fr);
       gap: 4px;
-    }
-  }
-
-  @media (max-width: 560px) {
-    .assurance-kpi-grid {
-      grid-template-columns: minmax(0, 1fr);
     }
   }
 `;

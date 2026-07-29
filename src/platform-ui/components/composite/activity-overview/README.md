@@ -8,10 +8,14 @@ from a data-source-neutral list of:
 - point-in-time signals;
 - nested or delegated subflows.
 
-The component owns timeline normalization, ordering, status
-treatment, time ticks, scrolling, and the bottom overview navigator. Feature
-pages remain responsible only for mapping their domain records to the shared
-item contract.
+`PlatformActivityOverviewCard` is the canonical chart entry. It combines a
+permission-ring visual, a compact action title, and the responsible actor
+without coupling the chart to a resource-specific preview row.
+
+The component owns timeline normalization, ordering, status treatment, time
+ticks, scrolling, and the bottom overview navigator. The navigator and its
+labels remain fixed below the scrollable plot. Feature pages remain responsible
+only for mapping their domain records to the shared item contract.
 
 ```tsx
 <PlatformActivityOverview

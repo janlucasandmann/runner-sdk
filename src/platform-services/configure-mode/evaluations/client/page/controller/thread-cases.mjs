@@ -507,147 +507,68 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
           const normalized = normalizePlaygroundEvaluationDataRow(row, index);
           return {
             ...normalized,
+            title: typeof row?.title === "string" ? row.title : normalized.title,
+            description: typeof row?.description === "string" ? row.description : normalized.description,
             runCount: String(normalizePlaygroundEvaluationCaseRunCount(normalized.runCount)),
           };
         }
 
-        function getEvaluationCaseEditorFieldDefinition(field) {
-          if (field === "expectedOutput") {
-            return {
-              field: "expectedOutput",
-              title: "Expected Output",
-              placeholder: "Reference output or expected behavior",
-              description: "Define the response or behavior that should be treated as correct.",
-            };
-          }
-          return {
-            field: "input",
-            title: "Input",
-            placeholder: "Input sent to the agent",
-            description: "Define the prompt or source text that will be sent to the agent.",
-          };
-        }
-
-        function openEvaluationCaseFocusedEditor(field) {
-          const definition = getEvaluationCaseEditorFieldDefinition(field);
-          const value = String(evaluationCaseEditorState?.draft?.[definition.field] || "");
-          setEvaluationCaseTextImportError("");
-          setEvaluationCaseFocusedEditor({
-            ...definition,
-            value,
+        function getEvaluationCaseEditorSignature(draft = {}) {
+          const normalized = buildEvaluationCaseEditorDraft(draft);
+          return JSON.stringify({
+            id: normalized.id,
+            title: String(normalized.title || ""),
+            description: String(normalized.description || ""),
+            input: String(normalized.input || ""),
+            expectedOutput: String(normalized.expectedOutput || ""),
+            evaluationGuidance: String(normalized.evaluationGuidance || ""),
+            optimizationRole: normalizePlaygroundEvaluationOptimizationRole(normalized.optimizationRole),
+            runCount: normalizePlaygroundEvaluationCaseRunCount(normalized.runCount),
           });
         }
 
-        function updateEvaluationCaseFocusedEditorValue(value) {
-          setEvaluationCaseFocusedEditor((current) => current
-            ? { ...current, value: String(value || "") }
-            : current
-          );
-        }
-
-        function closeEvaluationCaseFocusedEditor() {
-          setEvaluationCaseFocusedEditor(null);
-        }
-
-        function returnFromEvaluationCaseFocusedEditor() {
-          const focusedEditor = evaluationCaseFocusedEditor;
-          if (!focusedEditor?.field) return;
-          updateEvaluationCaseEditorDraft({
-            [focusedEditor.field]: String(focusedEditor.value || ""),
-          });
-          setEvaluationCaseFocusedEditor(null);
-        }
-
-        function saveEvaluationCaseFocusedEditor(event) {
-          if (event && typeof event.preventDefault === "function") {
-            event.preventDefault();
-          }
-          returnFromEvaluationCaseFocusedEditor();
-        }
-
-        function openEvaluationCaseTextFilePicker(field) {
-          setEvaluationCaseTextImportError("");
-          const inputRef = field === "expectedOutput"
-            ? evaluationCaseExpectedOutputFileRef
-            : evaluationCaseInputFileRef;
-          inputRef.current?.click();
-        }
-
-        function isEvaluationCaseTextFile(file) {
-          const fileName = String(file?.name || "").trim().toLowerCase();
-          const mimeType = String(file?.type || "").trim().toLowerCase();
-          return fileName.endsWith(".txt") || mimeType === "text/plain";
-        }
-
-        async function handleEvaluationCaseTextFile(field, event) {
-          const input = event?.currentTarget || event?.target || null;
-          const file = input?.files?.[0] || null;
-          if (input) input.value = "";
-          if (!file) return;
-          if (!isEvaluationCaseTextFile(file)) {
-            setEvaluationCaseTextImportError("Only .txt files can be imported into evaluation cases.");
-            return;
-          }
-          try {
-            const text = typeof file.text === "function"
-              ? await file.text()
-              : await new Promise((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onload = () => resolve(String(reader.result || ""));
-                  reader.onerror = () => reject(reader.error || new Error("Failed to read " + file.name));
-                  reader.readAsText(file);
-                });
-            const definition = getEvaluationCaseEditorFieldDefinition(field);
-            updateEvaluationCaseEditorDraft({ [definition.field]: String(text || "") });
-            setEvaluationCaseTextImportError("");
-          } catch (error) {
-            setEvaluationCaseTextImportError(error?.message || "The selected text file could not be read.");
-          }
+        function isEvaluationCaseEditorDirty(state = evaluationCaseEditorState) {
+          if (!state?.draft) return false;
+          return getEvaluationCaseEditorSignature(state.draft) !== String(state.baselineSignature || "");
         }
 
         function openEvaluationCaseEditor(setId, row = {}, index = 0, isNew = false) {
           const normalizedSetId = String(setId || "").trim();
           if (!normalizedSetId) return;
-          if (typeof window !== "undefined") {
-            if (evaluationCaseEditorCloseTimerRef.current) {
-              window.clearTimeout(evaluationCaseEditorCloseTimerRef.current);
-              evaluationCaseEditorCloseTimerRef.current = null;
-            }
-            if (evaluationCaseEditorFrameRef.current) {
-              window.cancelAnimationFrame(evaluationCaseEditorFrameRef.current);
-              evaluationCaseEditorFrameRef.current = null;
-            }
-          }
+          const draft = buildEvaluationCaseEditorDraft(row, index);
           const nextState = {
             setId: normalizedSetId,
-            rowId: isNew ? "" : String(row?.id || "").trim(),
+            rowId: String(draft.id || "").trim(),
             index,
             isNew,
-            draft: buildEvaluationCaseEditorDraft(row, index),
+            draft,
+            baselineDraft: draft,
+            baselineSignature: isNew ? getEvaluationCaseEditorSignature({
+              ...draft,
+              title: "",
+              description: "",
+              input: "",
+              expectedOutput: "",
+              evaluationGuidance: "",
+              optimizationRole: "train",
+              runCount: 1,
+            }) : getEvaluationCaseEditorSignature(draft),
           };
-          setEvaluationCaseEditorState({
-            ...nextState,
-          });
-          setEvaluationCaseFocusedEditor(null);
-          setEvaluationCaseTextImportError("");
-          setEvaluationCaseEditorVisible(false);
-          setEvaluationCaseEditorClosing(false);
-          if (typeof window !== "undefined") {
-            evaluationCaseEditorFrameRef.current = window.requestAnimationFrame(() => {
-              evaluationCaseEditorFrameRef.current = window.requestAnimationFrame(() => {
-                evaluationCaseEditorFrameRef.current = null;
-                setEvaluationCaseEditorVisible(true);
-              });
-            });
-          } else {
-            setEvaluationCaseEditorVisible(true);
-          }
+          setEvaluationCaseEditorState(nextState);
+          setEvaluationCaseActiveFileId("input");
+          if (typeof setEvaluationCaseDetailTab === "function") setEvaluationCaseDetailTab("code");
+          setSelectedEvaluationSetId(normalizedSetId);
+          setSelectedEvaluationRunId("");
+          setSelectedEvaluationCaseId(draft.id);
+          setEvaluationsPageMode("dataset-case");
         }
 
         function openNewEvaluationCaseEditor(set) {
           if (!set?.id) return;
           const nextIndex = Array.isArray(set.dataRows) ? set.dataRows.length : 0;
           openEvaluationCaseEditor(set.id, {
+            title: "",
+            description: "",
             input: "",
             expectedOutput: "",
             evaluationGuidance: "",
@@ -657,40 +578,33 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
         }
 
         function finishCloseEvaluationCaseEditor() {
-          if (typeof window !== "undefined") {
-            if (evaluationCaseEditorCloseTimerRef.current) {
-              window.clearTimeout(evaluationCaseEditorCloseTimerRef.current);
-              evaluationCaseEditorCloseTimerRef.current = null;
-            }
-            if (evaluationCaseEditorFrameRef.current) {
-              window.cancelAnimationFrame(evaluationCaseEditorFrameRef.current);
-              evaluationCaseEditorFrameRef.current = null;
-            }
-          }
+          const setId = String(evaluationCaseEditorState?.setId || selectedEvaluationSetId || "").trim();
           setEvaluationCaseEditorState(null);
-          setEvaluationCaseFocusedEditor(null);
-          setEvaluationCaseTextImportError("");
-          setEvaluationCaseEditorVisible(false);
-          setEvaluationCaseEditorClosing(false);
+          setSelectedEvaluationRunId("");
+          setSelectedEvaluationCaseId("");
+          if (typeof setEvaluationDetailTab === "function") setEvaluationDetailTab("cases");
+          if (setId) setSelectedEvaluationSetId(setId);
+          setEvaluationsPageMode(setId ? "detail" : "overview");
         }
 
         function closeEvaluationCaseEditor(options = {}) {
-          if (options?.animate === false || typeof window === "undefined") {
+          if (options?.discard === true || options?.guard === false) {
             finishCloseEvaluationCaseEditor();
-            return;
+            return true;
           }
-          if (!evaluationCaseEditorState || evaluationCaseEditorClosing) {
-            return;
-          }
-          setEvaluationCaseEditorVisible(false);
-          setEvaluationCaseEditorClosing(true);
-          if (evaluationCaseEditorCloseTimerRef.current) {
-            window.clearTimeout(evaluationCaseEditorCloseTimerRef.current);
-          }
-          evaluationCaseEditorCloseTimerRef.current = window.setTimeout(() => {
-            evaluationCaseEditorCloseTimerRef.current = null;
-            finishCloseEvaluationCaseEditor();
-          }, 75);
+          return requestEvaluationNavigation(finishCloseEvaluationCaseEditor);
+        }
+
+        function discardEvaluationCaseEditorDraft() {
+          const baselineDraft = evaluationCaseEditorState?.baselineDraft;
+          if (!baselineDraft) return;
+          setEvaluationCaseEditorState((current) => current
+            ? {
+                ...current,
+                draft: buildEvaluationCaseEditorDraft(baselineDraft, Number(current.index || 0)),
+              }
+            : current
+          );
         }
 
         function updateEvaluationCaseEditorDraft(patch) {
@@ -722,7 +636,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
           }, Number(state.index || 0));
           updateEvaluationSet(state.setId, (set) => {
             const rows = Array.isArray(set.dataRows) ? set.dataRows : [];
-            const isExisting = !state.isNew && rows.some((row) => row.id === state.rowId);
+            const isExisting = rows.some((row) => row.id === state.rowId);
             return {
               ...set,
               dataRows: isExisting
@@ -730,13 +644,24 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
                 : rows.concat(draft),
             };
           });
-          closeEvaluationCaseEditor();
+          setEvaluationCaseEditorState((current) => current
+            ? {
+                ...current,
+                rowId: draft.id,
+                isNew: false,
+                draft,
+                baselineDraft: draft,
+                baselineSignature: getEvaluationCaseEditorSignature(draft),
+              }
+            : current
+          );
+          setSelectedEvaluationCaseId(draft.id);
         }
 
         function deleteEvaluationCaseEditor() {
           const state = evaluationCaseEditorState;
           if (!state?.setId) {
-            closeEvaluationCaseEditor();
+            closeEvaluationCaseEditor({ discard: true });
             return;
           }
           if (!state.isNew && state.rowId) {
@@ -745,7 +670,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
               dataRows: (Array.isArray(set.dataRows) ? set.dataRows : []).filter((row) => row.id !== state.rowId),
             }));
           }
-          closeEvaluationCaseEditor();
+          closeEvaluationCaseEditor({ discard: true });
         }
 
 `;

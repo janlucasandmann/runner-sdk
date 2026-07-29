@@ -14,8 +14,10 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setSelectedEvaluationCaseId,
           evaluationsPageMode,
           setEvaluationsPageMode,
-          evaluationDetailTab,
-          setEvaluationDetailTab,
+	          evaluationDetailTab,
+	          setEvaluationDetailTab,
+	          evaluationCaseDetailTab,
+	          setEvaluationCaseDetailTab,
           evaluationCreateModalOpen,
           setEvaluationCreateModalOpen,
           evaluationCreateForm,
@@ -31,6 +33,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           currentUserName,
           currentUserEmail,
           currentUserAvatarUrl,
+          organizations = [],
+          activeOrganizationId = "",
           workspaceTeams = [],
           workspaceTeamsLoading = false,
           onWorkspaceTeamsRequest,
@@ -62,10 +66,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const evaluationPublishMenuRef = useRef(null);
         const evaluationRenameInputRef = useRef(null);
         const evaluationGuidanceTextareaRef = useRef(null);
-        const evaluationCaseEditorFrameRef = useRef(null);
-        const evaluationCaseEditorCloseTimerRef = useRef(null);
-        const evaluationCaseInputFileRef = useRef(null);
-        const evaluationCaseExpectedOutputFileRef = useRef(null);
         const evaluationCreateModalFrameRef = useRef(null);
         const evaluationCreateModalCloseTimerRef = useRef(null);
         const evaluationCreateSubmittingRef = useRef(false);
@@ -117,12 +117,9 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const [evaluationRunSubmitting, setEvaluationRunSubmitting] = useState(false);
         const [evaluationUnsavedRunDialog, setEvaluationUnsavedRunDialog] = useState(null);
         const [evaluationGuidanceEditingId, setEvaluationGuidanceEditingId] = useState("");
-        const [evaluationGuidanceHistoryById, setEvaluationGuidanceHistoryById] = useState({});
-        const [evaluationCaseEditorState, setEvaluationCaseEditorState] = useState(null);
-        const [evaluationCaseEditorVisible, setEvaluationCaseEditorVisible] = useState(false);
-        const [evaluationCaseEditorClosing, setEvaluationCaseEditorClosing] = useState(false);
-        const [evaluationCaseFocusedEditor, setEvaluationCaseFocusedEditor] = useState(null);
-        const [evaluationCaseTextImportError, setEvaluationCaseTextImportError] = useState("");
+	        const [evaluationGuidanceHistoryById, setEvaluationGuidanceHistoryById] = useState({});
+	        const [evaluationCaseEditorState, setEvaluationCaseEditorState] = useState(null);
+	        const [evaluationCaseActiveFileId, setEvaluationCaseActiveFileId] = useState("input");
         const [evaluationJsonlFileImportError, setEvaluationJsonlFileImportError] = useState("");
         const [evaluationJsonlFileImportMessage, setEvaluationJsonlFileImportMessage] = useState("");
         const [evaluationJsonlWorkspacePickerOpen, setEvaluationJsonlWorkspacePickerOpen] = useState(false);
@@ -164,23 +161,33 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const [evaluationAccessMenuOpen, setEvaluationAccessMenuOpen] = useState(false);
         const [evaluationAccessActionId, setEvaluationAccessActionId] = useState("");
         const [evaluationOwnerSelectorOpen, setEvaluationOwnerSelectorOpen] = useState(false);
-	        const [evaluationOwnerCandidateStateBySetId, setEvaluationOwnerCandidateStateBySetId] = useState({});
-	        const requestHeadersSignature = useMemo(() => JSON.stringify(requestHeaders || {}), [requestHeaders]);
-	        const evaluationRunHistoryCacheScopeKey = useMemo(() => (
-	          buildPlaygroundEvaluationRunHistoryCacheScope({
+        const [evaluationOwnerCandidateStateBySetId, setEvaluationOwnerCandidateStateBySetId] = useState({});
+        const [evaluationOrganizationOwnerStateById, setEvaluationOrganizationOwnerStateById] = useState({});
+        const requestHeadersSignature = useMemo(() => JSON.stringify(requestHeaders || {}), [requestHeaders]);
+        const evaluationRunHistoryCacheScopeKey = useMemo(() => (
+          buildPlaygroundEvaluationRunHistoryCacheScope({
 	            backendUrl,
 	            requestHeaders,
 	            userId: currentUserId,
 	            userEmail: currentUserEmail,
-	          })
-	        ), [backendUrl, currentUserEmail, currentUserId, requestHeadersSignature]);
-	        const currentEvaluationCreator = normalizePlaygroundEvaluationPersonIdentity({
+          })
+        ), [backendUrl, currentUserEmail, currentUserId, requestHeadersSignature]);
+        const currentEvaluationCreator = normalizePlaygroundEvaluationPersonIdentity({
           id: currentUserId || currentUserEmail || "",
           userId: currentUserId || "",
           name: currentUserName || "",
           email: currentUserEmail || "",
           avatarUrl: currentUserAvatarUrl || "",
         });
+        const evaluationOrganizations = Array.isArray(organizations) ? organizations : [];
+        const evaluationRequestOrganizationId = getPlaygroundEvaluationRequestHeaderValue(requestHeaders, [
+          "X-Organization-ID",
+          "x-organization-id",
+          "X-Organization-Id",
+        ]);
+        const normalizedActiveEvaluationOrganizationId = String(
+          activeOrganizationId || evaluationRequestOrganizationId || ""
+        ).trim();
         const normalizedSets = deduplicatePlaygroundEvaluationSets(evaluationSets);
         const agentOptions = Array.isArray(agents) ? agents : [];
         const environmentOptions = Array.isArray(environments) ? environments : [];
@@ -226,25 +233,73 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           evaluationJsonlWorkspaceSearch,
           evaluationJsonlWorkspaceTree,
         ]);
-        const activeSet = normalizedSets.find((set) => set.id === selectedEvaluationSetId) || normalizedSets[0] || null;
-        const activeRun = activeSet?.runs?.find((run) => run.id === selectedEvaluationRunId) || activeSet?.runs?.[0] || null;
-        const activeCase = activeRun?.cases?.find((caseItem) => caseItem.id === selectedEvaluationCaseId) || null;
-        const normalizedMode = evaluationsPageMode === "case" && activeSet && activeRun && activeCase
-          ? "case"
+	        const activeSet = normalizedSets.find((set) => set.id === selectedEvaluationSetId) || normalizedSets[0] || null;
+	        const activeRun = activeSet?.runs?.find((run) => run.id === selectedEvaluationRunId) || activeSet?.runs?.[0] || null;
+	        const activeCase = activeRun?.cases?.find((caseItem) => caseItem.id === selectedEvaluationCaseId) || null;
+	        const isEvaluationDatasetCaseDraft = Boolean(
+	          evaluationsPageMode === "dataset-case"
+	          && activeSet
+	          && selectedEvaluationCaseId
+	        );
+	        const normalizedMode = isEvaluationDatasetCaseDraft
+	          ? "dataset-case"
+	          : evaluationsPageMode === "case" && activeSet && activeRun && activeCase
+	          ? "case"
           : evaluationsPageMode === "run" && activeRun
             ? "run"
             : evaluationsPageMode === "detail" && activeSet
               ? "detail"
               : "overview";
-        const isEvaluationDetailPage = normalizedMode === "detail" && Boolean(activeSet);
-        const isEvaluationRunActionsPage = normalizedMode === "run" && Boolean(activeSet && activeRun);
-        const supportsEvaluationActionsPopover = isEvaluationDetailPage || isEvaluationRunActionsPage;
-        const hasUnsavedEvaluationChanges = Boolean(
+	        const isEvaluationDetailPage = normalizedMode === "detail" && Boolean(activeSet);
+	        const isEvaluationDatasetCasePage = normalizedMode === "dataset-case" && Boolean(activeSet);
+	        const isEvaluationRunActionsPage = normalizedMode === "run" && Boolean(activeSet && activeRun);
+	        const supportsEvaluationActionsPopover = isEvaluationDetailPage || isEvaluationDatasetCasePage || isEvaluationRunActionsPage;
+	        const hasUnsavedEvaluationCaseChanges = Boolean(
+	          isEvaluationDatasetCasePage
+	          && isEvaluationCaseEditorDirty(evaluationCaseEditorState)
+	        );
+	        const hasUnsavedEvaluationChanges = Boolean(
           isEvaluationDetailPage
           && activeSet
           && hasSelectedEvaluationVersionChanges()
         );
-        const nowIso = new Date().toISOString();
+	        const nowIso = new Date().toISOString();
+
+	        useEffect(() => {
+	          if (
+	            evaluationsPageMode !== "dataset-case"
+	            || !activeSet?.id
+	            || !selectedEvaluationCaseId
+	            || (
+	              evaluationCaseEditorState?.setId === activeSet.id
+	              && evaluationCaseEditorState?.draft?.id === selectedEvaluationCaseId
+	            )
+	          ) {
+	            return;
+	          }
+	          const rowIndex = Array.isArray(activeSet.dataRows)
+	            ? activeSet.dataRows.findIndex((row) => row?.id === selectedEvaluationCaseId)
+	            : -1;
+	          if (rowIndex < 0) return;
+	          const draft = buildEvaluationCaseEditorDraft(activeSet.dataRows[rowIndex], rowIndex);
+	          setEvaluationCaseEditorState({
+	            setId: activeSet.id,
+	            rowId: draft.id,
+	            index: rowIndex,
+	            isNew: false,
+	            draft,
+	            baselineDraft: draft,
+	            baselineSignature: getEvaluationCaseEditorSignature(draft),
+	          });
+	          setEvaluationCaseActiveFileId("input");
+	        }, [
+	          activeSet?.id,
+	          activeSet?.dataRows,
+	          evaluationCaseEditorState?.draft?.id,
+	          evaluationCaseEditorState?.setId,
+	          evaluationsPageMode,
+	          selectedEvaluationCaseId,
+	        ]);
 
 	        async function requestEvaluationBackendJson(path, init = {}, fallbackMessage = "Evaluation request failed.") {
           const normalizedBackendUrl = String(backendUrl || "").replace(/\/+$/, "");
@@ -768,9 +823,18 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           if (typeof onNavigationGuardChange !== "function") {
             return;
           }
-          const evaluationName = String(activeSet?.name || "").trim() || "this evaluation";
-          onNavigationGuardChange(hasUnsavedEvaluationChanges
-            ? {
+	          const evaluationName = String(activeSet?.name || "").trim() || "this evaluation";
+	          const caseName = String(evaluationCaseEditorState?.draft?.title || "").trim() || "this case";
+	          onNavigationGuardChange(hasUnsavedEvaluationCaseChanges
+	            ? {
+	                id: "evaluation-case-unsaved-changes",
+	                active: true,
+	                title: "Leave without saving?",
+	                description: "Your changes to " + caseName + " have not been saved. If you leave now, they will be lost.",
+	                onDiscard: discardEvaluationCaseEditorDraft,
+	              }
+	            : hasUnsavedEvaluationChanges
+	            ? {
                 id: "evaluation-details-unsaved-changes",
                 active: true,
                 title: "Leave without saving?",
@@ -780,9 +844,11 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
             : null
           );
         }, [
-          activeSet?.id,
-          activeSet?.name,
-          hasUnsavedEvaluationChanges,
+	          activeSet?.id,
+	          activeSet?.name,
+	          evaluationCaseEditorState,
+	          hasUnsavedEvaluationCaseChanges,
+	          hasUnsavedEvaluationChanges,
           onNavigationGuardChange,
         ]);
 
@@ -793,8 +859,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           return () => onNavigationGuardChange(null);
         }, [onNavigationGuardChange]);
 
-        useEffect(() => {
-          if (isEvaluationDetailPage) {
+	        useEffect(() => {
+	          if (isEvaluationDetailPage) {
             return;
           }
           setEvaluationVersionsSidebarOpen(false);
@@ -810,7 +876,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setEvaluationVersionDescriptionDraft("");
           setIsEvaluationVersionDescriptionEditing(false);
           evaluationVersionDraftTouchedRef.current = false;
-        }, [isEvaluationDetailPage]);
+	        }, [isEvaluationDetailPage]);
 
         useEffect(() => {
           setEvaluationAccessTeamId("");
@@ -1062,14 +1128,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         }, [breadcrumbActionsPortalId, normalizedMode, activeSet?.id, activeRun?.id]);
 
         useEffect(() => () => {
-          if (evaluationCaseEditorFrameRef.current && typeof window !== "undefined") {
-            window.cancelAnimationFrame(evaluationCaseEditorFrameRef.current);
-            evaluationCaseEditorFrameRef.current = null;
-          }
-          if (evaluationCaseEditorCloseTimerRef.current && typeof window !== "undefined") {
-            window.clearTimeout(evaluationCaseEditorCloseTimerRef.current);
-            evaluationCaseEditorCloseTimerRef.current = null;
-          }
           if (evaluationCreateModalFrameRef.current && typeof window !== "undefined") {
             window.cancelAnimationFrame(evaluationCreateModalFrameRef.current);
             evaluationCreateModalFrameRef.current = null;
@@ -1125,6 +1183,34 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           evaluationVersionSaveDialog,
           evaluationVersionState.status,
           isEvaluationDetailPage,
+        ]);
+
+        useEffect(() => {
+          if (!isEvaluationDatasetCasePage) {
+            return undefined;
+          }
+
+          function handleEvaluationCaseSaveShortcut(event) {
+            if (
+              event.defaultPrevented
+              || !(event.metaKey || event.ctrlKey)
+              || event.altKey
+              || String(event.key || "").toLowerCase() !== "s"
+            ) {
+              return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            if (isEvaluationCaseEditorDirty(evaluationCaseEditorState)) {
+              saveEvaluationCaseEditor(event);
+            }
+          }
+
+          window.addEventListener("keydown", handleEvaluationCaseSaveShortcut, true);
+          return () => window.removeEventListener("keydown", handleEvaluationCaseSaveShortcut, true);
+        }, [
+          evaluationCaseEditorState,
+          isEvaluationDatasetCasePage,
         ]);
 
         useEffect(() => {

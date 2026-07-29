@@ -1127,10 +1127,12 @@
           const hasGuardrailsVersionsDrawerSlot = activePage === "guardrails";
           const hasEvaluationsVersionsDrawerSlot = activePage === "evaluations";
           const hasSecurityVersionsDrawerSlot = activePage === "develop-security";
+          const hasSkillsVersionsDrawerSlot = activePage === "tools" && toolsView === "skills";
           const hasResourcesVersionsDrawerSlot = (
             isResourcesPage
             && (activeResourcesView === "agents" || activeResourcesView === "computers" || activeResourcesView === "servers")
-          ) || hasGuardrailsVersionsDrawerSlot || hasEvaluationsVersionsDrawerSlot || hasSecurityVersionsDrawerSlot;
+          ) || hasGuardrailsVersionsDrawerSlot || hasEvaluationsVersionsDrawerSlot
+            || hasSecurityVersionsDrawerSlot || hasSkillsVersionsDrawerSlot;
           const selectedGlobalGuardrailSet = allGuardrailSets.find((set) => set?.id === selectedGuardrailSetId) || null;
           const isGuardrailsVersionsDrawerOpen = Boolean(
             hasGuardrailsVersionsDrawerSlot
@@ -1142,6 +1144,9 @@
           const isResourcesVersionsDrawerOpen = (
             isResourcesPage
             && hasResourcesVersionsDrawerSlot
+            && isAgentVersionsDetailOpen
+          ) || (
+            hasSkillsVersionsDrawerSlot
             && isAgentVersionsDetailOpen
           ) || isGuardrailsVersionsDrawerOpen || (
             hasEvaluationsVersionsDrawerSlot
@@ -1297,6 +1302,7 @@
             selectedPluginId,
             selectedGuardrailSetId,
             selectedEvaluationRunId,
+            selectedEvaluationCaseId,
             selectedEvaluationSetId,
             selectedFineTuningJobId,
             selectedTestPlanId,

@@ -1,13 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   beginPlatformPluginConnection,
+  buildPlatformPluginConnectionReturnUrl,
+  clearPlatformPluginConnectionReturnUrlState,
   clearPlatformPluginConnectionRedirectState,
+  createPlatformPluginConnectionReturnUrlState,
   disconnectPlatformPluginConnection,
   fetchPlatformGitHubRepositoryBranches,
   fetchPlatformPluginConnectionStatus,
   getPlatformPluginConnectionDefinition,
   getPlatformPluginConnectionIdentity,
   readCachedPlatformPluginConnectionStatus,
+  readPlatformPluginConnectionReturnUrlState,
   readPlatformPluginConnectionRedirectState,
   writeCachedPlatformPluginConnectionStatus,
   writePlatformPluginConnectionRedirectState,
@@ -39,6 +43,23 @@ describe("plugin connection registry", () => {
     expect(getPlatformPluginConnectionDefinition("one-drive").logoUrl).toBe(
       "https://upload.wikimedia.org/wikipedia/commons/e/e7/Microsoft_OneDrive_Icon_%282025_-_present%29.svg",
     );
+    expect(getPlatformPluginConnectionDefinition("jira")).toMatchObject({
+      label: "Jira",
+      statusPath: "/api/aios/jira/user",
+      loginPath: "/api/aios/jira/login",
+    });
+  });
+
+  it("uses the connected Jira site as its visible identity", () => {
+    expect(
+      getPlatformPluginConnectionIdentity("jira", {
+        connected: true,
+        profile: {
+          siteName: "Computer Agents",
+          displayName: "Jan Sandmann",
+        },
+      }),
+    ).toBe("Computer Agents");
   });
 
   it("owns provider endpoints and normalizes connected identities", async () => {
@@ -79,17 +100,29 @@ describe("plugin connection registry", () => {
     const started = await beginPlatformPluginConnection("github", {
       redirectTo: "https://platform.example/develop/security",
       scope: "repo read:user",
+      credentialId: "credential-work",
+      credentialName: "Work GitHub",
+      organizationId: "organization-acme",
       fetch: request,
     });
-    await disconnectPlatformPluginConnection("github", { fetch: request });
+    await disconnectPlatformPluginConnection("github", {
+      credentialId: "credential-work",
+      fetch: request,
+    });
 
     expect(started.authUrl).toContain("github.com");
     expect(request.mock.calls[0]?.[0]).toBe("/api/aios/github/login");
     expect(JSON.parse(String(request.mock.calls[0]?.[1]?.body))).toEqual({
       redirectTo: "https://platform.example/develop/security",
       scope: "repo read:user",
+      credentialId: "credential-work",
+      credentialName: "Work GitHub",
+      organizationId: "organization-acme",
     });
     expect(request.mock.calls[1]?.[0]).toBe("/api/aios/github/disconnect");
+    expect(JSON.parse(String(request.mock.calls[1]?.[1]?.body))).toEqual({
+      credentialId: "credential-work",
+    });
   });
 
   it("preserves existing cache and redirect storage contracts", () => {
@@ -116,6 +149,53 @@ describe("plugin connection registry", () => {
 
     clearPlatformPluginConnectionRedirectState(session);
     expect(readPlatformPluginConnectionRedirectState(session)).toBeNull();
+  });
+
+  it("round-trips the exact connector authentication return target", () => {
+    const savedAt = Date.parse("2026-07-29T09:30:00.000Z");
+    const state = createPlatformPluginConnectionReturnUrlState(
+      "github",
+      {
+        toolsView: "plugins",
+        resourceId: "github",
+        tab: "authentication",
+      },
+      savedAt,
+    );
+    const returnUrl = buildPlatformPluginConnectionReturnUrl(
+      "http://localhost:4177/?existing=1",
+      state,
+    );
+
+    expect(readPlatformPluginConnectionReturnUrlState(returnUrl, savedAt + 1_000)).toEqual(
+      state,
+    );
+    const clearedUrl = new URL(clearPlatformPluginConnectionReturnUrlState(returnUrl));
+    expect(clearedUrl.searchParams.get("existing")).toBe("1");
+    expect(clearedUrl.searchParams.has("connectorAuthReturn")).toBe(false);
+    expect(clearedUrl.searchParams.has("connectorAuthResource")).toBe(false);
+  });
+
+  it("rejects stale or malformed connector return targets", () => {
+    const now = Date.parse("2026-07-29T10:00:00.000Z");
+    const staleUrl = buildPlatformPluginConnectionReturnUrl(
+      "https://platform.computer-agents.com/",
+      createPlatformPluginConnectionReturnUrlState(
+        "github",
+        {
+          toolsView: "tags",
+          resourceId: "github",
+          tab: "authentication",
+        },
+        now - 31 * 60 * 1_000,
+      ),
+    );
+    const malformedUrl = new URL(staleUrl);
+    malformedUrl.searchParams.set("connectorAuthSavedAt", String(now));
+    malformedUrl.searchParams.set("connectorAuthView", "settings");
+
+    expect(readPlatformPluginConnectionReturnUrlState(staleUrl, now)).toBeNull();
+    expect(readPlatformPluginConnectionReturnUrlState(malformedUrl, now)).toBeNull();
   });
 
   it("loads normalized repository branches through the shared GitHub plugin API", async () => {

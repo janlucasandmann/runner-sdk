@@ -82,6 +82,9 @@ export interface BeginPlatformPluginConnectionOptions
   extends PlatformPluginConnectionRequestOptions {
   redirectTo: string;
   scope?: string;
+  credentialId?: string;
+  credentialName?: string;
+  organizationId?: string;
 }
 
 export async function beginPlatformPluginConnection(
@@ -97,6 +100,9 @@ export async function beginPlatformPluginConnection(
     body: JSON.stringify({
       redirectTo: options.redirectTo,
       ...(options.scope?.trim() ? { scope: options.scope.trim() } : {}),
+      ...(options.credentialId?.trim() ? { credentialId: options.credentialId.trim() } : {}),
+      ...(options.credentialName?.trim() ? { credentialName: options.credentialName.trim() } : {}),
+      ...(options.organizationId?.trim() ? { organizationId: options.organizationId.trim() } : {}),
     }),
   });
   const payload = await requireSuccessfulJson(
@@ -118,13 +124,17 @@ export async function beginPlatformPluginConnection(
 
 export async function disconnectPlatformPluginConnection(
   id: PlatformPluginConnectionId,
-  options: PlatformPluginConnectionRequestOptions = {},
+  options: PlatformPluginConnectionRequestOptions & { credentialId?: string } = {},
 ): Promise<void> {
   const definition = getPlatformPluginConnectionDefinition(id);
   const response = await (options.fetch || getDefaultFetch())(definition.disconnectPath, {
     method: "POST",
+    headers: options.credentialId?.trim() ? { "Content-Type": "application/json" } : undefined,
     credentials: "include",
     signal: options.signal,
+    body: options.credentialId?.trim()
+      ? JSON.stringify({ credentialId: options.credentialId.trim() })
+      : undefined,
   });
   await requireSuccessfulJson(response, `Unable to disconnect ${definition.label}.`);
 }

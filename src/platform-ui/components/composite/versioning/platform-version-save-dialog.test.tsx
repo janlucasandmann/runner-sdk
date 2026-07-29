@@ -51,6 +51,11 @@ describe("PlatformVersionSaveDialog", () => {
     );
 
     expect(screen.getByRole("dialog", { name: "Review changes" })).not.toBeNull();
+    await waitFor(() => {
+      expect(document.activeElement).toBe(screen.getByRole("textbox", {
+        name: "Version description (optional)",
+      }));
+    });
     expect(screen.queryByText("Choose how to save these changes before publishing.")).toBeNull();
     expect(screen.queryByText("Save destination")).toBeNull();
     const dialogHeader = document.querySelector('[data-platform-modal-part="header"]');
@@ -163,5 +168,36 @@ describe("PlatformVersionSaveDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
     expect((await screen.findByRole("alert")).textContent).toBe("Publish failed.");
     expect(screen.getByRole("dialog", { name: "Review changes" })).not.toBeNull();
+  });
+
+  it("submits from the focused description with Command or Control plus Enter", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <PlatformVersionSaveDialog
+        open
+        currentVersion={2}
+        nextVersion={3}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    const description = screen.getByRole("textbox", {
+      name: "Version description (optional)",
+    });
+    description.focus();
+    fireEvent.keyDown(description, {
+      key: "Enter",
+      metaKey: true,
+    });
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledOnce();
+      expect(onSubmit).toHaveBeenCalledWith({
+        mode: "new",
+        description: "",
+      });
+    });
   });
 });

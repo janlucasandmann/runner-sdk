@@ -15,7 +15,7 @@ function isRetiredPlatformDocumentPath(pathname) {
 
 /** Ordered routes for the single platform document and its static assets. */
 export function createPageAndStaticRoutes(bindings) {
-    const { githubOauthAllowedOrigins, githubOauthEnvFileCandidates, handleFeedbackSummaryPageRequest, handleGithubApiRequest, handleProductUsageSummaryPageRequest, isGithubApiRequestPath, noVncNextRoot, platformDocumentHtml, platformOrigin, serveAiosPublicAsset, serveDistAsset, serveEnvironmentGuiViewerPage, serveVendorAsset, xlsxRoot, } = bindings;
+    const { connectorOauthAllowedOrigins, connectorOauthEnvFileCandidates, handleFeedbackSummaryPageRequest, handleGithubApiRequest, handleJiraApiRequest, handleProductUsageSummaryPageRequest, isGithubApiRequestPath, isJiraApiRequestPath, noVncNextRoot, platformDocumentHtml, platformOrigin, serveAiosPublicAsset, serveDistAsset, serveEnvironmentGuiViewerPage, serveVendorAsset, xlsxRoot, } = bindings;
     return function handlePageAndStaticRoutes(req, res, url) {
         const rawThreadPathMatch = url.pathname.match(/^\/(thread[_-][A-Za-z0-9_-]+)\/?$/);
         if ((req.method === "GET" || req.method === "HEAD") && rawThreadPathMatch) {
@@ -36,8 +36,19 @@ export function createPageAndStaticRoutes(bindings) {
                 res,
                 url,
                 platformOrigin,
-                envFileCandidates: githubOauthEnvFileCandidates,
-                allowedOrigins: githubOauthAllowedOrigins,
+                envFileCandidates: connectorOauthEnvFileCandidates,
+                allowedOrigins: connectorOauthAllowedOrigins,
+            });
+            return true;
+        }
+        if (isJiraApiRequestPath(url.pathname)) {
+            void handleJiraApiRequest({
+                req,
+                res,
+                url,
+                platformOrigin,
+                envFileCandidates: connectorOauthEnvFileCandidates,
+                allowedOrigins: connectorOauthAllowedOrigins,
             });
             return true;
         }

@@ -502,8 +502,8 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
-  padding: 13px 14px;
-  border: 1px solid transparent;
+  padding: 10px;
+  border: 0;
   border-radius: 10px;
   background: transparent;
   color: rgba(255, 255, 255, 0.9);
@@ -532,8 +532,8 @@
 
 .platform-role-permissions-page__role.is-active,
 .playground-team-role-card.is-active {
-  border-color: rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.05);
+  border: 0;
+  background: rgba(255, 255, 255, 0.075);
   color: #fff;
 }
 
@@ -541,15 +541,15 @@
 .platform-role-permissions-page__role.is-active:disabled:hover,
 .playground-team-role-card.is-active:disabled,
 .playground-team-role-card.is-active:disabled:hover {
-  border-color: rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.05);
+  border: 0;
+  background: rgba(255, 255, 255, 0.075);
   color: #fff;
 }
 
 .platform-role-permissions-page__role-title,
 .playground-team-role-card-title {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 400;
   line-height: 1.25;
 }
 

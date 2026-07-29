@@ -517,9 +517,7 @@ describe("resource overview pages", () => {
         .querySelector(".resource-overview-identity__visual.is-plugin"),
     ).toBeNull();
     expect(
-      container.querySelectorAll(
-        ".resource-overview-identity__visual.is-tag",
-      ),
+      container.querySelectorAll(".resource-overview-identity__visual.is-tag"),
     ).toHaveLength(3);
     expect(
       screen
@@ -575,9 +573,7 @@ describe("resource overview pages", () => {
     });
     expect(catalogTable).not.toBeNull();
     expect(
-      catalogTable?.parentElement?.classList.contains(
-        "has-full-bleed-table",
-      ),
+      catalogTable?.parentElement?.classList.contains("has-full-bleed-table"),
     ).toBe(true);
     expect(catalogToolbar?.classList.contains("has-title-line")).toBe(false);
     expect(catalogLeading).toBeNull();
@@ -597,6 +593,14 @@ describe("resource overview pages", () => {
     expect(
       within(table).queryByRole("columnheader", { name: /Provider/ }),
     ).toBeNull();
+    expect(
+      within(table).queryByRole("columnheader", {
+        name: "Connected Identity",
+      }),
+    ).toBeNull();
+    expect(
+      within(table).getByRole("columnheader", { name: "Status" }),
+    ).not.toBeNull();
     expect(
       within(table)
         .getAllByRole("button", { name: /Collapse (Plugins|Tags)/ })
@@ -691,7 +695,9 @@ describe("resource overview pages", () => {
     ).toBeNull();
     expect(screen.getByText("Computer Agents Skill")).not.toBeNull();
     expect(screen.getByText("Audit")).not.toBeNull();
-    expect(screen.getByText("Browse and interact with websites.")).not.toBeNull();
+    expect(
+      screen.getByText("Browse and interact with websites."),
+    ).not.toBeNull();
     expect(
       container.querySelector(".platform-data-table.is-catalog-ui"),
     ).not.toBeNull();

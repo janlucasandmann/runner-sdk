@@ -89,6 +89,18 @@ const skillActionsSource = await fs.readFile(
   path.join(domainsRoot, "skills/controller/02-actions-and-editors.js"),
   "utf8",
 );
+const skillTitleActionsSource = await fs.readFile(
+  path.join(domainsRoot, "skills/controller/03-title-actions-and-sharing.js"),
+  "utf8",
+);
+const skillDetailIdentityAndSettingsSource = await fs.readFile(
+  path.join(domainsRoot, "skills/controller/03-detail-identity-and-settings.js"),
+  "utf8",
+);
+const skillVersioningSource = await fs.readFile(
+  path.join(domainsRoot, "skills/controller/03-versioning-and-shortcuts.js"),
+  "utf8",
+);
 const platformTemplateSource = await fs.readFile(
   path.join(domainsRoot, "../templates/platform.template.js"),
   "utf8",
@@ -202,8 +214,18 @@ assert.match(
 );
 assert.match(
   skillRenderingSource,
-  /menuDisabled: skillSaveState\.isSaving \|\| skillCodeFilesTransferState\.isProcessing/,
-  "Skill drafts must never disable only the menu segment of Save Changes.",
+  /const skillVersionControlDisabled = Boolean\([\s\S]{0,180}skillVersionControlBusy[\s\S]{0,100}!skillHasVersionChanges[\s\S]{0,500}disabled: skillVersionControlDisabled,[\s\S]{0,100}menuDisabled: skillVersionControlDisabled/,
+  "Skill Save Changes and its chevron must always share one disabled state.",
+);
+assert.match(
+  skillStateSource,
+  /useEffect\(\(\) => \{[\s\S]{0,240}skillsPageMode !== "detail"[\s\S]{0,180}!selectedSkill\?\.isDraft[\s\S]{0,240}skillTitleInputRef\.current\.focus\(\{ preventScroll: true \}\)/,
+  "Opening a new Skill detail page must focus its title input.",
+);
+assert.match(
+  skillDetailIdentityAndSettingsSource,
+  /ref: skillTitleInputRef,[\s\S]{0,120}className: "skill-detail-page__name-input"/,
+  "The Skill title input must expose the focus ref used by the draft-entry lifecycle.",
 );
 assert.match(
   skillRenderingSource,
@@ -212,8 +234,169 @@ assert.match(
 );
 assert.match(
   skillRenderingSource,
+  /onPublish: \(\) => openSkillVersionSaveDialog\(\)/,
+  "The Skill Save Changes action must open the shared version review flow.",
+);
+assert.match(
+  skillDetailIdentityAndSettingsSource,
+  /React\.createElement\(ProjectIconPicker,[\s\S]{0,500}iconOptions: PLAYGROUND_SKILL_ICON_OPTIONS[\s\S]{0,350}onChange: handleSelectedSkillIdentityChange/,
+  "Skill Details must reuse the centralized Project icon picker for Skill identity.",
+);
+assert.match(
+  skillDetailIdentityAndSettingsSource,
+  /React\.createElement\(PlatformDeploymentMap,[\s\S]{0,300}title: "Deployment region"[\s\S]{0,500}accessSettings/,
+  "Skill Settings must place the shared deployment region section before access settings.",
+);
+assert.match(
+  skillDetailIdentityAndSettingsSource,
+  /renderSkillDetailSidebarRow\("Creator"[\s\S]{0,900}renderSkillDetailSidebarRow\("Owner"/,
+  "Skill Settings must expose creator and owner identities in its properties sidebar.",
+);
+assert.match(
+  skillRenderingSource,
+  /const skillSettingsComposition = renderSkillSettingsComposition\([\s\S]{0,300}const skillSettingsSidebar = skillSettingsComposition\.sidebar[\s\S]{0,4000}sidebar: skillSettingsSidebar/,
+  "Skill Details must pass the shared settings properties sidebar into its detail shell.",
+);
+assert.match(
+  skillVersioningSource,
+  /function renderSkillVersionSaveDialog\(\)[\s\S]{0,900}React\.createElement\(PlatformVersionSaveDialog,[\s\S]{0,1400}React\.createElement\(PlatformDiffViewer/,
+  "Skills must review source changes in the centralized version-save dialog.",
+);
+assert.match(
+  skillVersioningSource,
+  /function handleSkillVersionKeyboardShortcut\(event\)[\s\S]{0,500}String\(event\.key \|\| ""\)\.toLowerCase\(\) !== "s"[\s\S]{0,700}openSkillVersionSaveDialog/,
+  "Command+S on Skill details must open the version-save dialog.",
+);
+assert.match(
+  skillActionsSource,
+  /saveToCurrentVersion[\s\S]{0,1800}method: saveToCurrentVersion \? "PATCH" : "POST"[\s\S]{0,500}operation: "publish"[\s\S]{0,300}publish: true/,
+  "Skills must support saving into the current version or creating a new version.",
+);
+assert.match(
+  skillActionsSource,
+  /saveSelectedSkillCodeFiles\(nextFiles, \{ throwOnError: true \}\)/,
+  "Skill version publishing must request source-save error propagation.",
+);
+assert.match(
+  skillActionsSource,
+  /async function saveSelectedSkillCodeFiles\(nextCodeFiles, options = \{\}\)[\s\S]*?options\.throwOnError[\s\S]{0,120}throw error/,
+  "Skill version publishing must preserve the underlying source-save failure.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /label: toolsSkillsHeaderState\.title \|\| "Skill"[\s\S]{0,400}id: "playground-skill-title-actions"/,
+  "Skill details must expose the title-actions portal beside the Skill title.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /titleActionsPortalId: "playground-skill-title-actions"/,
+  "The Skills controller must receive the title-actions portal.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /versionsDrawerPortalId: "playground-agent-versions-drawer-root",[\s\S]{0,120}onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen/,
+  "Skill versions must use the shell-owned responsive versions drawer.",
+);
+assert.match(
+  shellApplicationLifecycleSource,
+  /hasSkillsVersionsDrawerSlot = activePage === "tools" && toolsView === "skills"[\s\S]{0,1800}hasSkillsVersionsDrawerSlot[\s\S]{0,120}isAgentVersionsDetailOpen/,
+  "The shell must reserve content width while the Skill versions drawer is open.",
+);
+for (const expectedSkillTitleAction of [
+  '"aria-label": "Skill actions"',
+  '["ID"',
+  '["Created"',
+  '["Updated"',
+  '"Send to Team"',
+  '"Copy Skill"',
+  '"Delete"',
+]) {
+  assert.ok(
+    skillTitleActionsSource.includes(expectedSkillTitleAction),
+    `Skill title actions must include ${expectedSkillTitleAction}.`,
+  );
+}
+assert.match(
+  skillTitleActionsSource,
+  /function renderSkillTitleActions\(\)[\s\S]*?titleActionsContainer/,
+  "Skill details must provide the same compact metadata and actions menu as Agent details.",
+);
+assert.match(
+  skillTitleActionsSource,
+  /resourceType: "skill"[\s\S]{0,1600}patchSelectedSkillFields\(\{ metadata: nextMetadata \}\)/,
+  "Sending a Skill to a team must persist both the team share and Skill access metadata.",
+);
+assert.match(
+  skillRenderingSource,
   /className: "skill-detail-page__access-table",[\s\S]{0,100}title: "Manage Skill Access"/,
   "Skill settings must label the centralized access table.",
+);
+assert.match(
+  skillRenderingSource,
+  /className: "skill-detail-page__versions-sidebar",[\s\S]{0,120}width: "var\(--playground-thread-task-detail-width, min\(42vw, 520px\)\)"/,
+  "Skill version history must retain the Agent sidebar width when portaled outside the content shell.",
+);
+const skillVersionSidebarSource = skillRenderingSource.match(
+  /const skillVersionsSidebar =[\s\S]*?(?=\n\s*return React\.createElement\(React\.Fragment)/,
+)?.[0] || "";
+assert.doesNotMatch(
+  skillVersionSidebarSource,
+  /onCreateVersion/,
+  "Skill version history must not render a redundant Version button in its header.",
+);
+for (const expectedSkillVersionSidebarControl of [
+  "onPublishVersion:",
+  "canPublishVersion:",
+  "onViewChanges:",
+  "getVersionActions:",
+]) {
+  assert.ok(
+    skillVersionSidebarSource.includes(expectedSkillVersionSidebarControl),
+    `Skill version history must wire ${expectedSkillVersionSidebarControl}.`,
+  );
+}
+for (const expectedSkillVersionAction of [
+  'label: "Edit description"',
+  'label: "View Changes"',
+  'label: "Delete version"',
+  "icon: SquarePen",
+  "icon: Code2",
+  "icon: Trash2",
+]) {
+  assert.ok(
+    skillVersioningSource.includes(expectedSkillVersionAction),
+    `Skill version actions must include ${expectedSkillVersionAction}.`,
+  );
+}
+assert.match(
+  skillVersioningSource,
+  /function renderSkillVersionChangesPage\(actions = null\)[\s\S]*?renderPlaygroundVersionChangesPage\(\{[\s\S]*?className: "playground-skills-version-changes-page"/,
+  "Skill versions must expose the shared source-comparison screen.",
+);
+assert.match(
+  skillVersioningSource,
+  /function getDefaultSkillVersionCompareSourceIds\(versionId = ""\)[\s\S]{0,2600}previousSource[\s\S]{0,900}editorHasChanges/,
+  "Skill version comparisons must fall back to adjacent saved versions when the editor is unchanged.",
+);
+assert.match(
+  skillVersioningSource,
+  /function openSkillVersionChangesPage\(versionId\)[\s\S]{0,300}getDefaultSkillVersionCompareSourceIds\(versionId\)[\s\S]{0,200}setSkillVersionChangesState\(compareSourceIds\)/,
+  "Opening Skill changes must use the meaningful default comparison pair.",
+);
+assert.match(
+  skillRenderingSource,
+  /portalTarget: skillVersionsDrawerContainer/,
+  "The Skill version sidebar must mount in the shell drawer instead of covering the changes page.",
+);
+assert.match(
+  skillVersioningSource,
+  /onVersionsSidebarOpenChange\(Boolean\(skillVersionsOpen\)\)/,
+  "The Skill controller must notify the shell when its version sidebar opens.",
+);
+assert.match(
+  skillVersioningSource,
+  /function renderSkillVersionEditDialog\(\)[\s\S]*?title: "Edit " \+ versionLabel[\s\S]*?initialFocusRef: skillVersionDescriptionTextareaRef/,
+  "Editing a Skill version description must open a focused version modal.",
 );
 
 assert.match(
@@ -256,6 +439,32 @@ assert.match(
   agentDialogsSource,
   /const agentUsageChartSection = React\.createElement\(PlatformAnalyticsSection, \{[\s\S]{0,180}variant: "default",[\s\S]{0,180}analytics: agentDetailAnalyticsModel/,
   "The Agent Insights analytics section must use the standard unboxed variant.",
+);
+const agentUsageChartSectionStart = agentDialogsSource.indexOf(
+  "const agentUsageChartSection =",
+);
+const agentUsageChartSectionEnd = agentDialogsSource.indexOf(
+  "const normalizedAgentDetailActionId =",
+  agentUsageChartSectionStart,
+);
+assert.ok(
+  agentUsageChartSectionStart >= 0 && agentUsageChartSectionEnd > agentUsageChartSectionStart,
+  "The Agent Insights analytics section source must be present.",
+);
+assert.doesNotMatch(
+  agentDialogsSource.slice(agentUsageChartSectionStart, agentUsageChartSectionEnd),
+  /timeframe:/,
+  "The Agent Insights timeframe selector must not remain inside the analytics content.",
+);
+assert.match(
+  agentDialogsSource,
+  /const agentInsightsTimeframeControl = !agentVersionChangesState[\s\S]{0,220}\["insights", "threads", "evaluation"\]\.includes\(agentDetailTab\)[\s\S]{0,300}React\.createElement\(PlatformSwitch,[\s\S]{0,500}ariaLabel: "Agent analytics time frame"/,
+  "The Agent Insights timeframe selector must render only in the app header.",
+);
+assert.match(
+  agentDialogsSource,
+  /const agentsTopNavActions =[\s\S]{0,500}agentInsightsTimeframeControl,[\s\S]{0,180}renderAgentPublishAction\(\)/,
+  "The Agent app header must render the Insights timeframe selector before Save and Publish.",
 );
 assert.match(
   agentDialogsSource,

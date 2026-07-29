@@ -40,6 +40,7 @@ export interface RunnerPendingMessage {
   scrapeCreationCommand?: StagedScrapeCreationCommand | null;
   parseCreationCommand?: StagedParseCreationCommand | null;
   adCreationCommand?: StagedAdCreationCommand | null;
+  connectors?: Record<string, unknown> | null;
 }
 
 export interface RunnerQueuedExecutionOptions {

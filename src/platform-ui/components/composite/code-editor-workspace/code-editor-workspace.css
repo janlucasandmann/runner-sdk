@@ -1,12 +1,13 @@
 .platform-code-editor-workspace {
   position: relative;
+  width: 100%;
   min-width: 0;
   min-height: 0;
-  height: 100%;
-  max-height: 100%;
   flex: 1 1 0;
+  align-self: stretch;
   display: grid;
   grid-template-columns: 252px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 15px;
@@ -17,8 +18,6 @@
 .platform-code-editor-workspace.is-full-screen {
   width: 100%;
   max-width: none;
-  height: 100%;
-  max-height: none;
   flex: 1 1 0;
   align-self: stretch;
   border: 0;
@@ -52,7 +51,7 @@
 
 .platform-code-editor-workspace__sidebar-title {
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   overflow: hidden;
   color: rgba(255, 255, 255, 0.9);
   font-size: 12px;
@@ -169,7 +168,7 @@
 .platform-code-editor-workspace__file-main {
   min-width: 0;
   min-height: 14px;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -202,9 +201,17 @@
   height: 14px;
 }
 
+.platform-code-editor-workspace__folder-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  color: rgba(255, 255, 255, 0.6);
+  stroke-width: 1.7;
+}
+
 .platform-code-editor-workspace__file-label {
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   overflow: hidden;
   color: inherit;
   font-size: 12px;
@@ -272,6 +279,103 @@
   flex-direction: column;
   overflow: hidden;
   background: #000;
+}
+
+.platform-code-editor-workspace__editor.is-markdown {
+  background: #000;
+}
+
+.platform-code-editor-workspace__markdown-editor.platform-instructions-editor {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.platform-code-editor-workspace
+  .platform-code-editor-workspace__markdown-editor.platform-instructions-editor.is-minimalistic-ui
+  .platform-instructions-editor__header {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  flex: 0 0 42px;
+  padding: 0 10px 0 12px;
+  overflow: hidden;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  background: transparent;
+}
+
+.platform-code-editor-workspace__markdown-editor
+  .platform-instructions-editor__title {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-code-editor-workspace__markdown-editor
+  .platform-instructions-editor__toolbar {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.platform-code-editor-workspace__markdown-editor
+  .platform-instructions-editor__toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+.platform-code-editor-workspace
+  .platform-code-editor-workspace__markdown-editor.platform-instructions-editor.is-minimalistic-ui
+  .platform-instructions-editor__body {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 0;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  border: 0;
+  border-radius: 0;
+  background: #000;
+}
+
+.platform-code-editor-workspace__markdown-editor
+  .platform-instructions-editor__content-viewport {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+  padding: 18px 20px;
+}
+
+.platform-code-editor-workspace
+  .platform-code-editor-workspace__markdown-editor.platform-instructions-editor.is-minimalistic-ui
+  .platform-instructions-editor__prosemirror {
+  min-height: 100%;
+  padding: 0;
+}
+
+.platform-code-editor-workspace__markdown-editor
+  .platform-instructions-editor__readonly {
+  min-height: 100%;
+  padding: 0;
 }
 
 .platform-code-editor-workspace__editor-header {
@@ -474,14 +578,34 @@
 
 .platform-code-editor-workspace__editor-body {
   min-height: 0;
-  flex: 1;
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .platform-code-editor-workspace__editor-body > * {
+  box-sizing: border-box;
+  width: 100%;
   min-height: 0;
-  flex: 1;
+  flex: 1 1 0;
+}
+
+.platform-code-editor-workspace__editor-body > .playground-code-preview-editor-shell,
+.platform-code-editor-workspace__editor-body > .playground-servers-code-editor-shell {
+  height: auto;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.platform-code-editor-workspace__editor-body > .playground-code-preview-editor-shell > *,
+.platform-code-editor-workspace__editor-body > .playground-servers-code-editor-shell > * {
+  box-sizing: border-box;
+  width: 100% !important;
+  min-height: 0;
+  flex: 1 1 0;
 }
 
 .platform-code-editor-workspace__empty {

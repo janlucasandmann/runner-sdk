@@ -12,6 +12,9 @@
           currentUserEmail = "",
           currentUserAvatarUrl = "",
           topNavActionsPortalId,
+          titleActionsPortalId,
+          versionsDrawerPortalId = "",
+          onVersionsSidebarOpenChange,
           onToolsSkillsHeaderChange,
           backRequestToken,
           openSkillRequest = null,
@@ -23,10 +26,12 @@
 	          const searchPopupInputRef = useRef(null);
           const skillCodeFileInputRef = useRef(null);
           const skillActionsPopoverRef = useRef(null);
+          const skillActionsPopoverSurfaceRef = useRef(null);
           const skillDetailIconPickerRef = useRef(null);
           const skillRenameInputRef = useRef(null);
           const skillEditTitleInputRef = useRef(null);
           const skillEditDescriptionTextareaRef = useRef(null);
+          const skillTitleInputRef = useRef(null);
           const [toolbarPopover, setToolbarPopover] = useState("");
           const [searchPopupQuery, setSearchPopupQuery] = useState("");
           const [skillListMode, setSkillListMode] = useState("system");
@@ -54,6 +59,7 @@
           const [skillAccessSelectedTeamIds, setSkillAccessSelectedTeamIds] = useState(() => new Set());
           const [skillVersionsOpen, setSkillVersionsOpen] = useState(false);
           const [skillPublishMenuOpen, setSkillPublishMenuOpen] = useState(false);
+          const [skillVersionSaveDialog, setSkillVersionSaveDialog] = useState(null);
           const [skillVersionState, setSkillVersionState] = useState({
             skillId: "",
             status: "idle",
@@ -860,6 +866,7 @@
             setSkillAccessSelectedTeamIds(new Set());
             setSkillVersionsOpen(false);
             setSkillPublishMenuOpen(false);
+            setSkillVersionSaveDialog(null);
           }, [selectedSkillId]);
   
           useEffect(() => {
@@ -905,7 +912,7 @@
             }
             void loadSelectedSkillVersions(selectedSkill);
 	          }, [selectedSkill?.id, selectedSkill?.isCustom, selectedSkill?.isDraft, skillsPageMode]);
-  
+
           useEffect(() => {
             const files = normalizeSkillCodeFiles(selectedSkill?.codeFiles);
             const activeFile = files.find((file) => file.id === skillCodeEditorState.fileId) || files[0] || null;
@@ -1074,7 +1081,11 @@
   
             function handleSkillActionsPopoverPointerDown(event) {
               const target = event?.target instanceof Node ? event.target : null;
-              if (!target || !skillActionsPopoverRef.current || skillActionsPopoverRef.current.contains(target)) {
+              if (
+                !target
+                || skillActionsPopoverRef.current?.contains(target)
+                || skillActionsPopoverSurfaceRef.current?.contains(target)
+              ) {
                 return;
               }
               setSkillActionsPopoverOpen(false);
@@ -1211,6 +1222,17 @@
           useEffect(() => {
             setSkillTitleDraft(String(selectedSkill?.name || ""));
           }, [selectedSkill?.id, selectedSkill?.name]);
+
+          useEffect(() => {
+            if (
+              skillsPageMode !== "detail"
+              || !selectedSkill?.isDraft
+              || !skillTitleInputRef.current
+            ) {
+              return;
+            }
+            skillTitleInputRef.current.focus({ preventScroll: true });
+          }, [selectedSkill?.id, selectedSkill?.isDraft, skillsPageMode]);
   
           useEffect(() => {
             setSkillActionsPopoverOpen(false);

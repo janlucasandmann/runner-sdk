@@ -485,6 +485,7 @@
     "navigation-guard-service-test": "node ./src/platform-shell/navigation-guard/navigation-guard-service-test.mjs && vitest run src/platform-ui/components/composite/modal/platform-unsaved-changes-modal.test.tsx",
     "plan-gate-service-test": "node ./src/platform-shell/plan-gate/plan-gate-service-test.mjs && vitest run src/platform-shell/plan-gate/plan-gate-modal",
     "projects-service-test": "node ./src/platform-services/create-mode/projects/projects-service-test.mjs",
+    "projects-delivery-control-test": "node ./src/platform-services/create-mode/projects/server/delivery-control-routes.test.mjs && vitest run src/platform-services/create-mode/projects/client/delivery/project-delivery-workspace.test.tsx",
     "teams-service-test": "node ./src/platform-services/configure-mode/teams/teams-service-test.mjs",
     "tests-service-test": "node ./src/platform-services/configure-mode/tests/tests-service-test.mjs && node --test ./src/platform-services/configure-mode/tests/server/runtime.test.mjs",
     "thread-domain-test": "npm run build && node ./tests/thread-domain.test.mjs",

@@ -10,6 +10,7 @@ export function PlatformAnalyticsSection({
   title,
   timeframe,
   showChart = true,
+  showXAxisLabels = true,
 }: PlatformAnalyticsSectionProps) {
   const resolvedTitle = title ?? analytics.title;
   const showTitle = (variant === "framed" || variant === "compact")
@@ -60,6 +61,7 @@ export function PlatformAnalyticsSection({
             analytics={analytics}
             chartType={chartType}
             compact={variant === "compact"}
+            showXAxisLabels={showXAxisLabels}
           />
         </div>
       ) : null}

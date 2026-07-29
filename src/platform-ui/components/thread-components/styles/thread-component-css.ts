@@ -1666,7 +1666,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   z-index: 3;
   margin: 0;
   border-radius: 6px;
-  background: rgba(0, 0, 0, 0.32);
+  background: transparent;
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }

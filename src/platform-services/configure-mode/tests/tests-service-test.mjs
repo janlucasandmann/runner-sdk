@@ -12,6 +12,7 @@ assert.match(PLAYGROUND_TESTS_CSS, /\.tests-overview-guide/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.state, /selectedTestPlanId/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestsPage/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /TestsWorkspacePage/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-tests-section-controls/);
 
 const platformSource = await readPlatformCompositionSource();
 assert.match(
@@ -82,10 +83,34 @@ const detailSource = await fs.readFile(
   new URL("./client/page/test-plan-detail-page.tsx", import.meta.url),
   "utf8",
 );
-assert.match(detailSource, /ResourceDetailPage/);
+assert.match(detailSource, /PlatformServiceDetailPage/);
+assert.match(detailSource, /PlatformAnalyticsSection/);
+assert.match(detailSource, /PlatformSwitch/);
 assert.match(detailSource, /PlatformDataTable/);
+assert.match(detailSource, /PlatformLabel/);
 assert.match(detailSource, /publishVersion/);
 assert.match(detailSource, /TestPlanAccessSettings/);
+assert.doesNotMatch(detailSource, /CircleDot/);
+assert.doesNotMatch(
+  detailSource,
+  /primaryAction:\s*\{\s*label:\s*"Run Tests"/s,
+);
+
+const runDetailSource = await fs.readFile(
+  new URL("./client/page/test-run-detail-page.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(runDetailSource, /PlatformServiceDetailPage/);
+assert.match(runDetailSource, /variant="run"/);
+assert.match(runDetailSource, /PlatformAnalyticsSection/);
+assert.doesNotMatch(runDetailSource, /activeTab/);
+
+const workspaceSource = await fs.readFile(
+  new URL("./client/page/tests-workspace-page.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(workspaceSource, /PlatformServiceDetailFrame/);
+assert.match(workspaceSource, /sectionControlsPortalId/);
 
 const overviewSource = await fs.readFile(
   new URL("./client/page/tests-overview-page.tsx", import.meta.url),
@@ -93,6 +118,8 @@ const overviewSource = await fs.readFile(
 );
 assert.match(overviewSource, /ResourceOverviewPage/);
 assert.match(overviewSource, /PlatformEmptyState/);
+assert.match(overviewSource, /PlatformLabel/);
+assert.doesNotMatch(overviewSource, /ResourceOverviewIdentityCell/);
 
 const overviewGuideSource = await fs.readFile(
   new URL("./client/page/tests-overview-guide.tsx", import.meta.url),

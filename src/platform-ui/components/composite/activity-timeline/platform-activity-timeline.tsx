@@ -44,7 +44,9 @@ export type PlatformActivityTimelineLayout = "timeline" | "inspector";
 
 export interface PlatformActivityTimelineProps {
   title?: ReactNode;
+  titleActions?: ReactNode;
   headerActions?: ReactNode;
+  listFooter?: ReactNode;
   items?: readonly PlatformActivityItem[];
   composer?: PlatformActivityComposerProps;
   emptyTitle?: ReactNode;
@@ -164,7 +166,9 @@ function PlatformActivityTimelineItem({
 
 export function PlatformActivityTimeline({
   title = "Activity",
+  titleActions,
   headerActions,
+  listFooter,
   items = [],
   composer,
   emptyTitle = "No activity yet",
@@ -211,7 +215,14 @@ export function PlatformActivityTimeline({
       >
         <div className="platform-activity-timeline__inspector-header">
           <div className="platform-activity-timeline__pane-header is-list">
-            <h2 className="platform-activity-timeline__title">{title}</h2>
+            <div className="platform-activity-timeline__pane-heading">
+              <h2 className="platform-activity-timeline__title">{title}</h2>
+              {titleActions ? (
+                <div className="platform-activity-timeline__title-actions">
+                  {titleActions}
+                </div>
+              ) : null}
+            </div>
             {headerActions ? (
               <div className="platform-activity-timeline__header-actions">
                 {headerActions}
@@ -252,6 +263,11 @@ export function PlatformActivityTimeline({
                 description={emptyDescription}
               />
             )}
+            {listFooter ? (
+              <div className="platform-activity-timeline__list-footer">
+                {listFooter}
+              </div>
+            ) : null}
           </div>
 
           <div
@@ -301,7 +317,14 @@ export function PlatformActivityTimeline({
   return (
     <section className={joinClassNames("platform-activity-timeline", className)}>
       <header className="platform-activity-timeline__header">
-        <h2 className="platform-activity-timeline__title">{title}</h2>
+        <div className="platform-activity-timeline__pane-heading">
+          <h2 className="platform-activity-timeline__title">{title}</h2>
+          {titleActions ? (
+            <div className="platform-activity-timeline__title-actions">
+              {titleActions}
+            </div>
+          ) : null}
+        </div>
         {headerActions ? (
           <div className="platform-activity-timeline__header-actions">{headerActions}</div>
         ) : null}

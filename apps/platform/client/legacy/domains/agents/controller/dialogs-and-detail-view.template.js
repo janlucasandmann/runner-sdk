@@ -567,7 +567,18 @@
                 )
               );
           }
-  
+
+          const agentDetailPerformanceRangeOptions = [
+            { id: "day", label: "24H", bucketCount: 1 },
+            { id: "week", label: "7D", bucketCount: 7 },
+            { id: "month", label: "30D", bucketCount: 30 },
+          ];
+          const normalizedAgentDetailPerformanceRange = agentDetailPerformanceRangeOptions.some(
+            (option) => option.id === agentDetailPerformanceRange
+          )
+            ? agentDetailPerformanceRange
+            : "month";
+
           function renderEditorSection(sectionId, title, description, content, headerActions, collapsible = true) {
             const isExpanded = collapsible ? expandedSections.has(sectionId) : true;
             return React.createElement("section", { className: "playground-environments-section", key: sectionId, "data-section-id": sectionId },
@@ -1677,12 +1688,7 @@
                 popupClassName: "playground-agents-detail-voice-select-menu",
               });
   
-            const agentDetailPerformanceRangeOptions = [
-              { id: "day", label: "24H", bucketCount: 1 },
-              { id: "week", label: "7D", bucketCount: 7 },
-              { id: "month", label: "30D", bucketCount: 30 },
-            ];
-            const activeAgentDetailPerformanceRange = agentDetailPerformanceRangeOptions.find((option) => option.id === agentDetailPerformanceRange)
+            const activeAgentDetailPerformanceRange = agentDetailPerformanceRangeOptions.find((option) => option.id === normalizedAgentDetailPerformanceRange)
               || agentDetailPerformanceRangeOptions[2];
             const formatAgentDetailPerformanceInteger = (value) => {
               const numericValue = Math.max(0, Math.round(Number(value || 0)));
@@ -2172,15 +2178,6 @@
                 variant: "default",
                 className: "playground-agents-detail-analytics",
                 analytics: agentDetailAnalyticsModel,
-                timeframe: {
-                  value: activeAgentDetailPerformanceRange.id,
-                  options: agentDetailPerformanceRangeOptions.map((option) => ({
-                    value: option.id,
-                    label: option.label,
-                  })),
-                  onValueChange: setAgentDetailPerformanceRange,
-                  ariaLabel: "Agent analytics time frame",
-                },
               }
             );
   
@@ -3442,13 +3439,29 @@
                 titleActionsContainer
               )
             : null;
+          const agentInsightsTimeframeControl = !agentVersionChangesState
+            && ["insights", "threads", "evaluation"].includes(agentDetailTab)
+            ? React.createElement(PlatformSwitch, {
+                className: "playground-agent-detail-header-timeframe",
+                value: normalizedAgentDetailPerformanceRange,
+                options: agentDetailPerformanceRangeOptions.map((option) => ({
+                  value: option.id,
+                  label: option.label,
+                })),
+                onValueChange: setAgentDetailPerformanceRange,
+                ariaLabel: "Agent analytics time frame",
+              })
+            : null;
           const agentsTopNavActions = topNavActionsContainer
             && !shouldShowAgentsHome
             && !agentCreationSetupOpen
             ? createPortal(
-                !agentVersionChangesState
-                  ? renderAgentPublishAction()
-                  : null,
+                React.createElement(React.Fragment, null,
+                  agentInsightsTimeframeControl,
+                  !agentVersionChangesState
+                    ? renderAgentPublishAction()
+                    : null
+                ),
                 topNavActionsContainer
               )
             : null;

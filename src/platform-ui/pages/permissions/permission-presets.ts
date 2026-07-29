@@ -10,6 +10,7 @@ import {
   normalizePlatformPermissionSet,
 } from "./permission-policy.js";
 import type { PlatformPermissionAccess, PlatformPermissionSet } from "./permission-types.js";
+import { isPlatformConnectorPermissionSubjectType } from "../../../platform-integrations/connectors/index.js";
 
 export type PlatformPermissionRoleId =
   | "owner"
@@ -305,7 +306,7 @@ function createManagedResourceRolePermissionSet(
 }
 
 function createConnectionRolePermissionSet(
-  subjectType: "tag" | "tag_team_role" | "plugin" | "plugin_team_role",
+  subjectType: PlatformPermissionSubjectType,
   roleId: string,
 ): PlatformPermissionSet {
   if (roleId === "owner" || roleId === "admin") {
@@ -315,9 +316,25 @@ function createConnectionRolePermissionSet(
   const actionIds = getSubjectActionIds(subjectType);
   const isContributor = roleId === "contributor" || roleId === "developer";
   const isViewer = roleId === "viewer" || roleId === "billing";
+  const isExactConnector = isPlatformConnectorPermissionSubjectType(subjectType);
+  const connectorCapabilityActionIds = actionIds.filter((id) =>
+    id.includes("_action_"),
+  );
+  const connectorReadActionIds = connectorCapabilityActionIds.filter(
+    (id) =>
+      PLATFORM_PERMISSION_ACTION_DEFINITIONS.find(
+        (action) => action.id === id,
+      )?.ringId === "ring_1",
+  );
+  const connectorInteractiveActionIds = connectorCapabilityActionIds.filter(
+    (id) =>
+      PLATFORM_PERMISSION_ACTION_DEFINITIONS.find(
+        (action) => action.id === id,
+      )?.ringId === "ring_3",
+  );
   const readActionIds = actionIds.filter(
     (id) => id.endsWith("_view") || id.endsWith("_use_read"),
-  );
+  ).concat(connectorReadActionIds);
   const invocationActionIds = actionIds.filter((id) => id.endsWith("_invoke"));
   const operationalActionIds = actionIds.filter(
     (id) =>
@@ -339,7 +356,13 @@ function createConnectionRolePermissionSet(
     "ring_2",
     isContributor ? "full_access" : isViewer ? "no_access" : "ask_for_permission",
   );
-  setRingAccess(permissionSet, "ring_3", "no_access");
+  setRingAccess(
+    permissionSet,
+    "ring_3",
+    isExactConnector && isContributor
+      ? "ask_for_permission"
+      : "no_access",
+  );
   applyAccess(permissionSet, readActionIds, isContributor ? "full_access" : "read_only");
   applyAccess(
     permissionSet,
@@ -354,6 +377,11 @@ function createConnectionRolePermissionSet(
   applyAccess(
     permissionSet,
     connectionActionIds,
+    isContributor ? "ask_for_permission" : "no_access",
+  );
+  applyAccess(
+    permissionSet,
+    connectorInteractiveActionIds,
     isContributor ? "ask_for_permission" : "no_access",
   );
   applyAccess(permissionSet, administrativeActionIds, "no_access");
@@ -693,6 +721,7 @@ export function createPlatformRolePermissionSet(
     || subjectType === "tag_team_role"
     || subjectType === "plugin"
     || subjectType === "plugin_team_role"
+    || isPlatformConnectorPermissionSubjectType(subjectType)
   ) {
     return createConnectionRolePermissionSet(subjectType, normalizedRoleId);
   }

@@ -15,9 +15,14 @@
 - centered file-loading feedback through the shared `PlatformLoadingState`;
 - nested-file disclosure and optional sidebar actions;
 - the editor content region and empty states;
+- automatic Markdown-file detection with the centralized live
+  `PlatformInstructionsEditor` and formatting toolbar;
 - Undo and Redo controls rendered through the shared icon-button primitive in the active-file header.
 
-The caller remains responsible for file data, editor implementation, draft state, and persistence.
+The caller remains responsible for file data, editor implementation, draft
+state, and persistence. Pass `markdownEditor` with the active file value and
+change handler to enable rich Markdown editing for `.md`, `.markdown`,
+`.mdown`, `.mkd`, and `.mkdn` files; other files continue to render `editor`.
 Use `variant="full-screen"` when the workspace should occupy the complete width and height exposed by its content container.
 
 ```tsx
@@ -33,6 +38,11 @@ Use `variant="full-screen"` when the workspace should occupy the complete width 
   onUploadFiles={uploadFiles}
   onCreateFolder={createFolder}
   editor={<Editor value={source} onChange={setSource} />}
+  markdownEditor={{
+    value: source,
+    onChange: setSource,
+    historyKey: activeFileId,
+  }}
   historyControls={{
     onUndo: undo,
     onRedo: redo,

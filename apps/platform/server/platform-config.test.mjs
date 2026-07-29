@@ -27,6 +27,10 @@ test("uses fail-closed administrator configuration and portable local roots", ()
   assert.ok(path.isAbsolute(config.aiosHostingRoot));
   assert.ok(path.isAbsolute(config.playgroundSystemSkillsRoot));
   assert.ok(config.githubOauthAllowedOrigins.includes("http://localhost:4177"));
+  assert.equal(
+    config.connectorOauthAllowedOrigins,
+    config.githubOauthAllowedOrigins,
+  );
   assert.equal(config.executionDispatcher.enabled, false);
 });
 
@@ -48,12 +52,20 @@ test("normalizes explicit origins, paths, and administrator settings", () => {
     "https://one.example",
     "https://two.example",
   ]);
+  assert.deepEqual(
+    config.connectorOauthAllowedOrigins,
+    config.githubOauthAllowedOrigins,
+  );
   assert.deepEqual(config.feedbackSummaryAdminEnvFileCandidates, [
     path.resolve("./fixtures/first.env"),
     path.resolve("./fixtures/second.env"),
   ]);
   assert.equal(
     config.githubOauthEnvFileCandidates,
+    config.feedbackSummaryAdminEnvFileCandidates,
+  );
+  assert.equal(
+    config.connectorOauthEnvFileCandidates,
     config.feedbackSummaryAdminEnvFileCandidates,
   );
   assert.equal(

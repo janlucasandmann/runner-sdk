@@ -2550,6 +2550,16 @@
                   ? "No source files yet."
                   : "Create this " + serverKindLabel.toLowerCase() + " first.",
                 editor: renderServerCodeEditorBody(),
+                markdownEditor: serverFileEditorState.status === "ready" && serverFileEditorState.path
+                  ? {
+                      value: serverFileEditorState.value,
+                      onChange: handleServerFileEditorChange,
+                      placeholder: "Write Markdown...",
+                      ariaLabel: serverFileEditorState.path + " Markdown content",
+                      readOnly: isServerTemplatePreview,
+                      historyKey: serverFileEditorState.path,
+                    }
+                  : undefined,
                 historyControls: {
                   onUndo: handleServerFileEditorUndo,
                   onRedo: handleServerFileEditorRedo,

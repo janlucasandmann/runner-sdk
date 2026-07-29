@@ -148,10 +148,10 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
       function getPlaygroundEvaluationCreatorIdentity(source = {}) {
         const record = source && typeof source === "object" && !Array.isArray(source) ? source : {};
         const metadata = record.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
-        const nested = record.creator || record.createdBy || record.created_by || metadata.creator || metadata.createdBy || metadata.created_by || record.owner || metadata.owner || null;
+        const nested = record.creator || record.createdBy || record.created_by || metadata.creator || metadata.createdBy || metadata.created_by || null;
         const direct = normalizePlaygroundEvaluationPersonIdentity({
-          id: record.creatorId || record.creator_id || record.createdById || record.created_by_id || metadata.creatorId || metadata.creator_id || metadata.createdById || metadata.created_by_id || record.userId || record.user_id,
-          userId: record.creatorUserId || record.creator_user_id || metadata.creatorUserId || metadata.creator_user_id || record.userId || record.user_id,
+          id: record.creatorId || record.creator_id || record.createdById || record.created_by_id || record.createdByUserId || record.created_by_user_id || metadata.creatorId || metadata.creator_id || metadata.createdById || metadata.created_by_id || metadata.createdByUserId || metadata.created_by_user_id,
+          userId: record.creatorUserId || record.creator_user_id || record.createdByUserId || record.created_by_user_id || metadata.creatorUserId || metadata.creator_user_id || metadata.createdByUserId || metadata.created_by_user_id,
           name: record.creatorName || record.creator_name || record.createdByName || record.created_by_name || metadata.creatorName || metadata.creator_name || metadata.createdByName || metadata.created_by_name,
           email: record.creatorEmail || record.creator_email || record.createdByEmail || record.created_by_email || metadata.creatorEmail || metadata.creator_email || metadata.createdByEmail || metadata.created_by_email,
           avatarUrl: record.creatorAvatarUrl || record.creator_avatar_url || record.createdByAvatarUrl || record.created_by_avatar_url || metadata.creatorAvatarUrl || metadata.creator_avatar_url || metadata.createdByAvatarUrl || metadata.created_by_avatar_url,
@@ -201,6 +201,8 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
                 : "";
         return {
           id: String(source.id || source.caseId || source.case_id || "").trim() || createPlaygroundEvaluationId("eval_case"),
+          title: String(source.title || source.name || source.caseTitle || source.case_title || "").trim(),
+          description: String(source.description || source.summary || "").trim(),
           input,
           expectedOutput,
           evaluationGuidance: String(source.evaluationGuidance || source.evaluation_guidance || source.scoringGuidance || source.scoring_guidance || source.rubric || ""),
@@ -571,6 +573,8 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
           environmentType: String(source.environmentType || source.environment_type || metadataRecord.environmentType || metadataRecord.environment_type || "").trim().toLowerCase() === "project" ? "project" : "computer",
           environmentId: String(source.environmentId || source.environment_id || source.computerId || source.computer_id || metadataRecord.environmentId || metadataRecord.environment_id || metadataRecord.computerId || metadataRecord.computer_id || "").trim(),
           projectId: String(source.projectId || source.project_id || metadataRecord.projectId || metadataRecord.project_id || "").trim(),
+          organizationId: String(source.organizationId || source.organization_id || metadataRecord.organizationId || metadataRecord.organization_id || "").trim(),
+          createdByUserId: String(source.createdByUserId || source.created_by_user_id || metadataRecord.createdByUserId || metadataRecord.created_by_user_id || creator.userId || creator.id || "").trim(),
           dataRows: dataRows.map((row, index) => normalizePlaygroundEvaluationDataRow(row, index)),
           runs: runs.map((run, index) => normalizePlaygroundEvaluationRun({ passThreshold, ...(run || {}) }, index)),
           creator,

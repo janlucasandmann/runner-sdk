@@ -215,6 +215,15 @@
                 style: { objectFit: "cover", borderRadius: "50%" },
               });
             }
+            const customEmoji = String(skill?.icon || "").trim().startsWith("emoji:")
+              ? String(skill.icon).trim().slice("emoji:".length).trim()
+              : "";
+            if (customEmoji) {
+              return React.createElement("span", {
+                className: className + " playground-skill-emoji-icon",
+                "aria-hidden": "true",
+              }, customEmoji);
+            }
             const Icon = getPlaygroundSkillIconComponent(skill);
             return React.createElement(Icon, { className, strokeWidth: 1.8 });
           }
@@ -380,6 +389,122 @@
             return normalizedUpdatedSkill;
           }
 
+          function getSelectedSkillVersion(targetSkill = selectedSkill) {
+            const selectedVersionId = String(
+              skillVersionState.currentVersionId
+              || targetSkill?.currentVersionId
+              || ""
+            ).trim();
+            return skillVersionState.versions.find((version) =>
+              String(version?.id || "").trim() === selectedVersionId
+            ) || skillVersionState.versions[0] || null;
+          }
+
+          function buildCurrentSkillVersionSnapshot(targetSkill = selectedSkill) {
+            const currentFiles = normalizeSkillCodeFiles(targetSkill?.codeFiles);
+            const activeFile = currentFiles.find((file) =>
+              file.id === skillCodeEditorState.fileId
+            );
+            const codeFiles = activeFile && skillCodeEditorState.value !== skillCodeEditorState.initialValue
+              ? currentFiles.map((file) =>
+                  file.id === activeFile.id
+                    ? { ...file, content: skillCodeEditorState.value }
+                    : file
+                )
+              : currentFiles;
+            const markdownFile = codeFiles.find((file) =>
+              normalizeHistoryPath(file.name).toLowerCase() === "skill.md"
+            );
+            return {
+              name: getSelectedSkillSaveName(targetSkill),
+              skillDescription: String(targetSkill?.description || ""),
+              markdown: markdownFile?.content ?? String(targetSkill?.markdown || ""),
+              codeFiles,
+              icon: String(targetSkill?.icon || "code"),
+              category: String(targetSkill?.category || "custom"),
+            };
+          }
+
+          function normalizeSkillVersionDiffSnapshot(snapshot = {}) {
+            const codeFiles = normalizeSkillCodeFiles(snapshot?.codeFiles);
+            const hasMarkdownFile = codeFiles.some((file) =>
+              normalizeHistoryPath(file.name).toLowerCase() === "skill.md"
+            );
+            if (!hasMarkdownFile && typeof snapshot?.markdown === "string") {
+              codeFiles.unshift({
+                id: "skill-md",
+                name: "SKILL.md",
+                content: snapshot.markdown,
+                language: "markdown",
+              });
+            }
+            return {
+              name: String(snapshot?.name || ""),
+              skillDescription: String(snapshot?.skillDescription || ""),
+              codeFiles,
+              icon: String(snapshot?.icon || "code"),
+              category: String(snapshot?.category || "custom"),
+            };
+          }
+
+          function buildSkillVersionSaveDialogData() {
+            const selectedVersion = getSelectedSkillVersion();
+            const currentSnapshot = buildCurrentSkillVersionSnapshot();
+            const latestVersion = skillVersionState.versions.reduce((highest, version) => {
+              const parsedVersion = Number(version?.version);
+              return Number.isFinite(parsedVersion)
+                ? Math.max(highest, parsedVersion)
+                : highest;
+            }, 0);
+            return {
+              selectedVersion,
+              canSaveCurrent: Boolean(selectedVersion),
+              currentVersion: selectedVersion ? Number(selectedVersion.version) : null,
+              nextVersion: latestVersion + 1,
+              currentDescription: String(selectedVersion?.description || "").trim(),
+              currentSnapshot,
+              diffFiles: buildSkillVersionDiffFilesFromSnapshots(
+                selectedVersion || {},
+                currentSnapshot
+              ),
+            };
+          }
+
+          function hasSelectedSkillVersionChanges() {
+            if (
+              !selectedSkill?.id
+              || !selectedSkill.isCustom
+              || !getSelectedSkillSaveName()
+            ) {
+              return false;
+            }
+            return selectedSkill.isDraft || buildSkillVersionSaveDialogData().diffFiles.length > 0;
+          }
+
+          function openSkillVersionSaveDialog(options = {}) {
+            if (
+              !selectedSkill?.id
+              || !selectedSkill.isCustom
+              || skillSaveState.isSaving
+              || skillCodeFilesTransferState.isProcessing
+              || skillVersionState.status === "loading"
+              || !hasSelectedSkillVersionChanges()
+            ) {
+              return false;
+            }
+            setSkillPublishMenuOpen(false);
+            setSkillVersionsOpen(false);
+            setSkillSaveState((current) => ({
+              ...current,
+              error: "",
+            }));
+            setSkillVersionSaveDialog({
+              initialMode: options.mode === "current" ? "current" : "new",
+              key: Date.now().toString(36) + Math.random().toString(36).slice(2),
+            });
+            return true;
+          }
+
           async function loadSelectedSkillVersions(targetSkill = selectedSkill) {
             if (!targetSkill?.id || !targetSkill.isCustom || targetSkill.isDraft) {
               return [];
@@ -426,10 +551,26 @@
             }
           }
 
-          async function saveAndPublishSelectedSkillVersion() {
+          async function saveAndPublishSelectedSkillVersion(details = {}) {
             if (!selectedSkill?.id || !selectedSkill.isCustom || skillSaveState.isSaving) {
               return null;
             }
+            const skillName = getSelectedSkillSaveName();
+            if (!skillName) {
+              setSkillSaveState({
+                isSaving: false,
+                error: "Enter a skill name before saving.",
+              });
+              return null;
+            }
+            const versionData = buildSkillVersionSaveDialogData();
+            const selectedVersion = versionData.selectedVersion;
+            const saveToCurrentVersion = Boolean(
+              !selectedSkill.isDraft
+              && details.mode === "current"
+              && selectedVersion?.id
+            );
+            const versionDescription = String(details.description || "").trim().slice(0, 240);
             setSkillPublishMenuOpen(false);
             setSkillSaveState({ isSaving: true, error: "" });
             try {
@@ -454,16 +595,17 @@
                     credentials: "include",
                     headers: getSkillApiRequestHeaders(),
                     body: JSON.stringify({
-                      name: String(skillTitleDraft || selectedSkill.name || "").trim() || "Untitled Skill",
+                      name: skillName,
                       description: String(selectedSkill.description || ""),
                       markdown: markdownFile?.content ?? String(selectedSkill.markdown || ""),
                       codeFiles: nextFiles,
                       icon: selectedSkill.icon || "code",
                       category: selectedSkill.category || "custom",
                       metadata: selectedSkill.metadata || {},
-                      permissionSet: selectedSkill.permissionSet || undefined,
-                      accessControl: selectedSkill.accessControl || undefined,
+                      permissionSet: selectedSkill.permissionSet || null,
+                      accessControl: selectedSkill.accessControl || null,
                       isActive: selectedSkill.isActive !== false,
+                      versionDescription,
                     }),
                   }
                 );
@@ -495,40 +637,61 @@
                 return createdSkill;
               }
               if (activeFile && skillCodeEditorState.value !== skillCodeEditorState.initialValue) {
-                const didSaveFiles = await saveSelectedSkillCodeFiles(nextFiles);
-                if (!didSaveFiles) {
-                  throw new Error("Failed to save skill source before publishing.");
-                }
+                await saveSelectedSkillCodeFiles(nextFiles, { throwOnError: true });
               }
+              const versionEndpoint = "/api/aios/projects/" + encodeURIComponent(selectedSkillProjectId) + "/skills/"
+                + encodeURIComponent(selectedSkill.id) + "/versions";
               const response = await fetch(
-                "/api/aios/projects/" + encodeURIComponent(selectedSkillProjectId) + "/skills/"
-                  + encodeURIComponent(selectedSkill.id) + "/versions",
+                saveToCurrentVersion
+                  ? versionEndpoint + "/" + encodeURIComponent(selectedVersion.id)
+                  : versionEndpoint,
                 {
-                  method: "POST",
+                  method: saveToCurrentVersion ? "PATCH" : "POST",
                   credentials: "include",
                   headers: getSkillApiRequestHeaders(),
-                  body: JSON.stringify({ publish: true }),
+                  body: JSON.stringify(saveToCurrentVersion
+                    ? {
+                        operation: "publish",
+                        description: versionDescription,
+                      }
+                    : {
+                        publish: true,
+                        description: versionDescription,
+                      }
+                  ),
                 }
               );
               const data = await response.json().catch(() => ({}));
               if (!response.ok) {
-                throw new Error(data?.message || data?.error || "Failed to publish skill version.");
+                throw new Error(data?.message || data?.error || "Failed to save skill version.");
               }
-              const version = data?.version || null;
+              const version = data?.version
+                ? {
+                    ...data.version,
+                    ...versionData.currentSnapshot,
+                    description: versionDescription,
+                  }
+                : null;
               if (version) {
+                const currentVersionId = String(data?.currentVersionId || version.id || "");
+                const publishedVersionId = String(data?.publishedVersionId || version.id || "");
                 setSkillVersionState((current) => ({
                   ...current,
                   skillId: selectedSkill.id,
                   status: "ready",
                   error: "",
-                  versions: [version, ...current.versions.filter((entry) => entry.id !== version.id)],
-                  currentVersionId: String(data?.currentVersionId || version.id || ""),
-                  publishedVersionId: String(data?.publishedVersionId || version.id || ""),
+                  versions: [version, ...current.versions
+                    .filter((entry) => entry.id !== version.id)
+                    .map((entry) => entry.id === current.publishedVersionId
+                      ? { ...entry, status: "saved", publishedAt: null }
+                      : entry)],
+                  currentVersionId,
+                  publishedVersionId,
                 }));
                 updateSelectedSkillLocal((current) => ({
                   ...current,
-                  currentVersionId: String(data?.currentVersionId || version.id || ""),
-                  publishedVersionId: String(data?.publishedVersionId || version.id || ""),
+                  currentVersionId,
+                  publishedVersionId,
                 }));
               }
               setSkillCodeEditorState((current) => ({
@@ -536,14 +699,14 @@
                 initialValue: current.value,
                 isSaving: false,
                 error: "",
-                message: "Published",
+                message: "Saved",
               }));
               setSkillSaveState({ isSaving: false, error: "" });
               return version;
             } catch (error) {
               setSkillSaveState({
                 isSaving: false,
-                error: error instanceof Error ? error.message : "Failed to publish skill version.",
+                error: error instanceof Error ? error.message : "Failed to save skill version.",
               });
               return null;
             }
@@ -641,21 +804,6 @@
             }));
             void saveSelectedSkillFields({
               name: nextName,
-            });
-          }
-  
-          function handleSelectedSkillIconChange(iconId) {
-            if (!selectedSkill?.isCustom) {
-              return;
-            }
-            const normalizedIconId = getPlaygroundSkillIconId(iconId);
-            updateSelectedSkillLocal((current) => ({
-              ...current,
-              icon: normalizedIconId,
-            }));
-            setSkillDetailIconPickerOpen(false);
-            void saveSelectedSkillFields({
-              icon: normalizedIconId,
             });
           }
   
@@ -960,7 +1108,7 @@
             applySkillMarkdownSelection(sectionId, edit.value, edit.selectionStart, edit.selectionEnd);
           }
   
-          async function saveSelectedSkillCodeFiles(nextCodeFiles) {
+          async function saveSelectedSkillCodeFiles(nextCodeFiles, options = {}) {
             if (!selectedSkill || !selectedSkill.isCustom) {
               return false;
             }
@@ -1020,6 +1168,9 @@
                 isProcessing: false,
                 error: error instanceof Error ? error.message : "Failed to save skill code files.",
               });
+              if (options.throwOnError) {
+                throw error;
+              }
               return false;
             }
           }

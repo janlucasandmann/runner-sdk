@@ -6,10 +6,13 @@ import type {
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
 import {
-  ResourceOverviewIdentityCell,
   ResourceOverviewPage,
   ResourceOverviewValue,
 } from "../../../../../platform-ui/pages/overview/index.js";
+import {
+  PlatformLabel,
+  type PlatformLabelVariant,
+} from "../../../../../platform-ui/components/ui/label/index.js";
 import { TestsOverviewGuide } from "./tests-overview-guide.js";
 
 export interface TestPlanOverviewRow {
@@ -43,6 +46,14 @@ function statusLabel(value: string) {
     .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
+function statusLabelVariant(value: string): PlatformLabelVariant {
+  if (value === "passed" || value === "active") return "green";
+  if (["failed", "error", "completed_with_errors"].includes(value)) return "red";
+  if (value === "running" || value === "queued") return "blue";
+  if (value === "warning") return "yellow";
+  return "gray";
+}
+
 export function TestsOverviewPage({
   rows,
   loading = false,
@@ -74,12 +85,7 @@ export function TestsOverviewPage({
         sortable: true,
         width: "minmax(250px, 1.25fr)",
         cell: ({ row }) => (
-          <ResourceOverviewIdentityCell
-            title={row.name}
-            icon={FlaskConical}
-            iconClassName="is-connection"
-            size="compact"
-          />
+          <span className="resource-overview-identity__title">{row.name}</span>
         ),
       },
       {
@@ -106,9 +112,9 @@ export function TestsOverviewPage({
         sortable: true,
         width: "minmax(160px, 0.75fr)",
         cell: ({ row }) => (
-          <span className={`tests-status-label is-${row.lastRunStatus || "idle"}`}>
+          <PlatformLabel variant={statusLabelVariant(row.lastRunStatus)}>
             {statusLabel(row.lastRunStatus)}
-          </span>
+          </PlatformLabel>
         ),
       },
       {

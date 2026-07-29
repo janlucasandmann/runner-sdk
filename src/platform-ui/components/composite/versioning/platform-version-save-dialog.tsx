@@ -319,7 +319,20 @@ export function PlatformVersionSaveDialog({
         )}
       </section>
 
-      <div className="platform-version-save-dialog__description-field">
+      <div
+        className="platform-version-save-dialog__description-field"
+        onKeyDown={(event) => {
+          if (
+            event.key !== "Enter"
+            || (!event.metaKey && !event.ctrlKey)
+          ) {
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          void handleSubmit();
+        }}
+      >
         <PlatformInstructionsEditor
           value={descriptionByMode[mode]}
           onChange={(value) => {
@@ -338,6 +351,7 @@ export function PlatformVersionSaveDialog({
           historyKey={`${String(instanceKey ?? "version-save")}:${mode}`}
           variant="minimalistic-ui"
           className="platform-version-save-dialog__description-editor"
+          autoFocus={open && !isPending}
         />
         <span className="platform-version-save-dialog__character-count" aria-hidden="true">
           {descriptionByMode[mode].length}/240

@@ -498,6 +498,19 @@
           }
 
           function renderCurrentSkillDetail() {
+            const skillHasVersionChanges = Boolean(
+              selectedSkill?.isCustom
+              && hasSelectedSkillVersionChanges()
+            );
+            const skillVersionControlBusy = Boolean(
+              skillSaveState.isSaving
+              || skillCodeFilesTransferState.isProcessing
+              || skillVersionState.status === "loading"
+            );
+            const skillVersionControlDisabled = Boolean(
+              skillVersionControlBusy
+              || !skillHasVersionChanges
+            );
             const skillDetailTopNavAction = skillsPageMode !== "detail"
               || !selectedSkill
               || !selectedSkill.isCustom
@@ -505,10 +518,10 @@
               : React.createElement(PlatformVersionPublishControl, {
                   open: skillPublishMenuOpen,
                   onOpenChange: setSkillPublishMenuOpen,
-                  onPublish: () => void saveAndPublishSelectedSkillVersion(),
-                  active: selectedSkill.isDraft || skillCodeEditorState.value !== skillCodeEditorState.initialValue,
-                  disabled: skillSaveState.isSaving || skillCodeFilesTransferState.isProcessing,
-                  menuDisabled: skillSaveState.isSaving || skillCodeFilesTransferState.isProcessing,
+                  onPublish: () => openSkillVersionSaveDialog(),
+                  active: skillHasVersionChanges,
+                  disabled: skillVersionControlDisabled,
+                  menuDisabled: skillVersionControlDisabled,
                   actions: selectedSkill.isDraft ? [{
                     id: "discard-draft",
                     label: "Discard draft",
@@ -529,7 +542,9 @@
                 });
             const skillsTopNavActions = topNavActionsContainer
               ? createPortal(React.createElement(React.Fragment, null,
-                  skillsPageMode === "detail" ? skillDetailTopNavAction : renderSkillsCreateAction()
+                  skillsPageMode === "detail"
+                    ? (skillVersionChangesState ? null : skillDetailTopNavAction)
+                    : renderSkillsCreateAction()
                 ), topNavActionsContainer)
               : null;
   
@@ -940,40 +955,7 @@
               selectedSkill.isSystem
               && !systemSkillSourceCatalog[selectedSkillFamilyId]
             );
-            const skillMetadataSection = React.createElement("section", {
-                className: "skill-detail-page__identity",
-                "aria-label": "Skill identity",
-              },
-              React.createElement("input", {
-                type: "text",
-                className: "skill-detail-page__name-input",
-                value: skillTitleDraft,
-                onChange: (event) => setSkillTitleDraft(event.target.value),
-                onBlur: handleSelectedSkillTitleCommit,
-                placeholder: selectedSkill.isDraft ? "new-skill" : undefined,
-                readOnly: !selectedSkill.isCustom,
-                "aria-label": "Skill name",
-              }),
-              React.createElement("textarea", {
-                className: "skill-detail-page__description-input",
-                value: selectedSkill.description || "",
-                onChange: selectedSkill.isCustom
-                  ? (event) => updateSelectedSkillLocal((current) => ({
-                      ...current,
-                      description: event.target.value,
-                    }))
-                  : undefined,
-                onBlur: selectedSkill.isCustom
-                  ? (event) => void saveSelectedSkillFields({
-                      description: event.target.value,
-                    })
-                  : undefined,
-                readOnly: !selectedSkill.isCustom,
-                rows: 2,
-                placeholder: "Describe when agents should use this skill.",
-                "aria-label": "Skill description",
-              })
-            );
+            const skillMetadataSection = renderSkillIdentitySection(skillResourceMetadata);
             const skillCodeWorkspace = React.createElement(React.Fragment, null,
               isSelectedSkillCodeFilesEditable
                 ? React.createElement("input", {
@@ -1004,6 +986,16 @@
                   ? "No source files are exposed for this system skill."
                   : "No source files yet.",
                 editor: renderSkillCodeEditorBody(),
+                markdownEditor: activeSkillCodeFile
+                  ? {
+                      value: skillCodeEditorState.value,
+                      onChange: handleSkillCodeEditorChange,
+                      placeholder: "Write skill instructions in Markdown...",
+                      ariaLabel: activeSkillCodeFile.name + " Markdown content",
+                      readOnly: !isSelectedSkillCodeFilesEditable,
+                      historyKey: activeSkillCodeFile.id,
+                    }
+                  : undefined,
                 historyControls: isSelectedSkillCodeFilesEditable
                   ? {
                       onUndo: () => {},
@@ -1024,18 +1016,12 @@
                 onDrop: (event) => void handleSkillCodeFileDrop(event),
               })
             );
-            const skillCodeTabContent = React.createElement("div", {
-                className: "skill-detail-page__code",
-              },
-              skillMetadataSection,
-              skillSaveState.error || skillCodeFilesTransferState.error
-                ? React.createElement("div", {
-                    className: "playground-environments-error playground-environments-editor-notice",
-                    role: "alert",
-                  }, skillSaveState.error || skillCodeFilesTransferState.error)
-                : null,
-              skillCodeWorkspace
-            );
+            const skillCodeNotice = skillSaveState.error || skillCodeFilesTransferState.error
+              ? React.createElement("div", {
+                  className: "playground-environments-error playground-environments-editor-notice",
+                  role: "alert",
+                }, skillSaveState.error || skillCodeFilesTransferState.error)
+              : null;
 
             const normalizedWorkspaceTeams = (Array.isArray(workspaceTeams) ? workspaceTeams : [])
               .map((team) => {
@@ -1145,7 +1131,7 @@
                   subjectType === "skill" || subjectType === "skill_team_role"
                 )
             );
-            const skillSettingsTabContent = React.createElement(PlatformResourceAccessSettings, {
+            const skillAccessSettingsContent = React.createElement(PlatformResourceAccessSettings, {
               teams: skillAccessTeams,
               resourceLabel: "Skill",
               selectedPrincipalId: skillAccessPrincipalId,
@@ -1246,14 +1232,21 @@
                 error: skillSaveState.error || null,
               },
             });
+            const skillSettingsComposition = renderSkillSettingsComposition(
+              skillAccessSettingsContent,
+              skillResourceMetadata
+            );
+            const skillSettingsTabContent = skillSettingsComposition.content;
+            const skillSettingsSidebar = skillSettingsComposition.sidebar;
             const skillVersionsSidebar = selectedSkill.isCustom && !selectedSkill.isDraft
               ? React.createElement(PlatformVersionHistorySidebar, {
                   open: skillVersionsOpen,
                   title: "Version history",
                   sectionTitle: "All Versions",
                   className: "skill-detail-page__versions-sidebar",
-                  width: "var(--playground-thread-task-detail-width)",
+                  width: "var(--playground-thread-task-detail-width, min(42vw, 520px))",
                   portal: true,
+                  portalTarget: skillVersionsDrawerContainer,
                   versions: skillVersionState.versions,
                   activeVersionId: skillVersionState.publishedVersionId,
                   selectedVersionId: skillVersionState.currentVersionId,
@@ -1261,25 +1254,40 @@
                   loadingMessage: "Loading versions",
                   error: skillVersionState.error || null,
                   emptyDescription: "Publish this skill to create its first version.",
-                  busy: skillSaveState.isSaving,
-                  onClose: () => setSkillVersionsOpen(false),
-                  onCreateVersion: () => void saveAndPublishSelectedSkillVersion(),
+                  busy: skillSaveState.isSaving || skillVersionState.status === "loading",
+                  onClose: () => { setSkillVersionChangesState(null); setSkillVersionsOpen(false); },
                   onSelectVersion: (versionId) => void restoreSelectedSkillVersion(versionId),
+                  onPublishVersion: (versionId) => void publishSelectedSkillVersion(versionId),
+                  canPublishVersion: (version) => canPublishSelectedSkillVersion(version),
+                  onViewChanges: () => openSkillVersionChangesPage(),
+                  getVersionActions: (version) => getSelectedSkillVersionActions(version),
                   getVersionCreatedAt: (version) => formatRelativeThreadTime(
                     version?.createdAt || version?.updatedAt || version?.publishedAt
                   ) || "—",
                 })
               : null;
+            const skillVersionChangesSurface = renderSkillVersionChangesSurface(skillDetailTopNavAction);
 
             return React.createElement(React.Fragment, null,
               skillsTopNavActions,
-              React.createElement(SkillDetailPage, {
-                activeTab: skillDetailTab,
-                code: skillCodeTabContent,
-                settings: skillSettingsTabContent,
-                className: "playground-skills-detail-page",
-              }),
-              skillVersionsSidebar
+              skillVersionChangesSurface
+                ? skillVersionChangesSurface
+                : React.createElement(React.Fragment, null,
+                    renderSkillTitleActions(),
+                    React.createElement(SkillDetailPage, {
+                      activeTab: skillDetailTab,
+                      metadata: skillMetadataSection,
+                      notice: skillCodeNotice,
+                      code: skillCodeWorkspace,
+                      settings: skillSettingsTabContent,
+                      sidebar: skillSettingsSidebar,
+                      className: "playground-skills-detail-page",
+                    })
+                  ),
+              skillVersionsSidebar,
+              renderSkillVersionSaveDialog(),
+              renderSkillVersionEditDialog(),
+              renderSkillSendToTeamModal()
             );
           }
   

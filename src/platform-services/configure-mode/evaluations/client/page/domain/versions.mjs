@@ -265,9 +265,12 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
           dataRows: (Array.isArray(normalizedSnapshot.dataRows) ? normalizedSnapshot.dataRows : [])
             .map((row, index) => ({
               id: String(row?.id || ("row_" + (index + 1))).trim(),
+              title: String(row?.title || ""),
+              description: String(row?.description || ""),
               input: String(row?.input || ""),
               expectedOutput: String(row?.expectedOutput || ""),
               evaluationGuidance: String(row?.evaluationGuidance || ""),
+              optimizationRole: normalizePlaygroundEvaluationOptimizationRole(row?.optimizationRole),
               runCount: normalizePlaygroundEvaluationCaseRunCount(row?.runCount),
             })),
         };
@@ -403,7 +406,7 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
       });
 
       function createPlaygroundEvaluationVersionRowSlug(row, index = 0) {
-        const source = String(row?.input || row?.id || ("case " + (index + 1))).trim().toLowerCase();
+        const source = String(row?.title || row?.input || row?.id || ("case " + (index + 1))).trim().toLowerCase();
         const slug = source
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-+|-+$/g, "")
@@ -476,6 +479,8 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
             id: "case:" + rowId,
             path: "evaluation/cases/" + createPlaygroundEvaluationVersionRowSlug(displayRow, index) + ".json",
             before: baseRow ? {
+              title: baseRow.title,
+              description: baseRow.description,
               input: baseRow.input,
               expectedOutput: baseRow.expectedOutput,
               evaluationGuidance: baseRow.evaluationGuidance,
@@ -483,6 +488,8 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
               runCount: normalizePlaygroundEvaluationCaseRunCount(baseRow.runCount),
             } : null,
             after: targetRow ? {
+              title: targetRow.title,
+              description: targetRow.description,
               input: targetRow.input,
               expectedOutput: targetRow.expectedOutput,
               evaluationGuidance: targetRow.evaluationGuidance,

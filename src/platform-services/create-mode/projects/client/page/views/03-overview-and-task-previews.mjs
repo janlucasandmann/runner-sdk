@@ -28,68 +28,13 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
           });
         }
 
-        function parseProjectWorkActivityTimestamp(...values) {
-          for (const value of values) {
-            if (typeof value === "number" && Number.isFinite(value) && value > 0) {
-              return value;
-            }
-            if (typeof value !== "string" || !value.trim()) {
-              continue;
-            }
-            const timestamp = Date.parse(value.trim());
-            if (Number.isFinite(timestamp)) {
-              return timestamp;
-            }
-          }
-          return null;
-        }
+\${PROJECT_ACTIVITY_CARD_SCRIPT}
 
-        function getProjectWorkActivityStatus(value) {
-          const normalizedStatus = String(value || "").trim().toLowerCase();
-          if (["done", "completed", "complete", "success", "succeeded"].includes(normalizedStatus)) {
-            return "success";
-          }
-          if (["blocked", "canceled", "cancelled", "failed", "error", "stale"].includes(normalizedStatus)) {
-            return "error";
-          }
-          if (["in_progress", "in_review", "running", "starting", "awaiting_input", "waiting_permission"].includes(normalizedStatus)) {
-            return "running";
-          }
-          return "default";
-        }
-
-        function getProjectWorkActivityColor(value) {
-          const status = getProjectWorkActivityStatus(value);
-          if (status === "success") return "#85df7b";
-          if (status === "error") return "#ff5757";
-          if (status === "running") return "#4da3ff";
-          return "#c980ff";
-        }
-
-        function getProjectWorkActivityFieldLabel(value) {
-          const normalizedField = String(value || "").trim().toLowerCase();
-          const labels = {
-            assignee_agent_id: "Assignee",
-            due_at: "Due date",
-            priority: "Priority",
-            release_id: "Milestone",
-            reviewer_agent_id: "Reviewer",
-            status: "Status",
-            task_type: "Type",
-          };
-          if (labels[normalizedField]) {
-            return labels[normalizedField];
-          }
-          return normalizedField
-            .replaceAll("_", " ")
-            .split(" ")
-            .map((part) => part
-              ? part.charAt(0).toUpperCase() + part.slice(1)
-              : "")
-            .join(" ");
-        }
-
-        function buildProjectWorkActivityOverviewItems(scopedTasks) {
+        function buildProjectWorkActivityOverviewItems(
+          scopedTasks,
+          selectionEvents = [],
+          selectedTimelineItemId = ""
+        ) {
           const currentTimestamp = Date.now();
           const activityTasks = (Array.isArray(scopedTasks) ? scopedTasks : [])
             .filter((task) => task?.id && matchesTaskSearch(task));
@@ -97,12 +42,19 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
           const activityTasksById = new Map(activityTasks.map((task) => [String(task.id), task]));
           const timelineItems = [];
           const representedThreadIds = new Set();
-
+          const getTimelineEntrySelection = (selectionCriteria) =>
+            getProjectWorkActivityTimelineSelection(
+              selectionEvents,
+              selectionCriteria,
+              selectedTimelineItemId
+            );
           activityTasks.forEach((task) => {
             const taskId = String(task.id);
             const ticketNumber = String(
               taskTicketNumbersById[taskId] || task.ticketNumber || "000"
             ).trim();
+            const taskType = normalizePlaygroundTaskType(task.taskType);
+            const taskCreatorEvent = getProjectWorkActivityTaskCreatorEvent(task);
             const taskStatus = String(task.status || "").trim().toLowerCase();
             const startTime = parseProjectWorkActivityTimestamp(
               task.createdAt,
@@ -119,23 +71,36 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
               startTime
             );
             const taskIsActive = ["in_progress", "in_review"].includes(taskStatus);
+            const taskSelection = getTimelineEntrySelection({
+              eventId: taskCreatorEvent?.id,
+              eventType: "created",
+              sourceId: taskId,
+              taskId,
+            });
             timelineItems.push({
               id: "task:" + taskId,
-              label: ticketNumber + " " + String(task.title || "Untitled Task").trim(),
+              label: "Created " + ticketNumber,
+              content: renderProjectWorkActivityCard({
+                title: "Created " + ticketNumber,
+                permissionActionId: "project_issues_manage",
+                actor: taskCreatorEvent,
+                ariaLabel: "Inspect activity for " + ticketNumber,
+                onSelect: taskSelection.onSelect,
+                selected: taskSelection.selected,
+              }),
               startAt: startTime,
               endAt: taskIsActive ? currentTimestamp : endTime,
-              kind: task.taskType === "subtask" || task.taskType === "loop"
+              kind: taskType === "subtask" || taskType === "loop"
                 ? "subflow"
                 : "activity",
               status: getProjectWorkActivityStatus(taskStatus),
-              icon: task.taskType === "subtask" || task.taskType === "loop"
+              icon: taskType === "subtask" || taskType === "loop"
                 ? GitBranch
                 : Bookmark,
-              color: task.taskType === "subtask" || task.taskType === "loop"
+              color: taskType === "subtask" || taskType === "loop"
                 ? "#ffd65c"
                 : getProjectWorkActivityColor(taskStatus),
               ariaLabel: "Open " + ticketNumber + " " + String(task.title || "Untitled Task").trim(),
-              onActivate: () => openProjectTaskDetailScreen(taskId),
             });
 
             (Array.isArray(task.activity) ? task.activity : []).forEach((event) => {
@@ -157,13 +122,30 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                 ? String(event.nextValue || "").trim()
                 : "";
               const eventLabel = eventType === "status_changed"
-                ? ticketNumber + " · " + getPlaygroundTaskStatusLabel(nextStatus)
+                ? getProjectWorkActivityStatusTitle(ticketNumber, nextStatus)
                 : eventType === "thread_started"
-                  ? ticketNumber + " · Thread started"
-                  : ticketNumber + " · " + getProjectWorkActivityFieldLabel(fieldName) + " changed";
+                  ? "Started work " + ticketNumber
+                  : getProjectWorkActivityEventTitle(event, ticketNumber);
+              const eventSelection = getTimelineEntrySelection({
+                eventId: event?.id,
+                eventType,
+                sourceId: event?.sourceId,
+                taskId,
+                threadId: event?.threadId,
+              });
               timelineItems.push({
                 id: "event:" + taskId + ":" + event.id,
                 label: eventLabel,
+                content: renderProjectWorkActivityCard({
+                  title: eventLabel,
+                  permissionActionId: eventType === "thread_started"
+                    ? "project_threads_create"
+                    : "project_issues_manage",
+                  actor: event,
+                  ariaLabel: "Inspect activity for " + ticketNumber,
+                  onSelect: eventSelection.onSelect,
+                  selected: eventSelection.selected,
+                }),
                 startAt: eventTime,
                 kind: "signal",
                 status: nextStatus
@@ -177,7 +159,6 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                     ? "#4da3ff"
                     : "#c980ff",
                 ariaLabel: "Open " + ticketNumber,
-                onActivate: () => openProjectTaskDetailScreen(taskId),
               });
             });
           });
@@ -210,10 +191,30 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             const ticketNumber = String(
               taskTicketNumbersById[taskId] || task?.ticketNumber || "000"
             ).trim();
+            const threadActor = getProjectWorkActivityThreadActor(thread, task);
+            const threadTitle = getProjectWorkActivityExecutionTitle(
+              ticketNumber,
+              threadStatus,
+              "work"
+            );
+            const threadSelection = getTimelineEntrySelection({
+              eventType: "thread_started",
+              sourceId: String(thread.id),
+              taskId,
+              threadId: String(thread.id),
+            });
             representedThreadIds.add(String(thread.id));
             timelineItems.push({
               id: "thread:" + String(thread.id),
-              label: ticketNumber + " · " + String(thread.title || "Agent work").trim(),
+              label: threadTitle,
+              content: renderProjectWorkActivityCard({
+                title: threadTitle,
+                permissionActionId: "project_threads_create",
+                actor: threadActor,
+                ariaLabel: "Inspect work activity for " + ticketNumber,
+                onSelect: threadSelection.onSelect,
+                selected: threadSelection.selected,
+              }),
               startAt: startTime,
               endAt: threadIsActive ? currentTimestamp : endTime,
               kind: "activity",
@@ -221,13 +222,6 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
               icon: Bot,
               color: "#4da3ff",
               ariaLabel: "Open thread " + String(thread.title || ""),
-              onActivate: () => {
-                if (typeof handleThreadSelect === "function") {
-                  handleThreadSelect(String(thread.id));
-                } else {
-                  openProjectTaskDetailScreen(taskId);
-                }
-              },
             });
           });
 
@@ -271,9 +265,29 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                 1,
                 Number(session?.attemptNumber ?? session?.attempt_number ?? index + 1) || 1
               );
+              const sessionActor = getProjectWorkActivitySessionActor(session, task);
+              const sessionTitle = getProjectWorkActivityExecutionTitle(
+                ticketNumber,
+                sessionState,
+                "attempt"
+              );
+              const sessionSelection = getTimelineEntrySelection({
+                eventType: "thread_started",
+                sourceId: threadId,
+                taskId,
+                threadId,
+              });
               timelineItems.push({
                 id: "session:" + String(session?.id || threadId || taskId + ":" + index),
-                label: ticketNumber + " · Agent attempt " + attemptNumber,
+                label: sessionTitle,
+                content: renderProjectWorkActivityCard({
+                  title: sessionTitle,
+                  permissionActionId: "project_threads_create",
+                  actor: sessionActor,
+                  ariaLabel: "Inspect agent attempt " + attemptNumber + " for " + ticketNumber,
+                  onSelect: sessionSelection.onSelect,
+                  selected: sessionSelection.selected,
+                }),
                 startAt: startTime,
                 endAt: sessionIsActive ? currentTimestamp : endTime,
                 kind: "subflow",
@@ -281,19 +295,11 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                 icon: GitBranch,
                 color: "#ffd65c",
                 ariaLabel: "Open agent attempt " + attemptNumber + " for " + ticketNumber,
-                onActivate: () => {
-                  if (threadId && typeof handleThreadSelect === "function") {
-                    handleThreadSelect(threadId);
-                  } else {
-                    openProjectTaskDetailScreen(taskId);
-                  }
-                },
               });
             });
 
           return timelineItems;
         }
-
         function getProjectWorkActivityActorName(event) {
           const actorName = String(event?.actorName || "").trim();
           if (actorName) {
@@ -812,10 +818,10 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
         }
 
 \${PROJECT_ACTIVITY_FILTER_SCRIPT}
+\${PROJECT_ACTIVITY_RANGE_SCRIPT}
 
         function renderProjectActivityOverviewView() {
           const activityTasks = selectedRelease ? projectReleaseTasks : tasks;
-          const activityItems = buildProjectWorkActivityOverviewItems(activityTasks);
           const visibleTaskIds = new Set(
             (Array.isArray(activityTasks) ? activityTasks : [])
               .filter((task) => task?.id && matchesTaskSearch(task))
@@ -828,33 +834,37 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
               const rightTime = Date.parse(String(right?.createdAt || "")) || 0;
               return leftTime - rightTime || String(left?.id || "").localeCompare(String(right?.id || ""));
             });
-          const filteredProjectActivityEvents = projectActivityEvents.filter((event) =>
-            matchesProjectWorkActivityFilter(
-              event,
-              projectOverviewTaskActivityFilterMode
-            )
-          );
+          const filteredProjectActivityEvents = filterProjectWorkActivityEventsByTimeRange(
+            projectActivityEvents,
+            projectOverviewTaskActivityTimeRange
+          )
+            .filter((event) =>
+              matchesProjectWorkActivityFilter(
+                event,
+                projectOverviewTaskActivityFilterMode
+              )
+            );
           const projectActivityTimelineItems = buildProjectWorkActivityTimelineItems(
             filteredProjectActivityEvents
+          );
+          const effectiveProjectActivitySelectedId = projectActivityTimelineItems.some(
+            (item) => item.id === projectOverviewTaskActivitySelectedId
+          )
+            ? projectOverviewTaskActivitySelectedId
+            : String(projectActivityTimelineItems[0]?.id || "");
+          const activityItems = buildProjectWorkActivityOverviewItems(
+            activityTasks,
+            projectActivityEvents,
+            effectiveProjectActivitySelectedId
           );
           const hasActivityFilter = projectOverviewTaskActivityFilterMode !== "all";
           return React.createElement("div", {
               className: "playground-project-activity-page",
+              style: getProjectActivityPageGridStyle(
+                projectOverviewActivityChartHeight
+              ),
             },
-            React.createElement(PlatformActivityOverview, {
-              className: "playground-project-activity-overview",
-              items: activityItems,
-              emptyTitle: normalizedSearchQuery
-                ? "No matching activity"
-                : selectedRelease
-                  ? "No milestone activity yet"
-                  : "No project activity yet",
-              emptyDescription: normalizedSearchQuery
-                ? "Clear the search to show all ticket work."
-                : "Ticket work and agent runs will appear here over time.",
-              minTimelineWidth: 1480,
-              ariaLabel: "Project ticket activity over time",
-            }),
+            renderProjectActivityOverviewChart(activityItems),
             React.createElement("section", {
                 className: "playground-project-activity-feed",
               },
@@ -869,9 +879,17 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                     className: "playground-project-activity-timeline",
                     layout: "inspector",
                     title: "Activity",
-                    headerActions: renderProjectWorkActivityFilter(),
+                    titleActions: renderProjectWorkActivityFilter(),
+                    headerActions: React.createElement(PlatformSearch, {
+                      value: searchQuery,
+                      onChange: (event) => setSearchQuery(event.target.value),
+                      placeholder: "Search activity",
+                      "aria-label": "Search project activity",
+                    }),
                     inspectorTitle: "Inspector",
                     items: projectActivityTimelineItems,
+                    selectedItemId: projectOverviewTaskActivitySelectedId,
+                    onSelectedItemChange: setProjectOverviewTaskActivitySelectedId,
                     emptyTitle: projectOverviewTaskActivityState?.status === "error"
                       ? "Activity unavailable"
                       : normalizedSearchQuery

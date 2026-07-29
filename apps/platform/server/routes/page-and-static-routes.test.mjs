@@ -21,6 +21,7 @@ const handler = createPageAndStaticRoutes({
   platformDocumentHtml: "<!doctype html><div id=\"app\"></div>",
   platformOrigin: "http://localhost:4177",
   isGithubApiRequestPath: () => false,
+  isJiraApiRequestPath: () => false,
 });
 
 for (const pathname of ["/", "/login", "/signup", "/logout"]) {

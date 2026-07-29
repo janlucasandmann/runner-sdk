@@ -5,6 +5,7 @@ export type ProjectDetailTab =
   | "general"
   | "resources"
   | "milestones"
+  | "delivery"
   | "permissions";
 
 export interface ProjectDetailPageProps {

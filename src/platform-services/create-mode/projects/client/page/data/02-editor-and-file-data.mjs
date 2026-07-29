@@ -342,6 +342,9 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
             error: "",
             items: [],
           });
+          setProjectOverviewTaskActivitySelectedId("");
+          setProjectOverviewTaskActivityTimeRange(null);
+          setProjectOverviewActivityChartHeight(null);
           setTaskLoadState({
             status: "idle",
             error: "",
@@ -1007,7 +1010,7 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
               color: selectedProject.color || selectedProject.metadata?.color || "",
               view: taskView,
               sectionId: taskView === "overview" ? projectOverviewHomeTab : "",
-              extraActions: taskView === "backlog" || taskView === "board" || taskView === "activity"
+              extraActions: taskView === "backlog" || taskView === "board"
                 ? renderProjectAppHeaderMilestoneSelector()
                 : null,
               projectId: selectedProject.id,
@@ -1104,6 +1107,7 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           const requestedSectionId = String(projectNavViewRequest?.sectionId || "").trim();
           const requestedHomeTab = requestedSectionId === "resources"
             || requestedSectionId === "milestones"
+            || requestedSectionId === "delivery"
             || (selectedProjectHeaderCanViewSettings && requestedSectionId === "permissions")
               ? requestedSectionId
               : "general";

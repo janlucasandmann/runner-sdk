@@ -41,6 +41,10 @@ export const ProjectDetailPage = lazyNamed(
   () => import("../../platform-services/create-mode/projects/client/detail/project-detail-page.js"),
   "ProjectDetailPage",
 );
+export const ProjectDeliveryWorkspace = lazyNamed(
+  () => import("../../platform-services/create-mode/projects/client/delivery/index.js"),
+  "ProjectDeliveryWorkspace",
+);
 export { ProjectIconPicker } from "../../platform-services/create-mode/projects/client/project-icon-picker/index.js";
 export {
   ProjectSummary,
@@ -162,6 +166,13 @@ export const EvaluationDetailPage = lazyNamed(
       "../../platform-services/configure-mode/evaluations/client/page/detail/evaluation-detail-page.js"
     ),
   "EvaluationDetailPage",
+);
+export const EvaluationCaseDetailPage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/configure-mode/evaluations/client/page/dataset-case-detail/evaluation-case-detail-page.js"
+    ),
+  "EvaluationCaseDetailPage",
 );
 export const FineTuningOverviewPage = lazyNamed(
   () =>

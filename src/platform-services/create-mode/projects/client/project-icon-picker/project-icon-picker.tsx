@@ -1,5 +1,11 @@
 import type { LucideIcon } from "lucide-react";
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { PlatformDetailTabBar } from "../../../../../platform-ui/components/composite/detail-tab-bar/index.js";
 import { PlatformPopup } from "../../../../../platform-ui/components/composite/popup/index.js";
 import { PlatformSearch } from "../../../../../platform-ui/components/ui/search/index.js";
@@ -22,8 +28,11 @@ export interface ProjectIconPickerProps {
   iconOptions: readonly ProjectIconPickerOption[];
   colorOptions: readonly string[];
   showProjectName?: boolean;
+  resourceLabel?: string;
   disabled?: boolean;
-  onChange: (value: ProjectIconPickerValue) => boolean | undefined | Promise<boolean | undefined>;
+  onChange: (
+    value: ProjectIconPickerValue,
+  ) => boolean | undefined | Promise<boolean | undefined>;
   className?: string;
 }
 
@@ -49,11 +58,19 @@ const PROJECT_EMOJI_OPTIONS: readonly ProjectEmojiOption[] = [
   { id: "emoji:\u{1F4C8}", label: "Growth", glyph: "\u{1F4C8}" },
   { id: "emoji:\u{1F4B0}", label: "Revenue", glyph: "\u{1F4B0}" },
   { id: "emoji:\u{1F6E0}\u{FE0F}", label: "Tools", glyph: "\u{1F6E0}\u{FE0F}" },
-  { id: "emoji:\u{2699}\u{FE0F}", label: "Settings", glyph: "\u{2699}\u{FE0F}" },
+  {
+    id: "emoji:\u{2699}\u{FE0F}",
+    label: "Settings",
+    glyph: "\u{2699}\u{FE0F}",
+  },
   { id: "emoji:\u{1F3D7}\u{FE0F}", label: "Build", glyph: "\u{1F3D7}\u{FE0F}" },
   { id: "emoji:\u{1F4E6}", label: "Package", glyph: "\u{1F4E6}" },
   { id: "emoji:\u{1F4C1}", label: "Files", glyph: "\u{1F4C1}" },
-  { id: "emoji:\u{1F5C2}\u{FE0F}", label: "Archive", glyph: "\u{1F5C2}\u{FE0F}" },
+  {
+    id: "emoji:\u{1F5C2}\u{FE0F}",
+    label: "Archive",
+    glyph: "\u{1F5C2}\u{FE0F}",
+  },
   { id: "emoji:\u{1F4DD}", label: "Writing", glyph: "\u{1F4DD}" },
   { id: "emoji:\u{1F4AC}", label: "Conversation", glyph: "\u{1F4AC}" },
   { id: "emoji:\u{1F465}", label: "Team", glyph: "\u{1F465}" },
@@ -63,11 +80,19 @@ const PROJECT_EMOJI_OPTIONS: readonly ProjectEmojiOption[] = [
   { id: "emoji:\u{1F4CD}", label: "Location", glyph: "\u{1F4CD}" },
   { id: "emoji:\u{1F512}", label: "Security", glyph: "\u{1F512}" },
   { id: "emoji:\u{1F511}", label: "Access", glyph: "\u{1F511}" },
-  { id: "emoji:\u{1F6E1}\u{FE0F}", label: "Protection", glyph: "\u{1F6E1}\u{FE0F}" },
+  {
+    id: "emoji:\u{1F6E1}\u{FE0F}",
+    label: "Protection",
+    glyph: "\u{1F6E1}\u{FE0F}",
+  },
   { id: "emoji:\u{26A1}", label: "Fast", glyph: "\u{26A1}" },
   { id: "emoji:\u{2705}", label: "Complete", glyph: "\u{2705}" },
   { id: "emoji:\u{1F4CC}", label: "Pinned", glyph: "\u{1F4CC}" },
-  { id: "emoji:\u{1F5D3}\u{FE0F}", label: "Calendar", glyph: "\u{1F5D3}\u{FE0F}" },
+  {
+    id: "emoji:\u{1F5D3}\u{FE0F}",
+    label: "Calendar",
+    glyph: "\u{1F5D3}\u{FE0F}",
+  },
   { id: "emoji:\u{1F3A8}", label: "Design", glyph: "\u{1F3A8}" },
   { id: "emoji:\u{1F3AC}", label: "Media", glyph: "\u{1F3AC}" },
   { id: "emoji:\u{1F3B5}", label: "Audio", glyph: "\u{1F3B5}" },
@@ -91,8 +116,16 @@ const PROJECT_EMOJI_OPTIONS: readonly ProjectEmojiOption[] = [
   { id: "emoji:\u{1FA7A}", label: "Health", glyph: "\u{1FA7A}" },
   { id: "emoji:\u{1F331}", label: "Sustainability", glyph: "\u{1F331}" },
   { id: "emoji:\u{1F310}", label: "Web", glyph: "\u{1F310}" },
-  { id: "emoji:\u{1F578}\u{FE0F}", label: "Network", glyph: "\u{1F578}\u{FE0F}" },
-  { id: "emoji:\u{1F6F0}\u{FE0F}", label: "Satellite", glyph: "\u{1F6F0}\u{FE0F}" },
+  {
+    id: "emoji:\u{1F578}\u{FE0F}",
+    label: "Network",
+    glyph: "\u{1F578}\u{FE0F}",
+  },
+  {
+    id: "emoji:\u{1F6F0}\u{FE0F}",
+    label: "Satellite",
+    glyph: "\u{1F6F0}\u{FE0F}",
+  },
   { id: "emoji:\u{2708}\u{FE0F}", label: "Travel", glyph: "\u{2708}\u{FE0F}" },
   { id: "emoji:\u{1F69A}", label: "Logistics", glyph: "\u{1F69A}" },
   { id: "emoji:\u{1F3ED}", label: "Manufacturing", glyph: "\u{1F3ED}" },
@@ -103,22 +136,40 @@ const PROJECT_EMOJI_OPTIONS: readonly ProjectEmojiOption[] = [
   { id: "emoji:\u{1F4CE}", label: "Attachment", glyph: "\u{1F4CE}" },
   { id: "emoji:\u{1F517}", label: "Link", glyph: "\u{1F517}" },
   { id: "emoji:\u{1F9E9}", label: "Integration", glyph: "\u{1F9E9}" },
-  { id: "emoji:\u{265F}\u{FE0F}", label: "Strategy", glyph: "\u{265F}\u{FE0F}" },
+  {
+    id: "emoji:\u{265F}\u{FE0F}",
+    label: "Strategy",
+    glyph: "\u{265F}\u{FE0F}",
+  },
   { id: "emoji:\u{23F1}\u{FE0F}", label: "Time", glyph: "\u{23F1}\u{FE0F}" },
   { id: "emoji:\u{1F514}", label: "Alerts", glyph: "\u{1F514}" },
   { id: "emoji:\u{1F5FA}\u{FE0F}", label: "Map", glyph: "\u{1F5FA}\u{FE0F}" },
   { id: "emoji:\u{1F9F1}", label: "Foundation", glyph: "\u{1F9F1}" },
   { id: "emoji:\u{1FA84}", label: "Magic", glyph: "\u{1FA84}" },
-  { id: "emoji:\u{1F5F9}\u{FE0F}", label: "Checklist", glyph: "\u{1F5F9}\u{FE0F}" },
+  {
+    id: "emoji:\u{1F5F9}\u{FE0F}",
+    label: "Checklist",
+    glyph: "\u{1F5F9}\u{FE0F}",
+  },
   { id: "emoji:\u{1F4BE}", label: "Data", glyph: "\u{1F4BE}" },
   { id: "emoji:\u{1F48E}", label: "Quality", glyph: "\u{1F48E}" },
   { id: "emoji:\u{1F3A5}", label: "Video", glyph: "\u{1F3A5}" },
   { id: "emoji:\u{1F3A7}", label: "Support", glyph: "\u{1F3A7}" },
-  { id: "emoji:\u{1F6CD}\u{FE0F}", label: "Shopping", glyph: "\u{1F6CD}\u{FE0F}" },
-  { id: "emoji:\u{1F5C3}\u{FE0F}", label: "Records", glyph: "\u{1F5C3}\u{FE0F}" },
+  {
+    id: "emoji:\u{1F6CD}\u{FE0F}",
+    label: "Shopping",
+    glyph: "\u{1F6CD}\u{FE0F}",
+  },
+  {
+    id: "emoji:\u{1F5C3}\u{FE0F}",
+    label: "Records",
+    glyph: "\u{1F5C3}\u{FE0F}",
+  },
 ];
 
-function joinClassNames(...classNames: Array<string | false | null | undefined>) {
+function joinClassNames(
+  ...classNames: Array<string | false | null | undefined>
+) {
   return classNames
     .filter(
       (className): className is string =>
@@ -130,7 +181,9 @@ function joinClassNames(...classNames: Array<string | false | null | undefined>)
 
 function getProjectEmoji(icon: string) {
   const normalizedIcon = String(icon || "").trim();
-  return normalizedIcon.startsWith("emoji:") ? normalizedIcon.slice("emoji:".length).trim() : "";
+  return normalizedIcon.startsWith("emoji:")
+    ? normalizedIcon.slice("emoji:".length).trim()
+    : "";
 }
 
 function normalizeProjectColor(value: string, fallback: string) {
@@ -159,9 +212,12 @@ function ProjectIdentityGlyph({
       </span>
     );
   }
-  const selectedOption = iconOptions.find((option) => option.id === icon) || iconOptions[0];
+  const selectedOption =
+    iconOptions.find((option) => option.id === icon) || iconOptions[0];
   const Icon = selectedOption?.icon;
-  return Icon ? <Icon width={size} height={size} strokeWidth={1.8} aria-hidden="true" /> : null;
+  return Icon ? (
+    <Icon width={size} height={size} strokeWidth={1.8} aria-hidden="true" />
+  ) : null;
 }
 
 export function ProjectIconPicker({
@@ -171,12 +227,20 @@ export function ProjectIconPicker({
   iconOptions,
   colorOptions,
   showProjectName = true,
+  resourceLabel = "project",
   disabled = false,
   onChange,
   className = "",
 }: ProjectIconPickerProps) {
   const fallbackIcon = iconOptions[0]?.id || "rocket";
   const fallbackColor = colorOptions[0] || "#79d0ff";
+  const normalizedResourceLabel =
+    String(resourceLabel || "")
+      .trim()
+      .toLowerCase() || "project";
+  const titledResourceLabel =
+    normalizedResourceLabel.charAt(0).toUpperCase() +
+    normalizedResourceLabel.slice(1);
   const normalizedValue = useMemo<ProjectIconPickerValue>(
     () => ({
       icon: String(icon || "").trim() || fallbackIcon,
@@ -184,7 +248,8 @@ export function ProjectIconPicker({
     }),
     [color, fallbackColor, fallbackIcon, icon],
   );
-  const [draftValue, setDraftValue] = useState<ProjectIconPickerValue>(normalizedValue);
+  const [draftValue, setDraftValue] =
+    useState<ProjectIconPickerValue>(normalizedValue);
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<ProjectIconPickerTab>("icons");
   const [searchQuery, setSearchQuery] = useState("");
@@ -211,7 +276,11 @@ export function ProjectIconPicker({
     if (!open) return undefined;
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node | null;
-      if (target && (rootRef.current?.contains(target) || surfaceRef.current?.contains(target))) {
+      if (
+        target &&
+        (rootRef.current?.contains(target) ||
+          surfaceRef.current?.contains(target))
+      ) {
         return;
       }
       setOpen(false);
@@ -300,7 +369,9 @@ export function ProjectIconPicker({
             )}
             style={triggerStyle}
             aria-label={
-              disabled ? `${projectName} project icon` : `Change icon and color for ${projectName}`
+              disabled
+                ? `${projectName} ${normalizedResourceLabel} icon`
+                : `Change icon and color for ${projectName}`
             }
             aria-expanded={triggerOpen}
             disabled={disabled}
@@ -311,11 +382,17 @@ export function ProjectIconPicker({
             }}
           >
             <span className="platform-project-icon-picker__trigger-icon">
-              <ProjectIdentityGlyph icon={draftValue.icon} iconOptions={iconOptions} size={18} />
+              <ProjectIdentityGlyph
+                icon={draftValue.icon}
+                iconOptions={iconOptions}
+                size={18}
+              />
             </span>
           </button>
           {showProjectName ? (
-            <span className="platform-project-icon-picker__project-name">{projectName}</span>
+            <span className="platform-project-icon-picker__project-name">
+              {projectName}
+            </span>
           ) : null}
         </>
       )}
@@ -331,25 +408,34 @@ export function ProjectIconPicker({
           setSearchQuery("");
         }}
         variant="minimal"
-        ariaLabel="Project icon type"
+        ariaLabel={`${titledResourceLabel} icon type`}
         className="platform-project-icon-picker__tabs"
       />
-      <fieldset className="platform-project-icon-picker__colors" aria-label="Project icon color">
+      <fieldset
+        className="platform-project-icon-picker__colors"
+        aria-label={`${titledResourceLabel} icon color`}
+      >
         {colorOptions.map((colorOption) => (
           <button
             key={colorOption}
             type="button"
             className={joinClassNames(
               "platform-project-icon-picker__color",
-              draftValue.color.toLowerCase() === colorOption.toLowerCase() && "is-selected",
+              draftValue.color.toLowerCase() === colorOption.toLowerCase() &&
+                "is-selected",
             )}
             style={{ backgroundColor: colorOption }}
             aria-label={`Use ${colorOption}`}
-            aria-pressed={draftValue.color.toLowerCase() === colorOption.toLowerCase()}
+            aria-pressed={
+              draftValue.color.toLowerCase() === colorOption.toLowerCase()
+            }
             onClick={() => updateValue({ color: colorOption })}
           />
         ))}
-        <span className="platform-project-icon-picker__color-divider" aria-hidden="true" />
+        <span
+          className="platform-project-icon-picker__color-divider"
+          aria-hidden="true"
+        />
         <button
           type="button"
           className="platform-project-icon-picker__custom-color"
@@ -377,9 +463,15 @@ export function ProjectIconPicker({
       <div
         className="platform-project-icon-picker__grid"
         role="group"
-        aria-label={activeTab === "icons" ? "Project icons" : "Project emojis"}
+        aria-label={
+          activeTab === "icons"
+            ? `${titledResourceLabel} icons`
+            : `${titledResourceLabel} emojis`
+        }
         onWheelCapture={(event) => {
-          if (event.currentTarget.scrollHeight > event.currentTarget.clientHeight) {
+          if (
+            event.currentTarget.scrollHeight > event.currentTarget.clientHeight
+          ) {
             event.stopPropagation();
           }
         }}
@@ -392,16 +484,22 @@ export function ProjectIconPicker({
                 <button
                   key={option.id}
                   type="button"
+                  role="option"
                   className={joinClassNames(
                     "platform-project-icon-picker__option",
                     selected && "is-selected",
                   )}
                   aria-label={option.label}
-                  aria-pressed={selected}
+                  aria-selected={selected}
                   title={option.label}
                   onClick={() => updateValue({ icon: option.id })}
                 >
-                  <OptionIcon width={17} height={17} strokeWidth={1.8} aria-hidden="true" />
+                  <OptionIcon
+                    width={17}
+                    height={17}
+                    strokeWidth={1.8}
+                    aria-hidden="true"
+                  />
                 </button>
               );
             })
@@ -411,13 +509,14 @@ export function ProjectIconPicker({
                 <button
                   key={option.id}
                   type="button"
+                  role="option"
                   className={joinClassNames(
                     "platform-project-icon-picker__option",
                     "is-emoji",
                     selected && "is-selected",
                   )}
                   aria-label={option.label}
-                  aria-pressed={selected}
+                  aria-selected={selected}
                   title={option.label}
                   onClick={() => updateValue({ icon: option.id })}
                 >
@@ -425,8 +524,11 @@ export function ProjectIconPicker({
                 </button>
               );
             })}
-        {(activeTab === "icons" ? filteredIconOptions : filteredEmojiOptions).length === 0 ? (
-          <div className="platform-project-icon-picker__empty">No matching {activeTab}</div>
+        {(activeTab === "icons" ? filteredIconOptions : filteredEmojiOptions)
+          .length === 0 ? (
+          <div className="platform-project-icon-picker__empty">
+            No matching {activeTab}
+          </div>
         ) : null}
       </div>
     </PlatformPopup>

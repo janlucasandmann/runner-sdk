@@ -87,7 +87,21 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
           getEvaluationPersonIdentityKeys(identity)[0]
           || String(normalizeEvaluationPersonIdentity(identity).name || "").trim().toLowerCase()
         );
-        const getEvaluationOwnerIdentity = (set = activeSet) => {
+        const hasEvaluationPersonIdentity = (identity) => {
+          const normalized = normalizeEvaluationPersonIdentity(identity);
+          return Boolean(getEvaluationPersonIdentityKeys(normalized).length || normalized.name);
+        };
+        const mergeEvaluationPersonIdentity = (...identities) => identities.reduce((merged, identity) => {
+          const normalized = normalizeEvaluationPersonIdentity(identity);
+          return {
+            id: merged.id || normalized.id,
+            userId: merged.userId || normalized.userId,
+            name: merged.name || normalized.name,
+            email: merged.email || normalized.email,
+            avatarUrl: merged.avatarUrl || normalized.avatarUrl,
+          };
+        }, { id: "", userId: "", name: "", email: "", avatarUrl: "" });
+        const getEvaluationExplicitOwnerIdentity = (set = activeSet) => {
           const metadata = getEvaluationAccessMetadata(set);
           const ownerSource = set?.owner && typeof set.owner === "object" && !Array.isArray(set.owner)
             ? set.owner
@@ -100,10 +114,107 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
                   email: set?.ownerEmail || set?.owner_email || metadata.ownerEmail || metadata.owner_email,
                   avatarUrl: set?.ownerAvatarUrl || set?.owner_avatar_url || metadata.ownerAvatarUrl || metadata.owner_avatar_url,
                 };
-          const owner = normalizeEvaluationPersonIdentity(ownerSource);
-          return getEvaluationPersonIdentityKeys(owner).length || owner.name
-            ? owner
-            : normalizeEvaluationPersonIdentity(set?.creator || set?.createdBy || currentEvaluationCreator);
+          return normalizeEvaluationPersonIdentity(ownerSource);
+        };
+        const getEvaluationOrganizationRecord = (set = activeSet) => {
+          const metadata = getEvaluationAccessMetadata(set);
+          const setOrganizationId = String(
+            set?.organizationId
+            || set?.organization_id
+            || metadata.organizationId
+            || metadata.organization_id
+            || normalizedActiveEvaluationOrganizationId
+            || ""
+          ).trim();
+          if (setOrganizationId) {
+            const matchingOrganization = evaluationOrganizations.find((organization) => (
+              String(organization?.id || organization?.organizationId || organization?.organization_id || "").trim()
+                === setOrganizationId
+            ));
+            if (matchingOrganization) return matchingOrganization;
+            return { id: setOrganizationId };
+          }
+          return evaluationOrganizations.find((organization) => (
+            String(organization?.type || "").trim().toLowerCase() === "personal"
+          )) || evaluationOrganizations.find((organization) => (
+            String(
+              organization?.ownerUserId
+              || organization?.owner_user_id
+              || organization?.ownerId
+              || organization?.owner_id
+              || ""
+            ).trim() === String(currentEvaluationCreator.userId || currentEvaluationCreator.id || "").trim()
+          )) || null;
+        };
+        const getEvaluationOrganizationOwnerIdentity = (set = activeSet) => {
+          const organization = getEvaluationOrganizationRecord(set);
+          const organizationMetadata = organization?.metadata
+            && typeof organization.metadata === "object"
+            && !Array.isArray(organization.metadata)
+            ? organization.metadata
+            : {};
+          const organizationOwnerSource = organization?.owner
+            && typeof organization.owner === "object"
+            && !Array.isArray(organization.owner)
+            ? organization.owner
+            : organizationMetadata.owner
+              && typeof organizationMetadata.owner === "object"
+              && !Array.isArray(organizationMetadata.owner)
+              ? organizationMetadata.owner
+              : {};
+          const ownerUserId = String(
+            organization?.ownerUserId
+            || organization?.owner_user_id
+            || organization?.ownerId
+            || organization?.owner_id
+            || organizationOwnerSource.userId
+            || organizationOwnerSource.user_id
+            || organizationOwnerSource.id
+            || ""
+          ).trim();
+          const organizationId = String(
+            organization?.id
+            || organization?.organizationId
+            || organization?.organization_id
+            || ""
+          ).trim();
+          const storedOwner = normalizeEvaluationPersonIdentity({
+            ...organizationOwnerSource,
+            id: ownerUserId || organizationOwnerSource.id,
+            userId: ownerUserId || organizationOwnerSource.userId || organizationOwnerSource.user_id,
+            name: organization?.ownerName || organization?.owner_name || organizationMetadata.ownerName || organizationMetadata.owner_name || organizationOwnerSource.name,
+            email: organization?.ownerEmail || organization?.owner_email || organizationMetadata.ownerEmail || organizationMetadata.owner_email || organizationOwnerSource.email,
+            avatarUrl: organization?.ownerAvatarUrl || organization?.owner_avatar_url || organizationMetadata.ownerAvatarUrl || organizationMetadata.owner_avatar_url || organizationOwnerSource.avatarUrl || organizationOwnerSource.avatar_url,
+          });
+          const loadedOwner = normalizeEvaluationPersonIdentity(
+            evaluationOrganizationOwnerStateById?.[organizationId]?.identity || {}
+          );
+          const currentOrganizationRole = String(
+            organization?.role
+            || organization?.currentUserRole
+            || organization?.viewerRole
+            || organization?.membership?.role
+            || ""
+          ).trim().toLowerCase();
+          const currentUserKeys = new Set(getEvaluationPersonIdentityKeys(currentEvaluationCreator));
+          const isCurrentUserOrganizationOwner = currentOrganizationRole === "owner"
+            || getEvaluationPersonIdentityKeys(storedOwner).some((key) => currentUserKeys.has(key));
+          const resolvedOwner = mergeEvaluationPersonIdentity(
+            loadedOwner,
+            isCurrentUserOrganizationOwner ? currentEvaluationCreator : {},
+            storedOwner,
+          );
+          if (!resolvedOwner.name && (resolvedOwner.id || resolvedOwner.userId)) {
+            resolvedOwner.name = "Organization owner";
+          }
+          return resolvedOwner;
+        };
+        const getEvaluationOwnerIdentity = (set = activeSet) => {
+          const explicitOwner = getEvaluationExplicitOwnerIdentity(set);
+          if (hasEvaluationPersonIdentity(explicitOwner)) return explicitOwner;
+          const creator = normalizeEvaluationPersonIdentity(set?.creator || set?.createdBy || {});
+          if (hasEvaluationPersonIdentity(creator)) return creator;
+          return getEvaluationOrganizationOwnerIdentity(set);
         };
         const getCurrentEvaluationUserIdentity = () => normalizeEvaluationPersonIdentity(currentEvaluationCreator);
         const mergeEvaluationOwnerCandidates = (candidates) => {
@@ -147,6 +258,97 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
           return getEvaluationPersonIdentityKeys(getCurrentEvaluationUserIdentity())
             .some((key) => ownerKeys.has(key));
         };
+        const loadEvaluationOrganizationOwner = async (set = activeSet) => {
+          const explicitOwner = getEvaluationExplicitOwnerIdentity(set);
+          const creator = normalizeEvaluationPersonIdentity(set?.creator || set?.createdBy || {});
+          if (hasEvaluationPersonIdentity(explicitOwner) || hasEvaluationPersonIdentity(creator)) return;
+          const organization = getEvaluationOrganizationRecord(set);
+          const organizationId = String(
+            organization?.id
+            || organization?.organizationId
+            || organization?.organization_id
+            || ""
+          ).trim();
+          if (!organizationId) return;
+          const fallbackOwner = getEvaluationOrganizationOwnerIdentity(set);
+          const ownerKey = getEvaluationOwnerCandidateKey(fallbackOwner);
+          const currentState = evaluationOrganizationOwnerStateById?.[organizationId];
+          if (
+            currentState?.ownerKey === ownerKey
+            && ["loading", "ready"].includes(currentState.status)
+          ) return;
+          if (
+            ownerKey
+            && getEvaluationPersonIdentityKeys(fallbackOwner).some((key) => (
+              getEvaluationPersonIdentityKeys(currentEvaluationCreator).includes(key)
+            ))
+          ) {
+            setEvaluationOrganizationOwnerStateById((current) => ({
+              ...current,
+              [organizationId]: {
+                status: "ready",
+                ownerKey,
+                identity: mergeEvaluationPersonIdentity(currentEvaluationCreator, fallbackOwner),
+              },
+            }));
+            return;
+          }
+          setEvaluationOrganizationOwnerStateById((current) => ({
+            ...current,
+            [organizationId]: {
+              status: "loading",
+              ownerKey,
+              identity: current?.[organizationId]?.identity || fallbackOwner,
+            },
+          }));
+          try {
+            const payload = await requestEvaluationBackendJson(
+              "/organizations/" + encodeURIComponent(organizationId) + "/members",
+              { method: "GET" },
+              "Failed to load the organization owner."
+            );
+            const members = readPlaygroundEvaluationListFromPayload(payload, ["members", "organizationMembers", "organization_members"]);
+            const matchingOwner = members.find((member) => (
+              String(member?.role || "").trim().toLowerCase() === "owner"
+            )) || members.find((member) => (
+              getEvaluationPersonIdentityKeys(member).some((key) => (
+                getEvaluationPersonIdentityKeys(fallbackOwner).includes(key)
+              ))
+            ));
+            const resolvedOwner = mergeEvaluationPersonIdentity(
+              normalizeEvaluationPersonIdentity(matchingOwner || {}),
+              fallbackOwner,
+            );
+            setEvaluationOrganizationOwnerStateById((current) => ({
+              ...current,
+              [organizationId]: {
+                status: "ready",
+                ownerKey: getEvaluationOwnerCandidateKey(resolvedOwner) || ownerKey,
+                identity: resolvedOwner,
+              },
+            }));
+          } catch (error) {
+            setEvaluationOrganizationOwnerStateById((current) => ({
+              ...current,
+              [organizationId]: {
+                status: "error",
+                ownerKey,
+                identity: fallbackOwner,
+                error: String(error?.message || error || "Failed to load the organization owner."),
+              },
+            }));
+          }
+        };
+        useEffect(() => {
+          if (!activeSet?.id || normalizedMode !== "detail") return;
+          void loadEvaluationOrganizationOwner(activeSet);
+        }, [
+          activeSet?.id,
+          activeSet?.updatedAt,
+          normalizedMode,
+          normalizedActiveEvaluationOrganizationId,
+          evaluationOrganizations.length,
+        ]);
         const loadEvaluationOwnerCandidates = async (set = activeSet) => {
           const setId = String(set?.id || "").trim();
           if (!setId) return;

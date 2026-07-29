@@ -51,7 +51,7 @@
             action: "",
           });
           const [threadMutationSignal, setThreadMutationSignal] = useState(null);
-  
+
           function emitThreadMutationSignal(action, threadId, threadRecord = null) {
             const normalizedThreadId = String(threadId || threadRecord?.id || threadRecord?.threadId || "").trim();
             if (!normalizedThreadId) {
@@ -300,6 +300,7 @@
           const [googleDriveStatus, setGoogleDriveStatus] = useState(() => readCachedIntegrationStatus("google-drive"));
           const [oneDriveStatus, setOneDriveStatus] = useState(() => readCachedIntegrationStatus("one-drive"));
           const [gmailStatus, setGmailStatus] = useState(() => readCachedIntegrationStatus("gmail"));
+          const [jiraStatus, setJiraStatus] = useState(() => readCachedIntegrationStatus("jira"));
           const [notionDatabases, setNotionDatabases] = useState([]);
           const [settingsEmailStatus, setSettingsEmailStatus] = useState(null);
           const [settingsEmailLoading, setSettingsEmailLoading] = useState(false);
@@ -399,6 +400,8 @@
           const [projectOverviewResourceMenuId, setProjectOverviewResourceMenuId] = useState("");
   ${MODELS_APP_SCRIPT_FRAGMENTS.resolvedCatalog}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.runtimeBeforeEvaluations}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.lifecycle}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.runtimeBetweenEvaluationsAndFineTuning}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.lifecycle}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.runtimeAfterFineTuning}${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.state}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.state}${API_KEYS_APP_SCRIPT_FRAGMENTS.uiState}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.metricsState}${TEAMS_APP_SCRIPT_FRAGMENTS.statePrimary}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.statePrimary}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.stateDialogs}${TEAMS_APP_SCRIPT_FRAGMENTS.stateDialogs}${TEAMS_APP_SCRIPT_FRAGMENTS.roleLifecycle}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.roleLifecycle}${TEAMS_APP_SCRIPT_FRAGMENTS.tableLifecycle}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.tableLifecycle}${TEAMS_APP_SCRIPT_FRAGMENTS.dialogLifecycle}${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.modeState}
           const [selectedPluginId, setSelectedPluginId] = useState("");
+          const connectorAuthReturnTargetRef = useRef(null);
+          const connectorAuthRedirectProcessingKeyRef = useRef("");
           const [toolsSkillsHeaderState, setToolsSkillsHeaderState] = useState({
             mode: "overview",
             title: "",
@@ -2981,6 +2984,10 @@
           async function refreshNotionStatus(options = {}) {
             return refreshPluginConnectionStatus("notion", setNotionStatus, options);
           }
+
+          async function refreshJiraStatus(options = {}) {
+            return refreshPluginConnectionStatus("jira", setJiraStatus, options);
+          }
   
           const loadSettingsEmailStatus = useCallback(async function loadSettingsEmailStatus() {
             if (!hasSessionAuth) {
@@ -3083,27 +3090,37 @@
             if (normalizedProvider === "gmail") {
               return refreshGmailStatus;
             }
+            if (normalizedProvider === "jira") {
+              return refreshJiraStatus;
+            }
             return null;
           }
-  
-          function isConnectorStatusConnected(provider) {
+
+          function getConnectorStatusRecord(provider) {
             const normalizedProvider = getPlaygroundIntegrationProvider(provider);
             if (normalizedProvider === "github") {
-              return Boolean(githubStatus.connected);
+              return githubStatus;
             }
             if (normalizedProvider === "notion") {
-              return Boolean(notionStatus.connected);
+              return notionStatus;
             }
             if (normalizedProvider === "google-drive") {
-              return Boolean(googleDriveStatus.connected);
+              return googleDriveStatus;
             }
             if (normalizedProvider === "one-drive") {
-              return Boolean(oneDriveStatus.connected);
+              return oneDriveStatus;
             }
             if (normalizedProvider === "gmail") {
-              return Boolean(gmailStatus.connected);
+              return gmailStatus;
             }
-            return false;
+            if (normalizedProvider === "jira") {
+              return jiraStatus;
+            }
+            return null;
+          }
+
+          function isConnectorStatusConnected(provider) {
+            return Boolean(getConnectorStatusRecord(provider)?.connected);
           }
   
           function refreshConnectorStatusAfterRedirect(provider) {
@@ -3159,10 +3176,42 @@
               projectConnectorBrowserRestoreState,
             };
           }
+
+          function persistPlaygroundConnectorAuthReturnState(returnState) {
+            if (!returnState) {
+              return readPlaygroundIntegrationRedirectState();
+            }
+            const storedRedirectState = readPlaygroundIntegrationRedirectState();
+            const nextRedirectState = {
+              ...(storedRedirectState || {}),
+              provider: returnState.provider,
+              savedAt: returnState.savedAt,
+              returnTarget: {
+                toolsView: returnState.toolsView,
+                resourceId: returnState.resourceId,
+                tab: returnState.tab,
+              },
+              ...(returnState.credentialId
+                ? { credentialId: returnState.credentialId }
+                : {}),
+              ...(returnState.result
+                ? { returnResult: returnState.result }
+                : {}),
+              ...(returnState.error
+                ? { returnError: returnState.error }
+                : {}),
+            };
+            writePlaygroundIntegrationRedirectState(nextRedirectState);
+            return nextRedirectState;
+          }
   
           async function handleConnectorAuthConnect(provider, label, options = {}) {
             const authState = buildProjectConnectorBrowserAuthState(provider, options);
             const pendingId = authState.provider || provider;
+            const connectionSavedAt = Date.now();
+            const connectionReturnTarget = normalizePlatformPluginConnectionReturnTarget(
+              options?.returnTarget,
+            );
             const projectComposerConnectorRestoreState = authState.connectorBrowserMode === "project-composer"
               ? normalizePlaygroundProjectComposerConnectorRestoreState({
                   provider: authState.provider,
@@ -3202,7 +3251,16 @@
               addPendingStatusIndicatorId(pendingId);
               writePlaygroundIntegrationRedirectState({
                 provider: authState.provider,
-                savedAt: Date.now(),
+                savedAt: connectionSavedAt,
+                ...(typeof options?.credentialId === "string" && options.credentialId.trim()
+                  ? { credentialId: options.credentialId.trim() }
+                  : {}),
+                ...(typeof options?.credentialName === "string" && options.credentialName.trim()
+                  ? { credentialName: options.credentialName.trim() }
+                  : {}),
+                ...(connectionReturnTarget
+                  ? { returnTarget: connectionReturnTarget }
+                  : {}),
                 activePage,
                 settingsSection,
                 onboarding: options?.onboarding === true
@@ -3225,11 +3283,26 @@
               const explicitRedirectTo = typeof options?.redirectTo === "string" && options.redirectTo.trim()
                 ? options.redirectTo.trim()
                 : "";
-              const redirectTo = explicitRedirectTo || (
+              const baseRedirectTo = explicitRedirectTo || (
                 authState.projectConnectorBrowserRestoreState
                   ? (buildPlaygroundConnectorBrowserRestoreRedirectUrl(authState.projectConnectorBrowserRestoreState) || window.location.href)
                   : window.location.href
               );
+              const redirectTo = connectionReturnTarget
+                ? buildPlatformPluginConnectionReturnUrl(
+                    baseRedirectTo,
+                    {
+                      ...createPlatformPluginConnectionReturnUrlState(
+                        authState.provider,
+                        connectionReturnTarget,
+                        connectionSavedAt,
+                      ),
+                      ...(typeof options?.credentialId === "string" && options.credentialId.trim()
+                        ? { credentialId: options.credentialId.trim() }
+                        : {}),
+                    },
+                  )
+                : baseRedirectTo;
               console.info("[connector-debug] connector auth redirect prepared", {
                 provider: authState.provider,
                 redirectTo,
@@ -3240,6 +3313,21 @@
                 ...(typeof options?.scope === "string" && options.scope.trim()
                   ? { scope: options.scope.trim() }
                   : {}),
+                ...(typeof options?.credentialId === "string" && options.credentialId.trim()
+                  ? { credentialId: options.credentialId.trim() }
+                  : {}),
+                ...(typeof options?.credentialName === "string" && options.credentialName.trim()
+                  ? { credentialName: options.credentialName.trim() }
+                  : {}),
+                ...(String(options?.organizationId || billingOrganizationId || settingsBudgetStatus?.organizationId || "").trim()
+                  ? {
+                      organizationId: String(
+                        options?.organizationId
+                        || billingOrganizationId
+                        || settingsBudgetStatus?.organizationId,
+                      ).trim(),
+                    }
+                  : {}),
               });
               console.info("[connector-debug] connector auth redirecting to provider", {
                 provider: authState.provider,
@@ -3248,16 +3336,18 @@
                 projectConnectorBrowserRestoreState: authState.projectConnectorBrowserRestoreState,
               });
               window.location.href = connection.authUrl;
+              return true;
             } catch (error) {
               clearPlaygroundIntegrationRedirectState();
               clearPlaygroundConnectorBrowserRestoreState();
               clearPlaygroundProjectComposerConnectorRestoreState();
               if (error?.status === 401) {
                 handleSignInWithComputerAgents();
-                return;
+                return false;
               }
               removePendingStatusIndicatorId(pendingId);
               console.error("Failed to initiate " + label + " auth:", error);
+              return false;
             }
           }
   
@@ -3295,6 +3385,17 @@
             setGithubDisconnectToken(Date.now().toString(36) + Math.random().toString(36).slice(2));
             setGithubStatus({ connected: false });
             setStatusIndicatorItems((current) => current.filter((item) => item.id !== "github"));
+          }
+
+          async function handleJiraAuthConnect(options = {}) {
+            return handleConnectorAuthConnect("jira", "Jira", options);
+          }
+
+          async function handleJiraAuthDisconnect() {
+            await disconnectPlatformPluginConnection("jira");
+            removePendingStatusIndicatorId("jira");
+            setJiraStatus({ connected: false, credentials: [] });
+            setStatusIndicatorItems((current) => current.filter((item) => item.id !== "jira"));
           }
   
           async function handleOneDriveAuthConnect(options = {}) {
@@ -3475,13 +3576,14 @@
   
               if (data?.oauthUrl) {
                 window.location.href = data.oauthUrl;
-                return;
+                return true;
               }
   
               throw new Error(data?.error || "No OAuth URL received");
             } catch (error) {
               setSettingsDiscordError(error instanceof Error ? error.message : "Failed to link Discord");
               setSettingsIsLinkingDiscord(false);
+              return false;
             }
           }
   
@@ -5528,6 +5630,8 @@
   
           useEffect(() => {
             const urlConnectorRestoreState = consumePlaygroundConnectorBrowserRestoreUrlState();
+            const connectorAuthReturnState = consumePlaygroundPluginConnectionReturnUrlState();
+            persistPlaygroundConnectorAuthReturnState(connectorAuthReturnState);
             const pendingIds = readPendingStatusIndicatorIds();
             const redirectState = readPlaygroundIntegrationRedirectState();
             const storedConnectorRestoreState = readPlaygroundConnectorBrowserRestoreState();
@@ -5538,6 +5642,7 @@
               storedConnectorRestoreState,
               projectComposerConnectorRestoreState,
               connectorRestoreState,
+              connectorAuthReturnState,
               redirectState,
               pendingIds,
             });
@@ -5547,11 +5652,14 @@
             if (projectComposerConnectorRestoreState && isConnectorStatusConnected(projectComposerConnectorRestoreState.provider)) {
               scheduleProjectComposerConnectorBrowserRestore(projectComposerConnectorRestoreState);
             }
-            const integrationSourcesToRefresh = PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) => option.source).concat("gmail");
+            const integrationSourcesToRefresh = PLAYGROUND_TASK_CONNECTOR_OPTIONS
+              .map((option) => option.source)
+              .concat("gmail", "jira");
             integrationSourcesToRefresh.forEach((source) => {
               const shouldRefresh =
                 pendingIds.includes(source)
                 || String(redirectState?.provider || "") === source
+                || String(connectorAuthReturnState?.provider || "") === source
                 || String(urlConnectorRestoreState?.provider || "") === source
                 || String(storedConnectorRestoreState?.provider || "") === source
                 || String(projectComposerConnectorRestoreState?.provider || "") === source;
@@ -5564,13 +5672,39 @@
           useEffect(() => {
             function handleConnectorBrowserPageShow() {
               const urlRestoreState = consumePlaygroundConnectorBrowserRestoreUrlState();
+              const connectorAuthReturnState = consumePlaygroundPluginConnectionReturnUrlState();
+              const connectorRedirectState = persistPlaygroundConnectorAuthReturnState(
+                connectorAuthReturnState,
+              );
               const restoreState = urlRestoreState || readPlaygroundConnectorBrowserRestoreState();
               const projectComposerRestoreState = readPlaygroundProjectComposerConnectorRestoreState();
               console.info("[connector-debug] pageshow connector restore check", {
                 urlRestoreState,
+                connectorAuthReturnState,
                 restoreState,
                 projectComposerRestoreState,
               });
+              if (connectorAuthReturnState?.result === "error") {
+                restoreTagPluginConnectionReturnTarget(connectorAuthReturnState);
+                removePendingStatusIndicatorId(connectorAuthReturnState.provider);
+                if (connectorRedirectState?.credentialId) {
+                  void discardTagPluginCredentialFromRedirect(
+                    connectorAuthReturnState.provider,
+                    connectorRedirectState,
+                  ).catch((error) => {
+                    console.error("Failed to discard cancelled connector credentials:", error);
+                  });
+                }
+                setTagDetailSaveState(connectorAuthReturnState.resourceId, {
+                  status: "error",
+                  error: "Authorization was not completed. Try adding the credentials again.",
+                });
+                clearPlaygroundIntegrationRedirectState();
+                return;
+              }
+              if (connectorAuthReturnState) {
+                refreshConnectorStatusAfterRedirect(connectorAuthReturnState.provider);
+              }
               if (restoreState) {
                 scheduleProjectConnectorBrowserRestore(restoreState);
                 refreshConnectorStatusAfterRedirect(restoreState.provider);
@@ -5586,6 +5720,59 @@
             window.addEventListener("pageshow", handleConnectorBrowserPageShow);
             return () => window.removeEventListener("pageshow", handleConnectorBrowserPageShow);
           }, []);
+
+          useEffect(() => {
+            if (!settingsEmailStatus?.linked || !settingsEmailStatus?.verified) {
+              return;
+            }
+            void finalizePendingTagPluginCredential(
+              "email",
+              settingsEmailStatus.email || "",
+              "Verification code",
+            ).catch((error) => {
+              console.error("Failed to finalize email credentials:", error);
+            });
+          }, [
+            settingsEmailStatus?.email,
+            settingsEmailStatus?.linked,
+            settingsEmailStatus?.verified,
+          ]);
+
+          useEffect(() => {
+            if (!settingsDiscordStatus?.linked || !settingsDiscordStatus?.verified) {
+              return;
+            }
+            void finalizePendingTagPluginCredential(
+              "discord",
+              settingsDiscordStatus.discordUsername || settingsDiscordStatus.discordId || "",
+              "OAuth 2.0",
+            ).catch((error) => {
+              console.error("Failed to finalize Discord credentials:", error);
+            });
+          }, [
+            settingsDiscordStatus?.discordId,
+            settingsDiscordStatus?.discordUsername,
+            settingsDiscordStatus?.linked,
+            settingsDiscordStatus?.verified,
+          ]);
+
+          useEffect(() => {
+            if (!settingsTelegramStatus?.linked || !settingsTelegramStatus?.verified) {
+              return;
+            }
+            void finalizePendingTagPluginCredential(
+              "telegram",
+              settingsTelegramStatus.telegramUsername || settingsTelegramStatus.telegramId || "",
+              "Verification code",
+            ).catch((error) => {
+              console.error("Failed to finalize Telegram credentials:", error);
+            });
+          }, [
+            settingsTelegramStatus?.telegramId,
+            settingsTelegramStatus?.telegramUsername,
+            settingsTelegramStatus?.linked,
+            settingsTelegramStatus?.verified,
+          ]);
   
           useEffect(() => {
             if (!githubStatus.connected) {
@@ -5628,6 +5815,20 @@
             const nextActivePage = typeof redirectState.activePage === "string" ? redirectState.activePage : "";
             const nextSettingsSection = typeof redirectState.settingsSection === "string" ? redirectState.settingsSection : "";
             const shouldReopenSettingsTriggerComposer = Boolean(redirectState.reopenSettingsTriggerComposer);
+            const connectionReturnTarget = normalizePlatformPluginConnectionReturnTarget(
+              redirectState.returnTarget,
+            );
+            const connectionReturnResult = redirectState.returnResult === "success"
+              ? "success"
+              : redirectState.returnResult === "error"
+                ? "error"
+                : "";
+            const redirectProcessingKey = [
+              redirectProvider,
+              savedAt,
+              String(redirectState.credentialId || ""),
+              connectionReturnResult,
+            ].join(":");
             const connectorBrowserContext = redirectState.connectorBrowser && typeof redirectState.connectorBrowser === "object" && !Array.isArray(redirectState.connectorBrowser)
               ? redirectState.connectorBrowser
               : null;
@@ -5661,9 +5862,83 @@
               clearPlaygroundIntegrationRedirectState();
               return;
             }
+
+            if (connectionReturnTarget && connectionReturnResult === "error") {
+              if (connectorAuthRedirectProcessingKeyRef.current === redirectProcessingKey) {
+                return;
+              }
+              connectorAuthRedirectProcessingKeyRef.current = redirectProcessingKey;
+              restoreTagPluginConnectionReturnTarget(connectionReturnTarget);
+              removePendingStatusIndicatorId(redirectProvider);
+              setTagDetailSaveState(connectionReturnTarget.resourceId, {
+                status: "error",
+                error: "Authorization was not completed. Try adding the credentials again.",
+              });
+              if (redirectState.credentialId) {
+                void discardTagPluginCredentialFromRedirect(
+                  redirectProvider,
+                  redirectState,
+                ).catch((error) => {
+                  console.error("Failed to discard cancelled connector credentials:", error);
+                });
+              }
+              clearPlaygroundIntegrationRedirectState();
+              return;
+            }
   
             if (!isConnectorStatusConnected(redirectProvider)) {
               return;
+            }
+
+            if (connectionReturnTarget) {
+              const credentialId = String(redirectState.credentialId || "").trim();
+              const providerStatus = getConnectorStatusRecord(redirectProvider);
+              const providerCredentials = normalizePlatformConnectionCredentials(
+                providerStatus?.credentials,
+              );
+              if (
+                credentialId
+                && Array.isArray(providerStatus?.credentials)
+                && !providerCredentials.some((credential) => credential.id === credentialId)
+              ) {
+                return;
+              }
+              if (connectorAuthRedirectProcessingKeyRef.current === redirectProcessingKey) {
+                return;
+              }
+              connectorAuthRedirectProcessingKeyRef.current = redirectProcessingKey;
+              void (async () => {
+                try {
+                  if (credentialId) {
+                    await finalizeTagPluginCredentialFromRedirect(
+                      redirectProvider,
+                      redirectState,
+                    );
+                  }
+                  restoreTagPluginConnectionReturnTarget(connectionReturnTarget);
+                } catch (error) {
+                  restoreTagPluginConnectionReturnTarget(connectionReturnTarget);
+                  setTagDetailSaveState(connectionReturnTarget.resourceId, {
+                    status: "error",
+                    error: error instanceof Error
+                      ? error.message
+                      : "The credentials connected, but their settings could not be saved.",
+                  });
+                  console.error("Failed to finalize connector credentials:", error);
+                } finally {
+                  clearPlaygroundIntegrationRedirectState();
+                }
+              })();
+              return;
+            }
+
+            if (redirectState.credentialId) {
+              void finalizeTagPluginCredentialFromRedirect(
+                redirectProvider,
+                redirectState,
+              ).catch((error) => {
+                console.error("Failed to finalize connector credentials:", error);
+              });
             }
   
             if (restorePlaygroundOnboardingFromConnectorRedirect(redirectState)) {
@@ -5683,11 +5958,25 @@
             }
   
             clearPlaygroundIntegrationRedirectState();
-          }, [githubStatus.connected, gmailStatus.connected, googleDriveStatus.connected, notionStatus.connected, oneDriveStatus.connected]);
+          }, [
+            githubStatus.connected,
+            githubStatus.credentials,
+            jiraStatus.connected,
+            jiraStatus.credentials,
+            gmailStatus.connected,
+            gmailStatus.credentials,
+            googleDriveStatus.connected,
+            googleDriveStatus.credentials,
+            notionStatus.connected,
+            notionStatus.credentials,
+            oneDriveStatus.connected,
+            oneDriveStatus.credentials,
+          ]);
   
           useEffect(() => {
             const anyConnectorConnected = Boolean(
               githubStatus.connected
+              || jiraStatus.connected
               || gmailStatus.connected
               || googleDriveStatus.connected
               || notionStatus.connected
@@ -5708,7 +5997,7 @@
             if (projectComposerRestoreState && isConnectorStatusConnected(projectComposerRestoreState.provider)) {
               scheduleProjectComposerConnectorBrowserRestore(projectComposerRestoreState);
             }
-          }, [githubStatus.connected, gmailStatus.connected, googleDriveStatus.connected, notionStatus.connected, oneDriveStatus.connected]);
+          }, [githubStatus.connected, jiraStatus.connected, gmailStatus.connected, googleDriveStatus.connected, notionStatus.connected, oneDriveStatus.connected]);
   
           useEffect(() => {
             if (isDemoMode) {
@@ -5763,6 +6052,10 @@
           useEffect(() => {
             writeCachedIntegrationStatus("gmail", gmailStatus);
           }, [gmailStatus]);
+
+          useEffect(() => {
+            writeCachedIntegrationStatus("jira", jiraStatus);
+          }, [jiraStatus]);
   
           useEffect(() => {
             try {

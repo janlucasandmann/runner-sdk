@@ -1,5 +1,5 @@
-import { Cable, ChevronRight, Link2, Unlink } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { ChevronRight, Link2, Unlink } from "lucide-react";
+import { type ReactNode, useMemo, useState } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
@@ -7,12 +7,13 @@ import type {
 } from "../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformLabel } from "../../../platform-ui/components/ui/label/index.js";
 import {
+  type ResourceOverviewAnalyticsModel,
   ResourceOverviewPage,
+  type ResourceOverviewPeriod,
   ResourceOverviewStatus,
   ResourceOverviewValue,
-  type ResourceOverviewAnalyticsModel,
-  type ResourceOverviewPeriod,
 } from "../../../platform-ui/pages/overview/index.js";
+import { ConnectionIdentityIcon } from "./connection-identity-icon.js";
 
 export interface ConnectionOverviewRow {
   id: string;
@@ -76,8 +77,18 @@ function createFallbackAnalytics(
     ariaLabel: `${label} activity overview`,
     metrics: [
       { id: "total", label, value: String(rows.length), color: "#8fc4ff" },
-      { id: "connected", label: "Connected", value: String(connected), color: "#7effff" },
-      { id: "available", label: "Available", value: String(rows.length - connected), color: "#6750ff" },
+      {
+        id: "connected",
+        label: "Connected",
+        value: String(connected),
+        color: "#7effff",
+      },
+      {
+        id: "available",
+        label: "Available",
+        value: String(rows.length - connected),
+        color: "#6750ff",
+      },
       { id: "activity", label: "Activity", value: "-", color: "#4da3ff" },
     ],
     labels: [],
@@ -107,11 +118,15 @@ export function ConnectionOverviewPage({
   onOpen,
 }: ConnectionOverviewPageProps) {
   const [statusFilter, setStatusFilter] = useState("all");
-  const filteredRows = useMemo(() => rows.filter((row) => {
-    if (statusFilter === "connected" && !row.connected) return false;
-    if (statusFilter === "disconnected" && row.connected) return false;
-    return true;
-  }), [rows, statusFilter]);
+  const filteredRows = useMemo(
+    () =>
+      rows.filter((row) => {
+        if (statusFilter === "connected" && !row.connected) return false;
+        if (statusFilter === "disconnected" && row.connected) return false;
+        return true;
+      }),
+    [rows, statusFilter],
+  );
   const resolvedAnalytics = analytics || createFallbackAnalytics(kind, rows);
   const entity =
     kind === "connections"
@@ -120,86 +135,130 @@ export function ConnectionOverviewPage({
         ? "Tags"
         : "Plugins";
   const usesCatalogLayout = tableVariant === "catalog-ui";
-  const columns = useMemo<PlatformDataTableColumn<ConnectionOverviewRow>[]>(() => [
-    {
-      id: "name",
-      header: "Name",
-      accessor: "name",
-      sortable: true,
-      width: "minmax(220px, 1.25fr)",
-      cell: ({ row }) => {
-        const rowKind =
-          row.resourceKind || (kind === "connections" ? "plugins" : kind);
-        const normalizedRowId = row.id.toLowerCase();
-        const isGitLab =
-          rowKind === "plugins" && normalizedRowId === "gitlab";
-        const tagIconClassName =
-          rowKind === "tags"
-            ? ` is-size-compact is-tag${normalizedRowId === "email" ? " is-email" : ""}${normalizedRowId === "discord" ? " is-discord" : ""}${normalizedRowId === "telegram" ? " is-telegram" : ""}`
-            : "";
-        return (
-          <div className={`resource-overview-identity${usesCatalogLayout ? " is-catalog" : ""}`}>
-            <span className={`resource-overview-identity__visual is-connection${tagIconClassName || " is-plugin"}${isGitLab ? " is-gitlab" : ""}`} aria-hidden="true">
-              {row.logoUrl ? <img src={row.logoUrl} alt="" className={row.logoClassName} /> : row.icon || <Cable width={17} height={17} strokeWidth={1.8} />}
-            </span>
-            {usesCatalogLayout ? (
-              <span className="resource-overview-identity__copy">
-                <span className="resource-overview-identity__title">{row.name}</span>
-                {row.description ? (
-                  <span className="resource-overview-identity__description">{row.description}</span>
-                ) : null}
-              </span>
-            ) : (
-              <span className="resource-overview-identity__title">{row.name}</span>
-            )}
-          </div>
-        );
+  const columns = useMemo<PlatformDataTableColumn<ConnectionOverviewRow>[]>(
+    () => [
+      {
+        id: "name",
+        header: "Name",
+        accessor: "name",
+        sortable: true,
+        width: "minmax(220px, 1.25fr)",
+        cell: ({ row }) => {
+          const rowKind =
+            row.resourceKind || (kind === "connections" ? "plugins" : kind);
+          return (
+            <div
+              className={`resource-overview-identity${usesCatalogLayout ? " is-catalog" : ""}`}
+            >
+              <ConnectionIdentityIcon
+                kind={rowKind === "tags" ? "tags" : "plugins"}
+                connectionId={row.id}
+                icon={row.icon}
+                logoUrl={row.logoUrl}
+                logoClassName={row.logoClassName}
+                variant={usesCatalogLayout ? "catalog" : "default"}
+              />
+              {usesCatalogLayout ? (
+                <span className="resource-overview-identity__copy">
+                  <span className="resource-overview-identity__title">
+                    {row.name}
+                  </span>
+                  {row.description ? (
+                    <span className="resource-overview-identity__description">
+                      {row.description}
+                    </span>
+                  ) : null}
+                </span>
+              ) : (
+                <span className="resource-overview-identity__title">
+                  {row.name}
+                </span>
+              )}
+            </div>
+          );
+        },
       },
-    },
-    {
-      id: "connected",
-      header: "Status",
-      accessor: (row) => row.connected ? 1 : 0,
-      sortable: true,
-      width: "minmax(125px, 0.62fr)",
-      cell: ({ row }) => {
-        const rowKind =
-          row.resourceKind || (kind === "connections" ? "plugins" : kind);
-        return rowKind === "tags" || kind === "connections"
-          ? <PlatformLabel variant={row.connected ? "green" : "gray"}>{row.connected ? "Connected" : "Not Connected"}</PlatformLabel>
-          : <ResourceOverviewStatus active={row.connected} activeLabel="Connected" inactiveLabel="Not Connected" />;
+      {
+        id: "connected",
+        header: "Status",
+        accessor: (row) => (row.connected ? 1 : 0),
+        sortable: true,
+        width: "minmax(125px, 0.62fr)",
+        cell: ({ row }) => {
+          const rowKind =
+            row.resourceKind || (kind === "connections" ? "plugins" : kind);
+          return rowKind === "tags" || kind === "connections" ? (
+            <PlatformLabel variant={row.connected ? "green" : "gray"}>
+              {row.connected ? "Connected" : "Not Connected"}
+            </PlatformLabel>
+          ) : (
+            <ResourceOverviewStatus
+              active={row.connected}
+              activeLabel="Connected"
+              inactiveLabel="Not Connected"
+            />
+          );
+        },
       },
-    },
-    {
-      id: "identity",
-      header: "Connected Identity",
-      accessor: "identityLabel",
-      sortable: true,
-      width: "minmax(170px, 0.9fr)",
-      hideBelow: 760,
-      cell: ({ row }) => <ResourceOverviewValue>{row.identityLabel}</ResourceOverviewValue>,
-    },
-    ...(kind === "connections" ? [] : [{
-      id: "provider",
-      header: "Provider",
-      accessor: "providerLabel",
-      sortable: true,
-      width: "minmax(120px, 0.62fr)",
-      hideBelow: 960,
-      cell: ({ row }) => <ResourceOverviewValue>{row.providerLabel}</ResourceOverviewValue>,
-    } satisfies PlatformDataTableColumn<ConnectionOverviewRow>]),
-  ], [kind, usesCatalogLayout]);
+      ...(kind === "connections"
+        ? []
+        : [
+            {
+              id: "identity",
+              header: "Connected Identity",
+              accessor: "identityLabel",
+              sortable: true,
+              width: "minmax(170px, 0.9fr)",
+              hideBelow: 760,
+              cell: ({ row }) => (
+                <ResourceOverviewValue>
+                  {row.identityLabel}
+                </ResourceOverviewValue>
+              ),
+            } satisfies PlatformDataTableColumn<ConnectionOverviewRow>,
+          ]),
+      ...(kind === "connections"
+        ? []
+        : [
+            {
+              id: "provider",
+              header: "Provider",
+              accessor: "providerLabel",
+              sortable: true,
+              width: "minmax(120px, 0.62fr)",
+              hideBelow: 960,
+              cell: ({ row }) => (
+                <ResourceOverviewValue>
+                  {row.providerLabel}
+                </ResourceOverviewValue>
+              ),
+            } satisfies PlatformDataTableColumn<ConnectionOverviewRow>,
+          ]),
+    ],
+    [kind, usesCatalogLayout],
+  );
 
-  const getRowActions = (row: ConnectionOverviewRow): readonly PlatformDataTableAction<ConnectionOverviewRow>[] => [
-    { id: "open", label: "Open", icon: ChevronRight, onSelect: () => onOpen(row) },
-    ...(row.connectionAction ? [{
-      id: "connection",
-      label: row.connectionAction.label,
-      icon: row.connectionAction.tone === "destructive" ? Unlink : Link2,
-      danger: row.connectionAction.tone === "destructive",
-      separatorBefore: true,
-      onSelect: row.connectionAction.onSelect,
-    } satisfies PlatformDataTableAction<ConnectionOverviewRow>] : []),
+  const getRowActions = (
+    row: ConnectionOverviewRow,
+  ): readonly PlatformDataTableAction<ConnectionOverviewRow>[] => [
+    {
+      id: "open",
+      label: "Open",
+      icon: ChevronRight,
+      onSelect: () => onOpen(row),
+    },
+    ...(row.connectionAction
+      ? [
+          {
+            id: "connection",
+            label: row.connectionAction.label,
+            icon: row.connectionAction.tone === "destructive" ? Unlink : Link2,
+            danger: row.connectionAction.tone === "destructive",
+            separatorBefore: true,
+            onSelect: row.connectionAction.onSelect,
+          } satisfies PlatformDataTableAction<ConnectionOverviewRow>,
+        ]
+      : []),
   ];
 
   return (
@@ -224,9 +283,17 @@ export function ConnectionOverviewPage({
           ? { enabled: true, ariaLabel: (row) => `Select ${row.name}` }
           : undefined,
         rowGrouping,
-        pagination: pagination === undefined ? (kind === "tags" ? false : undefined) : pagination,
+        pagination:
+          pagination === undefined
+            ? kind === "tags"
+              ? false
+              : undefined
+            : pagination,
         toolbar: {
-          title: toolbarTitle === false ? undefined : toolbarTitle || `All ${entity}`,
+          title:
+            toolbarTitle === false
+              ? undefined
+              : toolbarTitle || `All ${entity}`,
           leading: toolbarLeading,
           search: {
             placeholder:
@@ -237,17 +304,21 @@ export function ConnectionOverviewPage({
               row.searchText ||
               `${row.name} ${row.description || ""} ${row.identityLabel} ${row.providerLabel}`,
           },
-          filters: showStatusFilter ? [{
-            id: "status",
-            label: "Status",
-            value: statusFilter,
-            onChange: setStatusFilter,
-            options: [
-              { id: "all", label: `All ${entity}` },
-              { id: "connected", label: "Connected" },
-              { id: "disconnected", label: "Not Connected" },
-            ],
-          }] : undefined,
+          filters: showStatusFilter
+            ? [
+                {
+                  id: "status",
+                  label: "Status",
+                  value: statusFilter,
+                  onChange: setStatusFilter,
+                  options: [
+                    { id: "all", label: `All ${entity}` },
+                    { id: "connected", label: "Connected" },
+                    { id: "disconnected", label: "Not Connected" },
+                  ],
+                },
+              ]
+            : undefined,
         },
         getRowActions,
         onRowActivate: onOpen,

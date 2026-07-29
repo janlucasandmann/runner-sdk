@@ -10,13 +10,13 @@ import {
   XCircle,
 } from "lucide-react";
 import { createPortal } from "react-dom";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { PlatformAnalyticsSection } from "../../../../../platform-ui/components/composite/analytics/index.js";
 import {
   PlatformDataTable,
   type PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
-import { PlatformDetailSidebarSection } from "../../../../../platform-ui/components/composite/detail-sidebar/index.js";
 import {
   PlatformConfirmationModal,
 } from "../../../../../platform-ui/components/composite/modal/index.js";
@@ -29,7 +29,11 @@ import {
   PlatformPrimaryButton,
   PlatformSecondaryButton,
 } from "../../../../../platform-ui/components/ui/button/index.js";
-import { ResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
+import {
+  PlatformServiceDetailPage,
+  PlatformServiceDetailProperty,
+  PlatformServiceDetailPropertyList,
+} from "../../../../../platform-ui/pages/details/index.js";
 import type { AssuranceApi } from "../api/index.js";
 import type {
   AssuranceGateResult,
@@ -38,8 +42,6 @@ import type {
   AssuranceRunEvent,
   AssuranceWorkspaceOption,
 } from "../domain/index.js";
-
-type AssuranceRunTab = "decision" | "evidence" | "audit";
 
 interface AssuranceRunDetailPageProps {
   run: AssuranceRun;
@@ -50,6 +52,7 @@ interface AssuranceRunDetailPageProps {
   refreshing?: boolean;
   onRunChange: (run: AssuranceRun) => void;
   onRefresh: () => void;
+  onRunAgain: () => void;
 }
 
 function formatTimestamp(value: string | null | undefined): string {
@@ -85,15 +88,6 @@ function usePortalTarget(id: string | undefined): HTMLElement | null {
   return target;
 }
 
-function PropertyRow({ label, children }: { label: ReactNode; children: ReactNode }) {
-  return (
-    <div className="assurance-sidebar-property">
-      <span>{label}</span>
-      <strong>{children}</strong>
-    </div>
-  );
-}
-
 export function AssuranceRunDetailPage({
   run,
   policy,
@@ -103,8 +97,8 @@ export function AssuranceRunDetailPage({
   refreshing = false,
   onRunChange,
   onRefresh,
+  onRunAgain,
 }: AssuranceRunDetailPageProps) {
-  const [activeTab, setActiveTab] = useState<AssuranceRunTab>("decision");
   const [busyAction, setBusyAction] = useState("");
   const [confirmAction, setConfirmAction] = useState<"approve" | "cancel" | "">("");
   const [error, setError] = useState("");
@@ -257,21 +251,89 @@ export function AssuranceRunDetailPage({
   }
 
   const terminal = ["passed", "failed", "cancelled"].includes(run.status);
-  const headerActions = (
-    <>
-      <PlatformSecondaryButton
+  const runAnalytics = {
+    ariaLabel: "Assurance Run analytics",
+    metrics: [
+      {
+        id: "passed",
+        label: "Passed Gates",
+        value: String(passedGateCount),
+        color: "#9ff6ce",
+      },
+      {
+        id: "failed",
+        label: "Failed Gates",
+        value: String(failedGateCount),
+        color: "#ff9b9b",
+      },
+      {
+        id: "pending",
+        label: "Pending Gates",
+        value: String(pendingGateCount),
+        color: "#8fc4ff",
+      },
+      {
+        id: "cost",
+        label: "Evidence Cost",
+        value: Number.isFinite(totalCostUsd) ? `$${totalCostUsd.toFixed(2)}` : "—",
+        color: "#7657ff",
+      },
+    ],
+    labels: gates.map((gate) => gate.id),
+    hasData: gates.length > 0,
+    series: [
+      {
+        id: "outcome",
+        label: "Gate outcome",
+        values: gates.map((gate) => gate.status === "passed" ? 100 : 0),
+        color: "#8fc4ff",
+        valueKind: "percent" as const,
+      },
+    ],
+  };
+  const properties = (
+    <PlatformServiceDetailPropertyList>
+      <PlatformServiceDetailProperty label="Status">
+        <span className={`assurance-status-label is-${run.status}`}>
+          {formatStatus(run.status)}
+        </span>
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Project">
+        {projectLabel}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Release" title={run.releaseId || ""}>
+        {run.releaseId || "Not linked"}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Commit" title={run.commitSha || ""}>
+        {run.commitSha || "Not pinned"}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Policy">
+        {policy.name}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Version" title={run.policyVersionId}>
+        {run.policyVersionId}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Evidence" title={evidenceFingerprint}>
+        {evidenceFingerprint ? `${evidenceFingerprint.slice(0, 18)}…` : "Pending"}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Decision" title={decisionFingerprint}>
+        {decisionFingerprint ? `${decisionFingerprint.slice(0, 18)}…` : "Pending"}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Completed">
+        {formatTimestamp(run.completedAt)}
+      </PlatformServiceDetailProperty>
+      <PlatformPrimaryButton
         size="small"
-        disabled={refreshing || Boolean(busyAction)}
-        onClick={onRefresh}
+        fullWidth
+        className="assurance-detail-run-button"
+        onClick={onRunAgain}
       >
-        <RefreshCw
-          className={refreshing ? "assurance-spin" : ""}
-          width={14}
-          height={14}
-          aria-hidden="true"
-        />
-        Refresh
-      </PlatformSecondaryButton>
+        Run Again
+      </PlatformPrimaryButton>
+    </PlatformServiceDetailPropertyList>
+  );
+  const sidebarActions = (
+    <div className="platform-service-detail-page__sidebar-actions">
       {!terminal ? (
         <PlatformSecondaryButton
           size="small"
@@ -303,60 +365,38 @@ export function AssuranceRunDetailPage({
           Cancel
         </PlatformSecondaryButton>
       ) : null}
-    </>
+    </div>
+  );
+  const headerActions = (
+    <PlatformSecondaryButton
+      size="small"
+      disabled={refreshing || Boolean(busyAction)}
+      onClick={onRefresh}
+    >
+      <RefreshCw
+        className={refreshing ? "assurance-spin" : ""}
+        width={14}
+        height={14}
+        aria-hidden="true"
+      />
+      Refresh
+    </PlatformSecondaryButton>
   );
 
   return (
     <>
       {portalTarget ? createPortal(headerActions, portalTarget) : null}
-      <ResourceDetailPage<AssuranceRunTab>
-        tabs={[
-          { id: "decision", label: "Decision" },
-          { id: "evidence", label: "Evidence" },
-          { id: "audit", label: "Audit Log" },
-        ]}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        sidebar={(
-          <>
-            <PlatformDetailSidebarSection title="Run details">
-              <div className="assurance-sidebar-properties">
-                <PropertyRow label="Status">
-                  <span className={`assurance-status-label is-${run.status}`}>
-                    {formatStatus(run.status)}
-                  </span>
-                </PropertyRow>
-                <PropertyRow label="Project">{projectLabel}</PropertyRow>
-                <PropertyRow label="Release">{run.releaseId || "Not linked"}</PropertyRow>
-                <PropertyRow label="Commit">{run.commitSha || "Not pinned"}</PropertyRow>
-                <PropertyRow label="Revision">{run.revision}</PropertyRow>
-                <PropertyRow label="Completed">{formatTimestamp(run.completedAt)}</PropertyRow>
-              </div>
-            </PlatformDetailSidebarSection>
-            <PlatformDetailSidebarSection title="Traceability">
-              <div className="assurance-sidebar-properties">
-                <PropertyRow label="Policy">{policy.name}</PropertyRow>
-                <PropertyRow label="Version">{run.policyVersionId}</PropertyRow>
-                <PropertyRow label="Evidence">
-                  {evidenceFingerprint ? `${evidenceFingerprint.slice(0, 18)}…` : "Pending"}
-                </PropertyRow>
-                <PropertyRow label="Decision">
-                  {decisionFingerprint ? `${decisionFingerprint.slice(0, 18)}…` : "Pending"}
-                </PropertyRow>
-                <PropertyRow label="Approval">
-                  {run.approval.approvedAt ? formatTimestamp(run.approval.approvedAt) : "Not approved"}
-                </PropertyRow>
-              </div>
-            </PlatformDetailSidebarSection>
-          </>
-        )}
+      <PlatformServiceDetailPage
+        variant="run"
+        properties={properties}
+        actions={sidebarActions}
         ariaLabel={`${policy.name} Assurance Run`}
-        tabAriaLabel="Assurance Run sections"
         sidebarAriaLabel="Assurance Run information"
         className="assurance-detail-page is-run"
-        tabBarClassName="assurance-detail-tabs"
         contentClassName="assurance-detail-content"
         sidebarClassName="assurance-detail-sidebar"
+        propertiesCardClassName="assurance-detail-sidebar-card"
+        actionsCardClassName="assurance-detail-sidebar-card"
       >
         {error ? (
           <PlatformUiCard as="div" className="assurance-inline-error" role="alert">
@@ -364,63 +404,13 @@ export function AssuranceRunDetailPage({
           </PlatformUiCard>
         ) : null}
 
-        {activeTab === "decision" ? (
-          <div className="assurance-detail-stack">
-            <div className="assurance-kpi-grid">
-              <PlatformUiCard as="article" className="assurance-kpi-card is-success">
-                <span>Passed gates</span><strong>{passedGateCount}</strong>
-                <small>{gates.length} evaluated gates</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="assurance-kpi-card is-danger">
-                <span>Failed gates</span><strong>{failedGateCount}</strong>
-                <small>Release blockers</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="assurance-kpi-card is-warning">
-                <span>Pending gates</span><strong>{pendingGateCount}</strong>
-                <small>Evidence not terminal</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="assurance-kpi-card">
-                <span>Evidence cost</span>
-                <strong>{Number.isFinite(totalCostUsd) ? `$${totalCostUsd.toFixed(2)}` : "—"}</strong>
-                <small>{run.evidence?.cost?.complete === false ? "Cost data incomplete" : "Canonical total"}</small>
-              </PlatformUiCard>
-            </div>
-
-            <div className={`assurance-decision-banner is-${run.status}`}>
-              <BadgeCheck width={21} height={21} aria-hidden="true" />
-              <div>
-                <strong>{formatStatus(decisionOutcome || run.status)}</strong>
-                <span>
-                  {technicalOutcome
-                    ? `Technical outcome: ${formatStatus(technicalOutcome)}.`
-                    : "The control plane is waiting for sufficient canonical evidence."}
-                </span>
-              </div>
-            </div>
-
-            <PlatformDataTable
-              rows={gates}
-              columns={gateColumns}
-              getRowId={(gate) => `${gate.kind}:${gate.id}`}
-              ariaLabel="Assurance gate decisions"
-              variant="minimalistic-ui"
-              surface="plain"
-              sticky={false}
-              pagination={false}
-              emptyState={(
-                <PlatformEmptyState
-                  icon={Clock3}
-                  title="Evidence evaluation pending"
-                  description="Evaluate this run after its canonical evidence references are available."
-                />
-              )}
-            />
-          </div>
-        ) : null}
-
-        {activeTab === "evidence" ? (
-          <div className="assurance-detail-stack">
-            <div className="assurance-evidence-banner">
+        <div className="assurance-detail-stack">
+          <PlatformUiCard
+            as="section"
+            cardTitle="Execution evidence"
+            className={`assurance-run-evidence-card ${evidenceFingerprint ? "is-trusted" : "is-pending"}`}
+          >
+            <div className="assurance-run-evidence-summary">
               <Fingerprint width={21} height={21} aria-hidden="true" />
               <div>
                 <strong>{evidenceFingerprint ? "Canonical evidence fingerprinted" : "Evidence pending"}</strong>
@@ -429,64 +419,106 @@ export function AssuranceRunDetailPage({
                 </span>
               </div>
             </div>
-            <PlatformSettingsSectionList>
-              <PlatformSettingsSection title="Evidence references">
-                <dl className="assurance-evidence-identity">
-                  <div>
-                    <dt>Test Runs</dt>
-                    <dd>{run.evidenceReferences.testRunIds.join(", ") || "None"}</dd>
-                  </div>
-                  <div>
-                    <dt>Evaluation Runs</dt>
-                    <dd>{run.evidenceReferences.evaluationRunIds.join(", ") || "None"}</dd>
-                  </div>
-                  <div>
-                    <dt>Optimization Jobs</dt>
-                    <dd>{run.evidenceReferences.optimizationJobIds.join(", ") || "None"}</dd>
-                  </div>
-                  <div><dt>Evidence fingerprint</dt><dd>{evidenceFingerprint || "Pending"}</dd></div>
-                  <div><dt>Decision fingerprint</dt><dd>{decisionFingerprint || "Pending"}</dd></div>
-                </dl>
-              </PlatformSettingsSection>
-              <PlatformSettingsSection
-                title="Canonical evidence envelope"
-                description="Read-only server-derived evidence. Browser-authored summaries are never release proof."
-              >
-                <pre className="assurance-evidence-json">{JSON.stringify(run.evidence || {}, null, 2)}</pre>
-              </PlatformSettingsSection>
-              <PlatformSettingsSection
-                title="Canonical decision envelope"
-                description="The decision fingerprint binds the policy version, evidence, release, project, and approval."
-              >
-                <pre className="assurance-evidence-json">{JSON.stringify(run.decision || {}, null, 2)}</pre>
-              </PlatformSettingsSection>
-            </PlatformSettingsSectionList>
-          </div>
-        ) : null}
+            <dl className="assurance-run-evidence-grid">
+              <div><dt>Evidence</dt><dd title={evidenceFingerprint}>{evidenceFingerprint || "Pending"}</dd></div>
+              <div><dt>Decision</dt><dd title={decisionFingerprint}>{decisionFingerprint || "Pending"}</dd></div>
+              <div><dt>Policy version</dt><dd>{run.policyVersionId}</dd></div>
+              <div><dt>Approval</dt><dd>{run.approval.approvedAt ? formatTimestamp(run.approval.approvedAt) : "Not approved"}</dd></div>
+            </dl>
+          </PlatformUiCard>
 
-        {activeTab === "audit" ? (
-          <div className="assurance-detail-stack">
-            <PlatformDataTable
-              rows={events}
-              columns={eventColumns}
-              getRowId={(event) => event.id}
-              ariaLabel="Assurance Run audit log"
-              variant="minimalistic-ui"
-              surface="plain"
-              sticky={false}
-              pagination={false}
-              sorting={{ defaultValue: { id: "time", direction: "asc" } }}
-              emptyState={(
-                <PlatformEmptyState
-                  icon={CircleDot}
-                  title="No audit events retained"
-                  description="Control-plane mutations will appear here with actor and fingerprint context."
-                />
-              )}
-            />
+          <div className={`assurance-decision-banner is-${run.status}`}>
+            <BadgeCheck width={21} height={21} aria-hidden="true" />
+            <div>
+              <strong>{formatStatus(decisionOutcome || run.status)}</strong>
+              <span>
+                {technicalOutcome
+                  ? `Technical outcome: ${formatStatus(technicalOutcome)}.`
+                  : "The control plane is waiting for sufficient canonical evidence."}
+              </span>
+            </div>
           </div>
-        ) : null}
-      </ResourceDetailPage>
+
+          <PlatformAnalyticsSection
+            variant="default"
+            title="Analytics"
+            analytics={runAnalytics}
+            className="assurance-detail-analytics"
+            showXAxisLabels
+          />
+
+          <PlatformDataTable
+            rows={gates}
+            columns={gateColumns}
+            getRowId={(gate) => `${gate.kind}:${gate.id}`}
+            ariaLabel="Assurance gate decisions"
+            variant="minimalistic-ui"
+            surface="plain"
+            sticky={false}
+            pagination={false}
+            emptyState={(
+              <PlatformEmptyState
+                icon={Clock3}
+                title="Evidence evaluation pending"
+                description="Evaluate this run after its canonical evidence references are available."
+              />
+            )}
+          />
+
+          <PlatformSettingsSectionList>
+            <PlatformSettingsSection title="Evidence references">
+              <dl className="assurance-evidence-identity">
+                <div>
+                  <dt>Test Runs</dt>
+                  <dd>{run.evidenceReferences.testRunIds.join(", ") || "None"}</dd>
+                </div>
+                <div>
+                  <dt>Evaluation Runs</dt>
+                  <dd>{run.evidenceReferences.evaluationRunIds.join(", ") || "None"}</dd>
+                </div>
+                <div>
+                  <dt>Optimization Jobs</dt>
+                  <dd>{run.evidenceReferences.optimizationJobIds.join(", ") || "None"}</dd>
+                </div>
+                <div><dt>Evidence fingerprint</dt><dd>{evidenceFingerprint || "Pending"}</dd></div>
+                <div><dt>Decision fingerprint</dt><dd>{decisionFingerprint || "Pending"}</dd></div>
+              </dl>
+            </PlatformSettingsSection>
+            <PlatformSettingsSection
+              title="Canonical evidence envelope"
+              description="Read-only server-derived evidence. Browser-authored summaries are never release proof."
+            >
+              <pre className="assurance-evidence-json">{JSON.stringify(run.evidence || {}, null, 2)}</pre>
+            </PlatformSettingsSection>
+            <PlatformSettingsSection
+              title="Canonical decision envelope"
+              description="The decision fingerprint binds the policy version, evidence, release, project, and approval."
+            >
+              <pre className="assurance-evidence-json">{JSON.stringify(run.decision || {}, null, 2)}</pre>
+            </PlatformSettingsSection>
+          </PlatformSettingsSectionList>
+
+          <PlatformDataTable
+            rows={events}
+            columns={eventColumns}
+            getRowId={(event) => event.id}
+            ariaLabel="Assurance Run audit log"
+            variant="minimalistic-ui"
+            surface="plain"
+            sticky={false}
+            pagination={false}
+            sorting={{ defaultValue: { id: "time", direction: "asc" } }}
+            toolbar={{ title: "Audit Log" }}
+            emptyState={(
+              <PlatformEmptyState
+                icon={CircleDot}
+                title="No audit events retained"
+                description="Control-plane mutations will appear here with actor and fingerprint context."
+              />
+            )}
+          />
+        </div>
+      </PlatformServiceDetailPage>
 
       <PlatformConfirmationModal
         open={confirmAction === "approve"}

@@ -133,7 +133,14 @@
           }, [activePage, toolsView]);
   
           useEffect(() => {
-            setPluginDetailTab("general");
+            const returnTarget = normalizePlatformPluginConnectionReturnTarget(
+              connectorAuthReturnTargetRef.current,
+            );
+            const isReturningToAuthentication =
+              returnTarget
+              && returnTarget.resourceId === String(selectedPluginId || "").trim().toLowerCase()
+              && returnTarget.toolsView === toolsView;
+            setPluginDetailTab(isReturningToAuthentication ? "tutorial" : "general");
             setTagDetailPropertyPopover("");
             setTagPluginAccessPrincipalId("");
             setTagPluginAccessRoleId("member");

@@ -202,12 +202,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_EDITORS_SCRIPT = String.raw`        fun
           applyEvaluationGuidanceSelection(setId, edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
-        function buildEvaluationCaseEditorFieldKey(state, field) {
-          const source = state && typeof state === "object" && !Array.isArray(state) ? state : {};
-          const baseId = source.rowId || (source.isNew ? "new:" + String(source.index || 0) : "case");
-          return "case:" + String(source.setId || "") + ":" + String(baseId || "case") + ":" + String(field || "");
-        }
-
         function updateEvaluationRunCase(setId, runId, caseId, patch) {
           setEvaluationSets((current) => (Array.isArray(current) ? current : []).map((item) => {
             const normalized = normalizePlaygroundEvaluationSet(item);

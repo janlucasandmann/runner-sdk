@@ -31,6 +31,7 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/composite/ui-card/ui-card.css",
   "src/platform-ui/pages/home/platform-home.css",
   "src/platform-ui/pages/overview/resource-overview.css",
+  "src/platform-resources/shared/connections/connection-identity-icon.css",
   "src/platform-ui/components/composite/detail-tab-bar/detail-tab-bar.css",
   "src/platform-ui/components/composite/detail-sidebar/detail-sidebar.css",
   "src/platform-ui/components/composite/floating-sidebar/floating-sidebar.css",

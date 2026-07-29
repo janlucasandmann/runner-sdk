@@ -184,26 +184,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_CASE_DETAIL_SCRIPT = String.raw`       
           });
         }
 
-        function renderEvaluationCaseEditorMarkdownSection(field, title, placeholder, options = {}) {
-          const state = evaluationCaseEditorState;
-          const editorKey = buildEvaluationCaseEditorFieldKey(state, field);
-          const value = options.value === undefined
-            ? String(state?.draft?.[field] ?? "")
-            : String(options.value || "");
-          return React.createElement(PlatformInstructionsEditor, {
-            variant: "minimalistic-ui",
-            value,
-            onChange: options.onChange || ((nextValue) => updateEvaluationCaseEditorDraft({ [field]: nextValue })),
-            title,
-            placeholder,
-            ariaLabel: options.ariaLabel || (typeof title === "string" ? title : "Evaluation case content"),
-            stickyHeader: false,
-            historyKey: options.historyKey || editorKey,
-            className: "playground-evaluations-case-editor-field" + (options.className ? " " + options.className : ""),
-            autoFocus: options.autoFocus === true,
-          });
-        }
-
         function renderEvaluationCaseGuidanceTitle() {
           return React.createElement("span", { className: "playground-evaluations-case-guidance-title" },
             React.createElement("span", null, "Evaluator Guidance"),
@@ -219,69 +199,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_CASE_DETAIL_SCRIPT = String.raw`       
                 role: "tooltip",
               },
                 "Optional case-specific instructions for the evaluator. Use them to define scoring criteria, required behavior, tolerances, or partial-credit rules."
-              )
-            )
-          );
-        }
-
-        function renderEvaluationCaseEditorSourceCard(field) {
-          const definition = getEvaluationCaseEditorFieldDefinition(field);
-          const value = String(evaluationCaseEditorState?.draft?.[definition.field] || "");
-          const normalizedValue = value.trim().replace(/\s+/g, " ");
-          const preview = normalizedValue
-            ? normalizedValue.slice(0, 150) + (normalizedValue.length > 150 ? "…" : "")
-            : definition.description;
-          const fileInputRef = definition.field === "expectedOutput"
-            ? evaluationCaseExpectedOutputFileRef
-            : evaluationCaseInputFileRef;
-          const characterCount = value.length;
-          return React.createElement(PlatformUiCard, {
-              as: "article",
-              className: "playground-evaluations-case-source-card" + (normalizedValue ? " has-content" : ""),
-            },
-            React.createElement("button", {
-                type: "button",
-                className: "playground-evaluations-case-source-card-main",
-                onClick: () => openEvaluationCaseFocusedEditor(definition.field),
-                "aria-label": "Open " + definition.title + " editor",
-              },
-              React.createElement("span", { className: "playground-evaluations-case-source-card-heading" },
-                React.createElement("span", { className: "playground-evaluations-case-source-card-icon", "aria-hidden": "true" },
-                  React.createElement(FileText, { width: 18, height: 18, strokeWidth: 1.8 })
-                ),
-                React.createElement("span", { className: "playground-evaluations-case-source-card-title" }, definition.title),
-                React.createElement(SquarePen, {
-                  className: "playground-evaluations-case-source-card-edit-icon",
-                  width: 14,
-                  height: 14,
-                  strokeWidth: 1.8,
-                  "aria-hidden": "true",
-                })
-              ),
-              React.createElement("span", {
-                className: "playground-evaluations-case-source-card-preview" + (normalizedValue ? "" : " is-placeholder"),
-              }, preview)
-            ),
-            React.createElement("div", { className: "playground-evaluations-case-source-card-footer" },
-              React.createElement("input", {
-                ref: fileInputRef,
-                type: "file",
-                accept: ".txt,text/plain",
-                hidden: true,
-                onChange: (event) => void handleEvaluationCaseTextFile(definition.field, event),
-              }),
-              React.createElement(PlatformSecondaryButton, {
-                  size: "small",
-                  type: "button",
-                  onClick: () => openEvaluationCaseTextFilePicker(definition.field),
-                },
-                React.createElement(ArrowUpFromLine, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" }),
-                React.createElement("span", null, "Upload .txt")
-              ),
-              React.createElement("span", { className: "playground-evaluations-case-source-card-meta" },
-                characterCount > 0
-                  ? characterCount.toLocaleString() + " " + (characterCount === 1 ? "character" : "characters")
-                  : "No content"
               )
             )
           );

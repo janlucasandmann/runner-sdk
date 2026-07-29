@@ -2113,6 +2113,11 @@
               && !isProjectTaskDetailView
               && activeProjectSectionId === "milestones"
             );
+            const isProjectDeliveryView = Boolean(
+              isProjectDetailView
+              && !isProjectTaskDetailView
+              && activeProjectSectionId === "delivery"
+            );
             const activeTicketNavigation = isProjectTaskDetailView
               && tasksHeaderState.ticketNavigation
               && Number(tasksHeaderState.ticketNavigation.currentIndex) > 0
@@ -2180,6 +2185,7 @@
                   [
                     { id: "general", label: "Home", Icon: House },
                     { id: "resources", label: "Resources", Icon: FolderOpen },
+                    { id: "delivery", label: "Delivery", Icon: GitPullRequestArrow },
                     ...(canViewProjectSettings
                       ? [{ id: "permissions", label: "Settings", Icon: Settings2 }]
                       : []),
@@ -2270,13 +2276,15 @@
                             label: projectTitle,
                             leading: projectBreadcrumbLeading,
                             trailing: projectBreadcrumbTrailing,
-                            onClick: isProjectMilestonesView
+                            onClick: isProjectMilestonesView || isProjectDeliveryView
                               ? () => navigateToProjectSection("general")
                               : undefined,
                           },
                           ...(isProjectMilestonesView
                             ? [{ label: "Milestones" }]
-                            : []),
+                            : isProjectDeliveryView
+                              ? [{ label: "Delivery" }]
+                              : []),
                         ]),
                   ]
                 : [{ label: "Create" }, { label: "Projects" }],

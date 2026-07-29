@@ -1,5 +1,4 @@
 import {
-  BadgeCheck,
   CheckCircle2,
   CircleDot,
   Clock3,
@@ -12,14 +11,13 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
+import { PlatformAnalyticsSection } from "../../../../../platform-ui/components/composite/analytics/index.js";
 import {
   PlatformDataTable,
   type PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
-import { PlatformDetailSidebarSection } from "../../../../../platform-ui/components/composite/detail-sidebar/index.js";
 import {
   PlatformSettingsSection,
   PlatformSettingsSectionList,
@@ -27,10 +25,14 @@ import {
 import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
 import {
   PlatformPrimaryButton,
-  PlatformSecondaryButton,
 } from "../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
-import { ResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
+import { PlatformSwitch } from "../../../../../platform-ui/components/ui/switch/index.js";
+import {
+  PlatformServiceDetailPage,
+  PlatformServiceDetailProperty,
+  PlatformServiceDetailPropertyList,
+} from "../../../../../platform-ui/pages/details/index.js";
 import type { AssuranceApi } from "../api/index.js";
 import type {
   AssurancePolicy,
@@ -41,7 +43,7 @@ import type {
 } from "../domain/index.js";
 import { AssurancePolicyAccessSettings } from "./assurance-policy-access-settings.js";
 
-type AssurancePolicyTab = "policy" | "runs" | "settings";
+type AssurancePolicyTab = "general" | "gates" | "settings";
 
 interface AssurancePolicyDetailPageProps {
   policy: AssurancePolicy;
@@ -49,6 +51,7 @@ interface AssurancePolicyDetailPageProps {
   projects: readonly AssuranceWorkspaceOption[];
   workspaceTeams?: readonly unknown[];
   controlsPortalId?: string;
+  sectionControlsPortalId?: string;
   onPolicyChange: (policy: AssurancePolicy) => void;
   onReload: () => Promise<void>;
   onRun: (policy: AssurancePolicy) => void;
@@ -135,27 +138,19 @@ function usePortalTarget(id: string | undefined): HTMLElement | null {
   return target;
 }
 
-function PropertyRow({ label, children }: { label: ReactNode; children: ReactNode }) {
-  return (
-    <div className="assurance-sidebar-property">
-      <span>{label}</span>
-      <strong>{children}</strong>
-    </div>
-  );
-}
-
 export function AssurancePolicyDetailPage({
   policy,
   api,
   projects,
   workspaceTeams = [],
   controlsPortalId,
+  sectionControlsPortalId,
   onPolicyChange,
   onReload,
   onRun,
   onOpenRun,
 }: AssurancePolicyDetailPageProps) {
-  const [activeTab, setActiveTab] = useState<AssurancePolicyTab>("policy");
+  const [activeTab, setActiveTab] = useState<AssurancePolicyTab>("general");
   const [name, setName] = useState(policy.name);
   const [description, setDescription] = useState(policy.description);
   const [status, setStatus] = useState(policy.status);
@@ -166,6 +161,7 @@ export function AssurancePolicyDetailPage({
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
   const portalTarget = usePortalTarget(controlsPortalId);
+  const sectionControlsPortalTarget = usePortalTarget(sectionControlsPortalId);
   const parsedDefinition = useMemo(() => parseDefinition(definitionJson), [definitionJson]);
 
   useEffect(() => {
@@ -187,7 +183,6 @@ export function AssurancePolicyDetailPage({
   );
   const versions = Array.isArray(policy.versions) ? policy.versions : [];
   const runs = Array.isArray(policy.runs) ? policy.runs : [];
-  const lastRun = runs[0] || null;
   const terminalRuns = runs.filter((run) => ["passed", "failed", "cancelled"].includes(run.status));
   const passedRuns = runs.filter((run) => run.status === "passed").length;
   const blockedRuns = runs.filter((run) => run.status === "blocked").length;
@@ -389,76 +384,137 @@ export function AssurancePolicyDetailPage({
     [],
   );
 
-  const headerActions = (
-    <>
-      <PlatformSecondaryButton
+  const analyticsRuns = runs.slice().reverse();
+  const policyPassRate = terminalRuns.length > 0
+    ? Math.round((passedRuns / terminalRuns.length) * 100)
+    : 0;
+  const policyAnalytics = {
+    ariaLabel: "Assurance Policy analytics",
+    metrics: [
+      {
+        id: "pass-rate",
+        label: "Pass Rate",
+        value: terminalRuns.length > 0 ? `${policyPassRate}%` : "—",
+        color: "#8fc4ff",
+      },
+      {
+        id: "gates",
+        label: "Gates",
+        value: String(gateRows.length),
+        color: "#7657ff",
+      },
+      {
+        id: "runs",
+        label: "Runs",
+        value: String(runs.length),
+        color: "#7effff",
+      },
+      {
+        id: "blocked",
+        label: "Awaiting Approval",
+        value: String(blockedRuns),
+        color: "#9ff6ce",
+      },
+    ],
+    labels: analyticsRuns.map((_run, index) => `Run ${index + 1}`),
+    hasData: analyticsRuns.length > 0,
+    series: [
+      {
+        id: "outcome",
+        label: "Decision",
+        values: analyticsRuns.map((run) => run.status === "passed" ? 100 : 0),
+        color: "#8fc4ff",
+        valueKind: "percent" as const,
+      },
+      {
+        id: "evaluated-gates",
+        label: "Evaluated gates",
+        values: analyticsRuns.map((run) => (
+          Array.isArray(run.evidence?.gates) ? run.evidence.gates.length : 0
+        )),
+        color: "#9ff6ce",
+        axis: "secondary" as const,
+      },
+    ],
+  };
+  const properties = (
+    <PlatformServiceDetailPropertyList>
+      <PlatformServiceDetailProperty label="Status">
+        <span className={`assurance-status-label is-${policy.status}`}>
+          {formatStatus(policy.status)}
+        </span>
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Project">
+        {projectLabel}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Gates">
+        {gateRows.length}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Approval">
+        {formatStatus(policy.definition.approval.mode)}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Published">
+        {publishedVersion ? `v${publishedVersion.version}` : "None"}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Updated">
+        {formatTimestamp(policy.updatedAt)}
+      </PlatformServiceDetailProperty>
+      <PlatformPrimaryButton
         size="small"
+        fullWidth
+        className="assurance-detail-run-button"
         disabled={Boolean(busyAction) || policy.status === "archived" || !policy.publishedVersionId}
         onClick={() => onRun(policy)}
       >
         <Play width={14} height={14} aria-hidden="true" />
         Run Assurance
-      </PlatformSecondaryButton>
-      <PlatformPrimaryButton
-        size="small"
-        disabled={Boolean(busyAction) || !dirty || !parsedDefinition.definition}
-        onClick={() => void savePolicy()}
-      >
-        <Save width={14} height={14} aria-hidden="true" />
-        {busyAction === "save" ? "Saving…" : "Save Changes"}
       </PlatformPrimaryButton>
-    </>
+    </PlatformServiceDetailPropertyList>
+  );
+  const headerActions = (
+    <PlatformPrimaryButton
+      size="small"
+      disabled={Boolean(busyAction) || !dirty || !parsedDefinition.definition}
+      onClick={() => void savePolicy()}
+    >
+      <Save width={14} height={14} aria-hidden="true" />
+      {busyAction === "save" ? "Saving…" : "Save Changes"}
+    </PlatformPrimaryButton>
+  );
+  const sectionSwitch = (
+    <PlatformSwitch
+      className="assurance-detail-header-switch"
+      value={activeTab}
+      options={[
+        { value: "general", label: "General" },
+        { value: "gates", label: "Gates" },
+        { value: "settings", label: "Settings" },
+      ]}
+      onValueChange={(nextTab) => setActiveTab(
+        nextTab === "gates"
+          ? "gates"
+          : nextTab === "settings"
+            ? "settings"
+            : "general",
+      )}
+      ariaLabel="Assurance Policy section"
+    />
   );
 
   return (
     <>
       {portalTarget ? createPortal(headerActions, portalTarget) : null}
-      <ResourceDetailPage<AssurancePolicyTab>
-        tabs={[
-          { id: "policy", label: "Policy" },
-          { id: "runs", label: "Runs" },
-          { id: "settings", label: "Settings" },
-        ]}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        sidebarAutoCollapseTabs={["settings"]}
-        sidebar={(
-          <>
-            <PlatformDetailSidebarSection title="Details">
-              <div className="assurance-sidebar-properties">
-                <PropertyRow label="Status">
-                  <span className={`assurance-status-label is-${policy.status}`}>
-                    {formatStatus(policy.status)}
-                  </span>
-                </PropertyRow>
-                <PropertyRow label="Project">{projectLabel}</PropertyRow>
-                <PropertyRow label="Gates">{gateRows.length}</PropertyRow>
-                <PropertyRow label="Approval">
-                  {formatStatus(policy.definition.approval.mode)}
-                </PropertyRow>
-                <PropertyRow label="Published version">
-                  {publishedVersion ? `v${publishedVersion.version}` : "None"}
-                </PropertyRow>
-                <PropertyRow label="Updated">{formatTimestamp(policy.updatedAt)}</PropertyRow>
-              </div>
-            </PlatformDetailSidebarSection>
-            <PlatformDetailSidebarSection title="Trust boundary">
-              <div className="assurance-sidebar-properties">
-                <PropertyRow label="Policy">Immutable version</PropertyRow>
-                <PropertyRow label="Evidence">Authoritative services</PropertyRow>
-                <PropertyRow label="Decision">Server derived</PropertyRow>
-                <PropertyRow label="Approval">Fingerprint bound</PropertyRow>
-              </div>
-            </PlatformDetailSidebarSection>
-          </>
-        )}
+      {sectionControlsPortalTarget
+        ? createPortal(sectionSwitch, sectionControlsPortalTarget)
+        : null}
+      <PlatformServiceDetailPage
+        properties={properties}
         ariaLabel={`${policy.name} Assurance Policy`}
-        tabAriaLabel="Assurance Policy sections"
         sidebarAriaLabel="Assurance Policy information"
         className="assurance-detail-page"
-        tabBarClassName="assurance-detail-tabs"
         contentClassName="assurance-detail-content"
         sidebarClassName="assurance-detail-sidebar"
+        propertiesCardClassName="assurance-detail-sidebar-card"
       >
         {error || parsedDefinition.error ? (
           <PlatformUiCard as="div" className="assurance-inline-error" role="alert">
@@ -466,28 +522,90 @@ export function AssurancePolicyDetailPage({
           </PlatformUiCard>
         ) : null}
 
-        {activeTab === "policy" ? (
+        {activeTab === "general" ? (
           <div className="assurance-detail-stack">
-            <div className="assurance-kpi-grid">
-              <PlatformUiCard as="article" className="assurance-kpi-card">
-                <span>Release gates</span><strong>{gateRows.length}</strong>
-                <small>Version-pinned verification contracts</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="assurance-kpi-card is-success">
-                <span>Passed runs</span><strong>{passedRuns}</strong>
-                <small>{terminalRuns.length} terminal decisions</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="assurance-kpi-card is-warning">
-                <span>Awaiting approval</span><strong>{blockedRuns}</strong>
-                <small>Human decisions required</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="assurance-kpi-card">
-                <span>Last decision</span>
-                <strong>{lastRun ? formatStatus(lastRun.status) : "Never"}</strong>
-                <small>{lastRun ? formatTimestamp(lastRun.createdAt) : "No evidence evaluated"}</small>
-              </PlatformUiCard>
-            </div>
+            <PlatformAnalyticsSection
+              variant="default"
+              title="Analytics"
+              analytics={policyAnalytics}
+              className="assurance-detail-analytics"
+            />
+            <PlatformDataTable
+              rows={runs}
+              columns={runColumns}
+              getRowId={(run) => run.id}
+              ariaLabel="Assurance Runs"
+              variant="minimalistic-ui"
+              surface="plain"
+              sticky={false}
+              pagination={{ defaultValue: { pageIndex: 0, pageSize: 20 } }}
+              toolbar={{
+                title: "Run History",
+                search: {
+                  placeholder: "Search Assurance Runs",
+                  getSearchText: (run) =>
+                    `${run.id} ${run.status} ${run.releaseId || ""} ${run.commitSha || ""}`,
+                },
+                primaryAction: {
+                  label: "Run Assurance",
+                  icon: Play,
+                  onClick: () => onRun(policy),
+                  disabled: policy.status === "archived" || !policy.publishedVersionId,
+                },
+              }}
+              onRowActivate={onOpenRun}
+              getRowAriaLabel={(run) => `Open Assurance Run ${run.id}`}
+              emptyState={(
+                <PlatformEmptyState
+                  icon={Clock3}
+                  title="No Assurance Runs yet"
+                  description="Evaluate canonical delivery evidence against the published policy."
+                  primaryAction={{ label: "Run Assurance", onClick: () => onRun(policy) }}
+                />
+              )}
+            />
+          </div>
+        ) : null}
 
+        {activeTab === "gates" ? (
+          <div className="assurance-detail-stack">
+            <PlatformSettingsSectionList>
+              <PlatformSettingsSection
+                title="Release gates"
+                description="Every run resolves these gates against canonical Test, Evaluation, and Agent Optimization rows."
+                bodyPresentation="flush"
+              >
+                <PlatformDataTable
+                  rows={gateRows}
+                  columns={gateColumns}
+                  getRowId={(gate) => gate.id}
+                  ariaLabel="Assurance release gates"
+                  variant="minimalistic-ui"
+                  surface="plain"
+                  sticky={false}
+                  pagination={false}
+                  emptyState="At least one release gate is required."
+                />
+              </PlatformSettingsSection>
+
+              <PlatformSettingsSection
+                title="Strict policy definition"
+                description="Advanced versioned contract. Unknown fields are rejected by the control API."
+              >
+                <textarea
+                  className="assurance-definition-editor"
+                  aria-label="Strict Assurance Policy definition JSON"
+                  spellCheck={false}
+                  value={definitionJson}
+                  onChange={(event) => setDefinitionJson(event.currentTarget.value)}
+                />
+              </PlatformSettingsSection>
+            </PlatformSettingsSectionList>
+          </div>
+        ) : null}
+
+        {activeTab === "settings" ? (
+          <div className="assurance-detail-stack">
             <PlatformSettingsSectionList>
               <PlatformSettingsSection
                 title="Properties"
@@ -539,38 +657,6 @@ export function AssurancePolicyDetailPage({
                   </div>
                 </div>
               </PlatformSettingsSection>
-
-              <PlatformSettingsSection
-                title="Release gates"
-                description="Every run resolves these gates against canonical Test, Evaluation, and Agent Optimization rows."
-                bodyPresentation="flush"
-              >
-                <PlatformDataTable
-                  rows={gateRows}
-                  columns={gateColumns}
-                  getRowId={(gate) => gate.id}
-                  ariaLabel="Assurance release gates"
-                  variant="minimalistic-ui"
-                  surface="plain"
-                  sticky={false}
-                  pagination={false}
-                  emptyState="At least one release gate is required."
-                />
-              </PlatformSettingsSection>
-
-              <PlatformSettingsSection
-                title="Strict policy definition"
-                description="Advanced versioned contract. Unknown fields are rejected by the control API."
-              >
-                <textarea
-                  className="assurance-definition-editor"
-                  aria-label="Strict Assurance Policy definition JSON"
-                  spellCheck={false}
-                  value={definitionJson}
-                  onChange={(event) => setDefinitionJson(event.currentTarget.value)}
-                />
-              </PlatformSettingsSection>
-
               <PlatformSettingsSection
                 title="Version history"
                 description="Save Changes creates and publishes a new immutable policy snapshot."
@@ -595,77 +681,27 @@ export function AssurancePolicyDetailPage({
                   emptyState="No saved policy versions."
                 />
               </PlatformSettingsSection>
+              <PlatformSettingsSection
+                title="Trust boundary"
+                description="Assurance decisions are derived from version-pinned authoritative evidence."
+              >
+                <dl className="assurance-evidence-identity">
+                  <div><dt>Policy</dt><dd>Immutable version</dd></div>
+                  <div><dt>Evidence</dt><dd>Authoritative services</dd></div>
+                  <div><dt>Decision</dt><dd>Server derived</dd></div>
+                  <div><dt>Approval</dt><dd>Fingerprint bound</dd></div>
+                </dl>
+              </PlatformSettingsSection>
             </PlatformSettingsSectionList>
-          </div>
-        ) : null}
-
-        {activeTab === "runs" ? (
-          <div className="assurance-detail-stack">
-            <div className="assurance-kpi-grid">
-              <PlatformUiCard as="article" className="assurance-kpi-card">
-                <span>Total runs</span><strong>{runs.length}</strong>
-                <small>Project- and version-bound decisions</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="assurance-kpi-card is-success">
-                <span>Passed</span><strong>{passedRuns}</strong>
-                <small>Eligible release evidence</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="assurance-kpi-card is-warning">
-                <span>Blocked</span><strong>{blockedRuns}</strong>
-                <small>Awaiting fingerprint-bound approval</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="assurance-kpi-card is-danger">
-                <span>Failed</span>
-                <strong>{runs.filter((run) => run.status === "failed").length}</strong>
-                <small>Failed technical gates</small>
-              </PlatformUiCard>
-            </div>
-            <PlatformDataTable
-              rows={runs}
-              columns={runColumns}
-              getRowId={(run) => run.id}
-              ariaLabel="Assurance Runs"
-              variant="minimalistic-ui"
-              surface="plain"
-              sticky={false}
-              pagination={{ defaultValue: { pageIndex: 0, pageSize: 20 } }}
-              toolbar={{
-                title: "Run History",
-                search: {
-                  placeholder: "Search Assurance Runs",
-                  getSearchText: (run) =>
-                    `${run.id} ${run.status} ${run.releaseId || ""} ${run.commitSha || ""}`,
-                },
-                primaryAction: {
-                  label: "Run Assurance",
-                  icon: Play,
-                  onClick: () => onRun(policy),
-                  disabled: policy.status === "archived" || !policy.publishedVersionId,
-                },
-              }}
-              onRowActivate={onOpenRun}
-              getRowAriaLabel={(run) => `Open Assurance Run ${run.id}`}
-              emptyState={(
-                <PlatformEmptyState
-                  icon={Clock3}
-                  title="No Assurance Runs yet"
-                  description="Evaluate canonical delivery evidence against the published policy."
-                  primaryAction={{ label: "Run Assurance", onClick: () => onRun(policy) }}
-                />
-              )}
+            <AssurancePolicyAccessSettings
+              policy={policy}
+              api={api}
+              workspaceTeams={workspaceTeams}
+              onPolicyChange={onPolicyChange}
             />
           </div>
         ) : null}
-
-        {activeTab === "settings" ? (
-          <AssurancePolicyAccessSettings
-            policy={policy}
-            api={api}
-            workspaceTeams={workspaceTeams}
-            onPolicyChange={onPolicyChange}
-          />
-        ) : null}
-      </ResourceDetailPage>
+      </PlatformServiceDetailPage>
     </>
   );
 }

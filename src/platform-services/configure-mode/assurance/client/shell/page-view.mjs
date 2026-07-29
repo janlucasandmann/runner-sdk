@@ -9,6 +9,9 @@ export const ASSURANCE_APP_PAGE_VIEW_SCRIPT = String.raw`        function render
             controlsPortalId: assurancePageMode === "overview"
               ? "playground-assurance-overview-controls"
               : "playground-assurance-nav-actions",
+            sectionControlsPortalId: assurancePageMode === "detail"
+              ? "playground-assurance-section-controls"
+              : undefined,
             defaultProjectId: latestInteractedProjectId || "",
             projects: runnerWorkspaceProjects,
             workspaceTeams: teamPageTeams,

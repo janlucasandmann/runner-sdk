@@ -458,7 +458,14 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
       }
 
       function getPlaygroundSkillIconId(value) {
-        const normalized = String(value || "").trim().toLowerCase();
+        const rawValue = String(value || "").trim();
+        const emoji = rawValue.startsWith("emoji:")
+          ? rawValue.slice("emoji:".length).trim()
+          : "";
+        if (emoji) {
+          return "emoji:" + emoji;
+        }
+        const normalized = rawValue.toLowerCase();
         return PLAYGROUND_SKILL_ICON_OPTIONS.some((option) => option.id === normalized)
           ? normalized
           : PLAYGROUND_SKILL_ICON_OPTIONS[0].id;

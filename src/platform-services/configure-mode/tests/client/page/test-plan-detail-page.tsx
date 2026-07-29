@@ -1,6 +1,5 @@
 import {
   CheckCircle2,
-  CircleDot,
   Clock3,
   FlaskConical,
   Play,
@@ -15,17 +14,14 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
 import {
   PlatformDataTable,
   type PlatformDataTableAction,
   type PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
+import { PlatformAnalyticsSection } from "../../../../../platform-ui/components/composite/analytics/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
-import {
-  PlatformDetailSidebarSection,
-} from "../../../../../platform-ui/components/composite/detail-sidebar/index.js";
 import {
   PlatformSettingsSection,
   PlatformSettingsSectionList,
@@ -35,8 +31,17 @@ import {
   PlatformPrimaryButton,
   PlatformSecondaryButton,
 } from "../../../../../platform-ui/components/ui/button/index.js";
+import {
+  PlatformLabel,
+  type PlatformLabelVariant,
+} from "../../../../../platform-ui/components/ui/label/index.js";
 import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
-import { ResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
+import { PlatformSwitch } from "../../../../../platform-ui/components/ui/switch/index.js";
+import {
+  PlatformServiceDetailPage,
+  PlatformServiceDetailProperty,
+  PlatformServiceDetailPropertyList,
+} from "../../../../../platform-ui/pages/details/index.js";
 import type { TestsApi } from "../api/index.js";
 import type {
   TestCaseDefinition,
@@ -48,7 +53,7 @@ import type {
 } from "../domain/index.js";
 import { TestPlanAccessSettings } from "./test-plan-access-settings.js";
 
-type TestPlanTab = "plan" | "runs" | "settings";
+type TestPlanTab = "general" | "cases" | "settings";
 
 interface TestPlanDetailPageProps {
   plan: TestPlan;
@@ -57,6 +62,7 @@ interface TestPlanDetailPageProps {
   environments: readonly TestWorkspaceResourceOption[];
   workspaceTeams?: readonly unknown[];
   controlsPortalId?: string;
+  sectionControlsPortalId?: string;
   onPlanChange: (plan: TestPlan) => void;
   onReload: () => Promise<void>;
   onRun: (plan: TestPlan) => void;
@@ -86,6 +92,14 @@ function formatStatus(value: string): string {
   return String(value || "unknown")
     .replace(/_/g, " ")
     .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function statusLabelVariant(value: string): PlatformLabelVariant {
+  if (value === "passed" || value === "active") return "green";
+  if (["failed", "error", "completed_with_errors"].includes(value)) return "red";
+  if (value === "running" || value === "queued") return "blue";
+  if (value === "warning") return "yellow";
+  return "gray";
 }
 
 function cloneDefinition(definition: TestPlanDefinition): TestPlanDefinition {
@@ -128,15 +142,6 @@ function usePortalTarget(id: string | undefined): HTMLElement | null {
   return target;
 }
 
-function PropertyRow({ label, children }: { label: ReactNode; children: ReactNode }) {
-  return (
-    <div className="tests-sidebar-property">
-      <span>{label}</span>
-      <strong>{children}</strong>
-    </div>
-  );
-}
-
 export function TestPlanDetailPage({
   plan,
   api,
@@ -144,12 +149,13 @@ export function TestPlanDetailPage({
   environments,
   workspaceTeams = [],
   controlsPortalId,
+  sectionControlsPortalId,
   onPlanChange,
   onReload,
   onRun,
   onOpenRun,
 }: TestPlanDetailPageProps) {
-  const [activeTab, setActiveTab] = useState<TestPlanTab>("plan");
+  const [activeTab, setActiveTab] = useState<TestPlanTab>("general");
   const [name, setName] = useState(plan.name);
   const [description, setDescription] = useState(plan.description);
   const [status, setStatus] = useState(plan.status);
@@ -161,6 +167,7 @@ export function TestPlanDetailPage({
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
   const portalTarget = usePortalTarget(controlsPortalId);
+  const sectionControlsPortalTarget = usePortalTarget(sectionControlsPortalId);
   const parsedDefinition = useMemo(
     () => readParsedDefinition(definitionJson),
     [definitionJson],
@@ -356,7 +363,6 @@ export function TestPlanDetailPage({
         width: "minmax(220px, 1.15fr)",
         cell: ({ row }) => (
           <span className="tests-table-identity">
-            <CircleDot width={15} height={15} aria-hidden="true" />
             <span>
               <strong>{row.id}</strong>
               <small>{formatTimestamp(row.createdAt)}</small>
@@ -371,7 +377,9 @@ export function TestPlanDetailPage({
         sortable: true,
         width: "minmax(150px, .7fr)",
         cell: ({ row }) => (
-          <span className={`tests-status-label is-${row.status}`}>{formatStatus(row.status)}</span>
+          <PlatformLabel variant={statusLabelVariant(row.status)}>
+            {formatStatus(row.status)}
+          </PlatformLabel>
         ),
       },
       {
@@ -427,76 +435,141 @@ export function TestPlanDetailPage({
     [plan.publishedVersionId],
   );
 
-  const headerActions = (
-    <>
-      <PlatformSecondaryButton
+  const analyticsRuns = runs.slice().reverse();
+  const planAnalytics = {
+    ariaLabel: "Test plan analytics",
+    metrics: [
+      {
+        id: "pass-rate",
+        label: "Pass Rate",
+        value: terminalRuns.length > 0 ? `${passRate}%` : "—",
+        color: "#8fc4ff",
+      },
+      {
+        id: "cases",
+        label: "Cases",
+        value: String(currentCases.length),
+        color: "#7657ff",
+      },
+      {
+        id: "runs",
+        label: "Runs",
+        value: String(runs.length),
+        color: "#7effff",
+      },
+      {
+        id: "duration",
+        label: "Last Duration",
+        value: formatDuration(lastRun?.durationMs),
+        color: "#9ff6ce",
+      },
+    ],
+    labels: analyticsRuns.map((run, index) => (
+      `Run ${index + 1}`
+    )),
+    hasData: analyticsRuns.length > 0,
+    series: [
+      {
+        id: "pass-rate",
+        label: "Pass rate",
+        values: analyticsRuns.map((run) => (
+          run.totalCount > 0
+            ? Math.round((run.passedCount / run.totalCount) * 100)
+            : 0
+        )),
+        color: "#8fc4ff",
+        valueKind: "percent" as const,
+      },
+      {
+        id: "passed",
+        label: "Passed cases",
+        values: analyticsRuns.map((run) => run.passedCount),
+        color: "#9ff6ce",
+        axis: "secondary" as const,
+      },
+    ],
+  };
+  const publishedVersion = versions.find(
+    (version) => version.id === plan.publishedVersionId,
+  );
+  const properties = (
+    <PlatformServiceDetailPropertyList>
+      <PlatformServiceDetailProperty label="Status">
+        <span className={`tests-status-label is-${plan.status}`}>
+          {formatStatus(plan.status)}
+        </span>
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Project">
+        {projectLabel}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Environment">
+        {environmentLabel}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Cases">
+        {plan.caseCount}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Published">
+        {publishedVersion ? `v${publishedVersion.version}` : "None"}
+      </PlatformServiceDetailProperty>
+      <PlatformServiceDetailProperty label="Updated">
+        {formatTimestamp(plan.updatedAt)}
+      </PlatformServiceDetailProperty>
+      <PlatformPrimaryButton
         size="small"
+        fullWidth
+        className="tests-detail-run-button"
         disabled={Boolean(busyAction) || status === "archived" || currentCases.length === 0}
         onClick={() => onRun(plan)}
       >
         <Play width={14} height={14} aria-hidden="true" />
         Run Tests
-      </PlatformSecondaryButton>
-      <PlatformPrimaryButton
-        size="small"
-        disabled={Boolean(busyAction) || !dirty || !parsedDefinition.definition}
-        onClick={() => void savePlan()}
-      >
-        <Save width={14} height={14} aria-hidden="true" />
-        {busyAction === "save" ? "Saving…" : "Save Changes"}
       </PlatformPrimaryButton>
-    </>
+    </PlatformServiceDetailPropertyList>
+  );
+  const headerActions = (
+    <PlatformPrimaryButton
+      size="small"
+      disabled={Boolean(busyAction) || !dirty || !parsedDefinition.definition}
+      onClick={() => void savePlan()}
+    >
+      <Save width={14} height={14} aria-hidden="true" />
+      {busyAction === "save" ? "Saving…" : "Save Changes"}
+    </PlatformPrimaryButton>
+  );
+  const sectionSwitch = (
+    <PlatformSwitch
+      className="tests-detail-header-switch"
+      value={activeTab}
+      options={[
+        { value: "general", label: "General" },
+        { value: "cases", label: "Cases" },
+        { value: "settings", label: "Settings" },
+      ]}
+      onValueChange={(nextTab) => setActiveTab(
+        nextTab === "cases"
+          ? "cases"
+          : nextTab === "settings"
+            ? "settings"
+            : "general",
+      )}
+      ariaLabel="Test plan section"
+    />
   );
 
   return (
     <>
       {portalTarget ? createPortal(headerActions, portalTarget) : null}
-      <ResourceDetailPage<TestPlanTab>
-        tabs={[
-          { id: "plan", label: "Test Plan" },
-          { id: "runs", label: "Runs" },
-          { id: "settings", label: "Settings" },
-        ]}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        sidebarAutoCollapseTabs={["settings"]}
-        sidebar={(
-          <>
-            <PlatformDetailSidebarSection title="Details">
-              <div className="tests-sidebar-properties">
-                <PropertyRow label="Status">
-                  <span className={`tests-status-label is-${plan.status}`}>
-                    {formatStatus(plan.status)}
-                  </span>
-                </PropertyRow>
-                <PropertyRow label="Project">{projectLabel}</PropertyRow>
-                <PropertyRow label="Environment">{environmentLabel}</PropertyRow>
-                <PropertyRow label="Cases">{plan.caseCount}</PropertyRow>
-                <PropertyRow label="Published version">
-                  {versions.find((version) => version.id === plan.publishedVersionId)
-                    ? `v${versions.find((version) => version.id === plan.publishedVersionId)?.version}`
-                    : "None"}
-                </PropertyRow>
-                <PropertyRow label="Updated">{formatTimestamp(plan.updatedAt)}</PropertyRow>
-              </div>
-            </PlatformDetailSidebarSection>
-            <PlatformDetailSidebarSection title="Safety boundary">
-              <div className="tests-sidebar-properties">
-                <PropertyRow label="Execution">Computer Agents environment</PropertyRow>
-                <PropertyRow label="Definition">Immutable published snapshot</PropertyRow>
-                <PropertyRow label="Secrets">References only · redacted</PropertyRow>
-                <PropertyRow label="Evidence">Server fingerprinted</PropertyRow>
-              </div>
-            </PlatformDetailSidebarSection>
-          </>
-        )}
+      {sectionControlsPortalTarget
+        ? createPortal(sectionSwitch, sectionControlsPortalTarget)
+        : null}
+      <PlatformServiceDetailPage
+        properties={properties}
         ariaLabel={`${plan.name} test plan`}
-        tabAriaLabel="Test plan sections"
         sidebarAriaLabel="Test plan information"
         className="tests-detail-page"
-        tabBarClassName="tests-detail-tabs"
         contentClassName="tests-detail-content"
         sidebarClassName="tests-detail-sidebar"
+        propertiesCardClassName="tests-detail-sidebar-card"
       >
         {error || parsedDefinition.error ? (
           <PlatformUiCard as="div" className="tests-inline-error" role="alert">
@@ -504,31 +577,107 @@ export function TestPlanDetailPage({
           </PlatformUiCard>
         ) : null}
 
-        {activeTab === "plan" ? (
+        {activeTab === "general" ? (
           <div className="tests-detail-stack">
-            <div className="tests-kpi-grid">
-              <PlatformUiCard as="article" className="tests-kpi-card">
-                <span>Enabled cases</span>
-                <strong>{currentCases.filter((testCase) => testCase.enabled !== false).length}</strong>
-                <small>{currentCases.length} total definitions</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="tests-kpi-card">
-                <span>Runs</span>
-                <strong>{runs.length}</strong>
-                <small>{lastRun ? `Last ${formatStatus(lastRun.status)}` : "Never run"}</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="tests-kpi-card">
-                <span>Pass rate</span>
-                <strong>{terminalRuns.length ? `${passRate}%` : "—"}</strong>
-                <small>{terminalRuns.length} completed runs</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="tests-kpi-card">
-                <span>Evidence</span>
-                <strong>{lastRun?.evidence?.fingerprint ? "Signed" : "Pending"}</strong>
-                <small>{lastRun?.commitSha ? lastRun.commitSha.slice(0, 12) : "No commit pinned"}</small>
-              </PlatformUiCard>
-            </div>
+            <PlatformAnalyticsSection
+              variant="default"
+              title="Analytics"
+              analytics={planAnalytics}
+              className="tests-detail-analytics"
+            />
+            <PlatformDataTable
+              rows={runs}
+              columns={runColumns}
+              getRowId={(run) => run.id}
+              ariaLabel="Test runs"
+              className="tests-runs-table"
+              variant="minimalistic-ui"
+              surface="plain"
+              sticky={false}
+              pagination={{ defaultValue: { pageIndex: 0, pageSize: 20 } }}
+              toolbar={{
+                title: "Run History",
+                search: {
+                  placeholder: "Search runs",
+                  getSearchText: (run) =>
+                    `${run.id} ${run.status} ${run.commitSha || ""} ${run.triggerType}`,
+                },
+              }}
+              onRowActivate={onOpenRun}
+              getRowAriaLabel={(run) => `Open test run ${run.id}`}
+              emptyState={(
+                <PlatformEmptyState
+                  icon={Clock3}
+                  title="No test runs yet"
+                  description="Run the published plan to retain case-level verification evidence."
+                  primaryAction={{ label: "Run Tests", onClick: () => onRun(plan) }}
+                />
+              )}
+            />
+          </div>
+        ) : null}
 
+        {activeTab === "cases" ? (
+          <div className="tests-detail-stack">
+            <PlatformSettingsSectionList>
+              <PlatformSettingsSection
+                title="Test cases"
+                description="Every case is executed from the immutable published snapshot."
+                actions={(
+                  <PlatformSecondaryButton size="compact" onClick={addCase}>
+                    <Plus width={13} height={13} aria-hidden="true" />
+                    Add Case
+                  </PlatformSecondaryButton>
+                )}
+                bodyPresentation="flush"
+              >
+                <PlatformDataTable
+                  rows={currentCases}
+                  columns={caseColumns}
+                  getRowId={(testCase) => testCase.id}
+                  ariaLabel="Test cases"
+                  variant="minimalistic-ui"
+                  surface="plain"
+                  sticky={false}
+                  pagination={false}
+                  getRowActions={(testCase): readonly PlatformDataTableAction<TestCaseDefinition>[] => [
+                    {
+                      id: "remove",
+                      label: "Remove",
+                      icon: Trash2,
+                      danger: true,
+                      onSelect: () => removeCase(testCase),
+                    },
+                  ]}
+                  emptyState={(
+                    <PlatformEmptyState
+                      icon={FlaskConical}
+                      title="No test cases"
+                      description="Add at least one executable case before running this plan."
+                      primaryAction={{ label: "Add Case", onClick: addCase }}
+                    />
+                  )}
+                />
+              </PlatformSettingsSection>
+
+              <PlatformSettingsSection
+                title="Strict definition"
+                description="Advanced JSON editor for setup, cases, teardown, retry, and evidence-retention policy. Unknown fields are rejected by the API."
+              >
+                <textarea
+                  className="tests-definition-editor"
+                  aria-label="Strict test-plan definition JSON"
+                  spellCheck={false}
+                  value={definitionJson}
+                  onChange={(event) => setDefinitionJson(event.currentTarget.value)}
+                />
+              </PlatformSettingsSection>
+            </PlatformSettingsSectionList>
+          </div>
+        ) : null}
+
+        {activeTab === "settings" ? (
+          <div className="tests-detail-stack">
             <PlatformSettingsSectionList>
               <PlatformSettingsSection
                 title="Properties"
@@ -597,60 +746,6 @@ export function TestPlanDetailPage({
                   </div>
                 </div>
               </PlatformSettingsSection>
-
-              <PlatformSettingsSection
-                title="Test cases"
-                description="Every case is executed from the immutable published snapshot."
-                actions={(
-                  <PlatformSecondaryButton size="compact" onClick={addCase}>
-                    <Plus width={13} height={13} aria-hidden="true" />
-                    Add Case
-                  </PlatformSecondaryButton>
-                )}
-                bodyPresentation="flush"
-              >
-                <PlatformDataTable
-                  rows={currentCases}
-                  columns={caseColumns}
-                  getRowId={(testCase) => testCase.id}
-                  ariaLabel="Test cases"
-                  variant="minimalistic-ui"
-                  surface="plain"
-                  sticky={false}
-                  pagination={false}
-                  getRowActions={(testCase): readonly PlatformDataTableAction<TestCaseDefinition>[] => [
-                    {
-                      id: "remove",
-                      label: "Remove",
-                      icon: Trash2,
-                      danger: true,
-                      onSelect: () => removeCase(testCase),
-                    },
-                  ]}
-                  emptyState={(
-                    <PlatformEmptyState
-                      icon={FlaskConical}
-                      title="No test cases"
-                      description="Add at least one executable case before running this plan."
-                      primaryAction={{ label: "Add Case", onClick: addCase }}
-                    />
-                  )}
-                />
-              </PlatformSettingsSection>
-
-              <PlatformSettingsSection
-                title="Strict definition"
-                description="Advanced JSON editor for setup, cases, teardown, retry, and evidence-retention policy. Unknown fields are rejected by the API."
-              >
-                <textarea
-                  className="tests-definition-editor"
-                  aria-label="Strict test-plan definition JSON"
-                  spellCheck={false}
-                  value={definitionJson}
-                  onChange={(event) => setDefinitionJson(event.currentTarget.value)}
-                />
-              </PlatformSettingsSection>
-
               <PlatformSettingsSection
                 title="Version history"
                 description="New runs always pin the currently published immutable version."
@@ -687,81 +782,27 @@ export function TestPlanDetailPage({
                   emptyState="No saved versions."
                 />
               </PlatformSettingsSection>
+              <PlatformSettingsSection
+                title="Execution boundary"
+                description="Tests execute only from immutable published snapshots inside Computer Agents environments."
+              >
+                <dl className="tests-evidence-identity">
+                  <div><dt>Execution</dt><dd>Computer Agents environment</dd></div>
+                  <div><dt>Definition</dt><dd>Immutable published snapshot</dd></div>
+                  <div><dt>Secrets</dt><dd>References only · redacted</dd></div>
+                  <div><dt>Evidence</dt><dd>Server fingerprinted</dd></div>
+                </dl>
+              </PlatformSettingsSection>
             </PlatformSettingsSectionList>
-          </div>
-        ) : null}
-
-        {activeTab === "runs" ? (
-          <div className="tests-detail-stack">
-            <div className="tests-kpi-grid">
-              <PlatformUiCard as="article" className="tests-kpi-card">
-                <span>Queued or running</span>
-                <strong>{runs.filter((run) => ["queued", "running"].includes(run.status)).length}</strong>
-                <small>Durably dispatched</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="tests-kpi-card">
-                <span>Passed</span>
-                <strong>{passedRuns}</strong>
-                <small>{passRate}% completed-run pass rate</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="tests-kpi-card">
-                <span>Failed</span>
-                <strong>{runs.filter((run) => ["failed", "completed_with_errors"].includes(run.status)).length}</strong>
-                <small>Require review</small>
-              </PlatformUiCard>
-              <PlatformUiCard as="article" className="tests-kpi-card">
-                <span>Last run</span>
-                <strong>{lastRun ? formatStatus(lastRun.status) : "Never"}</strong>
-                <small>{lastRun ? formatTimestamp(lastRun.createdAt) : "No evidence yet"}</small>
-              </PlatformUiCard>
-            </div>
-            <PlatformDataTable
-              rows={runs}
-              columns={runColumns}
-              getRowId={(run) => run.id}
-              ariaLabel="Test runs"
-              className="tests-runs-table"
-              variant="minimalistic-ui"
-              surface="plain"
-              sticky={false}
-              pagination={{ defaultValue: { pageIndex: 0, pageSize: 20 } }}
-              toolbar={{
-                title: "Run History",
-                search: {
-                  placeholder: "Search runs",
-                  getSearchText: (run) =>
-                    `${run.id} ${run.status} ${run.commitSha || ""} ${run.triggerType}`,
-                },
-                primaryAction: {
-                  label: "Run Tests",
-                  icon: Play,
-                  onClick: () => onRun(plan),
-                  disabled: plan.status === "archived" || plan.caseCount === 0,
-                },
-              }}
-              onRowActivate={onOpenRun}
-              getRowAriaLabel={(run) => `Open test run ${run.id}`}
-              emptyState={(
-                <PlatformEmptyState
-                  icon={Clock3}
-                  title="No test runs yet"
-                  description="Run the published plan to retain case-level verification evidence."
-                  primaryAction={{ label: "Run Tests", onClick: () => onRun(plan) }}
-                />
-              )}
+            <TestPlanAccessSettings
+              plan={plan}
+              api={api}
+              workspaceTeams={workspaceTeams}
+              onPlanChange={onPlanChange}
             />
           </div>
         ) : null}
-
-        {activeTab === "settings" ? (
-          <TestPlanAccessSettings
-            plan={plan}
-            api={api}
-            workspaceTeams={workspaceTeams}
-            onPlanChange={onPlanChange}
-          />
-        ) : null}
-      </ResourceDetailPage>
+      </PlatformServiceDetailPage>
     </>
   );
 }

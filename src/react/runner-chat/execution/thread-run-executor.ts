@@ -101,6 +101,7 @@ export interface RunnerThreadRunOptions {
   githubRepoOverride?: RunnerGithubRunReference | null;
   enabledSkillsOverride?: Record<string, unknown> | null;
   displayPromptOverride?: string | null;
+  connectorsOverride?: Record<string, unknown> | null;
 }
 
 export interface RunnerEnsuredThread {
@@ -121,6 +122,7 @@ export interface RunnerExternalRunHandoff {
   attachments?: RunnerAttachment[] | null;
   githubRepo?: RunnerGithubRunReference | null;
   enabledSkills?: Record<string, unknown> | null;
+  connectors?: Record<string, unknown> | null;
   environmentId?: string | null;
   projectId?: string | null;
   quotedSelection?: RunnerQuotedSelection | null;
@@ -358,6 +360,10 @@ export function createRunnerThreadRunExecutor(
         attachments: resolvedAttachments || [],
         githubRepo: githubRepo || null,
         enabledSkills: executionEnabledSkillsPayload || null,
+        connectors:
+          options.connectorsOverride === undefined
+            ? dependencies.backlogTaskConnectors
+            : options.connectorsOverride,
         environmentId:
           typeof runEnvironmentId === "string" ? runEnvironmentId : "",
         projectId: dependencies.effectiveProjectId || null,
@@ -599,7 +605,10 @@ export function createRunnerThreadRunExecutor(
             persistFileChanges: options.persistFileChanges,
             quotedSelection: options.quotedSelection,
             enabledSkills: executionEnabledSkillsPayload,
-            connectors: dependencies.backlogTaskConnectors,
+            connectors:
+              options.connectorsOverride === undefined
+                ? dependencies.backlogTaskConnectors
+                : options.connectorsOverride,
             backlogCommand: options.backlogCommand,
             slideCreationCommand: options.slideCreationCommand,
             researchCreationCommand: options.researchCreationCommand,

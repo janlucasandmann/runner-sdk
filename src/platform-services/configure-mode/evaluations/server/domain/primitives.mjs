@@ -139,10 +139,10 @@ export function normalizePersonIdentity(rawValue = {}) {
 export function getCreatorIdentity(source = {}) {
   const record = source && typeof source === "object" && !Array.isArray(source) ? source : {};
   const metadata = record.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
-  const nested = record.creator || record.createdBy || record.created_by || metadata.creator || metadata.createdBy || metadata.created_by || record.owner || metadata.owner || null;
+  const nested = record.creator || record.createdBy || record.created_by || metadata.creator || metadata.createdBy || metadata.created_by || null;
   const direct = normalizePersonIdentity({
-    id: record.creatorId || record.creator_id || record.createdById || record.created_by_id || metadata.creatorId || metadata.creator_id || metadata.createdById || metadata.created_by_id || record.userId || record.user_id,
-    userId: record.creatorUserId || record.creator_user_id || metadata.creatorUserId || metadata.creator_user_id || record.userId || record.user_id,
+    id: record.creatorId || record.creator_id || record.createdById || record.created_by_id || record.createdByUserId || record.created_by_user_id || metadata.creatorId || metadata.creator_id || metadata.createdById || metadata.created_by_id || metadata.createdByUserId || metadata.created_by_user_id,
+    userId: record.creatorUserId || record.creator_user_id || record.createdByUserId || record.created_by_user_id || metadata.creatorUserId || metadata.creator_user_id || metadata.createdByUserId || metadata.created_by_user_id,
     name: record.creatorName || record.creator_name || record.createdByName || record.created_by_name || metadata.creatorName || metadata.creator_name || metadata.createdByName || metadata.created_by_name,
     email: record.creatorEmail || record.creator_email || record.createdByEmail || record.created_by_email || metadata.creatorEmail || metadata.creator_email || metadata.createdByEmail || metadata.created_by_email,
     avatarUrl: record.creatorAvatarUrl || record.creator_avatar_url || record.createdByAvatarUrl || record.created_by_avatar_url || metadata.creatorAvatarUrl || metadata.creator_avatar_url || metadata.createdByAvatarUrl || metadata.created_by_avatar_url,

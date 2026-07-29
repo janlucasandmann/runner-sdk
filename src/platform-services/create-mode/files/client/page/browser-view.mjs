@@ -5,7 +5,7 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
             value: contentMode === "changes" ? "changes" : "files",
             options: [
               { value: "files", label: "Files" },
-              { value: "changes", label: "Changes" },
+              { value: "changes", label: "Activity" },
             ],
             ariaLabel: "Files view",
             onValueChange: (nextMode) => {
@@ -574,6 +574,7 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
             operationFilter: changesOperationFilter,
             actorFilter: changesActorFilter,
             onAvailableActorsChange: setAvailableChangeActors,
+            onOperationFilterChange: setChangesOperationFilter,
             onShowInFiles: navigateToFilesSelection,
             onScreenModeChange: setChangesViewMode,
           });
@@ -745,90 +746,6 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                 ),
                 !isChangesMode
                   ? renderFilesLibraryHeader()
-                  : null,
-                isChangesMode && changesViewMode !== "detail"
-                  ? React.createElement("div", { className: "playground-files-control-row" },
-                      React.createElement("div", { className: "playground-files-control-actions" },
-                        React.createElement("div", { className: "playground-files-toolbar-anchor" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-files-control-button" + (toolbarPopover === "filter" || (isChangesMode ? hasActiveChangesFilters : filterMode !== "all") ? " is-active" : ""),
-                            onClick: () => toggleToolbarPopover("filter"),
-                          },
-                            React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Filter")
-                          ),
-                          toolbarPopover === "filter"
-                            ? isChangesMode
-                              ? renderChangesFilterMenu()
-                              : React.createElement(PlatformPopupSurface, { className: "playground-files-toolbar-menu playground-files-toolbar-menu-wide" },
-                                  React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeFilterOption.label),
-                                  filterOptions.map((option) =>
-                                    React.createElement("button", {
-                                        key: option.id,
-                                        type: "button",
-                                        className: "playground-files-toolbar-menu-item" + (filterMode === option.id ? " is-active" : ""),
-                                        onClick: () => {
-                                          setFilterMode(option.id);
-                                          setToolbarPopover("");
-                                        },
-                                      },
-                                        React.createElement("span", { className: "playground-files-toolbar-menu-check" }, filterMode === option.id ? "•" : ""),
-                                        React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                          React.createElement("span", null, option.label),
-                                          React.createElement("span", null, option.description)
-                                        )
-                                      )
-                                  )
-                                )
-                            : null
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-files-control-spacer" }),
-                      !isChangesMode
-                        ? React.createElement("div", { className: "playground-files-path-strip" },
-                            React.createElement("div", { className: "playground-files-browser-nav" },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-files-nav-button",
-                                onClick: handleGoBack,
-                                disabled: !canGoBack,
-                                title: "Go back",
-                              }, React.createElement(ChevronLeft, { strokeWidth: 1.8, width: 14, height: 14 })),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-files-nav-button",
-                                onClick: handleGoForward,
-                                disabled: !canGoForward,
-                                title: "Go forward",
-                              }, React.createElement(ChevronRight, { strokeWidth: 1.8, width: 14, height: 14 }))
-                            ),
-                            React.createElement("div", { className: "playground-files-breadcrumbs" },
-                              React.createElement("img", {
-                                className: "playground-files-breadcrumb-icon",
-                                src: PLAYGROUND_FOLDER_ICON_URL,
-                                alt: "",
-                                "aria-hidden": "true",
-                              }),
-                              breadcrumbs.map((crumb, index) =>
-                                React.createElement("button", {
-                                    key: crumb.id || "root",
-                                    type: "button",
-                                    className: "playground-files-breadcrumb" + (index === breadcrumbs.length - 1 ? " is-active" : ""),
-                                    onClick: () => handleBreadcrumbClick(crumb.id),
-                                  },
-                                    index > 0
-                                      ? React.createElement("span", { className: "playground-files-breadcrumb-separator" }, "/")
-                                      : null,
-                                    React.createElement("span", null, index === 0 ? "/" : crumb.name)
-                                  )
-                              ),
-                              React.createElement("span", { className: "playground-files-browser-summary" }, visibleEntryCount + " items")
-                            )
-                          )
-                        : null,
-                      !isChangesMode ? renderFilesCreateButton() : null
-                    )
                   : null,
                 actionError
                   ? React.createElement("div", { className: "playground-files-action-error" }, actionError)

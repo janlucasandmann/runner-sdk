@@ -253,9 +253,20 @@ export function createPlatformConfig(env = process.env) {
         path.join(aiosHostingRoot, ".env"),
         path.join(cloudInfrastructureRoot, ".env"),
       ];
-  const configuredGithubOrigins = splitCommaSeparatedValues(
-    env.GITHUB_OAUTH_ALLOWED_ORIGINS,
+  const configuredConnectorOauthOrigins = splitCommaSeparatedValues(
+    env.CONNECTOR_OAUTH_ALLOWED_ORIGINS
+    || env.GITHUB_OAUTH_ALLOWED_ORIGINS,
   );
+  const connectorOauthAllowedOrigins =
+    configuredConnectorOauthOrigins.length > 0
+      ? configuredConnectorOauthOrigins
+      : [
+          "https://computer-agents.com",
+          "https://platform.computer-agents.com",
+          "https://testbaseai.web.app",
+          "http://localhost:3000",
+          "http://localhost:4177",
+        ];
 
   return Object.freeze({
     aiosHostingRoot,
@@ -283,15 +294,11 @@ export function createPlatformConfig(env = process.env) {
       || env.FEEDBACK_SUMMARY_ALLOWED_EMAIL
       || "",
     ).trim().toLowerCase(),
-    githubOauthAllowedOrigins: configuredGithubOrigins.length > 0
-      ? configuredGithubOrigins
-      : [
-          "https://computer-agents.com",
-          "https://platform.computer-agents.com",
-          "https://testbaseai.web.app",
-          "http://localhost:3000",
-          "http://localhost:4177",
-        ],
+    connectorOauthAllowedOrigins,
+    connectorOauthEnvFileCandidates: runtimeEnvFileCandidates,
+    // Compatibility aliases for downstream deployments that still reference
+    // the original GitHub-specific configuration names.
+    githubOauthAllowedOrigins: connectorOauthAllowedOrigins,
     githubOauthEnvFileCandidates: runtimeEnvFileCandidates,
     executionDispatcher: Object.freeze({
       enabled: executionDispatcherEnabled,

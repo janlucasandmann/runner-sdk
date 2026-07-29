@@ -50,7 +50,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects domain runtime",
     source: PROJECTS_DOMAIN_RUNTIME_SCRIPT,
-    expectedSha256: "9a5266c8a3b0bc0fc24c87ec5a34395cbef1c46118fd0447b2301923eaa474ea",
+    expectedSha256: "cb530bc8693df3d431c5727a48fd4575ae8bc08417f05931a705015116257ba0",
     fragmentGroups: [
       {
         baseUrl: projectsClientUrl,
@@ -62,7 +62,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "9e5a2401b2eb29ed83e3f7406d5ce6c67628f3c1464e056d4aa673a8ee7a8500",
+    expectedSha256: "bec46a79eb60380d576a3509024bbb1047745d18fd42b5614876f495d01b498a",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -98,7 +98,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects data runtime",
     source: PROJECTS_PAGE_DATA_SCRIPT,
-    expectedSha256: "eed5eca965bf81d6222621c0ba18a47af113204a52d4733541026b07db994dcf",
+    expectedSha256: "be0e50df296414835a257833aafccf749278d579ca41570d485e740b6231ea59",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -110,7 +110,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects shell runtime",
     source: PROJECTS_PAGE_SHELL_SCRIPT,
-    expectedSha256: "8f185dfeb76ea6f3416e822dd90ce5ec23db6ba1c6b8e776ab8d8fe50cf4cb75",
+    expectedSha256: "96963db453d70778987a8cdcc74b228e245a35d22ee8f2b9b3a4468c720c54cc",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -122,7 +122,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "407acc8af1c328745c5366f3a45638849c780f3215cc93a5bc5342dfdb1148c7",
+    expectedSha256: "c13ccf64a49ec1887a72f655f88cc34977fd9e1a8fe561a93973e0404d7eb54a",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -134,7 +134,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects core styles",
     source: PROJECTS_CORE_CSS,
-    expectedSha256: "5b9efa196fc79e496741e40c77a858bcd255fcbfe990abd0569519276aa05308",
+    expectedSha256: "2668cf4c5587fea38f6df9d1aa5835d1a790d60dd7709d7f73878b64b9a418f8",
     fragmentGroups: [
       {
         baseUrl: projectsStylesUrl,
@@ -264,6 +264,10 @@ assert.doesNotMatch(
 assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
   /workRelations: Array\.isArray\(tasksData\?\.relations\)[\s\S]*?agentSessions: Array\.isArray\(tasksData\?\.agentSessions\)/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /event\.eventType === "created"[\s\S]*?event\.taskId \+ ":created"[\s\S]*?actorPriority > existingActorPriority/,
 );
 assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
@@ -1255,7 +1259,7 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
-  /extraActions: taskView === "backlog" \|\| taskView === "board" \|\| taskView === "activity"\s*\? renderProjectAppHeaderMilestoneSelector\(\)\s*: null/,
+  /extraActions: taskView === "backlog" \|\| taskView === "board"\s*\? renderProjectAppHeaderMilestoneSelector\(\)\s*: null/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -2044,19 +2048,67 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /function buildProjectWorkActivityOverviewItems\(scopedTasks\)[\s\S]*?function renderProjectActivityOverviewView\(\)[\s\S]*?className: "playground-project-activity-page"[\s\S]*?React\.createElement\(PlatformActivityOverview, \{[\s\S]*?React\.createElement\(PlatformActivityTimeline, \{[\s\S]*?layout: "inspector"[\s\S]*?title: "Activity"[\s\S]*?inspectorTitle: "Inspector"/,
+  /function buildProjectWorkActivityOverviewItems\(\s*scopedTasks,\s*selectionEvents = \[\],\s*selectedTimelineItemId = ""\s*\)[\s\S]*?function renderProjectActivityOverviewView\(\)[\s\S]*?className: "playground-project-activity-page"[\s\S]*?renderProjectActivityOverviewChart\(activityItems\)[\s\S]*?React\.createElement\(PlatformActivityTimeline, \{[\s\S]*?layout: "inspector"[\s\S]*?title: "Activity"[\s\S]*?inspectorTitle: "Inspector"/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function filterProjectWorkActivityEventsByTimeRange\([\s\S]*?function getProjectActivityPageGridStyle\(chartHeight\)[\s\S]*?function renderProjectActivityOverviewChart\(activityItems\)[\s\S]*?React\.createElement\(PlatformActivityOverview, \{[\s\S]*?resizable: true[\s\S]*?onHeightChange: setProjectOverviewActivityChartHeight[\s\S]*?onTimeRangeChange: setProjectOverviewTaskActivityTimeRange/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function getProjectActivityPageGridStyle\(chartHeight\) \{[\s\S]*?if \(!Number\.isFinite\(normalizedHeight\) \|\| normalizedHeight <= 0\) \{\s*return \{\s*gridTemplateRows: "repeat\(2, minmax\(0, 1fr\)\)",\s*\};/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const effectiveProjectActivitySelectedId = projectActivityTimelineItems\.some\([\s\S]*?buildProjectWorkActivityOverviewItems\(\s*activityTasks,\s*projectActivityEvents,\s*effectiveProjectActivitySelectedId\s*\)/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /filterProjectWorkActivityEventsByTimeRange\(\s*projectActivityEvents,\s*projectOverviewTaskActivityTimeRange\s*\)/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function renderProjectWorkActivityCard\(\{[\s\S]*?selected = false,[\s\S]*?React\.createElement\(PlatformActivityOverviewCard, \{[\s\S]*?PlatformPermissionMiniRingIcon[\s\S]*?renderProjectWorkActivityActorAvatar\([\s\S]*?selected,/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const taskSelection = getTimelineEntrySelection\(\{[\s\S]*?eventType: "created"[\s\S]*?content: renderProjectWorkActivityCard\(\{[\s\S]*?onSelect: taskSelection\.onSelect,\s*selected: taskSelection\.selected,/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const eventSelection = getTimelineEntrySelection\(\{[\s\S]*?eventId: event\?\.id[\s\S]*?content: renderProjectWorkActivityCard\(\{[\s\S]*?onSelect: eventSelection\.onSelect,\s*selected: eventSelection\.selected,/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /content: renderProjectWorkActivityCard\(\{[\s\S]*?permissionActionId: "project_threads_create"[\s\S]*?actor: threadActor/,
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /renderProjectWorkActivityTicketPreview/,
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /minTimelineWidth: 1480/,
 );
 assert.match(
   PROJECTS_PAGE_SHELL_SCRIPT,
-  /const \[projectOverviewTaskActivityFilterMode, setProjectOverviewTaskActivityFilterMode\] = useState\("all"\);[\s\S]*?projectOverviewTaskActivityFilterPopupRef = useRef\(null\);[\s\S]*?projectOverviewTaskActivityFilterSurfaceRef = useRef\(null\);[\s\S]*?projectOverviewTaskActivityToolbarPopover !== "filter"[\s\S]*?setProjectOverviewTaskActivityToolbarPopover\(""\)/,
+  /projectOverviewTaskActivitySelectedId,[\s\S]*?setProjectOverviewTaskActivitySelectedId,[\s\S]*?useState\(""\);[\s\S]*?const \[projectOverviewTaskActivityFilterMode, setProjectOverviewTaskActivityFilterMode\] = useState\("all"\);[\s\S]*?projectOverviewTaskActivityFilterPopupRef = useRef\(null\);[\s\S]*?projectOverviewTaskActivityFilterSurfaceRef = useRef\(null\);[\s\S]*?projectOverviewTaskActivityToolbarPopover !== "filter"[\s\S]*?setProjectOverviewTaskActivityToolbarPopover\(""\)/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /const projectWorkActivityFilterOptions = \[[\s\S]*?id: "lifecycle"[\s\S]*?id: "agent_work"[\s\S]*?id: "assignments"[\s\S]*?id: "planning"[\s\S]*?id: "other_changes"[\s\S]*?function matchesProjectWorkActivityFilter\(event, filterMode\)[\s\S]*?function renderProjectWorkActivityFilter\(\)[\s\S]*?variant: "minimal"[\s\S]*?portal: true,[\s\S]*?placement: "bottom-end"[\s\S]*?React\.createElement\(ListFilter,[\s\S]*?headerActions: renderProjectWorkActivityFilter\(\)/,
+  /setProjectOverviewTaskActivityFilterMode\("all"\);[\s\S]*?setProjectOverviewTaskActivitySelectedId\(selectionId\);[\s\S]*?selectedItemId: projectOverviewTaskActivitySelectedId,[\s\S]*?onSelectedItemChange: setProjectOverviewTaskActivitySelectedId/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /const filteredProjectActivityEvents = projectActivityEvents\.filter\([\s\S]*?projectOverviewTaskActivityFilterMode[\s\S]*?const projectActivityTimelineItems = buildProjectWorkActivityTimelineItems\(\s*filteredProjectActivityEvents\s*\)/,
+  /title: "Activity",\s*titleActions: renderProjectWorkActivityFilter\(\),\s*headerActions: React\.createElement\(PlatformSearch, \{[\s\S]*?placeholder: "Search activity"[\s\S]*?"aria-label": "Search project activity"/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const projectWorkActivityFilterOptions = \[[\s\S]*?id: "lifecycle"[\s\S]*?id: "agent_work"[\s\S]*?id: "assignments"[\s\S]*?id: "planning"[\s\S]*?id: "other_changes"[\s\S]*?function matchesProjectWorkActivityFilter\(event, filterMode\)[\s\S]*?function renderProjectWorkActivityFilter\(\)[\s\S]*?variant: "minimal"[\s\S]*?portal: true,[\s\S]*?placement: "bottom-start"[\s\S]*?React\.createElement\(ListFilter,[\s\S]*?titleActions: renderProjectWorkActivityFilter\(\)/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const filteredProjectActivityEvents = filterProjectWorkActivityEventsByTimeRange\(\s*projectActivityEvents,\s*projectOverviewTaskActivityTimeRange\s*\)\s*\.filter\([\s\S]*?projectOverviewTaskActivityFilterMode[\s\S]*?const projectActivityTimelineItems = buildProjectWorkActivityTimelineItems\(\s*filteredProjectActivityEvents\s*\)/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -2282,11 +2334,15 @@ assert.match(
 );
 assert.match(
   PROJECTS_CORE_CSS,
-  /\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-activity\s*\{\s*padding: 0 !important;\s*gap: 0;/,
+  /\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-activity\s*\{\s*padding: 0 !important;\s*gap: 0;\s*overflow: hidden;/,
 );
 assert.match(
   PROJECTS_CORE_CSS,
-  /\.playground-project-workspace-inner\.is-activity-work-view\s*\{\s*width: 100%;\s*max-width: none;\s*margin: 0;\s*gap: 0;/,
+  /\.playground-project-workspace-inner\.is-activity-work-view\s*\{\s*width: 100%;\s*height: 100%;\s*max-width: none;\s*min-height: 0;\s*margin: 0;\s*gap: 0;/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-project-activity-page\s*\{\s*display: grid;\s*flex: 1 1 auto;\s*grid-template-rows: repeat\(2, minmax\(0, 1fr\)\);\s*height: 100%;\s*min-height: 0;/,
 );
 
 const platformEntrySource = await readPlatformCompositionSource();

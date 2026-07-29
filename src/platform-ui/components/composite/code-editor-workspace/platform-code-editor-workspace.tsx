@@ -2,6 +2,7 @@ import {
   ArrowUpFromLine,
   EllipsisVertical,
   FilePlus2,
+  Folder,
   FolderPlus,
   Plus,
   Redo2,
@@ -21,6 +22,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PlatformLoadingState } from "../loading-state/index.js";
 import { PlatformPopup } from "../popup/index.js";
+import {
+  PlatformInstructionsEditor,
+  type PlatformInstructionsEditorChangeContext,
+  type PlatformInstructionsEditorContentVariant,
+  type PlatformInstructionsEditorFileUpload,
+} from "../instructions-editor/index.js";
 import { PlatformCheckbox } from "../../ui/checkbox/index.js";
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
 
@@ -31,6 +38,7 @@ export interface PlatformCodeEditorFile {
   id: string;
   label?: ReactNode;
   tabLabel?: ReactNode;
+  editorMode?: "code" | "markdown";
   icon?: ReactNode;
   tabIcon?: ReactNode;
   leading?: ReactNode;
@@ -65,6 +73,22 @@ export interface PlatformCodeEditorHistoryControls {
   onRedo?: MouseEventHandler<HTMLButtonElement>;
   undoDisabled?: boolean;
   redoDisabled?: boolean;
+}
+
+export interface PlatformCodeEditorMarkdownEditor {
+  value: string;
+  onChange: (
+    value: string,
+    context?: PlatformInstructionsEditorChangeContext,
+  ) => void;
+  placeholder?: string;
+  ariaLabel?: string;
+  readOnly?: boolean;
+  historyKey?: string | number;
+  contentVariant?: PlatformInstructionsEditorContentVariant;
+  fileUpload?: PlatformInstructionsEditorFileUpload;
+  autoFocus?: boolean;
+  className?: string;
 }
 
 export interface PlatformCodeEditorWorkspaceProps {
@@ -104,6 +128,7 @@ export interface PlatformCodeEditorWorkspaceProps {
   /** @deprecated The workspace renders one active-file header instead of tabs. */
   onFileClose?: (fileId: string) => void;
   editor?: ReactNode;
+  markdownEditor?: PlatformCodeEditorMarkdownEditor;
   emptyFiles?: ReactNode;
   emptySearchResults?: ReactNode;
   emptyEditor?: ReactNode;
@@ -144,6 +169,26 @@ function normalizeFileSelection(
       .map((fileId) => String(fileId || "").trim())
       .filter(Boolean),
   );
+}
+
+export function isPlatformCodeEditorMarkdownFile(
+  file: PlatformCodeEditorFile | null | undefined,
+) {
+  if (!file || file.isFolder) return false;
+  if (file.editorMode) return file.editorMode === "markdown";
+  const candidates = [
+    file.id,
+    typeof file.label === "string" ? file.label : "",
+    typeof file.tabLabel === "string" ? file.tabLabel : "",
+    file.ariaLabel,
+    file.searchText,
+  ];
+  return candidates.some((candidate) => {
+    const normalizedCandidate = String(candidate || "")
+      .trim()
+      .split(/[?#]/, 1)[0];
+    return /\.(?:md|markdown|mdown|mkd|mkdn)$/i.test(normalizedCandidate);
+  });
 }
 
 const PLATFORM_CODE_EDITOR_FILE_DRAG_TYPE = "application/x-platform-code-editor-files";
@@ -193,6 +238,7 @@ export function PlatformCodeEditorWorkspace({
   isLoadingFiles = false,
   loadingFilesMessage = "Loading files...",
   editor = null,
+  markdownEditor,
   emptyFiles = "No code files.",
   emptyEditor = "Select a file to edit.",
   historyControls,
@@ -236,6 +282,9 @@ export function PlatformCodeEditorWorkspace({
   const creationControlsDisabled = fileCreationDisabled || isLoadingFiles;
   const activeFile = fileById.get(activeFileId);
   const activeFileTitle = activeFile?.tabLabel ?? activeFile?.label ?? activeFile?.id ?? "";
+  const markdownEditorActive = Boolean(
+    markdownEditor && isPlatformCodeEditorMarkdownFile(activeFile),
+  );
   const draggedFiles = useMemo(
     () => draggedFileIds
       .map((fileId) => fileById.get(fileId))
@@ -713,6 +762,12 @@ export function PlatformCodeEditorWorkspace({
                         {file.leading}
                       </span>
                     ) : null}
+                    {file.isFolder ? (
+                      <Folder
+                        className="platform-code-editor-workspace__folder-icon"
+                        aria-hidden="true"
+                      />
+                    ) : null}
                     <span className="platform-code-editor-workspace__file-label">
                       {file.label ?? file.id}
                     </span>
@@ -741,22 +796,53 @@ export function PlatformCodeEditorWorkspace({
         </div>
       </aside>
 
-      <div className="platform-code-editor-workspace__editor">
-        <div className="platform-code-editor-workspace__editor-header">
-          <span className="platform-code-editor-workspace__editor-title">
-            {activeFileTitle}
-          </span>
-          {historyControls ? (
-            <div className="platform-code-editor-workspace__header-actions">
-              {renderHistoryControls(historyControls)}
+      <div
+        className={joinClassNames(
+          "platform-code-editor-workspace__editor",
+          markdownEditorActive && "is-markdown",
+        )}
+      >
+        {markdownEditorActive && markdownEditor ? (
+          <PlatformInstructionsEditor
+            value={markdownEditor.value}
+            onChange={markdownEditor.onChange}
+            title={activeFileTitle}
+            placeholder={markdownEditor.placeholder || "Write Markdown..."}
+            ariaLabel={
+              markdownEditor.ariaLabel
+              || `${String(activeFile?.ariaLabel || activeFile?.id || "Markdown file")} content`
+            }
+            readOnly={markdownEditor.readOnly}
+            stickyHeader={false}
+            historyKey={markdownEditor.historyKey ?? activeFile?.id ?? "markdown"}
+            variant="minimalistic-ui"
+            contentVariant={markdownEditor.contentVariant}
+            fileUpload={markdownEditor.fileUpload}
+            autoFocus={markdownEditor.autoFocus}
+            className={joinClassNames(
+              "platform-code-editor-workspace__markdown-editor",
+              markdownEditor.className,
+            )}
+          />
+        ) : (
+          <>
+            <div className="platform-code-editor-workspace__editor-header">
+              <span className="platform-code-editor-workspace__editor-title">
+                {activeFileTitle}
+              </span>
+              {historyControls ? (
+                <div className="platform-code-editor-workspace__header-actions">
+                  {renderHistoryControls(historyControls)}
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </div>
-        <div className="platform-code-editor-workspace__editor-body">
-          {editor ? editor : (
-            <div className="platform-code-editor-workspace__empty is-editor">{emptyEditor}</div>
-          )}
-        </div>
+            <div className="platform-code-editor-workspace__editor-body">
+              {editor ? editor : (
+                <div className="platform-code-editor-workspace__empty is-editor">{emptyEditor}</div>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {fileMenuPopup}

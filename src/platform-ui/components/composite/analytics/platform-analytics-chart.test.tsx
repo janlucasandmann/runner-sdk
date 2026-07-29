@@ -10,6 +10,12 @@ interface CapturedChartConfiguration {
   };
   options: {
     scales: {
+      x: {
+        ticks: {
+          display?: boolean;
+          padding?: number;
+        };
+      };
       y: {
         display?: boolean;
         grid: {
@@ -138,6 +144,35 @@ describe("PlatformAnalyticsChart", () => {
     expect(chartConfigurations.at(-1)).toBeDefined();
     expect(chartConfigurations.at(-1)?.data.datasets[0]).toMatchObject({
       data: [0, 0],
+    });
+  });
+
+  it("can hide x-axis labels without removing the chart labels", () => {
+    render(
+      <PlatformAnalyticsChart
+        showXAxisLabels={false}
+        chartType="line"
+        analytics={{
+          metrics: [],
+          labels: ["Run 1", "Run 2"],
+          hasData: true,
+          series: [
+            {
+              id: "score",
+              label: "Average score",
+              color: "#8fc4ff",
+              values: [70, 90],
+              valueKind: "percent",
+            },
+          ],
+        }}
+      />,
+    );
+
+    const configuration = chartConfigurations.at(-1);
+    expect(configuration?.options.scales.x.ticks).toMatchObject({
+      display: false,
+      padding: 0,
     });
   });
 

@@ -1,4 +1,4 @@
-import { ChartColumnIncreasing, ChevronRight, Play, Plus, SquarePen, Trash2 } from "lucide-react";
+import { ChevronRight, Play, Plus, SquarePen, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import type {
   PlatformDataTableAction,
@@ -79,12 +79,7 @@ export function EvaluationsOverviewPage({
         sortable: true,
         width: "minmax(230px, 1.25fr)",
         cell: ({ row }) => (
-          <ResourceOverviewIdentityCell
-            title={row.name}
-            icon={ChartColumnIncreasing}
-            iconClassName="is-connection"
-            size="compact"
-          />
+          <span className="resource-overview-identity__title">{row.name}</span>
         ),
       },
       {
@@ -113,7 +108,9 @@ export function EvaluationsOverviewPage({
         sortable: true,
         sortDescFirst: true,
         width: "minmax(80px, 0.4fr)",
-        cell: ({ row }) => <ResourceOverviewValue>{row.caseCount}</ResourceOverviewValue>,
+        cell: ({ row }) => (
+          <ResourceOverviewValue>{row.caseCount}</ResourceOverviewValue>
+        ),
       },
       {
         id: "creator",
@@ -141,7 +138,9 @@ export function EvaluationsOverviewPage({
         width: "minmax(120px, 0.62fr)",
         hideBelow: 1020,
         cell: ({ row }) => (
-          <ResourceOverviewValue title={row.updatedTitle}>{row.updatedLabel}</ResourceOverviewValue>
+          <ResourceOverviewValue title={row.updatedTitle}>
+            {row.updatedLabel}
+          </ResourceOverviewValue>
         ),
       },
     ],
@@ -168,8 +167,18 @@ export function EvaluationsOverviewPage({
       ];
     }
     return [
-      { id: "open", label: "Open", icon: ChevronRight, onSelect: () => onOpen(row) },
-      { id: "rename", label: "Rename", icon: SquarePen, onSelect: () => onRename(row) },
+      {
+        id: "open",
+        label: "Open",
+        icon: ChevronRight,
+        onSelect: () => onOpen(row),
+      },
+      {
+        id: "rename",
+        label: "Rename",
+        icon: SquarePen,
+        onSelect: () => onRename(row),
+      },
       {
         id: "run",
         label: "Run",
@@ -232,7 +241,8 @@ export function EvaluationsOverviewPage({
         selection: {
           enabled: true,
           value: selectedRowIds,
-          onChange: ({ selectedIds }) => setSelectedRowIds(new Set(selectedIds)),
+          onChange: ({ selectedIds }) =>
+            setSelectedRowIds(new Set(selectedIds)),
           ariaLabel: (row) => `Select ${row.name}`,
         },
         pagination: false,

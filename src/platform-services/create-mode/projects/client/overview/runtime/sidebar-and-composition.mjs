@@ -1641,6 +1641,17 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                 ? renderProjectOverviewResourcesPanel()
                 : activeProjectOverviewHomeTab === "milestones"
                     ? renderProjectOverviewMilestonesPanel()
+                : activeProjectOverviewHomeTab === "delivery"
+                    ? React.createElement(ProjectDeliveryWorkspace, {
+                        projectId: selectedProjectId,
+                        projectName: selectedProject?.name || "",
+                        projectDescription: selectedProject?.description || "",
+                        initialRequest:
+                          selectedProject?.deliveryDesignRequest
+                          || selectedProject?.metadata?.deliveryDesignRequest
+                          || null,
+                        canManage: canManageProjectAccess,
+                      })
                 : activeProjectOverviewHomeTab === "permissions"
                     ? renderProjectOverviewPermissionsPanel()
                     : renderProjectOverviewGeneralPanel();

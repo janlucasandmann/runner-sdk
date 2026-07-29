@@ -11,10 +11,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               const evaluatorAvatarUrl = evaluatorAgent
                 ? getPlaygroundEvaluationAgentPhotoUrl(evaluatorAgent)
                 : "";
-              const explicitCreator = getPlaygroundEvaluationCreatorIdentity(set);
-              const creator = explicitCreator.name || explicitCreator.email || explicitCreator.id || explicitCreator.userId
-                ? explicitCreator
-                : currentEvaluationCreator;
+              const creator = getPlaygroundEvaluationCreatorIdentity(set);
               const creatorLabel = getPlaygroundEvaluationCreatorLabel(creator) || "Unknown";
               const updatedValue = set?.updatedAt || set?.createdAt || "";
               const updatedDate = new Date(updatedValue || "");

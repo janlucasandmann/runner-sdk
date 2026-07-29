@@ -1,50 +1,74 @@
-.skill-detail-page {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: none;
-  min-height: 0;
-  height: 100%;
-  margin: 0;
-}
-
-.skill-detail-page.is-code-tab {
-  grid-template-rows: minmax(0, 1fr);
-  align-items: stretch;
-}
-
-.skill-detail-page__content.is-code-tab {
-  min-height: 0;
-  height: 100%;
-  gap: 24px;
-  overflow: hidden;
-}
-
-.skill-detail-page__code {
-  box-sizing: border-box;
-  min-height: 0;
-  height: 100%;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 0;
-  overflow: hidden;
-}
-
 .skill-detail-page__identity {
   box-sizing: border-box;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
   padding: 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.skill-detail-page__icon-picker {
+  --skill-detail-icon-size: 52px;
+
+  flex: 0 0 auto;
+}
+
+.skill-detail-page__icon-picker .platform-project-icon-picker__trigger,
+.skill-detail-page__icon-picker .platform-project-icon-picker__trigger-icon {
+  flex-basis: var(--skill-detail-icon-size);
+  width: var(--skill-detail-icon-size);
+  height: var(--skill-detail-icon-size);
+}
+
+.skill-detail-page__icon-picker .platform-project-icon-picker__trigger-icon {
+  border-radius: 12px;
+  background: color-mix(
+    in srgb,
+    var(--project-icon-color, #fff) 10%,
+    transparent
+  );
+  color: var(--project-icon-color, #fff);
+}
+
+.skill-detail-page__icon-picker
+  .platform-project-icon-picker__trigger:not(:disabled):hover
+  .platform-project-icon-picker__trigger-icon,
+.skill-detail-page__icon-picker
+  .platform-project-icon-picker__trigger.is-open
+  .platform-project-icon-picker__trigger-icon {
+  background: color-mix(
+    in srgb,
+    var(--project-icon-color, #fff) 16%,
+    transparent
+  );
+}
+
+.skill-detail-page__icon-picker
+  .platform-project-icon-picker__trigger-icon
+  > svg {
+  width: 24px;
+  height: 24px;
+}
+
+.skill-detail-page__icon-picker .platform-project-icon-picker__emoji {
+  font-size: 24px !important;
+}
+
+.skill-detail-page__identity-copy {
+  min-width: 0;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .skill-detail-header__version-label {
   margin-left: 4px;
 }
 
-.skill-detail-page__name-input,
-.skill-detail-page__description-input {
+.skill-detail-page__name-input {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
@@ -57,7 +81,6 @@
   color: rgba(255, 255, 255, 0.96);
   font: inherit;
   letter-spacing: 0;
-  resize: none;
 }
 
 .skill-detail-page__name-input {
@@ -67,7 +90,6 @@
 }
 
 .skill-detail-page__description-input {
-  min-height: 32px;
   color: rgba(255, 255, 255, 0.62);
   font-size: 12px;
   line-height: 1.5;
@@ -83,35 +105,70 @@
   color: rgba(255, 255, 255, 0.35);
 }
 
-.skill-detail-page__code-workspace {
-  min-height: 0;
-  height: 100%;
+.skill-detail-page__settings-content,
+.skill-detail-page__settings {
+  min-width: 0;
 }
 
-.skill-detail-page__content.is-settings-tab {
-  box-sizing: border-box;
-  width: min(100%, var(--playground-centered-page-max-width));
-  max-width: var(--playground-centered-page-max-width);
-  min-height: 0;
-  margin-inline: auto;
-  padding: 42px 44px 56px;
+.skill-detail-page__deployment-map {
+  margin-block: 0;
 }
 
-.skill-detail-page.is-settings-tab {
-  overflow-x: hidden;
-  overflow-y: auto;
+.skill-detail-page__properties-card {
+  min-width: 0;
+}
+
+.skill-detail-page__identity-value {
+  min-width: 0;
+  width: 100%;
+}
+
+.playground-skill-emoji-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .skill-detail-page__access-settings {
   min-width: 0;
 }
 
+.playground-content-body:has(
+  > .playground-skills-page.playground-plugins-detail
+  > .playground-skills-detail-page.file-resource-detail-page.is-code-tab
+) {
+  display: flex;
+  flex-direction: column;
+}
+
+.playground-content-body
+  > .playground-skills-page.playground-plugins-detail:has(
+    > .playground-skills-detail-page.file-resource-detail-page.is-code-tab
+  ) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  min-height: 0;
+  flex: 1 1 0;
+  overflow: hidden;
+}
+
+.playground-skills-page.playground-plugins-detail
+  > .playground-skills-detail-page.file-resource-detail-page.is-code-tab {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  flex: 1 1 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 @media (max-width: 760px) {
   .skill-detail-page__identity {
     padding: 20px;
-  }
-
-  .skill-detail-page__content.is-settings-tab {
-    padding: 24px 20px 40px;
   }
 }

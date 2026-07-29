@@ -38,6 +38,23 @@ Projects experience.
 
 ## Canonical project delivery
 
+The Project details breadcrumb now exposes a dedicated **Delivery** workspace.
+It uses the centralized cards, buttons, labels, loading state, empty state, and
+minimal data table. Operators can:
+
+- compile a brief with no persistence or execution side effects;
+- save an immutable delivery-design revision;
+- explicitly apply the exact design fingerprint as a delivery plan;
+- inspect Project-correlated Optimization Campaigns and their attempt-level
+  Test, Evaluation, and Assurance references;
+- explicitly start, cancel, or promote a campaign.
+
+The browser proxy intentionally does not expose managed worker lifecycle
+commands such as producer context, candidate submission, reconciliation, or
+finalization. Those remain worker-credential and SDK integration surfaces.
+Opening the Delivery workspace performs reads only; it never starts Mission
+Control, a delivery execution, a campaign, a model, or a deployment.
+
 Mission Control first uses the read-only Computer Agents
 `projects delivery preview` command and only then uses
 `projects delivery apply` for deployable and agentic projects. Preview returns
@@ -146,6 +163,7 @@ Run the narrowest relevant checks from the repository root:
 
 ```bash
 npm run projects-service-test
+npm run projects-delivery-control-test
 npm run check:static
 ```
 

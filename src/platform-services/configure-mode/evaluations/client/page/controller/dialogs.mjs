@@ -8,14 +8,43 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
             return null;
           }
 
-          const rightActionsPortal = isEvaluationDetailPage && evaluationTopNavActionsContainer
+          const rightActionsPortal = isEvaluationDatasetCasePage && evaluationTopNavActionsContainer
             ? createPortal(
+                React.createElement("div", { className: "playground-evaluations-detail-topnav-actions playground-evaluations-dataset-case-topnav-actions" },
+                  React.createElement(PlatformPrimaryButton, {
+                    type: "button",
+                    size: "small",
+                    disabled: !isEvaluationCaseEditorDirty(evaluationCaseEditorState),
+                    onClick: saveEvaluationCaseEditor,
+                  },
+                    React.createElement(Bookmark, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Save Changes")
+                  )
+                ),
+                evaluationTopNavActionsContainer
+              )
+            : isEvaluationDetailPage && evaluationTopNavActionsContainer
+              ? createPortal(
                 React.createElement("div", { className: "playground-evaluations-detail-topnav-actions" },
+                  evaluationDetailTab !== "cases"
+                    && evaluationDetailTab !== "data"
+                    && evaluationDetailTab !== "settings"
+                    ? React.createElement(PlatformSwitch, {
+                        value: evaluationAnalyticsTimeframe,
+                        options: [
+                          { value: "day", label: "24H" },
+                          { value: "week", label: "7D" },
+                          { value: "month", label: "30D" },
+                        ],
+                        onValueChange: setEvaluationAnalyticsTimeframe,
+                        ariaLabel: "Evaluation analytics time frame",
+                      })
+                    : null,
                   renderEvaluationPublishSplitButton()
                 ),
                 evaluationTopNavActionsContainer
               )
-            : null;
+              : null;
           const breadcrumbActionsPortal = evaluationBreadcrumbActionsContainer
             ? createPortal(
                 isEvaluationRunActionsPage
@@ -913,9 +942,11 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
 
         const isEvaluationRunPage = normalizedMode === "run" && activeSet && activeRun;
         const isEvaluationCasePage = normalizedMode === "case" && activeSet && activeRun && activeCase;
-        const isEvaluationSubpage = isEvaluationDetailPage || isEvaluationRunPage || isEvaluationCasePage;
+        const isEvaluationSubpage = isEvaluationDetailPage || isEvaluationDatasetCasePage || isEvaluationRunPage || isEvaluationCasePage;
         const isEvaluationOverviewPage = !isEvaluationSubpage && normalizedMode !== "detail";
-        const evaluationPageTitle = isEvaluationRunPage
+        const evaluationPageTitle = isEvaluationDatasetCasePage
+          ? String(evaluationCaseEditorState?.draft?.title || "Evaluation Case")
+          : isEvaluationRunPage
           ? (activeRun.label || "Evaluation Run")
           : isEvaluationCasePage
             ? "Evaluation Case"
@@ -928,7 +959,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
             renderOverview(),
             renderRunModal(),
             renderEvaluationUnsavedRunDialog(),
-            renderEvaluationCaseEditorModal(),
             renderEvaluationRenameModal(),
             renderEvaluationThreadCaseModal(),
             renderEvaluationJsonlWorkspacePicker(),
@@ -943,7 +973,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
           renderEvaluationTopNavActions(),
           React.createElement("div", { className: "playground-files-shell playground-guardrails-shell" },
             React.createElement("section", { className: "playground-files-browser playground-guardrails-browser" },
-              evaluationVersionChangesState || isEvaluationDetailPage || isEvaluationRunPage
+              evaluationVersionChangesState || isEvaluationDetailPage || isEvaluationDatasetCasePage || isEvaluationRunPage
                 ? null
                 : React.createElement("div", { className: "playground-files-browser-header playground-guardrails-browser-header" + (isEvaluationOverviewPage ? " playground-guardrails-overview-browser-header" : "") },
                 React.createElement("div", { className: "playground-files-library-header playground-guardrails-library-header" },
@@ -1000,18 +1030,17 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
                   )
                 )
               ),
-              React.createElement("div", { className: "playground-files-browser-body playground-guardrails-browser-body" + (isEvaluationOverviewPage ? " playground-guardrails-overview-browser-body" : "") + (isEvaluationDetailPage || isEvaluationRunPage ? " is-detail-page playground-evaluations-detail-page-body" : "") },
+              React.createElement("div", { className: "playground-files-browser-body playground-guardrails-browser-body" + (isEvaluationOverviewPage ? " playground-guardrails-overview-browser-body" : "") + (isEvaluationDetailPage || isEvaluationDatasetCasePage || isEvaluationRunPage ? " is-detail-page playground-evaluations-detail-page-body" : "") + (isEvaluationDatasetCasePage ? " playground-evaluations-dataset-case-page-body" : "") },
                 normalizedMode === "detail" && evaluationVersionChangesState
                   ? React.createElement("div", { className: "playground-guardrails-detail playground-evaluations-version-changes-shell" },
                       renderEvaluationVersionChangesPage()
                     )
-                  : normalizedMode === "case" ? renderCase() : normalizedMode === "run" ? renderRun() : normalizedMode === "detail" ? renderDetail() : renderOverview()
+                  : normalizedMode === "dataset-case" ? renderEvaluationDatasetCaseDetail() : normalizedMode === "case" ? renderCase() : normalizedMode === "run" ? renderRun() : normalizedMode === "detail" ? renderDetail() : renderOverview()
               )
             )
           ),
 	          renderRunModal(),
 	          renderEvaluationUnsavedRunDialog(),
-	          renderEvaluationCaseEditorModal(),
 	          renderEvaluationRenameModal(),
             renderEvaluationThreadCaseModal(),
 	          renderEvaluationJsonlWorkspacePicker(),

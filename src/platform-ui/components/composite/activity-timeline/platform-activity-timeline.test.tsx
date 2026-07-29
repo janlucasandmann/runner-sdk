@@ -67,6 +67,9 @@ describe("PlatformActivityTimeline", () => {
       <PlatformActivityTimeline
         layout="inspector"
         title="Activity"
+        titleActions={<button type="button">Filter activity</button>}
+        headerActions={<input aria-label="Search activity" />}
+        listFooter={<button type="button">Show more activity</button>}
         inspectorTitle="Inspector"
         items={[
           {
@@ -86,6 +89,16 @@ describe("PlatformActivityTimeline", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Activity" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Filter activity" })).not.toBeNull();
+    expect(screen.getByRole("textbox", { name: "Search activity" })).not.toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Show more activity" }),
+    ).not.toBeNull();
+    expect(
+      screen
+        .getByRole("button", { name: "Show more activity" })
+        .closest(".platform-activity-timeline__list-pane"),
+    ).not.toBeNull();
     expect(screen.getByRole("heading", { name: "Inspector" })).not.toBeNull();
     expect(screen.getByText("Created event details")).not.toBeNull();
     expect(

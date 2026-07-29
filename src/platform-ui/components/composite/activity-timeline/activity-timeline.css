@@ -31,6 +31,24 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  margin-left: auto;
+}
+
+.platform-activity-timeline__pane-heading,
+.platform-activity-timeline__title-actions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.platform-activity-timeline__pane-heading {
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.platform-activity-timeline__title-actions {
+  gap: 4px;
 }
 
 .platform-activity-timeline__list {
@@ -194,7 +212,8 @@
 .platform-activity-timeline__inspector-header {
   flex: 0 0 46px;
   min-height: 46px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background: #000;
 }
 
@@ -209,6 +228,23 @@
 
 .platform-activity-timeline__pane-header.is-list {
   border-right: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-activity-timeline__pane-header.is-list
+  .platform-activity-timeline__header-actions {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  margin-left: 12px;
+}
+
+.platform-activity-timeline__pane-header.is-list
+  .platform-activity-timeline__header-actions
+  .platform-search {
+  width: min(100%, 280px);
+  min-width: 0;
+  max-width: 280px;
+  height: 28px;
+  min-height: 28px;
 }
 
 .platform-activity-timeline__inspector-body {
@@ -233,6 +269,14 @@
 .platform-activity-timeline__list-pane {
   padding: 24px;
   border-right: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-activity-timeline__list-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 16px 0 0;
 }
 
 .platform-activity-timeline__preview-pane {

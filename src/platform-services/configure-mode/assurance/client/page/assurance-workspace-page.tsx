@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
+import { PlatformServiceDetailFrame } from "../../../../../platform-ui/pages/details/index.js";
 import { AssuranceApi } from "../api/index.js";
 import {
   normalizeAssuranceWorkspaceOption,
@@ -25,6 +26,7 @@ export interface AssuranceWorkspacePageProps {
   selectedPolicyId?: string;
   selectedRunId?: string;
   controlsPortalId?: string;
+  sectionControlsPortalId?: string;
   defaultProjectId?: string;
   projects?: readonly unknown[];
   workspaceTeams?: readonly unknown[];
@@ -65,6 +67,7 @@ export function AssuranceWorkspacePage({
   selectedPolicyId = "",
   selectedRunId = "",
   controlsPortalId,
+  sectionControlsPortalId,
   defaultProjectId = "",
   projects = [],
   workspaceTeams = [],
@@ -284,17 +287,20 @@ export function AssuranceWorkspacePage({
     }
     return (
       <>
-        <AssurancePolicyDetailPage
-          policy={activePolicy}
-          api={api}
-          projects={normalizedProjects}
-          workspaceTeams={workspaceTeams}
-          controlsPortalId={controlsPortalId}
-          onPolicyChange={replacePolicy}
-          onReload={() => loadPolicy(activePolicy.id)}
-          onRun={setRunPolicy}
-          onOpenRun={(run) => onOpenRun(activePolicy.id, run.id, activePolicy.name)}
-        />
+        <PlatformServiceDetailFrame className="assurance-detail-frame">
+          <AssurancePolicyDetailPage
+            policy={activePolicy}
+            api={api}
+            projects={normalizedProjects}
+            workspaceTeams={workspaceTeams}
+            controlsPortalId={controlsPortalId}
+            sectionControlsPortalId={sectionControlsPortalId}
+            onPolicyChange={replacePolicy}
+            onReload={() => loadPolicy(activePolicy.id)}
+            onRun={setRunPolicy}
+            onOpenRun={(run) => onOpenRun(activePolicy.id, run.id, activePolicy.name)}
+          />
+        </PlatformServiceDetailFrame>
         <AssuranceRunCreateModal
           open={Boolean(runPolicy)}
           policy={runPolicy}
@@ -321,23 +327,34 @@ export function AssuranceWorkspacePage({
       );
     }
     return (
-      <AssuranceRunDetailPage
-        run={activeRun}
-        policy={activeRunPolicy}
-        api={api}
-        projects={normalizedProjects}
-        controlsPortalId={controlsPortalId}
-        refreshing={refreshingRun}
-        onRunChange={(nextRun) => {
-          setActiveRun(nextRun);
-          setRuns((current) => [
-            nextRun,
-            ...current.filter((run) => run.id !== nextRun.id),
-          ]);
-          void loadRun(nextRun.id, true);
-        }}
-        onRefresh={() => void loadRun(activeRun.id, true)}
-      />
+      <>
+        <PlatformServiceDetailFrame className="assurance-detail-frame">
+          <AssuranceRunDetailPage
+            run={activeRun}
+            policy={activeRunPolicy}
+            api={api}
+            projects={normalizedProjects}
+            controlsPortalId={controlsPortalId}
+            refreshing={refreshingRun}
+            onRunChange={(nextRun) => {
+              setActiveRun(nextRun);
+              setRuns((current) => [
+                nextRun,
+                ...current.filter((run) => run.id !== nextRun.id),
+              ]);
+              void loadRun(nextRun.id, true);
+            }}
+            onRefresh={() => void loadRun(activeRun.id, true)}
+            onRunAgain={() => setRunPolicy(activeRunPolicy)}
+          />
+        </PlatformServiceDetailFrame>
+        <AssuranceRunCreateModal
+          open={Boolean(runPolicy)}
+          policy={runPolicy}
+          onClose={() => setRunPolicy(null)}
+          onCreate={startRun}
+        />
+      </>
     );
   }
 

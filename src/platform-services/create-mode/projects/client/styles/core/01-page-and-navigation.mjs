@@ -1145,11 +1145,14 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-activity {
         padding: 0 !important;
         gap: 0;
+        overflow: hidden;
       }
 
       .playground-project-workspace-inner.is-activity-work-view {
         width: 100%;
+        height: 100%;
         max-width: none;
+        min-height: 0;
         margin: 0;
         gap: 0;
       }
@@ -1163,20 +1166,28 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
       }
 
       .playground-project-activity-page {
-        display: flex;
+        display: grid;
         flex: 1 1 auto;
-        flex-direction: column;
-        min-height: 100%;
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
         background: #000;
+      }
+
+      .playground-project-activity-page
+        > .platform-activity-overview.playground-project-activity-overview {
+        height: 100%;
+        min-height: 0;
       }
 
       .playground-project-activity-feed {
         box-sizing: border-box;
         display: flex;
-        flex: 1 1 auto;
         width: 100%;
+        height: 100%;
         min-width: 0;
-        min-height: 360px;
+        min-height: 0;
         padding: 0;
       }
 
@@ -1189,7 +1200,8 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         flex: 1 1 auto;
         width: 100%;
         max-width: none;
-        height: auto;
+        height: 100%;
+        min-height: 0;
       }
 
       .playground-project-activity-preview {

@@ -37,7 +37,8 @@ projection lifecycle.
 Lower-level exports support specialized hosts:
 
 - `RunnerThreadTimeline` renders ordered messages and run cards.
-- `RunnerThreadLiveSupervisionDock` combines active work and pending judgments.
+- `RunnerThreadLiveSupervisionDock` promotes pending judgments without adding
+  transient worker or orchestrator status labels above the conversation.
 - `RunnerThreadActivityGroupTree` renders observer-maintained causal groups.
 - `RunnerThreadPermissionRequestCard` presents a grounded permission decision.
 - `RunnerThreadRoutingReceiptView` makes communicator/worker delivery visible.

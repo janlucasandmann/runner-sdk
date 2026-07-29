@@ -653,6 +653,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
           const canViewProjectSettings = canManageProjectAccess || hasReducedProjectSettingsAccess;
 	          const activeProjectOverviewHomeTab = normalizedProjectOverviewHomeTab === "resources"
               || normalizedProjectOverviewHomeTab === "milestones"
+              || normalizedProjectOverviewHomeTab === "delivery"
               || (canViewProjectSettings && normalizedProjectOverviewHomeTab === "permissions")
 		            ? normalizedProjectOverviewHomeTab
 		            : "general";

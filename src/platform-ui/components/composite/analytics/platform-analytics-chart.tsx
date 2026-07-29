@@ -70,6 +70,7 @@ export function PlatformAnalyticsChart({
   analytics,
   chartType,
   compact = false,
+  showXAxisLabels = true,
 }: PlatformAnalyticsChartProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chartRef = useRef<Chart | null>(null);
@@ -245,9 +246,10 @@ export function PlatformAnalyticsChart({
             border: { display: false },
             grid: { display: false },
             ticks: {
+              display: showXAxisLabels,
               color: "rgba(255,255,255,0.42)",
               font: { family: "Inter, sans-serif", size: 11, weight: 400 },
-              padding: compact ? 6 : 10,
+              padding: showXAxisLabels ? (compact ? 6 : 10) : 0,
               maxRotation: 0,
               autoSkip: !compact,
               maxTicksLimit: compact ? 2 : 7,
@@ -304,7 +306,16 @@ export function PlatformAnalyticsChart({
       },
       plugins: compact ? [] : [dashedGridPlugin, maxReferencePlugin],
     });
-  }, [analytics.error, analytics.loading, chartType, compact, hasData, labels, series]);
+  }, [
+    analytics.error,
+    analytics.loading,
+    chartType,
+    compact,
+    hasData,
+    labels,
+    series,
+    showXAxisLabels,
+  ]);
 
   if (analytics.loading) {
     return (

@@ -14,6 +14,10 @@ assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.state, /selectedAssurancePolicyId/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.navigation, /openAssurancePage/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.pageView, /AssuranceWorkspacePage/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /label: "Assurance"/);
+assert.match(
+  ASSURANCE_APP_SCRIPT_FRAGMENTS.topNavigation,
+  /playground-assurance-section-controls/,
+);
 
 const platformSource = await readPlatformCompositionSource();
 assert.match(
@@ -74,7 +78,9 @@ const detailSource = await fs.readFile(
   new URL("./client/page/assurance-policy-detail-page.tsx", import.meta.url),
   "utf8",
 );
-assert.match(detailSource, /ResourceDetailPage/);
+assert.match(detailSource, /PlatformServiceDetailPage/);
+assert.match(detailSource, /PlatformAnalyticsSection/);
+assert.match(detailSource, /PlatformSwitch/);
 assert.match(detailSource, /PlatformDataTable/);
 assert.match(detailSource, /PlatformUiCard/);
 assert.match(detailSource, /AssurancePolicyAccessSettings/);
@@ -87,13 +93,19 @@ const runSource = await fs.readFile(
 );
 assert.match(runSource, /evidenceFingerprint/);
 assert.match(runSource, /PlatformConfirmationModal/);
+assert.match(runSource, /PlatformServiceDetailPage/);
+assert.match(runSource, /variant="run"/);
+assert.match(runSource, /PlatformAnalyticsSection/);
 assert.match(runSource, /approveRun/);
 assert.match(runSource, /Audit Log/);
+assert.doesNotMatch(runSource, /activeTab/);
 
 const workspaceSource = await fs.readFile(
   new URL("./client/page/assurance-workspace-page.tsx", import.meta.url),
   "utf8",
 );
 assert.match(workspaceSource, /PlatformLoadingState/);
+assert.match(workspaceSource, /PlatformServiceDetailFrame/);
+assert.match(workspaceSource, /sectionControlsPortalId/);
 assert.match(workspaceSource, /AssurancePolicyCreateModal/);
 assert.match(workspaceSource, /AssuranceRunCreateModal/);

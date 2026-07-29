@@ -3,6 +3,7 @@ import type {
   PlatformPluginConnectionId,
   PlatformPluginConnectionStatus,
 } from "./plugin-connection-types.js";
+import { normalizePlatformConnectionCredentials } from "../../shared/connections/connection-credentials.js";
 
 const CONNECTIONS: Readonly<
   Record<PlatformPluginConnectionId, PlatformPluginConnectionDefinition>
@@ -53,6 +54,16 @@ const CONNECTIONS: Readonly<
     loginPath: "/api/aios/onedrive/login",
     disconnectPath: "/api/aios/onedrive/disconnect",
   }),
+  jira: Object.freeze({
+    id: "jira",
+    label: "Jira",
+    category: "Project management",
+    logoUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/8/8a/Jira_Logo.svg",
+    statusPath: "/api/aios/jira/user",
+    loginPath: "/api/aios/jira/login",
+    disconnectPath: "/api/aios/jira/disconnect",
+  }),
 });
 
 export function isPlatformPluginConnectionId(value: string): value is PlatformPluginConnectionId {
@@ -86,9 +97,15 @@ export function normalizePlatformPluginConnectionStatus(
     id === "notion" && workspace
       ? { ...(sourceProfile || {}), workspaceName: String(workspace.name || "") }
       : sourceProfile;
+  const hasCredentialList = Array.isArray(payload.credentials);
+  const credentials = normalizePlatformConnectionCredentials(payload.credentials);
   return {
     connected: Boolean(payload.connected),
     ...(profile ? { profile } : {}),
+    ...(hasCredentialList ? { credentials } : {}),
+    ...(typeof payload.defaultCredentialId === "string" && payload.defaultCredentialId.trim()
+      ? { defaultCredentialId: payload.defaultCredentialId.trim() }
+      : {}),
     ...(typeof payload.scope === "string" ? { scope: payload.scope } : {}),
     ...(typeof payload.tokenType === "string" ? { tokenType: payload.tokenType } : {}),
     ...(typeof payload.expiresAt === "number" || payload.expiresAt === null
@@ -119,6 +136,8 @@ export function getPlatformPluginConnectionIdentity(
       ? (["login", "email", "name"] as const)
       : id === "notion"
         ? (["workspaceName", "name", "email"] as const)
+        : id === "jira"
+          ? (["siteName", "displayName", "email", "url"] as const)
         : (["email", "username", "name"] as const);
   return firstProfileText(status.profile, fields) || "Connected";
 }

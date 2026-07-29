@@ -405,6 +405,18 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           error: "",
           items: [],
         });
+        const [
+          projectOverviewTaskActivitySelectedId,
+          setProjectOverviewTaskActivitySelectedId,
+        ] = useState("");
+        const [
+          projectOverviewTaskActivityTimeRange,
+          setProjectOverviewTaskActivityTimeRange,
+        ] = useState(null);
+        const [
+          projectOverviewActivityChartHeight,
+          setProjectOverviewActivityChartHeight,
+        ] = useState(null);
         const [projectOverviewTaskActivityFilterMode, setProjectOverviewTaskActivityFilterMode] = useState("all");
         const [projectOverviewTaskActivityToolbarPopover, setProjectOverviewTaskActivityToolbarPopover] = useState("");
         const projectOverviewTaskActivityFilterPopupRef = useRef(null);

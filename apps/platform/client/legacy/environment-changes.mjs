@@ -16,6 +16,78 @@ export const ENVIRONMENT_CHANGES_CSS = String.raw`
         flex-direction: column;
       }
 
+      .playground-environment-changes-view.is-timeline {
+        overflow: auto;
+        scrollbar-width: none;
+      }
+
+      .playground-environment-changes-view.is-timeline::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-environment-changes-activity-panel {
+        width: 100%;
+        max-width: none;
+        height: 100%;
+        min-height: 100%;
+        display: grid;
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        overflow: hidden;
+        background: #000;
+      }
+
+      .playground-environment-changes-activity-panel
+        > .platform-activity-overview.playground-files-activity-overview {
+        width: 100%;
+        max-width: none;
+        height: 100%;
+        min-height: 0;
+      }
+
+      .playground-files-activity-feed {
+        box-sizing: border-box;
+        display: flex;
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        padding: 0;
+      }
+
+      .playground-files-activity-feed-loading {
+        flex: 1 1 auto;
+        min-height: 220px;
+      }
+
+      .platform-activity-timeline.is-inspector.playground-files-activity-timeline {
+        flex: 1 1 auto;
+        width: 100%;
+        max-width: none;
+        height: 100%;
+        min-height: 0;
+      }
+
+      .playground-files-activity-inspector-preview {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        gap: 12px;
+      }
+
+      .playground-files-activity-inspector-preview
+        > .playground-environment-changes-detail-preview,
+      .playground-files-activity-inspector-diff {
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+
+      .playground-files-activity-inspector-diff {
+        overflow: auto;
+      }
+
       .playground-environment-changes-view .changes-timeline-panel {
         width: 100%;
         max-width: none;
@@ -755,6 +827,33 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
       }
 
       const ENVIRONMENT_CHANGES_BATCH_SIZE = 25;
+      const ENVIRONMENT_ACTIVITY_FILTER_OPTIONS = [
+        {
+          id: "all",
+          label: "All actions",
+          description: "Show every recorded file operation.",
+        },
+        {
+          id: "created",
+          label: "Created",
+          description: "Files created by agents or users.",
+        },
+        {
+          id: "uploaded",
+          label: "Uploaded",
+          description: "Files uploaded into the environment.",
+        },
+        {
+          id: "modified",
+          label: "Modified",
+          description: "Existing files that were changed.",
+        },
+        {
+          id: "deleted",
+          label: "Deleted",
+          description: "Files removed from the environment.",
+        },
+      ];
 
       function applyEnvironmentChangeClientFilters(items, { projectFilterScope, actorFilter }) {
         const safeItems = Array.isArray(items) ? items : [];
@@ -1212,9 +1311,12 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
         operationFilter,
         actorFilter,
         onAvailableActorsChange,
+        onOperationFilterChange,
         onShowInFiles,
         onScreenModeChange,
       }) {
+        const activityFilterPopupRef = useRef(null);
+        const activityFilterSurfaceRef = useRef(null);
         const [changes, setChanges] = useState([]);
         const [loading, setLoading] = useState(false);
         const [loadingMore, setLoadingMore] = useState(false);
@@ -1230,6 +1332,9 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
         const [forkState, setForkState] = useState({ status: "", message: "" });
         const [changesScreenMode, setChangesScreenMode] = useState("timeline");
         const [availableAgents, setAvailableAgents] = useState([]);
+        const [activityChartHeight, setActivityChartHeight] = useState(null);
+        const [activityFilterOpen, setActivityFilterOpen] = useState(false);
+        const [activitySearchQuery, setActivitySearchQuery] = useState("");
 
         useEffect(() => {
           let cancelled = false;
@@ -1266,6 +1371,9 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
           setDetailError("");
           setForkState({ status: "", message: "" });
           setChangesScreenMode("timeline");
+          setActivityChartHeight(null);
+          setActivityFilterOpen(false);
+          setActivitySearchQuery("");
 
           if (!environmentId) {
             setLoading(false);
@@ -1423,28 +1531,36 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
             return change.agentId === actorFilter;
           });
         }, [actorFilter, scopedChanges]);
-
-        const groupedChanges = useMemo(() => {
-          const groups = [];
-          let currentGroup = null;
-          filteredChanges.forEach((change) => {
-            const groupKey = getHistoryDateGroupKey(change.createdAt);
-            if (!currentGroup || currentGroup.key !== groupKey) {
-              currentGroup = {
-                key: groupKey,
-                label: formatHistoryDateHeading(change.createdAt),
-                items: [],
-              };
-              groups.push(currentGroup);
-            }
-            currentGroup.items.push(change);
+        const normalizedActivitySearchQuery = activitySearchQuery.trim().toLowerCase();
+        const activityChanges = useMemo(() => {
+          if (!normalizedActivitySearchQuery) {
+            return filteredChanges;
+          }
+          return filteredChanges.filter((change) => {
+            const fileSearchText = (Array.isArray(change?.files) ? change.files : [])
+              .flatMap((file) => [
+                file?.name,
+                file?.path,
+                file?.operation,
+                file?.changeKind,
+              ])
+              .join(" ");
+            return [
+              buildEnvironmentChangeTimelineTitle(change),
+              change?.agentName,
+              change?.projectName,
+              change?.threadTitle,
+              fileSearchText,
+            ]
+              .join(" ")
+              .toLowerCase()
+              .includes(normalizedActivitySearchQuery);
           });
-          return groups;
-        }, [filteredChanges]);
+        }, [filteredChanges, normalizedActivitySearchQuery]);
 
         const selectedChange = useMemo(
-          () => filteredChanges.find((change) => change.id === selectedChangeId) || null,
-          [filteredChanges, selectedChangeId]
+          () => activityChanges.find((change) => change.id === selectedChangeId) || null,
+          [activityChanges, selectedChangeId]
         );
         const selectedFile = useMemo(
           () => (selectedChange?.files || []).find((file) => normalizeHistoryPath(file.path) === normalizeHistoryPath(selectedFilePath)) || null,
@@ -1505,19 +1621,19 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
         }, [changesScreenMode, onScreenModeChange]);
 
         useEffect(() => {
-          if (filteredChanges.length === 0) {
+          if (activityChanges.length === 0) {
             setSelectedChangeId("");
             setSelectedFilePath("");
             setChangesScreenMode("timeline");
             return;
           }
-          if (selectedChangeId && filteredChanges.some((change) => change.id === selectedChangeId)) {
+          if (selectedChangeId && activityChanges.some((change) => change.id === selectedChangeId)) {
             return;
           }
-          const firstChange = filteredChanges[0];
+          const firstChange = activityChanges[0];
           setSelectedChangeId(firstChange.id);
           setSelectedFilePath(firstChange.files[0]?.path || "");
-        }, [filteredChanges, selectedChangeId]);
+        }, [activityChanges, selectedChangeId]);
 
         useEffect(() => {
           if (!selectedChange) {
@@ -1672,14 +1788,309 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
             || (selectedFilePreviewMode === "diff" && detailError)
           )
         );
-        function openChangeDetail(change, preferredPath = "") {
+        function selectEnvironmentActivityChange(change, preferredPath = "") {
           const normalizedChangeId = String(change?.id || "").trim();
           if (!normalizedChangeId) {
             return;
           }
+          setDetailLoading(true);
+          setDetailDiff(null);
+          setDetailFileContent("");
+          setDetailError("");
+          setForkState({ status: "", message: "" });
           setSelectedChangeId(normalizedChangeId);
           setSelectedFilePath(preferredPath || change?.files?.[0]?.path || "");
-          setChangesScreenMode("detail");
+          setChangesScreenMode("timeline");
+        }
+
+        const activityRecords = useMemo(
+          () => activityChanges.flatMap((change, index) => {
+            const createdAt = String(change?.createdAt || "").trim();
+            if (!createdAt || !Number.isFinite(Date.parse(createdAt))) {
+              return [];
+            }
+            const changeId = String(change?.id || change?.snapshotId || index).trim();
+            const primaryFile = Array.isArray(change?.files) && change.files.length > 0
+              ? change.files[0]
+              : null;
+            const activityTitle = primaryFile
+              ? getEnvironmentChangeKindLabel(primaryFile.operation || primaryFile.changeKind)
+                + " "
+                + String(primaryFile.path || primaryFile.name || "file")
+              : buildEnvironmentChangeTimelineTitle(change);
+            const changeAgent = resolveEnvironmentChangeAgentRecord(
+              change,
+              availableAgentsById,
+              availableAgentsByName
+            );
+            const changeAgentPhotoUrl = changeAgent
+              ? (typeof getPlaygroundAgentProfilePhotoUrl === "function"
+                  ? normalizeEnvironmentChangesPhotoUrl(
+                      getPlaygroundAgentProfilePhotoUrl(changeAgent)
+                    ) || readEnvironmentChangesAgentPhotoUrl(changeAgent)
+                  : readEnvironmentChangesAgentPhotoUrl(changeAgent))
+              : "";
+            const actorName = String(
+              change?.agentName
+              || changeAgent?.name
+              || (change?.sourceKind === "manual" ? "Manual change" : "Environment")
+            ).trim();
+            return [{
+              id: changeId,
+              change,
+              createdAt,
+              primaryFile,
+              activityTitle,
+              actorName,
+              changeAgentPhotoUrl,
+            }];
+          }),
+          [
+            availableAgentsById,
+            availableAgentsByName,
+            activityChanges,
+          ]
+        );
+
+        const activityItems = useMemo(
+          () => activityRecords.map((record) => {
+            const permissionRingId = "ring_2";
+            return {
+              id: "environment-change:" + record.id,
+              label: record.activityTitle,
+              content: React.createElement(PlatformActivityOverviewCard, {
+                title: record.activityTitle,
+                permissionRingId,
+                permissionIcon: React.createElement(
+                  PlatformPermissionMiniRingIcon,
+                  { ringId: permissionRingId }
+                ),
+                actorAvatar: renderEnvironmentChangesAgentAvatar(
+                  record.actorName,
+                  "playground-environment-changes-agent-avatar",
+                  record.changeAgentPhotoUrl
+                ),
+                actorLabel: record.actorName,
+                selected: selectedChangeId === record.id,
+                "aria-label": "Inspect " + record.activityTitle + " by " + record.actorName,
+                onClick: () => selectEnvironmentActivityChange(record.change),
+              }),
+              startAt: record.createdAt,
+              kind: "activity",
+              status: "default",
+              icon: FileText,
+              ariaLabel: "Inspect " + record.activityTitle,
+            };
+          }),
+          [
+            activityRecords,
+            selectedChangeId,
+          ]
+        );
+
+        const activityInspectorBody = !selectedChange || !selectedFile
+          ? React.createElement(PlatformEmptyState, {
+              title: "Select an activity",
+              description: "Choose a file change to inspect its diff and file state.",
+            })
+          : detailLoading
+            ? React.createElement(PlatformLoadingState, {
+                message: "Loading file diff...",
+                centered: true,
+              })
+            : shouldRenderDocumentPreview
+              ? React.createElement("div", {
+                  className: "playground-environment-changes-detail-preview",
+                },
+                  React.createElement(RunnerDocumentPreviewDrawer, {
+                    attachment: selectedFilePreviewAttachment,
+                    backendUrl,
+                    requestHeaders,
+                    inline: true,
+                    showCloseButton: false,
+                    className: "playground-environment-changes-detail-preview-drawer",
+                  })
+                )
+              : detailError
+                ? React.createElement(PlatformEmptyState, {
+                    title: "Unable to load file activity",
+                    description: detailError,
+                  })
+                : selectedFile.changeKind === "deleted"
+                  ? React.createElement(PlatformEmptyState, {
+                      title: "File deleted",
+                      description: "This file was deleted at the selected activity.",
+                    })
+                  : React.createElement("div", {
+                      className: "playground-files-activity-inspector-diff",
+                    },
+                      React.createElement(RunnerFileDiffSurface, {
+                        diffContent: detailDiffText,
+                        fileContent: detailFileContent,
+                        filePath: selectedFile.path,
+                        emptyMessage: "No stored diff is available for this activity.",
+                        additions,
+                        deletions,
+                      })
+                    );
+        const activityInspectorPreview = React.createElement("div", {
+            className: "playground-files-activity-inspector-preview",
+          },
+            forkState.message
+              ? React.createElement("div", {
+                  className: "playground-environment-changes-detail-message"
+                    + (forkState.status === "error" ? " is-error" : ""),
+                }, forkState.message)
+              : null,
+            activityInspectorBody
+          );
+        const activityInspectorActions = selectedChange && selectedFile
+          ? React.createElement("div", {
+              className: "playground-environment-changes-detail-actions",
+            },
+              React.createElement(PlatformSecondaryButton, {
+                size: "small",
+                onClick: () => onShowInFiles?.({
+                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                  environmentId,
+                  projectId: selectedChange.projectId || "",
+                  path: selectedFile.path,
+                  isFolder: selectedFile.entryType === "directory",
+                }),
+              },
+                React.createElement(FolderOpen, { width: 14, height: 14, strokeWidth: 1.75 }),
+                React.createElement("span", null, "Show in Files")
+              ),
+              React.createElement(PlatformSecondaryButton, {
+                size: "small",
+                onClick: () => void handleForkFromChange(),
+                disabled: forkState.status === "loading",
+              },
+                React.createElement(GitFork, { width: 14, height: 14, strokeWidth: 1.75 }),
+                React.createElement("span", null, forkState.status === "loading" ? "Forking..." : "Fork from Here")
+              )
+            )
+          : null;
+        const activityTimelineItems = activityRecords.map((record) => ({
+          id: record.id,
+          summary: React.createElement("strong", null, record.activityTitle),
+          timestamp: formatHistoryTimestamp(record.createdAt),
+          trailing: record.change.projectName || undefined,
+          avatar: renderEnvironmentChangesAgentAvatar(
+            record.actorName,
+            "playground-environment-changes-agent-avatar",
+            record.changeAgentPhotoUrl
+          ),
+          tone: record.primaryFile?.operation === "created"
+            || record.primaryFile?.operation === "uploaded"
+            ? "created"
+            : "status",
+          ariaLabel: "Inspect " + record.activityTitle,
+          preview: selectedChangeId === record.id
+            ? activityInspectorPreview
+            : undefined,
+          inspectorAction: selectedChangeId === record.id
+            ? activityInspectorActions
+            : undefined,
+        }));
+        const activityTimelineTitleActions = React.createElement(PlatformPopup, {
+            open: activityFilterOpen,
+            rootRef: activityFilterPopupRef,
+            surfaceRef: activityFilterSurfaceRef,
+            rootClassName: "playground-project-activity-filter-shell is-central-popup",
+            surfaceClassName: "platform-data-table__floating-menu playground-project-activity-filter-menu is-central-popup",
+            surfaceProps: {
+              role: "menu",
+              "aria-label": "Filter activity",
+            },
+            animation: "down-in",
+            variant: "minimal",
+            portal: true,
+            placement: "bottom-start",
+            portalOffset: 6,
+            trigger: React.createElement("button", {
+              type: "button",
+              className: "platform-data-table__toolbar-button is-icon-only"
+                + (activityFilterOpen || operationFilter !== "all" ? " is-open" : ""),
+              onClick: (event) => {
+                event.stopPropagation();
+                setActivityFilterOpen((current) => !current);
+              },
+              title: "Filter activity",
+              "aria-label": "Filter activity",
+              "aria-haspopup": "menu",
+              "aria-expanded": activityFilterOpen ? "true" : "false",
+            }, React.createElement(ListFilter, {
+              width: 14,
+              height: 14,
+              strokeWidth: 1.8,
+              "aria-hidden": "true",
+            })),
+          },
+          ENVIRONMENT_ACTIVITY_FILTER_OPTIONS.map((option) =>
+            React.createElement("button", {
+              key: option.id,
+              type: "button",
+              role: "menuitemradio",
+              "aria-checked": operationFilter === option.id ? "true" : "false",
+              className: "platform-data-table__menu-item",
+              onClick: () => {
+                onOperationFilterChange?.(option.id);
+                setActivityFilterOpen(false);
+              },
+            },
+              React.createElement("span", {
+                  className: "platform-data-table__menu-icon",
+                },
+                operationFilter === option.id
+                  ? React.createElement(Check, {
+                      width: 14,
+                      height: 14,
+                      strokeWidth: 1.8,
+                      "aria-hidden": "true",
+                    })
+                  : null
+              ),
+              React.createElement("span", {
+                  className: "platform-data-table__menu-copy",
+                },
+                React.createElement("span", {
+                  className: "platform-data-table__menu-label",
+                }, option.label),
+                React.createElement("span", {
+                  className: "platform-data-table__menu-description",
+                }, option.description)
+              )
+            )
+          )
+        );
+        const activityTimelineListFooter = hasMore
+          ? React.createElement(PlatformSecondaryButton, {
+              size: "small",
+              onClick: () => void handleLoadMoreChanges(),
+              disabled: loadingMore,
+            },
+              loadingMore
+                ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.75 })
+                : React.createElement(List, { width: 14, height: 14, strokeWidth: 1.75 }),
+              React.createElement("span", null, loadingMore ? "Loading..." : "Show more")
+            )
+          : null;
+        const normalizedActivityChartHeight = Number(activityChartHeight);
+        const activityPanelStyle = Number.isFinite(normalizedActivityChartHeight)
+          && normalizedActivityChartHeight > 0
+          ? {
+              gridTemplateRows:
+                "min("
+                + Math.max(240, normalizedActivityChartHeight)
+                + "px, calc(100% - 220px)) minmax(220px, 1fr)",
+            }
+          : undefined;
+        function handleActivityTimelineSelection(itemId) {
+          const nextRecord = activityRecords.find((record) => record.id === itemId);
+          if (nextRecord) {
+            selectEnvironmentActivityChange(nextRecord.change);
+          }
         }
 
         if (changesScreenMode === "detail") {
@@ -1792,123 +2203,52 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
         }
 
         return React.createElement("div", { className: "playground-environment-changes-view is-timeline" },
-          React.createElement("section", { className: "changes-panel changes-timeline-panel" },
-            loading
-              ? React.createElement("div", { className: "changes-panel-body changes-timeline-body" },
-                  React.createElement("div", { className: "changes-loading-state" },
-                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                    React.createElement("span", null, "Loading environment changes...")
-                  )
-                )
-              : error
-                ? React.createElement("div", { className: "changes-panel-body changes-timeline-body" },
-                    React.createElement("div", { className: "changes-empty-state" }, error)
-                  )
-                : filteredChanges.length === 0
-                  ? React.createElement("div", { className: "changes-panel-body changes-timeline-body" },
-                      React.createElement("div", { className: "changes-empty-state" }, "No file changes have been recorded for this environment yet.")
-                    )
-                  : React.createElement("div", { className: "changes-panel-body changes-timeline-body" },
-                      React.createElement("div", { className: "changes-timeline" },
-                        groupedChanges.map((group) =>
-                          React.createElement("section", { key: group.key, className: "changes-timeline-group" },
-                            React.createElement("div", { className: "changes-timeline-track" },
-                              group.items.map((change) => {
-                                const isActiveChange = selectedChange?.id === change.id;
-                                const primaryFile = Array.isArray(change?.files) && change.files.length > 0 ? change.files[0] : null;
-                                const changeKindLabel = primaryFile ? getEnvironmentChangeKindLabel(primaryFile.operation || primaryFile.changeKind) : "";
-                                const changeAgent = resolveEnvironmentChangeAgentRecord(change, availableAgentsById, availableAgentsByName);
-                                const changeAgentPhotoUrl = changeAgent
-                                  ? (typeof getPlaygroundAgentProfilePhotoUrl === "function"
-                                      ? normalizeEnvironmentChangesPhotoUrl(getPlaygroundAgentProfilePhotoUrl(changeAgent)) || readEnvironmentChangesAgentPhotoUrl(changeAgent)
-                                      : readEnvironmentChangesAgentPhotoUrl(changeAgent))
-                                  : "";
-                                const changeAgentName = String(change?.agentName || changeAgent?.name || "").trim();
-                                return React.createElement("article", {
-                                    key: change.id,
-                                    className: "changes-step-card" + (isActiveChange ? " is-active" : ""),
-                                  },
-                                    React.createElement("div", { className: "changes-step-card-header" },
-                                      React.createElement("span", {
-                                        className: "changes-step-card-commit",
-                                        "aria-hidden": "true",
-                                      }, React.createElement(GitCommitHorizontal, null)),
-                                      React.createElement("button", {
-                                        type: "button",
-                                        className: "changes-step-card-summary",
-                                        onClick: () => openChangeDetail(change),
-                                      },
-                                        React.createElement("div", { className: "playground-environment-changes-step-summary-head" },
-                                          React.createElement("div", { className: "changes-step-card-title playground-environment-changes-step-summary-title" }, buildEnvironmentChangeTimelineTitle(change)),
-                                          React.createElement("div", { className: "playground-environment-changes-step-summary-meta" },
-                                            changeAgentName
-                                              ? React.createElement("span", { className: "playground-environment-changes-step-summary-agent" },
-                                                  renderEnvironmentChangesAgentAvatar(
-                                                    changeAgentName,
-                                                    "playground-environment-changes-agent-avatar",
-                                                    changeAgentPhotoUrl
-                                                  ),
-                                                  React.createElement("span", null, changeAgentName)
-                                                )
-                                              : null,
-                                            React.createElement("span", { className: "playground-environment-changes-step-summary-date" }, formatHistoryTimestamp(change.createdAt))
-                                          )
-                                        )
-                                      )
-                                    ),
-                                    React.createElement("div", { className: "changes-step-card-files" },
-                                      primaryFile
-                                        ? React.createElement("div", {
-                                            className: "changes-step-file-row" + (isActiveChange ? " is-active" : ""),
-                                          },
-                                            React.createElement("button", {
-                                              type: "button",
-                                              className: "changes-step-file-row-main",
-                                              onClick: () => openChangeDetail(change, primaryFile.path),
-                                            },
-                                              React.createElement("div", { className: "changes-step-file-row-head" },
-                                                React.createElement("div", { className: "changes-step-file-head-main" },
-                                                  React.createElement("div", { className: "changes-step-file-main" },
-                                                    React.createElement("div", { className: "changes-step-file-name" }, primaryFile.name || primaryFile.path),
-                                                    React.createElement("div", { className: "changes-step-file-path" }, "/" + primaryFile.path)
-                                                  )
-                                                ),
-                                                React.createElement("div", { className: "changes-step-file-right" },
-                                                  changeKindLabel
-                                                    ? React.createElement("span", { className: "changes-step-file-kind is-" + (primaryFile.operation || primaryFile.changeKind || "created") }, changeKindLabel)
-                                                    : null,
-                                                  typeof primaryFile.additions === "number" && primaryFile.additions > 0
-                                                    ? React.createElement("span", { className: "changes-step-file-stat is-added" }, "+" + primaryFile.additions)
-                                                    : null,
-                                                  typeof primaryFile.deletions === "number" && primaryFile.deletions > 0
-                                                    ? React.createElement("span", { className: "changes-step-file-stat is-removed" }, "-" + primaryFile.deletions)
-                                                    : null
-                                                )
-                                              )
-                                            )
-                                          )
-                                        : React.createElement("div", { className: "changes-step-card-empty" }, "No file change was recorded for this entry.")
-                                    )
-                                  );
-                              })
-                            )
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-environment-changes-list-footer" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-environment-changes-load-more",
-                            onClick: () => void handleLoadMoreChanges(),
-                            disabled: loadingMore || !hasMore,
-                          },
-                            loadingMore
-                              ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.75 })
-                              : React.createElement(List, { width: 14, height: 14, strokeWidth: 1.75 }),
-                            React.createElement("span", null, loadingMore ? "Loading..." : "Show more")
-                          )
-                        )
-                      )
-                    )
+          React.createElement("section", {
+              className: "playground-environment-changes-activity-panel",
+              style: activityPanelStyle,
+            },
+            React.createElement(PlatformActivityOverview, {
+              className: "playground-files-activity-overview",
+              items: activityItems,
+              loading,
+              loadingMessage: "Loading environment activity...",
+              emptyTitle: error ? "Unable to load activity" : "No file activity yet",
+              emptyDescription: error || "Changes made in this environment will appear here.",
+              ariaLabel: (environmentName || "Environment") + " file activity",
+              resizable: true,
+              minResizeHeight: 240,
+              minSiblingHeight: 220,
+              onHeightChange: setActivityChartHeight,
+            }),
+            React.createElement("section", {
+                className: "playground-files-activity-feed",
+              },
+              loading && activityTimelineItems.length === 0
+                ? React.createElement(PlatformLoadingState, {
+                    className: "playground-files-activity-feed-loading",
+                    message: "Loading activity...",
+                    centered: true,
+                  })
+                : React.createElement(PlatformActivityTimeline, {
+                    className: "playground-files-activity-timeline",
+                    layout: "inspector",
+                    title: "Activity",
+                    titleActions: activityTimelineTitleActions,
+                    headerActions: React.createElement(PlatformSearch, {
+                      value: activitySearchQuery,
+                      onChange: (event) => setActivitySearchQuery(event.target.value),
+                      placeholder: "Search activity",
+                      "aria-label": "Search environment activity",
+                    }),
+                    listFooter: activityTimelineListFooter,
+                    inspectorTitle: "Inspector",
+                    items: activityTimelineItems,
+                    selectedItemId: selectedChangeId,
+                    onSelectedItemChange: handleActivityTimelineSelection,
+                    emptyTitle: error ? "Activity unavailable" : "No file activity yet",
+                    emptyDescription: error || "Changes made in this environment will appear here.",
+                  })
+            )
           )
         );
       }

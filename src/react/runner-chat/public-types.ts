@@ -78,6 +78,17 @@ export interface RunnerChatProjectsConfig {
   onProjectChange?: (projectId: string) => void;
 }
 
+export interface RunnerChatConnectorOption {
+  id: string;
+  name: string;
+  description?: string;
+  keywords?: string[];
+  logoUrl?: string;
+  connected?: boolean;
+  disabled?: boolean;
+  onConnect?: () => Promise<boolean | void> | boolean | void;
+}
+
 export interface RunnerChatExternalRunRequest {
   token: string | number;
   threadId: string;
@@ -93,6 +104,7 @@ export interface RunnerChatExternalRunRequest {
     branch: string;
   } | null;
   enabledSkills?: Record<string, unknown> | null;
+  connectors?: Record<string, unknown> | null;
   environmentId?: string | null;
   projectId?: string | null;
   quotedSelection?: RunnerQuotedSelection | null;
@@ -123,6 +135,7 @@ export interface RunnerChatProjectTaskSubmitPayload {
     branch: string;
   } | null;
   enabledSkills?: Record<string, unknown> | null;
+  connectors?: Record<string, unknown> | null;
   quotedSelection?: RunnerQuotedSelection | null;
 }
 
@@ -200,6 +213,9 @@ export interface RunnerChatComputerAgentsConfig {
   workspace?: RunnerChatWorkspaceConfig;
   schedule?: RunnerChatScheduleConfig;
   projects?: RunnerChatProjectsConfig;
+  connectors?: RunnerChatConnectorOption[];
+  selectedConnectorIds?: string[];
+  onSelectedConnectorsChange?: (connectorIds: string[]) => void;
 }
 
 export interface RunnerChatActionSummaryClickPayload {
@@ -394,6 +410,7 @@ export interface RunnerChatProps {
       branch: string;
     } | null;
     enabledSkills?: Record<string, unknown> | null;
+    connectors?: Record<string, unknown> | null;
   }) => Promise<void> | void;
   followUpActions?: RunnerChatFollowUpAction[];
   followUpError?: string;

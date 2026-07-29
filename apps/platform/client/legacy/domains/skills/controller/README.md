@@ -10,7 +10,10 @@ This directory contains remaining legacy browser interaction controllers and eff
 
 - [`01-state-and-data.js`](01-state-and-data.js) — State and projection logic for 01 State And Data.
 - [`02-actions-and-editors.js`](02-actions-and-editors.js) — Focused implementation of 02 Actions And Editors.
+- [`03-title-actions-and-sharing.js`](03-title-actions-and-sharing.js) — Skill detail title actions, copying, and team sharing.
+- [`03-detail-identity-and-settings.js`](03-detail-identity-and-settings.js) — Skill identity picker, deployment-region settings, and properties-sidebar composition.
 - [`03-rendering-and-composition.js`](03-rendering-and-composition.js) — Focused implementation of 03 Rendering And Composition.
+- [`03-versioning-and-shortcuts.js`](03-versioning-and-shortcuts.js) — Skill version diffs, the shared save-review dialog, and keyboard shortcuts. The source composer injects this fragment at the verified component-scope boundary before the environment file-picker renderer.
 
 ## Working in this directory
 
