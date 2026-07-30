@@ -350,8 +350,14 @@ const agentAnalyticsEnd = agentAnalyticsStart >= 0
 const agentAnalyticsSource = agentAnalyticsStart >= 0 && agentAnalyticsEnd > agentAnalyticsStart
   ? platformEntrySource.slice(agentAnalyticsStart, agentAnalyticsEnd)
   : "";
-if (!agentAnalyticsSource.includes("timeframe: {")) {
-  failures.push("agent detail Insights analytics must delegate its timeframe selector to PlatformAnalyticsSection");
+if (agentAnalyticsSource.includes("timeframe: {")) {
+  failures.push("agent detail Insights analytics must not duplicate the app-header timeframe selector");
+}
+if (
+  !platformEntrySource.includes("const agentInsightsTimeframeControl = !agentVersionChangesState")
+  || !platformEntrySource.includes('ariaLabel: "Agent analytics time frame"')
+) {
+  failures.push("agent detail Insights must expose its timeframe selector through the app header");
 }
 if (
   !platformEntrySource.includes('{ id: "day", label: "24H", bucketCount: 1 }')

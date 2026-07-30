@@ -261,6 +261,29 @@ export const METRONOME_APP_SIDEBAR_STATE_SCRIPT = `
             window.removeEventListener("scroll", handleViewportChange, true);
           };
         }, [displayedSidebarThreadEntries, metronomeRunActionMenuState]);
+        const metronomeRunStatusCandidateSignature = useMemo(() => (
+          displayedSidebarThreadEntries
+            .filter((entry) => entry?.kind === "metronome-run")
+            .map((entry) => ({
+              key: String(entry?.key || getSidebarMetronomeRunGroupKey({
+                metronomeId: entry?.metronomeId,
+                runId: entry?.runId,
+              }) || "").trim(),
+              metronomeId: String(entry?.metronomeId || "").trim(),
+              runId: String(entry?.runId || "").trim(),
+              status: String(entry?.status || "").trim(),
+            }))
+            .filter((entry) => (
+              entry.key
+              && entry.metronomeId
+              && entry.runId
+              && (!entry.status || isActiveMetronomeRunStatus(entry.status))
+            ))
+            .map((entry) => [entry.key, entry.metronomeId, entry.runId].join(":"))
+            .sort()
+            .join("|")
+        ), [displayedSidebarThreadEntries]);
+        const metronomeRunStatusRequestHeadersKey = JSON.stringify(authRequestHeaders || {});
         useEffect(() => {
           if (!hasRealAccess || activePage !== "thread") {
             return undefined;
@@ -289,13 +312,14 @@ export const METRONOME_APP_SIDEBAR_STATE_SCRIPT = `
           let cancelled = false;
           let refreshTimer = null;
           const requestController = new AbortController();
+          const requestHeaders = JSON.parse(metronomeRunStatusRequestHeadersKey || "{}");
           const loadStatuses = async () => {
             let hasActiveRun = false;
             await Promise.all(candidates.map(async (entry) => {
               try {
                 const { response, data } = await fetchJsonWithTimeout(
                   proxyBackendBase + "/metronomes/" + encodeURIComponent(entry.metronomeId) + "/runs/" + encodeURIComponent(entry.runId) + "?view=status",
-                  { method: "GET", headers: authRequestHeaders, signal: requestController.signal },
+                  { method: "GET", headers: requestHeaders, signal: requestController.signal },
                   10000
                 );
                 if (cancelled || !response.ok) {
@@ -371,8 +395,8 @@ export const METRONOME_APP_SIDEBAR_STATE_SCRIPT = `
             }));
             if (!cancelled && hasActiveRun) {
               refreshTimer = window.setTimeout(() => {
-                setMetronomeRunStatusRefreshTick((current) => current + 1);
-              }, 15000);
+                void loadStatuses();
+              }, document.visibilityState === "hidden" ? 60000 : 15000);
             }
           };
 
@@ -384,5 +408,11 @@ export const METRONOME_APP_SIDEBAR_STATE_SCRIPT = `
               window.clearTimeout(refreshTimer);
             }
           };
-        }, [activePage, authRequestHeaders, displayedSidebarThreadEntries, hasRealAccess, metronomeRunStatusRefreshTick, proxyBackendBase]);
+        }, [
+          activePage,
+          hasRealAccess,
+          metronomeRunStatusCandidateSignature,
+          metronomeRunStatusRequestHeadersKey,
+          proxyBackendBase,
+        ]);
 `;

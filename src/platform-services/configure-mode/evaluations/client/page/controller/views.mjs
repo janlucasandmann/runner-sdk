@@ -274,7 +274,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               : evidenceSelfReported
                 ? "Self-reported"
                 : evidenceLegacy
-                  ? "Legacy evidence"
+                  ? ""
                   : "Invalid evidence";
           const evidenceVariant = !runTerminal
             ? "blue"
@@ -315,9 +315,11 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
                 + (evidenceTrusted ? " is-trusted" : runTerminal ? " is-untrusted" : " is-pending"),
             },
             React.createElement("div", { className: "playground-evaluations-run-evidence-summary" },
-              React.createElement(PlatformLabel, {
-                variant: evidenceVariant,
-              }, evidenceLabel),
+              evidenceLabel
+                ? React.createElement(PlatformLabel, {
+                    variant: evidenceVariant,
+                  }, evidenceLabel)
+                : null,
               React.createElement("p", null, evidenceExplanation)
             ),
             React.createElement("dl", { className: "playground-evaluations-run-evidence-grid" },

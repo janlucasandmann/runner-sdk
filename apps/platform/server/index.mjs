@@ -2,6 +2,10 @@ import http from "node:http";
 import { handleGithubApiRequest, isGithubApiRequestPath } from "./integrations/github-oauth.mjs";
 import { handleJiraApiRequest, isJiraApiRequestPath } from "./integrations/jira-oauth.mjs";
 import {
+  handleGenericConnectorApiRequest,
+  isGenericConnectorApiRequestPath,
+} from "./integrations/generic-connector-oauth.mjs";
+import {
   matchPlaygroundBillingProxyRoute,
 } from "../shared/billing/playground-billing-catalog.mjs";
 import {
@@ -84,7 +88,9 @@ const platformDocumentAssets = platformViteOrigin
       packageRoot,
       viteOrigin: platformViteOrigin,
     })
-  : createPlatformDocumentAssets(platformApplicationSources);
+  : await createPlatformDocumentAssets(platformApplicationSources, {
+      packageRoot,
+    });
 const platformDocumentHtml = platformDocumentAssets.documentHtml;
 
 const platformGateway = createPlatformGateway({
@@ -106,6 +112,10 @@ const platformGateway = createPlatformGateway({
 });
 const platformServices = createPlatformServices({
   gateway: platformGateway,
+  identityService,
+  connectorOauthEnvFileCandidates,
+  connectorRuntimeSigningSecret: platformControlPlaneSecret,
+  platformOrigin,
   playgroundSystemSkillsRoot,
   port,
   executionDispatcherEnabled: executionDispatcher.enabled,
@@ -130,8 +140,10 @@ const server = http.createServer(createPlatformRequestHandler({
   aiosOrigin,
   connectorOauthAllowedOrigins,
   connectorOauthEnvFileCandidates,
+  handleGenericConnectorApiRequest,
   handleGithubApiRequest,
   handleJiraApiRequest,
+  isGenericConnectorApiRequestPath,
   isGithubApiRequestPath,
   isJiraApiRequestPath,
   matchPlaygroundBillingProxyRoute,
@@ -159,7 +171,9 @@ server.listen(port, bindAddress, () => {
   console.log(
     `[platform] document=${platformDocumentAssets.metrics.documentBytes}B `
     + `css=${platformDocumentAssets.metrics.cssBytes}B `
-    + `client=${platformDocumentAssets.metrics.moduleBytes}B`,
+    + `client=${platformDocumentAssets.metrics.moduleBytes}B `
+    + `chunks=${platformDocumentAssets.metrics.moduleChunkCount || 0} `
+    + `modules=${platformDocumentAssets.metrics.moduleGraphInputs || 1}`,
   );
   executionDispatcherRuntime.start();
 });

@@ -493,6 +493,17 @@ export function createOidcIdentityService(config, dependencies = {}) {
     hasSession(request) {
       return Boolean(readCookie(request, config.platformSessionCookieName));
     },
+    async readPrincipal(request) {
+      const session = await readSession(request);
+      if (!session) return null;
+      return Object.freeze({
+        provider: "oidc",
+        userId: session.profile.userId,
+        uid: session.profile.userId,
+        email: session.profile.email || session.principal.email || "",
+        principal: session.principal,
+      });
+    },
     readSession,
   });
 }

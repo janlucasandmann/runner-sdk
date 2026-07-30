@@ -1,19 +1,4 @@
 export const PLAYGROUND_TESTS_CSS = String.raw`
-  .tests-overview-guide {
-    display: grid;
-    gap: 28px;
-  }
-
-  .tests-overview-guide__hero {
-    max-width: 920px;
-  }
-
-  .tests-overview-guide__cards {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px;
-  }
-
   .resource-overview-page.is-tests {
     --resource-overview-accent: #4aa7ff;
   }
@@ -111,8 +96,176 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
   }
 
   .playground-tests-section-controls,
-  .tests-detail-header-switch {
+  .tests-detail-header-switch,
+  .tests-case-detail-header-switch {
     min-width: 0;
+  }
+
+  .tests-case-detail-page {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .tests-case-detail-identity {
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .tests-case-detail-title-input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    border-radius: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.96);
+    font: inherit;
+    font-size: 20px;
+    line-height: 1.3;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .tests-case-detail-description-input {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .tests-case-detail-title-input::placeholder,
+  .tests-case-detail-description-input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .tests-case-detail-notice {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 24px;
+    border-bottom: 1px solid rgba(255, 91, 91, 0.2);
+    color: #ff9b9b;
+    background: rgba(155, 37, 37, 0.1);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .tests-case-detail-workspace {
+    min-height: 0;
+    flex: 1 1 0;
+  }
+
+  .tests-case-detail-editor {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 0;
+    flex: 1 1 0;
+    margin: 0;
+    padding: 16px 18px;
+    border: 0;
+    outline: 0;
+    border-radius: 0;
+    background: #000;
+    color: rgba(255, 255, 255, 0.92);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    resize: none;
+    tab-size: 2;
+  }
+
+  .tests-case-detail-settings-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .tests-case-detail-settings-title {
+    margin: 0;
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 400;
+  }
+
+  .tests-case-detail-configuration {
+    min-width: 0;
+  }
+
+  .tests-case-detail-configuration-row {
+    min-width: 0;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .tests-case-detail-configuration-row + .tests-case-detail-configuration-row {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .tests-case-detail-configuration-label {
+    min-width: 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 400;
+  }
+
+  .tests-case-detail-setting-selector {
+    min-width: 160px;
+  }
+
+  .tests-case-detail-setting-input {
+    box-sizing: border-box;
+    width: min(320px, 50%);
+    min-width: 160px;
+    min-height: 30px;
+    padding: 5px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+    outline: 0;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    text-align: right;
+  }
+
+  .tests-case-detail-setting-input.is-number {
+    width: 96px;
+    min-width: 96px;
+  }
+
+  .tests-case-detail-setting-input:focus {
+    border-color: rgba(74, 167, 255, 0.58);
+    background: rgba(74, 167, 255, 0.045);
+  }
+
+  .tests-case-detail-sidebar-card.platform-ui-card {
+    min-width: 0;
+  }
+
+  .tests-case-detail-delete-button.platform-button {
+    width: 100%;
+    margin-top: 12px;
   }
 
   .tests-form-grid {
@@ -443,6 +596,23 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
   }
 
   @media (max-width: 780px) {
+    .tests-case-detail-identity {
+      padding: 20px;
+    }
+
+    .tests-case-detail-configuration-row {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .tests-case-detail-setting-input,
+    .tests-case-detail-setting-input.is-number,
+    .tests-case-detail-setting-selector {
+      width: 100%;
+      min-width: 0;
+    }
+
     .tests-overview-guide__cards,
     .tests-form-grid,
     .tests-result-evidence-grid,

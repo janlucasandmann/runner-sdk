@@ -1,11 +1,16 @@
 import { PLATFORM_CONNECTOR_CAPABILITIES } from "./connector-capability-catalog.js";
+import {
+  ADDITIONAL_CONNECTOR_IDS,
+  ADDITIONAL_CONNECTOR_PROVIDER_BY_ID,
+  type AdditionalConnectorId,
+} from "./providers/index.js";
 import type {
   PlatformConnectorCatalogEntry,
   PlatformConnectorFeature,
   PlatformConnectorKind,
 } from "./connector-types.js";
 
-export const PLATFORM_CONNECTOR_IDS = [
+const LEGACY_CONNECTOR_IDS = [
   "github",
   "gitlab",
   "notion",
@@ -18,16 +23,22 @@ export const PLATFORM_CONNECTOR_IDS = [
   "email",
 ] as const;
 
-export type PlatformConnectorId = (typeof PLATFORM_CONNECTOR_IDS)[number];
+type LegacyConnectorId = (typeof LEGACY_CONNECTOR_IDS)[number];
+export type PlatformConnectorId = LegacyConnectorId | AdditionalConnectorId;
+
+export const PLATFORM_CONNECTOR_IDS = Object.freeze([
+  ...LEGACY_CONNECTOR_IDS,
+  ...ADDITIONAL_CONNECTOR_IDS,
+]) as readonly PlatformConnectorId[];
 
 type ConnectorDefinition = Omit<
-  PlatformConnectorCatalogEntry<PlatformConnectorId>,
+  PlatformConnectorCatalogEntry<LegacyConnectorId>,
   "permissionSubjectType" | "permissionTeamSubjectType" | "capabilities"
 >;
 
-const pluginSubject = (id: PlatformConnectorId) =>
+const pluginSubject = (id: LegacyConnectorId) =>
   `${id.replaceAll("-", "_")}_plugin`;
-const tagSubject = (id: PlatformConnectorId) =>
+const tagSubject = (id: LegacyConnectorId) =>
   `${id.replaceAll("-", "_")}_tag`;
 
 function feature(
@@ -40,7 +51,7 @@ function feature(
   return Object.freeze({ id, title, kind, description, iconKey });
 }
 
-const DEFINITIONS: Readonly<Record<PlatformConnectorId, ConnectorDefinition>> =
+const DEFINITIONS: Readonly<Record<LegacyConnectorId, ConnectorDefinition>> =
   Object.freeze({
     github: {
       id: "github",
@@ -316,22 +327,21 @@ const DEFINITIONS: Readonly<Record<PlatformConnectorId, ConnectorDefinition>> =
     jira: {
       id: "jira",
       kind: "plugin",
-      label: "Jira",
-      shortLabel: "JI",
+      label: "Atlassian",
+      shortLabel: "AT",
       description:
-        "Search and manage Jira projects, issues, comments, worklogs, sprints, and attachments.",
-      category: "Project management",
+        "Search and manage Jira work and Confluence knowledge from one authorized Atlassian account.",
+      category: "Work and knowledge",
       categoryLabel: "Workspace Integration",
-      logoUrl:
-        "https://upload.wikimedia.org/wikipedia/commons/8/8a/Jira_Logo.svg",
+      logoUrl: "/img/plugins/atlassian.svg",
       authentication: "oauth2",
       authenticationLabel: "OAuth 2.0",
-      functionsLabel: "Search, Triage, Update",
+      functionsLabel: "Search, Triage, Document",
       samplePrompt:
-        "Triage open issues for the current sprint, identify blockers, and update the relevant tickets.",
+        "Triage the current sprint, identify blockers, update Jira, and publish the delivery summary in Confluence.",
       whenToUse:
-        "Use Jira when agents need authoritative work-item context or should maintain project delivery records.",
-      websiteUrl: "https://www.atlassian.com/software/jira",
+        "Use Atlassian when agents need authoritative Jira work-item context or Confluence knowledge.",
+      websiteUrl: "https://www.atlassian.com/",
       termsUrl: "https://www.atlassian.com/legal/cloud-terms-of-service",
       privacyUrl: "https://www.atlassian.com/legal/privacy-policy",
       features: [
@@ -355,6 +365,13 @@ const DEFINITIONS: Readonly<Record<PlatformConnectorId, ConnectorDefinition>> =
           "Workflow",
           "Manage comments, transitions, worklogs, and attachments.",
           "workflow",
+        ),
+        feature(
+          "confluence-knowledge",
+          "Confluence knowledge",
+          "App",
+          "Search, read, create, and maintain authorized Confluence content.",
+          "app",
         ),
       ],
     },
@@ -492,7 +509,9 @@ const DEFINITIONS: Readonly<Record<PlatformConnectorId, ConnectorDefinition>> =
     },
   });
 
-function createEntry(id: PlatformConnectorId): PlatformConnectorCatalogEntry<PlatformConnectorId> {
+function createLegacyEntry(
+  id: LegacyConnectorId,
+): PlatformConnectorCatalogEntry<LegacyConnectorId> {
   const definition = DEFINITIONS[id];
   const subjectPrefix =
     definition.kind === "tag" ? tagSubject(id) : pluginSubject(id);
@@ -509,7 +528,13 @@ export const PLATFORM_CONNECTOR_CATALOG: Readonly<
   Record<PlatformConnectorId, PlatformConnectorCatalogEntry<PlatformConnectorId>>
 > = Object.freeze(
   Object.fromEntries(
-    PLATFORM_CONNECTOR_IDS.map((id) => [id, createEntry(id)]),
+    [
+      ...LEGACY_CONNECTOR_IDS.map((id) => [id, createLegacyEntry(id)]),
+      ...ADDITIONAL_CONNECTOR_IDS.map((id) => [
+        id,
+        ADDITIONAL_CONNECTOR_PROVIDER_BY_ID[id],
+      ]),
+    ],
   ) as Record<PlatformConnectorId, PlatformConnectorCatalogEntry<PlatformConnectorId>>,
 );
 

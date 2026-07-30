@@ -44,7 +44,11 @@ export function ConnectionIdentityIcon({
         isTag && normalizedId === "email" && "is-email",
         isTag && normalizedId === "discord" && "is-discord",
         isTag && normalizedId === "telegram" && "is-telegram",
+        !isTag && normalizedId === "box" && "is-box",
         !isTag && normalizedId === "gitlab" && "is-gitlab",
+        !isTag && normalizedId === "linear" && "is-linear",
+        !isTag && normalizedId === "stripe" && "is-stripe",
+        !isTag && normalizedId === "supabase" && "is-supabase",
         className,
       )}
       aria-hidden="true"

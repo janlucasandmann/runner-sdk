@@ -7,10 +7,18 @@ import {
   randomBytes,
 } from "node:crypto";
 import fs from "node:fs";
+import {
+  handleGithubRepositories,
+  handleGithubRepositoryDetail,
+} from "./github-repository-api.mjs";
+import {
+  registerOrganizationConnectorCredential,
+  sanitizeConnectorRedirectTarget,
+  unregisterOrganizationConnectorCredential,
+} from "./connector-oauth-core.mjs";
 
 const GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize";
 const GITHUB_TOKEN_ENDPOINT = "https://github.com/login/oauth/access_token";
-const GITHUB_API_BASE = "https://api.github.com";
 const FIRESTORE_TOKEN_COLLECTION = "user_oauth_tokens";
 const OAUTH_STATE_COLLECTION = "oauth_states";
 const ENCRYPTION_ALGO = "aes-256-gcm";
@@ -75,16 +83,31 @@ export async function handleGithubApiRequest({
     }
 
     if (req.method === "GET" && normalizedPathname === "/api/github/repos") {
-      return await handleGithubRepos(req, res, url, {
+      return await handleGithubRepositories({
+        req,
+        res,
+        url,
         envFileCandidates,
         allowedOrigins,
+        verifyRequestUser,
+        loadGithubToken,
+        deleteGithubToken,
+        sendJson: sendGithubJson,
       });
     }
 
     if (req.method === "GET" && normalizedPathname.startsWith("/api/github/repos/")) {
-      return await handleGithubRepoDetail(req, res, url, normalizedPathname, {
+      return await handleGithubRepositoryDetail({
+        req,
+        res,
+        url,
+        normalizedPathname,
         envFileCandidates,
         allowedOrigins,
+        verifyRequestUser,
+        loadGithubToken,
+        deleteGithubToken,
+        sendJson: sendGithubJson,
       });
     }
 
@@ -124,7 +147,10 @@ async function handleGithubLogin(req, res, { platformOrigin, envFileCandidates, 
     }, allowedOrigins);
   }
 
-  const redirectTarget = sanitizeOAuthRedirectTarget(body?.redirectTo, platformOrigin);
+  const redirectTarget = sanitizeConnectorRedirectTarget(
+    body?.redirectTo,
+    platformOrigin,
+  );
   const overrideRedirectUri = await resolveOAuthCallbackUrl(platformOrigin, envFileCandidates);
   const hasRedirectUriOverride = Boolean(overrideRedirectUri);
   const state = randomBytes(16).toString("hex");
@@ -426,275 +452,6 @@ async function handleGithubDisconnect(req, res, { envFileCandidates, allowedOrig
     credentials: listPublicGithubCredentials(store),
     defaultCredentialId: store.defaultCredentialId || undefined,
   }, allowedOrigins);
-}
-
-async function handleGithubRepos(req, res, url, { envFileCandidates, allowedOrigins }) {
-  const verifiedUser = await verifyRequestUser(req, envFileCandidates);
-  const token = await loadGithubToken(verifiedUser.uid, envFileCandidates);
-  if (!token) {
-    return sendGithubJson(req, res, 404, {
-      error: "GitHub not connected",
-    }, allowedOrigins);
-  }
-
-  try {
-    const perPage = Math.min(Math.max(Number(url.searchParams.get("per_page")) || 30, 1), 100);
-    const page = Math.max(Number(url.searchParams.get("page")) || 1, 1);
-    const affiliation = (url.searchParams.get("affiliation") || "").trim();
-    const visibility = (url.searchParams.get("visibility") || "").trim();
-    const searchQuery = (url.searchParams.get("search") || "").trim().toLowerCase();
-    const params = new URLSearchParams();
-    params.set("per_page", String(perPage));
-    params.set("page", String(page));
-    if (affiliation) params.set("affiliation", affiliation);
-    if (visibility) params.set("visibility", visibility);
-    const repos = await githubFetchJson(`/user/repos?${params.toString()}`, token.accessToken);
-    const filteredRepos = searchQuery
-      ? repos.filter((repo) =>
-          String(repo?.name || "").toLowerCase().includes(searchQuery)
-          || String(repo?.full_name || "").toLowerCase().includes(searchQuery))
-      : repos;
-
-    return sendGithubJson(req, res, 200, {
-      repos: filteredRepos,
-      pagination: {
-        page,
-        perPage,
-        count: filteredRepos.length,
-      },
-    }, allowedOrigins);
-  } catch (error) {
-    if (error?.status === 401) {
-      await deleteGithubToken(
-        verifiedUser.uid,
-        envFileCandidates,
-        token.credentialId,
-      );
-      return sendGithubJson(req, res, 401, {
-        error: "GitHub token revoked",
-      }, allowedOrigins);
-    }
-    throw error;
-  }
-}
-
-async function handleGithubRepoDetail(req, res, url, normalizedPathname, { envFileCandidates, allowedOrigins }) {
-  const verifiedUser = await verifyRequestUser(req, envFileCandidates);
-  const token = await loadGithubToken(verifiedUser.uid, envFileCandidates);
-  if (!token) {
-    return sendGithubJson(req, res, 404, {
-      error: "GitHub not connected",
-    }, allowedOrigins);
-  }
-
-  const suffix = normalizedPathname.replace(/^\/api\/github\/repos\//, "");
-  const parts = suffix.split("/").filter(Boolean);
-  if (parts.length < 2) {
-    return sendGithubJson(req, res, 400, {
-      error: "Invalid GitHub repository route",
-    }, allowedOrigins);
-  }
-
-  const owner = parts[0];
-  const repo = parts[1];
-  const action = parts[2] || "";
-
-  try {
-    if (!action) {
-      const [repoData, readme] = await Promise.all([
-        githubFetchJson(`/repos/${owner}/${repo}`, token.accessToken),
-        getGithubReadme(token.accessToken, owner, repo),
-      ]);
-      return sendGithubJson(req, res, 200, {
-        repo: repoData,
-        readme,
-      }, allowedOrigins);
-    }
-
-    if (action === "branches") {
-      const branches = await githubFetchJson(`/repos/${owner}/${repo}/branches`, token.accessToken);
-      return sendGithubJson(req, res, 200, { branches }, allowedOrigins);
-    }
-
-    if (action === "contents") {
-      const contentPath = url.searchParams.get("path") || "";
-      const ref = url.searchParams.get("ref") || "";
-      const encodedPath = contentPath
-        ? `/${encodeURIComponent(contentPath).replace(/%2F/g, "/")}`
-        : "";
-      const query = ref ? `?ref=${encodeURIComponent(ref)}` : "";
-      const contents = await githubFetchJson(`/repos/${owner}/${repo}/contents${encodedPath}${query}`, token.accessToken);
-      const normalizedContents = Array.isArray(contents) ? contents : [contents];
-      normalizedContents.sort((a, b) => {
-        if (a?.type === "dir" && b?.type !== "dir") return -1;
-        if (a?.type !== "dir" && b?.type === "dir") return 1;
-        return String(a?.name || "").localeCompare(String(b?.name || ""));
-      });
-      return sendGithubJson(req, res, 200, {
-        contents: normalizedContents,
-        path: contentPath,
-        ref: ref || undefined,
-      }, allowedOrigins);
-    }
-
-    if (action === "download") {
-      const filePath = url.searchParams.get("path") || "";
-      const ref = url.searchParams.get("ref") || "";
-      if (!filePath) {
-        return sendGithubJson(req, res, 400, {
-          error: "path query parameter is required",
-        }, allowedOrigins);
-      }
-      const encodedPath = encodeURIComponent(filePath).replace(/%2F/g, "/");
-      const query = ref ? `?ref=${encodeURIComponent(ref)}` : "";
-      const fileContent = await githubFetchJson(`/repos/${owner}/${repo}/contents/${encodedPath}${query}`, token.accessToken);
-      const mimeType = getMimeTypeForPath(filePath);
-      return sendGithubJson(req, res, 200, {
-        name: fileContent.name,
-        path: fileContent.path,
-        content: fileContent.content,
-        encoding: fileContent.encoding,
-        size: fileContent.size,
-        sha: fileContent.sha,
-        mimeType,
-      }, allowedOrigins);
-    }
-
-    return sendGithubJson(req, res, 404, {
-      error: "Unknown GitHub route",
-    }, allowedOrigins);
-  } catch (error) {
-    if (error?.status === 401) {
-      await deleteGithubToken(
-        verifiedUser.uid,
-        envFileCandidates,
-        token.credentialId,
-      );
-      return sendGithubJson(req, res, 401, {
-        error: "GitHub token revoked",
-      }, allowedOrigins);
-    }
-    if (error?.status === 404) {
-      return sendGithubJson(req, res, 404, {
-        error: "Not found",
-      }, allowedOrigins);
-    }
-    throw error;
-  }
-}
-
-async function githubFetchJson(pathname, accessToken) {
-  const response = await fetch(`${GITHUB_API_BASE}${pathname}`, {
-    method: "GET",
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${accessToken}`,
-      "User-Agent": "computer-agents-platform",
-    },
-    cache: "no-store",
-  });
-  const text = await response.text().catch(() => "");
-  let parsed = {};
-  try {
-    parsed = text ? JSON.parse(text) : {};
-  } catch {
-    parsed = text;
-  }
-  if (!response.ok) {
-    const error = new Error(typeof parsed === "string" ? parsed : parsed?.message || response.statusText);
-    error.status = response.status;
-    throw error;
-  }
-  return parsed;
-}
-
-async function getGithubReadme(accessToken, owner, repo) {
-  try {
-    const response = await githubFetchJson(`/repos/${owner}/${repo}/readme`, accessToken);
-    if (response?.encoding === "base64" && typeof response.content === "string") {
-      return Buffer.from(response.content, "base64").toString("utf8");
-    }
-    return response?.content || null;
-  } catch (error) {
-    if (error?.status === 404) {
-      return null;
-    }
-    throw error;
-  }
-}
-
-function getMimeTypeForPath(filePath) {
-  const extension = String(filePath || "").split(".").pop()?.toLowerCase() || "";
-  const mimeTypes = {
-    png: "image/png",
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    gif: "image/gif",
-    webp: "image/webp",
-    svg: "image/svg+xml",
-    ico: "image/x-icon",
-    pdf: "application/pdf",
-    js: "text/javascript",
-    mjs: "text/javascript",
-    ts: "text/typescript",
-    tsx: "text/typescript",
-    jsx: "text/javascript",
-    json: "application/json",
-    html: "text/html",
-    htm: "text/html",
-    css: "text/css",
-    md: "text/markdown",
-    txt: "text/plain",
-    py: "text/x-python",
-    rb: "text/x-ruby",
-    go: "text/x-go",
-    rs: "text/x-rust",
-    java: "text/x-java",
-    c: "text/x-c",
-    cpp: "text/x-c++",
-    h: "text/x-c",
-    sh: "text/x-sh",
-    yaml: "text/yaml",
-    yml: "text/yaml",
-    xml: "application/xml",
-  };
-  return mimeTypes[extension] || "application/octet-stream";
-}
-
-function sanitizeOAuthRedirectTarget(redirectTo, origin) {
-  if (!redirectTo) return origin;
-  try {
-    const url = new URL(redirectTo, origin);
-    const originUrl = new URL(origin);
-    const isSameOrigin = url.origin === originUrl.origin;
-    const isTrustedComputerAgentsRedirect =
-      url.protocol === "https:"
-      && originUrl.protocol === "https:"
-      && isTrustedComputerAgentsHost(url.hostname)
-      && isTrustedComputerAgentsHost(originUrl.hostname);
-    const isLocalDevRedirect =
-      isLocalDevelopmentHost(url.hostname)
-      && (isLocalDevelopmentHost(originUrl.hostname) || isTrustedComputerAgentsHost(originUrl.hostname));
-    const isNativeAppRedirect =
-      url.protocol === "computeragents:"
-      && (url.hostname === "oauth" || url.hostname === "oauth-callback");
-
-    if (!isSameOrigin && !isTrustedComputerAgentsRedirect && !isLocalDevRedirect && !isNativeAppRedirect) {
-      return origin;
-    }
-
-    return url.toString();
-  } catch {
-    return origin;
-  }
-}
-
-function isTrustedComputerAgentsHost(hostname) {
-  return hostname === "computer-agents.com" || hostname.endsWith(".computer-agents.com");
-}
-
-function isLocalDevelopmentHost(hostname) {
-  return hostname === "localhost" || hostname === "127.0.0.1";
 }
 
 async function resolveOAuthCallbackUrl(origin, envFileCandidates) {
@@ -1045,7 +802,33 @@ async function saveGithubToken(uid, payload, envFileCandidates) {
   if (!store.defaultCredentialId || !store.credentials[store.defaultCredentialId]) {
     store.defaultCredentialId = credentialId;
   }
-  return writeGithubCredentialStore(uid, store, envFileCandidates);
+  const writtenStore = await writeGithubCredentialStore(
+    uid,
+    store,
+    envFileCandidates,
+  );
+  const nextCredential = writtenStore.credentials[credentialId];
+  if (
+    existing?.organizationId
+    && existing.organizationId !== nextCredential.organizationId
+  ) {
+    await unregisterOrganizationConnectorCredential({
+      organizationId: existing.organizationId,
+      provider: "github",
+      credentialId,
+      envFileCandidates,
+    });
+  }
+  if (nextCredential.organizationId) {
+    await registerOrganizationConnectorCredential({
+      organizationId: nextCredential.organizationId,
+      provider: "github",
+      credential: nextCredential,
+      ownerUserId: uid,
+      envFileCandidates,
+    });
+  }
+  return writtenStore;
 }
 
 async function loadGithubToken(uid, envFileCandidates, credentialId = "") {
@@ -1092,12 +875,30 @@ async function updateGithubCredentialMetadata(
       : {}),
     updatedAt: Date.now(),
   };
-  return writeGithubCredentialStore(uid, store, envFileCandidates);
+  const writtenStore = await writeGithubCredentialStore(
+    uid,
+    store,
+    envFileCandidates,
+  );
+  const nextCredential = writtenStore.credentials[normalizedCredentialId];
+  if (nextCredential.organizationId) {
+    await registerOrganizationConnectorCredential({
+      organizationId: nextCredential.organizationId,
+      provider: "github",
+      credential: nextCredential,
+      ownerUserId: uid,
+      envFileCandidates,
+    });
+  }
+  return writtenStore;
 }
 
 async function deleteGithubToken(uid, envFileCandidates, credentialId = "") {
   const store = await readGithubCredentialStore(uid, envFileCandidates);
   const normalizedCredentialId = normalizeGithubCredentialId(credentialId);
+  const removedCredentials = normalizedCredentialId
+    ? [store.credentials[normalizedCredentialId]].filter(Boolean)
+    : Object.values(store.credentials);
   if (normalizedCredentialId) {
     delete store.credentials[normalizedCredentialId];
   } else {
@@ -1106,7 +907,21 @@ async function deleteGithubToken(uid, envFileCandidates, credentialId = "") {
   if (!store.credentials[store.defaultCredentialId]) {
     store.defaultCredentialId = Object.keys(store.credentials)[0] || "";
   }
-  return writeGithubCredentialStore(uid, store, envFileCandidates);
+  const writtenStore = await writeGithubCredentialStore(
+    uid,
+    store,
+    envFileCandidates,
+  );
+  for (const removedCredential of removedCredentials) {
+    if (!removedCredential.organizationId) continue;
+    await unregisterOrganizationConnectorCredential({
+      organizationId: removedCredential.organizationId,
+      provider: "github",
+      credentialId: removedCredential.id,
+      envFileCandidates,
+    });
+  }
+  return writtenStore;
 }
 
 async function firestoreGetDocument(documentPath, envFileCandidates) {

@@ -27,6 +27,7 @@ import {
 } from "../../../platform-ui/components/ui/button/index.js";
 import { PlatformIconButton } from "../../../platform-ui/components/ui/icon-button/index.js";
 import { PlatformLabel } from "../../../platform-ui/components/ui/label/index.js";
+import { PlatformSelector } from "../../../platform-ui/components/ui/selector/index.js";
 import { ResourceDetailPage } from "../../../platform-ui/pages/details/index.js";
 import {
   normalizePlatformConnectionCredentials,
@@ -39,9 +40,27 @@ import {
 
 export type TagDetailTab = "overview" | "authentication" | "permissions";
 
+export interface TagDetailCredentialField {
+  id: string;
+  label: ReactNode;
+  type?: "text" | "password" | "textarea" | "select";
+  options?: readonly {
+    value: string;
+    label: ReactNode;
+    description?: ReactNode;
+  }[];
+  placeholder?: string;
+  description?: ReactNode;
+  required?: boolean;
+}
+
 export interface TagDetailConnectionAction {
   label?: ReactNode;
-  onClick: (credentialName?: string) => void | Promise<void>;
+  onClick: (
+    credentialName?: string,
+    values?: Readonly<Record<string, string>>,
+  ) => void | Promise<void>;
+  credentialFields?: readonly TagDetailCredentialField[];
   disabled?: boolean;
   tone?: "primary" | "secondary" | "destructive";
 }
@@ -677,6 +696,7 @@ export function TagDetailPage({
   const [credentialName, setCredentialName] = useState("");
   const [credentialSubmitting, setCredentialSubmitting] = useState(false);
   const [credentialError, setCredentialError] = useState("");
+  const [credentialValues, setCredentialValues] = useState<Record<string, string>>({});
   const credentialNameInputRef = useRef<HTMLInputElement>(null);
   const connectorName =
     typeof identityTitle === "string" && identityTitle.trim()
@@ -732,6 +752,13 @@ export function TagDetailPage({
   const openCredentialModal = () => {
     if (!connectionAction || connectionAction.disabled) return;
     setCredentialName("");
+    setCredentialValues(
+      Object.fromEntries(
+        (connectionAction.credentialFields || [])
+          .filter((field) => field.type === "select" && field.options?.[0]?.value)
+          .map((field) => [field.id, field.options?.[0]?.value || ""]),
+      ),
+    );
     setCredentialError("");
     setCredentialModalOpen(true);
   };
@@ -739,17 +766,36 @@ export function TagDetailPage({
   const closeCredentialModal = () => {
     if (credentialSubmitting) return;
     setCredentialError("");
+    setCredentialValues({});
     setCredentialModalOpen(false);
   };
 
   const submitCredential = async () => {
     const normalizedName = credentialName.trim();
-    if (!connectionAction || !normalizedName || credentialSubmitting) return;
+    const requiredFields = connectionAction?.credentialFields?.filter(
+      (field) => field.required !== false,
+    ) || [];
+    const hasMissingValue = requiredFields.some(
+      (field) => !String(credentialValues[field.id] || "").trim(),
+    );
+    if (
+      !connectionAction
+      || !normalizedName
+      || hasMissingValue
+      || credentialSubmitting
+    ) {
+      return;
+    }
     setCredentialSubmitting(true);
     setCredentialError("");
     try {
-      await connectionAction.onClick(normalizedName);
+      if (connectionAction.credentialFields?.length) {
+        await connectionAction.onClick(normalizedName, credentialValues);
+      } else {
+        await connectionAction.onClick(normalizedName);
+      }
       setCredentialModalOpen(false);
+      setCredentialValues({});
     } catch (error) {
       setCredentialError(
         error instanceof Error && error.message.trim()
@@ -867,7 +913,15 @@ export function TagDetailPage({
               type="button"
               size="medium"
               onClick={() => void submitCredential()}
-              disabled={!credentialName.trim() || credentialSubmitting}
+              disabled={
+                !credentialName.trim()
+                || credentialSubmitting
+                || Boolean(connectionAction?.credentialFields?.some(
+                  (field) =>
+                    field.required !== false
+                    && !String(credentialValues[field.id] || "").trim(),
+                ))
+              }
             >
               {credentialSubmitting ? "Connecting..." : "Add Credentials"}
             </PlatformPrimaryButton>
@@ -900,6 +954,69 @@ export function TagDetailPage({
             Give these credentials a recognizable name. You can connect another
             account later.
           </p>
+          {connectionAction?.credentialFields?.map((field) => {
+            const inputId = `tag-detail-credential-${field.id}`;
+            return (
+              <div
+                key={field.id}
+                className="tag-detail-page__credential-provider-field"
+              >
+                <label htmlFor={inputId}>{field.label}</label>
+                {field.type === "select" ? (
+                  <PlatformSelector
+                    value={credentialValues[field.id] || field.options?.[0]?.value || ""}
+                    options={field.options || []}
+                    ariaLabel={typeof field.label === "string" ? field.label : field.id}
+                    fullWidth
+                    popupClassName="is-minimal"
+                    onValueChange={(value) =>
+                      setCredentialValues((current) => ({
+                        ...current,
+                        [field.id]: value,
+                      }))
+                    }
+                  />
+                ) : field.type === "textarea" ? (
+                  <textarea
+                    id={inputId}
+                    value={credentialValues[field.id] || ""}
+                    placeholder={field.placeholder}
+                    autoComplete="off"
+                    spellCheck={false}
+                    disabled={credentialSubmitting}
+                    onChange={(event) =>
+                      setCredentialValues((current) => ({
+                        ...current,
+                        [field.id]: event.target.value,
+                      }))
+                    }
+                  />
+                ) : (
+                  <input
+                    id={inputId}
+                    type={field.type === "text" ? "text" : "password"}
+                    value={credentialValues[field.id] || ""}
+                    placeholder={field.placeholder}
+                    autoComplete="off"
+                    disabled={credentialSubmitting}
+                    onChange={(event) =>
+                      setCredentialValues((current) => ({
+                        ...current,
+                        [field.id]: event.target.value,
+                      }))
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        void submitCredential();
+                      }
+                    }}
+                  />
+                )}
+                {field.description ? <p>{field.description}</p> : null}
+              </div>
+            );
+          })}
           {credentialError ? (
             <p
               id="tag-detail-credential-error"

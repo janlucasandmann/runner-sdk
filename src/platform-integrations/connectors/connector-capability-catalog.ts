@@ -4,6 +4,7 @@ import type {
   PlatformConnectorJsonSchema,
 } from "./connector-types.js";
 import { GITHUB_CONNECTOR_CAPABILITIES } from "./github-capability-catalog.js";
+import { ADDITIONAL_CONNECTOR_CAPABILITIES } from "./providers/index.js";
 
 type CapabilityInput = {
   id: string;
@@ -1222,6 +1223,211 @@ export const JIRA_CONNECTOR_CAPABILITIES = defineCapabilities([
   },
 ]);
 
+const confluenceContentId = {
+  contentId: stringField("Confluence content or page ID."),
+};
+const confluencePagination = {
+  cursor: stringField("Pagination cursor returned by Atlassian."),
+  limit: numberField("Maximum results.", { minimum: 1, maximum: 250 }),
+};
+
+export const CONFLUENCE_CONNECTOR_CAPABILITIES = defineCapabilities([
+  {
+    id: "confluence_get_current_user",
+    description: "Get the authenticated Confluence user's profile.",
+    access: "read-only",
+  },
+  {
+    id: "confluence_list_spaces",
+    description: "List Confluence spaces visible to the authenticated user.",
+    access: "read-only",
+    properties: {
+      keys: stringArrayField("Space keys to include."),
+      type: stringField("Space type.", { enum: ["global", "personal"] }),
+      status: stringField("Space status.", { enum: ["current", "archived"] }),
+      ...confluencePagination,
+    },
+  },
+  {
+    id: "confluence_get_space",
+    description: "Get a Confluence space and its metadata.",
+    access: "read-only",
+    properties: {
+      spaceId: stringField("Confluence space ID."),
+    },
+    required: ["spaceId"],
+  },
+  {
+    id: "confluence_search_content",
+    description: "Search Confluence content using a CQL expression.",
+    access: "read-only",
+    properties: {
+      cql: stringField("Confluence Query Language expression."),
+      cqlContext: stringField("Optional serialized CQL context."),
+      excerpt: stringField("Excerpt mode.", {
+        enum: ["highlight", "indexed", "none"],
+      }),
+      ...confluencePagination,
+    },
+    required: ["cql"],
+  },
+  {
+    id: "confluence_get_page",
+    description: "Get a Confluence page including its body and version.",
+    access: "read-only",
+    properties: {
+      pageId: stringField("Confluence page ID."),
+      bodyFormat: stringField("Requested body format.", {
+        enum: ["storage", "atlas_doc_format", "view"],
+      }),
+      includeLabels: booleanField("Include page labels."),
+      includeProperties: booleanField("Include content properties."),
+    },
+    required: ["pageId"],
+  },
+  {
+    id: "confluence_get_page_children",
+    description: "List child pages beneath a Confluence page.",
+    access: "read-only",
+    properties: {
+      pageId: stringField("Parent Confluence page ID."),
+      ...confluencePagination,
+    },
+    required: ["pageId"],
+  },
+  {
+    id: "confluence_list_comments",
+    description: "List footer and inline comments on Confluence content.",
+    access: "read-only",
+    properties: {
+      ...confluenceContentId,
+      commentType: stringField("Comment type.", {
+        enum: ["footer", "inline"],
+      }),
+      ...confluencePagination,
+    },
+    required: ["contentId"],
+  },
+  {
+    id: "confluence_list_attachments",
+    description: "List files attached to Confluence content.",
+    access: "read-only",
+    properties: {
+      ...confluenceContentId,
+      filename: stringField("Optional filename filter."),
+      ...confluencePagination,
+    },
+    required: ["contentId"],
+  },
+  {
+    id: "confluence_create_page",
+    description: "Create a page in a Confluence space.",
+    access: "interactive",
+    properties: {
+      spaceId: stringField("Confluence space ID."),
+      title: stringField("Page title."),
+      body: stringField("Page body."),
+      bodyRepresentation: stringField("Body representation.", {
+        enum: ["storage", "atlas_doc_format"],
+      }),
+      parentId: stringField("Optional parent page ID."),
+      status: stringField("Page status.", { enum: ["current", "draft"] }),
+    },
+    required: ["spaceId", "title", "body"],
+  },
+  {
+    id: "confluence_update_page",
+    description: "Update a Confluence page body, title, or status.",
+    access: "interactive",
+    properties: {
+      pageId: stringField("Confluence page ID."),
+      title: stringField("Updated page title."),
+      body: stringField("Updated page body."),
+      bodyRepresentation: stringField("Body representation.", {
+        enum: ["storage", "atlas_doc_format"],
+      }),
+      versionNumber: numberField("Current version plus one.", { minimum: 2 }),
+      versionMessage: stringField("Version message."),
+      status: stringField("Page status.", { enum: ["current", "draft"] }),
+    },
+    required: ["pageId", "title", "body", "versionNumber"],
+  },
+  {
+    id: "confluence_delete_page",
+    description: "Move a Confluence page to the trash.",
+    access: "interactive",
+    properties: {
+      pageId: stringField("Confluence page ID."),
+      purge: booleanField("Permanently purge eligible content."),
+    },
+    required: ["pageId"],
+  },
+  {
+    id: "confluence_add_comment",
+    description: "Add a footer or inline comment to Confluence content.",
+    access: "interactive",
+    properties: {
+      ...confluenceContentId,
+      body: stringField("Comment body in storage or Atlassian document format."),
+      bodyRepresentation: stringField("Body representation.", {
+        enum: ["storage", "atlas_doc_format"],
+      }),
+      commentType: stringField("Comment type.", {
+        enum: ["footer", "inline"],
+      }),
+      inlineProperties: {
+        type: "object",
+        description: "Inline comment selection metadata.",
+        additionalProperties: true,
+      },
+    },
+    required: ["contentId", "body"],
+  },
+  {
+    id: "confluence_update_comment",
+    description: "Update an existing Confluence comment.",
+    access: "interactive",
+    properties: {
+      commentId: stringField("Confluence comment ID."),
+      body: stringField("Updated comment body."),
+      bodyRepresentation: stringField("Body representation.", {
+        enum: ["storage", "atlas_doc_format"],
+      }),
+      versionNumber: numberField("Current version plus one.", { minimum: 2 }),
+    },
+    required: ["commentId", "body", "versionNumber"],
+  },
+  {
+    id: "confluence_delete_comment",
+    description: "Delete a Confluence footer or inline comment.",
+    access: "interactive",
+    properties: {
+      commentId: stringField("Confluence comment ID."),
+      commentType: stringField("Comment type.", {
+        enum: ["footer", "inline"],
+      }),
+    },
+    required: ["commentId"],
+  },
+  {
+    id: "confluence_add_attachment",
+    description: "Upload a file attachment to Confluence content.",
+    access: "interactive",
+    properties: {
+      ...confluenceContentId,
+      filePath: stringField("Workspace file path to upload."),
+      filename: stringField("Optional destination filename."),
+      comment: stringField("Optional attachment comment."),
+    },
+    required: ["contentId", "filePath"],
+  },
+]);
+
+export const ATLASSIAN_CONNECTOR_CAPABILITIES = Object.freeze([
+  ...JIRA_CONNECTOR_CAPABILITIES,
+  ...CONFLUENCE_CONNECTOR_CAPABILITIES,
+]);
+
 const externalThreadFields = {
   agentId: stringField("Agent ID to run."),
   environmentId: stringField("Computer or project environment ID."),
@@ -1414,8 +1620,9 @@ export const PLATFORM_CONNECTOR_CAPABILITIES = Object.freeze({
   "google-drive": GOOGLE_DRIVE_CONNECTOR_CAPABILITIES,
   gmail: GMAIL_CONNECTOR_CAPABILITIES,
   "one-drive": ONE_DRIVE_CONNECTOR_CAPABILITIES,
-  jira: JIRA_CONNECTOR_CAPABILITIES,
+  jira: ATLASSIAN_CONNECTOR_CAPABILITIES,
   discord: DISCORD_CONNECTOR_CAPABILITIES,
   telegram: TELEGRAM_CONNECTOR_CAPABILITIES,
   email: EMAIL_CONNECTOR_CAPABILITIES,
+  ...ADDITIONAL_CONNECTOR_CAPABILITIES,
 } satisfies Readonly<Record<string, readonly PlatformConnectorCapability[]>>);

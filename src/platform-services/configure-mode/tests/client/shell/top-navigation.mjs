@@ -7,12 +7,17 @@ export const TESTS_APP_TOP_NAVIGATION_SCRIPT = `        function renderTestsPage
               onClick: openTestsOverviewPage,
             },
           ];
-          if (testsPageMode === "detail" || testsPageMode === "run") {
+          if (testsPageMode === "detail" || testsPageMode === "case" || testsPageMode === "run") {
             pathItems.push({
               label: selectedTestPlanName || "Test Plan",
-              onClick: testsPageMode === "run"
+              onClick: testsPageMode === "run" || testsPageMode === "case"
                 ? () => openTestPlanDetailPage(selectedTestPlanId, selectedTestPlanName)
                 : undefined,
+            });
+          }
+          if (testsPageMode === "case") {
+            pathItems.push({
+              label: selectedTestCaseName || "Test Case",
             });
           }
           if (testsPageMode === "run") {
@@ -23,7 +28,7 @@ export const TESTS_APP_TOP_NAVIGATION_SCRIPT = `        function renderTestsPage
           return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems,
-            center: testsPageMode === "detail"
+            center: testsPageMode === "detail" || testsPageMode === "case"
               ? React.createElement("div", {
                   id: "playground-tests-section-controls",
                   className: "playground-tests-section-controls",

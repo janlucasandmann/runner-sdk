@@ -8,7 +8,7 @@ import {
 } from "./index.mjs";
 import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
-assert.match(PLAYGROUND_ASSURANCE_CSS, /\.assurance-overview-guide/);
+assert.match(PLAYGROUND_ASSURANCE_CSS, /\.resource-overview-page\.is-assurance/);
 assert.match(PLAYGROUND_ASSURANCE_CSS, /\.assurance-detail-page/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.state, /selectedAssurancePolicyId/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.navigation, /openAssurancePage/);

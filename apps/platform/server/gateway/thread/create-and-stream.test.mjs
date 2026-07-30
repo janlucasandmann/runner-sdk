@@ -38,12 +38,12 @@ function responseRecorder() {
   };
 }
 
-function createGateway(fetchSessionApi) {
+function createGateway(fetchSessionApi, options = {}) {
   return createThreadMessageGateway({
     fetchSessionApi,
     hasAiosSession: () => true,
     parseUpstreamUrl: () => "https://api.example.test/v1",
-    readOptionalApiKey: () => "",
+    readOptionalApiKey: () => options.apiKey || "",
     readRequestBody,
     sendJson,
     summarizeRunnerStreamChunkForLog: () => [],
@@ -94,4 +94,157 @@ test("session-backed message streams use the topology-aware control seam", async
   assert.equal(calls[0].controlPath, "/threads/thread_1/messages");
   assert.equal(calls[0].hostedPath, "/api/threads/thread_1/messages");
   assert.equal(JSON.parse(calls[0].init.body).content, "Continue the task");
+});
+
+test("session-backed message streams never forward a client connector authority envelope", async () => {
+  const calls = [];
+  const gateway = createGateway(async (_request, controlPath, hostedPath, init) => {
+    calls.push({ controlPath, hostedPath, init });
+    return new Response("data: {\"type\":\"thread.completed\"}\n\n", {
+      status: 200,
+      headers: { "content-type": "text/event-stream" },
+    });
+  });
+  gateway.setThreadMessagePayloadEnricher(
+    async (_request, threadId, _upstreamUrl, _apiKey, payload, context) => {
+      assert.equal(threadId, "thread_1");
+      assert.equal(context.requestedConnectors.github.credentialId, "credential_attacker");
+      assert.deepEqual(context.requestedConnectors.github.allowedActions, ["delete_repository"]);
+      return {
+        ...payload,
+        connectors: {
+          github: {
+            enabled: true,
+            credentialId: "credential_server_selected",
+            allowedActions: ["get_file_contents"],
+          },
+        },
+      };
+    },
+  );
+  const response = responseRecorder();
+  const request = requestWithJson({
+    content: "Inspect the repository",
+    connectors: {
+      github: {
+        enabled: true,
+        credentialId: "credential_attacker",
+        allowedActions: ["delete_repository"],
+      },
+    },
+    untrustedField: "must not reach upstream",
+  });
+  request.url = "/api/real/threads/thread_1/messages";
+
+  await gateway.proxyThreadMessages(request, response, "thread_1");
+
+  const upstreamBody = JSON.parse(calls[0].init.body);
+  assert.equal(upstreamBody.untrustedField, undefined);
+  assert.equal(upstreamBody.connectors.github.credentialId, "credential_server_selected");
+  assert.deepEqual(upstreamBody.connectors.github.allowedActions, ["get_file_contents"]);
+});
+
+test("connector selections are omitted unless an authoritative message enricher allows them", async () => {
+  const calls = [];
+  const gateway = createGateway(async (_request, _controlPath, _hostedPath, init) => {
+    calls.push(init);
+    return new Response("data: {\"type\":\"thread.completed\"}\n\n", {
+      status: 200,
+      headers: { "content-type": "text/event-stream" },
+    });
+  });
+  const response = responseRecorder();
+  const request = requestWithJson({
+    content: "Inspect the repository",
+    connectors: {
+      github: {
+        enabled: true,
+        credentialId: "credential_attacker",
+        allowedActions: ["delete_repository"],
+      },
+    },
+  });
+
+  await gateway.proxyThreadMessages(request, response, "thread_1");
+
+  assert.equal(JSON.parse(calls[0].body).connectors, undefined);
+});
+
+test("API-key message streams use the same authoritative connector envelope", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, init });
+    return new Response("data: {\"type\":\"thread.completed\"}\n\n", {
+      status: 200,
+      headers: { "content-type": "text/event-stream" },
+    });
+  };
+  try {
+    const gateway = createGateway(
+      async () => {
+        throw new Error("session transport should not be used");
+      },
+      { apiKey: "api_key_1" },
+    );
+    gateway.setThreadMessagePayloadEnricher(
+      async (_request, _threadId, _upstreamUrl, apiKey, payload) => ({
+        ...payload,
+        connectors: apiKey
+          ? {
+              github: {
+                enabled: true,
+                credentialId: "credential_service",
+                allowedActions: ["get_me"],
+              },
+            }
+          : undefined,
+      }),
+    );
+    const response = responseRecorder();
+    const request = requestWithJson({
+      content: "Who am I?",
+      connectors: {
+        github: {
+          credentialId: "credential_attacker",
+          allowedActions: ["delete_repository"],
+        },
+      },
+    });
+
+    await gateway.proxyThreadMessages(request, response, "thread_1");
+
+    const upstreamBody = JSON.parse(calls[0].init.body);
+    assert.equal(upstreamBody.connectors.github.credentialId, "credential_service");
+    assert.deepEqual(upstreamBody.connectors.github.allowedActions, ["get_me"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("connector policy denials retain their original 4xx status", async () => {
+  const gateway = createGateway(async () => {
+    throw new Error("upstream must not be called");
+  });
+  const policyError = new Error("The assigned agent cannot use GitHub.");
+  policyError.statusCode = 403;
+  policyError.code = "connector_actions_denied";
+  gateway.setThreadMessagePayloadEnricher(async () => {
+    throw policyError;
+  });
+  const response = responseRecorder();
+  const request = requestWithJson({
+    content: "Use GitHub.",
+    connectors: {
+      github: { enabled: true },
+    },
+  });
+
+  await gateway.proxyThreadMessages(request, response, "thread_1");
+
+  assert.equal(response.status, 403);
+  assert.deepEqual(JSON.parse(response.body), {
+    error: "connector_actions_denied",
+    message: "The assigned agent cannot use GitHub.",
+  });
 });

@@ -593,7 +593,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
             {
               id: "case",
               header: "Case",
-              accessor: (record) => record.caseLabel + " " + record.caseTitle,
+              accessor: (record) => record.caseTitle,
               sortable: true,
               width: "minmax(260px, 1.6fr)",
               cell: ({ row: record }) => React.createElement("div", {
@@ -608,10 +608,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                       ? React.createElement(AlertCircle, { width: 13, height: 13, strokeWidth: 1.9 })
                       : React.createElement(Loader2, { className: "playground-evaluations-pending-case-spinner", width: 13, height: 13, strokeWidth: 1.9 }))
                   : null,
-                React.createElement("span", { className: "playground-evaluations-dataset-case-table-copy" },
-                  React.createElement("span", { className: "playground-evaluations-dataset-case-table-label" }, record.caseLabel),
-                  React.createElement("span", { className: "playground-evaluations-dataset-case-table-title" }, record.caseTitle)
-                )
+                React.createElement("span", { className: "playground-evaluations-dataset-case-table-title" }, record.caseTitle)
               ),
             },
             {

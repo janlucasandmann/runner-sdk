@@ -44,6 +44,26 @@ Assurance gate. The built-in readiness contract supplies that attestation, and
 the control API validates it against the active dispatch lease and credential
 plus the exact immutable plan, commit, results, and artifacts.
 
+## Access control
+
+The Settings tab uses the centralized resource-access page. It always exposes
+the `All Agents` and `All Organization Members` system principals alongside
+explicit team shares. Organization and team role pages configure seven
+Test-specific capabilities:
+
+- view the Test Plan;
+- inspect run evidence;
+- run tests;
+- manage the plan definition;
+- create and publish versions;
+- manage access;
+- delete the plan.
+
+Opening a principal switches from the ordinary Test Plan sidebar to the shared
+role sidebar. The same permission metadata is persisted on the live plan and
+enforced by the Tests API per operation; immutable versions do not capture
+mutable access policy.
+
 ## Mission Control
 
 Mission Control is expected to create an explicit build → test → evaluation →

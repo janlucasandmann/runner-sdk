@@ -979,6 +979,13 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
     subjectTypes: ["evaluation", "evaluation_team_role"],
   },
   {
+    id: "evaluation_runs_manage",
+    ringId: "ring_2",
+    label: "Manage evaluation runs",
+    description: "Retry, recalculate, or delete retained evaluation runs and their case results.",
+    subjectTypes: ["evaluation", "evaluation_team_role"],
+  },
+  {
     id: "evaluation_cases_manage",
     ringId: "ring_2",
     label: "Manage cases",

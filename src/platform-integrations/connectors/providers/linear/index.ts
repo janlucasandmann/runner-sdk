@@ -1,0 +1,146 @@
+import {
+  defineCapabilities,
+  defineConnectorProvider,
+  paginationFields,
+  stringArrayField,
+  stringField,
+} from "../shared.js";
+
+const capabilities = defineCapabilities([
+  {
+    id: "get_viewer",
+    description: "Get the authenticated Linear user and organization.",
+    access: "read-only",
+  },
+  {
+    id: "list_teams",
+    description: "List Linear teams visible to the authenticated user.",
+    access: "read-only",
+    properties: paginationFields,
+  },
+  {
+    id: "list_projects",
+    description: "List or search projects in the connected Linear workspace.",
+    access: "read-only",
+    properties: {
+      query: stringField("Optional project search query."),
+      teamId: stringField("Optional Linear team ID."),
+      ...paginationFields,
+    },
+  },
+  {
+    id: "get_project",
+    description: "Get a Linear project with milestones, status, and members.",
+    access: "read-only",
+    properties: { projectId: stringField("Linear project ID.") },
+    required: ["projectId"],
+  },
+  {
+    id: "search_issues",
+    description: "Search issues visible in the connected Linear workspace.",
+    access: "read-only",
+    properties: {
+      query: stringField("Issue search query."),
+      teamId: stringField("Optional Linear team ID."),
+      projectId: stringField("Optional Linear project ID."),
+      states: stringArrayField("Optional workflow state names."),
+      ...paginationFields,
+    },
+    required: ["query"],
+  },
+  {
+    id: "get_issue",
+    description: "Get an issue with relations, comments, and attachments.",
+    access: "read-only",
+    properties: { issueId: stringField("Linear issue ID or identifier.") },
+    required: ["issueId"],
+  },
+  {
+    id: "list_issue_comments",
+    description: "List comments for a Linear issue.",
+    access: "read-only",
+    properties: {
+      issueId: stringField("Linear issue ID."),
+      ...paginationFields,
+    },
+    required: ["issueId"],
+  },
+  {
+    id: "create_issue",
+    description: "Create an issue in a Linear team.",
+    access: "interactive",
+    properties: {
+      teamId: stringField("Linear team ID."),
+      title: stringField("Issue title."),
+      description: stringField("Issue description in Markdown."),
+      projectId: stringField("Optional project ID."),
+      assigneeId: stringField("Optional assignee user ID."),
+      labelIds: stringArrayField("Optional label IDs."),
+    },
+    required: ["teamId", "title"],
+  },
+  {
+    id: "update_issue",
+    description: "Update fields on an existing Linear issue.",
+    access: "interactive",
+    properties: {
+      issueId: stringField("Linear issue ID."),
+      title: stringField("Updated title."),
+      description: stringField("Updated Markdown description."),
+      stateId: stringField("Updated workflow state ID."),
+      assigneeId: stringField("Updated assignee user ID."),
+      projectId: stringField("Updated project ID."),
+    },
+    required: ["issueId"],
+  },
+  {
+    id: "add_issue_comment",
+    description: "Add a comment to a Linear issue.",
+    access: "interactive",
+    properties: {
+      issueId: stringField("Linear issue ID."),
+      body: stringField("Comment body in Markdown."),
+    },
+    required: ["issueId", "body"],
+  },
+  {
+    id: "create_project",
+    description: "Create a project in a Linear workspace.",
+    access: "interactive",
+    properties: {
+      teamIds: stringArrayField("Linear team IDs."),
+      name: stringField("Project name."),
+      summary: stringField("Project summary."),
+      description: stringField("Project description in Markdown."),
+    },
+    required: ["teamIds", "name"],
+  },
+  {
+    id: "update_project",
+    description: "Update a Linear project's metadata or status.",
+    access: "interactive",
+    properties: {
+      projectId: stringField("Linear project ID."),
+      name: stringField("Updated project name."),
+      summary: stringField("Updated summary."),
+      description: stringField("Updated Markdown description."),
+      statusId: stringField("Updated project status ID."),
+    },
+    required: ["projectId"],
+  },
+]);
+
+export const LINEAR_CONNECTOR_PROVIDER = defineConnectorProvider({
+  id: "linear",
+  label: "Linear",
+  shortLabel: "LN",
+  description: "Search and manage Linear issues, projects, teams, and comments.",
+  category: "Project management",
+  logoUrl: "/img/plugins/linear.svg",
+  functionsLabel: "Search, Triage, Update",
+  samplePrompt: "Triage overdue issues, identify blockers, and update the current cycle.",
+  whenToUse: "Use Linear for authoritative product delivery context and issue updates.",
+  websiteUrl: "https://linear.app/",
+  termsUrl: "https://linear.app/terms",
+  privacyUrl: "https://linear.app/privacy",
+}, capabilities);

@@ -25,10 +25,12 @@ import { mergeHydratedTurns } from "./turn-merge.js";
 import { isRunningTurnStatus } from "./turn-state.js";
 import type { RunnerThreadHydrationPayload } from "./types.js";
 
-export const RUNNER_REATTACH_POLL_INTERVAL_MS = 900;
-export const RUNNER_REATTACH_RETRY_DELAY_MS = 1_500;
+export const RUNNER_REATTACH_POLL_INTERVAL_MS = 2_500;
+export const RUNNER_REATTACH_RETRY_DELAY_MS = 5_000;
+export const RUNNER_REATTACH_HIDDEN_POLL_INTERVAL_MS = 15_000;
+export const RUNNER_REATTACH_MAX_HYDRATION_STALENESS_MS = 10_000;
 export const RUNNER_REATTACH_TERMINAL_SETTLE_POLLS = 2;
-export const RUNNER_REATTACH_INITIAL_GRACE_POLLS = 30;
+export const RUNNER_REATTACH_INITIAL_GRACE_POLLS = 8;
 
 export interface RunnerThreadReattachmentDecision {
   localHasActiveDeepResearch: boolean;
@@ -142,13 +144,18 @@ export function useRunnerRunningThreadReattachment({
     let trailingTerminalPollsRemaining =
       RUNNER_REATTACH_TERMINAL_SETTLE_POLLS;
     let initialGracePollsRemaining = RUNNER_REATTACH_INITIAL_GRACE_POLLS;
+    let lastHydrationAtMs = 0;
 
     const scheduleNextPoll = (delayMs: number) => {
       if (cancelled) return;
       if (timeoutId !== null) window.clearTimeout(timeoutId);
+      const resolvedDelayMs =
+        document.visibilityState === "hidden"
+          ? Math.max(delayMs, RUNNER_REATTACH_HIDDEN_POLL_INTERVAL_MS)
+          : delayMs;
       timeoutId = window.setTimeout(() => {
         void pollRunningThread();
-      }, delayMs);
+      }, resolvedDelayMs);
     };
 
     const pollRunningThread = async () => {
@@ -184,6 +191,17 @@ export function useRunnerRunningThreadReattachment({
             hydrationCacheRef.current?.threadId === normalizedThreadId
               ? hydrationCacheRef.current
               : null;
+          const hydrationSnapshotIsFresh = Boolean(
+            cachedPayload
+            && statusSnapshot.updatedAt
+            && cachedPayload.threadUpdatedAt === statusSnapshot.updatedAt
+            && Date.now() - lastHydrationAtMs
+              < RUNNER_REATTACH_MAX_HYDRATION_STALENESS_MS
+          );
+          if (hydrationSnapshotIsFresh) {
+            scheduleNextPoll(RUNNER_REATTACH_POLL_INTERVAL_MS);
+            return;
+          }
           const initialPrompt = resolveHydrationInitialPrompt(
             turnsRef.current,
             cachedPayload,
@@ -210,6 +228,7 @@ export function useRunnerRunningThreadReattachment({
           if (cancelled) return;
 
           hydrationCacheRef.current = payload;
+          lastHydrationAtMs = Date.now();
           setHydratedThreadStatus(
             payload.threadStatus ?? statusSnapshot.status ?? null,
           );

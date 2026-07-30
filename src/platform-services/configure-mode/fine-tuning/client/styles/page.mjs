@@ -109,16 +109,12 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         --platform-page-content-max-width: 87.5rem;
       }
 
-      .playground-fine-tuning-detail-page-header {
-        min-height: 32px;
-      }
-
-      .playground-fine-tuning-detail-header-actions {
+      .playground-fine-tuning-detail-topnav-actions {
         min-width: 0;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 10px;
+        gap: 8px;
       }
 
       .playground-fine-tuning-publication-error {
@@ -126,29 +122,6 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         color: #f28b82;
         font-size: 12px;
         line-height: 1.35;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .playground-fine-tuning-detail-header-copy {
-        min-width: 0;
-        display: flex;
-        align-items: center;
-        gap: 0;
-      }
-
-      .playground-fine-tuning-detail-inline-back-button {
-        margin-left: -7px;
-      }
-
-      .playground-fine-tuning-detail-title {
-        min-width: 0;
-        margin: 0;
-        color: #fff;
-        font-size: 18px;
-        line-height: 1.3;
-        font-weight: 500;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -190,15 +163,16 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 4px;
       }
 
       .playground-fine-tuning-detail-sidebar-row {
         min-width: 0;
-        display: flex;
+        min-height: 30px;
+        display: grid;
+        grid-template-columns: minmax(88px, 110px) minmax(0, 1fr);
         align-items: center;
-        justify-content: space-between;
-        gap: 16px;
+        gap: 12px;
         color: rgba(255, 255, 255, 0.92);
         font-size: 12px;
         line-height: 1.35;
@@ -206,8 +180,8 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
       }
 
       .playground-fine-tuning-detail-sidebar-label {
-        flex: 0 0 auto;
-        color: rgba(255, 255, 255, 0.5);
+        min-width: 0;
+        color: #fff;
       }
 
       .playground-fine-tuning-detail-sidebar-value {
@@ -227,6 +201,10 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
 
+      .playground-fine-tuning-detail-owner-row .playground-fine-tuning-detail-sidebar-value {
+        overflow: visible;
+      }
+
       .playground-fine-tuning-owner-selector {
         width: 100%;
         min-width: 0;
@@ -236,7 +214,7 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         width: 100%;
         min-width: 0;
         min-height: 24px;
-        justify-content: flex-start;
+        justify-content: flex-end;
         gap: 6px;
         padding: 0;
         border: 0;
@@ -254,7 +232,7 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         min-width: 0;
         display: inline-flex;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: flex-end;
         gap: 7px;
       }
 
@@ -285,14 +263,13 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         min-width: 0;
         display: flex;
         flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
       }
 
       .playground-fine-tuning-detail-sidebar-action {
         width: 100%;
         min-width: 0;
-        justify-content: flex-start;
-        padding-left: 0;
-        padding-right: 0;
       }
 
       .playground-fine-tuning-detail-sidebar-action .is-spinning {

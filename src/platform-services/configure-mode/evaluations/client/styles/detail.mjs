@@ -670,7 +670,15 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 42px;
+        gap: 24px;
+      }
+
+      .playground-evaluations-dataset-case-settings-title {
+        margin: 0;
+        color: #fff;
+        font-size: 14px;
+        line-height: 1.4;
+        font-weight: 400;
       }
 
       .playground-evaluations-dataset-case-guidance .platform-instructions-editor__title {
@@ -735,10 +743,9 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         min-width: 0;
       }
 
-      .playground-evaluations-dataset-case-delete-button {
+      .playground-evaluations-dataset-case-delete-button.platform-button {
+        width: 100%;
         margin-top: 12px;
-        padding-top: 12px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       @media (max-width: 760px) {

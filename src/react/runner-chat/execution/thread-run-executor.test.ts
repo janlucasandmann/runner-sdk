@@ -1,4 +1,19 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { startEnvironmentMock } = vi.hoisted(() => ({
+  startEnvironmentMock: vi.fn(),
+}));
+
+vi.mock("../environment-api.js", async () => {
+  const actual = await vi.importActual<typeof import("../environment-api.js")>(
+    "../environment-api.js",
+  );
+  return {
+    ...actual,
+    startEnvironment: startEnvironmentMock,
+  };
+});
+
 import {
   createRunnerThreadRunExecutor,
   type RunnerThreadRunExecutorDependencies,
@@ -59,6 +74,11 @@ function dependencies(
 }
 
 describe("createRunnerThreadRunExecutor", () => {
+  beforeEach(() => {
+    startEnvironmentMock.mockReset();
+    startEnvironmentMock.mockResolvedValue(undefined);
+  });
+
   it("hands a newly created thread to the page coordinator exactly once", async () => {
     const onExternalRunRequestCreate = vi.fn(() => true);
     const execute = vi.fn();
@@ -85,5 +105,39 @@ describe("createRunnerThreadRunExecutor", () => {
       }),
     );
     expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("keeps ordinary environment warm-up off the message execution critical path", async () => {
+    let finishWarmup: (() => void) | null = null;
+    startEnvironmentMock.mockReturnValue(new Promise<void>((resolve) => {
+      finishWarmup = resolve;
+    }));
+    const execute = vi.fn(async () => ({
+      cancelled: false,
+      durationSeconds: 1,
+    }));
+    const run = createRunnerThreadRunExecutor(
+      dependencies({
+        effectiveEnvironmentId: "environment_1",
+        ensureThread: vi.fn(async () => ({
+          threadId: "thread_1",
+          didCreateThread: false,
+          initialTitle: "Existing thread",
+          environmentId: "environment_1",
+        })),
+        execute,
+      }),
+    );
+
+    const resultPromise = run("Start immediately", []);
+    await vi.waitFor(() => {
+      expect(execute).toHaveBeenCalledTimes(1);
+    });
+    expect(startEnvironmentMock).toHaveBeenCalledTimes(1);
+
+    finishWarmup?.();
+    await expect(resultPromise).resolves.toEqual(expect.objectContaining({
+      threadId: "thread_1",
+    }));
   });
 });

@@ -1,5 +1,5 @@
-import { ChevronRight, Plus, ShieldCheck, SquarePen, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ChevronRight, Plus, SquarePen, Trash2 } from "lucide-react";
+import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
@@ -46,12 +46,6 @@ export function GuardrailsOverviewPage({
   onRename,
   onDelete,
 }: GuardrailsOverviewPageProps) {
-  const [typeFilter, setTypeFilter] = useState("all");
-  const filteredRows = useMemo(
-    () => rows.filter((row) => typeFilter === "all" || row.type === typeFilter),
-    [rows, typeFilter],
-  );
-
   const columns = useMemo<PlatformDataTableColumn<GuardrailOverviewRow>[]>(
     () => [
       {
@@ -61,12 +55,7 @@ export function GuardrailsOverviewPage({
         sortable: true,
         width: "minmax(230px, 1.3fr)",
         cell: ({ row }) => (
-          <ResourceOverviewIdentityCell
-            title={row.name}
-            icon={ShieldCheck}
-            iconClassName="is-connection"
-            size="compact"
-          />
+          <span className="resource-overview-identity__title">{row.name}</span>
         ),
       },
       {
@@ -132,61 +121,29 @@ export function GuardrailsOverviewPage({
     },
   ];
 
-  const scrollToTable = () => {
-    if (typeof document === "undefined") return;
-    document
-      .querySelector(".resource-overview-page.is-guardrails .resource-overview-page__table-section")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const showDefaultSets = () => {
-    setTypeFilter("default");
-    scrollToTable();
-  };
-
   return (
     <ResourceOverviewPage<GuardrailOverviewRow>
-      heroContent={
-        <GuardrailsOverviewGuide
-          guardrailCount={rows.length}
-          onCreate={onCreate}
-          onBrowse={scrollToTable}
-          onShowDefaults={showDefaultSets}
-        />
-      }
+      heroContent={<GuardrailsOverviewGuide />}
       showPeriodSelector={false}
       controlsPortalId={controlsPortalId}
       className="is-guardrails"
       table={{
-        rows: filteredRows,
+        rows,
         columns,
         getRowId: (row) => row.id,
         ariaLabel: "Guardrail sets",
         className: "resource-overview-table is-guardrails",
+        variant: "catalog-ui",
         sorting: { defaultValue: { id: "updated", direction: "desc" } },
         selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
         pagination: false,
         toolbar: {
-          title: "All Guardrails",
           search: {
             placeholder: "Search guardrails",
             getSearchText: (row) =>
               row.searchText ||
               `${row.name} ${row.typeLabel} ${row.creatorLabel} ${row.updatedLabel}`,
           },
-          filters: [
-            {
-              id: "type",
-              label: "Type",
-              value: typeFilter,
-              onChange: setTypeFilter,
-              options: [
-                { id: "all", label: "All Sets" },
-                { id: "default", label: "Default Sets" },
-                { id: "custom", label: "Custom Sets" },
-              ],
-            },
-          ],
           primaryAction: { label: "New Set", icon: Plus, onClick: onCreate },
         },
         getRowActions,

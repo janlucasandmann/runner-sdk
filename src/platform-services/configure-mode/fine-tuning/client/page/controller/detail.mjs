@@ -794,27 +794,15 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
           );
           const renderSidebarRow = (key, label, value, options = {}) => React.createElement("div", {
               key,
-              className: "playground-fine-tuning-detail-sidebar-row" + (options.className ? " " + options.className : ""),
+              className: "playground-fine-tuning-detail-sidebar-row playground-tasks-detail-fact" + (options.className ? " " + options.className : ""),
             },
-            React.createElement("span", { className: "playground-fine-tuning-detail-sidebar-label" }, label),
             React.createElement("span", {
-              className: "playground-fine-tuning-detail-sidebar-value",
+              className: "playground-fine-tuning-detail-sidebar-label playground-tasks-detail-fact-label",
+            }, label),
+            React.createElement(options.control ? "div" : "span", {
+              className: "playground-fine-tuning-detail-sidebar-value playground-tasks-detail-fact-control",
               title: options.title || (typeof value === "string" ? value : undefined),
             }, value)
-          );
-          const header = React.createElement("div", { className: "playground-fine-tuning-detail-header-copy" },
-            React.createElement("button", {
-                type: "button",
-                className: "playground-files-header-icon-button is-plain playground-fine-tuning-detail-inline-back-button",
-                onClick: () => {
-                  if (typeof setFineTuningPageMode === "function") setFineTuningPageMode("overview");
-                },
-                title: "Back to optimization jobs",
-                "aria-label": "Back to optimization jobs",
-              },
-              React.createElement(ArrowLeft, { width: 16, height: 16, strokeWidth: 1.8, "aria-hidden": "true" })
-            ),
-            React.createElement("h1", { className: "playground-content-title playground-fine-tuning-detail-title" }, job.name || "Untitled Optimization")
           );
           const agentValue = React.createElement("span", { className: "playground-fine-tuning-detail-person", title: agentName },
             React.createElement("span", { className: "playground-evaluations-run-agent-avatar", "aria-hidden": "true" },
@@ -828,7 +816,44 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
             React.createElement(Monitor, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" }),
             React.createElement("span", null, environmentName)
           );
-          const properties = React.createElement("div", { className: "playground-fine-tuning-detail-sidebar-list" },
+          const showStopButton = canStopPlaygroundFineTuningJob(job);
+          const isStopping = fineTuningStopJobId === job.id;
+          const sidebarActions = threadId && typeof onOpenThread === "function" || showStopButton
+            ? React.createElement("div", {
+                className: "platform-service-detail-page__sidebar-actions playground-fine-tuning-detail-sidebar-actions",
+              },
+              threadId && typeof onOpenThread === "function"
+                ? React.createElement(PlatformPrimaryButton, {
+                    type: "button",
+                    size: "small",
+                    fullWidth: true,
+                    className: "playground-fine-tuning-detail-sidebar-action",
+                    onClick: () => onOpenThread(threadId),
+                  },
+                  React.createElement(MessageSquare, { width: 14, height: 14, strokeWidth: 1.85, "aria-hidden": "true" }),
+                  React.createElement("span", null, "Open Thread")
+                )
+                : null,
+              showStopButton
+                ? React.createElement(PlatformSecondaryButton, {
+                    type: "button",
+                    size: "small",
+                    fullWidth: true,
+                    className: "playground-fine-tuning-detail-sidebar-action",
+                    onClick: () => stopFineTuningJob(job),
+                    disabled: isStopping,
+                  },
+                  isStopping
+                    ? React.createElement(Loader2, { className: "is-spinning", width: 14, height: 14, strokeWidth: 1.85, "aria-hidden": "true" })
+                    : React.createElement(Square, { width: 13, height: 13, strokeWidth: 1.85, "aria-hidden": "true" }),
+                  React.createElement("span", null, isStopping ? "Stopping" : "Stop Job")
+                )
+                : null
+            )
+            : null;
+          const properties = React.createElement("div", {
+              className: "playground-fine-tuning-detail-sidebar-list playground-tasks-detail-facts-body",
+            },
             renderSidebarRow("status", "Status", React.createElement(PlatformLabel, { variant: statusVariant }, statusLabel)),
             renderSidebarRow("agent", "Agent", agentValue),
             renderSidebarRow("environment", "Environment", environmentValue),
@@ -845,49 +870,10 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
             renderSidebarRow("created", "Created", formatPlaygroundFineTuningDateTime(job.createdAt)),
             renderSidebarRow("updated", "Updated", formatPlaygroundFineTuningDateTime(job.updatedAt || job.createdAt)),
             renderSidebarRow("owner", "Owner", renderFineTuningOwnerSelector(job), {
-              className: "playground-fine-tuning-detail-owner-row",
-            })
-          );
-          const showStopButton = canStopPlaygroundFineTuningJob(job);
-          const isStopping = fineTuningStopJobId === job.id;
-          const actions = React.createElement("div", { className: "playground-fine-tuning-detail-sidebar-actions" },
-            threadId && typeof onOpenThread === "function"
-              ? React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-fine-tuning-detail-sidebar-action",
-                  onClick: () => onOpenThread(threadId),
-                },
-                React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                  React.createElement(MessageSquare, { width: 14, height: 14, strokeWidth: 1.85 })
-                ),
-                React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Open Thread")
-              )
-              : null,
-            showStopButton
-              ? React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-fine-tuning-detail-sidebar-action",
-                  onClick: () => stopFineTuningJob(job),
-                  disabled: isStopping,
-                },
-                React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                  isStopping
-                    ? React.createElement(Loader2, { className: "is-spinning", width: 14, height: 14, strokeWidth: 1.85 })
-                    : React.createElement(Square, { width: 13, height: 13, strokeWidth: 1.85 })
-                ),
-                React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, isStopping ? "Stopping" : "Stop Job")
-              )
-              : null
-          );
-          const sidebarToggle = React.createElement("button", {
-              type: "button",
-              className: "playground-project-overview-sidebar-toggle",
-              onClick: () => setFineTuningDetailSidebarCollapsed((current) => !current),
-              title: fineTuningDetailSidebarCollapsed ? "Show optimization sidebar" : "Hide optimization sidebar",
-              "aria-label": fineTuningDetailSidebarCollapsed ? "Show optimization sidebar" : "Hide optimization sidebar",
-              "aria-pressed": fineTuningDetailSidebarCollapsed ? "true" : "false",
-            },
-            React.createElement(PanelRight, { width: 15, height: 15, strokeWidth: 1.8, "aria-hidden": "true" })
+              className: "is-owner playground-fine-tuning-detail-owner-row",
+              control: true,
+            }),
+            sidebarActions
           );
           const detailContent = fineTuningDetailTab === "analysis"
             ? React.createElement(React.Fragment, null,
@@ -905,16 +891,16 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
                         renderFineTuningAccessSettings(job)
                       ))
                 : React.createElement(React.Fragment, null,
-                    renderFineTuningExecutionProgress(job),
                     renderKpiCard(job),
+                    renderFineTuningExecutionProgress(job),
                     renderFineTuningIterations(job),
                     renderFineTuningStatisticalEvidence(job),
                     renderFineTuningCaseComparisons(job)
                   );
-          return React.createElement(FineTuningDetailPage, {
-              header,
-              headerActions: React.createElement("div", {
-                  className: "playground-fine-tuning-detail-header-actions",
+          const topNavActions = fineTuningTopNavActionsContainer && typeof createPortal === "function"
+            ? createPortal(
+              React.createElement("div", {
+                  className: "playground-fine-tuning-detail-topnav-actions",
                 },
                 fineTuningApprovalError
                   ? React.createElement("span", {
@@ -934,19 +920,16 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
                   : null,
                 React.createElement(PlatformLabel, { variant: statusVariant }, statusLabel)
               ),
-              activeTab: ["analysis", "changes", "settings"].includes(fineTuningDetailTab) ? fineTuningDetailTab : "general",
-              onTabChange: (nextTab) => {
-                setFineTuningDetailTab(nextTab);
-                if (nextTab === "settings" && !(Array.isArray(workspaceTeams) && workspaceTeams.length) && typeof onWorkspaceTeamsRequest === "function") {
-                  onWorkspaceTeamsRequest({ selectedTeamId: "" });
-                }
-              },
-              sidebarToggle,
-              sidebarCollapsed: fineTuningDetailSidebarCollapsed,
+              fineTuningTopNavActionsContainer
+            )
+            : null;
+          return React.createElement(React.Fragment, null,
+            React.createElement(FineTuningDetailPage, {
               properties,
-              actions,
             },
-            detailContent
+              detailContent
+            ),
+            topNavActions
           );
         }
 

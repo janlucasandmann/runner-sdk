@@ -1770,7 +1770,10 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                   )
                 : React.createElement("div", { className: "playground-tasks-secondary-copy" },
                     "No plugins are available yet."
-                  )
+                  ),
+              renderProjectConnectorCredentialRouting(projectOverviewDraft, {
+                disabled: !canManageProjectAccess,
+              })
             );
           }
 

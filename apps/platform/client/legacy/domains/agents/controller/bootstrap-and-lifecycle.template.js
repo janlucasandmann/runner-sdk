@@ -2720,10 +2720,16 @@
             setAgentsHomeThreadsError((current) => current ? "" : current);
             const requestPromise = (async () => {
               try {
-                const response = await fetch(backendUrl + "/threads?limit=" + AGENT_THREAD_FETCH_LIMIT, {
+                const response = await fetch(
+                  backendUrl
+                    + "/threads?limit="
+                    + AGENT_THREAD_FETCH_LIMIT
+                    + "&view=overview",
+                  {
                   method: "GET",
                   headers: requestHeadersRef.current,
-                });
+                  },
+                );
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok) {
                   throw new Error(data?.message || data?.error || "Failed to load threads.");

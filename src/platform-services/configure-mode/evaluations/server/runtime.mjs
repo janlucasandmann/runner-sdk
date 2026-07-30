@@ -252,6 +252,22 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     throw createRuntimeError("Sign in to Computer Agents or provide an API key.", 401);
   }
 
+  async function assertEvaluationActionAllowed(record, evaluationId, actionId) {
+    const normalizedEvaluationId = normalizeString(evaluationId);
+    const normalizedActionId = normalizeString(actionId);
+    if (!normalizedEvaluationId || !normalizedActionId) {
+      throw createRuntimeError(
+        "A persisted evaluation and access action are required.",
+        400,
+      );
+    }
+    await fetchBackendJson(
+      record,
+      `/evaluations/${encodeURIComponent(normalizedEvaluationId)}`
+        + `?accessAction=${encodeURIComponent(normalizedActionId)}`,
+    );
+  }
+
   async function requestBackendJson(record, path, options = {}, fallbackMessage = "Backend request failed.") {
     const { requestContext, upstreamUrl, apiKey, body } = record;
     if (apiKey) {
@@ -1787,6 +1803,11 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         apiKey,
         body,
       };
+      await assertEvaluationActionAllowed(
+        record,
+        evaluationSet.id,
+        "evaluation_cases_manage",
+      );
       const snapshot = await buildSourceThreadRefinementSnapshot(record, sourceThreadId, body.thread || {});
       const refinerThread = await createHiddenThread(record, {
         title: `Evaluation Case Refinement · ${snapshot.thread?.title || sourceThreadId}`,

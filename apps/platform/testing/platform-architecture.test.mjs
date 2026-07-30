@@ -650,7 +650,7 @@ const platformSources = createLegacyPlatformApplicationSources({
   defaultUpstreamOrigin: "https://api.computer-agents.com/v1",
   platformOrigin: "http://localhost:4177",
 });
-const assets = createPlatformDocumentAssets(platformSources);
+const assets = await createPlatformDocumentAssets(platformSources);
 const assembledStyleLines = platformSources.styleSource.split("\n").length;
 const assembledModuleLines = platformSources.moduleSource.split("\n").length;
 

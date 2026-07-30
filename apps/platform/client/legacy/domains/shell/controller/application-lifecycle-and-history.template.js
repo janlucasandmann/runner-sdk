@@ -212,12 +212,19 @@
               if (isDisposed) {
                 return;
               }
-              const refreshDelayMs = hasLiveThreadListActivity() ? 5000 : 45000;
+              const isPageHidden = document.visibilityState === "hidden";
+              const refreshDelayMs = isPageHidden
+                ? 60000
+                : hasLiveThreadListActivity()
+                  ? 10000
+                  : 60000;
               refreshTimer = window.setTimeout(() => {
                 if (isDisposed) {
                   return;
                 }
-                triggerSilentRefresh();
+                if (document.visibilityState === "visible") {
+                  triggerSilentRefresh();
+                }
                 scheduleNextThreadRefresh();
               }, refreshDelayMs);
             };
@@ -282,41 +289,6 @@
   
             void loadThreadGroundTruthStatus(currentThreadId);
           }, [activePage, currentThreadId, hasRealAccess, loadThreadGroundTruthStatus]);
-  
-          useEffect(() => {
-            if (activePage !== "thread" || !hasRealAccess || !isRealThreadId(currentThreadId)) {
-              return;
-            }
-  
-            const selectedThread = realThreads.find((thread) => thread.id === currentThreadId) || null;
-            const normalizedThreadStatus = String(selectedThread?.status || "").trim().toLowerCase();
-            if (!isActiveThreadDisplayStatus(normalizedThreadStatus) && !isPendingPermissionThreadDisplayStatus(normalizedThreadStatus)) {
-              return;
-            }
-  
-            let cancelled = false;
-  
-            const pollThreadStatus = async () => {
-              const nextStatus = await loadThreadGroundTruthStatus(currentThreadId);
-              if (cancelled || !nextStatus) {
-                return;
-              }
-              const normalizedNextStatus = String(nextStatus).trim().toLowerCase();
-              if (["completed", "failed", "cancelled"].includes(normalizedNextStatus)) {
-                void refreshThreads();
-              }
-            };
-  
-            void pollThreadStatus();
-            const interval = window.setInterval(() => {
-              void pollThreadStatus();
-            }, 2000);
-  
-            return () => {
-              cancelled = true;
-              window.clearInterval(interval);
-            };
-          }, [activePage, currentThreadId, hasRealAccess, loadThreadGroundTruthStatus, realThreads, refreshThreads]);
   
           useEffect(() => {
             const trackedRuns = Object.values(taskRunStates || {});
@@ -1307,6 +1279,8 @@
             selectedFineTuningJobId,
             selectedTestPlanId,
             selectedTestPlanName,
+            selectedTestCaseId,
+            selectedTestCaseName,
             selectedTestRunId,
             selectedTestRunName,
             settingsSelectedTriggerId,

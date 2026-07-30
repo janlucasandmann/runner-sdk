@@ -7,6 +7,8 @@ import {
 } from "node:crypto";
 import fs from "node:fs";
 
+import { createConnectorCredentialRegistry } from "./connector-credential-registry.mjs";
+
 const FIRESTORE_TOKEN_COLLECTION = "user_oauth_tokens";
 const OAUTH_STATE_COLLECTION = "oauth_states";
 const ENCRYPTION_ALGORITHM = "aes-256-gcm";
@@ -348,12 +350,34 @@ export async function saveConnectorCredential({
   if (!store.defaultCredentialId) {
     store.defaultCredentialId = normalizedCredentialId;
   }
-  return writeConnectorCredentialStore(
+  const writtenStore = await writeConnectorCredentialStore(
     provider,
     uid,
     store,
     envFileCandidates,
   );
+  const nextCredential = writtenStore.credentials[normalizedCredentialId];
+  if (
+    existing?.organizationId
+    && existing.organizationId !== nextCredential.organizationId
+  ) {
+    await unregisterOrganizationConnectorCredential({
+      organizationId: existing.organizationId,
+      provider,
+      credentialId: normalizedCredentialId,
+      envFileCandidates,
+    });
+  }
+  if (nextCredential.organizationId) {
+    await registerOrganizationConnectorCredential({
+      organizationId: nextCredential.organizationId,
+      provider,
+      credential: nextCredential,
+      ownerUserId: uid,
+      envFileCandidates,
+    });
+  }
+  return writtenStore;
 }
 
 export async function loadConnectorCredential({
@@ -369,10 +393,12 @@ export async function loadConnectorCredential({
     envFileCandidates,
   );
   const normalizedCredentialId = normalizeConnectorCredentialId(credentialId);
+  if (credentialId && !normalizedCredentialId) return null;
+  if (normalizedCredentialId && !store.credentials[normalizedCredentialId]) {
+    return null;
+  }
   const selectedId =
-    (normalizedCredentialId && store.credentials[normalizedCredentialId]
-      ? normalizedCredentialId
-      : store.defaultCredentialId)
+    (normalizedCredentialId || store.defaultCredentialId)
     || Object.keys(store.credentials)[0]
     || "";
   const credential = store.credentials[selectedId];
@@ -414,12 +440,34 @@ export async function updateConnectorCredentialMetadata({
       : current.profile,
     updatedAt: Date.now(),
   };
-  return writeConnectorCredentialStore(
+  const writtenStore = await writeConnectorCredentialStore(
     provider,
     uid,
     store,
     envFileCandidates,
   );
+  const nextCredential = writtenStore.credentials[normalizedCredentialId];
+  if (
+    current.organizationId
+    && current.organizationId !== nextCredential.organizationId
+  ) {
+    await unregisterOrganizationConnectorCredential({
+      organizationId: current.organizationId,
+      provider,
+      credentialId: normalizedCredentialId,
+      envFileCandidates,
+    });
+  }
+  if (nextCredential.organizationId) {
+    await registerOrganizationConnectorCredential({
+      organizationId: nextCredential.organizationId,
+      provider,
+      credential: nextCredential,
+      ownerUserId: uid,
+      envFileCandidates,
+    });
+  }
+  return writtenStore;
 }
 
 export async function deleteConnectorCredential({
@@ -434,6 +482,9 @@ export async function deleteConnectorCredential({
     envFileCandidates,
   );
   const normalizedCredentialId = normalizeConnectorCredentialId(credentialId);
+  const removedCredentials = normalizedCredentialId
+    ? [store.credentials[normalizedCredentialId]].filter(Boolean)
+    : Object.values(store.credentials);
   if (normalizedCredentialId) {
     delete store.credentials[normalizedCredentialId];
   } else {
@@ -442,12 +493,198 @@ export async function deleteConnectorCredential({
   if (!store.credentials[store.defaultCredentialId]) {
     store.defaultCredentialId = Object.keys(store.credentials)[0] || "";
   }
-  return writeConnectorCredentialStore(
+  const writtenStore = await writeConnectorCredentialStore(
     provider,
     uid,
     store,
     envFileCandidates,
   );
+  for (const removedCredential of removedCredentials) {
+    if (!removedCredential.organizationId) continue;
+    await unregisterOrganizationConnectorCredential({
+      organizationId: removedCredential.organizationId,
+      provider,
+      credentialId: removedCredential.id,
+      envFileCandidates,
+    });
+  }
+  return writtenStore;
+}
+
+export async function registerOrganizationConnectorCredential({
+  organizationId,
+  provider,
+  credential,
+  ownerUserId,
+  envFileCandidates,
+}) {
+  const normalizedCredentialId = normalizeConnectorCredentialId(
+    credential?.id || credential?.credentialId,
+  );
+  if (
+    !normalizeConnectorOrganizationId(organizationId)
+    || !normalizedCredentialId
+    || !String(ownerUserId || "").trim()
+  ) {
+    return null;
+  }
+  return getOrganizationCredentialRegistry(envFileCandidates).register({
+    organizationId,
+    provider,
+    credentialId: normalizedCredentialId,
+    ownerUserId,
+    name: credential?.name,
+    identity: credential?.identity,
+    status: credential?.status,
+    createdAt: credential?.createdAt,
+    updatedAt: credential?.updatedAt,
+  });
+}
+
+export async function unregisterOrganizationConnectorCredential({
+  organizationId,
+  provider,
+  credentialId,
+  envFileCandidates,
+}) {
+  return getOrganizationCredentialRegistry(envFileCandidates).unregister({
+    organizationId,
+    provider,
+    credentialId,
+  });
+}
+
+export async function listOrganizationConnectorCredentials({
+  organizationId,
+  provider,
+  envFileCandidates,
+}) {
+  const normalizedOrganizationId =
+    normalizeConnectorOrganizationId(organizationId);
+  const normalizedProvider = normalizeConnectorProviderId(provider);
+  if (!normalizedOrganizationId || !normalizedProvider) return [];
+
+  const references = await getOrganizationCredentialRegistry(
+    envFileCandidates,
+  ).list({
+    organizationId: normalizedOrganizationId,
+    provider: normalizedProvider,
+  });
+  return references.map((reference) => ({
+    id: reference.credentialId,
+    credentialId: reference.credentialId,
+    provider: reference.provider,
+    name: reference.name,
+    identity: reference.identity,
+    status: reference.status,
+    isDefault: reference.isDefault === true,
+    createdAt: new Date(reference.createdAt).toISOString(),
+    updatedAt: new Date(reference.updatedAt).toISOString(),
+  }));
+}
+
+export async function listOrganizationConnectorCredentialProviders({
+  organizationId,
+  envFileCandidates,
+}) {
+  const normalizedOrganizationId =
+    normalizeConnectorOrganizationId(organizationId);
+  if (!normalizedOrganizationId) return [];
+
+  const registry = getOrganizationCredentialRegistry(envFileCandidates);
+  const providers = await registry.listProviders({
+    organizationId: normalizedOrganizationId,
+  });
+  const catalogs = await Promise.all(
+    providers.map(async ({ provider }) => ({
+      provider,
+      credentials: await listOrganizationConnectorCredentials({
+        organizationId: normalizedOrganizationId,
+        provider,
+        envFileCandidates,
+      }),
+    })),
+  );
+  return catalogs.filter((catalog) => catalog.credentials.length > 0);
+}
+
+export async function resolveConnectorCredentialForOrganization({
+  provider,
+  organizationId,
+  credentialId = "",
+  requestingUserId = "",
+  envFileCandidates,
+  encryptionKeyNames = [],
+}) {
+  const normalizedOrganizationId =
+    normalizeConnectorOrganizationId(organizationId);
+  const normalizedCredentialId =
+    normalizeConnectorCredentialId(credentialId);
+  const normalizedRequestingUserId = String(requestingUserId || "").trim();
+  if (
+    !normalizedOrganizationId
+    || (credentialId && !normalizedCredentialId)
+  ) {
+    return null;
+  }
+
+  let reference = await getOrganizationCredentialRegistry(
+    envFileCandidates,
+  ).resolve({
+    organizationId: normalizedOrganizationId,
+    provider,
+    credentialId: normalizedCredentialId,
+  });
+
+  if (!reference && normalizedRequestingUserId) {
+    const legacyStore = await readConnectorCredentialStore(
+      provider,
+      normalizedRequestingUserId,
+      envFileCandidates,
+    );
+    const selectedLegacyCredential = normalizedCredentialId
+      ? legacyStore.credentials[normalizedCredentialId]
+      : (
+          legacyStore.credentials[legacyStore.defaultCredentialId]
+            ?.organizationId === normalizedOrganizationId
+            ? legacyStore.credentials[legacyStore.defaultCredentialId]
+            : Object.values(legacyStore.credentials).find(
+                (candidate) =>
+                  candidate.organizationId === normalizedOrganizationId,
+              )
+        );
+    if (
+      selectedLegacyCredential
+      && selectedLegacyCredential.organizationId === normalizedOrganizationId
+    ) {
+      reference = await registerOrganizationConnectorCredential({
+        organizationId: normalizedOrganizationId,
+        provider,
+        credential: selectedLegacyCredential,
+        ownerUserId: normalizedRequestingUserId,
+        envFileCandidates,
+      });
+    }
+  }
+
+  if (!reference) return null;
+  const credential = await loadConnectorCredential({
+    provider,
+    uid: reference.ownerUserId,
+    credentialId: reference.credentialId,
+    envFileCandidates,
+    encryptionKeyNames,
+  });
+  if (
+    !credential
+    || credential.organizationId !== normalizedOrganizationId
+  ) {
+    return null;
+  }
+  return {
+    ...credential,
+    credentialOwnerId: reference.ownerUserId,
+  };
 }
 
 export function getConnectorRequestSearchParam(req, key) {
@@ -579,6 +816,11 @@ function getConnectorFieldPrefix(provider) {
   return normalized;
 }
 
+function normalizeConnectorProviderId(provider) {
+  const normalized = String(provider || "").trim().toLowerCase();
+  return /^[a-z0-9][a-z0-9-]{0,79}$/.test(normalized) ? normalized : "";
+}
+
 function isTrustedComputerAgentsHost(hostname) {
   return (
     hostname === "computer-agents.com"
@@ -618,6 +860,33 @@ function extractIdToken(req) {
       return result;
     }, {});
   return cookies.__session || cookies.tb_id_token || "";
+}
+
+function getOrganizationCredentialRegistry(envFileCandidates) {
+  return createConnectorCredentialRegistry({
+    async getDocument(path) {
+      return parseFirestoreRecord(
+        await firestoreGetDocument(path, envFileCandidates),
+      );
+    },
+    async setDocument(path, value) {
+      const fields = createFirestoreFields(value);
+      await firestorePatchDocument(
+        path,
+        fields,
+        Object.keys(fields),
+        envFileCandidates,
+      );
+    },
+    async deleteDocument(path) {
+      await firestoreDeleteDocument(path, envFileCandidates);
+    },
+    async listDocuments(path) {
+      return (
+        await firestoreListDocuments(path, envFileCandidates)
+      ).map(parseFirestoreRecord);
+    },
+  });
 }
 
 async function encryptConnectorToken(
@@ -696,6 +965,38 @@ async function firestoreGetDocument(documentPath, envFileCandidates) {
     throw new Error(message || `Firestore GET failed (${response.status})`);
   }
   return response.json();
+}
+
+async function firestoreListDocuments(collectionPath, envFileCandidates) {
+  const { projectId, accessToken } = await getFirestoreAccessContext(
+    envFileCandidates,
+  );
+  const documents = [];
+  let pageToken = "";
+  do {
+    const target = new URL(
+      `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents/${collectionPath}`,
+    );
+    target.searchParams.set("pageSize", "100");
+    if (pageToken) target.searchParams.set("pageToken", pageToken);
+    const response = await fetch(target, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (response.status === 404) return documents;
+    if (!response.ok) {
+      const message = await response.text().catch(() => "");
+      throw new Error(
+        message || `Firestore LIST failed (${response.status})`,
+      );
+    }
+    const payload = await response.json().catch(() => ({}));
+    if (Array.isArray(payload.documents)) {
+      documents.push(...payload.documents);
+    }
+    pageToken = String(payload.nextPageToken || "").trim();
+  } while (pageToken);
+  return documents;
 }
 
 async function firestoreDeleteDocument(documentPath, envFileCandidates) {
@@ -889,4 +1190,42 @@ function getFirestoreInteger(value) {
     return Number.isFinite(parsed) ? parsed : null;
   }
   return null;
+}
+
+function parseFirestoreRecord(document) {
+  if (!document || typeof document !== "object") return null;
+  const fields =
+    document.fields && typeof document.fields === "object"
+      ? document.fields
+      : {};
+  return Object.entries(fields).reduce((record, [key, value]) => {
+    if (typeof value?.stringValue === "string") {
+      record[key] = value.stringValue;
+    } else if (
+      typeof value?.integerValue === "string"
+      || typeof value?.integerValue === "number"
+    ) {
+      record[key] = Number(value.integerValue);
+    } else if (typeof value?.booleanValue === "boolean") {
+      record[key] = value.booleanValue;
+    }
+    return record;
+  }, {});
+}
+
+function createFirestoreFields(value) {
+  const source =
+    value && typeof value === "object" && !Array.isArray(value)
+      ? value
+      : {};
+  return Object.entries(source).reduce((fields, [key, entry]) => {
+    if (typeof entry === "string") {
+      fields[key] = { stringValue: entry };
+    } else if (typeof entry === "number" && Number.isFinite(entry)) {
+      fields[key] = { integerValue: String(Math.floor(entry)) };
+    } else if (typeof entry === "boolean") {
+      fields[key] = { booleanValue: entry };
+    }
+    return fields;
+  }, {});
 }

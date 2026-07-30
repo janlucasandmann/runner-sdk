@@ -17,8 +17,8 @@ import {
 } from "../../../../../platform-resources/access-control/index.js";
 import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
 import type { PlatformPermissionSet } from "../../../../../platform-ui/pages/permissions/index.js";
+import type { TestsApi } from "../api/index.js";
 import type { TestPlan } from "../domain/index.js";
-import { TestsApi } from "../api/index.js";
 
 interface TestAccessTeam extends PlatformAccessPrincipal {
   roleId: string;
@@ -29,6 +29,7 @@ interface TestPlanAccessSettingsProps {
   api: TestsApi;
   workspaceTeams?: readonly unknown[];
   onPlanChange: (plan: TestPlan) => void;
+  onPermissionDetailOpenChange?: (open: boolean) => void;
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -66,6 +67,7 @@ export function TestPlanAccessSettings({
   api,
   workspaceTeams = [],
   onPlanChange,
+  onPermissionDetailOpenChange,
 }: TestPlanAccessSettingsProps) {
   const [selectedPrincipalId, setSelectedPrincipalId] = useState("");
   const [selectedRoleId, setSelectedRoleId] = useState("member");
@@ -188,6 +190,7 @@ export function TestPlanAccessSettings({
         runs: plan.runs,
       });
       setSelectedPrincipalId("");
+      onPermissionDetailOpenChange?.(false);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "Failed to remove team access.");
     } finally {
@@ -246,6 +249,7 @@ export function TestPlanAccessSettings({
       onSelectedPrincipalIdChange={(value) => {
         setSelectedRoleId("member");
         setSelectedPrincipalId(value);
+        onPermissionDetailOpenChange?.(Boolean(value));
       }}
       subjectType="test_plan"
       teamSubjectType="test_plan_team_role"

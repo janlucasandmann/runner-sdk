@@ -5,14 +5,17 @@ import { PlatformServiceDetailFrame } from "../../../../../platform-ui/pages/det
 import { TestsApi } from "../api/index.js";
 import {
   normalizeTestWorkspaceOption,
+  type TestCaseDefinition,
   type TestPlan,
   type TestPlanCreateInput,
+  type TestPlanDefinition,
   type TestRun,
   type TestRunCreateInput,
   type TestWorkspaceResourceOption,
 } from "../domain/index.js";
 import { TestPlanCreateModal } from "./test-plan-create-modal.js";
 import { TestPlanDetailPage } from "./test-plan-detail-page.js";
+import { TestCaseDetailPage } from "./test-case-detail-page.js";
 import { TestRunCreateModal } from "./test-run-create-modal.js";
 import { TestRunDetailPage } from "./test-run-detail-page.js";
 import {
@@ -20,7 +23,7 @@ import {
   type TestPlanOverviewRow,
 } from "./tests-overview-page.js";
 
-export type TestsWorkspaceMode = "overview" | "detail" | "run";
+export type TestsWorkspaceMode = "overview" | "detail" | "case" | "run";
 
 export interface TestsWorkspacePageProps {
   shouldLoadData?: boolean;
@@ -28,6 +31,7 @@ export interface TestsWorkspacePageProps {
   requestHeaders?: Readonly<Record<string, string>>;
   mode?: TestsWorkspaceMode;
   selectedTestPlanId?: string;
+  selectedTestCaseId?: string;
   selectedTestRunId?: string;
   controlsPortalId?: string;
   sectionControlsPortalId?: string;
@@ -39,13 +43,26 @@ export interface TestsWorkspacePageProps {
   agents?: readonly unknown[];
   workspaceTeams?: readonly unknown[];
   onOpenPlan: (planId: string, planName?: string) => void;
+  onOpenCase: (
+    planId: string,
+    caseId: string,
+    planName?: string,
+    caseName?: string,
+  ) => void;
   onOpenRun: (planId: string, runId: string, planName?: string) => void;
   onIdentityChange?: (identity: {
     planId: string;
     planName: string;
+    caseId?: string;
+    caseName?: string;
     runId?: string;
     runLabel?: string;
   }) => void;
+}
+
+interface ActiveTestCaseContext {
+  plan: TestPlan;
+  testCase: TestCaseDefinition;
 }
 
 function formatRelativeTimestamp(value: string): string {
@@ -73,6 +90,7 @@ export function TestsWorkspacePage({
   requestHeaders = {},
   mode = "overview",
   selectedTestPlanId = "",
+  selectedTestCaseId = "",
   selectedTestRunId = "",
   controlsPortalId,
   sectionControlsPortalId,
@@ -84,6 +102,7 @@ export function TestsWorkspacePage({
   agents = [],
   workspaceTeams = [],
   onOpenPlan,
+  onOpenCase,
   onOpenRun,
   onIdentityChange,
 }: TestsWorkspacePageProps) {
@@ -112,6 +131,7 @@ export function TestsWorkspacePage({
   const [activePlan, setActivePlan] = useState<TestPlan | null>(null);
   const [activeRun, setActiveRun] = useState<TestRun | null>(null);
   const [activeRunPlan, setActiveRunPlan] = useState<TestPlan | null>(null);
+  const [activeCaseContext, setActiveCaseContext] = useState<ActiveTestCaseContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [refreshingRun, setRefreshingRun] = useState(false);
@@ -197,7 +217,7 @@ export function TestsWorkspacePage({
       void loadOverview();
       return;
     }
-    if (mode === "detail" && selectedTestPlanId) {
+    if ((mode === "detail" || mode === "case") && selectedTestPlanId) {
       void loadPlan(selectedTestPlanId);
       return;
     }
@@ -210,6 +230,7 @@ export function TestsWorkspacePage({
     loadRun,
     mode,
     selectedTestPlanId,
+    selectedTestCaseId,
     selectedTestRunId,
     shouldLoadData,
   ]);
@@ -308,6 +329,20 @@ export function TestsWorkspacePage({
             onReload={() => loadPlan(activePlan.id)}
             onRun={setRunPlan}
             onOpenRun={(run) => onOpenRun(activePlan.id, run.id, activePlan.name)}
+            onOpenCase={(testCase, definition: TestPlanDefinition) => {
+              const contextPlan: TestPlan = {
+                ...activePlan,
+                definition,
+                caseCount: definition.cases.length,
+              };
+              setActiveCaseContext({ plan: contextPlan, testCase });
+              onOpenCase(
+                activePlan.id,
+                testCase.id,
+                activePlan.name,
+                testCase.name,
+              );
+            }}
           />
         </PlatformServiceDetailFrame>
         <TestRunCreateModal
@@ -321,6 +356,78 @@ export function TestsWorkspacePage({
           onRun={startRun}
         />
       </>
+    );
+  }
+
+  if (mode === "case") {
+    const matchingContext = (
+      activeCaseContext?.plan.id === selectedTestPlanId
+      && activeCaseContext.testCase.id === selectedTestCaseId
+    )
+      ? activeCaseContext
+      : null;
+    const casePlan = matchingContext?.plan
+      || (
+        activePlan?.id === selectedTestPlanId
+          ? activePlan
+          : null
+      );
+    const activeCase = matchingContext?.testCase
+      || casePlan?.definition.cases.find(
+        (testCase) => testCase.id === selectedTestCaseId,
+      )
+      || null;
+
+    if (
+      (!matchingContext && detailLoading)
+      || !casePlan
+      || !activeCase
+    ) {
+      const caseError = error || (
+        casePlan && !activeCase
+          ? "The selected test case no longer exists."
+          : ""
+      );
+      return (
+        <div className="tests-centered-state">
+          {caseError ? <p className="tests-page-error" role="alert">{caseError}</p> : (
+            <PlatformLoadingState centered message="Loading test case…" />
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <TestCaseDetailPage
+        plan={casePlan}
+        testCase={activeCase}
+        api={api}
+        controlsPortalId={controlsPortalId}
+        sectionControlsPortalId={sectionControlsPortalId}
+        onPlanChange={(nextPlan) => {
+          replacePlan(nextPlan);
+          const nextCase = nextPlan.definition.cases.find(
+            (testCase) => testCase.id === activeCase.id,
+          ) || activeCase;
+          setActiveCaseContext({ plan: nextPlan, testCase: nextCase });
+        }}
+        onCaseIdentityChange={(nextCase) => {
+          setActiveCaseContext((current) => current
+            ? { ...current, testCase: nextCase }
+            : { plan: casePlan, testCase: nextCase });
+          identityChangeRef.current?.({
+            planId: casePlan.id,
+            planName: casePlan.name,
+            caseId: nextCase.id,
+            caseName: nextCase.name,
+          });
+        }}
+        onDeleted={(nextPlan) => {
+          replacePlan(nextPlan);
+          setActiveCaseContext(null);
+          onOpenPlan(nextPlan.id, nextPlan.name);
+        }}
+      />
     );
   }
 

@@ -1,0 +1,116 @@
+import {
+  defineCapabilities,
+  defineConnectorProvider,
+  paginationFields,
+  stringArrayField,
+  stringField,
+} from "../shared.js";
+
+const capabilities = defineCapabilities([
+  {
+    id: "list_calendars",
+    description: "List calendars available to the connected Microsoft account.",
+    access: "read-only",
+    properties: paginationFields,
+  },
+  {
+    id: "get_calendar",
+    description: "Get an Outlook calendar.",
+    access: "read-only",
+    properties: { calendarId: stringField("Microsoft Graph calendar ID.") },
+    required: ["calendarId"],
+  },
+  {
+    id: "list_events",
+    description: "List Outlook events in a calendar and time range.",
+    access: "read-only",
+    properties: {
+      calendarId: stringField("Optional calendar ID. Omit for the default calendar."),
+      startDateTime: stringField("ISO 8601 range start."),
+      endDateTime: stringField("ISO 8601 range end."),
+      ...paginationFields,
+    },
+    required: ["startDateTime", "endDateTime"],
+  },
+  {
+    id: "get_event",
+    description: "Get an Outlook calendar event.",
+    access: "read-only",
+    properties: { eventId: stringField("Microsoft Graph event ID.") },
+    required: ["eventId"],
+  },
+  {
+    id: "find_meeting_times",
+    description: "Find available meeting times for a set of attendees.",
+    access: "read-only",
+    properties: {
+      attendees: stringArrayField("Attendee email addresses."),
+      startDateTime: stringField("ISO 8601 range start."),
+      endDateTime: stringField("ISO 8601 range end."),
+      duration: stringField("ISO 8601 meeting duration."),
+      timeZone: stringField("IANA or Windows time zone."),
+    },
+    required: ["attendees", "startDateTime", "endDateTime", "duration"],
+  },
+  {
+    id: "create_event",
+    description: "Create an event in an Outlook calendar.",
+    access: "interactive",
+    properties: {
+      calendarId: stringField("Optional target calendar ID."),
+      subject: stringField("Event title."),
+      body: stringField("Event description."),
+      startDateTime: stringField("ISO 8601 event start."),
+      endDateTime: stringField("ISO 8601 event end."),
+      timeZone: stringField("Event time zone."),
+      attendees: stringArrayField("Attendee email addresses."),
+    },
+    required: ["subject", "startDateTime", "endDateTime"],
+  },
+  {
+    id: "update_event",
+    description: "Update an Outlook calendar event.",
+    access: "interactive",
+    properties: {
+      eventId: stringField("Microsoft Graph event ID."),
+      subject: stringField("Updated title."),
+      body: stringField("Updated description."),
+      startDateTime: stringField("Updated ISO 8601 start."),
+      endDateTime: stringField("Updated ISO 8601 end."),
+      attendees: stringArrayField("Updated attendee email addresses."),
+    },
+    required: ["eventId"],
+  },
+  {
+    id: "cancel_event",
+    description: "Cancel an Outlook meeting and notify attendees.",
+    access: "interactive",
+    properties: {
+      eventId: stringField("Microsoft Graph event ID."),
+      comment: stringField("Cancellation message."),
+    },
+    required: ["eventId"],
+  },
+  {
+    id: "delete_event",
+    description: "Delete an Outlook calendar event.",
+    access: "interactive",
+    properties: { eventId: stringField("Microsoft Graph event ID.") },
+    required: ["eventId"],
+  },
+]);
+
+export const OUTLOOK_CALENDAR_CONNECTOR_PROVIDER = defineConnectorProvider({
+  id: "outlook-calendar",
+  label: "Outlook Calendar",
+  shortLabel: "OC",
+  description: "Inspect availability and manage events in authorized Microsoft calendars.",
+  category: "Calendar",
+  logoUrl: "/img/plugins/outlook-calendar.png",
+  functionsLabel: "Schedule, Inspect, Coordinate",
+  samplePrompt: "Find a time that works for the attendees and schedule the review.",
+  whenToUse: "Use Outlook Calendar for delegated Microsoft 365 scheduling.",
+  websiteUrl: "https://outlook.office.com/calendar/",
+  termsUrl: "https://www.microsoft.com/servicesagreement",
+  privacyUrl: "https://privacy.microsoft.com/privacystatement",
+}, capabilities);

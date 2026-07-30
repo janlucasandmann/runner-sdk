@@ -9,19 +9,25 @@ export const TESTS_APP_NAVIGATION_SCRIPT = `        function openTestsPage(optio
             title: "",
           });
           const requestedPlanId = String(options.testPlanId || options.planId || "").trim();
+          const requestedCaseId = String(options.testCaseId || options.caseId || "").trim();
           const requestedRunId = String(options.testRunId || options.runId || "").trim();
           const requestedPlanName = String(options.testPlanName || options.planName || "").trim();
+          const requestedCaseName = String(options.testCaseName || options.caseName || "").trim();
           const requestedRunName = String(options.testRunName || options.runName || "").trim();
           if (requestedPlanId) setSelectedTestPlanId(requestedPlanId);
           if (requestedPlanName) setSelectedTestPlanName(requestedPlanName);
+          if (requestedCaseId) setSelectedTestCaseId(requestedCaseId);
+          if (requestedCaseName) setSelectedTestCaseName(requestedCaseName);
           if (requestedRunId) setSelectedTestRunId(requestedRunId);
           if (requestedRunName) setSelectedTestRunName(requestedRunName);
           setTestsPageMode(
-            options.mode === "run" || requestedRunId
-              ? "run"
-              : options.mode === "detail" || requestedPlanId
-                ? "detail"
-                : "overview"
+            options.mode === "case" || requestedCaseId
+              ? "case"
+              : options.mode === "run" || requestedRunId
+                ? "run"
+                : options.mode === "detail" || requestedPlanId
+                  ? "detail"
+                  : "overview"
           );
           setActivePage("tests");
         }
@@ -29,6 +35,8 @@ export const TESTS_APP_NAVIGATION_SCRIPT = `        function openTestsPage(optio
         function openTestsOverviewPage() {
           setSelectedTestPlanId("");
           setSelectedTestPlanName("");
+          setSelectedTestCaseId("");
+          setSelectedTestCaseName("");
           setSelectedTestRunId("");
           setSelectedTestRunName("");
           openTestsPage({ mode: "overview" });
@@ -40,6 +48,8 @@ export const TESTS_APP_NAVIGATION_SCRIPT = `        function openTestsPage(optio
             openTestsOverviewPage();
             return;
           }
+          setSelectedTestCaseId("");
+          setSelectedTestCaseName("");
           setSelectedTestRunId("");
           setSelectedTestRunName("");
           openTestsPage({
@@ -56,12 +66,32 @@ export const TESTS_APP_NAVIGATION_SCRIPT = `        function openTestsPage(optio
             openTestPlanDetailPage(normalizedPlanId, testPlanName);
             return;
           }
+          setSelectedTestCaseId("");
+          setSelectedTestCaseName("");
           openTestsPage({
             mode: "run",
             testPlanId: normalizedPlanId,
             testRunId: normalizedRunId,
             testPlanName,
             testRunName,
+          });
+        }
+
+        function openTestCaseDetailPage(testPlanId, testCaseId, testPlanName = "", testCaseName = "") {
+          const normalizedPlanId = String(testPlanId || "").trim();
+          const normalizedCaseId = String(testCaseId || "").trim();
+          if (!normalizedCaseId) {
+            openTestPlanDetailPage(normalizedPlanId, testPlanName);
+            return;
+          }
+          setSelectedTestRunId("");
+          setSelectedTestRunName("");
+          openTestsPage({
+            mode: "case",
+            testPlanId: normalizedPlanId,
+            testCaseId: normalizedCaseId,
+            testPlanName,
+            testCaseName,
           });
         }
 

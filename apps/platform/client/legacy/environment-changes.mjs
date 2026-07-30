@@ -939,7 +939,7 @@ export const ENVIRONMENT_CHANGES_SCRIPT = String.raw`
       }) {
         const batchSize = Math.max(1, Number(limit || ENVIRONMENT_CHANGES_BATCH_SIZE) || ENVIRONMENT_CHANGES_BATCH_SIZE);
         const [threadsResponse, agentsResponse] = await Promise.all([
-          fetch(backendUrl + "/threads?limit=500", {
+          fetch(backendUrl + "/threads?limit=500&view=overview", {
             method: "GET",
             headers,
           }),

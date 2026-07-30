@@ -114,6 +114,27 @@ describe("permission policy", () => {
     },
   );
 
+  it.each(["test_plan", "test_plan_team_role"] as const)(
+    "shows only concrete Test capabilities for %s subjects",
+    (subjectType) => {
+      const visibleActionIds = PLATFORM_PERMISSION_ACTION_DEFINITIONS.filter(
+        (action) => shouldShowPlatformPermissionAction(action, subjectType),
+      ).map((action) => action.id);
+
+      expect(visibleActionIds).toEqual([
+        "test_plan_view",
+        "test_run_results_view",
+        "test_run",
+        "test_plan_manage",
+        "test_plan_versions_manage",
+        "test_plan_access_manage",
+        "test_plan_delete",
+      ]);
+      expect(visibleActionIds).not.toContain("workspace_read");
+      expect(visibleActionIds).not.toContain("evaluation_run");
+    },
+  );
+
   it.each(["computer", "computer_team_role"])(
     "shows only computer resource capabilities for %s subjects",
     (subjectType) => {
@@ -184,6 +205,15 @@ describe("permission policy", () => {
       ringId: "ring_3",
       access: "ask_for_permission",
     });
+  });
+
+  it("denies unknown actions instead of granting an implicit fallback", () => {
+    expect(
+      getPlatformPermissionActionAccessByDefinition(
+        createPlatformDefaultPermissionSet("agent"),
+        "connector_action_that_does_not_exist",
+      ),
+    ).toBe("no_access");
   });
 
   it("applies conservative GitHub connector role presets", () => {
@@ -284,6 +314,7 @@ describe("permission policy", () => {
         "evaluation_view",
         "evaluation_runs_view",
         "evaluation_run",
+        "evaluation_runs_manage",
         "evaluation_cases_manage",
         "evaluation_settings_manage",
         "evaluation_versions_manage",
@@ -468,6 +499,18 @@ describe("permission policy", () => {
       "contributor",
     );
     const evaluationMember = createPlatformRolePermissionSet("evaluation_team_role", "member");
+    const testPlanOwner = createPlatformRolePermissionSet("test_plan_team_role", "owner");
+    const testPlanContributor = createPlatformRolePermissionSet(
+      "test_plan_team_role",
+      "contributor",
+    );
+    const testPlanDeveloper = createPlatformRolePermissionSet(
+      "test_plan_team_role",
+      "developer",
+    );
+    const testPlanMember = createPlatformRolePermissionSet("test_plan_team_role", "member");
+    const testPlanViewer = createPlatformRolePermissionSet("test_plan_team_role", "viewer");
+    const testPlanBilling = createPlatformRolePermissionSet("test_plan_team_role", "billing");
     const fineTuningContributor = createPlatformRolePermissionSet(
       "fine_tuning_team_role",
       "contributor",
@@ -575,6 +618,39 @@ describe("permission policy", () => {
     );
     expect(
       getPlatformPermissionActionAccessByDefinition(evaluationMember, "evaluation_settings_manage"),
+    ).toBe("no_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(testPlanOwner, "test_plan_delete"),
+    ).toBe("full_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(
+        testPlanContributor,
+        "test_plan_versions_manage",
+      ),
+    ).toBe("full_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(
+        testPlanContributor,
+        "test_plan_access_manage",
+      ),
+    ).toBe("no_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(
+        testPlanDeveloper,
+        "test_plan_manage",
+      ),
+    ).toBe("full_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(testPlanMember, "test_run"),
+    ).toBe("full_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(testPlanMember, "test_plan_manage"),
+    ).toBe("no_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(testPlanViewer, "test_run"),
+    ).toBe("no_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(testPlanBilling, "test_run"),
     ).toBe("no_access");
     expect(
       getPlatformPermissionActionAccessByDefinition(

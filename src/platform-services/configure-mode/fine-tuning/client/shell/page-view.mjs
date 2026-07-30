@@ -19,6 +19,8 @@ export const FINE_TUNING_APP_PAGE_VIEW_SCRIPT = String.raw`        function rend
             setSelectedFineTuningJobId,
             fineTuningPageMode,
             setFineTuningPageMode,
+            fineTuningDetailTab,
+            setFineTuningDetailTab,
             fineTuningCreateModalOpen,
             setFineTuningCreateModalOpen,
             fineTuningCreateForm,
@@ -84,6 +86,9 @@ export const FINE_TUNING_APP_PAGE_VIEW_SCRIPT = String.raw`        function rend
               }));
             },
             onAgentsRefresh: refreshAgents,
+            topNavActionsPortalId: fineTuningPageMode === "detail"
+              ? "playground-fine-tuning-nav-actions"
+              : "",
           });
         }
 

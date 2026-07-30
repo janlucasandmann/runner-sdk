@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { brotliDecompressSync } from "node:zlib";
 
 import { createPlatformDocumentAssets } from "./platform-assets.mjs";
 
-const assets = createPlatformDocumentAssets({
+const assets = await createPlatformDocumentAssets({
   documentTemplate: `<!doctype html>
 <html>
   <head><link data-platform-style /></head>
@@ -16,6 +19,9 @@ const assets = createPlatformDocumentAssets({
 assert.ok(assets.metrics.documentBytes > 0);
 assert.ok(assets.metrics.cssBytes > 0);
 assert.ok(assets.metrics.moduleBytes > 0);
+assert.equal(assets.metrics.moduleGraphInputs, 1);
+assert.equal(assets.metrics.moduleChunkCount, 0);
+assert.deepEqual(assets.chunkPaths, []);
 assert.match(assets.documentHtml, /rel="stylesheet" href="\/platform\/assets\/platform\.[a-f0-9]+\.css"/);
 assert.match(assets.documentHtml, /type="module" src="\/platform\/assets\/platform\.[a-f0-9]+\.js"/);
 assert.doesNotMatch(assets.documentHtml, /data-platform-style/);
@@ -57,5 +63,89 @@ result = request(assets.cssPath, { headers: { "if-none-match": result.headers.ET
 assert.equal(result.status, 304);
 
 assert.equal(request("/platform/assets/missing.js").handled, false);
+
+const fixtureRoot = await mkdtemp(path.join(tmpdir(), "platform-assets-"));
+try {
+  await mkdir(path.join(fixtureRoot, "dist"), { recursive: true });
+  await writeFile(
+    path.join(fixtureRoot, "dist", "fixture.js"),
+    'export const fixtureValue = "bundled";\n',
+  );
+  await writeFile(
+    path.join(fixtureRoot, "dist", "lazy-fixture.js"),
+    'export const lazyFixtureValue = "lazy-bundled";\n',
+  );
+  const bundledAssets = await createPlatformDocumentAssets(
+    {
+      documentTemplate: `<!doctype html>
+<html>
+  <head><link data-platform-style /></head>
+  <body><div id="app"></div><script type="module" data-platform-module></script></body>
+</html>`,
+      styleSource: "body { color: white; }",
+      moduleSource: `
+        import { fixtureValue } from "/dist/fixture.js";
+        console.log(fixtureValue);
+        window.loadFixture = () => import("/dist/lazy-fixture.js");
+      `,
+    },
+    {
+      packageRoot: fixtureRoot,
+    },
+  );
+  const bundledResult = (() => {
+    const response = { status: 0, headers: {}, body: null };
+    assert.equal(
+      bundledAssets.handleRequest(
+        { method: "GET", headers: { "accept-encoding": "br" } },
+        {
+          writeHead(status, headers) {
+            response.status = status;
+            response.headers = headers;
+          },
+          end(body) {
+            response.body = body ?? null;
+          },
+        },
+        new URL(bundledAssets.modulePath, "http://localhost"),
+      ),
+      true,
+    );
+    return response;
+  })();
+  const bundledModuleSource = brotliDecompressSync(
+    bundledResult.body,
+  ).toString("utf8");
+  assert.equal(bundledAssets.metrics.moduleGraphInputs, 3);
+  assert.equal(bundledAssets.metrics.moduleChunkCount, 1);
+  assert.equal(bundledAssets.chunkPaths.length, 1);
+  assert.match(bundledModuleSource, /"bundled"/);
+  assert.match(bundledModuleSource, /console\.log\(/);
+  assert.doesNotMatch(bundledModuleSource, /\/dist\/fixture\.js/);
+  const chunkResponse = { status: 0, headers: {}, body: null };
+  assert.equal(
+    bundledAssets.handleRequest(
+      { method: "GET", headers: { "accept-encoding": "br" } },
+      {
+        writeHead(status, headers) {
+          chunkResponse.status = status;
+          chunkResponse.headers = headers;
+        },
+        end(body) {
+          chunkResponse.body = body ?? null;
+        },
+      },
+      new URL(bundledAssets.chunkPaths[0], "http://localhost"),
+    ),
+    true,
+  );
+  assert.equal(chunkResponse.status, 200);
+  assert.match(
+    brotliDecompressSync(chunkResponse.body).toString("utf8"),
+    /lazy-bundled/,
+  );
+} finally {
+  await rm(fixtureRoot, { recursive: true, force: true });
+}
 
 console.log("Platform document and immutable asset delivery contracts passed.");

@@ -1,11 +1,17 @@
 /** Ordered service compatibility routes. */
 export function createServiceRoutes(bindings) {
-    const { agentRuntimeService, apiKeysService, calendarService, configureHomeService, evidenceAgentsService, filesService, guardrailsService, imagineService, inferenceService, marketplaceService, metronomeService, organizationsService, platformDocumentAssets, projectsService, securityService, systemSkillSourceService, teamsService, } = bindings;
+    const { agentRuntimeService, apiKeysService, calendarService, configureHomeService, connectorCredentialCatalogService, connectorMcpService, evidenceAgentsService, filesService, guardrailsService, imagineService, inferenceService, marketplaceService, metronomeService, organizationsService, platformDocumentAssets, projectsService, securityService, systemSkillSourceService, teamsService, } = bindings;
     return function handleServiceRoutes(req, res, url) {
         if (platformDocumentAssets.handleRequest(req, res, url)) {
             return true;
         }
         if (systemSkillSourceService.handleRequest(req, res, url)) {
+            return true;
+        }
+        if (connectorMcpService?.handleRequest?.(req, res, url)) {
+            return true;
+        }
+        if (connectorCredentialCatalogService?.handleRequest?.(req, res, url)) {
             return true;
         }
         if (agentRuntimeService.handleRequest(req, res, url)) {

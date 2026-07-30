@@ -11,6 +11,7 @@ export const FINE_TUNING_APP_NAVIGATION_SCRIPT = String.raw`        function ope
           const requestedJobId = String(options.jobId || options.fineTuneJobId || "").trim();
           if (requestedJobId) {
             setSelectedFineTuningJobId(requestedJobId);
+            setFineTuningDetailTab("general");
           }
           setFineTuningPageMode(options.mode === "detail" || requestedJobId ? "detail" : "overview");
           setActivePage("fine-tuning");
@@ -18,6 +19,7 @@ export const FINE_TUNING_APP_NAVIGATION_SCRIPT = String.raw`        function ope
 
         function openFineTuningOverviewPage() {
           setSelectedFineTuningJobId("");
+          setFineTuningDetailTab("general");
           openFineTuningPage({ mode: "overview" });
         }
 

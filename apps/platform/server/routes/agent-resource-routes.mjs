@@ -6,7 +6,7 @@ export function createAgentResourceRoutes(bindings) {
             return true;
         }
         if (req.method === "GET" && url.pathname === "/api/real/agents") {
-            void proxyUpstreamGet(req, res, "/agents");
+            void proxyUpstreamGet(req, res, "/agents" + (url.search || ""));
             return true;
         }
         if (modelsService.handleRequest(req, res, url)) {

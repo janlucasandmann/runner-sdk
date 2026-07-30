@@ -1,19 +1,4 @@
 export const PLAYGROUND_ASSURANCE_CSS = String.raw`
-  .assurance-overview-guide {
-    display: grid;
-    gap: 28px;
-  }
-
-  .assurance-overview-guide__hero {
-    max-width: 940px;
-  }
-
-  .assurance-overview-guide__cards {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px;
-  }
-
   .resource-overview-page.is-assurance {
     --resource-overview-accent: #8f7bff;
   }

@@ -129,7 +129,7 @@ function createProjectRolePermissionSet(roleId: string): PlatformPermissionSet {
     return createAdminPermissionSet("project_team_role");
   const permissionSet = createPlatformDefaultPermissionSet("project_team_role");
   const actionIds = getSubjectActionIds("project_team_role");
-  if (roleId === "contributor") {
+  if (roleId === "contributor" || roleId === "developer") {
     setRingAccess(permissionSet, "ring_1", "full_access");
     setRingAccess(permissionSet, "ring_2", "full_access");
     setRingAccess(permissionSet, "ring_3", "no_access");
@@ -437,7 +437,7 @@ function createEvaluationRolePermissionSet(roleId: string): PlatformPermissionSe
   if (roleId === "owner" || roleId === "admin")
     return createAdminPermissionSet("evaluation_team_role");
   const permissionSet = createPlatformDefaultPermissionSet("evaluation_team_role");
-  if (roleId === "contributor") {
+  if (roleId === "contributor" || roleId === "developer") {
     setRingAccess(permissionSet, "ring_1", "full_access");
     setRingAccess(permissionSet, "ring_2", "full_access");
     setRingAccess(permissionSet, "ring_3", "ask_for_permission");
@@ -447,6 +447,7 @@ function createEvaluationRolePermissionSet(roleId: string): PlatformPermissionSe
         "evaluation_view",
         "evaluation_runs_view",
         "evaluation_run",
+        "evaluation_runs_manage",
         "evaluation_cases_manage",
         "evaluation_settings_manage",
         "evaluation_versions_manage",
@@ -461,10 +462,15 @@ function createEvaluationRolePermissionSet(roleId: string): PlatformPermissionSe
   setRingAccess(permissionSet, "ring_2", "no_access");
   setRingAccess(permissionSet, "ring_3", "no_access");
   applyAccess(permissionSet, ["evaluation_view", "evaluation_runs_view"], "read_only");
-  setActionAccess(permissionSet, "evaluation_run", "full_access");
+  setActionAccess(
+    permissionSet,
+    "evaluation_run",
+    roleId === "member" ? "full_access" : "no_access",
+  );
   applyAccess(
     permissionSet,
     [
+      "evaluation_runs_manage",
       "evaluation_cases_manage",
       "evaluation_settings_manage",
       "evaluation_versions_manage",
@@ -526,7 +532,7 @@ function createTestPlanRolePermissionSet(roleId: string): PlatformPermissionSet 
   if (roleId === "owner" || roleId === "admin")
     return createAdminPermissionSet("test_plan_team_role");
   const permissionSet = createPlatformDefaultPermissionSet("test_plan_team_role");
-  if (roleId === "contributor") {
+  if (roleId === "contributor" || roleId === "developer") {
     setRingAccess(permissionSet, "ring_1", "full_access");
     setRingAccess(permissionSet, "ring_2", "full_access");
     setRingAccess(permissionSet, "ring_3", "ask_for_permission");
@@ -556,7 +562,11 @@ function createTestPlanRolePermissionSet(roleId: string): PlatformPermissionSet 
     ["test_plan_view", "test_run_results_view"],
     "read_only",
   );
-  setActionAccess(permissionSet, "test_run", "full_access");
+  setActionAccess(
+    permissionSet,
+    "test_run",
+    roleId === "member" ? "full_access" : "no_access",
+  );
   applyAccess(
     permissionSet,
     [

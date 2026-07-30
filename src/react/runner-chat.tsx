@@ -1383,6 +1383,8 @@ export function RunnerChat({
   const showActiveRunStopButton =
     !showRunPreparationIndicator &&
     (hasRunningTurn || hydratedThreadIsRunning || hasActiveDeepResearchSession || isRunning || isStoppingRun);
+  const onThreadStatusChangeRef = useRef(onThreadStatusChange);
+  onThreadStatusChangeRef.current = onThreadStatusChange;
   useEffect(() => {
     if (!currentThreadId || !hasRunningTurn || hydratedThreadIsRunning) {
       return;
@@ -1390,11 +1392,11 @@ export function RunnerChat({
 
     setHydratedThreadStatus("running");
     try {
-      onThreadStatusChange?.(currentThreadId, "running");
+      onThreadStatusChangeRef.current?.(currentThreadId, "running");
     } catch (error) {
       reportRunnerLifecycleCallbackError("onThreadStatusChange", error);
     }
-  }, [currentThreadId, hasRunningTurn, hydratedThreadIsRunning, onThreadStatusChange]);
+  }, [currentThreadId, hasRunningTurn, hydratedThreadIsRunning]);
   const trimmedInput = input.trim();
   const hasComposerText = input.length > 0;
   const stagedThreadContextCommandToneValue = stagedThreadContextCommandTone(stagedThreadContextCommand);
@@ -4597,6 +4599,7 @@ export function RunnerChat({
       if (
         executionAttachmentEntries.length === 0 &&
         !quotedSelection &&
+        !runConnectorPayload &&
         await tryHandleThreadCommunicatorMessage(taskText)
       ) {
         return;
@@ -4616,6 +4619,7 @@ export function RunnerChat({
         executionAttachmentEntries.length === 0
         && !(previewImageRunAttachments?.length)
         && !quotedSelection
+        && !runConnectorPayload
         && !hasSpecialExecutionCommand
         && await tryHandleActiveCanonicalWorkerInstruction(taskText)
       ) {
@@ -4748,6 +4752,7 @@ export function RunnerChat({
 
   function applyComposerInputValue(nextValue: string, selectionStart: number) {
     setInputSelectionStart(selectionStart);
+    setDismissedConnectorMentionKey("");
     if (tryAutoStageInput(nextValue, {
       agentCreation: enableAgentCreationCommand,
       backlogMissionControl: enableBacklogMissionControlCommand,

@@ -55,19 +55,8 @@ export function EvaluationsOverviewPage({
   onDelete,
   onDeleteMany,
 }: EvaluationsOverviewPageProps) {
-  const [runFilter, setRunFilter] = useState("all");
   const [selectedRowIds, setSelectedRowIds] = useState<ReadonlySet<string>>(
     () => new Set(),
-  );
-  const filteredRows = useMemo(
-    () =>
-      rows.filter((row) => {
-        if (runFilter === "with-runs") return row.runCount > 0;
-        if (runFilter === "without-runs") return row.runCount === 0;
-        if (runFilter === "empty") return row.caseCount === 0;
-        return true;
-      }),
-    [rows, runFilter],
   );
 
   const columns = useMemo<PlatformDataTableColumn<EvaluationOverviewRow>[]>(
@@ -204,39 +193,19 @@ export function EvaluationsOverviewPage({
     ];
   };
 
-  const scrollToTable = () => {
-    if (typeof document === "undefined") return;
-    document
-      .querySelector(
-        ".resource-overview-page.is-evaluations .resource-overview-page__table-section",
-      )
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const showRuns = () => {
-    setRunFilter("with-runs");
-    scrollToTable();
-  };
-
   return (
     <ResourceOverviewPage<EvaluationOverviewRow>
-      heroContent={
-        <EvaluationsOverviewGuide
-          evaluationCount={rows.length}
-          onCreate={onCreate}
-          onBrowse={scrollToTable}
-          onShowCompletedRuns={showRuns}
-        />
-      }
+      heroContent={<EvaluationsOverviewGuide />}
       showPeriodSelector={false}
       controlsPortalId={controlsPortalId}
       className="is-evaluations"
       table={{
-        rows: filteredRows,
+        rows,
         columns,
         getRowId: (row) => row.id,
         ariaLabel: "Evaluations",
         className: "resource-overview-table is-evaluations",
+        variant: "catalog-ui",
         sorting: { defaultValue: { id: "updated", direction: "desc" } },
         selection: {
           enabled: true,
@@ -247,27 +216,12 @@ export function EvaluationsOverviewPage({
         },
         pagination: false,
         toolbar: {
-          title: "All Evaluations",
           search: {
             placeholder: "Search evaluations",
             getSearchText: (row) =>
               row.searchText ||
               `${row.name} ${row.evaluatorLabel} ${row.creatorLabel} ${row.updatedLabel}`,
           },
-          filters: [
-            {
-              id: "runs",
-              label: "Runs",
-              value: runFilter,
-              onChange: setRunFilter,
-              options: [
-                { id: "all", label: "All Evaluations" },
-                { id: "with-runs", label: "With Runs" },
-                { id: "without-runs", label: "Without Runs" },
-                { id: "empty", label: "Empty Dataset" },
-              ],
-            },
-          ],
           primaryAction: { label: "Evaluation", icon: Plus, onClick: onCreate },
         },
         getRowActions,

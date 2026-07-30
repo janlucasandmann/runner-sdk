@@ -123,6 +123,9 @@ export const EVALUATIONS_PAGE_CONTROLLER_DATASET_CASE_DETAIL_SCRIPT = String.raw
           const settings = React.createElement("div", {
               className: "playground-evaluations-dataset-case-settings-content",
             },
+            React.createElement("h2", {
+              className: "playground-evaluations-dataset-case-settings-title",
+            }, "Case Settings"),
             React.createElement("section", {
                 className: "playground-evaluations-dataset-case-configuration",
               },
@@ -203,7 +206,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_DATASET_CASE_DETAIL_SCRIPT = String.raw
                 : null,
               renderEvaluationDetailSidebarRow("created", "Created", formatPlaygroundEvaluationDate(draft.createdAt)),
               renderEvaluationDetailSidebarRow("updated", "Updated", formatPlaygroundEvaluationDate(draft.updatedAt || draft.createdAt)),
-              React.createElement(PlatformSecondaryButton, {
+              React.createElement(PlatformPrimaryButton, {
                 type: "button",
                 size: "small",
                 fullWidth: true,

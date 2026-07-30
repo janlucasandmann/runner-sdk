@@ -4,67 +4,62 @@ import type {
   PlatformPluginConnectionStatus,
 } from "./plugin-connection-types.js";
 import { normalizePlatformConnectionCredentials } from "../../shared/connections/connection-credentials.js";
+import {
+  getPlatformConnectorCatalogEntry,
+  listPlatformConnectorCatalogEntries,
+} from "../../../platform-integrations/connectors/index.js";
+
+const LEGACY_API_PATHS: Readonly<
+  Partial<Record<PlatformPluginConnectionId, string>>
+> = Object.freeze({
+  github: "github",
+  notion: "notion",
+  "google-drive": "google-drive",
+  gmail: "gmail",
+  "one-drive": "onedrive",
+  jira: "jira",
+});
+
+function createConnectionDefinition(
+  id: PlatformPluginConnectionId,
+): PlatformPluginConnectionDefinition {
+  const catalogEntry = getPlatformConnectorCatalogEntry(id);
+  if (!catalogEntry || catalogEntry.kind !== "plugin") {
+    throw new TypeError(`Unknown plugin connection provider: ${id}`);
+  }
+  const legacyPath = LEGACY_API_PATHS[id];
+  const basePath = legacyPath
+    ? `/api/aios/${legacyPath}`
+    : `/api/aios/connectors/${encodeURIComponent(id)}`;
+  return Object.freeze({
+    id,
+    label: catalogEntry.label,
+    category: catalogEntry.category,
+    logoUrl: catalogEntry.logoUrl || "",
+    authentication: catalogEntry.authentication,
+    statusPath: `${basePath}/user`,
+    loginPath: `${basePath}/login`,
+    disconnectPath: `${basePath}/disconnect`,
+    credentialsPath: `${basePath}/credentials`,
+  });
+}
+
+export const PLATFORM_PLUGIN_CONNECTION_IDS = Object.freeze(
+  listPlatformConnectorCatalogEntries("plugin").map(
+    (entry) => entry.id as PlatformPluginConnectionId,
+  ),
+) as readonly PlatformPluginConnectionId[];
 
 const CONNECTIONS: Readonly<
   Record<PlatformPluginConnectionId, PlatformPluginConnectionDefinition>
-> = Object.freeze({
-  github: Object.freeze({
-    id: "github",
-    label: "GitHub",
-    category: "Source control",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
-    statusPath: "/api/aios/github/user",
-    loginPath: "/api/aios/github/login",
-    disconnectPath: "/api/aios/github/disconnect",
-  }),
-  notion: Object.freeze({
-    id: "notion",
-    label: "Notion",
-    category: "Knowledge",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg",
-    statusPath: "/api/aios/notion/user",
-    loginPath: "/api/aios/notion/login",
-    disconnectPath: "/api/aios/notion/disconnect",
-  }),
-  "google-drive": Object.freeze({
-    id: "google-drive",
-    label: "Google Drive",
-    category: "Storage",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg",
-    statusPath: "/api/aios/google-drive/user",
-    loginPath: "/api/aios/google-drive/login",
-    disconnectPath: "/api/aios/google-drive/disconnect",
-  }),
-  gmail: Object.freeze({
-    id: "gmail",
-    label: "Gmail",
-    category: "Channels",
-    logoUrl: "/img/plugins/gmail.svg",
-    statusPath: "/api/aios/gmail/user",
-    loginPath: "/api/aios/gmail/login",
-    disconnectPath: "/api/aios/gmail/disconnect",
-  }),
-  "one-drive": Object.freeze({
-    id: "one-drive",
-    label: "OneDrive",
-    category: "Storage",
-    logoUrl:
-      "https://upload.wikimedia.org/wikipedia/commons/e/e7/Microsoft_OneDrive_Icon_%282025_-_present%29.svg",
-    statusPath: "/api/aios/onedrive/user",
-    loginPath: "/api/aios/onedrive/login",
-    disconnectPath: "/api/aios/onedrive/disconnect",
-  }),
-  jira: Object.freeze({
-    id: "jira",
-    label: "Jira",
-    category: "Project management",
-    logoUrl:
-      "https://upload.wikimedia.org/wikipedia/commons/8/8a/Jira_Logo.svg",
-    statusPath: "/api/aios/jira/user",
-    loginPath: "/api/aios/jira/login",
-    disconnectPath: "/api/aios/jira/disconnect",
-  }),
-});
+> = Object.freeze(
+  Object.fromEntries(
+    PLATFORM_PLUGIN_CONNECTION_IDS.map((id) => [
+      id,
+      createConnectionDefinition(id),
+    ]),
+  ) as Record<PlatformPluginConnectionId, PlatformPluginConnectionDefinition>,
+);
 
 export function isPlatformPluginConnectionId(value: string): value is PlatformPluginConnectionId {
   return Object.hasOwn(CONNECTIONS, value);
@@ -138,6 +133,17 @@ export function getPlatformPluginConnectionIdentity(
         ? (["workspaceName", "name", "email"] as const)
         : id === "jira"
           ? (["siteName", "displayName", "email", "url"] as const)
-        : (["email", "username", "name"] as const);
+          : ([
+              "email",
+              "username",
+              "displayName",
+              "accountName",
+              "workspaceName",
+              "teamName",
+              "projectName",
+              "domain",
+              "name",
+              "url",
+            ] as const);
   return firstProfileText(status.profile, fields) || "Connected";
 }

@@ -13849,6 +13849,84 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   position: relative;
 }
 
+.tb-runner-chat .tb-composer-selected-connectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 16px 0;
+}
+
+.tb-runner-chat .tb-composer-selected-connector {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 32px;
+  padding: 0 6px 0 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.075);
+  color: white;
+}
+
+.tb-runner-chat .tb-composer-selected-connector-icon-shell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  overflow: hidden;
+  border-radius: 5px;
+}
+
+.tb-runner-chat .tb-composer-selected-connector-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tb-runner-chat .tb-composer-selected-connector-icon {
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.tb-runner-chat .tb-composer-selected-connector-name {
+  min-width: 0;
+  overflow: hidden;
+  color: white;
+  font-size: 14px;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-composer-selected-connector-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.tb-runner-chat .tb-composer-selected-connector-remove:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.tb-runner-chat .tb-composer-selected-connector-remove svg {
+  width: 14px;
+  height: 14px;
+}
+
 .tb-runner-chat .sidebar-textarea {
   width: 100%;
   min-height: 0;
@@ -13864,6 +13942,14 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   line-height: 1.45;
   font-family: inherit;
   transition: padding-left 160ms ease;
+}
+
+.tb-runner-chat .sidebar-textarea-connectors {
+  padding-top: 10px;
+}
+
+.tb-runner-chat .tb-composer-textarea-shell-connectors .tb-staged-thread-command {
+  top: 54px;
 }
 
 .tb-runner-chat .sidebar-textarea::placeholder {
@@ -14451,7 +14537,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   width: 240px;
 }
 
-.tb-runner-chat .tb-popup-menu-main:not(.tb-popup-menu-slash):not(.tb-ad-creation-popup),
+.tb-runner-chat .tb-popup-menu-main:not(.tb-popup-menu-slash):not(.tb-ad-creation-popup):not(.tb-popup-menu-connector-mention),
 .tb-runner-chat .tb-popup-menu-context {
   padding-top: 4px;
   padding-bottom: 4px;
@@ -14462,6 +14548,162 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   max-height: 220px;
   left: 0;
   overflow-y: auto;
+}
+
+.tb-runner-chat .tb-popup-menu-connector-mention {
+  left: 0;
+  display: flex;
+  width: 100%;
+  max-height: 356px;
+  padding: 0;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+.tb-runner-chat .tb-connector-mention-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 38px;
+  padding: 0 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.tb-runner-chat .tb-connector-mention-list {
+  min-height: 0;
+  padding: 4px;
+  overflow-y: auto;
+}
+
+.tb-runner-chat .tb-connector-mention-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 54px;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: white;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+.tb-runner-chat .tb-connector-mention-row.is-active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tb-runner-chat .tb-connector-mention-row:disabled {
+  cursor: default;
+}
+
+.tb-runner-chat .tb-connector-mention-icon-shell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.tb-runner-chat .tb-connector-mention-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tb-runner-chat .tb-connector-mention-icon {
+  width: 17px;
+  height: 17px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.tb-runner-chat .tb-connector-mention-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tb-runner-chat .tb-connector-mention-name {
+  overflow: hidden;
+  color: white;
+  font-size: 14px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-connector-mention-description {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-connector-mention-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 54px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.tb-runner-chat .tb-connector-mention-check {
+  width: 17px;
+  height: 17px;
+  color: white;
+}
+
+.tb-runner-chat .tb-connector-mention-spinner {
+  width: 16px;
+  height: 16px;
+  animation: tb-runner-spin 0.8s linear infinite;
+}
+
+.tb-runner-chat .tb-connector-mention-empty {
+  padding: 18px 14px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+}
+
+.tb-runner-chat .tb-connector-mention-manage {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  gap: 9px;
+  padding: 0 14px;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.tb-runner-chat .tb-connector-mention-manage:hover {
+  background: rgba(255, 255, 255, 0.075);
+  color: white;
+}
+
+.tb-runner-chat .tb-connector-mention-manage svg {
+  width: 16px;
+  height: 16px;
 }
 
 .tb-runner-chat .tb-popup-menu-slash-empty {

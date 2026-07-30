@@ -25,6 +25,63 @@ test("failed target threads cannot be converted into scored Evaluation output", 
   );
 });
 
+test("case refinement is authorized before a hidden Agent thread is created", async () => {
+  const backendRequests = [];
+  const cloudRequests = [];
+  let response;
+  const runtime = createPlaygroundEvaluationsRuntime({
+    enrichThreadPayloadWithAgentGuardrails: async (_req, _url, _apiKey, payload) => payload,
+    fetchAiosApi: async (_requestContext, path, init = {}) => {
+      backendRequests.push({ path, method: init.method || "GET" });
+      return new Response(JSON.stringify({
+        error: "Evaluation not found",
+      }), {
+        status: 404,
+        headers: { "content-type": "application/json" },
+      });
+    },
+    fetchAiosCloud: async (_url, init = {}) => {
+      cloudRequests.push({ url: _url, method: init.method || "GET" });
+      return new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    },
+    hasAiosSession: () => true,
+    parseUpstreamUrl: () => "https://runner.example.test/v1",
+    readOptionalApiKey: () => "",
+    readRequestBody: async () => ({
+      evaluationSet: {
+        id: "evaluation_restricted",
+        name: "Restricted evaluation",
+        evaluator: { type: "agent", agentId: "agent_refiner" },
+        environmentId: "computer_1",
+      },
+      threadId: "thread_source",
+      refinerAgentId: "agent_refiner",
+      environmentId: "computer_1",
+    }),
+    sendJson: (_res, status, payload) => {
+      response = { status, payload };
+    },
+    withProxyOrganizationHeader: (_req, _body, headers) => headers,
+  });
+
+  assert.equal(runtime.handleRequest(
+    { method: "POST", headers: {}, url: "/api/real/evaluations/cases/from-thread" },
+    {},
+    new URL("http://localhost/api/real/evaluations/cases/from-thread"),
+  ), true);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  assert.deepEqual(backendRequests, [{
+    path: "/api/evaluations/evaluation_restricted?accessAction=evaluation_cases_manage",
+    method: "GET",
+  }]);
+  assert.deepEqual(cloudRequests, []);
+  assert.equal(response?.status, 404);
+});
+
 function maybeEvaluationLeaseResponse(path, init = {}, runId) {
   const leasePath = `/api/evaluations/runs/${runId}/lease`;
   if (path === `${leasePath}/heartbeat` && init.method === "POST") {

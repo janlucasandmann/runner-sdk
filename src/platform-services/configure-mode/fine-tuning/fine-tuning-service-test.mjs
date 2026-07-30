@@ -101,6 +101,12 @@ assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /React\.createEl
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /isPlanned[\s\S]*?"Planned"/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.jobs, /phase === "planned" \|\| status === "planned"/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(FineTuningDetailPage/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(React\.Fragment[\s\S]*?React\.createElement\(FineTuningDetailPage/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /typeof createPortal === "function"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /playground-fine-tuning-detail-topnav-actions/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /platform-service-detail-page__sidebar-actions/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /sidebarToggle/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /activeTab:/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /waiting for its delivery gate/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(PlatformAnalyticsSection/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /function renderFineTuningDescriptionEditor/);
@@ -120,13 +126,17 @@ assert.equal(normalizeFineTuningPhase("planned"), "planned");
 assert.equal(isFineTuningPhaseActive("planned"), false);
 
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.state, /fineTuningJobs/);
+assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.state, /fineTuningDetailTab/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.navigation, /function openFineTuningPage/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyCapture, /fineTuneJobId/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.page === "fine-tuning"/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.lifecycle, /selectedFineTuningJobId/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderFineTuningPageNav/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-fine-tuning-overview-controls/);
+assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformSwitch/);
+assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-fine-tuning-nav-actions/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView, /function renderFineTuningPage/);
+assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView, /topNavActionsPortalId/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "fine-tuning"/);
 assert.doesNotThrow(() => new Function(String.raw`
   function fineTuningHostIntegration() {

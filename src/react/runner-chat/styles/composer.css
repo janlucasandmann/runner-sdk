@@ -690,7 +690,7 @@
   width: 240px;
 }
 
-.tb-runner-chat .tb-popup-menu-main:not(.tb-popup-menu-slash):not(.tb-ad-creation-popup),
+.tb-runner-chat .tb-popup-menu-main:not(.tb-popup-menu-slash):not(.tb-ad-creation-popup):not(.tb-popup-menu-connector-mention),
 .tb-runner-chat .tb-popup-menu-context {
   padding-top: 4px;
   padding-bottom: 4px;

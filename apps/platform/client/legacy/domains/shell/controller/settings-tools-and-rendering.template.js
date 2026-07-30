@@ -976,6 +976,10 @@
             if (pluginId === "gitlab") {
               return "Available via webhooks";
             }
+            const connectorStatus = getConnectorStatusRecord(pluginId);
+            if (connectorStatus) {
+              return getPlatformPluginConnectionIdentity(pluginId, connectorStatus);
+            }
             return "Not connected";
           }
   
@@ -1437,7 +1441,7 @@
   	        }
   
   	        function buildPluginsCatalog() {
-            return [
+            const specializedPlugins = [
               {
                 id: "github",
                 label: "GitHub",
@@ -1573,6 +1577,52 @@
                   : [{ label: "Connect Jira", onClick: () => { void handleJiraAuthConnect(); }, tone: "primary" }],
               },
             ];
+            const specializedPluginsById = new Map(
+              specializedPlugins.map((plugin) => [plugin.id, plugin]),
+            );
+
+            return listPlatformConnectorCatalogEntries("plugin").map((catalogEntry) => {
+              const specializedPlugin = specializedPluginsById.get(catalogEntry.id);
+              if (specializedPlugin) {
+                return {
+                  ...specializedPlugin,
+                  label: catalogEntry.label,
+                  shortLabel: catalogEntry.shortLabel,
+                  logoUrl: catalogEntry.logoUrl || specializedPlugin.logoUrl,
+                  description: catalogEntry.description,
+                  category: catalogEntry.category,
+                };
+              }
+
+              const connectionStatus = getConnectorStatusRecord(catalogEntry.id);
+              const connected = Boolean(connectionStatus?.connected);
+              const openConnectorDetails = () => {
+                setToolsView("plugins");
+                setSelectedPluginId(catalogEntry.id);
+                setPluginDetailTab(connected ? "general" : "tutorial");
+              };
+              return {
+                id: catalogEntry.id,
+                label: catalogEntry.label,
+                shortLabel: catalogEntry.shortLabel,
+                logoUrl: catalogEntry.logoUrl,
+                description: catalogEntry.description,
+                connected,
+                statusCopy: getPluginConnectionSummary(catalogEntry.id),
+                category: catalogEntry.category,
+                ...getPluginStaticDetail(catalogEntry.id),
+                capabilities: catalogEntry.capabilities.map(
+                  (capability) => capability.description,
+                ),
+                actions: [{
+                  label: connected
+                    ? "Manage " + catalogEntry.label
+                    : "Connect " + catalogEntry.label,
+                  onClick: openConnectorDetails,
+                  tone: connected ? "default" : "primary",
+                }],
+              };
+            });
           }
   
           function buildTagsCatalog() {
@@ -1945,6 +1995,14 @@
               },
             }));
           }
+
+          function usesProviderManagedConnectorCredentials(resourceId) {
+            return Boolean(
+              getPlaygroundIntegrationProvider(
+                String(resourceId || "").trim().toLowerCase(),
+              ),
+            );
+          }
   
           async function saveTagDetailConfig(tagId, config) {
             const normalizedTagId = String(tagId || "").trim().toLowerCase();
@@ -1969,7 +2027,11 @@
                   defaultProjectName: config.defaultProjectName || "",
                   defaultAgentId: config.defaultAgentId || "",
                   defaultAgentName: config.defaultAgentName || "",
-                  credentials: normalizePlatformConnectionCredentials(config.credentials),
+                  ...(usesProviderManagedConnectorCredentials(normalizedTagId)
+                    ? {}
+                    : {
+                        credentials: normalizePlatformConnectionCredentials(config.credentials),
+                      }),
                   permissionSet: normalizePlaygroundPermissionSet(config.permissionSet, subjectType),
                   accessControl: config.accessControl && typeof config.accessControl === "object"
                     ? config.accessControl
@@ -2162,6 +2224,7 @@
               if (
                 JSON.stringify(normalized.credentials)
                 !== JSON.stringify(loadedConfig.credentials)
+                && !usesProviderManagedConnectorCredentials(normalizedTagId)
               ) {
                 void saveTagDetailConfig(normalizedTagId, normalized).catch((error) => {
                   console.error("Failed to finalize loaded connector credentials:", error);
@@ -2210,7 +2273,10 @@
               credentials: normalizePlatformConnectionCredentials(credentials),
             });
             commitTagDetailConfig(normalizedResourceId, nextConfig, { save: false });
-            if (!hasSessionAuth) {
+            if (
+              !hasSessionAuth
+              || usesProviderManagedConnectorCredentials(normalizedResourceId)
+            ) {
               return nextConfig;
             }
             const savedConfig = await saveTagDetailConfig(normalizedResourceId, nextConfig);
@@ -2246,6 +2312,9 @@
               const connectionStarted = await beginConnection({
                 credentialId: pendingCredential.id,
                 credentialName: pendingCredential.name,
+                ...(options.values && typeof options.values === "object"
+                  ? { values: options.values }
+                  : {}),
                 organizationId: String(
                   billingOrganizationId || settingsBudgetStatus?.organizationId || "",
                 ).trim(),
@@ -2257,6 +2326,35 @@
               });
               if (connectionStarted === false) {
                 throw new Error("Unable to start connector authorization.");
+              }
+              if (
+                connectionStarted
+                && typeof connectionStarted === "object"
+                && !Array.isArray(connectionStarted)
+              ) {
+                setGenericConnectorStatuses((current) => ({
+                  ...current,
+                  [normalizedResourceId]: connectionStarted,
+                }));
+                const providerCredentials = normalizePlatformConnectionCredentials(
+                  connectionStarted.credentials,
+                );
+                await persistTagPluginCredentials(
+                  normalizedResourceId,
+                  providerCredentials.length
+                    ? reconcilePlatformConnectionCredentials(
+                        getTagPluginCredentials(normalizedResourceId),
+                        providerCredentials,
+                      )
+                    : finalizePlatformConnectionCredential(
+                        getTagPluginCredentials(normalizedResourceId),
+                        pendingCredential.id,
+                        {
+                          method: String(options.method || pendingCredential.method),
+                          lastCheckedAt: new Date().toISOString(),
+                        },
+                      ),
+                );
               }
             } catch (error) {
               await persistTagPluginCredentials(
@@ -2435,6 +2533,8 @@
             const provider = getPlaygroundIntegrationProvider(normalizedResourceId);
             let beginConnection = null;
             let disabled = false;
+            let credentialFields = [];
+            let authentication = "";
 
             if (provider === "github") {
               beginConnection = handleGithubAuthConnect;
@@ -2459,8 +2559,82 @@
                 setPluginDetailTab("tutorial");
                 return true;
               };
-            } else if (
-              fallbackAction
+            }
+
+            if (!beginConnection && provider) {
+              try {
+                const definition = getPlatformPluginConnectionDefinition(provider);
+                authentication = String(definition?.authentication || "oauth2");
+                if (authentication === "oauth2") {
+                  beginConnection = (options = {}) => handleConnectorAuthConnect(
+                    provider,
+                    definition.label || normalizedResourceId,
+                    options,
+                  );
+                } else if (
+                  authentication === "api-key"
+                  || authentication === "service-account"
+                ) {
+                  const accessProfileField = {
+                    id: "permissionClass",
+                    label: "Credential access",
+                    type: "select",
+                    description: "This is an additional Computer Agents ceiling. Provider IAM and restricted-key permissions still apply.",
+                    required: true,
+                    options: [
+                      {
+                        value: "read_only",
+                        label: "Read only",
+                        description: "Allow only read operations supported by this credential.",
+                      },
+                      {
+                        value: "read_write",
+                        label: "Read and write",
+                        description: "Allow supported write operations when provider permissions also allow them.",
+                      },
+                    ],
+                  };
+                  credentialFields = authentication === "service-account"
+                    ? [{
+                        id: "serviceAccountJson",
+                        label: "Service account JSON",
+                        type: "textarea",
+                        placeholder: "{\n  \"type\": \"service_account\",\n  ...\n}",
+                        description: "The private key is encrypted at rest and is never returned to the browser.",
+                        required: true,
+                      }, accessProfileField]
+                    : [{
+                        id: "apiKey",
+                        label: definition.label === "Stripe"
+                          ? "Restricted API key"
+                          : "Access token",
+                        type: "password",
+                        placeholder: definition.label === "Stripe"
+                          ? "rk_..."
+                          : "Enter access token",
+                        description: definition.label === "Stripe"
+                          ? "Use a restricted key with only the permissions this connector needs."
+                          : "The token is encrypted at rest and is never returned to the browser.",
+                        required: true,
+                      }, accessProfileField];
+                  beginConnection = (options = {}) => savePlatformPluginCredentials(
+                    provider,
+                    {
+                      credentialId: options.credentialId,
+                      credentialName: options.credentialName,
+                      organizationId: options.organizationId,
+                      values: options.values || {},
+                    },
+                  );
+                }
+              } catch {
+                // Non-catalog integrations retain their existing setup flow.
+              }
+            }
+
+            if (
+              !beginConnection
+              && fallbackAction
               && typeof fallbackAction.onClick === "function"
               && fallbackAction.tone !== "destructive"
             ) {
@@ -2481,11 +2655,15 @@
               label: "Add Credentials",
               tone: "primary",
               disabled,
-              onClick: (credentialName) => beginTagPluginCredentialConnection(
+              ...(credentialFields.length ? { credentialFields } : {}),
+              onClick: (credentialName, values) => beginTagPluginCredentialConnection(
                 normalizedResourceId,
                 credentialName,
                 beginConnection,
-                { method: getPluginDetailAuthMethod(normalizedResourceId) },
+                {
+                  method: getPluginDetailAuthMethod(normalizedResourceId),
+                  ...(values && typeof values === "object" ? { values } : {}),
+                },
               ),
             };
           }

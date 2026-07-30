@@ -9,9 +9,19 @@
       <link rel="apple-touch-icon" sizes="180x180" href="/img/logos/apple-touch-icon.png" />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      <link
+        rel="preload"
+        as="style"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        onload="this.onload=null;this.rel='stylesheet'"
+      />
   __PLATFORM_COMPATIBILITY_BINDING_000__
-      <link rel="stylesheet" href="https://esm.sh/@xyflow/react@12.8.4/dist/style.css" />
+      <link
+        rel="preload"
+        as="style"
+        href="https://esm.sh/@xyflow/react@12.8.4/dist/style.css"
+        onload="this.onload=null;this.rel='stylesheet'"
+      />
       <link rel="stylesheet" href="/dist/platform-ui/components/composite/data-table/data-table.css" />
       <link rel="stylesheet" href="/dist/platform-ui/components/composite/popup/popup.css" />
       <link rel="stylesheet" href="/dist/platform-ui/components/composite/modal/modal.css" />
@@ -23,6 +33,27 @@
       <link rel="stylesheet" href="/dist/platform-ui/components/ui/search/search.css" />
       <link rel="stylesheet" href="/dist/platform-ui/components/ui/selector/selector.css" />
       <link rel="stylesheet" href="/dist/platform-ui/components/ui/switch/switch.css" />
+
+      <!--
+        The platform module is intentionally large and discovers these remote
+        ESM dependencies only after its own download. Start the direct module
+        requests while the local bundle is in flight to remove that waterfall.
+      -->
+      <link rel="modulepreload" crossorigin href="https://esm.sh/react@18.3.1" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/react@18.3.1/jsx-runtime" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/react-dom@18.3.1?external=react" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/react-dom@18.3.1/client" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/lucide-react@0.575.0?external=react" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/date-fns@4.1.0?bundle" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/date-fns@4.1.0/locale/en-US?bundle" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/dompurify@3.3.3?bundle" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/react-markdown@10.1.0?bundle&external=react" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/rehype-raw@7.0.0?bundle" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/remark-gfm@4.0.1?bundle" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/unist-util-visit@5.0.0" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/chart.js@4.5.1/auto?bundle" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/@xyflow/react@12.8.4?external=react,react-dom" />
+      <link rel="modulepreload" crossorigin href="https://esm.sh/react-big-calendar@1.19.4?bundle&external=react,react-dom" />
   
       <script type="importmap">
         {

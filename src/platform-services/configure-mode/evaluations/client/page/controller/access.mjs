@@ -488,146 +488,49 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
             optionClassName: "playground-agents-detail-owner-option",
           });
         };
-        const getEvaluationTeamRolePermissionSets = (set = activeSet) => {
-          const source = getEvaluationAccessMetadata(set).teamRolePermissionSets;
-          return source && typeof source === "object" && !Array.isArray(source) ? source : {};
-        };
         const getEvaluationTeamRolePermissionSet = (teamId, roleId, set = activeSet) => {
-          const normalizedTeamId = String(teamId || "").trim();
-          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
-          const teamRoleSets = getEvaluationTeamRolePermissionSets(set);
-          return normalizePlaygroundRolePermissionSet(
-            teamRoleSets?.[normalizedTeamId]?.[normalizedRoleId],
+          return getPlatformTeamRolePermissionSet(
+            getEvaluationAccessMetadata(set),
+            teamId,
+            roleId,
             "evaluation_team_role",
-            normalizedRoleId
           );
         };
-        const updateEvaluationPermissionSet = (updater) => {
-          const principalId = isPlatformSystemAccessPrincipalId(evaluationAccessTeamId)
-            ? normalizePlatformAccessPrincipalId(evaluationAccessTeamId)
-            : PLATFORM_ALL_AGENTS_PRINCIPAL_ID;
-          const currentPermissionSet = getEvaluationPermissionSet(activeSet, principalId);
-          const nextPermissionSet = normalizePlaygroundPermissionSet(
-            typeof updater === "function" ? updater(currentPermissionSet) : updater,
-            "evaluation"
-          );
+        const getEvaluationSystemRolePermissionSet = (
+          principalId,
+          roleId,
+          set = activeSet
+        ) => getPlatformSystemPrincipalRolePermissionSet(
+          getEvaluationAccessMetadata(set),
+          principalId,
+          roleId,
+          "evaluation_team_role"
+        );
+        const updateEvaluationSystemPermissionSet = (principalId, permissionSet) => {
           updateEvaluationAccessMetadata((metadata) => buildPlatformSystemPrincipalPermissionMetadata(
             metadata,
             principalId,
-            nextPermissionSet,
+            permissionSet,
             "evaluation"
           ));
         };
-        const updateEvaluationPermissionRingAccess = (ringId, nextAccess) => {
-          const ring = getPlaygroundPermissionRingDefinition(ringId);
-          updateEvaluationPermissionSet((current) => ({
-            ...current,
-            rings: {
-              ...(current.rings || {}),
-              [ring.id]: {
-                ...(current.rings?.[ring.id] || {}),
-                defaultAccess: normalizePlaygroundPermissionAccess(nextAccess, ring.defaultAccess),
-              },
-            },
-          }));
-        };
-        const updateEvaluationPermissionActionRing = (actionId, nextRingId) => {
-          const action = getPlaygroundPermissionActionDefinition(actionId);
-          if (!action) return;
-          updateEvaluationPermissionSet((current) => ({
-            ...current,
-            actions: {
-              ...(current.actions || {}),
-              [action.id]: buildPlaygroundPermissionActionPolicy(
-                current,
-                action,
-                current.actions?.[action.id] || { ringId: action.ringId },
-                getPlaygroundPermissionActionExplicitAccess(current, action),
-                normalizePlaygroundPermissionRingId(nextRingId, action.ringId)
-              ),
-            },
-          }));
-        };
-        const updateEvaluationPermissionActionAccess = (actionId, nextAccess) => {
-          const action = getPlaygroundPermissionActionDefinition(actionId);
-          if (!action) return;
-          updateEvaluationPermissionSet((current) => ({
-            ...current,
-            actions: {
-              ...(current.actions || {}),
-              [action.id]: buildPlaygroundPermissionActionPolicy(
-                current,
-                action,
-                current.actions?.[action.id] || { ringId: action.ringId },
-                nextAccess
-              ),
-            },
-          }));
-        };
-        const updateEvaluationTeamRolePermissionSet = (teamId, roleId, updater) => {
-          const normalizedTeamId = String(teamId || "").trim();
-          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
-          if (!normalizedTeamId || normalizedRoleId === "owner") return;
-          const currentSet = getEvaluationTeamRolePermissionSet(normalizedTeamId, normalizedRoleId);
-          const nextSet = normalizePlaygroundPermissionSet(
-            typeof updater === "function" ? updater(currentSet) : updater,
+        const updateEvaluationSystemRolePermissionSet = (principalId, roleId, permissionSet) => {
+          updateEvaluationAccessMetadata((metadata) => buildPlatformSystemPrincipalRolePermissionMetadata(
+            metadata,
+            principalId,
+            roleId,
+            permissionSet,
             "evaluation_team_role"
-          );
-          updateEvaluationAccessMetadata((metadata) => ({
-            teamRolePermissionSets: {
-              ...(metadata.teamRolePermissionSets && typeof metadata.teamRolePermissionSets === "object" ? metadata.teamRolePermissionSets : {}),
-              [normalizedTeamId]: {
-                ...(metadata.teamRolePermissionSets?.[normalizedTeamId] || {}),
-                [normalizedRoleId]: nextSet,
-              },
-            },
-          }));
+          ));
         };
-        const updateEvaluationTeamRoleRingAccess = (teamId, roleId, ringId, nextAccess) => {
-          const ring = getPlaygroundPermissionRingDefinition(ringId);
-          updateEvaluationTeamRolePermissionSet(teamId, roleId, (current) => ({
-            ...current,
-            rings: {
-              ...(current.rings || {}),
-              [ring.id]: {
-                ...(current.rings?.[ring.id] || {}),
-                defaultAccess: normalizePlaygroundPermissionAccess(nextAccess, ring.defaultAccess),
-              },
-            },
-          }));
-        };
-        const updateEvaluationTeamRoleActionRing = (teamId, roleId, actionId, nextRingId) => {
-          const action = getPlaygroundPermissionActionDefinition(actionId);
-          if (!action) return;
-          updateEvaluationTeamRolePermissionSet(teamId, roleId, (current) => ({
-            ...current,
-            actions: {
-              ...(current.actions || {}),
-              [action.id]: buildPlaygroundPermissionActionPolicy(
-                current,
-                action,
-                current.actions?.[action.id] || { ringId: action.ringId },
-                getPlaygroundPermissionActionExplicitAccess(current, action),
-                normalizePlaygroundPermissionRingId(nextRingId, action.ringId)
-              ),
-            },
-          }));
-        };
-        const updateEvaluationTeamRoleActionAccess = (teamId, roleId, actionId, nextAccess) => {
-          const action = getPlaygroundPermissionActionDefinition(actionId);
-          if (!action) return;
-          updateEvaluationTeamRolePermissionSet(teamId, roleId, (current) => ({
-            ...current,
-            actions: {
-              ...(current.actions || {}),
-              [action.id]: buildPlaygroundPermissionActionPolicy(
-                current,
-                action,
-                current.actions?.[action.id] || { ringId: action.ringId },
-                nextAccess
-              ),
-            },
-          }));
+        const updateEvaluationTeamRolePermissionSet = (teamId, roleId, permissionSet) => {
+          updateEvaluationAccessMetadata((metadata) => buildPlatformTeamRolePermissionMetadata(
+            metadata,
+            teamId,
+            roleId,
+            permissionSet,
+            "evaluation_team_role"
+          ));
         };
         const evaluationAccessTeamIds = getEvaluationAccessTeamIds();
         const evaluationWorkspaceTeams = (Array.isArray(workspaceTeams) ? workspaceTeams : [])
@@ -644,7 +547,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
             locked: false,
           };
         });
-        const evaluationAccessRows = composePlatformAccessPrincipalRows(evaluationSharedTeams);
         const availableEvaluationTeams = evaluationWorkspaceTeams.filter((team) => !evaluationAccessTeamIds.includes(String(team.id)));
         const buildEvaluationTeamSharePayload = (team) => {
           const owner = getEvaluationOwnerIdentity(activeSet);
@@ -775,65 +677,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
             setEvaluationAccessActionId("");
           }
         };
-        const openEvaluationAccessDetail = (row) => {
-          setEvaluationAccessTeamId(String(row?.id || ""));
-          setEvaluationAccessRoleId("member");
-          setEvaluationAccessMenuOpen(false);
-        };
         const renderEvaluationAccessSettings = () => {
-          const selectedAccessRow = evaluationAccessRows.find((row) => row.id === evaluationAccessTeamId) || null;
-          if (selectedAccessRow) {
-            const systemPrincipal = getPlatformSystemAccessPrincipal(selectedAccessRow.id);
-            const selectedRole = getPlaygroundTeamRoleDefinition(evaluationAccessRoleId);
-            return React.createElement("section", { className: "playground-evaluations-access-detail" },
-              React.createElement("div", { className: "playground-project-team-permissions-header" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-team-permissions-back",
-                  onClick: () => setEvaluationAccessTeamId(""),
-                },
-                  React.createElement(ArrowLeft, { width: 13, height: 13, strokeWidth: 1.9 }),
-                  React.createElement("span", null, "Settings")
-                ),
-                React.createElement("div", { className: "playground-project-team-permissions-title" },
-                  systemPrincipal ? systemPrincipal.name + " Permissions" : selectedAccessRow.name + " Access"
-                )
-              ),
-              systemPrincipal
-                ? React.createElement(PlatformPermissionsPage, {
-                    permissionSet: getEvaluationPermissionSet(activeSet, systemPrincipal.id),
-                    accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
-                    ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
-                    actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
-                    subjectType: "evaluation",
-                    onRingAccessChange: updateEvaluationPermissionRingAccess,
-                    onActionRingChange: updateEvaluationPermissionActionRing,
-                    onActionAccessChange: updateEvaluationPermissionActionAccess,
-                  })
-                : React.createElement(PlatformRolePermissionsPage, {
-                    roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
-                      id: role.id,
-                      label: role.label,
-                      description: role.description,
-                      meta: "Evaluation access",
-                    })),
-                    value: selectedRole.id,
-                    onValueChange: setEvaluationAccessRoleId,
-                    roleAriaLabel: "Evaluation team roles",
-                    roleKicker: "Evaluation role",
-                    roleDescription: "Evaluation-specific permissions for " + selectedRole.label.toLowerCase() + "s in " + selectedAccessRow.name + ".",
-                    readOnly: selectedRole.id === "owner",
-                    permissionSet: getEvaluationTeamRolePermissionSet(selectedAccessRow.id, selectedRole.id),
-                    accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
-                    ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
-                    actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
-                    subjectType: "evaluation_team_role",
-                    onRingAccessChange: (ringId, access) => updateEvaluationTeamRoleRingAccess(selectedAccessRow.id, selectedRole.id, ringId, access),
-                    onActionRingChange: (actionId, ringId) => updateEvaluationTeamRoleActionRing(selectedAccessRow.id, selectedRole.id, actionId, ringId),
-                    onActionAccessChange: (actionId, access) => updateEvaluationTeamRoleActionAccess(selectedAccessRow.id, selectedRole.id, actionId, access),
-                  })
-            );
-          }
+          const selectedSystemPrincipal = getPlatformSystemAccessPrincipal(evaluationAccessTeamId);
           const addTeamsControl = React.createElement(PlatformPopup, {
             open: evaluationAccessMenuOpen,
             variant: "minimal",
@@ -874,14 +719,62 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
                 )
           );
           return React.createElement("section", { className: "playground-evaluations-access-settings" },
-            React.createElement(PlatformResourceAccessTable, {
-              teams: evaluationSharedTeams.map((team) => ({ ...team, description: team.meta })),
+            React.createElement(PlatformResourceAccessSettings, {
+              teams: evaluationSharedTeams,
               resourceLabel: "Evaluation",
-              trailing: addTeamsControl,
-              busy: Boolean(evaluationAccessActionId),
-              onOpenPermissions: openEvaluationAccessDetail,
-              onRemoveTeams: (teams) => teams.forEach((team) => void removeEvaluationTeamAccess(team.id)),
-              formatCreatedAt: formatPlaygroundEvaluationDate,
+              selectedPrincipalId: evaluationAccessTeamId,
+              onSelectedPrincipalIdChange: (nextPrincipalId) => {
+                setEvaluationAccessTeamId(String(nextPrincipalId || ""));
+                setEvaluationAccessRoleId("member");
+                setEvaluationAccessMenuOpen(false);
+              },
+              subjectType: "evaluation",
+              teamSubjectType: "evaluation_team_role",
+              systemPermissionSet: selectedSystemPrincipal
+                ? getEvaluationPermissionSet(activeSet, selectedSystemPrincipal.id)
+                : null,
+              onSystemPermissionSetChange: selectedSystemPrincipal
+                ? (permissionSet) => updateEvaluationSystemPermissionSet(
+                    selectedSystemPrincipal.id,
+                    permissionSet
+                  )
+                : undefined,
+              systemRolePermissionSet: selectedSystemPrincipal
+                ? getEvaluationSystemRolePermissionSet(
+                    selectedSystemPrincipal.id,
+                    evaluationAccessRoleId
+                  )
+                : null,
+              onSystemRolePermissionSetChange: selectedSystemPrincipal
+                ? (roleId, permissionSet) => updateEvaluationSystemRolePermissionSet(
+                    selectedSystemPrincipal.id,
+                    roleId,
+                    permissionSet
+                  )
+                : undefined,
+              selectedRoleId: evaluationAccessRoleId,
+              onSelectedRoleIdChange: setEvaluationAccessRoleId,
+              teamPermissionSet: evaluationAccessTeamId && !selectedSystemPrincipal
+                ? getEvaluationTeamRolePermissionSet(
+                    evaluationAccessTeamId,
+                    evaluationAccessRoleId
+                  )
+                : null,
+              onTeamPermissionSetChange: evaluationAccessTeamId && !selectedSystemPrincipal
+                ? (roleId, permissionSet) => updateEvaluationTeamRolePermissionSet(
+                    evaluationAccessTeamId,
+                    roleId,
+                    permissionSet
+                  )
+                : undefined,
+              actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
+              backLabel: "Settings",
+              tableProps: {
+                trailing: addTeamsControl,
+                busy: Boolean(evaluationAccessActionId),
+                onRemoveTeams: (teams) => teams.forEach((team) => void removeEvaluationTeamAccess(team.id)),
+                formatCreatedAt: formatPlaygroundEvaluationDate,
+              },
             })
           );
         };

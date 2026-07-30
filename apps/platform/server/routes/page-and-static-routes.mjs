@@ -15,7 +15,7 @@ function isRetiredPlatformDocumentPath(pathname) {
 
 /** Ordered routes for the single platform document and its static assets. */
 export function createPageAndStaticRoutes(bindings) {
-    const { connectorOauthAllowedOrigins, connectorOauthEnvFileCandidates, handleFeedbackSummaryPageRequest, handleGithubApiRequest, handleJiraApiRequest, handleProductUsageSummaryPageRequest, isGithubApiRequestPath, isJiraApiRequestPath, noVncNextRoot, platformDocumentHtml, platformOrigin, serveAiosPublicAsset, serveDistAsset, serveEnvironmentGuiViewerPage, serveVendorAsset, xlsxRoot, } = bindings;
+    const { connectorOauthAllowedOrigins, connectorOauthEnvFileCandidates, handleFeedbackSummaryPageRequest, handleGenericConnectorApiRequest, handleGithubApiRequest, handleJiraApiRequest, handleProductUsageSummaryPageRequest, isGenericConnectorApiRequestPath, isGithubApiRequestPath, isJiraApiRequestPath, noVncNextRoot, platformDocumentHtml, platformOrigin, serveAiosPublicAsset, serveDistAsset, serveEnvironmentGuiViewerPage, serveVendorAsset, xlsxRoot, } = bindings;
     return function handlePageAndStaticRoutes(req, res, url) {
         const rawThreadPathMatch = url.pathname.match(/^\/(thread[_-][A-Za-z0-9_-]+)\/?$/);
         if ((req.method === "GET" || req.method === "HEAD") && rawThreadPathMatch) {
@@ -43,6 +43,17 @@ export function createPageAndStaticRoutes(bindings) {
         }
         if (isJiraApiRequestPath(url.pathname)) {
             void handleJiraApiRequest({
+                req,
+                res,
+                url,
+                platformOrigin,
+                envFileCandidates: connectorOauthEnvFileCandidates,
+                allowedOrigins: connectorOauthAllowedOrigins,
+            });
+            return true;
+        }
+        if (isGenericConnectorApiRequestPath(url.pathname)) {
+            void handleGenericConnectorApiRequest({
                 req,
                 res,
                 url,

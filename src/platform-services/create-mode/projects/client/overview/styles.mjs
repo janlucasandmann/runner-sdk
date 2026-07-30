@@ -7,6 +7,7 @@ import { PROJECT_OVERVIEW_CSS_01_FRAGMENT } from "./styles/01-foundation.mjs";
 import { PROJECT_OVERVIEW_CSS_02_FRAGMENT } from "./styles/02-analytics-and-charts.mjs";
 import { PROJECT_OVERVIEW_CSS_03_FRAGMENT } from "./styles/03-resources-and-tables.mjs";
 import { PROJECT_OVERVIEW_CSS_04_FRAGMENT } from "./styles/04-sidebar-and-responsive.mjs";
+import { PROJECT_OVERVIEW_CONNECTOR_CREDENTIAL_ROUTING_CSS_FRAGMENT } from "./styles/connector-credential-routing.mjs";
 
 export const PROJECT_OVERVIEW_CSS_FRAGMENT_PATHS = Object.freeze([
   "../project-icon-picker/styles.mjs",
@@ -17,6 +18,7 @@ export const PROJECT_OVERVIEW_CSS_FRAGMENT_PATHS = Object.freeze([
   "styles/02-analytics-and-charts.mjs",
   "styles/03-resources-and-tables.mjs",
   "styles/04-sidebar-and-responsive.mjs",
+  "styles/connector-credential-routing.mjs",
 ]);
 
 export const PROJECT_OVERVIEW_CSS = joinLegacyBrowserSourceFragments([
@@ -28,4 +30,5 @@ export const PROJECT_OVERVIEW_CSS = joinLegacyBrowserSourceFragments([
   PROJECT_OVERVIEW_CSS_02_FRAGMENT,
   PROJECT_OVERVIEW_CSS_03_FRAGMENT,
   PROJECT_OVERVIEW_CSS_04_FRAGMENT,
+  PROJECT_OVERVIEW_CONNECTOR_CREDENTIAL_ROUTING_CSS_FRAGMENT,
 ]);

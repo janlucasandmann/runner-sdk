@@ -15,6 +15,8 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setSelectedFineTuningJobId,
           fineTuningPageMode = "overview",
           setFineTuningPageMode,
+          fineTuningDetailTab = "general",
+          setFineTuningDetailTab,
           fineTuningCreateModalOpen = false,
           setFineTuningCreateModalOpen,
           fineTuningCreateForm = {},
@@ -30,6 +32,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           currentUserName = "",
           currentUserEmail = "",
           currentUserAvatarUrl = "",
+          topNavActionsPortalId = "",
           shouldLoadData = false,
         } = props;
 
@@ -41,6 +44,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const fineTuningThreadNotificationRef = useRef(new Set());
         const fineTuningJobListLoadRef = useRef("");
         const fineTuningEvaluationSetListLoadRef = useRef("");
+        const fineTuningWorkspaceTeamsRequestRef = useRef("");
         const fineTuningCreateDefaultEvaluationAppliedRef = useRef(false);
         const fineTuningPersistTimersRef = useRef(new Map());
         const [modalVisible, setModalVisible] = useState(false);
@@ -50,8 +54,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const [fineTuningJobsLoading, setFineTuningJobsLoading] = useState(false);
         const [fineTuningEvaluationSetsLoading, setFineTuningEvaluationSetsLoading] = useState(false);
         const [fineTuningEvaluationSetsError, setFineTuningEvaluationSetsError] = useState("");
-        const [fineTuningDetailTab, setFineTuningDetailTab] = useState("general");
-        const [fineTuningDetailSidebarCollapsed, setFineTuningDetailSidebarCollapsed] = useState(false);
+        const [fineTuningTopNavActionsContainer, setFineTuningTopNavActionsContainer] = useState(null);
         const [fineTuningAccessTeamId, setFineTuningAccessTeamId] = useState("");
         const [fineTuningAccessRoleId, setFineTuningAccessRoleId] = useState("member");
         const [fineTuningAccessMenuOpen, setFineTuningAccessMenuOpen] = useState(false);
@@ -209,6 +212,56 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setFineTuningAccessMenuOpen(false);
           setFineTuningOwnerSelectorOpen(false);
         }, [selectedJob?.id]);
+
+        useEffect(() => {
+          if (!topNavActionsPortalId || typeof document === "undefined") {
+            setFineTuningTopNavActionsContainer(null);
+            return undefined;
+          }
+          let disposed = false;
+          const updateContainer = () => {
+            if (disposed) return;
+            setFineTuningTopNavActionsContainer(document.getElementById(topNavActionsPortalId));
+          };
+          updateContainer();
+          const observer = typeof MutationObserver !== "undefined"
+            ? new MutationObserver(updateContainer)
+            : null;
+          if (observer && document.body) {
+            observer.observe(document.body, { childList: true, subtree: true });
+          }
+          return () => {
+            disposed = true;
+            if (observer) observer.disconnect();
+          };
+        }, [topNavActionsPortalId, fineTuningPageMode, selectedJob?.id]);
+
+        useEffect(() => {
+          setFineTuningAccessMenuOpen(false);
+          if (fineTuningPageMode !== "detail" || fineTuningDetailTab !== "settings") {
+            setFineTuningAccessTeamId("");
+            fineTuningWorkspaceTeamsRequestRef.current = "";
+            return;
+          }
+          const activeJobId = normalizePlaygroundFineTuningString(selectedJob?.id);
+          const hasWorkspaceTeams = Array.isArray(workspaceTeams) && workspaceTeams.length > 0;
+          if (
+            activeJobId
+            && !workspaceTeamsLoading
+            && !hasWorkspaceTeams
+            && typeof onWorkspaceTeamsRequest === "function"
+            && fineTuningWorkspaceTeamsRequestRef.current !== activeJobId
+          ) {
+            fineTuningWorkspaceTeamsRequestRef.current = activeJobId;
+            onWorkspaceTeamsRequest({ selectedTeamId: "" });
+          }
+        }, [
+          fineTuningPageMode,
+          fineTuningDetailTab,
+          selectedJob?.id,
+          workspaceTeamsLoading,
+          Array.isArray(workspaceTeams) ? workspaceTeams.length : 0,
+        ]);
 
         function isDefaultFineTuningTargetAgent(agent) {
           const metadata = agent?.metadata && typeof agent.metadata === "object" && !Array.isArray(agent.metadata) ? agent.metadata : {};

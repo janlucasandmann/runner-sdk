@@ -35,6 +35,8 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
           "teamAccessShareIds", "team_access_share_ids",
           "teamRolePermissionSets", "team_role_permission_sets",
           "permissionSet", "permission_set",
+          "accessControl", "access_control",
+          "organizationMemberPermissionSet", "organization_member_permission_set",
         ].forEach((key) => delete source[key]);
         return source;
       }

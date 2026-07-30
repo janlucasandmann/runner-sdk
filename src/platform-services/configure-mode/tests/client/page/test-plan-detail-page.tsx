@@ -1,5 +1,6 @@
 import {
   CheckCircle2,
+  ChevronRight,
   Clock3,
   FlaskConical,
   Play,
@@ -67,6 +68,10 @@ interface TestPlanDetailPageProps {
   onReload: () => Promise<void>;
   onRun: (plan: TestPlan) => void;
   onOpenRun: (run: TestRun) => void;
+  onOpenCase: (
+    testCase: TestCaseDefinition,
+    definition: TestPlanDefinition,
+  ) => void;
 }
 
 function formatTimestamp(value: string | null | undefined): string {
@@ -154,6 +159,7 @@ export function TestPlanDetailPage({
   onReload,
   onRun,
   onOpenRun,
+  onOpenCase,
 }: TestPlanDetailPageProps) {
   const [activeTab, setActiveTab] = useState<TestPlanTab>("general");
   const [name, setName] = useState(plan.name);
@@ -166,6 +172,7 @@ export function TestPlanDetailPage({
   );
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
+  const [accessDetailOpen, setAccessDetailOpen] = useState(false);
   const portalTarget = usePortalTarget(controlsPortalId);
   const sectionControlsPortalTarget = usePortalTarget(sectionControlsPortalId);
   const parsedDefinition = useMemo(
@@ -181,7 +188,12 @@ export function TestPlanDetailPage({
     setEnvironmentId(plan.defaultEnvironmentId || "");
     setDefinitionJson(JSON.stringify(cloneDefinition(plan.definition), null, 2));
     setError("");
+    setAccessDetailOpen(false);
   }, [plan.id, plan.updatedAt]);
+
+  useEffect(() => {
+    if (activeTab !== "settings") setAccessDetailOpen(false);
+  }, [activeTab]);
 
   const dirty = (
     name.trim() !== plan.name
@@ -564,6 +576,7 @@ export function TestPlanDetailPage({
         : null}
       <PlatformServiceDetailPage
         properties={properties}
+        sidebarCollapsed={accessDetailOpen}
         ariaLabel={`${plan.name} test plan`}
         sidebarAriaLabel="Test plan information"
         className="tests-detail-page"
@@ -642,13 +655,28 @@ export function TestPlanDetailPage({
                   pagination={false}
                   getRowActions={(testCase): readonly PlatformDataTableAction<TestCaseDefinition>[] => [
                     {
+                      id: "open",
+                      label: "Open",
+                      icon: ChevronRight,
+                      onSelect: () => onOpenCase(
+                        testCase,
+                        parsedDefinition.definition || plan.definition,
+                      ),
+                    },
+                    {
                       id: "remove",
                       label: "Remove",
                       icon: Trash2,
                       danger: true,
+                      separatorBefore: true,
                       onSelect: () => removeCase(testCase),
                     },
                   ]}
+                  onRowActivate={(testCase) => onOpenCase(
+                    testCase,
+                    parsedDefinition.definition || plan.definition,
+                  )}
+                  getRowAriaLabel={(testCase) => `Open test case ${testCase.name}`}
                   emptyState={(
                     <PlatformEmptyState
                       icon={FlaskConical}
@@ -799,6 +827,7 @@ export function TestPlanDetailPage({
               api={api}
               workspaceTeams={workspaceTeams}
               onPlanChange={onPlanChange}
+              onPermissionDetailOpenChange={setAccessDetailOpen}
             />
           </div>
         ) : null}

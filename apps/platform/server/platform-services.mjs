@@ -20,9 +20,32 @@ import { createTeamsService } from "../../../src/platform-services/configure-mod
 import { createTestsService } from "../../../src/platform-services/configure-mode/tests/index.mjs";
 
 import { createSystemSkillSourceService } from "./system-skill-sources.mjs";
+import {
+  createConnectorCredentialCatalogService,
+} from "./integrations/connector-credential-catalog.mjs";
+import { createConnectorExecutionPolicy } from "./integrations/connector-execution-policy.mjs";
+import {
+  createConnectorRuntimeBridge,
+} from "./integrations/connector-runtime-bridge.mjs";
+import {
+  createConnectorRuntimeGrantService,
+} from "./integrations/connector-runtime-grants.mjs";
+import {
+  createConnectorResourceTransport,
+} from "./integrations/connector-resource-transport.mjs";
+import {
+  createConnectorAdapterRegistry,
+} from "./integrations/connectors/runtime/connector-adapter-registry.mjs";
+import {
+  createConnectorMcpService,
+} from "./integrations/connectors/runtime/connector-mcp-service.mjs";
 
 export function createPlatformServices({
   gateway,
+  identityService,
+  connectorOauthEnvFileCandidates = [],
+  connectorRuntimeSigningSecret = "",
+  platformOrigin,
   playgroundSystemSkillsRoot,
   port,
   executionDispatcherEnabled = false,
@@ -30,6 +53,7 @@ export function createPlatformServices({
   const {
     fetchAiosApi,
     fetchAiosCloud,
+    fetchSessionApi,
     fetchUpstreamJsonForProxyExactPath,
     hasAiosSession,
     inferProxyContentTypeFromPath,
@@ -57,6 +81,72 @@ export function createPlatformServices({
     withProxyOrganizationHeader,
   });
   gateway.setThreadPayloadEnricher(guardrailsService.enrichThreadPayload);
+  const fetchConnectorResource = createConnectorResourceTransport({
+    fetchImpl: fetch,
+    fetchAiosCloud,
+    fetchAiosApi,
+    withProxyOrganizationHeader,
+  });
+  const connectorAdapterRegistry = createConnectorAdapterRegistry({
+    envFileCandidates: connectorOauthEnvFileCandidates,
+  });
+  const connectorExecutionPolicy = createConnectorExecutionPolicy({
+    fetchSessionApi,
+    fetchResourceApi: fetchConnectorResource,
+    fetchOrganizationApi: fetchAiosCloud,
+    identityService,
+    envFileCandidates: connectorOauthEnvFileCandidates,
+    listConnectorCapabilities: (connectorId) =>
+      connectorAdapterRegistry.listCapabilities(connectorId),
+    logger: console,
+  });
+  const connectorRuntimeGrantService = createConnectorRuntimeGrantService({
+    secret: connectorRuntimeSigningSecret,
+    envFileCandidates: connectorOauthEnvFileCandidates,
+  });
+  const connectorRuntimeBridge = createConnectorRuntimeBridge({
+    grantService: connectorRuntimeGrantService,
+    platformOrigin,
+    envFileCandidates: connectorOauthEnvFileCandidates,
+    logger: console,
+  });
+  const connectorCredentialCatalogService =
+    createConnectorCredentialCatalogService({
+      fetchSessionApi,
+      fetchOrganizationApi: fetchAiosCloud,
+      identityService,
+      envFileCandidates: connectorOauthEnvFileCandidates,
+      logger: console,
+    });
+  const connectorMcpService = createConnectorMcpService({
+    grantService: connectorRuntimeGrantService,
+    adapterRegistry: connectorAdapterRegistry,
+    logger: console,
+  });
+  gateway.setThreadMessagePayloadEnricher(
+    async (
+      req,
+      threadId,
+      upstreamUrl,
+      apiKey,
+      payload,
+      context,
+    ) => {
+      const authorizedPayload =
+        await connectorExecutionPolicy.enrichThreadMessagePayload(
+          req,
+          threadId,
+          upstreamUrl,
+          apiKey,
+          payload,
+          context,
+        );
+      return connectorRuntimeBridge.addRuntimeServers({
+        threadId,
+        payload: authorizedPayload,
+      });
+    },
+  );
   const enrichThreadPayloadWithAgentGuardrails =
     guardrailsService.enrichThreadPayload;
 
@@ -116,6 +206,11 @@ export function createPlatformServices({
     configureHomeService: createConfigureHomeService({
       proxyUpstreamGet,
     }),
+    connectorCredentialCatalogService,
+    connectorMcpService,
+    connectorExecutionPolicy,
+    connectorRuntimeBridge,
+    connectorRuntimeGrantService,
     evaluationsService,
     evidenceAgentsService: createEvidenceAgentsService({
       proxyUpstreamGet,

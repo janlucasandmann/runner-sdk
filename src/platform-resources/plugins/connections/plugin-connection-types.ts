@@ -1,29 +1,24 @@
 import type { PlatformConnectionCredential } from "../../shared/connections/connection-credentials.js";
+import type {
+  PlatformConnectorAuthentication,
+  PlatformConnectorId,
+} from "../../../platform-integrations/connectors/index.js";
 
-export const PLATFORM_PLUGIN_CONNECTION_IDS = [
-  "github",
-  "notion",
-  "google-drive",
-  "gmail",
-  "one-drive",
-  "jira",
-] as const;
-
-export type PlatformPluginConnectionId = (typeof PLATFORM_PLUGIN_CONNECTION_IDS)[number];
+export type PlatformPluginConnectionId = Exclude<
+  PlatformConnectorId,
+  "discord" | "telegram" | "email"
+>;
 
 export interface PlatformPluginConnectionDefinition {
   id: PlatformPluginConnectionId;
   label: string;
-  category:
-    | "Source control"
-    | "Knowledge"
-    | "Storage"
-    | "Channels"
-    | "Project management";
+  category: string;
   logoUrl: string;
+  authentication: PlatformConnectorAuthentication;
   statusPath: string;
   loginPath: string;
   disconnectPath: string;
+  credentialsPath: string;
 }
 
 export interface PlatformPluginConnectionStatus {

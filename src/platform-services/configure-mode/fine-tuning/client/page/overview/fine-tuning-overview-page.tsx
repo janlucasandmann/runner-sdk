@@ -1,5 +1,5 @@
 import { ChevronRight, Plus, TestTubeDiagonal, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
@@ -47,17 +47,6 @@ export function FineTuningOverviewPage({
   onCreate,
   onDelete,
 }: FineTuningOverviewPageProps) {
-  const [statusFilter, setStatusFilter] = useState("all");
-  const filteredRows = useMemo(
-    () =>
-      rows.filter((row) => {
-        if (statusFilter === "with-improvement") return row.improvementScore > 0;
-        if (statusFilter !== "all") return row.status === statusFilter;
-        return true;
-      }),
-    [rows, statusFilter],
-  );
-
   const columns = useMemo<PlatformDataTableColumn<FineTuningOverviewRow>[]>(
     () => [
       {
@@ -67,12 +56,7 @@ export function FineTuningOverviewPage({
         sortable: true,
         width: "minmax(230px, 1.2fr)",
         cell: ({ row }) => (
-          <ResourceOverviewIdentityCell
-            title={row.name}
-            icon={TestTubeDiagonal}
-            iconClassName="is-connection"
-            size="compact"
-          />
+          <span className="resource-overview-identity__title">{row.name}</span>
         ),
       },
       {
@@ -149,68 +133,28 @@ export function FineTuningOverviewPage({
     },
   ];
 
-  const scrollToTable = () => {
-    if (typeof document === "undefined") return;
-    document
-      .querySelector(
-        ".resource-overview-page.is-fine-tuning .resource-overview-page__table-section",
-      )
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const showCompleted = () => {
-    setStatusFilter("completed");
-    scrollToTable();
-  };
-
   return (
     <ResourceOverviewPage<FineTuningOverviewRow>
-      heroContent={
-        <FineTuningOverviewGuide
-          jobCount={rows.length}
-          onCreate={onCreate}
-          onBrowse={scrollToTable}
-          onShowCompleted={showCompleted}
-        />
-      }
+      heroContent={<FineTuningOverviewGuide />}
       showPeriodSelector={false}
       controlsPortalId={controlsPortalId}
       className="is-fine-tuning"
       table={{
-        rows: filteredRows,
+        rows,
         columns,
         getRowId: (row) => row.id,
         ariaLabel: "Fine-tuning jobs",
         className: "resource-overview-table is-fine-tuning",
+        variant: "catalog-ui",
         sorting: { defaultValue: { id: "name", direction: "asc" } },
         selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
-        pagination: {
-          defaultValue: { pageIndex: 0, pageSize: 20 },
-          pageSizeOptions: [20, 50, 100],
-        },
+        pagination: false,
         toolbar: {
-          title: "All Fine-tuning Jobs",
           search: {
             placeholder: "Search optimization jobs",
             getSearchText: (row) =>
               row.searchText || `${row.name} ${row.agentLabel} ${row.conductorLabel} ${row.status}`,
           },
-          filters: [
-            {
-              id: "status",
-              label: "Status",
-              value: statusFilter,
-              onChange: setStatusFilter,
-              options: [
-                { id: "all", label: "All Jobs" },
-                { id: "planned", label: "Planned" },
-                { id: "completed", label: "Completed" },
-                { id: "running", label: "Running" },
-                { id: "verifying", label: "Verifying" },
-                { id: "with-improvement", label: "With Improvement" },
-              ],
-            },
-          ],
           primaryAction: { label: "Optimize Agent", icon: Plus, onClick: onCreate },
         },
         getRowActions,

@@ -54,6 +54,7 @@ export function listPlatformConnectorPermissionActionDescriptors(
     const connector = getPlatformConnectorCatalogEntry(id);
     if (!connector) return [];
     const subjectTypes = Object.freeze([
+      "agent",
       connector.permissionSubjectType,
       connector.permissionTeamSubjectType,
     ]);

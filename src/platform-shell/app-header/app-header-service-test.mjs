@@ -260,11 +260,24 @@ assert.doesNotMatch(platformEntrySource, /renderAppHeaderSidebarToggle\(\)/);
 assert.match(platformEntrySource, /function getThreadPagePathItems\(\)/);
 assert.match(
   platformEntrySource,
-  /label: selectedThreadProjectName,[\s\S]*?className: "playground-project-breadcrumb-icon"[\s\S]*?onClick: openSelectedThreadProject/,
+  /function renderThreadTitleActionMenu\(\) \{[\s\S]*?return React\.createElement\(PlatformPopup, \{[\s\S]*?variant: "minimal",[\s\S]*?placement: "bottom-start"/,
+);
+assert.equal(
+  platformEntrySource.match(/playground-thread-nav-popup-shell/g)?.length,
+  1,
+  "The thread actions popup must be owned only by the active breadcrumb item.",
 );
 assert.match(
   platformEntrySource,
-  /label: selectedThreadTaskTicketNumber,[\s\S]*?className: "playground-tasks-backlog-project-icon is-" \+ selectedThreadTaskType[\s\S]*?onClick: openSelectedThreadTaskDetail/,
+  /label: selectedThreadTitle \|\| "Current thread",[\s\S]*?trailing: threadTitleActionMenu/,
+);
+assert.match(
+  platformEntrySource,
+  /label: selectedThreadProjectName,[\s\S]*?trailing: selectedThreadTaskTicketNumber \? null : threadTitleActionMenu,[\s\S]*?className: "playground-project-breadcrumb-icon"[\s\S]*?onClick: openSelectedThreadProject/,
+);
+assert.match(
+  platformEntrySource,
+  /label: selectedThreadTaskTicketNumber,[\s\S]*?trailing: threadTitleActionMenu,[\s\S]*?className: "playground-tasks-backlog-project-icon is-" \+ selectedThreadTaskType[\s\S]*?onClick: openSelectedThreadTaskDetail/,
 );
 assert.match(
   platformEntrySource,

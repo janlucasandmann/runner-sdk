@@ -39,10 +39,11 @@ Configuration:
 
 | Variable | Default |
 | --- | --- |
-| `ENABLE_EXECUTION_DISPATCHER` | enabled when the control-plane secret is valid |
+| `ENABLE_EXECUTION_DISPATCHER` | disabled by default; set explicitly to `true` only on a designated execution worker |
 | `EXECUTION_DISPATCH_CONTROL_ORIGIN` | `RUNNER_UPSTREAM_ORIGIN` without `/v1` |
 | `EXECUTION_DISPATCH_WORKER_ID` | hostname and process-derived identity |
 | `EXECUTION_DISPATCH_POLL_INTERVAL_MS` | `2000` |
+| `EXECUTION_DISPATCH_MAX_IDLE_POLL_INTERVAL_MS` | `8000` |
 | `EXECUTION_DISPATCH_HEARTBEAT_INTERVAL_MS` | `25000` |
 | `EXECUTION_DISPATCH_LEASE_TTL_MS` | `120000` |
 | `EXECUTION_DISPATCH_BATCH_SIZE` | `4` |

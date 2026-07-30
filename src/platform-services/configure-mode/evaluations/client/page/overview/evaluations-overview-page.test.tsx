@@ -47,7 +47,7 @@ afterEach(() => {
 });
 
 describe("EvaluationsOverviewPage", () => {
-  it("uses the Teams overview composition and shared minimal table", async () => {
+  it("uses the Skills overview composition and shared catalog table", async () => {
     const user = userEvent.setup();
     const onOpen = vi.fn();
     const onCreate = vi.fn();
@@ -80,14 +80,18 @@ describe("EvaluationsOverviewPage", () => {
         name: "Measure agent performance with confidence",
       }),
     ).not.toBeNull();
-    expect(container.querySelectorAll(".platform-ui-card")).toHaveLength(2);
+    expect(container.querySelectorAll(".platform-ui-card")).toHaveLength(0);
     expect(screen.getByRole("table", { name: "Evaluations" })).not.toBeNull();
     expect(
-      container.querySelector(".platform-data-table.is-minimalistic-ui"),
+      container.querySelector(".platform-data-table.is-catalog-ui"),
     ).not.toBeNull();
+    expect(
+      container.querySelector(".platform-data-table__group-header"),
+    ).toBeNull();
     expect(container.querySelector(".platform-data-table__footer")).toBeNull();
-    expect(screen.getByText("All Evaluations")).not.toBeNull();
+    expect(screen.queryByText("All Evaluations")).toBeNull();
     expect(screen.getByPlaceholderText("Search evaluations")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "Runs" })).toBeNull();
     expect(
       screen.getByRole("checkbox", { name: "Select all visible rows" }),
     ).not.toBeNull();

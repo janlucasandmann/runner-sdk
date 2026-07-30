@@ -2,7 +2,7 @@ export function createComputeResourceRoutes(bindings) {
     const { fetchUpstreamOverviewJson, proxyEnvironmentGuiSession, proxyEnvironmentStart, proxyUpstreamBinaryGet, proxyUpstreamGet, proxyUpstreamJsonRequest, sendJson, sendServerDetailBootstrap, } = bindings;
     return function handleComputeResourceRoutes(req, res, url) {
         if (req.method === "GET" && url.pathname === "/api/real/environments") {
-            void proxyUpstreamGet(req, res, "/environments");
+            void proxyUpstreamGet(req, res, "/environments" + (url.search || ""));
             return true;
         }
         if (req.method === "POST" && url.pathname === "/api/real/environments") {

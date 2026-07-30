@@ -62,7 +62,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "bec46a79eb60380d576a3509024bbb1047745d18fd42b5614876f495d01b498a",
+    expectedSha256: "448cb76c133476a5fe838e3c71209eca010f8a3ff1bd22dd262a00c976f4e301",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -74,7 +74,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview styles",
     source: PROJECT_OVERVIEW_CSS,
-    expectedSha256: "ab6a128ab2f124b64c651e7fc85a26870990827d741636b0d21479600e7cf60a",
+    expectedSha256: "8cf7c675520de7af32b93503441022fe0cf4a02eb7df957bfa89259bda8cb8df",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -110,7 +110,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects shell runtime",
     source: PROJECTS_PAGE_SHELL_SCRIPT,
-    expectedSha256: "96963db453d70778987a8cdcc74b228e245a35d22ee8f2b9b3a4468c720c54cc",
+    expectedSha256: "0569bfc27463b0e82fabe890cd88baf40a67fa7c069393b71dbcb9ba973ffec6",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -122,7 +122,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "c13ccf64a49ec1887a72f655f88cc34977fd9e1a8fe561a93973e0404d7eb54a",
+    expectedSha256: "141083924598825bfc0871b50b257e45c6549b4e5beca380ea140195ea589741",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -2133,6 +2133,46 @@ assert.match(
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
   /className: "playground-tasks-backlog-header is-board-list-header"[\s\S]*?React\.createElement\(ListFilter,[\s\S]*?React\.createElement\(PlatformSearch, \{\s*className: "playground-tasks-board-central-search"/,
+);
+assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /\/api\/aios\/organizations\/"[\s\S]*?\/connector-credentials"/,
+);
+assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /Array\.isArray\(payload\?\.providers\)[\s\S]*?providerCatalog\?\.credentials/,
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /\/connector-credentials\?provider=/,
+);
+assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /new Headers\(requestHeaders \|\| \{\}\)\.get\("x-computer-agents-organization"\)/,
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /projectOverviewConnectorCredentialProviderDefinitions,\s*requestHeaders,\s*selectedProjectId/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /metadata\.connectorCredentialBindings/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /Object\.keys\(providerCatalogs\)[\s\S]*?bindingProviderIds/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /normalizedCredentialId === "__organization_default__"[\s\S]*?delete nextBindings\[providerId\]/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /connectorCredentialBindings: nextBindings/,
+);
+assert.doesNotMatch(
+  PROJECT_OVERVIEW_SCRIPT,
+  /accessToken|refreshToken|clientSecret/,
 );
 assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /playground-tasks-backlog-sort-shell/);
 assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /openScopedBoardTaskCount/);

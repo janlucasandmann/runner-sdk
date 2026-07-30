@@ -15,7 +15,12 @@
 }
 
 .resource-overview-page.is-tags-and-plugins,
-.resource-overview-page.is-skills {
+.resource-overview-page.is-skills,
+.resource-overview-page.is-evaluations,
+.resource-overview-page.is-tests,
+.resource-overview-page.is-assurance,
+.resource-overview-page.is-guardrails,
+.resource-overview-page.is-fine-tuning {
   width: 100%;
   max-width: none;
   padding: 24px;
@@ -24,10 +29,7 @@
 .resource-overview-page.is-teams,
 .resource-overview-page.is-organizations,
 .resource-overview-page.is-marketplace,
-.resource-overview-page.is-inference,
-.resource-overview-page.is-guardrails,
-.resource-overview-page.is-evaluations,
-.resource-overview-page.is-fine-tuning {
+.resource-overview-page.is-inference {
   gap: 76px;
 }
 
@@ -255,6 +257,24 @@
   background: transparent;
 }
 
+.resource-overview-table.is-evaluations.is-catalog-ui
+  .resource-overview-identity__visual.is-agent,
+.resource-overview-table.is-evaluations.is-catalog-ui
+  .resource-overview-identity__visual.is-creator,
+.resource-overview-table.is-guardrails.is-catalog-ui
+  .resource-overview-identity__visual.is-creator,
+.resource-overview-table.is-fine-tuning.is-catalog-ui
+  .resource-overview-identity__visual.is-agent,
+.resource-overview-table.is-fine-tuning.is-catalog-ui
+  .resource-overview-identity__visual.is-creator {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
 .resource-overview-table.is-connections.is-catalog-ui
   .resource-overview-identity__visual.is-plugin,
 .connection-identity-icon.is-catalog.is-plugin {
@@ -263,9 +283,34 @@
 }
 
 .resource-overview-table.is-connections.is-catalog-ui
+  .resource-overview-identity__visual.is-plugin.is-box,
+.connection-identity-icon.is-catalog.is-plugin.is-box {
+  background: #015fcf;
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
   .resource-overview-identity__visual.is-plugin.is-gitlab,
 .connection-identity-icon.is-catalog.is-plugin.is-gitlab {
   background: #f7f5e3;
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .resource-overview-identity__visual.is-plugin.is-linear,
+.connection-identity-icon.is-catalog.is-plugin.is-linear {
+  background: linear-gradient(to bottom, #2c2d31, #131416);
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .resource-overview-identity__visual.is-plugin.is-stripe,
+.connection-identity-icon.is-catalog.is-plugin.is-stripe {
+  padding: 9px;
+  background: #533afd;
+}
+
+.resource-overview-table.is-connections.is-catalog-ui
+  .resource-overview-identity__visual.is-plugin.is-supabase,
+.connection-identity-icon.is-catalog.is-plugin.is-supabase {
+  background: #1b1b1b;
 }
 
 .resource-overview-table.is-connections.is-catalog-ui
@@ -381,10 +426,7 @@
   .resource-overview-page.is-teams,
   .resource-overview-page.is-organizations,
   .resource-overview-page.is-marketplace,
-  .resource-overview-page.is-inference,
-  .resource-overview-page.is-guardrails,
-  .resource-overview-page.is-evaluations,
-  .resource-overview-page.is-fine-tuning {
+  .resource-overview-page.is-inference {
     gap: 56px;
   }
 
@@ -409,10 +451,7 @@
   .resource-overview-page.is-teams,
   .resource-overview-page.is-organizations,
   .resource-overview-page.is-marketplace,
-  .resource-overview-page.is-inference,
-  .resource-overview-page.is-guardrails,
-  .resource-overview-page.is-evaluations,
-  .resource-overview-page.is-fine-tuning {
+  .resource-overview-page.is-inference {
     gap: 48px;
   }
 

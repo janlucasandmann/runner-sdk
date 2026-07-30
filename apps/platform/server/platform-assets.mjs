@@ -1,11 +1,18 @@
 import { createHash } from "node:crypto";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { brotliCompressSync, constants as zlibConstants, gzipSync } from "node:zlib";
+import { build, transform } from "esbuild";
 import {
   normalizePlatformSources,
   renderPlatformDocument,
 } from "../shared/platform-source-contract.mjs";
 
 const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
+const DEFAULT_PACKAGE_ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../../..",
+);
 
 function hashContent(value) {
   return createHash("sha256").update(value).digest("hex").slice(0, 20);
@@ -63,27 +70,159 @@ function createAsset(pathname, contentType, source) {
   });
 }
 
+async function optimizePlatformSources(
+  {
+    styleSource,
+    moduleSource,
+  },
+  {
+    packageRoot,
+  },
+) {
+  const normalizedPackageRoot = path.resolve(packageRoot);
+  const distRoot = path.join(normalizedPackageRoot, "dist");
+  const [moduleBuild, styleBuild] = await Promise.all([
+    build({
+      stdin: {
+        contents: moduleSource,
+        loader: "js",
+        resolveDir: normalizedPackageRoot,
+        sourcefile: "platform-runtime.js",
+      },
+      bundle: true,
+      charset: "utf8",
+      external: [
+        "/api/*",
+        "/vendor/*",
+      ],
+      format: "esm",
+      chunkNames: "chunk-[hash]",
+      entryNames: "entry",
+      legalComments: "none",
+      logLevel: "silent",
+      metafile: true,
+      minify: true,
+      outdir: path.join(normalizedPackageRoot, ".platform-assets"),
+      packages: "external",
+      platform: "browser",
+      plugins: [
+        {
+          name: "platform-local-dist-bundle",
+          setup(builder) {
+            builder.onResolve({ filter: /^\/dist\// }, (args) => {
+              const resolvedPath = path.resolve(
+                normalizedPackageRoot,
+                `.${args.path}`,
+              );
+              if (
+                resolvedPath !== distRoot
+                && !resolvedPath.startsWith(`${distRoot}${path.sep}`)
+              ) {
+                return {
+                  errors: [{
+                    text: `Platform asset import escapes dist: ${args.path}`,
+                  }],
+                };
+              }
+              return { path: resolvedPath };
+            });
+          },
+        },
+      ],
+      splitting: true,
+      target: "es2022",
+      treeShaking: true,
+      write: false,
+    }),
+    transform(styleSource, {
+      charset: "utf8",
+      legalComments: "none",
+      loader: "css",
+      minify: true,
+      target: "es2022",
+    }),
+  ]);
+
+  const moduleOutput = moduleBuild.outputFiles.find(
+    (outputFile) => path.basename(outputFile.path) === "entry.js",
+  );
+  if (!moduleOutput) {
+    throw new Error("Platform browser bundle did not emit a JavaScript asset.");
+  }
+  const chunkOutputs = moduleBuild.outputFiles.filter(
+    (outputFile) => outputFile !== moduleOutput && outputFile.path.endsWith(".js"),
+  );
+  const unexpectedOutputs = moduleBuild.outputFiles.filter(
+    (outputFile) => (
+      outputFile !== moduleOutput
+      && !chunkOutputs.includes(outputFile)
+    ),
+  );
+  if (unexpectedOutputs.length > 0) {
+    throw new Error(
+      `Platform browser bundle emitted unsupported assets: ${
+        unexpectedOutputs.map((outputFile) => path.basename(outputFile.path)).join(", ")
+      }.`,
+    );
+  }
+
+  return Object.freeze({
+    styleSource: styleBuild.code,
+    moduleSource: moduleOutput.text,
+    moduleChunks: Object.freeze(chunkOutputs.map((outputFile) => Object.freeze({
+      filename: path.basename(outputFile.path),
+      source: outputFile.text,
+    }))),
+    moduleGraphInputs: Object.keys(moduleBuild.metafile?.inputs || {}).length,
+  });
+}
+
 /**
  * Publishes an explicit platform shell, stylesheet, and browser module as
  * immutable content-addressed assets.
  */
-export function createPlatformDocumentAssets(
+export async function createPlatformDocumentAssets(
   sources,
-  { assetBasePath = "/platform/assets" } = {},
+  {
+    assetBasePath = "/platform/assets",
+    packageRoot = DEFAULT_PACKAGE_ROOT,
+  } = {},
 ) {
   const {
     documentTemplate,
     styleSource,
     moduleSource,
   } = normalizePlatformSources(sources);
-  const cssHash = hashContent(styleSource);
-  const moduleHash = hashContent(moduleSource);
+  const optimizedSources = await optimizePlatformSources(
+    {
+      styleSource,
+      moduleSource,
+    },
+    {
+      packageRoot,
+    },
+  );
+  const cssHash = hashContent(optimizedSources.styleSource);
+  const moduleHash = hashContent(optimizedSources.moduleSource);
   const normalizedBasePath = `/${String(assetBasePath || "platform/assets")
     .replace(/^\/+|\/+$/g, "")}`;
   const cssPath = `${normalizedBasePath}/platform.${cssHash}.css`;
   const modulePath = `${normalizedBasePath}/platform.${moduleHash}.js`;
-  const cssAsset = createAsset(cssPath, "text/css; charset=utf-8", styleSource);
-  const moduleAsset = createAsset(modulePath, "text/javascript; charset=utf-8", moduleSource);
+  const cssAsset = createAsset(
+    cssPath,
+    "text/css; charset=utf-8",
+    optimizedSources.styleSource,
+  );
+  const moduleAsset = createAsset(
+    modulePath,
+    "text/javascript; charset=utf-8",
+    optimizedSources.moduleSource,
+  );
+  const chunkAssets = optimizedSources.moduleChunks.map((chunk) => createAsset(
+    `${normalizedBasePath}/${chunk.filename}`,
+    "text/javascript; charset=utf-8",
+    chunk.source,
+  ));
 
   const documentHtml = renderPlatformDocument(
     documentTemplate,
@@ -96,12 +235,14 @@ export function createPlatformDocumentAssets(
   const assetsByPath = new Map([
     [cssAsset.pathname, cssAsset],
     [moduleAsset.pathname, moduleAsset],
+    ...chunkAssets.map((asset) => [asset.pathname, asset]),
   ]);
 
   return Object.freeze({
     documentHtml,
     cssPath,
     modulePath,
+    chunkPaths: Object.freeze(chunkAssets.map((asset) => asset.pathname)),
     metrics: Object.freeze({
       sourceBytes:
         Buffer.byteLength(documentTemplate)
@@ -112,6 +253,18 @@ export function createPlatformDocumentAssets(
       moduleBytes: moduleAsset.variants.identity.byteLength,
       cssBrotliBytes: cssAsset.variants.br.byteLength,
       moduleBrotliBytes: moduleAsset.variants.br.byteLength,
+      moduleChunkBytes: chunkAssets.reduce(
+        (total, asset) => total + asset.variants.identity.byteLength,
+        0,
+      ),
+      moduleChunkBrotliBytes: chunkAssets.reduce(
+        (total, asset) => total + asset.variants.br.byteLength,
+        0,
+      ),
+      moduleChunkCount: chunkAssets.length,
+      sourceCssBytes: Buffer.byteLength(styleSource),
+      sourceModuleBytes: Buffer.byteLength(moduleSource),
+      moduleGraphInputs: optimizedSources.moduleGraphInputs,
     }),
     handleRequest(req, res, url) {
       const asset = assetsByPath.get(url.pathname);

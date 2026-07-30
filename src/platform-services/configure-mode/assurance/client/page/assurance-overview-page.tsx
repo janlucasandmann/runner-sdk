@@ -1,12 +1,11 @@
 import { ChevronRight, Plus, ShieldCheck } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
 import {
-  ResourceOverviewIdentityCell,
   ResourceOverviewPage,
   ResourceOverviewValue,
 } from "../../../../../platform-ui/pages/overview/index.js";
@@ -50,17 +49,6 @@ export function AssuranceOverviewPage({
   onOpen,
   onCreate,
 }: AssuranceOverviewPageProps) {
-  const [statusFilter, setStatusFilter] = useState("all");
-  const filteredRows = useMemo(
-    () => rows.filter((row) => {
-      if (statusFilter === "passed") return row.lastRunStatus === "passed";
-      if (statusFilter === "blocked") return row.lastRunStatus === "blocked";
-      if (statusFilter === "failed") return row.lastRunStatus === "failed";
-      if (statusFilter === "never") return row.runCount === 0;
-      return true;
-    }),
-    [rows, statusFilter],
-  );
   const columns = useMemo<PlatformDataTableColumn<AssurancePolicyOverviewRow>[]>(
     () => [
       {
@@ -70,12 +58,7 @@ export function AssuranceOverviewPage({
         sortable: true,
         width: "minmax(260px, 1.3fr)",
         cell: ({ row }) => (
-          <ResourceOverviewIdentityCell
-            title={row.name}
-            icon={ShieldCheck}
-            iconClassName="is-connection"
-            size="compact"
-          />
+          <span className="resource-overview-identity__title">{row.name}</span>
         ),
       },
       {
@@ -130,59 +113,27 @@ export function AssuranceOverviewPage({
       onSelect: () => onOpen(row),
     },
   ];
-  const scrollToTable = () => {
-    if (typeof document === "undefined") return;
-    document
-      .querySelector(".resource-overview-page.is-assurance .resource-overview-page__table-section")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-  const showBlocked = () => {
-    setStatusFilter("blocked");
-    scrollToTable();
-  };
   return (
     <ResourceOverviewPage<AssurancePolicyOverviewRow>
-      heroContent={(
-        <AssuranceOverviewGuide
-          policyCount={rows.length}
-          passedRunCount={rows.reduce((total, row) => total + row.passedRunCount, 0)}
-          blockedRunCount={rows.reduce((total, row) => total + row.blockedRunCount, 0)}
-          onCreate={onCreate}
-          onBrowse={scrollToTable}
-          onShowBlocked={showBlocked}
-        />
-      )}
+      heroContent={<AssuranceOverviewGuide />}
       showPeriodSelector={false}
       controlsPortalId={controlsPortalId}
       className="is-assurance"
       table={{
-        rows: filteredRows,
+        rows,
         columns,
         getRowId: (row) => row.id,
         ariaLabel: "Assurance Policies",
         className: "resource-overview-table is-assurance",
+        variant: "catalog-ui",
         sorting: { defaultValue: { id: "updated", direction: "desc" } },
         selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
         pagination: false,
         toolbar: {
-          title: "All Assurance Policies",
           search: {
             placeholder: "Search Assurance Policies",
             getSearchText: (row) => row.searchText || `${row.name} ${row.projectLabel}`,
           },
-          filters: [{
-            id: "status",
-            label: "Decision",
-            value: statusFilter,
-            onChange: setStatusFilter,
-            options: [
-              { id: "all", label: "All Policies" },
-              { id: "passed", label: "Passed" },
-              { id: "blocked", label: "Awaiting Approval" },
-              { id: "failed", label: "Failed" },
-              { id: "never", label: "Never Run" },
-            ],
-          }],
           primaryAction: {
             label: "Assurance Policy",
             icon: Plus,

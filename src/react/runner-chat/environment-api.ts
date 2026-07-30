@@ -2,12 +2,13 @@ import { sanitizeBackendUrl } from "./api-utils.js";
 
 const environmentStartPromises = new Map<string, Promise<void>>();
 const environmentWarmCacheUntilMs = new Map<string, number>();
-const ENVIRONMENT_START_CACHE_TTL_MS = 90 * 1000;
+const ENVIRONMENT_START_CACHE_TTL_MS = 4 * 60 * 1000;
 const ENVIRONMENT_START_TIMEOUT_MS = 8 * 1000;
 const ENVIRONMENT_START_TIMEOUT_ERROR_NAME =
   "EnvironmentStartTimeoutError";
 
 type SharedEnvironmentWarmCacheStore = Record<string, number>;
+type SharedEnvironmentStartPromiseStore = Record<string, Promise<void>>;
 
 function readSharedEnvironmentWarmCacheUntilMs(
   requestKey: string
@@ -40,6 +41,38 @@ function writeSharedEnvironmentWarmCacheUntilMs(
     delete sharedCache[requestKey];
   }
   nextWindow.__runnerEnvironmentWarmCacheUntilMs = sharedCache;
+}
+
+function readSharedEnvironmentStartPromise(
+  requestKey: string
+): Promise<void> | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+  return (
+    window as typeof window & {
+      __runnerEnvironmentStartPromises?: SharedEnvironmentStartPromiseStore;
+    }
+  ).__runnerEnvironmentStartPromises?.[requestKey];
+}
+
+function writeSharedEnvironmentStartPromise(
+  requestKey: string,
+  promise: Promise<void> | null
+): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const nextWindow = window as typeof window & {
+    __runnerEnvironmentStartPromises?: SharedEnvironmentStartPromiseStore;
+  };
+  const sharedPromises = nextWindow.__runnerEnvironmentStartPromises || {};
+  if (promise) {
+    sharedPromises[requestKey] = promise;
+  } else {
+    delete sharedPromises[requestKey];
+  }
+  nextWindow.__runnerEnvironmentStartPromises = sharedPromises;
 }
 
 function buildEnvironmentStartRequestKey(params: {
@@ -106,7 +139,9 @@ export async function startEnvironment(params: {
   if (!params.force && environmentStartPromises.has(requestKey)) {
     return environmentStartPromises.get(requestKey);
   }
-  const existingPromise = environmentStartPromises.get(requestKey);
+  const existingPromise =
+    environmentStartPromises.get(requestKey)
+    || readSharedEnvironmentStartPromise(requestKey);
   if (existingPromise) {
     return existingPromise;
   }
@@ -176,10 +211,16 @@ export async function startEnvironment(params: {
       clearTimeout(timeoutId);
     }
   })().finally(() => {
-    environmentStartPromises.delete(requestKey);
+    if (environmentStartPromises.get(requestKey) === startPromise) {
+      environmentStartPromises.delete(requestKey);
+    }
+    if (readSharedEnvironmentStartPromise(requestKey) === startPromise) {
+      writeSharedEnvironmentStartPromise(requestKey, null);
+    }
   });
 
   environmentStartPromises.set(requestKey, startPromise);
+  writeSharedEnvironmentStartPromise(requestKey, startPromise);
   return startPromise;
 }
 

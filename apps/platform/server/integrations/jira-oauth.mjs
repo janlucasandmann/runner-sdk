@@ -14,6 +14,7 @@ import {
   normalizeConnectorOrganizationId,
   readConnectorCredentialStore,
   readConnectorRequestBody,
+  resolveConnectorCredentialForOrganization,
   sanitizeConnectorRedirectTarget,
   saveConnectorCredential,
   saveConnectorOAuthState,
@@ -29,10 +30,26 @@ const JIRA_AUTHORIZE_URL = "https://auth.atlassian.com/authorize";
 const JIRA_TOKEN_URL = "https://auth.atlassian.com/oauth/token";
 const JIRA_API_BASE = "https://api.atlassian.com";
 const JIRA_DEFAULT_SCOPE =
-  "offline_access read:jira-work write:jira-work read:jira-user";
+  "offline_access read:jira-work write:jira-work read:jira-user read:confluence-content.all read:confluence-content.summary read:confluence-space.summary read:confluence-user search:confluence write:confluence-content write:confluence-file";
 const JIRA_ENCRYPTION_KEYS = [
   "JIRA_TOKEN_ENCRYPTION_KEY",
   "CONNECTOR_TOKEN_ENCRYPTION_KEY",
+];
+const JIRA_CLIENT_ID_KEYS = [
+  "JIRA_OAUTH_CLIENT_ID",
+  "ATLASSIAN_OAUTH_CLIENT_ID",
+  "ATLASSIAN_CLIENT_ID",
+];
+const JIRA_CLIENT_SECRET_KEYS = [
+  "JIRA_OAUTH_CLIENT_SECRET",
+  "ATLASSIAN_OAUTH_CLIENT_SECRET",
+  "ATLASSIAN_CLIENT_SECRET",
+];
+const JIRA_REDIRECT_URI_KEYS = [
+  "JIRA_OAUTH_REDIRECT_URI",
+  "JIRA_OAUTH_REDIRECT_URL",
+  "ATLASSIAN_OAUTH_REDIRECT_URI",
+  "ATLASSIAN_OAUTH_REDIRECT_URL",
 ];
 
 export function isJiraApiRequestPath(pathname) {
@@ -87,11 +104,19 @@ export async function handleJiraApiRequest({
       404,
       {
         error: "Not found",
-        message: "Jira API route not found.",
+        message: "Atlassian API route not found.",
       },
       allowedOrigins,
     );
   } catch (error) {
+    if (error?.code === "jira_oauth_not_configured") {
+      return sendJiraConfigurationError(
+        req,
+        res,
+        error.missing,
+        allowedOrigins,
+      );
+    }
     if (error?.code === "unauthorized") {
       return sendConnectorJson(
         req,
@@ -106,7 +131,7 @@ export async function handleJiraApiRequest({
       res,
       500,
       {
-        error: "Jira integration error",
+        error: "Atlassian integration error",
         message: error instanceof Error ? error.message : String(error),
       },
       allowedOrigins,
@@ -130,26 +155,21 @@ async function handleJiraLogin(
 ) {
   const body = await readConnectorRequestBody(req);
   const user = await verifyConnectorRequestUser(req, envFileCandidates);
-  const clientId = await getConnectorRuntimeEnvValue(
-    "JIRA_OAUTH_CLIENT_ID",
+  const configuration = await resolveJiraOAuthConfiguration({
+    platformOrigin,
     envFileCandidates,
-  );
-  if (!clientId) {
-    return sendConnectorJson(
+  });
+  if (!configuration.configured) {
+    return sendJiraConfigurationError(
       req,
       res,
-      500,
-      { error: "Jira OAuth not configured" },
+      configuration.missing,
       allowedOrigins,
     );
   }
   const redirectTarget = sanitizeConnectorRedirectTarget(
     body?.redirectTo,
     platformOrigin,
-  );
-  const redirectUri = await resolveJiraCallbackUrl(
-    platformOrigin,
-    envFileCandidates,
   );
   const state = randomBytes(24).toString("base64url");
   await saveConnectorOAuthState(
@@ -158,7 +178,7 @@ async function handleJiraLogin(
       provider: JIRA_PROVIDER,
       uid: user.uid,
       redirectTarget,
-      callbackTarget: redirectUri,
+      callbackTarget: configuration.redirectUri,
       credentialId: normalizeConnectorCredentialId(body?.credentialId),
       credentialName: normalizeConnectorCredentialName(body?.credentialName),
       organizationId: normalizeConnectorOrganizationId(body?.organizationId),
@@ -174,8 +194,8 @@ async function handleJiraLogin(
     200,
     {
       authUrl: buildJiraAuthorizationUrl({
-        clientId,
-        redirectUri,
+        clientId: configuration.clientId,
+        redirectUri: configuration.redirectUri,
         state,
         scope: normalizeJiraScope(body?.scope),
       }),
@@ -238,33 +258,25 @@ async function handleJiraCallback(
       allowedOrigins,
     );
   }
-  const clientId = await getConnectorRuntimeEnvValue(
-    "JIRA_OAUTH_CLIENT_ID",
+  const configuration = await resolveJiraOAuthConfiguration({
+    platformOrigin,
     envFileCandidates,
-  );
-  const clientSecret = await getConnectorRuntimeEnvValue(
-    "JIRA_OAUTH_CLIENT_SECRET",
-    envFileCandidates,
-  );
-  if (!clientId || !clientSecret) {
-    return sendConnectorJson(
+  });
+  if (!configuration.configured) {
+    return sendJiraCallbackResult(
       req,
       res,
-      500,
-      { error: "Jira OAuth not configured" },
+      state.redirectTarget,
+      { result: "error", error: "jira_oauth_not_configured" },
       allowedOrigins,
     );
   }
-  const redirectUri = await resolveJiraCallbackUrl(
-    platformOrigin,
-    envFileCandidates,
-  );
   try {
     const token = await exchangeJiraAuthorizationCode({
-      clientId,
-      clientSecret,
+      clientId: configuration.clientId,
+      clientSecret: configuration.clientSecret,
       code,
-      redirectUri,
+      redirectUri: configuration.redirectUri,
     });
     const sites = await fetchJiraAccessibleResources(token.access_token);
     const requestedSiteId = normalizeJiraCloudId(state.metadata?.siteId);
@@ -272,7 +284,7 @@ async function handleJiraCallback(
       sites.find((candidate) => candidate.id === requestedSiteId)
       || sites[0];
     if (!site?.id) {
-      throw new Error("The Atlassian account does not expose an accessible Jira site.");
+      throw new Error("The Atlassian account does not expose an accessible cloud site.");
     }
     const profile = await fetchJiraProfile(token.access_token, site.id);
     const normalizedProfile = sanitizeJiraProfile(profile, site);
@@ -293,7 +305,7 @@ async function handleJiraCallback(
       encryptionKeyNames: JIRA_ENCRYPTION_KEYS,
     });
   } catch (error) {
-    console.error("[jira-oauth] Failed to save Jira credentials.", error);
+    console.error("[atlassian-oauth] Failed to save Atlassian credentials.", error);
     return sendJiraCallbackResult(
       req,
       res,
@@ -470,6 +482,39 @@ async function loadValidJiraCredential({
     envFileCandidates,
     encryptionKeyNames: JIRA_ENCRYPTION_KEYS,
   });
+  return refreshJiraCredentialIfNeeded({
+    credential,
+    ownerUserId: uid,
+    envFileCandidates,
+  });
+}
+
+export async function resolveJiraCredentialForOrganization({
+  organizationId,
+  credentialId = "",
+  requestingUserId = "",
+  envFileCandidates = [],
+}) {
+  const credential = await resolveConnectorCredentialForOrganization({
+    provider: JIRA_PROVIDER,
+    organizationId,
+    credentialId,
+    requestingUserId,
+    envFileCandidates,
+    encryptionKeyNames: JIRA_ENCRYPTION_KEYS,
+  });
+  return refreshJiraCredentialIfNeeded({
+    credential,
+    ownerUserId: credential?.credentialOwnerId,
+    envFileCandidates,
+  });
+}
+
+async function refreshJiraCredentialIfNeeded({
+  credential,
+  ownerUserId,
+  envFileCandidates,
+}) {
   if (!credential) return null;
   if (
     !credential.token?.expiresAt
@@ -478,22 +523,26 @@ async function loadValidJiraCredential({
     return credential;
   }
   if (!credential.token.refreshToken) return credential;
-  const clientId = await getConnectorRuntimeEnvValue(
-    "JIRA_OAUTH_CLIENT_ID",
+  const configuration = await resolveJiraOAuthConfiguration({
     envFileCandidates,
-  );
-  const clientSecret = await getConnectorRuntimeEnvValue(
-    "JIRA_OAUTH_CLIENT_SECRET",
-    envFileCandidates,
-  );
+  });
+  if (!configuration.configured) {
+    throw createJiraConfigurationError(configuration.missing);
+  }
   const refreshed = await refreshJiraToken({
-    clientId,
-    clientSecret,
+    clientId: configuration.clientId,
+    clientSecret: configuration.clientSecret,
     refreshToken: credential.token.refreshToken,
   });
+  const normalizedOwnerUserId = String(
+    ownerUserId || credential.credentialOwnerId || "",
+  ).trim();
+  if (!normalizedOwnerUserId) {
+    throw new Error("The Jira credential owner is unavailable.");
+  }
   await saveConnectorCredential({
     provider: JIRA_PROVIDER,
-    uid,
+    uid: normalizedOwnerUserId,
     credentialId: credential.credentialId,
     credentialName: credential.name,
     organizationId: credential.organizationId,
@@ -505,12 +554,17 @@ async function loadValidJiraCredential({
   });
   credential = await loadConnectorCredential({
     provider: JIRA_PROVIDER,
-    uid,
+    uid: normalizedOwnerUserId,
     credentialId: credential.credentialId,
     envFileCandidates,
     encryptionKeyNames: JIRA_ENCRYPTION_KEYS,
   });
-  return credential;
+  return credential
+    ? {
+        ...credential,
+        credentialOwnerId: normalizedOwnerUserId,
+      }
+    : null;
 }
 
 async function exchangeJiraAuthorizationCode({
@@ -572,7 +626,7 @@ async function fetchJiraAccessibleResources(accessToken) {
   );
   const payload = await response.json().catch(() => []);
   if (!response.ok) {
-    const error = new Error("Unable to load accessible Jira sites.");
+    const error = new Error("Unable to load accessible Atlassian sites.");
     error.status = response.status;
     throw error;
   }
@@ -607,7 +661,7 @@ async function fetchJiraProfile(accessToken, cloudId) {
     const error = new Error(
       payload?.errorMessages?.[0]
       || payload?.message
-      || "Unable to load the Jira profile.",
+      || "Unable to load the Atlassian profile.",
     );
     error.status = response.status;
     throw error;
@@ -675,18 +729,67 @@ function getJiraIdentity(profile) {
   ].find((value) => typeof value === "string" && value.trim())?.trim() || "";
 }
 
-async function resolveJiraCallbackUrl(platformOrigin, envFileCandidates) {
-  return (
-    await getConnectorRuntimeEnvValue(
-      "JIRA_OAUTH_REDIRECT_URI",
-      envFileCandidates,
-    )
-    || await getConnectorRuntimeEnvValue(
-      "JIRA_OAUTH_REDIRECT_URL",
-      envFileCandidates,
-    )
-    || new URL("/api/jira/callback", `${platformOrigin}/`).toString()
+export async function resolveJiraOAuthConfiguration({
+  platformOrigin = "http://localhost",
+  envFileCandidates = [],
+}) {
+  const [clientId, clientSecret, configuredRedirectUri] = await Promise.all([
+    getFirstJiraRuntimeEnvValue(JIRA_CLIENT_ID_KEYS, envFileCandidates),
+    getFirstJiraRuntimeEnvValue(JIRA_CLIENT_SECRET_KEYS, envFileCandidates),
+    getFirstJiraRuntimeEnvValue(JIRA_REDIRECT_URI_KEYS, envFileCandidates),
+  ]);
+  const missing = [
+    ...(!clientId ? ["JIRA_OAUTH_CLIENT_ID"] : []),
+    ...(!clientSecret ? ["JIRA_OAUTH_CLIENT_SECRET"] : []),
+  ];
+  return {
+    configured: missing.length === 0,
+    clientId,
+    clientSecret,
+    redirectUri:
+      configuredRedirectUri
+      || new URL("/api/jira/callback", `${platformOrigin}/`).toString(),
+    missing,
+  };
+}
+
+async function getFirstJiraRuntimeEnvValue(keys, envFileCandidates) {
+  for (const key of keys) {
+    const value = await getConnectorRuntimeEnvValue(key, envFileCandidates);
+    if (value) return value;
+  }
+  return "";
+}
+
+function sendJiraConfigurationError(
+  req,
+  res,
+  missing,
+  allowedOrigins,
+) {
+  return sendConnectorJson(
+    req,
+    res,
+    503,
+    {
+      error: "Atlassian OAuth not configured",
+      code: "jira_oauth_not_configured",
+      message:
+        "Atlassian authentication is unavailable because this deployment has no complete OAuth 2.0 client configured.",
+      missing,
+    },
+    allowedOrigins,
   );
+}
+
+function createJiraConfigurationError(missing) {
+  const error = new Error(
+    "Atlassian authentication is unavailable because this deployment has no complete OAuth 2.0 client configured.",
+  );
+  error.code = "jira_oauth_not_configured";
+  error.status = 503;
+  error.missing = missing;
+  return error;
 }
 
 function sendJiraCallbackResult(

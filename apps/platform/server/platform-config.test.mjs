@@ -86,7 +86,7 @@ test("builds a fail-closed on-prem OIDC profile without normalizing its issuer i
   assert.equal(config.oidc.clientId, "computer-agents-platform");
   assert.deepEqual(config.oidc.scopes, ["openid", "profile", "email"]);
   assert.equal(config.platformCookieSecure, true);
-  assert.equal(config.executionDispatcher.enabled, true);
+  assert.equal(config.executionDispatcher.enabled, false);
   assert.equal(
     config.platformControlPlaneSecret,
     "control-plane-secret-with-at-least-32-bytes",
@@ -95,6 +95,16 @@ test("builds a fail-closed on-prem OIDC profile without normalizing its issuer i
     config.executionDispatcher.controlOrigin,
     "http://127.0.0.1:8080",
   );
+});
+
+test("enables execution dispatch only when explicitly requested", () => {
+  const config = createPlatformConfig(validOidcEnvironment({
+    ENABLE_EXECUTION_DISPATCHER: "true",
+  }));
+
+  assert.equal(config.executionDispatcher.enabled, true);
+  assert.equal(config.executionDispatcher.pollIntervalMs, 2_000);
+  assert.equal(config.executionDispatcher.maximumIdlePollIntervalMs, 8_000);
 });
 
 test("rejects incomplete or unsafe OIDC trust configuration", () => {

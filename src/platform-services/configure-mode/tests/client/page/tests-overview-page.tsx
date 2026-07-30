@@ -1,5 +1,5 @@
 import { ChevronRight, FlaskConical, Play, Plus, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
@@ -64,18 +64,6 @@ export function TestsOverviewPage({
   onRun,
   onDelete,
 }: TestsOverviewPageProps) {
-  const [statusFilter, setStatusFilter] = useState("all");
-  const filteredRows = useMemo(
-    () => rows.filter((row) => {
-      if (statusFilter === "passed") return row.lastRunStatus === "passed";
-      if (statusFilter === "attention") {
-        return ["failed", "completed_with_errors"].includes(row.lastRunStatus);
-      }
-      if (statusFilter === "never") return row.runCount === 0;
-      return true;
-    }),
-    [rows, statusFilter],
-  );
   const columns = useMemo<PlatformDataTableColumn<TestPlanOverviewRow>[]>(
     () => [
       {
@@ -150,61 +138,29 @@ export function TestsOverviewPage({
       onSelect: () => onDelete(row),
     },
   ];
-  const scrollToTable = () => {
-    if (typeof document === "undefined") return;
-    document
-      .querySelector(".resource-overview-page.is-tests .resource-overview-page__table-section")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-  const showPassed = () => {
-    setStatusFilter("passed");
-    scrollToTable();
-  };
   return (
     <ResourceOverviewPage<TestPlanOverviewRow>
-      heroContent={
-        <TestsOverviewGuide
-          planCount={rows.length}
-          passedRunCount={rows.reduce((total, row) => total + row.passedRunCount, 0)}
-          onCreate={onCreate}
-          onBrowse={scrollToTable}
-          onShowPassed={showPassed}
-        />
-      }
+      heroContent={<TestsOverviewGuide />}
       showPeriodSelector={false}
       controlsPortalId={controlsPortalId}
       className="is-tests"
       table={{
-        rows: filteredRows,
+        rows,
         columns,
         getRowId: (row) => row.id,
         ariaLabel: "Test plans",
         className: "resource-overview-table is-tests",
+        variant: "catalog-ui",
         sorting: { defaultValue: { id: "updated", direction: "desc" } },
         selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
         pagination: false,
         toolbar: {
-          title: "All Test Plans",
           search: {
             placeholder: "Search test plans",
             getSearchText: (row) =>
               row.searchText
               || `${row.name} ${row.projectLabel} ${row.lastRunStatus}`,
           },
-          filters: [
-            {
-              id: "status",
-              label: "Status",
-              value: statusFilter,
-              onChange: setStatusFilter,
-              options: [
-                { id: "all", label: "All Plans" },
-                { id: "passed", label: "Passing" },
-                { id: "attention", label: "Needs Attention" },
-                { id: "never", label: "Never Run" },
-              ],
-            },
-          ],
           primaryAction: { label: "Test Plan", icon: Plus, onClick: onCreate },
         },
         getRowActions: actions,

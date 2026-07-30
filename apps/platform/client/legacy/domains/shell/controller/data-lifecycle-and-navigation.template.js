@@ -76,19 +76,60 @@
           }, [hasSessionAuth, loadSettingsBudgetStatus, settingsBudgetStatus, showInitialThreadWelcome]);
   
           useEffect(() => {
-            if (activePage !== "tools" || !hasSessionAuth) {
+            if (
+              activePage !== "tools"
+              || (toolsView !== "plugins" && toolsView !== "tags")
+              || !hasSessionAuth
+            ) {
               return;
             }
-  
-            void loadSettingsEmailStatus();
-            void loadSettingsDiscordStatus();
-            void loadSettingsTelegramStatus();
-            void refreshGithubStatus();
-            void refreshGmailStatus();
-            void refreshGoogleDriveStatus();
-            void refreshOneDriveStatus();
-            void refreshNotionStatus();
-            void loadSettingsTriggers();
+
+            let cancelled = false;
+            let fallbackTimer = 0;
+            let idleCallback = 0;
+            const refreshConnectors = async () => {
+              const refreshes = [
+                loadSettingsEmailStatus,
+                loadSettingsDiscordStatus,
+                loadSettingsTelegramStatus,
+                refreshGithubStatus,
+                refreshGmailStatus,
+                refreshGoogleDriveStatus,
+                refreshOneDriveStatus,
+                refreshNotionStatus,
+                loadSettingsTriggers,
+              ];
+              // Keep the connector overview responsive even when its remote
+              // control plane is under pressure. Small batches avoid turning
+              // one page visit into a burst that exhausts the API/SQL pool.
+              for (let index = 0; index < refreshes.length; index += 2) {
+                if (cancelled) return;
+                await Promise.allSettled(
+                  refreshes
+                    .slice(index, index + 2)
+                    .map((refresh) => refresh()),
+                );
+              }
+            };
+            const scheduleRefresh = () => {
+              if (!cancelled) void refreshConnectors();
+            };
+            if (typeof window.requestIdleCallback === "function") {
+              idleCallback = window.requestIdleCallback(scheduleRefresh, {
+                timeout: 750,
+              });
+            } else {
+              fallbackTimer = window.setTimeout(scheduleRefresh, 150);
+            }
+            return () => {
+              cancelled = true;
+              if (idleCallback && typeof window.cancelIdleCallback === "function") {
+                window.cancelIdleCallback(idleCallback);
+              }
+              if (fallbackTimer) {
+                window.clearTimeout(fallbackTimer);
+              }
+            };
           }, [
             activePage,
             hasSessionAuth,
@@ -96,6 +137,7 @@
             loadSettingsEmailStatus,
             loadSettingsTelegramStatus,
             loadSettingsTriggers,
+            toolsView,
           ]);
   
           useEffect(() => {
@@ -162,6 +204,10 @@
               || !selectedPluginId
             ) {
               return;
+            }
+            const refreshStatus = getConnectorStatusRefresh(selectedPluginId);
+            if (typeof refreshStatus === "function") {
+              void refreshStatus({ clearPendingOnFailure: false });
             }
             void loadTagDetailConfig(selectedPluginId);
           }, [activePage, toolsView, selectedPluginId, hasSessionAuth]);
@@ -268,63 +314,116 @@
             setSettingsCopiedField("");
           }, [settingsSelectedTriggerId]);
   
-          const demoComputerAgents = useMemo(() => ({
-            github: {
-              connected: githubStatus.connected,
-              disconnectToken: githubDisconnectToken,
-              onConnect: handleGithubAuthConnect,
-              onDisconnect: handleGithubAuthDisconnect,
-              fetchItems: handleGithubFetchItems,
-              fetchBranches: handleGithubFetchBranches,
-              fetchFileContent: handleGithubFetchFileContent,
-            },
-            notion: {
-              connected: notionStatus.connected,
-              databases: notionDatabases,
-              onConnect: handleNotionAuthConnect,
-              onDisconnect: handleNotionAuthDisconnect,
-              fetchDatabases: handleNotionFetchDatabases,
-            },
-            googleDrive: {
-              connected: googleDriveStatus.connected,
-              rootLabel: "My Drive",
-              onConnect: handleGoogleDriveAuthConnect,
-              onDisconnect: handleGoogleDriveAuthDisconnect,
-              onManageAccess: handleGoogleDriveManageAccess,
-              fetchItems: handleGoogleDriveFetchItems,
-              fetchFileContent: handleGoogleDriveFetchFileContent,
-            },
-            oneDrive: {
-              connected: oneDriveStatus.connected,
-              rootLabel: "OneDrive",
-              onConnect: handleOneDriveAuthConnect,
-              onDisconnect: handleOneDriveAuthDisconnect,
-              fetchItems: handleOneDriveFetchItems,
-              fetchFileContent: handleOneDriveFetchFileContent,
-            },
-            workspace: {
-              items: [
-                { id: "ws_file_runner", name: "src/react/runner-chat.tsx", mimeType: "text/typescript" },
-                { id: "ws_file_css", name: "src/react/runner-chat.css", mimeType: "text/css" },
-                { id: "ws_file_demo", name: "apps/platform/server/index.mjs", mimeType: "text/javascript" }
-              ]
-            },
-            schedule: {
-              enabled: false,
-              presets: [
-                { id: "daily", label: "Every day", cron: "0 9 * * *" },
-                { id: "weekdays", label: "Every weekday", cron: "0 9 * * 1-5" },
-                { id: "weekly", label: "Every week", cron: "0 9 * * 1" }
-              ]
-            }
-          }), [githubDisconnectToken, githubStatus.connected, googleDriveStatus.connected, notionDatabases, notionStatus.connected, oneDriveStatus.connected]);
-  
-          const runtimeEnvironments = useMemo(() => {
-            if (hasRealAccess) {
-              return realEnvironments;
-            }
-            return demoEnvironments;
-          }, [demoEnvironments, hasRealAccess, realEnvironments]);
+          const demoComputerAgents = useMemo(() => {
+            const connectorOptions = listPlatformConnectorCatalogEntries().map((connector) => {
+              const providerStatus = getConnectorStatusRecord(connector.id);
+              const detailConfig = getCurrentTagDetailConfig(connector.id);
+              const credentials = normalizePlatformConnectionCredentials(detailConfig.credentials);
+              const channelConnected = connector.id === "discord"
+                ? Boolean(settingsDiscordStatus?.linked && settingsDiscordStatus?.verified)
+                : connector.id === "telegram"
+                  ? Boolean(settingsTelegramStatus?.linked && settingsTelegramStatus?.verified)
+                  : connector.id === "email"
+                    ? Boolean(settingsEmailStatus?.linked && settingsEmailStatus?.verified)
+                    : false;
+              const connected = Boolean(
+                providerStatus?.connected
+                || detailConfig.linked
+                || detailConfig.verified
+                || credentials.some((credential) => credential.status === "valid")
+                || channelConnected
+              );
+
+              return {
+                id: connector.id,
+                name: connector.label,
+                description: connector.functionsLabel || connector.description,
+                keywords: [
+                  connector.shortLabel,
+                  connector.category,
+                  connector.categoryLabel,
+                  connector.authenticationLabel,
+                ].filter(Boolean),
+                logoUrl: connector.logoUrl,
+                connected,
+                onConnect: () => {
+                  setSelectedPluginId(connector.id);
+                  setPluginDetailTab("tutorial");
+                  openToolsView(connector.kind === "tag" ? "tags" : "plugins");
+                  return false;
+                },
+              };
+            });
+
+            return {
+              connectors: connectorOptions,
+              github: {
+                connected: githubStatus.connected,
+                disconnectToken: githubDisconnectToken,
+                onConnect: handleGithubAuthConnect,
+                onDisconnect: handleGithubAuthDisconnect,
+                fetchItems: handleGithubFetchItems,
+                fetchBranches: handleGithubFetchBranches,
+                fetchFileContent: handleGithubFetchFileContent,
+              },
+              notion: {
+                connected: notionStatus.connected,
+                databases: notionDatabases,
+                onConnect: handleNotionAuthConnect,
+                onDisconnect: handleNotionAuthDisconnect,
+                fetchDatabases: handleNotionFetchDatabases,
+              },
+              googleDrive: {
+                connected: googleDriveStatus.connected,
+                rootLabel: "My Drive",
+                onConnect: handleGoogleDriveAuthConnect,
+                onDisconnect: handleGoogleDriveAuthDisconnect,
+                onManageAccess: handleGoogleDriveManageAccess,
+                fetchItems: handleGoogleDriveFetchItems,
+                fetchFileContent: handleGoogleDriveFetchFileContent,
+              },
+              oneDrive: {
+                connected: oneDriveStatus.connected,
+                rootLabel: "OneDrive",
+                onConnect: handleOneDriveAuthConnect,
+                onDisconnect: handleOneDriveAuthDisconnect,
+                fetchItems: handleOneDriveFetchItems,
+                fetchFileContent: handleOneDriveFetchFileContent,
+              },
+              workspace: {
+                items: [
+                  { id: "ws_file_runner", name: "src/react/runner-chat.tsx", mimeType: "text/typescript" },
+                  { id: "ws_file_css", name: "src/react/runner-chat.css", mimeType: "text/css" },
+                  { id: "ws_file_demo", name: "apps/platform/server/index.mjs", mimeType: "text/javascript" }
+                ]
+              },
+              schedule: {
+                enabled: false,
+                presets: [
+                  { id: "daily", label: "Every day", cron: "0 9 * * *" },
+                  { id: "weekdays", label: "Every weekday", cron: "0 9 * * 1-5" },
+                  { id: "weekly", label: "Every week", cron: "0 9 * * 1" }
+                ]
+              }
+            };
+          }, [
+            githubDisconnectToken,
+            githubStatus.connected,
+            gmailStatus.connected,
+            googleDriveStatus.connected,
+            jiraStatus.connected,
+            notionDatabases,
+            notionStatus.connected,
+            oneDriveStatus.connected,
+            settingsDiscordStatus?.linked,
+            settingsDiscordStatus?.verified,
+            settingsEmailStatus?.linked,
+            settingsEmailStatus?.verified,
+            settingsTelegramStatus?.linked,
+            settingsTelegramStatus?.verified,
+            tagDetailConfigsById,
+          ]);
+
           const runnerWorkspaceProjects = useMemo(() => {
             if (!hasRealAccess) {
               return [];
@@ -504,7 +603,9 @@
               return;
             }
   
-            const existingPromise = proactiveDefaultEnvironmentWarmPromisesRef.current.get(requestKey);
+            const existingPromise =
+              proactiveDefaultEnvironmentWarmPromisesRef.current.get(requestKey)
+              || readSharedEnvironmentStartPromise(requestKey);
             if (existingPromise) {
               return existingPromise;
             }
@@ -536,15 +637,21 @@
                   return;
                 }
   
-                const nextWarmCacheUntilMs = Date.now() + 90 * 1000;
+                const nextWarmCacheUntilMs = Date.now() + 4 * 60 * 1000;
                 proactiveDefaultEnvironmentWarmCacheUntilMsRef.current.set(requestKey, nextWarmCacheUntilMs);
                 writeSharedEnvironmentWarmCacheUntilMs(requestKey, nextWarmCacheUntilMs);
               } finally {
-                proactiveDefaultEnvironmentWarmPromisesRef.current.delete(requestKey);
+                if (proactiveDefaultEnvironmentWarmPromisesRef.current.get(requestKey) === warmPromise) {
+                  proactiveDefaultEnvironmentWarmPromisesRef.current.delete(requestKey);
+                }
+                if (readSharedEnvironmentStartPromise(requestKey) === warmPromise) {
+                  writeSharedEnvironmentStartPromise(requestKey, null);
+                }
               }
             })();
   
             proactiveDefaultEnvironmentWarmPromisesRef.current.set(requestKey, warmPromise);
+            writeSharedEnvironmentStartPromise(requestKey, warmPromise);
             return warmPromise;
           }, [authRequestHeaders, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
   ${ONBOARDING_APP_SCRIPT_FRAGMENTS.runtime}
@@ -558,7 +665,10 @@
               return undefined;
             }
   
-            void proactivelyWarmDefaultEnvironment(defaultShellEnvironmentId, resolvedPreferredAgentId);
+            void proactivelyWarmDefaultEnvironment(
+              defaultShellEnvironmentId,
+              resolvedPreferredAgentId,
+            ).catch(() => undefined);
             return undefined;
           }, [
             activePage,
@@ -890,10 +1000,16 @@
             }
             let requestPromise = null;
             try {
-              requestPromise = fetch(proxyBackendBase + "/threads?limit=" + encodeURIComponent(String(requestedLimit)), {
+              requestPromise = fetch(
+                proxyBackendBase
+                  + "/threads?limit="
+                  + encodeURIComponent(String(requestedLimit))
+                  + "&view=overview",
+                {
                 method: "GET",
                 headers: authRequestHeaders,
-              });
+                },
+              );
               threadRefreshInFlightRef.current = {
                 key: requestKey,
                 promise: requestPromise,
@@ -1013,6 +1129,17 @@
               return;
             }
             if (privateThreadIdsRef.current.has(normalizedThreadId)) {
+              return;
+            }
+            const existingThread = realThreadsRef.current.find((thread) => thread.id === normalizedThreadId) || null;
+            const nextCompletedAt = typeof options?.completedAt === "string"
+              ? options.completedAt
+              : String(existingThread?.completedAt || "");
+            if (
+              existingThread
+              && String(existingThread.status || "").trim() === normalizedStatus
+              && String(existingThread.completedAt || "") === nextCompletedAt
+            ) {
               return;
             }
   
@@ -2070,7 +2197,7 @@
 
             const request = (async () => {
               try {
-                const response = await fetch(proxyBackendBase + "/agents?limit=100", {
+                const response = await fetch(proxyBackendBase + "/agents?view=overview&limit=100", {
                   method: "GET",
                   headers: authRequestHeaders,
                   cache: "no-store",

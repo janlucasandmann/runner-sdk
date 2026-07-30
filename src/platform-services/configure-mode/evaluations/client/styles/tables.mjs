@@ -397,19 +397,6 @@ export const EVALUATIONS_STYLE_TABLES = String.raw`        line-height: 1.35;
         gap: 10px;
       }
 
-      .playground-evaluations-dataset-case-table-copy {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-      }
-
-      .playground-evaluations-dataset-case-table-label {
-        color: rgba(255, 255, 255, 0.46);
-        font-size: 10px;
-        line-height: 1.2;
-      }
-
       .playground-evaluations-dataset-case-table-title {
         min-width: 0;
         overflow: hidden;
@@ -435,8 +422,6 @@ export const EVALUATIONS_STYLE_TABLES = String.raw`        line-height: 1.35;
         color: rgba(255, 255, 255, 0.62);
       }
 
-      .playground-evaluations-dataset-cases-table-row.is-pending.is-error
-        .playground-evaluations-dataset-case-table-label,
       .playground-evaluations-dataset-cases-table-row.is-pending.is-error
         .playground-evaluations-dataset-case-table-title {
         color: rgba(255, 135, 135, 0.9);

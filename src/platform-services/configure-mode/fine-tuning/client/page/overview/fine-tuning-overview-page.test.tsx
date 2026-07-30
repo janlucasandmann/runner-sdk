@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 describe("FineTuningOverviewPage", () => {
-  it("uses the Teams overview composition and shared minimal table", async () => {
+  it("uses the Evaluations overview composition and shared catalog table", async () => {
     const user = userEvent.setup();
     const onOpen = vi.fn();
     const onCreate = vi.fn();
@@ -51,19 +51,24 @@ describe("FineTuningOverviewPage", () => {
     expect(
       screen.getByRole("heading", { name: "Improve agents with evaluated evidence" }),
     ).not.toBeNull();
-    expect(container.querySelectorAll(".platform-ui-card")).toHaveLength(2);
+    expect(container.querySelectorAll(".platform-ui-card")).toHaveLength(0);
     expect(screen.getByRole("table", { name: "Fine-tuning jobs" })).not.toBeNull();
-    expect(container.querySelector(".platform-data-table.is-minimalistic-ui")).not.toBeNull();
+    expect(container.querySelector(".platform-data-table.is-catalog-ui")).not.toBeNull();
+    expect(container.querySelector(".platform-data-table__group-header")).toBeNull();
     expect(container.querySelector(".platform-data-table__footer")).toBeNull();
     expect(
-      screen.getByRole("navigation", { name: "Fine-tuning jobs pagination" }),
-    ).not.toBeNull();
-    expect(
-      (screen.getByRole("combobox", { name: "Rows per page" }) as HTMLSelectElement).value,
-    ).toBe("20");
-    expect(screen.getByText("1-1 of 1")).not.toBeNull();
-    expect(screen.getByText("All Fine-tuning Jobs")).not.toBeNull();
+      screen.queryByRole("navigation", { name: "Fine-tuning jobs pagination" }),
+    ).toBeNull();
+    expect(screen.queryByText("All Fine-tuning Jobs")).toBeNull();
     expect(screen.getByPlaceholderText("Search optimization jobs")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "Status" })).toBeNull();
+    const jobRow = screen.getByRole("row", { name: "Improve Support Agent" });
+    const jobCell = jobRow.querySelector(
+      '.platform-data-table__cell[data-column-id="name"]',
+    );
+    expect(
+      jobCell?.querySelector(".resource-overview-identity__visual"),
+    ).toBeNull();
 
     await user.click(await screen.findByRole("button", { name: "Optimize Agent" }));
     expect(onCreate).toHaveBeenCalledOnce();
@@ -84,9 +89,8 @@ describe("FineTuningOverviewPage", () => {
 
     expect(container.querySelector(".platform-empty-state")).not.toBeNull();
     expect(
-      screen.getByRole("navigation", { name: "Fine-tuning jobs pagination" }),
-    ).not.toBeNull();
-    expect(screen.getByText("0-0 of 0")).not.toBeNull();
+      screen.queryByRole("navigation", { name: "Fine-tuning jobs pagination" }),
+    ).toBeNull();
     expect(screen.getByText("No optimization jobs yet")).not.toBeNull();
     expect(
       screen.getByText(

@@ -8,11 +8,17 @@ import {
 } from "./index.mjs";
 import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
-assert.match(PLAYGROUND_TESTS_CSS, /\.tests-overview-guide/);
+assert.match(PLAYGROUND_TESTS_CSS, /\.resource-overview-page\.is-tests/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.state, /selectedTestPlanId/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.state, /selectedTestCaseId/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestsPage/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestCaseDetailPage/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.historyCapture, /testCaseId/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.mode === "case"/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /TestsWorkspacePage/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onOpenCase/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-tests-section-controls/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /selectedTestCaseName/);
 
 const platformSource = await readPlatformCompositionSource();
 assert.match(
@@ -88,13 +94,27 @@ assert.match(detailSource, /PlatformAnalyticsSection/);
 assert.match(detailSource, /PlatformSwitch/);
 assert.match(detailSource, /PlatformDataTable/);
 assert.match(detailSource, /PlatformLabel/);
+assert.match(detailSource, /onRowActivate=\{\(testCase\) => onOpenCase/);
 assert.match(detailSource, /publishVersion/);
 assert.match(detailSource, /TestPlanAccessSettings/);
+assert.match(detailSource, /sidebarCollapsed=\{accessDetailOpen\}/);
+assert.match(detailSource, /onPermissionDetailOpenChange=\{setAccessDetailOpen\}/);
 assert.doesNotMatch(detailSource, /CircleDot/);
 assert.doesNotMatch(
   detailSource,
   /primaryAction:\s*\{\s*label:\s*"Run Tests"/s,
 );
+
+const accessSettingsSource = await fs.readFile(
+  new URL("./client/page/test-plan-access-settings.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(accessSettingsSource, /PlatformResourceAccessSettings<TestAccessTeam>/);
+assert.match(accessSettingsSource, /PLATFORM_ALL_AGENTS_PRINCIPAL_ID/);
+assert.match(accessSettingsSource, /buildPlatformSystemPrincipalRolePermissionMetadata/);
+assert.match(accessSettingsSource, /subjectType="test_plan"/);
+assert.match(accessSettingsSource, /teamSubjectType="test_plan_team_role"/);
+assert.match(accessSettingsSource, /onPermissionDetailOpenChange\?\.\(Boolean\(value\)\)/);
 
 const runDetailSource = await fs.readFile(
   new URL("./client/page/test-run-detail-page.tsx", import.meta.url),
@@ -111,6 +131,19 @@ const workspaceSource = await fs.readFile(
 );
 assert.match(workspaceSource, /PlatformServiceDetailFrame/);
 assert.match(workspaceSource, /sectionControlsPortalId/);
+assert.match(workspaceSource, /mode === "case"/);
+assert.match(workspaceSource, /TestCaseDetailPage/);
+
+const caseDetailSource = await fs.readFile(
+  new URL("./client/page/test-case-detail-page.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(caseDetailSource, /FileResourceDetailPage/);
+assert.match(caseDetailSource, /PlatformCodeEditorWorkspace/);
+assert.match(caseDetailSource, /PlatformSwitch/);
+assert.match(caseDetailSource, /PlatformServiceDetailPropertyList/);
+assert.match(caseDetailSource, /Save Changes/);
+assert.match(caseDetailSource, /Delete Case/);
 
 const overviewSource = await fs.readFile(
   new URL("./client/page/tests-overview-page.tsx", import.meta.url),
@@ -125,4 +158,7 @@ const overviewGuideSource = await fs.readFile(
   new URL("./client/page/tests-overview-guide.tsx", import.meta.url),
   "utf8",
 );
-assert.match(overviewGuideSource, /PlatformUiCard/);
+assert.match(overviewGuideSource, /PlatformPageHero/);
+assert.doesNotMatch(overviewGuideSource, /PlatformUiCard/);
+assert.match(overviewSource, /variant:\s*"catalog-ui"/);
+assert.doesNotMatch(overviewSource, /filters:/);

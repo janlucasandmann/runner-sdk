@@ -3116,7 +3116,7 @@
             const request = (async () => {
               setServerAgentOptionsLoading(true);
               try {
-                const response = await fetch(backendUrl + "/agents?limit=200", {
+                const response = await fetch(backendUrl + "/agents?view=overview&limit=200", {
                   method: "GET",
                   headers: requestHeaders,
                 });

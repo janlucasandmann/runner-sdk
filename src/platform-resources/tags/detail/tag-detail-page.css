@@ -564,7 +564,8 @@ button.tag-detail-page__function-item-trigger:focus-visible {
   font-weight: 400;
 }
 
-.tag-detail-page__credential-form input {
+.tag-detail-page__credential-form input,
+.tag-detail-page__credential-form textarea {
   box-sizing: border-box;
   width: 100%;
   min-height: 40px;
@@ -578,13 +579,26 @@ button.tag-detail-page__function-item-trigger:focus-visible {
   font-size: 12px;
 }
 
-.tag-detail-page__credential-form input:focus {
+.tag-detail-page__credential-form textarea {
+  min-height: 132px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  line-height: 1.45;
+}
+
+.tag-detail-page__credential-form input:focus,
+.tag-detail-page__credential-form textarea:focus {
   border-color: #4da3ff;
   box-shadow: 0 0 0 1px #4da3ff;
 }
 
-.tag-detail-page__credential-form input::placeholder {
+.tag-detail-page__credential-form input::placeholder,
+.tag-detail-page__credential-form textarea::placeholder {
   color: rgba(255, 255, 255, 0.42);
+}
+
+.tag-detail-page__credential-provider-field {
+  margin-top: 20px;
 }
 
 .tag-detail-page__credential-form p {

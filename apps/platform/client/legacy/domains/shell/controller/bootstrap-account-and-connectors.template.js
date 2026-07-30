@@ -301,6 +301,7 @@
           const [oneDriveStatus, setOneDriveStatus] = useState(() => readCachedIntegrationStatus("one-drive"));
           const [gmailStatus, setGmailStatus] = useState(() => readCachedIntegrationStatus("gmail"));
           const [jiraStatus, setJiraStatus] = useState(() => readCachedIntegrationStatus("jira"));
+          const [genericConnectorStatuses, setGenericConnectorStatuses] = useState({});
           const [notionDatabases, setNotionDatabases] = useState([]);
           const [settingsEmailStatus, setSettingsEmailStatus] = useState(null);
           const [settingsEmailLoading, setSettingsEmailLoading] = useState(false);
@@ -619,6 +620,7 @@
           }, [proxyBackendBase, requestHeadersSignature, shouldLoadGuardrailSets]);
   ${TEAMS_APP_SCRIPT_FRAGMENTS.resourceLifecycle}
           const hasRealAccess = !isDemoMode && hasSessionAuth;
+          const runtimeEnvironments = hasRealAccess ? realEnvironments : demoEnvironments;
           const hasShellAccess = hasRealAccess || hasDemoAccess;
           const databaseListIdentity = hasSessionAuth
             ? String(sessionState.userId || "").trim()
@@ -779,6 +781,26 @@
                 delete sharedCache[requestKey];
               }
               window.__runnerEnvironmentWarmCacheUntilMs = sharedCache;
+            } catch {}
+          }
+
+          function readSharedEnvironmentStartPromise(requestKey) {
+            try {
+              return window.__runnerEnvironmentStartPromises?.[requestKey] || null;
+            } catch {
+              return null;
+            }
+          }
+
+          function writeSharedEnvironmentStartPromise(requestKey, promise) {
+            try {
+              const sharedPromises = window.__runnerEnvironmentStartPromises || {};
+              if (promise) {
+                sharedPromises[requestKey] = promise;
+              } else {
+                delete sharedPromises[requestKey];
+              }
+              window.__runnerEnvironmentStartPromises = sharedPromises;
             } catch {}
           }
   
@@ -2953,7 +2975,7 @@
             }
           }
   
-          async function refreshPluginConnectionStatus(provider, setStatus, options = {}) {
+          const refreshPluginConnectionStatus = useCallback(async function refreshPluginConnectionStatus(provider, setStatus, options = {}) {
             const { clearPendingOnFailure = false } = options;
             try {
               setStatus(await fetchPlatformPluginConnectionStatus(provider));
@@ -2963,31 +2985,26 @@
                 removePendingStatusIndicatorId(provider);
               }
             }
-          }
+          }, []);
 
-          async function refreshGithubStatus(options = {}) {
-            return refreshPluginConnectionStatus("github", setGithubStatus, options);
-          }
-  
-          async function refreshGoogleDriveStatus(options = {}) {
-            return refreshPluginConnectionStatus("google-drive", setGoogleDriveStatus, options);
-          }
-  
-          async function refreshOneDriveStatus(options = {}) {
-            return refreshPluginConnectionStatus("one-drive", setOneDriveStatus, options);
-          }
-  
-          async function refreshGmailStatus(options = {}) {
-            return refreshPluginConnectionStatus("gmail", setGmailStatus, options);
-          }
-  
-          async function refreshNotionStatus(options = {}) {
-            return refreshPluginConnectionStatus("notion", setNotionStatus, options);
-          }
+          const refreshGithubStatus = useCallback((options = {}) => refreshPluginConnectionStatus("github", setGithubStatus, options), [refreshPluginConnectionStatus]);
+          const refreshGoogleDriveStatus = useCallback((options = {}) => refreshPluginConnectionStatus("google-drive", setGoogleDriveStatus, options), [refreshPluginConnectionStatus]);
+          const refreshOneDriveStatus = useCallback((options = {}) => refreshPluginConnectionStatus("one-drive", setOneDriveStatus, options), [refreshPluginConnectionStatus]);
+          const refreshGmailStatus = useCallback((options = {}) => refreshPluginConnectionStatus("gmail", setGmailStatus, options), [refreshPluginConnectionStatus]);
+          const refreshNotionStatus = useCallback((options = {}) => refreshPluginConnectionStatus("notion", setNotionStatus, options), [refreshPluginConnectionStatus]);
+          const refreshJiraStatus = useCallback((options = {}) => refreshPluginConnectionStatus("jira", setJiraStatus, options), [refreshPluginConnectionStatus]);
 
-          async function refreshJiraStatus(options = {}) {
-            return refreshPluginConnectionStatus("jira", setJiraStatus, options);
-          }
+          const refreshGenericConnectorStatus = useCallback(async function refreshGenericConnectorStatus(provider, options = {}) {
+            const normalizedProvider = getPlaygroundIntegrationProvider(provider);
+            if (!normalizedProvider) return;
+            return refreshPluginConnectionStatus(
+              normalizedProvider,
+              (status) => setGenericConnectorStatuses((current) => (
+                { ...current, [normalizedProvider]: status }
+              )),
+              options,
+            );
+          }, [refreshPluginConnectionStatus]);
   
           const loadSettingsEmailStatus = useCallback(async function loadSettingsEmailStatus() {
             if (!hasSessionAuth) {
@@ -3093,7 +3110,14 @@
             if (normalizedProvider === "jira") {
               return refreshJiraStatus;
             }
-            return null;
+            try {
+              const definition = getPlatformPluginConnectionDefinition(normalizedProvider);
+              return definition
+                ? (options = {}) => refreshGenericConnectorStatus(normalizedProvider, options)
+                : null;
+            } catch {
+              return null;
+            }
           }
 
           function getConnectorStatusRecord(provider) {
@@ -3116,7 +3140,7 @@
             if (normalizedProvider === "jira") {
               return jiraStatus;
             }
-            return null;
+            return genericConnectorStatuses[normalizedProvider] || null;
           }
 
           function isConnectorStatusConnected(provider) {

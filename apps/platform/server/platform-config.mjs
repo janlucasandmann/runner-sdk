@@ -137,12 +137,7 @@ export function createPlatformConfig(env = process.env) {
   ) {
     throw new Error("ENABLE_EXECUTION_DISPATCHER must be true or false.");
   }
-  const hasExecutionDispatcherSecret = Buffer.byteLength(
-    platformControlPlaneSecret,
-    "utf8",
-  ) >= 32;
-  const executionDispatcherEnabled = executionDispatcherRequested === "true"
-    || (!executionDispatcherRequested && hasExecutionDispatcherSecret);
+  const executionDispatcherEnabled = executionDispatcherRequested === "true";
   if (executionDispatcherEnabled) {
     validateSecret(
       "PLATFORM_CONTROL_PLANE_SECRET",
@@ -307,6 +302,11 @@ export function createPlatformConfig(env = process.env) {
       pollIntervalMs: readPositiveInteger(
         env.EXECUTION_DISPATCH_POLL_INTERVAL_MS,
         2_000,
+        { minimum: 250, maximum: 60_000 },
+      ),
+      maximumIdlePollIntervalMs: readPositiveInteger(
+        env.EXECUTION_DISPATCH_MAX_IDLE_POLL_INTERVAL_MS,
+        8_000,
         { minimum: 250, maximum: 60_000 },
       ),
       heartbeatIntervalMs: readPositiveInteger(

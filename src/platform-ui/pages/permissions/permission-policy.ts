@@ -317,7 +317,7 @@ export function getPlatformPermissionActionAccessByDefinition(
   const resolvedAction = typeof actionDefinition === "string"
     ? getPlatformPermissionActionDefinitionById(actionDefinition)
     : actionDefinition;
-  if (!resolvedAction) return "full_access";
+  if (!resolvedAction) return "no_access";
   const subjectType = normalizePlatformPermissionSubjectType(permissionSet?.subjectType, "agent");
   if (!shouldShowPlatformPermissionAction(resolvedAction, subjectType)) return "no_access";
   const explicitAccess = getPlatformPermissionActionExplicitAccessByDefinition(

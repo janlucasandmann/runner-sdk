@@ -142,6 +142,31 @@ assert.match(
 );
 assert.match(
   shellSettingsToolsSource,
+  /return listPlatformConnectorCatalogEntries\("plugin"\)\.map\(\(catalogEntry\) =>/,
+  "The Connectors overview must project every plugin from the canonical connector catalog.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /function usesProviderManagedConnectorCredentials\(resourceId\)[\s\S]{0,240}getPlaygroundIntegrationProvider/,
+  "Provider-backed connector credentials must be owned by the connector service.",
+);
+assert.match(
+  shellBootstrapSource,
+  /const refreshPluginConnectionStatus = useCallback\([\s\S]{0,900}const refreshGithubStatus = useCallback\([\s\S]{0,1600}const refreshGenericConnectorStatus = useCallback\(/,
+  "Connector status refresh callbacks must remain stable so status updates cannot restart the overview effect.",
+);
+assert.match(
+  shellDataLifecycleSource,
+  /activePage !== "tools"[\s\S]{0,200}toolsView !== "plugins"[\s\S]{0,100}toolsView !== "tags"[\s\S]{0,1800}requestIdleCallback/,
+  "Connector status fan-out must remain page-scoped and deferred until browser idle time.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /async function persistTagPluginCredentials\(resourceId, credentials\)[\s\S]{0,700}usesProviderManagedConnectorCredentials\(normalizedResourceId\)[\s\S]{0,120}return nextConfig;[\s\S]{0,160}saveTagDetailConfig/,
+  "Starting a provider OAuth flow must not persist pending credentials through tag settings.",
+);
+assert.match(
+  shellSettingsToolsSource,
   /surfaceProps: \{[\s\S]{0,180}"aria-label": "Connectors actions"/,
   "The Connectors title action must use the matching accessible label.",
 );
@@ -918,7 +943,7 @@ assert.match(
 );
 assert.match(
   agentBootstrapSource,
-  /const AGENT_THREAD_FETCH_LIMIT = 20;[\s\S]*?fetch\(backendUrl \+ "\/threads\?limit=" \+ AGENT_THREAD_FETCH_LIMIT[\s\S]*?\.slice\(0, AGENT_THREAD_FETCH_LIMIT\)/,
+  /const AGENT_THREAD_FETCH_LIMIT = 20;[\s\S]*?fetch\([\s\S]{0,300}"\/threads\?limit="[\s\S]{0,300}"&view=overview"[\s\S]*?\.slice\(0, AGENT_THREAD_FETCH_LIMIT\)/,
   "Agent detail thread loading must request and retain no more than 20 threads.",
 );
 assert.match(

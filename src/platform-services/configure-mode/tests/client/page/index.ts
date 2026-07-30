@@ -1,5 +1,9 @@
 export { TestsOverviewGuide } from "./tests-overview-guide.js";
 export {
+  TestCaseDetailPage,
+  type TestCaseDetailPageProps,
+} from "./test-case-detail-page.js";
+export {
   TestsOverviewPage,
   type TestsOverviewPageProps,
   type TestPlanOverviewRow,

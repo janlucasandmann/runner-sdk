@@ -20,6 +20,7 @@ function createResponseRecorder() {
 const handler = createPageAndStaticRoutes({
   platformDocumentHtml: "<!doctype html><div id=\"app\"></div>",
   platformOrigin: "http://localhost:4177",
+  isGenericConnectorApiRequestPath: () => false,
   isGithubApiRequestPath: () => false,
   isJiraApiRequestPath: () => false,
 });

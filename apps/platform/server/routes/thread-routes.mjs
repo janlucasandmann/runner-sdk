@@ -4,7 +4,7 @@ export function createThreadRoutes(bindings) {
     return function handleThreadRoutes(req, res, url) {
         // New proxy shape (matches RunnerChat backend contract)
         if (req.method === "GET" && url.pathname === "/api/real/threads") {
-            void proxyUpstreamGet(req, res, "/threads");
+            void proxyUpstreamGet(req, res, "/threads" + (url.search || ""));
             return true;
         }
         if (req.method === "POST" && url.pathname === "/api/real/threads") {

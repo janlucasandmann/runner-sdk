@@ -21,8 +21,25 @@
   background: #fff;
 }
 
+.connection-identity-icon.is-catalog.is-plugin.is-box {
+  background: #015fcf;
+}
+
 .connection-identity-icon.is-catalog.is-plugin.is-gitlab {
   background: #f7f5e3;
+}
+
+.connection-identity-icon.is-catalog.is-plugin.is-linear {
+  background: linear-gradient(to bottom, #2c2d31, #131416);
+}
+
+.connection-identity-icon.is-catalog.is-plugin.is-stripe {
+  padding: 9px;
+  background: #533afd;
+}
+
+.connection-identity-icon.is-catalog.is-plugin.is-supabase {
+  background: #1b1b1b;
 }
 
 .connection-identity-icon.is-catalog.is-tag {

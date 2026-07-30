@@ -114,6 +114,9 @@ export function createExecutionDispatcher({
   fetchImpl = fetch,
   logger = console,
   pollIntervalMs = 2_000,
+  maximumIdlePollIntervalMs = 8_000,
+  maximumPollBackoffMs = 60_000,
+  random = Math.random,
   heartbeatIntervalMs = 25_000,
   leaseTtlMs = 120_000,
   projectDeliveryReplayPollMs = 5_000,
@@ -157,6 +160,8 @@ export function createExecutionDispatcher({
   let stopped = true;
   let pollTimer = null;
   let pollInFlight = null;
+  let consecutivePollFailures = 0;
+  let consecutiveEmptyPolls = 0;
 
   async function requestControl(path, body) {
     const assertion = await assertionSigner.sign();
@@ -1006,7 +1011,15 @@ export function createExecutionDispatcher({
 
   function trackClaim(claim) {
     const execution = executeClaim(claim)
-      .finally(() => active.delete(execution));
+      .finally(() => {
+        active.delete(execution);
+        // If all slots were occupied, the queue loop may currently be in its
+        // idle delay. Re-open capacity immediately when a claim settles.
+        if (!stopped && !pollInFlight) {
+          consecutiveEmptyPolls = 0;
+          schedulePoll(0);
+        }
+      });
     active.add(execution);
     return execution;
   }
@@ -1030,14 +1043,42 @@ export function createExecutionDispatcher({
 
   function schedulePoll(delayMs = pollIntervalMs) {
     if (stopped) return;
+    if (pollTimer) {
+      clearTimeout(pollTimer);
+    }
     pollTimer = setTimeout(() => {
+      pollTimer = null;
+      let nextPollDelayMs = pollIntervalMs;
       pollInFlight = pollNow()
+        .then((claimCount) => {
+          consecutivePollFailures = 0;
+          if (claimCount > 0) {
+            consecutiveEmptyPolls = 0;
+            return;
+          }
+          consecutiveEmptyPolls = Math.min(10, consecutiveEmptyPolls + 1);
+          nextPollDelayMs = Math.min(
+            Math.max(pollIntervalMs, maximumIdlePollIntervalMs),
+            pollIntervalMs * (2 ** Math.max(0, consecutiveEmptyPolls - 1)),
+          );
+        })
         .catch((error) => {
+          consecutivePollFailures += 1;
+          consecutiveEmptyPolls = 0;
+          const exponentialDelayMs = Math.min(
+            Math.max(pollIntervalMs, maximumPollBackoffMs),
+            pollIntervalMs * (2 ** Math.min(10, consecutivePollFailures - 1)),
+          );
+          const jitterMultiplier = 0.75 + (Math.max(0, Math.min(1, random())) * 0.5);
+          nextPollDelayMs = Math.max(
+            pollIntervalMs,
+            Math.round(exponentialDelayMs * jitterMultiplier),
+          );
           logger.error?.("[execution-dispatch] Queue poll failed", safeError(error));
         })
         .finally(() => {
           pollInFlight = null;
-          schedulePoll();
+          schedulePoll(nextPollDelayMs);
         });
     }, delayMs);
     pollTimer.unref?.();

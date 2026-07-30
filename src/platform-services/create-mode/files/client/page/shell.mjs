@@ -483,7 +483,7 @@ export const FILES_PAGE_SHELL_SCRIPT = `
                 headers: requestHeaders,
                 signal: signal || undefined,
               }),
-              fetch(backendUrl + "/threads?limit=240", {
+              fetch(backendUrl + "/threads?limit=240&view=overview", {
                 method: "GET",
                 headers: requestHeaders,
                 signal: signal || undefined,

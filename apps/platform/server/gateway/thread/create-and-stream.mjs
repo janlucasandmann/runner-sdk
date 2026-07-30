@@ -3,6 +3,7 @@ import { isAgentAssistantPresetExecutionContent } from "./message-sanitization.m
 export function createThreadMessageGateway(bindings) {
     const { fetchSessionApi, hasAiosSession, parseUpstreamUrl, readOptionalApiKey, readRequestBody, sendJson, summarizeRunnerStreamChunkForLog, withProxyOrganizationHeader } = bindings;
     let threadPayloadEnricher = async (_req, _upstreamUrl, _apiKey, payload) => payload;
+    let threadMessagePayloadEnricher = async (_req, _threadId, _upstreamUrl, _apiKey, payload) => payload;
     async function proxyCreateThread(req, res) {
         try {
             const body = await readRequestBody(req);
@@ -75,8 +76,14 @@ export function createThreadMessageGateway(bindings) {
             const shouldUseExecutionContentForUpstream = body.useExecutionContentForUpstream === true || isAgentAssistantPresetExecutionContent(executionContent);
             const payload = {
                 content: visibleContent,
+                ...(typeof body.reasoningEffort === "string" && body.reasoningEffort.trim()
+                    ? { reasoningEffort: body.reasoningEffort.trim() }
+                    : {}),
                 ...(executionContent ? { executionContent } : {}),
                 ...(shouldUseExecutionContentForUpstream ? { useExecutionContentForUpstream: true } : {}),
+                ...(body.messageMetadata && typeof body.messageMetadata === "object" && !Array.isArray(body.messageMetadata)
+                    ? { messageMetadata: body.messageMetadata }
+                    : {}),
                 ...(Array.isArray(body.attachments) ? { attachments: body.attachments } : {}),
                 ...(body.githubRepo && typeof body.githubRepo === "object" ? { githubRepo: body.githubRepo } : {}),
                 ...(body.quotedSelection && typeof body.quotedSelection === "object" ? { quotedSelection: body.quotedSelection } : {}),
@@ -84,10 +91,23 @@ export function createThreadMessageGateway(bindings) {
                 ...(typeof body.editMessageId === "string" && body.editMessageId.trim() ? { editMessageId: body.editMessageId.trim() } : {}),
                 ...(typeof body.persistFileChanges === "boolean" ? { persistFileChanges: body.persistFileChanges } : {}),
                 ...(body.enabledSkills && typeof body.enabledSkills === "object" ? { enabledSkills: body.enabledSkills } : {}),
+                ...(body.backlogTaskCommand && typeof body.backlogTaskCommand === "object" && !Array.isArray(body.backlogTaskCommand)
+                    ? { backlogTaskCommand: body.backlogTaskCommand }
+                    : {}),
             };
             if (!payload.content) {
                 return sendJson(res, 400, { error: "content or task is required" });
             }
+            const enrichedPayload = await threadMessagePayloadEnricher(
+                req,
+                threadId,
+                upstreamUrl,
+                apiKey,
+                payload,
+                {
+                    requestedConnectors: body.connectors,
+                },
+            );
             if (apiKey) {
                 console.info("[platform-gateway] Thread message stream start", {
                     threadId,
@@ -99,7 +119,7 @@ export function createThreadMessageGateway(bindings) {
                         "Content-Type": "application/json",
                         "X-API-Key": apiKey,
                     }),
-                    body: JSON.stringify(payload),
+                    body: JSON.stringify(enrichedPayload),
                 });
             }
             else if (hasAiosSession(req)) {
@@ -116,11 +136,7 @@ export function createThreadMessageGateway(bindings) {
                         headers: {
                             "content-type": "application/json",
                         },
-                        body: JSON.stringify({
-                            ...body,
-                            content: payload.content,
-                            task: payload.content,
-                        }),
+                        body: JSON.stringify(enrichedPayload),
                     },
                 );
             }
@@ -201,9 +217,18 @@ export function createThreadMessageGateway(bindings) {
         }
         catch (error) {
             if (!res.headersSent) {
-                return sendJson(res, 502, {
-                    error: "Failed to stream messages from upstream backend",
+                const statusCode = Number(error?.statusCode);
+                const isPolicyError = Number.isInteger(statusCode)
+                    && statusCode >= 400
+                    && statusCode < 500;
+                return sendJson(res, isPolicyError ? statusCode : 502, {
+                    error: isPolicyError
+                        ? String(error?.code || "connector_policy_denied")
+                        : "Failed to stream messages from upstream backend",
                     message: error instanceof Error ? error.message : String(error),
+                    ...(isPolicyError && error?.details
+                        ? { details: error.details }
+                        : {}),
                 });
             }
             if (!res.writableEnded) {
@@ -237,6 +262,11 @@ export function createThreadMessageGateway(bindings) {
             threadPayloadEnricher = typeof enricher === "function"
                 ? enricher
                 : async (_req, _upstreamUrl, _apiKey, payload) => payload;
+        },
+        setThreadMessagePayloadEnricher(enricher) {
+            threadMessagePayloadEnricher = typeof enricher === "function"
+                ? enricher
+                : async (_req, _threadId, _upstreamUrl, _apiKey, payload) => payload;
         },
     });
 }

@@ -82,6 +82,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const evaluationVersionBaselineRef = useRef({ key: "", signature: "" });
         const evaluationVersionsSidebarRequestTokenRef = useRef(Number(versionsSidebarRequestToken) || 0);
         const evaluationDetailSidebarCollapsedBeforeVersionsRef = useRef(false);
+        const evaluationDetailSidebarCollapsedBeforeAccessRef = useRef(null);
         const evaluationVersionDraftTouchedRef = useRef(false);
         const evaluationBackendLoadRef = useRef("");
         const evaluationBackendLoadedRef = useRef(false);
@@ -806,6 +807,28 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           }
           setEvaluationDetailSidebarCollapsed(evaluationDetailSidebarCollapsedBeforeVersionsRef.current);
         }, [evaluationVersionsSidebarOpen, isEvaluationDetailPage]);
+
+        useEffect(() => {
+          if (evaluationAccessTeamId) {
+            if (evaluationDetailSidebarCollapsedBeforeAccessRef.current === null) {
+              evaluationDetailSidebarCollapsedBeforeAccessRef.current = evaluationDetailSidebarCollapsed;
+            }
+            setEvaluationDetailSidebarCollapsed(true);
+            return;
+          }
+          if (
+            evaluationDetailSidebarCollapsedBeforeAccessRef.current !== null
+            && !evaluationVersionsSidebarOpen
+          ) {
+            setEvaluationDetailSidebarCollapsed(
+              Boolean(evaluationDetailSidebarCollapsedBeforeAccessRef.current)
+            );
+            evaluationDetailSidebarCollapsedBeforeAccessRef.current = null;
+          }
+        }, [
+          evaluationAccessTeamId,
+          evaluationVersionsSidebarOpen,
+        ]);
 
         useEffect(() => {
           if (!activeSet?.id || !isEvaluationDetailPage) {

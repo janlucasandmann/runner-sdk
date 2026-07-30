@@ -5,6 +5,7 @@ import {
   buildJiraAuthorizationUrl,
   isJiraApiRequestPath,
   JIRA_OAUTH_DEFAULT_SCOPE,
+  resolveJiraOAuthConfiguration,
 } from "./jira-oauth.mjs";
 
 test("matches only Jira API routes", () => {
@@ -34,4 +35,79 @@ test("builds the Atlassian authorization-code request", () => {
   assert.equal(url.searchParams.get("response_type"), "code");
   assert.equal(url.searchParams.get("prompt"), "consent");
   assert.equal(url.searchParams.get("scope"), JIRA_OAUTH_DEFAULT_SCOPE);
+});
+
+test("resolves a complete Atlassian OAuth client through supported aliases", async () => {
+  const keys = [
+    "JIRA_OAUTH_CLIENT_ID",
+    "JIRA_OAUTH_CLIENT_SECRET",
+    "JIRA_OAUTH_REDIRECT_URI",
+    "ATLASSIAN_OAUTH_CLIENT_ID",
+    "ATLASSIAN_OAUTH_CLIENT_SECRET",
+    "ATLASSIAN_OAUTH_REDIRECT_URI",
+  ];
+  const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  keys.forEach((key) => delete process.env[key]);
+  process.env.ATLASSIAN_OAUTH_CLIENT_ID = "atlassian-client";
+  process.env.ATLASSIAN_OAUTH_CLIENT_SECRET = "atlassian-secret";
+  process.env.ATLASSIAN_OAUTH_REDIRECT_URI =
+    "https://platform.example.test/api/jira/callback";
+
+  try {
+    const configuration = await resolveJiraOAuthConfiguration({
+      platformOrigin: "https://ignored.example.test",
+    });
+    assert.equal(configuration.configured, true);
+    assert.equal(configuration.clientId, "atlassian-client");
+    assert.equal(configuration.clientSecret, "atlassian-secret");
+    assert.equal(
+      configuration.redirectUri,
+      "https://platform.example.test/api/jira/callback",
+    );
+    assert.deepEqual(configuration.missing, []);
+  } finally {
+    keys.forEach((key) => {
+      if (previous[key] === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = previous[key];
+      }
+    });
+  }
+});
+
+test("reports every missing Jira OAuth credential before authorization starts", async () => {
+  const keys = [
+    "JIRA_OAUTH_CLIENT_ID",
+    "JIRA_OAUTH_CLIENT_SECRET",
+    "ATLASSIAN_OAUTH_CLIENT_ID",
+    "ATLASSIAN_OAUTH_CLIENT_SECRET",
+    "ATLASSIAN_CLIENT_ID",
+    "ATLASSIAN_CLIENT_SECRET",
+  ];
+  const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  keys.forEach((key) => delete process.env[key]);
+
+  try {
+    const configuration = await resolveJiraOAuthConfiguration({
+      platformOrigin: "http://localhost:4177",
+    });
+    assert.equal(configuration.configured, false);
+    assert.deepEqual(configuration.missing, [
+      "JIRA_OAUTH_CLIENT_ID",
+      "JIRA_OAUTH_CLIENT_SECRET",
+    ]);
+    assert.equal(
+      configuration.redirectUri,
+      "http://localhost:4177/api/jira/callback",
+    );
+  } finally {
+    keys.forEach((key) => {
+      if (previous[key] === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = previous[key];
+      }
+    });
+  }
 });

@@ -50,16 +50,18 @@ export const EVALUATIONS_APP_TOP_NAVIGATION_SCRIPT = `        function renderEva
             const versionNumber = Number(version?.version);
             return Number.isFinite(versionNumber) ? Math.max(latestVersion, versionNumber) : latestVersion;
           }, -1);
-          const evaluationsPathItems = [
-            { label: "Configure" },
-	            {
-	              label: "Evaluations",
-	              onClick: () => requestPlatformNavigation(openEvaluationsOverviewPage),
-	            },
-          ];
 	          const isEvaluationsOverview = evaluationsPageMode === "overview";
 	          const isEvaluationDatasetCase = evaluationsPageMode === "dataset-case" && Boolean(activeEvaluationSet?.id);
 	          const showEvaluationSetActions = evaluationsPageMode === "detail" && Boolean(activeEvaluationSet?.id) && !isResourcesVersionsDrawerOpen;
+          const evaluationsPathItems = [
+            { label: "Configure" },
+          ];
+	          if (!isEvaluationDatasetCase) {
+	            evaluationsPathItems.push({
+	              label: "Evaluations",
+	              onClick: () => requestPlatformNavigation(openEvaluationsOverviewPage),
+	            });
+	          }
 	          if (
 	            (evaluationsPageMode === "detail" || evaluationsPageMode === "run" || evaluationsPageMode === "case" || isEvaluationDatasetCase)
 	            && activeEvaluationSet?.name

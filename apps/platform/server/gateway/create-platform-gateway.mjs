@@ -20,6 +20,7 @@ export function createPlatformGateway(config) {
         extractFeedbackSummaryIdToken: modules.extractFeedbackSummaryIdToken,
         fetchAiosApi: modules.fetchAiosApi,
         fetchAiosCloud: modules.fetchAiosCloud,
+        fetchSessionApi: modules.fetchSessionApi,
         fetchUpstreamJsonForProxyExactPath: modules.fetchUpstreamJsonForProxyExactPath,
         fetchUpstreamOverviewJson: modules.fetchUpstreamOverviewJson,
         handleAiosUserSessionRequest: modules.handleAiosUserSessionRequest,
@@ -56,6 +57,7 @@ export function createPlatformGateway(config) {
         sendServerDetailBootstrap,
         sendJson: modules.sendJson,
         withProxyOrganizationHeader: modules.withProxyOrganizationHeader,
+        setThreadMessagePayloadEnricher: thread.setThreadMessagePayloadEnricher,
         setThreadPayloadEnricher: thread.setThreadPayloadEnricher,
     });
 }

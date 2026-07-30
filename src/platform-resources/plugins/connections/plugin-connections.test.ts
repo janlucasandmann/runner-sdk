@@ -44,13 +44,13 @@ describe("plugin connection registry", () => {
       "https://upload.wikimedia.org/wikipedia/commons/e/e7/Microsoft_OneDrive_Icon_%282025_-_present%29.svg",
     );
     expect(getPlatformPluginConnectionDefinition("jira")).toMatchObject({
-      label: "Jira",
+      label: "Atlassian",
       statusPath: "/api/aios/jira/user",
       loginPath: "/api/aios/jira/login",
     });
   });
 
-  it("uses the connected Jira site as its visible identity", () => {
+  it("uses the connected Atlassian site as its visible identity", () => {
     expect(
       getPlatformPluginConnectionIdentity("jira", {
         connected: true,
@@ -79,6 +79,27 @@ describe("plugin connection registry", () => {
     );
     expect(status).toMatchObject({ connected: true, scope: "repo" });
     expect(getPlatformPluginConnectionIdentity("github", status)).toBe("octocat");
+  });
+
+  it("coalesces duplicate default status reads during connector page startup", async () => {
+    const request = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({ connected: true, profile: { displayName: "Work Drive" } }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+    );
+    vi.stubGlobal("fetch", request);
+    try {
+      const [first, second] = await Promise.all([
+        fetchPlatformPluginConnectionStatus("one-drive"),
+        fetchPlatformPluginConnectionStatus("one-drive"),
+      ]);
+      expect(first).toEqual(second);
+      expect(request).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("starts and disconnects providers through the registered endpoints", async () => {
@@ -122,6 +143,35 @@ describe("plugin connection registry", () => {
     expect(request.mock.calls[1]?.[0]).toBe("/api/aios/github/disconnect");
     expect(JSON.parse(String(request.mock.calls[1]?.[1]?.body))).toEqual({
       credentialId: "credential-work",
+    });
+  });
+
+  it("starts Atlassian OAuth directly with the pending credential identity", async () => {
+    const request = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            authUrl: "https://auth.atlassian.com/authorize?audience=api.atlassian.com",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+    );
+
+    await beginPlatformPluginConnection("jira", {
+      redirectTo: "https://platform.example/connectors/jira?tab=authentication",
+      credentialId: "credential-jira-work",
+      credentialName: "Work Atlassian",
+      organizationId: "organization-acme",
+      fetch: request,
+    });
+
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(request.mock.calls[0]?.[0]).toBe("/api/aios/jira/login");
+    expect(JSON.parse(String(request.mock.calls[0]?.[1]?.body))).toEqual({
+      redirectTo: "https://platform.example/connectors/jira?tab=authentication",
+      credentialId: "credential-jira-work",
+      credentialName: "Work Atlassian",
+      organizationId: "organization-acme",
     });
   });
 

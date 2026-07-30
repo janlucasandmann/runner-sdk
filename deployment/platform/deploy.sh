@@ -142,6 +142,8 @@ mkdir -p "${TMP_BUILD_DIR}/web/hosting/public/img/empty-state"
 rsync -a "repos/runner-web-sdk/img/empty-state/" "${TMP_BUILD_DIR}/web/hosting/public/img/empty-state/"
 mkdir -p "${TMP_BUILD_DIR}/web/hosting/public/img/imagine"
 rsync -a "repos/runner-web-sdk/img/imagine/" "${TMP_BUILD_DIR}/web/hosting/public/img/imagine/"
+mkdir -p "${TMP_BUILD_DIR}/web/hosting/public/img/plugins"
+rsync -a --exclude ".DS_Store" "repos/runner-web-sdk/img/plugins/" "${TMP_BUILD_DIR}/web/hosting/public/img/plugins/"
 
 cat > "${TMP_BUILD_DIR}/.gcloudignore" <<'EOF'
 .gcloudignore
@@ -181,12 +183,19 @@ keys = [
     "PLATFORM_PRINCIPAL_ASSERTION_ISSUER",
     "ADMIN_API_KEY",
     "CONTACT_SALES_API_TOKEN",
+    "CONNECTOR_OAUTH_ALLOWED_ORIGINS",
+    "CONNECTOR_TOKEN_ENCRYPTION_KEY",
     "GITHUB_OAUTH_CLIENT_ID",
     "GITHUB_OAUTH_CLIENT_SECRET",
     "GITHUB_OAUTH_ALLOWED_ORIGINS",
     "GITHUB_OAUTH_REDIRECT_URI",
     "GITHUB_OAUTH_REDIRECT_URL",
     "GITHUB_TOKEN_ENCRYPTION_KEY",
+    "ATLASSIAN_OAUTH_REDIRECT_URI",
+    "DROPBOX_OAUTH_CLIENT_ID",
+    "DROPBOX_OAUTH_CLIENT_SECRET",
+    "DROPBOX_OAUTH_CALLBACK_URL",
+    "DROPBOX_TOKEN_ENCRYPTION_KEY",
     "FB_SERVICE_ACCOUNT_KEY",
 ]
 values = {
@@ -196,6 +205,8 @@ values = {
     "AIOS_APP_ORIGIN": app_origin,
     "PLATFORM_APP_ORIGIN": platform_origin,
     "RUNNER_UPSTREAM_ORIGIN": api_origin,
+    "ATLASSIAN_OAUTH_REDIRECT_URI": f"{platform_origin.rstrip('/')}/api/jira/callback",
+    "DROPBOX_OAUTH_CALLBACK_URL": f"{platform_origin.rstrip('/')}/api/aios/connectors/dropbox/callback",
 }
 
 if source_path.exists():
@@ -317,6 +328,12 @@ if [[ -n "${CLOUD_RUN_SERVICE_ACCOUNT}" ]]; then
   DEPLOY_ARGS+=(--service-account "${CLOUD_RUN_SERVICE_ACCOUNT}")
 fi
 "${DEPLOY_ARGS[@]}"
+
+gcloud run services update-traffic "${SERVICE_NAME}" \
+  --project "${PROJECT_ID}" \
+  --region "${REGION}" \
+  --to-latest \
+  --quiet
 
 SERVICE_URL="$(gcloud run services describe "${SERVICE_NAME}" \
   --project "${PROJECT_ID}" \

@@ -481,52 +481,60 @@ export function createRunnerThreadRunExecutor(
         && dependencies.normalizedBackendUrl
         && dependencies.apiKey.trim()
       ) {
-        let didEnvironmentWarmupTimeout = false;
-        try {
-          await startEnvironment({
-            backendUrl: dependencies.normalizedBackendUrl,
-            apiKey: dependencies.apiKey.trim(),
-            requestHeaders: dependencies.requestHeaders,
-            environmentId: runEnvironmentId,
-            ...(runAgentId ? { agentId: runAgentId } : {}),
-            ...(options.enabledSkillsOverride !== undefined
-              ? {
-                  enabledSkills:
-                    executionEnabledSkillsPayload
-                    || options.enabledSkillsOverride,
-                }
-              : executionEnabledSkillsPayload
-                ? { enabledSkills: executionEnabledSkillsPayload }
-                : {}),
-          });
-        } catch (error) {
-          if (!isEnvironmentStartTimeoutError(error)) throw error;
-          didEnvironmentWarmupTimeout = true;
-          console.warn(
-            "[RunnerChat] Environment warm-up timed out; continuing with thread execution.",
-            error,
-          );
-        }
+        const environmentStartInput = {
+          backendUrl: dependencies.normalizedBackendUrl,
+          apiKey: dependencies.apiKey.trim(),
+          requestHeaders: dependencies.requestHeaders,
+          environmentId: runEnvironmentId,
+          ...(runAgentId ? { agentId: runAgentId } : {}),
+          ...(options.enabledSkillsOverride !== undefined
+            ? {
+                enabledSkills:
+                  executionEnabledSkillsPayload
+                  || options.enabledSkillsOverride,
+              }
+            : executionEnabledSkillsPayload
+              ? { enabledSkills: executionEnabledSkillsPayload }
+              : {}),
+        };
         if (
           githubRepo?.repoFullName
           && githubRepo?.branch
-          && !didEnvironmentWarmupTimeout
         ) {
-          await dependencies.prepareGithubRepoForThreadRun(
-            {
-              repoFullName: githubRepo.repoFullName,
-              branch: githubRepo.branch,
-            },
-            runEnvironmentId,
-          );
-        } else if (
-          githubRepo?.repoFullName
-          && githubRepo?.branch
-          && didEnvironmentWarmupTimeout
-        ) {
-          console.warn(
-            "[RunnerChat] Skipping GitHub preflight because environment warm-up timed out.",
-          );
+          let didEnvironmentWarmupTimeout = false;
+          try {
+            await startEnvironment(environmentStartInput);
+          } catch (error) {
+            if (!isEnvironmentStartTimeoutError(error)) throw error;
+            didEnvironmentWarmupTimeout = true;
+            console.warn(
+              "[RunnerChat] Environment warm-up timed out; continuing with thread execution.",
+              error,
+            );
+          }
+          if (!didEnvironmentWarmupTimeout) {
+            await dependencies.prepareGithubRepoForThreadRun(
+              {
+                repoFullName: githubRepo.repoFullName,
+                branch: githubRepo.branch,
+              },
+              runEnvironmentId,
+            );
+          } else {
+            console.warn(
+              "[RunnerChat] Skipping GitHub preflight because environment warm-up timed out.",
+            );
+          }
+        } else {
+          // The execution API owns container readiness. Keep opportunistic
+          // warm-up off the critical path so the first message can stream
+          // immediately even when a container is cold.
+          void startEnvironment(environmentStartInput).catch((error) => {
+            console.warn(
+              "[RunnerChat] Background environment warm-up failed; execution will resolve readiness.",
+              error,
+            );
+          });
         }
       }
 

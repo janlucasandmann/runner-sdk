@@ -2,7 +2,7 @@ export function createDatabaseRoutes(bindings) {
     const { proxyUpstreamGet, proxyUpstreamJsonRequest, sendDatabaseBootstrap, } = bindings;
     return function handleDatabaseRoutes(req, res, url) {
         if (req.method === "GET" && url.pathname === "/api/real/databases") {
-            void proxyUpstreamGet(req, res, "/databases");
+            void proxyUpstreamGet(req, res, "/databases" + (url.search || ""));
             return true;
         }
         if (req.method === "POST" && url.pathname === "/api/real/databases") {

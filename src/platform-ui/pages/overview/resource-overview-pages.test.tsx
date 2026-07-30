@@ -475,6 +475,13 @@ describe("resource overview pages", () => {
     );
 
     expect(
+      within(screen.getByRole("table", { name: "Tags and Plugins" }))
+        .getAllByRole("button", {
+          name: /Collapse (Connected|Plugins|Tags)/,
+        })
+        .map((button) => button.textContent?.replace(/\d+$/, "")),
+    ).toEqual(["Connected", "Plugins", "Tags"]);
+    expect(
       container.querySelectorAll(
         ".resource-overview-identity__visual.is-connection.is-size-compact",
       ),
@@ -603,9 +610,15 @@ describe("resource overview pages", () => {
     ).not.toBeNull();
     expect(
       within(table)
-        .getAllByRole("button", { name: /Collapse (Plugins|Tags)/ })
+        .getAllByRole("button", {
+          name: /Collapse (Connected|Plugins|Tags)/,
+        })
         .map((button) => button.getAttribute("aria-label")),
-    ).toEqual(["Collapse Plugins", "Collapse Tags"]);
+    ).toEqual([
+      "Collapse Connected",
+      "Collapse Plugins",
+      "Collapse Tags",
+    ]);
     expect(
       table.querySelector(".platform-data-table__group-indicator"),
     ).toBeNull();
@@ -624,7 +637,8 @@ describe("resource overview pages", () => {
     await user.click(
       within(table).getByRole("button", { name: "Collapse Plugins" }),
     );
-    expect(screen.queryByRole("row", { name: "GitHub" })).toBeNull();
+    expect(screen.queryByRole("row", { name: "Notion" })).toBeNull();
+    expect(screen.getByRole("row", { name: "GitHub" })).not.toBeNull();
     expect(screen.getByRole("row", { name: "Email" })).not.toBeNull();
 
     await user.click(

@@ -20,7 +20,7 @@ export function createPlatformResourceRoutes(bindings) {
             return true;
         }
         if (req.method === "GET" && url.pathname === "/api/real/skills") {
-            void proxyUpstreamGet(req, res, "/v1/skills");
+            void proxyUpstreamGet(req, res, "/v1/skills" + (url.search || ""));
             return true;
         }
         return false;

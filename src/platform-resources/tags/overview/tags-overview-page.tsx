@@ -69,6 +69,11 @@ export function TagsOverviewPage({
       rowGrouping={{
         groups: [
           {
+            id: "connected",
+            label: "Connected",
+            ariaLabel: "Connected",
+          },
+          {
             id: "plugins",
             label: "Plugins",
             ariaLabel: "Plugins",
@@ -79,7 +84,8 @@ export function TagsOverviewPage({
             ariaLabel: "Tags",
           },
         ],
-        getGroupId: (row) => row.resourceKind || "plugins",
+        getGroupId: (row) =>
+          row.connected ? "connected" : row.resourceKind || "plugins",
       }}
       pagination={false}
       heroContent={<TagsOverviewGuide />}

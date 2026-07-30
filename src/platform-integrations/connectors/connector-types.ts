@@ -4,6 +4,8 @@ export type PlatformConnectorCapabilityAccess = "interactive" | "read-only";
 
 export type PlatformConnectorAuthentication =
   | "oauth2"
+  | "api-key"
+  | "service-account"
   | "webhook"
   | "bot"
   | "email";

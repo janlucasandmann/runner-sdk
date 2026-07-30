@@ -363,11 +363,12 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /"Upload JSONL file"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /"Upload from Workspace"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformEmptyState, \{[\s\S]*?title: "No cases yet"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /renderEvaluationAccessSettings/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /React\.createElement\(PlatformRolePermissionsPage/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /React\.createElement\(PlatformResourceAccessTable/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /React\.createElement\(PlatformResourceAccessSettings/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /type:\s*"checkbox"|playground-agents-overview-select-checkbox/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /subjectType: "evaluation_team_role"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /subjectType: "evaluation"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /resourceType: "evaluation"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /getPlatformTeamRolePermissionSet/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /buildPlatformTeamRolePermissionMetadata/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /renderEvaluationOwnerSelector/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /\bteamPageTeams\b/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /\bteamPageLoading\b/);
@@ -391,8 +392,9 @@ assert.doesNotMatch(
   EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access,
   /set\?\.creator \|\| set\?\.createdBy \|\| currentEvaluationCreator/,
 );
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /composePlatformAccessPrincipalRows\(evaluationSharedTeams\)/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /readOnly: selectedRole\.id === "owner"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /teams: evaluationSharedTeams/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /teamSubjectType: "evaluation_team_role"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /selectedRoleId: evaluationAccessRoleId/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /renderEvaluationRenameModal/);
 const evaluationRunModalStart = EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs.indexOf("function renderRunModal()");
 const evaluationRunModalEnd = EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs.indexOf("function renderCreateModal()", evaluationRunModalStart);
@@ -480,6 +482,14 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /id: "input"[\
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /markdownEditor: \{[\s\S]*?historyKey: "evaluation-case:" \+ draft\.id \+ ":" \+ activeFileId/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /evaluationCaseCodeEditorComponent|React\.createElement\(PlatformInstructionsEditor/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /React\.createElement\("section", \{[\s\S]*?className: "playground-evaluations-dataset-case-configuration"/);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail,
+  /className: "playground-evaluations-dataset-case-settings-title",[\s\S]*?"Case Settings"[\s\S]*?className: "playground-evaluations-dataset-case-configuration"/,
+);
+assert.match(
+  EVALUATIONS_STYLE_FRAGMENTS.detail,
+  /\.playground-evaluations-dataset-case-settings-title \{[\s\S]*?color: #fff;[\s\S]*?font-size: 14px;[\s\S]*?font-weight: 400;/,
+);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /React\.createElement\(PlatformPermissionHelpTooltip,[\s\S]*?ariaLabel: "About optimization role"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /React\.createElement\(PlatformPermissionHelpTooltip,[\s\S]*?ariaLabel: "About runs per evaluation"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /title: typeof row\?\.title === "string" \? row\.title : normalized\.title/);
@@ -507,6 +517,10 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /function openEvalua
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /function saveEvaluationCaseEditor/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /isEvaluationCaseEditorDirty\(evaluationCaseEditorState\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail, /React\.createElement\(PlatformUiCard/);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.datasetCaseDetail,
+  /React\.createElement\(PlatformPrimaryButton, \{[\s\S]*?className: "playground-evaluations-dataset-case-delete-button"[\s\S]*?"Delete Case"/,
+);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /function renderEvaluationCaseGuidanceTitle/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /Evaluator guidance information/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /const normalizedRunEvaluator = normalizePlaygroundEvaluationEvaluator\(run\?\.evaluator\)/);
@@ -567,6 +581,11 @@ assert.doesNotMatch(evaluationRunViewScript, /renderEvaluationDetailSidebarRow\(
 assert.doesNotMatch(evaluationRunViewScript, /renderEvaluationDetailSidebarRow\("version"/);
 assert.match(evaluationRunViewScript, /className: "playground-evaluations-run-agent-version-cell"/);
 assert.match(evaluationRunViewScript, /variant: "gray",\s*className: "playground-evaluations-run-agent-version-label"/);
+assert.doesNotMatch(evaluationRunViewScript, /"Legacy evidence"/);
+assert.match(
+  evaluationRunViewScript,
+  /evidenceLabel[\s\S]*?\? React\.createElement\(PlatformLabel,[\s\S]*?: null,[\s\S]*?React\.createElement\("p", null, evidenceExplanation\)/,
+);
 assert.match(evaluationRunViewScript, /renderEvaluationDetailSidebarRow\("environment"[\s\S]*?className: "is-environment"/);
 assert.match(
   evaluationRunViewScript,
@@ -670,6 +689,10 @@ assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.page === "
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.lifecycle, /selectedEvaluationSetId/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderEvaluationsPageNav/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Evaluations",[\s\S]*?onClick: \(\) => requestPlatformNavigation\(openEvaluationsOverviewPage\)/);
+assert.match(
+  EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation,
+  /if \(!isEvaluationDatasetCase\) \{[\s\S]*?evaluationsPathItems\.push\(\{[\s\S]*?label: "Evaluations"/,
+);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /evaluationsPageMode === "run" \|\| evaluationsPageMode === "case"/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /onClick: evaluationsPageMode === "run" \|\| evaluationsPageMode === "case" \|\| isEvaluationDatasetCase[\s\S]*?requestPlatformNavigation/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /setSelectedEvaluationCaseId\(""\);[\s\S]*?setEvaluationsPageMode\("run"\)/);

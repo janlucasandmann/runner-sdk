@@ -317,7 +317,7 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
 
           let projectThreads = normalizeThreadList(selectedProjectRecentThreads);
           try {
-            const threadsResponse = await fetch(backendUrl + "/threads?limit=240", {
+            const threadsResponse = await fetch(backendUrl + "/threads?limit=240&view=overview", {
               method: "GET",
               headers: threadHeaders,
             });
