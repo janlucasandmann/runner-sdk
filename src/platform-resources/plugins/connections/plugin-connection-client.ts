@@ -16,19 +16,31 @@ type PluginFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Res
 // navigation and React remounts from repeatedly hitting every provider.
 const STATUS_CACHE_TTL_MS = 30_000;
 const connectionStatusCache = new Map<
-  PlatformPluginConnectionId,
+  string,
   { expiresAt: number; status: PlatformPluginConnectionStatus }
 >();
 const connectionStatusRequests = new Map<
-  PlatformPluginConnectionId,
+  string,
   Promise<PlatformPluginConnectionStatus>
 >();
+
+function getConnectionStatusCacheKey(
+  id: PlatformPluginConnectionId,
+  organizationId = "",
+): string {
+  return `${id}:${String(organizationId || "").trim()}`;
+}
 
 function invalidatePlatformPluginConnectionStatus(
   id: PlatformPluginConnectionId,
 ): void {
-  connectionStatusCache.delete(id);
-  connectionStatusRequests.delete(id);
+  const prefix = `${id}:`;
+  for (const key of connectionStatusCache.keys()) {
+    if (key.startsWith(prefix)) connectionStatusCache.delete(key);
+  }
+  for (const key of connectionStatusRequests.keys()) {
+    if (key.startsWith(prefix)) connectionStatusRequests.delete(key);
+  }
 }
 
 export class PlatformPluginConnectionRequestError extends Error {
@@ -78,26 +90,36 @@ async function requireSuccessfulJson(
 export interface PlatformPluginConnectionRequestOptions {
   fetch?: PluginFetch;
   signal?: AbortSignal;
+  organizationId?: string;
 }
 
 export async function fetchPlatformPluginConnectionStatus(
   id: PlatformPluginConnectionId,
   options: PlatformPluginConnectionRequestOptions = {},
 ): Promise<PlatformPluginConnectionStatus> {
+  const organizationId = String(options.organizationId || "").trim();
+  const requestKey = getConnectionStatusCacheKey(id, organizationId);
   // Explicit fetch implementations and abort signals are request-scoped
   // (primarily tests and detail flows), so they must not share lifecycle.
   const canShareRequest = !options.fetch && !options.signal;
   if (canShareRequest) {
-    const cached = connectionStatusCache.get(id);
+    const cached = connectionStatusCache.get(requestKey);
     if (cached && cached.expiresAt > Date.now()) return cached.status;
-    const pending = connectionStatusRequests.get(id);
+    const pending = connectionStatusRequests.get(requestKey);
     if (pending) return pending;
   }
 
   const definition = getPlatformPluginConnectionDefinition(id);
   const request = (async () => {
-    const response = await (options.fetch || getDefaultFetch())(definition.statusPath, {
+    const statusPath = organizationId
+      ? `${definition.statusPath}${definition.statusPath.includes("?") ? "&" : "?"}`
+        + `organizationId=${encodeURIComponent(organizationId)}`
+      : definition.statusPath;
+    const response = await (options.fetch || getDefaultFetch())(statusPath, {
       method: "GET",
+      headers: organizationId
+        ? { "X-Computer-Agents-Organization": organizationId }
+        : undefined,
       credentials: "include",
       cache: "no-store",
       signal: options.signal,
@@ -108,7 +130,7 @@ export async function fetchPlatformPluginConnectionStatus(
     );
     const status = normalizePlatformPluginConnectionStatus(id, payload);
     if (canShareRequest) {
-      connectionStatusCache.set(id, {
+      connectionStatusCache.set(requestKey, {
         expiresAt: Date.now() + STATUS_CACHE_TTL_MS,
         status,
       });
@@ -117,12 +139,12 @@ export async function fetchPlatformPluginConnectionStatus(
   })();
   if (!canShareRequest) return request;
 
-  connectionStatusRequests.set(id, request);
+  connectionStatusRequests.set(requestKey, request);
   try {
     return await request;
   } finally {
-    if (connectionStatusRequests.get(id) === request) {
-      connectionStatusRequests.delete(id);
+    if (connectionStatusRequests.get(requestKey) === request) {
+      connectionStatusRequests.delete(requestKey);
     }
   }
 }

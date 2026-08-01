@@ -104,5 +104,6 @@ build output, or application composition.
 ## Related documentation
 
 - [Parent directory guide](../README.md)
+- [Connector provider setup](../../../../docs/development/connector-provider-setup.md)
 - [Platform architecture](../../../../docs/platform-architecture.md)
 - [Directory README standard](../../../../docs/development/readme-standard.md)

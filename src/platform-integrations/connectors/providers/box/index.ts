@@ -67,9 +67,11 @@ const capabilities = defineCapabilities([
     properties: {
       folderId: stringField("Destination folder ID."),
       name: stringField("Destination file name."),
-      contentPath: stringField("Workspace path of the file to upload."),
+      content: stringField("UTF-8 text content to upload."),
+      contentBase64: stringField("Base64-encoded binary content to upload."),
+      contentPath: stringField("Workspace path when a file-transfer bridge is available."),
     },
-    required: ["folderId", "name", "contentPath"],
+    required: ["folderId", "name"],
   },
   {
     id: "upload_file_version",
@@ -77,9 +79,12 @@ const capabilities = defineCapabilities([
     access: "interactive",
     properties: {
       fileId: stringField("Box file ID."),
-      contentPath: stringField("Workspace path of the replacement content."),
+      name: stringField("Optional replacement file name."),
+      content: stringField("UTF-8 replacement content."),
+      contentBase64: stringField("Base64-encoded binary replacement content."),
+      contentPath: stringField("Workspace path when a file-transfer bridge is available."),
     },
-    required: ["fileId", "contentPath"],
+    required: ["fileId"],
   },
   {
     id: "create_folder",
@@ -129,17 +134,20 @@ const capabilities = defineCapabilities([
   },
 ]);
 
-export const BOX_CONNECTOR_PROVIDER = defineConnectorProvider({
-  id: "box",
-  label: "Box",
-  shortLabel: "BX",
-  description: "Search, retrieve, organize, and share authorized Box content.",
-  category: "Storage",
-  logoUrl: "/img/plugins/box.svg",
-  functionsLabel: "Search, Retrieve, Organize",
-  samplePrompt: "Find the current contract, summarize it, and upload the reviewed version.",
-  whenToUse: "Use Box for enterprise content that must retain Box access controls.",
-  websiteUrl: "https://www.box.com/",
-  termsUrl: "https://www.box.com/legal/termsofservice",
-  privacyUrl: "https://www.box.com/legal/privacypolicy",
-}, capabilities);
+export const BOX_CONNECTOR_PROVIDER = defineConnectorProvider(
+  {
+    id: "box",
+    label: "Box",
+    shortLabel: "BX",
+    description: "Search, retrieve, organize, and share authorized Box content.",
+    category: "Storage",
+    logoUrl: "/img/plugins/box.svg",
+    functionsLabel: "Search, Retrieve, Organize",
+    samplePrompt: "Find the current contract, summarize it, and upload the reviewed version.",
+    whenToUse: "Use Box for enterprise content that must retain Box access controls.",
+    websiteUrl: "https://www.box.com/",
+    termsUrl: "https://www.box.com/legal/termsofservice",
+    privacyUrl: "https://www.box.com/legal/privacypolicy",
+  },
+  capabilities,
+);

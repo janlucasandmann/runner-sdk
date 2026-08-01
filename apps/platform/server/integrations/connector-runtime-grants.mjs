@@ -5,6 +5,10 @@ import {
 } from "node:crypto";
 
 import { getConnectorRuntimeEnvValue } from "./connector-oauth-core.mjs";
+import {
+  canonicalizeConnectorId,
+  getConnectorCredentialProviderId,
+} from "./connector-identity.mjs";
 
 const GRANT_VERSION = 1;
 const GRANT_TYPE = "connector_runtime";
@@ -142,9 +146,13 @@ function normalizeGrantPayload(value) {
     type: String(input.type || input.typ || "").trim(),
     grantId: normalizeIdentifier(input.grantId || input.jti, 120),
     threadId: normalizeIdentifier(input.threadId, 200),
-    connectorId: normalizeConnectorId(input.connectorId),
-    provider: normalizeConnectorId(input.provider || input.connectorId),
+    connectorId: canonicalizeConnectorId(input.connectorId),
+    provider: getConnectorCredentialProviderId(
+      input.provider || input.connectorId,
+    ),
     organizationId: normalizeIdentifier(input.organizationId, 200),
+    agentId: normalizeOptionalIdentifier(input.agentId, 200),
+    actorUserId: normalizeOptionalIdentifier(input.actorUserId, 200),
     credentialId: normalizeIdentifier(input.credentialId, 120),
     credentialSource: normalizeCredentialSource(
       input.credentialSource
@@ -202,11 +210,6 @@ function normalizeActionList(value) {
       .map((item) => String(item || "").trim())
       .filter((item) => /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$/.test(item)),
   )].slice(0, 300);
-}
-
-function normalizeConnectorId(value) {
-  const normalized = String(value || "").trim().toLowerCase();
-  return /^[a-z0-9][a-z0-9-]{0,79}$/.test(normalized) ? normalized : "";
 }
 
 function normalizeIdentifier(value, maximumLength) {

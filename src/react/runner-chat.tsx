@@ -58,12 +58,12 @@ import {
   PlatformSecondaryButton,
 } from "../platform-ui/components/ui/button/index.js";
 import { PlatformSwitch } from "../platform-ui/components/ui/switch/index.js";
-import { adaptLegacyThreadToProjection } from "../thread/legacy-adapter.js";
-import type { RunnerThreadAction, RunnerThreadMessage, RunnerThreadProjection, RunnerThreadRunStatus } from "../thread/types.js";
+import { buildRunnerThreadScreenViewModel } from "../thread/presentation.js";
+import type { RunnerThreadAction, RunnerThreadMessage } from "../thread/types.js";
 import { useRunnerExecution } from "./use-runner-execution.js";
 import { getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
-import { RunnerThreadRunActivityCard } from "./thread/run-activity-card.js";
+import { RunnerThreadExecutionWorkbench } from "./thread/execution-workbench.js";
 import { RunnerThreadUserMessageTime } from "./thread/thread-message.js";
 import { useRunnerThreadProjection } from "./thread/use-runner-thread-projection.js";
 import { shouldUseRunnerCanonicalThreadSurface } from "./thread/thread-surface-mode.js";
@@ -673,6 +673,9 @@ export function RunnerChat({
   onContextIndicatorClick,
   onActionSummaryClick,
   onOpenChanges,
+  executionWorkbenchOpen,
+  onExecutionWorkbenchOpenChange,
+  onExecutionWorkbenchAvailabilityChange,
   onSubagentDetailOpenChange,
   onDocumentPreviewOpenChange,
   onDeepResearchDetailOpenChange,
@@ -1215,85 +1218,6 @@ export function RunnerChat({
     onUnavailable: setInlineError,
     onReportOpen: () => setRunSummaryMoreTurnId(null),
   });
-  const legacyTurnProjectionCacheRef = useRef(new Map<string, {
-    projection: RunnerThreadProjection;
-    logCount: number;
-    status: RunnerTurnStatus;
-  }>());
-  const legacyTurnProjectionsById = useMemo(() => {
-    const projections = new Map<string, ReturnType<typeof adaptLegacyThreadToProjection>>();
-    const liveTurnIds = new Set(turns.map((turn) => turn.id));
-    for (const cachedTurnId of legacyTurnProjectionCacheRef.current.keys()) {
-      if (!liveTurnIds.has(cachedTurnId)) legacyTurnProjectionCacheRef.current.delete(cachedTurnId);
-    }
-    for (const turn of turns) {
-      const cached = legacyTurnProjectionCacheRef.current.get(turn.id);
-      const newLogs = cached ? turn.logs.slice(cached.logCount) : turn.logs;
-      const hasPriorityProjectionChange = newLogs.some((log) =>
-        log.type === "error" ||
-        log.eventType === "permission_request" ||
-        log.eventType === "action_summary" ||
-        log.eventType === "turn_completed" ||
-        log.eventType === "planning"
-      );
-      const canReuseCachedProjection = Boolean(
-        cached &&
-        cached.status === turn.status &&
-        turn.logs.length >= cached.logCount &&
-        turn.logs.length - cached.logCount < 8 &&
-        !hasPriorityProjectionChange
-      );
-      if (cached && canReuseCachedProjection) {
-        projections.set(turn.id, cached.projection);
-        continue;
-      }
-      const projectionThreadId = String(currentThreadId || `local:${turn.id}`).trim();
-      const logRunId = turn.logs.find((log) => typeof log.metadata?.runId === "string" && log.metadata.runId.trim())?.metadata?.runId;
-      const runId = String(logRunId || `legacy:${projectionThreadId}:${turn.id}`).trim();
-      const runStatus: RunnerThreadRunStatus = turn.status === "permission_asked" ? "requires_action" : turn.status;
-      const finalAssistantLog = [...turn.logs].reverse().find((log) => (
-        (log.eventType === "agent_message" || log.eventType === "llm_response") && log.message.trim()
-      ));
-      const finalAssistantMessageId = typeof (finalAssistantLog?.metadata as Record<string, unknown> | undefined)?.messageId === "string"
-        ? String((finalAssistantLog?.metadata as Record<string, unknown>).messageId)
-        : `${turn.id}:assistant`;
-      const projection = adaptLegacyThreadToProjection({
-        threadId: projectionThreadId,
-        runId,
-        runStatus,
-        runTitle: turn.prompt,
-        runMetadata: turn.status === "queued"
-          ? { pageResidentQueue: true, coordinatorDurable: false }
-          : null,
-        logs: turn.logs,
-        messages: [
-          ...(turn.prompt.trim() ? [{
-            id: turn.sourceMessageId || `${turn.id}:prompt`,
-            role: "user" as const,
-            content: turn.prompt,
-            createdAt: new Date(turn.startedAtMs).toISOString(),
-            metadata: turn.messageMetadata || null,
-          }] : []),
-          ...(finalAssistantLog ? [{
-            id: finalAssistantMessageId,
-            role: "assistant" as const,
-            content: finalAssistantLog.message,
-            createdAt: finalAssistantLog.createdAt || finalAssistantLog.time || new Date(turn.completedAtMs || Date.now()).toISOString(),
-            metadata: finalAssistantLog.metadata || null,
-          }] : []),
-        ],
-        startedAt: new Date(turn.startedAtMs).toISOString(),
-        completedAt: turn.completedAtMs ? new Date(turn.completedAtMs).toISOString() : null,
-      });
-      legacyTurnProjectionCacheRef.current.set(turn.id, {
-        projection,
-        logCount: turn.logs.length,
-        status: turn.status,
-      });
-      projections.set(turn.id, projection);
-    }
-    return projections;
-  }, [currentThreadId, turns]);
   const scopedActiveThreadEnvironmentId = hasCurrentThread ? activeThreadEnvironmentId : null;
   const scopedActiveThreadEnvironmentName = hasCurrentThread ? activeThreadEnvironmentName : null;
   const currentThreadHasMessages = useMemo(
@@ -1672,8 +1596,15 @@ export function RunnerChat({
     [apiKey, requestHeaders]
   );
   const canonicalThreadId = String(currentThreadId || "").trim();
+  const canonicalThreadWorkbenchRequested = Boolean(
+    executionWorkbenchOpen !== undefined
+    || onExecutionWorkbenchOpenChange
+    || onExecutionWorkbenchAvailabilityChange
+  );
   const canonicalThreadEnabled = Boolean(
-    threadViewMode !== "legacy" && canonicalThreadId && normalizedBackendUrl
+    canonicalThreadId
+    && normalizedBackendUrl
+    && (threadViewMode !== "legacy" || canonicalThreadWorkbenchRequested)
   );
   const canonicalThread = useRunnerThreadProjection({
     threadId: canonicalThreadId,
@@ -1743,6 +1674,21 @@ export function RunnerChat({
     : null;
   const hasRoutableActiveRun = hasRunningTurn || Boolean(activeCanonicalRun);
   const hasCanonicalSurfaceContent = canonicalThread.projection.timeline.length > 0;
+  const executionWorkbenchScreen = useMemo(
+    () => buildRunnerThreadScreenViewModel(canonicalThread.projection),
+    [canonicalThread.projection],
+  );
+  const executionWorkbenchReceipt = executionWorkbenchScreen.defaultRunId
+    ? executionWorkbenchScreen.receipts.find(
+      (receipt) => receipt.id === executionWorkbenchScreen.defaultRunId,
+    ) || null
+    : null;
+  const executionWorkbenchAvailable = Boolean(executionWorkbenchReceipt);
+  const detachedExecutionWorkbenchOpen = Boolean(
+    !shouldUseCanonicalThreadSurface
+    && executionWorkbenchOpen
+    && executionWorkbenchReceipt
+  );
   const workspaceItems = hasApiKey ? remoteWorkspaceItems : workspaceConfig?.items || [];
   const availableEnvironments = useMemo(
     () =>
@@ -4669,6 +4615,7 @@ export function RunnerChat({
             scrapeCreationCommand,
             parseCreationCommand,
             adCreationCommand,
+            connectors: runConnectorPayload,
           },
         ]);
         return;
@@ -5958,6 +5905,17 @@ export function RunnerChat({
   }, [effectiveSelectedDeepResearchDetailPresentation, onDeepResearchDetailOpenChange]);
 
   useEffect(() => {
+    if (shouldUseCanonicalThreadSurface) return undefined;
+    onExecutionWorkbenchAvailabilityChange?.(executionWorkbenchAvailable);
+    return () => onExecutionWorkbenchAvailabilityChange?.(false);
+  }, [
+    canonicalThreadId,
+    executionWorkbenchAvailable,
+    onExecutionWorkbenchAvailabilityChange,
+    shouldUseCanonicalThreadSurface,
+  ]);
+
+  useEffect(() => {
     return () => {
       onDeepResearchDetailOpenChange?.(false);
     };
@@ -6023,7 +5981,7 @@ export function RunnerChat({
   return (
     <div
       ref={rootRef}
-      className={`tb-runner-chat ${shouldReserveDocumentPreviewWidth ? "tb-runner-chat-document-preview-open" : ""} ${isPreviewedDocumentImage ? "tb-runner-chat-image-preview-open" : ""} ${isPreviewedDocumentImage && hasPortalDocumentPreview ? "tb-runner-chat-image-preview-portal-open" : ""} ${isPreviewedDocumentImage && !hasPortalDocumentPreview ? "tb-runner-chat-image-preview-local-open" : ""} ${previewedDocumentAttachment && isDocumentPreviewMaximized ? "tb-runner-chat-document-preview-maximized" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${className || ""}`.trim()}
+      className={`tb-runner-chat ${shouldReserveDocumentPreviewWidth ? "tb-runner-chat-document-preview-open" : ""} ${isPreviewedDocumentImage ? "tb-runner-chat-image-preview-open" : ""} ${isPreviewedDocumentImage && hasPortalDocumentPreview ? "tb-runner-chat-image-preview-portal-open" : ""} ${isPreviewedDocumentImage && !hasPortalDocumentPreview ? "tb-runner-chat-image-preview-local-open" : ""} ${previewedDocumentAttachment && isDocumentPreviewMaximized ? "tb-runner-chat-document-preview-maximized" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${detachedExecutionWorkbenchOpen ? "tb-runner-chat-execution-workbench-open" : ""} ${className || ""}`.trim()}
       onDragEnterCapture={handleRootFileDragEnter}
       onDragOverCapture={handleRootFileDragOver}
       onDragLeaveCapture={handleRootFileDragLeave}
@@ -6151,6 +6109,8 @@ export function RunnerChat({
                   }
                 }}
                 onOpenChanges={onOpenChanges ? (run) => onOpenChanges(canonicalThreadId, run.id) : undefined}
+                executionWorkbenchOpen={executionWorkbenchOpen}
+                onExecutionWorkbenchOpenChange={onExecutionWorkbenchOpenChange}
                 onPermissionDecision={(request, decision) => handlePermissionDecision(
                   adaptRunnerThreadPermissionRequestToRunnerLog(request),
                   decision,
@@ -6295,19 +6255,6 @@ export function RunnerChat({
                 </span>
               );
               const shouldRenderWorkSection = isTurnRunning || isTurnPermissionAsked || revealedTimelineItems.length > 0 || isWorkLogsLoading;
-              const legacyTurnProjection = legacyTurnProjectionsById.get(turn.id) || null;
-              const legacyTurnRun = legacyTurnProjection
-                ? Object.values(legacyTurnProjection.runsById)[0] || null
-                : null;
-              const effectiveLegacyTurnProjection = legacyTurnProjection && legacyTurnRun && liveWorkSummary
-                ? {
-                    ...legacyTurnProjection,
-                    runsById: {
-                      ...legacyTurnProjection.runsById,
-                      [legacyTurnRun.id]: { ...legacyTurnRun, currentSummary: liveWorkSummary },
-                    },
-                  }
-                : legacyTurnProjection;
               const userThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "user");
               const assistantThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "assistant");
               const visibleFollowUpActions = Array.isArray(followUpActions)
@@ -6768,20 +6715,73 @@ export function RunnerChat({
                     </div>
                   ) : null}
 
-                  {shouldRenderWorkSection && effectiveLegacyTurnProjection && legacyTurnRun ? (
-                    <div className="tb-turn-run-activity" style={workHeaderStyle}>
-                      <RunnerThreadRunActivityCard
-                        run={effectiveLegacyTurnProjection.runsById[legacyTurnRun.id] || legacyTurnRun}
-                        projection={effectiveLegacyTurnProjection}
-                        fallbackAgentName={turnAgentLabel}
-                        fallbackWorkspaceName={effectiveWorkspaceSelectorMode === "projects" ? displayedWorkspaceLabel : turnEnvironmentLabel}
-                        renderAction={renderCanonicalThreadAction}
-                        onPermissionDecision={(request, decision) => handlePermissionDecision(
-                          adaptRunnerThreadPermissionRequestToRunnerLog(request),
-                          decision,
-                        )}
-                      />
-                    </div>
+                  {shouldRenderWorkSection ? (
+                    <>
+                      <button
+                        type="button"
+                        className="tb-work-header"
+                        style={workHeaderStyle}
+                        aria-expanded={isExpanded}
+                        onClick={() => toggleWorkingLogs(turn.id, isExpanded)}
+                      >
+                        <span className="tb-work-label">
+                          <span>{workLabel}</span>
+                          {isExpanded ? <IconChevronUp className="tb-chevron" /> : <IconChevronDown className="tb-chevron" />}
+                        </span>
+                        {workComputerLabel}
+                      </button>
+
+                      <div className={`tb-work-collapse ${isExpanded ? "is-expanded" : ""} ${isExpanded || shouldShowCollapsedLivePreview ? "" : "collapsed"}`.trim()}>
+                        {isExpanded || shouldShowCollapsedLivePreview ? (
+                          <div className="tb-work-collapse-inner">
+                            <div className="agent-steps-container">
+                              {hasMoreWorkingLogs ? (
+                                <div className="agent-step-item tb-work-load-more-item">
+                                  <div className="agent-step-content">
+                                    <button
+                                      type="button"
+                                      className="tb-work-load-more-button"
+                                      onClick={() => loadMoreWorkingLogs(turn.id, revealedTimelineItems.length)}
+                                    >
+                                      <LucidePlus className="tb-work-load-more-icon" strokeWidth={1.8} />
+                                      Load more...
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : null}
+                              {displayedTimelineItems.map((item, index) => {
+                                const timelineIndex = firstDisplayedTimelineItemIndex + index;
+                                const content = renderTimelineItem(turn, item, timelineIndex);
+                                if (!content) return null;
+                                return (
+                                  <div
+                                    key={timelineItemKey(turn.id, timelineIndex, item)}
+                                    className="agent-step-item"
+                                    style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
+                                  >
+                                    <div className="agent-step-content">{content}</div>
+                                  </div>
+                                );
+                              })}
+                              {shouldRenderThinkingStatus ? (
+                                <div
+                                  className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}
+                                  style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
+                                >
+                                  <div className="agent-step-content">
+                                    <InlineStatusLogBox
+                                      label="Thinking..."
+                                      icon={<LucideTerminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
+                                      pending
+                                    />
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    </>
                   ) : null}
 
                   {agentMessage?.message ? (
@@ -6895,6 +6895,51 @@ export function RunnerChat({
           </div>
         ) : null}
       </div>
+
+      {!shouldUseCanonicalThreadSurface && executionWorkbenchReceipt ? (
+        <aside
+          className={`tb-thread-execution-workbench-sidebar ${detachedExecutionWorkbenchOpen ? "is-open" : ""}`.trim()}
+          aria-label="Execution details"
+          aria-hidden={detachedExecutionWorkbenchOpen ? undefined : true}
+          inert={detachedExecutionWorkbenchOpen ? undefined : true}
+        >
+          {detachedExecutionWorkbenchOpen ? (
+            <RunnerThreadExecutionWorkbench
+              key={executionWorkbenchReceipt.id}
+              receipt={executionWorkbenchReceipt}
+              projection={canonicalThread.projection}
+              detailLoadState={
+                canonicalThread.runDetailStates?.[executionWorkbenchReceipt.id]
+                || { status: "idle", error: null }
+              }
+              activityGroupActionStates={canonicalThread.activityGroupActionStates}
+              renderAction={renderCanonicalThreadAction}
+              onClose={() => onExecutionWorkbenchOpenChange?.(false)}
+              onLoadRunDetails={(run) => canonicalThread.loadRunDetails(run.id)}
+              onLoadActivityGroupActions={canonicalThread.loadActivityGroupActions}
+              onControlRun={async (run, action) => {
+                try {
+                  const command = await canonicalThread.controlRun(run.id, {
+                    action,
+                    idempotencyKey: ["runner-chat", run.id, action, Date.now()].join(":"),
+                  });
+                  if (command.effectApplied === false) {
+                    setInlineError(command.limitation || "The control request was recorded and is waiting for the run coordinator.");
+                  }
+                } catch (error) {
+                  const normalizedError = error instanceof Error ? error : new Error(String(error));
+                  setInlineError(normalizedError.message || `Failed to ${action} the run.`);
+                }
+              }}
+              onOpenChanges={onOpenChanges ? (run) => onOpenChanges(canonicalThreadId, run.id) : undefined}
+              onPermissionDecision={(request, decision) => handlePermissionDecision(
+                adaptRunnerThreadPermissionRequestToRunnerLog(request),
+                decision,
+              )}
+            />
+          ) : null}
+        </aside>
+      ) : null}
 
       <div className="tb-input-shell">
         <div className="tb-input-width">

@@ -54,6 +54,7 @@ function createFixture({
   principal = { uid: "user_1" },
   projectId = "",
   projectCredentialId = "",
+  projectBindingConnectorId = connectorId,
   resolveCredentialOverride,
 } = {}) {
   const calls = [];
@@ -104,6 +105,14 @@ function createFixture({
         permissionSet: agentPermissions,
       });
     }
+    if (controlPath === "/organizations") {
+      return response({
+        organizations: [{
+          id: "org_1",
+          role: organizationRole,
+        }],
+      });
+    }
     if (controlPath === `/projects/${projectId}` && projectId) {
       return response({
         id: projectId,
@@ -111,9 +120,9 @@ function createFixture({
         metadata: {
           connectorCredentialBindings: projectCredentialId
             ? {
-                github: {
+                [projectBindingConnectorId]: {
                   credentialId: projectCredentialId,
-                  credentialName: "Project GitHub",
+                  credentialName: "Project connector credential",
                 },
               }
             : {},
@@ -210,6 +219,16 @@ test("normalizes connector selection without accepting client authority", () => 
   );
 });
 
+test("canonicalizes Atlassian selections to one Jira authorization identity", () => {
+  assert.deepEqual(
+    normalizeRequestedConnectors({
+      atlassian: { enabled: true, credentialId: "cred_alias" },
+      jira: { enabled: true, credentialId: "cred_canonical" },
+    }),
+    [{ id: "jira", credentialId: "cred_canonical" }],
+  );
+});
+
 test("unknown actions fail closed", () => {
   assert.equal(
     resolvePermissionAccess(
@@ -259,6 +278,17 @@ test("builds a server-owned connector envelope without provider secrets", async 
   });
   assert.equal(payload.connectors.github.accessToken, undefined);
   assert.equal(payload.connectors.github.policyVersion, 1);
+  assert.equal(payload.content, "Use GitHub.");
+  assert.equal(payload.useExecutionContentForUpstream, true);
+  assert.match(
+    payload.executionContent,
+    /\[Platform connector runtime instructions\]/,
+  );
+  assert.match(
+    payload.executionContent,
+    /Never ask the user for provider URLs, API tokens, passwords, or credentials/,
+  );
+  assert.equal(payload.executionContent.includes("provider-token"), false);
 });
 
 test("uses the trusted Atlassian catalog when a legacy account record is missing", async () => {
@@ -283,7 +313,56 @@ test("uses the trusted Atlassian catalog when a legacy account record is missing
   assert.deepEqual(payload.connectors.jira.credentialResolution, {
     source: "organization_default",
   });
-  assert.deepEqual(fixture.calls, ["/user/tags/jira"]);
+  assert.deepEqual(fixture.calls, [
+    "/user/tags/jira",
+    "/user/tags/atlassian",
+  ]);
+  assert.equal(fixture.credentialCalls[0].provider, "jira");
+});
+
+test("authorizes an Atlassian alias through canonical Jira actions and scopes", async () => {
+  const fixture = createFixture({
+    connectorId: "atlassian",
+    connectorConfig: {
+      id: "atlassian",
+      permissionSet: {
+        defaultAccess: "full_access",
+        rings: {
+          ring_1: { defaultAccess: "full_access" },
+          ring_2: { defaultAccess: "full_access" },
+          ring_3: { defaultAccess: "full_access" },
+        },
+        actions: {
+          jira_action_get_myself: {
+            ringId: "ring_1",
+            access: "full_access",
+          },
+          jira_action_create_issue: {
+            ringId: "ring_3",
+            access: "full_access",
+          },
+        },
+      },
+    },
+    credentialScope: "read:jira-work write:jira-work read:jira-user",
+    organizationRole: "owner",
+    trustedCapabilities: [
+      { id: "get_myself", access: "read-only" },
+      { id: "create_issue", access: "interactive" },
+    ],
+  });
+
+  const payload = await enrich(fixture);
+
+  assert.deepEqual(Object.keys(payload.connectors), ["jira"]);
+  assert.deepEqual(payload.connectors.jira.allowedActions, [
+    "get_myself",
+    "create_issue",
+  ]);
+  assert.deepEqual(fixture.calls, [
+    "/user/tags/jira",
+    "/user/tags/atlassian",
+  ]);
   assert.equal(fixture.credentialCalls[0].provider, "jira");
 });
 
@@ -395,9 +474,18 @@ test("passes the thread runner credentials only to protected resource reads", as
         upstreamUrl: "https://api.example.test/v1",
         apiKey: "api_key_1",
       },
+      {
+        upstreamUrl: "https://api.example.test/v1",
+        apiKey: "api_key_1",
+      },
     ],
   );
-  assert.deepEqual(fixture.organizationCalls, ["/organizations"]);
+  assert.deepEqual(fixture.resourceCalls, [
+    "/threads/thread_1",
+    "/organizations",
+    "/agents/agent_1",
+  ]);
+  assert.deepEqual(fixture.organizationCalls, []);
   assert.deepEqual(fixture.calls, ["/user/tags/github"]);
 });
 
@@ -415,6 +503,33 @@ test("uses a trusted project credential binding for project threads", async () =
   });
   assert.equal(fixture.credentialCalls[0].credentialId, "cred_project");
   assert.ok(fixture.resourceCalls.includes("/projects/project_1"));
+});
+
+test("keeps legacy Atlassian project credential bindings after Jira canonicalization", async () => {
+  const fixture = createFixture({
+    connectorId: "jira",
+    projectId: "project_1",
+    projectCredentialId: "cred_atlassian_project",
+    projectBindingConnectorId: "atlassian",
+    credentialScope: "read:jira-work write:jira-work read:jira-user",
+    organizationRole: "owner",
+    trustedCapabilities: [
+      { id: "get_myself", access: "read-only" },
+      { id: "create_issue", access: "interactive" },
+    ],
+  });
+
+  const payload = await enrich(fixture);
+
+  assert.equal(payload.connectors.jira.credentialId, "cred_atlassian_project");
+  assert.deepEqual(payload.connectors.jira.credentialResolution, {
+    source: "project",
+    projectId: "project_1",
+  });
+  assert.equal(
+    fixture.credentialCalls[0].credentialId,
+    "cred_atlassian_project",
+  );
 });
 
 test("an explicit thread credential overrides the project binding", async () => {

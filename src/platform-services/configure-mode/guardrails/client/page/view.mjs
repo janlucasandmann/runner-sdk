@@ -351,7 +351,7 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
                         activeTab: guardrailDetailTab,
                         onTabChange: handleGuardrailDetailTabChange,
                         sidebarToggle: guardrailDetailSidebarToggle,
-                        sidebarCollapsed: guardrailDetailSidebarCollapsed,
+                        sidebarCollapsed: guardrailDetailSidebarCollapsed || Boolean(guardrailAccessTeamId),
                         actions: guardrailDetailActions,
                         properties: guardrailDetailProperties,
                       }, guardrailDetailActiveContent)

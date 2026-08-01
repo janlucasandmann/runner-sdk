@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   createConnectorRuntimeBridge,
+  resolveRuntimeOrigin,
 } from "./connector-runtime-bridge.mjs";
 
 test("connector runtime bridge injects one scoped MCP server per connector", async () => {
@@ -23,6 +24,8 @@ test("connector runtime bridge injects one scoped MCP server per connector", asy
       content: "Create the issue.",
       connectors: {
         jira: {
+          agentId: "agent_test",
+          actorUserId: "user_test",
           organizationId: "org_test",
           credentialId: "credential_project",
           credentialResolution: {
@@ -37,6 +40,8 @@ test("connector runtime bridge injects one scoped MCP server per connector", asy
     },
   });
   assert.equal(issued.length, 1);
+  assert.equal(issued[0].agentId, "agent_test");
+  assert.equal(issued[0].actorUserId, "user_test");
   assert.equal(issued[0].credentialSource, "project");
   assert.equal(issued[0].projectId, "project_test");
   assert.deepEqual(payload.mcpServers, [{
@@ -67,7 +72,7 @@ test("connector runtime bridge leaves connector-free requests unchanged", async 
   );
 });
 
-test("connector runtime bridge canonicalizes Atlassian grants to Jira credentials", async () => {
+test("connector runtime bridge canonicalizes Atlassian grants and MCP identity to Jira", async () => {
   const issued = [];
   const bridge = createConnectorRuntimeBridge({
     platformOrigin: "https://platform.example.test",
@@ -80,7 +85,7 @@ test("connector runtime bridge canonicalizes Atlassian grants to Jira credential
     logger: null,
   });
 
-  await bridge.addRuntimeServers({
+  const payload = await bridge.addRuntimeServers({
     threadId: "thread_atlassian",
     payload: {
       connectors: {
@@ -99,8 +104,29 @@ test("connector runtime bridge canonicalizes Atlassian grants to Jira credential
     },
   });
 
-  assert.equal(issued[0].connectorId, "atlassian");
+  assert.equal(issued[0].connectorId, "jira");
   assert.equal(issued[0].provider, "jira");
   assert.equal(issued[0].credentialId, "credential_project");
   assert.equal(issued[0].projectId, "project_test");
+  assert.equal(payload.mcpServers[0].name, "connector_jira");
+});
+
+test("connector runtime bridge rejects loopback origins that containers cannot reach", async () => {
+  await assert.rejects(
+    resolveRuntimeOrigin({
+      platformOrigin: "http://localhost:4177",
+      envFileCandidates: [],
+    }),
+    /must be reachable from the agent runtime/,
+  );
+});
+
+test("connector runtime bridge accepts a container-reachable development origin", async () => {
+  assert.equal(
+    await resolveRuntimeOrigin({
+      platformOrigin: "http://host.docker.internal:4177",
+      envFileCandidates: [],
+    }),
+    "http://host.docker.internal:4177/",
+  );
 });

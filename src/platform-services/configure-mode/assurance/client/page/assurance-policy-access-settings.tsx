@@ -29,6 +29,7 @@ interface AssurancePolicyAccessSettingsProps {
   api: AssuranceApi;
   workspaceTeams?: readonly unknown[];
   onPolicyChange: (policy: AssurancePolicy) => void;
+  onPermissionDetailOpenChange?: (open: boolean) => void;
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -65,6 +66,7 @@ export function AssurancePolicyAccessSettings({
   api,
   workspaceTeams = [],
   onPolicyChange,
+  onPermissionDetailOpenChange,
 }: AssurancePolicyAccessSettingsProps) {
   const [selectedPrincipalId, setSelectedPrincipalId] = useState("");
   const [selectedRoleId, setSelectedRoleId] = useState("member");
@@ -180,6 +182,7 @@ export function AssurancePolicyAccessSettings({
       nextMetadata.teamAccessShareIds = nextShareIds;
       replacePolicy(await api.updatePolicy(policy.id, { metadata: nextMetadata }));
       setSelectedPrincipalId("");
+      onPermissionDetailOpenChange?.(false);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "Failed to remove team access.");
     } finally {
@@ -238,6 +241,7 @@ export function AssurancePolicyAccessSettings({
       onSelectedPrincipalIdChange={(value) => {
         setSelectedRoleId("member");
         setSelectedPrincipalId(value);
+        onPermissionDetailOpenChange?.(Boolean(value));
       }}
       subjectType="assurance_policy"
       teamSubjectType="assurance_policy_team_role"

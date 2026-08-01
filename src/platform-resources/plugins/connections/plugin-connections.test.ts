@@ -81,6 +81,31 @@ describe("plugin connection registry", () => {
     expect(getPlatformPluginConnectionIdentity("github", status)).toBe("octocat");
   });
 
+  it("loads connection status from the active organization scope", async () => {
+    const request = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({ connected: true, profile: { login: "octocat" } }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+    );
+
+    await fetchPlatformPluginConnectionStatus("github", {
+      organizationId: "organization-acme",
+      fetch: request,
+    });
+
+    expect(request).toHaveBeenCalledWith(
+      "/api/aios/github/user?organizationId=organization-acme",
+      expect.objectContaining({
+        method: "GET",
+        headers: {
+          "X-Computer-Agents-Organization": "organization-acme",
+        },
+      }),
+    );
+  });
+
   it("coalesces duplicate default status reads during connector page startup", async () => {
     const request = vi.fn(
       async () =>

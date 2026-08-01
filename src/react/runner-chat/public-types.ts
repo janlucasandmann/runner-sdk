@@ -302,6 +302,9 @@ export interface RunnerChatProps {
     summary: RunnerChatActionSummaryClickPayload,
   ) => void;
   onOpenChanges?: (threadId: string, runId?: string) => void;
+  executionWorkbenchOpen?: boolean;
+  onExecutionWorkbenchOpenChange?: (isOpen: boolean) => void;
+  onExecutionWorkbenchAvailabilityChange?: (isAvailable: boolean) => void;
   onSubagentDetailOpenChange?: (isOpen: boolean) => void;
   onDocumentPreviewOpenChange?: (isOpen: boolean) => void;
   onDeepResearchDetailOpenChange?: (isOpen: boolean) => void;

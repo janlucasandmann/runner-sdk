@@ -12,6 +12,8 @@ domain-agnostic `ui` primitives and `composite` building blocks.
   and their colocated tests.
 - `document-preview`: the attachment-preview composition shell plus isolated
   directory, PDF, and specialized preview renderers.
+- `thread-screen`: canonical conversation, execution receipt, and workbench
+  presentation shells.
 
 New thread UI should import from this category or one of its canonical
 subpaths. The former `src/react/runner-log-boxes.tsx` and

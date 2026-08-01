@@ -118,6 +118,8 @@ assert.match(fragments.breadcrumbBar, /safeItems\.slice\(1\)/);
 assert.match(fragments.breadcrumbBar, /item\.node != null\s*\? item\.node/);
 assert.match(fragments.breadcrumbBar, /item\.leading != null/);
 assert.match(fragments.breadcrumbBar, /playground-top-nav-path-leading/);
+assert.match(fragments.breadcrumbBar, /const subtitle = String\(item\.subtitle \|\| ""\)\.trim\(\)/);
+assert.match(fragments.breadcrumbBar, /playground-top-nav-path-subtitle/);
 assert.match(fragments.breadcrumbBar, /item\.trailing/);
 assert.match(fragments.breadcrumbBar, /playground-top-nav-path-item-group/);
 assert.match(fragments.appHeader, /function renderAppHeader\(/);

@@ -4,6 +4,7 @@ import {
     renderBriefingPreviewHtml,
 } from "./aios-domain.mjs";
 import { readResponseJson } from "./http-utils.mjs";
+import { fetchWithTransientRetry } from "./transient-upstream.mjs";
 
 export function createAiosGateway(bindings) {
     const { aiosOrigin, defaultUpstreamOrigin, fetchAiosCloud, identityService, isUnauthorizedHttpStatus, normalizeBackendUrl, normalizePlaygroundApiKey, notionOauthCallbackUri, port, readHeader, readRequestBody, sendJson, withProxyOrganizationHeader, } = bindings;
@@ -30,7 +31,7 @@ export function createAiosGateway(bindings) {
                 const body = await readRequestBody(req);
                 init.body = JSON.stringify(body);
             }
-            const upstream = await fetch(upstreamTarget.toString(), init);
+            const upstream = await fetchWithTransientRetry(upstreamTarget.toString(), init);
             const parsed = await readResponseJson(upstream);
             const responseHeaders = {
                 "Content-Type": "application/json; charset=utf-8",
@@ -63,7 +64,7 @@ export function createAiosGateway(bindings) {
         };
         async function fetchAiosSessionJson(upstreamPath) {
             const upstreamTarget = new URL(`${aiosOrigin}${upstreamPath}`);
-            const upstream = await fetch(upstreamTarget.toString(), {
+            const upstream = await fetchWithTransientRetry(upstreamTarget.toString(), {
                 method: "GET",
                 headers: baseHeaders,
             });
@@ -76,18 +77,21 @@ export function createAiosGateway(bindings) {
             };
         }
         try {
-            const [profileResult, streamingResult] = await Promise.all([
-                fetchAiosSessionJson("/api/user/profile"),
-                fetchAiosSessionJson("/api/user/streaming-key").catch((error) => ({
-                    ok: false,
-                    status: 502,
-                    data: {
-                        error: "Failed to load runner access.",
-                        message: error instanceof Error ? error.message : String(error),
-                    },
-                    setCookie: "",
-                })),
-            ]);
+            // Resolve runner access first. Both hosted endpoints may provision a
+            // default key, so parallel requests can race across Cloud Run
+            // instances and revoke the key returned by the other request.
+            const streamingResult = await fetchAiosSessionJson(
+                "/api/user/streaming-key",
+            ).catch((error) => ({
+                ok: false,
+                status: 502,
+                data: {
+                    error: "Failed to load runner access.",
+                    message: error instanceof Error ? error.message : String(error),
+                },
+                setCookie: "",
+            }));
+            const profileResult = await fetchAiosSessionJson("/api/user/profile");
             const responseHeaders = {
                 "Content-Type": "application/json; charset=utf-8",
                 "Cache-Control": "no-store",

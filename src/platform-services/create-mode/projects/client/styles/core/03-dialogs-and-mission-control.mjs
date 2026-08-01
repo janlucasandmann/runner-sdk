@@ -1070,6 +1070,15 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 	        color: rgba(255, 255, 255, 0.48);
 	      }
 
+	      .playground-database-browser-pagination-loading {
+	        box-sizing: border-box;
+	        width: 100%;
+	        min-height: 42px;
+	        padding: 8px var(--playground-database-browser-column-inline-padding);
+	        justify-content: center;
+	        color: rgba(255, 255, 255, 0.62);
+	      }
+
 	      .playground-database-browser-pane-empty {
 	        flex: 1 1 auto;
 	        box-sizing: border-box;

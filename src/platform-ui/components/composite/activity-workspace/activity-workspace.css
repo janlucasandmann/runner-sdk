@@ -1,0 +1,23 @@
+.platform-activity-workspace {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+}
+
+.platform-activity-workspace__timeline {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.platform-activity-workspace__timeline > .platform-activity-timeline,
+.platform-activity-workspace__loading {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+}

@@ -1,6 +1,12 @@
 import {
   resolveConnectorCredentialForOrganization,
 } from "./connector-oauth-core.mjs";
+import {
+  canonicalizeConnectorId,
+  createConnectorActionPrefix,
+  getConnectorCredentialProviderId,
+  listConnectorIdentityAliases,
+} from "./connector-identity.mjs";
 import { resolveProviderGrantAccess } from "./connector-provider-grants.mjs";
 
 const CONNECTOR_POLICY_VERSION = 1;
@@ -9,6 +15,8 @@ const VALID_RING_IDS = new Set(["ring_1", "ring_2", "ring_3"]);
 const READ_ACCESS = new Set(["full_access", "read_only"]);
 const WRITE_ACCESS = new Set(["full_access"]);
 const APPROVAL_ACCESS = "ask_for_permission";
+const CONNECTOR_RUNTIME_INSTRUCTION_MARKER =
+  "[Platform connector runtime instructions]";
 
 export class ConnectorPolicyError extends Error {
   constructor(statusCode, code, message, details = undefined) {
@@ -72,6 +80,10 @@ export function createConnectorExecutionPolicy({
     if (!requestedConnectors.length) return payload;
 
     const principal = await readVerifiedPrincipal(identityService, req);
+    const protectedResourceContext = { upstreamUrl, apiKey };
+    const organizationTransport = apiKey && upstreamUrl && fetchResourceApi
+      ? fetchResourceApi
+      : fetchOrganizationApi || fetchResourceApi;
     const [threadPayload, organizationsPayload] = await Promise.all([
       fetchRequiredResourceJson(
         fetchResourceApi,
@@ -80,15 +92,16 @@ export function createConnectorExecutionPolicy({
         `/threads/${encodeURIComponent(threadId)}`,
         `/api/threads/${encodeURIComponent(threadId)}`,
         "thread",
-        { upstreamUrl, apiKey },
+        protectedResourceContext,
       ),
       fetchRequiredResourceJson(
-        fetchOrganizationApi || fetchResourceApi,
+        organizationTransport,
         fetchSessionApi,
         req,
         "/organizations",
         "/api/organizations",
         "organizations",
+        protectedResourceContext,
       ),
     ]);
     const thread = unwrapRecord(
@@ -126,7 +139,7 @@ export function createConnectorExecutionPolicy({
       `/agents/${encodeURIComponent(agentId)}`,
       `/api/agents/${encodeURIComponent(agentId)}`,
       "agent",
-      { upstreamUrl, apiKey },
+      protectedResourceContext,
     );
     const agent = unwrapRecord(agentPayload, ["agent", "item", "data"]);
     const agentPermissionSet = readPermissionSet(agent);
@@ -148,7 +161,7 @@ export function createConnectorExecutionPolicy({
             `/projects/${encodeURIComponent(projectId)}`,
             `/api/projects/${encodeURIComponent(projectId)}`,
             "project",
-            { upstreamUrl, apiKey },
+            protectedResourceContext,
           ),
           ["project", "item", "data"],
         )
@@ -161,6 +174,7 @@ export function createConnectorExecutionPolicy({
         req,
         request,
         principal,
+        agentId,
         organization,
         roleId,
         agentPermissionSet,
@@ -186,9 +200,15 @@ export function createConnectorExecutionPolicy({
       })),
     });
 
+    const executionContent = buildConnectorExecutionContent(
+      payload,
+      evaluatedConnectors,
+    );
     return {
       ...payload,
       connectors: evaluatedConnectors,
+      executionContent,
+      useExecutionContentForUpstream: true,
     };
   }
 
@@ -196,6 +216,60 @@ export function createConnectorExecutionPolicy({
     enrichThreadMessagePayload,
     evaluateRequestedConnector,
   });
+}
+
+export function buildConnectorExecutionContent(payload, connectors) {
+  const baseContent = String(
+    typeof payload?.executionContent === "string"
+      && payload.executionContent.trim()
+      ? payload.executionContent
+      : payload?.content || "",
+  ).trim();
+  if (!baseContent || !isRecord(connectors) || !Object.keys(connectors).length) {
+    return baseContent;
+  }
+  if (baseContent.includes(CONNECTOR_RUNTIME_INSTRUCTION_MARKER)) {
+    return baseContent;
+  }
+
+  const connectorLines = Object.entries(connectors)
+    .filter(([, policy]) => policy?.enabled !== false)
+    .map(([connectorId, policy]) => {
+      const actions = Array.isArray(policy?.allowedActions)
+        ? policy.allowedActions.map(String).filter(Boolean)
+        : [];
+      const approvalActions = Array.isArray(policy?.approvalRequiredActions)
+        ? policy.approvalRequiredActions.map(String).filter(Boolean)
+        : [];
+      const actionSummary = [...actions, ...approvalActions].join(", ");
+      return `- ${formatConnectorName(connectorId)} (${connectorId})`
+        + (actionSummary ? `: ${actionSummary}` : "");
+    });
+
+  return [
+    baseContent,
+    "",
+    CONNECTOR_RUNTIME_INSTRUCTION_MARKER,
+    "The user explicitly selected the authenticated platform connectors below. "
+      + "Their tools are supplied to this run through platform-managed remote MCP servers:",
+    ...connectorLines,
+    "Use the selected connector tools directly whenever they are relevant to the request. "
+      + "Do not inspect local MCP settings, environment files, or secrets to decide whether these connectors are configured.",
+    "Never ask the user for provider URLs, API tokens, passwords, or credentials for a selected connector. "
+      + "Do not install another connector or bypass it with a direct provider REST script.",
+    "If a selected connector tool returns an error, report that platform connector error accurately instead of claiming the connector was not configured.",
+  ].join("\n");
+}
+
+function formatConnectorName(connectorId) {
+  if (connectorId === "atlassian" || connectorId === "jira") {
+    return "Atlassian";
+  }
+  return String(connectorId || "")
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 export function normalizeRequestedConnectors(value) {
@@ -211,21 +285,21 @@ export function normalizeRequestedConnectors(value) {
     : isRecord(value)
       ? Object.entries(value)
       : [];
-  const normalized = [];
-  const seen = new Set();
+  const normalizedById = new Map();
   for (const [rawId, rawOptions] of entries) {
-    const id = normalizeConnectorId(rawId);
+    const id = canonicalizeConnectorId(rawId);
     const options = isRecord(rawOptions) ? rawOptions : {};
-    if (!id || seen.has(id) || options.enabled === false) continue;
-    seen.add(id);
-    normalized.push({
+    if (!id || options.enabled === false) continue;
+    const requestedId = String(rawId || "").trim().toLowerCase();
+    if (normalizedById.has(id) && requestedId !== id) continue;
+    normalizedById.set(id, {
       id,
       credentialId: normalizeCredentialId(
         options.credentialId || options.credential_id,
       ),
     });
   }
-  return normalized;
+  return [...normalizedById.values()];
 }
 
 export function resolvePermissionAccess(
@@ -280,6 +354,7 @@ async function evaluateRequestedConnector({
   req,
   request,
   principal,
+  agentId,
   organization,
   roleId,
   agentPermissionSet,
@@ -341,7 +416,7 @@ async function evaluateRequestedConnector({
     principal.uid || principal.userId || "",
   ).trim();
   const credential = await resolveCredential({
-    provider: getCredentialProviderId(request.id),
+    provider: getConnectorCredentialProviderId(request.id),
     organizationId: organization.id,
     credentialId: selectedCredentialId,
     requestingUserId,
@@ -398,7 +473,7 @@ async function evaluateRequestedConnector({
       capability.ringId,
     );
     const providerAccess = resolveProviderGrantAccess(
-      request.id,
+      getConnectorCredentialProviderId(request.id),
       capability,
       credential.token,
     );
@@ -430,6 +505,8 @@ async function evaluateRequestedConnector({
 
   return Object.freeze({
     enabled: true,
+    agentId,
+    actorUserId: requestingUserId,
     credentialId: credential.credentialId,
     organizationId: organization.id,
     credentialResolution: Object.freeze({
@@ -449,7 +526,7 @@ function listConfiguredCapabilities(
   permissionSet,
   trustedCapabilities = [],
 ) {
-  const prefix = `${connectorId.replaceAll("-", "_")}_action_`;
+  const prefix = createConnectorActionPrefix(connectorId);
   const byId = new Map();
   const hasTrustedCapabilities = trustedCapabilities.length > 0;
   for (const capability of trustedCapabilities) {
@@ -648,22 +725,28 @@ async function fetchConnectorConfigJson(
   connectorId,
   { allowMissing = false } = {},
 ) {
-  const response = await fetchSessionApi(
-    req,
-    `/user/tags/${encodeURIComponent(connectorId)}`,
-    `/api/user/tags/${encodeURIComponent(connectorId)}`,
-    {
-      method: "GET",
-      headers: { accept: "application/json" },
-    },
-  );
-  const payload = await readResponseJson(response);
-  if (response?.ok) return payload;
-  const status = Number(response?.status) || 502;
-  if (allowMissing && status === 404) {
-    return {};
+  let missingPayload = {};
+  for (const alias of listConnectorIdentityAliases(connectorId)) {
+    const response = await fetchSessionApi(
+      req,
+      `/user/tags/${encodeURIComponent(alias)}`,
+      `/api/user/tags/${encodeURIComponent(alias)}`,
+      {
+        method: "GET",
+        headers: { accept: "application/json" },
+      },
+    );
+    const payload = await readResponseJson(response);
+    if (response?.ok) return payload;
+    const status = Number(response?.status) || 502;
+    if (status === 404) {
+      missingPayload = payload;
+      continue;
+    }
+    throw createResourceLookupError(status, "connector", payload);
   }
-  throw createResourceLookupError(status, "connector", payload);
+  if (allowMissing) return {};
+  throw createResourceLookupError(404, "connector", missingPayload);
 }
 
 async function fetchRequiredResourceJson(
@@ -853,11 +936,13 @@ function readProjectConnectorCredentialBinding(project, connectorId) {
     project.connectorCredentialBindings,
     project.connector_credential_bindings,
   ].filter(isRecord);
-  const aliases = [
-    connectorId,
-    connectorId.replaceAll("-", "_"),
-    getCredentialProviderId(connectorId),
-  ];
+  const aliases = [...new Set([
+    ...listConnectorIdentityAliases(connectorId),
+    ...listConnectorIdentityAliases(connectorId).map((alias) => (
+      alias.replaceAll("-", "_")
+    )),
+    getConnectorCredentialProviderId(connectorId),
+  ])];
   for (const bindings of candidates) {
     for (const alias of aliases) {
       const rawBinding = bindings[alias];
@@ -939,14 +1024,8 @@ function findArray(value, keys) {
   return [];
 }
 
-function getCredentialProviderId(connectorId) {
-  if (connectorId === "one-drive") return "microsoft";
-  if (connectorId === "atlassian") return "jira";
-  return connectorId;
-}
-
 function getCredentialEncryptionKeyNames(connectorId) {
-  const providerId = getCredentialProviderId(connectorId);
+  const providerId = getConnectorCredentialProviderId(connectorId);
   const prefix = providerId
     .replaceAll("-", "_")
     .toUpperCase();
@@ -956,11 +1035,6 @@ function getCredentialEncryptionKeyNames(connectorId) {
     ...(providerId === "github" ? ["GITHUB_TOKEN_ENCRYPTION_KEY"] : []),
     "CONNECTOR_TOKEN_ENCRYPTION_KEY",
   ];
-}
-
-function normalizeConnectorId(value) {
-  const normalized = String(value || "").trim().toLowerCase();
-  return /^[a-z0-9][a-z0-9-]{0,79}$/.test(normalized) ? normalized : "";
 }
 
 function normalizeCredentialId(value) {

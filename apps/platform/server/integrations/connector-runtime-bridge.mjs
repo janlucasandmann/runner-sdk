@@ -1,4 +1,8 @@
 import { getConnectorRuntimeEnvValue } from "./connector-oauth-core.mjs";
+import {
+  canonicalizeConnectorId,
+  getConnectorCredentialProviderId,
+} from "./connector-identity.mjs";
 
 const MCP_PATH = "/api/aios/connectors/mcp";
 
@@ -27,8 +31,19 @@ export function createConnectorRuntimeBridge({
     const connectors = isRecord(payload?.connectors)
       ? payload.connectors
       : {};
-    const connectorEntries = Object.entries(connectors)
-      .filter(([, policy]) => policy?.enabled !== false);
+    const connectorEntriesById = new Map();
+    for (const [requestedId, policy] of Object.entries(connectors)) {
+      if (policy?.enabled === false) continue;
+      const connectorId = canonicalizeConnectorId(requestedId);
+      if (!connectorId) continue;
+      if (
+        !connectorEntriesById.has(connectorId)
+        || requestedId === connectorId
+      ) {
+        connectorEntriesById.set(connectorId, policy);
+      }
+    }
+    const connectorEntries = [...connectorEntriesById.entries()];
     if (!connectorEntries.length) return payload;
 
     const endpoint = new URL(MCP_PATH, await getRuntimeOrigin()).toString();
@@ -42,8 +57,10 @@ export function createConnectorRuntimeBridge({
       const name = createMcpServerName(connectorId);
       const bearerToken = await grantService.issue({
         threadId,
+        agentId: policy.agentId,
+        actorUserId: policy.actorUserId,
         connectorId,
-        provider: getCredentialProviderId(connectorId),
+        provider: getConnectorCredentialProviderId(connectorId),
         organizationId: policy.organizationId,
         credentialId: policy.credentialId,
         credentialSource: policy.credentialResolution?.source,
@@ -80,7 +97,7 @@ export function createConnectorRuntimeBridge({
   });
 }
 
-async function resolveRuntimeOrigin({
+export async function resolveRuntimeOrigin({
   platformOrigin,
   envFileCandidates,
 }) {
@@ -104,7 +121,24 @@ async function resolveRuntimeOrigin({
   ) {
     throw new Error("Connector MCP origin is invalid.");
   }
+  if (isLoopbackHostname(origin.hostname)) {
+    throw new Error(
+      "Connector MCP origin must be reachable from the agent runtime. "
+        + "Configure CONNECTOR_MCP_ORIGIN with a container-reachable or public platform origin.",
+    );
+  }
   return `${origin.origin}/`;
+}
+
+function isLoopbackHostname(hostname) {
+  const normalized = String(hostname || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^\[|\]$/g, "");
+  return normalized === "localhost"
+    || normalized === "::1"
+    || normalized === "0:0:0:0:0:0:0:1"
+    || normalized.startsWith("127.");
 }
 
 function createMcpServerName(connectorId) {
@@ -114,12 +148,6 @@ function createMcpServerName(connectorId) {
     .replace(/[^a-z0-9_-]+/g, "_")
     .slice(0, 52);
   return `connector_${suffix || "service"}`;
-}
-
-function getCredentialProviderId(connectorId) {
-  if (connectorId === "one-drive") return "microsoft";
-  if (connectorId === "atlassian") return "jira";
-  return connectorId;
 }
 
 function isRecord(value) {

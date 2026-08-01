@@ -10,14 +10,14 @@ styles without introducing a second application runtime.
 ## Contents
 
 - [`domain/`](domain/) - Pure flow and snapshot rules.
-- [`page/`](page/) - Onboarding modal presentation.
+- [`page/`](page/) - Full-screen onboarding presentation.
 - [`shell/`](shell/) - Legacy host bridge and lifecycle orchestration.
 - [`styles/`](styles/) - Onboarding-owned styles.
 
 ## Working in this directory
 
 Compose browser-facing onboarding code through this directory's public entry
-point. Keep pure step and snapshot rules in `domain`, modal rendering in `page`,
+point. Keep pure step and snapshot rules in `domain`, screen rendering in `page`,
 global runtime integration in `shell`, and feature-only CSS in `styles`.
 
 ## Verification

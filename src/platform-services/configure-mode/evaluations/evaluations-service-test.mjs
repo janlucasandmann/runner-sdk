@@ -806,6 +806,18 @@ assert.doesNotMatch(platformEntrySource, /function renderEvaluationsPage\(/);
 assert.doesNotMatch(platformEntrySource, /function renderEvaluationsPageNav\(/);
 assert.doesNotMatch(platformEntrySource, /const playgroundEvaluationsRuntime/);
 assert.match(evaluationRuntimeSource, /async function resolveEvaluationGuardrailTarget/);
+assert.match(
+  evaluationRuntimeSource,
+  /\/guardrails\/\$\{encodeURIComponent\(guardrailId\)\}\/evaluation-target/,
+);
+assert.match(
+  evaluationRuntimeSource,
+  /You do not have permission to evaluate this guardrail\./,
+);
+assert.doesNotMatch(
+  evaluationRuntimeSource,
+  /catch \(error\) \{\s*if \(!providedSnapshot\) throw error;\s*\}/,
+);
 assert.match(evaluationRuntimeSource, /guardrail: record\.targetGuardrail \|\| null/);
 assert.match(evaluationRuntimeSource, /buildProxyPromptAdaptationsFromGuardrails\(explicitGuardrails\)/);
 assert.match(evaluationRuntimeSource, /targetGuardrail = await resolveEvaluationGuardrailTarget/);

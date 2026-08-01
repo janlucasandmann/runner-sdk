@@ -9,6 +9,7 @@ This directory contains contributor workflows for configuration, testing, and re
 ## Contents
 
 - [`configuration.md`](configuration.md) — Engineering documentation for Configuration.
+- [`connector-provider-setup.md`](connector-provider-setup.md) — Provider-console, callback, permission, and environment setup for production connector runtimes.
 - [`readme-standard.md`](readme-standard.md) — Engineering documentation for README Standard.
 - [`testing.md`](testing.md) — Engineering documentation for Testing.
 

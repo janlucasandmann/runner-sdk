@@ -2250,20 +2250,6 @@
                 },
                 React.createElement("div", { className: "playground-tasks-detail-facts-body" },
                   renderAgentFactRow(
-                    "Email",
-                    renderAgentCopyableFactValue(
-                      "agent-email",
-                      agentEmailAddress,
-                      "email address",
-                      "playground-agents-detail-about-email",
-                      agentEmailAddress || "No email address available"
-                    ),
-                    {
-                      className: "is-email",
-                      valueClassName: "playground-agents-detail-about-email-control",
-                    }
-                  ),
-                  renderAgentFactRow(
                     "Model",
                     agentPrimaryModelControl,
                     {

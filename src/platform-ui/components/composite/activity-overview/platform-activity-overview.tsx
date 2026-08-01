@@ -80,6 +80,7 @@ export interface PlatformActivityOverviewProps
   maxResizeHeight?: number;
   minSiblingHeight?: number;
   onHeightChange?: (height: number) => void;
+  headerActions?: ReactNode;
 }
 
 interface NormalizedActivityOverviewItem
@@ -345,8 +346,10 @@ function formatRangeValue(timestamp: number) {
 
 function ActivityOverviewItem({
   item,
+  topPadding,
 }: {
   item: NormalizedActivityOverviewItem;
+  topPadding: number;
 }) {
   const ItemIcon = resolveItemIcon(item);
   const StatusIcon = resolveStatusIcon(item.status);
@@ -371,7 +374,7 @@ function ActivityOverviewItem({
           `is-${item.status}`,
         )}
         style={{
-          top: `${PLOT_TOP_PADDING + item.rowIndex * ROW_HEIGHT}px`,
+          top: `${topPadding + item.rowIndex * ROW_HEIGHT}px`,
         }}
         role="listitem"
       >
@@ -405,7 +408,7 @@ function ActivityOverviewItem({
           `is-${item.status}`,
         )}
         style={{
-          top: `${PLOT_TOP_PADDING + item.rowIndex * ROW_HEIGHT}px`,
+          top: `${topPadding + item.rowIndex * ROW_HEIGHT}px`,
         }}
         role="listitem"
       >
@@ -467,7 +470,7 @@ function ActivityOverviewItem({
         `is-${item.status}`,
       )}
       style={{
-        top: `${PLOT_TOP_PADDING + item.rowIndex * ROW_HEIGHT}px`,
+        top: `${topPadding + item.rowIndex * ROW_HEIGHT}px`,
       }}
       role="listitem"
     >
@@ -511,6 +514,7 @@ export function PlatformActivityOverview({
   maxResizeHeight,
   minSiblingHeight = DEFAULT_MIN_SIBLING_HEIGHT,
   onHeightChange,
+  headerActions = null,
   className = "",
   style,
   ...props
@@ -589,9 +593,10 @@ export function PlatformActivityOverview({
     () => buildTicks(normalizedTickCount, domain.start, domain.end),
     [domain.end, domain.start, normalizedTickCount],
   );
+  const plotTopPadding = headerActions ? 58 : PLOT_TOP_PADDING;
   const plotHeight = Math.max(
     240,
-    PLOT_TOP_PADDING +
+    plotTopPadding +
       normalizedItems.length * ROW_HEIGHT +
       PLOT_BOTTOM_PADDING,
   );
@@ -918,6 +923,11 @@ export function PlatformActivityOverview({
         )}
         aria-label={ariaLabel}
       >
+        {headerActions ? (
+          <div className="platform-activity-overview__header-actions">
+            {headerActions}
+          </div>
+        ) : null}
         <PlatformLoadingState
           className="platform-activity-overview__loading"
           message={loadingMessage}
@@ -940,6 +950,11 @@ export function PlatformActivityOverview({
         )}
         aria-label={ariaLabel}
       >
+        {headerActions ? (
+          <div className="platform-activity-overview__header-actions">
+            {headerActions}
+          </div>
+        ) : null}
         <PlatformEmptyState
           className="platform-activity-overview__empty"
           icon={emptyIcon}
@@ -963,6 +978,11 @@ export function PlatformActivityOverview({
       )}
       aria-label={ariaLabel}
     >
+      {headerActions ? (
+        <div className="platform-activity-overview__header-actions">
+          {headerActions}
+        </div>
+      ) : null}
       <div className="platform-activity-overview__viewport">
         <div
           className="platform-activity-overview__timeline"
@@ -987,7 +1007,11 @@ export function PlatformActivityOverview({
             </div>
 
             {normalizedItems.map((item) => (
-              <ActivityOverviewItem key={item.id} item={item} />
+              <ActivityOverviewItem
+                key={item.id}
+                item={item}
+                topPadding={plotTopPadding}
+              />
             ))}
             {normalizedItems.length === 0 ? (
               <PlatformEmptyState

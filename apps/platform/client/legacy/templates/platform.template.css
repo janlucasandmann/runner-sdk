@@ -2967,7 +2967,170 @@
         .playground-view-pane.is-hidden {
           display: none;
         }
-  
+
+        .playground-thread-activity-page {
+          width: 100%;
+          height: 100%;
+          min-width: 0;
+          min-height: 0;
+          overflow: hidden;
+          background: #000;
+        }
+
+        .playground-thread-activity-page
+          > .platform-activity-overview.playground-thread-activity-overview {
+          height: 100%;
+          min-height: 0;
+        }
+
+        .platform-activity-timeline.is-inspector.playground-thread-activity-timeline {
+          flex: 1 1 auto;
+          width: 100%;
+          max-width: none;
+          height: 100%;
+          min-height: 0;
+        }
+
+        .playground-thread-activity-avatar {
+          display: block;
+          width: 20px;
+          height: 20px;
+          object-fit: cover;
+          border-radius: 50%;
+        }
+
+        .playground-thread-activity-summary__actor {
+          color: #fff;
+          font-weight: 400;
+        }
+
+        .playground-thread-activity-summary__action {
+          margin-left: 4px;
+          color: rgba(255, 255, 255, 0.58);
+        }
+
+        .playground-thread-activity-preview {
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          min-width: 0;
+          gap: 24px;
+          padding: 24px;
+        }
+
+        .playground-thread-activity-preview__heading {
+          display: flex;
+          align-items: center;
+          min-width: 0;
+          gap: 10px;
+        }
+
+        .playground-thread-activity-preview__heading-copy {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .playground-thread-activity-preview__title {
+          color: #fff;
+          font-size: 14px;
+          font-weight: 500;
+          line-height: 1.35;
+        }
+
+        .playground-thread-activity-preview__meta,
+        .playground-thread-activity-preview__changes-title,
+        .playground-thread-activity-preview__change-kind {
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 11px;
+          font-weight: 400;
+        }
+
+        .playground-thread-activity-preview__description {
+          max-width: 760px;
+          color: rgba(255, 255, 255, 0.78);
+          font-size: 12px;
+          line-height: 1.6;
+          white-space: pre-wrap;
+        }
+
+        .playground-thread-activity-preview__changes {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+          gap: 4px;
+        }
+
+        .playground-thread-activity-preview__changes-title {
+          margin-bottom: 5px;
+        }
+
+        .playground-thread-activity-preview__change {
+          display: flex;
+          align-items: center;
+          min-width: 0;
+          min-height: 32px;
+          gap: 8px;
+          padding: 0 8px;
+          border-radius: 8px;
+          color: rgba(255, 255, 255, 0.78);
+          background: rgba(255, 255, 255, 0.0375);
+          font-size: 12px;
+        }
+
+        .playground-thread-activity-preview__change-icon {
+          width: 18px;
+          height: 18px;
+          flex: 0 0 18px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: rgba(255, 255, 255, 0.62);
+        }
+
+        .playground-thread-activity-preview__change-name {
+          min-width: 0;
+          flex: 1 1 auto;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .playground-thread-activity-preview__change.is-action {
+          min-height: 44px;
+          padding-top: 6px;
+          padding-bottom: 6px;
+        }
+
+        .playground-thread-activity-preview__change.is-action .playground-thread-activity-preview__change-name {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          overflow: visible;
+          text-overflow: clip;
+          white-space: normal;
+        }
+
+        .playground-thread-activity-preview__action-title {
+          color: rgba(255, 255, 255, 0.86);
+          font-size: 12px;
+          font-weight: 400;
+        }
+
+        .playground-thread-activity-preview__action-summary,
+        .playground-thread-activity-preview__description.is-muted {
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 11px;
+          font-weight: 400;
+        }
+
+        .playground-thread-activity-preview__action-status {
+          flex: 0 0 auto;
+          text-transform: capitalize;
+        }
+
         .changes-view {
           height: 100%;
           min-height: 0;
@@ -30433,13 +30596,13 @@
   
         .playground-thread-nav-popup-shell .playground-thread-nav-popup-menu {
           top: calc(100% + 8px);
-          right: 0;
-          left: auto;
+          right: auto;
+          left: 0;
           bottom: auto;
           width: 280px;
           min-width: 280px;
           max-height: min(720px, calc(100vh - 72px));
-          transform-origin: top right;
+          transform-origin: top left;
         }
   
         .playground-thread-nav-popup-static-row {

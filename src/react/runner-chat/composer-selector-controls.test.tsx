@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   RunnerAgentSelectorControl,
   RunnerComposerOrganizationSelector,
+  RunnerWorkspaceSelectorControl,
 } from "./composer-selector-controls.js";
 
 describe("composer selector controls", () => {
@@ -40,6 +41,39 @@ describe("composer selector controls", () => {
 
     expect(html).toContain("Forge");
     expect(html).toContain("Max");
+    expect(html).toContain("tb-selector-anchor-agent");
+    expect(html).toContain('class="tb-inline-selector-label"');
+    expect(html).toContain('title="Forge"');
+  });
+
+  it("marks the selected workspace label as a truncation target", () => {
+    const workspaceName = "A very long computer environment name";
+    const html = renderToStaticMarkup(
+      <RunnerWorkspaceSelectorControl
+        animation={false}
+        buttonRef={createRef<HTMLButtonElement>()}
+        displayedWorkspaceLabel={workspaceName}
+        effectiveMode="computers"
+        environments={[{ id: "environment_1", name: workspaceName }]}
+        hasApiKey
+        hidden={false}
+        mode="computers"
+        onModeChange={vi.fn()}
+        onSelectEnvironment={vi.fn()}
+        onSelectProject={vi.fn()}
+        onToggle={vi.fn()}
+        open={false}
+        popupRef={createRef<HTMLDivElement>()}
+        popupStyle={null}
+        projects={[]}
+        selectedEnvironmentId="environment_1"
+        selectedProjectId=""
+      />,
+    );
+
+    expect(html).toContain("tb-selector-anchor-workspace");
+    expect(html).toContain('class="tb-inline-selector-label"');
+    expect(html).toContain(`title="${workspaceName}"`);
   });
 
   it("resolves the default organization label", () => {

@@ -12,6 +12,16 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
             "guardrail",
             set?.permissionSet || getGuardrailAccessMetadata(set).permissionSet
           );
+          const getGuardrailSystemRolePermissionSet = (
+            principalId,
+            roleId,
+            set = selectedGuardrailSet
+          ) => getPlatformSystemPrincipalRolePermissionSet(
+            getGuardrailAccessMetadata(set),
+            principalId,
+            normalizePlaygroundTeamRoleId(roleId, "member"),
+            "guardrail_team_role"
+          );
           const getGuardrailAccessTeamIds = (set = selectedGuardrailSet) => getPlatformSharedTeamIds({
             ...getGuardrailAccessMetadata(set),
             sharedTeamIds: getGuardrailAccessMetadata(set).teamAccessIds,
@@ -259,6 +269,27 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
               nextPermissionSet,
               "guardrail"
             ));
+          };
+          const updateGuardrailSystemRolePermissionSet = (principalId, roleId, updater) => {
+            const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+            if (!isPlatformRoleScopedSystemAccessPrincipalId(principalId) || normalizedRoleId === "owner") return;
+            const currentPermissionSet = getGuardrailSystemRolePermissionSet(
+              principalId,
+              normalizedRoleId
+            );
+            const nextPermissionSet = normalizePlaygroundPermissionSet(
+              typeof updater === "function" ? updater(currentPermissionSet) : updater,
+              "guardrail_team_role"
+            );
+            updateGuardrailAccessMetadata((metadata) =>
+              buildPlatformSystemPrincipalRolePermissionMetadata(
+                metadata,
+                principalId,
+                normalizedRoleId,
+                nextPermissionSet,
+                "guardrail_team_role"
+              )
+            );
           };
           const updateGuardrailPermissionRingAccess = (ringId, nextAccess) => {
             const ring = getPlaygroundPermissionRingDefinition(ringId);
@@ -594,6 +625,8 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
             const selectedAccessRow = guardrailAccessRows.find((row) => row.id === guardrailAccessTeamId) || null;
             if (selectedAccessRow) {
               const systemPrincipal = getPlatformSystemAccessPrincipal(selectedAccessRow.id);
+              const roleScopedSystemPrincipal = systemPrincipal
+                && isPlatformRoleScopedSystemAccessPrincipalId(systemPrincipal.id);
               const selectedRole = getPlaygroundTeamRoleDefinition(guardrailAccessRoleId);
               return React.createElement("section", { className: "playground-guardrails-access-detail" },
                 React.createElement("div", { className: "playground-project-team-permissions-header" },
@@ -609,7 +642,7 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
                     systemPrincipal ? systemPrincipal.name + " Permissions" : selectedAccessRow.name + " Access"
                   )
                 ),
-                systemPrincipal
+                systemPrincipal && !roleScopedSystemPrincipal
                   ? React.createElement(PlatformPermissionsPage, {
                       permissionSet: getGuardrailPermissionSet(selectedGuardrailSet, systemPrincipal.id),
                       accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
@@ -634,14 +667,68 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
                       roleKicker: "Guardrail role",
                       roleDescription: "Guardrail-specific permissions for " + selectedRole.label.toLowerCase() + "s in " + selectedAccessRow.name + ".",
                       readOnly: selectedRole.id === "owner" || selectedGuardrailSetReadonly,
-                      permissionSet: getGuardrailTeamRolePermissionSet(selectedAccessRow.id, selectedRole.id),
+                      permissionSet: roleScopedSystemPrincipal
+                        ? getGuardrailSystemRolePermissionSet(systemPrincipal.id, selectedRole.id)
+                        : getGuardrailTeamRolePermissionSet(selectedAccessRow.id, selectedRole.id),
                       accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
                       ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
                       actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
                       subjectType: "guardrail_team_role",
-                      onRingAccessChange: (ringId, access) => updateGuardrailTeamRoleRingAccess(selectedAccessRow.id, selectedRole.id, ringId, access),
-                      onActionRingChange: (actionId, ringId) => updateGuardrailTeamRoleActionRing(selectedAccessRow.id, selectedRole.id, actionId, ringId),
-                      onActionAccessChange: (actionId, access) => updateGuardrailTeamRoleActionAccess(selectedAccessRow.id, selectedRole.id, actionId, access),
+                      onRingAccessChange: (ringId, access) => (
+                        roleScopedSystemPrincipal
+                          ? updateGuardrailSystemRolePermissionSet(systemPrincipal.id, selectedRole.id, (current) => ({
+                              ...current,
+                              rings: {
+                                ...(current.rings || {}),
+                                [ringId]: {
+                                  ...(current.rings?.[ringId] || {}),
+                                  defaultAccess: access,
+                                },
+                              },
+                            }))
+                          : updateGuardrailTeamRoleRingAccess(selectedAccessRow.id, selectedRole.id, ringId, access)
+                      ),
+                      onActionRingChange: (actionId, ringId) => (
+                        roleScopedSystemPrincipal
+                          ? updateGuardrailSystemRolePermissionSet(systemPrincipal.id, selectedRole.id, (current) => {
+                              const action = getPlaygroundPermissionActionDefinition(actionId);
+                              if (!action) return current;
+                              return {
+                                ...current,
+                                actions: {
+                                  ...(current.actions || {}),
+                                  [action.id]: buildPlaygroundPermissionActionPolicy(
+                                    current,
+                                    action,
+                                    current.actions?.[action.id] || { ringId: action.ringId },
+                                    getPlaygroundPermissionActionExplicitAccess(current, action),
+                                    normalizePlaygroundPermissionRingId(ringId, action.ringId)
+                                  ),
+                                },
+                              };
+                            })
+                          : updateGuardrailTeamRoleActionRing(selectedAccessRow.id, selectedRole.id, actionId, ringId)
+                      ),
+                      onActionAccessChange: (actionId, access) => (
+                        roleScopedSystemPrincipal
+                          ? updateGuardrailSystemRolePermissionSet(systemPrincipal.id, selectedRole.id, (current) => {
+                              const action = getPlaygroundPermissionActionDefinition(actionId);
+                              if (!action) return current;
+                              return {
+                                ...current,
+                                actions: {
+                                  ...(current.actions || {}),
+                                  [action.id]: buildPlaygroundPermissionActionPolicy(
+                                    current,
+                                    action,
+                                    current.actions?.[action.id] || { ringId: action.ringId },
+                                    access
+                                  ),
+                                },
+                              };
+                            })
+                          : updateGuardrailTeamRoleActionAccess(selectedAccessRow.id, selectedRole.id, actionId, access)
+                      ),
                     })
               );
             }

@@ -24,6 +24,7 @@
   --tb-runner-text-tertiary: rgba(255, 255, 255, 0.55);
   --tb-runner-accent: linear-gradient(to top, #0151a8, #016bdf, #4190e7);
   --tb-document-preview-width: 0px;
+  --tb-execution-workbench-width: 0px;
   --tb-document-preview-max-width: min(42vw, 620px);
   --tb-image-preview-composer-width: var(--tb-document-preview-width);
   display: grid;
@@ -42,6 +43,10 @@
 
 .tb-runner-chat.tb-runner-chat-document-preview-open {
   --tb-document-preview-width: var(--tb-document-preview-max-width);
+}
+
+.tb-runner-chat.tb-runner-chat-execution-workbench-open {
+  --tb-execution-workbench-width: min(520px, 42vw);
 }
 
 .tb-runner-chat.tb-runner-chat-image-preview-local-open .tb-input-shell {
@@ -207,7 +212,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-runner-chat .workinglogsbox {
   width: 100%;
-  max-width: calc(100% - var(--tb-document-preview-width));
+  max-width: calc(100% - var(--tb-document-preview-width) - var(--tb-execution-workbench-width));
   height: 100%;
   min-height: 0;
   display: flex;
@@ -471,7 +476,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .tb-input-shell {
   position: absolute;
   left: 0;
-  right: var(--tb-document-preview-width);
+  right: calc(var(--tb-document-preview-width) + var(--tb-execution-workbench-width));
   bottom: 0;
   z-index: 20;
   display: flex;
@@ -480,6 +485,47 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   background: transparent;
   pointer-events: none;
   transition: right 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tb-runner-chat .tb-thread-execution-workbench-sidebar {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 120;
+  width: min(520px, 42vw);
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border-left: 1px solid rgba(255, 255, 255, 0.075);
+  background: #000;
+  opacity: 0;
+  transform: translate3d(100%, 0, 0);
+  pointer-events: none;
+  transition:
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 160ms ease;
+}
+
+.tb-runner-chat .tb-thread-execution-workbench-sidebar.is-open {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
+.tb-runner-chat .tb-thread-execution-workbench-sidebar .platform-thread-workbench {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: #000;
+}
+
+@media (max-width: 760px) {
+  .tb-runner-chat.tb-runner-chat-execution-workbench-open {
+    --tb-execution-workbench-width: 100%;
+  }
+
+  .tb-runner-chat .tb-thread-execution-workbench-sidebar {
+    width: 100%;
+  }
 }
 
 .tb-runner-chat.playground-thread-runner.is-project-wallpaper-active .tb-input-shell {

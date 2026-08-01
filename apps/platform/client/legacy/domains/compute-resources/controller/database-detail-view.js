@@ -1,3 +1,68 @@
+          const PLAYGROUND_DATABASE_BROWSER_INITIAL_ROW_LIMIT = 50;
+          const PLAYGROUND_DATABASE_BROWSER_LOAD_MORE_COUNT = 20;
+
+          function isPlaygroundDatabaseBrowserScrollAtEnd(scrollNode) {
+            if (!scrollNode) return false;
+            return scrollNode.scrollHeight - scrollNode.scrollTop - scrollNode.clientHeight <= 24;
+          }
+
+          function focusPlaygroundDatabaseBrowserRow(listNode, rowId) {
+            if (!listNode || !rowId || typeof window === "undefined") return;
+            let attempts = 0;
+            const focusRow = () => {
+              attempts += 1;
+              const row = Array.from(listNode.querySelectorAll("[data-database-browser-row-id]"))
+                .find((candidate) => candidate.dataset.databaseBrowserRowId === rowId);
+              if (row) {
+                row.focus();
+                row.scrollIntoView({ block: "nearest" });
+                return;
+              }
+              if (attempts < 3) window.requestAnimationFrame(focusRow);
+            };
+            window.requestAnimationFrame(focusRow);
+          }
+
+          async function handlePlaygroundDatabaseBrowserRowKeyDown(event, options = {}) {
+            if (
+              event.altKey
+              || event.ctrlKey
+              || event.metaKey
+              || event.shiftKey
+              || !["ArrowDown", "ArrowUp"].includes(event.key)
+            ) {
+              return;
+            }
+            const rows = Array.isArray(options.rows) ? options.rows : [];
+            const focusedRowId = String(event.currentTarget?.dataset?.databaseBrowserRowId || "").trim();
+            const selectedRowId = String(options.selectedRowId || focusedRowId).trim();
+            let navigableRows = rows;
+            let selectedIndex = navigableRows.findIndex((row) => String(row?.id || "") === selectedRowId);
+            if (selectedIndex < 0) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (
+              event.key === "ArrowDown"
+              && selectedIndex === navigableRows.length - 1
+              && typeof options.revealMore === "function"
+            ) {
+              const expandedRows = await options.revealMore();
+              if (Array.isArray(expandedRows)) navigableRows = expandedRows;
+              selectedIndex = navigableRows.findIndex((row) => String(row?.id || "") === selectedRowId);
+            }
+
+            const nextIndex = selectedIndex + (event.key === "ArrowDown" ? 1 : -1);
+            const nextRow = navigableRows[nextIndex] || null;
+            if (!nextRow || typeof options.onSelect !== "function") return;
+            options.onSelect(nextRow);
+            focusPlaygroundDatabaseBrowserRow(
+              event.currentTarget?.closest(".playground-database-browser-pane-list"),
+              String(nextRow.id || "")
+            );
+          }
+
           function renderCurrentDatabaseEditor() {
             if (!draftDatabase) {
               return React.createElement("div", { className: "playground-environments-detail-empty" },
@@ -11,7 +76,118 @@
             const documentsLoading = loadingDatabaseDocumentsKey === (draftDatabase.id + ":" + selectedDatabaseCollectionId);
             const selectedCollection = currentDatabaseCollection;
             const selectedDocument = currentDatabaseDocuments.find((document) => document.id === selectedDatabaseDocumentId) || null;
+            const databaseCollectionVisibleLimit = Math.max(
+              PLAYGROUND_DATABASE_BROWSER_INITIAL_ROW_LIMIT,
+              Number(databaseCollectionVisibleLimitById[draftDatabase.id]) || PLAYGROUND_DATABASE_BROWSER_INITIAL_ROW_LIMIT
+            );
+            const visibleDatabaseCollections = currentDatabaseCollections.slice(0, databaseCollectionVisibleLimit);
+            const databaseDocumentListKey = draftDatabase.id + ":" + selectedDatabaseCollectionId;
+            const databaseDocumentVisibleLimit = Math.max(
+              PLAYGROUND_DATABASE_BROWSER_INITIAL_ROW_LIMIT,
+              Number(databaseDocumentVisibleLimitByCollectionKey[databaseDocumentListKey]) || PLAYGROUND_DATABASE_BROWSER_INITIAL_ROW_LIMIT
+            );
+            const visibleDatabaseDocuments = currentDatabaseDocuments.slice(0, databaseDocumentVisibleLimit);
+            const selectedCollectionDocumentCount = Number(selectedCollection?.documentCount);
+            const hasDeclaredSelectedCollectionDocumentCount = Number.isFinite(selectedCollectionDocumentCount);
+            const databaseDocumentLoadCeiling = hasDeclaredSelectedCollectionDocumentCount
+              ? Math.min(250, Math.max(currentDatabaseDocuments.length, 0, selectedCollectionDocumentCount))
+              : 250;
+            const canRevealMoreDatabaseDocuments = currentDatabaseDocuments.length > visibleDatabaseDocuments.length;
+            const canRequestMoreDatabaseDocuments = !isDatabaseTemplatePreview
+              && Boolean(selectedDatabaseCollectionId)
+              && currentDatabaseDocuments.length < databaseDocumentLoadCeiling;
             const collectionStats = currentDatabaseCollections.reduce((sum, collection) => sum + Number(collection?.documentCount || 0), 0);
+
+            const selectDatabaseCollection = (collection) => {
+              const collectionId = String(collection?.id || "").trim();
+              if (!collectionId) return;
+              selectedDatabaseCollectionIdRef.current = collectionId;
+              setSelectedDatabaseCollectionId(collectionId);
+              selectedDatabaseDocumentIdRef.current = "";
+              setSelectedDatabaseDocumentId("");
+              setDatabaseDocumentVisibleLimitByCollectionKey((current) => ({
+                ...current,
+                [draftDatabase.id + ":" + collectionId]: PLAYGROUND_DATABASE_BROWSER_INITIAL_ROW_LIMIT,
+              }));
+              setDatabaseDocumentViewMode("preview");
+              setDatabaseDocumentEditorState({
+                documentId: "",
+                value: "{}",
+                initialValue: "{}",
+                error: "",
+                saveError: "",
+                saveMessage: "",
+                isLoading: false,
+                isSaving: false,
+              });
+            };
+
+            const revealMoreDatabaseCollections = async () => {
+              const nextLimit = Math.min(
+                currentDatabaseCollections.length,
+                databaseCollectionVisibleLimit + PLAYGROUND_DATABASE_BROWSER_LOAD_MORE_COUNT
+              );
+              if (nextLimit <= databaseCollectionVisibleLimit) return visibleDatabaseCollections;
+              setDatabaseCollectionVisibleLimitById((current) => ({
+                ...current,
+                [draftDatabase.id]: nextLimit,
+              }));
+              return currentDatabaseCollections.slice(0, nextLimit);
+            };
+
+            const revealMoreDatabaseDocuments = async () => {
+              if (!selectedDatabaseCollectionId) return visibleDatabaseDocuments;
+              const nextLimit = Math.min(
+                databaseDocumentLoadCeiling,
+                databaseDocumentVisibleLimit + PLAYGROUND_DATABASE_BROWSER_LOAD_MORE_COUNT
+              );
+              if (nextLimit <= databaseDocumentVisibleLimit) return visibleDatabaseDocuments;
+              setDatabaseDocumentVisibleLimitByCollectionKey((current) => ({
+                ...current,
+                [databaseDocumentListKey]: nextLimit,
+              }));
+              if (currentDatabaseDocuments.length >= nextLimit || isDatabaseTemplatePreview) {
+                return currentDatabaseDocuments.slice(0, nextLimit);
+              }
+              if (
+                !canRequestMoreDatabaseDocuments
+                || databaseBrowserPaginationRequestRef.current.has(databaseDocumentListKey)
+              ) {
+                return currentDatabaseDocuments.slice(0, nextLimit);
+              }
+
+              databaseBrowserPaginationRequestRef.current.add(databaseDocumentListKey);
+              setLoadingMoreDatabaseDocumentsKey(databaseDocumentListKey);
+              try {
+                const documents = await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId, {
+                  force: true,
+                  limit: nextLimit,
+                  silent: true,
+                });
+                return (Array.isArray(documents) ? documents : []).slice(0, nextLimit);
+              } finally {
+                databaseBrowserPaginationRequestRef.current.delete(databaseDocumentListKey);
+                setLoadingMoreDatabaseDocumentsKey((current) => current === databaseDocumentListKey ? "" : current);
+              }
+            };
+
+            const handleDatabaseCollectionsScroll = (event) => {
+              if (
+                visibleDatabaseCollections.length < currentDatabaseCollections.length
+                && isPlaygroundDatabaseBrowserScrollAtEnd(event.currentTarget)
+              ) {
+                void revealMoreDatabaseCollections();
+              }
+            };
+
+            const handleDatabaseDocumentsScroll = (event) => {
+              if (
+                (canRevealMoreDatabaseDocuments || canRequestMoreDatabaseDocuments)
+                && isPlaygroundDatabaseBrowserScrollAtEnd(event.currentTarget)
+              ) {
+                void revealMoreDatabaseDocuments();
+              }
+            };
   	      const normalizedDatabaseDetailChartTimescale = normalizePlaygroundEnvironmentHomeChartPeriod(databaseDetailChartTimescale);
   	      const activeDatabaseAnalyticsStateKey = buildPlaygroundDatabaseAnalyticsStateKey(
   	        draftDatabase.id,
@@ -483,34 +659,33 @@
                     createLabel: "Add Collection",
                     createDisabled: isDatabaseTemplatePreview || !draftDatabase.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
                   }),
-                  React.createElement("div", { className: "playground-database-browser-pane-list" },
+                  React.createElement("div", {
+                      className: "playground-database-browser-pane-list",
+                      role: "listbox",
+                      "aria-label": "Database collections",
+                      "aria-busy": collectionLoading ? "true" : "false",
+                      onScroll: handleDatabaseCollectionsScroll,
+                    },
                     collectionLoading
                       ? React.createElement("div", { className: "playground-files-state" },
                           React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
                         )
                       : currentDatabaseCollections.length
-                        ? currentDatabaseCollections.map((collection) =>
+                        ? visibleDatabaseCollections.map((collection) =>
                             React.createElement("button", {
                                 key: collection.id,
                                 type: "button",
                                 className: "playground-database-browser-pane-row" + (selectedDatabaseCollectionId === collection.id ? " is-active" : ""),
-                                onClick: () => {
-                                  selectedDatabaseCollectionIdRef.current = collection.id;
-                                  setSelectedDatabaseCollectionId(collection.id);
-                                  selectedDatabaseDocumentIdRef.current = "";
-                                  setSelectedDatabaseDocumentId("");
-                                  setDatabaseDocumentViewMode("preview");
-                                  setDatabaseDocumentEditorState({
-                                    documentId: "",
-                                    value: "{}",
-                                    initialValue: "{}",
-                                    error: "",
-                                    saveError: "",
-                                    saveMessage: "",
-                                    isLoading: false,
-                                    isSaving: false,
-                                  });
-                                },
+                                role: "option",
+                                "aria-selected": selectedDatabaseCollectionId === collection.id ? "true" : "false",
+                                "data-database-browser-row-id": collection.id,
+                                onClick: () => selectDatabaseCollection(collection),
+                                onKeyDown: (event) => void handlePlaygroundDatabaseBrowserRowKeyDown(event, {
+                                  rows: visibleDatabaseCollections,
+                                  selectedRowId: selectedDatabaseCollectionId,
+                                  onSelect: selectDatabaseCollection,
+                                  revealMore: revealMoreDatabaseCollections,
+                                }),
                                 title: collection.name || collection.id || "Collection",
                               },
                               React.createElement("span", { className: "playground-database-browser-pane-row-label" }, collection.name || collection.id || "Collection"),
@@ -542,7 +717,13 @@
                       disabled: isDatabaseTemplatePreview || !selectedDatabaseCollectionId,
                     },
                   }),
-                  React.createElement("div", { className: "playground-database-browser-pane-list" },
+                  React.createElement("div", {
+                      className: "playground-database-browser-pane-list",
+                      role: "listbox",
+                      "aria-label": "Database documents",
+                      "aria-busy": documentsLoading || loadingMoreDatabaseDocumentsKey === databaseDocumentListKey ? "true" : "false",
+                      onScroll: handleDatabaseDocumentsScroll,
+                    },
                     documentsLoading
                       ? React.createElement("div", { className: "playground-files-state" },
                           React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
@@ -554,17 +735,34 @@
                             description: "Choose a collection to browse its documents.",
                           })
                         : currentDatabaseDocuments.length
-                          ? currentDatabaseDocuments.map((document) =>
-                              React.createElement("button", {
-                                  key: document.id,
-                                  type: "button",
-                                  className: "playground-database-browser-pane-row" + (selectedDatabaseDocumentId === document.id ? " is-active" : ""),
-                                  onClick: () => handleSelectDatabaseDocument(document),
-                                  title: document.id || "Document",
-                                },
-                                React.createElement("span", { className: "playground-database-browser-pane-row-label" }, document.id || "Document"),
-                                React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.9 })
-                              )
+                          ? React.createElement(React.Fragment, null,
+                              visibleDatabaseDocuments.map((document) =>
+                                React.createElement("button", {
+                                    key: document.id,
+                                    type: "button",
+                                    className: "playground-database-browser-pane-row" + (selectedDatabaseDocumentId === document.id ? " is-active" : ""),
+                                    role: "option",
+                                    "aria-selected": selectedDatabaseDocumentId === document.id ? "true" : "false",
+                                    "data-database-browser-row-id": document.id,
+                                    onClick: () => handleSelectDatabaseDocument(document),
+                                    onKeyDown: (event) => void handlePlaygroundDatabaseBrowserRowKeyDown(event, {
+                                      rows: visibleDatabaseDocuments,
+                                      selectedRowId: selectedDatabaseDocumentId,
+                                      onSelect: handleSelectDatabaseDocument,
+                                      revealMore: revealMoreDatabaseDocuments,
+                                    }),
+                                    title: document.id || "Document",
+                                  },
+                                  React.createElement("span", { className: "playground-database-browser-pane-row-label" }, document.id || "Document"),
+                                  React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.9 })
+                                )
+                              ),
+                              loadingMoreDatabaseDocumentsKey === databaseDocumentListKey
+                                ? React.createElement(PlatformLoadingState, {
+                                    className: "playground-database-browser-pagination-loading",
+                                    message: "Loading more documents...",
+                                  })
+                                : null
                             )
                           : renderDatabaseBrowserEmptyPane({
                               icon: FileText,

@@ -1,3 +1,5 @@
+        const PLAYGROUND_COMPUTE_EMPTY_LIST = Object.freeze([]);
+
         function PlaygroundEnvironmentsPage({
           backendUrl,
           requestHeaders,
@@ -16,8 +18,8 @@
           fetchCustomSkills,
           speechToTextUrl = "",
           computerAgents = null,
-          agents = [],
-          skills = [],
+          agents = PLAYGROUND_COMPUTE_EMPTY_LIST,
+          skills = PLAYGROUND_COMPUTE_EMPTY_LIST,
           preferredEnvironmentId = "",
           preferredAgentId = "",
           onPreferredAgentChange,
@@ -26,7 +28,7 @@
           onThreadOpen,
           onThreadStarted,
           onOpenFilesPage,
-          threadRecords = [],
+          threadRecords = PLAYGROUND_COMPUTE_EMPTY_LIST,
           embeddedInResources = false,
           embeddedResourcesView = "computers",
           embeddedServerKind = "",
@@ -41,8 +43,8 @@
           resourceBillingSuccess = "",
           canConfigureResourceBilling = true,
           onResourceBillingPreferencesChange = null,
-          resourceTemplatePreviewResources = [],
-          workspaceTeams = [],
+          resourceTemplatePreviewResources = PLAYGROUND_COMPUTE_EMPTY_LIST,
+          workspaceTeams = PLAYGROUND_COMPUTE_EMPTY_LIST,
           workspaceTeamsLoading = false,
           workspaceTeamsRequiresPlan = false,
           onWorkspaceTeamsRequest,
@@ -199,6 +201,7 @@
           const databaseAnalyticsByIdRef = useRef({});
           const databaseCollectionsByIdRef = useRef({});
           const databaseDocumentsByCollectionKeyRef = useRef({});
+          const databaseBrowserPaginationRequestRef = useRef(new Set());
           const environmentSeededSelectionRef = useRef("");
           const serverSeededSelectionRef = useRef("");
           const serverDefaultSourceCreationRef = useRef(new Set());
@@ -659,6 +662,9 @@
           const [hasLoadedDatabases, setHasLoadedDatabases] = useState(() => Number(initialDatabaseListCacheRecord?.loadedAt || 0) > 0);
           const [databaseCollectionsById, setDatabaseCollectionsById] = useState({});
           const [databaseDocumentsByCollectionKey, setDatabaseDocumentsByCollectionKey] = useState({});
+          const [databaseCollectionVisibleLimitById, setDatabaseCollectionVisibleLimitById] = useState({});
+          const [databaseDocumentVisibleLimitByCollectionKey, setDatabaseDocumentVisibleLimitByCollectionKey] = useState({});
+          const [loadingMoreDatabaseDocumentsKey, setLoadingMoreDatabaseDocumentsKey] = useState("");
           const [selectedDatabaseCollectionId, setSelectedDatabaseCollectionId] = useState("");
           const [selectedDatabaseDocumentId, setSelectedDatabaseDocumentId] = useState("");
           const [databaseDocumentEditorState, setDatabaseDocumentEditorState] = useState({
@@ -2540,6 +2546,10 @@
               isSaving: false,
             });
             setDatabaseDocumentViewMode("preview");
+            databaseBrowserPaginationRequestRef.current.clear();
+            setDatabaseCollectionVisibleLimitById({});
+            setDatabaseDocumentVisibleLimitByCollectionKey({});
+            setLoadingMoreDatabaseDocumentsKey("");
             setDatabaseDetailTab("data");
             setDatabasePermissionTeamId("");
   	      setDatabasePermissionRoleId("member");

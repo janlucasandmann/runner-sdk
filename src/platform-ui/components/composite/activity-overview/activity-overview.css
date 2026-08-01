@@ -23,6 +23,16 @@
   justify-content: center;
 }
 
+.platform-activity-overview__header-actions {
+  position: absolute;
+  top: 12px;
+  right: 20px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .platform-activity-overview__loading,
 .platform-activity-overview__empty {
   width: 100%;

@@ -123,6 +123,13 @@
     "./platform-ui/components/composite/activity-timeline/styles.css": {
       "default": "./dist/platform-ui/components/composite/activity-timeline/activity-timeline.css"
     },
+    "./platform-ui/components/composite/activity-workspace": {
+      "types": "./dist/platform-ui/components/composite/activity-workspace/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/activity-workspace/index.js"
+    },
+    "./platform-ui/components/composite/activity-workspace/styles.css": {
+      "default": "./dist/platform-ui/components/composite/activity-workspace/activity-workspace.css"
+    },
     "./platform-ui/components/composite/comments": {
       "types": "./dist/platform-ui/components/composite/comments/index.d.ts",
       "default": "./dist/platform-ui/components/composite/comments/index.js"

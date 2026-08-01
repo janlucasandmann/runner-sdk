@@ -2,18 +2,12 @@ const OAUTH2 = "oauth2";
 const API_KEY = "api-key";
 const SERVICE_ACCOUNT = "service-account";
 
-const MICROSOFT_AUTHORIZE_URL =
-  "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
-const MICROSOFT_TOKEN_URL =
-  "https://login.microsoftonline.com/common/oauth2/v2.0/token";
+const MICROSOFT_AUTHORIZE_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+const MICROSOFT_TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
 const GOOGLE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 
-const microsoftProvider = ({
-  id,
-  label,
-  scopes,
-}) => ({
+const microsoftProvider = ({ id, label, scopes }) => ({
   id,
   label,
   authentication: OAUTH2,
@@ -24,6 +18,7 @@ const microsoftProvider = ({
   callbackUrlEnv: `${toEnvironmentPrefix(id)}_OAUTH_CALLBACK_URL`,
   scopes: ["offline_access", "openid", "profile", "email", ...scopes],
   authorizeParams: { response_mode: "query" },
+  pkce: true,
   profile: {
     url: "https://graph.microsoft.com/v1.0/me?$select=id,displayName,mail,userPrincipalName",
     identityFields: ["mail", "userPrincipalName", "displayName", "id"],
@@ -142,6 +137,7 @@ const PROVIDERS = [
       "files:write",
       "reactions:write",
     ],
+    userScopes: ["search:read"],
     profile: {
       url: "https://slack.com/api/auth.test",
       unwrap: [],
@@ -215,6 +211,7 @@ const PROVIDERS = [
     clientSecretEnv: "ASANA_OAUTH_CLIENT_SECRET",
     callbackUrlEnv: "ASANA_OAUTH_CALLBACK_URL",
     scopes: ["default"],
+    pkce: true,
     profile: {
       url: "https://app.asana.com/api/1.0/users/me",
       unwrap: ["data"],
@@ -246,6 +243,7 @@ const PROVIDERS = [
     clientSecretEnv: "FIGMA_OAUTH_CLIENT_SECRET",
     callbackUrlEnv: "FIGMA_OAUTH_CALLBACK_URL",
     tokenAuth: "basic",
+    pkce: true,
     scopes: [
       "current_user:read",
       "file_content:read",
@@ -288,6 +286,7 @@ const PROVIDER_BY_ID = Object.freeze(
         scopeSeparator: provider.scopeSeparator || " ",
         authorizeParams: Object.freeze({ ...(provider.authorizeParams || {}) }),
         scopes: Object.freeze([...(provider.scopes || [])]),
+        userScopes: Object.freeze([...(provider.userScopes || [])]),
         scopesByPermissionClass: Object.freeze({
           ...(provider.scopesByPermissionClass || {}),
         }),
@@ -301,9 +300,7 @@ const PROVIDER_BY_ID = Object.freeze(
   ),
 );
 
-export const GENERIC_CONNECTOR_PROVIDER_IDS = Object.freeze(
-  Object.keys(PROVIDER_BY_ID),
-);
+export const GENERIC_CONNECTOR_PROVIDER_IDS = Object.freeze(Object.keys(PROVIDER_BY_ID));
 
 export function getGenericConnectorProvider(id) {
   return PROVIDER_BY_ID[normalizeProviderId(id)] || null;
@@ -317,11 +314,7 @@ export function listGenericConnectorProviders() {
   return Object.values(PROVIDER_BY_ID);
 }
 
-export function buildGenericConnectorCallbackUrl(
-  provider,
-  platformOrigin,
-  override = "",
-) {
+export function buildGenericConnectorCallbackUrl(provider, platformOrigin, override = "") {
   if (override) return override;
   return new URL(
     `/api/aios/connectors/${encodeURIComponent(provider.id)}/callback`,
@@ -330,7 +323,9 @@ export function buildGenericConnectorCallbackUrl(
 }
 
 function normalizeProviderId(value) {
-  return String(value || "").trim().toLowerCase();
+  return String(value || "")
+    .trim()
+    .toLowerCase();
 }
 
 function toEnvironmentPrefix(value) {

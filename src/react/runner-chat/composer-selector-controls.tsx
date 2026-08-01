@@ -235,14 +235,16 @@ export function RunnerAgentSelectorControl({
         : "No agents available.";
 
   return (
-    <div className="tb-selector-anchor">
+    <div className="tb-selector-anchor tb-selector-anchor-agent">
       <button
         ref={buttonRef}
         type="button"
         className={`tb-inline-selector tb-inline-selector-agent ${open ? "active" : ""}`.trim()}
         onClick={onToggle}
       >
-        <span>{displayedAgentLabel}</span>
+        <span className="tb-inline-selector-label" title={displayedAgentLabel}>
+          {displayedAgentLabel}
+        </span>
         <span className="tb-composer-agent-button-effort">
           {selectedReasoningEffort.label}
         </span>
@@ -450,14 +452,16 @@ export function RunnerWorkspaceSelectorControl({
       : "No computers available.";
 
   return (
-    <div className="tb-selector-anchor">
+    <div className="tb-selector-anchor tb-selector-anchor-workspace">
       <button
         ref={buttonRef}
         type="button"
         className={`tb-inline-selector ${open ? "active" : ""}`.trim()}
         onClick={onToggle}
       >
-        <span>{displayedWorkspaceLabel}</span>
+        <span className="tb-inline-selector-label" title={displayedWorkspaceLabel}>
+          {displayedWorkspaceLabel}
+        </span>
         <IconChevronDown className="tb-inline-selector-chevron" />
       </button>
 

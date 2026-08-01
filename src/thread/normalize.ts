@@ -151,7 +151,17 @@ export function normalizeRunnerThreadParticipant(raw: unknown, defaults: RunnerT
     displayName: firstString(record, ["displayName", "display_name", "name", "label"], kind),
     userId: firstNullableString(record, ["userId", "user_id"]),
     agentId: firstNullableString(record, ["agentId", "agent_id"]),
-    avatarUrl: firstNullableString(record, ["avatarUrl", "avatar_url", "photoUrl", "photo_url"]),
+    avatarUrl: firstNullableString(record, [
+      "avatarUrl",
+      "avatar_url",
+      "photoUrl",
+      "photo_url",
+      "profileImageUrl",
+      "profile_image_url",
+      "agentAvatarUrl",
+      "agent_avatar_url",
+      "picture",
+    ]),
     active: record.active === undefined ? undefined : firstBoolean(record, ["active"]),
     capabilities: stringArray(record.capabilities),
     metadata: normalizedMetadata(record),
@@ -588,7 +598,13 @@ function compatibilityParticipantId(threadId: string, kind: RunnerThreadParticip
 
 function upsertCompatibilityParticipant(
   participants: Map<string, RunnerThreadParticipant>,
-  options: { threadId: string; roleOrType: string; authorityId?: string; displayName?: string },
+  options: {
+    threadId: string;
+    roleOrType: string;
+    authorityId?: string;
+    displayName?: string;
+    avatarUrl?: string;
+  },
 ): RunnerThreadParticipant {
   const kind = compatibilityParticipantKind(options.roleOrType);
   const id = compatibilityParticipantId(options.threadId, kind, options.authorityId || "");
@@ -601,6 +617,7 @@ function upsertCompatibilityParticipant(
       || (kind === "human" ? "User" : kind === "worker" ? "Worker" : kind === "communicator" ? "Communicator" : String(kind || "Participant")),
     userId: kind === "human" ? options.authorityId || null : null,
     agentId: kind === "worker" || kind === "communicator" || kind === "observer" ? options.authorityId || null : null,
+    avatarUrl: options.avatarUrl?.trim() || previous?.avatarUrl || null,
     active: true,
     metadata: { ...(previous?.metadata || {}), source: "timeline_compatibility" },
     createdAt: previous?.createdAt || null,
@@ -650,6 +667,7 @@ function normalizeCompatibilityTimelineRow(
         roleOrType: role,
         authorityId: firstString(payloadMetadata, ["participantId", "participant_id", "userId", "user_id", "agentId", "agent_id"]),
         displayName: firstString(payloadMetadata, ["participantName", "participant_name", "userName", "user_name", "agentName", "agent_name"]),
+        avatarUrl: firstString(payloadMetadata, ["avatarUrl", "avatar_url", "photoUrl", "photo_url", "profileImageUrl", "profile_image_url", "agentAvatarUrl", "agent_avatar_url", "picture"]),
       });
     return normalizeRunnerThreadMessage({
       ...payload,
@@ -692,13 +710,20 @@ function normalizeCompatibilityTimelineRow(
 
   if (rawKind === "action") {
     const eventType = firstString(payload, ["eventType", "event_type", "type"], "action");
+    const actionSequence = sequence || Math.max(0, Math.trunc(firstNumber(payloadMetadata, [
+      "runtimeSequence",
+      "runtime_sequence",
+      "actionSequence",
+      "action_sequence",
+      "sequence",
+    ], 0)));
     if (eventType === "permission_request") {
       return normalizeRunnerThreadPermissionRequest({
         ...payloadMetadata,
         id: firstString(payloadMetadata, ["permissionRequestId", "permission_request_id", "requestId", "request_id"], firstString(row, ["id"])),
         threadId,
         runId,
-        sequence,
+        sequence: actionSequence,
         sourceEventId: firstString(row, ["id"]),
         activityGroupId: firstValue(payloadMetadata, ["activityGroupId", "activity_group_id", "groupId", "group_id"]),
         status: firstString(payloadMetadata, ["status", "decision"], "pending"),
@@ -709,14 +734,14 @@ function normalizeCompatibilityTimelineRow(
         requestedAt: createdAt,
         createdAt,
         metadata: compatibilityMetadata,
-      }, { threadId, runId, sequence, createdAt });
+      }, { threadId, runId, sequence: actionSequence, createdAt });
     }
     return normalizeRunnerThreadAction({
       ...payload,
       id: firstString(row, ["id"], firstString(payload, ["id"])),
       threadId,
       runId,
-      sequence,
+      sequence: actionSequence,
       sourceEventId: firstString(row, ["id"]),
       activityGroupId: firstValue(payload, ["activityGroupId", "activity_group_id", "groupId", "group_id"])
         ?? firstValue(payloadMetadata, ["activityGroupId", "activity_group_id", "groupId", "group_id"]),
@@ -731,7 +756,7 @@ function normalizeCompatibilityTimelineRow(
       touchedResources: firstValue(payloadMetadata, ["touchedResources", "touched_resources", "filePaths", "file_paths"]),
       createdAt,
       metadata: compatibilityMetadata,
-    }, { threadId, runId, sequence, createdAt });
+    }, { threadId, runId, sequence: actionSequence, createdAt });
   }
 
   if (rawKind === "event") {
@@ -743,6 +768,7 @@ function normalizeCompatibilityTimelineRow(
       roleOrType: producerType,
       authorityId: producerId,
       displayName: firstString(eventData, ["producerName", "producer_name", "actorName", "actor_name"]),
+      avatarUrl: firstString(eventData, ["producerAvatarUrl", "producer_avatar_url", "actorAvatarUrl", "actor_avatar_url", "avatarUrl", "avatar_url", "photoUrl", "photo_url"]),
     });
     return normalizeRunnerThreadEvent({
       id: firstString(row, ["id"]),
@@ -891,6 +917,35 @@ export function normalizeRunnerThreadTimelinePage(raw: unknown, defaults: Runner
   }
 
   const rawItems = readArray(record, ["items", "timeline", "events", "data"]);
+  const rawRuns = readArray(record, ["runs"]);
+  const compatibilityRunIdForRow = (rawItem: unknown): string | null => {
+    const row = asRecord(rawItem);
+    const payload = asRecord(row.payload);
+    const metadata = asRecord(payload.metadata);
+    const directRunId = firstNullableString(row, ["runId", "run_id"])
+      ?? firstNullableString(payload, ["runId", "run_id"])
+      ?? firstNullableString(metadata, ["runId", "run_id"]);
+    if (directRunId) return directRunId;
+    if (rawRuns.length === 1) {
+      return firstNullableString(asRecord(rawRuns[0]), ["id", "runId", "run_id"]);
+    }
+    const occurredAt = Date.parse(dateString(row, ["createdAt", "created_at", "occurredAt", "occurred_at"]));
+    if (!Number.isFinite(occurredAt)) return null;
+    const matchingRun = rawRuns
+      .map(asRecord)
+      .filter((runRecord): runRecord is UnknownRecord => Boolean(runRecord))
+      .filter((runRecord) => {
+        const startedAt = Date.parse(dateString(runRecord, ["startedAt", "started_at", "createdAt", "created_at"]));
+        const completedAtValue = firstNullableString(runRecord, ["completedAt", "completed_at", "updatedAt", "updated_at"]);
+        const completedAt = completedAtValue ? Date.parse(completedAtValue) : Number.POSITIVE_INFINITY;
+        return Number.isFinite(startedAt) && occurredAt >= startedAt && occurredAt <= completedAt;
+      })
+      .sort((left, right) => (
+        Date.parse(dateString(right, ["startedAt", "started_at", "createdAt", "created_at"])) -
+        Date.parse(dateString(left, ["startedAt", "started_at", "createdAt", "created_at"]))
+      ))[0];
+    return matchingRun ? firstNullableString(matchingRun, ["id", "runId", "run_id"]) : null;
+  };
   const producerParticipantByMessageId = new Map<string, RunnerThreadParticipant>();
   for (const rawItem of rawItems) {
     const row = asRecord(rawItem);
@@ -907,13 +962,18 @@ export function normalizeRunnerThreadTimelinePage(raw: unknown, defaults: Runner
       roleOrType: producerType,
       authorityId: producerId,
       displayName: firstString(eventData, ["producerName", "producer_name", "authorName", "author_name"]),
+      avatarUrl: firstString(eventData, ["producerAvatarUrl", "producer_avatar_url", "authorAvatarUrl", "author_avatar_url", "avatarUrl", "avatar_url", "photoUrl", "photo_url"]),
     });
     producerParticipantByMessageId.set(messageId, participant);
   }
 
   const canonicalItems: RunnerThreadTimelineItem[] = [];
   for (const rawItem of rawItems) {
-    const item = normalizeCompatibilityTimelineRow(rawItem, { threadId, sequence: 0 }, participantMap, producerParticipantByMessageId);
+    const item = normalizeCompatibilityTimelineRow(rawItem, {
+      threadId,
+      runId: compatibilityRunIdForRow(rawItem),
+      sequence: 0,
+    }, participantMap, producerParticipantByMessageId);
     canonicalItems.push(item);
     if (item.kind !== "event" || !item.type.toLowerCase().replace(/[.-]/g, "_").includes("action")) continue;
     const activityGroupId = firstNullableString(item.payload, ["activityGroupId", "activity_group_id", "groupId", "group_id"]);
@@ -955,7 +1015,7 @@ export function normalizeRunnerThreadTimelinePage(raw: unknown, defaults: Runner
   }
 
   const seenRunIds = new Set<string>();
-  for (const rawRun of readArray(record, ["runs"])) {
+  for (const rawRun of rawRuns) {
     const runRecord = asRecord(rawRun);
     const runId = firstString(runRecord, ["id", "runId", "run_id"]);
     if (!runId) continue;
@@ -968,6 +1028,7 @@ export function normalizeRunnerThreadTimelinePage(raw: unknown, defaults: Runner
       roleOrType: runKind === "communicator" || runKind === "observer" ? runKind : "worker",
       authorityId: agentId,
       displayName: firstString(asRecord(runRecord.metadata), ["agentName", "agent_name"], runKind === "worker" ? "Worker" : runKind),
+      avatarUrl: firstString(asRecord(runRecord.metadata), ["agentAvatarUrl", "agent_avatar_url", "profileImageUrl", "profile_image_url", "avatarUrl", "avatar_url", "photoUrl", "photo_url"]),
     });
     const triggerMessageId = firstString(runRecord, ["triggerMessageId", "trigger_message_id", "sourceMessageId", "source_message_id"]);
     const messageAnchor = triggerMessageId

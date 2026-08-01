@@ -1,73 +1,4 @@
-export const ONBOARDING_MODAL_SCRIPT = String.raw`        function PlaygroundOnboardingVideoBackground({ onStarted } = {}) {
-          const videoRef = useRef(null);
-          const [videoReady, setVideoReady] = useState(false);
-          const hasNotifiedStartedRef = useRef(false);
-          const notifyStarted = useCallback(() => {
-            if (hasNotifiedStartedRef.current) {
-              return;
-            }
-            hasNotifiedStartedRef.current = true;
-            if (typeof onStarted === "function") {
-              onStarted();
-            }
-          }, [onStarted]);
-  
-          useEffect(() => {
-            const video = videoRef.current;
-            if (!video) {
-              return undefined;
-            }
-            const fallbackTimer = window.setTimeout(notifyStarted, 180);
-  
-            video.playbackRate = 0.5;
-            video.preload = "auto";
-            video.src = "/img/bg/macapp.mp4";
-  
-            const handleCanPlay = () => {
-              setVideoReady(true);
-              notifyStarted();
-              const playResult = video.play();
-              if (playResult && typeof playResult.then === "function") {
-                playResult.catch(() => {});
-              } else {
-                video.play().catch(() => {});
-              }
-            };
-            const handlePlaying = () => {
-              notifyStarted();
-            };
-  
-            video.addEventListener("canplaythrough", handleCanPlay);
-            video.addEventListener("playing", handlePlaying);
-            video.load();
-  
-            return () => {
-              window.clearTimeout(fallbackTimer);
-              video.removeEventListener("canplaythrough", handleCanPlay);
-              video.removeEventListener("playing", handlePlaying);
-            };
-          }, [notifyStarted]);
-  
-          return React.createElement("div", { className: "playground-onboarding-video-bg", "aria-hidden": "true" },
-            React.createElement("img", {
-              className: "playground-onboarding-video-bg-media",
-              src: "/img/bg/macapp-poster.jpg",
-              alt: "",
-            }),
-            React.createElement("video", {
-              ref: videoRef,
-              className: "playground-onboarding-video-bg-media playground-onboarding-video-bg-video" + (videoReady ? " is-ready" : ""),
-              loop: true,
-              muted: true,
-              playsInline: true,
-              autoPlay: true,
-              suppressHydrationWarning: true,
-            }),
-            React.createElement("div", { className: "playground-onboarding-video-bg-overlay" })
-          );
-        }
-  
-        function PlaygroundOnboardingModal({
+export const ONBOARDING_EXPERIENCE_SCRIPT = String.raw`        function PlaygroundOnboardingExperience({
           open,
           sessionStatus,
           hasRealAccess,
@@ -340,13 +271,12 @@ export const ONBOARDING_MODAL_SCRIPT = String.raw`        function PlaygroundOnb
           }
   
           if (sessionStatus !== "authenticated" || !hasRealAccess) {
-            return React.createElement(PlatformModalBackdrop, {
-                className: "playground-onboarding-scrim",
-                onClick: handleDismiss,
+            return React.createElement(PlaygroundOnboardingScreen, {
+                className: "is-auth",
+                label: "Sign in to continue Computer Agents onboarding",
               },
                 React.createElement("div", {
                   className: "playground-onboarding-auth-card",
-                  onClick: (event) => event.stopPropagation(),
                 },
                   React.createElement("div", { className: "playground-onboarding-title-wrap" },
                     React.createElement("div", { className: "playground-onboarding-kicker" }, "Agentic Compute Platform"),
@@ -1325,8 +1255,7 @@ export const ONBOARDING_MODAL_SCRIPT = String.raw`        function PlaygroundOnb
             );
           }
   
-          const onboardingModalClassName = [
-            "playground-onboarding-modal",
+          const onboardingScreenClassName = [
             "is-" + activeOnboardingPage.key,
             activeOnboardingPage.key === "welcome" && onboardingVideoStarted ? "is-welcome-video-started" : "",
             onboardingCreationTransitionPhase === "loading" || onboardingCreationTransitionPhase === "hiding-label" ? "is-onboarding-transition-leaving" : "",
@@ -1340,8 +1269,9 @@ export const ONBOARDING_MODAL_SCRIPT = String.raw`        function PlaygroundOnb
             onboardingFreeExitPhase ? "is-onboarding-free-exit-" + onboardingFreeExitPhase : "",
           ].filter(Boolean).join(" ");
   
-          return React.createElement(PlatformModalBackdrop, { className: "playground-onboarding-scrim" },
-            React.createElement(PlatformModalSurface, { className: onboardingModalClassName },
+          return React.createElement(PlaygroundOnboardingScreen, {
+              className: onboardingScreenClassName,
+            },
               React.createElement(PlaygroundOnboardingVideoBackground, {
                 onStarted: handleOnboardingVideoStarted,
               }),
@@ -1406,7 +1336,6 @@ export const ONBOARDING_MODAL_SCRIPT = String.raw`        function PlaygroundOnb
                       renderSplitExplanation(activeOnboardingPage)
                     )
               )
-            )
           );
         }
 `;

@@ -20,6 +20,7 @@ import { createVncWebSocketProxy } from "./vnc-websocket-proxy.mjs";
 import { createPlatformRequestHandler } from "./request-handler.mjs";
 import { createPlatformGateway } from "./gateway/create-platform-gateway.mjs";
 import { createPlatformConfig } from "./platform-config.mjs";
+import { waitForLocalAiosBridge } from "./gateway/aios-readiness.mjs";
 import { createIdentityService } from "./identity/create-identity-service.mjs";
 import { createPlatformServices } from "./platform-services.mjs";
 import { createAdminPageRenderers } from "./admin/pages.mjs";
@@ -165,6 +166,14 @@ const server = http.createServer(createPlatformRequestHandler({
 server.on("upgrade", (req, socket, head) => {
   vncWebSocketProxy.handleUpgrade(req, socket, head, { port });
 });
+
+const aiosBridgeReadiness = await waitForLocalAiosBridge(aiosOrigin);
+if (!aiosBridgeReadiness.ready) {
+  console.warn("[platform] Local AIOS bridge preflight failed; gateway retries remain enabled.", {
+    status: aiosBridgeReadiness.status,
+    error: aiosBridgeReadiness.error || "",
+  });
+}
 
 server.listen(port, bindAddress, () => {
   console.log(`Platform listening at http://${bindAddress}:${port}`);

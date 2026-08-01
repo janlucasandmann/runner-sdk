@@ -97,11 +97,15 @@ const capabilities = defineCapabilities([
     access: "interactive",
     properties: {
       channelId: stringField("Destination Slack channel ID."),
-      filePath: stringField("Workspace file path."),
+      filename: stringField("Destination file name."),
+      content: stringField("UTF-8 text content to upload."),
+      contentBase64: stringField("Base64-encoded binary content to upload."),
+      filePath: stringField("Workspace path when a file-transfer bridge is available."),
       title: stringField("Optional file title."),
       initialComment: stringField("Optional message accompanying the file."),
+      threadTs: stringField("Optional parent message timestamp."),
     },
-    required: ["channelId", "filePath"],
+    required: ["channelId", "filename"],
   },
   {
     id: "add_reaction",
@@ -116,17 +120,20 @@ const capabilities = defineCapabilities([
   },
 ]);
 
-export const SLACK_CONNECTOR_PROVIDER = defineConnectorProvider({
-  id: "slack",
-  label: "Slack",
-  shortLabel: "SL",
-  description: "Search Slack context and perform approved collaboration actions.",
-  category: "Communication",
-  logoUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg",
-  functionsLabel: "Search, Coordinate, Notify",
-  samplePrompt: "Summarize the incident thread and post the approved handoff.",
-  whenToUse: "Use Slack when agents need team conversation context or approved channel actions.",
-  websiteUrl: "https://slack.com/",
-  termsUrl: "https://slack.com/terms-of-service",
-  privacyUrl: "https://slack.com/trust/privacy/privacy-policy",
-}, capabilities);
+export const SLACK_CONNECTOR_PROVIDER = defineConnectorProvider(
+  {
+    id: "slack",
+    label: "Slack",
+    shortLabel: "SL",
+    description: "Search Slack context and perform approved collaboration actions.",
+    category: "Communication",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg",
+    functionsLabel: "Search, Coordinate, Notify",
+    samplePrompt: "Summarize the incident thread and post the approved handoff.",
+    whenToUse: "Use Slack when agents need team conversation context or approved channel actions.",
+    websiteUrl: "https://slack.com/",
+    termsUrl: "https://slack.com/terms-of-service",
+    privacyUrl: "https://slack.com/trust/privacy/privacy-policy",
+  },
+  capabilities,
+);

@@ -96,6 +96,29 @@ export {
 } from "./selectors.js";
 
 export type {
+  RunnerThreadRunReceiptMetrics,
+  RunnerThreadRunReceiptViewModel,
+  RunnerThreadScreenPhase,
+  RunnerThreadScreenViewModel,
+} from "./presentation.js";
+export {
+  buildRunnerThreadRunReceiptViewModel,
+  buildRunnerThreadScreenViewModel,
+} from "./presentation.js";
+
+export type {
+  BuildRunnerThreadActivityHierarchyInput,
+  RunnerThreadActivityHierarchyLevel,
+  RunnerThreadActivityHierarchyRecord,
+  RunnerThreadActivityHierarchyRecordKind,
+  RunnerThreadActivityHierarchyStatus,
+} from "./activity-hierarchy.js";
+export {
+  buildRunnerThreadActivityHierarchy,
+  isRunnerThreadToolAction,
+} from "./activity-hierarchy.js";
+
+export type {
   RunnerLegacyConversationMessage,
   RunnerLegacyThreadAdapterInput,
   RunnerLegacyThreadAdapterResult,

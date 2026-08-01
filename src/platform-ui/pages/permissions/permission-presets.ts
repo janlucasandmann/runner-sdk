@@ -392,7 +392,7 @@ function createGuardrailRolePermissionSet(roleId: string): PlatformPermissionSet
   if (roleId === "owner" || roleId === "admin")
     return createAdminPermissionSet("guardrail_team_role");
   const permissionSet = createPlatformDefaultPermissionSet("guardrail_team_role");
-  if (roleId === "contributor") {
+  if (roleId === "contributor" || roleId === "developer") {
     setRingAccess(permissionSet, "ring_1", "full_access");
     setRingAccess(permissionSet, "ring_2", "full_access");
     setRingAccess(permissionSet, "ring_3", "ask_for_permission");
@@ -487,7 +487,7 @@ function createFineTuningRolePermissionSet(roleId: string): PlatformPermissionSe
   if (roleId === "owner" || roleId === "admin")
     return createAdminPermissionSet("fine_tuning_team_role");
   const permissionSet = createPlatformDefaultPermissionSet("fine_tuning_team_role");
-  if (roleId === "contributor") {
+  if (roleId === "contributor" || roleId === "developer") {
     setRingAccess(permissionSet, "ring_1", "full_access");
     setRingAccess(permissionSet, "ring_2", "full_access");
     setRingAccess(permissionSet, "ring_3", "ask_for_permission");
@@ -585,7 +585,7 @@ function createAssurancePolicyRolePermissionSet(roleId: string): PlatformPermiss
     return createAdminPermissionSet("assurance_policy_team_role");
   }
   const permissionSet = createPlatformDefaultPermissionSet("assurance_policy_team_role");
-  if (roleId === "contributor") {
+  if (roleId === "contributor" || roleId === "developer") {
     setRingAccess(permissionSet, "ring_1", "full_access");
     setRingAccess(permissionSet, "ring_2", "full_access");
     setRingAccess(permissionSet, "ring_3", "no_access");

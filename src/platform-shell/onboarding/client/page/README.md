@@ -4,19 +4,21 @@
 
 ## Purpose
 
-Owns the onboarding modal presentation and step-specific interactions. Service
+Owns the full-screen onboarding presentation and step-specific interactions. Service
 operations are accepted as callbacks from the shell host.
 
 ## Contents
 
-- [`modal.mjs`](modal.mjs) - Modal presentation, transitions, uploads, connector actions, and plan selection.
+- [`screen.mjs`](screen.mjs) - Full-viewport shell, focus lifecycle, scroll locking, and video background.
+- [`experience.mjs`](experience.mjs) - Step transitions, uploads, connector actions, and plan selection.
 - [`index.mjs`](index.mjs) - Public page export.
 
 ## Working in this directory
 
 Keep this layer presentation-focused. New service actions must enter through
-the host callback contract; do not read unrelated shell state directly. Use
-the centralized modal primitives and preserve keyboard and dismissal behavior.
+the host callback contract; do not read unrelated shell state directly. The
+experience is a screen-level route overlay and must not use modal primitives.
+Preserve keyboard and dismissal behavior.
 
 ## Verification
 

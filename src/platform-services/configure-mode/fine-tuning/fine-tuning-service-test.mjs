@@ -42,6 +42,26 @@ assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /readPlaygroundEvaluationS
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /fineTuningCreateDefaultEvaluationAppliedRef/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.access, /function renderFineTuningAccessSettings/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.access, /subjectType: "fine_tuning"/);
+assert.match(
+  FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.access,
+  /getPlatformSystemPrincipalRolePermissionSet/,
+);
+assert.match(
+  FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.access,
+  /buildPlatformSystemPrincipalRolePermissionMetadata/,
+);
+assert.match(
+  FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.access,
+  /isPlatformRoleScopedSystemAccessPrincipalId/,
+);
+assert.match(
+  FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.access,
+  /React\.createElement\(PlatformRolePermissionsPage/,
+);
+assert.match(
+  FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail,
+  /sidebarCollapsed: Boolean\(fineTuningAccessTeamId\)/,
+);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.verification, /startFineTuningVerificationRuns/);
 assert.match(
   FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.verification,

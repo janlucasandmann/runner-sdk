@@ -926,6 +926,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
           return React.createElement(React.Fragment, null,
             React.createElement(FineTuningDetailPage, {
               properties,
+              sidebarCollapsed: Boolean(fineTuningAccessTeamId),
             },
               detailContent
             ),

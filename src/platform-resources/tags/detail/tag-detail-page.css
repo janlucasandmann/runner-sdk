@@ -509,6 +509,8 @@ button.tag-detail-page__function-item-trigger:focus-visible {
 
 .tag-detail-page__credential-menu {
   --platform-popup-radius: 12px;
+  right: 0;
+  left: auto;
 }
 
 .tag-detail-page__credential-menu-placeholder {

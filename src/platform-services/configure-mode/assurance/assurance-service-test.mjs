@@ -84,8 +84,23 @@ assert.match(detailSource, /PlatformSwitch/);
 assert.match(detailSource, /PlatformDataTable/);
 assert.match(detailSource, /PlatformUiCard/);
 assert.match(detailSource, /AssurancePolicyAccessSettings/);
+assert.match(detailSource, /sidebarCollapsed=\{accessDetailOpen\}/);
+assert.match(detailSource, /onPermissionDetailOpenChange=\{setAccessDetailOpen\}/);
 assert.match(detailSource, /createVersion/);
 assert.match(detailSource, /publishVersion/);
+
+const accessSource = await fs.readFile(
+  new URL("./client/page/assurance-policy-access-settings.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(accessSource, /PlatformResourceAccessSettings/);
+assert.match(accessSource, /getPlatformSystemPrincipalRolePermissionSet/);
+assert.match(accessSource, /buildPlatformSystemPrincipalRolePermissionMetadata/);
+assert.match(accessSource, /isPlatformRoleScopedSystemAccessPrincipalId/);
+assert.match(
+  accessSource,
+  /onPermissionDetailOpenChange\?\.\(Boolean\(value\)\)/,
+);
 
 const runSource = await fs.readFile(
   new URL("./client/page/assurance-run-detail-page.tsx", import.meta.url),

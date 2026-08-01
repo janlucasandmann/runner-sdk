@@ -40,6 +40,15 @@ assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /buildPlatformSyst
 assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /name: "Default Access"/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /React\.createElement\(PlatformPermissionsPage/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /React\.createElement\(PlatformRolePermissionsPage/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /getPlatformSystemPrincipalRolePermissionSet/);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access,
+  /buildPlatformSystemPrincipalRolePermissionMetadata/,
+);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access,
+  /isPlatformRoleScopedSystemAccessPrincipalId/,
+);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /const updateGuardrailOwner =/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /\/teams\/.*\/members\?includeProfiles=1/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /const renderGuardrailShareTeamModal =/);
@@ -53,7 +62,10 @@ assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.table, /React\.crea
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /React\.createElement\(GuardrailDetailPage/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /activeTab: guardrailDetailTab/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /sidebarToggle: guardrailDetailSidebarToggle/);
-assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /sidebarCollapsed: guardrailDetailSidebarCollapsed/);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,
+  /sidebarCollapsed: guardrailDetailSidebarCollapsed \|\| Boolean\(guardrailAccessTeamId\)/,
+);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /React\.createElement\(PlatformInstructionsEditor/);
 assert.match(
   GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,

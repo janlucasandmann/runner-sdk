@@ -1831,11 +1831,20 @@
             }
 
             const loadingKey = databaseId + ":" + collectionId;
+            const existingDocuments = databaseDocumentsByCollectionKeyRef.current[loadingKey];
+            const existingDocumentById = new Map(
+              (Array.isArray(existingDocuments) ? existingDocuments : [])
+                .filter((document) => document?.id)
+                .map((document) => [document.id, document])
+            );
             const applyDocumentList = (documents, useSummaryData = false) => {
               const normalizedDocuments = (Array.isArray(documents) ? documents : []).map((document) => {
                 if (useSummaryData) return document;
                 const { data: _documentData, ...summary } = document && typeof document === "object" ? document : {};
-                return summary;
+                const existingDocument = existingDocumentById.get(summary.id);
+                return existingDocument?.data != null
+                  ? { ...summary, data: existingDocument.data }
+                  : summary;
               });
               setDatabaseDocumentsByCollectionKey((current) => ({
                 ...current,
@@ -1848,11 +1857,10 @@
                 selectedDatabaseDocumentIdRef.current = nextDocumentId;
                 setSelectedDatabaseDocumentId(nextDocumentId);
                 if (nextDocumentId) {
+                  const selectedDocumentIncludesData = nextDocument?.data != null;
                   void loadDatabaseDocumentContent(databaseId, collectionId, nextDocumentId, {
-                    documentSummary: useSummaryData
-                      ? (Array.isArray(documents) ? documents : []).find((entry) => entry?.id === nextDocumentId) || nextDocument
-                      : nextDocument,
-                    useSummaryData,
+                    documentSummary: nextDocument,
+                    useSummaryData: useSummaryData || selectedDocumentIncludesData,
                   });
                 } else {
                   setDatabaseDocumentEditorState({
@@ -1879,9 +1887,40 @@
             if (hasDeclaredDocumentCount && Number(collectionRecord.documentCount) <= 0) {
               return applyDocumentList([]);
             }
-            const existingDocuments = databaseDocumentsByCollectionKeyRef.current[loadingKey];
             if (options?.force !== true && Array.isArray(existingDocuments)) {
-              return applyDocumentList(existingDocuments, existingDocuments.some((entry) => entry?.data != null));
+              if (
+                selectedDatabaseIdRef.current === databaseId
+                && selectedDatabaseCollectionIdRef.current === collectionId
+              ) {
+                const currentSelectedDocumentId = selectedDatabaseDocumentIdRef.current;
+                const nextDocument = existingDocuments.find((entry) => entry?.id === currentSelectedDocumentId)
+                  || existingDocuments[0]
+                  || null;
+                const nextDocumentId = String(nextDocument?.id || "").trim();
+                if (nextDocumentId !== currentSelectedDocumentId) {
+                  selectedDatabaseDocumentIdRef.current = nextDocumentId;
+                  setSelectedDatabaseDocumentId(nextDocumentId);
+                  if (nextDocumentId) {
+                    const useSummaryData = existingDocuments.some((entry) => entry?.data != null);
+                    void loadDatabaseDocumentContent(databaseId, collectionId, nextDocumentId, {
+                      documentSummary: nextDocument,
+                      useSummaryData,
+                    });
+                  } else {
+                    setDatabaseDocumentEditorState({
+                      documentId: "",
+                      value: "{}",
+                      initialValue: "{}",
+                      error: "",
+                      saveError: "",
+                      saveMessage: "",
+                      isLoading: false,
+                      isSaving: false,
+                    });
+                  }
+                }
+              }
+              return existingDocuments;
             }
             const templatePreviewDocuments = resourceTemplatePreviewDatabaseDocumentsByCollectionKey[loadingKey];
             if (Array.isArray(templatePreviewDocuments)) {
@@ -1893,7 +1932,7 @@
             }
             try {
               const data = await fetchPlaygroundCachedDatabaseResourceJson(
-                buildPlaygroundDatabaseDocumentsUrl(backendUrl, databaseId, collectionId, options?.limit || 25),
+                buildPlaygroundDatabaseDocumentsUrl(backendUrl, databaseId, collectionId, options?.limit || 50),
                 requestHeaders,
                 {
                   scopeKey: databaseListScopeKey,
@@ -3015,6 +3054,9 @@
               return;
             }
             if (!selectedDatabaseId || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
+              if (databaseSeededSelectionRef.current === selectedDatabaseId) {
+                return;
+              }
               databaseSeededSelectionRef.current = selectedDatabaseId;
               setDraftDatabase(null);
               resetDatabaseEditorAuxiliaryState();
@@ -3202,7 +3244,12 @@
             if (!selectedDatabaseId || selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID || !selectedDatabaseCollectionId) {
               return;
             }
-            void loadDatabaseDocuments(selectedDatabaseId, selectedDatabaseCollectionId);
+            const documentListKey = selectedDatabaseId + ":" + selectedDatabaseCollectionId;
+            setDatabaseDocumentVisibleLimitByCollectionKey((current) => ({
+              ...current,
+              [documentListKey]: 50,
+            }));
+            void loadDatabaseDocuments(selectedDatabaseId, selectedDatabaseCollectionId, { limit: 50 });
           }, [loadDatabaseDocuments, resourceMode, selectedDatabaseCollectionId, selectedDatabaseId]);
 
           useEffect(() => {

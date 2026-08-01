@@ -28,6 +28,7 @@ const capabilities = defineCapabilities([
       calendarId: stringField("Optional calendar ID. Omit for the default calendar."),
       startDateTime: stringField("ISO 8601 range start."),
       endDateTime: stringField("ISO 8601 range end."),
+      timeZone: stringField("Preferred response time zone."),
       ...paginationFields,
     },
     required: ["startDateTime", "endDateTime"],
@@ -77,6 +78,7 @@ const capabilities = defineCapabilities([
       body: stringField("Updated description."),
       startDateTime: stringField("Updated ISO 8601 start."),
       endDateTime: stringField("Updated ISO 8601 end."),
+      timeZone: stringField("Updated event time zone."),
       attendees: stringArrayField("Updated attendee email addresses."),
     },
     required: ["eventId"],
@@ -100,17 +102,20 @@ const capabilities = defineCapabilities([
   },
 ]);
 
-export const OUTLOOK_CALENDAR_CONNECTOR_PROVIDER = defineConnectorProvider({
-  id: "outlook-calendar",
-  label: "Outlook Calendar",
-  shortLabel: "OC",
-  description: "Inspect availability and manage events in authorized Microsoft calendars.",
-  category: "Calendar",
-  logoUrl: "/img/plugins/outlook-calendar.png",
-  functionsLabel: "Schedule, Inspect, Coordinate",
-  samplePrompt: "Find a time that works for the attendees and schedule the review.",
-  whenToUse: "Use Outlook Calendar for delegated Microsoft 365 scheduling.",
-  websiteUrl: "https://outlook.office.com/calendar/",
-  termsUrl: "https://www.microsoft.com/servicesagreement",
-  privacyUrl: "https://privacy.microsoft.com/privacystatement",
-}, capabilities);
+export const OUTLOOK_CALENDAR_CONNECTOR_PROVIDER = defineConnectorProvider(
+  {
+    id: "outlook-calendar",
+    label: "Outlook Calendar",
+    shortLabel: "OC",
+    description: "Inspect availability and manage events in authorized Microsoft calendars.",
+    category: "Calendar",
+    logoUrl: "/img/plugins/outlook-calendar.png",
+    functionsLabel: "Schedule, Inspect, Coordinate",
+    samplePrompt: "Find a time that works for the attendees and schedule the review.",
+    whenToUse: "Use Outlook Calendar for delegated Microsoft 365 scheduling.",
+    websiteUrl: "https://outlook.office.com/calendar/",
+    termsUrl: "https://www.microsoft.com/servicesagreement",
+    privacyUrl: "https://privacy.microsoft.com/privacystatement",
+  },
+  capabilities,
+);

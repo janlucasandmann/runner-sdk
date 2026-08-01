@@ -203,6 +203,16 @@ export const APP_HEADER_CSS = `      .playground-top-nav-search-divider {
         height: 14px;
       }
 
+      .playground-top-nav-path-copy {
+        min-width: 0;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 1px;
+        line-height: 1.1;
+      }
+
       .playground-top-nav-path-item-group {
         min-width: 0;
         display: inline-flex;
@@ -215,6 +225,18 @@ export const APP_HEADER_CSS = `      .playground-top-nav-search-divider {
         font-size: 14px;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .playground-top-nav-path-subtitle {
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .playground-top-nav-path-separator {

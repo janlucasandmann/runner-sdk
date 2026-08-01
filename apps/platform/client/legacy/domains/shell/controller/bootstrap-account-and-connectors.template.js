@@ -274,9 +274,16 @@
             });
           }, []);
   ${SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.state}
-  ${PLAN_GATE_APP_SCRIPT_FRAGMENTS.state}
+          ${PLAN_GATE_APP_SCRIPT_FRAGMENTS.state}
           const [contentMode, setContentMode] = useState("chat");
+          const [threadActivityHierarchyLevel, setThreadActivityHierarchyLevel] = useState("groups");
           const [changesNavigationTarget, setChangesNavigationTarget] = useState(null);
+          const [threadExecutionWorkbenchOpen, setThreadExecutionWorkbenchOpen] = useState(false);
+          const [threadExecutionWorkbenchAvailable, setThreadExecutionWorkbenchAvailable] = useState(false);
+          useEffect(() => {
+            setThreadExecutionWorkbenchOpen(false);
+            setThreadExecutionWorkbenchAvailable(false);
+          }, [currentThreadId]);
           const computerAgentsMode = true;
           const [realThreads, setRealThreads] = useState([]);
           const realThreadsRef = useRef([]);
@@ -2977,15 +2984,23 @@
   
           const refreshPluginConnectionStatus = useCallback(async function refreshPluginConnectionStatus(provider, setStatus, options = {}) {
             const { clearPendingOnFailure = false } = options;
+            const organizationId = String(
+              options.organizationId
+                || billingOrganizationId
+                || settingsBudgetStatus?.organizationId
+                || "",
+            ).trim();
             try {
-              setStatus(await fetchPlatformPluginConnectionStatus(provider));
+              setStatus(await fetchPlatformPluginConnectionStatus(provider, {
+                ...(organizationId ? { organizationId } : {}),
+              }));
             } catch {
               setStatus({ connected: false });
               if (clearPendingOnFailure) {
                 removePendingStatusIndicatorId(provider);
               }
             }
-          }, []);
+          }, [billingOrganizationId, settingsBudgetStatus?.organizationId]);
 
           const refreshGithubStatus = useCallback((options = {}) => refreshPluginConnectionStatus("github", setGithubStatus, options), [refreshPluginConnectionStatus]);
           const refreshGoogleDriveStatus = useCallback((options = {}) => refreshPluginConnectionStatus("google-drive", setGoogleDriveStatus, options), [refreshPluginConnectionStatus]);

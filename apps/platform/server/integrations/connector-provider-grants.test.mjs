@@ -114,6 +114,14 @@ test("keeps Jira and Confluence grants action-scoped within Atlassian", () => {
     ),
     "full_access",
   );
+  assert.equal(
+    resolveProviderGrantAccess(
+      "atlassian",
+      writeCapability("create_issue"),
+      jiraToken,
+    ),
+    "full_access",
+  );
 });
 
 test("enforces action-specific Slack read and write scopes", () => {

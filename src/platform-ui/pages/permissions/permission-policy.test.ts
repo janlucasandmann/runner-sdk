@@ -135,6 +135,24 @@ describe("permission policy", () => {
     },
   );
 
+  it.each([
+    ["guardrail_team_role", "guardrail_edit"],
+    ["fine_tuning_team_role", "fine_tuning_settings_manage"],
+    ["assurance_policy_team_role", "assurance_policy_manage"],
+  ] as const)(
+    "gives organization developers contributor-level %s capabilities",
+    (subjectType, actionId) => {
+      const developer = createPlatformRolePermissionSet(
+        subjectType,
+        "developer",
+      );
+
+      expect(
+        getPlatformPermissionActionAccessByDefinition(developer, actionId),
+      ).toBe("full_access");
+    },
+  );
+
   it.each(["computer", "computer_team_role"])(
     "shows only computer resource capabilities for %s subjects",
     (subjectType) => {

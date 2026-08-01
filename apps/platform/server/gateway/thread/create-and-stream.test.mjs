@@ -41,6 +41,10 @@ function responseRecorder() {
 function createGateway(fetchSessionApi, options = {}) {
   return createThreadMessageGateway({
     fetchSessionApi,
+    fetchSessionRunnerApi:
+      options.fetchSessionRunnerApi
+      || ((request, runnerPath, init) =>
+        fetchSessionApi(request, runnerPath, null, init)),
     hasAiosSession: () => true,
     parseUpstreamUrl: () => "https://api.example.test/v1",
     readOptionalApiKey: () => options.apiKey || "",
@@ -74,7 +78,7 @@ test("session-backed thread creation uses the topology-aware control seam", asyn
   assert.equal(JSON.parse(calls[0].init.body).title, "Portable thread");
 });
 
-test("session-backed message streams use the topology-aware control seam", async () => {
+test("session-backed message streams use the authenticated runner seam", async () => {
   const calls = [];
   const gateway = createGateway(async (_request, controlPath, hostedPath, init) => {
     calls.push({ controlPath, hostedPath, init });
@@ -92,7 +96,7 @@ test("session-backed message streams use the topology-aware control seam", async
   assert.equal(response.status, 200);
   assert.match(response.body, /thread\.completed/);
   assert.equal(calls[0].controlPath, "/threads/thread_1/messages");
-  assert.equal(calls[0].hostedPath, "/api/threads/thread_1/messages");
+  assert.equal(calls[0].hostedPath, null);
   assert.equal(JSON.parse(calls[0].init.body).content, "Continue the task");
 });
 

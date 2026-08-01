@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Owns the platform-wide first-run experience, including flow state, modal
+Owns the platform-wide first-run experience, including flow state, full-screen
 presentation, URL/session restoration, shell composition, and completion
 lifecycle. Onboarding coordinates service-owned capabilities through callbacks;
 it does not own computers, connectors, projects, or billing.
@@ -20,7 +20,7 @@ it does not own computers, connectors, projects, or billing.
 Keep global first-run orchestration here, but leave computer, connector, billing,
 and project behavior with their service owners. Integrate those capabilities
 through the shell host callback contract instead of importing service internals
-into the modal. Update the focused contract test whenever lifecycle or
+into the onboarding screen. Update the focused contract test whenever lifecycle or
 persistence semantics change.
 
 ## Verification

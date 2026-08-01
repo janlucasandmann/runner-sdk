@@ -154,25 +154,13 @@ async function handleLogin({
     envFileCandidates,
   );
   const callbackOverride = provider.callbackUrlEnv
-    ? await getConnectorRuntimeEnvValue(
-      provider.callbackUrlEnv,
-      envFileCandidates,
-    )
+    ? await getConnectorRuntimeEnvValue(provider.callbackUrlEnv, envFileCandidates)
     : "";
-  const redirectUri = buildGenericConnectorCallbackUrl(
-    provider,
-    platformOrigin,
-    callbackOverride,
-  );
+  const redirectUri = buildGenericConnectorCallbackUrl(provider, platformOrigin, callbackOverride);
   const state = randomBytes(24).toString("base64url");
-  const pkceVerifier = provider.pkce
-    ? randomBytes(48).toString("base64url")
-    : "";
+  const pkceVerifier = provider.pkce ? randomBytes(48).toString("base64url") : "";
   const requestedScope = normalizeRequestedScope(provider, body?.scope);
-  const redirectTarget = sanitizeConnectorRedirectTarget(
-    body?.redirectTo,
-    platformOrigin,
-  );
+  const redirectTarget = sanitizeConnectorRedirectTarget(body?.redirectTo, platformOrigin);
 
   await saveConnectorOAuthState(
     state,
@@ -235,11 +223,7 @@ async function handleCallback({
       allowedOrigins,
     );
   }
-  const state = await consumeConnectorOAuthState(
-    stateValue,
-    provider.id,
-    envFileCandidates,
-  );
+  const state = await consumeConnectorOAuthState(stateValue, provider.id, envFileCandidates);
   if (!state) {
     return sendConnectorJson(
       req,
@@ -254,8 +238,8 @@ async function handleCallback({
   }
 
   const providerError = normalizeConnectorOAuthError(
-    getConnectorRequestSearchParam(req, "error")
-      || getConnectorRequestSearchParam(req, "error_description"),
+    getConnectorRequestSearchParam(req, "error") ||
+      getConnectorRequestSearchParam(req, "error_description"),
   );
   if (providerError) {
     return redirectWithResult(
@@ -288,16 +272,9 @@ async function handleCallback({
     envFileCandidates,
   );
   const callbackOverride = provider.callbackUrlEnv
-    ? await getConnectorRuntimeEnvValue(
-      provider.callbackUrlEnv,
-      envFileCandidates,
-    )
+    ? await getConnectorRuntimeEnvValue(provider.callbackUrlEnv, envFileCandidates)
     : "";
-  const redirectUri = buildGenericConnectorCallbackUrl(
-    provider,
-    platformOrigin,
-    callbackOverride,
-  );
+  const redirectUri = buildGenericConnectorCallbackUrl(provider, platformOrigin, callbackOverride);
   const tokenPayload = await exchangeAuthorizationCode({
     provider,
     code,
@@ -307,10 +284,7 @@ async function handleCallback({
     pkceVerifier: String(state.metadata?.pkceVerifier || ""),
     fetchImpl,
   });
-  const token = normalizeProviderToken(
-    tokenPayload,
-    String(state.metadata?.scope || ""),
-  );
+  const token = normalizeProviderToken(tokenPayload, String(state.metadata?.scope || ""));
   const profile = await fetchProviderProfile(provider, token, fetchImpl);
   const identity = readFirstString(
     profile,
@@ -330,29 +304,12 @@ async function handleCallback({
     encryptionKeyNames: provider.encryptionKeyNames,
   });
 
-  return redirectWithResult(
-    req,
-    res,
-    state.redirectTarget,
-    { result: "success" },
-    allowedOrigins,
-  );
+  return redirectWithResult(req, res, state.redirectTarget, { result: "success" }, allowedOrigins);
 }
 
-async function handleStatus({
-  req,
-  res,
-  provider,
-  envFileCandidates,
-  allowedOrigins,
-  verifyUser,
-}) {
+async function handleStatus({ req, res, provider, envFileCandidates, allowedOrigins, verifyUser }) {
   const user = await verifyUser(req, envFileCandidates);
-  const store = await readConnectorCredentialStore(
-    provider.id,
-    user.uid,
-    envFileCandidates,
-  );
+  const store = await readConnectorCredentialStore(provider.id, user.uid, envFileCandidates);
   return sendConnectorJson(
     req,
     res,
@@ -416,17 +373,10 @@ async function handleDirectCredentials({
   }
   const validationError = provider.validateCredentials?.(values);
   if (validationError) {
-    throw createHttpError(
-      400,
-      "connector_credentials_invalid",
-      validationError,
-    );
+    throw createHttpError(400, "connector_credentials_invalid", validationError);
   }
   const normalized = normalizeDirectConnectorCredential(provider, values);
-  const identity = readFirstString(
-    normalized.profile,
-    provider.identityFields || [],
-  );
+  const identity = readFirstString(normalized.profile, provider.identityFields || []);
   const store = await saveConnectorCredential({
     provider: provider.id,
     uid: user.uid,
@@ -462,6 +412,9 @@ export function buildGenericConnectorAuthorizationUrl({
   url.searchParams.set("response_type", "code");
   url.searchParams.set("state", String(state || "").trim());
   if (scope) url.searchParams.set("scope", scope);
+  if (Array.isArray(provider.userScopes) && provider.userScopes.length) {
+    url.searchParams.set("user_scope", provider.userScopes.join(provider.scopeSeparator || " "));
+  }
   Object.entries(provider.authorizeParams || {}).forEach(([key, value]) => {
     if (value !== undefined && value !== null && String(value).trim()) {
       url.searchParams.set(key, String(value));
@@ -494,15 +447,14 @@ async function exchangeAuthorizationCode({
   const response = await fetchImpl(provider.tokenUrl, request);
   const payload = await readProviderResponse(response);
   if (
-    !response.ok
-    || provider.validateToken?.(payload) === false
-    || !readProviderAccessToken(payload)
+    !response.ok ||
+    provider.validateToken?.(payload) === false ||
+    !readProviderAccessToken(payload)
   ) {
     throw createHttpError(
       502,
       "connector_token_exchange_failed",
-      readProviderError(payload)
-        || `${provider.label} did not issue an access token.`,
+      readProviderError(payload) || `${provider.label} did not issue an access token.`,
     );
   }
   return payload;
@@ -526,10 +478,9 @@ export function buildGenericConnectorTokenRequest({
     "Content-Type": "application/x-www-form-urlencoded",
   };
   if (provider.tokenAuth === "basic") {
-    headers.Authorization = `Basic ${Buffer.from(
-      `${clientId}:${clientSecret}`,
-      "utf8",
-    ).toString("base64")}`;
+    headers.Authorization = `Basic ${Buffer.from(`${clientId}:${clientSecret}`, "utf8").toString(
+      "base64",
+    )}`;
   } else {
     params.set("client_id", clientId);
     params.set("client_secret", clientSecret);
@@ -546,38 +497,54 @@ export function buildGenericConnectorTokenRequest({
 
 async function fetchProviderProfile(provider, token, fetchImpl) {
   if (!provider.profile?.url) return {};
-  const accessToken = readProviderAccessToken(token);
-  const response = await fetchImpl(provider.profile.url, {
-    method: provider.profile.method || "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `${token.token_type || token.tokenType || "Bearer"} ${accessToken}`,
-      ...(provider.profile.headers || {}),
-    },
-    ...(provider.profile.body !== undefined
-      ? { body: provider.profile.body }
-      : {}),
-  });
+  const response = await fetchImpl(
+    provider.profile.url,
+    buildGenericConnectorProfileRequest(provider, token),
+  );
   const payload = await readProviderResponse(response);
   if (!response.ok || provider.profile.validate?.(payload) === false) {
     throw createHttpError(
       502,
       "connector_profile_fetch_failed",
-      readProviderError(payload)
-        || `Unable to read the connected ${provider.label} identity.`,
+      readProviderError(payload) ||
+        `Unable to read the connected ${provider.label} identity (HTTP ${response.status}).`,
     );
   }
   return unwrapObject(payload, provider.profile.unwrap || []);
 }
 
+export function buildGenericConnectorProfileRequest(provider, token) {
+  const accessToken = readProviderAccessToken(token);
+  return {
+    method: provider.profile.method || "GET",
+    headers: {
+      Accept: "application/json",
+      // OAuth token_type is metadata, not necessarily an HTTP auth scheme.
+      // Box returns `bearer` and Slack returns `bot`, while both APIs require
+      // the canonical Bearer authorization scheme.
+      Authorization: `Bearer ${accessToken}`,
+      ...(provider.profile.headers || {}),
+    },
+    ...(provider.profile.body !== undefined ? { body: provider.profile.body } : {}),
+  };
+}
+
 function normalizeProviderToken(payload, fallbackScope) {
   const accessToken = readProviderAccessToken(payload);
   const expiresIn = Math.max(0, Number(payload?.expires_in || 0));
-  const scope = normalizeTokenScope(
-    payload?.scope
-      || payload?.authed_user?.scope
-      || fallbackScope,
-  );
+  const primaryScope = normalizeTokenScope(payload?.scope || fallbackScope);
+  const userScope = normalizeTokenScope(payload?.authed_user?.scope || "");
+  const scope = [
+    ...new Set(
+      `${primaryScope} ${userScope}`
+        .split(/[\s,]+/)
+        .map((value) => value.trim())
+        .filter(Boolean),
+    ),
+  ].join(" ");
+  const userAccessToken = String(payload?.authed_user?.access_token || "").trim();
+  const userRefreshToken = String(payload?.authed_user?.refresh_token || "").trim();
+  const userExpiresIn = Math.max(0, Number(payload?.authed_user?.expires_in || 0));
   return {
     accessToken,
     access_token: accessToken,
@@ -587,6 +554,20 @@ function normalizeProviderToken(payload, fallbackScope) {
     token_type: String(payload?.token_type || "Bearer").trim(),
     scope,
     expiresAt: expiresIn ? Date.now() + expiresIn * 1000 : null,
+    ...(userAccessToken
+      ? {
+          userAccessToken,
+          user_access_token: userAccessToken,
+          userRefreshToken,
+          user_refresh_token: userRefreshToken,
+          userTokenType: String(payload?.authed_user?.token_type || "user").trim(),
+          user_token_type: String(payload?.authed_user?.token_type || "user").trim(),
+          userScope,
+          user_scope: userScope,
+          userExpiresAt: userExpiresIn ? Date.now() + userExpiresIn * 1000 : null,
+          user_expires_at: userExpiresIn ? Date.now() + userExpiresIn * 1000 : null,
+        }
+      : {}),
     raw: sanitizeTokenMetadata(payload),
   };
 }
@@ -597,9 +578,7 @@ export function normalizeDirectConnectorCredential(provider, values) {
     provider.defaultPermissionClass || "read_only",
   );
   const scope =
-    provider.scopesByPermissionClass?.[permissionClass]
-    || provider.defaultScope
-    || permissionClass;
+    provider.scopesByPermissionClass?.[permissionClass] || provider.defaultScope || permissionClass;
   if (provider.authentication === "service-account") {
     let serviceAccount;
     try {
@@ -612,10 +591,10 @@ export function normalizeDirectConnectorCredential(provider, values) {
       );
     }
     if (
-      !isRecord(serviceAccount)
-      || !String(serviceAccount.client_email || "").trim()
-      || !String(serviceAccount.private_key || "").trim()
-      || !String(serviceAccount.project_id || "").trim()
+      !isRecord(serviceAccount) ||
+      !String(serviceAccount.client_email || "").trim() ||
+      !String(serviceAccount.private_key || "").trim() ||
+      !String(serviceAccount.project_id || "").trim()
     ) {
       throw createHttpError(
         400,
@@ -670,14 +649,8 @@ function buildPublicConnectionStatus(provider, store) {
   };
 }
 
-async function requireProviderEnvironmentValue(
-  provider,
-  key,
-  envFileCandidates,
-) {
-  const value = key
-    ? await getConnectorRuntimeEnvValue(key, envFileCandidates)
-    : "";
+async function requireProviderEnvironmentValue(provider, key, envFileCandidates) {
+  const value = key ? await getConnectorRuntimeEnvValue(key, envFileCandidates) : "";
   if (value) return value;
   throw createHttpError(
     501,
@@ -707,9 +680,7 @@ function normalizeRequestedScope(provider, value) {
   if (!requestedScopes.length) {
     return provider.scopes.join(provider.scopeSeparator || " ");
   }
-  const denied = requestedScopes.find(
-    (scope) => !allowed.has(scope.toLowerCase()),
-  );
+  const denied = requestedScopes.find((scope) => !allowed.has(scope.toLowerCase()));
   if (denied) {
     throw createHttpError(
       400,
@@ -724,14 +695,15 @@ function normalizePermissionClass(value, fallback) {
   const normalized = String(value || fallback || "")
     .trim()
     .toLowerCase();
-  return ["read_only", "read_write"].includes(normalized)
-    ? normalized
-    : "read_only";
+  return ["read_only", "read_write"].includes(normalized) ? normalized : "read_only";
 }
 
 function normalizeTokenScope(value) {
   return Array.isArray(value)
-    ? value.map((scope) => String(scope || "").trim()).filter(Boolean).join(" ")
+    ? value
+        .map((scope) => String(scope || "").trim())
+        .filter(Boolean)
+        .join(" ")
     : String(value || "").trim();
 }
 
@@ -740,20 +712,16 @@ function createPkceChallenge(value) {
 }
 
 function readProviderAccessToken(payload) {
-  return String(
-    payload?.access_token
-      || payload?.authed_user?.access_token
-      || "",
-  ).trim();
+  return String(payload?.access_token || payload?.authed_user?.access_token || "").trim();
 }
 
 function readProviderError(payload) {
   return String(
-    payload?.error_description
-      || payload?.error?.message
-      || payload?.error
-      || payload?.message
-      || "",
+    payload?.error_description ||
+      payload?.error?.message ||
+      payload?.error ||
+      payload?.message ||
+      "",
   ).trim();
 }
 
@@ -770,12 +738,9 @@ async function readProviderResponse(response) {
 function sanitizeTokenMetadata(payload) {
   if (!isRecord(payload)) return {};
   return Object.fromEntries(
-    Object.entries(payload).filter(([key]) => ![
-      "access_token",
-      "refresh_token",
-      "id_token",
-      "authed_user",
-    ].includes(key)),
+    Object.entries(payload).filter(
+      ([key]) => !["access_token", "refresh_token", "id_token", "authed_user"].includes(key),
+    ),
   );
 }
 
@@ -795,13 +760,7 @@ function readFirstString(value, fields) {
   return "";
 }
 
-function redirectWithResult(
-  req,
-  res,
-  redirectTarget,
-  result,
-  allowedOrigins,
-) {
+function redirectWithResult(req, res, redirectTarget, result, allowedOrigins) {
   return sendConnectorRedirect(
     req,
     res,

@@ -78,16 +78,133 @@ test("connector MCP fails closed for approval-required and denied actions", asyn
   assert.equal(calls.length, 0);
 });
 
-function createTestService(calls) {
-  const definitions = [
+test("connector MCP canonicalizes one unambiguous tool alias to the signed action", async () => {
+  const calls = [];
+  const service = createTestService(calls);
+  const called = await request(service, {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "tools/call",
+    params: {
+      name: "createIssue",
+      arguments: { summary: "Alias" },
+    },
+  });
+
+  assert.equal(called.body.result.isError, false);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].name, "create_issue");
+});
+
+test("connector MCP unwraps and repairs omitted optional values from raw tool arguments", async () => {
+  const calls = [];
+  const service = createTestService(calls);
+  const called = await request(service, {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "tools/call",
+    params: {
+      name: "create_issue",
+      arguments: {
+        raw: '{"assigneeAccountId": , "description":"literal: ,", "projectKey":"KAN", "summary":"Acceptance"}',
+      },
+    },
+  });
+
+  assert.equal(called.body.result.isError, false);
+  assert.deepEqual(calls[0].arguments, {
+    assigneeAccountId: null,
+    description: "literal: ,",
+    projectKey: "KAN",
+    summary: "Acceptance",
+  });
+});
+
+test("connector MCP rejects arbitrary malformed raw tool arguments", async () => {
+  const calls = [];
+  const service = createTestService(calls);
+  const called = await request(service, {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "tools/call",
+    params: {
+      name: "create_issue",
+      arguments: { raw: "not-json" },
+    },
+  });
+
+  assert.equal(called.body.result.isError, true);
+  assert.equal(
+    called.body.result.structuredContent.error.code,
+    "connector_arguments_invalid",
+  );
+  assert.equal(calls.length, 0);
+});
+
+test("connector MCP preserves raw when the connector tool declares that argument", async () => {
+  const calls = [];
+  const service = createTestService(calls, {
+    ...GRANT,
+    allowedActions: ["create_issue"],
+  }, [
+    {
+      name: "create_issue",
+      description: "Create",
+      inputSchema: {
+        type: "object",
+        properties: { raw: { type: "string" } },
+      },
+    },
+  ]);
+  const called = await request(service, {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "tools/call",
+    params: {
+      name: "create_issue",
+      arguments: { raw: "connector-native-input" },
+    },
+  });
+
+  assert.equal(called.body.result.isError, false);
+  assert.deepEqual(calls[0].arguments, { raw: "connector-native-input" });
+});
+
+test("connector MCP rejects ambiguous semantic aliases", async () => {
+  const calls = [];
+  const grant = {
+    ...GRANT,
+    allowedActions: ["foo_bar", "foobar"],
+    approvalRequiredActions: [],
+  };
+  const service = createTestService(calls, grant, [
+    { name: "foo_bar", description: "One", inputSchema: { type: "object" } },
+    { name: "foobar", description: "Two", inputSchema: { type: "object" } },
+  ]);
+  const called = await request(service, {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "tools/call",
+    params: { name: "foo-bar", arguments: {} },
+  });
+
+  assert.equal(called.body.result.isError, true);
+  assert.equal(
+    called.body.result.structuredContent.error.code,
+    "connector_action_denied",
+  );
+  assert.equal(calls.length, 0);
+});
+
+function createTestService(calls, grant = GRANT, definitions = [
     { name: "create_issue", description: "Create", inputSchema: { type: "object" } },
     { name: "delete_issue", description: "Delete", inputSchema: { type: "object" } },
-  ];
+  ]) {
   return createConnectorMcpService({
     grantService: {
       async verify(token) {
         assert.equal(token, "signed-grant");
-        return GRANT;
+        return grant;
       },
     },
     adapterRegistry: {

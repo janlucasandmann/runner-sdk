@@ -13,7 +13,7 @@ and composing onboarding inside the single platform runtime.
 - [`navigation.mjs`](navigation.mjs) - Open, dismiss, complete, and redirect-restoration actions.
 - [`lifecycle.mjs`](lifecycle.mjs) - URL synchronization and automatic-open effects.
 - [`runtime.mjs`](runtime.mjs) - Default-computer provisioning and warmup adapter.
-- [`host.mjs`](host.mjs) - Modal dependency and callback composition.
+- [`host.mjs`](host.mjs) - Body-level screen portal and callback composition.
 - [`index.mjs`](index.mjs) - Public shell fragment map.
 
 ## Working in this directory

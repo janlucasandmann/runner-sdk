@@ -52,13 +52,18 @@ for (const fragment of Object.values(ONBOARDING_APP_SCRIPT_FRAGMENTS)) {
 }
 assert.doesNotThrow(() => new Function(ONBOARDING_PAGE_SCRIPT));
 
-assert.match(ONBOARDING_PAGE_SCRIPT, /function PlaygroundOnboardingModal/);
-assert.match(ONBOARDING_PAGE_SCRIPT, /PlatformModalBackdrop/);
-assert.match(ONBOARDING_PAGE_SCRIPT, /PlatformModalSurface/);
+assert.match(ONBOARDING_PAGE_SCRIPT, /function PlaygroundOnboardingScreen/);
+assert.match(ONBOARDING_PAGE_SCRIPT, /function PlaygroundOnboardingExperience/);
+assert.doesNotMatch(ONBOARDING_PAGE_SCRIPT, /PlatformModalBackdrop/);
+assert.doesNotMatch(ONBOARDING_PAGE_SCRIPT, /PlatformModalSurface/);
 assert.match(ONBOARDING_PAGE_SCRIPT, /onDismiss/);
 assert.match(ONBOARDING_PAGE_SCRIPT, /onComplete/);
 assert.match(ONBOARDING_PAGE_SCRIPT, /onboardingStepIndex/);
 assert.match(ONBOARDING_PAGE_SCRIPT, /files\/upload/);
+assert.match(
+  ONBOARDING_PAGE_SCRIPT,
+  /body\.children[\s\S]*setAttribute\("inert"[\s\S]*removeAttribute\("inert"/,
+);
 assert.doesNotMatch(ONBOARDING_PAGE_SCRIPT, /const conceptPages/);
 assert.doesNotMatch(ONBOARDING_PAGE_SCRIPT, /function renderFooter/);
 assert.doesNotMatch(ONBOARDING_PAGE_SCRIPT, /renderResourcesConfig/);
@@ -85,11 +90,18 @@ assert.match(
 );
 assert.match(
   ONBOARDING_APP_SCRIPT_FRAGMENTS.host,
-  /renderPlaygroundOnboardingHost/,
+  /renderPlaygroundOnboardingHost[\s\S]*createPortal\([\s\S]*PlaygroundOnboardingExperience[\s\S]*document\.body/,
 );
 
-assert.match(ONBOARDING_CSS, /\.playground-onboarding-scrim/);
-assert.match(ONBOARDING_CSS, /\.playground-onboarding-modal/);
+assert.match(
+  ONBOARDING_CSS,
+  /\.playground-onboarding-screen\s*\{[\s\S]*position:\s*fixed;[\s\S]*inset:\s*0;[\s\S]*height:\s*100dvh;/,
+);
+assert.match(
+  ONBOARDING_CSS,
+  /\.playground-onboarding-screen-surface\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(0,\s*1fr\);/,
+);
+assert.doesNotMatch(ONBOARDING_CSS, /\.playground-onboarding-(?:scrim|modal)/);
 
 const shellBootstrapSource = await fs.readFile(
   new URL(
@@ -141,7 +153,7 @@ assert.doesNotMatch(shellBootstrapSource, /function closePlaygroundOnboarding/);
 assert.match(shellRuntimeSource, /ONBOARDING_APP_SCRIPT_FRAGMENTS\.runtime/);
 assert.doesNotMatch(shellRuntimeSource, /function ensureAndWarmOnboardingDefaultEnvironment/);
 assert.match(shellCompositionSource, /ONBOARDING_APP_SCRIPT_FRAGMENTS\.host/);
-assert.doesNotMatch(shellCompositionSource, /React\.createElement\(PlaygroundOnboardingModal/);
+assert.doesNotMatch(shellCompositionSource, /React\.createElement\(PlaygroundOnboardingExperience/);
 assert.doesNotMatch(platformTemplateSource, /function readPlaygroundOnboardingState/);
 assert.doesNotMatch(platformTemplateCss, /\.playground-onboarding-scrim/);
 assert.match(platformBindingsSource, /ONBOARDING_PAGE_SCRIPT/);

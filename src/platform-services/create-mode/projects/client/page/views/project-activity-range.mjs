@@ -28,8 +28,8 @@ export const PROJECT_ACTIVITY_RANGE_SCRIPT = `        function filterProjectWork
           };
         }
 
-        function renderProjectActivityOverviewChart(activityItems) {
-          return React.createElement(PlatformActivityOverview, {
+        function getProjectActivityOverviewProps(activityItems) {
+          return {
             className: "playground-project-activity-overview",
             items: activityItems,
             resizable: true,
@@ -46,6 +46,13 @@ export const PROJECT_ACTIVITY_RANGE_SCRIPT = `        function filterProjectWork
               ? "Clear the search to show all ticket work."
               : "Ticket work and agent runs will appear here over time.",
             ariaLabel: "Project ticket activity over time",
-          });
+          };
+        }
+
+        function renderProjectActivityOverviewChart(activityItems) {
+          return React.createElement(
+            PlatformActivityOverview,
+            getProjectActivityOverviewProps(activityItems)
+          );
         }
 `;

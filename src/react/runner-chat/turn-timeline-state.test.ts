@@ -56,4 +56,58 @@ describe("turn timeline state", () => {
     expect(state.agentMessage?.message).toBe("Finished");
     expect(state.displayedTimelineItems).toHaveLength(1);
   });
+
+  it("coalesces streamed words before exposing working-log items", () => {
+    const turn = createTurn({
+      logs: [
+        {
+          time: "00:01",
+          message: "Inspecting",
+          type: "info",
+          eventType: "reasoning",
+          metadata: { source: "provider_reasoning", runId: "run_1" },
+        },
+        {
+          time: "00:01",
+          message: "the",
+          type: "info",
+          eventType: "reasoning",
+          metadata: { source: "provider_reasoning", runId: "run_1" },
+        },
+        {
+          time: "00:01",
+          message: "repository",
+          type: "info",
+          eventType: "reasoning",
+          metadata: { source: "provider_reasoning", runId: "run_1" },
+        },
+        {
+          time: "00:02",
+          message: "npm test",
+          type: "success",
+          eventType: "command_execution",
+          metadata: { command: "npm test", runId: "run_1" },
+        },
+      ],
+    });
+    const state = buildRunnerTurnTimelineState({
+      turn,
+      turns: [turn],
+      deepResearchSessions: [],
+      activeDeepResearchThreadSession: null,
+    });
+
+    expect(state.displayedTimelineItems).toHaveLength(2);
+    expect(state.displayedTimelineItems[0]).toMatchObject({
+      kind: "log",
+      log: {
+        message: "Inspecting the repository",
+        metadata: { streamCoalesced: true, fragmentCount: 3 },
+      },
+    });
+    expect(state.displayedTimelineItems[1]).toMatchObject({
+      kind: "log",
+      log: { eventType: "command_execution" },
+    });
+  });
 });

@@ -2311,7 +2311,7 @@ ${apiKeysLegacySettingsCase}            case "design":
                   renderSettingsSummaryCard("Runner Surface", [
                     { label: "Input Mode", value: "Computer Agents" },
                     { label: "Sidebar", value: sidebarOpen ? "Expanded" : "Collapsed" },
-                    { label: "Content Mode", value: contentMode === "changes" ? "Changes" : "Thread" },
+                    { label: "Content Mode", value: contentMode === "changes" ? "Activity" : "Thread" },
                     { label: "Welcome State", value: showInitialThreadWelcome ? "Visible" : "Hidden" },
                   ]),
                   React.createElement("div", { className: "playground-environments-summary-card" },

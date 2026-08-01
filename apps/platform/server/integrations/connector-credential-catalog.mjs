@@ -2,6 +2,7 @@ import {
   listOrganizationConnectorCredentialProviders,
   listOrganizationConnectorCredentials,
 } from "./connector-oauth-core.mjs";
+import { getConnectorCredentialProviderId } from "./connector-identity.mjs";
 
 const CREDENTIAL_CATALOG_PATH =
   /^\/api\/aios\/organizations\/([^/]+)\/connector-credentials\/?$/;
@@ -337,11 +338,7 @@ function normalizePublicCredential(value) {
 }
 
 function normalizeProviderId(value) {
-  const normalized = String(value || "").trim().toLowerCase();
-  const canonical = normalized === "atlassian" ? "jira" : normalized;
-  return /^[a-z0-9][a-z0-9-]{0,79}$/.test(canonical)
-    ? canonical
-    : "";
+  return getConnectorCredentialProviderId(value);
 }
 
 function normalizeOrganizationId(value) {

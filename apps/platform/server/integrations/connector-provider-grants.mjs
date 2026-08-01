@@ -1,3 +1,5 @@
+import { canonicalizeConnectorId } from "./connector-identity.mjs";
+
 const READ_ONLY = "read_only";
 const FULL_ACCESS = "full_access";
 const NO_ACCESS = "no_access";
@@ -463,7 +465,7 @@ export function resolveProviderGrantAccess(connectorId, capability, token) {
       : explicitGrant.access;
   }
 
-  const policy = PROVIDER_SCOPE_POLICIES[normalizeConnectorId(connectorId)];
+  const policy = PROVIDER_SCOPE_POLICIES[canonicalizeConnectorId(connectorId)];
   if (!policy) return NO_ACCESS;
   const scopes = normalizeProviderScopes(
     token.scope
@@ -577,10 +579,6 @@ function hasProviderSecret(token) {
 }
 
 function normalizeScope(value) {
-  return String(value || "").trim().toLowerCase();
-}
-
-function normalizeConnectorId(value) {
   return String(value || "").trim().toLowerCase();
 }
 

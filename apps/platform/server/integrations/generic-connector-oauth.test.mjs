@@ -3,6 +3,7 @@ import test from "node:test";
 import { getGenericConnectorProvider } from "./connector-provider-registry.mjs";
 import {
   buildGenericConnectorAuthorizationUrl,
+  buildGenericConnectorProfileRequest,
   buildGenericConnectorTokenRequest,
   isGenericConnectorApiRequestPath,
   normalizeDirectConnectorCredential,
@@ -59,6 +60,37 @@ test("Dropbox OAuth requests offline access with the configured connector scopes
   assert.ok(authUrl.searchParams.get("code_challenge"));
 });
 
+test("Slack requests bot and user scopes while Asana and Figma use PKCE", () => {
+  const slack = getGenericConnectorProvider("slack");
+  const slackUrl = new URL(
+    buildGenericConnectorAuthorizationUrl({
+      provider: slack,
+      clientId: "slack-client",
+      redirectUri: "http://localhost:4177/api/aios/connectors/slack/callback",
+      state: "slack-state",
+      scope: slack.scopes.join(" "),
+    }),
+  );
+  assert.equal(slackUrl.searchParams.get("scope"), slack.scopes.join(" "));
+  assert.equal(slackUrl.searchParams.get("user_scope"), "search:read");
+
+  for (const providerId of ["asana", "figma"]) {
+    const provider = getGenericConnectorProvider(providerId);
+    const authUrl = new URL(
+      buildGenericConnectorAuthorizationUrl({
+        provider,
+        clientId: `${providerId}-client`,
+        redirectUri: `http://localhost:4177/api/aios/connectors/${providerId}/callback`,
+        state: `${providerId}-state`,
+        scope: provider.scopes.join(provider.scopeSeparator),
+        pkceVerifier: `${providerId}-pkce-verifier`,
+      }),
+    );
+    assert.equal(authUrl.searchParams.get("code_challenge_method"), "S256");
+    assert.ok(authUrl.searchParams.get("code_challenge"));
+  }
+});
+
 test("token exchange honors provider-specific client authentication", () => {
   const figmaRequest = buildGenericConnectorTokenRequest({
     provider: getGenericConnectorProvider("figma"),
@@ -101,6 +133,20 @@ test("token exchange honors provider-specific client authentication", () => {
   assert.equal(dropboxBody.get("client_id"), "dropbox-app-key");
   assert.equal(dropboxBody.get("client_secret"), "dropbox-app-secret");
   assert.equal(dropboxBody.get("code_verifier"), "dropbox-pkce-verifier");
+});
+
+test("provider profile requests always use the canonical Bearer scheme", () => {
+  const boxRequest = buildGenericConnectorProfileRequest(getGenericConnectorProvider("box"), {
+    access_token: "box-access-token",
+    token_type: "bearer",
+  });
+  assert.equal(boxRequest.headers.Authorization, "Bearer box-access-token");
+
+  const slackRequest = buildGenericConnectorProfileRequest(getGenericConnectorProvider("slack"), {
+    access_token: "slack-bot-token",
+    token_type: "bot",
+  });
+  assert.equal(slackRequest.headers.Authorization, "Bearer slack-bot-token");
 });
 
 test("direct credentials receive a narrow, explicit provider access ceiling", () => {

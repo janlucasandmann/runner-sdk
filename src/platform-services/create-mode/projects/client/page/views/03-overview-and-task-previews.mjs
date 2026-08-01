@@ -858,55 +858,45 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             effectiveProjectActivitySelectedId
           );
           const hasActivityFilter = projectOverviewTaskActivityFilterMode !== "all";
-          return React.createElement("div", {
+          return React.createElement(PlatformActivityWorkspace, {
               className: "playground-project-activity-page",
-              style: getProjectActivityPageGridStyle(
-                projectOverviewActivityChartHeight
-              ),
-            },
-            renderProjectActivityOverviewChart(activityItems),
-            React.createElement("section", {
-                className: "playground-project-activity-feed",
+              chartHeight: projectOverviewActivityChartHeight,
+              overviewProps: getProjectActivityOverviewProps(activityItems),
+              timelineLoading: projectOverviewTaskActivityState?.status === "loading"
+                && projectActivityTimelineItems.length === 0,
+              timelineLoadingMessage: "Loading activity...",
+              timelineLoadingClassName: "playground-project-activity-feed-loading",
+              timelineProps: {
+                className: "playground-project-activity-timeline",
+                layout: "inspector",
+                title: "Activity",
+                titleActions: renderProjectWorkActivityFilter(),
+                headerActions: React.createElement(PlatformSearch, {
+                  value: searchQuery,
+                  onChange: (event) => setSearchQuery(event.target.value),
+                  placeholder: "Search activity",
+                  "aria-label": "Search project activity",
+                }),
+                inspectorTitle: "Inspector",
+                items: projectActivityTimelineItems,
+                selectedItemId: projectOverviewTaskActivitySelectedId,
+                onSelectedItemChange: setProjectOverviewTaskActivitySelectedId,
+                emptyTitle: projectOverviewTaskActivityState?.status === "error"
+                  ? "Activity unavailable"
+                  : normalizedSearchQuery
+                    ? "No matching activity"
+                    : hasActivityFilter
+                      ? "No matching actions"
+                      : "No activity yet",
+                emptyDescription: projectOverviewTaskActivityState?.status === "error"
+                  ? projectOverviewTaskActivityState.error
+                  : normalizedSearchQuery
+                    ? "Clear the search to show all project activity."
+                    : hasActivityFilter
+                      ? "Choose another action filter to show more activity."
+                      : "Ticket actions and agent work will appear here.",
               },
-              projectOverviewTaskActivityState?.status === "loading"
-                && projectActivityTimelineItems.length === 0
-                ? React.createElement(PlatformLoadingState, {
-                    className: "playground-project-activity-feed-loading",
-                    message: "Loading activity...",
-                    centered: true,
-                  })
-                : React.createElement(PlatformActivityTimeline, {
-                    className: "playground-project-activity-timeline",
-                    layout: "inspector",
-                    title: "Activity",
-                    titleActions: renderProjectWorkActivityFilter(),
-                    headerActions: React.createElement(PlatformSearch, {
-                      value: searchQuery,
-                      onChange: (event) => setSearchQuery(event.target.value),
-                      placeholder: "Search activity",
-                      "aria-label": "Search project activity",
-                    }),
-                    inspectorTitle: "Inspector",
-                    items: projectActivityTimelineItems,
-                    selectedItemId: projectOverviewTaskActivitySelectedId,
-                    onSelectedItemChange: setProjectOverviewTaskActivitySelectedId,
-                    emptyTitle: projectOverviewTaskActivityState?.status === "error"
-                      ? "Activity unavailable"
-                      : normalizedSearchQuery
-                        ? "No matching activity"
-                        : hasActivityFilter
-                          ? "No matching actions"
-                        : "No activity yet",
-                    emptyDescription: projectOverviewTaskActivityState?.status === "error"
-                      ? projectOverviewTaskActivityState.error
-                      : normalizedSearchQuery
-                        ? "Clear the search to show all project activity."
-                        : hasActivityFilter
-                          ? "Choose another action filter to show more activity."
-                        : "Ticket actions and agent work will appear here.",
-                  })
-            )
-          );
+            });
         }
 
         function renderBoardView() {

@@ -27,6 +27,25 @@ const mutationsAndDataSource = await fs.readFile(
   path.resolve(domainRoot, "controller/mutations-and-data.js"),
   "utf8",
 );
+const bootstrapAndEffectsSource = await fs.readFile(
+  path.resolve(domainRoot, "controller/bootstrap-and-effects.js"),
+  "utf8",
+);
+const catalogAndLifecycleSource = await fs.readFile(
+  path.resolve(domainRoot, "controller/catalog-and-lifecycle.js"),
+  "utf8",
+);
+const databaseDetailViewSource = await fs.readFile(
+  path.resolve(domainRoot, "controller/database-detail-view.js"),
+  "utf8",
+);
+const databaseBrowserCssSource = await fs.readFile(
+  path.resolve(
+    domainRoot,
+    "../../../../../../src/platform-services/create-mode/projects/client/styles/core/03-dialogs-and-mission-control.mjs",
+  ),
+  "utf8",
+);
 const platformTemplateSource = await fs.readFile(
   path.resolve(domainRoot, "../../templates/platform.template.js"),
   "utf8",
@@ -34,6 +53,77 @@ const platformTemplateSource = await fs.readFile(
 
 assert.equal(COMPUTE_RESOURCES_CONTROLLER_FRAGMENT_PATHS.length, 12);
 assert.match(COMPUTE_RESOURCES_PAGE_SCRIPT, /function PlaygroundEnvironmentsPage/);
+const environmentsHomeThreadStartSource = COMPUTE_RESOURCES_PAGE_SCRIPT.match(
+  /const handleEnvironmentsHomeThreadStartRequest = \(runRequest\) => \{[\s\S]*?(?=\n\s*function EnvironmentsHomeResponsiveSvgShared)/,
+)?.[0] || "";
+assert.match(
+  environmentsHomeThreadStartSource,
+  /connectors: runRequest\.connectors \|\| null/,
+  "The Compute Resources home handoff must preserve selected connectors.",
+);
+assert.match(
+  bootstrapAndEffectsSource,
+  /const PLAYGROUND_COMPUTE_EMPTY_LIST = Object\.freeze\(\[\]\);[\s\S]{0,1800}resourceTemplatePreviewResources = PLAYGROUND_COMPUTE_EMPTY_LIST/,
+  "Compute resource list defaults must keep stable identities across renders.",
+);
+assert.match(
+  catalogAndLifecycleSource,
+  /if \(!selectedDatabaseId \|\| selectedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID\) \{[\s\S]{0,180}databaseSeededSelectionRef\.current === selectedDatabaseId[\s\S]{0,120}return;/,
+  "Database editor resets must run once per selected database identity.",
+);
+const cachedDatabaseDocumentsBranch = catalogAndLifecycleSource.match(
+  /const existingDocuments = databaseDocumentsByCollectionKeyRef\.current\[loadingKey\];[\s\S]*?const templatePreviewDocuments =/,
+)?.[0] || "";
+assert.match(
+  cachedDatabaseDocumentsBranch,
+  /nextDocumentId !== currentSelectedDocumentId[\s\S]{0,240}setSelectedDatabaseDocumentId\(nextDocumentId\)/,
+  "Cached database documents must synchronize selection only when its identity changes.",
+);
+assert.doesNotMatch(
+  cachedDatabaseDocumentsBranch,
+  /applyDocumentList\(existingDocuments/,
+  "Cached database documents must not be reapplied into React state on loader identity changes.",
+);
+assert.match(
+  databaseDetailViewSource,
+  /PLAYGROUND_DATABASE_BROWSER_INITIAL_ROW_LIMIT = 50/,
+  "Database browser lists must initially expose up to 50 rows.",
+);
+assert.match(
+  databaseDetailViewSource,
+  /PLAYGROUND_DATABASE_BROWSER_LOAD_MORE_COUNT = 20/,
+  "Database browser lists must reveal 20 additional rows per continuation.",
+);
+assert.match(
+  databaseDetailViewSource,
+  /handlePlaygroundDatabaseBrowserRowKeyDown[\s\S]{0,800}\["ArrowDown", "ArrowUp"\][\s\S]{0,1600}options\.onSelect\(nextRow\)/,
+  "Database collection and document rows must support adjacent Arrow key selection.",
+);
+assert.match(
+  databaseDetailViewSource,
+  /onScroll: handleDatabaseCollectionsScroll/,
+  "The database Collections pane must progressively reveal more rows from its own scroll container.",
+);
+assert.match(
+  databaseDetailViewSource,
+  /onScroll: handleDatabaseDocumentsScroll/,
+  "The database Documents pane must progressively reveal more rows from its own scroll container.",
+);
+assert.match(
+  databaseDetailViewSource,
+  /loadingMoreDatabaseDocumentsKey === databaseDocumentListKey\s*\? React\.createElement\(PlatformLoadingState, \{[\s\S]{0,220}className: "playground-database-browser-pagination-loading",[\s\S]{0,160}message: "Loading more documents\.\.\."/,
+  "Database document continuation must expose the centralized loading indicator at the end of the loaded rows.",
+);
+assert.match(
+  databaseBrowserCssSource,
+  /\.playground-database-browser-pagination-loading \{[\s\S]{0,180}width: 100%;[\s\S]{0,180}justify-content: center;/,
+  "The database continuation indicator must occupy and center within the bottom row of its list.",
+);
+assert.match(
+  catalogAndLifecycleSource,
+  /loadDatabaseDocuments\(selectedDatabaseId, selectedDatabaseCollectionId, \{ limit: 50 \}\)/,
+  "Database documents must start with the shared 50-row initial limit.",
+);
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /serverCreationRequestToken = 0,[\s\S]{0,100}serverCreationRequestKind = ""/,
@@ -1227,10 +1317,6 @@ assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /const sourceServerTopNavActions = isSourceDeployableServer[\s\S]{0,2200}renderServerPublishSplitButton\(\)\s*\),\s*topNavActionsContainer/,
   "Function app-header actions must end with Save and Publish without a properties-sidebar toggle.",
-);
-const databaseDetailViewSource = await fs.readFile(
-  path.join(domainRoot, "controller/database-detail-view.js"),
-  "utf8",
 );
 assert.match(
   databaseDetailViewSource,

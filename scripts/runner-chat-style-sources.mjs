@@ -27,6 +27,8 @@ export const RUNNER_CHAT_STYLE_SOURCE_PATHS = Object.freeze([
   "src/react/runner-chat/styles/composer.css",
   "src/react/runner-chat/styles/dialogs-and-file-browser.css",
   "src/react/thread/runner-thread.css",
+  "src/platform-ui/components/composite/detail-tab-bar/detail-tab-bar.css",
+  "src/platform-ui/components/thread-components/thread-screen/thread-screen.css",
   "src/platform-ui/components/ui/button/button.css",
   "src/platform-ui/components/ui/icon-button/icon-button.css",
   "src/platform-ui/components/ui/label/label.css",

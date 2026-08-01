@@ -1,5 +1,6 @@
 export * from "./activity-overview/index.js";
 export * from "./activity-timeline/index.js";
+export * from "./activity-workspace/index.js";
 export * from "./analytics/index.js";
 export * from "./attachments/index.js";
 export * from "./code-editor-workspace/index.js";

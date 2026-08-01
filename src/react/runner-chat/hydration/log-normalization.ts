@@ -696,8 +696,146 @@ function pruneSupersededMediaGenerationLogs(logs: RunnerLog[]): RunnerLog[] {
   });
 }
 
+const RUNNER_STREAM_FRAGMENT_SOURCES = new Set([
+  "assistant_text",
+  "provider_reasoning",
+]);
+
+const RUNNER_STREAM_FRAGMENT_EVENTS = new Set([
+  "assistant_delta",
+  "content_block_delta",
+  "content_delta",
+  "message_delta",
+  "stream_chunk",
+  "text_delta",
+  "token",
+  "token_delta",
+]);
+
+function normalizeRunnerStreamIdentityPart(value: unknown): string {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function readRunnerStreamMetadataValue(
+  log: RunnerLog,
+  keys: readonly string[],
+): string {
+  const metadata = log.metadata as Record<string, unknown> | null | undefined;
+  const runtime = metadata?.runtime && typeof metadata.runtime === "object"
+    ? (metadata.runtime as Record<string, unknown>)
+    : null;
+  for (const source of [metadata, runtime]) {
+    if (!source) continue;
+    for (const key of keys) {
+      const value = source[key];
+      if (typeof value === "string" && value.trim()) {
+        return value.trim();
+      }
+    }
+  }
+  return "";
+}
+
+export function isRunnerStreamingFragmentLog(log: RunnerLog): boolean {
+  const source = normalizeRunnerStreamIdentityPart(log.metadata?.source);
+  if (RUNNER_STREAM_FRAGMENT_SOURCES.has(source)) {
+    return true;
+  }
+
+  const runtimeEvent = normalizeRunnerStreamIdentityPart(
+    readRunnerStreamMetadataValue(log, [
+      "runtimeEventType",
+      "runtime_event_type",
+      "eventType",
+      "event_type",
+      "type",
+    ]),
+  ).replace(/[.\s-]+/g, "_");
+  return RUNNER_STREAM_FRAGMENT_EVENTS.has(runtimeEvent);
+}
+
+function getRunnerStreamingFragmentIdentity(log: RunnerLog): string {
+  if (!isRunnerStreamingFragmentLog(log)) {
+    return "";
+  }
+  const source = normalizeRunnerStreamIdentityPart(log.metadata?.source) || "stream";
+  const runId = readRunnerStreamMetadataValue(log, ["runId", "run_id"]);
+  const runtime = readRunnerStreamMetadataValue(log, ["runtime", "adapter", "provider"]);
+  const actor = getRunnerLogSubagentInvocationIdentity(log) || readRunnerStreamMetadataValue(
+    log,
+    ["actorParticipantId", "actor_participant_id", "agentId", "agent_id"],
+  );
+  return [source, runId, runtime, actor].map((value) => String(value || "").trim()).join("|");
+}
+
+function appendRunnerStreamingFragment(previous: string, next: string): string {
+  if (!previous) return next;
+  if (!next) return previous;
+  if (next.startsWith(previous)) return next;
+  if (previous.startsWith(next)) return previous;
+  if (/\s$/.test(previous) || /^\s/.test(next)) return previous + next;
+  if (/^[,.;:!?%)}\]>]/.test(next)) return previous + next;
+  if (/[({[<]$/.test(previous)) return previous + next;
+  if (/^['’]/.test(next) || /['’]$/.test(previous)) return previous + next;
+  return `${previous} ${next}`;
+}
+
+export function coalesceRunnerStreamingLogs(logs: RunnerLog[]): RunnerLog[] {
+  const coalesced: RunnerLog[] = [];
+  let activeIdentity = "";
+  let activeIndex = -1;
+  let activeFragmentCount = 0;
+
+  for (const log of logs) {
+    const identity = getRunnerStreamingFragmentIdentity(log);
+    if (!identity || identity !== activeIdentity || activeIndex < 0) {
+      coalesced.push(log);
+      activeIdentity = identity;
+      activeIndex = identity ? coalesced.length - 1 : -1;
+      activeFragmentCount = identity ? 1 : 0;
+      continue;
+    }
+
+    const previous = coalesced[activeIndex];
+    activeFragmentCount += 1;
+    const previousMetadata = (previous.metadata || {}) as Record<string, unknown>;
+    const nextMetadata = (log.metadata || {}) as Record<string, unknown>;
+    const firstRuntimeSequence =
+      previousMetadata.firstRuntimeSequence ||
+      previousMetadata.runtimeSequence ||
+      previousMetadata.runtime_sequence ||
+      nextMetadata.runtimeSequence ||
+      nextMetadata.runtime_sequence;
+    const lastRuntimeSequence =
+      nextMetadata.runtimeSequence ||
+      nextMetadata.runtime_sequence ||
+      previousMetadata.lastRuntimeSequence ||
+      previousMetadata.runtimeSequence ||
+      previousMetadata.runtime_sequence;
+    coalesced[activeIndex] = {
+      ...previous,
+      ...log,
+      createdAt: previous.createdAt || log.createdAt,
+      time: previous.time || log.time,
+      message: appendRunnerStreamingFragment(previous.message || "", log.message || ""),
+      metadata: {
+        ...previousMetadata,
+        ...nextMetadata,
+        streamCoalesced: true,
+        fragmentCount: activeFragmentCount,
+        ...(firstRuntimeSequence !== undefined ? { firstRuntimeSequence } : {}),
+        ...(lastRuntimeSequence !== undefined ? { lastRuntimeSequence } : {}),
+      } as RunnerLog["metadata"],
+    };
+  }
+
+  return coalesced;
+}
+
 export function dedupeAdjacentRunnerLogs(logs: RunnerLog[]): RunnerLog[] {
-  const prunedLogs = pruneSupersededMediaGenerationLogs(logs);
+  const prunedLogs = pruneSupersededMediaGenerationLogs(
+    coalesceRunnerStreamingLogs(logs),
+  );
   const deduped: RunnerLog[] = [];
   let lastSignature = "";
 

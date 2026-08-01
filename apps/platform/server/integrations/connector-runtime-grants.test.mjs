@@ -19,6 +19,8 @@ test("connector runtime grants round-trip without provider tokens", async () => 
     connectorId: "jira",
     provider: "jira",
     organizationId: "org_test",
+    agentId: "agent_test",
+    actorUserId: "user_test",
     credentialId: "credential_test",
     credentialSource: "project",
     projectId: "project_test",
@@ -30,10 +32,34 @@ test("connector runtime grants round-trip without provider tokens", async () => 
   assert.equal(token.includes("must-not-leak"), false);
   const grant = await service.verify(token);
   assert.equal(grant.threadId, "thread_test");
+  assert.equal(grant.agentId, "agent_test");
+  assert.equal(grant.actorUserId, "user_test");
   assert.equal(grant.credentialSource, "project");
   assert.equal(grant.projectId, "project_test");
   assert.deepEqual(grant.allowedActions, ["create_issue"]);
   assert.equal("accessToken" in grant, false);
+});
+
+test("connector runtime grants canonicalize Atlassian to Jira", async () => {
+  const service = createConnectorRuntimeGrantService({
+    secret: SECRET,
+    now: () => 1_000_000,
+    ttlMs: 60_000,
+  });
+  const token = await service.issue({
+    threadId: "thread_atlassian",
+    connectorId: "atlassian",
+    provider: "atlassian",
+    organizationId: "org_test",
+    credentialId: "credential_test",
+    credentialSource: "organization_default",
+    allowedActions: ["create_issue"],
+  });
+
+  const grant = await service.verify(token);
+
+  assert.equal(grant.connectorId, "jira");
+  assert.equal(grant.provider, "jira");
 });
 
 test("connector runtime grants reject tampering and expiry", async () => {

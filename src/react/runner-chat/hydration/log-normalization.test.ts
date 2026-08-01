@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { RunnerLog } from "../../../types.js";
 import {
+  coalesceRunnerStreamingLogs,
   dedupeAdjacentRunnerLogs,
   isDuplicateAssistantSummaryTimelineLog,
   normalizeHydratedLog,
@@ -135,5 +136,77 @@ describe("runner hydration log normalization", () => {
         log({ eventType: "agent_message", message: "Finished the migration" }),
       ),
     ).toBe(true);
+  });
+
+  it("coalesces provider token fragments without merging executable actions", () => {
+    const normalized = dedupeAdjacentRunnerLogs([
+      log({
+        eventType: "reasoning",
+        message: "Inspecting",
+        metadata: { source: "provider_reasoning", runId: "run-1" },
+      }),
+      log({
+        eventType: "reasoning",
+        message: "the",
+        metadata: { source: "provider_reasoning", runId: "run-1" },
+      }),
+      log({
+        eventType: "reasoning",
+        message: "repository",
+        metadata: { source: "provider_reasoning", runId: "run-1" },
+      }),
+      log({
+        eventType: "command_execution",
+        message: "npm test",
+        metadata: { command: "npm test", runId: "run-1" },
+      }),
+      log({
+        eventType: "reasoning",
+        message: "Tests",
+        metadata: { source: "assistant_text", runId: "run-1" },
+      }),
+      log({
+        eventType: "reasoning",
+        message: "passed",
+        metadata: { source: "assistant_text", runId: "run-1" },
+      }),
+      log({
+        eventType: "reasoning",
+        message: ".",
+        metadata: { source: "assistant_text", runId: "run-1" },
+      }),
+    ]);
+
+    expect(normalized).toHaveLength(3);
+    expect(normalized[0].message).toBe("Inspecting the repository");
+    expect(normalized[0].metadata).toMatchObject({
+      streamCoalesced: true,
+      fragmentCount: 3,
+    });
+    expect(normalized[1].metadata?.command).toBe("npm test");
+    expect(normalized[2].message).toBe("Tests passed.");
+  });
+
+  it("keeps distinct subagent streams separate", () => {
+    const normalized = coalesceRunnerStreamingLogs([
+      log({
+        eventType: "reasoning",
+        message: "First",
+        metadata: {
+          source: "provider_reasoning",
+          actor: subagentActor("invocation-a"),
+        },
+      }),
+      log({
+        eventType: "reasoning",
+        message: "Second",
+        metadata: {
+          source: "provider_reasoning",
+          actor: subagentActor("invocation-b"),
+        },
+      }),
+    ]);
+
+    expect(normalized).toHaveLength(2);
   });
 });

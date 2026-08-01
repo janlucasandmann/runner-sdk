@@ -1,6 +1,7 @@
 import { Activity, ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { buildRunnerThreadRunReceiptViewModel } from "../../thread/presentation.js";
 import type {
   RunnerThreadControlAction,
   RunnerThreadAction,
@@ -22,6 +23,7 @@ import {
 } from "./pending-permissions-dock.js";
 import { RunnerThreadLiveSupervisionDock } from "./live-supervision-dock.js";
 import { RunnerThreadRunActivityCard } from "./run-activity-card.js";
+import { RunnerThreadRunReceipt } from "./run-receipt.js";
 import type { RunnerThreadDetailLoadState } from "./run-detail-hydration.js";
 
 export interface RunnerThreadTimelineProps {
@@ -35,6 +37,7 @@ export interface RunnerThreadTimelineProps {
   renderAction?: RunnerThreadActionRenderer;
   runDetailStates?: Record<string, RunnerThreadDetailLoadState>;
   activityGroupActionStates?: Record<string, RunnerThreadDetailLoadState>;
+  // biome-ignore lint/suspicious/noConfusingVoidType: Preserves the existing pagination callback contract.
   onLoadEarlier?: () => Promise<boolean | void> | boolean | void;
   onLoadRunDetails?: (run: RunnerThreadRun) => Promise<void> | void;
   onLoadActivityGroupActions?: (groupId: string, runId: string) => Promise<void> | void;
@@ -43,6 +46,10 @@ export interface RunnerThreadTimelineProps {
   onCorrectRoute?: (receipt: RunnerThreadRoutingReceipt) => void;
   onOpenChanges?: (run: RunnerThreadRun) => void;
   onRunElement?: (runId: string, element: HTMLElement | null) => void;
+  onSelectRun?: (run: RunnerThreadRun) => void;
+  selectedRunId?: string | null;
+  runPresentation?: "activity-card" | "receipt";
+  showLiveSupervision?: boolean;
 }
 
 function getReferenceItem(projection: RunnerThreadProjection, reference: RunnerThreadTimelineReference) {
@@ -65,6 +72,10 @@ function getMessageReceipt(projection: RunnerThreadProjection, message: RunnerTh
     .sort((left, right) => right.sequence - left.sequence)[0] || null;
 }
 
+function getReferenceKey(reference: RunnerThreadTimelineReference) {
+  return `${reference.kind}:${reference.id}`;
+}
+
 export function RunnerThreadTimeline({
   projection,
   fallbackRunAgentName,
@@ -84,10 +95,15 @@ export function RunnerThreadTimeline({
   onCorrectRoute,
   onOpenChanges,
   onRunElement,
+  onSelectRun,
+  selectedRunId,
+  runPresentation = "activity-card",
+  showLiveSupervision = true,
 }: RunnerThreadTimelineProps) {
   const [windowEndKey, setWindowEndKey] = useState<string | null>(null);
   const [loadingEarlier, setLoadingEarlier] = useState(false);
   const [pendingEarlierAnchorKey, setPendingEarlierAnchorKey] = useState<string | null>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Reset the bounded timeline window when its owning thread changes.
   useEffect(() => {
     setWindowEndKey(null);
     setPendingEarlierAnchorKey(null);
@@ -122,9 +138,8 @@ export function RunnerThreadTimeline({
     }),
     [projection, renderEvent],
   );
-  const referenceKey = (reference: RunnerThreadTimelineReference) => `${reference.kind}:${reference.id}`;
   const anchoredEndIndex = windowEndKey
-    ? references.findIndex((reference) => referenceKey(reference) === windowEndKey) + 1
+    ? references.findIndex((reference) => getReferenceKey(reference) === windowEndKey) + 1
     : references.length;
   const endIndex = anchoredEndIndex > 0 ? anchoredEndIndex : references.length;
   const startIndex = Math.max(0, endIndex - maxMountedItems);
@@ -132,10 +147,17 @@ export function RunnerThreadTimeline({
   const hiddenBefore = startIndex;
   const hiddenAfter = references.length - endIndex;
   const canLoadFromServer = Boolean((projection.hasOlder || projection.hasMore) && onLoadEarlier);
+  const runReceiptsById = useMemo(() => {
+    if (runPresentation !== "receipt") return {};
+    return Object.fromEntries(Object.values(projection.runsById).map((run) => [
+      run.id,
+      buildRunnerThreadRunReceiptViewModel(projection, run),
+    ]));
+  }, [projection, runPresentation]);
 
   useEffect(() => {
     if (!pendingEarlierAnchorKey) return;
-    const anchorIndex = references.findIndex((reference) => referenceKey(reference) === pendingEarlierAnchorKey);
+    const anchorIndex = references.findIndex((reference) => getReferenceKey(reference) === pendingEarlierAnchorKey);
     // A server page can contain only run-scoped evidence, which is deliberately
     // hidden at conversation altitude. Do not collapse the window unless a
     // newly visible item actually landed before the former first item.
@@ -147,14 +169,14 @@ export function RunnerThreadTimeline({
     const currentFirst = visibleReferences[0];
     if (!currentFirst) return;
     if (hiddenBefore > 0) {
-      setWindowEndKey(referenceKey(currentFirst));
+      setWindowEndKey(getReferenceKey(currentFirst));
       return;
     }
     if (!canLoadFromServer || !onLoadEarlier) return;
     setLoadingEarlier(true);
     try {
       const loaded = await onLoadEarlier();
-      if (loaded !== false) setPendingEarlierAnchorKey(referenceKey(currentFirst));
+      if (loaded !== false) setPendingEarlierAnchorKey(getReferenceKey(currentFirst));
     } catch {
       // The owner surfaces request errors; keep the current window anchored.
     } finally {
@@ -172,10 +194,12 @@ export function RunnerThreadTimeline({
 
   return (
     <div className="tb-thread-timeline">
-      <RunnerThreadLiveSupervisionDock
-        projection={projection}
-        onPermissionDecision={onPermissionDecision}
-      />
+      {showLiveSupervision ? (
+        <RunnerThreadLiveSupervisionDock
+          projection={projection}
+          onPermissionDecision={onPermissionDecision}
+        />
+      ) : null}
 
       {(hiddenBefore > 0 || canLoadFromServer) ? (
         <button type="button" className="tb-thread-load-earlier" onClick={() => void showEarlier()} disabled={loadingEarlier}>
@@ -205,24 +229,34 @@ export function RunnerThreadTimeline({
           const runActivity = activityByRunId[item.id];
           return (
             <div key={`run:${item.id}`} ref={(element) => onRunElement?.(item.id, element)} className="tb-thread-run-anchor">
-              <RunnerThreadRunActivityCard
-                run={item}
-                projection={projection}
-                fallbackAgentName={fallbackRunAgentName}
-                fallbackWorkspaceName={fallbackRunWorkspaceName}
-                renderAction={renderAction}
-                detailLoadState={runDetailStates?.[item.id] || (onLoadRunDetails ? { status: "idle", error: null } : undefined)}
-                activityGroupActionStates={activityGroupActionStates}
-                onLoadDetails={onLoadRunDetails}
-                onLoadActivityGroupActions={onLoadActivityGroupActions}
-                onControlRun={onControlRun}
-                onPermissionDecision={onPermissionDecision}
-                onOpenChanges={onOpenChanges}
-                activityGroups={runActivity?.groups || []}
-                actions={runActivity?.actions || []}
-                permissions={runActivity?.permissions || []}
-                promotePermissionsExternally
-              />
+              {runPresentation === "receipt" && runReceiptsById[item.id] ? (
+                <RunnerThreadRunReceipt
+                  receipt={runReceiptsById[item.id]}
+                  fallbackAgentName={fallbackRunAgentName}
+                  fallbackWorkspaceName={fallbackRunWorkspaceName}
+                  selected={selectedRunId === item.id}
+                  onSelect={() => onSelectRun?.(item)}
+                />
+              ) : (
+                <RunnerThreadRunActivityCard
+                  run={item}
+                  projection={projection}
+                  fallbackAgentName={fallbackRunAgentName}
+                  fallbackWorkspaceName={fallbackRunWorkspaceName}
+                  renderAction={renderAction}
+                  detailLoadState={runDetailStates?.[item.id] || (onLoadRunDetails ? { status: "idle", error: null } : undefined)}
+                  activityGroupActionStates={activityGroupActionStates}
+                  onLoadDetails={onLoadRunDetails}
+                  onLoadActivityGroupActions={onLoadActivityGroupActions}
+                  onControlRun={onControlRun}
+                  onPermissionDecision={onPermissionDecision}
+                  onOpenChanges={onOpenChanges}
+                  activityGroups={runActivity?.groups || []}
+                  actions={runActivity?.actions || []}
+                  permissions={runActivity?.permissions || []}
+                  promotePermissionsExternally
+                />
+              )}
             </div>
           );
         }

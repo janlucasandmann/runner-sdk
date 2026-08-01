@@ -21,6 +21,7 @@ export function createPlatformGateway(config) {
         fetchAiosApi: modules.fetchAiosApi,
         fetchAiosCloud: modules.fetchAiosCloud,
         fetchSessionApi: modules.fetchSessionApi,
+        fetchSessionRunnerApi: modules.fetchSessionRunnerApi,
         fetchUpstreamJsonForProxyExactPath: modules.fetchUpstreamJsonForProxyExactPath,
         fetchUpstreamOverviewJson: modules.fetchUpstreamOverviewJson,
         handleAiosUserSessionRequest: modules.handleAiosUserSessionRequest,

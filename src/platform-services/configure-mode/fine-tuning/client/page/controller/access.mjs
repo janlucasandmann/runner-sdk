@@ -232,6 +232,15 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
           );
         }
 
+        function getFineTuningSystemRolePermissionSet(job, principalId, roleId) {
+          return getPlatformSystemPrincipalRolePermissionSet(
+            getFineTuningAccessMetadata(job),
+            principalId,
+            normalizePlaygroundTeamRoleId(roleId, "member"),
+            "fine_tuning_team_role"
+          );
+        }
+
         function getFineTuningTeamRolePermissionSet(job, teamId, roleId) {
           const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
           const source = getFineTuningAccessMetadata(job).teamRolePermissionSets;
@@ -253,6 +262,29 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
           );
           updateFineTuningAccessMetadata(job.id, (metadata) =>
             buildPlatformSystemPrincipalPermissionMetadata(metadata, principalId, next, "fine_tuning")
+          );
+        }
+
+        function updateFineTuningSystemRolePermissionSet(job, principalId, roleId, updater) {
+          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+          if (!isPlatformRoleScopedSystemAccessPrincipalId(principalId) || normalizedRoleId === "owner") return;
+          const current = getFineTuningSystemRolePermissionSet(
+            job,
+            principalId,
+            normalizedRoleId
+          );
+          const next = normalizePlaygroundPermissionSet(
+            typeof updater === "function" ? updater(current) : updater,
+            "fine_tuning_team_role"
+          );
+          updateFineTuningAccessMetadata(job.id, (metadata) =>
+            buildPlatformSystemPrincipalRolePermissionMetadata(
+              metadata,
+              principalId,
+              normalizedRoleId,
+              next,
+              "fine_tuning_team_role"
+            )
           );
         }
 
@@ -462,6 +494,8 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
           const selectedRow = rows.find((row) => row.id === fineTuningAccessTeamId) || null;
           if (selectedRow) {
             const systemPrincipal = getPlatformSystemAccessPrincipal(selectedRow.id);
+            const roleScopedSystemPrincipal = systemPrincipal
+              && isPlatformRoleScopedSystemAccessPrincipalId(systemPrincipal.id);
             const selectedRole = getPlaygroundTeamRoleDefinition(fineTuningAccessRoleId);
             return React.createElement("section", { className: "playground-fine-tuning-access-detail" },
               React.createElement("div", { className: "playground-project-team-permissions-header" },
@@ -477,7 +511,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
                   systemPrincipal ? systemPrincipal.name + " Permissions" : selectedRow.name + " Access"
                 )
               ),
-              systemPrincipal
+              systemPrincipal && !roleScopedSystemPrincipal
                 ? React.createElement(PlatformPermissionsPage, {
                     permissionSet: getFineTuningPermissionSet(job, systemPrincipal.id),
                     accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
@@ -501,14 +535,68 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
                     roleKicker: "Fine-tuning role",
                     roleDescription: "Fine-tuning-specific permissions for " + selectedRole.label.toLowerCase() + "s in " + selectedRow.name + ".",
                     readOnly: selectedRole.id === "owner",
-                    permissionSet: getFineTuningTeamRolePermissionSet(job, selectedRow.id, selectedRole.id),
+                    permissionSet: roleScopedSystemPrincipal
+                      ? getFineTuningSystemRolePermissionSet(job, systemPrincipal.id, selectedRole.id)
+                      : getFineTuningTeamRolePermissionSet(job, selectedRow.id, selectedRole.id),
                     accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
                     ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
                     actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
                     subjectType: "fine_tuning_team_role",
-                    onRingAccessChange: (ringId, access) => updateFineTuningTeamRoleRing(job, selectedRow.id, selectedRole.id, ringId, access),
-                    onActionRingChange: (actionId, ringId) => updateFineTuningTeamRoleAction(job, selectedRow.id, selectedRole.id, actionId, { ringId }),
-                    onActionAccessChange: (actionId, access) => updateFineTuningTeamRoleAction(job, selectedRow.id, selectedRole.id, actionId, { access }),
+                    onRingAccessChange: (ringId, access) => (
+                      roleScopedSystemPrincipal
+                        ? updateFineTuningSystemRolePermissionSet(job, systemPrincipal.id, selectedRole.id, (current) => ({
+                            ...current,
+                            rings: {
+                              ...(current.rings || {}),
+                              [ringId]: {
+                                ...(current.rings?.[ringId] || {}),
+                                defaultAccess: access,
+                              },
+                            },
+                          }))
+                        : updateFineTuningTeamRoleRing(job, selectedRow.id, selectedRole.id, ringId, access)
+                    ),
+                    onActionRingChange: (actionId, ringId) => (
+                      roleScopedSystemPrincipal
+                        ? updateFineTuningSystemRolePermissionSet(job, systemPrincipal.id, selectedRole.id, (current) => {
+                            const action = getPlaygroundPermissionActionDefinition(actionId);
+                            if (!action) return current;
+                            return {
+                              ...current,
+                              actions: {
+                                ...(current.actions || {}),
+                                [action.id]: buildPlaygroundPermissionActionPolicy(
+                                  current,
+                                  action,
+                                  current.actions?.[action.id] || { ringId: action.ringId },
+                                  getPlaygroundPermissionActionExplicitAccess(current, action),
+                                  normalizePlaygroundPermissionRingId(ringId, action.ringId)
+                                ),
+                              },
+                            };
+                          })
+                        : updateFineTuningTeamRoleAction(job, selectedRow.id, selectedRole.id, actionId, { ringId })
+                    ),
+                    onActionAccessChange: (actionId, access) => (
+                      roleScopedSystemPrincipal
+                        ? updateFineTuningSystemRolePermissionSet(job, systemPrincipal.id, selectedRole.id, (current) => {
+                            const action = getPlaygroundPermissionActionDefinition(actionId);
+                            if (!action) return current;
+                            return {
+                              ...current,
+                              actions: {
+                                ...(current.actions || {}),
+                                [action.id]: buildPlaygroundPermissionActionPolicy(
+                                  current,
+                                  action,
+                                  current.actions?.[action.id] || { ringId: action.ringId },
+                                  access
+                                ),
+                              },
+                            };
+                          })
+                        : updateFineTuningTeamRoleAction(job, selectedRow.id, selectedRole.id, actionId, { access })
+                    ),
                   })
             );
           }

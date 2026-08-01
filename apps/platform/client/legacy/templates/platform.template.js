@@ -13,7 +13,7 @@
         import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
         import { browserLocalPersistence, getApps, getAuth, GoogleAuthProvider, initializeApp, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOutFirebaseAuth } from "/api/platform/auth/browser-module.js";
         import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, GitPullRequestArrow, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plug, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquareMousePointer, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
-	      import { RunnerClient } from "/dist/index.js";
+	      import { RunnerClient, buildRunnerThreadActivityHierarchy } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
 	      import { PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
         import { PlatformAttachmentActionMenu, PlatformAttachments } from "/dist/platform-ui/components/composite/attachments/index.js";
@@ -21,6 +21,7 @@
         import { PlatformSubtasks } from "/dist/platform-ui/components/composite/subtasks/index.js";
         import { PlatformActivityOverview, PlatformActivityOverviewCard } from "/dist/platform-ui/components/composite/activity-overview/index.js";
         import { PlatformActivityTimeline } from "/dist/platform-ui/components/composite/activity-timeline/index.js";
+        import { PlatformActivityWorkspace } from "/dist/platform-ui/components/composite/activity-workspace/index.js";
         import { PlatformCommentCard, PlatformCommentComposer } from "/dist/platform-ui/components/composite/comments/index.js";
         import { PlatformCodeEditorWorkspace } from "/dist/platform-ui/components/composite/code-editor-workspace/index.js";
   	      import { PlatformCodePreviewBox } from "/dist/platform-ui/components/composite/code-preview-box/index.js";
@@ -13693,8 +13694,202 @@
   
           return normalizeHistoryPreviewText(step.title || "Changes", 160);
         }
+
+        function getThreadHistoryActivityActor(step) {
+          const metadata = getTraceRecordMetadata(step);
+          const actorName = String(
+            step?.actorName
+            || step?.actor_name
+            || step?.agentName
+            || step?.agent_name
+            || metadata?.actorName
+            || metadata?.actor_name
+            || metadata?.agentName
+            || metadata?.agent_name
+            || "Computer Agents"
+          ).trim() || "Computer Agents";
+          const avatarUrl = String(
+            step?.actorAvatarUrl
+            || step?.actor_avatar_url
+            || step?.agentAvatarUrl
+            || step?.agent_avatar_url
+            || metadata?.actorAvatarUrl
+            || metadata?.actor_avatar_url
+            || metadata?.agentAvatarUrl
+            || metadata?.agent_avatar_url
+            || COMPUTER_AGENTS_CREATOR_PROFILE_URL
+          ).trim() || COMPUTER_AGENTS_CREATOR_PROFILE_URL;
+          return { name: actorName, avatarUrl };
+        }
+
+        function getThreadHistoryActivityStatus(step) {
+          const metadata = getTraceRecordMetadata(step);
+          const status = String(
+            step?.status
+            || step?.state
+            || metadata?.status
+            || metadata?.state
+            || ""
+          ).trim().toLowerCase();
+          if (["failed", "error", "stale", "cancelled", "canceled"].includes(status)) {
+            return "error";
+          }
+          if (["running", "starting", "pending", "awaiting_input", "waiting_permission"].includes(status)) {
+            return "running";
+          }
+          if (["done", "complete", "completed", "success", "succeeded"].includes(status)) {
+            return "success";
+          }
+          return "default";
+        }
+
+        function getThreadHistoryActivityColor(status) {
+          if (status === "error") return "#ff5757";
+          if (status === "running") return "#4da3ff";
+          if (status === "success") return "#85df7b";
+          return "#c980ff";
+        }
+
+        function renderThreadHistoryActivityAvatar(actor) {
+          return React.createElement("img", {
+            className: "playground-thread-activity-avatar",
+            src: actor.avatarUrl,
+            alt: "",
+          });
+        }
+
+        function renderThreadHistoryActivityPreview({ step, prompt, files, actor }) {
+          const title = getTraceStepTitle(step) || "Recorded activity";
+          const detail = getTraceStepCopy(step) || prompt || "This action was recorded in the thread history.";
+          return React.createElement("div", { className: "playground-thread-activity-preview" },
+            React.createElement("div", { className: "playground-thread-activity-preview__heading" },
+              renderThreadHistoryActivityAvatar(actor),
+              React.createElement("div", { className: "playground-thread-activity-preview__heading-copy" },
+                React.createElement("div", { className: "playground-thread-activity-preview__title" }, title),
+                React.createElement("div", { className: "playground-thread-activity-preview__meta" },
+                  actor.name + " · " + formatHistoryTimestamp(step.createdAt)
+                )
+              )
+            ),
+            detail
+              ? React.createElement("div", { className: "playground-thread-activity-preview__description" }, detail)
+              : null,
+            files.length > 0
+              ? React.createElement("div", { className: "playground-thread-activity-preview__changes" },
+                  React.createElement("div", { className: "playground-thread-activity-preview__changes-title" },
+                    files.length + " " + (files.length === 1 ? "change" : "changes")
+                  ),
+                  files.map((entry) => React.createElement("div", {
+                      key: step.id + ":preview:" + entry.path,
+                      className: "playground-thread-activity-preview__change",
+                    },
+                    React.createElement("span", { className: "playground-thread-activity-preview__change-icon", "aria-hidden": "true" },
+                      entry.type === "resource"
+                        ? renderHistoryResourceIcon(entry.resourceType)
+                        : React.createElement(FileText, { width: 13, height: 13, strokeWidth: 1.8 })
+                    ),
+                    React.createElement("span", { className: "playground-thread-activity-preview__change-name" }, entry.name || entry.path),
+                    entry.changeKind
+                      ? React.createElement("span", { className: "playground-thread-activity-preview__change-kind" }, getHistoryChangeKindLabel(entry.changeKind))
+                      : null
+                  ))
+                )
+              : null
+          );
+        }
+
+        function getCanonicalThreadActivityActor(record, participantsById) {
+          const participantId = String(record?.actorParticipantId || "").trim();
+          const participant = participantId ? participantsById.get(participantId) : null;
+          if (participant) {
+            return {
+              name: String(participant.displayName || participant.name || "Computer Agents").trim() || "Computer Agents",
+              avatarUrl: String(participant.avatarUrl || participant.avatar_url || COMPUTER_AGENTS_CREATOR_PROFILE_URL).trim() || COMPUTER_AGENTS_CREATOR_PROFILE_URL,
+            };
+          }
+          return getThreadHistoryActivityActor(record);
+        }
+
+        function getCanonicalThreadActivityStatus(group, actions, run) {
+          const actionStatuses = actions.map((action) => String(action?.status || "").trim().toLowerCase());
+          if (actionStatuses.some((status) => ["failed", "error", "cancelled", "canceled"].includes(status))) {
+            return "error";
+          }
+          if (actionStatuses.some((status) => ["queued", "pending", "running", "blocked"].includes(status))) {
+            return "running";
+          }
+          const runStatus = String(run?.status || "").trim().toLowerCase();
+          if (["failed", "error", "cancelled", "canceled"].includes(runStatus)) return "error";
+          if (group?.status === "open" || ["queued", "pending", "running", "requires_action", "waiting_permission"].includes(runStatus)) {
+            return "running";
+          }
+          if (actionStatuses.length > 0 && actionStatuses.every((status) => ["completed", "succeeded", "success", "done"].includes(status))) {
+            return "success";
+          }
+          if (["completed", "succeeded", "success", "done"].includes(runStatus)) return "success";
+          return "default";
+        }
+
+        function renderCanonicalThreadActivityPreview(record) {
+          const actions = Array.isArray(record.actions) ? record.actions : [];
+          const actionCountLabel = actions.length + " " + (actions.length === 1 ? "action" : "actions");
+          return React.createElement("div", { className: "playground-thread-activity-preview is-canonical-group" },
+            React.createElement("div", { className: "playground-thread-activity-preview__heading" },
+              renderThreadHistoryActivityAvatar(record.actor),
+              React.createElement("div", { className: "playground-thread-activity-preview__heading-copy" },
+                React.createElement("div", { className: "playground-thread-activity-preview__title" }, record.title),
+                React.createElement("div", { className: "playground-thread-activity-preview__meta" },
+                  record.actor.name
+                    + " · "
+                    + formatHistoryTimestamp(record.createdAt)
+                    + (record.recordKind === "message" ? "" : " · " + actionCountLabel)
+                )
+              )
+            ),
+            record.detail
+              ? React.createElement("div", { className: "playground-thread-activity-preview__description" }, record.detail)
+              : null,
+            actions.length > 0
+              ? React.createElement("div", { className: "playground-thread-activity-preview__changes is-actions" },
+                  React.createElement("div", { className: "playground-thread-activity-preview__changes-title" }, "Actions"),
+                  actions.map((action) => {
+                    const ring = getTraceRingNumber(action);
+                    const actionSummary = String(action?.summary || "").trim();
+                    return React.createElement("div", {
+                        key: record.id + ":action:" + action.id,
+                        className: "playground-thread-activity-preview__change is-action",
+                      },
+                      React.createElement("span", { className: "playground-thread-activity-preview__change-icon", "aria-hidden": "true" },
+                        renderTracePermissionRingIcon(ring)
+                      ),
+                      React.createElement("span", { className: "playground-thread-activity-preview__change-name" },
+                        React.createElement("span", { className: "playground-thread-activity-preview__action-title" }, action.title || "Recorded action"),
+                        actionSummary
+                          ? React.createElement("span", { className: "playground-thread-activity-preview__action-summary" }, actionSummary)
+                          : null
+                      ),
+                      React.createElement(PlatformLabel, {
+                        className: "playground-thread-activity-preview__action-status",
+                        variant: getThreadHistoryActivityStatus(action) === "error"
+                          ? "red"
+                          : getThreadHistoryActivityStatus(action) === "success"
+                            ? "green"
+                            : getThreadHistoryActivityStatus(action) === "running"
+                              ? "blue"
+                              : "gray",
+                      }, String(action.status || "recorded").replaceAll("_", " "))
+                    );
+                  })
+                )
+              : record.recordKind === "message"
+                ? null
+                : React.createElement("div", { className: "playground-thread-activity-preview__description is-muted" },
+                  "No individual action evidence is available for this group."
+                )
+          );
+        }
   
-        function ThreadChangesView({ threadId, threadTitle, backendUrl, apiKey, upstreamUrl, hasRealAccess, onThreadMutated, navigationTarget, onNavigationTargetHandled }) {
+        function ThreadChangesView({ threadId, threadTitle, backendUrl, apiKey, upstreamUrl, hasRealAccess, currentUserName = "User", currentUserAvatarUrl = "", activityHierarchyLevel = "groups", onThreadMutated, navigationTarget, onNavigationTargetHandled }) {
           const client = useMemo(() => new RunnerClient(), []);
           const historyHeaders = useMemo(() => ({
             ...(apiKey.trim() ? { "X-API-Key": apiKey.trim() } : {}),
@@ -13707,8 +13902,12 @@
           const [stepsError, setStepsError] = useState("");
           const [threadMessages, setThreadMessages] = useState([]);
           const [threadLogs, setThreadLogs] = useState([]);
+          const [canonicalTimelineItems, setCanonicalTimelineItems] = useState([]);
+          const [canonicalParticipants, setCanonicalParticipants] = useState([]);
+          const [canonicalAgents, setCanonicalAgents] = useState([]);
           const [changesScreenMode, setChangesScreenMode] = useState("timeline");
           const [selectedStepId, setSelectedStepId] = useState("");
+          const [selectedActivityItemId, setSelectedActivityItemId] = useState("");
           const [stepFiles, setStepFiles] = useState([]);
           const [stepDiffSummary, setStepDiffSummary] = useState(null);
           const [stepDataLoading, setStepDataLoading] = useState(false);
@@ -13721,6 +13920,9 @@
           const [historyMutationLoading, setHistoryMutationLoading] = useState(null);
           const [historyMutationError, setHistoryMutationError] = useState("");
           const [reloadNonce, setReloadNonce] = useState(0);
+          const [activitySearchQuery, setActivitySearchQuery] = useState("");
+          const [activityTimeRange, setActivityTimeRange] = useState(null);
+          const [activityChartHeight, setActivityChartHeight] = useState(null);
   
           const historyLogsById = useMemo(() => {
             const nextMap = new Map();
@@ -13839,31 +14041,253 @@
           const selectedFileImageUrl = selectedFileEntry && selectedStep && selectedFileIsImage
             ? buildThreadStepFileDownloadUrl(threadId, selectedStep.id, selectedFileEntry.path)
             : "";
-  
-          const groupedTimelineSteps = useMemo(() => {
-            const groups = [];
-            let currentGroup = null;
-  
-            for (const step of sortedSteps) {
-              const groupKey = getHistoryDateGroupKey(step.createdAt);
-              if (!currentGroup || currentGroup.key !== groupKey) {
-                currentGroup = {
-                  key: groupKey,
-                  label: formatHistoryDateHeading(step.createdAt),
-                  steps: [],
-                };
-                groups.push(currentGroup);
-              }
-  
-                currentGroup.steps.push({
-                step,
-                prompt: resolveHistoryStepPrompt(step, threadMessages),
-                files: previewStepFilesById.get(step.id) || [],
+
+          const canonicalActivityParticipants = useMemo(() => {
+            const agentsById = new Map(
+              canonicalAgents
+                .filter((agent) => agent && agent.id)
+                .map((agent) => [String(agent.id), agent])
+            );
+            const participants = canonicalParticipants.map((participant) => {
+              const agent = participant?.agentId ? agentsById.get(String(participant.agentId)) : null;
+              const isHuman = String(participant?.kind || "").trim().toLowerCase() === "human";
+              return {
+                ...participant,
+                displayName: String(
+                  agent?.name
+                  || participant?.displayName
+                  || (isHuman ? currentUserName : "Computer Agents")
+                ).trim() || "Computer Agents",
+                avatarUrl: String(
+                  (agent ? getPlaygroundAgentRunnerPhotoUrl(agent) : "")
+                  || participant?.avatarUrl
+                  || (isHuman ? currentUserAvatarUrl : "")
+                  || COMPUTER_AGENTS_CREATOR_PROFILE_URL
+                ).trim() || COMPUTER_AGENTS_CREATOR_PROFILE_URL,
+              };
+            });
+            const participantAgentIds = new Set(
+              participants.map((participant) => String(participant?.agentId || "").trim()).filter(Boolean)
+            );
+            for (const agent of canonicalAgents) {
+              const agentId = String(agent?.id || "").trim();
+              if (!agentId || participantAgentIds.has(agentId)) continue;
+              participants.push({
+                id: "activity-agent:" + agentId,
+                threadId,
+                kind: "worker",
+                displayName: String(agent?.name || agentId).trim() || agentId,
+                agentId,
+                avatarUrl: getPlaygroundAgentRunnerPhotoUrl(agent),
               });
             }
-  
-            return groups;
+            if (!participants.some((participant) => participant.id === "activity-current-user")) {
+              participants.push({
+                id: "activity-current-user",
+                threadId,
+                kind: "human",
+                displayName: String(currentUserName || "User").trim() || "User",
+                avatarUrl: String(currentUserAvatarUrl || "").trim(),
+              });
+            }
+            return participants;
+          }, [canonicalAgents, canonicalParticipants, currentUserAvatarUrl, currentUserName, threadId]);
+
+          const supplementalCanonicalMessages = useMemo(() => {
+            return threadMessages
+              .filter((message) => ["user", "human", "customer", "email"].includes(String(message?.role || "").trim().toLowerCase()))
+              .map((message, index) => ({
+                kind: "message",
+                id: String(message?.id || ("history-user-message:" + index)),
+                threadId,
+                sequence: Number.isFinite(Number(message?.sequence)) ? Number(message.sequence) : index,
+                authorParticipantId: String(message?.authorParticipantId || message?.author_participant_id || "activity-current-user"),
+                content: String(message?.content || ""),
+                modality: String(message?.modality || "text"),
+                status: String(message?.status || "delivered"),
+                metadata: {
+                  ...(message?.metadata && typeof message.metadata === "object" ? message.metadata : {}),
+                  role: "user",
+                },
+                createdAt: String(message?.createdAt || message?.created_at || new Date(0).toISOString()),
+                updatedAt: String(message?.updatedAt || message?.updated_at || "") || null,
+              }));
+          }, [threadId, threadMessages]);
+
+          const canonicalActivityRecords = useMemo(() => {
+            return buildRunnerThreadActivityHierarchy({
+              items: canonicalTimelineItems,
+              participants: canonicalActivityParticipants,
+              supplementalMessages: supplementalCanonicalMessages,
+              level: activityHierarchyLevel,
+            }).map((record) => {
+              const fallbackActorSource = record.action || record.run || record.group || record.message || {};
+              const actor = record.actor
+                ? {
+                    name: String(record.actor.displayName || "Computer Agents").trim() || "Computer Agents",
+                    avatarUrl: String(record.actor.avatarUrl || COMPUTER_AGENTS_CREATOR_PROFILE_URL).trim() || COMPUTER_AGENTS_CREATOR_PROFILE_URL,
+                  }
+                : record.kind === "message"
+                  ? {
+                      name: String(currentUserName || "User").trim() || "User",
+                      avatarUrl: String(currentUserAvatarUrl || COMPUTER_AGENTS_CREATOR_PROFILE_URL).trim() || COMPUTER_AGENTS_CREATOR_PROFILE_URL,
+                    }
+                  : getThreadHistoryActivityActor(fallbackActorSource);
+              return {
+                id: record.id,
+                kind: "canonical",
+                recordKind: record.kind,
+                group: record.group,
+                run: record.run,
+                action: record.action,
+                message: record.message,
+                actions: record.actions,
+                actor,
+                ring: Number(record.permissionRing) || 1,
+                status: record.status,
+                title: normalizeHistoryPreviewText(record.title || "Recorded activity", 80),
+                detail: normalizeHistoryPreviewText(record.detail || "", 280),
+                createdAt: record.createdAt,
+                endAt: record.endAt,
+                sequence: record.sequence,
+                searchText: [record.searchText, actor.name].filter(Boolean).join(" ").toLowerCase(),
+              };
+            }).sort((left, right) => Number(right.sequence || 0) - Number(left.sequence || 0));
+          }, [activityHierarchyLevel, canonicalActivityParticipants, canonicalTimelineItems, currentUserAvatarUrl, currentUserName, supplementalCanonicalMessages]);
+
+          const stepActivityRecords = useMemo(() => {
+            return sortedSteps.map((step) => {
+              const files = previewStepFilesById.get(step.id) || [];
+              const actor = getThreadHistoryActivityActor(step);
+              const title = getTraceStepTitle(step) || "Recorded activity";
+              const detail = getTraceStepCopy(step) || resolveHistoryStepPrompt(step, threadMessages);
+              return {
+                id: step.id,
+                kind: "step",
+                step,
+                files,
+                actor,
+                ring: getTraceRingNumber(step),
+                status: getThreadHistoryActivityStatus(step),
+                title,
+                detail,
+                createdAt: step.createdAt,
+                endAt: null,
+                searchText: [
+                  title,
+                  detail,
+                  actor.name,
+                  files.map((entry) => [entry.name, entry.path, entry.resourceTypeLabel].filter(Boolean).join(" ")).join(" "),
+                ].filter(Boolean).join(" ").toLowerCase(),
+              };
+            });
           }, [previewStepFilesById, sortedSteps, threadMessages]);
+
+          const allActivityRecords = canonicalActivityRecords.length > 0
+            ? canonicalActivityRecords
+            : stepActivityRecords;
+          const activityError = allActivityRecords.length > 0 ? "" : stepsError;
+
+          const normalizedActivitySearchQuery = String(activitySearchQuery || "").trim().toLowerCase();
+          const activitySearchMatchedRecords = useMemo(() => {
+            if (!normalizedActivitySearchQuery) {
+              return allActivityRecords;
+            }
+            return allActivityRecords.filter((record) => {
+              return record.searchText.includes(normalizedActivitySearchQuery);
+            });
+          }, [allActivityRecords, normalizedActivitySearchQuery]);
+
+          const activityTimelineRecords = useMemo(() => {
+            const rangeStart = Number(activityTimeRange?.startAt);
+            const rangeEnd = Number(activityTimeRange?.endAt);
+            if (!Number.isFinite(rangeStart) || !Number.isFinite(rangeEnd)) {
+              return activitySearchMatchedRecords;
+            }
+            return activitySearchMatchedRecords.filter((record) => {
+              const timestamp = Date.parse(String(record?.createdAt || ""));
+              return Number.isFinite(timestamp) && timestamp >= rangeStart && timestamp <= rangeEnd;
+            });
+          }, [activitySearchMatchedRecords, activityTimeRange]);
+
+          const effectiveActivitySelectedItemId = activityTimelineRecords.some((record) => record.id === selectedActivityItemId)
+            ? selectedActivityItemId
+            : String(activityTimelineRecords[0]?.id || "");
+
+          const activityOverviewItems = useMemo(() => {
+            return [...activitySearchMatchedRecords].reverse().map((record) => {
+              const ringId = getTracePermissionRingId(record.ring);
+              const title = normalizeHistoryPreviewText(record.title || "Recorded activity", 52);
+              return {
+                id: record.id,
+                label: title,
+                startAt: record.createdAt,
+                endAt: record.endAt,
+                status: record.status,
+                color: getThreadHistoryActivityColor(record.status),
+                content: React.createElement(PlatformActivityOverviewCard, {
+                  title,
+                  permissionIcon: renderTracePermissionRingIcon(record.ring),
+                  permissionRingId: ringId,
+                  actorAvatar: renderThreadHistoryActivityAvatar(record.actor),
+                  actorLabel: record.actor.name,
+                  selected: effectiveActivitySelectedItemId === record.id,
+                  onClick: () => {
+                    setSelectedActivityItemId(record.id);
+                    if (record.kind === "step") {
+                      handleStepSelection(record.step, record.files);
+                    }
+                  },
+                  "aria-label": "Inspect " + title,
+                }),
+              };
+            });
+          }, [activitySearchMatchedRecords, effectiveActivitySelectedItemId]);
+
+          const activityTimelineItems = useMemo(() => {
+            return activityTimelineRecords.map((record) => {
+              if (record.kind === "canonical") {
+                return {
+                  id: record.id,
+                  tone: record.status === "error" ? "status" : "neutral",
+                  summary: React.createElement(React.Fragment, null,
+                    React.createElement("span", { className: "playground-thread-activity-summary__actor" }, record.actor.name),
+                    React.createElement("span", { className: "playground-thread-activity-summary__action" }, record.title)
+                  ),
+                  timestamp: formatHistoryTimestamp(record.createdAt),
+                  avatar: renderThreadHistoryActivityAvatar(record.actor),
+                  preview: renderCanonicalThreadActivityPreview(record),
+                  ariaLabel: "Inspect " + record.title,
+                };
+              }
+              const step = record.step;
+              const files = record.files;
+              const prompt = resolveHistoryStepPrompt(step, threadMessages);
+              const preferredPath = getPreferredHistoryEntryPath(files, extractStepChangedPaths(step, historyLogsById));
+              return {
+                id: record.id,
+                tone: record.status === "error" ? "status" : "neutral",
+                summary: React.createElement(React.Fragment, null,
+                  React.createElement("span", { className: "playground-thread-activity-summary__actor" }, record.actor.name),
+                  React.createElement("span", { className: "playground-thread-activity-summary__action" }, record.title)
+                ),
+                timestamp: formatHistoryTimestamp(record.createdAt),
+                avatar: renderThreadHistoryActivityAvatar(record.actor),
+                preview: renderThreadHistoryActivityPreview({ step, prompt, files, actor: record.actor }),
+                onActivate: preferredPath ? () => handleFileSelection(step, preferredPath) : undefined,
+                ariaLabel: "Inspect " + record.title,
+                inspectorAction: preferredPath
+                  ? React.createElement(PlatformSecondaryButton, {
+                      size: "compact",
+                      onClick: () => handleFileSelection(step, preferredPath),
+                    },
+                      React.createElement(ExternalLink, { width: 13, height: 13, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Open changes")
+                    )
+                  : null,
+              };
+            });
+          }, [activityTimelineRecords, historyLogsById, threadMessages]);
   
           useEffect(() => {
             let cancelled = false;
@@ -13873,8 +14297,12 @@
             setStepsLoadedOnce(false);
             setThreadMessages([]);
             setThreadLogs([]);
+            setCanonicalTimelineItems([]);
+            setCanonicalParticipants([]);
+            setCanonicalAgents([]);
             setChangesScreenMode("timeline");
             setSelectedStepId("");
+            setSelectedActivityItemId("");
             setStepFiles([]);
             setStepDiffSummary(null);
             setStepDataError("");
@@ -13883,6 +14311,9 @@
             setSelectedFileDiff(null);
             setFilePreviewError("");
             setHistoryMutationError("");
+            setActivitySearchQuery("");
+            setActivityTimeRange(null);
+            setActivityChartHeight(null);
   
             if (!threadId) {
               setStepsLoading(false);
@@ -13921,9 +14352,19 @@
                 threadId,
                 headers: historyHeaders,
               }),
+              client.listThreadTimeline({
+                backendUrl,
+                threadId,
+                limit: 500,
+                headers: historyHeaders,
+              }),
+              client.listAgents({
+                backendUrl,
+                headers: historyHeaders,
+              }),
             ]).then((results) => {
               if (cancelled) return;
-              const [stepsResult, messagesResult, logsResult] = results;
+              const [stepsResult, messagesResult, logsResult, timelineResult, agentsResult] = results;
   
               if (stepsResult.status === "fulfilled") {
                 setSteps(Array.isArray(stepsResult.value) ? stepsResult.value : []);
@@ -13944,6 +14385,20 @@
               } else {
                 setThreadLogs([]);
               }
+
+              if (timelineResult.status === "fulfilled") {
+                setCanonicalTimelineItems(Array.isArray(timelineResult.value?.items) ? timelineResult.value.items : []);
+                setCanonicalParticipants(Array.isArray(timelineResult.value?.participants) ? timelineResult.value.participants : []);
+              } else {
+                setCanonicalTimelineItems([]);
+                setCanonicalParticipants([]);
+              }
+
+              if (agentsResult.status === "fulfilled") {
+                setCanonicalAgents(Array.isArray(agentsResult.value) ? agentsResult.value : []);
+              } else {
+                setCanonicalAgents([]);
+              }
             }).finally(() => {
               if (!cancelled) {
                 setStepsLoading(false);
@@ -13955,6 +14410,17 @@
               cancelled = true;
             };
           }, [backendUrl, client, hasRealAccess, historyHeaders, reloadNonce, threadId]);
+
+          useEffect(() => {
+            if (activityTimelineRecords.length === 0) {
+              setSelectedActivityItemId("");
+              return;
+            }
+            if (selectedActivityItemId && activityTimelineRecords.some((record) => record.id === selectedActivityItemId)) {
+              return;
+            }
+            setSelectedActivityItemId(activityTimelineRecords[0].id);
+          }, [activityTimelineRecords, selectedActivityItemId]);
   
           useEffect(() => {
             if (!navigationTarget || !threadId || navigationTarget.threadId !== threadId) {
@@ -14369,123 +14835,66 @@
   
           }
   
-          return React.createElement("div", { className: "changes-view is-timeline" },
-            React.createElement("section", { className: "changes-panel changes-timeline-panel" },
-              React.createElement("div", { className: "changes-panel-header" },
-                React.createElement("div", { className: "changes-panel-title" }, "Changes"),
-                React.createElement("div", { className: "changes-panel-subtitle" }, sortedSteps.length > 0 ? sortedSteps.length + " " + (sortedSteps.length === 1 ? "step" : "steps") : "")
-              ),
-              React.createElement("div", { className: "changes-panel-body changes-timeline-body" },
-                stepsLoading
-                  ? React.createElement("div", { className: "changes-loading-state" }, "Loading thread steps…")
-                  : stepsError
-                    ? React.createElement("div", { className: "changes-empty-state" }, stepsError)
-                    : sortedSteps.length === 0
-                      ? React.createElement("div", { className: "changes-empty-state" }, "No step history has been recorded for this thread yet.")
-                      : React.createElement("div", { className: "changes-timeline" },
-                          groupedTimelineSteps.map((group) =>
-                            React.createElement("section", { key: group.key, className: "changes-timeline-group" },
-                              React.createElement("div", { className: "changes-timeline-track" },
-                                group.steps.map(({ step, prompt, files }) => {
-                                  const isActiveStep = selectedStepId === step.id;
-                                  const changeCount = files.length;
-                                  return React.createElement("article", {
-                                    key: step.id,
-                                    className: "changes-step-card" + (isActiveStep ? " is-active" : "")
-                                  },
-                                    React.createElement("div", { className: "changes-step-card-header" },
-                                      React.createElement("span", {
-                                        className: "changes-step-card-commit",
-                                        "aria-hidden": "true",
-                                      }, React.createElement(GitCommitHorizontal, null)),
-                                      React.createElement("button", {
-                                        type: "button",
-                                        className: "changes-step-card-summary",
-                                        onClick: () => handleStepSelection(step, files),
-                                      },
-                                        React.createElement("div", { className: "changes-step-card-title" }, prompt || step.title || "Changes"),
-                                        React.createElement("div", { className: "changes-step-card-meta" },
-                                          React.createElement("span", null, formatHistoryTimestamp(step.createdAt)),
-                                          React.createElement("span", null, changeCount + " " + (changeCount === 1 ? "change" : "changes"))
-                                        )
-                                      )
-                                    ),
-                                    React.createElement("div", { className: "changes-step-card-files" },
-                                      changeCount === 0
-                                        ? React.createElement("div", { className: "changes-step-card-empty" }, "No changes were recorded for this step.")
-                                        : files.map((entry) => {
-                                            const isSelectedFile = isActiveStep && selectedFileEntry && historyPathsMatch(selectedFileEntry.path, entry.path);
-                                            const changeKindLabel = getHistoryChangeKindLabel(entry.changeKind);
-                                            const isRevertedStep = revertedChangeStepIds.has(step.id);
-                                            const isImageFile = entry.type === "file" && isHistoryImagePath(entry.path);
-                                            const imagePreviewUrl = isImageFile ? buildThreadStepFileDownloadUrl(threadId, step.id, entry.path) : "";
-                                            const isResourceEntry = entry.type === "resource";
-                                            const resourceLabel = isResourceEntry ? (entry.resourceTypeLabel || "Resource") : "";
-                                            const resourceSubtitle = isResourceEntry
-                                              ? buildHistoryResourceSubtitle(entry)
-                                              : "";
-                                            return React.createElement("div", {
-                                              key: step.id + ":" + entry.path,
-                                              className: "changes-step-file-row" + (isSelectedFile ? " is-active" : ""),
-                                            },
-                                              React.createElement("button", {
-                                                type: "button",
-                                                className: "changes-step-file-row-main",
-                                                onClick: () => handleFileSelection(step, entry.path),
-                                              },
-                                                React.createElement("div", { className: "changes-step-file-row-head" },
-                                                  React.createElement("div", { className: "changes-step-file-head-main" },
-                                                    isResourceEntry
-                                                      ? React.createElement("div", { className: "changes-step-file-icon", "aria-hidden": "true" }, renderHistoryResourceIcon(entry.resourceType))
-                                                      : null,
-                                                    React.createElement("div", { className: "changes-step-file-main" + (isResourceEntry ? " is-resource" : "") },
-                                                      React.createElement("div", { className: "changes-step-file-name" }, entry.name || entry.path),
-                                                      resourceSubtitle
-                                                        ? React.createElement("div", { className: "changes-step-file-path" }, resourceSubtitle)
-                                                        : null
-                                                    )
-                                                  ),
-                                                  React.createElement("div", { className: "changes-step-file-right" },
-                                                    changeKindLabel
-                                                      ? React.createElement("span", { className: "changes-step-file-kind is-" + entry.changeKind }, changeKindLabel)
-                                                      : null,
-                                                    isResourceEntry
-                                                      ? React.createElement("span", { className: "changes-step-file-kind" }, resourceLabel)
-                                                      : null,
-                                                    typeof entry.additions === "number" && entry.additions > 0
-                                                      ? React.createElement("span", { className: "changes-step-file-stat is-added" }, "+" + entry.additions)
-                                                      : null,
-                                                    typeof entry.deletions === "number" && entry.deletions > 0
-                                                      ? React.createElement("span", { className: "changes-step-file-stat is-removed" }, "-" + entry.deletions)
-                                                      : null,
-                                                    isRevertedStep
-                                                      ? React.createElement("span", { className: "changes-step-file-kind is-reverted" }, "Reverted")
-                                                      : null
-                                                  )
-                                                ),
-                                                isImageFile && imagePreviewUrl
-                                                  ? React.createElement("div", { className: "changes-step-file-preview" },
-                                                      React.createElement(RunnerImagePreviewSurface, {
-                                                        src: imagePreviewUrl,
-                                                        alt: entry.name || entry.path,
-                                                        fetchHeaders: historyHeaders,
-                                                        interactive: false,
-                                                      })
-                                                    )
-                                                  : null
-                                              )
-                                            );
-                                          })
-                                    )
-                                  );
-                                })
-                              )
-                            )
-                          )
-                        )
-              )
-            )
-          );
+          return React.createElement(PlatformActivityWorkspace, {
+            className: "playground-thread-activity-page",
+            chartHeight: activityChartHeight,
+            overviewProps: {
+              className: "playground-thread-activity-overview",
+              items: activityOverviewItems,
+              loading: stepsLoading,
+              loadingMessage: "Loading thread activity...",
+              timelineLayout: "fit",
+              resizable: true,
+              minResizeHeight: 240,
+              minSiblingHeight: 220,
+              onHeightChange: setActivityChartHeight,
+              onTimeRangeChange: setActivityTimeRange,
+              emptyTitle: activityError
+                ? "Activity unavailable"
+                : normalizedActivitySearchQuery
+                  ? "No matching activity"
+                  : "No thread activity yet",
+              emptyDescription: activityError
+                ? activityError
+                : normalizedActivitySearchQuery
+                  ? "Clear the search to show all recorded actions."
+                  : "Actions and durable changes will appear here over time.",
+              ariaLabel: "Thread activity over time",
+            },
+            timelineLoading: stepsLoading,
+            timelineLoadingMessage: "Loading thread activity...",
+            timelineLoadingClassName: "playground-thread-activity-loading",
+            timelineProps: {
+              className: "playground-thread-activity-timeline",
+              layout: "inspector",
+              title: "Activity",
+              headerActions: React.createElement(PlatformSearch, {
+                className: "playground-thread-activity-search",
+                value: activitySearchQuery,
+                onChange: (event) => setActivitySearchQuery(event.target.value),
+                placeholder: "Search activity",
+                "aria-label": "Search thread activity",
+              }),
+              inspectorTitle: "Inspector",
+              items: activityTimelineItems,
+              selectedItemId: effectiveActivitySelectedItemId,
+              onSelectedItemChange: setSelectedActivityItemId,
+              emptyTitle: activityError
+                ? "Activity unavailable"
+                : normalizedActivitySearchQuery
+                  ? "No matching activity"
+                  : activityTimeRange
+                    ? "No activity in this range"
+                    : "No activity yet",
+              emptyDescription: activityError
+                ? activityError
+                : normalizedActivitySearchQuery
+                  ? "Clear the search to show all recorded actions."
+                  : activityTimeRange
+                    ? "Expand the selected time range to show more actions."
+                    : "Actions and durable changes will appear here.",
+            },
+          });
         }
   
         function isPlaygroundRasterThumbnailCandidate(entry) {

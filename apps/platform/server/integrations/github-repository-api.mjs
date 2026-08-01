@@ -1,4 +1,4 @@
-const GITHUB_API_BASE = "https://api.github.com";
+import { fetchGithubJson } from "./github-api-client.mjs";
 
 export async function handleGithubRepositories({
   req,
@@ -254,32 +254,7 @@ export async function handleGithubRepositoryDetail({
 }
 
 async function githubFetchJson(pathname, accessToken, fetchImpl) {
-  const response = await fetchImpl(`${GITHUB_API_BASE}${pathname}`, {
-    method: "GET",
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${accessToken}`,
-      "User-Agent": "computer-agents-platform",
-    },
-    cache: "no-store",
-  });
-  const text = await response.text().catch(() => "");
-  let parsed = {};
-  try {
-    parsed = text ? JSON.parse(text) : {};
-  } catch {
-    parsed = text;
-  }
-  if (!response.ok) {
-    const error = new Error(
-      typeof parsed === "string"
-        ? parsed
-        : parsed?.message || response.statusText,
-    );
-    error.status = response.status;
-    throw error;
-  }
-  return parsed;
+  return fetchGithubJson(pathname, accessToken, { fetchImpl });
 }
 
 async function getGithubReadme(accessToken, owner, repo, fetchImpl) {

@@ -1629,20 +1629,26 @@
                   error: "",
                 });
                 if (versionItems.length === 0) return;
-                const agentWithVersions = createPlaygroundAgentWithVersionList(baseAgent, versionItems);
-                setAgentDetailsById((current) => ({
-                  ...current,
-                  [normalizedAgentId]: agentWithVersions,
-                }));
+                setAgentDetailsById((current) => {
+                  const currentAgent = current[normalizedAgentId] || baseAgent;
+                  const agentWithVersions = createPlaygroundAgentWithVersionList(
+                    currentAgent,
+                    versionItems
+                  );
+                  agentDetailsByIdRef.current = {
+                    ...current,
+                    [normalizedAgentId]: agentWithVersions,
+                  };
+                  return agentDetailsByIdRef.current;
+                });
                 setDraftAgent((current) => {
                   if (!current || String(current.id || "").trim() !== normalizedAgentId) return current;
-                  return editorDirtyRef.current
-                    ? createPlaygroundAgentWithVersionList(current, versionItems)
-                    : agentWithVersions;
+                  const agentWithVersions = createPlaygroundAgentWithVersionList(current, versionItems);
+                  if (!editorDirtyRef.current && selectedAgentIdRef.current === normalizedAgentId) {
+                    rememberAgentVersionBaseline(agentWithVersions, { force: true });
+                  }
+                  return agentWithVersions;
                 });
-                if (!editorDirtyRef.current && selectedAgentIdRef.current === normalizedAgentId) {
-                  rememberAgentVersionBaseline(agentWithVersions, { force: true });
-                }
               })
               .catch((error) => {
                 agentVersionsLoadedRef.current.delete(versionLoadKey);
@@ -1695,6 +1701,7 @@
                 : {
                     mode: "detail",
                     title: selectedResourcesDetailTitle,
+                    subtitle: agentEmailAddress,
                     resourceType: "agent",
                     resourceId: selectedAgentId,
                     versionNumber: Number.isFinite(selectedVersionNumber) ? selectedVersionNumber : null,
@@ -1730,6 +1737,7 @@
             agentCreationSetupDraft,
             agentAccessPrincipalId,
             agentDetailTab,
+            agentEmailAddress,
             agentVersionState.status,
             agentVersionsSidebarOpen,
             canLoadAgentVersions,
@@ -2553,7 +2561,7 @@
                       ? getDraftAgentSelectedVersion(current)
                       : null;
                     const nextAgent = currentVersions.length > 0
-                      ? createAgentVersionSelectedResource(
+                      ? createPlaygroundAgentWithVersionList(
                           normalized,
                           currentVersions,
                           currentSelectedVersion?.id || ""
@@ -3004,6 +3012,7 @@
                 attachments: Array.isArray(runRequest.attachments) ? runRequest.attachments : [],
                 githubRepo: runRequest.githubRepo || null,
                 enabledSkills: runRequest.enabledSkills || null,
+                connectors: runRequest.connectors || null,
                 environmentId: typeof runRequest.environmentId === "string" ? runRequest.environmentId : "",
                 quotedSelection: runRequest.quotedSelection || null,
                 executionStarted: false,
@@ -3503,10 +3512,36 @@
               let changed = false;
               agents.forEach((agent) => {
                 if (!agent?.id) return;
-                const nextAgent = normalizePlaygroundAgentRecord({
-                  ...(current[agent.id] || {}),
+                const currentAgent = current[agent.id] || null;
+                const detailRequestKey = agentsOverviewAnalyticsScopeKey
+                  + "|agent-detail|"
+                  + agent.id;
+                const hasAuthoritativeDetail = Boolean(
+                  currentAgent
+                  && loadedAgentDetailRequestKeysRef.current.has(detailRequestKey)
+                );
+                const mergedAgent = normalizePlaygroundAgentRecord({
+                  ...(currentAgent || {}),
                   ...agent,
+                  ...(hasAuthoritativeDetail
+                    ? {
+                        instructions: currentAgent.instructions,
+                        voiceInstructions: currentAgent.voiceInstructions,
+                        voicePronunciationReplacements: currentAgent.voicePronunciationReplacements,
+                      }
+                    : {}),
                 });
+                const currentVersions = readPlaygroundAgentVersions(currentAgent);
+                const currentSelectedVersion = currentVersions.length > 0
+                  ? getDraftAgentSelectedVersion(currentAgent)
+                  : null;
+                const nextAgent = currentVersions.length > 0
+                  ? createPlaygroundAgentWithVersionList(
+                      mergedAgent,
+                      currentVersions,
+                      currentSelectedVersion?.id || ""
+                    )
+                  : mergedAgent;
                 next[agent.id] = nextAgent;
                 if (
                   !current[agent.id]
@@ -3522,7 +3557,7 @@
               agentDetailsByIdRef.current = next;
               return next;
             });
-          }, [agents]);
+          }, [agents, agentsOverviewAnalyticsScopeKey]);
   
           useEffect(() => {
             selectedAgentIdRef.current = selectedAgentId || "";

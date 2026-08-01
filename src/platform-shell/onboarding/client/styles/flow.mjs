@@ -1,28 +1,4 @@
-export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
-          position: fixed;
-          inset: 0;
-          z-index: 98;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 28px;
-          background: rgba(0, 0, 0, 0.62);
-          backdrop-filter: blur(14px);
-        }
-  
-        .playground-onboarding-modal {
-          width: min(920px, 100%);
-          max-height: min(86vh, 860px);
-          display: flex;
-          flex-direction: column;
-          border-radius: 15px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background: linear-gradient(180deg, rgba(36, 36, 36, 0.98) 0%, rgba(28, 28, 28, 0.98) 100%);
-          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
-          overflow: hidden;
-        }
-  
-        .playground-onboarding-header {
+export const ONBOARDING_FLOW_CSS = String.raw`        .playground-onboarding-header {
           display: flex;
           flex-direction: column;
           gap: 14px;
@@ -879,10 +855,6 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
         }
   
         @media (max-width: 920px) {
-          .playground-onboarding-modal {
-            width: min(720px, 100%);
-          }
-  
           .playground-onboarding-grid,
           .playground-onboarding-feature-grid,
           .playground-onboarding-connector-grid,
@@ -904,29 +876,6 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
           }
         }
   
-        .playground-onboarding-scrim {
-          z-index: 2147482000;
-          align-items: stretch;
-          justify-content: stretch;
-          padding: 0;
-          background: rgba(0, 0, 0, 0.96);
-          backdrop-filter: none;
-        }
-  
-        .playground-onboarding-modal {
-          width: 100vw;
-          max-height: none;
-          height: 100vh;
-          position: relative;
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-          overflow: hidden;
-          border: 0;
-          border-radius: 0;
-          background: #000;
-          box-shadow: none;
-        }
-  
         .playground-onboarding-pane {
           min-width: 0;
           min-height: 0;
@@ -937,7 +886,7 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
           padding: 18px 28px 20px;
         }
   
-        .playground-onboarding-modal.is-welcome .playground-onboarding-pane.is-config.is-welcome {
+        .playground-onboarding-screen-surface.is-welcome .playground-onboarding-pane.is-config.is-welcome {
           opacity: 0;
           transform: translateX(-100%);
           transition:
@@ -946,19 +895,19 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
           will-change: opacity, transform;
         }
   
-        .playground-onboarding-modal.is-welcome.is-welcome-video-started .playground-onboarding-pane.is-config.is-welcome {
+        .playground-onboarding-screen-surface.is-welcome.is-welcome-video-started .playground-onboarding-pane.is-config.is-welcome {
           opacity: 1;
           transform: translateX(0);
         }
   
-        .playground-onboarding-modal.is-welcome .playground-onboarding-pane.is-explain.is-welcome {
+        .playground-onboarding-screen-surface.is-welcome .playground-onboarding-pane.is-explain.is-welcome {
           transition:
             opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
             transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
           will-change: opacity, transform;
         }
   
-        .playground-onboarding-modal.is-onboarding-transition-leaving .playground-onboarding-pane.is-config {
+        .playground-onboarding-screen-surface.is-onboarding-transition-leaving .playground-onboarding-pane.is-config {
           opacity: 0;
           transform: translateX(-100%);
           transition:
@@ -966,12 +915,12 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
             transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
         }
   
-        .playground-onboarding-modal.is-welcome.is-onboarding-transition-leaving .playground-onboarding-pane.is-config.is-welcome {
+        .playground-onboarding-screen-surface.is-welcome.is-onboarding-transition-leaving .playground-onboarding-pane.is-config.is-welcome {
           opacity: 0;
           transform: translateX(-100%);
         }
   
-        .playground-onboarding-modal.is-onboarding-transition-leaving .playground-onboarding-pane.is-explain {
+        .playground-onboarding-screen-surface.is-onboarding-transition-leaving .playground-onboarding-pane.is-explain {
           opacity: 0;
           transform: translateX(100%);
           transition:
@@ -979,15 +928,15 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
             transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
         }
   
-        .playground-onboarding-modal.is-onboarding-transition-entering .playground-onboarding-pane.is-config {
+        .playground-onboarding-screen-surface.is-onboarding-transition-entering .playground-onboarding-pane.is-config {
           animation: playgroundOnboardingPaneInLeft 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
   
-        .playground-onboarding-modal.is-onboarding-transition-entering .playground-onboarding-pane.is-explain {
+        .playground-onboarding-screen-surface.is-onboarding-transition-entering .playground-onboarding-pane.is-explain {
           animation: playgroundOnboardingPaneInRight 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
   
-        .playground-onboarding-modal.is-onboarding-pane-transition-leaving .playground-onboarding-pane.is-config {
+        .playground-onboarding-screen-surface.is-onboarding-pane-transition-leaving .playground-onboarding-pane.is-config {
           opacity: 0;
           transform: translateX(-100%);
           transition:
@@ -995,7 +944,7 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
             transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
         }
   
-        .playground-onboarding-modal.is-onboarding-pane-transition-leaving .playground-onboarding-pane.is-explain {
+        .playground-onboarding-screen-surface.is-onboarding-pane-transition-leaving .playground-onboarding-pane.is-explain {
           opacity: 0;
           transform: translateX(100%);
           transition:
@@ -1003,15 +952,15 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
             transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
         }
   
-        .playground-onboarding-modal.is-onboarding-pane-transition-entering .playground-onboarding-pane.is-config {
+        .playground-onboarding-screen-surface.is-onboarding-pane-transition-entering .playground-onboarding-pane.is-config {
           animation: playgroundOnboardingPaneInLeft 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
   
-        .playground-onboarding-modal.is-onboarding-pane-transition-entering .playground-onboarding-pane.is-explain {
+        .playground-onboarding-screen-surface.is-onboarding-pane-transition-entering .playground-onboarding-pane.is-explain {
           animation: playgroundOnboardingPaneInRight 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
   
-        .playground-onboarding-modal.is-onboarding-free-exit-active .playground-onboarding-pane.is-config {
+        .playground-onboarding-screen-surface.is-onboarding-free-exit-active .playground-onboarding-pane.is-config {
           opacity: 0;
           transform: translateX(-100%);
           transition:
@@ -1019,7 +968,7 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
             transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
         }
   
-        .playground-onboarding-modal.is-onboarding-free-exit-active .playground-onboarding-pane.is-explain {
+        .playground-onboarding-screen-surface.is-onboarding-free-exit-active .playground-onboarding-pane.is-explain {
           opacity: 0;
           transform: translateX(100%);
           transition:
@@ -1027,7 +976,7 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
             transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
         }
   
-        .playground-onboarding-modal.is-onboarding-free-exit-fading .playground-onboarding-video-bg {
+        .playground-onboarding-screen-surface.is-onboarding-free-exit-fading .playground-onboarding-video-bg {
           opacity: 0;
         }
   
@@ -1075,11 +1024,11 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
           animation: playgroundOnboardingTransitionDot 0.95s ease-in-out infinite;
         }
   
-        .playground-onboarding-modal.is-onboarding-transition-loading .playground-onboarding-transition-label {
+        .playground-onboarding-screen-surface.is-onboarding-transition-loading .playground-onboarding-transition-label {
           animation: playgroundOnboardingTransitionLabelIn 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
   
-        .playground-onboarding-modal.is-onboarding-transition-hiding-label .playground-onboarding-transition-label {
+        .playground-onboarding-screen-surface.is-onboarding-transition-hiding-label .playground-onboarding-transition-label {
           animation: playgroundOnboardingTransitionLabelOut 220ms cubic-bezier(0.64, 0, 0.78, 0) both;
         }
   
@@ -1864,13 +1813,13 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
           pointer-events: none;
         }
   
-        .playground-onboarding-modal.is-welcome .playground-onboarding-welcome-prompt-stage .embedded-runner-input {
+        .playground-onboarding-screen-surface.is-welcome .playground-onboarding-welcome-prompt-stage .embedded-runner-input {
           opacity: 0;
           transform: scale(0);
           transform-origin: center center;
         }
   
-        .playground-onboarding-modal.is-welcome.is-welcome-video-started .playground-onboarding-welcome-prompt-stage .embedded-runner-input {
+        .playground-onboarding-screen-surface.is-welcome.is-welcome-video-started .playground-onboarding-welcome-prompt-stage .embedded-runner-input {
           animation: playgroundOnboardingPromptIn 440ms cubic-bezier(0.22, 1, 0.36, 1) 620ms both;
         }
   
@@ -1896,7 +1845,7 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
           pointer-events: none;
         }
   
-        .playground-onboarding-modal.is-welcome.is-welcome-video-started .playground-onboarding-welcome-input-guide {
+        .playground-onboarding-screen-surface.is-welcome.is-welcome-video-started .playground-onboarding-welcome-input-guide {
           animation: playgroundOnboardingGuideIn 340ms ease 820ms both;
         }
   
@@ -2062,15 +2011,15 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
         }
   
         @media (prefers-reduced-motion: reduce) {
-          .playground-onboarding-modal.is-welcome .playground-onboarding-pane.is-config.is-welcome,
-          .playground-onboarding-modal.is-welcome .playground-onboarding-welcome-prompt-stage .embedded-runner-input,
-          .playground-onboarding-modal.is-welcome .playground-onboarding-welcome-input-guide,
-          .playground-onboarding-modal.is-onboarding-transition-leaving .playground-onboarding-pane,
-          .playground-onboarding-modal.is-onboarding-transition-entering .playground-onboarding-pane,
-          .playground-onboarding-modal.is-onboarding-pane-transition-leaving .playground-onboarding-pane,
-          .playground-onboarding-modal.is-onboarding-pane-transition-entering .playground-onboarding-pane,
-          .playground-onboarding-modal.is-onboarding-free-exit-active .playground-onboarding-pane,
-          .playground-onboarding-modal.is-onboarding-free-exit-fading .playground-onboarding-video-bg,
+          .playground-onboarding-screen-surface.is-welcome .playground-onboarding-pane.is-config.is-welcome,
+          .playground-onboarding-screen-surface.is-welcome .playground-onboarding-welcome-prompt-stage .embedded-runner-input,
+          .playground-onboarding-screen-surface.is-welcome .playground-onboarding-welcome-input-guide,
+          .playground-onboarding-screen-surface.is-onboarding-transition-leaving .playground-onboarding-pane,
+          .playground-onboarding-screen-surface.is-onboarding-transition-entering .playground-onboarding-pane,
+          .playground-onboarding-screen-surface.is-onboarding-pane-transition-leaving .playground-onboarding-pane,
+          .playground-onboarding-screen-surface.is-onboarding-pane-transition-entering .playground-onboarding-pane,
+          .playground-onboarding-screen-surface.is-onboarding-free-exit-active .playground-onboarding-pane,
+          .playground-onboarding-screen-surface.is-onboarding-free-exit-fading .playground-onboarding-video-bg,
           .playground-onboarding-transition-label {
             opacity: 1;
             transform: none;
@@ -2284,11 +2233,6 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
         }
   
         @media (max-width: 920px) {
-          .playground-onboarding-modal {
-            grid-template-columns: 1fr;
-            overflow: auto;
-          }
-  
           .playground-onboarding-pane {
             min-height: 50vh;
           }
@@ -2304,4 +2248,3 @@ export const ONBOARDING_CSS = String.raw`        .playground-onboarding-scrim {
           }
         }
 `;
-

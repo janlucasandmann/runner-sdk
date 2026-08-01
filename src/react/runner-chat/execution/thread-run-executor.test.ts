@@ -89,7 +89,11 @@ describe("createRunnerThreadRunExecutor", () => {
       }),
     );
 
-    const result = await run("Build the feature", []);
+    const result = await run("Build the feature", [], {
+      connectorsOverride: {
+        atlassian: { enabled: true },
+      },
+    });
 
     expect(result).toEqual({
       threadId: "thread_1",
@@ -102,6 +106,9 @@ describe("createRunnerThreadRunExecutor", () => {
         threadId: "thread_1",
         displayPrompt: "Build the feature",
         projectId: "project_1",
+        connectors: {
+          atlassian: { enabled: true },
+        },
       }),
     );
     expect(execute).not.toHaveBeenCalled();

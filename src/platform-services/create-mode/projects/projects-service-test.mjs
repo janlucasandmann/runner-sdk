@@ -122,7 +122,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "141083924598825bfc0871b50b257e45c6549b4e5beca380ea140195ea589741",
+    expectedSha256: "d989e0c8d8b8f34a61c0176085214f950c94f22eb0c0769d85e45462d200b2de",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -2048,11 +2048,11 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /function buildProjectWorkActivityOverviewItems\(\s*scopedTasks,\s*selectionEvents = \[\],\s*selectedTimelineItemId = ""\s*\)[\s\S]*?function renderProjectActivityOverviewView\(\)[\s\S]*?className: "playground-project-activity-page"[\s\S]*?renderProjectActivityOverviewChart\(activityItems\)[\s\S]*?React\.createElement\(PlatformActivityTimeline, \{[\s\S]*?layout: "inspector"[\s\S]*?title: "Activity"[\s\S]*?inspectorTitle: "Inspector"/,
+  /function buildProjectWorkActivityOverviewItems\(\s*scopedTasks,\s*selectionEvents = \[\],\s*selectedTimelineItemId = ""\s*\)[\s\S]*?function renderProjectActivityOverviewView\(\)[\s\S]*?React\.createElement\(PlatformActivityWorkspace, \{[\s\S]*?className: "playground-project-activity-page"[\s\S]*?overviewProps: getProjectActivityOverviewProps\(activityItems\)[\s\S]*?timelineProps: \{[\s\S]*?layout: "inspector"[\s\S]*?title: "Activity"[\s\S]*?inspectorTitle: "Inspector"/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /function filterProjectWorkActivityEventsByTimeRange\([\s\S]*?function getProjectActivityPageGridStyle\(chartHeight\)[\s\S]*?function renderProjectActivityOverviewChart\(activityItems\)[\s\S]*?React\.createElement\(PlatformActivityOverview, \{[\s\S]*?resizable: true[\s\S]*?onHeightChange: setProjectOverviewActivityChartHeight[\s\S]*?onTimeRangeChange: setProjectOverviewTaskActivityTimeRange/,
+  /function filterProjectWorkActivityEventsByTimeRange\([\s\S]*?function getProjectActivityPageGridStyle\(chartHeight\)[\s\S]*?function getProjectActivityOverviewProps\(activityItems\)[\s\S]*?resizable: true[\s\S]*?onHeightChange: setProjectOverviewActivityChartHeight[\s\S]*?onTimeRangeChange: setProjectOverviewTaskActivityTimeRange[\s\S]*?function renderProjectActivityOverviewChart\(activityItems\)[\s\S]*?React\.createElement\([\s\S]*?PlatformActivityOverview,[\s\S]*?getProjectActivityOverviewProps\(activityItems\)/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,

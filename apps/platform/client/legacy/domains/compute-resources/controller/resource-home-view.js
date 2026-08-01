@@ -23,6 +23,7 @@
                 attachments: Array.isArray(runRequest.attachments) ? runRequest.attachments : [],
                 githubRepo: runRequest.githubRepo || null,
                 enabledSkills: runRequest.enabledSkills || null,
+                connectors: runRequest.connectors || null,
                 environmentId: typeof runRequest.environmentId === "string" ? runRequest.environmentId : "",
                 quotedSelection: runRequest.quotedSelection || null,
                 executionStarted: false,

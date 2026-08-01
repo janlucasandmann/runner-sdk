@@ -9,6 +9,10 @@ import {
     sendJson,
 } from "./http-utils.mjs";
 import { summarizeRunnerStreamChunkForLog } from "./runner-stream-utils.mjs";
+import {
+    fetchWithTransientRetry,
+    isTransientUpstreamStatus,
+} from "./transient-upstream.mjs";
 
 export function createCoreGateway(bindings) {
     const { aiosOrigin, defaultUpstreamOrigin, identityService, port, shouldForwardLocalCloudApiOverride, shouldRetryUpstreamWithAiosSession, } = bindings;
@@ -70,7 +74,7 @@ export function createCoreGateway(bindings) {
         if (shouldForwardLocalCloudApiOverride && !headers["x-runner-upstream-url"]) {
             headers["x-runner-upstream-url"] = defaultUpstreamOrigin;
         }
-        return fetch(targetUrl.toString(), {
+        return fetchWithTransientRetry(targetUrl.toString(), {
             method: init.method || "GET",
             headers,
             signal: init.signal,
@@ -84,7 +88,7 @@ export function createCoreGateway(bindings) {
             authorization: req.headers.authorization || "",
             ...(init.headers || {}),
         });
-        return fetch(targetUrl.toString(), {
+        return fetchWithTransientRetry(targetUrl.toString(), {
             method: init.method || "GET",
             headers,
             signal: init.signal,
@@ -96,6 +100,48 @@ export function createCoreGateway(bindings) {
             return identityService.fetchControlApi(req, controlPath, init);
         }
         return fetchAiosApi(req, hostedApiPath, init);
+    }
+    async function fetchSessionRunnerApi(req, runnerPath, init = {}) {
+        if (identityService.provider === "oidc") {
+            return identityService.fetchControlApi(req, runnerPath, init);
+        }
+        const accessResponse = await fetchAiosApi(req, "/api/user/streaming-key", {
+            method: "GET",
+            headers: { accept: "application/json" },
+        });
+        if (!accessResponse.ok) {
+            return accessResponse;
+        }
+        const access = await readResponseJson(accessResponse);
+        const apiKey = normalizePlaygroundApiKey(access?.apiKey);
+        if (!apiKey) {
+            return new Response(JSON.stringify({
+                error: "Runner access unavailable",
+                message: "The authenticated session did not resolve a runner API key.",
+            }), {
+                status: 502,
+                headers: { "content-type": "application/json; charset=utf-8" },
+            });
+        }
+        const backendUrl = normalizeBackendUrl(
+            typeof access?.backendUrl === "string" && access.backendUrl.trim()
+                ? access.backendUrl
+                : defaultUpstreamOrigin,
+        );
+        const normalizedPath = runnerPath.startsWith("/")
+            ? runnerPath
+            : `/${runnerPath}`;
+        const targetUrl = new URL(`${backendUrl}${normalizedPath}`);
+        const headers = withProxyOrganizationHeader(req, {}, {
+            "X-API-Key": apiKey,
+            ...(init.headers || {}),
+        });
+        return fetchWithTransientRetry(targetUrl.toString(), {
+            method: init.method || "GET",
+            headers,
+            signal: init.signal,
+            body: init.body,
+        });
     }
     async function proxyUpstreamGet(req, res, upstreamPath, options = {}) {
         const controller = new AbortController();
@@ -121,7 +167,7 @@ export function createCoreGateway(bindings) {
             if (apiKey) {
                 const upstreamTarget = new URL(`${upstreamUrl}${upstreamPath}`);
                 upstreamTarget.search = requestUrl.search;
-                upstream = await fetch(upstreamTarget.toString(), {
+                upstream = await fetchWithTransientRetry(upstreamTarget.toString(), {
                     method: "GET",
                     headers: withProxyOrganizationHeader(req, {}, {
                         "X-API-Key": apiKey,
@@ -153,6 +199,12 @@ export function createCoreGateway(bindings) {
                 });
             }
             const parsed = await readResponseJson(upstream);
+            if (isTransientUpstreamStatus(upstream.status)) {
+                console.warn("[platform-gateway] Upstream GET exhausted its retry budget", {
+                    path: upstreamPath,
+                    status: upstream.status,
+                });
+            }
             if (upstream.status === 404 && options?.emptyOn404) {
                 return sendJson(res, 200, { data: [] });
             }
@@ -162,6 +214,11 @@ export function createCoreGateway(bindings) {
             if (controller.signal.aborted && (res.writableEnded || res.destroyed)) {
                 return false;
             }
+            console.warn("[platform-gateway] Upstream GET failed after retry", {
+                path: upstreamPath,
+                timedOut: didTimeout,
+                error: error instanceof Error ? error.message : String(error),
+            });
             return sendJson(res, didTimeout ? 504 : 502, {
                 error: didTimeout ? "Upstream GET request timed out" : "Failed to proxy upstream GET request",
                 message: error instanceof Error ? error.message : String(error),
@@ -241,7 +298,7 @@ export function createCoreGateway(bindings) {
         if (apiKey) {
             const upstreamTarget = new URL(`${upstreamUrl}${upstreamPath}`);
             upstreamTarget.search = requestUrl.search;
-            upstream = await fetch(upstreamTarget.toString(), {
+            upstream = await fetchWithTransientRetry(upstreamTarget.toString(), {
                 method,
                 headers: withProxyOrganizationHeader(req, body, {
                     "Content-Type": "application/json",
@@ -278,7 +335,7 @@ export function createCoreGateway(bindings) {
         let upstream;
         if (apiKey) {
             const upstreamTarget = new URL(`${upstreamUrl}${normalizedPath}`);
-            upstream = await fetch(upstreamTarget.toString(), {
+            upstream = await fetchWithTransientRetry(upstreamTarget.toString(), {
                 method,
                 headers: withProxyOrganizationHeader(req, body, {
                     "Content-Type": "application/json",
@@ -325,7 +382,7 @@ export function createCoreGateway(bindings) {
             if (apiKey) {
                 const upstreamTarget = new URL(`${upstreamUrl}${upstreamPath}`);
                 upstreamTarget.search = requestUrl.search;
-                upstream = await fetch(upstreamTarget.toString(), {
+                upstream = await fetchWithTransientRetry(upstreamTarget.toString(), {
                     method,
                     headers: withProxyOrganizationHeader(req, {}, {
                         "Content-Type": contentType,
@@ -611,6 +668,7 @@ export function createCoreGateway(bindings) {
         fetchAiosApi,
         fetchAiosCloud,
         fetchSessionApi,
+        fetchSessionRunnerApi,
         fetchUpstreamJsonForProxy,
         fetchUpstreamJsonForProxyExactPath,
         hasAiosSession,

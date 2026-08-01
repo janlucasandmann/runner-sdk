@@ -160,6 +160,7 @@ export function AssurancePolicyDetailPage({
   );
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
+  const [accessDetailOpen, setAccessDetailOpen] = useState(false);
   const portalTarget = usePortalTarget(controlsPortalId);
   const sectionControlsPortalTarget = usePortalTarget(sectionControlsPortalId);
   const parsedDefinition = useMemo(() => parseDefinition(definitionJson), [definitionJson]);
@@ -171,7 +172,12 @@ export function AssurancePolicyDetailPage({
     setProjectId(policy.projectId || "");
     setDefinitionJson(JSON.stringify(cloneDefinition(policy.definition), null, 2));
     setError("");
+    setAccessDetailOpen(false);
   }, [policy.id, policy.updatedAt]);
+
+  useEffect(() => {
+    if (activeTab !== "settings") setAccessDetailOpen(false);
+  }, [activeTab]);
 
   const baselineDefinition = JSON.stringify(cloneDefinition(policy.definition), null, 2);
   const dirty = (
@@ -515,6 +521,7 @@ export function AssurancePolicyDetailPage({
         contentClassName="assurance-detail-content"
         sidebarClassName="assurance-detail-sidebar"
         propertiesCardClassName="assurance-detail-sidebar-card"
+        sidebarCollapsed={accessDetailOpen}
       >
         {error || parsedDefinition.error ? (
           <PlatformUiCard as="div" className="assurance-inline-error" role="alert">
@@ -698,6 +705,7 @@ export function AssurancePolicyDetailPage({
               api={api}
               workspaceTeams={workspaceTeams}
               onPolicyChange={onPolicyChange}
+              onPermissionDetailOpenChange={setAccessDetailOpen}
             />
           </div>
         ) : null}

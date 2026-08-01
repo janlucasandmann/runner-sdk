@@ -821,6 +821,7 @@
                   : null;
             const resourcesDetailPathItem = {
               label: resourcesHeaderState.title || "Resource",
+              subtitle: resourcesHeaderState.subtitle || "",
               trailing: resourcesDetailVersionLabel || resourcesDetailTitleActions
                 ? React.createElement(React.Fragment, null,
                     resourcesDetailVersionLabel,
@@ -2795,6 +2796,7 @@
                             attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
                             githubRepo: options.taskRunRequest.githubRepo || null,
                             enabledSkills: options.taskRunRequest.enabledSkills || null,
+                            connectors: options.taskRunRequest.connectors || null,
                             environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                             quotedSelection: options.taskRunRequest.quotedSelection || null,
                           });
@@ -2916,6 +2918,7 @@
                         attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
                         githubRepo: options.taskRunRequest.githubRepo || null,
                         enabledSkills: options.taskRunRequest.enabledSkills || null,
+                        connectors: options.taskRunRequest.connectors || null,
                         environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                         quotedSelection: options.taskRunRequest.quotedSelection || null,
                       });
@@ -3213,10 +3216,13 @@
                                   value: contentMode === "changes" ? "changes" : "chat",
                                   options: [
                                     { value: "chat", label: "Thread" },
-                                    { value: "changes", label: "Changes", disabled: !currentThreadId },
+                                    { value: "changes", label: "Activity", disabled: !currentThreadId },
                                   ],
                                   onValueChange: (nextMode) => {
                                     if (nextMode === "changes" && !currentThreadId) return;
+                                    if (nextMode === "changes") {
+                                      setThreadExecutionWorkbenchOpen(false);
+                                    }
                                     setContentMode(nextMode === "changes" ? "changes" : "chat");
                                   },
                                 })
@@ -3225,6 +3231,34 @@
                           includeSearchDivider: true,
                           extraActions: activePage === "thread" && !isThreadSideDetailOpen
                               ? React.createElement(React.Fragment, null,
+                                  contentMode === "changes" && currentThreadId
+                                    ? React.createElement(PlatformSwitch, {
+                                        className: "playground-thread-activity-level-switch",
+                                        ariaLabel: "Activity detail level",
+                                        value: threadActivityHierarchyLevel,
+                                        options: [
+                                          { value: "groups", label: "Action groups" },
+                                          { value: "tool_calls", label: "Tool calls" },
+                                        ],
+                                        onValueChange: (nextLevel) => {
+                                          setThreadActivityHierarchyLevel(nextLevel === "tool_calls" ? "tool_calls" : "groups");
+                                        },
+                                      })
+                                    : null,
+                                  contentMode === "chat" && currentThreadId
+                                    ? React.createElement(PlatformIconButton, {
+                                        type: "button",
+                                        size: "compact",
+                                        className: "playground-thread-execution-workbench-button",
+                                        "aria-label": threadExecutionWorkbenchOpen
+                                          ? "Close execution details"
+                                          : "Open execution details",
+                                        "aria-pressed": threadExecutionWorkbenchOpen,
+                                        title: "Execution details",
+                                        disabled: !threadExecutionWorkbenchAvailable,
+                                        onClick: () => setThreadExecutionWorkbenchOpen((current) => !current),
+                                      }, React.createElement(PanelRight, { strokeWidth: 1.75 }))
+                                    : null,
                                   shouldShowThreadTaskListButton
                                     ? React.createElement("div", {
                                     className: "playground-thread-task-list-popup-shell playground-tasks-toolbar-popup-shell",
@@ -3463,6 +3497,7 @@
                                       attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
                                       githubRepo: options.taskRunRequest.githubRepo || null,
                                       enabledSkills: options.taskRunRequest.enabledSkills || null,
+                                      connectors: options.taskRunRequest.connectors || null,
                                       environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                                       quotedSelection: options.taskRunRequest.quotedSelection || null,
                                     });
@@ -3599,6 +3634,7 @@
                                       attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
                                       githubRepo: options.taskRunRequest.githubRepo || null,
                                       enabledSkills: options.taskRunRequest.enabledSkills || null,
+                                      connectors: options.taskRunRequest.connectors || null,
                                       environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                                       quotedSelection: options.taskRunRequest.quotedSelection || null,
                                       slideCreationCommand: options.taskRunRequest.slideCreationCommand || null,
@@ -3837,6 +3873,7 @@
                                       attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
                                       githubRepo: options.taskRunRequest.githubRepo || null,
                                       enabledSkills: options.taskRunRequest.enabledSkills || null,
+                                      connectors: options.taskRunRequest.connectors || null,
                                       environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                                     });
                                   }
@@ -3891,6 +3928,7 @@
                                       requestHeaders,
                                       appId: "runner-web-sdk-demo",
                                       threadId: activeRunnerThreadId || undefined,
+                                      threadViewMode: "legacy",
                                       inputMode: computerAgentsMode ? "computer-agents" : "minimal",
                                       computerAgents: computerAgentsMode ? {
                                         ...demoComputerAgents,
@@ -4175,6 +4213,9 @@
                                         void refreshThreads();
                                       },
                                       onMetronomeWorkflowRun: handleMetronomeWorkflowRunFromThread,
+                                      executionWorkbenchOpen: threadExecutionWorkbenchOpen,
+                                      onExecutionWorkbenchOpenChange: setThreadExecutionWorkbenchOpen,
+                                      onExecutionWorkbenchAvailabilityChange: setThreadExecutionWorkbenchAvailable,
                                       onDocumentPreviewOpenChange: (isOpen) => {
                                         setThreadDocumentPreviewOpen(isOpen);
                                         if (isOpen) {
@@ -4243,6 +4284,9 @@
                                       apiKey: effectiveApiKey,
                                       upstreamUrl: resolvedUpstreamUrl,
                                       hasRealAccess,
+                                      currentUserName: hasSessionAuth ? accountName : "User",
+                                      currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
+                                      activityHierarchyLevel: threadActivityHierarchyLevel,
                                       onThreadMutated: () => refreshThreads(),
                                       navigationTarget: changesNavigationTarget,
                                       onNavigationTargetHandled: (token) => {
@@ -4477,6 +4521,7 @@
                                           attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
                                           githubRepo: options.taskRunRequest.githubRepo || null,
                                           enabledSkills: options.taskRunRequest.enabledSkills || null,
+                                          connectors: options.taskRunRequest.connectors || null,
                                           environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                                         });
                                     }

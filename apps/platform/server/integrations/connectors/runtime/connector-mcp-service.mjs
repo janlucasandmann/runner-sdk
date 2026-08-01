@@ -1,10 +1,9 @@
 const MCP_PATH = "/api/aios/connectors/mcp";
-const MAX_REQUEST_BYTES = 1024 * 1024;
-const SUPPORTED_PROTOCOL_VERSIONS = new Set([
-  "2025-06-18",
-  "2025-03-26",
-  "2024-11-05",
-]);
+// A 20 MiB binary payload expands to roughly 26.7 MiB when transported as
+// base64 JSON. Keep the connector cap below Cloud Run's 32 MiB HTTP/1 request
+// limit while allowing the runtime's documented inline upload maximum.
+const MAX_REQUEST_BYTES = 28 * 1024 * 1024;
+const SUPPORTED_PROTOCOL_VERSIONS = new Set(["2025-06-18", "2025-03-26", "2024-11-05"]);
 const DEFAULT_PROTOCOL_VERSION = "2025-06-18";
 
 export function createConnectorMcpService({
@@ -37,13 +36,7 @@ export function createConnectorMcpService({
   });
 }
 
-async function handleConnectorMcpRequest({
-  req,
-  res,
-  grantService,
-  adapterRegistry,
-  logger,
-}) {
+async function handleConnectorMcpRequest({ req, res, grantService, adapterRegistry, logger }) {
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
       Allow: "POST, OPTIONS",
@@ -53,14 +46,19 @@ async function handleConnectorMcpRequest({
     return;
   }
   if (req.method !== "POST") {
-    sendJson(res, 405, {
-      jsonrpc: "2.0",
-      id: null,
-      error: {
-        code: -32600,
-        message: "Connector MCP uses stateless HTTP POST requests.",
+    sendJson(
+      res,
+      405,
+      {
+        jsonrpc: "2.0",
+        id: null,
+        error: {
+          code: -32600,
+          message: "Connector MCP uses stateless HTTP POST requests.",
+        },
       },
-    }, { Allow: "POST, OPTIONS" });
+      { Allow: "POST, OPTIONS" },
+    );
     return;
   }
 
@@ -80,8 +78,7 @@ async function handleConnectorMcpRequest({
     return;
   }
 
-  const adapter = adapterRegistry.get(grant.provider)
-    || adapterRegistry.get(grant.connectorId);
+  const adapter = adapterRegistry.get(grant.provider) || adapterRegistry.get(grant.connectorId);
   if (!adapter) {
     sendJson(res, 501, {
       jsonrpc: "2.0",
@@ -128,19 +125,10 @@ async function handleConnectorMcpRequest({
     res.end();
     return;
   }
-  sendJson(
-    res,
-    200,
-    Array.isArray(body) ? responses : responses[0],
-  );
+  sendJson(res, 200, Array.isArray(body) ? responses : responses[0]);
 }
 
-async function handleJsonRpcRequest({
-  request,
-  grant,
-  adapter,
-  logger,
-}) {
+async function handleJsonRpcRequest({ request, grant, adapter, logger }) {
   if (!isRecord(request) || request.jsonrpc !== "2.0") {
     return rpcError(request?.id ?? null, -32600, "Invalid JSON-RPC request.");
   }
@@ -149,16 +137,12 @@ async function handleJsonRpcRequest({
   if (!method) return rpcError(id ?? null, -32600, "Method is required.");
 
   if (method === "notifications/initialized" || method === "notifications/cancelled") {
-    return id === undefined
-      ? null
-      : rpcResult(id, {});
+    return id === undefined ? null : rpcResult(id, {});
   }
   if (id === undefined) return null;
 
   if (method === "initialize") {
-    const requestedVersion = String(
-      request.params?.protocolVersion || "",
-    );
+    const requestedVersion = String(request.params?.protocolVersion || "");
     return rpcResult(id, {
       protocolVersion: SUPPORTED_PROTOCOL_VERSIONS.has(requestedVersion)
         ? requestedVersion
@@ -171,24 +155,20 @@ async function handleJsonRpcRequest({
         version: "1.0.0",
       },
       instructions:
-        `Use these ${grant.connectorId} tools directly with the credentials already selected for this thread. `
-        + "Never ask the user for API tokens or claim that the connector is not configured.",
+        `Use these ${grant.connectorId} tools directly with the credentials already selected for this thread. ` +
+        "Never ask the user for API tokens or claim that the connector is not configured.",
     });
   }
   if (method === "ping") return rpcResult(id, {});
   if (method === "tools/list") {
-    const actionIds = [
-      ...grant.allowedActions,
-      ...grant.approvalRequiredActions,
-    ];
+    const actionIds = [...grant.allowedActions, ...grant.approvalRequiredActions];
     const approvalRequired = new Set(grant.approvalRequiredActions);
     return rpcResult(id, {
       tools: adapter.listTools(actionIds).map((definition) => ({
         ...definition,
         ...(approvalRequired.has(definition.name)
           ? {
-              description:
-                `${definition.description} This action requires explicit approval before execution.`,
+              description: `${definition.description} This action requires explicit approval before execution.`,
             }
           : {}),
       })),
@@ -198,27 +178,50 @@ async function handleJsonRpcRequest({
     return rpcError(id, -32601, `Unsupported MCP method: ${method}`);
   }
 
-  const toolName = String(request.params?.name || "").trim();
+  const requestedToolName = String(request.params?.name || "").trim();
+  const toolName = resolveSignedConnectorAction(grant, requestedToolName);
   const allowed = new Set(grant.allowedActions);
   const approvalRequired = new Set(grant.approvalRequiredActions);
+  if (!toolName) {
+    return rpcResult(
+      id,
+      toolError(
+        "This connector action is not permitted for the current user, agent, project, and credential.",
+        "connector_action_denied",
+      ),
+    );
+  }
   if (approvalRequired.has(toolName)) {
-    return rpcResult(id, toolError(
-      "This action requires explicit approval. No approval was supplied, so it was not executed.",
-      "connector_approval_required",
-    ));
+    return rpcResult(
+      id,
+      toolError(
+        "This action requires explicit approval. No approval was supplied, so it was not executed.",
+        "connector_approval_required",
+      ),
+    );
   }
   if (!allowed.has(toolName)) {
-    return rpcResult(id, toolError(
-      "This connector action is not permitted for the current user, agent, project, and credential.",
-      "connector_action_denied",
-    ));
+    return rpcResult(
+      id,
+      toolError(
+        "This connector action is not permitted for the current user, agent, project, and credential.",
+        "connector_action_denied",
+      ),
+    );
   }
 
   try {
+    const toolDefinition = adapter
+      .listTools([toolName])
+      .find((definition) => definition?.name === toolName);
+    const toolArguments = normalizeConnectorToolArguments(
+      request.params?.arguments,
+      toolDefinition?.inputSchema,
+    );
     const result = await adapter.invoke({
       grant,
       name: toolName,
-      arguments: request.params?.arguments,
+      arguments: toolArguments,
     });
     logger?.info?.("[connector-mcp] Connector action completed", {
       threadId: grant.threadId,
@@ -240,21 +243,115 @@ async function handleJsonRpcRequest({
       statusCode: Number(error?.statusCode) || 500,
       message: error instanceof Error ? error.message : String(error),
     });
-    return rpcResult(id, toolError(
-      error instanceof Error ? error.message : "Connector action failed.",
-      String(error?.code || "connector_action_failed"),
-      error?.details,
-    ));
+    return rpcResult(
+      id,
+      toolError(
+        error instanceof Error ? error.message : "Connector action failed.",
+        String(error?.code || "connector_action_failed"),
+        error?.details,
+      ),
+    );
   }
+}
+
+function semanticActionName(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function resolveSignedConnectorAction(grant, requestedAction) {
+  const signedActions = [...new Set([
+    ...(Array.isArray(grant?.allowedActions) ? grant.allowedActions : []),
+    ...(Array.isArray(grant?.approvalRequiredActions) ? grant.approvalRequiredActions : []),
+  ])];
+  if (signedActions.includes(requestedAction)) return requestedAction;
+  const semanticName = semanticActionName(requestedAction);
+  const matches = signedActions.filter(
+    (actionName) => semanticActionName(actionName) === semanticName,
+  );
+  return matches.length === 1 ? matches[0] : "";
+}
+
+function normalizeConnectorToolArguments(value, inputSchema) {
+  if (!isRecord(value)) return value;
+  const keys = Object.keys(value);
+  const schemaDeclaresRaw = isRecord(inputSchema?.properties)
+    && Object.hasOwn(inputSchema.properties, "raw");
+  if (
+    schemaDeclaresRaw
+    || keys.length !== 1
+    || keys[0] !== "raw"
+    || typeof value.raw !== "string"
+  ) {
+    return value;
+  }
+
+  const raw = value.raw.trim();
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    const repaired = repairOmittedObjectValues(raw);
+    try {
+      parsed = repaired ? JSON.parse(repaired) : null;
+    } catch {
+      parsed = null;
+    }
+  }
+  if (isRecord(parsed)) return parsed;
+
+  const error = new Error("Connector tool arguments must be a valid JSON object.");
+  error.code = "connector_arguments_invalid";
+  error.statusCode = 400;
+  throw error;
+}
+
+function repairOmittedObjectValues(raw) {
+  let inString = false;
+  let escaped = false;
+  let changed = false;
+  let segmentStart = 0;
+  let repaired = "";
+
+  for (let index = 0; index < raw.length; index += 1) {
+    const character = raw[index];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (character === "\\") {
+        escaped = true;
+      } else if (character === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (character === '"') {
+      inString = true;
+      continue;
+    }
+    if (character !== ":") continue;
+
+    let nextIndex = index + 1;
+    while (nextIndex < raw.length && /\s/.test(raw[nextIndex])) nextIndex += 1;
+    if (raw[nextIndex] !== "," && raw[nextIndex] !== "}") continue;
+    repaired += `${raw.slice(segmentStart, nextIndex)}null`;
+    segmentStart = nextIndex;
+    changed = true;
+  }
+
+  return changed ? `${repaired}${raw.slice(segmentStart)}` : "";
 }
 
 function toolSuccess(value) {
   const structuredContent = normalizeStructuredContent(value);
   return {
-    content: [{
-      type: "text",
-      text: JSON.stringify(structuredContent, null, 2),
-    }],
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify(structuredContent, null, 2),
+      },
+    ],
     structuredContent,
     isError: false,
   };
@@ -269,10 +366,12 @@ function toolError(message, code, details) {
     },
   };
   return {
-    content: [{
-      type: "text",
-      text: `${message} (${code})`,
-    }],
+    content: [
+      {
+        type: "text",
+        text: `${message} (${code})`,
+      },
+    ],
     structuredContent,
     isError: true,
   };
@@ -301,9 +400,10 @@ function rpcError(id, code, message, data) {
 }
 
 function readBearerToken(req) {
-  const header = typeof req?.headers?.get === "function"
-    ? req.headers.get("authorization")
-    : req?.headers?.authorization;
+  const header =
+    typeof req?.headers?.get === "function"
+      ? req.headers.get("authorization")
+      : req?.headers?.authorization;
   const match = String(header || "").match(/^Bearer\s+(.+)$/i);
   return match?.[1]?.trim() || "";
 }
@@ -341,7 +441,5 @@ function sendJson(res, statusCode, payload, headers = {}) {
 }
 
 function isRecord(value) {
-  return Boolean(value)
-    && typeof value === "object"
-    && !Array.isArray(value);
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }

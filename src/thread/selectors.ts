@@ -80,6 +80,7 @@ export function isRunnerThreadRunActive(run: RunnerThreadRun): boolean {
     || status === "running"
     || status === "parked"
     || status === "waiting"
+    || status === "waiting_permission"
     || status === "requires_action";
 }
 

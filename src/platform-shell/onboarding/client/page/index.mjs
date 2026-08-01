@@ -1,2 +1,12 @@
-export { ONBOARDING_MODAL_SCRIPT } from "./modal.mjs";
+import { ONBOARDING_EXPERIENCE_SCRIPT } from "./experience.mjs";
+import { ONBOARDING_SCREEN_SCRIPT } from "./screen.mjs";
 
+export const ONBOARDING_PAGE_SCRIPT = [
+  ONBOARDING_SCREEN_SCRIPT,
+  ONBOARDING_EXPERIENCE_SCRIPT,
+].join("\n");
+
+export {
+  ONBOARDING_EXPERIENCE_SCRIPT,
+  ONBOARDING_SCREEN_SCRIPT,
+};

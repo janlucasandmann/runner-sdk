@@ -109,6 +109,35 @@ const platformTemplateCss = await fs.readFile(
   path.join(domainsRoot, "../templates/platform.template.css"),
   "utf8",
 );
+const runnerChatSource = await fs.readFile(
+  path.join(domainsRoot, "../../../../../src/react/runner-chat.tsx"),
+  "utf8",
+);
+
+const pendingThreadRunRequestBlocks = Array.from(
+  shellCompositionSource.matchAll(/setPendingThreadRunRequest\(\{([\s\S]*?)\n\s*\}\);/g),
+  (match) => match[1],
+);
+assert.equal(
+  pendingThreadRunRequestBlocks.length,
+  6,
+  "Every shell thread-start surface must continue using the audited pending-run handoff.",
+);
+for (const pendingRunRequestBlock of pendingThreadRunRequestBlocks) {
+  assert.match(
+    pendingRunRequestBlock,
+    /connectors: options\.taskRunRequest\.connectors \|\| null/,
+    "Pending thread runs must preserve selected connectors while navigating to the thread screen.",
+  );
+}
+const agentsHomeThreadStartSource = agentBootstrapSource.match(
+  /function handleAgentsHomeThreadStartRequest\(runRequest\)[\s\S]*?(?=\n\s*function buildAgentCreationEnabledSkillsPayload)/,
+)?.[0] || "";
+assert.match(
+  agentsHomeThreadStartSource,
+  /connectors: runRequest\.connectors \|\| null/,
+  "The Agents home handoff must preserve selected connectors.",
+);
 
 assert.match(
   shellSettingsToolsSource,
@@ -155,6 +184,67 @@ assert.match(
   /const refreshPluginConnectionStatus = useCallback\([\s\S]{0,900}const refreshGithubStatus = useCallback\([\s\S]{0,1600}const refreshGenericConnectorStatus = useCallback\(/,
   "Connector status refresh callbacks must remain stable so status updates cannot restart the overview effect.",
 );
+assert.doesNotMatch(
+  shellApplicationLifecycleSource,
+  /const pollThreadStatus\s*=|setInterval\([\s\S]{0,500}loadThreadGroundTruthStatus/,
+  "The shell must not duplicate RunnerChat's active-thread status polling.",
+);
+const updateRealThreadStatusSource = shellDataLifecycleSource.match(
+  /const updateRealThreadStatus = useCallback[\s\S]*?(?=\n\s+const upsertRealThreadTitle)/,
+)?.[0] || "";
+assert.match(
+  updateRealThreadStatusSource,
+  /existingThread[\s\S]*String\(existingThread\.status[\s\S]*String\(existingThread\.completedAt[\s\S]*return;[\s\S]*emitThreadListRefreshSignal/,
+  "Unchanged thread lifecycle status must not emit another cross-tab refresh signal.",
+);
+const runnerThreadStatusChangeSource = shellCompositionSource.match(
+  /onThreadStatusChange:\s*\(threadId, nextStatus\) => \{[\s\S]*?(?=\n\s+onRunFinish:)/,
+)?.[0] || "";
+assert.match(
+  runnerThreadStatusChangeSource,
+  /normalizedStatus === "permission_asked"[\s\S]{0,180}refreshThreads/,
+  "Permission transitions must still refresh the thread list immediately.",
+);
+assert.doesNotMatch(
+  runnerThreadStatusChangeSource,
+  /normalizedStatus === "running"[\s\S]{0,180}refreshThreads/,
+  "Repeated running status notifications must not refetch the complete thread list.",
+);
+assert.match(
+  shellCompositionSource,
+  /threadViewMode: "legacy"/,
+  "The platform thread page must keep the initially rendered transcript instead of replacing it after canonical hydration.",
+);
+assert.match(
+  shellCompositionSource,
+  /executionWorkbenchOpen: threadExecutionWorkbenchOpen[\s\S]{0,180}onExecutionWorkbenchAvailabilityChange: setThreadExecutionWorkbenchAvailable/,
+  "The normal transcript must retain the opt-in canonical execution-details sidebar.",
+);
+assert.doesNotMatch(
+  runnerChatSource,
+  /RunnerThreadRunActivityCard/,
+  "The normal transcript must not render permission-group navigation in its working-log section.",
+);
+assert.match(
+  runnerChatSource,
+  /shouldRenderWorkSection[\s\S]{0,1200}className="tb-work-header"[\s\S]{0,2200}displayedTimelineItems\.map/,
+  "The normal transcript must render its existing raw working-log lines.",
+);
+assert.match(
+  platformTemplateSource,
+  /client\.listThreadTimeline\([\s\S]{0,500}limit: 500/,
+  "The Activity tab must load the canonical mixed thread timeline.",
+);
+assert.match(
+  platformTemplateSource,
+  /buildRunnerThreadActivityHierarchy\(\{[\s\S]{0,500}items: canonicalTimelineItems[\s\S]{0,500}level: activityHierarchyLevel/,
+  "The Activity tab must adapt the canonical timeline through the selected activity hierarchy.",
+);
+assert.match(
+  platformTemplateSource,
+  /function renderCanonicalThreadActivityPreview[\s\S]{0,500}record\.actions[\s\S]{0,2500}renderTracePermissionRingIcon/,
+  "Canonical Activity inspector entries must expose their permission-grouped actions.",
+);
 assert.match(
   shellDataLifecycleSource,
   /activePage !== "tools"[\s\S]{0,200}toolsView !== "plugins"[\s\S]{0,100}toolsView !== "tags"[\s\S]{0,1800}requestIdleCallback/,
@@ -174,6 +264,11 @@ assert.match(
   platformTemplateCss,
   /\.playground-tasks-toolbar-popup-shell \.playground-tags-plugins-title-menu\s*\{[\s\S]{0,260}left: 0;[\s\S]{0,160}min-width: 220px;/,
   "The Tags and Plugins title menu must open below and toward the content side of its trigger.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-thread-nav-popup-shell \.playground-thread-nav-popup-menu\s*\{[\s\S]{0,180}right: auto;[\s\S]{0,80}left: 0;[\s\S]{0,240}transform-origin: top left;/,
+  "The thread title menu must align its left edge with the title action trigger.",
 );
 assert.match(
   shellSettingsToolsSource,
@@ -491,10 +586,20 @@ assert.match(
   /const agentsTopNavActions =[\s\S]{0,500}agentInsightsTimeframeControl,[\s\S]{0,180}renderAgentPublishAction\(\)/,
   "The Agent app header must render the Insights timeframe selector before Save and Publish.",
 );
-assert.match(
+assert.doesNotMatch(
   agentDialogsSource,
-  /renderAgentFactRow\(\s*"Email",\s*renderAgentCopyableFactValue\(\s*"agent-email",\s*agentEmailAddress,\s*"email address",\s*"playground-agents-detail-about-email"/,
-  "The Agent details Email value must expose the existing clipboard control.",
+  /renderAgentFactRow\(\s*"Email"/,
+  "The Agent details sidebar must not duplicate the email shown below the app-header title.",
+);
+assert.match(
+  agentBootstrapSource,
+  /title: selectedResourcesDetailTitle,\s*subtitle: agentEmailAddress,\s*resourceType: "agent"/,
+  "The Agent detail app-header title must expose the live agent email as supporting text.",
+);
+assert.match(
+  shellCompositionSource,
+  /const resourcesDetailPathItem = \{\s*label: resourcesHeaderState\.title \|\| "Resource",\s*subtitle: resourcesHeaderState\.subtitle \|\| ""/,
+  "Resource detail breadcrumbs must forward optional supporting text to the app header.",
 );
 assert.match(
   agentDialogsSource,
@@ -770,6 +875,31 @@ assert.match(
   agentBootstrapSource,
   /const hasLoaded = loadedAgentDetailRequestKeysRef\.current\.has\(requestKey\);[\s\S]{0,120}!force && cachedAgent && hasLoaded[\s\S]{0,80}return cachedAgent;/,
   "Agent detail records must load once per scoped Agent for the component lifetime.",
+);
+assert.match(
+  agentBootstrapSource,
+  /const currentAgent = current\[normalizedAgentId\] \|\| baseAgent;[\s\S]{0,220}createPlaygroundAgentWithVersionList\(\s*currentAgent,\s*versionItems\s*\)/,
+  "Late Agent-version responses must merge into the latest Agent record rather than an incomplete overview snapshot.",
+);
+assert.match(
+  agentBootstrapSource,
+  /const currentSelectedVersion = currentVersions\.length > 0[\s\S]{0,260}createPlaygroundAgentWithVersionList\(\s*normalized,\s*currentVersions,\s*currentSelectedVersion\?\.id \|\| ""\s*\)/,
+  "Authoritative Agent detail hydration must retain live instructions while attaching cached version metadata.",
+);
+assert.doesNotMatch(
+  agentBootstrapSource,
+  /const currentSelectedVersion = currentVersions\.length > 0[\s\S]{0,260}createAgentVersionSelectedResource\(/,
+  "Agent detail hydration must not replace live configuration with a cached version snapshot.",
+);
+assert.match(
+  agentBootstrapSource,
+  /const hasAuthoritativeDetail = Boolean\([\s\S]{0,180}loadedAgentDetailRequestKeysRef\.current\.has\(detailRequestKey\)[\s\S]{0,320}instructions: currentAgent\.instructions,[\s\S]{0,160}voiceInstructions: currentAgent\.voiceInstructions,[\s\S]{0,180}voicePronunciationReplacements: currentAgent\.voicePronunciationReplacements/,
+  "Compact Agent overview refreshes must preserve fields owned by the authoritative detail response.",
+);
+assert.match(
+  agentBootstrapSource,
+  /const currentVersions = readPlaygroundAgentVersions\(currentAgent\);[\s\S]{0,360}createPlaygroundAgentWithVersionList\(\s*mergedAgent,\s*currentVersions,\s*currentSelectedVersion\?\.id \|\| ""\s*\)/,
+  "Compact Agent overview refreshes must retain loaded version metadata.",
 );
 assert.match(
   agentBootstrapSource,

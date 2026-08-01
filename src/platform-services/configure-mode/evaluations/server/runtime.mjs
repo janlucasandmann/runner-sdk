@@ -656,38 +656,23 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       : runOptions.target_guardrail_snapshot && typeof runOptions.target_guardrail_snapshot === "object"
         ? runOptions.target_guardrail_snapshot
         : null;
-    let guardrailRecord = null;
-    try {
-      const payload = await requestBackendJson(
-        record,
-        `/guardrails/${encodeURIComponent(guardrailId)}`,
-        { method: "GET" },
-        "Failed to load the target guardrail."
-      );
-      guardrailRecord = unwrapGuardrailRecord(payload);
-    } catch (error) {
-      if (!providedSnapshot) throw error;
-    }
-    let versionRecord = null;
-    if (versionId) {
-      try {
-        const payload = await requestBackendJson(
-          record,
-          `/guardrails/${encodeURIComponent(guardrailId)}/versions/${encodeURIComponent(versionId)}`,
-          { method: "GET" },
-          "Failed to load the target guardrail version."
-        );
-        versionRecord = unwrapGuardrailRecord(payload);
-      } catch (error) {
-        if (!providedSnapshot) throw error;
-      }
-    }
+    const targetQuery = versionId
+      ? `?versionId=${encodeURIComponent(versionId)}`
+      : "";
+    const targetPayload = await requestBackendJson(
+      record,
+      `/guardrails/${encodeURIComponent(guardrailId)}/evaluation-target${targetQuery}`,
+      { method: "GET" },
+      "You do not have permission to evaluate this guardrail."
+    );
+    const guardrailRecord = unwrapGuardrailRecord(targetPayload?.guardrail);
+    const versionRecord = unwrapGuardrailRecord(targetPayload?.version);
     const versionSnapshot = versionRecord?.snapshot && typeof versionRecord.snapshot === "object"
       ? versionRecord.snapshot
       : null;
     const source = {
-      ...(guardrailRecord && typeof guardrailRecord === "object" ? guardrailRecord : {}),
       ...(providedSnapshot || {}),
+      ...(guardrailRecord && typeof guardrailRecord === "object" ? guardrailRecord : {}),
       ...(versionSnapshot || {}),
       id: guardrailId,
       name: normalizeString(
@@ -697,7 +682,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         || providedSnapshot?.name
         || guardrailRecord?.name
       ) || "Guardrail",
-      prompts: versionSnapshot?.prompts || providedSnapshot?.prompts || guardrailRecord?.prompts || [],
+      prompts: versionSnapshot?.prompts || guardrailRecord?.prompts || providedSnapshot?.prompts || [],
     };
     const normalized = normalizeProxyGuardrailSets([source])[0] || null;
     if (!normalized) {

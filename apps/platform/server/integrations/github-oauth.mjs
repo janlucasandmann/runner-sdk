@@ -12,6 +12,10 @@ import {
   handleGithubRepositoryDetail,
 } from "./github-repository-api.mjs";
 import {
+  fetchGithubJson,
+  validateGithubCredential,
+} from "./github-api-client.mjs";
+import {
   registerOrganizationConnectorCredential,
   sanitizeConnectorRedirectTarget,
   unregisterOrganizationConnectorCredential,
@@ -275,7 +279,17 @@ async function handleGithubCallback(req, res, { platformOrigin, envFileCandidate
   }
 
   try {
-    const profile = await githubFetchJson("/user", token.access_token);
+    let profile = {};
+    try {
+      profile = await fetchGithubJson("/user", token.access_token);
+    } catch (error) {
+      // Token exchange is the durable authorization boundary. Profile
+      // enrichment can be repaired by the status endpoint after a temporary
+      // GitHub API failure and must not discard a newly issued token.
+      console.warn("[github-oauth] GitHub profile enrichment deferred.", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
     await saveGithubToken(stateData.uid, {
       accessToken: token.access_token,
       refreshToken: token.refresh_token,
@@ -376,20 +390,40 @@ async function handleGithubUser(req, res, { envFileCandidates, allowedOrigins })
   try {
     const verifiedUser = await verifyRequestUser(req, envFileCandidates);
     const requestedCredentialId = urlSearchParam(req, "credentialId");
+    const requestedOrganizationId = normalizeGithubOrganizationId(
+      urlSearchParam(req, "organizationId")
+        || req.headers["x-computer-agents-organization"],
+    );
+    const completeStore = await readGithubCredentialStore(
+      verifiedUser.uid,
+      envFileCandidates,
+    );
+    const scopedStore = scopeGithubCredentialStore(
+      completeStore,
+      requestedOrganizationId,
+    );
+    await trySyncGithubCredentialRegistry(
+      verifiedUser.uid,
+      scopedStore,
+      envFileCandidates,
+    );
     const token = await loadGithubToken(
       verifiedUser.uid,
       envFileCandidates,
       requestedCredentialId,
+      scopedStore,
     );
     if (!token) {
       return sendGithubJson(req, res, 200, {
         connected: false,
-        credentials: [],
+        credentials: listPublicGithubCredentials(scopedStore),
+        defaultCredentialId: scopedStore.defaultCredentialId || undefined,
       }, allowedOrigins);
     }
 
-    try {
-      const profile = await githubFetchJson("/user", token.accessToken);
+    const validation = await validateGithubCredential(token.accessToken);
+    if (validation.state === "valid") {
+      const profile = validation.profile;
       const store = await updateGithubCredentialMetadata(
         verifiedUser.uid,
         token.credentialId,
@@ -401,31 +435,56 @@ async function handleGithubUser(req, res, { envFileCandidates, allowedOrigins })
         },
         envFileCandidates,
       );
+      const nextScopedStore = scopeGithubCredentialStore(
+        store,
+        requestedOrganizationId,
+      );
       return sendGithubJson(req, res, 200, {
         connected: true,
         profile,
-        credentials: listPublicGithubCredentials(store),
-        defaultCredentialId: store.defaultCredentialId || undefined,
+        credentials: listPublicGithubCredentials(nextScopedStore),
+        defaultCredentialId: nextScopedStore.defaultCredentialId || undefined,
         scope: token.scope || "",
         tokenType: token.tokenType || "bearer",
         expiresAt: token.expiresAt ?? null,
       }, allowedOrigins);
-    } catch (error) {
-      if (error?.status === 401) {
-        const store = await deleteGithubToken(
-          verifiedUser.uid,
-          envFileCandidates,
-          token.credentialId,
-        );
-        return sendGithubJson(req, res, 200, {
-          connected: Object.keys(store.credentials).length > 0,
-          credentials: listPublicGithubCredentials(store),
-          defaultCredentialId: store.defaultCredentialId || undefined,
-          reason: "token_revoked",
-        }, allowedOrigins);
-      }
-      throw error;
     }
+    if (validation.state === "invalid") {
+      const store = await updateGithubCredentialMetadata(
+        verifiedUser.uid,
+        token.credentialId,
+        {
+          status: "invalid",
+          lastCheckedAt: Date.now(),
+        },
+        envFileCandidates,
+      );
+      const nextScopedStore = scopeGithubCredentialStore(
+        store,
+        requestedOrganizationId,
+      );
+      const credentials = listPublicGithubCredentials(nextScopedStore);
+      return sendGithubJson(req, res, 200, {
+        connected: credentials.some(({ status }) => status === "valid"),
+        profile: token.profile || undefined,
+        credentials,
+        defaultCredentialId: nextScopedStore.defaultCredentialId || undefined,
+        reason: "token_revoked",
+      }, allowedOrigins);
+    }
+
+    // Provider validation is advisory. A temporary GitHub outage must not
+    // erase or visually disconnect a credential that is safely stored.
+    return sendGithubJson(req, res, 200, {
+      connected: true,
+      profile: token.profile || undefined,
+      credentials: listPublicGithubCredentials(scopedStore),
+      defaultCredentialId: scopedStore.defaultCredentialId || undefined,
+      scope: token.scope || "",
+      tokenType: token.tokenType || "bearer",
+      expiresAt: token.expiresAt ?? null,
+      reason: "validation_unavailable",
+    }, allowedOrigins);
   } catch (error) {
     if (error?.code === "unauthorized") {
       return sendGithubJson(req, res, 200, {
@@ -697,6 +756,59 @@ function parseGithubCredentialStore(document) {
   };
 }
 
+function scopeGithubCredentialStore(store, organizationId = "") {
+  const normalizedOrganizationId = normalizeGithubOrganizationId(organizationId);
+  if (!normalizedOrganizationId) return store;
+  const credentials = Object.fromEntries(
+    Object.entries(store?.credentials || {}).filter(([, credential]) => (
+      credential.organizationId === normalizedOrganizationId
+    )),
+  );
+  return {
+    credentials,
+    defaultCredentialId: credentials[store?.defaultCredentialId]
+      ? store.defaultCredentialId
+      : Object.keys(credentials)[0] || "",
+    migrated: false,
+  };
+}
+
+async function syncGithubCredentialRegistry(uid, store, envFileCandidates) {
+  const credentials = Object.values(store?.credentials || {}).sort((left, right) => {
+    if (left.id === store.defaultCredentialId) return -1;
+    if (right.id === store.defaultCredentialId) return 1;
+    return left.createdAt - right.createdAt;
+  });
+  await Promise.all(credentials.map((credential) => (
+    credential.organizationId
+      ? registerOrganizationConnectorCredential({
+          organizationId: credential.organizationId,
+          provider: "github",
+          credential,
+          ownerUserId: uid,
+          envFileCandidates,
+        })
+      : null
+  )));
+  return store;
+}
+
+async function trySyncGithubCredentialRegistry(uid, store, envFileCandidates) {
+  try {
+    await syncGithubCredentialRegistry(uid, store, envFileCandidates);
+    return true;
+  } catch (error) {
+    // The encrypted user credential store is authoritative. The organization
+    // catalog is a derived index and is retried on every status read, so a
+    // transient catalog failure must not make a persisted credential vanish.
+    console.warn("[github-oauth] Credential catalog synchronization deferred.", {
+      credentialCount: Object.keys(store?.credentials || {}).length,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
+}
+
 async function readGithubCredentialStore(uid, envFileCandidates) {
   const document = await firestoreGetDocument(
     `${FIRESTORE_TOKEN_COLLECTION}/${encodeURIComponent(uid)}`,
@@ -819,20 +931,20 @@ async function saveGithubToken(uid, payload, envFileCandidates) {
       envFileCandidates,
     });
   }
-  if (nextCredential.organizationId) {
-    await registerOrganizationConnectorCredential({
-      organizationId: nextCredential.organizationId,
-      provider: "github",
-      credential: nextCredential,
-      ownerUserId: uid,
-      envFileCandidates,
-    });
-  }
+  await trySyncGithubCredentialRegistry(uid, writtenStore, envFileCandidates);
   return writtenStore;
 }
 
-async function loadGithubToken(uid, envFileCandidates, credentialId = "") {
-  const store = await readGithubCredentialStore(uid, envFileCandidates);
+async function loadGithubToken(
+  uid,
+  envFileCandidates,
+  credentialId = "",
+  existingStore = null,
+) {
+  const store = existingStore || await readGithubCredentialStore(
+    uid,
+    envFileCandidates,
+  );
   const selectedCredentialId = normalizeGithubCredentialId(credentialId)
     || store.defaultCredentialId;
   const credential = store.credentials[selectedCredentialId];
@@ -843,6 +955,7 @@ async function loadGithubToken(uid, envFileCandidates, credentialId = "") {
     return {
       ...JSON.parse(await decryptToken(credential.encryptedToken, envFileCandidates)),
       credentialId: selectedCredentialId,
+      profile: credential.profile,
     };
   } catch {
     return null;
@@ -880,16 +993,7 @@ async function updateGithubCredentialMetadata(
     store,
     envFileCandidates,
   );
-  const nextCredential = writtenStore.credentials[normalizedCredentialId];
-  if (nextCredential.organizationId) {
-    await registerOrganizationConnectorCredential({
-      organizationId: nextCredential.organizationId,
-      provider: "github",
-      credential: nextCredential,
-      ownerUserId: uid,
-      envFileCandidates,
-    });
-  }
+  await trySyncGithubCredentialRegistry(uid, writtenStore, envFileCandidates);
   return writtenStore;
 }
 
@@ -1185,7 +1289,7 @@ function buildCorsHeaders(req, allowedOrigins) {
   const requestOrigin = String(req.headers.origin || "").trim();
   const responseHeaders = {
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization,X-API-Key",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization,X-API-Key,X-Computer-Agents-Organization",
     "Access-Control-Allow-Credentials": "true",
     Vary: "Origin",
   };

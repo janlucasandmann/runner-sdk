@@ -1,7 +1,7 @@
 import { isAgentAssistantPresetExecutionContent } from "./message-sanitization.mjs";
 
 export function createThreadMessageGateway(bindings) {
-    const { fetchSessionApi, hasAiosSession, parseUpstreamUrl, readOptionalApiKey, readRequestBody, sendJson, summarizeRunnerStreamChunkForLog, withProxyOrganizationHeader } = bindings;
+    const { fetchSessionApi, fetchSessionRunnerApi, hasAiosSession, parseUpstreamUrl, readOptionalApiKey, readRequestBody, sendJson, summarizeRunnerStreamChunkForLog, withProxyOrganizationHeader } = bindings;
     let threadPayloadEnricher = async (_req, _upstreamUrl, _apiKey, payload) => payload;
     let threadMessagePayloadEnricher = async (_req, _threadId, _upstreamUrl, _apiKey, payload) => payload;
     async function proxyCreateThread(req, res) {
@@ -127,10 +127,9 @@ export function createThreadMessageGateway(bindings) {
                     threadId,
                     mode: "aios-session",
                 });
-                upstream = await fetchSessionApi(
+                upstream = await fetchSessionRunnerApi(
                     req,
                     `/threads/${encodeURIComponent(threadId)}/messages`,
-                    `/api/threads/${encodeURIComponent(threadId)}/messages`,
                     {
                         method: "POST",
                         headers: {
