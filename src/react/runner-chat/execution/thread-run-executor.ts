@@ -43,9 +43,11 @@ import {
   startEnvironment,
 } from "../environment-api.js";
 import {
+  buildRunnerExecutionMessageMetadata,
   buildRunnerExecutionPrompt,
   buildRunnerThreadMessageRequestBody,
 } from "../execution-request.js";
+import { getRunnerConnectorIdsFromPayload } from "../composer-connectors.js";
 import { normalizeHydratedLog } from "../hydration/log-normalization.js";
 import { generateRunnerClientId } from "../id-utils.js";
 import {
@@ -201,6 +203,10 @@ export interface RunnerThreadRunExecutorDependencies {
   ) => Promise<void>;
   refreshThreadContextDetails: (threadId: string) => void;
   requestHeaders?: HeadersInit;
+  resolveRequestHeaders?: () =>
+    | HeadersInit
+    | undefined
+    | Promise<HeadersInit | undefined>;
   resolveAttachmentPayload: (
     files: LocalAttachment[],
     environmentIdOverride?: string | null,
@@ -319,6 +325,12 @@ export function createRunnerThreadRunExecutor(
           ),
         ),
       );
+    const runConnectors = options.connectorsOverride === undefined
+      ? dependencies.backlogTaskConnectors
+      : options.connectorsOverride;
+    const hasRunConnectors = getRunnerConnectorIdsFromPayload(
+      runConnectors,
+    ).length > 0;
 
     dependencies.initializedThreadHistoryIdRef.current = threadId;
     const githubRepo = options.githubRepoOverride !== undefined
@@ -360,10 +372,7 @@ export function createRunnerThreadRunExecutor(
         attachments: resolvedAttachments || [],
         githubRepo: githubRepo || null,
         enabledSkills: executionEnabledSkillsPayload || null,
-        connectors:
-          options.connectorsOverride === undefined
-            ? dependencies.backlogTaskConnectors
-            : options.connectorsOverride,
+        connectors: runConnectors,
         environmentId:
           typeof runEnvironmentId === "string" ? runEnvironmentId : "",
         projectId: dependencies.effectiveProjectId || null,
@@ -404,6 +413,14 @@ export function createRunnerThreadRunExecutor(
     const scrapeCreationCommand = options.scrapeCreationCommand || null;
     const parseCreationCommand = options.parseCreationCommand || null;
     const adCreationCommand = options.adCreationCommand || null;
+    const turnMessageMetadata = buildRunnerExecutionMessageMetadata({
+      slideCreationCommand,
+      researchCreationCommand,
+      scrapeCreationCommand,
+      parseCreationCommand,
+      adCreationCommand,
+      connectors: runConnectors,
+    });
     const startedAtMs = Date.now();
     let releasedPreparationState = false;
     const releasePreparationState = () => {
@@ -438,6 +455,12 @@ export function createRunnerThreadRunExecutor(
           parseCreationCommand || turn.parseCreationCommand || null,
         adCreationCommand:
           adCreationCommand || turn.adCreationCommand || null,
+        messageMetadata: turnMessageMetadata
+          ? {
+              ...(turn.messageMetadata || {}),
+              ...turnMessageMetadata,
+            }
+          : turn.messageMetadata,
       }));
     } else {
       dependencies.setTurns((currentTurns) => [
@@ -461,11 +484,12 @@ export function createRunnerThreadRunExecutor(
           scrapeCreationCommand,
           parseCreationCommand,
           adCreationCommand,
+          messageMetadata: turnMessageMetadata || null,
         },
       ]);
       dependencies.setExpandedTurns((current) => ({
         ...current,
-        [turnId]: true,
+        [turnId]: false,
       }));
     }
 
@@ -588,6 +612,10 @@ export function createRunnerThreadRunExecutor(
           });
       }
 
+      const resolvedRequestHeaders = hasRunConnectors
+        && dependencies.resolveRequestHeaders
+        ? await dependencies.resolveRequestHeaders()
+        : dependencies.requestHeaders;
       const executionResult = await dependencies.execute({
         run: {
           url:
@@ -595,12 +623,13 @@ export function createRunnerThreadRunExecutor(
             + `${encodeURIComponent(threadId)}/messages`,
           headers: (() => {
             const headers = new Headers(
-              dependencies.requestHeaders || {},
+              resolvedRequestHeaders || dependencies.requestHeaders || {},
             );
             headers.set("Content-Type", "application/json");
             headers.set("X-API-Key", dependencies.apiKey);
             return headers;
           })(),
+          credentials: "include",
           body: buildRunnerThreadMessageRequestBody({
             taskText,
             visibleTaskText,
@@ -613,10 +642,7 @@ export function createRunnerThreadRunExecutor(
             persistFileChanges: options.persistFileChanges,
             quotedSelection: options.quotedSelection,
             enabledSkills: executionEnabledSkillsPayload,
-            connectors:
-              options.connectorsOverride === undefined
-                ? dependencies.backlogTaskConnectors
-                : options.connectorsOverride,
+            connectors: runConnectors,
             backlogCommand: options.backlogCommand,
             slideCreationCommand: options.slideCreationCommand,
             researchCreationCommand: options.researchCreationCommand,

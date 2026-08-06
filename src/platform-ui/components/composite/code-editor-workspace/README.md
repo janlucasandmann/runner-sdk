@@ -17,6 +17,8 @@
 - the editor content region and empty states;
 - automatic Markdown-file detection with the centralized live
   `PlatformInstructionsEditor` and formatting toolbar;
+- an optional lazy, editable `PlatformMonacoCodeEditor` for language-aware
+  source and structured-data editing;
 - Undo and Redo controls rendered through the shared icon-button primitive in the active-file header.
 
 The caller remains responsible for file data, editor implementation, draft
@@ -37,7 +39,14 @@ Use `variant="full-screen"` when the workspace should occupy the complete width 
   onCreateFile={createFile}
   onUploadFiles={uploadFiles}
   onCreateFolder={createFolder}
-  editor={<Editor value={source} onChange={setSource} />}
+  editor={(
+    <PlatformMonacoCodeEditor
+      value={source}
+      onChange={setSource}
+      language="python"
+      path={activeFileId}
+    />
+  )}
   markdownEditor={{
     value: source,
     onChange: setSource,

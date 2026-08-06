@@ -20,6 +20,7 @@ export function createConnectorCredentialRegistry(storage) {
     name = "",
     identity = "",
     status = "valid",
+    makeDefault = false,
     createdAt = Date.now(),
     updatedAt = Date.now(),
   }) {
@@ -34,9 +35,10 @@ export function createConnectorCredentialRegistry(storage) {
       identifiers.provider,
     );
     const providerRecord = await storage.getDocument(providerPath);
-    const defaultCredentialId = normalizeCredentialId(
-      providerRecord?.defaultCredentialId,
-    ) || identifiers.credentialId;
+    const defaultCredentialId = makeDefault
+      ? identifiers.credentialId
+      : normalizeCredentialId(providerRecord?.defaultCredentialId)
+        || identifiers.credentialId;
 
     await storage.setDocument(
       getCredentialPath(

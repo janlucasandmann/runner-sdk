@@ -955,6 +955,9 @@ export function shouldDisplayTimelineLog(log: RunnerLog): boolean {
   if (normalizedMessage === "starting session" || normalizedMessage === "starting session...") {
     return false;
   }
+  if (normalizedMessage === "thinking" || normalizedMessage === "thinking...") {
+    return false;
+  }
   return true;
 }
 

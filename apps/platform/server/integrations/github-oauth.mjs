@@ -94,7 +94,12 @@ export async function handleGithubApiRequest({
         envFileCandidates,
         allowedOrigins,
         verifyRequestUser,
-        loadGithubToken,
+        loadGithubToken: (uid, candidates, credentialId = "") => loadGithubRequestToken(
+          req,
+          uid,
+          candidates,
+          credentialId,
+        ),
         deleteGithubToken,
         sendJson: sendGithubJson,
       });
@@ -109,7 +114,12 @@ export async function handleGithubApiRequest({
         envFileCandidates,
         allowedOrigins,
         verifyRequestUser,
-        loadGithubToken,
+        loadGithubToken: (uid, candidates, credentialId = "") => loadGithubRequestToken(
+          req,
+          uid,
+          candidates,
+          credentialId,
+        ),
         deleteGithubToken,
         sendJson: sendGithubJson,
       });
@@ -139,6 +149,23 @@ function normalizeGithubApiPath(pathname) {
     return pathname.replace(/^\/api\/aios/, "/api");
   }
   return null;
+}
+
+async function loadGithubRequestToken(req, uid, envFileCandidates, credentialId = "") {
+  const organizationId = normalizeGithubOrganizationId(
+    urlSearchParam(req, "organizationId")
+      || req.headers["x-computer-agents-organization"],
+  );
+  if (!organizationId) {
+    return loadGithubToken(uid, envFileCandidates, credentialId);
+  }
+  const completeStore = await readGithubCredentialStore(uid, envFileCandidates);
+  return loadGithubToken(
+    uid,
+    envFileCandidates,
+    credentialId,
+    scopeGithubCredentialStore(completeStore, organizationId),
+  );
 }
 
 async function handleGithubLogin(req, res, { platformOrigin, envFileCandidates, allowedOrigins }) {

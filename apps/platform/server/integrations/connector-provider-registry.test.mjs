@@ -78,6 +78,8 @@ test("provider metadata is normalized and immutable", () => {
   const figma = getGenericConnectorProvider("figma");
   assert.equal(figma.scopeSeparator, ",");
   assert.equal(figma.tokenAuth, "basic");
+  assert.equal(figma.tokenUrl, "https://api.figma.com/v1/oauth/token");
+  assert.equal(figma.refreshUrl, "https://api.figma.com/v1/oauth/refresh");
 
   const teams = getGenericConnectorProvider("microsoft-teams");
   assert.ok(teams.scopes.includes("TeamMember.Read.All"));

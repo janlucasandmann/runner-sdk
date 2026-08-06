@@ -11,13 +11,12 @@
         import { visit as unistVisit } from "unist-util-visit";
         import Chart from "chart.js/auto";
         import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
-        import { browserLocalPersistence, getApps, getAuth, GoogleAuthProvider, initializeApp, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOutFirebaseAuth } from "/api/platform/auth/browser-module.js";
         import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, GitPullRequestArrow, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plug, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquareMousePointer, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
-	      import { RunnerClient, buildRunnerThreadActivityHierarchy } from "/dist/index.js";
+        import { RunnerClient, buildRunnerThreadActivityTree, collectRunnerConnectorIdsFromStructuredEvidence, describeRunnerThreadActivityGroup, extractRunnerThreadPlanSteps, flattenRunnerThreadActivityTree, presentRunnerThreadAction } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
 	      import { PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
         import { PlatformAttachmentActionMenu, PlatformAttachments } from "/dist/platform-ui/components/composite/attachments/index.js";
-        import { PlatformFileExplorerBrowserModal, PlatformFileExplorerModal } from "/dist/platform-ui/components/composite/file-explorer/index.js";
+        import { PlatformFileExplorerBrowser, PlatformFileExplorerBrowserModal, PlatformFileExplorerFileIcon, PlatformFileExplorerModal, resolvePlatformFileExplorerFileKind } from "/dist/platform-ui/components/composite/file-explorer/index.js";
         import { PlatformSubtasks } from "/dist/platform-ui/components/composite/subtasks/index.js";
         import { PlatformActivityOverview, PlatformActivityOverviewCard } from "/dist/platform-ui/components/composite/activity-overview/index.js";
         import { PlatformActivityTimeline } from "/dist/platform-ui/components/composite/activity-timeline/index.js";
@@ -35,6 +34,7 @@
         import { PlatformInstructionsEditor, normalizePlatformInstructionsEditorImageSource, replacePlatformInstructionsEditorImageMarkdown, serializePlatformInstructionsEditorFileMarkdown, serializePlatformInstructionsEditorImageMarkdown } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
   	      import { PlatformLoadingState } from "/dist/platform-ui/components/composite/loading-state/index.js";
         import { PlatformSettingsSection, PlatformSettingsSectionList } from "/dist/platform-ui/components/composite/settings-section/index.js";
+        import { PlatformResourceShareModal } from "/dist/platform-ui/components/composite/resource-action-modals/index.js";
         import { PlatformUiCard } from "/dist/platform-ui/components/composite/ui-card/index.js";
   	      import { PlatformButton, PlatformPrimaryButton, PlatformSecondaryButton } from "/dist/platform-ui/components/ui/button/index.js";
         import { PlatformIconButton } from "/dist/platform-ui/components/ui/icon-button/index.js";
@@ -81,7 +81,7 @@
         import { AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, arePlatformAgentListRecordsEquivalent as arePlaygroundAgentListsEquivalent, buildPlatformAgentListScopeKey as buildPlaygroundAgentListScopeKey, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, isThreadFunctionalAgentRole, normalizeComputerOverviewRows, normalizePlatformAgentListRecords, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, readCachedPlatformAgentList as readCachedPlaygroundAgentList, saveComputerResource, writeCachedPlatformAgentList as writeCachedPlaygroundAgentList } from "/dist/platform-shell/presentation/platform-resource-api.js";
 	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, getDevelopResourceCreatorIdentity, getDevelopResourceOwnerIdentity, initializeDevelopResourceIdentityMetadata, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-shell/presentation/platform-develop-api.js";
         import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, AssuranceWorkspacePage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopEvidenceAgentsWorkspacePage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopSecurityWorkspacePage, DevelopServerDetailPage, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationCaseDetailPage, EvaluationDetailPage, EvaluationsOverviewPage, FineTuningDetailPage, FineTuningOverviewPage, GuardrailDetailPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationAccessControlPage, OrganizationsOverviewPage, ProjectDeliveryWorkspace, ProjectDetailPage, ProjectIconPicker, ProjectMilestonesOverviewPage, ProjectSummary, ProjectSummaryDetails, SkillDetailPage, SkillsOverviewPage, SourceDeployableServerDetailPage, TagDetailPage, TagsOverviewPage, TeamDetailPage, TeamsOverviewPage, TestsWorkspacePage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
-	      import { beginPlatformPluginConnection, buildPlatformPluginConnectionReturnUrl, clearPlatformPluginConnectionRedirectState, clearPlatformPluginConnectionReturnUrlState, createPlatformPluginConnectionReturnUrlState, disconnectPlatformPluginConnection, fetchPlatformPluginConnectionStatus, getPlatformPluginConnectionDefinition, getPlatformPluginConnectionIdentity, normalizePlatformPluginConnectionReturnTarget, readCachedPlatformPluginConnectionStatus, readPlatformPluginConnectionRedirectState, readPlatformPluginConnectionReturnUrlState, savePlatformPluginCredentials, writeCachedPlatformPluginConnectionStatus, writePlatformPluginConnectionRedirectState } from "/dist/platform-resources/plugins/connections/index.js";
+	      import { beginPlatformPluginConnection, buildPlatformPluginConnectionReturnUrl, clearPlatformPluginConnectionRedirectState, clearPlatformPluginConnectionReturnUrlState, createPlatformPluginConnectionReturnUrlState, disconnectPlatformPluginConnection, fetchPlatformPluginConnectionStatus, fetchPlatformPluginFileSourceStatuses, fetchPlatformPluginFiles, getPlatformPluginConnectionDefinition, getPlatformPluginConnectionIdentity, normalizePlatformPluginConnectionReturnTarget, readCachedPlatformPluginConnectionStatus, readPlatformPluginConnectionRedirectState, readPlatformPluginConnectionReturnUrlState, savePlatformPluginCredentials, writeCachedPlatformPluginConnectionStatus, writePlatformPluginConnectionRedirectState } from "/dist/platform-resources/plugins/connections/index.js";
         import {
           PLATFORM_CONNECTOR_CAPABILITIES,
           getPlatformConnectorCatalogEntry,
@@ -839,6 +839,8 @@
         const PLAYGROUND_INITIAL_PROMPT_QUERY_PARAM = "initialPrompt";
         const PLAYGROUND_AUTH_REDIRECT_STATE_KEY = "runner_demo_auth_redirect_v1";
         const PLAYGROUND_AUTH_SESSION_MARKER_KEY = "runner_demo_auth_session_marker_v1";
+        const PLAYGROUND_AUTH_SESSION_SNAPSHOT_KEY = "runner_demo_auth_session_snapshot_v1";
+        const PLAYGROUND_AUTH_SESSION_SNAPSHOT_MAX_AGE_MS = 5 * 60 * 1000;
         const PLAYGROUND_CONNECTOR_BROWSER_RESTORE_STATE_KEY = "runner_demo_connector_browser_restore_v1";
         const PLAYGROUND_PROJECT_COMPOSER_CONNECTOR_RESTORE_STATE_KEY = "runner_demo_project_composer_connector_restore_v1";
   __PLATFORM_COMPATIBILITY_BINDING_064__      const PLAYGROUND_CONNECTOR_BROWSER_RESTORE_QUERY_PARAMS = [
@@ -926,6 +928,7 @@
         const PLAYGROUND_FIREBASE_APP_NAME = "runner-platform-auth";
         let playgroundFirebaseAuthInstance = null;
         let playgroundFirebaseAuthReadyPromise = null;
+        let playgroundFirebaseBrowserModulePromise = null;
         const SETTINGS_CHANNEL_COLORS = {
           native: "rgb(143,196,255)",
           web: "rgb(255,255,255)",
@@ -1147,6 +1150,84 @@
         function clearPlaygroundAuthSessionMarker() {
           try {
             sessionStorage.removeItem(PLAYGROUND_AUTH_SESSION_MARKER_KEY);
+          } catch {}
+        }
+
+        function readPlaygroundAuthSessionSnapshot() {
+          try {
+            if (!readPlaygroundAuthSessionMarker()) {
+              sessionStorage.removeItem(PLAYGROUND_AUTH_SESSION_SNAPSHOT_KEY);
+              return null;
+            }
+            const raw = sessionStorage.getItem(PLAYGROUND_AUTH_SESSION_SNAPSHOT_KEY);
+            const parsed = raw ? JSON.parse(raw) : null;
+            const cachedAt = Number(parsed?.cachedAt || 0);
+            const userId = typeof parsed?.userId === "string" ? parsed.userId.trim() : "";
+            if (
+              !parsed
+              || typeof parsed !== "object"
+              || Array.isArray(parsed)
+              || !userId
+              || !Number.isFinite(cachedAt)
+              || Date.now() - cachedAt > PLAYGROUND_AUTH_SESSION_SNAPSHOT_MAX_AGE_MS
+            ) {
+              sessionStorage.removeItem(PLAYGROUND_AUTH_SESSION_SNAPSHOT_KEY);
+              return null;
+            }
+            return {
+              status: "authenticated",
+              userId,
+              email: typeof parsed.email === "string" ? parsed.email : "",
+              projectId: typeof parsed.projectId === "string" ? parsed.projectId : "",
+              displayName: typeof parsed.displayName === "string" ? parsed.displayName : "",
+              photoURL: typeof parsed.photoURL === "string" ? parsed.photoURL : "",
+              emailVerified: !!parsed.emailVerified,
+              subscriptionTier: typeof parsed.subscriptionTier === "string"
+                ? parsed.subscriptionTier
+                : "sandbox",
+              subscriptionStatus: typeof parsed.subscriptionStatus === "string"
+                ? parsed.subscriptionStatus
+                : "",
+              onboardingCompleted: typeof parsed.onboardingCompleted === "boolean"
+                ? parsed.onboardingCompleted
+                : null,
+              error: "",
+            };
+          } catch {
+            return null;
+          }
+        }
+
+        function writePlaygroundAuthSessionSnapshot(session) {
+          try {
+            const userId = typeof session?.userId === "string" ? session.userId.trim() : "";
+            if (!userId) {
+              return;
+            }
+            sessionStorage.setItem(PLAYGROUND_AUTH_SESSION_SNAPSHOT_KEY, JSON.stringify({
+              cachedAt: Date.now(),
+              userId,
+              email: typeof session.email === "string" ? session.email : "",
+              projectId: typeof session.projectId === "string" ? session.projectId : "",
+              displayName: typeof session.displayName === "string" ? session.displayName : "",
+              photoURL: typeof session.photoURL === "string" ? session.photoURL : "",
+              emailVerified: !!session.emailVerified,
+              subscriptionTier: typeof session.subscriptionTier === "string"
+                ? session.subscriptionTier
+                : "sandbox",
+              subscriptionStatus: typeof session.subscriptionStatus === "string"
+                ? session.subscriptionStatus
+                : "",
+              onboardingCompleted: typeof session.onboardingCompleted === "boolean"
+                ? session.onboardingCompleted
+                : null,
+            }));
+          } catch {}
+        }
+
+        function clearPlaygroundAuthSessionSnapshot() {
+          try {
+            sessionStorage.removeItem(PLAYGROUND_AUTH_SESSION_SNAPSHOT_KEY);
           } catch {}
         }
   
@@ -2176,7 +2257,21 @@
           }
         }
   
-        function getPlaygroundFirebaseAuth() {
+        async function loadPlaygroundFirebaseBrowserModule() {
+          if (PLATFORM_IDENTITY_PROVIDER !== "firebase") {
+            return null;
+          }
+          if (!playgroundFirebaseBrowserModulePromise) {
+            playgroundFirebaseBrowserModulePromise = import("/api/platform/auth/browser-module.js")
+              .catch((error) => {
+                playgroundFirebaseBrowserModulePromise = null;
+                throw error;
+              });
+          }
+          return playgroundFirebaseBrowserModulePromise;
+        }
+
+        function getPlaygroundFirebaseAuth(firebaseBrowserModule) {
           if (PLATFORM_IDENTITY_PROVIDER !== "firebase") {
             return null;
           }
@@ -2196,27 +2291,37 @@
             appId: FIREBASE_APP_ID,
           };
           try {
-            const existingApp = getApps().find((app) => app.name === PLAYGROUND_FIREBASE_APP_NAME);
-            const firebaseApp = existingApp || initializeApp(firebaseConfig, PLAYGROUND_FIREBASE_APP_NAME);
-            playgroundFirebaseAuthInstance = getAuth(firebaseApp);
+            const existingApp = firebaseBrowserModule.getApps().find((app) => app.name === PLAYGROUND_FIREBASE_APP_NAME);
+            const firebaseApp = existingApp || firebaseBrowserModule.initializeApp(firebaseConfig, PLAYGROUND_FIREBASE_APP_NAME);
+            playgroundFirebaseAuthInstance = firebaseBrowserModule.getAuth(firebaseApp);
             return playgroundFirebaseAuthInstance;
           } catch {
             return null;
           }
         }
-  
-        async function ensurePlaygroundFirebaseAuth() {
-          const auth = getPlaygroundFirebaseAuth();
-          if (!auth) {
+
+        async function ensurePlaygroundFirebaseAuthContext() {
+          const firebaseBrowserModule = await loadPlaygroundFirebaseBrowserModule();
+          const auth = firebaseBrowserModule
+            ? getPlaygroundFirebaseAuth(firebaseBrowserModule)
+            : null;
+          if (!auth || !firebaseBrowserModule) {
             return null;
           }
           if (!playgroundFirebaseAuthReadyPromise) {
-            playgroundFirebaseAuthReadyPromise = setPersistence(auth, browserLocalPersistence).catch(() => {});
+            playgroundFirebaseAuthReadyPromise = firebaseBrowserModule
+              .setPersistence(auth, firebaseBrowserModule.browserLocalPersistence)
+              .catch(() => {});
           }
           await playgroundFirebaseAuthReadyPromise;
-          return auth;
+          return { auth, firebaseBrowserModule };
         }
-  
+
+        async function ensurePlaygroundFirebaseAuth() {
+          const context = await ensurePlaygroundFirebaseAuthContext();
+          return context?.auth || null;
+        }
+
         function createFetchAbortReason(name, message) {
           if (typeof DOMException === "function") {
             return new DOMException(message, name);
@@ -2509,7 +2614,20 @@
             return false;
           }
         }
-  
+
+        async function buildRunnerAuthenticatedRequestHeaders(requestHeaders) {
+          const headers = { ...(requestHeaders || {}) };
+          if (PLATFORM_IDENTITY_PROVIDER !== "firebase") {
+            return headers;
+          }
+          await syncFirebaseSessionCookieFromCurrentUser(false);
+          const idToken = readNamedCookie("__session");
+          return {
+            ...headers,
+            ...(idToken ? { Authorization: "Bearer " + idToken } : {}),
+          };
+        }
+
         async function copyTextToClipboard(value) {
           try {
             await navigator.clipboard.writeText(String(value || ""));
@@ -12267,6 +12385,178 @@
             ringId: getTracePermissionRingId(ring),
           });
         }
+
+        function normalizeActivityConnectorId(value) {
+          if (value === null || value === undefined || (typeof value !== "string" && typeof value !== "number")) {
+            return "";
+          }
+          const normalized = String(value || "")
+            .trim()
+            .toLowerCase()
+            .replace(/^(?:mcp__)?connector[_:-]+/, "")
+            .replace(/^integration[_:-]+/, "")
+            .replace(/[^a-z0-9_-]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+          const aliases = {
+            atlassian: "jira",
+            google_drive: "google-drive",
+            googlecalendar: "google-calendar",
+            google_calendar: "google-calendar",
+            onedrive: "one-drive",
+            microsoft_teams: "microsoft-teams",
+            microsoftteams: "microsoft-teams",
+          };
+          return aliases[normalized] || normalized;
+        }
+
+        function humanizeActivityConnectorOperation(value) {
+          const normalized = String(value || "")
+            .trim()
+            .replace(/^mcp__connector_.+?__/, "")
+            .replace(/[^a-zA-Z0-9]+/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .toLowerCase();
+          if (!normalized) return "Used the connector";
+          const words = normalized.split(" ");
+          const verb = words.shift() || "completed";
+          const object = words.join(" ").trim();
+          const verbLabels = {
+            add: "Added",
+            archive: "Archived",
+            assign: "Assigned",
+            comment: "Commented on",
+            create: "Created",
+            delete: "Deleted",
+            download: "Downloaded",
+            edit: "Edited",
+            fetch: "Fetched",
+            get: "Viewed",
+            import: "Imported",
+            list: "Listed",
+            move: "Moved",
+            post: "Posted to",
+            query: "Queried",
+            read: "Read",
+            remove: "Removed",
+            search: "Searched",
+            send: "Sent",
+            share: "Shared",
+            update: "Updated",
+            upload: "Uploaded",
+            write: "Wrote",
+          };
+          const label = verbLabels[verb] || `${verb.charAt(0).toUpperCase()}${verb.slice(1)}`;
+          return `${label}${object ? ` ${object}` : ""}`;
+        }
+
+        function getActivityConnectorDetails(action) {
+          if (!action || typeof action !== "object") return null;
+          const connectorIds = new Set();
+          try {
+            collectRunnerConnectorIdsFromStructuredEvidence(action, connectorIds);
+          } catch {}
+          const metadata = action.metadata && typeof action.metadata === "object" && !Array.isArray(action.metadata)
+            ? action.metadata
+            : {};
+          [
+            metadata.connectorId,
+            metadata.connector_id,
+            metadata.connector,
+            metadata.integration,
+            metadata.integrationId,
+            metadata.integration_id,
+            metadata.provider,
+            metadata.serverName,
+            metadata.server_name,
+            metadata.connectorServerName,
+            metadata.connector_server_name,
+          ].forEach((value) => {
+            const normalized = normalizeActivityConnectorId(value);
+            if (normalized) connectorIds.add(normalized);
+          });
+          const connectorId = Array.from(connectorIds)
+            .map(normalizeActivityConnectorId)
+            .map((value) => value.replace(/-+$/g, ""))
+            .find((value) => Boolean(getPlatformConnectorCatalogEntry(value)))
+            || Array.from(connectorIds)
+              .map(normalizeActivityConnectorId)
+              .find((value) => value && !["connector", "integration", "mcp", "provider"].includes(value))
+            || "";
+          if (!connectorId) return null;
+          const catalogEntry = getPlatformConnectorCatalogEntry(connectorId);
+          const connectorName = String(catalogEntry?.label || connectorId)
+            .replace(/\s+/g, " ")
+            .trim() || "Connector";
+          const toolName = String(
+            action.toolName
+            || metadata.toolName
+            || metadata.tool_name
+            || ""
+          ).trim();
+          const qualifiedToolName = toolName.match(/^mcp__connector_(.+?)__(.+)$/i)?.[2] || toolName;
+          const actionPresentation = presentRunnerThreadAction(action);
+          const genericPresentation = /^(?:used (?:a|the) connector|worked with connected services?)$/i.test(
+            String(actionPresentation?.title || "").trim(),
+          );
+          const description = genericPresentation
+            ? humanizeActivityConnectorOperation(
+                qualifiedToolName
+                || metadata.permissionActionLabel
+                || metadata.permission_action_label
+                || action.summary
+                || action.title,
+              )
+            : String(actionPresentation?.title || "Used the connector").trim();
+          return {
+            id: connectorId,
+            name: connectorName,
+            logoUrl: String(catalogEntry?.logoUrl || "").trim(),
+            description,
+          };
+        }
+
+        function renderActivityConnectorIcon(connector) {
+          if (!connector?.logoUrl) return renderThreadActivityActionIcon("connector");
+          return React.createElement("span", {
+            className: "platform-activity-overview-card__connector-icon",
+            "aria-hidden": "true",
+          }, React.createElement("img", {
+            src: connector.logoUrl,
+            alt: "",
+            loading: "lazy",
+          }));
+        }
+
+        function renderThreadActivityActionIcon(iconKind) {
+          const props = { width: 14, height: 14, strokeWidth: 1.8 };
+          if (iconKind === "search") return React.createElement(Search, props);
+          if (iconKind === "web") return React.createElement(Globe, props);
+          if (iconKind === "terminal") return React.createElement(Terminal, props);
+          if (iconKind === "file_add") return React.createElement(FilePlus2, props);
+          if (iconKind === "file_delete") return React.createElement(Trash2, props);
+          if (iconKind === "file") return React.createElement(FileText, props);
+          if (iconKind === "todo") return React.createElement(ListTodo, props);
+          if (iconKind === "connector") return React.createElement(Plug, props);
+          if (iconKind === "database") return React.createElement(Database, props);
+          if (iconKind === "subagent") return React.createElement(Bot, props);
+          if (iconKind === "browser") return React.createElement(MousePointer2, props);
+          if (iconKind === "code") return React.createElement(Code2, props);
+          if (iconKind === "git") return React.createElement(GitBranch, props);
+          if (iconKind === "test") return React.createElement(TestTubeDiagonal, props);
+          return React.createElement(Zap, props);
+        }
+
+        function getThreadActivityGroupRailColor(groupId) {
+          const palette = ["#4da3ff", "#7effff", "#85df7b", "#f2b84b", "#c084fc", "#f472b6"];
+          const value = String(groupId || "");
+          if (!value) return "";
+          let hash = 0;
+          for (let index = 0; index < value.length; index += 1) {
+            hash = ((hash * 31) + value.charCodeAt(index)) >>> 0;
+          }
+          return palette[hash % palette.length];
+        }
   
         function getTraceRingDescription(ring) {
           const numericRing = Number(ring);
@@ -12506,6 +12796,21 @@
             return "—";
           }
           return Math.round(numericValue).toLocaleString("en-US") + " ms";
+        }
+
+        function formatTraceElapsedLabelMs(value) {
+          const numericValue = Number(value);
+          if (!Number.isFinite(numericValue) || numericValue < 0) {
+            return "0.0 s";
+          }
+          const totalSeconds = numericValue / 1000;
+          if (totalSeconds < 60) {
+            return totalSeconds.toFixed(1) + " s";
+          }
+          const totalWholeSeconds = Math.max(0, Math.round(totalSeconds));
+          const minutes = Math.floor(totalWholeSeconds / 60);
+          const seconds = totalWholeSeconds % 60;
+          return minutes + " min " + seconds + " s";
         }
   
         function formatTraceRawJson(value) {
@@ -13842,7 +14147,7 @@
                   record.actor.name
                     + " · "
                     + formatHistoryTimestamp(record.createdAt)
-                    + (record.recordKind === "message" ? "" : " · " + actionCountLabel)
+                    + (["message", "plan_step"].includes(record.recordKind) ? "" : " · " + actionCountLabel)
                 )
               )
             ),
@@ -13881,7 +14186,7 @@
                     );
                   })
                 )
-              : record.recordKind === "message"
+              : ["message", "plan_step"].includes(record.recordKind)
                 ? null
                 : React.createElement("div", { className: "playground-thread-activity-preview__description is-muted" },
                   "No individual action evidence is available for this group."
@@ -13889,7 +14194,7 @@
           );
         }
   
-        function ThreadChangesView({ threadId, threadTitle, backendUrl, apiKey, upstreamUrl, hasRealAccess, currentUserName = "User", currentUserAvatarUrl = "", activityHierarchyLevel = "groups", onThreadMutated, navigationTarget, onNavigationTargetHandled }) {
+        function ThreadChangesView({ threadId, threadTitle, backendUrl, apiKey, upstreamUrl, hasRealAccess, currentUserName = "User", currentUserAvatarUrl = "", onThreadMutated, navigationTarget, onNavigationTargetHandled }) {
           const client = useMemo(() => new RunnerClient(), []);
           const historyHeaders = useMemo(() => ({
             ...(apiKey.trim() ? { "X-API-Key": apiKey.trim() } : {}),
@@ -13923,6 +14228,11 @@
           const [activitySearchQuery, setActivitySearchQuery] = useState("");
           const [activityTimeRange, setActivityTimeRange] = useState(null);
           const [activityChartHeight, setActivityChartHeight] = useState(null);
+          const [collapsedActivityItemIds, setCollapsedActivityItemIds] = useState(() => new Set());
+
+          useEffect(() => {
+            setCollapsedActivityItemIds(new Set());
+          }, [threadId]);
   
           const historyLogsById = useMemo(() => {
             const nextMap = new Map();
@@ -14114,14 +14424,22 @@
               }));
           }, [threadId, threadMessages]);
 
-          const canonicalActivityRecords = useMemo(() => {
-            return buildRunnerThreadActivityHierarchy({
+          const threadPlanSteps = useMemo(
+            () => extractRunnerThreadPlanSteps(threadLogs),
+            [threadLogs]
+          );
+
+          const canonicalActivityTreeRecords = useMemo(() => {
+            return buildRunnerThreadActivityTree({
               items: canonicalTimelineItems,
               participants: canonicalActivityParticipants,
               supplementalMessages: supplementalCanonicalMessages,
-              level: activityHierarchyLevel,
+              planSteps: threadPlanSteps,
             }).map((record) => {
-              const fallbackActorSource = record.action || record.run || record.group || record.message || {};
+              const fallbackActorSource = record.action || record.run || record.group || record.message || record.planStep || {};
+              const actionPresentation = record.action
+                ? presentRunnerThreadAction(record.action)
+                : null;
               const actor = record.actor
                 ? {
                     name: String(record.actor.displayName || "Computer Agents").trim() || "Computer Agents",
@@ -14140,8 +14458,21 @@
                 group: record.group,
                 run: record.run,
                 action: record.action,
+                actionPresentation,
                 message: record.message,
+                planStep: record.planStep,
                 actions: record.actions,
+                groupId: String(record.group?.id || record.action?.activityGroupId || ""),
+                groupLabel: record.group
+                  ? describeRunnerThreadActivityGroup({
+                      title: record.group.title,
+                      status: record.group.status,
+                      category: record.group.metadata?.category,
+                      actions: Array.isArray(record.actions) && record.actions.length > 0
+                        ? record.actions
+                        : record.action ? [record.action] : [],
+                    })
+                  : "",
                 actor,
                 ring: Number(record.permissionRing) || 1,
                 status: record.status,
@@ -14150,10 +14481,15 @@
                 createdAt: record.createdAt,
                 endAt: record.endAt,
                 sequence: record.sequence,
+                parentId: record.parentId,
+                childIds: record.childIds,
+                depth: record.depth,
+                order: record.order,
+                expandable: record.expandable,
                 searchText: [record.searchText, actor.name].filter(Boolean).join(" ").toLowerCase(),
               };
-            }).sort((left, right) => Number(right.sequence || 0) - Number(left.sequence || 0));
-          }, [activityHierarchyLevel, canonicalActivityParticipants, canonicalTimelineItems, currentUserAvatarUrl, currentUserName, supplementalCanonicalMessages]);
+            });
+          }, [canonicalActivityParticipants, canonicalTimelineItems, currentUserAvatarUrl, currentUserName, supplementalCanonicalMessages, threadPlanSteps]);
 
           const stepActivityRecords = useMemo(() => {
             return sortedSteps.map((step) => {
@@ -14183,20 +14519,53 @@
             });
           }, [previewStepFilesById, sortedSteps, threadMessages]);
 
-          const allActivityRecords = canonicalActivityRecords.length > 0
+          const normalizedActivitySearchQuery = String(activitySearchQuery || "").trim().toLowerCase();
+          const canonicalActivityRecords = useMemo(() => {
+            if (canonicalActivityTreeRecords.length === 0) return [];
+            if (!normalizedActivitySearchQuery) {
+              return flattenRunnerThreadActivityTree(
+                canonicalActivityTreeRecords,
+                collapsedActivityItemIds
+              );
+            }
+
+            const recordsById = new Map(
+              canonicalActivityTreeRecords.map((record) => [record.id, record])
+            );
+            const includedIds = new Set();
+            canonicalActivityTreeRecords.forEach((record) => {
+              if (!record.searchText.includes(normalizedActivitySearchQuery)) return;
+              includedIds.add(record.id);
+              let parentId = record.parentId;
+              const visited = new Set();
+              while (parentId && !visited.has(parentId)) {
+                visited.add(parentId);
+                includedIds.add(parentId);
+                parentId = recordsById.get(parentId)?.parentId || null;
+              }
+            });
+            return flattenRunnerThreadActivityTree(
+              canonicalActivityTreeRecords,
+              new Set()
+            ).filter((record) => includedIds.has(record.id));
+          }, [canonicalActivityTreeRecords, collapsedActivityItemIds, normalizedActivitySearchQuery]);
+
+          const allActivityRecords = canonicalActivityTreeRecords.length > 0
             ? canonicalActivityRecords
             : stepActivityRecords;
           const activityError = allActivityRecords.length > 0 ? "" : stepsError;
 
-          const normalizedActivitySearchQuery = String(activitySearchQuery || "").trim().toLowerCase();
           const activitySearchMatchedRecords = useMemo(() => {
+            if (canonicalActivityTreeRecords.length > 0) {
+              return canonicalActivityRecords;
+            }
             if (!normalizedActivitySearchQuery) {
               return allActivityRecords;
             }
             return allActivityRecords.filter((record) => {
               return record.searchText.includes(normalizedActivitySearchQuery);
             });
-          }, [allActivityRecords, normalizedActivitySearchQuery]);
+          }, [allActivityRecords, canonicalActivityRecords, canonicalActivityTreeRecords.length, normalizedActivitySearchQuery]);
 
           const activityTimelineRecords = useMemo(() => {
             const rangeStart = Number(activityTimeRange?.startAt);
@@ -14204,10 +14573,23 @@
             if (!Number.isFinite(rangeStart) || !Number.isFinite(rangeEnd)) {
               return activitySearchMatchedRecords;
             }
-            return activitySearchMatchedRecords.filter((record) => {
+            const includedIds = new Set();
+            const recordsById = new Map(
+              activitySearchMatchedRecords.map((record) => [record.id, record])
+            );
+            activitySearchMatchedRecords.forEach((record) => {
               const timestamp = Date.parse(String(record?.createdAt || ""));
-              return Number.isFinite(timestamp) && timestamp >= rangeStart && timestamp <= rangeEnd;
+              if (!Number.isFinite(timestamp) || timestamp < rangeStart || timestamp > rangeEnd) return;
+              includedIds.add(record.id);
+              let parentId = record.parentId;
+              const visited = new Set();
+              while (parentId && !visited.has(parentId)) {
+                visited.add(parentId);
+                includedIds.add(parentId);
+                parentId = recordsById.get(parentId)?.parentId || null;
+              }
             });
+            return activitySearchMatchedRecords.filter((record) => includedIds.has(record.id));
           }, [activitySearchMatchedRecords, activityTimeRange]);
 
           const effectiveActivitySelectedItemId = activityTimelineRecords.some((record) => record.id === selectedActivityItemId)
@@ -14215,22 +14597,206 @@
             : String(activityTimelineRecords[0]?.id || "");
 
           const activityOverviewItems = useMemo(() => {
-            return [...activitySearchMatchedRecords].reverse().map((record) => {
+            const chartRecordSource = canonicalActivityTreeRecords.length > 0
+              ? normalizedActivitySearchQuery
+                ? activitySearchMatchedRecords
+                : canonicalActivityTreeRecords
+              : [];
+            const chartRecords = chartRecordSource.filter((record) => (
+              record.kind === "canonical"
+              && ["message", "activity_group", "tool_call"].includes(record.recordKind)
+            ));
+            const chartRecordIds = new Set(chartRecords.map((record) => record.id));
+            const recordsById = new Map(canonicalActivityTreeRecords.map((record) => [record.id, record]));
+            const chartParentById = new Map();
+            const chartDepthById = new Map();
+            for (const record of chartRecords) {
+              let parentId = record.parentId || null;
+              let chartParentId = null;
+              let chartDepth = 0;
+              const visited = new Set();
+              while (parentId && !visited.has(parentId)) {
+                visited.add(parentId);
+                const parent = recordsById.get(parentId);
+                if (!parent) break;
+                if (chartRecordIds.has(parent.id)) {
+                  chartParentId = parent.id;
+                  chartDepth = (chartDepthById.get(parent.id) || 0) + 1;
+                  break;
+                }
+                parentId = parent.parentId || null;
+              }
+              chartParentById.set(record.id, chartParentId);
+              chartDepthById.set(record.id, chartDepth);
+            }
+            const chartChildrenById = new Map();
+            for (const record of chartRecords) {
+              const parentId = chartParentById.get(record.id) || null;
+              if (!parentId) continue;
+              const children = chartChildrenById.get(parentId) || [];
+              children.push(record);
+              chartChildrenById.set(parentId, children);
+            }
+            const chartScopeStartById = new Map();
+            const resolveChartScopeStart = (record, visiting = new Set()) => {
+              const cached = chartScopeStartById.get(record.id);
+              if (cached !== undefined) return cached;
+              const ownStart = parseTraceTimestampValue(
+                record.action?.startedAt
+                || record.action?.createdAt
+                || record.createdAt
+              );
+              if (visiting.has(record.id)) return ownStart;
+              const nextVisiting = new Set(visiting);
+              nextVisiting.add(record.id);
+              let scopeStart = ownStart;
+              for (const child of chartChildrenById.get(record.id) || []) {
+                const childStart = resolveChartScopeStart(child, nextVisiting);
+                if (childStart > 0 && (scopeStart <= 0 || childStart < scopeStart)) {
+                  scopeStart = childStart;
+                }
+              }
+              chartScopeStartById.set(record.id, scopeStart);
+              return scopeStart;
+            };
+            chartRecords.forEach((record) => resolveChartScopeStart(record));
+            const compareChartRecordsByStart = (left, right) => {
+              const leftStart = chartScopeStartById.get(left.id) || 0;
+              const rightStart = chartScopeStartById.get(right.id) || 0;
+              if (leftStart !== rightStart) {
+                if (leftStart <= 0) return 1;
+                if (rightStart <= 0) return -1;
+                return leftStart - rightStart;
+              }
+              const leftOrder = Number(left.order);
+              const rightOrder = Number(right.order);
+              if (Number.isFinite(leftOrder) && Number.isFinite(rightOrder) && leftOrder !== rightOrder) {
+                return leftOrder - rightOrder;
+              }
+              return String(left.id).localeCompare(String(right.id));
+            };
+            const sortedChartRecords = [];
+            const appendedChartRecordIds = new Set();
+            const appendChartRecord = (record) => {
+              if (appendedChartRecordIds.has(record.id)) return;
+              appendedChartRecordIds.add(record.id);
+              sortedChartRecords.push(record);
+              const children = [...(chartChildrenById.get(record.id) || [])]
+                .sort(compareChartRecordsByStart);
+              children.forEach(appendChartRecord);
+            };
+            chartRecords
+              .filter((record) => !chartParentById.get(record.id))
+              .sort(compareChartRecordsByStart)
+              .forEach(appendChartRecord);
+            chartRecords
+              .slice()
+              .sort(compareChartRecordsByStart)
+              .forEach(appendChartRecord);
+            const hiddenChartRecordIds = new Set();
+            if (!normalizedActivitySearchQuery) {
+              const hideDescendants = (recordId) => {
+                for (const child of chartChildrenById.get(recordId) || []) {
+                  if (hiddenChartRecordIds.has(child.id)) continue;
+                  hiddenChartRecordIds.add(child.id);
+                  hideDescendants(child.id);
+                }
+              };
+              collapsedActivityItemIds.forEach((recordId) => {
+                if (chartRecordIds.has(recordId)) hideDescendants(recordId);
+              });
+            }
+            const chartStartTime = sortedChartRecords.reduce((earliest, record) => {
+              const candidate = parseTraceTimestampValue(
+                record.action?.startedAt
+                || record.action?.createdAt
+                || record.createdAt
+              );
+              return candidate > 0 ? Math.min(earliest, candidate) : earliest;
+            }, Number.POSITIVE_INFINITY);
+            const chartOrderById = new Map(
+              sortedChartRecords.map((record, index) => [record.id, index])
+            );
+            return sortedChartRecords.map((record) => {
               const ringId = getTracePermissionRingId(record.ring);
-              const title = normalizeHistoryPreviewText(record.title || "Recorded activity", 52);
+              const isToolCall = record.kind === "canonical" && record.recordKind === "tool_call";
+              const isUserMessage = record.kind === "canonical" && record.recordKind === "message";
+              const connectorDetails = isToolCall ? getActivityConnectorDetails(record.action) : null;
+              const baseTitle = isUserMessage
+                ? normalizeHistoryPreviewText(record.detail || record.title || "User message", 80)
+                : normalizeHistoryPreviewText(record.title || "Recorded activity", 52);
+              const title = connectorDetails
+                ? normalizeHistoryPreviewText(`${connectorDetails.name} · ${connectorDetails.description}`, 80)
+                : baseTitle;
+              const isPlainCard = isToolCall;
+              const toolStartTime = isToolCall
+                ? parseTraceTimestampValue(
+                    record.action?.startedAt
+                    || record.action?.createdAt
+                    || record.createdAt
+                  )
+                : 0;
+              const toolStartLabel = isToolCall
+                ? formatTraceElapsedLabelMs(
+                    Number.isFinite(chartStartTime) && toolStartTime > 0
+                      ? Math.max(0, toolStartTime - chartStartTime)
+                      : 0
+                  )
+                : null;
+              const isExpanded = !collapsedActivityItemIds.has(record.id);
+              const chartParentId = chartParentById.get(record.id) || null;
+              const chartDepth = chartDepthById.get(record.id) || 0;
               return {
                 id: record.id,
                 label: title,
+                ariaLabel: "Inspect " + title,
                 startAt: record.createdAt,
                 endAt: record.endAt,
+                density: isToolCall ? "compact" : "default",
+                hidden: hiddenChartRecordIds.has(record.id),
                 status: record.status,
                 color: getThreadHistoryActivityColor(record.status),
+                hierarchy: {
+                  parentId: chartParentId,
+                  depth: chartDepth,
+                  order: chartOrderById.get(record.id) ?? record.order,
+                  expandable: record.expandable,
+                  expanded: isExpanded,
+                  onToggle: record.expandable
+                    ? () => {
+                        setCollapsedActivityItemIds((current) => {
+                          const next = new Set(current);
+                          if (next.has(record.id)) {
+                            next.delete(record.id);
+                          } else {
+                            next.add(record.id);
+                          }
+                          return next;
+                        });
+                      }
+                    : undefined,
+                },
                 content: React.createElement(PlatformActivityOverviewCard, {
                   title,
                   permissionIcon: renderTracePermissionRingIcon(record.ring),
+                  leadingIcon: isToolCall
+                    ? connectorDetails
+                      ? renderActivityConnectorIcon(connectorDetails)
+                      : renderThreadActivityActionIcon(record.actionPresentation?.iconKind)
+                    : isUserMessage
+                      ? React.createElement(MessageSquare, { width: 14, height: 14, strokeWidth: 1.8 })
+                      : null,
                   permissionRingId: ringId,
-                  actorAvatar: renderThreadHistoryActivityAvatar(record.actor),
+                  actorAvatar: isToolCall ? null : renderThreadHistoryActivityAvatar(record.actor),
                   actorLabel: record.actor.name,
+                  metadata: toolStartLabel,
+                  status: isToolCall ? record.status : undefined,
+                  variant: isPlainCard ? "plain" : "default",
+                  className: isToolCall
+                    ? `is-tool-call${connectorDetails ? " is-connector" : ""}`
+                    : isUserMessage
+                      ? "is-user-message"
+                      : "",
                   selected: effectiveActivitySelectedItemId === record.id,
                   onClick: () => {
                     setSelectedActivityItemId(record.id);
@@ -14242,7 +14808,7 @@
                 }),
               };
             });
-          }, [activitySearchMatchedRecords, effectiveActivitySelectedItemId]);
+          }, [activitySearchMatchedRecords, canonicalActivityTreeRecords, collapsedActivityItemIds, effectiveActivitySelectedItemId, normalizedActivitySearchQuery]);
 
           const activityTimelineItems = useMemo(() => {
             return activityTimelineRecords.map((record) => {
@@ -14843,7 +15409,7 @@
               items: activityOverviewItems,
               loading: stepsLoading,
               loadingMessage: "Loading thread activity...",
-              timelineLayout: "fit",
+              timelineLayout: "scroll",
               resizable: true,
               minResizeHeight: 240,
               minSiblingHeight: 220,

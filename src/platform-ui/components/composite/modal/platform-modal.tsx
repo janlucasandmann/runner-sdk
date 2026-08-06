@@ -175,6 +175,31 @@ function assignRef<T>(ref: Ref<T> | undefined, value: T | null) {
   }
 }
 
+function scheduleModalAnimationFrame(callback: FrameRequestCallback) {
+  if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+    return { kind: "frame" as const, id: window.requestAnimationFrame(callback) };
+  }
+  return {
+    kind: "timeout" as const,
+    id: globalThis.setTimeout(() => callback(Date.now()), 0),
+  };
+}
+
+function cancelModalAnimationFrame(
+  scheduled: ReturnType<typeof scheduleModalAnimationFrame> | null,
+) {
+  if (!scheduled) return;
+  if (
+    scheduled.kind === "frame"
+    && typeof window !== "undefined"
+    && typeof window.cancelAnimationFrame === "function"
+  ) {
+    window.cancelAnimationFrame(scheduled.id);
+    return;
+  }
+  globalThis.clearTimeout(scheduled.id);
+}
+
 function lockDocumentScroll() {
   if (typeof document === "undefined") return;
   if (modalScrollLockCount === 0) {
@@ -369,6 +394,7 @@ export function PlatformModal({
 }: PlatformModalProps) {
   const generatedId = useId().replace(/:/g, "");
   const [retained, setRetained] = useState(open);
+  const [entered, setEntered] = useState(false);
   const localSurfaceRef = useRef<HTMLElement | null>(null);
   const localHeaderSearchInputRef = useRef<HTMLInputElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
@@ -376,7 +402,7 @@ export function PlatformModal({
   const shouldRender = open || retained;
   const resolvedAnimationDurationMs = Math.max(0, animationDurationMs);
   const resolvedClosing = closing || (!open && shouldRender);
-  const resolvedVisible = !resolvedClosing && (controlledVisible ?? open);
+  const resolvedVisible = !resolvedClosing && (controlledVisible ?? (open && entered));
   const titleId = ariaLabelledBy || `platform-modal-title-${generatedId}`;
   const descriptionId = ariaDescribedBy || `platform-modal-description-${generatedId}`;
   const forwardedHeaderSearchInputRef = headerSearchProps?.inputRef;
@@ -393,6 +419,15 @@ export function PlatformModal({
     if (open) {
       setRetained(true);
     }
+  }, [open]);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setEntered(false);
+      return undefined;
+    }
+    const scheduledFrame = scheduleModalAnimationFrame(() => setEntered(true));
+    return () => cancelModalAnimationFrame(scheduledFrame);
   }, [open]);
 
   useEffect(() => {

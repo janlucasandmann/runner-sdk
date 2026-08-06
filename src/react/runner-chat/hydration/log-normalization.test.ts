@@ -94,6 +94,7 @@ describe("runner hydration log normalization", () => {
         }),
       ),
     ).toBe(false);
+    expect(shouldDisplayTimelineLog(log({ message: "Thinking..." }))).toBe(false);
     expect(
       shouldDisplayTimelineLog(
         log({

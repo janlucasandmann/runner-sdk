@@ -221,6 +221,55 @@ describe("PlatformPopup", () => {
     expect(surface?.style.top).toBe("240px");
   });
 
+  it("positions nested popup surfaces beside their anchor", () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: HTMLElement) {
+        if (this.classList.contains("platform-popup-surface")) {
+          return {
+            x: 0,
+            y: 0,
+            width: 180,
+            height: 120,
+            top: 0,
+            right: 180,
+            bottom: 120,
+            left: 0,
+            toJSON: () => ({}),
+          } as DOMRect;
+        }
+        return {
+          x: 100,
+          y: 160,
+          width: 40,
+          height: 32,
+          top: 160,
+          right: 140,
+          bottom: 192,
+          left: 100,
+          toJSON: () => ({}),
+        } as DOMRect;
+      },
+    );
+
+    render(
+      <PlatformPopup
+        open
+        portal
+        placement="right-start"
+        trigger={<button type="button">Open side popup</button>}
+      >
+        Side content
+      </PlatformPopup>,
+    );
+
+    const surface = document.body.querySelector<HTMLElement>(
+      ".platform-popup-surface.is-portaled",
+    );
+    expect(surface?.getAttribute("data-platform-popup-placement")).toBe("right-start");
+    expect(surface?.style.left).toBe("148px");
+    expect(surface?.style.top).toBe("160px");
+  });
+
   it("normalizes legacy transition classes onto the central animation contract", () => {
     const { container } = render(
       <PlatformPopupSurface className="playground-tasks-toolbar-popup-menu-animate-down-in">

@@ -131,6 +131,24 @@ export class TestsApi {
     return payload.testPlan;
   }
 
+  async listOrganizationMembers(organizationId: string): Promise<unknown[]> {
+    const normalizedOrganizationId = String(organizationId || "").trim();
+    if (!normalizedOrganizationId) return [];
+    const payload = await this.request<unknown>(
+      `/organizations/${encodeURIComponent(normalizedOrganizationId)}/members`
+        + "?includeProfiles=1&includeUsers=1&include=profile,user,account&expand=profile,user,account",
+      {},
+      "Failed to load organization members.",
+    );
+    if (Array.isArray(payload)) return payload;
+    const source = asRecord(payload);
+    if (Array.isArray(source.data)) return source.data;
+    if (Array.isArray(source.members)) return source.members;
+    if (Array.isArray(source.organizationMembers)) return source.organizationMembers;
+    if (Array.isArray(source.organization_members)) return source.organization_members;
+    return [];
+  }
+
   async deletePlan(id: string): Promise<void> {
     await this.request(
       `/test-plans/${encodeURIComponent(id)}`,

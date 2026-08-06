@@ -440,6 +440,7 @@ export const FILES_FOUNDATION_CSS = `
       .playground-files-page .tb-runner-document-preview-host-inline .tb-attachment-preview-drawer-header {
         min-height: var(--playground-files-preview-nav-height);
         padding: 0 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.075);
         background: transparent;
       }
 
@@ -455,7 +456,7 @@ export const FILES_FOUNDATION_CSS = `
       }
 
       .playground-files-page .tb-runner-document-preview-host-inline .tb-attachment-preview-drawer-name {
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 400;
       }
 
@@ -494,6 +495,7 @@ export const FILES_FOUNDATION_CSS = `
 
       .playground-files-preview-breadcrumb-item.is-current {
         color: rgba(255, 255, 255, 0.94);
+        font-size: 14px;
       }
 
       .playground-files-preview-breadcrumb-separator {
@@ -653,6 +655,24 @@ export const FILES_FOUNDATION_CSS = `
         align-items: center;
         gap: 10px;
         min-width: 0;
+      }
+
+      .playground-files-library-title-heading.is-connector {
+        gap: 8px;
+      }
+
+      .playground-files-library-title-connector-icon {
+        display: block;
+        width: auto;
+        height: 1em;
+        max-width: 1.5em;
+        max-height: 1em;
+        flex: 0 0 auto;
+        object-fit: contain;
+      }
+
+      .playground-files-library-title-connector-icon.is-github {
+        filter: brightness(0) invert(1);
       }
 
       .playground-files-library-title-computer-badge {

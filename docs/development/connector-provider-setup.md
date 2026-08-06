@@ -156,10 +156,10 @@ registration](https://developers.figma.com/docs/rest-api/oauth-apps/),
 6. Copy the values into `FIGMA_OAUTH_CLIENT_ID` and
    `FIGMA_OAUTH_CLIENT_SECRET`.
 
-The platform uses S256 PKCE, HTTP Basic client authentication for token
-exchange, and the current `/v1/oauth/token` endpoint for both initial exchange
-and refresh. API results are still limited to files, projects, and teams the
-authorizing user can access.
+The platform uses S256 PKCE and HTTP Basic client authentication. It exchanges
+authorization codes at `/v1/oauth/token` and refreshes long-lived connections
+at `/v1/oauth/refresh`. API results are still limited to files, projects, and
+teams the authorizing user can access.
 
 ## Linear
 

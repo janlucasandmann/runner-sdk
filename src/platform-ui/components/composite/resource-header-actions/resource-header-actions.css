@@ -1,0 +1,154 @@
+.platform-resource-header-actions {
+  min-width: 0;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.platform-resource-header-version-label {
+  margin-left: 6px;
+  color: #fff;
+}
+
+.platform-resource-header-version-label .platform-version-label__separator {
+  color: #fff;
+}
+
+.platform-resource-actions-menu {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.platform-resource-actions-menu__popup {
+  --platform-popup-font-size: 12px;
+  min-width: 0;
+}
+
+.platform-resource-actions-menu__popup .tb-popup-label {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.platform-resource-actions-menu__item-trailing {
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  flex: 0 0 14px;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  color: rgba(255, 255, 255, 0.54);
+}
+
+.platform-resource-actions-menu__shortcut {
+  margin-left: auto;
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.platform-resource-actions-information {
+  width: 100%;
+  display: block;
+}
+
+.platform-resource-actions-information__popup {
+  --platform-popup-font-size: 12px;
+  min-width: 0;
+}
+
+.platform-resource-actions-information__metadata {
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.platform-resource-actions-menu__divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.platform-resource-actions-menu__metadata {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.platform-resource-actions-menu__metadata-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.platform-resource-actions-information__metadata .platform-resource-actions-menu__metadata-row {
+  grid-template-columns: 62px minmax(0, 1fr);
+  align-items: start;
+}
+
+.platform-resource-actions-menu__metadata.platform-resource-actions-information__metadata {
+  border-bottom: 0;
+}
+
+.platform-resource-actions-menu__metadata-label {
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.platform-resource-actions-menu__metadata-value {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.3;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-resource-actions-menu__metadata-content {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.platform-resource-actions-menu__metadata-value.is-copyable {
+  overflow: visible;
+  flex: 1 1 auto;
+  text-align: left;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.platform-resource-actions-menu__metadata-copy.platform-icon-button {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  flex: 0 0 20px;
+  margin: -3px -3px -3px 0;
+  border-radius: 5px;
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.platform-resource-actions-menu__metadata-copy.platform-icon-button:hover,
+.platform-resource-actions-menu__metadata-copy.platform-icon-button:focus-visible {
+  color: #fff;
+}
+
+.platform-resource-actions-menu__metadata-value.is-monospace {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}

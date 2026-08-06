@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
 import {
-  LoaderCircle as LucideLoaderCircle,
   Table2 as LucideTable2,
 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
+import { PlatformLoadingState } from "../../composite/loading-state/index.js";
 import {
   canSerializeRunnerSpreadsheetFile,
   formatRunnerSpreadsheetWorkbookCode,
@@ -468,10 +468,11 @@ export function RunnerSpreadsheetPreview({
 
   if (loadState.status === "loading" || loadState.status === "idle") {
     return (
-      <div className="tb-attachment-preview-state">
-        <LucideLoaderCircle className="tb-attachment-preview-state-icon tb-context-action-notice-icon-spinner" strokeWidth={1.8} />
-        <span>Preparing spreadsheet…</span>
-      </div>
+      <PlatformLoadingState
+        centered
+        className="tb-attachment-preview-state"
+        message="Loading spreadsheet..."
+      />
     );
   }
 

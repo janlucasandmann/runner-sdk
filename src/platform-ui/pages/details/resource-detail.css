@@ -93,6 +93,10 @@
   min-width: 0;
 }
 
+.playground-ticket-detail-sidebar-details {
+  border: 0;
+}
+
 .platform-service-detail-page__property-list {
   min-width: 0;
   display: flex;

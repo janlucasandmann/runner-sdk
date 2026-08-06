@@ -187,6 +187,60 @@ describe("buildRunnerThreadActivityHierarchy", () => {
     expect(records.find((record) => record.group?.id === "group-implement")?.actions).toHaveLength(0);
   });
 
+  it("projects worker-authored plan steps as the highest activity level", () => {
+    const records = buildRunnerThreadActivityHierarchy({
+      items,
+      participants: [human, worker],
+      planSteps: [
+        {
+          id: "plan-step:inspect",
+          text: "Inspect the repository",
+          status: "completed",
+          completed: true,
+          sequence: 3.001,
+          createdAt: "2026-08-01T08:00:02.000Z",
+          updatedAt: "2026-08-01T08:00:20.000Z",
+          completedAt: "2026-08-01T08:00:20.000Z",
+          actorParticipantId: worker.id,
+          agentId: worker.agentId || null,
+          runId: run.id,
+        },
+        {
+          id: "plan-step:verify",
+          text: "Run focused tests",
+          status: "in_progress",
+          completed: false,
+          sequence: 3.002,
+          createdAt: "2026-08-01T08:00:02.000Z",
+          updatedAt: "2026-08-01T08:00:25.000Z",
+          completedAt: null,
+          actorParticipantId: worker.id,
+          agentId: worker.agentId || null,
+          runId: run.id,
+        },
+      ],
+      level: "plan_steps",
+    });
+
+    expect(records.map((record) => record.kind)).toEqual([
+      "message",
+      "plan_step",
+      "plan_step",
+    ]);
+    expect(records.filter((record) => record.kind === "plan_step").map((record) => record.title))
+      .toEqual(["Inspect the repository", "Run focused tests"]);
+    expect(records.find((record) => record.kind === "plan_step")?.actor?.displayName)
+      .toBe("Spark");
+    expect(records.find((record) => record.planStep?.id === "plan-step:inspect")?.status)
+      .toBe("success");
+    expect(records.find((record) => record.planStep?.id === "plan-step:inspect")?.createdAt)
+      .toBe("2026-08-01T08:00:20.000Z");
+    expect(records.find((record) => record.planStep?.id === "plan-step:inspect")?.endAt)
+      .toBeNull();
+    expect(records.find((record) => record.planStep?.id === "plan-step:verify")?.createdAt)
+      .toBe("2026-08-01T08:00:25.000Z");
+  });
+
   it("shows only executable calls at the tool-call level", () => {
     const records = buildRunnerThreadActivityHierarchy({
       items,
@@ -239,12 +293,50 @@ describe("buildRunnerThreadActivityHierarchy", () => {
     expect(calls.map((record) => record.title)).toEqual([
       "Inspect files",
       "Run tests",
-      "run_terminal_command",
+      "Ran Bash Command",
     ]);
     expect(calls.some((record) => record.title.toLowerCase().includes("unknown"))).toBe(false);
     expect(calls.at(-1)?.group?.id).toBe("group-implement");
     expect(calls.at(-1)?.action?.status).toBe("completed");
     expect(calls.at(-1)?.action?.output).toBe("done");
+  });
+
+  it("derives grounded labels for generic observer groups", () => {
+    const genericGroup = group(
+      "group-generic",
+      59,
+      "Working through the task",
+      ["tool-generic"],
+      "group-root",
+    );
+    const genericTool: RunnerThreadAction = {
+      ...action("tool-generic", 60, "action_summary", genericGroup.id, "Run local commands"),
+      toolName: "run_terminal_command",
+      metadata: {
+        isToolStarted: true,
+        status: "started",
+        toolId: "call-generic",
+        permissionActionId: "local_shell",
+        permissionActionLabel: "Run local commands",
+      },
+    };
+    const rootWithGeneric = {
+      ...groups[0],
+      childGroupIds: [...(groups[0]?.childGroupIds || []), genericGroup.id],
+    };
+    const records = buildRunnerThreadActivityHierarchy({
+      items: [
+        ...items.filter((item) => item.id !== rootWithGeneric.id),
+        rootWithGeneric,
+        genericGroup,
+        genericTool,
+      ],
+      participants: [human, worker],
+      level: "groups",
+    });
+
+    expect(records.find((record) => record.group?.id === genericGroup.id)?.title)
+      .toBe("Ran Bash Command");
   });
 
   it("uses runtime sequence metadata for compatibility actions", () => {

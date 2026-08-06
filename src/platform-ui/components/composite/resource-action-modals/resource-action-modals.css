@@ -1,0 +1,163 @@
+.platform-resource-share-modal__body,
+.platform-resource-rename-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.platform-resource-share-modal__team-list {
+  display: flex;
+  max-height: min(360px, calc(100dvh - 260px));
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  flex-direction: column;
+  gap: 6px;
+  overflow: auto;
+}
+
+.platform-resource-share-modal__team {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 16px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: left;
+  background: rgba(255, 255, 255, 0.035);
+  cursor: pointer;
+}
+
+.platform-resource-share-modal__team:hover:not(
+  :has(.platform-resource-share-modal__team-radio:disabled)
+),
+.platform-resource-share-modal__team.is-selected {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-resource-share-modal__team.is-shared {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.platform-resource-share-modal__team:has(.platform-resource-share-modal__team-radio:disabled) {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.platform-resource-share-modal__team-radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.platform-resource-share-modal__team-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.platform-resource-share-modal__team-icon img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.platform-resource-share-modal__team-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.platform-resource-share-modal__team-name,
+.platform-resource-share-modal__team-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-resource-share-modal__team-name {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.platform-resource-share-modal__team-meta {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.platform-resource-share-modal__team-check {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.platform-resource-share-modal__empty,
+.platform-resource-share-modal__loading {
+  width: 100%;
+  min-height: 112px;
+  box-sizing: border-box;
+  padding: 24px 12px;
+}
+
+.platform-resource-rename-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.platform-resource-rename-modal__field input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 36px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  outline: none;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.platform-resource-rename-modal__field input:focus {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.platform-resource-rename-modal__field input:disabled {
+  opacity: 0.55;
+}
+
+.platform-resource-action-modal__error {
+  margin: 0;
+  color: #f0a4a4;
+  font-size: 12px;
+  line-height: 1.45;
+}

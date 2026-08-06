@@ -1,3 +1,8 @@
+import {
+  describeRunnerThreadActivityGroup,
+  presentRunnerThreadAction,
+} from "./action-presentation.js";
+import type { RunnerThreadPlanStep } from "./activity-plan.js";
 import type {
   RunnerThreadAction,
   RunnerThreadActivityGroup,
@@ -10,11 +15,13 @@ import type {
 
 export type RunnerThreadActivityHierarchyLevel =
   | "overview"
+  | "plan_steps"
   | "groups"
   | "tool_calls";
 
 export type RunnerThreadActivityHierarchyRecordKind =
   | "message"
+  | "plan_step"
   | "run"
   | "activity_group"
   | "tool_call";
@@ -44,12 +51,14 @@ export interface RunnerThreadActivityHierarchyRecord {
   group: RunnerThreadActivityGroup | null;
   action: RunnerThreadAction | null;
   actions: RunnerThreadAction[];
+  planStep: RunnerThreadPlanStep | null;
 }
 
 export interface BuildRunnerThreadActivityHierarchyInput {
   items: readonly RunnerThreadTimelineItem[];
   participants?: readonly RunnerThreadParticipant[];
   supplementalMessages?: readonly RunnerThreadMessage[];
+  planSteps?: readonly RunnerThreadPlanStep[];
   level?: RunnerThreadActivityHierarchyLevel;
 }
 
@@ -263,22 +272,6 @@ function readMeaningfulToolIdentity(action: RunnerThreadAction): string {
   const explicitIdentity = readExplicitToolIdentity(action);
   if (explicitIdentity) return explicitIdentity;
   return meaningfulToolLabel(action.title);
-}
-
-function resolveToolActionTitle(action: RunnerThreadAction): string {
-  const descriptiveTitle = meaningfulToolLabel(action.title);
-  if (descriptiveTitle && normalizeType(action.type) !== "action_summary") {
-    return descriptiveTitle;
-  }
-  const identity = readMeaningfulToolIdentity(action);
-  if (identity) return identity;
-  const type = normalizeType(action.type);
-  if (["command", "command_execution", "shell"].includes(type)) return "Command";
-  if (["connector", "connector_call"].includes(type)) return "Connector call";
-  if (["function", "function_call"].includes(type)) return "Function call";
-  if (["http", "http_request"].includes(type)) return "HTTP request";
-  if (["mcp", "mcp_call"].includes(type)) return "MCP call";
-  return "Tool call";
 }
 
 function isToolStartAction(action: RunnerThreadAction): boolean {
@@ -507,6 +500,7 @@ function buildMessageRecord(
     group: null,
     action: null,
     actions: [],
+    planStep: null,
   };
 }
 
@@ -544,6 +538,7 @@ export function buildRunnerThreadActivityHierarchy({
   items,
   participants = [],
   supplementalMessages = [],
+  planSteps = [],
   level = "overview",
 }: BuildRunnerThreadActivityHierarchyInput): RunnerThreadActivityHierarchyRecord[] {
   const participantsById = new Map(
@@ -704,7 +699,59 @@ export function buildRunnerThreadActivityHierarchy({
 
   const records: RunnerThreadActivityHierarchyRecord[] = [...messageRecords];
 
-  if (level === "overview") {
+  if (level === "plan_steps") {
+    const fallbackWorker = participants.find((participant) => (
+      ["worker", "agent", "assistant", "orchestrator"].includes(normalizeType(participant.kind))
+    )) || null;
+    for (const planStep of planSteps) {
+      const planRun = (planStep.runId
+        ? runs.find((run) => run.id === planStep.runId)
+        : null)
+        || [...runs].reverse().find((run) => run.runKind === "worker")
+        || runs.at(-1)
+        || null;
+      const actor = resolveActor(
+        planStep.actorParticipantId,
+        planStep.agentId || "",
+        participantsById,
+        participantsByAgentId,
+      ) || (planRun
+        ? resolveActionActor(null, planRun, participantsById, participantsByAgentId)
+        : null) || fallbackWorker;
+      const title = normalizeCopy(planStep.text, "Plan step");
+      const detail = planStep.status === "completed"
+        ? "Completed plan step"
+        : planStep.status === "in_progress"
+          ? "Plan step in progress"
+          : "Pending plan step";
+      const occurredAt = planStep.status === "completed"
+        ? planStep.completedAt || planStep.updatedAt || planStep.createdAt
+        : planStep.status === "in_progress"
+          ? planStep.updatedAt || planStep.createdAt
+          : planStep.createdAt || planStep.updatedAt;
+      records.push({
+        id: planStep.id,
+        level,
+        kind: "plan_step",
+        sequence: toSequence(planStep.sequence),
+        title,
+        detail,
+        searchText: createSearchText([title, detail, actor?.displayName]),
+        status: statusFromValues([planStep.status]),
+        permissionRing: null,
+        createdAt: occurredAt || planRun?.startedAt || planRun?.createdAt || "",
+        endAt: null,
+        actorParticipantId: actor?.id || planStep.actorParticipantId || planRun?.actorParticipantId || null,
+        actor,
+        message: null,
+        run: planRun,
+        group: null,
+        action: null,
+        actions: [],
+        planStep,
+      });
+    }
+  } else if (level === "overview") {
     for (const run of runs) {
       const runGroups = groups.filter((group) => group.runId === run.id);
       const runActions = actions
@@ -747,6 +794,7 @@ export function buildRunnerThreadActivityHierarchy({
         group: null,
         action: null,
         actions: runActions,
+        planStep: null,
       });
     }
   } else if (level === "groups") {
@@ -774,6 +822,7 @@ export function buildRunnerThreadActivityHierarchy({
           group: null,
           action: null,
           actions: [],
+          planStep: null,
         });
       }
 
@@ -798,7 +847,12 @@ export function buildRunnerThreadActivityHierarchy({
           || groupActions[0]
           || null;
         const actor = resolveActionActor(actorAction, run, participantsById, participantsByAgentId);
-        const title = normalizeCopy(group.title, "Activity group");
+        const title = describeRunnerThreadActivityGroup({
+          title: group.title,
+          status: group.status,
+          category: firstString(asRecord(group.metadata), ["category", "phase", "activityCategory"]),
+          actions: groupToolActions,
+        });
         const detail = normalizeCopy(
           group.liveSummary || group.rationale || run.currentSummary || run.summary,
         );
@@ -833,6 +887,7 @@ export function buildRunnerThreadActivityHierarchy({
           group,
           action: null,
           actions: groupToolActions,
+          planStep: null,
         });
       }
     }
@@ -860,7 +915,7 @@ export function buildRunnerThreadActivityHierarchy({
       for (const action of orderedActions) {
         const group = resolveToolActionGroup(action, selectedGroups);
         const actor = resolveActionActor(action, run, participantsById, participantsByAgentId);
-        const title = resolveToolActionTitle(action);
+        const title = presentRunnerThreadAction(action).title;
         const detail = normalizeCopy(action.summary || group?.title);
         records.push({
           id: `action:${action.id}`,
@@ -888,6 +943,7 @@ export function buildRunnerThreadActivityHierarchy({
           group,
           action,
           actions: [action],
+          planStep: null,
         });
       }
     }

@@ -144,6 +144,12 @@ describe("PlatformModal", () => {
 
   it("mounts in the opening render and keeps close timing stable across rerenders", () => {
     vi.useFakeTimers();
+    let enterFrame: FrameRequestCallback | null = null;
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      enterFrame = callback;
+      return 1;
+    });
+    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {});
     const initialOnExited = vi.fn();
     const latestOnExited = vi.fn();
     const { rerender } = render(
@@ -173,6 +179,11 @@ describe("PlatformModal", () => {
     );
 
     const dialog = screen.getByRole("dialog", { name: "Lifecycle test" });
+    expect(dialog.getAttribute("data-platform-modal-state")).toBe("opening");
+    expect(
+      dialog.closest(".platform-modal-backdrop")?.getAttribute("data-platform-modal-state"),
+    ).toBe("opening");
+    act(() => enterFrame?.(0));
     expect(dialog.getAttribute("data-platform-modal-state")).toBe("visible");
 
     rerender(
@@ -187,6 +198,9 @@ describe("PlatformModal", () => {
       </PlatformModal>
     );
     expect(dialog.getAttribute("data-platform-modal-state")).toBe("closing");
+    expect(
+      dialog.closest(".platform-modal-backdrop")?.getAttribute("data-platform-modal-state"),
+    ).toBe("closing");
 
     act(() => vi.advanceTimersByTime(30));
     rerender(

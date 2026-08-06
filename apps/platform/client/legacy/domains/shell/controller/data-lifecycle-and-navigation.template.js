@@ -45,7 +45,11 @@
   
   ${API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.loadLifecycle}
           useEffect(() => {
-            if (activePage !== "configure" || !hasSessionAuth) {
+            if (
+              activePage !== "configure"
+              || !hasSessionAuth
+              || sessionStreamingConfig.status === "loading"
+            ) {
               return;
             }
   
@@ -64,16 +68,28 @@
   	          billingOrganizationId,
             hasSessionAuth,
             loadSettingsBudgetStatus,
+            sessionStreamingConfig.status,
             settingsBudgetStatus,
           ]);
   
           useEffect(() => {
-            if (!showInitialThreadWelcome || !hasSessionAuth || settingsBudgetStatus) {
+            if (
+              !showInitialThreadWelcome
+              || !hasSessionAuth
+              || sessionStreamingConfig.status === "loading"
+              || settingsBudgetStatus
+            ) {
               return;
             }
   
             void loadSettingsBudgetStatus();
-          }, [hasSessionAuth, loadSettingsBudgetStatus, settingsBudgetStatus, showInitialThreadWelcome]);
+          }, [
+            hasSessionAuth,
+            loadSettingsBudgetStatus,
+            sessionStreamingConfig.status,
+            settingsBudgetStatus,
+            showInitialThreadWelcome,
+          ]);
   
           useEffect(() => {
             if (
@@ -211,6 +227,38 @@
             }
             void loadTagDetailConfig(selectedPluginId);
           }, [activePage, toolsView, selectedPluginId, hasSessionAuth]);
+
+          function listManagedConnectorStatusProviderIds() {
+            return listPlatformConnectorCatalogEntries("plugin")
+              .filter((entry) => (
+                entry.authentication === "oauth2"
+                || entry.authentication === "api-key"
+                || entry.authentication === "service-account"
+              ))
+              .map((entry) => entry.id);
+          }
+
+          useEffect(() => {
+            if (
+              !hasSessionAuth
+              || sessionState.status !== "authenticated"
+              || !sessionState.userId
+            ) {
+              return;
+            }
+            listManagedConnectorStatusProviderIds().forEach((provider) => {
+              const refreshStatus = getConnectorStatusRefresh(provider);
+              if (typeof refreshStatus === "function") {
+                void refreshStatus({ forceRefresh: true });
+              }
+            });
+          }, [
+            hasSessionAuth,
+            sessionState.status,
+            sessionState.userId,
+            billingOrganizationId,
+            settingsBudgetStatus?.organizationId,
+          ]);
   
           useEffect(() => {
             if (activePage === "tools" && toolsView === "skills") {
@@ -337,6 +385,7 @@
               return {
                 id: connector.id,
                 name: connector.label,
+                kind: connector.kind,
                 description: connector.functionsLabel || connector.description,
                 keywords: [
                   connector.shortLabel,
@@ -2120,7 +2169,11 @@
               if (response.ok) {
                 const parsed = await parseResponse(response);
                 const items = parsePlaygroundEnvironmentListResponse(parsed);
-                if (items.length > 0 || (sessionState.onboardingCompleted !== false && !showPlaygroundOnboarding)) {
+                // An empty catalog is not a valid settled state for the shell:
+                // the default endpoint lazily provisions the account's first
+                // selectable computer. This is especially important for the
+                // files page, which receives the catalog directly as a prop.
+                if (items.length > 0) {
                   setRealEnvironments(items);
                   return;
                 }
@@ -2159,8 +2212,6 @@
             authRequestHeaders,
             hasRealAccess,
             proxyBackendBase,
-            sessionState.onboardingCompleted,
-            showPlaygroundOnboarding,
             triggerPlatformSessionRecovery,
           ]);
   

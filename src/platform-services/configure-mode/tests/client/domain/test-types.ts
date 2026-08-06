@@ -165,10 +165,12 @@ export interface TestPlanCreateInput {
     cases: Partial<TestCaseDefinition>[];
   };
   metadata?: Record<string, unknown>;
+  publishInitialVersion?: boolean;
 }
 
 export interface TestRunCreateInput {
-  environmentId: string;
+  versionId?: string;
+  environmentId?: string;
   agentId?: string;
   projectId?: string;
   taskId?: string;

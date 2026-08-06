@@ -1,5 +1,5 @@
 export const FILES_PAGE_SHELL_SCRIPT = `
-      function PlaygroundFilesPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, apiKey, agentId, agents = [], isAgentSelectionBlocked, onBlockedAgentSelect, onFileChatThreadMutated, onThreadOpen, onThreadStarted, onRequestSidebarCollapse, navigationRequest, onNavigationRequestHandled, onOpenEnvironmentSettings, onCreateEnvironment, onEnvironmentMutated, onEnvironmentChange, onTopNavChange }) {
+      function PlaygroundFilesPage({ backendUrl, requestHeaders, environments, initialEnvironmentId, apiKey, agentId, agents = [], organizationId = "", connectorConnectionStatuses = {}, isAgentSelectionBlocked, onBlockedAgentSelect, onFileChatThreadMutated, onThreadOpen, onThreadStarted, onRequestSidebarCollapse, navigationRequest, onNavigationRequestHandled, onOpenEnvironmentSettings, onCreateEnvironment, onEnvironmentMutated, onEnvironmentChange, onTopNavChange }) {
         const FILE_CHAT_PANEL_DEFAULT_WIDTH = 420;
         const FILES_BROWSER_RESTORE_WIDTH = 320;
         const FILES_PANE_CLOSE_THRESHOLD = 100;
@@ -29,6 +29,22 @@ export const FILES_PAGE_SHELL_SCRIPT = `
         const [renameValue, setRenameValue] = useState("");
         const [viewMode, setViewMode] = useState("list");
         const [contentMode, setContentMode] = useState("files");
+        const [connectorSourceState, setConnectorSourceState] = useState({
+          status: "idle",
+          items: [],
+          error: "",
+        });
+        const [activeConnectorSourceId, setActiveConnectorSourceId] = useState("");
+        const [activeConnectorCredentialId, setActiveConnectorCredentialId] = useState("");
+        const [connectorBrowserHistory, setConnectorBrowserHistory] = useState([{ folderId: "root", label: "Files" }]);
+        const [connectorBrowserHistoryIndex, setConnectorBrowserHistoryIndex] = useState(0);
+        const [connectorItemsByLocation, setConnectorItemsByLocation] = useState({});
+        const [connectorBrowserLoadState, setConnectorBrowserLoadState] = useState({
+          key: "",
+          status: "idle",
+          error: "",
+        });
+        const [connectorBrowserSearchQuery, setConnectorBrowserSearchQuery] = useState("");
         const [changesViewMode, setChangesViewMode] = useState("timeline");
         const [toolbarPopover, setToolbarPopover] = useState("");
         const [filesToolbarMenuAnimation, setFilesToolbarMenuAnimation] = useState({
@@ -82,6 +98,7 @@ export const FILES_PAGE_SHELL_SCRIPT = `
         const [contextMenu, setContextMenu] = useState(null);
         const [contextMenuPhase, setContextMenuPhase] = useState("idle");
         const contextMenuCloseTimerRef = useRef(null);
+        const connectorBrowserRequestTokenRef = useRef(0);
         const [fileProjectPickerState, setFileProjectPickerState] = useState(null);
         const [fileProjectPickerValue, setFileProjectPickerValue] = useState("");
         const [fileProjectPickerError, setFileProjectPickerError] = useState("");
@@ -94,8 +111,7 @@ export const FILES_PAGE_SHELL_SCRIPT = `
         const [fileTeamPickerState, setFileTeamPickerState] = useState(null);
         const [fileTeamPickerVisible, setFileTeamPickerVisible] = useState(false);
         const [fileTeamPickerClosing, setFileTeamPickerClosing] = useState(false);
-        const [fileTeamPickerOpen, setFileTeamPickerOpen] = useState(false);
-        const [fileTeamPickerValue, setFileTeamPickerValue] = useState("");
+        const [fileTeamPickerValues, setFileTeamPickerValues] = useState([]);
         const [fileTeamPickerError, setFileTeamPickerError] = useState("");
         const [availableFileTeams, setAvailableFileTeams] = useState([]);
         const [isLoadingFileTeams, setIsLoadingFileTeams] = useState(false);
@@ -344,7 +360,11 @@ export const FILES_PAGE_SHELL_SCRIPT = `
           const requestedProjectId = String(navigationRequest?.projectId || "").trim();
           const requestedProjectLabel = String(navigationRequest?.projectName || navigationRequest?.projectLabel || "").trim();
           const requestedEnvironmentId = String(navigationRequest?.environmentId || "").trim();
-          const requestedContentMode = navigationRequest?.contentMode === "changes" ? "changes" : "files";
+          const requestedContentMode = navigationRequest?.contentMode === "changes"
+            ? "changes"
+            : navigationRequest?.contentMode === "connectors"
+              ? "connectors"
+              : "files";
           const requestedAction = String(navigationRequest?.action || "").trim();
           const requestedPath = normalizeHistoryPath(navigationRequest?.path || "");
           const requestedIsFolder = Boolean(navigationRequest?.isFolder);
@@ -394,6 +414,19 @@ export const FILES_PAGE_SHELL_SCRIPT = `
                 setRenamingPath("");
                 setRenameValue("");
                 setIsPreviewOpen(false);
+                return;
+              }
+              if (requestedContentMode === "connectors") {
+                setToolbarPopover("");
+                setContextMenu(null);
+                setSelectedPaths(new Set());
+                setSelectionAnchorPath("");
+                setPreviewTargetPath("");
+                setRenamingPath("");
+                setRenameValue("");
+                setIsPreviewOpen(false);
+                setIsPreviewMaximized(false);
+                setIsFileChatOpen(false);
                 return;
               }
               if (targetEnvironmentId) {
@@ -642,6 +675,58 @@ export const FILES_PAGE_SHELL_SCRIPT = `
             window.removeEventListener("keydown", handleKeyDown);
           };
         }, [toolbarPopover]);
+
+        useEffect(() => {
+          function handleFilesCreateShortcut(event) {
+            if (
+              !(event.metaKey || event.ctrlKey)
+              || event.altKey
+              || event.repeat
+              || !selectedEnvironmentId
+              || contentMode === "changes"
+            ) {
+              return;
+            }
+
+            const target = event.target;
+            if (
+              target instanceof HTMLElement
+              && (
+                target.isContentEditable
+                || Boolean(target.closest("input, textarea, select, [contenteditable='true'], [role='textbox']"))
+              )
+            ) {
+              return;
+            }
+            if (document.querySelector(".platform-modal-backdrop, .sidebar-thread-rename-scrim, [role='dialog'][aria-modal='true']")) {
+              return;
+            }
+
+            const key = String(event.key || "").toLowerCase();
+            if (key === "n") {
+              if (event.shiftKey ? isCreatingFolder : isCreatingFile) {
+                return;
+              }
+              event.preventDefault();
+              event.stopPropagation();
+              if (event.shiftKey) {
+                void handleCreateFolder(currentPath);
+              } else {
+                void handleCreateFile(currentPath);
+              }
+              return;
+            }
+
+            if (key === "u" && event.shiftKey && !isUploadingFiles) {
+              event.preventDefault();
+              event.stopPropagation();
+              openUploadPicker(currentPath);
+            }
+          }
+
+          window.addEventListener("keydown", handleFilesCreateShortcut, true);
+          return () => window.removeEventListener("keydown", handleFilesCreateShortcut, true);
+        }, [contentMode, currentPath, isCreatingFile, isCreatingFolder, isUploadingFiles, selectedEnvironmentId]);
 
         useEffect(() => {
           const isAnimatedFilesToolbarPopover = (value) => value === "create" || value === "sort" || value === "filter" || value === "projects";

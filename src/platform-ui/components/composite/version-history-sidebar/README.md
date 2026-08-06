@@ -4,7 +4,7 @@
 
 ## Purpose
 
-`PlatformVersionHistorySidebar` composes the floating-sidebar shell with a compact version list. Each item presents its title and creation date, identifies the production version, highlights the currently displayed version, and exposes centralized popup actions. The `All Versions` title toolbar retains production-status filtering. The sidebar also supports loading and error states, creating versions from its header, and an explicit comparison action.
+`PlatformVersionHistorySidebar` composes the floating-sidebar shell with a compact version list. Each item presents its title and creation date, identifies the production version, highlights the currently displayed version, and exposes centralized popup actions. The `All Versions` title toolbar retains production-status filtering. The sidebar also supports loading and error states, creating versions from its header, and an always-present `View Changes` footer action. The shared action is disabled until the resource supplies a comparison handler and at least one version is available.
 
 Version titles default to the canonical shared format: `vN`, or `vN | description` when an optional description is present. Resource domains remain responsible for persistence, creation dates, and actions. Opening the sidebar is deliberately independent from opening a comparison page.
 

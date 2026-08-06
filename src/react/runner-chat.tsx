@@ -9,7 +9,6 @@ import {
   Check as LucideCheck,
   ChevronDown as LucideChevronDown,
   CornerDownRight as LucideCornerDownRight,
-  Cloud as LucideCloud,
   Code as LucideCode,
   Copy as LucideCopy,
   Cpu as LucideCpu,
@@ -31,13 +30,11 @@ import {
   Palette as LucidePalette,
   Pencil as LucidePencil,
   Presentation as LucidePresentation,
-  Plus as LucidePlus,
   Plug as LucidePlug,
   RefreshCw as LucideRefreshCw,
   Split as LucideSplit,
   Star as LucideStar,
   Telescope as LucideTelescope,
-  Terminal as LucideTerminal,
   TextQuote as LucideTextQuote,
   ThumbsDown as LucideThumbsDown,
   ThumbsUp as LucideThumbsUp,
@@ -58,6 +55,7 @@ import {
   PlatformSecondaryButton,
 } from "../platform-ui/components/ui/button/index.js";
 import { PlatformSwitch } from "../platform-ui/components/ui/switch/index.js";
+import { ConnectionIdentityIcon } from "../platform-resources/shared/connections/connection-identity-icon.js";
 import { buildRunnerThreadScreenViewModel } from "../thread/presentation.js";
 import type { RunnerThreadAction, RunnerThreadMessage } from "../thread/types.js";
 import { useRunnerExecution } from "./use-runner-execution.js";
@@ -84,7 +82,11 @@ import {
   type RunnerWebSearchPreviewImage,
   type RunnerWebSearchPreviewSource,
 } from "./runner-document-preview.js";
-import { ComputerUseDetailDrawer, DeepResearchDetailDrawer, InlineStatusLogBox, RunnerCodeViewer, SubagentDetailDrawer, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "../platform-ui/components/thread-components/log-boxes/index.js";
+import { ComputerUseDetailDrawer, DeepResearchDetailDrawer, RunnerCodeViewer, SubagentDetailDrawer, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "../platform-ui/components/thread-components/log-boxes/index.js";
+import {
+  RunnerWorkStatusDisclosure,
+  type RunnerWorkStatusItem,
+} from "../platform-ui/components/thread-components/work-status-disclosure/index.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 import { DotLoader } from "./dot-loader.js";
 import {
@@ -110,16 +112,15 @@ export type {
   RunnerChatUserPromptRenderContext,
 } from "./runner-chat/run-summary-content.js";
 import {
-  getRunnerComputerDisplayLabel,
   renderRunnerSummaryResourceChip,
-  renderTurnAgentAvatar,
 } from "./runner-chat/run-summary-presentation.js";
 import {
+  RunnerTurnIdentity,
+} from "./runner-chat/turn-presentation.js";
+import {
   IconCheck,
-  IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
-  IconChevronUp,
   IconClock,
   IconCloud,
   IconFile,
@@ -237,10 +238,7 @@ import {
   sanitizeRunnerMessage,
   type RunnerConversationMessage,
 } from "./runner-chat/conversation-messages.js";
-import {
-  formatElapsedDurationLabel,
-  parseSecondsFromClock,
-} from "./runner-chat/time-utils.js";
+import { parseSecondsFromClock } from "./runner-chat/time-utils.js";
 import {
   buildRunnerHeaders,
   sanitizeBackendUrl,
@@ -295,6 +293,7 @@ import {
   isBrowserTimelineLog,
   isComputerUseTimelineLog,
   isDeepResearchTimelineCommand,
+  isRunnerTimelineToolCallItem,
   logBelongsToSubagentInvocation,
   type RunnerTimelineItem,
   type RunnerTurnTimelineState,
@@ -423,13 +422,20 @@ import {
 import {
   buildRunnerConnectorPayload,
   filterRunnerConnectorOptions,
+  getRunnerConnectorIdsFromPayload,
   mergeRunnerConnectorPayloads,
   normalizeRunnerConnectorOptions,
   normalizeRunnerSelectedConnectorIds,
   replaceRunnerConnectorMention,
   resolveRunnerConnectorMentionInputState,
+  RUNNER_CONNECTOR_IDS_METADATA_KEY,
   type RunnerConnectorMentionInputState,
 } from "./runner-chat/composer-connectors.js";
+import { RunnerUserMessageContent } from "./runner-chat/message-connectors.js";
+import {
+  buildRunnerTurnMessageMetadataIndex,
+  buildRunnerTurnWorkingLabelIndex,
+} from "./runner-chat/canonical-message-metadata.js";
 import type {
   RunnerChatConnectorOption,
   RunnerChatFollowUpAction,
@@ -459,10 +465,10 @@ export type {
   RunnerFileBrowserSource,
 } from "./runner-chat/file-browser-source.js";
 import { useRunnerExternalRunRequest } from "./runner-chat/execution/external-run-request.js";
-import { useRunnerThinkingStatus } from "./runner-chat/use-thinking-status.js";
+import { useRunnerWorkLogPagination } from "./runner-chat/use-work-log-pagination.js";
 import {
   getRunnerTurnDurationSeconds,
-  getRunnerTurnLiveWorkSummary,
+  getRunnerTurnWorkHeadline,
 } from "./runner-chat/turn-status-presentation.js";
 import {
   buildRunnerOriginalActionLogIndex,
@@ -565,10 +571,6 @@ const RUNNER_EMAIL_ATTACHMENT_FILE_ICON_URL = new URL(
 ).toString();
 const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
 const RUNNER_WORK_LOG_PAGE_SIZE = 10;
-// Live runs stay intentionally quiet at the conversation altitude. The header
-// carries the current semantic summary; concrete actions are mounted only when
-// the user expands the run.
-const RUNNER_LIVE_WORK_LOG_PREVIEW_COUNT = 0;
 
 interface RunnerQuotedSelectionPopupState {
   selection: RunnerQuotedSelection;
@@ -615,6 +617,22 @@ interface RunnerSelectedDeepResearchDetailPresentation {
 
 const ATTACH_FILES_SHORTCUT_KEY = "u";
 const SCHEDULE_SHORTCUT_KEY = "s";
+const RUNNER_CHAT_TAG_CONNECTOR_IDS = new Set(["discord", "email", "telegram"]);
+
+function getRunnerChatConnectorIdentityKind(
+  option: RunnerChatConnectorOption,
+): "tags" | "plugins" {
+  if (
+    option.kind === "tag"
+    || (
+      option.kind !== "plugin"
+      && RUNNER_CHAT_TAG_CONNECTOR_IDS.has(option.id)
+    )
+  ) {
+    return "tags";
+  }
+  return "plugins";
+}
 
 export function RunnerChat({
   backendUrl,
@@ -622,6 +640,7 @@ export function RunnerChat({
   speechToTextUrl,
   fetchCustomSkills,
   requestHeaders,
+  resolveRequestHeaders,
   environmentId,
   projectId,
   agentId,
@@ -705,6 +724,7 @@ export function RunnerChat({
   onExternalRunRequestHandled,
   onExternalRunRequestCreate,
   autoFocusComposer = false,
+  composerFocusRequest = null,
   keepFocusOnSubmit = false,
   enableBacklogSubtaskCommand = false,
   backlogTaskConnectors = null,
@@ -756,14 +776,9 @@ export function RunnerChat({
   const [turns, setTurns] = useState<RunnerTurn[]>([]);
   const [hydratedThreadStatus, setHydratedThreadStatus] = useState<string | null>(null);
   const {
-    thinkingStatusPhaseByTurn,
-    visibleTimelineItemCountsByTurn,
     visibleWorkLogItemCountsByTurn,
     setVisibleWorkLogItemCountsByTurn,
-  } = useRunnerThinkingStatus({
-    turns,
-    getTurnTimelineState,
-  });
+  } = useRunnerWorkLogPagination(turns);
   const [pendingQueuedMessages, setPendingQueuedMessages] = useState<RunnerPendingMessage[]>([]);
   const [editingTurnId, setEditingTurnId] = useState<string | null>(null);
   const [editingTurnDraft, setEditingTurnDraft] = useState("");
@@ -923,6 +938,7 @@ export function RunnerChat({
   const logsRef = useRef<HTMLDivElement | null>(null);
   const contentWidthRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const selectedConnectorsInlineRef = useRef<HTMLDivElement | null>(null);
   const editingTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const popupAreaRef = useRef<HTMLDivElement | null>(null);
   const plusButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -1417,6 +1433,12 @@ export function RunnerChat({
     const selectedIds = new Set(selectedConnectorIds);
     return availableConnectorOptions.filter((option) => selectedIds.has(option.id));
   }, [availableConnectorOptions, selectedConnectorIds]);
+  const selectedConnectorsInlineStartValue = hasStagedComposerCommand
+    ? stagedComposerOffsetValue
+    : "16px";
+  const composerTextareaOffsetValue = selectedConnectorOptions.length > 0
+    ? `calc(${selectedConnectorsInlineStartValue} + var(--tb-selected-connectors-inline-width, 0px) + 8px)`
+    : stagedComposerOffsetValue;
   const selectedConnectorPayload = useMemo(
     () => buildRunnerConnectorPayload(selectedConnectorIds),
     [selectedConnectorIds],
@@ -1604,7 +1626,7 @@ export function RunnerChat({
   const canonicalThreadEnabled = Boolean(
     canonicalThreadId
     && normalizedBackendUrl
-    && (threadViewMode !== "legacy" || canonicalThreadWorkbenchRequested)
+    && (threadViewMode !== "legacy" || canonicalThreadWorkbenchRequested || hasRunningTurn)
   );
   const canonicalThread = useRunnerThreadProjection({
     threadId: canonicalThreadId,
@@ -1615,6 +1637,14 @@ export function RunnerChat({
     includeLegacy: false,
   });
   const canonicalProjectionMatchesThread = canonicalThread.projection.threadId === canonicalThreadId;
+  const legacyTurnMessageMetadataById = useMemo(
+    () => buildRunnerTurnMessageMetadataIndex(turns, canonicalThread.projection),
+    [canonicalThread.projection, turns],
+  );
+  const canonicalWorkingLabelByTurnId = useMemo(
+    () => buildRunnerTurnWorkingLabelIndex(turns, canonicalThread.projection),
+    [canonicalThread.projection, turns],
+  );
   const isVoiceModeNoticeTurn = (turn: RunnerTurn) => (
     turn.presentation === "context-action-notice"
     && turn.logs.length > 0
@@ -2380,7 +2410,7 @@ export function RunnerChat({
     setTurns((prev) => prev.map((turn) => (turn.id === turnId ? updater(turn) : turn)));
   }
 
-  function collapseAllWorkingLogs(extraTurnId?: string, options?: { preserveExpandedTurnId?: string }) {
+  function collapseAllWorkingLogs(extraTurnId?: string) {
     const turnIds = Array.from(new Set([
       ...turnsRef.current.map((turn) => turn.id).filter(Boolean),
       ...(extraTurnId ? [extraTurnId] : []),
@@ -2392,9 +2422,6 @@ export function RunnerChat({
       let didChange = false;
       const nextExpandedTurns = { ...previousExpandedTurns };
       turnIds.forEach((turnId) => {
-        if (turnId === options?.preserveExpandedTurnId && previousExpandedTurns[turnId] === true) {
-          return;
-        }
         if (nextExpandedTurns[turnId] !== false) {
           nextExpandedTurns[turnId] = false;
           didChange = true;
@@ -2406,27 +2433,12 @@ export function RunnerChat({
       let didChange = false;
       const nextCounts = { ...previousCounts };
       turnIds.forEach((turnId) => {
-        if (turnId === options?.preserveExpandedTurnId) {
-          return;
-        }
         if (turnId in nextCounts) {
           delete nextCounts[turnId];
           didChange = true;
         }
       });
       return didChange ? nextCounts : previousCounts;
-    });
-  }
-
-  function toggleWorkingLogs(turnId: string, isExpanded: boolean) {
-    setExpandedTurns((prev) => ({ ...prev, [turnId]: !isExpanded }));
-    setVisibleWorkLogItemCountsByTurn((previousCounts) => {
-      if (!(turnId in previousCounts)) {
-        return previousCounts;
-      }
-      const nextCounts = { ...previousCounts };
-      delete nextCounts[turnId];
-      return nextCounts;
     });
   }
 
@@ -2457,7 +2469,7 @@ export function RunnerChat({
       logs: [...turn.logs, timestampedLog],
     }));
     if (isTurnResponseLog(timestampedLog)) {
-      collapseAllWorkingLogs(turnId, { preserveExpandedTurnId: turnId });
+      collapseAllWorkingLogs(turnId);
     }
   }
 
@@ -2482,7 +2494,7 @@ export function RunnerChat({
       };
     });
     if (message.trim()) {
-      collapseAllWorkingLogs(turnId, { preserveExpandedTurnId: turnId });
+      collapseAllWorkingLogs(turnId);
     }
   }
 
@@ -2578,7 +2590,7 @@ export function RunnerChat({
     isDrainingQueuedRunsRef.current = false;
     setExpandedTurns((prev) => ({
       ...prev,
-      [turnId]: true,
+      [turnId]: false,
     }));
     setEditingTurnId(null);
     setEditingTurnDraft("");
@@ -2613,7 +2625,6 @@ export function RunnerChat({
         setTurns(hydratedTurns);
         setExpandedTurns((previousExpandedTurns) =>
           mapExpandedTurns(previousExpandedTurns, nextTurns, hydratedTurns, {
-            defaultLatestExpanded: true,
             collapseOnNewRunSummary: true,
           })
         );
@@ -2641,7 +2652,6 @@ export function RunnerChat({
             setTurns(hydratedTurns);
             setExpandedTurns((previousExpandedTurns) =>
               mapExpandedTurns(previousExpandedTurns, turnsRef.current, hydratedTurns, {
-                defaultLatestExpanded: true,
                 collapseOnNewRunSummary: true,
               })
             );
@@ -3484,6 +3494,7 @@ export function RunnerChat({
     refreshThreadContextDetails:
       refreshThreadContextDetailsInBackground,
     requestHeaders,
+    resolveRequestHeaders,
     resolveAttachmentPayload,
     resourceCreationCommandHiddenPrompt,
     selectedAgent,
@@ -3793,6 +3804,35 @@ export function RunnerChat({
     }px`;
   }, [input]);
 
+  useLayoutEffect(() => {
+    const selectedConnectors = selectedConnectorsInlineRef.current;
+    const textareaShell = selectedConnectors?.parentElement;
+    if (!selectedConnectors || !textareaShell) {
+      return;
+    }
+
+    const syncInlineConnectorWidth = () => {
+      const width = Math.ceil(selectedConnectors.getBoundingClientRect().width);
+      textareaShell.style.setProperty(
+        "--tb-selected-connectors-inline-width",
+        `${width}px`,
+      );
+    };
+    syncInlineConnectorWidth();
+
+    const resizeObserver = typeof ResizeObserver === "undefined"
+      ? null
+      : new ResizeObserver(syncInlineConnectorWidth);
+    resizeObserver?.observe(selectedConnectors);
+
+    return () => {
+      resizeObserver?.disconnect();
+      textareaShell.style.removeProperty(
+        "--tb-selected-connectors-inline-width",
+      );
+    };
+  }, [selectedConnectorOptions]);
+
   useEffect(() => {
     if (!editingTextareaRef.current || !editingTurnId) return;
     const textarea = editingTextareaRef.current;
@@ -3818,6 +3858,13 @@ export function RunnerChat({
     }
     focusComposerSoon({ preventScroll: hasCustomEmptyStateActive });
   }, [autoFocusComposer, hasCustomEmptyStateActive]);
+
+  useEffect(() => {
+    if (composerFocusRequest === null || composerFocusRequest === undefined) {
+      return;
+    }
+    focusComposerSoon({ preventScroll: hasCustomEmptyStateActive });
+  }, [composerFocusRequest]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -4388,6 +4435,9 @@ export function RunnerChat({
         backlogTaskConnectors,
         selectedConnectorPayload,
       );
+      const runConnectorIds = getRunnerConnectorIdsFromPayload(
+        runConnectorPayload,
+      );
       if (stagedThreadContextCommand) {
         const stagedPrompt = textareaAllowsPromptAfterStagedCommand ? taskText : "";
         const shouldPreserveComposerState = stagedThreadContextCommand === "fork";
@@ -4592,7 +4642,9 @@ export function RunnerChat({
             scrapeCreationCommand,
             parseCreationCommand,
             adCreationCommand,
-            connectors: runConnectorPayload,
+            messageMetadata: runConnectorIds.length > 0
+              ? { [RUNNER_CONNECTOR_IDS_METADATA_KEY]: runConnectorIds }
+              : null,
           },
         ]);
         setPendingQueuedMessages((prev) => [
@@ -5032,28 +5084,6 @@ export function RunnerChat({
       agentName: normalizedAgentName || undefined,
     });
   }, [agentId, effectiveAgentId, onAgentTurnClick, selectedAgent]);
-  const renderTurnAgentTrigger = useCallback((turn: RunnerTurn, turnAgentLabel: string, turnAgentPhotoUrl: string) => {
-    const content = (
-      <>
-        {renderTurnAgentAvatar(turnAgentLabel, turnAgentPhotoUrl)}
-        <span className="tb-turn-agent-name">{turnAgentLabel}</span>
-      </>
-    );
-    if (typeof onAgentTurnClick !== "function" || !String(turnAgentLabel || "").trim()) {
-      return <div className="tb-turn-agent">{content}</div>;
-    }
-    return (
-      <button
-        type="button"
-        className="tb-turn-agent tb-turn-agent-button"
-        onClick={() => handleTurnAgentClick(turn, turnAgentLabel)}
-        aria-label={`Open agent details for ${turnAgentLabel}`}
-        title={`Open ${turnAgentLabel}`}
-      >
-        {content}
-      </button>
-    );
-  }, [handleTurnAgentClick, onAgentTurnClick]);
   const handleSummaryWorkspacePathClick = useCallback((turn: RunnerTurn, path: string, sourceType: RunnerQuotedSelectionSource) => {
     const normalizedPath = String(path || "").trim();
     if (!normalizedPath) {
@@ -6061,6 +6091,7 @@ export function RunnerChat({
             ) : null}
             {shouldUseCanonicalThreadSurface ? (
               <RunnerCanonicalThreadSurface
+                availableConnectorOptions={availableConnectorOptions}
                 projection={canonicalThread.projection}
                 connected={canonicalThread.connected}
                 reconnecting={canonicalThread.reconnecting}
@@ -6121,8 +6152,9 @@ export function RunnerChat({
               const isTurnPermissionAsked = turn.status === "permission_asked";
               const isQueuedTurn = turn.status === "queued";
               const isLatestTurn = turnIndex === turns.length - 1;
-              const turnSeconds = getTurnDurationSeconds(turn);
               const { agentMessage, displayedTimelineItems: rawDisplayedTimelineItems } = getTurnTimelineState(turn);
+              const hasRunSummary = Boolean(agentMessage?.message?.trim());
+              const isTurnActivelyWorking = isTurnRunning && !hasRunSummary;
               const metronomeWorkflowPromptLog = getTurnMetronomeWorkflowPromptLog(turn);
               const shouldRenderMetronomeWorkflowPrompt = Boolean(metronomeWorkflowPromptLog);
               const normalizedPrompt = turn.prompt.trim();
@@ -6153,7 +6185,17 @@ export function RunnerChat({
                   />
                 </>
               );
-              const userPromptContent = hasCustomUserPromptContent ? customUserPromptContent : defaultUserPromptContent;
+              const baseUserPromptContent = hasCustomUserPromptContent
+                ? customUserPromptContent
+                : defaultUserPromptContent;
+              const userPromptContent = (
+                <RunnerUserMessageContent
+                  metadata={legacyTurnMessageMetadataById.get(turn.id) || turn.messageMetadata}
+                  availableConnectorOptions={availableConnectorOptions}
+                >
+                  {baseUserPromptContent}
+                </RunnerUserMessageContent>
+              );
               const isBtwTurn = turn.presentation === "btw" || normalizedPrompt.toLowerCase().startsWith("/btw");
               const isEditingTurn = editingTurnId === turn.id;
               const canEditTurn = isEditableUserTurn(turn);
@@ -6186,41 +6228,18 @@ export function RunnerChat({
                 turn.presentation === "context-action-notice"
                   ? turn.logs.find((log) => log.eventType === "action_summary") || null
                   : null;
-              const visibleTimelineItemCount = visibleTimelineItemCountsByTurn[turn.id];
               const visibleTimelineSourceItems = shouldRenderMetronomeWorkflowPrompt && metronomeWorkflowPromptLog
                 ? rawDisplayedTimelineItems.filter((item) => item.kind !== "log" || item.log !== metronomeWorkflowPromptLog)
                 : rawDisplayedTimelineItems;
-              const revealedTimelineItems =
-                visibleTimelineItemCount === undefined
-                  ? visibleTimelineSourceItems
-                  : visibleTimelineSourceItems.slice(0, visibleTimelineItemCount);
-              const isLiveWorkLogPreviewTurn = isTurnRunning && !agentMessage?.message;
-              const isExpanded = expandedTurns[turn.id] ?? (isLiveWorkLogPreviewTurn ? false : !isThreadHistoryLoading);
-              const visibleWorkLogItemCount = isExpanded
-                ? visibleWorkLogItemCountsByTurn[turn.id] ?? RUNNER_WORK_LOG_PAGE_SIZE
-                : RUNNER_LIVE_WORK_LOG_PREVIEW_COUNT;
+              const revealedTimelineItems = visibleTimelineSourceItems;
+              const visibleWorkLogItemCount =
+                visibleWorkLogItemCountsByTurn[turn.id] ?? RUNNER_WORK_LOG_PAGE_SIZE;
               const firstDisplayedTimelineItemIndex = Math.max(0, revealedTimelineItems.length - visibleWorkLogItemCount);
               const displayedTimelineItems = revealedTimelineItems.slice(firstDisplayedTimelineItemIndex);
-              const hasMoreWorkingLogs = isExpanded && firstDisplayedTimelineItemIndex > 0;
-              const shouldShowCollapsedLivePreview = false;
-              const thinkingStatusPhase =
-                thinkingStatusPhaseByTurn[turn.id] ??
-                (isTurnRunning && visibleTimelineSourceItems.length > 0 && !agentMessage?.message ? "visible" : "hidden");
-              const shouldRenderThinkingStatus =
-                isTurnRunning &&
-                rawDisplayedTimelineItems.length > 0 &&
-                !agentMessage?.message &&
-                thinkingStatusPhase !== "hidden" &&
-                (isExpanded || displayedTimelineItems.length === 0);
-              const isWorkLogsLoading =
-                isThreadHistoryLoading &&
-                !isTurnRunning &&
-                Boolean(agentMessage?.message) &&
-                revealedTimelineItems.length === 0;
+              const hasMoreWorkingLogs = firstDisplayedTimelineItemIndex > 0;
               const baseDelay = turnIndex * 140;
               const promptStyle = turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay) : undefined;
               const metaHeaderStyle = turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 40) : undefined;
-              const workHeaderStyle = turn.animateOnRender ? getRunnerChatEnterAnimationStyle(baseDelay + 60) : undefined;
               const responseStyle = turn.animateOnRender
                 ? getRunnerChatEnterAnimationStyle(baseDelay + 150 + displayedTimelineItems.length * 45)
                 : undefined;
@@ -6233,28 +6252,73 @@ export function RunnerChat({
                 : turn.agentName || displayedAgentLabel || "Agent";
               const turnAgentPhotoUrl = resolveTurnAgentPhotoUrl(turnAgentLabel);
               const turnEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
-              const turnComputerLabel = getRunnerComputerDisplayLabel(turnEnvironmentLabel);
-              const liveWorkSummary = isTurnRunning
-                ? getRunnerTurnLiveWorkSummary(turn)
-                : null;
-              const workLabel = isWorkLogsLoading
-                ? `${turnAgentLabel} loading working logs...`
-                : turn.status === "permission_asked"
-                  ? `${turnAgentLabel} needs permission`
-                  : isTurnRunning
-                  ? liveWorkSummary
-                    ? `${liveWorkSummary} · ${formatElapsedDurationLabel(turnSeconds)}`
-                    : `${turnAgentLabel} working · ${formatElapsedDurationLabel(turnSeconds)}`
-                  : `${turnAgentLabel} worked for ${formatElapsedDurationLabel(turnSeconds)}`;
-              const workComputerLabel = (
-                <span className="tb-work-computer-label" title={turnComputerLabel}>
-                  <span className="tb-work-computer-label-icons" aria-hidden="true">
-                    <LucideMonitor className="tb-work-computer-label-icon" strokeWidth={1.55} />
-                  </span>
-                  <span className="tb-work-computer-label-text">{turnComputerLabel}</span>
-                </span>
+              const shouldRenderWorkSection = !isQueuedTurn;
+              const isWorkLogExpanded = expandedTurns[turn.id] ?? false;
+              const workLogHeadline = getRunnerTurnWorkHeadline(
+                turn,
+                nowMs,
+                canonicalWorkingLabelByTurnId.get(turn.id),
               );
-              const shouldRenderWorkSection = isTurnRunning || isTurnPermissionAsked || revealedTimelineItems.length > 0 || isWorkLogsLoading;
+              const turnIdentity = !isQueuedTurn ? (
+                <RunnerTurnIdentity
+                  agentName={turnAgentLabel}
+                  agentPhotoUrl={turnAgentPhotoUrl}
+                  environmentName={turnEnvironmentLabel}
+                  onAgentClick={
+                    typeof onAgentTurnClick === "function" && turnAgentLabel.trim()
+                      ? () => handleTurnAgentClick(turn, turnAgentLabel)
+                      : undefined
+                  }
+                  style={metaHeaderStyle}
+                />
+              ) : null;
+              const workLogItems = displayedTimelineItems.reduce<RunnerWorkStatusItem[]>((items, item, index) => {
+                const timelineIndex = firstDisplayedTimelineItemIndex + index;
+                const content = renderTimelineItem(turn, item, timelineIndex);
+                if (!content) {
+                  return items;
+                }
+                items.push({
+                  key: timelineItemKey(turn.id, timelineIndex, item),
+                  content,
+                  isToolCall: isRunnerTimelineToolCallItem(item),
+                  style: shouldAnimateTimelineRows
+                    ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45)
+                    : undefined,
+                });
+                return items;
+              }, []);
+              const workLogSection = shouldRenderWorkSection ? (
+                <RunnerWorkStatusDisclosure
+                  expanded={isWorkLogExpanded}
+                  headline={workLogHeadline}
+                  headerStyle={
+                    turn.animateOnRender
+                      ? getRunnerChatEnterAnimationStyle(baseDelay + 60)
+                      : undefined
+                  }
+                  items={workLogItems}
+                  live={isTurnActivelyWorking}
+                  showCollapsedPreview={!hasRunSummary}
+                  onExpandedChange={(expanded) => {
+                    setExpandedTurns((previousExpandedTurns) => {
+                      if (previousExpandedTurns[turn.id] === expanded) {
+                        return previousExpandedTurns;
+                      }
+                      return {
+                        ...previousExpandedTurns,
+                        [turn.id]: expanded,
+                      };
+                    });
+                  }}
+                  hasMore={hasMoreWorkingLogs}
+                  onLoadMore={
+                    hasMoreWorkingLogs
+                      ? () => loadMoreWorkingLogs(turn.id, revealedTimelineItems.length)
+                      : undefined
+                  }
+                />
+              ) : null;
               const userThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "user");
               const assistantThreadHistoryItemId = buildRunnerThreadHistoryItemId(turn.id, "assistant");
               const visibleFollowUpActions = Array.isArray(followUpActions)
@@ -6477,84 +6541,8 @@ export function RunnerChat({
                       </div>
                     ) : null}
 
-                    {!isQueuedTurn && !shouldRenderWorkSection ? (
-                      <div className="tb-turn-meta" style={metaHeaderStyle}>
-                        {renderTurnAgentTrigger(turn, turnAgentLabel, turnAgentPhotoUrl)}
-                        <div className="tb-turn-environment-pill">
-                          <LucideCloud className="tb-turn-environment-icon" />
-                          <span className="tb-turn-environment-label">{turnEnvironmentLabel}</span>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {shouldRenderWorkSection ? (
-                      <>
-                        <button
-                          type="button"
-                          className="tb-work-header"
-                          style={workHeaderStyle}
-                          aria-expanded={isExpanded}
-                          onClick={() => toggleWorkingLogs(turn.id, isExpanded)}
-                        >
-                          <span className="tb-work-label">
-                            <span>{workLabel}</span>
-                            {isExpanded ? <IconChevronUp className="tb-chevron" /> : <IconChevronDown className="tb-chevron" />}
-                          </span>
-                          {workComputerLabel}
-                        </button>
-
-                        <div className={`tb-work-collapse ${isExpanded ? "is-expanded" : ""} ${isExpanded || shouldShowCollapsedLivePreview ? "" : "collapsed"}`.trim()}>
-                          {isExpanded || shouldShowCollapsedLivePreview ? (
-                            <div className="tb-work-collapse-inner">
-                              <div className="agent-steps-container">
-                                {hasMoreWorkingLogs ? (
-                                  <div className="agent-step-item tb-work-load-more-item">
-                                    <div className="agent-step-content">
-                                      <button
-                                        type="button"
-                                        className="tb-work-load-more-button"
-                                        onClick={() => loadMoreWorkingLogs(turn.id, revealedTimelineItems.length)}
-                                      >
-                                        <LucidePlus className="tb-work-load-more-icon" strokeWidth={1.8} />
-                                        Load more...
-                                      </button>
-                                    </div>
-                                  </div>
-                                ) : null}
-                                {displayedTimelineItems.map((item, index) => {
-                                  const timelineIndex = firstDisplayedTimelineItemIndex + index;
-                                  const content = renderTimelineItem(turn, item, timelineIndex);
-                                  if (!content) return null;
-                                  return (
-                                    <div
-                                      key={timelineItemKey(turn.id, timelineIndex, item)}
-                                      className="agent-step-item"
-                                      style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
-                                    >
-                                      <div className="agent-step-content">{content}</div>
-                                    </div>
-                                  );
-                                })}
-                                {shouldRenderThinkingStatus ? (
-                                  <div
-                                    className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}
-                                    style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
-                                  >
-                                    <div className="agent-step-content">
-                                      <InlineStatusLogBox
-                                        label="Thinking..."
-                                        icon={<LucideTerminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
-                                        pending
-                                      />
-                                    </div>
-                                  </div>
-                                ) : null}
-                              </div>
-                            </div>
-                          ) : null}
-                        </div>
-                      </>
-                    ) : null}
+                    {turnIdentity}
+                    {workLogSection}
 
                     {agentMessage?.message ? (
                     <div
@@ -6705,84 +6693,8 @@ export function RunnerChat({
 
                   {isQueuedTurn ? <RunnerPageQueueReceipt /> : null}
 
-                  {!isQueuedTurn && !shouldRenderWorkSection ? (
-                    <div className="tb-turn-meta" style={metaHeaderStyle}>
-                      {renderTurnAgentTrigger(turn, turnAgentLabel, turnAgentPhotoUrl)}
-                      <div className="tb-turn-environment-pill">
-                        <LucideCloud className="tb-turn-environment-icon" />
-                        <span className="tb-turn-environment-label">{turnEnvironmentLabel}</span>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {shouldRenderWorkSection ? (
-                    <>
-                      <button
-                        type="button"
-                        className="tb-work-header"
-                        style={workHeaderStyle}
-                        aria-expanded={isExpanded}
-                        onClick={() => toggleWorkingLogs(turn.id, isExpanded)}
-                      >
-                        <span className="tb-work-label">
-                          <span>{workLabel}</span>
-                          {isExpanded ? <IconChevronUp className="tb-chevron" /> : <IconChevronDown className="tb-chevron" />}
-                        </span>
-                        {workComputerLabel}
-                      </button>
-
-                      <div className={`tb-work-collapse ${isExpanded ? "is-expanded" : ""} ${isExpanded || shouldShowCollapsedLivePreview ? "" : "collapsed"}`.trim()}>
-                        {isExpanded || shouldShowCollapsedLivePreview ? (
-                          <div className="tb-work-collapse-inner">
-                            <div className="agent-steps-container">
-                              {hasMoreWorkingLogs ? (
-                                <div className="agent-step-item tb-work-load-more-item">
-                                  <div className="agent-step-content">
-                                    <button
-                                      type="button"
-                                      className="tb-work-load-more-button"
-                                      onClick={() => loadMoreWorkingLogs(turn.id, revealedTimelineItems.length)}
-                                    >
-                                      <LucidePlus className="tb-work-load-more-icon" strokeWidth={1.8} />
-                                      Load more...
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : null}
-                              {displayedTimelineItems.map((item, index) => {
-                                const timelineIndex = firstDisplayedTimelineItemIndex + index;
-                                const content = renderTimelineItem(turn, item, timelineIndex);
-                                if (!content) return null;
-                                return (
-                                  <div
-                                    key={timelineItemKey(turn.id, timelineIndex, item)}
-                                    className="agent-step-item"
-                                    style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + index * 45) : undefined}
-                                  >
-                                    <div className="agent-step-content">{content}</div>
-                                  </div>
-                                );
-                              })}
-                              {shouldRenderThinkingStatus ? (
-                                <div
-                                  className={`agent-step-item tb-thinking-status-transition ${thinkingStatusPhase === "fading" ? "is-fading" : ""}`.trim()}
-                                  style={shouldAnimateTimelineRows ? getRunnerChatEnterAnimationStyle(baseDelay + 80 + displayedTimelineItems.length * 45) : undefined}
-                                >
-                                  <div className="agent-step-content">
-                                    <InlineStatusLogBox
-                                      label="Thinking..."
-                                      icon={<LucideTerminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
-                                      pending
-                                    />
-                                  </div>
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-                        ) : null}
-                      </div>
-                    </>
-                  ) : null}
+                  {turnIdentity}
+                  {workLogSection}
 
                   {agentMessage?.message ? (
                     <div
@@ -6947,6 +6859,110 @@ export function RunnerChat({
             <div
               className={`task-input-box ${privateMode ? "task-input-box-private" : ""} ${stagedComposerToneValue ? `task-input-box-thread-context task-input-box-thread-context-${stagedComposerToneValue}` : ""}`.trim()}
             >
+              {showConnectorMentionPopup && connectorMentionInputState ? (
+                <PlatformPopupSurface
+                  className={`tb-popup-menu-main tb-popup-menu-connector-mention is-placement-${hasCurrentThread ? "top" : "bottom"}`}
+                  animation={hasCurrentThread ? "up-in" : "down-in"}
+                  variant="minimal"
+                  role="listbox"
+                  aria-label="Connectors"
+                  data-connector-mention-placement={hasCurrentThread ? "top" : "bottom"}
+                >
+                  <div className="tb-connector-mention-list">
+                    {filteredConnectorOptions.length > 0 ? (
+                      filteredConnectorOptions.map((option, index) => {
+                        const isSelected = selectedConnectorIds.includes(
+                          option.id,
+                        );
+                        const isConnecting =
+                          connectingConnectorId === option.id;
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            role="option"
+                            aria-selected={isSelected}
+                            className={`tb-popup-row tb-connector-mention-row ${index === activeConnectorOptionIndex ? "is-active" : ""} ${isSelected ? "is-selected" : ""}`.trim()}
+                            disabled={Boolean(
+                              option.disabled || connectingConnectorId,
+                            )}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onMouseEnter={() =>
+                              setActiveConnectorOptionIndex(index)
+                            }
+                            onClick={() =>
+                              void selectComposerConnector(
+                                option,
+                                connectorMentionInputState,
+                              )
+                            }
+                          >
+                            <ConnectionIdentityIcon
+                              kind={getRunnerChatConnectorIdentityKind(option)}
+                              connectionId={option.id}
+                              logoUrl={option.logoUrl}
+                              logoClassName="tb-connector-mention-logo"
+                              variant="catalog"
+                              className="tb-connector-mention-icon-shell"
+                              icon={(
+                                <LucidePlug
+                                  className="tb-connector-mention-icon"
+                                  strokeWidth={1.7}
+                                />
+                              )}
+                            />
+                            <span className="tb-connector-mention-copy">
+                              <span className="tb-connector-mention-name">
+                                {option.name}
+                              </span>
+                              {option.description ? (
+                                <span className="tb-connector-mention-description">
+                                  {option.description}
+                                </span>
+                              ) : null}
+                            </span>
+                            <span className="tb-connector-mention-status">
+                              {isConnecting ? (
+                                <LucideLoaderCircle
+                                  className="tb-connector-mention-spinner"
+                                  strokeWidth={1.7}
+                                />
+                              ) : isSelected ? (
+                                <LucideCheck
+                                  className="tb-connector-mention-check"
+                                  strokeWidth={1.9}
+                                />
+                              ) : option.connected === false ? (
+                                "Connect"
+                              ) : null}
+                            </span>
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className="tb-connector-mention-empty">
+                        No connectors match that input.
+                      </div>
+                    )}
+                  </div>
+                  {onOpenPluginsOverview ? (
+                    <button
+                      type="button"
+                      className="tb-connector-mention-manage"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setDismissedConnectorMentionKey(
+                          connectorMentionKey,
+                        );
+                        onOpenPluginsOverview();
+                      }}
+                    >
+                      <LucidePlug strokeWidth={1.7} />
+                      <span>Manage connectors</span>
+                    </button>
+                  ) : null}
+                </PlatformPopupSurface>
+              ) : null}
               {stagedAdCreationCommand ? (
                 <PlatformPopupSurface className="tb-popup-menu-main tb-ad-creation-popup" animation="up-in" role="dialog" aria-label="Create Ad settings">
                   <div className="tb-ad-creation-popup-header">
@@ -7072,119 +7088,14 @@ export function RunnerChat({
               <div
                 className={`tb-composer-textarea-shell ${hasStagedComposerCommand ? "tb-composer-textarea-shell-staged" : ""} ${selectedConnectorOptions.length > 0 ? "tb-composer-textarea-shell-connectors" : ""}`.trim()}
                 style={
-                  hasStagedComposerCommand
+                  hasStagedComposerCommand || selectedConnectorOptions.length > 0
                     ? ({
-                        "--tb-staged-thread-command-offset": stagedComposerOffsetValue,
-                    } as CSSProperties)
+                        "--tb-staged-thread-command-offset": composerTextareaOffsetValue,
+                        "--tb-selected-connectors-inline-start": selectedConnectorsInlineStartValue,
+                      } as CSSProperties)
                     : undefined
                 }
               >
-                {showConnectorMentionPopup && connectorMentionInputState ? (
-                  <PlatformPopupSurface
-                    className="tb-popup-menu-main tb-popup-menu-connector-mention"
-                    animation="up-in"
-                    role="listbox"
-                    aria-label="Connectors"
-                  >
-                    <div className="tb-connector-mention-header">
-                      <span>Connectors</span>
-                      <span>{filteredConnectorOptions.length}</span>
-                    </div>
-                    <div className="tb-connector-mention-list">
-                      {filteredConnectorOptions.length > 0 ? (
-                        filteredConnectorOptions.map((option, index) => {
-                          const isSelected = selectedConnectorIds.includes(
-                            option.id,
-                          );
-                          const isConnecting =
-                            connectingConnectorId === option.id;
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              role="option"
-                              aria-selected={isSelected}
-                              className={`tb-connector-mention-row ${index === activeConnectorOptionIndex ? "is-active" : ""} ${isSelected ? "is-selected" : ""}`.trim()}
-                              disabled={Boolean(
-                                option.disabled || connectingConnectorId,
-                              )}
-                              onMouseDown={(event) => event.preventDefault()}
-                              onMouseEnter={() =>
-                                setActiveConnectorOptionIndex(index)
-                              }
-                              onClick={() =>
-                                void selectComposerConnector(
-                                  option,
-                                  connectorMentionInputState,
-                                )
-                              }
-                            >
-                              <span className="tb-connector-mention-icon-shell">
-                                {option.logoUrl ? (
-                                  <img
-                                    className="tb-connector-mention-logo"
-                                    src={option.logoUrl}
-                                    alt=""
-                                  />
-                                ) : (
-                                  <LucidePlug
-                                    className="tb-connector-mention-icon"
-                                    strokeWidth={1.7}
-                                  />
-                                )}
-                              </span>
-                              <span className="tb-connector-mention-copy">
-                                <span className="tb-connector-mention-name">
-                                  {option.name}
-                                </span>
-                                {option.description ? (
-                                  <span className="tb-connector-mention-description">
-                                    {option.description}
-                                  </span>
-                                ) : null}
-                              </span>
-                              <span className="tb-connector-mention-status">
-                                {isConnecting ? (
-                                  <LucideLoaderCircle
-                                    className="tb-connector-mention-spinner"
-                                    strokeWidth={1.7}
-                                  />
-                                ) : isSelected ? (
-                                  <LucideCheck
-                                    className="tb-connector-mention-check"
-                                    strokeWidth={1.9}
-                                  />
-                                ) : option.connected === false ? (
-                                  "Connect"
-                                ) : null}
-                              </span>
-                            </button>
-                          );
-                        })
-                      ) : (
-                        <div className="tb-connector-mention-empty">
-                          No connectors match that input.
-                        </div>
-                      )}
-                    </div>
-                    {onOpenPluginsOverview ? (
-                      <button
-                        type="button"
-                        className="tb-connector-mention-manage"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => {
-                          setDismissedConnectorMentionKey(
-                            connectorMentionKey,
-                          );
-                          onOpenPluginsOverview();
-                        }}
-                      >
-                        <LucidePlug strokeWidth={1.7} />
-                        <span>Manage connectors</span>
-                      </button>
-                    ) : null}
-                  </PlatformPopupSurface>
-                ) : null}
                 {showSlashCommandPopup ? (
                   <PlatformPopupSurface className="tb-popup-menu-main tb-popup-menu-slash" animation="up-in">
                     {filteredSlashCommandItems.length > 0 ? (
@@ -7224,40 +7135,39 @@ export function RunnerChat({
                 ) : null}
                 {selectedConnectorOptions.length > 0 ? (
                   <div
+                    ref={selectedConnectorsInlineRef}
                     className="tb-composer-selected-connectors"
+                    role="group"
                     aria-label="Selected connectors"
                   >
                     {selectedConnectorOptions.map((option) => (
-                      <span
+                      <button
                         key={option.id}
+                        type="button"
                         className="tb-composer-selected-connector"
+                        aria-label={`Remove ${option.name} connector`}
+                        title={`Remove ${option.name}`}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => removeSelectedConnector(option.id)}
                       >
-                        <span className="tb-composer-selected-connector-icon-shell">
-                          {option.logoUrl ? (
-                            <img
-                              className="tb-composer-selected-connector-logo"
-                              src={option.logoUrl}
-                              alt=""
-                            />
-                          ) : (
+                        <ConnectionIdentityIcon
+                          kind={getRunnerChatConnectorIdentityKind(option)}
+                          connectionId={option.id}
+                          logoUrl={option.logoUrl}
+                          logoClassName="tb-composer-selected-connector-logo"
+                          variant="catalog"
+                          className="tb-composer-selected-connector-icon-shell"
+                          icon={(
                             <LucidePlug
                               className="tb-composer-selected-connector-icon"
                               strokeWidth={1.7}
                             />
                           )}
-                        </span>
+                        />
                         <span className="tb-composer-selected-connector-name">
                           {option.name}
                         </span>
-                        <button
-                          type="button"
-                          className="tb-composer-selected-connector-remove"
-                          aria-label={`Remove ${option.name}`}
-                          onClick={() => removeSelectedConnector(option.id)}
-                        >
-                          <LucideX strokeWidth={1.8} />
-                        </button>
-                      </span>
+                      </button>
                     ))}
                   </div>
                 ) : null}
@@ -7271,7 +7181,11 @@ export function RunnerChat({
                   onSelect={handleInputSelectionChange}
                   onClick={handleInputSelectionChange}
                   onKeyUp={handleInputSelectionChange}
-                  placeholder={hasStagedComposerCommand ? "" : placeholder}
+                  placeholder={
+                    hasStagedComposerCommand || selectedConnectorOptions.length > 0
+                      ? ""
+                      : placeholder
+                  }
                   onKeyDown={handleKeyDown}
                   readOnly={Boolean(stagedThreadContextCommand && !textareaAllowsPromptAfterStagedCommand)}
                 />

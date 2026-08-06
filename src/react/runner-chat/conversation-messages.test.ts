@@ -44,6 +44,25 @@ describe("runner conversation messages", () => {
     });
   });
 
+  it("hydrates persisted user-message presentation metadata aliases", () => {
+    expect(
+      normalizeRunnerConversationMessage({
+        message_id: "message-user",
+        role: "user",
+        content: "Create the issue",
+        message_metadata: {
+          runnerConnectorIds: ["atlassian"],
+        },
+      })
+    ).toMatchObject({
+      id: "message-user",
+      role: "user",
+      logMetadata: {
+        runnerConnectorIds: ["atlassian"],
+      },
+    });
+  });
+
   it("sorts timestamped messages and enriches assistant metadata from logs", () => {
     const sorted = sortRunnerConversationMessagesChronologically([
       {

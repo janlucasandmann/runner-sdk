@@ -12,9 +12,7 @@ afterEach(() => {
 describe("PlatformLoadingState", () => {
   it("renders the shared dot loader beside its message", () => {
     vi.useFakeTimers();
-    const { container } = render(
-      <PlatformLoadingState message="Loading projects..." />,
-    );
+    const { container } = render(<PlatformLoadingState message="Loading projects..." />);
 
     const status = screen.getByRole("status", { name: "Loading projects..." });
     const dots = Array.from(
@@ -44,5 +42,13 @@ describe("PlatformLoadingState", () => {
     expect(status.classList.contains("platform-loading-state")).toBe(true);
     expect(status.classList.contains("is-centered")).toBe(true);
     expect(status.classList.contains("projects-loading-state")).toBe(true);
+  });
+
+  it("can render inline without duplicating the loading implementation", () => {
+    render(<PlatformLoadingState as="span" message="Loading image..." />);
+
+    const status = screen.getByRole("status", { name: "Loading image..." });
+    expect(status.tagName).toBe("SPAN");
+    expect(status.classList.contains("platform-loading-state")).toBe(true);
   });
 });

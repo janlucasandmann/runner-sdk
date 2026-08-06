@@ -26,6 +26,7 @@ export const TEAMS_MEMBER_IDENTITY_SCRIPT = `        function getTeamPageApiErro
           const source = team && typeof team === "object" && !Array.isArray(team) ? team : {};
           return {
             ...source,
+            profileImageUrl: getTeamPageProfileImageUrl(source),
             permissionSet: normalizePlaygroundPermissionSet(source.permissionSet, "team"),
             rolePermissionSets: normalizePlaygroundTeamRolePermissionSets(source.rolePermissionSets || source.rolePermissions || source.permissionSets),
           };

@@ -80,6 +80,32 @@ test("an explicit missing credential never falls back to the default", async () 
   assert.equal(resolved, null);
 });
 
+test("an explicitly selected organization credential becomes the default", async () => {
+  const storage = createStorage();
+  const registry = createConnectorCredentialRegistry(storage);
+  await registry.register({
+    organizationId: "org_1",
+    provider: "jira",
+    credentialId: "cred_1",
+    ownerUserId: "user_1",
+  });
+  await registry.register({
+    organizationId: "org_1",
+    provider: "jira",
+    credentialId: "cred_2",
+    ownerUserId: "user_1",
+    makeDefault: true,
+  });
+
+  assert.equal(
+    (await registry.resolve({
+      organizationId: "org_1",
+      provider: "jira",
+    })).credentialId,
+    "cred_2",
+  );
+});
+
 test("deleting a default credential promotes the next organization credential", async () => {
   const storage = createStorage();
   const registry = createConnectorCredentialRegistry(storage);

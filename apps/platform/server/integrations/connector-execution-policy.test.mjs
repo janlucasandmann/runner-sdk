@@ -52,10 +52,14 @@ function createFixture({
   credentialScope = "repo read:org",
   organizationRole = "member",
   principal = { uid: "user_1" },
+  principalReadError = null,
+  sessionProfile = null,
+  runnerProfile = null,
   projectId = "",
   projectCredentialId = "",
   projectBindingConnectorId = connectorId,
   resolveCredentialOverride,
+  resolveConnectorConfigOverride,
 } = {}) {
   const calls = [];
   const resourceCalls = [];
@@ -64,6 +68,9 @@ function createFixture({
   const credentialCalls = [];
   const fetchSessionApi = async (_req, controlPath) => {
     calls.push(controlPath);
+    if (controlPath === "/user/profile" && sessionProfile) {
+      return response(sessionProfile);
+    }
     if (controlPath === `/user/tags/${connectorId}`) {
       return response(
         connectorConfig || {
@@ -98,6 +105,9 @@ function createFixture({
         agentId: "agent_1",
         ...(projectId ? { projectId } : {}),
       });
+    }
+    if (controlPath === "/account" && runnerProfile) {
+      return response(runnerProfile);
     }
     if (controlPath === "/agents/agent_1") {
       return response({
@@ -164,10 +174,14 @@ function createFixture({
     fetchOrganizationApi,
     identityService: {
       async readPrincipal() {
+        if (principalReadError) throw principalReadError;
         return principal;
       },
     },
     resolveCredential,
+    ...(resolveConnectorConfigOverride
+      ? { resolveConnectorConfig: resolveConnectorConfigOverride }
+      : {}),
     listConnectorCapabilities() {
       return trustedCapabilities;
     },
@@ -320,6 +334,67 @@ test("uses the trusted Atlassian catalog when a legacy account record is missing
   assert.equal(fixture.credentialCalls[0].provider, "jira");
 });
 
+test("loads connector settings from the verified server-side principal scope", async () => {
+  const configCalls = [];
+  const fixture = createFixture({
+    connectorId: "jira",
+    organizationRole: "owner",
+    credentialScope: "read:jira-work write:jira-work",
+    trustedCapabilities: [
+      { id: "get_myself", access: "read-only" },
+      { id: "create_issue", access: "interactive" },
+    ],
+    resolveConnectorConfigOverride: async (options) => {
+      configCalls.push(options);
+      return {
+        permissionSet: {
+          defaultAccess: "full_access",
+          rings: {
+            ring_1: { defaultAccess: "full_access" },
+            ring_2: { defaultAccess: "full_access" },
+            ring_3: { defaultAccess: "full_access" },
+          },
+        },
+      };
+    },
+  });
+
+  const payload = await enrich(fixture);
+
+  assert.deepEqual(payload.connectors.jira.allowedActions, [
+    "get_myself",
+    "create_issue",
+  ]);
+  assert.equal(fixture.calls.includes("/user/tags/jira"), false);
+  assert.deepEqual(configCalls, [{
+    userId: "user_1",
+    organizationId: "org_1",
+    connectorId: "jira",
+    connectorIds: ["jira", "atlassian"],
+    envFileCandidates: [],
+  }]);
+});
+
+test("fails closed with a stable phase when server-side settings cannot be read", async () => {
+  const fixture = createFixture({
+    resolveConnectorConfigOverride: async () => {
+      throw new Error("Firestore unavailable");
+    },
+  });
+
+  await assert.rejects(
+    enrich(fixture),
+    (error) => {
+      assert.ok(error instanceof ConnectorPolicyError);
+      assert.equal(error.statusCode, 502);
+      assert.equal(error.code, "connector_configuration_lookup_failed");
+      assert.equal(error.details.phase, "connector_configuration");
+      assert.equal(error.message.includes("Firestore unavailable"), false);
+      return true;
+    },
+  );
+});
+
 test("authorizes an Atlassian alias through canonical Jira actions and scopes", async () => {
   const fixture = createFixture({
     connectorId: "atlassian",
@@ -422,6 +497,7 @@ test("an unknown connector still fails when its account record is missing", asyn
       assert.deepEqual(error.details, {
         upstreamStatus: 404,
         upstreamMessage: "Unsupported tag",
+        phase: "connector_configuration",
       });
       return true;
     },
@@ -638,6 +714,75 @@ test("requires a verified session principal", async () => {
       assert.equal(error.statusCode, 401);
       assert.equal(error.code, "connector_session_required");
       return true;
+    },
+  );
+});
+
+test("accepts the topology-aware verified profile when local token verification diverges", async () => {
+  const fixture = createFixture({
+    principalReadError: new Error("Missing ID token"),
+    sessionProfile: {
+      userId: "user_1",
+      email: "member@example.test",
+    },
+  });
+
+  const payload = await enrich(fixture);
+
+  assert.equal(payload.connectors.github.enabled, true);
+  assert.equal(fixture.credentialCalls[0].requestingUserId, "user_1");
+  assert.ok(fixture.calls.includes("/user/profile"));
+});
+
+test("accepts a wrapped topology-aware verified profile", async () => {
+  const fixture = createFixture({
+    principalReadError: new Error("Missing ID token"),
+    sessionProfile: {
+      data: {
+        userId: "user_1",
+        email: "member@example.test",
+      },
+    },
+  });
+
+  const payload = await enrich(fixture);
+
+  assert.equal(payload.connectors.github.enabled, true);
+  assert.equal(fixture.credentialCalls[0].requestingUserId, "user_1");
+});
+
+test("accepts the verified runner account for an authenticated API-key run", async () => {
+  const fixture = createFixture({
+    principalReadError: new Error("Missing ID token"),
+    runnerProfile: {
+      userId: "user_1",
+      email: "member@example.test",
+    },
+  });
+
+  const payload = await fixture.policy.enrichThreadMessagePayload(
+    fixture.req,
+    "thread_1",
+    "https://api.example.test/v1",
+    "runner-api-key",
+    { content: "Use GitHub." },
+    {
+      requestedConnectors: {
+        [fixture.connectorId]: { enabled: true },
+      },
+    },
+  );
+
+  assert.equal(payload.connectors.github.enabled, true);
+  assert.equal(fixture.credentialCalls[0].requestingUserId, "user_1");
+  const profileCallIndex = fixture.resourceCalls.indexOf("/account");
+  assert.notEqual(profileCallIndex, -1);
+  assert.equal(fixture.resourceCalls.includes("/user/profile"), false);
+  assert.deepEqual(
+    fixture.resourceContexts[profileCallIndex],
+    {
+      upstreamUrl: "https://api.example.test/v1",
+      apiKey: "runner-api-key",
     },
   );
 });

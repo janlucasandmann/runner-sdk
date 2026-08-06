@@ -202,6 +202,7 @@
           const databaseCollectionsByIdRef = useRef({});
           const databaseDocumentsByCollectionKeyRef = useRef({});
           const databaseBrowserPaginationRequestRef = useRef(new Set());
+          const databaseDocumentListRequestRef = useRef(new Set());
           const environmentSeededSelectionRef = useRef("");
           const serverSeededSelectionRef = useRef("");
           const serverDefaultSourceCreationRef = useRef(new Set());

@@ -568,17 +568,6 @@
               );
           }
 
-          const agentDetailPerformanceRangeOptions = [
-            { id: "day", label: "24H", bucketCount: 1 },
-            { id: "week", label: "7D", bucketCount: 7 },
-            { id: "month", label: "30D", bucketCount: 30 },
-          ];
-          const normalizedAgentDetailPerformanceRange = agentDetailPerformanceRangeOptions.some(
-            (option) => option.id === agentDetailPerformanceRange
-          )
-            ? agentDetailPerformanceRange
-            : "month";
-
           function renderEditorSection(sectionId, title, description, content, headerActions, collapsible = true) {
             const isExpanded = collapsible ? expandedSections.has(sectionId) : true;
             return React.createElement("section", { className: "playground-environments-section", key: sectionId, "data-section-id": sectionId },
@@ -1525,7 +1514,6 @@
             );
   
             const agentSharedTeamIds = getAgentSharedTeamIds(draftAgent);
-            const agentVisibilityLabel = agentSharedTeamIds.length > 0 ? "Public" : "Private";
             const agentProfileSection = React.createElement("div", {
                 className: "playground-agents-profile-section playground-agent-detail-editor-profile",
               },
@@ -1547,14 +1535,17 @@
                     placeholder: isTeamAgent ? "Squad" : "Agent",
                     "aria-label": isTeamAgent ? "Squad name" : "Agent name",
                     title: draftAgent.name || (isTeamAgent ? "Squad" : "Agent"),
+                    disabled: isDefaultAgentConfigurationLocked,
                     onKeyDown: (event) => event.stopPropagation(),
                     onChange: (event) => updateAgentField("name", event.target.value),
-                  }),
-                  React.createElement("span", {
-                    className: "playground-agents-visibility-label" + (agentVisibilityLabel === "Public" ? " is-public" : " is-private"),
-                    title: agentVisibilityLabel === "Public" ? "Shared with a team" : "Not shared with a team",
-                  }, agentVisibilityLabel)
-                )
+                  })
+                ),
+                agentEmailAddress
+                  ? React.createElement("span", {
+                      className: "playground-agents-profile-email",
+                      title: agentEmailAddress,
+                    }, agentEmailAddress)
+                  : null
               )
             );
   
@@ -2929,7 +2920,7 @@
             const instructionsSection = React.createElement(PlatformInstructionsEditor, {
               value: draftAgent.instructions || "",
               onChange: (value) => updateAgentField("instructions", value),
-              title: agentProfileSection,
+              title: "Instructions",
               placeholder: isTeamAgent ? "Add Squad Instructions here" : "Add Instructions here",
               ariaLabel: isTeamAgent ? "Squad instructions" : "Agent instructions",
               readOnly: isDefaultAgentConfigurationLocked,
@@ -2938,6 +2929,43 @@
               variant: "minimalistic-ui",
               className: "playground-agent-detail-instructions-editor",
             });
+            const agentGeneralRuntimeSettings = React.createElement("div", {
+                className: "playground-agent-general-runtime-settings",
+                "aria-label": "Agent runtime settings",
+              },
+              renderAgentFactRow(
+                "Model",
+                agentPrimaryModelControl,
+                {
+                  className: "is-model",
+                  valueClassName: "playground-agents-detail-about-model-control playground-tasks-detail-central-selector",
+                }
+              ),
+              renderAgentFactRow(
+                "Engine",
+                renderAgentExecutionEngineSelector(),
+                {
+                  className: "is-execution-engine",
+                  valueClassName: "playground-agents-detail-about-execution-engine-control",
+                }
+              ),
+              renderAgentFactRow(
+                "Voice",
+                renderAgentVoiceSelector(),
+                {
+                  className: "is-voice",
+                  valueClassName: "playground-agents-detail-about-voice-control",
+                }
+              )
+            );
+            const agentGeneralSection = React.createElement("section", {
+                className: "playground-agent-general-section",
+                "data-section-id": "general",
+              },
+              agentProfileSection,
+              instructionsSection,
+              agentGeneralRuntimeSettings
+            );
   
             const agentInsightsSection = React.createElement(React.Fragment, null,
               agentUsageChartSection,
@@ -3179,16 +3207,18 @@
                 ? agentSettingsSection
               : normalizedAgentDetailTab === "insights"
                 ? agentInsightsSection
-                : React.createElement(React.Fragment, null,
-  	                  isTeamAgent
-  	                    ? renderEditorSection("team", "Squad Setup", "", teamSection, null, false)
-  	                    : null,
-  		                  instructionsSection
- 		                );
+                : normalizedAgentDetailTab === "general"
+                  ? React.createElement(React.Fragment, null,
+	                    isTeamAgent
+	                      ? renderEditorSection("team", "Squad Setup", "", teamSection, null, false)
+	                      : null,
+	                    agentGeneralSection
+	                  )
+                  : null;
             const agentDetailWorkspaceSection = React.createElement(AgentDetailPage, {
-                sidebar: agentPropertiesSidebar,
+                sidebar: normalizedAgentDetailTab === "general" ? null : agentPropertiesSidebar,
                 activeTab: normalizedAgentDetailTab,
-                sidebarCollapsed: agentDetailSidebarCollapsed,
+                sidebarCollapsed: normalizedAgentDetailTab === "general" || agentDetailSidebarCollapsed,
                 sidebarPopoverOpen: Boolean(agentModelPopover || agentOwnerPopoverOpen || agentVoicePopoverOpen),
                 permissions: {
                   permissionSet: draftAgent.permissionSet,
@@ -3243,6 +3273,14 @@
             && draftAgent?.id
             && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
             && canVersionPlaygroundAgent(draftAgent)
+          );
+          const canShowAgentPreview = Boolean(
+            !shouldShowAgentsHome
+            && !agentCreationSetupOpen
+            && agentDetailTab === "general"
+            && draftAgent?.id
+            && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
+            && canUseAgentOnCurrentPlan(draftAgent)
           );
           const canShowAgentVersions = Boolean(
             !shouldShowAgentsHome
@@ -3425,25 +3463,11 @@
                 titleActionsContainer
               )
             : null;
-          const agentInsightsTimeframeControl = !agentVersionChangesState
-            && ["insights", "threads", "evaluation"].includes(agentDetailTab)
-            ? React.createElement(PlatformSwitch, {
-                className: "playground-agent-detail-header-timeframe",
-                value: normalizedAgentDetailPerformanceRange,
-                options: agentDetailPerformanceRangeOptions.map((option) => ({
-                  value: option.id,
-                  label: option.label,
-                })),
-                onValueChange: setAgentDetailPerformanceRange,
-                ariaLabel: "Agent analytics time frame",
-              })
-            : null;
           const agentsTopNavActions = topNavActionsContainer
             && !shouldShowAgentsHome
             && !agentCreationSetupOpen
             ? createPortal(
                 React.createElement(React.Fragment, null,
-                  agentInsightsTimeframeControl,
                   !agentVersionChangesState
                     ? renderAgentPublishAction()
                     : null
@@ -3452,6 +3476,6 @@
               )
             : null;
           const agentDetailLayoutClass = "playground-agents-detail-layout"
-            + (canShowAgentAssistant ? " has-assistant" : "")
-            + (canShowAgentAssistant && agentAssistantOpen && !agentVersionsSidebarOpen ? " is-assistant-open" : "");
+            + (canShowAgentPreview && !agentVersionsSidebarOpen ? " has-preview" : "")
+            + (agentVersionsSidebarOpen ? " has-version-history" : "");
   

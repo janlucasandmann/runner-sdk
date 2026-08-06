@@ -46,6 +46,19 @@ revision, and then promote that exact digest. A runtime overlay is a release
 artifact, not a substitute for consolidating the source into the next normal
 platform release.
 
+The GitHub connector has a separate narrow overlay in
+[`Dockerfile.github-connector-overlay`](Dockerfile.github-connector-overlay)
+and
+[`cloudbuild-github-connector-overlay.yaml`](cloudbuild-github-connector-overlay.yaml).
+It layers only the GitHub adapter, its trusted capability manifest, the adapter
+registry entry, and the asynchronous MCP discovery boundary onto an exact
+immutable platform image. Build and deploy it with zero traffic first, verify
+the tagged revision through the complete MCP lifecycle, and promote only that
+verified revision. Use
+[`gcloudignore.github-connector-overlay`](gcloudignore.github-connector-overlay)
+as the `gcloud builds submit --ignore-file` value so unrelated workspace files
+are not uploaded to the build.
+
 ### Resilient source staging
 
 The default build path uploads the generated context directly with

@@ -1,6 +1,8 @@
 import { Globe as LucideGlobe } from "lucide-react";
 import { useState } from "react";
+import { PlatformConnectorActionDetail } from "../../composite/connector-action-detail/index.js";
 import type {
+  RunnerConnectorActionPreviewData,
   RunnerImageUnderstandingPreviewData,
   RunnerMediaGenerationPromptPreviewData,
   RunnerWebSearchPreviewData,
@@ -119,6 +121,29 @@ export function RunnerWebSearchSidebarPreview({ data }: { data: RunnerWebSearchP
         </details>
       ) : null}
     </main>
+  );
+}
+
+export function RunnerConnectorActionSidebarPreview({
+  data,
+}: {
+  data: RunnerConnectorActionPreviewData;
+}) {
+  return (
+    <PlatformConnectorActionDetail
+      connectorId={data.connectorId}
+      connectorName={data.connectorName}
+      logoUrl={data.logoUrl}
+      logoBackground={data.logoBackground}
+      actionName={data.actionName}
+      description={data.description}
+      status={data.status}
+      input={data.inputData}
+      output={data.outputData}
+      inputText={data.inputText}
+      outputText={data.outputText}
+      errorMessage={data.errorMessage}
+    />
   );
 }
 

@@ -41,7 +41,15 @@ const createDependencies = (overrides = {}) => {
 };
 
 test("repository listing clamps pagination and filters returned repositories", async () => {
+  const loadedCredentials = [];
   const fixture = createDependencies({
+    loadGithubToken: async (...args) => {
+      loadedCredentials.push(args);
+      return {
+        accessToken: "github-token",
+        credentialId: "credential-work",
+      };
+    },
     fetchImpl: async (url, init) => {
       fixture.calls.push({ url, init });
       return createJsonResponse([
@@ -53,7 +61,7 @@ test("repository listing clamps pagination and filters returned repositories", a
   const result = await handleGithubRepositories({
     ...fixture.dependencies,
     url: new URL(
-      "https://platform.example/api/github/repos?per_page=500&page=0&search=runner",
+      "https://platform.example/api/github/repos?per_page=500&page=0&search=runner&credentialId=credential-work",
     ),
   });
 
@@ -72,10 +80,19 @@ test("repository listing clamps pagination and filters returned repositories", a
     fixture.calls[0].init.headers.Authorization,
     "Bearer github-token",
   );
+  assert.deepEqual(loadedCredentials, [["user-1", [], "credential-work"]]);
 });
 
 test("repository detail normalizes README content and sorts directories first", async () => {
+  const loadedCredentials = [];
   const fixture = createDependencies({
+    loadGithubToken: async (...args) => {
+      loadedCredentials.push(args);
+      return {
+        accessToken: "github-token",
+        credentialId: "credential-work",
+      };
+    },
     fetchImpl: async (url, init) => {
       fixture.calls.push({ url, init });
       if (url.endsWith("/readme")) {
@@ -97,7 +114,7 @@ test("repository detail normalizes README content and sorts directories first", 
 
   const detail = await handleGithubRepositoryDetail({
     ...fixture.dependencies,
-    url: new URL("https://platform.example/api/github/repos/computer/runner"),
+    url: new URL("https://platform.example/api/github/repos/computer/runner?credentialId=credential-work"),
     normalizedPathname: "/api/github/repos/computer/runner",
   });
   assert.equal(detail.status, 200);
@@ -118,6 +135,10 @@ test("repository detail normalizes README content and sorts directories first", 
     fixture.calls.some(({ url }) =>
       url.endsWith("/contents/src/lib?ref=main")),
   );
+  assert.deepEqual(loadedCredentials, [
+    ["user-1", [], "credential-work"],
+    ["user-1", [], ""],
+  ]);
 });
 
 test("download responses include MIME metadata and revoked tokens are deleted", async () => {

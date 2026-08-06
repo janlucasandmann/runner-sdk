@@ -14,6 +14,7 @@ export type RunnerDocumentPreviewKind =
   | "image-understanding"
   | "image-generation-prompt"
   | "web-search"
+  | "connector-action"
   | "video-generation-prompt"
   | "unsupported";
 
@@ -55,6 +56,21 @@ export interface RunnerWebSearchPreviewData {
   errorMessage?: string;
 }
 
+export interface RunnerConnectorActionPreviewData {
+  connectorId: string;
+  connectorName: string;
+  logoUrl?: string;
+  logoBackground?: string;
+  actionName: string;
+  description: string;
+  status: "running" | "completed" | "failed";
+  inputData?: unknown;
+  outputData?: unknown;
+  inputText: string;
+  outputText: string;
+  errorMessage: string;
+}
+
 export interface RunnerMediaGenerationPromptPreviewData {
   title: string;
   prompt: string;
@@ -89,6 +105,7 @@ export interface RunnerPreviewAttachment {
   imageGenerationPromptPreview?: RunnerMediaGenerationPromptPreviewData;
   imageUnderstandingPreview?: RunnerImageUnderstandingPreviewData;
   webSearchPreview?: RunnerWebSearchPreviewData;
+  connectorActionPreview?: RunnerConnectorActionPreviewData;
   videoGenerationPromptPreview?: RunnerMediaGenerationPromptPreviewData;
 }
 

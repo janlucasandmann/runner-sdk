@@ -125,6 +125,11 @@ assert.match(
   "Database documents must start with the shared 50-row initial limit.",
 );
 assert.match(
+  catalogAndLifecycleSource,
+  /current\[documentListKey\] === 50[\s\S]{0,420}databaseDocumentListRequestRef\.current\.has\(documentListKey\)/,
+  "Database document bootstrap must be idempotent across rerenders and deduplicated while pending.",
+);
+assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /serverCreationRequestToken = 0,[\s\S]{0,100}serverCreationRequestKind = ""/,
   "Develop Home creation actions must enter compute resources through an explicit request contract.",

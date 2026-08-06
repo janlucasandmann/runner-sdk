@@ -29,7 +29,6 @@ export const FILES_PAGE_SHARING_ACTIONS_SCRIPT = `
           if (!options.force && fileTeamShareState.action === "share") {
             return;
           }
-          setFileTeamPickerOpen(false);
           if (fileTeamPickerCloseTimerRef.current !== null) {
             window.clearTimeout(fileTeamPickerCloseTimerRef.current);
             fileTeamPickerCloseTimerRef.current = null;
@@ -38,7 +37,7 @@ export const FILES_PAGE_SHARING_ACTIONS_SCRIPT = `
           setFileTeamPickerClosing(true);
           fileTeamPickerCloseTimerRef.current = window.setTimeout(() => {
             setFileTeamPickerState(null);
-            setFileTeamPickerValue("");
+            setFileTeamPickerValues([]);
             setFileTeamPickerError("");
             setFileTeamPickerClosing(false);
             fileTeamPickerCloseTimerRef.current = null;
@@ -180,7 +179,11 @@ export const FILES_PAGE_SHARING_ACTIONS_SCRIPT = `
           const requestedEnvironmentId = String(normalizedRequest?.environmentId || selectedEnvironmentId || "").trim();
           const requestedProjectId = String(normalizedRequest?.projectId || "").trim();
           const requestedProjectLabel = String(normalizedRequest?.projectName || normalizedRequest?.projectLabel || "").trim();
-          const requestedContentMode = normalizedRequest?.contentMode === "changes" ? "changes" : "files";
+          const requestedContentMode = normalizedRequest?.contentMode === "changes"
+            ? "changes"
+            : normalizedRequest?.contentMode === "connectors"
+              ? "connectors"
+              : "files";
           const requestedPath = normalizeHistoryPath(normalizedRequest?.path || "");
           const requestedIsFolder = Boolean(normalizedRequest?.isFolder);
           const targetFolderPath = requestedPath
@@ -192,6 +195,15 @@ export const FILES_PAGE_SHARING_ACTIONS_SCRIPT = `
           setToolbarPopover("");
           setContextMenu(null);
           setActionError("");
+          if (requestedContentMode === "connectors") {
+            setSelectedPaths(new Set());
+            setSelectionAnchorPath("");
+            setPreviewTargetPath("");
+            setIsPreviewOpen(false);
+            setIsPreviewMaximized(false);
+            setIsFileChatOpen(false);
+            return;
+          }
           if (requestedProjectId) {
             setProjectFilterScope(requestedProjectId);
             setProjectFilterScopeLabel(requestedProjectLabel);
@@ -605,11 +617,30 @@ export const FILES_PAGE_SHARING_ACTIONS_SCRIPT = `
               ? data.data
               : (Array.isArray(data?.teams) ? data.teams : []);
             const adminTeams = rows
-              .map((team) => ({
-                id: String(team?.id || "").trim(),
-                name: String(team?.name || "Team").trim() || "Team",
-                role: String(team?.role || "").trim(),
-              }))
+              .map((team) => {
+                let metadata = team?.metadata && typeof team.metadata === "object"
+                  ? team.metadata
+                  : {};
+                if (typeof team?.metadata === "string") {
+                  try {
+                    metadata = JSON.parse(team.metadata) || {};
+                  } catch {
+                    metadata = {};
+                  }
+                }
+                return {
+                  id: String(team?.id || "").trim(),
+                  name: String(team?.name || "Team").trim() || "Team",
+                  role: String(team?.role || "").trim(),
+                  profileImageUrl: String(
+                    team?.profileImageUrl
+                    || team?.profile_image_url
+                    || metadata?.profileImageUrl
+                    || metadata?.profile_image_url
+                    || ""
+                  ).trim(),
+                };
+              })
               .filter((team) => team.id && team.role === "admin");
             setAvailableFileTeams(adminTeams);
             setFileTeamPickerError((current) => current === "Failed to load teams." ? "" : current);
@@ -632,13 +663,11 @@ export const FILES_PAGE_SHARING_ACTIONS_SCRIPT = `
           }
           const normalizedPath = normalizeHistoryPath(entries[0].path);
           const normalizedPaths = entries.map((entry) => normalizeHistoryPath(entry.path)).filter(Boolean);
-          const defaultTeamId = String(availableFileTeams[0]?.id || "").trim();
           if (fileTeamPickerCloseTimerRef.current !== null) {
             window.clearTimeout(fileTeamPickerCloseTimerRef.current);
             fileTeamPickerCloseTimerRef.current = null;
           }
           setFileTeamPickerClosing(false);
-          setFileTeamPickerOpen(false);
           setFileTeamPickerState({
             path: normalizedPath,
             paths: normalizedPaths,
@@ -646,12 +675,10 @@ export const FILES_PAGE_SHARING_ACTIONS_SCRIPT = `
               ? (entries[0].name || normalizedPath || "file")
               : (entries.length + " files"),
           });
-          setFileTeamPickerValue(defaultTeamId);
+          setFileTeamPickerValues([]);
           setFileTeamPickerError("");
           closeContextMenu();
-          void loadAvailableFileTeamsForPicker().then((teams) => {
-            setFileTeamPickerValue((current) => current || String(teams[0]?.id || "").trim());
-          });
+          void loadAvailableFileTeamsForPicker();
         }
 
         async function handleRemoveFileFromProject(entry, projectIdOverride = "") {
@@ -822,14 +849,17 @@ export const FILES_PAGE_SHARING_ACTIONS_SCRIPT = `
           });
         }
 
-        async function handleFileTeamPickerSubmit(event) {
-          event.preventDefault();
+        async function handleFileTeamPickerSubmit(selectedTeamIds = fileTeamPickerValues) {
           if (!fileTeamPickerState?.path || !selectedEnvironmentId) {
             return;
           }
-          const normalizedTeamId = String(fileTeamPickerValue || "").trim();
-          if (!normalizedTeamId) {
-            setFileTeamPickerError("Choose a team first.");
+          const normalizedTeamIds = Array.from(new Set(
+            (Array.isArray(selectedTeamIds) ? selectedTeamIds : [])
+              .map((teamId) => String(teamId || "").trim())
+              .filter(Boolean)
+          ));
+          if (!normalizedTeamIds.length) {
+            setFileTeamPickerError("Choose at least one team first.");
             return;
           }
           const pickerPaths = Array.isArray(fileTeamPickerState.paths) && fileTeamPickerState.paths.length
@@ -851,23 +881,42 @@ export const FILES_PAGE_SHARING_ACTIONS_SCRIPT = `
           });
 
           try {
-            const response = await fetch(
-              backendUrl + "/environments/" + encodeURIComponent(selectedEnvironmentId) + "/files/share-with-team",
-              {
-                method: "POST",
-                headers: {
-                  ...requestHeaders,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  teamId: normalizedTeamId,
-                  paths: pickerEntries.map((entry) => normalizeHistoryPath(entry.path)).filter(Boolean),
-                }),
+            const normalizedPaths = pickerEntries
+              .map((entry) => normalizeHistoryPath(entry.path))
+              .filter(Boolean);
+            const results = await Promise.allSettled(normalizedTeamIds.map(async (teamId) => {
+              const response = await fetch(
+                backendUrl + "/environments/" + encodeURIComponent(selectedEnvironmentId) + "/files/share-with-team",
+                {
+                  method: "POST",
+                  headers: {
+                    ...requestHeaders,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ teamId, paths: normalizedPaths }),
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to make files available to the team.");
               }
+              return teamId;
+            }));
+            const failedTeamIds = results.flatMap((result, index) =>
+              result.status === "rejected" ? [normalizedTeamIds[index]] : []
             );
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to make files available to the team.");
+            if (failedTeamIds.length) {
+              const failedTeamNames = failedTeamIds.map((teamId) =>
+                availableFileTeams.find((team) => String(team?.id || "").trim() === teamId)?.name || teamId
+              );
+              setFileTeamPickerValues(failedTeamIds);
+              throw new Error(
+                (failedTeamIds.length === normalizedTeamIds.length
+                  ? "Failed to share with "
+                  : "Some teams were shared successfully. Failed to share with ")
+                + failedTeamNames.join(", ")
+                + "."
+              );
             }
             closeFileTeamPickerDialog({ force: true });
           } catch (error) {

@@ -300,6 +300,7 @@ async function handleCallback({
     identity,
     profile,
     token,
+    makeDefault: true,
     envFileCandidates,
     encryptionKeyNames: provider.encryptionKeyNames,
   });

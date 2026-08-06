@@ -1088,6 +1088,19 @@
               : resourcesView;
           const activeResourcesServerKind = activeResourcesView === "servers" ? resourcesServerKind : "";
           const isResourcesPage = activePage === "resources" || activePage === "agents" || activePage === "environments";
+          const isAgentDetailsShellActive = Boolean(
+            isResourcesPage
+            && activeResourcesView === "agents"
+            && resourcesHeaderState.mode === "detail"
+          );
+          const wasAgentDetailsShellActiveRef = useRef(false);
+          useLayoutEffect(() => {
+            const enteredAgentDetails = isAgentDetailsShellActive && !wasAgentDetailsShellActiveRef.current;
+            wasAgentDetailsShellActiveRef.current = isAgentDetailsShellActive;
+            if (enteredAgentDetails) {
+              setSidebarOpen(false);
+            }
+          }, [isAgentDetailsShellActive]);
           const isSourceDeployableCodeContentRoute = Boolean(
             isResourcesPage
             && activeResourcesView === "servers"
@@ -1100,11 +1113,13 @@
           const hasEvaluationsVersionsDrawerSlot = activePage === "evaluations";
           const hasSecurityVersionsDrawerSlot = activePage === "develop-security";
           const hasSkillsVersionsDrawerSlot = activePage === "tools" && toolsView === "skills";
+          const hasTestsVersionsDrawerSlot = activePage === "tests";
           const hasResourcesVersionsDrawerSlot = (
             isResourcesPage
             && (activeResourcesView === "agents" || activeResourcesView === "computers" || activeResourcesView === "servers")
           ) || hasGuardrailsVersionsDrawerSlot || hasEvaluationsVersionsDrawerSlot
-            || hasSecurityVersionsDrawerSlot || hasSkillsVersionsDrawerSlot;
+            || hasSecurityVersionsDrawerSlot || hasSkillsVersionsDrawerSlot
+            || hasTestsVersionsDrawerSlot;
           const selectedGlobalGuardrailSet = allGuardrailSets.find((set) => set?.id === selectedGuardrailSetId) || null;
           const isGuardrailsVersionsDrawerOpen = Boolean(
             hasGuardrailsVersionsDrawerSlot
@@ -1125,6 +1140,9 @@
             && isAgentVersionsDetailOpen
           ) || (
             hasSecurityVersionsDrawerSlot
+            && isAgentVersionsDetailOpen
+          ) || (
+            hasTestsVersionsDrawerSlot
             && isAgentVersionsDetailOpen
           );
   
@@ -1212,7 +1230,11 @@
                 page: "files",
                 environmentId: filesPageTopNav?.environmentId || environmentId,
                 path: filesPageTopNav?.path || "",
-                contentMode: filesPageTopNav?.contentMode === "changes" ? "changes" : "files",
+                contentMode: filesPageTopNav?.contentMode === "changes"
+                  ? "changes"
+                  : filesPageTopNav?.contentMode === "connectors"
+                    ? "connectors"
+                    : "files",
               };
             }
   
@@ -1441,7 +1463,11 @@
                   environmentId: entry.environmentId || "",
                   path: entry.path || "",
                   isFolder: entry.isFolder !== "false",
-                  contentMode: entry.contentMode === "changes" ? "changes" : "files",
+                  contentMode: entry.contentMode === "changes"
+                    ? "changes"
+                    : entry.contentMode === "connectors"
+                      ? "connectors"
+                      : "files",
                 });
               }
               setActivePage("files");

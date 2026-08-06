@@ -34,6 +34,9 @@ const assets = await createPlatformDevelopmentAssets(platformSources, {
   viteOrigin,
 });
 
+assert.ok(assets.metrics.moduleBrotliBytes > 0);
+assert.ok(assets.metrics.cssBrotliBytes > 0);
+
 assert.match(assets.documentHtml, /\/@vite\/client/);
 assert.match(assets.documentHtml, /\/@react-refresh/);
 assert.match(assets.documentHtml, /RefreshRuntime\.injectIntoGlobalHook\(window\)/);
@@ -43,6 +46,8 @@ assert.match(
 );
 assert.match(assets.documentHtml, /\/platform\/dev\/platform\.css/);
 assert.match(assets.documentHtml, /\/platform\/dev\/platform\.js/);
+assert.match(assets.documentHtml, /rel="stylesheet"[^>]+fetchpriority="high"/);
+assert.match(assets.documentHtml, /type="module"[^>]+fetchpriority="high"/);
 assert.ok(
   assets.documentHtml.indexOf("/@react-refresh")
     < assets.documentHtml.indexOf("/platform/dev/platform.js"),
@@ -68,6 +73,15 @@ assert.match(
   assets.documentHtml,
   /\/@fs\/.*\/src\/platform-resources\/agents\/detail\/agent-publish-control\.css/,
 );
+assert.equal(
+  (
+    assets.documentHtml.match(
+      /\/src\/platform-ui\/components\/composite\/data-table\/data-table\.css/g,
+    ) || []
+  ).length,
+  1,
+  "Development styles shared by direct and aggregate entries must be emitted once.",
+);
 
 function createResponseRecorder() {
   return {
@@ -87,20 +101,57 @@ function createResponseRecorder() {
 const moduleResponse = createResponseRecorder();
 assert.equal(
   assets.handleRequest(
-    { method: "GET" },
+    { method: "GET", headers: {} },
     moduleResponse,
     new URL("http://localhost/platform/dev/platform.js"),
   ),
   true,
 );
 assert.equal(moduleResponse.status, 200);
-assert.equal(moduleResponse.headers["Cache-Control"], "no-store");
+assert.equal(moduleResponse.headers["Cache-Control"], "no-cache");
+assert.ok(moduleResponse.headers.ETag);
 assert.match(moduleResponse.body.toString("utf8"), /\/@fs\/.*\/src\/index\.ts/);
+assert.ok(
+  moduleResponse.body.toString("utf8").split("\n").length <= 4,
+  "The development entry must stay minified so reloads do not repeatedly parse the raw legacy source.",
+);
+assert.match(
+  moduleResponse.body.toString("utf8"),
+  /sourceMappingURL=\/platform\/dev\/platform\.js\.map/,
+);
+
+const cachedModuleResponse = createResponseRecorder();
+assert.equal(
+  assets.handleRequest(
+    {
+      method: "GET",
+      headers: { "if-none-match": moduleResponse.headers.ETag },
+    },
+    cachedModuleResponse,
+    new URL("http://localhost/platform/dev/platform.js"),
+  ),
+  true,
+);
+assert.equal(cachedModuleResponse.status, 304);
+assert.equal(cachedModuleResponse.body.byteLength, 0);
+
+const moduleMapResponse = createResponseRecorder();
+assert.equal(
+  assets.handleRequest(
+    { method: "GET", headers: {} },
+    moduleMapResponse,
+    new URL("http://localhost/platform/dev/platform.js.map"),
+  ),
+  true,
+);
+assert.equal(moduleMapResponse.status, 200);
+assert.equal(moduleMapResponse.headers["Content-Encoding"], undefined);
+assert.doesNotThrow(() => JSON.parse(moduleMapResponse.body.toString("utf8")));
 
 const headResponse = createResponseRecorder();
 assert.equal(
   assets.handleRequest(
-    { method: "HEAD" },
+    { method: "HEAD", headers: {} },
     headResponse,
     new URL("http://localhost/platform/dev/platform.css"),
   ),

@@ -14,3 +14,7 @@ export {
   PlatformCodeEditorTabBar,
   type PlatformCodeEditorTabBarProps,
 } from "./platform-code-editor-tab-bar.js";
+export {
+  PlatformMonacoCodeEditor,
+  type PlatformMonacoCodeEditorProps,
+} from "./platform-monaco-code-editor.js";

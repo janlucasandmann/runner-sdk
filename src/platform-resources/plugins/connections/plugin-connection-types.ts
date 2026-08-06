@@ -64,3 +64,62 @@ export interface PlatformGitHubRepositoryBranch {
   name: string;
   protected: boolean;
 }
+
+export type PlatformPluginFileConnectionId = Extract<
+  PlatformPluginConnectionId,
+  "github" | "google-drive" | "one-drive"
+>;
+
+export interface PlatformPluginFileSourceDefinition {
+  id: PlatformPluginFileConnectionId;
+  label: string;
+  logoUrl: string;
+}
+
+export interface PlatformPluginFileAccount {
+  id: string;
+  name: string;
+  identity: string;
+  isDefault: boolean;
+  status: PlatformConnectionCredential["status"];
+}
+
+export interface PlatformPluginFileSourceStatus
+  extends PlatformPluginFileSourceDefinition {
+  accounts: PlatformPluginFileAccount[];
+  connected: boolean;
+  defaultCredentialId?: string;
+  identity: string;
+  error?: string;
+}
+
+export interface PlatformPluginFileItem {
+  id: string;
+  providerId: PlatformPluginFileConnectionId;
+  name: string;
+  path: string;
+  isFolder: boolean;
+  size: number;
+  modifiedTime?: string;
+  createdTime?: string;
+  mimeType?: string;
+  previewUrl?: string;
+  webUrl?: string;
+  repoFullName?: string;
+  ref?: string;
+}
+
+export interface PlatformPluginFileContent {
+  content: string;
+  encoding: "base64" | "utf8";
+  mimeType?: string;
+  name: string;
+}
+
+export interface PlatformPluginFileRequestOptions {
+  credentialId?: string;
+  fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+  signal?: AbortSignal;
+  organizationId?: string;
+  forceRefresh?: boolean;
+}

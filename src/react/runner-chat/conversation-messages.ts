@@ -287,6 +287,8 @@ export function normalizeRunnerConversationMessage(
   const logMetadataCandidate = getRecordObject(record, [
     "logMetadata",
     "log_metadata",
+    "messageMetadata",
+    "message_metadata",
     "metadata",
   ]);
   const usageRecord = getRecordObject(record, [

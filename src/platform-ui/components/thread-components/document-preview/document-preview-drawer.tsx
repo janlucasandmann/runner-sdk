@@ -28,6 +28,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./preview-contracts.js";
 import { RunnerImagePreviewSurface } from "./image-preview-surface.js";
+import { PlatformLoadingState } from "../../composite/loading-state/index.js";
 import { RunnerFileDiffSurface } from "../../composite/diff-viewer/index.js";
 import {
   RunnerImageCropOverlay,
@@ -69,6 +70,7 @@ import {
   type RunnerPreviewEditableCodeSource,
 } from "./preview-state.js";
 import {
+  RunnerConnectorActionSidebarPreview,
   RunnerImageUnderstandingSidebarPreview,
   RunnerMediaGenerationPromptSidebarPreview,
   RunnerWebSearchSidebarPreview,
@@ -186,6 +188,7 @@ export function RunnerDocumentPreviewDrawer({
     : null;
   const isImageUnderstandingAttachment = attachmentPreviewKind === "image-understanding" && Boolean(attachment.imageUnderstandingPreview);
   const isWebSearchAttachment = attachmentPreviewKind === "web-search" && Boolean(attachment.webSearchPreview);
+  const isConnectorActionAttachment = attachmentPreviewKind === "connector-action" && Boolean(attachment.connectorActionPreview);
   const isImageGenerationPromptAttachment = attachmentPreviewKind === "image-generation-prompt" && Boolean(attachment.imageGenerationPromptPreview);
   const isVideoGenerationPromptAttachment = attachmentPreviewKind === "video-generation-prompt" && Boolean(attachment.videoGenerationPromptPreview);
 
@@ -481,6 +484,7 @@ export function RunnerDocumentPreviewDrawer({
       isImageAttachment
       || previewKind === "image-understanding"
       || previewKind === "web-search"
+      || previewKind === "connector-action"
       || previewKind === "image-generation-prompt"
       || previewKind === "video-generation-prompt"
     ) {
@@ -1099,10 +1103,11 @@ export function RunnerDocumentPreviewDrawer({
   const imagePreviewRootClassName = isImageAttachment ? " tb-attachment-preview-image-drawer" : "";
   const imageUnderstandingPreviewRootClassName = isImageUnderstandingAttachment ? " tb-attachment-preview-image-understanding-drawer" : "";
   const webSearchPreviewRootClassName = isWebSearchAttachment ? " tb-attachment-preview-web-search-drawer" : "";
+  const connectorActionPreviewRootClassName = isConnectorActionAttachment ? " tb-attachment-preview-connector-action-drawer" : "";
   const mediaGenerationPromptPreviewRootClassName = isImageGenerationPromptAttachment || isVideoGenerationPromptAttachment ? " tb-attachment-preview-media-generation-prompt-drawer" : "";
   const previewRootClassName = surface
-    ? `tb-attachment-preview-surface${inline ? " tb-attachment-preview-surface-inline" : ""}${imagePreviewRootClassName}${imageUnderstandingPreviewRootClassName}${webSearchPreviewRootClassName}${mediaGenerationPromptPreviewRootClassName}${className ? ` ${className}` : ""}`
-    : `tb-attachment-preview-drawer${inline ? " tb-attachment-preview-drawer-inline" : ""}${imagePreviewRootClassName}${imageUnderstandingPreviewRootClassName}${webSearchPreviewRootClassName}${mediaGenerationPromptPreviewRootClassName}${className ? ` ${className}` : ""}`;
+    ? `tb-attachment-preview-surface${inline ? " tb-attachment-preview-surface-inline" : ""}${imagePreviewRootClassName}${imageUnderstandingPreviewRootClassName}${webSearchPreviewRootClassName}${connectorActionPreviewRootClassName}${mediaGenerationPromptPreviewRootClassName}${className ? ` ${className}` : ""}`
+    : `tb-attachment-preview-drawer${inline ? " tb-attachment-preview-drawer-inline" : ""}${imagePreviewRootClassName}${imageUnderstandingPreviewRootClassName}${webSearchPreviewRootClassName}${connectorActionPreviewRootClassName}${mediaGenerationPromptPreviewRootClassName}${className ? ` ${className}` : ""}`;
   const canUseBuiltInImageTools = Boolean(enableImagePreviewTools && isImageAttachment && effectiveImagePreviewUrl);
   const isBuiltInImageToolModeActive = canUseBuiltInImageTools && imagePreviewToolMode !== "idle";
   const canSaveImageCrop = Boolean(
@@ -1485,6 +1490,8 @@ export function RunnerDocumentPreviewDrawer({
             />
           ) : isWebSearchAttachment && attachment.webSearchPreview ? (
             <RunnerWebSearchSidebarPreview data={attachment.webSearchPreview} />
+          ) : isConnectorActionAttachment && attachment.connectorActionPreview ? (
+            <RunnerConnectorActionSidebarPreview data={attachment.connectorActionPreview} />
           ) : isImageGenerationPromptAttachment && attachment.imageGenerationPromptPreview ? (
             <RunnerMediaGenerationPromptSidebarPreview data={attachment.imageGenerationPromptPreview} />
           ) : isVideoGenerationPromptAttachment && attachment.videoGenerationPromptPreview ? (
@@ -1535,10 +1542,11 @@ export function RunnerDocumentPreviewDrawer({
               />
             </div>
           ) : documentPreviewState.status === "loading" ? (
-            <div className="tb-attachment-preview-state">
-              <LucideLoaderCircle className="tb-attachment-preview-state-icon tb-context-action-notice-icon-spinner" strokeWidth={1.8} />
-              <span>Loading preview…</span>
-            </div>
+            <PlatformLoadingState
+              centered
+              className="tb-attachment-preview-state"
+              message="Loading preview..."
+            />
           ) : documentPreviewState.status === "error" ? (
             <div className="tb-attachment-preview-state tb-attachment-preview-state-error">
               <LucideFileText className="tb-attachment-preview-state-icon" strokeWidth={1.8} />

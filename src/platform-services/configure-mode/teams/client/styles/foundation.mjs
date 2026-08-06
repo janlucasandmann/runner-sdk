@@ -129,6 +129,28 @@ export const TEAMS_FOUNDATION_CSS = `      .playground-team-page {
         flex-basis: 20px;
       }
 
+      .playground-team-detail-creator {
+        min-width: 0;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .playground-team-detail-creator-avatar.playground-team-member-avatar {
+        width: 20px;
+        height: 20px;
+        flex-basis: 20px;
+      }
+
+      .playground-team-detail-creator .playground-team-table-title {
+        min-width: 0;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 12px;
+        font-weight: 400;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
       .playground-team-detail-sidebar-owner-row {
         width: 100%;
         margin-top: 12px;
@@ -166,6 +188,11 @@ export const TEAMS_FOUNDATION_CSS = `      .playground-team-page {
         font-weight: 400;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .playground-team-detail-invite-button.platform-button {
+        width: 100%;
+        margin-top: 12px;
       }
 
       .playground-team-detail-owner-option-avatar {

@@ -196,6 +196,7 @@ export const FILES_CHAT_CSS = `
         justify-content: space-between;
         gap: 12px;
         padding: 0 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.075);
       }
 
       .playground-files-presentation-preview-title-row {
@@ -219,6 +220,7 @@ export const FILES_CHAT_CSS = `
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        font-size: 14px;
       }
 
       .playground-files-presentation-preview-body {

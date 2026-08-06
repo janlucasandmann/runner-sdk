@@ -74,7 +74,8 @@ describe("thread activity-group source selection", () => {
       producer: { type: "observer", id: "thread-supervision-chronicle-live-v1" },
       payloadVersion: 1,
       payload: {
-        workingLabel: "Running checks and verifying the work.",
+        observerStatus: "grounded",
+        workingLabel: "Running automated tests",
         currentSummary: "Worker-authored low-level detail that must be ignored.",
       },
       occurredAt: "2030-07-25T08:00:00.000Z",
@@ -82,7 +83,66 @@ describe("thread activity-group source selection", () => {
     });
 
     expect(selectRunnerThreadRunWorkingLabel(projection, "run-1")).toBe(
-      "Running checks and verifying the work.",
+      "Running automated tests",
     );
+  });
+
+  it("keeps a grounded concrete label when a newer fallback is vague", () => {
+    const initial = createInitialRunnerThreadProjection("thread-stable-label");
+    const grounded = reduceRunnerThreadEvent(initial, {
+      kind: "event",
+      id: "event-grounded-label",
+      threadId: initial.threadId,
+      runId: "run-1",
+      sequence: 10,
+      type: "thread.run.projection.updated",
+      producer: { type: "observer", id: "thread-supervision-chronicle-live-v1" },
+      payloadVersion: 1,
+      payload: {
+        observerStatus: "grounded",
+        workingLabel: "Searching workspace code",
+      },
+      occurredAt: "2030-07-25T08:00:00.000Z",
+      createdAt: "2030-07-25T08:00:00.000Z",
+    });
+    const projection = reduceRunnerThreadEvent(grounded, {
+      kind: "event",
+      id: "event-fallback-label",
+      threadId: initial.threadId,
+      runId: "run-1",
+      sequence: 11,
+      type: "thread.run.projection.updated",
+      producer: { type: "observer", id: "legacy-fallback-observer" },
+      payloadVersion: 1,
+      payload: {
+        observerStatus: "fallback",
+        workingLabel: "Working through the current task",
+      },
+      occurredAt: "2030-07-25T08:00:01.000Z",
+      createdAt: "2030-07-25T08:00:01.000Z",
+    });
+
+    expect(selectRunnerThreadRunWorkingLabel(projection, "run-1")).toBe(
+      "Searching workspace code",
+    );
+  });
+
+  it("rejects vague observer labels when no concrete status exists", () => {
+    const initial = createInitialRunnerThreadProjection("thread-vague-label");
+    const projection = reduceRunnerThreadEvent(initial, {
+      kind: "event",
+      id: "event-vague-label",
+      threadId: initial.threadId,
+      runId: "run-1",
+      sequence: 10,
+      type: "thread.run.projection.updated",
+      producer: { type: "observer", id: "legacy-fallback-observer" },
+      payloadVersion: 1,
+      payload: { workingLabel: "Working through the task" },
+      occurredAt: "2030-07-25T08:00:00.000Z",
+      createdAt: "2030-07-25T08:00:00.000Z",
+    });
+
+    expect(selectRunnerThreadRunWorkingLabel(projection, "run-1")).toBeNull();
   });
 });

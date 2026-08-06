@@ -90,9 +90,86 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     width: 100%;
   }
 
+  .tests-cases-panel,
+  .tests-cases-table {
+    width: 100%;
+    min-width: 0;
+  }
+
   .tests-detail-run-button.platform-button {
     width: 100%;
     margin-top: 8px;
+  }
+
+  .tests-detail-truncated-property .platform-service-detail-page__property-value {
+    min-width: 0;
+  }
+
+  .tests-detail-truncated-property__value {
+    display: block;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tests-detail-identity-row .platform-service-detail-page__property-value,
+  .tests-detail-owner-row .platform-service-detail-page__property-value {
+    min-width: 0;
+    overflow: visible;
+  }
+
+  .tests-detail-identity-row .resource-overview-identity,
+  .tests-detail-owner-selector .resource-overview-identity {
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-end;
+  }
+
+  .tests-detail-identity-row .resource-overview-identity__visual,
+  .tests-detail-owner-selector .resource-overview-identity__visual,
+  .tests-detail-owner-option-avatar {
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    border-radius: 50%;
+  }
+
+  .tests-detail-owner-option-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 9px;
+    font-weight: 400;
+  }
+
+  .tests-detail-owner-option-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .tests-detail-owner-row {
+    width: 100%;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .tests-detail-owner-selector,
+  .tests-detail-owner-trigger {
+    width: 100%;
+  }
+
+  .tests-detail-owner-trigger {
+    justify-content: flex-end;
   }
 
   .playground-tests-section-controls,
@@ -413,6 +490,311 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     font-weight: 620;
   }
 
+  .tests-case-create-modal__body,
+  .tests-case-create-modal__contract,
+  .tests-case-create-modal__assertions,
+  .tests-plan-save-modal .platform-modal__body {
+    display: grid;
+    gap: 20px;
+  }
+
+  .tests-case-method-fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .tests-case-method-fieldset legend {
+    margin-bottom: 9px;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .tests-case-method-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .tests-case-method-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: start;
+    gap: 8px 10px;
+    min-height: 128px;
+    padding: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9px;
+    color: rgba(255, 255, 255, 0.68);
+    background: rgba(255, 255, 255, 0.025);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 140ms ease, background 140ms ease;
+  }
+
+  .tests-case-method-card:hover,
+  .tests-case-method-card.is-selected {
+    border-color: rgba(74, 167, 255, 0.5);
+    background: rgba(74, 167, 255, 0.08);
+  }
+
+  .tests-case-method-card > svg {
+    margin-top: 1px;
+    color: #8cc7ff;
+  }
+
+  .tests-case-method-card > span {
+    display: grid;
+    gap: 4px;
+  }
+
+  .tests-case-method-card strong {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    font-weight: 620;
+  }
+
+  .tests-case-method-card small,
+  .tests-case-method-card em {
+    color: rgba(255, 255, 255, 0.46);
+    font-size: 10px;
+    font-style: normal;
+    line-height: 1.45;
+  }
+
+  .tests-case-method-card em {
+    grid-column: 1 / -1;
+    align-self: end;
+  }
+
+  .tests-case-create-modal__checks,
+  .tests-evidence-policy {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+  }
+
+  .tests-case-create-modal__checks label,
+  .tests-evidence-policy label,
+  .tests-form-checkbox-field label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 12px;
+    font-weight: 480;
+  }
+
+  .tests-case-create-modal__assertions > div:first-child,
+  .tests-case-detail-assertion-editor > div:first-child {
+    display: grid;
+    gap: 4px;
+  }
+
+  .tests-case-create-modal__assertions strong,
+  .tests-evidence-policy > strong,
+  .tests-case-detail-assertion-editor > div:first-child span {
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 12px;
+    font-weight: 620;
+  }
+
+  .tests-case-create-modal__assertions > div:first-child span,
+  .tests-case-detail-assertion-editor > div:first-child small {
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 11px;
+  }
+
+  .tests-assertion-builder,
+  .tests-assertion-builder__rows {
+    display: grid;
+    gap: 9px;
+  }
+
+  .tests-assertion-builder__header,
+  .tests-assertion-builder__row {
+    display: grid;
+    grid-template-columns: minmax(110px, 1fr) minmax(150px, .8fr) minmax(120px, 1fr) 30px;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .tests-assertion-builder__header {
+    color: rgba(255, 255, 255, 0.38);
+    font-size: 10px;
+    font-weight: 620;
+  }
+
+  .tests-assertion-builder__row > input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 34px;
+    padding: 0 9px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+    outline: 0;
+    color: rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.03);
+    font: inherit;
+    font-size: 11px;
+  }
+
+  .tests-assertion-builder__empty {
+    padding: 16px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .tests-case-detail-assertion-editor {
+    display: grid;
+    align-content: start;
+    gap: 18px;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 20px;
+    overflow: auto;
+  }
+
+  .tests-case-detail-configuration-value {
+    max-width: 330px;
+    color: rgba(255, 255, 255, 0.48);
+    font-size: 11px;
+    text-align: right;
+  }
+
+  .tests-plan-state-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid rgba(74, 167, 255, 0.2);
+    border-radius: 8px;
+    color: #8cc7ff;
+    background: rgba(74, 167, 255, 0.06);
+  }
+
+  .tests-plan-state-banner.is-warning {
+    border-color: rgba(244, 201, 120, 0.24);
+    color: #f4c978;
+    background: rgba(244, 201, 120, 0.06);
+  }
+
+  .tests-plan-state-banner > span {
+    display: grid;
+    gap: 2px;
+    color: rgba(255, 255, 255, 0.56);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .tests-plan-state-banner strong {
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 12px;
+  }
+
+  .tests-table-truncated-value {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tests-evidence-policy {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .tests-evidence-policy > strong {
+    flex: 0 0 100%;
+  }
+
+  .tests-advanced-definition {
+    display: grid;
+    gap: 14px;
+  }
+
+  .tests-advanced-definition summary {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .tests-advanced-definition[open] .tests-definition-editor {
+    margin-top: 14px;
+  }
+
+  .tests-plan-save-modal__summary,
+  .tests-run-contract-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .tests-plan-save-modal__summary strong,
+  .tests-run-contract-summary strong {
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 12px;
+  }
+
+  .tests-plan-save-modal__summary span,
+  .tests-run-contract-summary span {
+    color: rgba(255, 255, 255, 0.44);
+    font-size: 11px;
+  }
+
+  .tests-run-contract-summary > div {
+    display: grid;
+    gap: 4px;
+  }
+
+  .tests-run-contract-summary > div:last-child {
+    text-align: right;
+  }
+
+  .tests-run-trust-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 16px 0;
+    padding: 12px 14px;
+    border: 1px solid rgba(244, 201, 120, 0.2);
+    border-radius: 8px;
+    color: #f4c978;
+    background: rgba(244, 201, 120, 0.05);
+  }
+
+  .tests-run-trust-card.is-verified_worker {
+    border-color: rgba(134, 226, 157, 0.22);
+    color: #86e29d;
+    background: rgba(134, 226, 157, 0.05);
+  }
+
+  .tests-run-trust-card > span {
+    display: grid;
+    gap: 3px;
+    color: rgba(255, 255, 255, 0.48);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .tests-run-trust-card strong {
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 12px;
+  }
+
   .tests-section-kicker {
     color: rgba(255, 255, 255, 0.42);
     font-size: 10px;
@@ -614,10 +996,31 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     }
 
     .tests-overview-guide__cards,
+    .tests-case-method-grid,
     .tests-form-grid,
     .tests-result-evidence-grid,
     .tests-run-evidence-grid {
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tests-assertion-builder__header {
+      display: none;
+    }
+
+    .tests-assertion-builder__row {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+    }
+
+    .tests-assertion-builder__row .platform-icon-button {
+      justify-self: end;
+    }
+
+    .tests-case-detail-configuration-value {
+      max-width: none;
+      text-align: left;
     }
 
     .tests-form-field.is-span-2 {

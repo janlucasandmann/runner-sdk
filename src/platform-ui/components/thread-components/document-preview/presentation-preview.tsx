@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
 import {
   FileText as LucideFileText,
-  LoaderCircle as LucideLoaderCircle,
   Presentation as LucidePresentation,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { PlatformLoadingState } from "../../composite/loading-state/index.js";
 import {
   isRunnerKeynotePresentationFile,
   isRunnerPowerPointPresentationFile,
@@ -223,10 +223,11 @@ export function RunnerPresentationPreview({
   return (
     <div ref={shellRef} className="tb-attachment-preview-presentation-shell">
       {loadState.status === "loading" ? (
-        <div className="tb-attachment-preview-presentation-state">
-          <LucideLoaderCircle className="tb-attachment-preview-presentation-state-icon is-spinning" strokeWidth={1.8} />
-          <span>Loading presentation...</span>
-        </div>
+        <PlatformLoadingState
+          centered
+          className="tb-attachment-preview-presentation-state"
+          message="Loading presentation..."
+        />
       ) : null}
       {loadState.status === "error" ? (
         <div className="tb-attachment-preview-presentation-state">

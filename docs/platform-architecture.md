@@ -129,9 +129,9 @@ Its extracted modules have explicit roles:
   from execution records to causal timeline presentation;
 - `legacy-timeline.ts`: pure log grouping and causal timeline projection;
 - `legacy-timeline-presentation.ts`: pure group presentation models;
-- `use-thinking-status.ts`, `use-log-auto-scroll.ts`, and
-  `use-thread-history-rail.ts`: independently tested viewport and live-status
-  controllers;
+- `use-work-log-pagination.ts`, `use-log-auto-scroll.ts`, and
+  `use-thread-history-rail.ts`: independently tested work-log pagination and
+  viewport controllers;
 - `use-composer-popup-controller.ts`: popup lifecycle, animation cleanup, and
   cross-composer exclusivity;
 - `use-composer-quoted-selection.ts`: composer quote state and enter/exit

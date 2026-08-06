@@ -1,0 +1,478 @@
+.platform-connector-action-detail {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: #fff;
+  background: transparent;
+}
+
+.platform-connector-action-detail__hero {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.platform-connector-action-detail__identity {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.platform-connector-action-detail__logo {
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 0;
+  border-radius: 9px;
+  color: #111;
+  background: var(--platform-connector-action-logo-background, #fff);
+}
+
+.platform-connector-action-detail__logo > :is(img, svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.platform-connector-action-detail__identity-copy {
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.platform-connector-action-detail__identity-copy h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.platform-connector-action-detail__identity-copy p {
+  max-width: 620px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.platform-connector-action-detail__status.platform-label {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.platform-connector-action-detail__action {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 52px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.platform-connector-action-detail__action-icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.platform-connector-action-detail__action-icon > svg {
+  width: 14px;
+  height: 14px;
+}
+
+.platform-connector-action-detail__action-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.platform-connector-action-detail__action-copy > span {
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.platform-connector-action-detail__action-copy > strong {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-connector-action-detail__section {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.platform-connector-action-detail__section > h2 {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.platform-connector-action-detail__section-details {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.platform-connector-action-detail__section-details > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.platform-connector-action-detail__section-details > summary::after {
+  box-sizing: border-box;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 140ms ease;
+  content: "";
+}
+
+.platform-connector-action-detail__section-details[open] > summary::after {
+  transform: translateY(2px) rotate(225deg);
+}
+
+.platform-connector-action-detail__section-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.platform-connector-action-detail__section-details > summary:hover {
+  color: #fff;
+}
+
+.platform-connector-action-detail__section-surface {
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.0375);
+}
+
+.platform-connector-action-detail__section.is-error
+  .platform-connector-action-detail__section-surface {
+  border-color: rgba(255, 143, 143, 0.16);
+  color: #ffaaaa;
+  background: rgba(255, 143, 143, 0.05);
+}
+
+.platform-connector-action-detail__structured-value {
+  min-width: 0;
+}
+
+.platform-connector-action-detail__fields {
+  min-width: 0;
+  margin: 0;
+}
+
+.platform-connector-action-detail__field {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 4px;
+}
+
+.platform-connector-action-detail__field + .platform-connector-action-detail__field {
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-connector-action-detail__field dt {
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 11px;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.platform-connector-action-detail__field dd {
+  min-width: 0;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.platform-connector-action-detail__field dd > a {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #8cc7ff;
+  text-decoration: none;
+}
+
+.platform-connector-action-detail__field dd > a > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-connector-action-detail__field dd > a:hover {
+  color: #fff;
+}
+
+.platform-connector-action-detail__nested-section {
+  min-width: 0;
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-connector-action-detail__structured-value
+  > .platform-connector-action-detail__nested-section:first-child {
+  border-top: 0;
+}
+
+.platform-connector-action-detail__fields + .platform-connector-action-detail__nested-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-connector-action-detail__nested-section > h3 {
+  margin: 0 0 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.platform-connector-action-detail__narrative {
+  margin: 0;
+  padding: 12px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 400;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.platform-connector-action-detail__field .platform-connector-action-detail__narrative {
+  padding: 0;
+}
+
+.platform-connector-action-detail__nested-section > .platform-connector-action-detail__narrative {
+  padding: 0;
+}
+
+.platform-connector-action-detail__collection-shell {
+  min-width: 0;
+}
+
+.platform-connector-action-detail__collection-count {
+  padding: 9px 12px;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 10px;
+  line-height: 1.3;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-connector-action-detail__collection {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.platform-connector-action-detail__collection-item {
+  min-width: 0;
+  padding: 11px 12px;
+}
+
+.platform-connector-action-detail__collection-item
+  + .platform-connector-action-detail__collection-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-connector-action-detail__collection-title {
+  margin-bottom: 7px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.platform-connector-action-detail__collection-item .platform-connector-action-detail__fields,
+.platform-connector-action-detail__collection-item
+  .platform-connector-action-detail__nested-section {
+  margin: 0 -12px -11px;
+}
+
+.platform-connector-action-detail__collection-item .platform-connector-action-detail__field {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.platform-connector-action-detail__more {
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-connector-action-detail__more > summary,
+.platform-connector-action-detail__technical > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.platform-connector-action-detail__more > summary::-webkit-details-marker,
+.platform-connector-action-detail__technical > summary::-webkit-details-marker {
+  display: none;
+}
+
+.platform-connector-action-detail__more > summary {
+  padding: 10px 12px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.platform-connector-action-detail__more > summary:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.platform-connector-action-detail__more[open] > summary {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-connector-action-detail__muted,
+.platform-connector-action-detail__empty {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.platform-connector-action-detail__section-surface > .platform-connector-action-detail__muted {
+  padding: 12px;
+}
+
+.platform-connector-action-detail__redacted {
+  color: rgba(255, 255, 255, 0.42);
+  font-style: italic;
+}
+
+.platform-connector-action-detail__technical {
+  min-width: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-connector-action-detail__technical > summary {
+  padding: 14px 0 0;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.platform-connector-action-detail__technical > summary:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.platform-connector-action-detail__technical-body {
+  min-width: 0;
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.platform-connector-action-detail__technical-body section {
+  min-width: 0;
+}
+
+.platform-connector-action-detail__technical-body h2 {
+  margin: 0 0 7px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.platform-connector-action-detail__technical-body pre {
+  box-sizing: border-box;
+  max-height: 320px;
+  margin: 0;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.58);
+  background: rgba(255, 255, 255, 0.025);
+  font:
+    400 10px / 1.55 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .platform-connector-action-detail {
+    padding: 18px;
+  }
+
+  .platform-connector-action-detail__hero {
+    gap: 10px;
+  }
+
+  .platform-connector-action-detail__field {
+    gap: 4px;
+  }
+}

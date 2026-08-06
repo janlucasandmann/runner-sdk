@@ -13,6 +13,12 @@ export const TESTS_APP_TOP_NAVIGATION_SCRIPT = `        function renderTestsPage
               onClick: testsPageMode === "run" || testsPageMode === "case"
                 ? () => openTestPlanDetailPage(selectedTestPlanId, selectedTestPlanName)
                 : undefined,
+              trailing: testsPageMode === "detail"
+                ? React.createElement("span", {
+                    id: "playground-tests-title-actions",
+                    className: "playground-agent-title-actions-root playground-tests-title-actions-root",
+                  })
+                : null,
             });
           }
           if (testsPageMode === "case") {

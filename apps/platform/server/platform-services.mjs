@@ -28,6 +28,9 @@ import {
   createConnectorRuntimeBridge,
 } from "./integrations/connector-runtime-bridge.mjs";
 import {
+  resolveConnectorSettingsForPrincipal,
+} from "./integrations/connector-oauth-core.mjs";
+import {
   createConnectorRuntimeGrantService,
 } from "./integrations/connector-runtime-grants.mjs";
 import {
@@ -96,6 +99,7 @@ export function createPlatformServices({
     fetchOrganizationApi: fetchAiosCloud,
     identityService,
     envFileCandidates: connectorOauthEnvFileCandidates,
+    resolveConnectorConfig: resolveConnectorSettingsForPrincipal,
     listConnectorCapabilities: (connectorId) =>
       connectorAdapterRegistry.listCapabilities(connectorId),
     logger: console,
@@ -132,19 +136,33 @@ export function createPlatformServices({
       payload,
       context,
     ) => {
-      const authorizedPayload =
-        await connectorExecutionPolicy.enrichThreadMessagePayload(
-          req,
+      try {
+        const authorizedPayload =
+          await connectorExecutionPolicy.enrichThreadMessagePayload(
+            req,
+            threadId,
+            upstreamUrl,
+            apiKey,
+            payload,
+            context,
+          );
+        return connectorRuntimeBridge.addRuntimeServers({
           threadId,
-          upstreamUrl,
-          apiKey,
-          payload,
-          context,
-        );
-      return connectorRuntimeBridge.addRuntimeServers({
-        threadId,
-        payload: authorizedPayload,
-      });
+          payload: authorizedPayload,
+        });
+      } catch (error) {
+        console.warn("[connector-policy] Thread connector preparation failed", {
+          threadId,
+          connectorIds: Object.entries(context?.requestedConnectors || {})
+            .filter(([, value]) => value?.enabled !== false)
+            .map(([id]) => String(id || "").trim().toLowerCase())
+            .filter(Boolean),
+          statusCode: Number(error?.statusCode) || 502,
+          code: String(error?.code || "connector_preparation_failed"),
+          phase: String(error?.details?.phase || "connector_authorization"),
+        });
+        throw error;
+      }
     },
   );
   const enrichThreadPayloadWithAgentGuardrails =

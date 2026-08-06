@@ -312,6 +312,19 @@ function buildEvaluationRunOptions(job, target, {
     phase,
     iterationNumber,
   ].join(":");
+  const candidateAuthority = (
+    ["verification", "final"].includes(phase)
+    && version.id
+    && Number.isInteger(Number(iterationNumber))
+    && Number(iterationNumber) > 0
+  )
+    ? {
+        kind: "agent_optimization_job",
+        id: job.id,
+        purpose: "verification",
+        iterationNumber: Number(iterationNumber),
+      }
+    : null;
   return {
     id: stableId("eval_run", fingerprint),
     label: phase === "baseline"
@@ -321,6 +334,7 @@ function buildEvaluationRunOptions(job, target, {
         : `Optimization Iteration ${iterationNumber}`,
     fineTuningJobId: job.id,
     fine_tuning_job_id: job.id,
+    purpose: "optimization",
     evaluationVersionId: target.evaluationVersionId,
     evaluationVersionNumber: target.evaluationVersionNumber,
     evaluationVersionLabel: target.evaluationVersionLabel,
@@ -331,6 +345,13 @@ function buildEvaluationRunOptions(job, target, {
     targetAgentVersionNumber: Math.max(0, Number(version.version || version.versionNumber || targetAgent.versionNumber || 0) || 0),
     targetAgentVersionLabel: normalizeString(version.label || targetAgent.versionLabel),
     targetAgentVersionRevisionId: normalizeString(version.revisionId || version.revision_id),
+    targetBinding: {
+      kind: "agent",
+      targetId: targetAgent.id,
+      targetVersionId: normalizeString(version.id || targetAgent.versionId),
+      environmentId: environment.id,
+      ...(candidateAuthority ? { candidateAuthority } : {}),
+    },
     environmentType: environment.type,
     environmentId: environment.id,
     environmentName: environment.name,

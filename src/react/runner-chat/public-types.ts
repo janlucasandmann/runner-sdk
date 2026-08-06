@@ -81,6 +81,7 @@ export interface RunnerChatProjectsConfig {
 export interface RunnerChatConnectorOption {
   id: string;
   name: string;
+  kind?: "plugin" | "tag";
   description?: string;
   keywords?: string[];
   logoUrl?: string;
@@ -239,6 +240,10 @@ export interface RunnerChatProps {
   speechToTextUrl?: string;
   fetchCustomSkills?: () => Promise<RunnerChatSkill[]>;
   requestHeaders?: HeadersInit;
+  resolveRequestHeaders?: () =>
+    | HeadersInit
+    | undefined
+    | Promise<HeadersInit | undefined>;
   environmentId?: string;
   projectId?: string | null;
   agentId?: string;
@@ -349,6 +354,7 @@ export interface RunnerChatProps {
     // biome-ignore lint/suspicious/noConfusingVoidType: Preserves the compatibility callback API.
   ) => boolean | void;
   autoFocusComposer?: boolean;
+  composerFocusRequest?: string | number | null;
   keepFocusOnSubmit?: boolean;
   enableBacklogSubtaskCommand?: boolean;
   backlogTaskConnectors?: Record<string, unknown> | null;

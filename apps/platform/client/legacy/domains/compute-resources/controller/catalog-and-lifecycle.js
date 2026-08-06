@@ -3245,11 +3245,22 @@
               return;
             }
             const documentListKey = selectedDatabaseId + ":" + selectedDatabaseCollectionId;
-            setDatabaseDocumentVisibleLimitByCollectionKey((current) => ({
-              ...current,
-              [documentListKey]: 50,
-            }));
-            void loadDatabaseDocuments(selectedDatabaseId, selectedDatabaseCollectionId, { limit: 50 });
+            setDatabaseDocumentVisibleLimitByCollectionKey((current) => (
+              current[documentListKey] === 50
+                ? current
+                : {
+                  ...current,
+                  [documentListKey]: 50,
+                }
+            ));
+            if (databaseDocumentListRequestRef.current.has(documentListKey)) {
+              return;
+            }
+            databaseDocumentListRequestRef.current.add(documentListKey);
+            void loadDatabaseDocuments(selectedDatabaseId, selectedDatabaseCollectionId, { limit: 50 })
+              .finally(() => {
+                databaseDocumentListRequestRef.current.delete(documentListKey);
+              });
           }, [loadDatabaseDocuments, resourceMode, selectedDatabaseCollectionId, selectedDatabaseId]);
 
           useEffect(() => {

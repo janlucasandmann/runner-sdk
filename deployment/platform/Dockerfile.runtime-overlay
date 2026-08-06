@@ -12,7 +12,15 @@ COPY repos/runner-web-sdk/src/platform-services/configure-mode/tests/server/runt
   /app/repos/runner-web-sdk/src/platform-services/configure-mode/tests/server/runtime.mjs
 COPY repos/runner-web-sdk/src/platform-services/configure-mode/evaluations/server/runtime.mjs \
   /app/repos/runner-web-sdk/src/platform-services/configure-mode/evaluations/server/runtime.mjs
+COPY repos/runner-web-sdk/src/platform-services/configure-mode/evaluations/server/domain/sets.mjs \
+  /app/repos/runner-web-sdk/src/platform-services/configure-mode/evaluations/server/domain/sets.mjs
 COPY repos/runner-web-sdk/src/platform-services/configure-mode/evaluations/server/domain/targets.mjs \
   /app/repos/runner-web-sdk/src/platform-services/configure-mode/evaluations/server/domain/targets.mjs
+COPY repos/runner-web-sdk/src/platform-services/configure-mode/fine-tuning/server/application/job-orchestrator.mjs \
+  /app/repos/runner-web-sdk/src/platform-services/configure-mode/fine-tuning/server/application/job-orchestrator.mjs
+COPY repos/runner-web-sdk/src/platform-services/configure-mode/fine-tuning/server/domain/thread-data.mjs \
+  /app/repos/runner-web-sdk/src/platform-services/configure-mode/fine-tuning/server/domain/thread-data.mjs
+COPY repos/runner-web-sdk/src/platform-services/configure-mode/fine-tuning/server/runtime.mjs \
+  /app/repos/runner-web-sdk/src/platform-services/configure-mode/fine-tuning/server/runtime.mjs
 COPY repos/runner-web-sdk/src/platform-services/create-mode/metronome/client/shell/sidebar-state.mjs \
   /app/repos/runner-web-sdk/src/platform-services/create-mode/metronome/client/shell/sidebar-state.mjs

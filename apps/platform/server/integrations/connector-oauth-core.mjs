@@ -8,6 +8,7 @@ import {
 import fs from "node:fs";
 
 import { createConnectorCredentialRegistry } from "./connector-credential-registry.mjs";
+import { createConnectorSettingsStore } from "./connector-settings-store.mjs";
 
 const FIRESTORE_TOKEN_COLLECTION = "user_oauth_tokens";
 const OAUTH_STATE_COLLECTION = "oauth_states";
@@ -310,6 +311,7 @@ export async function saveConnectorCredential({
   identity,
   profile,
   token,
+  makeDefault = false,
   envFileCandidates,
   encryptionKeyNames = [],
 }) {
@@ -347,7 +349,7 @@ export async function saveConnectorCredential({
     updatedAt: now,
     lastCheckedAt: now,
   };
-  if (!store.defaultCredentialId) {
+  if (makeDefault || !store.defaultCredentialId) {
     store.defaultCredentialId = normalizedCredentialId;
   }
   const writtenStore = await writeConnectorCredentialStore(
@@ -374,6 +376,7 @@ export async function saveConnectorCredential({
       provider,
       credential: nextCredential,
       ownerUserId: uid,
+      makeDefault,
       envFileCandidates,
     });
   }
@@ -397,24 +400,61 @@ export async function loadConnectorCredential({
   if (normalizedCredentialId && !store.credentials[normalizedCredentialId]) {
     return null;
   }
-  const selectedId =
-    (normalizedCredentialId || store.defaultCredentialId)
-    || Object.keys(store.credentials)[0]
-    || "";
-  const credential = store.credentials[selectedId];
-  if (!credential) return null;
-  const decrypted = await decryptConnectorToken(
-    credential.encryptedToken,
-    envFileCandidates,
-    encryptionKeyNames,
+  const candidateIds = listConnectorCredentialLoadCandidateIds(
+    store,
+    normalizedCredentialId,
   );
-  let token = {};
-  try {
-    token = JSON.parse(decrypted);
-  } catch {
-    token = {};
+  let firstDecryptionError = null;
+  for (const selectedId of candidateIds) {
+    const credential = store.credentials[selectedId];
+    if (!credential) continue;
+    let decrypted = "";
+    try {
+      decrypted = await decryptConnectorToken(
+        credential.encryptedToken,
+        envFileCandidates,
+        encryptionKeyNames,
+      );
+    } catch (error) {
+      if (normalizedCredentialId) throw error;
+      firstDecryptionError ||= error;
+      continue;
+    }
+    let token = {};
+    try {
+      token = JSON.parse(decrypted);
+    } catch {
+      token = {};
+    }
+    if (!normalizedCredentialId && selectedId !== store.defaultCredentialId) {
+      store.defaultCredentialId = selectedId;
+      await writeConnectorCredentialStore(
+        provider,
+        uid,
+        store,
+        envFileCandidates,
+      );
+    }
+    return { ...credential, token, credentialId: selectedId, store };
   }
-  return { ...credential, token, credentialId: selectedId, store };
+  if (firstDecryptionError) throw firstDecryptionError;
+  return null;
+}
+
+export function listConnectorCredentialLoadCandidateIds(
+  store,
+  credentialId = "",
+) {
+  const normalizedCredentialId = normalizeConnectorCredentialId(credentialId);
+  if (normalizedCredentialId) return [normalizedCredentialId];
+  const credentials = Object.values(store?.credentials || {})
+    .sort((left, right) => Number(right?.updatedAt || 0) - Number(left?.updatedAt || 0))
+    .map((credential) => normalizeConnectorCredentialId(credential?.id))
+    .filter(Boolean);
+  return [...new Set([
+    normalizeConnectorCredentialId(store?.defaultCredentialId),
+    ...credentials,
+  ].filter(Boolean))];
 }
 
 export async function updateConnectorCredentialMetadata({
@@ -516,6 +556,7 @@ export async function registerOrganizationConnectorCredential({
   provider,
   credential,
   ownerUserId,
+  makeDefault = false,
   envFileCandidates,
 }) {
   const normalizedCredentialId = normalizeConnectorCredentialId(
@@ -536,6 +577,7 @@ export async function registerOrganizationConnectorCredential({
     name: credential?.name,
     identity: credential?.identity,
     status: credential?.status,
+    makeDefault,
     createdAt: credential?.createdAt,
     updatedAt: credential?.updatedAt,
   });
@@ -628,63 +670,131 @@ export async function resolveConnectorCredentialForOrganization({
     return null;
   }
 
-  let reference = await getOrganizationCredentialRegistry(
-    envFileCandidates,
-  ).resolve({
+  const registry = getOrganizationCredentialRegistry(envFileCandidates);
+  const defaultReference = await registry.resolve({
     organizationId: normalizedOrganizationId,
     provider,
     credentialId: normalizedCredentialId,
   });
+  const references = [];
+  const referenceKeys = new Set();
+  const addReference = (reference) => {
+    const ownerUserId = String(reference?.ownerUserId || "").trim();
+    const candidateCredentialId = normalizeConnectorCredentialId(
+      reference?.credentialId || reference?.id,
+    );
+    const candidateOrganizationId = normalizeConnectorOrganizationId(
+      reference?.organizationId,
+    );
+    const key = `${ownerUserId}:${candidateCredentialId}`;
+    if (
+      !ownerUserId
+      || !candidateCredentialId
+      || candidateOrganizationId !== normalizedOrganizationId
+      || referenceKeys.has(key)
+    ) {
+      return;
+    }
+    referenceKeys.add(key);
+    references.push({
+      ...reference,
+      ownerUserId,
+      credentialId: candidateCredentialId,
+      organizationId: candidateOrganizationId,
+    });
+  };
+  addReference(defaultReference);
 
-  if (!reference && normalizedRequestingUserId) {
+  if (!normalizedCredentialId) {
+    const registeredReferences = await registry.list({
+      organizationId: normalizedOrganizationId,
+      provider,
+      repairDefault: false,
+    });
+    registeredReferences.forEach(addReference);
+  }
+
+  if (normalizedRequestingUserId) {
     const legacyStore = await readConnectorCredentialStore(
       provider,
       normalizedRequestingUserId,
       envFileCandidates,
     );
-    const selectedLegacyCredential = normalizedCredentialId
-      ? legacyStore.credentials[normalizedCredentialId]
-      : (
-          legacyStore.credentials[legacyStore.defaultCredentialId]
-            ?.organizationId === normalizedOrganizationId
-            ? legacyStore.credentials[legacyStore.defaultCredentialId]
-            : Object.values(legacyStore.credentials).find(
-                (candidate) =>
-                  candidate.organizationId === normalizedOrganizationId,
-              )
-        );
-    if (
-      selectedLegacyCredential
-      && selectedLegacyCredential.organizationId === normalizedOrganizationId
-    ) {
-      reference = await registerOrganizationConnectorCredential({
-        organizationId: normalizedOrganizationId,
-        provider,
-        credential: selectedLegacyCredential,
+    for (const candidateCredentialId of listConnectorCredentialLoadCandidateIds(
+      legacyStore,
+      normalizedCredentialId,
+    )) {
+      const candidate = legacyStore.credentials[candidateCredentialId];
+      if (
+        !candidate
+        || candidate.status === "invalid"
+        || candidate.organizationId !== normalizedOrganizationId
+      ) {
+        continue;
+      }
+      addReference({
+        ...candidate,
+        credentialId: candidateCredentialId,
         ownerUserId: normalizedRequestingUserId,
-        envFileCandidates,
       });
     }
   }
 
-  if (!reference) return null;
-  const credential = await loadConnectorCredential({
-    provider,
-    uid: reference.ownerUserId,
-    credentialId: reference.credentialId,
-    envFileCandidates,
-    encryptionKeyNames,
-  });
-  if (
-    !credential
-    || credential.organizationId !== normalizedOrganizationId
-  ) {
-    return null;
+  let firstLoadError = null;
+  for (const reference of references) {
+    if (reference.status === "invalid") continue;
+    let credential = null;
+    try {
+      credential = await loadConnectorCredential({
+        provider,
+        uid: reference.ownerUserId,
+        credentialId: reference.credentialId,
+        envFileCandidates,
+        encryptionKeyNames,
+      });
+    } catch (error) {
+      firstLoadError ||= error;
+      if (normalizedCredentialId) throw error;
+      continue;
+    }
+    if (
+      !credential
+      || credential.status === "invalid"
+      || credential.organizationId !== normalizedOrganizationId
+    ) {
+      continue;
+    }
+    await registerOrganizationConnectorCredential({
+      organizationId: normalizedOrganizationId,
+      provider,
+      credential,
+      ownerUserId: reference.ownerUserId,
+      makeDefault: !normalizedCredentialId,
+      envFileCandidates,
+    });
+    return {
+      ...credential,
+      credentialOwnerId: reference.ownerUserId,
+    };
   }
-  return {
-    ...credential,
-    credentialOwnerId: reference.ownerUserId,
-  };
+  if (firstLoadError) throw firstLoadError;
+  return null;
+}
+
+export async function resolveConnectorSettingsForPrincipal({
+  userId,
+  organizationId = "",
+  connectorIds = [],
+  envFileCandidates = [],
+}) {
+  const store = createConnectorSettingsStore({
+    async getDocument(path) {
+      return parseFirestoreRecord(
+        await firestoreGetDocument(path, envFileCandidates),
+      );
+    },
+  });
+  return store.resolve({ userId, organizationId, connectorIds });
 }
 
 export function getConnectorRequestSearchParam(req, key) {
@@ -894,7 +1004,10 @@ async function encryptConnectorToken(
   envFileCandidates,
   encryptionKeyNames,
 ) {
-  const key = await getEncryptionKey(envFileCandidates, encryptionKeyNames);
+  const [key] = await getEncryptionKeys(
+    envFileCandidates,
+    encryptionKeyNames,
+  );
   const iv = randomBytes(ENCRYPTION_IV_LENGTH);
   const cipher = createCipheriv(ENCRYPTION_ALGORITHM, key, iv);
   const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
@@ -906,7 +1019,6 @@ async function decryptConnectorToken(
   envFileCandidates,
   encryptionKeyNames,
 ) {
-  const key = await getEncryptionKey(envFileCandidates, encryptionKeyNames);
   const buffer = Buffer.from(value, "base64");
   const iv = buffer.subarray(0, ENCRYPTION_IV_LENGTH);
   const tag = buffer.subarray(
@@ -916,15 +1028,26 @@ async function decryptConnectorToken(
   const encrypted = buffer.subarray(
     ENCRYPTION_IV_LENGTH + ENCRYPTION_TAG_LENGTH,
   );
-  const decipher = createDecipheriv(ENCRYPTION_ALGORITHM, key, iv);
-  decipher.setAuthTag(tag);
-  return Buffer.concat([
-    decipher.update(encrypted),
-    decipher.final(),
-  ]).toString("utf8");
+  let firstError = null;
+  for (const key of await getEncryptionKeys(
+    envFileCandidates,
+    encryptionKeyNames,
+  )) {
+    try {
+      const decipher = createDecipheriv(ENCRYPTION_ALGORITHM, key, iv);
+      decipher.setAuthTag(tag);
+      return Buffer.concat([
+        decipher.update(encrypted),
+        decipher.final(),
+      ]).toString("utf8");
+    } catch (error) {
+      firstError ||= error;
+    }
+  }
+  throw firstError || new Error("Unable to decrypt connector token");
 }
 
-async function getEncryptionKey(envFileCandidates, encryptionKeyNames) {
+async function getEncryptionKeys(envFileCandidates, encryptionKeyNames) {
   const keyNames = [
     ...new Set([
       ...(Array.isArray(encryptionKeyNames) ? encryptionKeyNames : []),
@@ -932,20 +1055,33 @@ async function getEncryptionKey(envFileCandidates, encryptionKeyNames) {
       "GITHUB_TOKEN_ENCRYPTION_KEY",
     ]),
   ];
-  let value = "";
+  const keys = [];
+  const fingerprints = new Set();
   for (const keyName of keyNames) {
-    value = await getConnectorRuntimeEnvValue(keyName, envFileCandidates);
-    if (value) break;
+    const value = await getConnectorRuntimeEnvValue(
+      keyName,
+      envFileCandidates,
+    );
+    if (!value) continue;
+    const key = decodeEncryptionKey(value, keyName);
+    const fingerprint = key.toString("hex");
+    if (fingerprints.has(fingerprint)) continue;
+    fingerprints.add(fingerprint);
+    keys.push(key);
   }
-  if (!value) {
+  if (!keys.length) {
     throw new Error(`Missing ${keyNames[0] || "connector encryption key"}`);
   }
+  return keys;
+}
+
+function decodeEncryptionKey(value, keyName) {
   try {
     const decoded = Buffer.from(value, "base64");
     if (decoded.length === 32) return decoded;
   } catch {}
   if (value.length === 32) return Buffer.from(value, "utf8");
-  throw new Error("Connector token encryption key must be 32 bytes");
+  throw new Error(`${keyName} must be a 32-byte connector encryption key`);
 }
 
 async function firestoreGetDocument(documentPath, envFileCandidates) {
@@ -1199,18 +1335,45 @@ function parseFirestoreRecord(document) {
       ? document.fields
       : {};
   return Object.entries(fields).reduce((record, [key, value]) => {
-    if (typeof value?.stringValue === "string") {
-      record[key] = value.stringValue;
-    } else if (
-      typeof value?.integerValue === "string"
-      || typeof value?.integerValue === "number"
-    ) {
-      record[key] = Number(value.integerValue);
-    } else if (typeof value?.booleanValue === "boolean") {
-      record[key] = value.booleanValue;
-    }
+    const parsed = parseFirestoreValue(value);
+    if (parsed !== undefined) record[key] = parsed;
     return record;
   }, {});
+}
+
+function parseFirestoreValue(value) {
+  if (!value || typeof value !== "object") return undefined;
+  if (Object.hasOwn(value, "nullValue")) return null;
+  if (typeof value.stringValue === "string") return value.stringValue;
+  if (
+    typeof value.integerValue === "string"
+    || typeof value.integerValue === "number"
+  ) {
+    return Number(value.integerValue);
+  }
+  if (typeof value.doubleValue === "number") return value.doubleValue;
+  if (typeof value.booleanValue === "boolean") return value.booleanValue;
+  if (typeof value.timestampValue === "string") return value.timestampValue;
+  if (typeof value.bytesValue === "string") return value.bytesValue;
+  if (typeof value.referenceValue === "string") return value.referenceValue;
+  if (value.mapValue && typeof value.mapValue === "object") {
+    const fields = value.mapValue.fields;
+    if (!fields || typeof fields !== "object") return {};
+    return Object.entries(fields).reduce((record, [key, entry]) => {
+      const parsed = parseFirestoreValue(entry);
+      if (parsed !== undefined) record[key] = parsed;
+      return record;
+    }, {});
+  }
+  if (value.arrayValue && typeof value.arrayValue === "object") {
+    const values = Array.isArray(value.arrayValue.values)
+      ? value.arrayValue.values
+      : [];
+    return values
+      .map(parseFirestoreValue)
+      .filter((entry) => entry !== undefined);
+  }
+  return undefined;
 }
 
 function createFirestoreFields(value) {

@@ -13,6 +13,13 @@ export const TESTS_APP_PAGE_VIEW_SCRIPT = String.raw`        function renderTest
             sectionControlsPortalId: testsPageMode === "detail" || testsPageMode === "case"
               ? "playground-tests-section-controls"
               : undefined,
+            titleActionsPortalId: testsPageMode === "detail"
+              ? "playground-tests-title-actions"
+              : undefined,
+            versionsDrawerPortalId: testsPageMode === "detail"
+              ? "playground-agent-versions-drawer-root"
+              : undefined,
+            onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
             defaultProjectId: latestInteractedProjectId || "",
             defaultEnvironmentId: resolvedEnvironmentId || environmentId || "",
             defaultAgentId: resolvedComposerAgentId || resolvedPreferredAgentId || "",
@@ -20,8 +27,30 @@ export const TESTS_APP_PAGE_VIEW_SCRIPT = String.raw`        function renderTest
             environments: runtimeEnvironments,
             agents: runtimeAgents,
             workspaceTeams: teamPageTeams,
+            workspaceTeamsLoading: teamPageLoading,
+            workspaceTeamsRequiresPlan: teamPageRequiresPlan,
+            onWorkspaceTeamsRequest: () => {
+              if (
+                !teamPageLoading
+                && !teamPageRequiresPlan
+                && (!Array.isArray(teamPageTeams) || teamPageTeams.length === 0)
+              ) {
+                void loadTeamPageData({ selectedTeamId: "" });
+              }
+            },
+            activeOrganizationId,
+            currentUser: {
+              id: hasSessionAuth ? (sessionState.userId || accountEmail || "") : "",
+              userId: hasSessionAuth ? (sessionState.userId || "") : "",
+              name: hasSessionAuth ? accountName : "Me",
+              email: hasSessionAuth ? accountEmail : "",
+              avatarUrl: hasSessionAuth ? accountAvatarUrl : "",
+            },
             onOpenPlan: (planId, planName = "") => {
               openTestPlanDetailPage(planId, planName);
+            },
+            onPlanDeleted: () => {
+              openTestsOverviewPage();
             },
             onOpenCase: (planId, caseId, planName = "", caseName = "") => {
               openTestCaseDetailPage(planId, caseId, planName, caseName);

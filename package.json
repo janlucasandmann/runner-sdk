@@ -179,6 +179,13 @@
     "./platform-ui/components/composite/code-preview-box/styles.css": {
       "default": "./dist/platform-ui/components/composite/code-preview-box/code-preview-box.css"
     },
+    "./platform-ui/components/composite/connector-action-detail": {
+      "types": "./dist/platform-ui/components/composite/connector-action-detail/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/connector-action-detail/index.js"
+    },
+    "./platform-ui/components/composite/connector-action-detail/styles.css": {
+      "default": "./dist/platform-ui/components/composite/connector-action-detail/connector-action-detail.css"
+    },
     "./platform-ui/components/composite/data-table": {
       "types": "./dist/platform-ui/components/composite/data-table/index.d.ts",
       "default": "./dist/platform-ui/components/composite/data-table/index.js"
@@ -273,6 +280,20 @@
     },
     "./platform-ui/components/composite/profile-image-picker/styles.css": {
       "default": "./dist/platform-ui/components/composite/profile-image-picker/profile-image-picker.css"
+    },
+    "./platform-ui/components/composite/resource-action-modals": {
+      "types": "./dist/platform-ui/components/composite/resource-action-modals/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/resource-action-modals/index.js"
+    },
+    "./platform-ui/components/composite/resource-action-modals/styles.css": {
+      "default": "./dist/platform-ui/components/composite/resource-action-modals/resource-action-modals.css"
+    },
+    "./platform-ui/components/composite/resource-header-actions": {
+      "types": "./dist/platform-ui/components/composite/resource-header-actions/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/resource-header-actions/index.js"
+    },
+    "./platform-ui/components/composite/resource-header-actions/styles.css": {
+      "default": "./dist/platform-ui/components/composite/resource-header-actions/resource-header-actions.css"
     },
     "./platform-ui/components/composite/settings-section": {
       "types": "./dist/platform-ui/components/composite/settings-section/index.d.ts",
@@ -475,7 +496,7 @@
     "evidence-agents-service-test": "node ./src/platform-services/develop-mode/evidence-agents/evidence-agents-service-test.mjs && vitest run src/platform-services/develop-mode/evidence-agents/client",
     "evaluations-service-test": "node ./src/platform-services/configure-mode/evaluations/evaluations-service-test.mjs && node --test ./src/platform-services/configure-mode/evaluations/server/run-persistence.test.mjs ./src/platform-services/configure-mode/evaluations/server/domain/comparisons.test.mjs && vitest run ./src/platform-services/configure-mode/evaluations/client/page/detail",
     "files-service-test": "node ./src/platform-services/create-mode/files/files-service-test.mjs",
-    "fine-tuning-service-test": "node ./src/platform-services/configure-mode/fine-tuning/fine-tuning-service-test.mjs && node --test ./src/platform-services/configure-mode/fine-tuning/server/job-persistence.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/domain/policies.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/domain/publication.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/application/job-orchestrator.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/application/mission-control-job.test.mjs",
+    "fine-tuning-service-test": "node ./src/platform-services/configure-mode/fine-tuning/fine-tuning-service-test.mjs && node --test ./src/platform-services/configure-mode/fine-tuning/server/job-persistence.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/domain/policies.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/domain/publication.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/domain/thread-data.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/application/job-orchestrator.test.mjs ./src/platform-services/configure-mode/fine-tuning/server/application/mission-control-job.test.mjs",
     "assurance-service-test": "node ./src/platform-services/configure-mode/assurance/assurance-service-test.mjs",
     "guardrails-service-test": "node ./src/platform-services/configure-mode/guardrails/guardrails-service-test.mjs",
     "imagine-service-test": "node ./src/platform-services/create-mode/imagine/imagine-service-test.mjs",

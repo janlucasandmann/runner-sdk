@@ -31,6 +31,10 @@ import {
   buildRunnerExecutionPromptWithHiddenContext,
   type RunnerChatOption,
 } from "./agent-options.js";
+import {
+  getRunnerConnectorIdsFromPayload,
+  RUNNER_CONNECTOR_IDS_METADATA_KEY,
+} from "./composer-connectors.js";
 
 export interface RunnerExecutionCreationCommands {
   backlogCommand?: StagedBacklogCommand | null;
@@ -42,6 +46,11 @@ export interface RunnerExecutionCreationCommands {
   scrapeCreationCommand?: StagedScrapeCreationCommand | null;
   parseCreationCommand?: StagedParseCreationCommand | null;
   adCreationCommand?: StagedAdCreationCommand | null;
+}
+
+export interface RunnerExecutionMessageMetadataOptions
+  extends RunnerExecutionCreationCommands {
+  connectors?: Record<string, unknown> | null;
 }
 
 export interface RunnerExecutionPromptOptions extends RunnerExecutionCreationCommands {
@@ -119,14 +128,16 @@ export function buildRunnerExecutionPrompt(
 }
 
 export function buildRunnerExecutionMessageMetadata(
-  commands: RunnerExecutionCreationCommands,
+  commands: RunnerExecutionMessageMetadataOptions,
 ): Record<string, unknown> | undefined {
+  const connectorIds = getRunnerConnectorIdsFromPayload(commands.connectors);
   if (
     !commands.slideCreationCommand
     && !commands.researchCreationCommand
     && !commands.scrapeCreationCommand
     && !commands.parseCreationCommand
     && !commands.adCreationCommand
+    && connectorIds.length === 0
   ) {
     return undefined;
   }
@@ -136,6 +147,9 @@ export function buildRunnerExecutionMessageMetadata(
     : null;
 
   return {
+    ...(connectorIds.length > 0
+      ? { [RUNNER_CONNECTOR_IDS_METADATA_KEY]: connectorIds }
+      : {}),
     ...(commands.slideCreationCommand
       ? {
           slideCreationCommand: {

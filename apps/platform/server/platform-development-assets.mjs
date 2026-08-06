@@ -1,3 +1,9 @@
+import { transform } from "esbuild";
+
+import {
+  createAsset,
+  selectContentEncoding,
+} from "./platform-assets.mjs";
 import {
   resolveLegacyBrowserSourcePath,
   toViteFileUrl,
@@ -11,6 +17,7 @@ import {
 } from "../shared/platform-source-contract.mjs";
 
 function rewriteDevelopmentStylesheets(documentHtml, packageRoot, viteOrigin) {
+  const emittedSourceUrls = new Set();
   return documentHtml.replace(/<link\b[^>]*>/gi, (linkTag) => {
     if (!/\brel=(["'])stylesheet\1/i.test(linkTag)) {
       return linkTag;
@@ -24,9 +31,15 @@ function rewriteDevelopmentStylesheets(documentHtml, packageRoot, viteOrigin) {
       return linkTag;
     }
     return sourcePaths
-      .map((sourcePath) => (
-        `<link rel="stylesheet" href="${toViteFileUrl(viteOrigin, sourcePath)}" />`
-      ))
+      .map((sourcePath) => toViteFileUrl(viteOrigin, sourcePath))
+      .filter((sourceUrl) => {
+        if (emittedSourceUrls.has(sourceUrl)) {
+          return false;
+        }
+        emittedSourceUrls.add(sourceUrl);
+        return true;
+      })
+      .map((sourceUrl) => `<link rel="stylesheet" href="${sourceUrl}" />`)
       .join("\n");
   });
 }
@@ -74,23 +87,45 @@ export async function createPlatformDevelopmentAssets(
         : match;
     },
   );
+  const [optimizedModule, optimizedStyle] = await Promise.all([
+    transform(rewrittenModuleSource, {
+      charset: "utf8",
+      format: "esm",
+      legalComments: "none",
+      loader: "js",
+      minify: true,
+      sourcefile: "platform-runtime.js",
+      sourcemap: "external",
+      target: "es2022",
+    }),
+    transform(styleSource, {
+      charset: "utf8",
+      legalComments: "none",
+      loader: "css",
+      minify: true,
+      target: "es2022",
+    }),
+  ]);
   const cssUrl = "/platform/dev/platform.css";
   const moduleUrl = "/platform/dev/platform.js";
+  const moduleMapUrl = `${moduleUrl}.map`;
+  const optimizedModuleSource = `${optimizedModule.code}\n//# sourceMappingURL=${moduleMapUrl}\n`;
+  const developmentCompression = { gzipLevel: 6, brotliQuality: 4 };
   const assetsByPath = new Map([
-    [cssUrl, {
-      contentType: "text/css; charset=utf-8",
-      body: Buffer.from(styleSource),
-    }],
-    [moduleUrl, {
-      contentType: "text/javascript; charset=utf-8",
-      body: Buffer.from(rewrittenModuleSource),
-    }],
+    [cssUrl, createAsset(cssUrl, "text/css; charset=utf-8", optimizedStyle.code, developmentCompression)],
+    [moduleUrl, createAsset(moduleUrl, "text/javascript; charset=utf-8", optimizedModuleSource, developmentCompression)],
+    [moduleMapUrl, createAsset(
+      moduleMapUrl,
+      "application/json; charset=utf-8",
+      optimizedModule.map,
+      { compress: false },
+    )],
   ]);
   let documentHtml = renderPlatformDocument(
     documentTemplate,
     {
-      styleTag: `<link rel="stylesheet" href="${cssUrl}" />`,
-      moduleTag: `<script type="module" src="${moduleUrl}"></script>`,
+      styleTag: `<link rel="stylesheet" href="${cssUrl}" fetchpriority="high" />`,
+      moduleTag: `<script type="module" src="${moduleUrl}" fetchpriority="high"></script>`,
     },
   );
   documentHtml = rewriteDevelopmentStylesheets(
@@ -113,23 +148,41 @@ export async function createPlatformDevelopmentAssets(
         + Buffer.byteLength(styleSource)
         + Buffer.byteLength(moduleSource),
       documentBytes: Buffer.byteLength(documentHtml),
-      cssBytes: Buffer.byteLength(styleSource),
-      moduleBytes: Buffer.byteLength(rewrittenModuleSource),
-      cssBrotliBytes: 0,
-      moduleBrotliBytes: 0,
+      cssBytes: Buffer.byteLength(optimizedStyle.code),
+      moduleBytes: Buffer.byteLength(optimizedModuleSource),
+      cssBrotliBytes: assetsByPath.get(cssUrl).variants.br.byteLength,
+      moduleBrotliBytes: assetsByPath.get(moduleUrl).variants.br.byteLength,
     }),
     handleRequest(req, res, url) {
       const asset = assetsByPath.get(url.pathname);
       if (!asset || !["GET", "HEAD"].includes(String(req.method || "GET").toUpperCase())) {
         return false;
       }
-      res.writeHead(200, {
+      if (String(req.headers?.["if-none-match"] || "") === asset.etag) {
+        res.writeHead(304, {
+          ETag: asset.etag,
+          "Cache-Control": "no-cache",
+          Vary: "Accept-Encoding",
+        });
+        res.end();
+        return true;
+      }
+      const requestedEncoding = selectContentEncoding(req.headers?.["accept-encoding"]);
+      const encoding = asset.variants[requestedEncoding] ? requestedEncoding : "identity";
+      const body = asset.variants[encoding];
+      const headers = {
         "Content-Type": asset.contentType,
-        "Content-Length": asset.body.byteLength,
-        "Cache-Control": "no-store",
+        "Content-Length": body.byteLength,
+        "Cache-Control": "no-cache",
+        ETag: asset.etag,
+        Vary: "Accept-Encoding",
         "X-Content-Type-Options": "nosniff",
-      });
-      res.end(String(req.method || "GET").toUpperCase() === "HEAD" ? undefined : asset.body);
+      };
+      if (encoding !== "identity") {
+        headers["Content-Encoding"] = encoding;
+      }
+      res.writeHead(200, headers);
+      res.end(String(req.method || "GET").toUpperCase() === "HEAD" ? undefined : body);
       return true;
     },
   });

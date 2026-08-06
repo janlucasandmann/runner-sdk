@@ -7,7 +7,7 @@
   height: clamp(460px, 50dvh, 560px);
   min-height: 460px;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) 70px;
+  grid-template-rows: minmax(0, 1fr) 140px;
   overflow: hidden;
   color: #fff;
   background: rgba(255, 255, 255, 0.075);
@@ -48,8 +48,7 @@
   scrollbar-width: none;
 }
 
-.platform-activity-overview.is-fit-timeline
-  .platform-activity-overview__viewport {
+.platform-activity-overview.is-fit-timeline .platform-activity-overview__viewport {
   overflow-x: hidden;
 }
 
@@ -67,24 +66,35 @@
 .platform-activity-overview__custom-item {
   position: absolute;
   left: clamp(
-    20px,
-    var(--platform-activity-overview-item-left),
-    max(20px, calc(100% - 340px))
+    24px,
+    calc(
+      var(--platform-activity-overview-item-left) +
+      var(--platform-activity-overview-item-indent, 0px)
+    ),
+    max(24px, calc(100% - 340px))
   );
   top: 1px;
   box-sizing: border-box;
-  width: min(320px, calc(100% - 40px));
-  max-width: calc(100% - 40px);
+  width: min(320px, calc(100% - 48px - var(--platform-activity-overview-item-indent, 0px)));
+  max-width: calc(100% - 48px);
   min-width: 0;
   pointer-events: auto;
 }
 
-.platform-activity-overview__custom-item > * {
+.platform-activity-overview__custom-content {
   width: 100%;
   max-width: 100%;
+  height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.platform-activity-overview__custom-content.is-compact {
+  height: 36px;
 }
 
 .platform-activity-overview-card {
+  position: relative;
   box-sizing: border-box;
   width: 100%;
   height: 44px;
@@ -108,6 +118,74 @@
     transform 140ms ease;
 }
 
+.platform-activity-overview-card.is-tool-call {
+  height: 36px;
+  padding-top: 0;
+  padding-bottom: 0;
+  gap: 7px;
+}
+
+.platform-activity-overview-card.is-tool-call .platform-activity-overview-card__permission {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  color: #fff;
+}
+
+.platform-activity-overview-card.is-tool-call.is-connector .platform-activity-overview-card__permission {
+  background: transparent;
+  border-color: transparent;
+  backdrop-filter: none;
+}
+
+.platform-activity-overview-card.is-user-message .platform-activity-overview-card__permission {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  color: #fff;
+}
+
+.platform-activity-overview-card.is-tool-call .platform-activity-overview-card__permission svg,
+.platform-activity-overview-card.is-user-message .platform-activity-overview-card__permission svg {
+  color: #fff;
+}
+
+.platform-activity-overview-card__connector-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #fff;
+  padding: 2px;
+}
+
+.platform-activity-overview-card__connector-icon img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+.platform-activity-overview-card.has-group-rail {
+  padding-left: 10px;
+}
+
+.platform-activity-overview-card__group-rail {
+  position: absolute;
+  left: 0;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--platform-activity-overview-group-rail-color, rgba(77, 163, 255, 0.9));
+  pointer-events: none;
+}
+
 .platform-activity-overview-card:hover {
   border-color: rgba(255, 255, 255, 0.2);
   background: #313131;
@@ -121,21 +199,55 @@
   background: #454545;
 }
 
+.platform-activity-overview-card.is-plain,
+.platform-activity-overview-card.is-plain:hover,
+.platform-activity-overview-card.is-plain.is-selected,
+.platform-activity-overview-card.is-plain.is-selected:hover {
+  width: auto;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(50px);
+}
+
+.platform-activity-overview-card.is-tool-call,
+.platform-activity-overview-card.is-tool-call.is-plain,
+.platform-activity-overview-card.is-tool-call.is-plain.is-selected {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #2b2b2b;
+  backdrop-filter: none;
+}
+
+.platform-activity-overview-card.is-tool-call:hover,
+.platform-activity-overview-card.is-tool-call.is-plain:hover,
+.platform-activity-overview-card.is-tool-call.is-plain.is-selected:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: #313131;
+}
+
+.platform-activity-overview-card.is-tool-call.is-selected,
+.platform-activity-overview-card.is-tool-call.is-plain.is-selected {
+  background: #404040;
+}
+
+.platform-activity-overview-card.is-tool-call.is-selected:hover,
+.platform-activity-overview-card.is-tool-call.is-plain.is-selected:hover {
+  background: #454545;
+}
+
 .platform-activity-overview-card:focus-visible {
   outline: 1px solid #4da3ff;
   outline-offset: 2px;
 }
 
-.platform-activity-overview__row.is-error
-  .platform-activity-overview-card {
+.platform-activity-overview__row.is-error .platform-activity-overview-card {
   border-color: rgba(255, 87, 87, 0.72);
 }
 
 .platform-activity-overview-card__permission {
   --platform-permission-summary-icon-size: 22px;
-  width: 22px;
-  height: 22px;
-  flex: 0 0 22px;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -158,21 +270,62 @@
   --platform-activity-overview-ring-background: rgba(226, 30, 82, 0.1);
 }
 
-.platform-activity-overview-card__permission
-  .platform-permission-mini-ring-icon,
-.platform-activity-overview-card__permission
-  .playground-permission-mini-ring-icon {
+.platform-activity-overview-card__permission .platform-permission-mini-ring-icon,
+.platform-activity-overview-card__permission .playground-permission-mini-ring-icon {
   --platform-permission-summary-icon-size: 22px;
 }
 
 .platform-activity-overview-card__title {
   min-width: 0;
   flex: 1 1 auto;
+  overflow: hidden;
   color: inherit;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.platform-activity-overview-card__metadata {
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-activity-overview-card__status {
+  flex: 0 0 14px;
+  color: rgba(133, 223, 123, 0.9);
+}
+
+.platform-activity-overview-card.is-tool-call .platform-activity-overview-card__title {
+  flex: 0 1 auto;
+}
+
+.platform-activity-overview-card.is-tool-call .platform-activity-overview-card__metadata {
+  margin-left: 8px;
+}
+
+.platform-activity-overview-card.is-tool-call .platform-activity-overview-card__status {
+  margin-left: 1px;
+}
+
+.platform-activity-overview-card.is-tool-call .platform-activity-overview-card__actor {
+  margin-left: auto;
+}
+
+.platform-activity-overview__row.is-error .platform-activity-overview-card__status {
+  color: rgba(255, 117, 117, 0.95);
+}
+
+.platform-activity-overview__row.is-running .platform-activity-overview-card__status {
+  color: rgba(77, 163, 255, 0.95);
 }
 
 .platform-activity-overview-card__actor {
@@ -235,24 +388,67 @@
   pointer-events: none;
 }
 
+.platform-activity-overview__tree-toggle {
+  position: absolute;
+  z-index: 5;
+  left: clamp(
+    2px,
+    calc(var(--platform-activity-overview-item-left) - 18px),
+    max(2px, calc(100% - 358px))
+  );
+  top: 14px;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.58);
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.platform-activity-overview__tree-toggle:hover,
+.platform-activity-overview__tree-toggle:focus-visible {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-activity-overview__tree-toggle:focus-visible {
+  outline: 1px solid rgba(77, 163, 255, 0.82);
+  outline-offset: 1px;
+}
+
+.platform-activity-overview__tree-rail {
+  position: absolute;
+  z-index: 1;
+  left: clamp(
+    9px,
+    calc(var(--platform-activity-overview-item-left) - 11px),
+    max(9px, calc(100% - 351px))
+  );
+  top: 34px;
+  width: 1px;
+  height: calc(var(--platform-activity-overview-descendant-count, 0) * 58px + 14px);
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
 .platform-activity-overview__item,
 .platform-activity-overview__signal {
   position: absolute;
-  left: min(
-    var(--platform-activity-overview-item-left),
-    calc(100% - 158px)
-  );
+  left: max(24px, min(var(--platform-activity-overview-item-left), calc(100% - 158px)));
   top: 1px;
   box-sizing: border-box;
   pointer-events: auto;
 }
 
 .platform-activity-overview__item {
-  width: clamp(
-    158px,
-    var(--platform-activity-overview-item-width),
-    380px
-  );
+  width: clamp(158px, var(--platform-activity-overview-item-width), 380px);
   height: 44px;
   min-width: 158px;
   max-width: 380px;
@@ -290,19 +486,16 @@ button.platform-activity-overview__signal:focus-visible {
   outline-offset: 2px;
 }
 
-.platform-activity-overview__row.is-success
-  .platform-activity-overview__item {
+.platform-activity-overview__row.is-success .platform-activity-overview__item {
   border-color: rgba(133, 223, 123, 0.35);
 }
 
-.platform-activity-overview__row.is-error
-  .platform-activity-overview__item {
+.platform-activity-overview__row.is-error .platform-activity-overview__item {
   border-color: rgba(255, 87, 87, 0.65);
   color: #ff7575;
 }
 
-.platform-activity-overview__row.is-running
-  .platform-activity-overview__item {
+.platform-activity-overview__row.is-running .platform-activity-overview__item {
   border-color: rgba(77, 163, 255, 0.42);
 }
 
@@ -314,10 +507,7 @@ button.platform-activity-overview__signal:focus-visible {
   align-items: center;
   justify-content: center;
   border-radius: 5px;
-  color: var(
-    --platform-activity-overview-item-color,
-    rgba(201, 128, 255, 0.95)
-  );
+  color: var(--platform-activity-overview-item-color, rgba(201, 128, 255, 0.95));
   background: color-mix(
     in srgb,
     var(--platform-activity-overview-item-color, #b26be8) 18%,
@@ -325,8 +515,7 @@ button.platform-activity-overview__signal:focus-visible {
   );
 }
 
-.platform-activity-overview__row.is-subflow
-  .platform-activity-overview__item-icon {
+.platform-activity-overview__row.is-subflow .platform-activity-overview__item-icon {
   color: var(--platform-activity-overview-item-color, #ffd65c);
   background: color-mix(
     in srgb,
@@ -387,14 +576,12 @@ button.platform-activity-overview__signal {
   box-shadow: 0 0 0 3px rgba(77, 163, 255, 0.1);
 }
 
-.platform-activity-overview__row.is-error
-  .platform-activity-overview__signal-mark {
+.platform-activity-overview__row.is-error .platform-activity-overview__signal-mark {
   background: #ff5757;
   box-shadow: 0 0 0 3px rgba(255, 87, 87, 0.1);
 }
 
-.platform-activity-overview__row.is-success
-  .platform-activity-overview__signal-mark {
+.platform-activity-overview__row.is-success .platform-activity-overview__signal-mark {
   background: #85df7b;
   box-shadow: 0 0 0 3px rgba(133, 223, 123, 0.1);
 }
@@ -412,50 +599,86 @@ button.platform-activity-overview__signal {
   position: relative;
   box-sizing: border-box;
   width: calc(100% - 40px);
-  height: 30px;
+  height: var(--platform-activity-overview-axis-height);
   margin: 0 20px;
   color: rgba(255, 255, 255, 0.45);
   background: transparent;
+  z-index: 3;
 }
 
 .platform-activity-overview__tick {
   position: absolute;
-  top: 10px;
+  top: 0;
+  margin-left: 8px;
   font-size: 10px;
   font-weight: 400;
   line-height: 1;
   letter-spacing: 0;
   white-space: nowrap;
-  transform: translateX(-50%);
+  transform: none;
 }
 
 .platform-activity-overview__tick:first-child {
+  margin-left: 0;
   transform: none;
 }
 
 .platform-activity-overview__tick:last-child {
-  transform: translateX(-100%);
+  transform: none;
 }
 
 .platform-activity-overview__navigator {
   position: relative;
   z-index: 3;
   box-sizing: border-box;
+  --platform-activity-overview-minimap-height: 48px;
+  --platform-activity-overview-axis-height: 20px;
+  --platform-activity-overview-time-label-gap: 15px;
+  --platform-activity-overview-texture-top-offset: 12px;
   display: grid;
-  grid-template-rows: 40px 30px;
+  grid-template-rows:
+    var(--platform-activity-overview-minimap-height)
+    var(--platform-activity-overview-axis-height);
+  row-gap: var(--platform-activity-overview-time-label-gap);
+  align-content: end;
   width: 100%;
   min-width: 0;
-  min-height: 70px;
+  min-height: 140px;
   overflow: hidden;
   background: transparent;
+}
+
+.platform-activity-overview__navigator-guides {
+  position: absolute;
+  top: 0;
+  right: 20px;
+  bottom: 0;
+  left: 20px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.platform-activity-overview__navigator-guide {
+  position: absolute;
+  top: calc(
+    100% -
+    var(--platform-activity-overview-axis-height) -
+    var(--platform-activity-overview-time-label-gap) -
+    var(--platform-activity-overview-minimap-height) +
+    var(--platform-activity-overview-texture-top-offset)
+  );
+  bottom: var(--platform-activity-overview-axis-height);
+  width: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(-1px);
 }
 
 .platform-activity-overview__minimap {
   position: relative;
   box-sizing: border-box;
   width: calc(100% - 40px);
-  height: 34px;
-  margin: 6px 20px 0;
+  height: var(--platform-activity-overview-minimap-height);
+  margin: 0 20px;
   border-radius: 4px;
   cursor: pointer;
   touch-action: none;
@@ -469,31 +692,21 @@ button.platform-activity-overview__signal {
 
 .platform-activity-overview__minimap-bars {
   position: absolute;
-  inset: 5px 6px;
+  inset: 6px;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 1px;
   overflow: hidden;
-  background: repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.2) 0 1px,
-    transparent 2px 8px
-  );
+  border-radius: 4px;
 }
 
-.platform-activity-overview__minimap-bar {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  border-radius: 1px;
-  background: rgba(255, 255, 255, 0.5);
-  transform: translateX(-50%);
-}
-
-.platform-activity-overview__minimap-bar.is-success {
-  background: rgba(133, 223, 123, 0.48);
-}
-
-.platform-activity-overview__minimap-bar.is-error {
-  background: rgba(255, 87, 87, 0.55);
+.platform-activity-overview__minimap-texture-bar {
+  flex: 0 0 2px;
+  align-self: center;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .platform-activity-overview__minimap-window {
@@ -580,7 +793,9 @@ button.platform-activity-overview__signal {
   content: "";
   opacity: 0;
   transform: translateX(-50%);
-  transition: opacity 120ms ease, background-color 120ms ease;
+  transition:
+    opacity 120ms ease,
+    background-color 120ms ease;
 }
 
 .platform-activity-overview__resize-handle:hover::after,
@@ -602,11 +817,7 @@ button.platform-activity-overview__signal {
   }
 
   .platform-activity-overview__item {
-    width: clamp(
-      146px,
-      var(--platform-activity-overview-item-width),
-      280px
-    );
+    width: clamp(146px, var(--platform-activity-overview-item-width), 280px);
     min-width: 146px;
     max-width: 280px;
   }

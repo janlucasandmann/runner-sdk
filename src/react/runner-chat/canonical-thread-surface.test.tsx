@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createInitialRunnerThreadProjection } from "../../thread/projection.js";
 import type { RunnerThreadRun } from "../../thread/types.js";
 import { RunnerCanonicalThreadSurface } from "./canonical-thread-surface.js";
+
+afterEach(cleanup);
 
 function projectionWithRun() {
   const projection = createInitialRunnerThreadProjection("thread-screen");
@@ -47,6 +49,51 @@ function projectionWithRun() {
 }
 
 describe("RunnerCanonicalThreadSurface", () => {
+  it("renders persisted connector mentions on canonical user messages", () => {
+    const projection = projectionWithRun();
+    projection.participantsById.user = {
+      id: "user",
+      kind: "human",
+      displayName: "You",
+    };
+    projection.messagesById["message-1"] = {
+      kind: "message",
+      id: "message-1",
+      threadId: projection.threadId,
+      sequence: 0,
+      authorParticipantId: "user",
+      content: "Review the repository.",
+      modality: "text",
+      metadata: { runnerConnectorIds: ["connector_github"] },
+      createdAt: "2030-07-25T07:59:00.000Z",
+    };
+    projection.timeline.unshift({
+      kind: "message",
+      id: "message-1",
+      sequence: 0,
+      createdAt: "2030-07-25T07:59:00.000Z",
+    });
+
+    render(
+      <RunnerCanonicalThreadSurface
+        availableConnectorOptions={[{
+          id: "github",
+          name: "GitHub",
+          description: "Repositories and pull requests",
+        }]}
+        connected
+        hasContent
+        loading={false}
+        projection={projection}
+        reconnecting={false}
+      />,
+    );
+
+    expect(screen.getByRole("group", { name: "Message connectors" })).toBeTruthy();
+    expect(screen.getByText("GitHub")).toBeTruthy();
+    expect(screen.getByText("Review the repository.")).toBeTruthy();
+  });
+
   it("renders normal activity logs and keeps execution details closed by default", () => {
     render(
       <RunnerCanonicalThreadSurface

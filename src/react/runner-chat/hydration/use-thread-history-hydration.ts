@@ -248,7 +248,6 @@ export function useRunnerThreadHistoryHydration({
             previousTurns,
             mergedTurns,
             {
-              defaultLatestExpanded: true,
               collapseOnNewRunSummary: true,
             },
           ),

@@ -57,7 +57,6 @@ export function mapExpandedTurns(
   previousTurns: RunnerTurn[],
   nextTurns: RunnerTurn[],
   options?: {
-    defaultLatestExpanded?: boolean;
     collapseOnNewRunSummary?: boolean;
   },
 ): Record<string, boolean> {
@@ -71,7 +70,6 @@ export function mapExpandedTurns(
     }, {});
   }
 
-  const latestTurnId = nextTurns.at(-1)?.id ?? null;
   return nextTurns.reduce<Record<string, boolean>>((accumulator, turn) => {
     const directExpanded = previousExpandedTurns[turn.id];
     if (typeof directExpanded === "boolean") {
@@ -89,9 +87,6 @@ export function mapExpandedTurns(
       return accumulator;
     }
 
-    if (options?.defaultLatestExpanded && latestTurnId === turn.id) {
-      accumulator[turn.id] = true;
-    }
     return accumulator;
   }, {});
 }

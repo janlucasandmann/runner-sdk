@@ -35,6 +35,7 @@ export function createConnectorExecutionPolicy({
   identityService,
   envFileCandidates = [],
   resolveCredential = resolveConnectorCredentialForOrganization,
+  resolveConnectorConfig,
   listConnectorCapabilities = () => [],
   logger = console,
 } = {}) {
@@ -65,6 +66,14 @@ export function createConnectorExecutionPolicy({
       "Connector execution policy listConnectorCapabilities must be a function.",
     );
   }
+  if (
+    resolveConnectorConfig !== undefined
+    && typeof resolveConnectorConfig !== "function"
+  ) {
+    throw new TypeError(
+      "Connector execution policy resolveConnectorConfig must be a function.",
+    );
+  }
 
   async function enrichThreadMessagePayload(
     req,
@@ -79,8 +88,19 @@ export function createConnectorExecutionPolicy({
     );
     if (!requestedConnectors.length) return payload;
 
-    const principal = await readVerifiedPrincipal(identityService, req);
     const protectedResourceContext = { upstreamUrl, apiKey };
+    const principal = await readVerifiedPrincipal(
+      identityService,
+      fetchSessionApi,
+      fetchResourceApi,
+      req,
+      protectedResourceContext,
+      {
+        logger,
+        threadId,
+        requestedConnectors,
+      },
+    );
     const organizationTransport = apiKey && upstreamUrl && fetchResourceApi
       ? fetchResourceApi
       : fetchOrganizationApi || fetchResourceApi;
@@ -181,6 +201,7 @@ export function createConnectorExecutionPolicy({
         project,
         projectId,
         fetchSessionApi,
+        resolveConnectorConfig,
         resolveCredential,
         envFileCandidates,
         listConnectorCapabilities,
@@ -361,6 +382,7 @@ async function evaluateRequestedConnector({
   project,
   projectId,
   fetchSessionApi,
+  resolveConnectorConfig,
   resolveCredential,
   envFileCandidates,
   listConnectorCapabilities,
@@ -368,14 +390,16 @@ async function evaluateRequestedConnector({
   const trustedCapabilities = normalizeTrustedCapabilities(
     listConnectorCapabilities(request.id),
   );
-  const configPayload = await fetchConnectorConfigJson(
+  const configPayload = await resolveConnectorConfiguration({
     fetchSessionApi,
     req,
-    request.id,
-    {
-      allowMissing: trustedCapabilities.length > 0,
-    },
-  );
+    request,
+    principal,
+    organization,
+    resolveConnectorConfig,
+    envFileCandidates,
+    allowMissing: trustedCapabilities.length > 0,
+  });
   const config = unwrapRecord(
     configPayload,
     ["tag", "plugin", "connector", "config", "item", "data"],
@@ -518,6 +542,49 @@ async function evaluateRequestedConnector({
     actionPolicies: Object.freeze(actionPolicies),
     policyVersion: CONNECTOR_POLICY_VERSION,
   });
+}
+
+async function resolveConnectorConfiguration({
+  fetchSessionApi,
+  req,
+  request,
+  principal,
+  organization,
+  resolveConnectorConfig,
+  envFileCandidates,
+  allowMissing,
+}) {
+  try {
+    if (typeof resolveConnectorConfig === "function") {
+      return await resolveConnectorConfig({
+        userId: String(principal.uid || principal.userId || "").trim(),
+        organizationId: organization.id,
+        connectorId: request.id,
+        connectorIds: listConnectorIdentityAliases(request.id),
+        envFileCandidates,
+      });
+    }
+    return await fetchConnectorConfigJson(
+      fetchSessionApi,
+      req,
+      request.id,
+      { allowMissing },
+    );
+  } catch (error) {
+    if (error instanceof ConnectorPolicyError) {
+      error.details = {
+        ...(isRecord(error.details) ? error.details : {}),
+        phase: "connector_configuration",
+      };
+      throw error;
+    }
+    throw new ConnectorPolicyError(
+      502,
+      "connector_configuration_lookup_failed",
+      "Unable to load connector settings required for authorization.",
+      { phase: "connector_configuration" },
+    );
+  }
 }
 
 function listConfiguredCapabilities(
@@ -687,20 +754,196 @@ function createConservativeRolePermissionSet(roleId) {
   };
 }
 
-async function readVerifiedPrincipal(identityService, req) {
+async function readVerifiedPrincipal(
+  identityService,
+  fetchSessionApi,
+  fetchResourceApi,
+  req,
+  protectedResourceContext,
+  context = {},
+) {
+  let directError;
+  let profileStatus = null;
+  let profilePayloadShape = [];
+  let runnerAccountStatus = null;
+  let runnerAccountPayloadShape = [];
   try {
     const principal = await identityService.readPrincipal(req);
-    const userId = String(principal?.uid || principal?.userId || "").trim();
-    if (!userId) throw new Error("Principal is missing a user identifier.");
-    return { ...principal, uid: userId, userId };
+    const normalized = normalizeVerifiedPrincipal(principal);
+    if (normalized) return normalized;
+    directError = new Error("Principal is missing a user identifier.");
   } catch (error) {
-    throw new ConnectorPolicyError(
-      401,
-      "connector_session_required",
-      "Sign in with a verified user session to use connectors.",
-      { cause: error instanceof Error ? error.message : String(error) },
-    );
+    directError = error;
   }
+
+  // Hosted platform sessions are authoritative at the account service. Local
+  // Firebase verification can be unavailable or briefly stale even while that
+  // same forwarded session is accepted by the platform profile endpoint. Use
+  // the topology-aware session seam as a verified fallback; never accept a
+  // user identifier from the client request body or headers.
+  try {
+    const response = await fetchSessionApi(
+      req,
+      "/user/profile",
+      "/api/user/profile",
+      {
+        method: "GET",
+        headers: { accept: "application/json" },
+      },
+    );
+    profileStatus = Number(response?.status) || null;
+    const payload = await readResponseJson(response);
+    profilePayloadShape = describeRecordShape(payload);
+    if (response?.ok) {
+      const normalized = normalizeVerifiedPrincipal(payload);
+      if (normalized) return normalized;
+    }
+  } catch {
+    // The policy error below intentionally retains the direct verification
+    // failure as its stable diagnostic cause.
+  }
+
+  // A hosted shell can execute with a short-lived runner API key even when its
+  // browser identity token is unavailable to the local proxy. Resolve the
+  // principal from the runner's canonical API-key-authenticated account
+  // endpoint in that case.
+  // This trusts only the upstream response authorized by the runner key; it
+  // never accepts identity fields from the connector request itself.
+  if (
+    typeof fetchResourceApi === "function"
+    && String(protectedResourceContext?.apiKey || "").trim()
+    && String(protectedResourceContext?.upstreamUrl || "").trim()
+  ) {
+    try {
+      const response = await fetchResourceApi(
+        req,
+        "/account",
+        {
+          method: "GET",
+          headers: { accept: "application/json" },
+        },
+        protectedResourceContext,
+      );
+      runnerAccountStatus = Number(response?.status) || null;
+      const payload = await readResponseJson(response);
+      runnerAccountPayloadShape = describeRecordShape(payload);
+      if (response?.ok) {
+        const normalized = normalizeVerifiedPrincipal(payload);
+        if (normalized) return normalized;
+      }
+    } catch {
+      // The stable policy denial and sanitized diagnostic below cover failure.
+    }
+  }
+
+  context.logger?.warn?.(
+    "[connector-policy] Unable to resolve a verified connector principal.",
+    {
+      threadId: String(context.threadId || ""),
+      connectorIds: Array.isArray(context.requestedConnectors)
+        ? context.requestedConnectors.map((connector) => connector.id)
+        : [],
+      identityProvider: String(identityService?.provider || ""),
+      directCause: directError instanceof Error
+        ? directError.message
+        : String(directError || "Session verification failed."),
+      profileStatus,
+      profilePayloadShape,
+      runnerAccountStatus,
+      runnerAccountPayloadShape,
+      requestAuthentication: describeRequestAuthentication(req),
+    },
+  );
+
+  throw new ConnectorPolicyError(
+    401,
+    "connector_session_required",
+    "Sign in with a verified user session to use connectors.",
+    {
+      cause: directError instanceof Error
+        ? directError.message
+        : String(directError || "Session verification failed."),
+    },
+  );
+}
+
+function normalizeVerifiedPrincipal(value) {
+  if (!isRecord(value)) return null;
+  const candidates = [
+    value,
+    value.data,
+    value.account,
+    value.session,
+    value.identity,
+  ];
+  for (const candidate of candidates) {
+    const normalized = normalizeVerifiedPrincipalRecord(candidate);
+    if (normalized) return normalized;
+  }
+  return null;
+}
+
+function normalizeVerifiedPrincipalRecord(value) {
+  if (!isRecord(value)) return null;
+  const profile = isRecord(value.profile) ? value.profile : {};
+  const user = isRecord(value.user) ? value.user : {};
+  const userId = String(
+    value.uid
+      || value.userId
+      || value.user_id
+      || profile.uid
+      || profile.userId
+      || profile.user_id
+      || user.uid
+      || user.userId
+      || user.user_id
+      || user.id
+      || "",
+  ).trim();
+  if (!userId) return null;
+  const email = String(
+    value.email || profile.email || user.email || "",
+  ).trim();
+  return {
+    ...value,
+    uid: userId,
+    userId,
+    ...(email ? { email } : {}),
+  };
+}
+
+function describeRecordShape(value) {
+  if (!isRecord(value)) return [];
+  return Object.keys(value).sort().map((key) => {
+    const nested = isRecord(value[key])
+      ? `(${Object.keys(value[key]).sort().join(",")})`
+      : "";
+    return `${key}${nested}`;
+  });
+}
+
+function describeRequestAuthentication(req) {
+  const authorization = String(req?.headers?.authorization || "").trim();
+  const authorizationScheme = authorization.includes(" ")
+    ? authorization.slice(0, authorization.indexOf(" ")).toLowerCase()
+    : authorization
+      ? "present"
+      : "";
+  const cookieNames = String(req?.headers?.cookie || "")
+    .split(";")
+    .map((entry) => {
+      const separator = entry.indexOf("=");
+      return separator >= 0 ? entry.slice(0, separator).trim() : "";
+    })
+    .filter(Boolean)
+    .sort();
+  return {
+    authorizationScheme,
+    cookieNames,
+    hasApiKey: Boolean(String(req?.headers?.["x-api-key"] || "").trim()),
+    hasAuthorization: Boolean(authorization),
+    hasCookie: cookieNames.length > 0,
+  };
 }
 
 async function fetchRequiredJson(

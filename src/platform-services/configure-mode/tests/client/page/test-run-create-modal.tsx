@@ -1,16 +1,18 @@
-import { Loader2, Play } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { Bot, Loader2, Play, ShieldCheck } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { PlatformModal } from "../../../../../platform-ui/components/composite/modal/index.js";
 import {
   PlatformPrimaryButton,
   PlatformSecondaryButton,
 } from "../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
-import type {
-  TestPlan,
-  TestRun,
-  TestRunCreateInput,
-  TestWorkspaceResourceOption,
+import {
+  getTestPlanExecutionProfile,
+  type TestPlanDefinition,
+  type TestPlan,
+  type TestRun,
+  type TestRunCreateInput,
+  type TestWorkspaceResourceOption,
 } from "../domain/index.js";
 
 interface TestRunCreateModalProps {
@@ -39,6 +41,25 @@ export function TestRunCreateModal({
   const [commitSha, setCommitSha] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const publishedVersion = useMemo(() => (
+    plan?.versions?.find((version) => version.id === plan.publishedVersionId) || null
+  ), [plan]);
+  const publishedDefinition = useMemo(() => {
+    const snapshot = publishedVersion?.snapshot;
+    const candidate = snapshot && typeof snapshot === "object"
+      ? (snapshot as Record<string, unknown>).definition
+      : null;
+    return candidate && typeof candidate === "object" && !Array.isArray(candidate)
+      ? candidate as TestPlanDefinition
+      : plan?.definition || null;
+  }, [plan, publishedVersion]);
+  const executionProfile = publishedDefinition
+    ? getTestPlanExecutionProfile(publishedDefinition)
+    : null;
+  const enabledCaseCount = publishedDefinition?.cases.filter(
+    (testCase) => testCase.enabled !== false,
+  ).length || 0;
+  const requiresEnvironment = executionProfile?.requiresEnvironment !== false;
 
   useEffect(() => {
     if (!open) return;
@@ -57,16 +78,25 @@ export function TestRunCreateModal({
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!plan || !environmentId) {
-      setError("Select an environment before starting this run.");
+    if (!plan?.publishedVersionId || !publishedVersion) {
+      setError("Publish an immutable test-plan version before starting this run.");
+      return;
+    }
+    if (enabledCaseCount === 0) {
+      setError("The published version has no enabled test cases.");
+      return;
+    }
+    if (requiresEnvironment && !environmentId) {
+      setError("Select an environment for this agent-executed run.");
       return;
     }
     setSubmitting(true);
     setError("");
     try {
       await onRun(plan, {
-        environmentId,
-        agentId: agentId || undefined,
+        versionId: publishedVersion.id,
+        environmentId: requiresEnvironment ? environmentId || undefined : undefined,
+        agentId: requiresEnvironment ? agentId || undefined : undefined,
         projectId: plan.projectId || undefined,
         commitSha: commitSha.trim() || undefined,
         triggerType: "manual",
@@ -84,7 +114,7 @@ export function TestRunCreateModal({
       open={open}
       title="Run Test Plan"
       description={plan
-        ? `Execute the published version of ${plan.name} in an isolated Computer Agents environment.`
+        ? `Run the exact published snapshot of ${plan.name}. Draft and unsaved changes are excluded.`
         : "Select a test plan to run."}
       as="form"
       size="medium"
@@ -102,7 +132,13 @@ export function TestRunCreateModal({
           <PlatformPrimaryButton
             size="medium"
             type="submit"
-            disabled={submitting || !plan || !environmentId}
+            disabled={
+              submitting
+              || !plan
+              || !publishedVersion
+              || enabledCaseCount === 0
+              || (requiresEnvironment && !environmentId)
+            }
           >
             {submitting ? (
               <>
@@ -119,41 +155,70 @@ export function TestRunCreateModal({
         </>
       )}
     >
+      {plan ? (
+        <div className="tests-run-contract-summary">
+          <div>
+            <span>Version</span>
+            <strong>{publishedVersion ? `v${publishedVersion.version} · ${publishedVersion.label}` : "Not published"}</strong>
+          </div>
+          <div>
+            <span>Enabled cases</span>
+            <strong>{enabledCaseCount}</strong>
+          </div>
+        </div>
+      ) : null}
+      {executionProfile ? (
+        <div className={`tests-run-trust-card is-${executionProfile.trust}`}>
+          {executionProfile.trust === "verified_worker" ? (
+            <ShieldCheck width={17} height={17} aria-hidden="true" />
+          ) : (
+            <Bot width={17} height={17} aria-hidden="true" />
+          )}
+          <span>
+            <strong>{executionProfile.label}</strong>
+            {executionProfile.description}
+          </span>
+        </div>
+      ) : null}
       <div className="tests-form-grid">
-        <div className="tests-form-field is-span-2">
-          <span>Environment</span>
-          <PlatformSelector
-            value={environmentId}
-            options={environments.map((environment) => ({
-              value: environment.id,
-              label: environment.name,
-              description: environment.description,
-            }))}
-            fullWidth
-            ariaLabel="Test run environment"
-            disabled={submitting}
-            emptyContent="No environments are available."
-            onValueChange={setEnvironmentId}
-          />
-        </div>
-        <div className="tests-form-field is-span-2">
-          <span>Executor agent</span>
-          <PlatformSelector
-            value={agentId}
-            options={[
-              { value: "", label: "Platform default executor" },
-              ...agents.map((agent) => ({
-                value: agent.id,
-                label: agent.name,
-                description: agent.description,
-              })),
-            ]}
-            fullWidth
-            ariaLabel="Test executor agent"
-            disabled={submitting}
-            onValueChange={setAgentId}
-          />
-        </div>
+        {requiresEnvironment ? (
+          <>
+            <div className="tests-form-field is-span-2">
+              <span>Environment</span>
+              <PlatformSelector
+                value={environmentId}
+                options={environments.map((environment) => ({
+                  value: environment.id,
+                  label: environment.name,
+                  description: environment.description,
+                }))}
+                fullWidth
+                ariaLabel="Test run environment"
+                disabled={submitting}
+                emptyContent="No environments are available."
+                onValueChange={setEnvironmentId}
+              />
+            </div>
+            <div className="tests-form-field is-span-2">
+              <span>Executor agent</span>
+              <PlatformSelector
+                value={agentId}
+                options={[
+                  { value: "", label: "Platform default executor" },
+                  ...agents.map((agent) => ({
+                    value: agent.id,
+                    label: agent.name,
+                    description: agent.description,
+                  })),
+                ]}
+                fullWidth
+                ariaLabel="Test executor agent"
+                disabled={submitting}
+                onValueChange={setAgentId}
+              />
+            </div>
+          </>
+        ) : null}
         <label className="tests-form-field is-span-2">
           <span>Commit SHA (optional)</span>
           <input

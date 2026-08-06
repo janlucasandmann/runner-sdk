@@ -53,6 +53,10 @@ export type {
 
 export type { RunnerThreadNormalizationDefaults } from "./normalize.js";
 export {
+  collectRunnerConnectorIdsFromStructuredEvidence,
+  enrichRunnerThreadMessageConnectorMetadata,
+} from "./message-connector-metadata.js";
+export {
   normalizeRunnerThreadAction,
   normalizeRunnerThreadActivityGroup,
   normalizeRunnerThreadEvent,
@@ -107,6 +111,24 @@ export {
 } from "./presentation.js";
 
 export type {
+  DescribeRunnerThreadActivityGroupInput,
+  RunnerThreadActionIconKind,
+  RunnerThreadActionPresentation,
+  RunnerThreadActionPresentationCategory,
+} from "./action-presentation.js";
+export {
+  describeRunnerThreadAction,
+  describeRunnerThreadActivityGroup,
+  presentRunnerThreadAction,
+} from "./action-presentation.js";
+
+export {
+  isRunnerThreadGenericActivityGroupLabel,
+  normalizeRunnerThreadWorkingLabel,
+  RUNNER_THREAD_WORKING_LABEL_MAX_WORDS,
+} from "./working-label.js";
+
+export type {
   BuildRunnerThreadActivityHierarchyInput,
   RunnerThreadActivityHierarchyLevel,
   RunnerThreadActivityHierarchyRecord,
@@ -117,6 +139,21 @@ export {
   buildRunnerThreadActivityHierarchy,
   isRunnerThreadToolAction,
 } from "./activity-hierarchy.js";
+
+export type {
+  BuildRunnerThreadActivityTreeInput,
+  RunnerThreadActivityTreeRecord,
+} from "./activity-tree.js";
+export {
+  buildRunnerThreadActivityTree,
+  flattenRunnerThreadActivityTree,
+} from "./activity-tree.js";
+
+export type {
+  RunnerThreadPlanStep,
+  RunnerThreadPlanStepStatus,
+} from "./activity-plan.js";
+export { extractRunnerThreadPlanSteps } from "./activity-plan.js";
 
 export type {
   RunnerLegacyConversationMessage,

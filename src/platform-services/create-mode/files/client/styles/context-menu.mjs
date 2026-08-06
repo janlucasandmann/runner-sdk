@@ -65,7 +65,7 @@ export const FILES_CONTEXT_MENU_CSS = `
 
       .playground-files-context-divider {
         height: auto;
-        margin: 4px 0;
+        margin: 0;
         padding: 0;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
       }

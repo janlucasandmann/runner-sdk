@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   PlatformCodeEditorWorkspace,
   type PlatformCodeEditorFile,
+  PlatformMonacoCodeEditor,
 } from "../../../../../platform-ui/components/composite/code-editor-workspace/index.js";
 import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
 import { PlatformPrimaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
@@ -17,12 +18,25 @@ import {
   type FileResourceDetailTab,
 } from "../../../../../platform-ui/pages/details/index.js";
 import type { TestsApi } from "../api/index.js";
-import type {
-  TestCaseDefinition,
-  TestCaseKind,
-  TestPlan,
-  TestPlanDefinition,
+import {
+  applyTestCasePresentation,
+  getTestCaseCategory,
+  getTestCaseCategoryLabel,
+  getTestCaseExecutionMethod,
+  getTestCaseExecutionLabel,
+  TEST_CASE_CATEGORY_OPTIONS,
+  TEST_CASE_EXECUTION_OPTIONS,
+  type TestCaseCategory,
+  type TestCaseDefinition,
+  type TestCaseExecutionMethod,
+  type TestPlan,
+  type TestPlanDefinition,
 } from "../domain/index.js";
+import { TestAssertionBuilder } from "./test-assertion-builder.js";
+import {
+  TestPlanSaveModal,
+  type TestPlanSaveOutcome,
+} from "./test-plan-save-modal.js";
 
 type TestCaseFileId =
   | "command"
@@ -108,20 +122,6 @@ const TEST_CASE_FILES: readonly PlatformCodeEditorFile[] = [
     deleteDisabled: true,
     moveDisabled: true,
   },
-];
-
-const TEST_CASE_KIND_OPTIONS: readonly {
-  value: TestCaseKind;
-  label: string;
-  description: string;
-}[] = [
-  { value: "command", label: "Command", description: "Execute a deterministic shell command." },
-  { value: "contract", label: "Contract", description: "Verify a component contract and assertions." },
-  { value: "integration", label: "Integration", description: "Exercise multiple connected components." },
-  { value: "browser", label: "Browser", description: "Run a browser-based verification flow." },
-  { value: "agent", label: "Agent", description: "Delegate execution to a configured agent." },
-  { value: "security", label: "Security", description: "Validate a security or trust boundary." },
-  { value: "custom", label: "Custom", description: "Use a custom request and assertion contract." },
 ];
 
 function cloneTestCase(testCase: TestCaseDefinition): TestCaseDefinition {
@@ -266,6 +266,8 @@ export function TestCaseDetailPage({
   const [tags, setTags] = useState(() => testCase.tags.join(", "));
   const [busyAction, setBusyAction] = useState<"save" | "delete" | "">("");
   const [error, setError] = useState("");
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const identityChangeRef = useRef(onCaseIdentityChange);
   const controlsPortalTarget = usePortalTarget(controlsPortalId);
   const sectionControlsPortalTarget = usePortalTarget(sectionControlsPortalId);
@@ -280,6 +282,8 @@ export function TestCaseDetailPage({
     setTags(testCase.tags.join(", "));
     setActiveFileId("command");
     setError("");
+    setSaveModalOpen(false);
+    setSaveError("");
   }, [testCase.id, plan.updatedAt]);
 
   useEffect(() => {
@@ -288,12 +292,33 @@ export function TestCaseDetailPage({
 
   const parsedFiles = useMemo(() => parseEditorFiles(editorFiles), [editorFiles]);
   const baselineEditorFiles = useMemo(() => buildEditorFiles(testCase), [testCase]);
+  const executionMethod = getTestCaseExecutionMethod(draft);
+  const category = getTestCaseCategory(draft);
+  const editorFileOptions = useMemo(() => {
+    const allowed = executionMethod === "contract"
+      ? new Set<TestCaseFileId>(["request", "assertions", "environment", "secrets"])
+      : new Set<TestCaseFileId>(["command", "environment", "secrets"]);
+    return TEST_CASE_FILES
+      .filter((file) => allowed.has(file.id as TestCaseFileId))
+      .map((file) => executionMethod === "agent" && file.id === "command"
+        ? { ...file, label: "Instructions", tabLabel: "Instructions" }
+        : file);
+  }, [executionMethod]);
+
+  useEffect(() => {
+    if (editorFileOptions.some((file) => file.id === activeFileId)) return;
+    setActiveFileId((editorFileOptions[0]?.id as TestCaseFileId | undefined) || "command");
+  }, [activeFileId, editorFileOptions]);
   const dirty = getEditorSignature(draft, editorFiles, tags)
     !== getEditorSignature(testCase, baselineEditorFiles, testCase.tags.join(", "));
   const normalizedTimeout = Number(draft.timeoutMs);
   const normalizedRetries = Number(draft.retries);
   const settingsError = !draft.name.trim()
     ? "A case name is required."
+    : executionMethod === "command" && !draft.command.trim()
+      ? "A command is required for command execution."
+      : executionMethod === "agent" && !draft.command.trim()
+        ? "Verification instructions are required for agent-guided execution."
     : !Number.isInteger(normalizedTimeout) || normalizedTimeout <= 0
       ? "Timeout must be a positive whole number."
       : !Number.isInteger(normalizedRetries) || normalizedRetries < 0
@@ -312,7 +337,7 @@ export function TestCaseDetailPage({
           : editorFiles.secrets;
 
   const activeFileAriaLabel = activeFileId === "command"
-    ? "Test command"
+    ? executionMethod === "agent" ? "Agent verification instructions" : "Test command"
     : activeFileId === "request"
       ? "Test request JSON"
       : activeFileId === "assertions"
@@ -330,6 +355,31 @@ export function TestCaseDetailPage({
       ...current,
       [activeFileId]: value,
     }));
+  }
+
+  function changeExecutionMethod(value: TestCaseExecutionMethod) {
+    setDraft((current) => applyTestCasePresentation(
+      current,
+      value,
+      getTestCaseCategory(current),
+    ));
+  }
+
+  function changeCategory(value: TestCaseCategory) {
+    setDraft((current) => applyTestCasePresentation(
+      current,
+      getTestCaseExecutionMethod(current),
+      value,
+    ));
+    setTags((current) => {
+      const categoryValues = new Set(TEST_CASE_CATEGORY_OPTIONS.map((option) => option.value));
+      return [
+        value,
+        ...current.split(",").map((tag) => tag.trim()).filter(
+          (tag) => tag && !categoryValues.has(tag as TestCaseCategory),
+        ),
+      ].join(", ");
+    });
   }
 
   function buildNextCase(): TestCaseDefinition | null {
@@ -353,12 +403,13 @@ export function TestCaseDetailPage({
     };
   }
 
-  async function saveCase() {
+  async function saveCase(outcome: TestPlanSaveOutcome, versionDescription: string) {
     if (!dirty || busyAction) return;
     const nextCase = buildNextCase();
     if (!nextCase) return;
     setBusyAction("save");
     setError("");
+    setSaveError("");
     try {
       const caseExists = plan.definition.cases.some(
         (candidate) => candidate.id === testCase.id,
@@ -374,11 +425,36 @@ export function TestCaseDetailPage({
       const updated = await api.updatePlan(plan.id, {
         definition,
       } as Partial<TestPlan>);
-      const nextPlan = mergeUpdatedPlan(plan, updated, definition);
+      let nextPlan = mergeUpdatedPlan(plan, updated, definition);
+      if (outcome !== "draft") {
+        const versions = plan.versions || [];
+        const nextVersionNumber = versions.reduce(
+          (maximum, version) => Math.max(maximum, Number(version.version) || 0),
+          0,
+        ) + 1;
+        const version = await api.createVersion(plan.id, {
+          label: `Version ${nextVersionNumber}`,
+          description: versionDescription || `Updated ${nextCase.name}.`,
+        });
+        nextPlan = { ...nextPlan, versions: [...versions, version] };
+        if (outcome === "publish") {
+          const published = await api.publishVersion(plan.id, version.id);
+          nextPlan = {
+            ...nextPlan,
+            ...published,
+            definition,
+            versions: nextPlan.versions,
+            runs: plan.runs,
+          };
+        }
+      }
       onPlanChange(nextPlan);
       onCaseIdentityChange?.(nextCase);
+      setSaveModalOpen(false);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "Failed to save the test case.");
+      const message = nextError instanceof Error ? nextError.message : "Failed to save the test case.";
+      setError(message);
+      setSaveError(message);
     } finally {
       setBusyAction("");
     }
@@ -437,14 +513,41 @@ export function TestCaseDetailPage({
       className="tests-case-detail-workspace"
       ariaLabel={`${draft.name.trim() || "Test case"} files`}
       variant="full-screen"
-      files={TEST_CASE_FILES}
+      files={editorFileOptions}
       activeFileId={activeFileId}
       onFileSelect={(fileId) => setActiveFileId(
-        TEST_CASE_FILES.some((file) => file.id === fileId)
+        editorFileOptions.some((file) => file.id === fileId)
           ? fileId as TestCaseFileId
-          : "command",
+          : (editorFileOptions[0]?.id as TestCaseFileId | undefined) || "command",
       )}
-      editor={(
+      editor={activeFileId === "assertions" && !parsedFiles.error ? (
+        <div className="tests-case-detail-assertion-editor">
+          <div>
+            <span>Response assertions</span>
+            <small>Build deterministic checks without editing raw JSON.</small>
+          </div>
+          <TestAssertionBuilder
+            value={parsedFiles.assertions || []}
+            onChange={(assertions) => setEditorFiles((current) => ({
+              ...current,
+              assertions: formatJson(assertions),
+            }))}
+          />
+        </div>
+      ) : activeFileId === "request" ? (
+        <PlatformMonacoCodeEditor
+          className="tests-case-detail-monaco-editor"
+          value={editorFiles.request}
+          onChange={updateActiveFileValue}
+          language="json"
+          path={`tests/${plan.id}/cases/${testCase.id}/request.json`}
+          ariaLabel={activeFileAriaLabel}
+          options={{
+            bracketPairColorization: { enabled: true },
+            guides: { bracketPairs: true, indentation: true },
+          }}
+        />
+      ) : (
         <textarea
           key={activeFileId}
           className="tests-case-detail-editor"
@@ -462,15 +565,25 @@ export function TestCaseDetailPage({
       <h2 className="tests-case-detail-settings-title">Case Settings</h2>
       <section className="tests-case-detail-configuration">
         <div className="tests-case-detail-configuration-row">
-          <span className="tests-case-detail-configuration-label">Type</span>
+          <span className="tests-case-detail-configuration-label">Execution method</span>
           <PlatformSelector
-            value={draft.kind}
-            options={TEST_CASE_KIND_OPTIONS}
-            onValueChange={(value) => setDraft((current) => ({
-              ...current,
-              kind: value as TestCaseKind,
-            }))}
-            ariaLabel="Select test case type"
+            value={executionMethod}
+            options={TEST_CASE_EXECUTION_OPTIONS}
+            onValueChange={changeExecutionMethod}
+            ariaLabel="Select test case execution method"
+            alignment="end"
+            popupAlignment="right"
+            popupWidth="min(330px, calc(100vw - 48px))"
+            className="tests-case-detail-setting-selector"
+          />
+        </div>
+        <div className="tests-case-detail-configuration-row">
+          <span className="tests-case-detail-configuration-label">Category</span>
+          <PlatformSelector
+            value={category}
+            options={TEST_CASE_CATEGORY_OPTIONS}
+            onValueChange={changeCategory}
+            ariaLabel="Select test case category"
             alignment="end"
             popupAlignment="right"
             popupWidth="min(330px, calc(100vw - 48px))"
@@ -535,18 +648,10 @@ export function TestCaseDetailPage({
             }))}
           />
         </label>
-        <label className="tests-case-detail-configuration-row">
-          <span className="tests-case-detail-configuration-label">Executor Agent</span>
-          <input
-            className="tests-case-detail-setting-input"
-            value={draft.agentId}
-            placeholder="Use run agent"
-            onChange={(event) => setDraft((current) => ({
-              ...current,
-              agentId: event.currentTarget.value,
-            }))}
-          />
-        </label>
+        <div className="tests-case-detail-configuration-row">
+          <span className="tests-case-detail-configuration-label">Run executor</span>
+          <span className="tests-case-detail-configuration-value">Selected when the published plan is run</span>
+        </div>
         <label className="tests-case-detail-configuration-row">
           <span className="tests-case-detail-configuration-label">Tags</span>
           <input
@@ -569,8 +674,11 @@ export function TestCaseDetailPage({
         <PlatformServiceDetailProperty label="Case ID">
           <span title={testCase.id}>{testCase.id}</span>
         </PlatformServiceDetailProperty>
-        <PlatformServiceDetailProperty label="Type">
-          {TEST_CASE_KIND_OPTIONS.find((option) => option.value === draft.kind)?.label || draft.kind}
+        <PlatformServiceDetailProperty label="Execution">
+          {getTestCaseExecutionLabel(draft)}
+        </PlatformServiceDetailProperty>
+        <PlatformServiceDetailProperty label="Category">
+          {getTestCaseCategoryLabel(draft)}
         </PlatformServiceDetailProperty>
         <PlatformServiceDetailProperty label="State">
           <PlatformLabel variant={draft.enabled ? "green" : "gray"}>
@@ -605,7 +713,10 @@ export function TestCaseDetailPage({
       type="button"
       size="small"
       disabled={Boolean(busyAction) || !dirty || Boolean(validationError)}
-      onClick={() => void saveCase()}
+      onClick={() => {
+        setSaveError("");
+        setSaveModalOpen(true);
+      }}
     >
       <Save width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
       <span>{busyAction === "save" ? "Saving…" : "Save Changes"}</span>
@@ -655,6 +766,24 @@ export function TestCaseDetailPage({
         workspaceClassName="tests-case-detail-page__workspace"
         settingsClassName="tests-case-detail-page__settings"
         sidebarClassName="tests-case-detail-page__sidebar playground-project-overview-sidebar playground-agents-detail-sidebar"
+      />
+      <TestPlanSaveModal
+        open={saveModalOpen}
+        planName={plan.name}
+        nextVersion={(plan.versions || []).reduce(
+          (maximum, version) => Math.max(maximum, Number(version.version) || 0),
+          0,
+        ) + 1}
+        caseCount={plan.definition.cases.filter((candidate) => candidate.enabled !== false).length}
+        hasPublishedVersion={Boolean(plan.publishedVersionId)}
+        busy={busyAction === "save"}
+        error={saveError}
+        onClose={() => {
+          if (busyAction !== "save") setSaveModalOpen(false);
+        }}
+        onSave={({ outcome, description: versionDescription }) => (
+          saveCase(outcome, versionDescription)
+        )}
       />
     </>
   );

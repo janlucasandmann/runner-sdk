@@ -4,8 +4,10 @@ import { PlatformConfirmationModal } from "../../../../../platform-ui/components
 import { PlatformServiceDetailFrame } from "../../../../../platform-ui/pages/details/index.js";
 import { TestsApi } from "../api/index.js";
 import {
+  initializeTestPlanIdentityMetadata,
   normalizeTestWorkspaceOption,
   type TestCaseDefinition,
+  type TestPersonIdentityInput,
   type TestPlan,
   type TestPlanCreateInput,
   type TestPlanDefinition,
@@ -35,6 +37,8 @@ export interface TestsWorkspacePageProps {
   selectedTestRunId?: string;
   controlsPortalId?: string;
   sectionControlsPortalId?: string;
+  titleActionsPortalId?: string;
+  versionsDrawerPortalId?: string;
   defaultProjectId?: string;
   defaultEnvironmentId?: string;
   defaultAgentId?: string;
@@ -42,7 +46,13 @@ export interface TestsWorkspacePageProps {
   environments?: readonly unknown[];
   agents?: readonly unknown[];
   workspaceTeams?: readonly unknown[];
+  workspaceTeamsLoading?: boolean;
+  workspaceTeamsRequiresPlan?: boolean;
+  onWorkspaceTeamsRequest?: () => void;
+  activeOrganizationId?: string;
+  currentUser?: TestPersonIdentityInput;
   onOpenPlan: (planId: string, planName?: string) => void;
+  onPlanDeleted?: (planId: string) => void;
   onOpenCase: (
     planId: string,
     caseId: string,
@@ -58,6 +68,7 @@ export interface TestsWorkspacePageProps {
     runId?: string;
     runLabel?: string;
   }) => void;
+  onVersionsSidebarOpenChange?: (open: boolean) => void;
 }
 
 interface ActiveTestCaseContext {
@@ -94,6 +105,8 @@ export function TestsWorkspacePage({
   selectedTestRunId = "",
   controlsPortalId,
   sectionControlsPortalId,
+  titleActionsPortalId,
+  versionsDrawerPortalId,
   defaultProjectId = "",
   defaultEnvironmentId = "",
   defaultAgentId = "",
@@ -101,10 +114,17 @@ export function TestsWorkspacePage({
   environments = [],
   agents = [],
   workspaceTeams = [],
+  workspaceTeamsLoading = false,
+  workspaceTeamsRequiresPlan = false,
+  onWorkspaceTeamsRequest,
+  activeOrganizationId = "",
+  currentUser = {},
   onOpenPlan,
+  onPlanDeleted,
   onOpenCase,
   onOpenRun,
   onIdentityChange,
+  onVersionsSidebarOpenChange,
 }: TestsWorkspacePageProps) {
   const api = useMemo(
     () => new TestsApi(backendUrl, requestHeaders),
@@ -278,7 +298,10 @@ export function TestsWorkspacePage({
   }, [normalizedProjects, plans, runs]);
 
   async function createPlan(input: TestPlanCreateInput): Promise<TestPlan> {
-    const created = await api.createPlan(input);
+    const created = await api.createPlan({
+      ...input,
+      metadata: initializeTestPlanIdentityMetadata(input.metadata, currentUser),
+    });
     setPlans((current) => [created, ...current]);
     onOpenPlan(created.id, created.name);
     return created;
@@ -298,6 +321,10 @@ export function TestsWorkspacePage({
 
   function replacePlan(nextPlan: TestPlan) {
     setActivePlan(nextPlan);
+    identityChangeRef.current?.({
+      planId: nextPlan.id,
+      planName: nextPlan.name,
+    });
     setPlans((current) => [
       nextPlan,
       ...current.filter((plan) => plan.id !== nextPlan.id),
@@ -323,9 +350,23 @@ export function TestsWorkspacePage({
             projects={normalizedProjects}
             environments={normalizedEnvironments}
             workspaceTeams={workspaceTeams}
+            workspaceTeamsLoading={workspaceTeamsLoading}
+            workspaceTeamsRequiresPlan={workspaceTeamsRequiresPlan}
+            onWorkspaceTeamsRequest={onWorkspaceTeamsRequest}
+            activeOrganizationId={activeOrganizationId}
+            currentUser={currentUser}
             controlsPortalId={controlsPortalId}
             sectionControlsPortalId={sectionControlsPortalId}
+            titleActionsPortalId={titleActionsPortalId}
+            versionsDrawerPortalId={versionsDrawerPortalId}
+            onVersionsSidebarOpenChange={onVersionsSidebarOpenChange}
             onPlanChange={replacePlan}
+            onDeleted={(deletedPlan) => {
+              setActivePlan(null);
+              setPlans((current) => current.filter((plan) => plan.id !== deletedPlan.id));
+              setRuns((current) => current.filter((run) => run.testPlanId !== deletedPlan.id));
+              onPlanDeleted?.(deletedPlan.id);
+            }}
             onReload={() => loadPlan(activePlan.id)}
             onRun={setRunPlan}
             onOpenRun={(run) => onOpenRun(activePlan.id, run.id, activePlan.name)}

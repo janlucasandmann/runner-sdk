@@ -1,3 +1,4 @@
+import { enrichRunnerThreadMessageConnectorMetadata } from "./message-connector-metadata.js";
 import {
   normalizeRunnerThreadAction,
   normalizeRunnerThreadActivityGroup,
@@ -674,7 +675,7 @@ export function projectRunnerThreadTimelinePage(
     next = reduceRunnerThreadEvent(next, { operation: "participant.upsert", participant });
   }
   next = reduceRunnerThreadEvents(next, page.items);
-  return reduceRunnerThreadEvent(next, {
+  next = reduceRunnerThreadEvent(next, {
     operation: "cursor.update",
     latestSequence: page.latestSequence,
     nextCursor: page.nextCursor,
@@ -684,4 +685,5 @@ export function projectRunnerThreadTimelinePage(
     hasOlder: page.hasOlder,
     hasNewer: page.hasNewer,
   });
+  return enrichRunnerThreadMessageConnectorMetadata(next);
 }

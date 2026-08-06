@@ -13,7 +13,12 @@ export async function handleGithubRepositories({
   fetchImpl = globalThis.fetch,
 }) {
   const verifiedUser = await verifyRequestUser(req, envFileCandidates);
-  const token = await loadGithubToken(verifiedUser.uid, envFileCandidates);
+  const credentialId = String(url.searchParams.get("credentialId") || "").trim();
+  const token = await loadGithubToken(
+    verifiedUser.uid,
+    envFileCandidates,
+    credentialId,
+  );
   if (!token) {
     return sendJson(
       req,
@@ -102,7 +107,12 @@ export async function handleGithubRepositoryDetail({
   fetchImpl = globalThis.fetch,
 }) {
   const verifiedUser = await verifyRequestUser(req, envFileCandidates);
-  const token = await loadGithubToken(verifiedUser.uid, envFileCandidates);
+  const credentialId = String(url.searchParams.get("credentialId") || "").trim();
+  const token = await loadGithubToken(
+    verifiedUser.uid,
+    envFileCandidates,
+    credentialId,
+  );
   if (!token) {
     return sendJson(
       req,

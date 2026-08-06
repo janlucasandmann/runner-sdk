@@ -27,6 +27,9 @@
   --tb-execution-workbench-width: 0px;
   --tb-document-preview-max-width: min(42vw, 620px);
   --tb-image-preview-composer-width: var(--tb-document-preview-width);
+  --tb-thread-content-inline-padding: 20px;
+  --tb-thread-composer-inline-padding: 12px;
+  --tb-thread-constrained-inline-padding: 0px;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   width: 100%;
@@ -47,6 +50,16 @@
 
 .tb-runner-chat.tb-runner-chat-execution-workbench-open {
   --tb-execution-workbench-width: min(520px, 42vw);
+}
+
+.tb-runner-chat.playground-thread-runner:is(
+    .tb-runner-chat-document-preview-open,
+    .tb-runner-chat-subagent-detail-open,
+    .tb-runner-chat-deep-research-detail-open,
+    .tb-runner-chat-execution-workbench-open
+  ),
+.tb-runner-chat.playground-thread-runner:has(.platform-thread-screen.is-workbench-open) {
+  --tb-thread-constrained-inline-padding: 24px;
 }
 
 .tb-runner-chat.tb-runner-chat-image-preview-local-open .tb-input-shell {
@@ -297,7 +310,10 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   justify-content: center;
   align-items: flex-start;
   overflow-y: auto;
-  padding: 0 20px 180px;
+  padding:
+    0
+    max(var(--tb-thread-content-inline-padding), var(--tb-thread-constrained-inline-padding))
+    180px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -481,7 +497,10 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   z-index: 20;
   display: flex;
   justify-content: center;
-  padding: 10px 12px 10px;
+  padding:
+    10px
+    max(var(--tb-thread-composer-inline-padding), var(--tb-thread-constrained-inline-padding))
+    10px;
   background: transparent;
   pointer-events: none;
   transition: right 280ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -518,6 +537,12 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   background: #000;
 }
 
+@media (max-width: 980px) {
+  .tb-runner-chat.playground-thread-runner {
+    --tb-thread-constrained-inline-padding: 24px;
+  }
+}
+
 @media (max-width: 760px) {
   .tb-runner-chat.tb-runner-chat-execution-workbench-open {
     --tb-execution-workbench-width: 100%;
@@ -528,8 +553,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   }
 }
 
-.tb-runner-chat.playground-thread-runner.is-project-wallpaper-active .tb-input-shell {
-  padding: 10px 20px 10px;
+.tb-runner-chat.playground-thread-runner.is-project-wallpaper-active {
+  --tb-thread-composer-inline-padding: 20px;
 }
 
 .tb-runner-chat.playground-thread-runner.is-project-wallpaper-active .tb-input-width {
@@ -1535,6 +1560,135 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   color: rgba(255, 255, 255, 0.72);
 }
 
+.tb-runner-chat .tb-turn-work-logs {
+  margin-bottom: 24px;
+}
+
+.tb-runner-chat .tb-turn-work-section {
+  min-width: 0;
+  margin-bottom: 24px;
+}
+
+.tb-runner-chat .tb-turn-work-section > .tb-work-header {
+  width: auto;
+  max-width: 100%;
+  justify-content: flex-start;
+  padding: 0;
+  margin: 0;
+  min-height: 20px;
+}
+
+.tb-runner-chat .tb-turn-work-section.is-expanded > .tb-work-header {
+  margin-bottom: 14px;
+}
+
+.tb-runner-chat .tb-turn-work-section > .tb-work-header.is-static {
+  cursor: default;
+}
+
+.tb-runner-chat .tb-turn-work-section .tb-work-label {
+  flex: 0 1 auto;
+  max-width: 100%;
+}
+
+.tb-runner-chat .tb-turn-work-section .tb-work-label-copy {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-turn-work-section .tb-work-status-loader {
+  margin-right: 0;
+}
+
+.tb-runner-chat .tb-turn-work-section .tb-work-label.is-live .tb-work-label-copy {
+  animation: tb-turn-work-label-update 180ms ease-out;
+}
+
+.tb-runner-chat .tb-turn-work-section .tb-turn-work-logs {
+  margin-bottom: 0;
+}
+
+.tb-runner-chat .tb-turn-work-section .tb-work-live-tail {
+  min-width: 0;
+  margin-top: 14px;
+}
+
+.tb-runner-chat .tb-turn-work-section .tb-work-live-tail-stack {
+  display: grid;
+  min-width: 0;
+}
+
+.tb-runner-chat .tb-turn-work-section .tb-work-live-tail-transition-item {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+
+.tb-runner-chat .tb-turn-work-section .tb-work-live-tail-transition-item.is-entering {
+  z-index: 2;
+  animation: tb-work-live-tail-enter 220ms ease-out both;
+}
+
+.tb-runner-chat .tb-turn-work-section .tb-work-live-tail-transition-item.is-exiting {
+  z-index: 1;
+  pointer-events: none;
+  animation: tb-work-live-tail-exit 180ms ease-in both;
+}
+
+.tb-runner-chat .tb-turn-work-section .tb-work-collapse-inner,
+.tb-runner-chat .tb-turn-work-section .tb-work-collapse.is-expanded .tb-work-collapse-inner {
+  gap: 0;
+  margin-bottom: 0;
+}
+
+@keyframes tb-turn-work-label-update {
+  from {
+    opacity: 0.55;
+    transform: translateY(1px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tb-work-live-tail-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tb-work-live-tail-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-runner-chat .tb-turn-work-section .tb-work-label.is-live .tb-work-label-copy {
+    animation: none;
+  }
+
+  .tb-runner-chat .tb-turn-work-section .tb-work-live-tail-transition-item.is-entering {
+    animation: none;
+  }
+
+  .tb-runner-chat .tb-turn-work-section .tb-work-live-tail-transition-item.is-exiting {
+    display: none;
+  }
+}
+
 .tb-runner-chat .tb-work-header {
   width: 100%;
   display: inline-flex;
@@ -1567,56 +1721,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.tb-runner-chat .tb-work-computer-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 28px;
-  max-width: min(220px, 42%);
-  flex: 0 0 auto;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #ffffff;
-  font-size: 11px;
-  line-height: 1;
-  font-weight: 400;
-}
-
-.tb-runner-chat .tb-work-computer-label-icons {
-  display: inline-flex;
-  align-items: center;
-  flex: 0 0 auto;
-}
-
-.tb-runner-chat .tb-work-computer-label-icon {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 auto;
-  padding: 3px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #ffffff;
-}
-
-.tb-runner-chat .tb-work-computer-label-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tb-runner-chat .tb-work-label .tb-turn-agent-avatar {
-  width: 18px;
-  height: 18px;
-}
-
-.tb-runner-chat .tb-work-label .tb-turn-agent-avatar-fallback {
-  font-size: 8px;
 }
 
 .tb-runner-chat .tb-work-label .tb-chevron {
@@ -1737,51 +1841,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   margin-bottom: 0;
 }
 
-.tb-runner-chat .tb-work-load-more-button {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 12px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: #fff;
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 400;
-  cursor: pointer;
-}
-
-.tb-runner-chat .tb-work-load-more-button::before {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  padding: 1px;
-  background: var(--tb-runner-input-border);
-  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-  mask-clip: content-box, border-box;
-  mask-composite: exclude;
-  mask-origin: content-box, border-box;
-  mask-repeat: repeat, repeat;
-  mask-size: auto, auto;
-}
-
-.tb-runner-chat .tb-work-load-more-icon {
-  width: 16px;
-  height: 16px;
-  flex: 0 0 auto;
-}
-
-.tb-runner-chat .tb-work-load-more-button:hover,
-.tb-runner-chat .tb-work-load-more-button:focus-visible {
-  color: #fff;
-}
-
-.tb-runner-chat .tb-work-load-more-button:focus-visible {
-  outline: none;
+.tb-runner-chat .tb-work-load-more-button.platform-button.is-secondary {
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 
 .tb-runner-chat .tb-step-row {

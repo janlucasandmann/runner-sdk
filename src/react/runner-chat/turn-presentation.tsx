@@ -1,0 +1,50 @@
+import { Cloud as LucideCloud } from "lucide-react";
+import type { CSSProperties } from "react";
+import { renderTurnAgentAvatar } from "./run-summary-presentation.js";
+
+interface RunnerTurnIdentityProps {
+  agentName: string;
+  agentPhotoUrl?: string | null;
+  environmentName: string;
+  onAgentClick?: () => void;
+  style?: CSSProperties;
+}
+
+export function RunnerTurnIdentity({
+  agentName,
+  agentPhotoUrl,
+  environmentName,
+  onAgentClick,
+  style,
+}: RunnerTurnIdentityProps) {
+  const normalizedAgentName = String(agentName || "").trim() || "Agent";
+  const normalizedEnvironmentName = String(environmentName || "").trim() || "Environment";
+  const agentContent = (
+    <>
+      {renderTurnAgentAvatar(normalizedAgentName, agentPhotoUrl)}
+      <span className="tb-turn-agent-name">{normalizedAgentName}</span>
+    </>
+  );
+
+  return (
+    <div className="tb-turn-meta" style={style}>
+      {onAgentClick ? (
+        <button
+          type="button"
+          className="tb-turn-agent tb-turn-agent-button"
+          onClick={onAgentClick}
+          aria-label={`Open agent details for ${normalizedAgentName}`}
+          title={`Open ${normalizedAgentName}`}
+        >
+          {agentContent}
+        </button>
+      ) : (
+        <div className="tb-turn-agent">{agentContent}</div>
+      )}
+      <div className="tb-turn-environment-pill">
+        <LucideCloud className="tb-turn-environment-icon" />
+        <span className="tb-turn-environment-label">{normalizedEnvironmentName}</span>
+      </div>
+    </div>
+  );
+}

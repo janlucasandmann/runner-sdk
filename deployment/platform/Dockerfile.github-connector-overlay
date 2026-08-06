@@ -1,0 +1,14 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+# GitHub connector incident overlay. Keep this list intentionally narrow so a
+# production runtime repair cannot absorb unrelated changes from a dirty
+# development worktree.
+COPY repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/connector-adapter-registry.mjs \
+  /app/repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/connector-adapter-registry.mjs
+COPY repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/connector-mcp-service.mjs \
+  /app/repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/connector-mcp-service.mjs
+COPY repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/github-connector-adapter.mjs \
+  /app/repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/github-connector-adapter.mjs
+COPY repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/github-connector-capabilities.mjs \
+  /app/repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/github-connector-capabilities.mjs

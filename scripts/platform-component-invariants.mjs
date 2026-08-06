@@ -20,6 +20,7 @@ const compositeComponents = [
   "attachments",
   "code-editor-workspace",
   "code-preview-box",
+  "connector-action-detail",
   "data-table",
   "deployment-map",
   "detail-sidebar",
@@ -32,6 +33,8 @@ const compositeComponents = [
   "modal",
   "page-hero",
   "popup",
+  "resource-action-modals",
+  "resource-header-actions",
   "settings-section",
   "subtasks",
   "ui-card",
@@ -182,6 +185,10 @@ const canonicalExports = new Map([
     "./dist/platform-ui/components/composite/code-preview-box/index.js",
   ],
   [
+    "./platform-ui/components/composite/connector-action-detail",
+    "./dist/platform-ui/components/composite/connector-action-detail/index.js",
+  ],
+  [
     "./platform-ui/components/composite/data-table",
     "./dist/platform-ui/components/composite/data-table/index.js",
   ],
@@ -228,6 +235,14 @@ const canonicalExports = new Map([
   [
     "./platform-ui/components/composite/popup",
     "./dist/platform-ui/components/composite/popup/index.js",
+  ],
+  [
+    "./platform-ui/components/composite/resource-action-modals",
+    "./dist/platform-ui/components/composite/resource-action-modals/index.js",
+  ],
+  [
+    "./platform-ui/components/composite/resource-header-actions",
+    "./dist/platform-ui/components/composite/resource-header-actions/index.js",
   ],
   [
     "./platform-ui/components/composite/settings-section",

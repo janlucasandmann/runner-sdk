@@ -354,10 +354,24 @@ if (agentAnalyticsSource.includes("timeframe: {")) {
   failures.push("agent detail Insights analytics must not duplicate the app-header timeframe selector");
 }
 if (
-  !platformEntrySource.includes("const agentInsightsTimeframeControl = !agentVersionChangesState")
+  !platformEntrySource.includes("showTimeframe: !agentVersionChangesState")
+  || !platformEntrySource.includes("timeframeValue: normalizedAgentDetailPerformanceRange")
+  || !platformEntrySource.includes('className: "playground-agent-detail-header-timeframe"')
   || !platformEntrySource.includes('ariaLabel: "Agent analytics time frame"')
 ) {
-  failures.push("agent detail Insights must expose its timeframe selector through the app header");
+  failures.push("agent detail Insights must expose its timeframe selector through the centered app header");
+}
+const agentTimeframeOptionsDeclarationIndex = platformEntrySource.indexOf(
+  "const agentDetailPerformanceRangeOptions =",
+);
+const agentTimeframeHeaderPublicationIndex = platformEntrySource.indexOf(
+  "showTimeframe: !agentVersionChangesState",
+);
+if (
+  agentTimeframeOptionsDeclarationIndex < 0
+  || agentTimeframeHeaderPublicationIndex <= agentTimeframeOptionsDeclarationIndex
+) {
+  failures.push("agent detail timeframe state must initialize before the app-header lifecycle reads it");
 }
 if (
   !platformEntrySource.includes('{ id: "day", label: "24H", bucketCount: 1 }')

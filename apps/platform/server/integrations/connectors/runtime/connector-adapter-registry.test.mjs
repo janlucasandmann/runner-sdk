@@ -13,6 +13,7 @@ test("connector adapter registry includes every production connector runtime", (
 
   assert.equal(registry.get("jira")?.id, "jira");
   assert.equal(registry.get("atlassian")?.id, "jira");
+  assert.equal(registry.get("github")?.id, "github");
   assert.equal(registry.get("dropbox")?.id, "dropbox");
   assert.equal(registry.get("asana")?.id, "asana");
   assert.equal(registry.get("bigquery")?.id, "bigquery");
@@ -40,6 +41,7 @@ test("connector adapter registry includes every production connector runtime", (
   assert.equal(registry.listCapabilities("outlook").length, 12);
   assert.equal(registry.listCapabilities("outlook-calendar").length, 9);
   assert.equal(registry.listCapabilities("slack").length, 11);
+  assert.equal(registry.listCapabilities("github").length, 44);
 });
 
 test("runtime action catalogs stay aligned with the frontend provider catalog", () => {
@@ -82,4 +84,30 @@ test("runtime action catalogs stay aligned with the frontend provider catalog", 
       `${providerId} runtime and frontend capabilities differ.`,
     );
   }
+});
+
+test("GitHub runtime actions and access classes stay aligned with the centralized frontend contract", () => {
+  const registry = createConnectorAdapterRegistry({
+    fetchImpl: async () => {
+      throw new Error("not used");
+    },
+  });
+  const githubSource = readFileSync(
+    new URL(
+      "../../../../../../src/platform-integrations/connectors/github-capability-catalog.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const frontendCapabilities = [
+    ...githubSource.matchAll(
+      /^ {8}id: "([^"]+)",[\s\S]*?^ {8}access: "(interactive|read-only)",/gm,
+    ),
+  ].map((match) => ({ id: match[1], access: match[2] }));
+
+  assert.equal(frontendCapabilities.length, 44);
+  assert.deepEqual(
+    registry.listCapabilities("github"),
+    frontendCapabilities,
+  );
 });

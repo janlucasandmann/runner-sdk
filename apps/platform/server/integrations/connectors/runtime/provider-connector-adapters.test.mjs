@@ -160,6 +160,50 @@ test("Figma runtime creates context webhooks using the current lowercase request
   });
 });
 
+test("Figma runtime refreshes with the dedicated endpoint and Basic authentication", async () => {
+  const requests = [];
+  const persisted = [];
+  const adapter = createFigmaConnectorAdapter({
+    ...oauthOptions(async (input, init) => {
+      const url = new URL(input);
+      requests.push({ url, init });
+      if (url.pathname === "/v1/oauth/refresh") {
+        return jsonResponse({
+          access_token: "fresh-figma-access-token",
+          token_type: "bearer",
+          expires_in: 7_776_000,
+        });
+      }
+      if (url.pathname === "/v1/me") {
+        return jsonResponse({ id: "figma-user", handle: "Computer Agents" });
+      }
+      throw new Error(`Unexpected Figma request: ${url}`);
+    }, {
+      refreshToken: "figma-refresh-token",
+      refresh_token: "figma-refresh-token",
+      expiresAt: Date.now() - 1,
+    }),
+    persistCredential: async (value) => {
+      persisted.push(value);
+    },
+  });
+
+  const profile = await adapter.invoke({
+    grant: GRANT,
+    name: "get_current_user",
+    arguments: {},
+  });
+
+  assert.equal(profile.id, "figma-user");
+  assert.equal(requests[0].url.href, "https://api.figma.com/v1/oauth/refresh");
+  assert.match(requests[0].init.headers.Authorization, /^Basic /);
+  const refreshBody = new URLSearchParams(requests[0].init.body);
+  assert.equal(refreshBody.get("refresh_token"), "figma-refresh-token");
+  assert.equal(refreshBody.has("grant_type"), false);
+  assert.equal(requests[1].init.headers.Authorization, "Bearer fresh-figma-access-token");
+  assert.equal(persisted.length, 1);
+});
+
 test("Linear runtime sends typed GraphQL mutation variables", async () => {
   let requestBody;
   const adapter = createLinearConnectorAdapter(

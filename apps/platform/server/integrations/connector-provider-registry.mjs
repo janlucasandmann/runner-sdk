@@ -239,6 +239,7 @@ const PROVIDERS = [
     authentication: OAUTH2,
     authorizeUrl: "https://www.figma.com/oauth",
     tokenUrl: "https://api.figma.com/v1/oauth/token",
+    refreshUrl: "https://api.figma.com/v1/oauth/refresh",
     clientIdEnv: "FIGMA_OAUTH_CLIENT_ID",
     clientSecretEnv: "FIGMA_OAUTH_CLIENT_SECRET",
     callbackUrlEnv: "FIGMA_OAUTH_CALLBACK_URL",

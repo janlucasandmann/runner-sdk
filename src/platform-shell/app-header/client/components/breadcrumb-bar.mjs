@@ -16,7 +16,6 @@ const APP_HEADER_BREADCRUMB_BAR_TEMPLATE = `        function renderAppHeaderBrea
           return React.createElement("div", { className: "playground-top-nav-path", "aria-label": "Page path" },
             effectiveItems.map((item, index) => {
               const label = String(item.label || "").trim();
-              const subtitle = String(item.subtitle || "").trim();
               const isCurrent = index === effectiveItems.length - 1;
               const key = String(index) + ":" + label;
               const isClickable = typeof item.onClick === "function" && (!isCurrent || item.allowCurrentClick === true);
@@ -27,12 +26,7 @@ const APP_HEADER_BREADCRUMB_BAR_TEMPLATE = `        function renderAppHeaderBrea
                       "aria-hidden": "true",
                     }, item.leading)
                   : null,
-                React.createElement("span", { className: "playground-top-nav-path-copy" },
-                  React.createElement("span", { className: "playground-top-nav-path-label" }, label),
-                  subtitle
-                    ? React.createElement("span", { className: "playground-top-nav-path-subtitle" }, subtitle)
-                    : null
-                )
+                React.createElement("span", { className: "playground-top-nav-path-label" }, label)
               );
               const itemNode = item.node != null
                 ? item.node

@@ -109,7 +109,7 @@ export function useRunnerTurnNoticeController({
           presentation: options?.presentation || "default",
         },
       ]);
-      setExpandedTurns((previous) => ({ ...previous, [turnId]: true }));
+      setExpandedTurns((previous) => ({ ...previous, [turnId]: false }));
     },
     [agentName, createTurnId, environmentName, now, setExpandedTurns, setTurns],
   );

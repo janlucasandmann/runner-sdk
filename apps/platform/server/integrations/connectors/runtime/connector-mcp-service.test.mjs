@@ -211,7 +211,8 @@ function createTestService(calls, grant = GRANT, definitions = [
       get(id) {
         assert.equal(id, "jira");
         return {
-          listTools(actionIds) {
+          async listTools(actionIds, context) {
+            assert.equal(context?.grant, grant);
             const allowed = new Set(actionIds);
             return definitions.filter((item) => allowed.has(item.name));
           },

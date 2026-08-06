@@ -96,6 +96,7 @@ export function createOAuthCredentialRuntime({
   clientSecretEnv,
   tokenUrl,
   tokenAuth = "body",
+  includeRefreshGrantType = true,
   tokenSlot = {},
   validateRefreshPayload,
   buildRefreshParameters,
@@ -262,7 +263,7 @@ export function createOAuthCredentialRuntime({
           })
         : {};
     const parameters = new URLSearchParams({
-      grant_type: "refresh_token",
+      ...(includeRefreshGrantType ? { grant_type: "refresh_token" } : {}),
       refresh_token: refreshToken,
       ...compactStringRecord(customParameters),
     });

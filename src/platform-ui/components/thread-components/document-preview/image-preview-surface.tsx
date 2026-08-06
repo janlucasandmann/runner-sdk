@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type WheelEventHandler } from "react";
-import { DotLoader } from "../../ui/dot-loader/index.js";
+import { PlatformLoadingState } from "../../composite/loading-state/index.js";
 import { mountRunnerChatStyles } from "../styles/index.js";
 
 const RUNNER_IMAGE_PREVIEW_OBJECT_URL_CACHE_LIMIT = 80;
@@ -311,9 +311,12 @@ export function RunnerImagePreviewSurface({
       }}
     />
   ) : loading ? (
-    <span className="tb-runner-image-preview-surface-state" aria-hidden="true">
-      <DotLoader dotCount={9} dotSize={4} gap={3} className="tb-runner-media-dot-loader" />
-    </span>
+    <PlatformLoadingState
+      as="span"
+      centered
+      className="tb-runner-image-preview-surface-state"
+      message="Loading image..."
+    />
   ) : failed ? (
     <span className="tb-runner-image-preview-surface-state tb-runner-image-preview-surface-state-error">
       Preview unavailable.

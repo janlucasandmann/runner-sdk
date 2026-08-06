@@ -68,10 +68,11 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                         )
                       )
                     : isSearchInventoryLoading
-                      ? React.createElement("div", { className: "playground-files-state" },
-                          React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                          React.createElement("span", null, "Searching files...")
-                        )
+                      ? React.createElement(PlatformLoadingState, {
+                          centered: true,
+                          className: "playground-files-state",
+                          message: "Searching files...",
+                        })
                       : React.createElement("div", { className: "playground-files-search-empty" }, "No matching files found.")
                   : React.createElement("div", { className: "playground-files-search-empty" }, "Type a file name or path to search this environment.")
               )
@@ -79,42 +80,48 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
         }
 
         function renderFilesCreateMenuItems() {
+          const usesAppleShortcuts = typeof navigator !== "undefined"
+            && /mac|iphone|ipad/i.test(String(navigator.platform || ""));
+          const shortcutModifier = usesAppleShortcuts ? "⌘" : "Ctrl";
           return React.createElement(React.Fragment, null,
             React.createElement("button", {
                 type: "button",
-                className: "playground-files-toolbar-menu-item",
+                className: "tb-popup-row platform-instructions-editor__slash-option",
                 onClick: () => void handleCreateFile(currentPath),
                 disabled: !selectedEnvironmentId || isCreatingFile,
+                "aria-keyshortcuts": "Meta+N Control+N",
               },
-                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                  React.createElement("span", null, isCreatingFile ? "Creating..." : "Create File"),
-                  React.createElement("span", null, "Start a new file here")
-                )
+                React.createElement("span", { className: "tb-popup-icon", "aria-hidden": "true" },
+                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 })
+                ),
+                React.createElement("span", { className: "tb-popup-label" }, isCreatingFile ? "Creating..." : "Create File"),
+                React.createElement("span", { className: "platform-instructions-editor__slash-shortcut", "aria-hidden": "true" }, shortcutModifier + " N")
               ),
               React.createElement("button", {
                 type: "button",
-                className: "playground-files-toolbar-menu-item",
+                className: "tb-popup-row platform-instructions-editor__slash-option",
                 onClick: () => void handleCreateFolder(currentPath),
                 disabled: !selectedEnvironmentId || isCreatingFolder,
+                "aria-keyshortcuts": "Meta+Shift+N Control+Shift+N",
               },
-                React.createElement(Folder, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                  React.createElement("span", null, isCreatingFolder ? "Creating..." : "New Folder"),
-                  React.createElement("span", null, "Create in the current folder")
-                )
+                React.createElement("span", { className: "tb-popup-icon", "aria-hidden": "true" },
+                  React.createElement(Folder, { width: 14, height: 14, strokeWidth: 1.8 })
+                ),
+                React.createElement("span", { className: "tb-popup-label" }, isCreatingFolder ? "Creating..." : "New Folder"),
+                React.createElement("span", { className: "platform-instructions-editor__slash-shortcut", "aria-hidden": "true" }, shortcutModifier + " ⇧ N")
               ),
               React.createElement("button", {
                 type: "button",
-                className: "playground-files-toolbar-menu-item",
+                className: "tb-popup-row platform-instructions-editor__slash-option",
                 onClick: () => openUploadPicker(currentPath),
                 disabled: !selectedEnvironmentId || isUploadingFiles,
+                "aria-keyshortcuts": "Meta+Shift+U Control+Shift+U",
               },
-                React.createElement(ArrowUpFromLine, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                  React.createElement("span", null, isUploadingFiles ? "Uploading..." : "Upload Files"),
-                  React.createElement("span", null, "Add files to this location")
-                )
+                React.createElement("span", { className: "tb-popup-icon", "aria-hidden": "true" },
+                  React.createElement(ArrowUpFromLine, { width: 14, height: 14, strokeWidth: 1.8 })
+                ),
+                React.createElement("span", { className: "tb-popup-label" }, isUploadingFiles ? "Uploading..." : "Upload Files"),
+                React.createElement("span", { className: "platform-instructions-editor__slash-shortcut", "aria-hidden": "true" }, shortcutModifier + " ⇧ U")
               )
           );
         }
@@ -128,7 +135,7 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
         }
 
         function renderFilesAppHeaderCreateSelector() {
-          if (isChangesMode) {
+          if (!isFilesMode) {
             return null;
           }
           return React.createElement(PlatformButtonSelector, {
@@ -234,27 +241,38 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
         }
 
         function renderFilesLibraryPathRow() {
+          const activeBreadcrumbs = isConnectorsMode ? connectorBrowserBreadcrumbs : breadcrumbs;
+          const handleActiveBack = isConnectorsMode
+            ? () => navigateFileConnectorHistory(connectorBrowserHistoryIndex - 1)
+            : handleGoBack;
+          const handleActiveForward = isConnectorsMode
+            ? () => navigateFileConnectorHistory(connectorBrowserHistoryIndex + 1)
+            : handleGoForward;
+          const activeCanGoBack = isConnectorsMode ? connectorBrowserHistoryIndex > 0 : canGoBack;
+          const activeCanGoForward = isConnectorsMode
+            ? connectorBrowserHistoryIndex < connectorBrowserHistory.length - 1
+            : canGoForward;
           return React.createElement("div", { className: "playground-files-library-path-row" },
             React.createElement("div", { className: "playground-files-library-path-actions" },
               React.createElement("button", {
                 type: "button",
                 className: "playground-files-nav-button",
-                onClick: handleGoBack,
-                disabled: !canGoBack,
+                onClick: handleActiveBack,
+                disabled: !activeCanGoBack,
                 title: "Go back",
                 "aria-label": "Go back",
               }, React.createElement(ChevronLeft, { strokeWidth: 1.8, width: 14, height: 14 })),
               React.createElement("button", {
                 type: "button",
                 className: "playground-files-nav-button",
-                onClick: handleGoForward,
-                disabled: !canGoForward,
+                onClick: handleActiveForward,
+                disabled: !activeCanGoForward,
                 title: "Go forward",
                 "aria-label": "Go forward",
               }, React.createElement(ChevronRight, { strokeWidth: 1.8, width: 14, height: 14 }))
             ),
             React.createElement("div", { className: "playground-files-breadcrumbs", "aria-label": "Current folder path" },
-              breadcrumbs.map((crumb, index) =>
+              activeBreadcrumbs.map((crumb, index) =>
                 React.createElement("span", {
                     key: crumb.id || "root",
                     className: "playground-files-breadcrumb-segment",
@@ -268,11 +286,11 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                     : null,
                   React.createElement("button", {
                       type: "button",
-                      className: "playground-files-breadcrumb" + (index === breadcrumbs.length - 1 ? " is-active" : ""),
-                      onClick: () => handleBreadcrumbClick(crumb.id),
-                      disabled: index === breadcrumbs.length - 1,
+                      className: "playground-files-breadcrumb" + (index === activeBreadcrumbs.length - 1 ? " is-active" : ""),
+                      onClick: isConnectorsMode ? crumb.onSelect : () => handleBreadcrumbClick(crumb.id),
+                      disabled: index === activeBreadcrumbs.length - 1,
                     },
-                      React.createElement("span", null, index === 0 ? "Home" : crumb.name)
+                      React.createElement("span", null, isConnectorsMode ? crumb.name : index === 0 ? "Home" : crumb.name)
                     )
                   )
               )
@@ -300,11 +318,24 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
               || null
             : null;
           const scopedProjectComputerName = String(scopedProjectEnvironment?.name || selectedEnvironment?.name || "Computer").trim() || "Computer";
+          const activeSearchQuery = isConnectorsMode ? connectorBrowserSearchQuery : searchPopupQuery;
+          const setActiveSearchQuery = isConnectorsMode ? setConnectorBrowserSearchQuery : setSearchPopupQuery;
+          const connectorFilebaseTitle = String(activeFileConnectorSource?.label || "Connector").trim();
 
           return React.createElement("div", { className: "playground-files-library-header" },
             React.createElement("div", { className: "playground-files-library-title-row" },
               React.createElement("h1", { className: "playground-files-library-title" },
-                hasConcreteProjectScope
+                isConnectorsMode
+                  ? React.createElement("span", { className: "playground-files-library-title-heading is-connector" },
+                      activeFileConnectorSource
+                        ? renderFileConnectorSourceIcon(
+                            activeFileConnectorSource,
+                            "playground-files-library-title-connector-icon"
+                          )
+                        : null,
+                      React.createElement("span", null, connectorFilebaseTitle)
+                    )
+                  : hasConcreteProjectScope
                   ? React.createElement("span", { className: "playground-files-library-title-heading" },
                       React.createElement("span", null, "Files on " + scopedProjectTitle),
                       React.createElement("span", { className: "playground-files-library-title-computer-badge" },
@@ -321,14 +352,14 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                     className: "playground-files-library-search",
                     placeholder: "Search files",
                     "aria-label": "Search files",
-                    value: searchPopupQuery,
+                    value: activeSearchQuery,
                     onFocus: () => {
                       if (toolbarPopover === "search") {
                         setToolbarPopover("");
                       }
                     },
                     onChange: (event) => {
-                      setSearchPopupQuery(event.target.value);
+                      setActiveSearchQuery(event.target.value);
                       if (toolbarPopover) {
                         setToolbarPopover("");
                       }
@@ -391,7 +422,7 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
         }
 
         function renderFilesCreateButton() {
-          if (isChangesMode) {
+          if (!isFilesMode) {
             return null;
           }
           return React.createElement("div", { className: "playground-files-toolbar-anchor playground-files-control-create" },
@@ -421,19 +452,30 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
           extraActions: isPreviewMaximized ? null : renderFilesAppHeaderCreateSelector(),
           environmentId: selectedEnvironmentId,
           path: currentPath,
-          contentMode: isChangesMode ? "changes" : "files",
+          contentMode: isChangesMode ? "changes" : isConnectorsMode ? "connectors" : "files",
         }), [
           contentMode,
+          activeConnectorCredentialId,
+          activeConnectorSourceId,
+          activeFileConnectorAccount?.identity,
+          activeFileConnectorAccount?.name,
+          activeFileConnectorAccounts,
+          activeFileConnectorSource?.label,
           activeProjectFilterOption.id,
           activeProjectFilterOption.label,
           currentPath,
           availableProjectFilters.length,
+          connectorSourceState.error,
+          connectorSourceState.items,
+          connectorSourceState.status,
           environments.length,
           fileEnvironmentMutationState,
           filesEnvironmentMenuMode,
           hasPreviewPanel,
           isPreviewMaximized,
           isChangesMode,
+          isConnectorsMode,
+          isFilesMode,
           isCreatingFile,
           isCreatingFolder,
           isUploadingFiles,
@@ -465,10 +507,11 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
 
         function renderFilesBrowserContent() {
           return isCurrentEnvironmentLoading
-            ? React.createElement("div", { className: "playground-files-state" },
-                React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                React.createElement("span", null, "Loading files...")
-              )
+            ? React.createElement(PlatformLoadingState, {
+                centered: true,
+                className: "playground-files-state",
+                message: "Loading files...",
+              })
             : currentEnvironmentError
               ? React.createElement("div", { className: "playground-files-state is-error" }, currentEnvironmentError)
               : !selectedEnvironmentId
@@ -631,12 +674,14 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
 	                      type: "button",
 	                      className: "playground-files-inline-selector" + (toolbarPopover === "environment" ? " active" : ""),
 	                      onClick: () => {
-	                        setFilesEnvironmentMenuMode(projectFilterScope ? "projects" : "computers");
+	                        setFilesEnvironmentMenuMode(isConnectorsMode ? "connectors" : projectFilterScope ? "projects" : "computers");
 	                        toggleToolbarPopover("environment");
 	                      },
 	                    },
                       React.createElement("span", null,
-                        projectFilterScope
+                        isConnectorsMode
+                          ? activeFileConnectorSource?.label || "Connectors"
+                          : projectFilterScope
                           ? activeProjectFilterOption.label
                           : selectedEnvironment?.name || "No environments available"
                       ),
@@ -645,20 +690,8 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                         strokeWidth: 1.85,
                       })
 	                    ),
-	                    null,
-                    React.createElement("div", { className: "playground-files-toolbar-anchor" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-header-icon-button is-plain" + (toolbarPopover === "environment-actions" ? " is-active" : ""),
-                        onClick: () => toggleToolbarPopover("environment-actions"),
-                        disabled: !selectedEnvironmentId,
-                        title: "Computer actions",
-                        "aria-label": "Computer actions",
-                      }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
-                      toolbarPopover === "environment-actions"
-                        ? renderEnvironmentActionsMenu()
-                        : null
-                    )
+	                    toolbarPopover === "environment" ? renderFilesEnvironmentSelectMenu() : null,
+                    renderEnvironmentActionsControl()
                   ),
                   renderFilesModeSwitch(),
                   React.createElement("div", { className: "playground-files-topbar-actions" },
@@ -719,17 +752,18 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                                       )
                                     )
                                   : isSearchInventoryLoading
-                                    ? React.createElement("div", { className: "playground-files-state" },
-                                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                                        React.createElement("span", null, "Searching files...")
-                                      )
+                                    ? React.createElement(PlatformLoadingState, {
+                                        centered: true,
+                                        className: "playground-files-state",
+                                        message: "Searching files...",
+                                      })
                                     : React.createElement("div", { className: "playground-files-search-empty" }, "No matching files found.")
                                 : React.createElement("div", { className: "playground-files-search-empty" }, "Type a file name or path to search this environment.")
                             )
                           )
                         : null
                     ),
-                    !isChangesMode
+                    isFilesMode
                       ? React.createElement("div", { className: "playground-files-toolbar-anchor" },
                           React.createElement("button", {
                             type: "button",
@@ -744,7 +778,7 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                       : null
                   )
                 ),
-                !isChangesMode
+                isFilesMode || isConnectorsMode
                   ? renderFilesLibraryHeader()
                   : null,
                 actionError
@@ -754,9 +788,10 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
               React.createElement("div", {
                 className: "playground-files-browser-body"
                   + (isChangesMode ? " is-changes-view" : "")
-                  + (!isChangesMode && isBackgroundDropTarget ? " is-drop-target" : "")
-                  + (!isChangesMode && isExternalFileDropActive ? " is-file-drop-active" : ""),
-                onClick: !isChangesMode
+                  + (isConnectorsMode ? " is-connectors-view" : "")
+                  + (isFilesMode && isBackgroundDropTarget ? " is-drop-target" : "")
+                  + (isFilesMode && isExternalFileDropActive ? " is-file-drop-active" : ""),
+                onClick: isFilesMode
                   ? (event) => {
                       if (event.target === event.currentTarget) {
                         clearSelection();
@@ -764,19 +799,19 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                       }
                     }
                   : undefined,
-                onContextMenu: !isChangesMode
+                onContextMenu: isFilesMode
                   ? (event) => {
                       if (event.target === event.currentTarget) {
                         handleContextMenu(event, null);
                       }
                     }
                   : undefined,
-                onDragEnter: !isChangesMode ? handleFilesBrowserDragEnter : undefined,
-                onDragOver: !isChangesMode ? handleFilesBrowserDragOver : undefined,
-                onDragLeave: !isChangesMode ? handleFilesBrowserDragLeave : undefined,
-                onDrop: !isChangesMode ? (event) => void handleBrowserDrop(event) : undefined,
+                onDragEnter: isFilesMode ? handleFilesBrowserDragEnter : undefined,
+                onDragOver: isFilesMode ? handleFilesBrowserDragOver : undefined,
+                onDragLeave: isFilesMode ? handleFilesBrowserDragLeave : undefined,
+                onDrop: isFilesMode ? (event) => void handleBrowserDrop(event) : undefined,
               },
-                !isChangesMode && isExternalFileDropActive
+                isFilesMode && isExternalFileDropActive
                   ? React.createElement("div", { className: "playground-files-screen-drop-overlay" },
                       React.createElement("div", { className: "playground-files-screen-drop-overlay-panel" },
                         React.createElement("div", { className: "playground-files-screen-drop-overlay-illustration", "aria-hidden": "true" },
@@ -799,7 +834,9 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                   : null,
                 isChangesMode
                   ? renderChangesBrowserContent()
-                  : renderFilesBrowserContent()
+                  : isConnectorsMode
+                    ? renderFileConnectorsBrowser()
+                    : renderFilesBrowserContent()
               )
             ),
             React.createElement("aside", {

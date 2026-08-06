@@ -448,6 +448,31 @@ function normalizeEvaluationExecutionTarget(evaluationSet, options = {}) {
     && !Array.isArray(source.invocation)
     ? source.invocation
     : null;
+  const candidateAuthoritySource = source.candidateAuthority
+    && typeof source.candidateAuthority === "object"
+    && !Array.isArray(source.candidateAuthority)
+    ? source.candidateAuthority
+    : null;
+  const candidateAuthority = candidateAuthoritySource
+    && normalizeString(candidateAuthoritySource.kind).toLowerCase() === "agent_optimization_job"
+    && normalizeString(candidateAuthoritySource.id)
+    ? {
+        kind: "agent_optimization_job",
+        id: normalizeString(candidateAuthoritySource.id),
+        ...(normalizeString(candidateAuthoritySource.purpose).toLowerCase() === "verification"
+          ? {
+              purpose: "verification",
+              iterationNumber: Math.max(
+                0,
+                Number(
+                  candidateAuthoritySource.iterationNumber
+                    || candidateAuthoritySource.iteration_number,
+                ) || 0,
+              ),
+            }
+          : {}),
+      }
+    : null;
   const targetId = normalizeString(
     source.targetId
       || source.target_id
@@ -503,6 +528,7 @@ function normalizeEvaluationExecutionTarget(evaluationSet, options = {}) {
     ),
     snapshot,
     invocation,
+    candidateAuthority,
     environmentId: normalizeString(
       source.environmentId
         || source.environment_id
@@ -554,22 +580,31 @@ export function isScoredEvaluationCase(caseItem) {
 
 export function normalizeRunCase(rawCase = {}, fallbackIndex = 0) {
   const source = rawCase && typeof rawCase === "object" && !Array.isArray(rawCase) ? rawCase : {};
+  const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+    ? source.metadata
+    : {};
   const score = clampScore(source.score);
   const status = normalizeString(source.status).toLowerCase();
   return {
-    id: normalizeString(source.id || source.caseRunId || source.case_run_id) || createEvaluationId("eval_run_case"),
+    id: normalizeString(
+      source.id
+        || source.caseRunId
+        || source.case_run_id
+        || metadata.caseRunId
+        || metadata.case_run_id,
+    ) || createEvaluationId("eval_run_case"),
     dataRowId: normalizeString(source.dataRowId || source.data_row_id || source.caseId || source.case_id),
     dataRowRunIndex: normalizeRunCount(source.dataRowRunIndex ?? source.data_row_run_index ?? source.repeatIndex ?? source.repeat_index ?? 1),
     dataRowRunCount: normalizeRunCount(source.dataRowRunCount ?? source.data_row_run_count ?? source.repeatCount ?? source.repeat_count ?? 1),
-    threadId: normalizeString(source.threadId || source.thread_id),
-    evaluatorThreadId: normalizeString(source.evaluatorThreadId || source.evaluator_thread_id),
+    threadId: normalizeString(source.threadId || source.thread_id || metadata.threadId || metadata.thread_id),
+    evaluatorThreadId: normalizeString(source.evaluatorThreadId || source.evaluator_thread_id || metadata.evaluatorThreadId || metadata.evaluator_thread_id),
     input: String(source.input || ""),
     expectedOutput: String(source.expectedOutput || source.expected_output || ""),
     evaluationGuidance: String(source.evaluationGuidance || source.evaluation_guidance || source.scoringGuidance || source.scoring_guidance || source.rubric || ""),
     optimizationRole: ["train", "validation", "holdout"].includes(
-      normalizeString(source.optimizationRole || source.optimization_role).toLowerCase(),
+      normalizeString(source.optimizationRole || source.optimization_role || metadata.optimizationRole || metadata.optimization_role).toLowerCase(),
     )
-      ? normalizeString(source.optimizationRole || source.optimization_role).toLowerCase()
+      ? normalizeString(source.optimizationRole || source.optimization_role || metadata.optimizationRole || metadata.optimization_role).toLowerCase()
       : "train",
     sliceIds: Array.from(new Set(
       (Array.isArray(source.sliceIds)
@@ -580,9 +615,11 @@ export function normalizeRunCase(rawCase = {}, fallbackIndex = 0) {
         .map(normalizeString)
         .filter(Boolean),
     )).sort(),
-    actualOutput: String(source.actualOutput || source.actual_output || ""),
+    actualOutput: typeof (source.actualOutput ?? source.actual_output ?? source.output) === "string"
+      ? String(source.actualOutput ?? source.actual_output ?? source.output)
+      : JSON.stringify(source.actualOutput ?? source.actual_output ?? source.output ?? ""),
     evaluatorOutput: String(source.evaluatorOutput || source.evaluator_output || ""),
-    evaluatorReason: String(source.evaluatorReason || source.evaluator_reason || ""),
+    evaluatorReason: String(source.evaluatorReason || source.evaluator_reason || source.explanation || ""),
     evaluatorParseStatus: String(source.evaluatorParseStatus || source.evaluator_parse_status || ""),
     snapshotVersion: String(source.snapshotVersion || source.snapshot_version || ""),
     targetExecution: source.targetExecution
@@ -615,7 +652,7 @@ export function normalizeRunCase(rawCase = {}, fallbackIndex = 0) {
       ...EVALUATION_SCORED_CASE_STATUSES,
       ...EVALUATION_UNSCORED_CASE_STATUSES,
     ].includes(status) ? status : "queued",
-    latencyMs: Math.max(0, Number(source.latencyMs || source.latency_ms || 0) || 0),
+    latencyMs: Math.max(0, Number(source.latencyMs || source.latency_ms || source.durationMs || source.duration_ms || 0) || 0),
     error: String(source.error || ""),
     createdAt: normalizeString(source.createdAt || source.created_at) || new Date(Date.now() + fallbackIndex).toISOString(),
     completedAt: normalizeString(source.completedAt || source.completed_at),
@@ -821,6 +858,18 @@ export function createEvaluationRun(evaluationSet, options = {}) {
   });
   const datasetVersion = normalizeString(options.datasetVersion || options.dataset_version) || datasetFingerprint;
   const evaluatorVersion = normalizeString(options.evaluatorVersion || options.evaluator_version) || evaluatorFingerprint;
+  const requestedPurpose = normalizeString(
+    options.purpose || options.runPurpose || options.run_purpose,
+  ).toLowerCase();
+  const purpose = [
+    "diagnostic",
+    "development",
+    "optimization",
+    "release",
+    "external_validation",
+  ].includes(requestedPurpose)
+    ? requestedPurpose
+    : "diagnostic";
   const run = {
     id: normalizeString(options.id || options.runId || options.run_id) || createEvaluationId("eval_run"),
     evaluationSetId: evaluationSet.id,
@@ -828,6 +877,7 @@ export function createEvaluationRun(evaluationSet, options = {}) {
     evaluationVersionNumber: Math.max(0, Number(options.evaluationVersionNumber || options.evaluation_version_number || 0) || 0),
     evaluationVersionLabel: normalizeString(options.evaluationVersionLabel || options.evaluation_version_label),
     label: normalizeString(options.label || options.name) || "Run",
+    purpose,
     status: "running",
     createdAt: nowIso,
     completedAt: "",

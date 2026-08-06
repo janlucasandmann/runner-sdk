@@ -1,4 +1,3 @@
-import { FingerprintPattern, Layers, UsersRound } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ResourceDetailPage } from "../../../../../../platform-ui/pages/details/index.js";
@@ -10,11 +9,9 @@ export interface TeamDetailPageProps {
   tabBarActions?: ReactNode;
   appHeaderActions?: ReactNode;
   appHeaderActionsPortalId?: string;
-  sidebarToggle?: ReactNode;
   children: ReactNode;
   sidebar: ReactNode;
   activeTab: TeamDetailTab;
-  onTabChange: (tab: TeamDetailTab) => void;
   sidebarCollapsed?: boolean;
   sidebarPopoverOpen?: boolean;
   ariaLabel?: string;
@@ -22,22 +19,14 @@ export interface TeamDetailPageProps {
   className?: string;
 }
 
-const TEAM_DETAIL_TABS = [
-  { id: "members", label: "Members", icon: UsersRound },
-  { id: "resources", label: "Resources", icon: Layers },
-  { id: "roles", label: "Roles", icon: FingerprintPattern },
-] as const;
-
 export function TeamDetailPage({
   header,
   tabBarActions,
   appHeaderActions,
   appHeaderActionsPortalId = "",
-  sidebarToggle,
   children,
   sidebar,
   activeTab,
-  onTabChange,
   sidebarCollapsed = false,
   sidebarPopoverOpen = false,
   ariaLabel = "Team details",
@@ -58,11 +47,9 @@ export function TeamDetailPage({
     <>
       <ResourceDetailPage<TeamDetailTab>
         header={header}
-        tabs={TEAM_DETAIL_TABS}
+        tabs={[]}
         activeTab={activeTab}
-        onTabChange={onTabChange}
         tabBarActions={tabBarActions}
-        sidebarToggle={sidebarToggle}
         sidebar={sidebar}
         sidebarCollapsed={sidebarCollapsed}
         sidebarAutoCollapseTabs={["resources", "roles"]}

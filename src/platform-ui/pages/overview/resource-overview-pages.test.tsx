@@ -21,10 +21,21 @@ const analytics: ResourceOverviewAnalyticsModel = {
   series: [],
 };
 const CONTROLS_PORTAL_ID = "resource-overview-test-controls";
+const PERIOD_PORTAL_ID = "resource-overview-test-period";
 
 function renderWithOverviewControls(ui: React.ReactNode) {
   return render(
     <>
+      <div id={CONTROLS_PORTAL_ID} data-testid="overview-controls" />
+      {ui}
+    </>,
+  );
+}
+
+function renderWithSeparateOverviewControls(ui: React.ReactNode) {
+  return render(
+    <>
+      <div id={PERIOD_PORTAL_ID} data-testid="overview-period" />
       <div id={CONTROLS_PORTAL_ID} data-testid="overview-controls" />
       {ui}
     </>,
@@ -307,6 +318,49 @@ describe("resource overview pages", () => {
       within(container)
         .getByRole("button", { name: "Manage Repos" })
         .querySelector("svg"),
+    ).toBeNull();
+  });
+
+  it("can place the timeframe in a centered portal without moving header actions", () => {
+    renderWithSeparateOverviewControls(
+      <ResourceOverviewPage<{ id: string; name: string }>
+        period="month"
+        onPeriodChange={vi.fn()}
+        analytics={analytics}
+        controlsPortalId={CONTROLS_PORTAL_ID}
+        periodPortalId={PERIOD_PORTAL_ID}
+        table={{
+          rows: [],
+          columns: [{ id: "name", header: "Name", accessor: "name" }],
+          getRowId: (row) => row.id,
+          ariaLabel: "Resources",
+          toolbar: {
+            primaryAction: {
+              label: "Agent",
+              onClick: vi.fn(),
+            },
+          },
+        }}
+      />,
+    );
+
+    const periodPortal = screen.getByTestId("overview-period");
+    const actionsPortal = screen.getByTestId("overview-controls");
+    expect(
+      within(periodPortal).getByRole("radiogroup", {
+        name: "Analytics time frame",
+      }),
+    ).not.toBeNull();
+    expect(
+      within(periodPortal).queryByRole("button", { name: "Agent" }),
+    ).toBeNull();
+    expect(
+      within(actionsPortal).getByRole("button", { name: "Agent" }),
+    ).not.toBeNull();
+    expect(
+      within(actionsPortal).queryByRole("radiogroup", {
+        name: "Analytics time frame",
+      }),
     ).toBeNull();
   });
 

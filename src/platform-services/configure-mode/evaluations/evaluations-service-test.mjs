@@ -18,6 +18,7 @@ import {
   extractThreadCostUsd,
   normalizeCaseRefinementResult,
   normalizeEvaluationSet,
+  normalizeRunCase,
   parseEvaluatorResult,
   recomputeRun,
 } from "./server/domain/index.mjs";
@@ -899,6 +900,7 @@ assert.equal(evaluationSet.dataRows[0]?.runCount, 2);
 const evaluationRun = createEvaluationRun(evaluationSet, {
   id: "run_1",
   label: "Baseline",
+  purpose: "optimization",
   targetGuardrailId: "guardrail_1",
   targetGuardrailVersionId: "guardrail_version_1",
 });
@@ -906,6 +908,7 @@ assert.equal(evaluationRun.id, "run_1");
 assert.equal(evaluationRun.evaluationSetId, "evaluation_1");
 assert.equal(evaluationRun.cases.length, 2);
 assert.equal(evaluationRun.status, "running");
+assert.equal(evaluationRun.purpose, "optimization");
 assert.equal(evaluationRun.targetGuardrailId, "guardrail_1");
 assert.equal(evaluationRun.targetGuardrailVersionId, "guardrail_version_1");
 assert.match(evaluationRun.datasetFingerprint, /^sha256:[a-f0-9]{64}$/);
@@ -1108,6 +1111,28 @@ const validationRun = createEvaluationRun(optimizationEvaluationSet, {
 assert.deepEqual(validationRun.optimizationRoles, ["validation"]);
 assert.deepEqual(validationRun.cases.map((caseRun) => caseRun.dataRowId), ["validation_case"]);
 assert.equal(validationRun.cases[0]?.optimizationRole, "validation");
+
+const canonicalWorkerCase = normalizeRunCase({
+  caseId: "validation_case",
+  output: { result: "Validated" },
+  explanation: "Matched the immutable expected output.",
+  durationMs: 37,
+  status: "passed",
+  score: 1,
+  metadata: {
+    caseRunId: "case_run_validation",
+    threadId: "thread_validation",
+    evaluatorThreadId: "thread_evaluator_validation",
+    optimizationRole: "validation",
+  },
+});
+assert.equal(canonicalWorkerCase.id, "case_run_validation");
+assert.equal(canonicalWorkerCase.threadId, "thread_validation");
+assert.equal(canonicalWorkerCase.evaluatorThreadId, "thread_evaluator_validation");
+assert.equal(canonicalWorkerCase.optimizationRole, "validation");
+assert.equal(canonicalWorkerCase.actualOutput, '{"result":"Validated"}');
+assert.equal(canonicalWorkerCase.evaluatorReason, "Matched the immutable expected output.");
+assert.equal(canonicalWorkerCase.latencyMs, 37);
 
 const parsedScore = parseEvaluatorResult(
   '{"score":0.9,"reason":"Resolved correctly","passed":true,"confidence":0.8}',

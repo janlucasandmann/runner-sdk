@@ -32,7 +32,13 @@ for every production leaf module.
   reattachment.
 - `attachment-factories.ts`: deterministic workspace, implicit, connector, and
   GitHub-selection attachment construction.
-- `canonical-*.ts` and `turn-*.ts`: pure timeline and presentation adapters.
+- `canonical-*.ts` and `turn-*.ts`: pure timeline and presentation adapters,
+  including the canonical message/run bridge used by the live work label.
+- `turn-presentation.tsx`: canonical agent/environment identity shared by live
+  and hydrated conversation turns.
+- `use-work-log-pagination.ts`: bounded per-turn raw-log pagination; the
+  controlled disclosure itself lives in
+  `platform-ui/components/thread-components/work-status-disclosure`.
 - `use-*.ts`: reactive controllers whose state or lifecycle can be tested
   independently.
 - `use-file-browser-navigation.ts`: file-browser modal, source, history,

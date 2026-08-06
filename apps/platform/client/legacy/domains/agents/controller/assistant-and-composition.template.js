@@ -95,6 +95,7 @@
                 fetchCustomSkills,
                 speechToTextUrl: speechToTextUrl || undefined,
                 requestHeaders,
+                resolveRequestHeaders,
                 appId: "runner-web-sdk-demo",
                 threadId: assistantThreadId || undefined,
                 inputMode: "computer-agents",
@@ -162,6 +163,344 @@
                 },
                 onRunFinish: handleAgentAssistantRunFinish,
                 onRunError: handleAgentAssistantRunError,
+                onEnvironmentChange: (nextEnvironmentId) => {
+                  if (typeof onPreferredEnvironmentChange === "function") {
+                    onPreferredEnvironmentChange(String(nextEnvironmentId || "").trim());
+                  }
+                },
+              })
+            );
+          }
+
+          function renderAgentPreviewPanel() {
+            if (!canShowAgentPreview || agentVersionsSidebarOpen) {
+              return null;
+            }
+
+            const previewAgentId = String(draftAgent?.id || selectedAgentId || "").trim();
+            if (!previewAgentId || previewAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
+              return null;
+            }
+            const previewAgentLabel = String(draftAgent?.name || "Agent").trim() || "Agent";
+            const isPreviewTeamAgent = Boolean(
+              draftAgent?.agentType === "team" || isPlaygroundTeamAgent(draftAgent)
+            );
+            const isDefaultPreviewAgent = isPlaygroundDefaultAgentConfigurationLocked(draftAgent);
+            const canRefinePreviewAgent = !isDefaultPreviewAgent && canVersionPlaygroundAgent(draftAgent);
+            const isPreviewRefinementRunning = Boolean(
+              agentPreviewRefinementRun?.agentId === previewAgentId
+              && (agentPreviewRefinementRun?.status === "running" || agentPreviewRefinementRun?.status === "syncing")
+            );
+            const previewAgentOption = buildPlaygroundRunnerAgentOption(draftAgent, { isDefault: true });
+            const previewEnvironmentOptions = (Array.isArray(environments) ? environments : []).map((environment) => ({
+              ...environment,
+              ...(preferredEnvironmentId && environment.id === preferredEnvironmentId ? { isDefault: true } : {}),
+            }));
+            const previewServiceActions = [
+              {
+                id: "evaluations",
+                label: "Evaluate the Agent",
+                serviceLabel: "Evaluations",
+                onClick: onOpenEvaluations,
+              },
+              {
+                id: "agent-optimization",
+                label: "Fine-tune the Agent",
+                serviceLabel: "Agent Optimization",
+                onClick: onOpenAgentOptimization,
+              },
+              {
+                id: "refine-instructions",
+                label: "Refine Instructions",
+                serviceLabel: "Instructions",
+                onClick: () => {
+                  setAgentPreviewRefineMode(true);
+                  setAgentPreviewComposerFocusRequest((current) => (Number(current) || 0) + 1);
+                },
+              },
+            ];
+            const previewRefineControl = canRefinePreviewAgent
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "playground-agent-preview-refine-control" + (agentPreviewRefineMode ? " is-active" : ""),
+                  disabled: isPreviewRefinementRunning,
+                  "aria-label": agentPreviewRefineMode ? "Disable instruction refinement" : "Refine Agent instructions",
+                  "aria-pressed": agentPreviewRefineMode ? "true" : "false",
+                  title: isPreviewRefinementRunning
+                    ? "Refining instructions..."
+                    : agentPreviewRefineMode
+                      ? "Instruction refinement active"
+                      : "Refine instructions",
+                  onClick: () => setAgentPreviewRefineMode((current) => !current),
+                },
+                React.createElement(TestTubeDiagonal, {
+                  width: 16,
+                  height: 16,
+                  strokeWidth: 1.8,
+                  "aria-hidden": "true",
+                })
+              )
+              : null;
+            const previewEmptyState = isDefaultPreviewAgent
+              ? React.createElement("div", {
+                  className: "playground-agent-preview-empty-state is-default-agent",
+                  "aria-hidden": "true",
+                })
+              : React.createElement("div", {
+                className: "playground-agent-preview-empty-state",
+                "aria-label": "Start a private preview thread with " + previewAgentLabel,
+              },
+              React.createElement(PlatformUiCard, {
+                  as: "section",
+                  variant: "feature",
+                  className: "playground-agent-preview-guide-card",
+                  "aria-labelledby": "playground-agent-preview-guide-title",
+                },
+                React.createElement("span", {
+                    className: "platform-ui-card__feature-icon is-violet playground-agent-preview-guide-icon",
+                    "aria-hidden": "true",
+                  },
+                  React.createElement(Sparkles, { width: 30, height: 30, strokeWidth: 1.7 })
+                ),
+                React.createElement("h2", {
+                  id: "playground-agent-preview-guide-title",
+                  className: "platform-ui-card__feature-title",
+                }, "Improve this Agent"),
+                React.createElement("p", {
+                  className: "platform-ui-card__feature-description",
+                }, "Measure quality, optimize behavior, and refine operational instructions."),
+                React.createElement("div", {
+                    className: "platform-ui-card__feature-links",
+                    "aria-label": "Agent improvement services",
+                  },
+                  previewServiceActions.map((action) => React.createElement("button", {
+                      key: action.id,
+                      type: "button",
+                      className: "platform-ui-card__feature-link playground-agent-preview-guide-action"
+                        + (action.id === "refine-instructions" && agentPreviewRefineMode ? " is-active" : ""),
+                      disabled: typeof action.onClick !== "function",
+                      "aria-pressed": action.id === "refine-instructions"
+                        ? (agentPreviewRefineMode ? "true" : "false")
+                        : undefined,
+                      onClick: () => {
+                        if (action.id === "refine-instructions") {
+                          action.onClick();
+                          return;
+                        }
+                        requestAgentNavigation(action.onClick);
+                      },
+                    },
+                    React.createElement("span", {
+                      className: "platform-ui-card__feature-link-label",
+                    }, action.label),
+                    React.createElement("span", {
+                        className: "platform-ui-card__feature-link-end",
+                      },
+                      React.createElement("span", {
+                        className: "platform-ui-card__feature-link-meta",
+                      }, action.serviceLabel),
+                      React.createElement(ArrowRight, {
+                        width: 14,
+                        height: 14,
+                        strokeWidth: 1.8,
+                        "aria-hidden": "true",
+                      })
+                    )
+                  ))
+                )
+              )
+            );
+
+            return React.createElement("aside", {
+                className: "playground-agent-preview-sidebar",
+                "aria-label": "Private agent preview",
+              },
+              React.createElement("header", { className: "playground-agent-preview-header" },
+                React.createElement("span", { className: "playground-agent-preview-title" },
+                  isPreviewTeamAgent ? "Preview your Squad" : "Preview your Agent"
+                ),
+                React.createElement(PlatformButton, {
+                    variant: "primary",
+                    size: "small",
+                    className: "playground-agent-preview-open-thread",
+                    disabled: typeof onStartThreadWithAgent !== "function",
+                    onClick: handleAgentProfileNewThread,
+                  },
+                  React.createElement("span", null, "Open new chat"),
+                  React.createElement(ArrowUpRight, {
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                    "aria-hidden": "true",
+                  })
+                )
+              ),
+              React.createElement(RunnerChat, {
+                key: "agent-preview:" + previewAgentId,
+                className: "playground-agent-preview-runner",
+                backendUrl,
+                apiKey,
+                fetchCustomSkills,
+                speechToTextUrl: speechToTextUrl || undefined,
+                requestHeaders,
+                resolveRequestHeaders,
+                appId: "runner-web-sdk-agent-preview",
+                title: previewAgentLabel + " preview",
+                threadViewMode: "legacy",
+                threadMetadata: {
+                  runnerPlayground: {
+                    source: "agent-detail-preview",
+                    temporary: true,
+                    targetAgentId: previewAgentId,
+                  },
+                },
+                inputMode: "computer-agents",
+                computerAgents: computerAgents || undefined,
+                environments: previewEnvironmentOptions,
+                agents: [previewAgentOption],
+                hideAgentSelector: true,
+                skills: Array.isArray(skills) ? skills : [],
+                skillDefaults: getDemoImageGenerationSkillDefaults(),
+                enabledSkillIds: agentPreviewRefineMode
+                  ? Array.from(new Set([
+                      ...normalizePlaygroundEnabledSkillIds(draftAgent?.enabledSkills),
+                      "computer_agents",
+                    ]))
+                  : undefined,
+                environmentId: preferredEnvironmentId || undefined,
+                agentId: previewAgentId,
+                reasoningEffort: draftAgent?.reasoningEffort || undefined,
+                privateMode: true,
+                autoCreateThread: true,
+                composerFocusRequest: agentPreviewComposerFocusRequest,
+                keepFocusOnSubmit: true,
+                showUsageInStatus: false,
+                placeholder: agentPreviewRefineMode
+                  ? "Describe how to refine " + previewAgentLabel + "'s instructions"
+                  : "Message " + previewAgentLabel,
+                hiddenSystemPrompt: agentPreviewRefineMode
+                  ? buildAgentPreviewRefinementHiddenPrompt(draftAgent)
+                  : "",
+                composerBeforeAgentControl: previewRefineControl,
+                emptyState: previewEmptyState,
+                onRunStart: (threadId) => {
+                  if (!agentPreviewRefineMode) {
+                    return;
+                  }
+                  setAgentPreviewRefinementRun({
+                    agentId: previewAgentId,
+                    threadId: String(threadId || "").trim(),
+                    status: "running",
+                    baselineInstructions: String(draftAgent?.instructions || ""),
+                    baselineVersionId: String(
+                      getDraftAgentActiveVersion()?.id
+                      || getAgentVersionMetadata()?.activeAgentVersionId
+                      || getAgentVersionMetadata()?.active_agent_version_id
+                      || ""
+                    ).trim(),
+                  });
+                },
+                onRunFinish: (_result, threadId) => {
+                  const normalizedThreadId = String(threadId || "").trim();
+                  const isRefinementRun = agentPreviewRefineMode || Boolean(
+                    agentPreviewRefinementRun?.agentId === previewAgentId
+                    && (!agentPreviewRefinementRun?.threadId || agentPreviewRefinementRun.threadId === normalizedThreadId)
+                  );
+                  if (!isRefinementRun) {
+                    return;
+                  }
+                  setAgentPreviewRefinementRun({
+                    agentId: previewAgentId,
+                    threadId: normalizedThreadId,
+                    status: "syncing",
+                    baselineInstructions: String(agentPreviewRefinementRun?.baselineInstructions || draftAgent?.instructions || ""),
+                    baselineVersionId: String(agentPreviewRefinementRun?.baselineVersionId || "").trim(),
+                  });
+                  void (async () => {
+                    try {
+                      const baselineInstructions = String(
+                        agentPreviewRefinementRun?.baselineInstructions || draftAgent?.instructions || ""
+                      );
+                      const baselineVersionId = String(agentPreviewRefinementRun?.baselineVersionId || "").trim();
+                      const latestAgent = await loadAgentDetails(previewAgentId, {
+                        force: true,
+                        background: true,
+                      });
+                      let refreshedAgent = await refreshAuthoritativeAgentVersions(previewAgentId, {
+                        baseAgent: latestAgent || draftAgent,
+                      });
+                      const refreshedInstructions = typeof latestAgent?.instructions === "string"
+                        ? latestAgent.instructions
+                        : String(refreshedAgent?.instructions || "");
+                      const refreshedActiveVersion = readPlaygroundAgentVersions(refreshedAgent)
+                        .find((version) => version.status === "active") || null;
+                      if (
+                        refreshedInstructions !== baselineInstructions
+                        && baselineVersionId
+                        && String(refreshedActiveVersion?.id || "").trim() === baselineVersionId
+                      ) {
+                        const fallbackSnapshot = buildPlaygroundAgentVersionSnapshot({
+                          ...refreshedAgent,
+                          instructions: refreshedInstructions,
+                        });
+                        const fallbackVersion = await createAgentVersionApi(previewAgentId, fallbackSnapshot, {
+                          description: "Refined from Agent details preview",
+                        });
+                        await publishAgentVersionApi(previewAgentId, fallbackVersion.id, {
+                          snapshot: fallbackSnapshot,
+                          description: "Refined from Agent details preview",
+                        });
+                        refreshedAgent = await refreshAuthoritativeAgentVersions(previewAgentId, {
+                          baseAgent: refreshedAgent,
+                          preferredSelectedId: fallbackVersion.id,
+                        });
+                      }
+                      if (typeof onAgentMutated === "function") {
+                        await onAgentMutated();
+                      }
+                      setAgentPreviewRefineMode(false);
+                      setAgentPreviewRefinementRun({
+                        agentId: "",
+                        threadId: "",
+                        status: "idle",
+                        baselineInstructions: "",
+                        baselineVersionId: "",
+                      });
+                    } catch (_error) {
+                      setAgentPreviewRefinementRun({
+                        agentId: previewAgentId,
+                        threadId: normalizedThreadId,
+                        status: "failed",
+                        baselineInstructions: String(agentPreviewRefinementRun?.baselineInstructions || draftAgent?.instructions || ""),
+                        baselineVersionId: String(agentPreviewRefinementRun?.baselineVersionId || "").trim(),
+                      });
+                    }
+                  })();
+                },
+                onRunError: (_error, threadId) => {
+                  if (!agentPreviewRefineMode) {
+                    return;
+                  }
+                  setAgentPreviewRefinementRun({
+                    agentId: previewAgentId,
+                    threadId: String(threadId || "").trim(),
+                    status: "failed",
+                    baselineInstructions: String(agentPreviewRefinementRun?.baselineInstructions || draftAgent?.instructions || ""),
+                    baselineVersionId: String(agentPreviewRefinementRun?.baselineVersionId || "").trim(),
+                  });
+                },
+                onRunCancel: (threadId) => {
+                  if (!agentPreviewRefineMode) {
+                    return;
+                  }
+                  setAgentPreviewRefinementRun({
+                    agentId: previewAgentId,
+                    threadId: String(threadId || "").trim(),
+                    status: "failed",
+                    baselineInstructions: String(agentPreviewRefinementRun?.baselineInstructions || draftAgent?.instructions || ""),
+                    baselineVersionId: String(agentPreviewRefinementRun?.baselineVersionId || "").trim(),
+                  });
+                },
                 onEnvironmentChange: (nextEnvironmentId) => {
                   if (typeof onPreferredEnvironmentChange === "function") {
                     onPreferredEnvironmentChange(String(nextEnvironmentId || "").trim());
@@ -760,6 +1099,7 @@
               onPeriodChange: setAgentsHomeChartTimescale,
               analytics,
               controlsPortalId: "playground-resource-overview-controls",
+              periodPortalId: "playground-agents-overview-period-controls",
               loading: false,
               mutating: saveState.isSaving,
               onOpen: (row) => handleAgentSelect(row.id),
@@ -851,7 +1191,7 @@
                           )
                         )
                       ),
-                      renderAgentAssistantPanel()
+                      renderAgentPreviewPanel()
                     )
                   ),
   	            renderAgentVersionsSidebarPortal(),
@@ -1120,6 +1460,7 @@
                             fetchCustomSkills,
                             speechToTextUrl: speechToTextUrl || undefined,
                             requestHeaders,
+                            resolveRequestHeaders,
                             appId: "runner-web-sdk-demo",
                             inputMode: "computer-agents",
                             computerAgents: computerAgents || undefined,

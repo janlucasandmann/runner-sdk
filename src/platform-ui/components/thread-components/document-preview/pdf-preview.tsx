@@ -7,6 +7,7 @@ import {
   Plus as LucidePlus,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { PlatformLoadingState } from "../../composite/loading-state/index.js";
 import {
   clampRunnerPdfPage,
   RUNNER_PDF_MAX_ZOOM,
@@ -319,13 +320,11 @@ export function RunnerPdfPreview({ attachmentId, blob }: RunnerPdfPreviewProps) 
 
   if (pageCount === 0) {
     return (
-      <div className="tb-attachment-preview-state">
-        <LucideLoaderCircle
-          className="tb-attachment-preview-state-icon tb-context-action-notice-icon-spinner"
-          strokeWidth={1.8}
-        />
-        <span>Preparing PDF preview…</span>
-      </div>
+      <PlatformLoadingState
+        centered
+        className="tb-attachment-preview-state"
+        message="Loading PDF..."
+      />
     );
   }
 

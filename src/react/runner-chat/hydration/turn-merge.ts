@@ -1,4 +1,5 @@
 import type { RunnerLog } from "../../../types.js";
+import { enrichRunnerMessageConnectorMetadataFromStructuredEvidence } from "../../../thread/message-connector-metadata.js";
 import {
   isBrowserSkillCommand,
   isComputerUseMcpLog,
@@ -36,6 +37,17 @@ function normalizeTurnPrompt(prompt: string): string {
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
+}
+
+function mergeTurnMessageMetadata(
+  preferred: Record<string, unknown> | null | undefined,
+  fallback: Record<string, unknown> | null | undefined,
+): Record<string, unknown> | null {
+  if (!preferred && !fallback) return null;
+  return {
+    ...(fallback || {}),
+    ...(preferred || {}),
+  };
 }
 
 function runnerLogHasMetronomeWorkflowPromptReplacement(log: RunnerLog): boolean {
@@ -416,6 +428,10 @@ function insertHydratedTimelineLogs(
   return {
     ...turn,
     logs: dedupeAdjacentRunnerLogs(nextLogs),
+    messageMetadata: enrichRunnerMessageConnectorMetadataFromStructuredEvidence(
+      turn.messageMetadata,
+      nextLogs,
+    ),
     status,
     completedAtMs,
     durationSeconds,
@@ -516,7 +532,10 @@ export function mergeHydratedMessageTurnsIntoTurns(
     return {
       ...turn,
       prompt: turn.prompt || messageTurn.prompt,
-      messageMetadata: turn.messageMetadata ?? messageTurn.messageMetadata ?? null,
+      messageMetadata: mergeTurnMessageMetadata(
+        messageTurn.messageMetadata,
+        turn.messageMetadata,
+      ),
       sourceMessageId: turn.sourceMessageId ?? messageTurn.sourceMessageId ?? null,
       quotedSelection: turn.quotedSelection ?? messageTurn.quotedSelection ?? null,
       attachments: pickTurnAttachments(turn.attachments, messageTurn.attachments),
@@ -617,6 +636,10 @@ export function mergeHydratedTurns(
       mergedTurns[hydratedIndex] = {
         ...hydratedTurn,
         ...localTurn,
+        messageMetadata: mergeTurnMessageMetadata(
+          localTurn.messageMetadata,
+          hydratedTurn.messageMetadata,
+        ),
         presentation: localPresentation,
         quotedSelection:
           localTurn.quotedSelection ?? hydratedTurn.quotedSelection ?? null,
@@ -642,6 +665,10 @@ export function mergeHydratedTurns(
       ),
       sourceMessageId:
         hydratedTurn.sourceMessageId ?? localTurn.sourceMessageId ?? null,
+      messageMetadata: mergeTurnMessageMetadata(
+        hydratedTurn.messageMetadata,
+        localTurn.messageMetadata,
+      ),
       slideCreationCommand:
         hydratedTurn.slideCreationCommand ?? localTurn.slideCreationCommand ?? null,
       researchCreationCommand:

@@ -1,0 +1,33 @@
+# Upload only the reviewed GitHub connector overlay build definition and its
+# four runtime inputs. Parent directories must remain traversable for negated
+# file rules to take effect.
+*
+
+!repos/
+repos/*
+!repos/runner-web-sdk/
+repos/runner-web-sdk/*
+
+!repos/runner-web-sdk/deployment/
+repos/runner-web-sdk/deployment/*
+!repos/runner-web-sdk/deployment/platform/
+repos/runner-web-sdk/deployment/platform/*
+!repos/runner-web-sdk/deployment/platform/Dockerfile.github-connector-overlay
+!repos/runner-web-sdk/deployment/platform/cloudbuild-github-connector-overlay.yaml
+
+!repos/runner-web-sdk/apps/
+repos/runner-web-sdk/apps/*
+!repos/runner-web-sdk/apps/platform/
+repos/runner-web-sdk/apps/platform/*
+!repos/runner-web-sdk/apps/platform/server/
+repos/runner-web-sdk/apps/platform/server/*
+!repos/runner-web-sdk/apps/platform/server/integrations/
+repos/runner-web-sdk/apps/platform/server/integrations/*
+!repos/runner-web-sdk/apps/platform/server/integrations/connectors/
+repos/runner-web-sdk/apps/platform/server/integrations/connectors/*
+!repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/
+repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/*
+!repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/connector-adapter-registry.mjs
+!repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/connector-mcp-service.mjs
+!repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/github-connector-adapter.mjs
+!repos/runner-web-sdk/apps/platform/server/integrations/connectors/runtime/github-connector-capabilities.mjs

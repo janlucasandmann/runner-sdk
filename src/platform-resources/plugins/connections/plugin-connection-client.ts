@@ -91,6 +91,7 @@ export interface PlatformPluginConnectionRequestOptions {
   fetch?: PluginFetch;
   signal?: AbortSignal;
   organizationId?: string;
+  forceRefresh?: boolean;
 }
 
 export async function fetchPlatformPluginConnectionStatus(
@@ -99,9 +100,14 @@ export async function fetchPlatformPluginConnectionStatus(
 ): Promise<PlatformPluginConnectionStatus> {
   const organizationId = String(options.organizationId || "").trim();
   const requestKey = getConnectionStatusCacheKey(id, organizationId);
+  if (options.forceRefresh) {
+    connectionStatusCache.delete(requestKey);
+    connectionStatusRequests.delete(requestKey);
+  }
   // Explicit fetch implementations and abort signals are request-scoped
   // (primarily tests and detail flows), so they must not share lifecycle.
-  const canShareRequest = !options.fetch && !options.signal;
+  const canShareRequest = !options.fetch && !options.signal && !options.forceRefresh;
+  const canCacheResponse = !options.fetch && !options.signal;
   if (canShareRequest) {
     const cached = connectionStatusCache.get(requestKey);
     if (cached && cached.expiresAt > Date.now()) return cached.status;
@@ -129,7 +135,7 @@ export async function fetchPlatformPluginConnectionStatus(
       `Unable to read the ${definition.label} connection.`,
     );
     const status = normalizePlatformPluginConnectionStatus(id, payload);
-    if (canShareRequest) {
+    if (canCacheResponse) {
       connectionStatusCache.set(requestKey, {
         expiresAt: Date.now() + STATUS_CACHE_TTL_MS,
         status,
@@ -170,6 +176,7 @@ export async function beginPlatformPluginConnection(
   id: PlatformPluginConnectionId,
   options: BeginPlatformPluginConnectionOptions,
 ): Promise<PlatformPluginConnectionStart> {
+  invalidatePlatformPluginConnectionStatus(id);
   const definition = getPlatformPluginConnectionDefinition(id);
   const response = await (options.fetch || getDefaultFetch())(definition.loginPath, {
     method: "POST",

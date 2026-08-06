@@ -6,11 +6,11 @@ import {
   PlatformSecondaryButton,
 } from "../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
-import type {
-  TestCaseKind,
-  TestPlan,
-  TestPlanCreateInput,
-  TestWorkspaceResourceOption,
+import {
+  createDefaultTestPlanDefinition,
+  type TestPlan,
+  type TestPlanCreateInput,
+  type TestWorkspaceResourceOption,
 } from "../domain/index.js";
 
 interface TestPlanCreateModalProps {
@@ -21,25 +21,6 @@ interface TestPlanCreateModalProps {
   defaultEnvironmentId?: string;
   onClose: () => void;
   onCreate: (input: TestPlanCreateInput) => Promise<TestPlan>;
-}
-
-const CASE_KIND_OPTIONS: readonly { value: TestCaseKind; label: string; description: string }[] = [
-  { value: "command", label: "Command", description: "Execute a real shell command and verify its exit code." },
-  { value: "contract", label: "Contract", description: "Verify an API or data contract." },
-  { value: "integration", label: "Integration", description: "Verify multiple components working together." },
-  { value: "browser", label: "Browser", description: "Verify a user flow in a browser." },
-  { value: "agent", label: "Agent", description: "Verify an agent workflow or tool boundary." },
-  { value: "security", label: "Security", description: "Verify a security control or negative case." },
-  { value: "custom", label: "Custom", description: "Execute custom verification instructions." },
-] as const;
-
-function slugify(value: string): string {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80) || "test-case";
 }
 
 export function TestPlanCreateModal({
@@ -56,9 +37,6 @@ export function TestPlanCreateModal({
   const [description, setDescription] = useState("");
   const [projectId, setProjectId] = useState(defaultProjectId);
   const [environmentId, setEnvironmentId] = useState(defaultEnvironmentId);
-  const [caseName, setCaseName] = useState("Smoke test");
-  const [caseKind, setCaseKind] = useState<TestCaseKind>("command");
-  const [command, setCommand] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -68,9 +46,6 @@ export function TestPlanCreateModal({
     setDescription("");
     setProjectId(defaultProjectId);
     setEnvironmentId(defaultEnvironmentId);
-    setCaseName("Smoke test");
-    setCaseKind("command");
-    setCommand("");
     setSubmitting(false);
     setError("");
   }, [defaultEnvironmentId, defaultProjectId, open]);
@@ -82,19 +57,9 @@ export function TestPlanCreateModal({
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     const normalizedName = name.trim();
-    const normalizedCaseName = caseName.trim();
-    const normalizedCommand = command.trim();
     if (!normalizedName) {
       setError("Enter a test-plan name.");
       nameRef.current?.focus();
-      return;
-    }
-    if (!normalizedCaseName) {
-      setError("Enter a name for the first test case.");
-      return;
-    }
-    if (caseKind === "command" && !normalizedCommand) {
-      setError("Enter the command that the first test case should execute.");
       return;
     }
     setSubmitting(true);
@@ -107,29 +72,8 @@ export function TestPlanCreateModal({
         targetType: projectId ? "project" : "custom",
         targetId: projectId || undefined,
         defaultEnvironmentId: environmentId || undefined,
-        definition: {
-          cases: [
-            {
-              id: slugify(normalizedCaseName),
-              name: normalizedCaseName,
-              description: "",
-              kind: caseKind,
-              command: normalizedCommand,
-              workingDirectory: "",
-              timeoutMs: 300_000,
-              retries: 0,
-              env: {},
-              secretRefs: [],
-              request: {},
-              assertions: [],
-              agentId: "",
-              enabled: true,
-              tags: ["smoke"],
-            },
-          ],
-          concurrency: 1,
-          stopOnFailure: false,
-        },
+        definition: createDefaultTestPlanDefinition(),
+        publishInitialVersion: false,
       });
       onClose();
     } catch (nextError) {
@@ -143,7 +87,7 @@ export function TestPlanCreateModal({
     <PlatformModal
       open={open}
       title="New Test Plan"
-      description="Define an executable verification contract for a project component or workflow."
+      description="Create a draft plan first. You can add cases, review the execution boundary, and publish an immutable version when it is ready."
       as="form"
       size="large"
       initialFocusRef={nameRef}
@@ -162,7 +106,7 @@ export function TestPlanCreateModal({
           <PlatformPrimaryButton
             size="medium"
             type="submit"
-            disabled={submitting || !name.trim() || !caseName.trim()}
+            disabled={submitting || !name.trim()}
           >
             {submitting ? (
               <>
@@ -237,49 +181,6 @@ export function TestPlanCreateModal({
             disabled={submitting}
             onValueChange={setEnvironmentId}
           />
-        </div>
-      </div>
-
-      <div className="tests-create-modal__case">
-        <div>
-          <span className="tests-section-kicker">Initial Case</span>
-          <h3>Executable smoke test</h3>
-        </div>
-        <div className="tests-form-grid">
-          <label className="tests-form-field">
-            <span>Case name</span>
-            <input
-              value={caseName}
-              maxLength={500}
-              disabled={submitting}
-              onChange={(event) => setCaseName(event.currentTarget.value)}
-            />
-          </label>
-          <div className="tests-form-field">
-            <span>Case type</span>
-            <PlatformSelector
-              value={caseKind}
-              options={CASE_KIND_OPTIONS}
-              fullWidth
-              ariaLabel="Test case type"
-              disabled={submitting}
-              onValueChange={setCaseKind}
-            />
-          </div>
-          <label className="tests-form-field is-span-2">
-            <span>{caseKind === "command" ? "Command" : "Execution instructions"}</span>
-            <textarea
-              value={command}
-              rows={4}
-              placeholder={
-                caseKind === "command"
-                  ? "npm test -- --runInBand"
-                  : "Describe the concrete verification steps and assertions."
-              }
-              disabled={submitting}
-              onChange={(event) => setCommand(event.currentTarget.value)}
-            />
-          </label>
         </div>
       </div>
       {error ? <p className="tests-form-error" role="alert">{error}</p> : null}

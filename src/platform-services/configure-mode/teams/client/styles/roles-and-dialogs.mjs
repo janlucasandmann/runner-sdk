@@ -8,13 +8,18 @@ export const TEAMS_ROLES_AND_DIALOGS_CSS = `      .playground-team-roles-panel {
       }
 
       .playground-team-role-assigned-button {
+        display: inline-flex;
+        align-items: center;
+        padding: 0;
         border: 0;
+        background: transparent;
+        color: inherit;
         cursor: pointer;
         font-family: inherit;
       }
 
-      .playground-team-role-assigned-button:hover,
-      .playground-team-role-assigned-button.is-open {
+      .playground-team-role-assigned-button:hover .playground-team-role-assigned-label,
+      .playground-team-role-assigned-button.is-open .playground-team-role-assigned-label {
         background: rgba(255, 255, 255, 0.12);
         color: rgba(255, 255, 255, 0.92);
       }

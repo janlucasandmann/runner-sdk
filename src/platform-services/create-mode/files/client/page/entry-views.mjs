@@ -32,19 +32,38 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
           );
         }
 
-        function renderEntryRow(row) {
+        function renderEntryRow(row, options = {}) {
           const entry = row.entry;
-          const isActive = selectedPaths.has(entry.path);
-          const isExpanded = entry.isFolder && expandedFolders.has(entry.path);
-          const isFolderLoading = entry.isFolder && loadingFolderPaths.has(entry.path);
-          const canExpandFolder = entry.isFolder && (
-            entry.hasChildren
-            || isExpanded
-            || isFolderLoading
-            || (Array.isArray(entry.children) && entry.children.length > 0)
+          const isActive = options.isActive === undefined ? selectedPaths.has(entry.path) : Boolean(options.isActive);
+          const isExpanded = entry.isFolder && (
+            options.isExpanded === undefined ? expandedFolders.has(entry.path) : Boolean(options.isExpanded)
           );
-          const isDragSource = draggedPaths.includes(entry.path);
-          const isDropTarget = dragOverTargetPath === entry.path && entry.isFolder;
+          const isFolderLoading = entry.isFolder && (
+            options.isFolderLoading === undefined ? loadingFolderPaths.has(entry.path) : Boolean(options.isFolderLoading)
+          );
+          const canExpandFolder = entry.isFolder && (options.canExpandFolder === undefined
+            ? (
+                entry.hasChildren
+                || isExpanded
+                || isFolderLoading
+                || (Array.isArray(entry.children) && entry.children.length > 0)
+              )
+            : Boolean(options.canExpandFolder));
+          const isDragSource = options.draggable === false ? false : draggedPaths.includes(entry.path);
+          const isDropTarget = options.draggable === false ? false : dragOverTargetPath === entry.path && entry.isFolder;
+          const renderName = typeof options.renderName === "function" ? options.renderName : renderEntryName;
+          const onSelect = typeof options.onSelect === "function" ? options.onSelect : handleEntrySelection;
+          const onOpen = typeof options.onOpen === "function" ? options.onOpen : handleEntryDoubleClick;
+          const onToggleFolder = typeof options.onToggleFolder === "function"
+            ? options.onToggleFolder
+            : (value) => toggleFolderExpansion(value.path);
+          const onOptionsClick = typeof options.onOptionsClick === "function"
+            ? options.onOptionsClick
+            : (value, event) => handleEntryContextMenuButtonClick(value, event);
+          const showOptions = options.showOptions !== false;
+          const useThumbnail = options.useThumbnail !== false;
+          const iconEnvironmentId = options.environmentId === undefined ? selectedEnvironmentId : options.environmentId;
+          const iconBackendUrl = options.backendUrl === undefined ? backendUrl : options.backendUrl;
 
           return React.createElement("div", {
               key: entry.id,
@@ -54,15 +73,19 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
                 + (isDragSource ? " is-dragging" : ""),
               "data-playground-file-path": entry.path,
               style: { paddingLeft: 12 + row.level * 18 + "px" },
-              draggable: renamingPath !== entry.path,
-              onClick: (event) => handleEntrySelection(entry, event),
-              onDoubleClick: () => handleEntryDoubleClick(entry),
-              onContextMenu: (event) => handleContextMenu(event, entry),
-              onDragStart: (event) => handleDragStart(event, entry),
-              onDragEnd: handleDragEnd,
-              onDragOver: entry.isFolder ? (event) => handleFolderDragOver(event, entry) : undefined,
-              onDragLeave: handleDragLeave,
-              onDrop: entry.isFolder ? (event) => void handleFolderDrop(event, entry) : undefined,
+              draggable: options.draggable === false ? false : renamingPath !== entry.path,
+              onClick: (event) => onSelect(entry, event),
+              onDoubleClick: () => onOpen(entry),
+              onContextMenu: options.onContextMenu === false
+                ? undefined
+                : (event) => options.onContextMenu
+                  ? options.onContextMenu(entry, event)
+                  : handleContextMenu(event, entry),
+              onDragStart: options.draggable === false ? undefined : (event) => handleDragStart(event, entry),
+              onDragEnd: options.draggable === false ? undefined : handleDragEnd,
+              onDragOver: options.draggable === false || !entry.isFolder ? undefined : (event) => handleFolderDragOver(event, entry),
+              onDragLeave: options.draggable === false ? undefined : handleDragLeave,
+              onDrop: options.draggable === false || !entry.isFolder ? undefined : (event) => void handleFolderDrop(event, entry),
             },
               canExpandFolder
                 ? React.createElement("button", {
@@ -70,7 +93,7 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
                     className: "playground-files-entry-chevron-button",
                     onClick: (event) => {
                       event.stopPropagation();
-                      toggleFolderExpansion(entry.path);
+                      onToggleFolder(entry);
                     },
                   }, isExpanded
                     ? isFolderLoading
@@ -81,29 +104,41 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
                       : React.createElement(ChevronRight, { className: "playground-files-entry-chevron", strokeWidth: 1.8 }))
                 : React.createElement("div", { className: "playground-files-entry-chevron is-placeholder" }),
               React.createElement("div", { className: "playground-files-entry-main" },
-                React.createElement(PlaygroundFileIcon, { entry, environmentId: selectedEnvironmentId, backendUrl, useThumbnail: true }),
-                React.createElement("div", { className: "playground-files-entry-copy" }, renderEntryName(entry))
+                React.createElement(PlaygroundFileIcon, {
+                  entry,
+                  environmentId: iconEnvironmentId,
+                  backendUrl: iconBackendUrl,
+                  useThumbnail,
+                }),
+                React.createElement("div", { className: "playground-files-entry-copy" }, renderName(entry))
               ),
               React.createElement("div", { className: "playground-files-entry-meta" },
                 React.createElement("span", { className: "playground-files-entry-date" }, formatPlaygroundFileDate(entry.modifiedTime)),
                 React.createElement("span", { className: "playground-files-entry-size" }, entry.isFolder ? "-" : formatPlaygroundFileSize(entry.size))
               ),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-files-entry-options-button",
-                onClick: (event) => handleEntryContextMenuButtonClick(entry, event),
-                "aria-label": "Open file options",
-              }, React.createElement(Ellipsis, {
-                className: "playground-files-entry-options-icon",
-                strokeWidth: 1.8,
-              }))
+              showOptions
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-entry-options-button",
+                    onClick: (event) => onOptionsClick(entry, event),
+                    "aria-label": options.optionsLabel || "Open file options",
+                  }, React.createElement(Ellipsis, {
+                    className: "playground-files-entry-options-icon",
+                    strokeWidth: 1.8,
+                  }))
+                : React.createElement("span", { className: "playground-files-entry-options-button is-placeholder", "aria-hidden": "true" })
             );
         }
 
-        function renderGridItem(entry) {
-          const isActive = selectedPaths.has(entry.path);
-          const isDragSource = draggedPaths.includes(entry.path);
-          const isDropTarget = dragOverTargetPath === entry.path && entry.isFolder;
+        function renderGridItem(entry, options = {}) {
+          const isActive = options.isActive === undefined ? selectedPaths.has(entry.path) : Boolean(options.isActive);
+          const isDragSource = options.draggable === false ? false : draggedPaths.includes(entry.path);
+          const isDropTarget = options.draggable === false ? false : dragOverTargetPath === entry.path && entry.isFolder;
+          const onSelect = typeof options.onSelect === "function" ? options.onSelect : handleEntrySelection;
+          const onOpen = typeof options.onOpen === "function" ? options.onOpen : handleEntryDoubleClick;
+          const useThumbnail = options.useThumbnail !== false;
+          const iconEnvironmentId = options.environmentId === undefined ? selectedEnvironmentId : options.environmentId;
+          const iconBackendUrl = options.backendUrl === undefined ? backendUrl : options.backendUrl;
 
           return React.createElement("div", {
               key: entry.id,
@@ -112,18 +147,28 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
                 + (isDropTarget ? " is-drop-target" : "")
                 + (isDragSource ? " is-dragging" : ""),
               "data-playground-file-path": entry.path,
-              draggable: renamingPath !== entry.path,
-              onClick: (event) => handleEntrySelection(entry, event),
-              onDoubleClick: () => handleEntryDoubleClick(entry),
-              onContextMenu: (event) => handleContextMenu(event, entry),
-              onDragStart: (event) => handleDragStart(event, entry),
-              onDragEnd: handleDragEnd,
-              onDragOver: entry.isFolder ? (event) => handleFolderDragOver(event, entry) : undefined,
-              onDragLeave: handleDragLeave,
-              onDrop: entry.isFolder ? (event) => void handleFolderDrop(event, entry) : undefined,
+              draggable: options.draggable === false ? false : renamingPath !== entry.path,
+              onClick: (event) => onSelect(entry, event),
+              onDoubleClick: () => onOpen(entry),
+              onContextMenu: options.onContextMenu === false
+                ? undefined
+                : (event) => options.onContextMenu
+                  ? options.onContextMenu(entry, event)
+                  : handleContextMenu(event, entry),
+              onDragStart: options.draggable === false ? undefined : (event) => handleDragStart(event, entry),
+              onDragEnd: options.draggable === false ? undefined : handleDragEnd,
+              onDragOver: options.draggable === false || !entry.isFolder ? undefined : (event) => handleFolderDragOver(event, entry),
+              onDragLeave: options.draggable === false ? undefined : handleDragLeave,
+              onDrop: options.draggable === false || !entry.isFolder ? undefined : (event) => void handleFolderDrop(event, entry),
             },
-              React.createElement(PlaygroundFileIcon, { entry, size: "large", environmentId: selectedEnvironmentId, backendUrl, useThumbnail: true }),
-              renamingPath === entry.path
+              React.createElement(PlaygroundFileIcon, {
+                entry,
+                size: "large",
+                environmentId: iconEnvironmentId,
+                backendUrl: iconBackendUrl,
+                useThumbnail,
+              }),
+              options.readOnly !== true && renamingPath === entry.path
                 ? (() => {
                     const renameParts = splitPlaygroundProtectedFilename(entry.name || "", entry.isFolder);
                     return React.createElement("div", { className: "playground-files-rename-control is-grid" },
@@ -238,14 +283,14 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
 
         function renderFilePreviewMaximizeButton() {
           const PreviewSizeIcon = isPreviewMaximized ? Minimize2 : Maximize2;
-          return React.createElement("button", {
-            type: "button",
-            className: "tb-attachment-preview-drawer-action playground-files-preview-maximize-button",
+          return React.createElement(PlatformIconButton, {
+            size: "small",
+            className: "playground-files-preview-maximize-button",
             onClick: toggleFilePreviewMaximized,
             title: isPreviewMaximized ? "Exit full screen" : "Full screen",
             "aria-label": isPreviewMaximized ? "Exit full screen" : "Full screen",
             "aria-pressed": isPreviewMaximized ? "true" : "false",
-          }, React.createElement(PreviewSizeIcon, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 }));
+          }, React.createElement(PreviewSizeIcon, { width: 16, height: 16, strokeWidth: 1.9 }));
         }
 
         function renderFilePreviewThreadComposer(entry) {
@@ -257,13 +302,6 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
           const composerAgents = (Array.isArray(agents) ? agents : [])
             .map((agent) => buildPlaygroundRunnerAgentOption(agent, String(agent?.id || "").trim() === String(agentId || "").trim() ? { isDefault: true } : {}))
             .filter((agent) => agent.id);
-          const composerEnvironments = (Array.isArray(environments) ? environments : [])
-            .map((environment) => ({
-              id: String(environment?.id || "").trim(),
-              name: String(environment?.name || environment?.label || "Computer").trim() || "Computer",
-              isDefault: String(environment?.id || "").trim() === sourceEnvironmentId,
-            }))
-            .filter((environment) => environment.id);
           return React.createElement(RunnerChat, {
             key: "files-preview-composer:" + sourceEnvironmentId + ":" + normalizeHistoryPath(entry.path || entry.name || ""),
             className: "playground-files-image-thread-composer" + (isStartingImagePreviewThread ? " is-starting-thread" : ""),
@@ -276,7 +314,7 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
             agents: composerAgents,
             isAgentSelectionBlocked,
             onBlockedAgentSelect,
-            environments: composerEnvironments,
+            hideEnvironmentSelector: true,
             inputMode: "computer-agents",
             placeholder: fileKind === "image" ? "Ask about this image" : fileKind === "video" ? "Ask about this video" : "Ask about this file",
             autoCreateThread: true,
@@ -290,12 +328,6 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
                 environmentId: selectedEnvironmentId,
               })
             )),
-            onEnvironmentChange: (nextEnvironmentId) => {
-              const normalizedNextEnvironmentId = String(nextEnvironmentId || "").trim();
-              if (normalizedNextEnvironmentId) {
-                setSelectedEnvironmentId(normalizedNextEnvironmentId);
-              }
-            },
             onExternalRunRequestCreate: (runRequest) => {
               void handleFilePreviewExternalRunRequest(entry, runRequest, sourceEnvironmentId);
               return true;
@@ -365,55 +397,48 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
           );
           const previewHeaderActions = singleSelectedEntryFileKind === "image" && isImageSelectionMode
             ? React.createElement("div", { className: "playground-files-image-selection-controls" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-files-image-selection-button is-icon",
+                React.createElement(PlatformIconButton, {
+                  size: "small",
                   onClick: undoImageSelectionStroke,
                   disabled: imageMaskStrokes.length === 0,
                   title: "Undo selection stroke",
                   "aria-label": "Undo selection stroke",
                 }, React.createElement(RotateCcw, { width: 16, height: 16, strokeWidth: 1.9 })),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-files-image-selection-button is-icon",
+                React.createElement(PlatformIconButton, {
+                  size: "small",
                   onClick: redoImageSelectionStroke,
                   disabled: imageMaskRedoStrokes.length === 0,
                   title: "Redo selection stroke",
                   "aria-label": "Redo selection stroke",
                 }, React.createElement(RotateCw, { width: 16, height: 16, strokeWidth: 1.9 })),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-files-image-selection-button",
+                React.createElement(PlatformSecondaryButton, {
+                  size: "small",
                   onClick: resetImageSelectionMode,
                 }, "Cancel")
               )
             : singleSelectedEntryFileKind === "image" && isImageCropMode
               ? React.createElement("div", { className: "playground-files-image-selection-controls" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-image-selection-button is-icon is-plain",
+                  React.createElement(PlatformIconButton, {
+                    size: "small",
                     onClick: undoImageCropHistory,
                     disabled: imageCropHistoryIndex <= 0 || isCroppingImage || isSavingImageCrop,
                     title: "Undo crop",
                     "aria-label": "Undo crop",
                   }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.9 })),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-image-selection-button is-icon is-plain",
+                  React.createElement(PlatformIconButton, {
+                    size: "small",
                     onClick: redoImageCropHistory,
                     disabled: imageCropHistoryIndex >= imageCropHistory.length || isCroppingImage || isSavingImageCrop,
                     title: "Redo crop",
                     "aria-label": "Redo crop",
                   }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.9 })),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-image-selection-button is-plain",
+                  React.createElement(PlatformSecondaryButton, {
+                    size: "small",
                     onClick: resetImageCropMode,
                     disabled: isCroppingImage || isSavingImageCrop,
                   }, "Cancel"),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-image-selection-button",
+                  React.createElement(PlatformSecondaryButton, {
+                    size: "small",
                     onClick: () => void applyImageCropToActivePreview(),
                     disabled: !imageCropRect || isCroppingImage || isSavingImageCrop,
                   },
@@ -422,9 +447,8 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
                       : React.createElement(Crop, { width: 14, height: 14, strokeWidth: 1.9 }),
                     React.createElement("span", null, isCroppingImage ? "Cropping..." : "Apply Crop")
                   ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-image-selection-button",
+                  React.createElement(PlatformPrimaryButton, {
+                    size: "small",
                     onClick: () => void saveImageCropToActivePreview(),
                     disabled: imageCropHistoryIndex <= 0 || isCroppingImage || isSavingImageCrop,
                   },
@@ -437,18 +461,16 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
             : React.createElement(React.Fragment, null,
                 singleSelectedEntryFileKind === "image"
                   ? React.createElement(React.Fragment, null,
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-preview-select-button",
+                      React.createElement(PlatformSecondaryButton, {
+                        size: "small",
                         onClick: beginImageSelectionMode,
                         title: "Select image area",
                       },
                         React.createElement(LassoSelect, { width: 14, height: 14, strokeWidth: 1.9 }),
                         React.createElement("span", null, "Select")
                       ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-preview-select-button is-crop",
+                      React.createElement(PlatformSecondaryButton, {
+                        size: "small",
                         onClick: beginImageCropMode,
                         title: "Crop image",
                       },
@@ -459,9 +481,9 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
                     )
                   : null,
                 canToggleDocumentPreviewMode
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-preview-select-button playground-files-preview-mode-toggle" + (documentPreviewMode === "code" ? " is-active" : ""),
+                  ? React.createElement(PlatformSecondaryButton, {
+                      size: "small",
+                      active: documentPreviewMode === "code",
                       onClick: () => setDocumentPreviewMode((current) => current === "code" ? "preview" : "code"),
                       title: documentPreviewMode === "code" ? "Switch to preview mode" : "Switch to code view",
                       "aria-label": documentPreviewMode === "code" ? "Switch to preview mode" : "Switch to code view",
@@ -476,13 +498,12 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
                 singleSelectedEntryFileKind !== "image"
                   ? React.createElement("span", { className: "tb-image-preview-header-divider", "aria-hidden": "true" })
                   : null,
-                React.createElement("button", {
-                  type: "button",
-                  className: "tb-attachment-preview-drawer-action",
-                  onClick: (event) => handleEntryContextMenuButtonClick(activePreviewEntry, event),
+                React.createElement(PlatformIconButton, {
+                  size: "small",
+                  onClick: (event) => handleEntryContextMenuButtonClick(activePreviewEntry, event, { popupVariant: "minimal" }),
                   title: "File actions",
                   "aria-label": "File actions",
-                }, React.createElement(Ellipsis, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })),
+                }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.9 })),
                 renderFilePreviewMaximizeButton()
               );
 
@@ -535,13 +556,12 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
                   }, activePreviewEntry.name)
                 ),
                 React.createElement("div", { className: "playground-files-preview-top-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "tb-attachment-preview-drawer-action",
-                    onClick: (event) => handleEntryContextMenuButtonClick(activePreviewEntry, event),
+                  React.createElement(PlatformIconButton, {
+                    size: "small",
+                    onClick: (event) => handleEntryContextMenuButtonClick(activePreviewEntry, event, { popupVariant: "minimal" }),
                     title: "File actions",
                     "aria-label": "File actions",
-                  }, React.createElement(Ellipsis, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })),
+                  }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.9 })),
                   renderFilePreviewMaximizeButton(),
                   React.createElement("button", {
                     type: "button",

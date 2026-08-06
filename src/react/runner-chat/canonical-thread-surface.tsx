@@ -4,6 +4,7 @@ import { PlatformThreadScreen } from "../../platform-ui/components/thread-compon
 import { buildRunnerThreadScreenViewModel } from "../../thread/presentation.js";
 import type {
   RunnerThreadControlAction,
+  RunnerThreadMessage,
   RunnerThreadPermissionRequest,
   RunnerThreadProjection,
   RunnerThreadRun,
@@ -14,10 +15,13 @@ import { RunnerThreadExecutionWorkbench } from "../thread/execution-workbench.js
 import { RunnerThreadLiveSupervisionDock } from "../thread/live-supervision-dock.js";
 import type { RunnerThreadDetailLoadState } from "../thread/run-detail-hydration.js";
 import { RunnerThreadTimeline } from "../thread/thread-timeline.js";
+import { RunnerUserMessageContent } from "./message-connectors.js";
+import type { RunnerChatConnectorOption } from "./public-types.js";
 import { CollapsibleRunnerUserPrompt } from "./run-summary-content.js";
 
 export interface RunnerCanonicalThreadSurfaceProps {
   activityGroupActionStates?: Record<string, RunnerThreadDetailLoadState>;
+  availableConnectorOptions?: readonly RunnerChatConnectorOption[];
   connected: boolean;
   error?: string | null;
   fallbackRunAgentName?: string | null;
@@ -54,17 +58,26 @@ function renderCanonicalMessage(message: { content: string }) {
   );
 }
 
-function renderCanonicalUserMessage(message: { content: string }) {
+function renderCanonicalUserMessage(
+  message: RunnerThreadMessage,
+  availableConnectorOptions: readonly RunnerChatConnectorOption[],
+) {
   return (
-    <CollapsibleRunnerUserPrompt
-      content={stripRunnerSystemTags(message.content)}
-      className="tb-message-markdown tb-message-markdown-user"
-    />
+    <RunnerUserMessageContent
+      metadata={message.metadata}
+      availableConnectorOptions={availableConnectorOptions}
+    >
+      <CollapsibleRunnerUserPrompt
+        content={stripRunnerSystemTags(message.content)}
+        className="tb-message-markdown tb-message-markdown-user"
+      />
+    </RunnerUserMessageContent>
   );
 }
 
 export function RunnerCanonicalThreadSurface({
   activityGroupActionStates,
+  availableConnectorOptions = [],
   connected,
   error,
   fallbackRunAgentName,
@@ -173,7 +186,9 @@ export function RunnerCanonicalThreadSurface({
         onLoadActivityGroupActions={onLoadActivityGroupActions}
         renderAction={renderAction}
         renderMessageContent={renderCanonicalMessage}
-        renderUserMessageContent={renderCanonicalUserMessage}
+        renderUserMessageContent={(message) =>
+          renderCanonicalUserMessage(message, availableConnectorOptions)
+        }
         onLoadEarlier={onLoadEarlier}
         onControlRun={onControlRun}
         onOpenChanges={onOpenChanges}

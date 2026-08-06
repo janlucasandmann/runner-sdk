@@ -323,6 +323,57 @@ test("fresh baseline creates a draft candidate and independent verification", as
   assert.match(result.publicationDecision.evidenceFingerprint, /^sha256:[a-f0-9]{64}$/);
   assert.deepEqual(result.iterations.map((iteration) => iteration.number), [0, 1]);
   assert.equal(result.iterations[1].caseComparisons[0].cases[0].candidateScore, 0.9);
+  assert.equal(harness.calls.evaluationRunRequests[0].targetBinding.kind, "agent");
+  assert.equal(harness.calls.evaluationRunRequests[0].targetBinding.candidateAuthority, undefined);
+  assert.deepEqual(
+    harness.calls.evaluationRunRequests[1].targetBinding.candidateAuthority,
+    {
+      kind: "agent_optimization_job",
+      id: "fine_tune_test",
+      purpose: "verification",
+      iterationNumber: 1,
+    },
+  );
+  assert.equal(
+    harness.calls.evaluationRunRequests[1].targetBinding.targetVersionId,
+    "candidate_version_1",
+  );
+});
+
+test("a completed zero-score baseline remains scoreable optimization evidence", async () => {
+  const evaluationSet = createEvaluationSet();
+  const harness = createHarness({
+    evaluationSet,
+    scores: {
+      baseline: { train: 0 },
+      verification: { train: 1 },
+      final_baseline: { train: 0 },
+      final: { train: 1 },
+    },
+    job: createJob({
+      evaluationSet,
+      objective: {
+        mode: "custom",
+        successPolicy: {
+          minimumAverageScore: 1,
+          requiredPassRate: 1,
+          minimumImprovement: 0.5,
+          maximumRegression: 0,
+        },
+      },
+    }),
+  });
+
+  const result = await harness.orchestrator.start("fine_tune_test");
+
+  assert.equal(result.phase, "awaiting_review");
+  assert.equal(result.targetMet, true);
+  assert.equal(result.iterations[0].metrics.averageScore, 0);
+  assert.equal(result.iterations[1].baselineMetrics.averageScore, 0);
+  assert.equal(result.iterations[1].metrics.averageScore, 1);
+  assert.equal(result.improvementScore, 1);
+  assert.equal(harness.calls.optimizerExecutions, 1);
+  assert.equal(harness.calls.candidateVersions, 1);
 });
 
 test("an explicitly approved manual candidate resumes at publication without rerunning optimization", async () => {
@@ -470,6 +521,22 @@ test("sealed holdout cases never enter optimizer evidence and run alone at final
   assert.deepEqual(harness.calls.evaluationRunRequests[3].optimizationRoles, ["holdout"]);
   assert.equal(harness.calls.evaluationRunRequests[2].metadata.fineTuningPhase, "final_baseline");
   assert.equal(harness.calls.evaluationRunRequests[3].metadata.fineTuningPhase, "final");
+  assert.ok(harness.calls.evaluationRunRequests.every((request) => (
+    request.purpose === "optimization"
+  )));
+  assert.equal(
+    harness.calls.evaluationRunRequests[2].targetBinding.candidateAuthority,
+    undefined,
+  );
+  assert.deepEqual(
+    harness.calls.evaluationRunRequests[3].targetBinding.candidateAuthority,
+    {
+      kind: "agent_optimization_job",
+      id: "fine_tune_test",
+      purpose: "verification",
+      iterationNumber: 1,
+    },
+  );
   assert.equal(harness.calls.prompts.length, 1);
   assert.doesNotMatch(harness.calls.prompts[0], /SEALED_HOLDOUT_SECRET|SEALED_HOLDOUT_ANSWER/);
   assert.match(harness.calls.prompts[0], /"averageScore": 0\.39/);

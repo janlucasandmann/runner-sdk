@@ -188,4 +188,24 @@ describe("PlatformVersionHistorySidebar", () => {
     fireEvent.click(createButton);
     expect(onCreateVersion).toHaveBeenCalledTimes(1);
   });
+
+  it("always renders the centralized View Changes footer action", async () => {
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      callback(0);
+      return 1;
+    });
+
+    render(
+      <PlatformVersionHistorySidebar
+        open
+        versions={[{ id: "v1", version: 1, label: "Version 1" }]}
+        onClose={() => {}}
+      />,
+    );
+
+    await act(async () => {});
+    const viewChangesButton = screen.getByRole("button", { name: "View Changes" });
+    expect(viewChangesButton.closest(".platform-floating-sidebar__footer")).not.toBeNull();
+    expect((viewChangesButton as HTMLButtonElement).disabled).toBe(true);
+  });
 });

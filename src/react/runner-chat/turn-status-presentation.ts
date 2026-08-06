@@ -1,15 +1,11 @@
-import type { RunnerLog } from "../../types.js";
-import { getTurnLatestProgressTimestampMs } from "./hydration/turn-state.js";
-import { isRunningTurnStatus } from "./hydration/turn-state.js";
+import { getTurnLatestProgressTimestampMs, isRunningTurnStatus } from "./hydration/turn-state.js";
+import { formatElapsedDurationLabel } from "./time-utils.js";
 import type { RunnerTurn } from "./turn-types.js";
+import { normalizeRunnerThreadWorkingLabel } from "../../thread/working-label.js";
 
-export function getRunnerTurnDurationSeconds(
-  turn: RunnerTurn,
-  nowMs: number,
-): number {
+export function getRunnerTurnDurationSeconds(turn: RunnerTurn, nowMs: number): number {
   const explicitDurationSeconds =
-    typeof turn.durationSeconds === "number"
-    && Number.isFinite(turn.durationSeconds)
+    typeof turn.durationSeconds === "number" && Number.isFinite(turn.durationSeconds)
       ? Math.max(0, Math.round(turn.durationSeconds))
       : null;
   if (explicitDurationSeconds !== null && explicitDurationSeconds > 0) {
@@ -18,14 +14,8 @@ export function getRunnerTurnDurationSeconds(
 
   const derivedEndMs = isRunningTurnStatus(turn.status)
     ? nowMs
-    : Math.max(
-        turn.completedAtMs ?? turn.startedAtMs,
-        getTurnLatestProgressTimestampMs(turn),
-      );
-  const derivedDurationSeconds = Math.max(
-    0,
-    Math.round((derivedEndMs - turn.startedAtMs) / 1000),
-  );
+    : Math.max(turn.completedAtMs ?? turn.startedAtMs, getTurnLatestProgressTimestampMs(turn));
+  const derivedDurationSeconds = Math.max(0, Math.round((derivedEndMs - turn.startedAtMs) / 1000));
   return derivedDurationSeconds > 0
     ? derivedDurationSeconds
     : (explicitDurationSeconds ?? derivedDurationSeconds);
@@ -39,51 +29,79 @@ function cleanLiveSummary(value: unknown): string | null {
           .replace(/^(?:status|progress|working)\s*:\s*/i, "")
           .trim()
       : "";
-  if (!normalized) return null;
-  const sentence =
-    normalized.length > 132
-      ? `${normalized.slice(0, 129).trimEnd()}…`
-      : normalized;
-  return sentence.charAt(0).toUpperCase() + sentence.slice(1);
+  return normalizeRunnerThreadWorkingLabel(normalized);
 }
 
-export function getRunnerTurnLiveWorkSummary(
-  turn: RunnerTurn,
-): string | null {
-  for (const log of [...turn.logs].reverse()) {
-    const metadata = (log.metadata || {}) as Record<string, unknown>;
-    const explicitSummary =
-      cleanLiveSummary(metadata.liveSummary)
-      || cleanLiveSummary(metadata.observerSummary)
-      || cleanLiveSummary(metadata.thinkingSummary)
-      || cleanLiveSummary(
-        (
-          metadata.deepResearch as
-            | { thinkingSummary?: unknown }
-            | undefined
-        )?.thinkingSummary,
-      );
-    if (explicitSummary) return explicitSummary;
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function isOrchestratorOwnedMetadata(metadata: Record<string, unknown>): boolean {
+  const actor = asRecord(metadata.actor);
+  const actorKind = String(actor?.kind || "")
+    .trim()
+    .toLowerCase();
+  if (actorKind === "orchestrator") return true;
+
+  const source = String(metadata.source || metadata.producerType || metadata.producer_type || "")
+    .trim()
+    .toLowerCase();
+  return /observer|orchestrator|communicator|supervision|chronicle/.test(source);
+}
+
+function explicitLiveSummary(metadata: Record<string, unknown>): string | null {
+  // Observer-named fields are already an ownership contract. Generic status
+  // fields only participate when their producer is explicitly orchestration.
+  const observerSummary =
+    cleanLiveSummary(metadata.observerSummary) || cleanLiveSummary(metadata.observer_summary);
+  if (observerSummary) return observerSummary;
+
+  if (isOrchestratorOwnedMetadata(metadata)) {
+    for (const key of [
+      "workingLabel",
+      "working_label",
+      "workingSummary",
+      "working_summary",
+      "headerSummary",
+      "header_summary",
+      "statusMessage",
+      "status_message",
+      "liveSummary",
+      "live_summary",
+      "thinkingSummary",
+      "thinking_summary",
+    ]) {
+      const summary = cleanLiveSummary(metadata[key]);
+      if (summary) return summary;
+    }
   }
 
-  const actionSummary = [...turn.logs]
-    .reverse()
-    .find((log) => log.isActionSummary || log.eventType === "action_summary");
-  const actionSummaryText = cleanLiveSummary(actionSummary?.message);
-  if (actionSummaryText) return actionSummaryText;
+  const deepResearch = asRecord(metadata.deepResearch ?? metadata.deep_research);
+  return cleanLiveSummary(deepResearch?.thinkingSummary ?? deepResearch?.thinking_summary);
+}
 
-  const latestUsefulLog = [...turn.logs].reverse().find((log: RunnerLog) => {
-    if (!log.message?.trim()) return false;
-    if (
-      log.eventType === "agent_message"
-      || log.eventType === "llm_response"
-      || log.eventType === "user_message"
-    ) {
-      return false;
-    }
-    if (log.eventType === "permission_request") return false;
-    if (log.isReasoning && log.message.length > 180) return false;
-    return true;
-  });
-  return cleanLiveSummary(latestUsefulLog?.message);
+export function getRunnerTurnLiveWorkSummary(turn: RunnerTurn): string | null {
+  for (const log of [...turn.logs].reverse()) {
+    const metadata = (log.metadata || {}) as Record<string, unknown>;
+    const explicitSummary = explicitLiveSummary(metadata);
+    if (explicitSummary) return explicitSummary;
+  }
+  return null;
+}
+
+export function getRunnerTurnWorkHeadline(
+  turn: RunnerTurn,
+  nowMs: number,
+  canonicalWorkingLabel?: string | null,
+): string {
+  if (turn.status === "permission_asked") {
+    return "Waiting for permission";
+  }
+  if (isRunningTurnStatus(turn.status)) {
+    const liveSummary = cleanLiveSummary(canonicalWorkingLabel) || getRunnerTurnLiveWorkSummary(turn);
+    return liveSummary || "Working...";
+  }
+  return `Worked for ${formatElapsedDurationLabel(getRunnerTurnDurationSeconds(turn, nowMs))}`;
 }

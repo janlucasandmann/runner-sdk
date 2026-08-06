@@ -160,6 +160,9 @@ export const METRONOME_APP_SIDEBAR_STATE_SCRIPT = `
         const shouldShowThreadTaskListButton = Boolean(
           activeThreadTaskListTargetId && threadTaskListAvailabilityById[activeThreadTaskListTargetId] === "available"
         );
+        const activeThreadTaskListAvailability = activeThreadTaskListTargetId
+          ? String(threadTaskListAvailabilityById[activeThreadTaskListTargetId] || "loading")
+          : "empty";
         useEffect(() => {
           const candidateThreadIds = activePage === "thread"
             ? (selectedMetronomeRunEntry?.key ? selectedMetronomeRunThreadIds : [selectedThreadTaskListTargetId])

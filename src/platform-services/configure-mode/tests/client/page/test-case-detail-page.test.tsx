@@ -6,6 +6,28 @@ import type { TestsApi } from "../api/index.js";
 import type { TestCaseDefinition, TestPlan } from "../domain/index.js";
 import { TestCaseDetailPage } from "./test-case-detail-page.js";
 
+vi.mock("@monaco-editor/react", () => ({
+  default: ({
+    language,
+    value,
+    onChange,
+    options,
+  }: {
+    language?: string;
+    value?: string;
+    onChange?: (value: string) => void;
+    options?: { ariaLabel?: string };
+  }) => (
+    <textarea
+      data-monaco-editor="true"
+      data-monaco-language={language}
+      aria-label={options?.ariaLabel}
+      value={value}
+      onChange={(event) => onChange?.(event.currentTarget.value)}
+    />
+  ),
+}));
+
 afterEach(() => {
   cleanup();
   document.body.innerHTML = "";
@@ -63,7 +85,7 @@ const plan: TestPlan = {
 };
 
 describe("TestCaseDetailPage", () => {
-  it("uses the centralized file-resource case layout and app-header section switch", () => {
+  it("uses Monaco for request JSON inside the centralized case workspace", async () => {
     document.body.insertAdjacentHTML(
       "beforeend",
       '<div id="test-case-actions"></div><div id="test-case-sections"></div>',
@@ -86,7 +108,12 @@ describe("TestCaseDetailPage", () => {
     expect(
       (screen.getByLabelText("Case name") as HTMLInputElement).value,
     ).toBe("Readiness contract");
-    expect(screen.getByLabelText("Test command")).not.toBeNull();
+    const requestEditor = await screen.findByLabelText("Test request JSON");
+    expect(requestEditor.getAttribute("data-monaco-editor")).toBe("true");
+    expect(requestEditor.getAttribute("data-monaco-language")).toBe("json");
+    expect(
+      container.querySelector('[data-platform-monaco-code-editor="true"][data-language="json"]'),
+    ).not.toBeNull();
     expect(screen.queryByRole("tab")).toBeNull();
     expect(
       screen.getByRole("radiogroup", { name: "Test case section" }),
@@ -95,10 +122,19 @@ describe("TestCaseDetailPage", () => {
       (screen.getByRole("button", { name: "Save Changes" }) as HTMLButtonElement).disabled,
     ).toBe(true);
 
+    fireEvent.change(requestEditor, {
+      target: { value: '{"method":"POST","path":"/ready"}' },
+    });
+    expect(
+      (screen.getByRole("button", { name: "Save Changes" }) as HTMLButtonElement).disabled,
+    ).toBe(false);
+
     fireEvent.click(screen.getByRole("radio", { name: "Settings" }));
 
     expect(screen.getByText("Case Settings")).not.toBeNull();
     expect(screen.getByText("Case ID")).not.toBeNull();
-    expect(screen.queryByLabelText("Test command")).toBeNull();
+    expect(screen.getByText("Execution method")).not.toBeNull();
+    expect(screen.getAllByText("Category").length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText("Test request JSON")).toBeNull();
   });
 });

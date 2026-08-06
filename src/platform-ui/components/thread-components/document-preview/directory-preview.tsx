@@ -4,6 +4,7 @@ import {
   LoaderCircle as LucideLoaderCircle,
 } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PlatformLoadingState } from "../../composite/loading-state/index.js";
 import {
   buildRunnerPreviewDirectoryListUrl,
   normalizeRunnerPreviewDirectoryEntries,
@@ -468,13 +469,11 @@ export function RunnerDirectoryPreview({
         {activeDirectoryAbsolutePath}
       </div>
       {state.status === "loading" ? (
-        <div className="tb-attachment-preview-state">
-          <LucideLoaderCircle
-            className="tb-attachment-preview-state-icon tb-context-action-notice-icon-spinner"
-            strokeWidth={1.8}
-          />
-          <span>Loading folder…</span>
-        </div>
+        <PlatformLoadingState
+          centered
+          className="tb-attachment-preview-state"
+          message="Loading folder..."
+        />
       ) : state.status === "error" ? (
         <div className="tb-attachment-preview-state tb-attachment-preview-state-error">
           <img

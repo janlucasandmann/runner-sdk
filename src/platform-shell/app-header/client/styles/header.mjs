@@ -80,6 +80,13 @@ export const APP_HEADER_CSS = `      .playground-top-nav-search-divider {
         opacity: 0.45;
       }
 
+      .playground-agent-detail-header-center {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
       .playground-top-nav-pill-button {
         --playground-top-nav-pill-border: linear-gradient(
           -10deg,
@@ -156,14 +163,16 @@ export const APP_HEADER_CSS = `      .playground-top-nav-search-divider {
         display: inline-flex;
         align-items: center;
         gap: 12px;
+        overflow: hidden;
         color: rgba(255, 255, 255, 0.52);
       }
 
       .playground-top-nav-path-item {
-        min-width: 0;
-        max-width: min(360px, 42vw);
-        overflow: hidden;
-        text-overflow: ellipsis;
+        min-width: auto;
+        max-width: none;
+        flex: 0 0 auto;
+        overflow: visible;
+        text-overflow: clip;
         white-space: nowrap;
         display: inline-flex;
         align-items: center;
@@ -187,6 +196,11 @@ export const APP_HEADER_CSS = `      .playground-top-nav-search-divider {
       }
 
       .playground-top-nav-path-item.is-current {
+        min-width: 0;
+        max-width: min(360px, 42vw);
+        flex: 0 1 auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
         color: rgba(255, 255, 255, 0.94);
       }
 
@@ -203,40 +217,44 @@ export const APP_HEADER_CSS = `      .playground-top-nav-search-divider {
         height: 14px;
       }
 
-      .playground-top-nav-path-copy {
-        min-width: 0;
-        display: inline-flex;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: center;
-        gap: 1px;
-        line-height: 1.1;
-      }
-
       .playground-top-nav-path-item-group {
-        min-width: 0;
+        min-width: auto;
         display: inline-flex;
+        flex: 0 0 auto;
         align-items: center;
         gap: 4px;
       }
 
-      .playground-top-nav-path-label {
+      .playground-top-nav-path-item-group.is-current {
         min-width: 0;
-        font-size: 14px;
+        max-width: min(360px, 42vw);
+        flex: 0 1 auto;
         overflow: hidden;
-        text-overflow: ellipsis;
       }
 
-      .playground-top-nav-path-subtitle {
-        min-width: 0;
-        max-width: 100%;
-        overflow: hidden;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 10px;
-        font-weight: 400;
-        line-height: 1.2;
-        text-overflow: ellipsis;
+      .playground-top-nav-path-item-group.is-current > .playground-top-nav-path-item.is-current {
+        max-width: none;
+        flex: 1 1 auto;
+      }
+
+      .playground-top-nav-path-item-group.is-current > :not(.playground-top-nav-path-item) {
+        flex: 0 0 auto;
+      }
+
+      .playground-top-nav-path-label {
+        min-width: auto;
+        flex: 0 0 auto;
+        font-size: 14px;
+        overflow: visible;
+        text-overflow: clip;
         white-space: nowrap;
+      }
+
+      .playground-top-nav-path-item.is-current .playground-top-nav-path-label {
+        min-width: 0;
+        flex: 1 1 auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .playground-top-nav-path-separator {

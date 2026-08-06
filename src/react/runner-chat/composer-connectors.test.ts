@@ -3,8 +3,11 @@ import { describe, expect, it } from "vitest";
 import {
   buildRunnerConnectorPayload,
   filterRunnerConnectorOptions,
+  getRunnerConnectorIdsFromMessageMetadata,
+  getRunnerConnectorIdsFromPayload,
   mergeRunnerConnectorPayloads,
   replaceRunnerConnectorMention,
+  resolveRunnerMessageConnectorOptions,
   resolveRunnerConnectorMentionInputState,
 } from "./composer-connectors.js";
 
@@ -75,5 +78,57 @@ describe("composer connectors", () => {
       github: { enabled: true, credentialId: "cred_1" },
       jira: { enabled: true },
     });
+  });
+
+  it("persists only enabled connector identities in user-message metadata", () => {
+    expect(getRunnerConnectorIdsFromPayload({
+      jira: { enabled: true },
+      github: { enabled: false },
+      linear: {},
+    })).toEqual(["jira", "linear"]);
+    expect(getRunnerConnectorIdsFromMessageMetadata({
+      runnerConnectorIds: ["Jira", "jira", "linear", 42],
+    })).toEqual(["jira", "linear"]);
+    expect(getRunnerConnectorIdsFromMessageMetadata({
+      connector_ids: ["Atlassian"],
+    })).toEqual(["atlassian"]);
+    expect(getRunnerConnectorIdsFromMessageMetadata({
+      connectors: {
+        github: { enabled: true },
+        jira: { enabled: false },
+      },
+    })).toEqual(["github"]);
+  });
+
+  it("resolves persisted connector aliases and keeps a fallback before the catalog loads", () => {
+    const options = [
+      {
+        id: "github",
+        name: "GitHub",
+        description: "Repositories and pull requests",
+        logoUrl: "/img/plugins/github.svg",
+      },
+      {
+        id: "jira",
+        name: "Jira",
+        description: "Atlassian issues",
+        keywords: ["Atlassian"],
+      },
+    ];
+
+    expect(resolveRunnerMessageConnectorOptions({
+      runnerConnectorIds: ["connector_github", "atlassian"],
+    }, options)).toEqual([
+      options[0],
+      options[1],
+    ]);
+    expect(resolveRunnerMessageConnectorOptions({
+      runnerConnectorIds: ["connector_github"],
+    }, [])).toEqual([{
+      id: "github",
+      name: "GitHub",
+      description: "",
+      kind: "plugin",
+    }]);
   });
 });

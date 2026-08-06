@@ -211,6 +211,7 @@ test("evaluation run creation is not acknowledged before the initial run is dura
     releaseCreateWrite = resolve;
   });
   const backendWrites = [];
+  let createdRunPayload = null;
   let resolveResponse;
   const responsePromise = new Promise((resolve) => {
     resolveResponse = resolve;
@@ -228,6 +229,7 @@ test("evaluation run creation is not acknowledged before the initial run is dura
         });
       }
       if (init.method === "POST" && path === "/api/evaluations/evaluation_1/runs") {
+        createdRunPayload = JSON.parse(String(init.body || "{}"));
         await createWriteGate;
         return new Response(JSON.stringify({ run: { id: "run_durable" } }), {
           status: 202,
@@ -261,6 +263,7 @@ test("evaluation run creation is not acknowledged before the initial run is dura
       },
       runOptions: {
         id: "run_durable",
+        purpose: "optimization",
         targetAgentId: "agent_1",
         environmentId: "computer_1",
         evaluator: { type: "exact" },
@@ -293,6 +296,150 @@ test("evaluation run creation is not acknowledged before the initial run is dura
   const response = await responsePromise;
   assert.equal(response.status, 202);
   assert.equal(response.payload?.run?.id, "run_durable");
+  assert.equal(createdRunPayload?.purpose, "optimization");
+});
+
+async function assertCrossWorkerRunRefresh(durableExecutionEnabled) {
+  const mode = durableExecutionEnabled ? "durable" : "request_scoped";
+  const runId = `run_cross_worker_${mode}`;
+  const evaluationSetId = `evaluation_cross_worker_${mode}`;
+  let backendRun = null;
+  let createResponse = null;
+  let backendReadCount = 0;
+  const runtime = createPlaygroundEvaluationsRuntime({
+    durableExecutionEnabled,
+    enrichThreadPayloadWithAgentGuardrails: async (_req, _url, _apiKey, payload) => payload,
+    fetchAiosApi: async (_requestContext, path, init = {}) => {
+      if (
+        !durableExecutionEnabled
+        && path === `/api/evaluations/runs/${runId}/lease`
+        && init.method === "POST"
+      ) {
+        // Keep the request-scoped executor from mutating the cached run while
+        // this test simulates a separate worker completing the canonical run.
+        return new Promise(() => {});
+      }
+      if (
+        path === `/api/evaluations/runs/${runId}`
+        && (init.method || "GET") === "GET"
+      ) {
+        backendReadCount += 1;
+        if (!backendRun) {
+          return new Response(JSON.stringify({ error: "Evaluation run not found" }), {
+            status: 404,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        return new Response(JSON.stringify({ run: backendRun }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      if (
+        path === `/api/evaluations/runs/${runId}?view=status`
+        && init.method === "PATCH"
+      ) {
+        return new Response(JSON.stringify({ error: "Evaluation run not found" }), {
+          status: 404,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      if (
+        path === `/api/evaluations/${evaluationSetId}/runs`
+        && init.method === "POST"
+      ) {
+        return new Response(JSON.stringify({ run: { id: runId } }), {
+          status: 202,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    },
+    fetchAiosCloud: async () => new Response(JSON.stringify({}), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    }),
+    hasAiosSession: () => true,
+    parseUpstreamUrl: () => "https://runner.example.test/v1",
+    readOptionalApiKey: () => "",
+    readRequestBody: async () => ({
+      evaluationSet: {
+        id: evaluationSetId,
+        name: "Cross-worker refresh",
+        targetAgentId: "agent_1",
+        environmentId: "computer_1",
+        evaluator: { type: "exact" },
+        dataRows: [{
+          id: "case_1",
+          input: "Return the optimized response",
+          expectedOutput: "optimized",
+        }],
+      },
+      runOptions: {
+        id: runId,
+        targetAgentId: "agent_1",
+        environmentId: "computer_1",
+        evaluator: { type: "exact" },
+      },
+    }),
+    sendJson: (_res, status, payload) => {
+      createResponse = { status, payload };
+    },
+    withProxyOrganizationHeader: (_req, _body, headers) => headers,
+  });
+
+  assert.equal(runtime.handleRequest(
+    { method: "POST", headers: {}, url: "/api/real/evaluations/runs" },
+    {},
+    new URL("http://localhost/api/real/evaluations/runs"),
+  ), true);
+  for (let attempt = 0; attempt < 100 && !createResponse; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  assert.equal(createResponse?.status, 202);
+  const locallyQueuedRun = createResponse.payload.run;
+  assert.equal(locallyQueuedRun.status, "running");
+
+  backendRun = {
+    ...locallyQueuedRun,
+    status: "completed",
+    averageScore: 0,
+    passRate: 0,
+    scoredCount: 1,
+    totalCount: 1,
+    passedCount: 0,
+    cases: locallyQueuedRun.cases.map((caseItem) => ({
+      ...caseItem,
+      status: "failed",
+      score: 0,
+      actualOutput: "bounded-baseline-agent",
+    })),
+  };
+
+  const refreshed = await runtime.runs.get({
+    method: "GET",
+    headers: {},
+    url: `/api/real/evaluations/runs/${runId}`,
+  }, runId);
+
+  assert.equal(refreshed.status, "completed");
+  assert.equal(refreshed.averageScore, 0);
+  assert.equal(refreshed.passRate, 0);
+  assert.equal(refreshed.cases.length, 1);
+  assert.equal(refreshed.cases[0].score, 0);
+  assert.equal(refreshed.cases[0].status, "failed");
+  assert.ok(backendReadCount >= 2);
+}
+
+test("durable evaluation reads refresh a locally cached run completed by another worker", async () => {
+  await assertCrossWorkerRunRefresh(true);
+});
+
+test("request-scoped evaluation reads refresh a locally cached run completed by another worker", async () => {
+  await assertCrossWorkerRunRefresh(false);
 });
 
 test("evaluation execution preserves its thread and completes summary collection", async () => {

@@ -1,5 +1,30 @@
 import { isAgentAssistantPresetExecutionContent } from "./message-sanitization.mjs";
 
+const RUNNER_CONNECTOR_IDS_METADATA_KEY = "runnerConnectorIds";
+
+function isRecord(value) {
+    return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function attachAuthorizedConnectorMessageMetadata(payload) {
+    if (!isRecord(payload?.connectors)) return payload;
+    const connectorIds = Object.entries(payload.connectors)
+        .filter(([, connector]) => !isRecord(connector) || connector.enabled !== false)
+        .map(([connectorId]) => String(connectorId || "").trim().toLowerCase())
+        .filter((connectorId, index, all) => (
+            /^[a-z0-9][a-z0-9._:-]*$/.test(connectorId)
+            && all.indexOf(connectorId) === index
+        ));
+    if (connectorIds.length === 0) return payload;
+    return {
+        ...payload,
+        messageMetadata: {
+            ...(isRecord(payload.messageMetadata) ? payload.messageMetadata : {}),
+            [RUNNER_CONNECTOR_IDS_METADATA_KEY]: connectorIds,
+        },
+    };
+}
+
 export function createThreadMessageGateway(bindings) {
     const { fetchSessionApi, fetchSessionRunnerApi, hasAiosSession, parseUpstreamUrl, readOptionalApiKey, readRequestBody, sendJson, summarizeRunnerStreamChunkForLog, withProxyOrganizationHeader } = bindings;
     let threadPayloadEnricher = async (_req, _upstreamUrl, _apiKey, payload) => payload;
@@ -98,15 +123,17 @@ export function createThreadMessageGateway(bindings) {
             if (!payload.content) {
                 return sendJson(res, 400, { error: "content or task is required" });
             }
-            const enrichedPayload = await threadMessagePayloadEnricher(
-                req,
-                threadId,
-                upstreamUrl,
-                apiKey,
-                payload,
-                {
-                    requestedConnectors: body.connectors,
-                },
+            const enrichedPayload = attachAuthorizedConnectorMessageMetadata(
+                await threadMessagePayloadEnricher(
+                    req,
+                    threadId,
+                    upstreamUrl,
+                    apiKey,
+                    payload,
+                    {
+                        requestedConnectors: body.connectors,
+                    },
+                ),
             );
             if (apiKey) {
                 console.info("[platform-gateway] Thread message stream start", {

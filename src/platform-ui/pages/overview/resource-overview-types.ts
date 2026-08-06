@@ -24,6 +24,7 @@ export type ResourceOverviewAnalyticsModel = PlatformAnalyticsModel;
 interface ResourceOverviewPageBaseProps<TData> {
   showPeriodSelector?: boolean;
   controlsPortalId?: string;
+  periodPortalId?: string;
   table: PlatformDataTableProps<TData>;
   periodOptions?: readonly ResourceOverviewPeriodOption[];
   headerActions?: ReactNode;

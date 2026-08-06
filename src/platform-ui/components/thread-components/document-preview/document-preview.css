@@ -7,7 +7,7 @@
   width: var(--tb-document-preview-width);
   display: flex;
   flex-direction: column;
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 0;
   background: rgba(0, 0, 0, 0.5);
   box-shadow: -32px 0 80px rgba(0, 0, 0, 0.42);
   transform: translateX(100%);
@@ -88,7 +88,7 @@
   min-height: 56px;
   padding: 0 12px;
   box-sizing: border-box;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
   position: relative;
 }
 
@@ -267,6 +267,8 @@
   min-height: 0;
   flex: 1 1 auto;
   overflow: auto;
+  box-sizing: border-box;
+  border-left: 1px solid rgba(255, 255, 255, 0.075);
   background: transparent;
 }
 
@@ -312,6 +314,10 @@
 
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-code-save-message.is-saved {
   color: rgba(138, 255, 202, 0.82);
+}
+
+.tb-runner-document-preview-host-inline .tb-attachment-preview-drawer-body {
+  border-left: 0;
 }
 
 .tb-runner-document-preview-host-inline .tb-attachment-preview-drawer-body,

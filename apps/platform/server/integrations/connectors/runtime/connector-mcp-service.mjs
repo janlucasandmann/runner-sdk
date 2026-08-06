@@ -163,16 +163,37 @@ async function handleJsonRpcRequest({ request, grant, adapter, logger }) {
   if (method === "tools/list") {
     const actionIds = [...grant.allowedActions, ...grant.approvalRequiredActions];
     const approvalRequired = new Set(grant.approvalRequiredActions);
-    return rpcResult(id, {
-      tools: adapter.listTools(actionIds).map((definition) => ({
-        ...definition,
-        ...(approvalRequired.has(definition.name)
-          ? {
-              description: `${definition.description} This action requires explicit approval before execution.`,
-            }
-          : {}),
-      })),
-    });
+    try {
+      const definitions = await adapter.listTools(actionIds, { grant });
+      return rpcResult(id, {
+        tools: definitions.map((definition) => ({
+          ...definition,
+          ...(approvalRequired.has(definition.name)
+            ? {
+                description: `${definition.description} This action requires explicit approval before execution.`,
+              }
+            : {}),
+        })),
+      });
+    } catch (error) {
+      logger?.warn?.("[connector-mcp] Connector tool discovery failed", {
+        threadId: grant.threadId,
+        organizationId: grant.organizationId,
+        connectorId: grant.connectorId,
+        credentialId: grant.credentialId,
+        code: String(error?.code || "connector_tool_discovery_failed"),
+        statusCode: Number(error?.statusCode) || 500,
+        message: error instanceof Error ? error.message : String(error),
+      });
+      return rpcError(
+        id,
+        -32003,
+        error instanceof Error
+          ? error.message
+          : "Connector tool discovery failed.",
+        { code: String(error?.code || "connector_tool_discovery_failed") },
+      );
+    }
   }
   if (method !== "tools/call") {
     return rpcError(id, -32601, `Unsupported MCP method: ${method}`);
@@ -211,8 +232,7 @@ async function handleJsonRpcRequest({ request, grant, adapter, logger }) {
   }
 
   try {
-    const toolDefinition = adapter
-      .listTools([toolName])
+    const toolDefinition = (await adapter.listTools([toolName], { grant }))
       .find((definition) => definition?.name === toolName);
     const toolArguments = normalizeConnectorToolArguments(
       request.params?.arguments,

@@ -31,9 +31,14 @@ export const FILES_TOOLBAR_CSS = `
         max-width: 320px;
       }
 
+      .playground-files-unified-navbar .playground-files-environment-select-shell.is-connector {
+        max-width: 520px;
+      }
+
       .playground-files-unified-navbar .playground-files-inline-selector {
         min-height: 30px;
-        font-size: 12px;
+        font-size: 14px;
+        font-weight: 400;
       }
 
       .playground-files-unified-navbar .playground-files-header-icon-button.is-plain {
@@ -63,6 +68,24 @@ export const FILES_TOOLBAR_CSS = `
         max-width: 320px;
       }
 
+      .playground-files-environment-select-shell.is-connector {
+        max-width: 520px;
+      }
+
+      .playground-files-environment-breadcrumb-chevron {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 14px;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .playground-files-connector-account-selector > span {
+        overflow: hidden;
+        max-width: 190px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
       .playground-files-inline-selector {
         display: inline-flex;
         align-items: center;
@@ -74,7 +97,7 @@ export const FILES_TOOLBAR_CSS = `
         color: white;
         cursor: pointer;
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 400;
         transition: color 160ms ease;
       }
 
@@ -117,6 +140,11 @@ export const FILES_TOOLBAR_CSS = `
       .playground-files-environment-scope-menu {
         width: 336px;
         max-height: 420px;
+      }
+
+      .playground-files-connector-account-menu {
+        width: 280px;
+        max-height: 320px;
       }
 
       .playground-files-environment-menu-switch {
@@ -178,22 +206,6 @@ export const FILES_TOOLBAR_CSS = `
         line-height: 1.4;
       }
 
-      .playground-files-environment-actions-menu {
-        width: 280px;
-        max-height: none;
-      }
-
-      .playground-files-environment-actions-menu .playground-files-environment-menu-body {
-        overflow: visible;
-      }
-
-      .playground-files-environment-menu-title {
-        padding: 12px 16px;
-        color: rgba(255, 255, 255, 0.65);
-        font-size: 12px;
-        line-height: 1.2;
-      }
-
       .playground-files-environment-menu-body {
         flex: 1;
         min-height: 0;
@@ -247,6 +259,45 @@ export const FILES_TOOLBAR_CSS = `
 
       .playground-files-environment-menu-row.selected {
         background: transparent;
+      }
+
+      .playground-files-environment-menu-row.is-disabled {
+        cursor: default;
+        opacity: 0.48;
+      }
+
+      .playground-files-connector-menu-icon {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        object-fit: contain;
+        border-radius: 4px;
+      }
+
+      .playground-files-connector-menu-icon.is-github {
+        filter: brightness(0) invert(1);
+      }
+
+      .playground-files-connector-menu-row .playground-files-environment-menu-label,
+      .playground-files-connector-account-row .playground-files-environment-menu-label {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .playground-files-connector-menu-name {
+        color: #fff;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .playground-files-connector-menu-identity {
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        font-weight: 400;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .playground-files-environment-menu-label {

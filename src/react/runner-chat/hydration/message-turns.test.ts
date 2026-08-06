@@ -82,6 +82,7 @@ describe("runner hydrated message turns", () => {
           content: "Analyze",
           logMetadata: {
             quotedSelection: { text: "selected text", sourceType: "run_summary" },
+            runnerConnectorIds: ["jira"],
           },
         },
       ],
@@ -92,6 +93,10 @@ describe("runner hydrated message turns", () => {
       quotedSelection: {
         text: "selected text",
         sourceType: "run_summary",
+      },
+      messageMetadata: {
+        quotedSelection: { text: "selected text", sourceType: "run_summary" },
+        runnerConnectorIds: ["jira"],
       },
     });
   });

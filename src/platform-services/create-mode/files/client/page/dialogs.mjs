@@ -83,23 +83,9 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
           const contextMenuAnimationClass = contextMenuPhase === "exit"
             ? " account-menu-animate-up-out"
             : " account-menu-animate-up-in";
+          const isMinimalContextMenu = contextMenu.popupVariant === "minimal";
 
-          return React.createElement(React.Fragment, null,
-            React.createElement(PlatformPopupDismissLayer, {
-              className: "playground-files-context-backdrop",
-              onClick: closeContextMenu,
-              onContextMenu: (event) => {
-                event.preventDefault();
-                closeContextMenu();
-              },
-            }),
-            React.createElement(PlatformPopupSurface, {
-              className: "playground-files-context-menu" + contextMenuAnimationClass,
-              style: {
-                left: contextMenu.x + "px",
-                top: contextMenu.y + "px",
-              },
-            },
+          const contextMenuContent = React.createElement(React.Fragment, null,
               isMultiFileContext
                 ? React.createElement(React.Fragment, null,
                     React.createElement("div", { className: "playground-files-context-title" }, selectedFileEntries.length + " files selected"),
@@ -288,7 +274,46 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
                       : null
                   )
                 : null
-            )
+          );
+          const contextMenuSurface = isMinimalContextMenu
+            ? React.createElement(PlatformPopup, {
+                open: true,
+                variant: "minimal",
+                portal: true,
+                placement: "bottom-end",
+                portalOffset: 8,
+                portalAnchorPoint: contextMenu.anchorPoint || {
+                  x: contextMenu.x + 264,
+                  y: Math.max(0, contextMenu.y - 8),
+                },
+                animation: contextMenuPhase === "exit" ? "down-out" : "down-in",
+                rootClassName: "playground-files-context-menu-anchor",
+                surfaceClassName: "playground-files-context-menu",
+                surfaceProps: {
+                  role: "menu",
+                  width: 264,
+                  onClick: (event) => event.stopPropagation(),
+                },
+              }, contextMenuContent)
+            : React.createElement(PlatformPopupSurface, {
+                className: "playground-files-context-menu" + contextMenuAnimationClass,
+                style: {
+                  left: contextMenu.x + "px",
+                  top: contextMenu.y + "px",
+                },
+              }, contextMenuContent);
+
+          return React.createElement(React.Fragment, null,
+            React.createElement(PlatformPopupDismissLayer, {
+              className: "playground-files-context-backdrop",
+              style: isMinimalContextMenu ? { zIndex: 10059 } : undefined,
+              onClick: closeContextMenu,
+              onContextMenu: (event) => {
+                event.preventDefault();
+                closeContextMenu();
+              },
+            }),
+            contextMenuSurface
           );
         }
 
@@ -507,131 +532,29 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
 
           const isTeamSharePending = fileTeamShareState.action === "share"
             && fileTeamShareState.path === fileTeamPickerState.path;
-          const selectedTeamOption = availableFileTeams.find((team) =>
-            String(team?.id || "").trim() === String(fileTeamPickerValue || "").trim()
-          ) || null;
-          const selectedTeamTitle = String(selectedTeamOption?.name || "").trim() || "Select Team";
-          const selectedTeamDescription = selectedTeamOption
-            ? (String(selectedTeamOption?.role || "").trim() || "Team")
-            : (isLoadingFileTeams
-              ? "Loading teams..."
-              : (availableFileTeams.length > 0 ? "Choose a team" : "No teams are available yet"));
-          const modalElement = React.createElement(PlatformModalBackdrop, {
-              className: "playground-team-modal-backdrop playground-team-mission-modal-backdrop"
-                + (fileTeamPickerVisible ? " is-visible" : "")
-                + (fileTeamPickerClosing ? " is-closing" : ""),
-              onClick: closeFileTeamPickerDialog,
+          return React.createElement(PlatformResourceShareModal, {
+            open: fileTeamPickerVisible && !fileTeamPickerClosing,
+            resourceLabel: "File",
+            resourceName: fileTeamPickerState.title || "File",
+            selectionMode: "multiple",
+            teams: availableFileTeams.map((team) => ({
+              id: String(team?.id || "").trim(),
+              name: String(team?.name || "Team").trim() || "Team",
+              roleLabel: String(team?.role || "").trim() || "Team",
+              profileImageUrl: String(team?.profileImageUrl || "").trim(),
+            })),
+            selectedTeamIds: fileTeamPickerValues,
+            onSelectedTeamIdsChange: (teamIds) => {
+              setFileTeamPickerValues(teamIds);
+              setFileTeamPickerError("");
             },
-              React.createElement(PlatformModalSurface, {
-                as: "form",
-                className: "playground-team-modal playground-team-mission-modal is-share-resource"
-                  + (fileTeamPickerVisible ? " is-visible" : "")
-                  + (fileTeamPickerClosing ? " is-closing" : ""),
-                role: "dialog",
-                "aria-modal": "true",
-                "aria-labelledby": "file-team-picker-modal-title",
-                onClick: (event) => event.stopPropagation(),
-                onSubmit: (event) => {
-                  void handleFileTeamPickerSubmit(event);
-                },
-              },
-                React.createElement("div", { className: "playground-team-modal-header" },
-                  React.createElement("div", null,
-                    React.createElement("h2", { id: "file-team-picker-modal-title", className: "playground-team-modal-title" }, "Share with Team")
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-team-modal-close",
-                    onClick: closeFileTeamPickerDialog,
-                    disabled: isTeamSharePending,
-                    "aria-label": "Close share with team modal",
-                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                ),
-                React.createElement("div", { className: "playground-team-share-picker" },
-                  React.createElement("div", {
-                      className: "playground-tasks-project-blueprint-section playground-tasks-toolbar-popup-shell playground-team-share-resource-selector"
-                        + (fileTeamPickerOpen ? " is-open" : ""),
-                    },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-tasks-project-blueprint-trigger",
-                      onClick: () => setFileTeamPickerOpen((current) => !current),
-                      disabled: isTeamSharePending || isLoadingFileTeams || availableFileTeams.length === 0,
-                      "aria-haspopup": "listbox",
-                      "aria-expanded": fileTeamPickerOpen ? "true" : "false",
-                    },
-                      React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-main" },
-                        React.createElement("span", {
-                          className: "playground-tasks-project-blueprint-icon",
-                          style: { "--project-blueprint-accent": "#ffffff" },
-                          "aria-hidden": "true",
-                        }, React.createElement(UsersRound, { width: 15, height: 15, strokeWidth: 1.85 })),
-                        React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-copy" },
-                          React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-title" }, selectedTeamTitle),
-                          React.createElement("span", { className: "playground-tasks-project-blueprint-trigger-description" }, selectedTeamDescription)
-                        )
-                      ),
-                      React.createElement(ChevronDown, { className: "playground-tasks-project-blueprint-chevron", strokeWidth: 1.8 })
-                    ),
-                    fileTeamPickerOpen
-                      ? React.createElement(PlatformPopupSurface, {
-                          className: "playground-tasks-toolbar-popup-menu playground-tasks-project-blueprint-popover playground-tasks-toolbar-popup-menu-animate-down-in",
-                          role: "listbox",
-                        },
-                          React.createElement("div", { className: "playground-tasks-project-blueprint-grid" },
-                            availableFileTeams.map((team) => {
-                              const teamId = String(team?.id || "").trim();
-                              const teamName = String(team?.name || "Team").trim() || "Team";
-                              const teamMeta = String(team?.role || "").trim() || "Team";
-                              const isSelected = teamId && teamId === fileTeamPickerValue;
-                              return React.createElement("button", {
-                                  key: teamId,
-                                  type: "button",
-                                  className: "playground-tasks-project-blueprint-option" + (isSelected ? " is-active" : ""),
-                                  onClick: () => {
-                                    setFileTeamPickerValue(teamId);
-                                    setFileTeamPickerOpen(false);
-                                  },
-                                },
-                                React.createElement("span", {
-                                  className: "playground-tasks-project-blueprint-icon",
-                                  style: { "--project-blueprint-accent": "#ffffff" },
-                                  "aria-hidden": "true",
-                                }, React.createElement(UsersRound, { width: 15, height: 15, strokeWidth: 1.85 })),
-                                React.createElement("span", { className: "playground-tasks-project-blueprint-copy" },
-                                  React.createElement("span", { className: "playground-tasks-project-blueprint-title" }, teamName),
-                                  React.createElement("span", { className: "playground-tasks-project-blueprint-description" }, teamMeta)
-                                )
-                              );
-                            })
-                          )
-                        )
-                      : null
-                  ),
-                  fileTeamPickerError
-                    ? React.createElement("div", { className: "sidebar-thread-rename-error" }, fileTeamPickerError)
-                    : null,
-                  React.createElement("div", { className: "playground-team-modal-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-team-button",
-                      onClick: closeFileTeamPickerDialog,
-                      disabled: isTeamSharePending,
-                    }, "Cancel"),
-                    React.createElement(PlatformPrimaryButton, {
-                      size: "large",
-                      type: "submit",
-                      className: "playground-team-button is-primary",
-                      disabled: isTeamSharePending || isLoadingFileTeams || availableFileTeams.length === 0 || !fileTeamPickerValue,
-                    }, isTeamSharePending ? "Sharing..." : "Share")
-                  )
-                )
-              )
-            );
-
-          return typeof document !== "undefined" && document.body
-            ? createPortal(modalElement, document.body)
-            : modalElement;
+            onClose: closeFileTeamPickerDialog,
+            onShareTeams: (teamIds) => handleFileTeamPickerSubmit(teamIds),
+            busy: isTeamSharePending,
+            loading: isLoadingFileTeams,
+            error: fileTeamPickerError,
+            emptyMessage: "No teams are available yet.",
+          });
         }
 
         function renderChangesFilterMenu() {
@@ -683,54 +606,84 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
           const isDeletingEnvironment = fileEnvironmentMutationState.action === "delete" && fileEnvironmentMutationState.environmentId === normalizedEnvironmentId;
           const isDeleteBlocked = !normalizedEnvironmentId || selectedEnvironment?.isSystem || selectedEnvironment?.isDefault;
 
-          return React.createElement(PlatformPopupSurface, { className: "playground-files-environment-menu playground-files-environment-actions-menu" },
-            React.createElement("div", { className: "playground-files-environment-menu-title" }, selectedEnvironment?.name || "Computer"),
-            React.createElement("div", { className: "playground-files-environment-menu-body" },
+          return React.createElement(React.Fragment, null,
               React.createElement("button", {
                 type: "button",
-                className: "playground-files-environment-action-row",
+                className: "tb-popup-row",
                 onClick: handleOpenCurrentEnvironmentSettings,
                 disabled: !normalizedEnvironmentId || isForkingEnvironment || isDeletingEnvironment,
               },
-                React.createElement(Settings2, { className: "playground-files-environment-action-icon", strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-files-environment-action-copy" },
-                  React.createElement("span", null, "Computer Settings"),
-                  React.createElement("span", null, "Open this computer in Environments")
-                )
+                React.createElement("span", { className: "tb-popup-icon", "aria-hidden": "true" },
+                  React.createElement(Settings2, { strokeWidth: 1.8 })
+                ),
+                React.createElement("span", { className: "tb-popup-label" }, "Computer Settings")
               ),
               React.createElement("button", {
                 type: "button",
-                className: "playground-files-environment-action-row",
+                className: "tb-popup-row",
                 onClick: () => {
                   void handleForkCurrentEnvironment();
                 },
                 disabled: !normalizedEnvironmentId || isForkingEnvironment || isDeletingEnvironment,
               },
-                React.createElement(GitFork, { className: "playground-files-environment-action-icon", strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-files-environment-action-copy" },
-                  React.createElement("span", null, isForkingEnvironment ? "Forking Computer..." : "Fork Computer"),
-                  React.createElement("span", null, "Create a copy of this computer")
-                )
+                React.createElement("span", { className: "tb-popup-icon", "aria-hidden": "true" },
+                  React.createElement(GitFork, { strokeWidth: 1.8 })
+                ),
+                React.createElement("span", { className: "tb-popup-label" }, isForkingEnvironment ? "Forking Computer..." : "Fork Computer")
               ),
-              React.createElement("div", { className: "playground-files-environment-action-divider" }),
               React.createElement("button", {
                 type: "button",
-                className: "playground-files-environment-action-row",
+                className: "tb-popup-row",
                 onClick: () => {
                   void handleDeleteCurrentEnvironment();
                 },
                 disabled: isDeleteBlocked || isForkingEnvironment || isDeletingEnvironment,
               },
-                React.createElement(Trash2, { className: "playground-files-environment-action-icon", strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-files-environment-action-copy" },
-                  React.createElement("span", null, isDeletingEnvironment ? "Deleting Computer..." : "Delete Computer"),
-                  React.createElement("span", null,
-                    isDeleteBlocked
-                      ? "Default and system computers cannot be deleted"
-                      : "Permanently remove this computer"
-                  )
-                )
+                React.createElement("span", { className: "tb-popup-icon", "aria-hidden": "true" },
+                  React.createElement(Trash2, { strokeWidth: 1.8 })
+                ),
+                React.createElement("span", { className: "tb-popup-label" }, isDeletingEnvironment ? "Deleting Computer..." : "Delete Computer")
               )
+          );
+        }
+
+        function renderEnvironmentActionsControl() {
+          if (isConnectorsMode) {
+            return null;
+          }
+          const isOpen = toolbarPopover === "environment-actions";
+          return React.createElement(React.Fragment, null,
+            isOpen
+              ? React.createElement(PlatformPopupDismissLayer, {
+                  className: "playground-files-search-backdrop",
+                  style: { zIndex: 12059 },
+                  onClick: () => setToolbarPopover(""),
+                })
+              : null,
+            React.createElement(PlatformPopup, {
+                open: isOpen,
+                variant: "minimal",
+                portal: true,
+                placement: "bottom-end",
+                animation: "down-in",
+                rootClassName: "playground-files-toolbar-anchor playground-files-environment-actions-anchor",
+                surfaceProps: {
+                  role: "menu",
+                  "aria-label": (selectedEnvironment?.name || "Computer") + " actions",
+                  width: 220,
+                },
+                trigger: React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-header-icon-button is-plain" + (isOpen ? " is-active" : ""),
+                  onClick: () => toggleToolbarPopover("environment-actions"),
+                  disabled: !selectedEnvironmentId,
+                  title: "Computer actions",
+                  "aria-label": "Computer actions",
+                  "aria-haspopup": "menu",
+                  "aria-expanded": isOpen ? "true" : "false",
+                }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
+              },
+              renderEnvironmentActionsMenu()
             )
           );
         }
@@ -744,12 +697,18 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
 
         function renderFilesEnvironmentSelectMenu() {
           const isProjectMode = filesEnvironmentMenuMode === "projects";
+          const isConnectorMode = filesEnvironmentMenuMode === "connectors";
           const switchFilesEnvironmentMenuMode = (nextMode, event = null) => {
             if (event) {
               event.preventDefault();
               event.stopPropagation();
             }
-            setFilesEnvironmentMenuMode(nextMode === "projects" ? "projects" : "computers");
+            const normalizedMode = nextMode === "projects"
+              ? "projects"
+              : nextMode === "connectors"
+                ? "connectors"
+                : "computers";
+            setFilesEnvironmentMenuMode(normalizedMode);
             setToolbarPopover("environment");
           };
           const renderCheck = (isSelected) =>
@@ -772,6 +731,7 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
                   setProjectFilterScope(id);
                   setProjectFilterScopeLabel(id ? label : "");
                   setFilesEnvironmentMenuMode(id ? "projects" : "computers");
+                  if (isConnectorsMode) setContentMode("files");
                   setToolbarPopover("");
                 },
               },
@@ -785,18 +745,17 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
           };
 
           return React.createElement(PlatformPopupSurface, {
+              variant: "minimal",
+              animation: "down-in",
               className: "playground-files-environment-menu playground-files-environment-scope-menu",
               onPointerDown: stopFilesEnvironmentMenuEvent,
               onMouseDown: stopFilesEnvironmentMenuEvent,
               onClick: stopFilesEnvironmentMenuEvent,
             },
-            React.createElement("div", { className: "playground-files-environment-menu-title" },
-              isProjectMode ? activeProjectFilterOption.label : selectedEnvironment?.name || "Computer"
-            ),
             React.createElement("div", { className: "playground-files-environment-menu-switch" },
               React.createElement("button", {
                 type: "button",
-                className: "playground-files-environment-menu-switch-button" + (!isProjectMode ? " is-active" : ""),
+                className: "playground-files-environment-menu-switch-button" + (!isProjectMode && !isConnectorMode ? " is-active" : ""),
                 onPointerDownCapture: (event) => switchFilesEnvironmentMenuMode("computers", event),
                 onMouseDownCapture: (event) => switchFilesEnvironmentMenuMode("computers", event),
                 onClickCapture: (event) => switchFilesEnvironmentMenuMode("computers", event),
@@ -813,10 +772,48 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
                 onPointerDown: (event) => switchFilesEnvironmentMenuMode("projects", event),
                 onMouseDown: (event) => switchFilesEnvironmentMenuMode("projects", event),
                 onClick: (event) => switchFilesEnvironmentMenuMode("projects", event),
-              }, "Projects")
+              }, "Projects"),
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-environment-menu-switch-button" + (isConnectorMode ? " is-active" : ""),
+                onPointerDownCapture: (event) => switchFilesEnvironmentMenuMode("connectors", event),
+                onMouseDownCapture: (event) => switchFilesEnvironmentMenuMode("connectors", event),
+                onClickCapture: (event) => switchFilesEnvironmentMenuMode("connectors", event),
+                onPointerDown: (event) => switchFilesEnvironmentMenuMode("connectors", event),
+                onMouseDown: (event) => switchFilesEnvironmentMenuMode("connectors", event),
+                onClick: (event) => switchFilesEnvironmentMenuMode("connectors", event),
+              }, "Connectors")
             ),
             React.createElement("div", { className: "playground-files-environment-menu-body" },
-              isProjectMode
+              isConnectorMode
+                ? connectorSourceState.status === "loading" || connectorSourceState.status === "idle"
+                  ? React.createElement("div", { className: "playground-files-environment-menu-empty" }, "Loading connectors...")
+                  : connectorSourceState.error
+                    ? React.createElement("div", { className: "playground-files-environment-menu-empty is-error" }, connectorSourceState.error)
+                    : connectorSourceState.items.length > 0
+                      ? connectorSourceState.items.map((source) =>
+                          React.createElement("button", {
+                              key: source.id,
+                              type: "button",
+                              className: "playground-files-environment-menu-row playground-files-connector-menu-row"
+                                + (activeConnectorSourceId === source.id && isConnectorsMode ? " selected" : "")
+                                + (!source.connected ? " is-disabled" : ""),
+                              disabled: !source.connected,
+                              onClick: () => selectFileConnectorSource(source.id),
+                              title: source.connected ? "Open " + source.label + " files" : source.label + " is not connected",
+                            },
+                              renderFileConnectorSourceIcon(source, "playground-files-connector-menu-icon"),
+                              React.createElement("span", { className: "playground-files-environment-menu-label" },
+                                React.createElement("span", { className: "playground-files-connector-menu-name" }, source.label),
+                                React.createElement("span", { className: "playground-files-connector-menu-identity" },
+                                  source.connected ? source.identity || "Connected" : "Not connected"
+                                )
+                              ),
+                              renderCheck(activeConnectorSourceId === source.id && isConnectorsMode)
+                            )
+                        )
+                      : React.createElement("div", { className: "playground-files-environment-menu-empty" }, "No file connectors are available.")
+                : isProjectMode
                 ? [
                     renderProjectOption("", isChangesMode ? "All Changes" : "All Files"),
                     renderProjectOption("__all__", isChangesMode ? "All Project Changes" : "All Project Files"),
@@ -841,7 +838,7 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
                       )
                   )
             ),
-            !isProjectMode
+            !isProjectMode && !isConnectorMode
               ? React.createElement("div", { className: "playground-files-environment-menu-footer" },
                   React.createElement("button", {
                     type: "button",
@@ -856,42 +853,123 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
           );
         }
 
-        function renderFilesEnvironmentSelector() {
-          return React.createElement("div", { className: "playground-files-toolbar-anchor playground-files-environment-select-shell" },
-            React.createElement("button", {
-              type: "button",
-              className: "playground-files-inline-selector" + (toolbarPopover === "environment" ? " active" : ""),
-              onClick: () => {
-                setFilesEnvironmentMenuMode(projectFilterScope ? "projects" : "computers");
-                toggleToolbarPopover("environment");
-              },
+        function renderFileConnectorAccountMenu() {
+          const stopFileConnectorAccountMenuEvent = (event) => {
+            event.stopPropagation();
+            event.nativeEvent?.stopImmediatePropagation?.();
+          };
+          return React.createElement(PlatformPopupSurface, {
+              variant: "minimal",
+              animation: "down-in",
+              className: "playground-files-environment-menu playground-files-connector-account-menu",
+              onPointerDown: stopFileConnectorAccountMenuEvent,
+              onMouseDown: stopFileConnectorAccountMenuEvent,
+              onClick: stopFileConnectorAccountMenuEvent,
             },
-              React.createElement("span", null,
-                projectFilterScope
-                  ? activeProjectFilterOption.label
-                  : selectedEnvironment?.name || "No environments available"
-              ),
-              React.createElement(ChevronDown, {
-                className: "playground-files-inline-selector-chevron",
-                strokeWidth: 1.85,
-              })
-            ),
-            toolbarPopover === "environment"
-              ? renderFilesEnvironmentSelectMenu()
-              : null,
+            React.createElement("div", { className: "playground-files-environment-menu-body" },
+              activeFileConnectorAccounts.length > 0
+                ? activeFileConnectorAccounts.map((account) => {
+                    const isSelected = account.id === activeConnectorCredentialId;
+                    const identity = account.identity || account.name || "Connected account";
+                    const shouldShowName = account.name && account.name !== identity;
+                    return React.createElement("button", {
+                        key: account.id || "default-account",
+                        type: "button",
+                        className: "playground-files-environment-menu-row playground-files-connector-account-row"
+                          + (isSelected ? " selected" : ""),
+                        onClick: () => selectFileConnectorAccount(account.id),
+                        title: "Browse files as " + identity,
+                      },
+                        React.createElement("span", { className: "playground-files-environment-menu-label" },
+                          React.createElement("span", { className: "playground-files-connector-menu-name" }, identity),
+                          shouldShowName
+                            ? React.createElement("span", { className: "playground-files-connector-menu-identity" }, account.name)
+                            : null
+                        ),
+                        React.createElement("span", { className: "playground-files-environment-menu-check-slot" },
+                          isSelected
+                            ? React.createElement(Check, {
+                                className: "playground-files-environment-menu-check",
+                                width: 16,
+                                height: 16,
+                                strokeWidth: 2,
+                              })
+                            : null
+                        )
+                      );
+                  })
+                : React.createElement("div", { className: "playground-files-environment-menu-empty" }, "No connected accounts are available.")
+            )
+          );
+        }
+
+        function renderFilesEnvironmentSelector() {
+          const sourceLabel = isConnectorsMode
+            ? activeFileConnectorSource?.label || "Connectors"
+            : projectFilterScope
+              ? activeProjectFilterOption.label
+              : selectedEnvironment?.name || "No environments available";
+          const accountLabel = activeFileConnectorAccount?.identity
+            || activeFileConnectorAccount?.name
+            || "Connected account";
+          return React.createElement("div", {
+              className: "playground-files-environment-select-shell" + (isConnectorsMode ? " is-connector" : ""),
+            },
             React.createElement("div", { className: "playground-files-toolbar-anchor" },
               React.createElement("button", {
                 type: "button",
-                className: "playground-files-header-icon-button is-plain" + (toolbarPopover === "environment-actions" ? " is-active" : ""),
-                onClick: () => toggleToolbarPopover("environment-actions"),
-                disabled: !selectedEnvironmentId,
-                title: "Computer actions",
-                "aria-label": "Computer actions",
-              }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
-              toolbarPopover === "environment-actions"
-                ? renderEnvironmentActionsMenu()
+                className: "playground-files-inline-selector" + (toolbarPopover === "environment" ? " active" : ""),
+                onClick: () => {
+                  const nextMode = isConnectorsMode
+                    ? "connectors"
+                    : projectFilterScope
+                      ? "projects"
+                      : "computers";
+                  setFilesEnvironmentMenuMode(nextMode);
+                  toggleToolbarPopover("environment");
+                },
+              },
+                React.createElement("span", null, sourceLabel),
+                React.createElement(ChevronDown, {
+                  className: "playground-files-inline-selector-chevron",
+                  strokeWidth: 1.85,
+                })
+              ),
+              toolbarPopover === "environment"
+                ? renderFilesEnvironmentSelectMenu()
                 : null
-            )
+            ),
+            isConnectorsMode && activeFileConnectorSource
+              ? React.createElement(React.Fragment, null,
+                  React.createElement(ChevronRight, {
+                    className: "playground-files-environment-breadcrumb-chevron",
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                    "aria-hidden": "true",
+                  }),
+                  React.createElement("div", { className: "playground-files-toolbar-anchor" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-inline-selector playground-files-connector-account-selector"
+                        + (toolbarPopover === "connector-account" ? " active" : ""),
+                      onClick: () => toggleToolbarPopover("connector-account"),
+                      "aria-haspopup": "menu",
+                      "aria-expanded": toolbarPopover === "connector-account" ? "true" : "false",
+                    },
+                      React.createElement("span", null, accountLabel),
+                      React.createElement(ChevronDown, {
+                        className: "playground-files-inline-selector-chevron",
+                        strokeWidth: 1.85,
+                      })
+                    ),
+                    toolbarPopover === "connector-account"
+                      ? renderFileConnectorAccountMenu()
+                      : null
+                  )
+                )
+              : null,
+            renderEnvironmentActionsControl()
           );
         }
 `;

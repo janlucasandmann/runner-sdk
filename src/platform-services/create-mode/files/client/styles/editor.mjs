@@ -136,58 +136,6 @@ export const FILES_EDITOR_CSS = `
         font-weight: 500;
       }
 
-      .playground-code-preview-header-save-button {
-        --playground-code-preview-header-button-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        position: relative;
-        height: 32px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 0 14px;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.92);
-        font-size: 12px;
-        font-weight: 500;
-        line-height: 1;
-        cursor: pointer;
-        z-index: 0;
-      }
-
-      .playground-code-preview-header-save-button::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-code-preview-header-button-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-code-preview-header-save-button > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .playground-code-preview-header-save-button:disabled {
-        opacity: 0.44;
-        cursor: default;
-      }
-
       .playground-code-preview-header .tb-attachment-preview-drawer-action:disabled {
         opacity: 0.5;
         cursor: default;

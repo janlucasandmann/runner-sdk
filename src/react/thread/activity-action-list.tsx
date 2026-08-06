@@ -1,7 +1,10 @@
 import { AlertCircle, CheckCircle2, Circle, Clock3 } from "lucide-react";
 import type { ReactNode } from "react";
 import type { RunnerEventType, RunnerLog, RunnerLogType } from "../../types.js";
+import { describeRunnerThreadAction } from "../../thread/action-presentation.js";
 import type { RunnerThreadAction } from "../../thread/types.js";
+
+export { describeRunnerThreadAction } from "../../thread/action-presentation.js";
 
 export type RunnerThreadActionRenderer = (action: RunnerThreadAction) => ReactNode;
 
@@ -42,15 +45,6 @@ function recordText(record: Record<string, unknown> | null, ...keys: string[]): 
     if (typeof value === "string" && value.trim()) return value.trim();
   }
   return "";
-}
-
-function filename(value: string): string {
-  return value.split(/[\\/]/).filter(Boolean).at(-1) || "file";
-}
-
-function sentenceCase(value: string): string {
-  const normalized = value.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
-  return normalized ? `${normalized.charAt(0).toUpperCase()}${normalized.slice(1)}` : "Completed an action";
 }
 
 const RUNNER_LOG_EVENT_TYPES = new Set<RunnerEventType>([
@@ -146,68 +140,6 @@ export function adaptRunnerThreadActionToRunnerLog(action: RunnerThreadAction): 
     isLLMResponse: eventType === "llm_response",
     metadata,
   };
-}
-
-/** Produces a safe fallback when a host does not provide its typed log renderer. */
-export function describeRunnerThreadAction(action: RunnerThreadAction): string {
-  const input = payloadRecord(action.input);
-  const output = payloadRecord(action.output);
-  const searchable = [action.type, action.title, action.toolName].filter(Boolean).join(" ").toLowerCase();
-  const command = recordText(input, "command");
-  const description = recordText(input, "description");
-  const path = recordText(output, "filePath", "file_path", "path")
-    || recordText(input, "filePath", "file_path", "path");
-  const fileName = path ? filename(path) : "";
-  const changeKind = recordText(output, "type", "changeKind", "change_kind").toLowerCase();
-  const completed = action.status === "completed" || action.status === "succeeded";
-
-  if (/todo(?:write|_write)?|task list/.test(searchable)) {
-    return completed ? "Updated the task list" : "Updating the task list";
-  }
-
-  if (path || /write[_ ]?file|file[_ ]?(?:write|change)/.test(searchable)) {
-    const target = fileName || "a file";
-    if (changeKind === "create" || changeKind === "created") return `${completed ? "Created" : "Creating"} ${target}`;
-    if (changeKind === "delete" || changeKind === "deleted") return `${completed ? "Deleted" : "Deleting"} ${target}`;
-    return `${completed ? "Updated" : "Updating"} ${target}`;
-  }
-
-  const query = recordText(output, "query") || recordText(input, "query");
-  if (query || /websearch|web search|searching web/.test(searchable)) {
-    return query ? `Searched the web for “${query}”` : "Searched the web";
-  }
-
-  const url = recordText(output, "url") || recordText(input, "url");
-  if (url || /webfetch|web fetch|fetching/.test(searchable)) {
-    if (url) {
-      try {
-        return `Reviewed ${new URL(url).hostname.replace(/^www\./, "")}`;
-      } catch {
-        // Fall through to the grounded generic description.
-      }
-    }
-    return "Reviewed a web source";
-  }
-
-  if (command) {
-    const deleteMatch = /^\s*rm(?:\s+-\S+)*\s+([^;&|]+)/i.exec(command);
-    if (deleteMatch?.[1]) return `Deleted ${filename(deleteMatch[1].trim())}`;
-    const inspectMatch = /^\s*(?:ls|test)\s+([^;&|]+)/i.exec(command);
-    if (inspectMatch?.[1]) return `Verified ${filename(inspectMatch[1].trim())}`;
-    if (description) return sentenceCase(description);
-    return completed ? "Ran a command" : "Running a command";
-  }
-
-  const summary = String(action.summary || "").replace(/\s+/g, " ").trim();
-  if (/^writing\s*:/i.test(summary)) return `Updated ${filename(summary.replace(/^writing\s*:/i, "").trim())}`;
-  if (/^(?:\$|executed\s*:)/i.test(summary)) return completed ? "Ran a command" : "Running a command";
-  if (/^completed\s+(?:command_execution|file_write|tool\.completed)$/i.test(summary)) {
-    return /file/i.test(summary) ? "Updated a file" : "Completed an action";
-  }
-
-  const title = String(action.title || "").trim();
-  if (/^(?:command_execution|bash|shell)$/i.test(title)) return completed ? "Ran a command" : "Running a command";
-  return sentenceCase(title || summary);
 }
 
 function DefaultAction({ action }: { action: RunnerThreadAction }) {

@@ -301,6 +301,7 @@ async function handleJiraCallback(
         siteName: site.name,
         siteUrl: site.url,
       }),
+      makeDefault: true,
       envFileCandidates,
       encryptionKeyNames: JIRA_ENCRYPTION_KEYS,
     });

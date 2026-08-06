@@ -5,6 +5,7 @@ import { createBigQueryConnectorAdapter } from "./bigquery-connector-adapter.mjs
 import { createBoxConnectorAdapter } from "./box-connector-adapter.mjs";
 import { createDropboxConnectorAdapter } from "./dropbox-connector-adapter.mjs";
 import { createFigmaConnectorAdapter } from "./figma-connector-adapter.mjs";
+import { createGithubConnectorAdapter } from "./github-connector-adapter.mjs";
 import { createLinearConnectorAdapter } from "./linear-connector-adapter.mjs";
 import {
   createMicrosoftTeamsConnectorAdapter,
@@ -19,6 +20,10 @@ export function createConnectorAdapterRegistry({
   adapters = [],
 } = {}) {
   const configuredAdapters = [
+    createGithubConnectorAdapter({
+      fetchImpl,
+      envFileCandidates,
+    }),
     createAtlassianConnectorAdapter({
       fetchImpl,
       envFileCandidates,

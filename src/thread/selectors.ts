@@ -11,6 +11,7 @@ import type {
   RunnerThreadTimelineItem,
   RunnerThreadTimelineReference,
 } from "./types.js";
+import { normalizeRunnerThreadWorkingLabel } from "./working-label.js";
 
 function resolveTimelineReference(
   projection: RunnerThreadProjection,
@@ -190,16 +191,36 @@ function recordValue(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function explicitObserverWorkingLabel(event: RunnerThreadProjection["eventsById"][string]): string {
-  const producerType = String(event.producer?.type || "").toLowerCase();
-  if (producerType !== "observer" && producerType !== "communicator") return "";
-
+function observerProjectionRecords(
+  event: RunnerThreadProjection["eventsById"][string],
+): Record<string, unknown>[] {
   const payload = event.payload || {};
   const projection = recordValue(payload.projection);
   const runProjection = recordValue(payload.runProjection ?? payload.run_projection);
-  const records = [payload, projection, runProjection].filter(
+  return [payload, projection, runProjection].filter(
     (value): value is Record<string, unknown> => Boolean(value),
   );
+}
+
+function isGroundedObserverEvent(
+  event: RunnerThreadProjection["eventsById"][string],
+): boolean {
+  if (observerProjectionRecords(event).some((record) => (
+    nonEmptyString(record.observerStatus ?? record.observer_status).toLowerCase() === "grounded"
+  ))) {
+    return true;
+  }
+  return /chronicle.*live/i.test(String(event.producer?.id || ""));
+}
+
+function explicitObserverWorkingLabel(
+  event: RunnerThreadProjection["eventsById"][string],
+  includeProjectionFallback = false,
+): string {
+  const producerType = String(event.producer?.type || "").toLowerCase();
+  if (producerType !== "observer" && producerType !== "communicator") return "";
+
+  const records = observerProjectionRecords(event);
 
   // These fields are an explicit contract: an observer/communicator may opt a
   // concise status sentence into the collapsed run label. Never fall back to
@@ -216,18 +237,18 @@ function explicitObserverWorkingLabel(event: RunnerThreadProjection["eventsById"
       "statusMessage",
       "status_message",
     ]) {
-      const candidate = nonEmptyString(record[key]);
+      const candidate = normalizeRunnerThreadWorkingLabel(record[key]);
       if (candidate) return candidate;
     }
   }
 
-  if (event.type !== "thread.run.projection.updated") return "";
+  if (!includeProjectionFallback || event.type !== "thread.run.projection.updated") return "";
   for (const record of records) {
-    const activityTitle = nonEmptyString(
+    const activityTitle = normalizeRunnerThreadWorkingLabel(
       record.currentActivityGroupTitle ?? record.current_activity_group_title,
     );
     if (activityTitle && activityTitle.toLowerCase() !== "worker run") return activityTitle;
-    const phase = nonEmptyString(record.phase);
+    const phase = normalizeRunnerThreadWorkingLabel(record.phase);
     if (phase && phase.toLowerCase() !== "worker run") return phase;
   }
   return "";
@@ -245,9 +266,18 @@ export function selectRunnerThreadRunWorkingLabel(
   const observerEvents = Object.values(projection.eventsById)
     .filter((event) => event.runId === runId)
     .sort(bySequence);
-  for (let index = observerEvents.length - 1; index >= 0; index -= 1) {
-    const candidate = explicitObserverWorkingLabel(observerEvents[index]);
-    if (candidate) return candidate;
+  const groundedEvents = observerEvents.filter(isGroundedObserverEvent);
+  for (const events of [groundedEvents, observerEvents]) {
+    for (let index = events.length - 1; index >= 0; index -= 1) {
+      const candidate = explicitObserverWorkingLabel(events[index]);
+      if (candidate) return candidate;
+    }
+  }
+  for (const events of [groundedEvents, observerEvents]) {
+    for (let index = events.length - 1; index >= 0; index -= 1) {
+      const candidate = explicitObserverWorkingLabel(events[index], true);
+      if (candidate) return candidate;
+    }
   }
 
   // Hydrated projections can contain activity groups without their source
@@ -255,7 +285,7 @@ export function selectRunnerThreadRunWorkingLabel(
   // live/action summaries, so they are the only safe compatibility fallback.
   const groups = selectRunnerThreadActivityGroups(projection, { runId })
     .filter((group) => group.title.trim().toLowerCase() !== "worker run");
-  return nonEmptyString(groups[groups.length - 1]?.title) || null;
+  return normalizeRunnerThreadWorkingLabel(groups[groups.length - 1]?.title);
 }
 
 export function selectRunnerThreadRunProjection(

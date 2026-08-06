@@ -13,6 +13,7 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/composite/activity-timeline/activity-timeline.css",
   "src/platform-ui/components/composite/activity-workspace/activity-workspace.css",
   "src/platform-ui/components/composite/comments/comments.css",
+  "src/platform-ui/components/composite/connector-action-detail/connector-action-detail.css",
   "src/platform-ui/components/composite/popup/popup.css",
   "src/platform-ui/components/composite/profile-image-picker/profile-image-picker.css",
   "src/platform-ui/components/ui/selector/selector.css",

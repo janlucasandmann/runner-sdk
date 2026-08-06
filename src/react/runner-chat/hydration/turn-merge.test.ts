@@ -150,4 +150,61 @@ describe("runner hydrated turn reconciliation", () => {
     ]);
     expect(merged.logs[1].message).toBe("Done");
   });
+
+  it("preserves persisted connector metadata while reconciling a user turn", () => {
+    const [merged] = mergeHydratedMessageTurnsIntoTurns(
+      [
+        turn({
+          sourceMessageId: "user-connector-1",
+          messageMetadata: { optimistic: true },
+        }),
+      ],
+      [
+        {
+          id: "user-connector-1",
+          role: "user",
+          content: "Build it",
+          createdAt: "2026-07-16T10:00:00.000Z",
+          logMetadata: { runnerConnectorIds: ["github"] },
+        },
+      ],
+    );
+
+    expect(merged.messageMetadata).toEqual({
+      optimistic: true,
+      runnerConnectorIds: ["github"],
+    });
+  });
+
+  it("recovers historical connector metadata while assigning structured logs", () => {
+    const [merged] = mergeHydratedTimelineLogsIntoMessageTurns(
+      [
+        turn({
+          id: "msg_mTMHJP4BQyBuA1VXZwwEJ",
+          sourceMessageId: "msg_mTMHJP4BQyBuA1VXZwwEJ",
+          prompt: "list all my repos",
+          messageMetadata: null,
+          startedAtMs: Date.parse("2026-08-04T08:20:49.082Z"),
+        }),
+      ],
+      [
+        {
+          id: "log-github",
+          type: "info",
+          message: "Called GitHub",
+          eventType: "mcp_tool_call",
+          metadata: {
+            toolName: "mcp__connector_github__search_repositories",
+            serverName: "connector_github",
+            timestamp: "2026-08-04T08:20:50.000Z",
+          },
+        },
+      ],
+    ) || [];
+
+    expect(merged.messageMetadata).toMatchObject({
+      runnerConnectorIds: ["github"],
+      connectorMetadataSource: "structured_turn_evidence",
+    });
+  });
 });

@@ -4,6 +4,7 @@ import {
   buildSubagentTimelineGroups,
   buildTimelineItems,
   getTurnMetronomeWorkflowPromptLog,
+  isRunnerTimelineToolCallItem,
 } from "./legacy-timeline.js";
 import {
   buildSubagentGroupPresentation,
@@ -126,5 +127,20 @@ describe("legacy thread timeline projection", () => {
     });
 
     expect(getTurnMetronomeWorkflowPromptLog(turn([workflow]))).toBe(workflow);
+  });
+
+  it("classifies tool activity without treating reasoning as a tool call", () => {
+    expect(isRunnerTimelineToolCallItem({
+      kind: "log",
+      log: log({ eventType: "reasoning", message: "Considering the next step" }),
+    })).toBe(false);
+    expect(isRunnerTimelineToolCallItem({
+      kind: "log",
+      log: log({ eventType: "command_execution", message: "npm test" }),
+    })).toBe(true);
+    expect(isRunnerTimelineToolCallItem({
+      kind: "log",
+      log: log({ eventType: "mcp_tool_call", metadata: { toolName: "read_file" } }),
+    })).toBe(true);
   });
 });

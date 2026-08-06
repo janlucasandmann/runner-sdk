@@ -77,6 +77,11 @@ export const FILES_CONTENT_CSS = `
         overflow: hidden;
       }
 
+      .playground-files-page .playground-files-browser-body.is-connectors-view .platform-empty-state {
+        align-self: center;
+        margin: auto;
+      }
+
       .playground-files-screen-drop-overlay {
         position: absolute;
         inset: 0;

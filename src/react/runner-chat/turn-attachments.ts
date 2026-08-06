@@ -4,6 +4,7 @@ import {
   isRunnerPreviewHtmlFile,
   normalizeRunnerPreviewWorkspacePath,
   resolveRunnerPreviewAssetUrl,
+  type RunnerConnectorActionPreviewData,
   type RunnerImageUnderstandingPreviewData,
   type RunnerImageUnderstandingPreviewItem,
   type RunnerMediaGenerationPromptPreviewData,
@@ -265,6 +266,44 @@ function normalizeWebSearchPreviewData(
   };
 }
 
+function normalizeConnectorActionPreviewData(
+  value: unknown
+): RunnerConnectorActionPreviewData | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+  const candidate = value as Record<string, unknown>;
+  const connectorName = typeof candidate.connectorName === "string"
+    ? candidate.connectorName.trim()
+    : "";
+  const actionName = typeof candidate.actionName === "string"
+    ? candidate.actionName.trim()
+    : "";
+  const description = typeof candidate.description === "string"
+    ? candidate.description.trim()
+    : "";
+  if (!connectorName || !actionName || !description) {
+    return undefined;
+  }
+  return {
+    connectorId: typeof candidate.connectorId === "string"
+      ? candidate.connectorId.trim()
+      : "",
+    connectorName,
+    logoUrl: typeof candidate.logoUrl === "string" && candidate.logoUrl.trim()
+      ? candidate.logoUrl.trim()
+      : undefined,
+    actionName,
+    description,
+    status: candidate.status === "running" || candidate.status === "failed"
+      ? candidate.status
+      : "completed",
+    inputText: typeof candidate.inputText === "string" ? candidate.inputText : "",
+    outputText: typeof candidate.outputText === "string" ? candidate.outputText : "",
+    errorMessage: typeof candidate.errorMessage === "string" ? candidate.errorMessage : "",
+  };
+}
+
 function normalizeMediaGenerationPromptPreviewData(
   value: unknown
 ): RunnerMediaGenerationPromptPreviewData | undefined {
@@ -373,6 +412,7 @@ export function normalizeTurnAttachment(
     imageGenerationPromptPreview?: unknown;
     imageUnderstandingPreview?: unknown;
     webSearchPreview?: unknown;
+    connectorActionPreview?: unknown;
     videoGenerationPromptPreview?: unknown;
   };
   if (isRunnerTurnDisplayHiddenAttachment(candidate)) {
@@ -481,6 +521,10 @@ export function normalizeTurnAttachment(
     candidate.previewKindOverride === "web-search"
       ? normalizeWebSearchPreviewData(candidate.webSearchPreview)
       : undefined;
+  const connectorActionPreview =
+    candidate.previewKindOverride === "connector-action"
+      ? normalizeConnectorActionPreviewData(candidate.connectorActionPreview)
+      : undefined;
   const imageGenerationPromptPreview =
     candidate.previewKindOverride === "image-generation-prompt"
       ? normalizeMediaGenerationPromptPreviewData(
@@ -559,11 +603,14 @@ export function normalizeTurnAttachment(
       ? "image-understanding"
       : webSearchPreview
         ? "web-search"
-        : imageGenerationPromptPreview
-          ? "image-generation-prompt"
-          : videoGenerationPromptPreview
-            ? "video-generation-prompt"
-            : undefined,
+        : connectorActionPreview
+          ? "connector-action"
+          : imageGenerationPromptPreview
+            ? "image-generation-prompt"
+            : videoGenerationPromptPreview
+              ? "video-generation-prompt"
+              : undefined,
+    connectorActionPreview,
     imageGenerationPromptPreview,
     imageUnderstandingPreview,
     webSearchPreview,

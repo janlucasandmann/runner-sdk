@@ -821,7 +821,6 @@
                   : null;
             const resourcesDetailPathItem = {
               label: resourcesHeaderState.title || "Resource",
-              subtitle: resourcesHeaderState.subtitle || "",
               trailing: resourcesDetailVersionLabel || resourcesDetailTitleActions
                 ? React.createElement(React.Fragment, null,
                     resourcesDetailVersionLabel,
@@ -862,23 +861,32 @@
               className: "playground-resources-page",
               pathItems: resourcesPathItems,
               center: isResourcesDetailView && activeResourcesView === "agents"
-                ? React.createElement(PlatformSwitch, {
-                    className: "playground-agent-detail-header-switch",
-                    value: ["general", "insights", "settings"].includes(resourcesHeaderState.activeSection)
-                      ? resourcesHeaderState.activeSection
-                      : "general",
-                    options: [
-                      { value: "general", label: "General" },
-                      { value: "insights", label: "Insights" },
-                      { value: "settings", label: "Settings" },
-                    ],
-                    onValueChange: (nextSection) => {
-                      if (typeof resourcesHeaderState.onSectionChange === "function") {
-                        resourcesHeaderState.onSectionChange(nextSection);
-                      }
-                    },
-                    ariaLabel: "Agent section",
-                  })
+                ? React.createElement("div", {
+                    className: "playground-agent-detail-header-center",
+                  },
+                    React.createElement(PlatformSwitch, {
+                      className: "playground-agent-detail-header-switch",
+                      value: ["general", "insights", "settings"].includes(resourcesHeaderState.activeSection)
+                        ? resourcesHeaderState.activeSection
+                        : "general",
+                      options: [
+                        { value: "general", label: "General" },
+                        { value: "insights", label: "Insights" },
+                        { value: "settings", label: "Settings" },
+                      ],
+                      onValueChange: (nextSection) => {
+                        if (typeof resourcesHeaderState.onSectionChange === "function") {
+                          resourcesHeaderState.onSectionChange(nextSection);
+                        }
+                      },
+                      ariaLabel: "Agent section",
+                    })
+                  )
+                  : !isResourcesDetailView && activeResourcesView === "agents"
+                    ? React.createElement("div", {
+                        id: "playground-agents-overview-period-controls",
+                        className: "playground-agent-overview-period-controls-slot",
+                      })
                   : isDatabaseResourcesDetailView
                     ? React.createElement(PlatformSwitch, {
                       className: "playground-database-detail-header-switch",
@@ -992,6 +1000,24 @@
                 || (activeResourcesView === "servers" && Boolean(activeResourcesServerKind)),
               hideCommonActions: false,
               extraActions: React.createElement(React.Fragment, null,
+                isResourcesDetailView
+                  && activeResourcesView === "agents"
+                  && resourcesHeaderState.activeSection === "insights"
+                  && resourcesHeaderState.showTimeframe
+                  ? React.createElement(PlatformSwitch, {
+                      className: "playground-agent-detail-header-timeframe",
+                      value: resourcesHeaderState.timeframeValue || "month",
+                      options: Array.isArray(resourcesHeaderState.timeframeOptions)
+                        ? resourcesHeaderState.timeframeOptions
+                        : [],
+                      onValueChange: (nextTimeframe) => {
+                        if (typeof resourcesHeaderState.onTimeframeChange === "function") {
+                          resourcesHeaderState.onTimeframeChange(nextTimeframe);
+                        }
+                      },
+                      ariaLabel: "Agent analytics time frame",
+                    })
+                  : null,
                 !isResourcesDetailView
                   ? React.createElement("div", {
                       id: "playground-resource-overview-controls",
@@ -2700,6 +2726,7 @@
                     key: "resources:agents",
                     backendUrl: proxyBackendBase,
                     requestHeaders,
+                    resolveRequestHeaders: resolveRunnerRequestHeaders,
                     apiKey: effectiveApiKey,
                     fetchCustomSkills: handleFetchCustomSkills,
                     speechToTextUrl: speechToTextUrl || "",
@@ -2829,6 +2856,8 @@
                         initialPrompt: normalizePlaygroundInitialPrompt(initialPrompt) || "/agent",
                       });
                     },
+                    onOpenEvaluations: openEvaluationsOverviewPage,
+                    onOpenAgentOptimization: openFineTuningOverviewPage,
   ${MODELS_AGENT_SCRIPT_FRAGMENTS.hostProps}                  embeddedInResources: true,
                     topNavActionsPortalId: "playground-resources-nav-actions",
                     titleActionsPortalId: "playground-agent-title-actions",
@@ -3231,20 +3260,6 @@
                           includeSearchDivider: true,
                           extraActions: activePage === "thread" && !isThreadSideDetailOpen
                               ? React.createElement(React.Fragment, null,
-                                  contentMode === "changes" && currentThreadId
-                                    ? React.createElement(PlatformSwitch, {
-                                        className: "playground-thread-activity-level-switch",
-                                        ariaLabel: "Activity detail level",
-                                        value: threadActivityHierarchyLevel,
-                                        options: [
-                                          { value: "groups", label: "Action groups" },
-                                          { value: "tool_calls", label: "Tool calls" },
-                                        ],
-                                        onValueChange: (nextLevel) => {
-                                          setThreadActivityHierarchyLevel(nextLevel === "tool_calls" ? "tool_calls" : "groups");
-                                        },
-                                      })
-                                    : null,
                                   contentMode === "chat" && currentThreadId
                                     ? React.createElement(PlatformIconButton, {
                                         type: "button",
@@ -3443,6 +3458,12 @@
                                 apiKey: effectiveApiKey,
                                 agentId: resolvedComposerAgentId || "",
                                 agents: runtimeAgentsForComposer,
+                                organizationId: billingOrganizationId || settingsBudgetStatus?.organizationId || "",
+                                connectorConnectionStatuses: {
+                                  github: githubStatus,
+                                  "google-drive": googleDriveStatus,
+                                  "one-drive": oneDriveStatus,
+                                },
                                 isAgentSelectionBlocked: isComposerAgentSelectionBlocked,
                                 onBlockedAgentSelect: handleBlockedComposerAgentSelect,
                                 onFileChatThreadMutated: () => {
@@ -3926,6 +3947,7 @@
                                       fetchCustomSkills: computerAgentsMode ? handleFetchCustomSkills : undefined,
                                       speechToTextUrl: speechToTextUrl || undefined,
                                       requestHeaders,
+                                      resolveRequestHeaders: resolveRunnerRequestHeaders,
                                       appId: "runner-web-sdk-demo",
                                       threadId: activeRunnerThreadId || undefined,
                                       threadViewMode: "legacy",
@@ -4286,7 +4308,6 @@
                                       hasRealAccess,
                                       currentUserName: hasSessionAuth ? accountName : "User",
                                       currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
-                                      activityHierarchyLevel: threadActivityHierarchyLevel,
                                       onThreadMutated: () => refreshThreads(),
                                       navigationTarget: changesNavigationTarget,
                                       onNavigationTargetHandled: (token) => {

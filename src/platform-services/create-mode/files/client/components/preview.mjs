@@ -378,10 +378,11 @@ export const FILES_PREVIEW_COMPONENTS_SCRIPT = `
 
         function renderEditorBody() {
           if (loadState.status === "loading") {
-            return React.createElement("div", { className: "playground-code-preview-state" },
-              React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-              React.createElement("span", null, "Loading code...")
-            );
+            return React.createElement(PlatformLoadingState, {
+              centered: true,
+              className: "playground-code-preview-state",
+              message: "Loading code...",
+            });
           }
 
           if (loadState.status === "error") {
@@ -433,10 +434,11 @@ export const FILES_PREVIEW_COMPONENTS_SCRIPT = `
           }
 
           if (!editorModuleError) {
-            return React.createElement("div", { className: "playground-code-preview-state" },
-              React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-              React.createElement("span", null, "Loading editor...")
-            );
+            return React.createElement(PlatformLoadingState, {
+              centered: true,
+              className: "playground-code-preview-state",
+              message: "Loading editor...",
+            });
           }
 
           return React.createElement("textarea", {
@@ -450,30 +452,27 @@ export const FILES_PREVIEW_COMPONENTS_SCRIPT = `
         }
 
         const codeEditorHeaderActions = React.createElement(React.Fragment, null,
-          React.createElement("button", {
-            type: "button",
-            className: "tb-attachment-preview-drawer-action",
+          React.createElement(PlatformIconButton, {
+            size: "small",
             onClick: handleEditorUndo,
             disabled: isSaving || loadState.status !== "ready" || !editorHistoryAvailability.canUndo,
             title: "Undo change",
             "aria-label": "Undo change",
-          }, React.createElement(RotateCcw, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })),
-          React.createElement("button", {
-            type: "button",
-            className: "tb-attachment-preview-drawer-action",
+          }, React.createElement(RotateCcw, { width: 16, height: 16, strokeWidth: 1.9 })),
+          React.createElement(PlatformIconButton, {
+            size: "small",
             onClick: handleEditorRedo,
             disabled: isSaving || loadState.status !== "ready" || !editorHistoryAvailability.canRedo,
             title: "Redo change",
             "aria-label": "Redo change",
-          }, React.createElement(RotateCw, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 1.9 })),
-          React.createElement("button", {
-            type: "button",
-            className: "playground-code-preview-header-save-button",
+          }, React.createElement(RotateCw, { width: 16, height: 16, strokeWidth: 1.9 })),
+          React.createElement(PlatformPrimaryButton, {
+            size: "small",
             onClick: () => void handleSave(),
             disabled: !isDirty || isSaving || loadState.status !== "ready",
             title: "Save changes (" + shortcutLabel + ")",
           },
-            React.createElement(HardDrive, { width: 13, height: 13, strokeWidth: 1.9 }),
+            React.createElement(Bookmark, { width: 13, height: 13, strokeWidth: 1.9 }),
             React.createElement("span", null, isSaving ? "Saving..." : "Save")
           ),
           headerActions
@@ -505,12 +504,11 @@ export const FILES_PREVIEW_COMPONENTS_SCRIPT = `
                 ? React.createElement("div", { className: "tb-attachment-preview-drawer-header-actions" },
                     codeEditorHeaderActions,
                     showCloseButton && onClose
-                      ? React.createElement("button", {
-                          type: "button",
-                          className: "tb-attachment-preview-drawer-action",
+                      ? React.createElement(PlatformIconButton, {
+                          size: "small",
                           onClick: onClose,
                           "aria-label": "Close file preview",
-                        }, React.createElement(X, { className: "tb-attachment-preview-drawer-action-icon", strokeWidth: 2 }))
+                        }, React.createElement(X, { width: 16, height: 16, strokeWidth: 2 }))
                       : null
                   )
                 : null

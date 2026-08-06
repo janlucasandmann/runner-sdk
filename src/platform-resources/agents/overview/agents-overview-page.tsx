@@ -53,6 +53,7 @@ export interface AgentsOverviewPageProps {
   onPeriodChange: (period: ResourceOverviewPeriod) => void;
   analytics: ResourceOverviewAnalyticsModel;
   controlsPortalId?: string;
+  periodPortalId?: string;
   loading?: boolean;
   mutating?: boolean;
   headerActions?: React.ReactNode;
@@ -74,6 +75,7 @@ export function AgentsOverviewPage({
   onPeriodChange,
   analytics,
   controlsPortalId,
+  periodPortalId,
   loading = false,
   mutating = false,
   headerActions,
@@ -291,6 +293,7 @@ export function AgentsOverviewPage({
       onPeriodChange={onPeriodChange}
       analytics={analytics}
       controlsPortalId={controlsPortalId}
+      periodPortalId={periodPortalId}
       headerActions={headerActions}
       className="is-agents"
       table={{

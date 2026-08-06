@@ -14,6 +14,8 @@ domain-agnostic `ui` primitives and `composite` building blocks.
   directory, PDF, and specialized preview renderers.
 - `thread-screen`: canonical conversation, execution receipt, and workbench
   presentation shells.
+- `work-status-disclosure`: the controlled live-status row and collapsible raw
+  work log for an individual agent run.
 
 New thread UI should import from this category or one of its canonical
 subpaths. The former `src/react/runner-log-boxes.tsx` and

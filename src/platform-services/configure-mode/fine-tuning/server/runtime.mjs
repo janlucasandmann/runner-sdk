@@ -1375,6 +1375,38 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
               id: runOptions.id,
               runId: runOptions.id,
               run_id: runOptions.id,
+              ...(runOptions.targetBinding
+                && typeof runOptions.targetBinding === "object"
+                && !Array.isArray(runOptions.targetBinding)
+                ? {
+                    target: {
+                      kind: normalizeString(runOptions.targetBinding.kind),
+                      id: normalizeString(
+                        runOptions.targetBinding.id
+                          || runOptions.targetBinding.targetId
+                          || runOptions.targetBinding.target_id,
+                      ),
+                      versionId: normalizeString(
+                        runOptions.targetBinding.versionId
+                          || runOptions.targetBinding.version_id
+                          || runOptions.targetBinding.targetVersionId
+                          || runOptions.targetBinding.target_version_id,
+                      ) || undefined,
+                      environmentId: normalizeString(
+                        runOptions.targetBinding.environmentId
+                          || runOptions.targetBinding.environment_id,
+                      ) || undefined,
+                      ...(runOptions.targetBinding.candidateAuthority
+                        && typeof runOptions.targetBinding.candidateAuthority === "object"
+                        && !Array.isArray(runOptions.targetBinding.candidateAuthority)
+                        ? {
+                            candidateAuthority:
+                              runOptions.targetBinding.candidateAuthority,
+                          }
+                        : {}),
+                    },
+                  }
+                : {}),
               agentId: runOptions.targetAgentId,
               environmentId: runOptions.environmentId,
               computerId: runOptions.environmentId,

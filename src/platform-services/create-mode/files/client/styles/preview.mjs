@@ -23,6 +23,18 @@ export const FILES_PREVIEW_CSS = `
         border-left: 0;
       }
 
+      .playground-files-shell.has-preview .playground-files-preview::after {
+        content: "";
+        position: absolute;
+        z-index: 2;
+        top: var(--playground-files-preview-nav-height, 56px);
+        bottom: 0;
+        left: 0;
+        width: 1px;
+        background: rgba(255, 255, 255, 0.075);
+        pointer-events: none;
+      }
+
       .playground-files-shell.is-preview-maximized .playground-files-preview {
         transform: translateX(0);
       }
@@ -57,7 +69,20 @@ export const FILES_PREVIEW_CSS = `
         margin-top: calc(-1 * var(--playground-content-nav-height, 56px));
         align-self: stretch;
         position: relative;
-        z-index: 120;
+        z-index: 10050;
+      }
+
+      .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview)
+        .playground-files-preview
+        .tb-attachment-preview-drawer-header,
+      .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview)
+        .playground-files-preview
+        .tb-attachment-preview-drawer-header-actions,
+      .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview)
+        .playground-files-preview
+        .playground-files-preview-top-actions {
+        opacity: 1;
+        visibility: visible;
       }
 
       .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview)
@@ -204,74 +229,10 @@ export const FILES_PREVIEW_CSS = `
         animation: spinner-rotate 1s linear infinite;
       }
 
-      .playground-files-preview-select-button,
-      .playground-files-image-selection-button {
-        --playground-files-control-button-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        height: 30px;
-        min-height: 30px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 0 14px;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.92);
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .playground-files-preview-select-button::before,
-      .playground-files-image-selection-button::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-files-control-button-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-files-image-selection-button.is-plain::before {
-        content: none;
-      }
-
-      .playground-files-preview-select-button > *,
-      .playground-files-image-selection-button > * {
-        position: relative;
-        z-index: 1;
-      }
-
       .playground-files-image-selection-controls {
         display: inline-flex;
         align-items: center;
         gap: 10px;
-      }
-
-      .playground-files-image-selection-button.is-icon {
-        width: 34px;
-        padding: 0;
-      }
-
-      .playground-files-image-selection-button:disabled {
-        cursor: default;
-        color: rgba(255, 255, 255, 0.34);
       }
 
       .playground-files-image-mask-overlay,
@@ -289,6 +250,39 @@ export const FILES_PREVIEW_CSS = `
 
       .playground-files-image-crop-overlay {
         cursor: crosshair;
+      }
+
+      .playground-files-preview .tb-attachment-preview-drawer-action {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.78);
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 180ms ease, color 180ms ease, opacity 180ms ease;
+      }
+
+      .playground-files-preview .tb-attachment-preview-drawer-action:hover,
+      .playground-files-preview .tb-attachment-preview-drawer-action.is-active {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+
+      .playground-files-preview .tb-attachment-preview-drawer-action:disabled {
+        opacity: 0.44;
+        cursor: default;
+      }
+
+      .playground-files-preview .tb-attachment-preview-drawer-action-icon {
+        width: 16px;
+        height: 16px;
       }
 
       .playground-files-image-mask-canvas,

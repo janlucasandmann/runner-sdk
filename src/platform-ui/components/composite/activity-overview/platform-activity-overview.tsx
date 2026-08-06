@@ -1,43 +1,36 @@
 import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ElementType,
-  type HTMLAttributes,
-  type KeyboardEvent,
-  type PointerEvent,
-  type ReactNode,
-} from "react";
-import {
   Check,
+  ChevronDown,
+  ChevronRight,
   CircleAlert,
   Flag,
   GitBranch,
   Workflow,
   X,
 } from "lucide-react";
+import {
+  type CSSProperties,
+  type ElementType,
+  type HTMLAttributes,
+  type KeyboardEvent,
+  type PointerEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type WheelEvent,
+} from "react";
 
 import { PlatformEmptyState } from "../empty-state/index.js";
 import { PlatformLoadingState } from "../loading-state/index.js";
 
-export type PlatformActivityOverviewItemKind =
-  | "activity"
-  | "signal"
-  | "subflow";
+export type PlatformActivityOverviewItemKind = "activity" | "signal" | "subflow";
 
-export type PlatformActivityOverviewItemStatus =
-  | "default"
-  | "running"
-  | "success"
-  | "error";
+export type PlatformActivityOverviewItemStatus = "default" | "running" | "success" | "error";
 
-export type PlatformActivityOverviewTimestamp =
-  | Date
-  | number
-  | string;
+export type PlatformActivityOverviewTimestamp = Date | number | string;
 
 export interface PlatformActivityOverviewItem {
   id: string;
@@ -47,11 +40,23 @@ export interface PlatformActivityOverviewItem {
   endAt?: PlatformActivityOverviewTimestamp | null;
   kind?: PlatformActivityOverviewItemKind;
   status?: PlatformActivityOverviewItemStatus;
+  density?: "default" | "compact";
+  hidden?: boolean;
   metadata?: ReactNode;
   icon?: ElementType;
   color?: string;
   ariaLabel?: string;
   onActivate?: () => void;
+  hierarchy?: PlatformActivityOverviewItemHierarchy;
+}
+
+export interface PlatformActivityOverviewItemHierarchy {
+  parentId?: string | null;
+  depth?: number;
+  order?: number;
+  expandable?: boolean;
+  expanded?: boolean;
+  onToggle?: () => void;
 }
 
 export interface PlatformActivityOverviewTimeRange {
@@ -61,8 +66,7 @@ export interface PlatformActivityOverviewTimeRange {
   endPercent: number;
 }
 
-export interface PlatformActivityOverviewProps
-  extends Omit<HTMLAttributes<HTMLElement>, "title"> {
+export interface PlatformActivityOverviewProps extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   items?: readonly PlatformActivityOverviewItem[];
   loading?: boolean;
   loadingMessage?: ReactNode;
@@ -83,8 +87,7 @@ export interface PlatformActivityOverviewProps
   headerActions?: ReactNode;
 }
 
-interface NormalizedActivityOverviewItem
-  extends PlatformActivityOverviewItem {
+interface NormalizedActivityOverviewItem extends PlatformActivityOverviewItem {
   startTime: number;
   endTime: number;
   kind: PlatformActivityOverviewItemKind;
@@ -92,6 +95,8 @@ interface NormalizedActivityOverviewItem
   leftPercent: number;
   widthPercent: number;
   rowIndex: number;
+  rowTop: number;
+  visibleDescendantCount: number;
 }
 
 interface TimeRangeWindow {
@@ -123,12 +128,23 @@ const DEFAULT_RESIZE_HEIGHT = 460;
 const DEFAULT_MIN_RESIZE_HEIGHT = 240;
 const DEFAULT_MIN_SIBLING_HEIGHT = 220;
 const ROW_HEIGHT = 58;
+const COMPACT_ROW_HEIGHT = 50;
+const DEFAULT_ITEM_HEIGHT = 44;
+const COMPACT_ITEM_HEIGHT = 36;
 const PLOT_TOP_PADDING = 18;
 const PLOT_BOTTOM_PADDING = 22;
+const HIERARCHY_INDENT_PX = 24;
+const MINIMAP_TEXTURE_BARS = Array.from({ length: 224 }, (_, index) => index);
 
-function joinClassNames(
-  ...classNames: Array<string | false | null | undefined>
-) {
+function getActivityItemHeight(item: Pick<PlatformActivityOverviewItem, "density">) {
+  return item.density === "compact" ? COMPACT_ITEM_HEIGHT : DEFAULT_ITEM_HEIGHT;
+}
+
+function getActivityRowStep(item: Pick<PlatformActivityOverviewItem, "density">) {
+  return item.density === "compact" ? COMPACT_ROW_HEIGHT : ROW_HEIGHT;
+}
+
+function joinClassNames(...classNames: Array<string | false | null | undefined>) {
   return classNames
     .filter(
       (className): className is string =>
@@ -175,12 +191,7 @@ export function formatPlatformActivityOverviewDuration(durationMs: number) {
   return `${Math.max(1, Math.round(duration / 86_400_000))} d`;
 }
 
-function formatTickLabel(
-  timestamp: number,
-  domainStart: number,
-  domainEnd: number,
-  index: number,
-) {
+function formatTickLabel(timestamp: number, domainStart: number, domainEnd: number, index: number) {
   if (index === 0) {
     return "START";
   }
@@ -264,13 +275,38 @@ function itemIntersectsTimeRange(
   return startTime <= rangeEnd && endTime >= rangeStart;
 }
 
+function filterItemsToTimeRange(
+  items: readonly PlatformActivityOverviewItem[],
+  rangeStart: number,
+  rangeEnd: number,
+) {
+  const itemsById = new Map(items.map((item) => [item.id, item]));
+  const includedIds = new Set(
+    items
+      .filter((item) => itemIntersectsTimeRange(item, rangeStart, rangeEnd))
+      .map((item) => item.id),
+  );
+
+  for (const itemId of [...includedIds]) {
+    let parentId = itemsById.get(itemId)?.hierarchy?.parentId || null;
+    const visited = new Set<string>();
+    while (parentId && !visited.has(parentId)) {
+      visited.add(parentId);
+      includedIds.add(parentId);
+      parentId = itemsById.get(parentId)?.hierarchy?.parentId || null;
+    }
+  }
+
+  return items.filter((item) => includedIds.has(item.id));
+}
+
 function normalizeItems(
   items: readonly PlatformActivityOverviewItem[],
   domainStart: number,
   domainEnd: number,
 ) {
   const domainRange = Math.max(1, domainEnd - domainStart);
-  return items
+  const normalizedItems = items
     .map((item) => {
       const startTime = readTimestamp(item.startAt);
       if (startTime === null) {
@@ -291,48 +327,97 @@ function normalizeItems(
         item,
       ): item is Omit<
         NormalizedActivityOverviewItem,
-        "leftPercent" | "widthPercent" | "rowIndex"
+        "leftPercent"
+        | "widthPercent"
+        | "rowIndex"
+        | "rowTop"
+        | "visibleDescendantCount"
       > => Boolean(item),
-    )
-    .sort(
-      (left, right) =>
-        left.startTime - right.startTime ||
-        left.endTime - right.endTime ||
-        left.id.localeCompare(right.id),
-    )
-    .map((item, rowIndex) => ({
-      ...item,
-      leftPercent: clamp(
-        ((item.startTime - domainStart) / domainRange) * 100,
-        0,
-        100,
-      ),
-      widthPercent: clamp(
-        ((item.endTime - item.startTime) / domainRange) * 100,
-        0,
-        100,
-      ),
-      rowIndex,
-    }));
+    );
+  const childrenById = new Map<string, typeof normalizedItems>();
+  for (const item of normalizedItems) {
+    const parentId = String(item.hierarchy?.parentId || "").trim();
+    if (!parentId) continue;
+    const children = childrenById.get(parentId) || [];
+    children.push(item);
+    childrenById.set(parentId, children);
+  }
+
+  const scopeBoundsById = new Map<string, { startTime: number; endTime: number }>();
+  const resolveScopeBounds = (
+    item: (typeof normalizedItems)[number],
+    visiting = new Set<string>(),
+  ): { startTime: number; endTime: number } => {
+    const cached = scopeBoundsById.get(item.id);
+    if (cached) return cached;
+    if (visiting.has(item.id)) {
+      return { startTime: item.startTime, endTime: item.endTime };
+    }
+    const nextVisiting = new Set(visiting);
+    nextVisiting.add(item.id);
+    let startTime = item.startTime;
+    let endTime = item.endTime;
+    for (const child of childrenById.get(item.id) || []) {
+      const childBounds = resolveScopeBounds(child, nextVisiting);
+      startTime = Math.min(startTime, childBounds.startTime);
+      endTime = Math.max(endTime, childBounds.endTime);
+    }
+    const bounds = { startTime, endTime };
+    scopeBoundsById.set(item.id, bounds);
+    return bounds;
+  };
+
+  const scopedItems = normalizedItems.map((item) => ({
+    ...item,
+    ...resolveScopeBounds(item),
+  }));
+
+  const sortedItems = scopedItems.sort((left, right) => {
+    const leftOrder = Number(left.hierarchy?.order);
+    const rightOrder = Number(right.hierarchy?.order);
+    if (Number.isFinite(leftOrder) && Number.isFinite(rightOrder) && leftOrder !== rightOrder) {
+      return leftOrder - rightOrder;
+    }
+    return (
+      left.startTime - right.startTime ||
+      left.endTime - right.endTime ||
+      left.id.localeCompare(right.id)
+    );
+  });
+  let rowTop = 0;
+  return sortedItems
+    .map((item, rowIndex) => {
+      const nextItem = {
+        ...item,
+        leftPercent: clamp(((item.startTime - domainStart) / domainRange) * 100, 0, 100),
+        widthPercent: clamp(((item.endTime - item.startTime) / domainRange) * 100, 0, 100),
+        rowIndex,
+        rowTop,
+        visibleDescendantCount: 0,
+      };
+      rowTop += getActivityRowStep(item);
+      return nextItem;
+    })
+    .map((item, itemIndex, normalizedItems) => {
+      const depth = Number(item.hierarchy?.depth || 0);
+      let visibleDescendantCount = 0;
+      for (let index = itemIndex + 1; index < normalizedItems.length; index += 1) {
+        const candidateDepth = Number(normalizedItems[index]?.hierarchy?.depth || 0);
+        if (candidateDepth <= depth) break;
+        visibleDescendantCount += 1;
+      }
+      return { ...item, visibleDescendantCount };
+    });
 }
 
-function buildTicks(
-  tickCount: number,
-  domainStart: number,
-  domainEnd: number,
-) {
+function buildTicks(tickCount: number, domainStart: number, domainEnd: number) {
   return Array.from({ length: tickCount }, (_, index) => {
     const progress = index / (tickCount - 1);
     const timestamp = domainStart + (domainEnd - domainStart) * progress;
     return {
       id: `${index}:${timestamp}`,
       progress,
-      label: formatTickLabel(
-        timestamp,
-        domainStart,
-        domainEnd,
-        index,
-      ),
+      label: formatTickLabel(timestamp, domainStart, domainEnd, index),
     };
   });
 }
@@ -351,6 +436,9 @@ function ActivityOverviewItem({
   item: NormalizedActivityOverviewItem;
   topPadding: number;
 }) {
+  if (item.hidden) {
+    return null;
+  }
   const ItemIcon = resolveItemIcon(item);
   const StatusIcon = resolveStatusIcon(item.status);
   const interactive = typeof item.onActivate === "function";
@@ -362,7 +450,44 @@ function ActivityOverviewItem({
     "--platform-activity-overview-item-left": `${item.leftPercent}%`,
     "--platform-activity-overview-item-width": `${item.widthPercent}%`,
     "--platform-activity-overview-item-color": item.color || undefined,
+    "--platform-activity-overview-item-indent": `${
+      Math.min(
+        Math.max(
+          0,
+          Number.isFinite(Number(item.hierarchy?.depth)) ? Number(item.hierarchy?.depth) : 0,
+        ),
+        8,
+      ) * HIERARCHY_INDENT_PX
+    }px`,
+    "--platform-activity-overview-descendant-count": item.visibleDescendantCount,
   } as CSSProperties;
+  const hierarchy = item.hierarchy;
+  const expanded = hierarchy?.expanded !== false;
+  const HierarchyIcon = expanded ? ChevronDown : ChevronRight;
+  const hierarchyControls = hierarchy?.expandable ? (
+    <>
+      {expanded && item.visibleDescendantCount > 0 ? (
+        <span
+          className="platform-activity-overview__tree-rail"
+          style={itemStyle}
+          aria-hidden="true"
+        />
+      ) : null}
+      <button
+        type="button"
+        className="platform-activity-overview__tree-toggle"
+        style={itemStyle}
+        aria-label={`${expanded ? "Collapse" : "Expand"} ${item.ariaLabel || "activity"}`}
+        aria-expanded={expanded}
+        onClick={(event) => {
+          event.stopPropagation();
+          hierarchy.onToggle?.();
+        }}
+      >
+        <HierarchyIcon width={14} height={14} strokeWidth={1.8} />
+      </button>
+    </>
+  ) : null;
 
   if (item.content !== undefined && item.content !== null) {
     return (
@@ -370,19 +495,27 @@ function ActivityOverviewItem({
         className={joinClassNames(
           "platform-activity-overview__row",
           "has-custom-content",
+          Boolean(hierarchy) && "has-hierarchy",
+          hierarchy?.expandable && "is-expandable",
+          hierarchy?.expandable && expanded && "is-expanded",
           `is-${item.kind}`,
           `is-${item.status}`,
         )}
         style={{
-          top: `${topPadding + item.rowIndex * ROW_HEIGHT}px`,
+          top: `${topPadding + item.rowTop}px`,
         }}
         role="listitem"
       >
-        <div
-          className="platform-activity-overview__custom-item"
-          style={itemStyle}
-        >
-          {item.content}
+        {hierarchyControls}
+        <div className="platform-activity-overview__custom-item" style={itemStyle}>
+          <div
+            className={joinClassNames(
+              "platform-activity-overview__custom-content",
+              item.density === "compact" && "is-compact",
+            )}
+          >
+            {item.content}
+          </div>
         </div>
       </div>
     );
@@ -391,13 +524,8 @@ function ActivityOverviewItem({
   if (item.kind === "signal") {
     const signalContent = (
       <>
-        <span
-          className="platform-activity-overview__signal-mark"
-          aria-hidden="true"
-        />
-        <span className="platform-activity-overview__signal-label">
-          {item.label}
-        </span>
+        <span className="platform-activity-overview__signal-mark" aria-hidden="true" />
+        <span className="platform-activity-overview__signal-label">{item.label}</span>
       </>
     );
     return (
@@ -408,7 +536,7 @@ function ActivityOverviewItem({
           `is-${item.status}`,
         )}
         style={{
-          top: `${topPadding + item.rowIndex * ROW_HEIGHT}px`,
+          top: `${topPadding + item.rowTop}px`,
         }}
         role="listitem"
       >
@@ -423,10 +551,7 @@ function ActivityOverviewItem({
             {signalContent}
           </button>
         ) : (
-          <div
-            className="platform-activity-overview__signal"
-            style={itemStyle}
-          >
+          <div className="platform-activity-overview__signal" style={itemStyle}>
             {signalContent}
           </div>
         )}
@@ -436,15 +561,10 @@ function ActivityOverviewItem({
 
   const content = (
     <>
-      <span
-        className="platform-activity-overview__item-icon"
-        aria-hidden="true"
-      >
+      <span className="platform-activity-overview__item-icon" aria-hidden="true">
         <ItemIcon width={14} height={14} strokeWidth={1.8} />
       </span>
-      <span className="platform-activity-overview__item-label">
-        {item.label}
-      </span>
+      <span className="platform-activity-overview__item-label">{item.label}</span>
       {item.metadata || defaultMetadata ? (
         <span className="platform-activity-overview__item-metadata">
           {item.metadata || defaultMetadata}
@@ -466,14 +586,18 @@ function ActivityOverviewItem({
     <div
       className={joinClassNames(
         "platform-activity-overview__row",
+        Boolean(hierarchy) && "has-hierarchy",
+        hierarchy?.expandable && "is-expandable",
+        hierarchy?.expandable && expanded && "is-expanded",
         `is-${item.kind}`,
         `is-${item.status}`,
       )}
       style={{
-        top: `${topPadding + item.rowIndex * ROW_HEIGHT}px`,
+        top: `${topPadding + item.rowTop}px`,
       }}
       role="listitem"
     >
+      {hierarchyControls}
       {interactive ? (
         <button
           type="button"
@@ -485,10 +609,7 @@ function ActivityOverviewItem({
           {content}
         </button>
       ) : (
-        <div
-          className="platform-activity-overview__item"
-          style={itemStyle}
-        >
+        <div className="platform-activity-overview__item" style={itemStyle}>
           {content}
         </div>
       )}
@@ -520,9 +641,11 @@ export function PlatformActivityOverview({
   ...props
 }: PlatformActivityOverviewProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const minimapRef = useRef<HTMLDivElement>(null);
   const timeRangeDragRef = useRef<TimeRangeDrag | null>(null);
   const heightResizeDragRef = useRef<HeightResizeDrag | null>(null);
+  const synchronizingTimelineScrollRef = useRef(false);
   const onTimeRangeChangeRef = useRef(onTimeRangeChange);
   const [timeRangeWindow, setTimeRangeWindow] = useState<TimeRangeWindow>({
     start: 0,
@@ -536,77 +659,65 @@ export function PlatformActivityOverview({
     0.5,
     50,
   );
+  const fitTimeline = timelineLayout !== "scroll";
   const visibleTimeRange = useMemo<PlatformActivityOverviewTimeRange>(
     () => ({
-      startAt:
-        domain.start + domainRange * (timeRangeWindow.start / 100),
+      startAt: domain.start + domainRange * (timeRangeWindow.start / 100),
       endAt: domain.start + domainRange * (timeRangeWindow.end / 100),
       startPercent: timeRangeWindow.start,
       endPercent: timeRangeWindow.end,
     }),
-    [
-      domain.start,
-      domainRange,
-      timeRangeWindow.end,
-      timeRangeWindow.start,
-    ],
+    [domain.start, domainRange, timeRangeWindow.end, timeRangeWindow.start],
   );
   const minimapItems = useMemo(
     () => normalizeItems(items, domain.start, domain.end),
     [domain.end, domain.start, items],
   );
   const visibleItems = useMemo(
-    () =>
-      items.filter((item) =>
-        itemIntersectsTimeRange(
-          item,
-          visibleTimeRange.startAt,
-          visibleTimeRange.endAt,
-        ),
-      ),
+    () => filterItemsToTimeRange(items, visibleTimeRange.startAt, visibleTimeRange.endAt),
     [items, visibleTimeRange.endAt, visibleTimeRange.startAt],
   );
+  const visibleDomainStart = fitTimeline ? visibleTimeRange.startAt : domain.start;
+  const visibleDomainEnd = fitTimeline ? visibleTimeRange.endAt : domain.end;
+  const stableNormalizedItems = useMemo(
+    () => normalizeItems(items, visibleDomainStart, visibleDomainEnd),
+    [items, visibleDomainEnd, visibleDomainStart],
+  );
+  const visibleItemIds = useMemo(
+    () => new Set(visibleItems.map((item) => item.id)),
+    [visibleItems],
+  );
   const normalizedItems = useMemo(
-    () =>
-      normalizeItems(
-        visibleItems,
-        visibleTimeRange.startAt,
-        visibleTimeRange.endAt,
-      ),
-    [visibleItems, visibleTimeRange.endAt, visibleTimeRange.startAt],
+    () => stableNormalizedItems.filter((item) => visibleItemIds.has(item.id)),
+    [stableNormalizedItems, visibleItemIds],
   );
   const normalizedTickCount = Math.max(2, Math.floor(tickCount));
   const ticks = useMemo(
-    () =>
-      buildTicks(
-        normalizedTickCount,
-        visibleTimeRange.startAt,
-        visibleTimeRange.endAt,
-      ),
-    [
-      normalizedTickCount,
-      visibleTimeRange.endAt,
-      visibleTimeRange.startAt,
-    ],
+    () => buildTicks(normalizedTickCount, visibleDomainStart, visibleDomainEnd),
+    [normalizedTickCount, visibleDomainEnd, visibleDomainStart],
   );
   const navigatorTicks = useMemo(
     () => buildTicks(normalizedTickCount, domain.start, domain.end),
     [domain.end, domain.start, normalizedTickCount],
   );
   const plotTopPadding = headerActions ? 58 : PLOT_TOP_PADDING;
+  const normalizedItemsHeight = stableNormalizedItems.reduce(
+    (height, item) => Math.max(height, item.rowTop + getActivityItemHeight(item)),
+    0,
+  );
   const plotHeight = Math.max(
     240,
-    plotTopPadding +
-      normalizedItems.length * ROW_HEIGHT +
-      PLOT_BOTTOM_PADDING,
+    plotTopPadding + normalizedItemsHeight + PLOT_BOTTOM_PADDING,
   );
-  const fitTimeline = timelineLayout !== "scroll";
+  const selectedRangePercent = Math.max(
+    normalizedMinimumRangePercent,
+    timeRangeWindow.end - timeRangeWindow.start,
+  );
+  const timelineScale = fitTimeline ? 1 : Math.max(1, 100 / selectedRangePercent);
   const timelineStyle = {
-    width: "100%",
-    maxWidth: "100%",
-    minWidth: fitTimeline
-      ? "0"
-      : `${Math.max(720, minTimelineWidth)}px`,
+    width: fitTimeline ? "100%" : `${timelineScale * 100}%`,
+    maxWidth: fitTimeline ? "100%" : "none",
+    minWidth: fitTimeline ? "0" : `${Math.max(720, minTimelineWidth)}px`,
     height: `${plotHeight}px`,
   } as CSSProperties;
 
@@ -618,27 +729,89 @@ export function PlatformActivityOverview({
     onTimeRangeChangeRef.current?.(visibleTimeRange);
   }, [visibleTimeRange]);
 
+  useEffect(() => {
+    if (fitTimeline) {
+      return;
+    }
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return;
+    }
+    const maxScrollLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+    const maxWindowStart = Math.max(0, 100 - selectedRangePercent);
+    const progress = maxWindowStart > 0 ? clamp(timeRangeWindow.start / maxWindowStart, 0, 1) : 0;
+    const nextScrollLeft = maxScrollLeft * progress;
+    if (Math.abs(viewport.scrollLeft - nextScrollLeft) < 0.5) {
+      return;
+    }
+    synchronizingTimelineScrollRef.current = true;
+    viewport.scrollLeft = nextScrollLeft;
+    synchronizingTimelineScrollRef.current = false;
+  }, [fitTimeline, selectedRangePercent, timeRangeWindow.start]);
+
+  const handleTimelineScroll = useCallback(() => {
+    if (fitTimeline || synchronizingTimelineScrollRef.current) {
+      return;
+    }
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return;
+    }
+    const maxScrollLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+    const maxWindowStart = Math.max(0, 100 - selectedRangePercent);
+    if (maxScrollLeft <= 0 || maxWindowStart <= 0) {
+      return;
+    }
+    const nextStart = clamp(
+      (viewport.scrollLeft / maxScrollLeft) * maxWindowStart,
+      0,
+      maxWindowStart,
+    );
+    const nextEnd = nextStart + selectedRangePercent;
+    setTimeRangeWindow((current) =>
+      Math.abs(current.start - nextStart) < 0.001 && Math.abs(current.end - nextEnd) < 0.001
+        ? current
+        : { start: nextStart, end: nextEnd },
+    );
+  }, [fitTimeline, selectedRangePercent]);
+
+  const handleTimelineWheel = useCallback(
+    (event: WheelEvent<HTMLDivElement>) => {
+      if (fitTimeline) {
+        return;
+      }
+      const delta =
+        Math.abs(event.deltaX) >= Math.abs(event.deltaY)
+          ? event.deltaX
+          : event.shiftKey
+            ? event.deltaY
+            : 0;
+      if (!delta) {
+        return;
+      }
+      const viewport = viewportRef.current;
+      if (!viewport) {
+        return;
+      }
+      const maxScrollLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+      if (maxScrollLeft <= 0) {
+        return;
+      }
+      event.preventDefault();
+      viewport.scrollLeft = clamp(viewport.scrollLeft + delta, 0, maxScrollLeft);
+    },
+    [fitTimeline],
+  );
+
   const commitTimeRange = useCallback(
-    (
-      requestedStart: number,
-      requestedEnd: number,
-      anchor: TimeRangeDrag["mode"] = "window",
-    ) => {
+    (requestedStart: number, requestedEnd: number, anchor: TimeRangeDrag["mode"] = "window") => {
       setTimeRangeWindow((current) => {
         let nextStart = current.start;
         let nextEnd = current.end;
         if (anchor === "start") {
-          nextStart = clamp(
-            requestedStart,
-            0,
-            current.end - normalizedMinimumRangePercent,
-          );
+          nextStart = clamp(requestedStart, 0, current.end - normalizedMinimumRangePercent);
         } else if (anchor === "end") {
-          nextEnd = clamp(
-            requestedEnd,
-            current.start + normalizedMinimumRangePercent,
-            100,
-          );
+          nextEnd = clamp(requestedEnd, current.start + normalizedMinimumRangePercent, 100);
         } else {
           const requestedWidth = clamp(
             requestedEnd - requestedStart,
@@ -657,9 +830,7 @@ export function PlatformActivityOverview({
     [normalizedMinimumRangePercent],
   );
 
-  function handleMinimapPointerDown(
-    event: PointerEvent<HTMLDivElement>,
-  ) {
+  function handleMinimapPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) {
       return;
     }
@@ -668,12 +839,8 @@ export function PlatformActivityOverview({
       return;
     }
     const target = event.target instanceof Element ? event.target : null;
-    const handle = target?.closest<HTMLElement>(
-      "[data-activity-range-handle]",
-    );
-    const rangeWindow = target?.closest<HTMLElement>(
-      "[data-activity-range-window]",
-    );
+    const handle = target?.closest<HTMLElement>("[data-activity-range-handle]");
+    const rangeWindow = target?.closest<HTMLElement>("[data-activity-range-window]");
     let nextWindow = timeRangeWindow;
     let mode: TimeRangeDrag["mode"] = "window";
 
@@ -682,17 +849,9 @@ export function PlatformActivityOverview({
     } else if (handle?.dataset.activityRangeHandle === "end") {
       mode = "end";
     } else if (!rangeWindow) {
-      const pointerPercent = clamp(
-        ((event.clientX - bounds.left) / bounds.width) * 100,
-        0,
-        100,
-      );
+      const pointerPercent = clamp(((event.clientX - bounds.left) / bounds.width) * 100, 0, 100);
       const currentWidth = timeRangeWindow.end - timeRangeWindow.start;
-      const nextStart = clamp(
-        pointerPercent - currentWidth / 2,
-        0,
-        100 - currentWidth,
-      );
+      const nextStart = clamp(pointerPercent - currentWidth / 2, 0, 100 - currentWidth);
       nextWindow = {
         start: nextStart,
         end: nextStart + currentWidth,
@@ -712,44 +871,27 @@ export function PlatformActivityOverview({
     };
   }
 
-  function handleMinimapPointerMove(
-    event: PointerEvent<HTMLDivElement>,
-  ) {
+  function handleMinimapPointerMove(event: PointerEvent<HTMLDivElement>) {
     const drag = timeRangeDragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) {
       return;
     }
     event.preventDefault();
-    const deltaPercent =
-      ((event.clientX - drag.startClientX) / drag.trackWidth) * 100;
+    const deltaPercent = ((event.clientX - drag.startClientX) / drag.trackWidth) * 100;
     if (drag.mode === "start") {
-      commitTimeRange(
-        drag.startPercent + deltaPercent,
-        drag.endPercent,
-        "start",
-      );
+      commitTimeRange(drag.startPercent + deltaPercent, drag.endPercent, "start");
       return;
     }
     if (drag.mode === "end") {
-      commitTimeRange(
-        drag.startPercent,
-        drag.endPercent + deltaPercent,
-        "end",
-      );
+      commitTimeRange(drag.startPercent, drag.endPercent + deltaPercent, "end");
       return;
     }
     const width = drag.endPercent - drag.startPercent;
-    const nextStart = clamp(
-      drag.startPercent + deltaPercent,
-      0,
-      100 - width,
-    );
+    const nextStart = clamp(drag.startPercent + deltaPercent, 0, 100 - width);
     commitTimeRange(nextStart, nextStart + width);
   }
 
-  function handleMinimapPointerEnd(
-    event: PointerEvent<HTMLDivElement>,
-  ) {
+  function handleMinimapPointerEnd(event: PointerEvent<HTMLDivElement>) {
     if (timeRangeDragRef.current?.pointerId !== event.pointerId) {
       return;
     }
@@ -757,16 +899,8 @@ export function PlatformActivityOverview({
     timeRangeDragRef.current = null;
   }
 
-  function handleRangeHandleKeyDown(
-    side: "start" | "end",
-    event: KeyboardEvent<HTMLElement>,
-  ) {
-    const direction =
-      event.key === "ArrowLeft"
-        ? -1
-        : event.key === "ArrowRight"
-          ? 1
-          : 0;
+  function handleRangeHandleKeyDown(side: "start" | "end", event: KeyboardEvent<HTMLElement>) {
+    const direction = event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : 0;
     if (!direction && event.key !== "Home" && event.key !== "End") {
       return;
     }
@@ -805,21 +939,13 @@ export function PlatformActivityOverview({
 
   function resolveHeightResizeBounds() {
     const section = sectionRef.current;
-    const parentHeight =
-      section?.parentElement?.getBoundingClientRect().height || 0;
-    const normalizedMinHeight = Math.max(
-      160,
-      Number(minResizeHeight) || DEFAULT_MIN_RESIZE_HEIGHT,
-    );
+    const parentHeight = section?.parentElement?.getBoundingClientRect().height || 0;
+    const normalizedMinHeight = Math.max(160, Number(minResizeHeight) || DEFAULT_MIN_RESIZE_HEIGHT);
     const availableMaxHeight =
       parentHeight > 0
         ? Math.max(
             normalizedMinHeight,
-            parentHeight -
-              Math.max(
-                120,
-                Number(minSiblingHeight) || DEFAULT_MIN_SIBLING_HEIGHT,
-              ),
+            parentHeight - Math.max(120, Number(minSiblingHeight) || DEFAULT_MIN_SIBLING_HEIGHT),
           )
         : Number.POSITIVE_INFINITY;
     const configuredMaxHeight = Number(maxResizeHeight);
@@ -832,9 +958,7 @@ export function PlatformActivityOverview({
     };
   }
 
-  function handleResizePointerDown(
-    event: PointerEvent<HTMLDivElement>,
-  ) {
+  function handleResizePointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0 || !sectionRef.current) {
       return;
     }
@@ -849,26 +973,18 @@ export function PlatformActivityOverview({
     };
   }
 
-  function handleResizePointerMove(
-    event: PointerEvent<HTMLDivElement>,
-  ) {
+  function handleResizePointerMove(event: PointerEvent<HTMLDivElement>) {
     const drag = heightResizeDragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) {
       return;
     }
     event.preventDefault();
     commitHeight(
-      clamp(
-        drag.startHeight + event.clientY - drag.startClientY,
-        drag.minHeight,
-        drag.maxHeight,
-      ),
+      clamp(drag.startHeight + event.clientY - drag.startClientY, drag.minHeight, drag.maxHeight),
     );
   }
 
-  function handleResizePointerEnd(
-    event: PointerEvent<HTMLDivElement>,
-  ) {
+  function handleResizePointerEnd(event: PointerEvent<HTMLDivElement>) {
     if (heightResizeDragRef.current?.pointerId !== event.pointerId) {
       return;
     }
@@ -876,9 +992,7 @@ export function PlatformActivityOverview({
     heightResizeDragRef.current = null;
   }
 
-  function handleResizeKeyDown(
-    event: KeyboardEvent<HTMLDivElement>,
-  ) {
+  function handleResizeKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "ArrowUp" && event.key !== "ArrowDown") {
       return;
     }
@@ -916,17 +1030,11 @@ export function PlatformActivityOverview({
         {...props}
         ref={sectionRef}
         style={sectionStyle}
-        className={joinClassNames(
-          "platform-activity-overview",
-          "is-loading",
-          className,
-        )}
+        className={joinClassNames("platform-activity-overview", "is-loading", className)}
         aria-label={ariaLabel}
       >
         {headerActions ? (
-          <div className="platform-activity-overview__header-actions">
-            {headerActions}
-          </div>
+          <div className="platform-activity-overview__header-actions">{headerActions}</div>
         ) : null}
         <PlatformLoadingState
           className="platform-activity-overview__loading"
@@ -943,17 +1051,11 @@ export function PlatformActivityOverview({
         {...props}
         ref={sectionRef}
         style={sectionStyle}
-        className={joinClassNames(
-          "platform-activity-overview",
-          "is-empty",
-          className,
-        )}
+        className={joinClassNames("platform-activity-overview", "is-empty", className)}
         aria-label={ariaLabel}
       >
         {headerActions ? (
-          <div className="platform-activity-overview__header-actions">
-            {headerActions}
-          </div>
+          <div className="platform-activity-overview__header-actions">{headerActions}</div>
         ) : null}
         <PlatformEmptyState
           className="platform-activity-overview__empty"
@@ -979,24 +1081,21 @@ export function PlatformActivityOverview({
       aria-label={ariaLabel}
     >
       {headerActions ? (
-        <div className="platform-activity-overview__header-actions">
-          {headerActions}
-        </div>
+        <div className="platform-activity-overview__header-actions">{headerActions}</div>
       ) : null}
-      <div className="platform-activity-overview__viewport">
-        <div
-          className="platform-activity-overview__timeline"
-          style={timelineStyle}
-        >
+      <div
+        ref={viewportRef}
+        className="platform-activity-overview__viewport"
+        onScroll={handleTimelineScroll}
+        onWheel={handleTimelineWheel}
+      >
+        <div className="platform-activity-overview__timeline" style={timelineStyle}>
           <div
             className="platform-activity-overview__plot"
             style={{ height: `${plotHeight}px` }}
             role="list"
           >
-            <div
-              className="platform-activity-overview__grid"
-              aria-hidden="true"
-            >
+            <div className="platform-activity-overview__grid" aria-hidden="true">
               {ticks.map((tick) => (
                 <span
                   key={tick.id}
@@ -1007,11 +1106,7 @@ export function PlatformActivityOverview({
             </div>
 
             {normalizedItems.map((item) => (
-              <ActivityOverviewItem
-                key={item.id}
-                item={item}
-                topPadding={plotTopPadding}
-              />
+              <ActivityOverviewItem key={item.id} item={item} topPadding={plotTopPadding} />
             ))}
             {normalizedItems.length === 0 ? (
               <PlatformEmptyState
@@ -1026,6 +1121,15 @@ export function PlatformActivityOverview({
       </div>
 
       <div className="platform-activity-overview__navigator">
+        <div className="platform-activity-overview__navigator-guides" aria-hidden="true">
+          {navigatorTicks.slice(1).map((tick) => (
+            <span
+              key={tick.id}
+              className="platform-activity-overview__navigator-guide"
+              style={{ left: `${tick.progress * 100}%` }}
+            />
+          ))}
+        </div>
         <div
           ref={minimapRef}
           className="platform-activity-overview__minimap"
@@ -1037,20 +1141,9 @@ export function PlatformActivityOverview({
           onPointerCancel={handleMinimapPointerEnd}
           onLostPointerCapture={handleMinimapPointerEnd}
         >
-          <div
-            className="platform-activity-overview__minimap-bars"
-            aria-hidden="true"
-          >
-            {minimapItems.map((item) => (
-              <span
-                key={item.id}
-                className={joinClassNames(
-                  "platform-activity-overview__minimap-bar",
-                  `is-${item.kind}`,
-                  `is-${item.status}`,
-                )}
-                style={{ left: `${item.leftPercent}%` }}
-              />
+          <div className="platform-activity-overview__minimap-bars" aria-hidden="true">
+            {MINIMAP_TEXTURE_BARS.map((bar) => (
+              <span key={bar} className="platform-activity-overview__minimap-texture-bar" />
             ))}
           </div>
           <div
@@ -1067,42 +1160,31 @@ export function PlatformActivityOverview({
               role="slider"
               aria-label="Activity range start"
               aria-valuemin={0}
-              aria-valuemax={Math.round(
-                timeRangeWindow.end - normalizedMinimumRangePercent,
-              )}
+              aria-valuemax={Math.round(timeRangeWindow.end - normalizedMinimumRangePercent)}
               aria-valuenow={Math.round(timeRangeWindow.start)}
               aria-valuetext={formatRangeValue(visibleTimeRange.startAt)}
               aria-orientation="horizontal"
               tabIndex={0}
-              onKeyDown={(event) =>
-                handleRangeHandleKeyDown("start", event)
-              }
+              onKeyDown={(event) => handleRangeHandleKeyDown("start", event)}
             />
             <span
               className="platform-activity-overview__minimap-handle is-end"
               data-activity-range-handle="end"
               role="slider"
               aria-label="Activity range end"
-              aria-valuemin={Math.round(
-                timeRangeWindow.start + normalizedMinimumRangePercent,
-              )}
+              aria-valuemin={Math.round(timeRangeWindow.start + normalizedMinimumRangePercent)}
               aria-valuemax={100}
               aria-valuenow={Math.round(timeRangeWindow.end)}
               aria-valuetext={formatRangeValue(visibleTimeRange.endAt)}
               aria-orientation="horizontal"
               tabIndex={0}
-              onKeyDown={(event) =>
-                handleRangeHandleKeyDown("end", event)
-              }
+              onKeyDown={(event) => handleRangeHandleKeyDown("end", event)}
             />
           </div>
         </div>
 
-        <div
-          className="platform-activity-overview__axis"
-          aria-hidden="true"
-        >
-          {navigatorTicks.map((tick) => (
+        <div className="platform-activity-overview__axis" aria-hidden="true">
+          {navigatorTicks.slice(0, -1).map((tick) => (
             <span
               key={tick.id}
               className="platform-activity-overview__tick"
@@ -1125,9 +1207,7 @@ export function PlatformActivityOverview({
               ? Math.max(minResizeHeight, Number(maxResizeHeight))
               : 2_000
           }
-          aria-valuenow={Math.round(
-            internalHeight ?? DEFAULT_RESIZE_HEIGHT,
-          )}
+          aria-valuenow={Math.round(internalHeight ?? DEFAULT_RESIZE_HEIGHT)}
           tabIndex={0}
           onPointerDown={handleResizePointerDown}
           onPointerMove={handleResizePointerMove}

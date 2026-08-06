@@ -88,7 +88,10 @@ test("session-backed message streams use the authenticated runner seam", async (
     });
   });
   const response = responseRecorder();
-  const request = requestWithJson({ content: "Continue the task" });
+  const request = requestWithJson({
+    content: "Continue the task",
+    messageMetadata: { runnerConnectorIds: ["atlassian"] },
+  });
   request.url = "/api/real/threads/thread_1/messages";
 
   await gateway.proxyThreadMessages(request, response, "thread_1");
@@ -97,7 +100,11 @@ test("session-backed message streams use the authenticated runner seam", async (
   assert.match(response.body, /thread\.completed/);
   assert.equal(calls[0].controlPath, "/threads/thread_1/messages");
   assert.equal(calls[0].hostedPath, null);
-  assert.equal(JSON.parse(calls[0].init.body).content, "Continue the task");
+  const upstreamBody = JSON.parse(calls[0].init.body);
+  assert.equal(upstreamBody.content, "Continue the task");
+  assert.deepEqual(upstreamBody.messageMetadata, {
+    runnerConnectorIds: ["atlassian"],
+  });
 });
 
 test("session-backed message streams never forward a client connector authority envelope", async () => {
@@ -146,6 +153,9 @@ test("session-backed message streams never forward a client connector authority 
   assert.equal(upstreamBody.untrustedField, undefined);
   assert.equal(upstreamBody.connectors.github.credentialId, "credential_server_selected");
   assert.deepEqual(upstreamBody.connectors.github.allowedActions, ["get_file_contents"]);
+  assert.deepEqual(upstreamBody.messageMetadata, {
+    runnerConnectorIds: ["github"],
+  });
 });
 
 test("connector selections are omitted unless an authoritative message enricher allows them", async () => {

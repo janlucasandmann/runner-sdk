@@ -118,8 +118,6 @@ assert.match(fragments.breadcrumbBar, /safeItems\.slice\(1\)/);
 assert.match(fragments.breadcrumbBar, /item\.node != null\s*\? item\.node/);
 assert.match(fragments.breadcrumbBar, /item\.leading != null/);
 assert.match(fragments.breadcrumbBar, /playground-top-nav-path-leading/);
-assert.match(fragments.breadcrumbBar, /const subtitle = String\(item\.subtitle \|\| ""\)\.trim\(\)/);
-assert.match(fragments.breadcrumbBar, /playground-top-nav-path-subtitle/);
 assert.match(fragments.breadcrumbBar, /item\.trailing/);
 assert.match(fragments.breadcrumbBar, /playground-top-nav-path-item-group/);
 assert.match(fragments.appHeader, /function renderAppHeader\(/);
@@ -232,6 +230,18 @@ assert.match(APP_HEADER_STYLE_FRAGMENTS.header, /\.playground-top-nav-path/);
 assert.match(APP_HEADER_STYLE_FRAGMENTS.header, /\.playground-top-nav-path-label[\s\S]*font-size: 14px/);
 assert.match(APP_HEADER_STYLE_FRAGMENTS.header, /\.playground-top-nav-path-leading\s*\{[\s\S]*?flex: 0 0 auto/);
 assert.match(APP_HEADER_STYLE_FRAGMENTS.header, /\.playground-top-nav-path-item-group/);
+assert.match(
+  APP_HEADER_STYLE_FRAGMENTS.header,
+  /\.playground-top-nav-path-item\s*\{[\s\S]*?max-width: none;[\s\S]*?flex: 0 0 auto;[\s\S]*?text-overflow: clip;/,
+);
+assert.match(
+  APP_HEADER_STYLE_FRAGMENTS.header,
+  /\.playground-top-nav-path-item\.is-current\s*\{[\s\S]*?max-width: min\(360px, 42vw\);[\s\S]*?flex: 0 1 auto;[\s\S]*?text-overflow: ellipsis;/,
+);
+assert.match(
+  APP_HEADER_STYLE_FRAGMENTS.header,
+  /\.playground-top-nav-path-item\.is-current \.playground-top-nav-path-label\s*\{[\s\S]*?flex: 1 1 auto;[\s\S]*?text-overflow: ellipsis;/,
+);
 assert.doesNotMatch(APP_HEADER_STYLE_FRAGMENTS.header, /\.playground-top-nav-path-icon/);
 assert.match(APP_HEADER_STYLE_FRAGMENTS.accountMenu, /\.account-menu/);
 assert.match(APP_HEADER_STYLE_FRAGMENTS.notificationsPopup, /\.notification-menu/);

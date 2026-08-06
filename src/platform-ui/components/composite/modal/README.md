@@ -26,7 +26,7 @@ the required `PlatformModal` title remains the accessible dialog name.
 
 The structured surface itself has no padding. The body owns 24px padding, while the header and footer each own 12px vertical and 24px horizontal padding. Empty body and footer slots collapse visually. Low-level `PlatformModalSurface` usage retains 24px compatibility padding unless it opts into the structured layout.
 
-Opening is synchronous with the render that sets `open=true`; callers must not stage a separate `visible` frame. The browser handles the 60ms transition through `@starting-style`, beginning at 75% scale, so ordinary React rerenders cannot restart the animation. The same duration controls retained rendering during close.
+Opening mounts synchronously with the render that sets `open=true`, then the shared modal lifecycle advances the backdrop and surface from their opening state on the next animation frame. Closing uses the inverse state and retains the dialog for the same canonical 60ms duration before unmounting. Consumers must not implement their own visibility frame or exit timer; every modal built with `PlatformModal` therefore receives the same appearance and disappearance transition. `@starting-style` remains as compatibility coverage for the low-level backdrop and surface escape hatches.
 
 Intrinsic width and height changes animate by default with a 140ms resize transition. The shared surface interrupts and retargets an in-progress resize instead of jumping, observes non-React layout changes, and disables the effect when reduced motion is requested. Set `animateResize={false}` for a modal whose dimensions must change immediately, or override `resizeAnimationDurationMs` when a specialized workflow needs different timing.
 

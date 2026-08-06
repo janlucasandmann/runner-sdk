@@ -46,15 +46,13 @@ describe("turn expansion projection", () => {
     });
   });
 
-  it("preserves known expansion and opens only the latest unknown turn", () => {
+  it("preserves known expansion and leaves unknown turns collapsed by default", () => {
     expect(mapExpandedTurns(
       { old: false },
       [turn("old")],
       [turn("old"), turn("new")],
-      { defaultLatestExpanded: true },
     )).toEqual({
       old: false,
-      new: true,
     });
   });
 });

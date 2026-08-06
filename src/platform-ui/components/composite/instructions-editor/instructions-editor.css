@@ -436,7 +436,7 @@
 .platform-instructions-editor__prosemirror h1,
 .platform-instructions-editor__prosemirror h2,
 .platform-instructions-editor__prosemirror h3,
-.platform-instructions-editor__prosemirror h4 { margin: 16px 0 8px; color: rgba(255, 255, 255, 0.92); line-height: 1.35; font-weight: 500; }
+.platform-instructions-editor__prosemirror h4 { margin: 16px 0 8px; color: #fff; line-height: 1.35; font-weight: 500; }
 .platform-instructions-editor__prosemirror h1 { font-size: 18px; }
 .platform-instructions-editor__prosemirror h2 { font-size: 16px; }
 .platform-instructions-editor__prosemirror h3,

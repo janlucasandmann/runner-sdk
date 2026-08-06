@@ -20,7 +20,7 @@ import {
 } from "./connector-runtime-utils.mjs";
 
 const FIGMA_API_ORIGIN = "https://api.figma.com";
-const FIGMA_TOKEN_URL = "https://api.figma.com/v1/oauth/token";
+const FIGMA_REFRESH_URL = "https://api.figma.com/v1/oauth/refresh";
 
 const pagination = {
   cursor: stringSchema("Opaque Figma pagination cursor."),
@@ -155,8 +155,9 @@ export function createFigmaConnectorAdapter(options = {}) {
     provider: "figma",
     clientIdEnv: "FIGMA_OAUTH_CLIENT_ID",
     clientSecretEnv: "FIGMA_OAUTH_CLIENT_SECRET",
-    tokenUrl: FIGMA_TOKEN_URL,
+    tokenUrl: FIGMA_REFRESH_URL,
     tokenAuth: "basic",
+    includeRefreshGrantType: false,
     ...options,
     fetchImpl,
   });

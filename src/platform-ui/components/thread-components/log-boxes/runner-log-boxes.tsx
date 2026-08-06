@@ -144,6 +144,10 @@ import {
   normalizeListFileName,
 } from "./list-files-state.js";
 import { ListFilesLogBox } from "./list-files-view.js";
+import {
+  AtlassianActivityLogBox,
+  isAtlassianConnectorLog,
+} from "./atlassian-activity-view.js";
 export type {
   RunnerTaskPreviewClickPayload,
   RunnerWorkLogEntryProps,
@@ -2370,7 +2374,7 @@ export function RunnerWorkLogEntry({
   }
 
   if (normalizedMessage === "thinking" || normalizedMessage === "thinking...") {
-    return <InlineStatusLogBox label="Thinking..." icon={<Terminal className="tb-log-card-small-icon" strokeWidth={1.5} />} pending />;
+    return null;
   }
 
   if (log.eventType === "reasoning" || log.eventType === "planning" || log.isReasoning || log.isPlanning) {
@@ -2391,6 +2395,10 @@ export function RunnerWorkLogEntry({
 
   if (log.eventType === "metronome_workflow" || log.metadata?.metronomeWorkflow) {
     return <MetronomeWorkflowLogBox log={log} timeLabel={timeLabel} />;
+  }
+
+  if (isAtlassianConnectorLog(log)) {
+    return <AtlassianActivityLogBox log={log} onPreviewDocument={onPreviewDocument} />;
   }
 
   const persistedCommand = typeof log.metadata?.command === "string" ? log.metadata.command : "";

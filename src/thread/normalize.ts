@@ -114,7 +114,14 @@ function permissionRingFor(record: UnknownRecord): RunnerThreadPermissionRing | 
 }
 
 function normalizedMetadata(record: UnknownRecord): Record<string, unknown> | null {
-  return isRecord(record.metadata) ? record.metadata : null;
+  const metadata = firstValue(record, [
+    "metadata",
+    "messageMetadata",
+    "message_metadata",
+    "logMetadata",
+    "log_metadata",
+  ]);
+  return isRecord(metadata) ? metadata : null;
 }
 
 function requiredId(record: UnknownRecord, prefixes: string[], fallbackPrefix: string, defaults: RunnerThreadNormalizationDefaults): string {
@@ -173,6 +180,9 @@ export function normalizeRunnerThreadParticipant(raw: unknown, defaults: RunnerT
 export function normalizeRunnerThreadMessage(raw: unknown, defaults: RunnerThreadNormalizationDefaults = {}): RunnerThreadMessage {
   const record = asRecord(raw);
   const createdAt = dateString(record, ["createdAt", "created_at", "occurredAt", "occurred_at"], defaults.createdAt);
+  const linkedRunIds = stringArray(firstValue(record, ["linkedRunIds", "linked_run_ids", "runIds", "run_ids"]));
+  const eventRunId = runIdFor(record, defaults);
+  if (eventRunId && !linkedRunIds.includes(eventRunId)) linkedRunIds.push(eventRunId);
   return {
     kind: "message",
     id: requiredId(record, ["id", "messageId", "message_id"], "message", defaults),
@@ -188,7 +198,7 @@ export function normalizeRunnerThreadMessage(raw: unknown, defaults: RunnerThrea
     replyToMessageId: firstNullableString(record, ["replyToMessageId", "reply_to_message_id"]),
     replyToRunId: firstNullableString(record, ["replyToRunId", "reply_to_run_id"]),
     sourceMessageId: firstNullableString(record, ["sourceMessageId", "source_message_id"]),
-    linkedRunIds: stringArray(firstValue(record, ["linkedRunIds", "linked_run_ids", "runIds", "run_ids"])),
+    linkedRunIds,
     routingReceiptId: firstNullableString(record, ["routingReceiptId", "routing_receipt_id"]),
     metadata: normalizedMetadata(record),
     createdAt,

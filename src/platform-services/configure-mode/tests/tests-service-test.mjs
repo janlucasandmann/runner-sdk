@@ -19,6 +19,12 @@ assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /TestsWorkspacePage/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onOpenCase/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-tests-section-controls/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /selectedTestCaseName/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-tests-title-actions/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /versionsDrawerPortalId/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onVersionsSidebarOpenChange/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onPlanDeleted/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /workspaceTeamsLoading: teamPageLoading/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onWorkspaceTeamsRequest/);
 
 const platformSource = await readPlatformCompositionSource();
 assert.match(
@@ -96,9 +102,17 @@ assert.match(detailSource, /PlatformDataTable/);
 assert.match(detailSource, /PlatformLabel/);
 assert.match(detailSource, /onRowActivate=\{\(testCase\) => onOpenCase/);
 assert.match(detailSource, /publishVersion/);
+assert.match(detailSource, /PlatformResourceVersionLabel/);
+assert.match(detailSource, /PlatformVersionHistorySidebar/);
+assert.match(detailSource, /PlatformResourceActionsMenu/);
+assert.match(detailSource, /PlatformResourceShareModal/);
+assert.match(detailSource, /PlatformResourceRenameModal/);
+assert.match(detailSource, /PlatformConfirmationModal/);
+assert.match(detailSource, /buildPlatformTeamAccessMetadata/);
 assert.match(detailSource, /TestPlanAccessSettings/);
-assert.match(detailSource, /sidebarCollapsed=\{accessDetailOpen\}/);
+assert.match(detailSource, /sidebarCollapsed=\{accessDetailOpen \|\| versionHistoryOpen\}/);
 assert.match(detailSource, /onPermissionDetailOpenChange=\{setAccessDetailOpen\}/);
+assert.doesNotMatch(detailSource, /<PlatformServiceDetailProperty label="Cases">/);
 assert.doesNotMatch(detailSource, /CircleDot/);
 assert.doesNotMatch(
   detailSource,
@@ -133,6 +147,7 @@ assert.match(workspaceSource, /PlatformServiceDetailFrame/);
 assert.match(workspaceSource, /sectionControlsPortalId/);
 assert.match(workspaceSource, /mode === "case"/);
 assert.match(workspaceSource, /TestCaseDetailPage/);
+assert.match(workspaceSource, /onPlanDeleted/);
 
 const caseDetailSource = await fs.readFile(
   new URL("./client/page/test-case-detail-page.tsx", import.meta.url),

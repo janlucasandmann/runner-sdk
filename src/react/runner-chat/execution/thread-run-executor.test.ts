@@ -141,10 +141,54 @@ describe("createRunnerThreadRunExecutor", () => {
       expect(execute).toHaveBeenCalledTimes(1);
     });
     expect(startEnvironmentMock).toHaveBeenCalledTimes(1);
+    expect(execute).toHaveBeenCalledWith(expect.objectContaining({
+      run: expect.objectContaining({
+        credentials: "include",
+      }),
+    }));
 
     finishWarmup?.();
     await expect(resultPromise).resolves.toEqual(expect.objectContaining({
       threadId: "thread_1",
     }));
+  });
+
+  it("resolves fresh authenticated headers immediately before a connector run", async () => {
+    const execute = vi.fn(async () => ({
+      cancelled: false,
+      durationSeconds: 1,
+    }));
+    const resolveRequestHeaders = vi.fn(async () => ({
+      Authorization: "Bearer refreshed-firebase-token",
+      "X-Request-Scope": "current",
+    }));
+    const run = createRunnerThreadRunExecutor(
+      dependencies({
+        ensureThread: vi.fn(async () => ({
+          threadId: "thread_1",
+          didCreateThread: false,
+          initialTitle: "Existing thread",
+          environmentId: null,
+        })),
+        execute,
+        requestHeaders: { "X-Request-Scope": "stale" },
+        resolveRequestHeaders,
+      }),
+    );
+
+    await run("Search Atlassian", [], {
+      connectorsOverride: {
+        jira: { enabled: true },
+      },
+    });
+
+    expect(resolveRequestHeaders).toHaveBeenCalledTimes(1);
+    const executeOptions = execute.mock.calls[0]?.[0];
+    const headers = new Headers(executeOptions?.run.headers);
+    expect(headers.get("Authorization")).toBe(
+      "Bearer refreshed-firebase-token",
+    );
+    expect(headers.get("X-Request-Scope")).toBe("current");
+    expect(executeOptions?.run.credentials).toBe("include");
   });
 });

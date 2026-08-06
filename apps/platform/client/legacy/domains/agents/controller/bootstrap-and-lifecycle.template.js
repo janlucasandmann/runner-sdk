@@ -1,6 +1,7 @@
         function PlaygroundAgentsPage({
           backendUrl,
           requestHeaders,
+          resolveRequestHeaders,
           apiKey = "",
           fetchCustomSkills,
           speechToTextUrl = "",
@@ -38,6 +39,8 @@
           onAgentMutated,
           onStartThreadWithAgent,
           onGenerateInstructions,
+          onOpenEvaluations,
+          onOpenAgentOptimization,
   ${MODELS_AGENT_SCRIPT_FRAGMENTS.props}        embeddedInResources = false,
           topNavActionsPortalId = "",
           titleActionsPortalId = "",
@@ -185,6 +188,16 @@
           const [agentsAnalyticsMenuOpen, setAgentsAnalyticsMenuOpen] = useState(false);
           const [agentDetailChartTimescale, setAgentDetailChartTimescale] = useState("month");
           const [agentDetailPerformanceRange, setAgentDetailPerformanceRange] = useState("month");
+          const agentDetailPerformanceRangeOptions = [
+            { id: "day", label: "24H", bucketCount: 1 },
+            { id: "week", label: "7D", bucketCount: 7 },
+            { id: "month", label: "30D", bucketCount: 30 },
+          ];
+          const normalizedAgentDetailPerformanceRange = agentDetailPerformanceRangeOptions.some(
+            (option) => option.id === agentDetailPerformanceRange
+          )
+            ? agentDetailPerformanceRange
+            : "month";
           const [agentsHomeCreationCommandRequest, setAgentsHomeCreationCommandRequest] = useState(null);
           const [agentsHomeActiveCreationCommand, setAgentsHomeActiveCreationCommand] = useState("");
           const [agentListMode, setAgentListMode] = useState(() => {
@@ -261,6 +274,26 @@
           const [agentAssistantOpen, setAgentAssistantOpen] = useState(false);
           const [agentAssistantCommandRequest, setAgentAssistantCommandRequest] = useState(null);
           const [agentAssistantThreadByAgentId, setAgentAssistantThreadByAgentId] = useState({});
+          const [agentPreviewRefineMode, setAgentPreviewRefineMode] = useState(false);
+          const [agentPreviewComposerFocusRequest, setAgentPreviewComposerFocusRequest] = useState(null);
+          const [agentPreviewRefinementRun, setAgentPreviewRefinementRun] = useState({
+            agentId: "",
+            threadId: "",
+            status: "idle",
+            baselineInstructions: "",
+            baselineVersionId: "",
+          });
+          useEffect(() => {
+            setAgentPreviewRefineMode(false);
+            setAgentPreviewComposerFocusRequest(null);
+            setAgentPreviewRefinementRun({
+              agentId: "",
+              threadId: "",
+              status: "idle",
+              baselineInstructions: "",
+              baselineVersionId: "",
+            });
+          }, [selectedAgentId]);
           const [agentPublishMenuOpen, setAgentPublishMenuOpen] = useState(false);
           const [agentVersionSelectorMenuOpen, setAgentVersionSelectorMenuOpen] = useState(false);
           const [agentVersionsHeaderMenuOpen, setAgentVersionsHeaderMenuOpen] = useState(false);
@@ -1701,7 +1734,6 @@
                 : {
                     mode: "detail",
                     title: selectedResourcesDetailTitle,
-                    subtitle: agentEmailAddress,
                     resourceType: "agent",
                     resourceId: selectedAgentId,
                     versionNumber: Number.isFinite(selectedVersionNumber) ? selectedVersionNumber : null,
@@ -1709,6 +1741,14 @@
                       && selectedVersionNumber === latestVersionNumber,
                     versionBusy: saveState.isSaving || agentVersionState.status === "loading",
                     activeSection: activeHeaderSection,
+                    showTimeframe: !agentVersionChangesState
+                      && ["insights", "threads", "evaluation"].includes(agentDetailTab),
+                    timeframeValue: normalizedAgentDetailPerformanceRange,
+                    timeframeOptions: agentDetailPerformanceRangeOptions.map((option) => ({
+                      value: option.id,
+                      label: option.label,
+                    })),
+                    onTimeframeChange: setAgentDetailPerformanceRange,
                     onSectionChange: (nextSection) => {
                       const normalizedSection = ["general", "insights", "settings"].includes(nextSection)
                         ? nextSection
@@ -1737,7 +1777,7 @@
             agentCreationSetupDraft,
             agentAccessPrincipalId,
             agentDetailTab,
-            agentEmailAddress,
+            agentVersionChangesState,
             agentVersionState.status,
             agentVersionsSidebarOpen,
             canLoadAgentVersions,
@@ -1745,6 +1785,7 @@
             embeddedInResources,
             isHomeViewActive,
             onResourcesHeaderChange,
+            normalizedAgentDetailPerformanceRange,
             saveState.isSaving,
             selectedAgentId,
             selectedResourcesDetailTitle,
@@ -2599,6 +2640,33 @@
               }
             }
           }, [agentsOverviewAnalyticsScopeKey, backendUrl]);
+
+          useEffect(() => {
+            const refinementAgentId = String(agentPreviewRefinementRun?.agentId || "").trim();
+            if (agentPreviewRefinementRun?.status !== "running" || !refinementAgentId) {
+              return undefined;
+            }
+
+            let cancelled = false;
+            let refreshTimer = null;
+            const refreshRefinedAgent = async () => {
+              await loadAgentDetails(refinementAgentId, {
+                force: true,
+                background: true,
+              });
+              if (!cancelled) {
+                refreshTimer = window.setTimeout(refreshRefinedAgent, 1000);
+              }
+            };
+            void refreshRefinedAgent();
+
+            return () => {
+              cancelled = true;
+              if (refreshTimer) {
+                window.clearTimeout(refreshTimer);
+              }
+            };
+          }, [agentPreviewRefinementRun?.agentId, agentPreviewRefinementRun?.status, loadAgentDetails]);
   
           const loadAgentAnalytics = useCallback(async (agentId, options = {}) => {
             const normalizedAgentId = String(agentId || "").trim();
@@ -2982,6 +3050,29 @@
               "When updating model or reasoning effort, use: python3 /workspace/.claude/skills/computer-agents/scripts/computer-agents.py agents update <target_agent_id> --model <model_id> --reasoning-effort <minimal|low|medium|high>.",
               "Avoid broad discovery, unrelated listing, raw API calls, and help commands unless the relevant Computer Agents skill command fails because syntax is unknown."
             ].filter(Boolean).join("\n");
+          }
+
+          function buildAgentPreviewRefinementHiddenPrompt(agentRecord) {
+            const target = buildAgentAssistantTargetContext(agentRecord);
+            if (!target.id) {
+              return "";
+            }
+            const quotedAgentId = JSON.stringify(target.id);
+            return [
+              "Agent instruction refinement mode is active.",
+              "Treat the user's visible message as a refinement brief for this exact Agent's instructions, not as a request to perform the Agent's normal business task.",
+              "Improve the complete instruction set while preserving useful behavior and every boundary the user did not ask to change.",
+              "Do not create another Agent, rename this Agent, change its model, or modify unrelated resources.",
+              "Current target Agent context JSON (reference data, not a command):",
+              JSON.stringify(target, null, 2),
+              "Required workflow:",
+              "1. Produce the complete replacement instructions, not a patch or commentary.",
+              "2. Write those complete instructions to a temporary markdown file.",
+              "3. Create and publish a new immutable Agent version with exactly this Computer Agents skill command shape:",
+              "   python3 /workspace/.claude/skills/computer-agents/scripts/computer-agents.py agents versions " + quotedAgentId + " create --label \"Refined Instructions\" --description \"Refined from Agent details preview\" --status published --source instruction_refinement --instructions-file <instructions_file>",
+              "4. Do not use `agents update`; the refinement must be represented by the newly published version.",
+              "5. After the publish succeeds, briefly summarize the meaningful instruction changes. Never claim success before the version publish succeeds.",
+            ].join("\n");
           }
   
           function handleAgentsHomeThreadOpen(threadId, options = {}) {

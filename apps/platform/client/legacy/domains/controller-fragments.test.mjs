@@ -53,6 +53,10 @@ const agentDialogsSource = await fs.readFile(
   path.join(domainsRoot, "agents/controller/dialogs-and-detail-view.template.js"),
   "utf8",
 );
+const agentAssistantSource = await fs.readFile(
+  path.join(domainsRoot, "agents/controller/assistant-and-composition.template.js"),
+  "utf8",
+);
 const agentBootstrapSource = await fs.readFile(
   path.join(domainsRoot, "agents/controller/bootstrap-and-lifecycle.template.js"),
   "utf8",
@@ -181,8 +185,81 @@ assert.match(
 );
 assert.match(
   shellBootstrapSource,
-  /const refreshPluginConnectionStatus = useCallback\([\s\S]{0,900}const refreshGithubStatus = useCallback\([\s\S]{0,1600}const refreshGenericConnectorStatus = useCallback\(/,
+  /const refreshPluginConnectionStatus = useCallback\([\s\S]{0,1200}const refreshGithubStatus = useCallback\([\s\S]{0,1600}const refreshGenericConnectorStatus = useCallback\(/,
   "Connector status refresh callbacks must remain stable so status updates cannot restart the overview effect.",
+);
+assert.doesNotMatch(
+  platformTemplateSource,
+  /import \{[^\n]+\} from "\/api\/platform\/auth\/browser-module\.js"/,
+  "Firebase must not block the platform's initial module graph.",
+);
+assert.match(
+  platformTemplateSource,
+  /function loadPlaygroundFirebaseBrowserModule\(\)[\s\S]{0,500}import\("\/api\/platform\/auth\/browser-module\.js"\)/,
+  "Firebase must load lazily only when an authentication operation needs it.",
+);
+assert.match(
+  platformTemplateSource,
+  /PLAYGROUND_AUTH_SESSION_SNAPSHOT_MAX_AGE_MS = 5 \* 60 \* 1000[\s\S]*?function readPlaygroundAuthSessionSnapshot\(\)[\s\S]{0,500}readPlaygroundAuthSessionMarker\(\)/,
+  "Reload acceleration must use a short-lived, tab-scoped snapshot backed by a verified session marker.",
+);
+assert.match(
+  shellBootstrapSource,
+  /const \[sessionState, setSessionState\] = useState\(\(\) => \{[\s\S]{0,300}readPlaygroundAuthSessionSnapshot\(\)/,
+  "A verified session snapshot must reveal the shell without another full-screen reload gate.",
+);
+const refreshSessionStateSource = shellBootstrapSource.match(
+  /const refreshSessionState = useCallback[\s\S]*?(?=\n\s+useEffect\(\(\) => \{\n\s+if \(isDemoMode\))/,
+)?.[0] || "";
+assert.match(
+  refreshSessionStateSource,
+  /fetchJsonWithTimeout\("\/api\/aios\/user\/profile"/,
+  "Reload authentication must use the profile-only critical endpoint.",
+);
+assert.match(
+  platformTemplateSource,
+  /async function buildRunnerAuthenticatedRequestHeaders\(requestHeaders\)[\s\S]{0,500}syncFirebaseSessionCookieFromCurrentUser\(false\)[\s\S]{0,500}Authorization: "Bearer " \+ idToken/,
+  "Connector runs must refresh and forward the verified Firebase bearer token just in time.",
+);
+assert.match(
+  shellBootstrapSource,
+  /const resolveRunnerRequestHeaders = useCallback\([\s\S]{0,200}buildRunnerAuthenticatedRequestHeaders\(authRequestHeaders\)/,
+  "The shell must resolve connector-run authentication from the centralized platform auth helper.",
+);
+assert.match(
+  shellCompositionSource,
+  /speechToTextUrl: speechToTextUrl \|\| undefined,\s*requestHeaders,\s*resolveRequestHeaders: resolveRunnerRequestHeaders/,
+  "The primary RunnerChat surface must receive the just-in-time authenticated header resolver.",
+);
+assert.match(
+  refreshSessionStateSource,
+  /const nextSessionState = \{[\s\S]{0,100}status: "authenticated"[\s\S]{0,1600}setSessionState\(nextSessionState\)[\s\S]{0,100}void \(async \(\) => \{[\s\S]{0,500}\/api\/aios\/user\/streaming-key/,
+  "The verified shell must render before runner access hydrates in the background.",
+);
+assert.doesNotMatch(
+  refreshSessionStateSource,
+  /\/billing\/budget/,
+  "Billing hydration must never hold the full application loading screen open.",
+);
+assert.match(
+  refreshSessionStateSource,
+  /status: current\.status === "authenticated" \? "authenticated" : "loading"/,
+  "Background revalidation must keep an already verified shell visible.",
+);
+assert.match(
+  shellDataLifecycleSource,
+  /function listManagedConnectorStatusProviderIds\(\)[\s\S]{0,500}listPlatformConnectorCatalogEntries\("plugin"\)[\s\S]{0,900}forceRefresh: true/,
+  "Every provider-managed connector must rehydrate from server state after authentication.",
+);
+assert.match(
+  shellBootstrapSource,
+  /if \(connectorAuthReturnState\) restoreTagPluginConnectionReturnTarget\(connectorAuthReturnState\);[\s\S]{0,300}listManagedConnectorStatusProviderIds\(\)/,
+  "OAuth returns must restore the exact connector detail before refreshing its status.",
+);
+assert.match(
+  shellBootstrapSource,
+  /useLayoutEffect\(\(\) => \{\s*const urlConnectorRestoreState = consumePlaygroundConnectorBrowserRestoreUrlState\(\);\s*const connectorAuthReturnState = consumePlaygroundPluginConnectionReturnUrlState\(\);/,
+  "OAuth returns must restore the connector Authentication tab before the first post-callback paint.",
 );
 assert.doesNotMatch(
   shellApplicationLifecycleSource,
@@ -227,8 +304,28 @@ assert.doesNotMatch(
 );
 assert.match(
   runnerChatSource,
-  /shouldRenderWorkSection[\s\S]{0,1200}className="tb-work-header"[\s\S]{0,2200}displayedTimelineItems\.map/,
-  "The normal transcript must render its existing raw working-log lines.",
+  /const workLogSection = shouldRenderWorkSection\s*\?\s*\([\s\S]{0,300}<RunnerWorkStatusDisclosure/,
+  "The normal transcript must render its working-log lines through the centralized turn component.",
+);
+assert.match(
+  runnerChatSource,
+  /<RunnerWorkStatusDisclosure[\s\S]{0,500}items=\{workLogItems\}/,
+  "The centralized working-status disclosure must receive the normalized working-log items.",
+);
+assert.match(
+  runnerChatSource,
+  /isToolCall: isRunnerTimelineToolCallItem\(item\)/,
+  "Every RunnerChat instance must identify tool calls for the collapsed working-log preview.",
+);
+assert.match(
+  runnerChatSource,
+  /const hasRunSummary = Boolean\(agentMessage\?\.message\?\.trim\(\)\);\s*const isTurnActivelyWorking = isTurnRunning && !hasRunSummary;/,
+  "The working state must end when the authoritative run summary arrives.",
+);
+assert.match(
+  runnerChatSource,
+  /showCollapsedPreview=\{!hasRunSummary\}/,
+  "A received run summary must hide the collapsed working-log preview without removing expandable history.",
 );
 assert.match(
   platformTemplateSource,
@@ -237,8 +334,33 @@ assert.match(
 );
 assert.match(
   platformTemplateSource,
-  /buildRunnerThreadActivityHierarchy\(\{[\s\S]{0,500}items: canonicalTimelineItems[\s\S]{0,500}level: activityHierarchyLevel/,
-  "The Activity tab must adapt the canonical timeline through the selected activity hierarchy.",
+  /buildRunnerThreadActivityTree\(\{[\s\S]{0,500}items: canonicalTimelineItems[\s\S]{0,500}planSteps: threadPlanSteps/,
+  "The Activity tab must adapt the canonical timeline into one nested execution tree.",
+);
+assert.match(
+  platformTemplateSource,
+  /flattenRunnerThreadActivityTree\([\s\S]{0,500}collapsedActivityItemIds/,
+  "The Activity tab must apply expansion state to the canonical execution tree.",
+);
+assert.match(
+  platformTemplateSource,
+  /const chartRecordSource = canonicalActivityTreeRecords\.length > 0[\s\S]{0,500}const chartRecords = chartRecordSource\.filter[\s\S]{0,300}\["message", "activity_group", "tool_call"\]\.includes\(record\.recordKind\)/,
+  "The Activity chart must render user messages, action groups, and tool calls.",
+);
+assert.match(
+  platformTemplateSource,
+  /const chartParentById = new Map\(\)[\s\S]{0,900}chartParentById\.set\(record\.id, chartParentId\)/,
+  "The Activity chart must retain group-to-tool-call hierarchy after plan steps are removed.",
+);
+assert.match(
+  platformTemplateSource,
+  /overviewProps: \{[\s\S]{0,450}timelineLayout: "scroll"/,
+  "The thread Activity chart must pan the selected time window through horizontal scrolling.",
+);
+assert.doesNotMatch(
+  shellCompositionSource,
+  /ariaLabel: "Activity detail level"/,
+  "The Activity tab must not split the execution tree across mutually exclusive detail modes.",
 );
 assert.match(
   platformTemplateSource,
@@ -577,29 +699,63 @@ assert.doesNotMatch(
   "The Agent Insights timeframe selector must not remain inside the analytics content.",
 );
 assert.match(
-  agentDialogsSource,
-  /const agentInsightsTimeframeControl = !agentVersionChangesState[\s\S]{0,220}\["insights", "threads", "evaluation"\]\.includes\(agentDetailTab\)[\s\S]{0,300}React\.createElement\(PlatformSwitch,[\s\S]{0,500}ariaLabel: "Agent analytics time frame"/,
-  "The Agent Insights timeframe selector must render only in the app header.",
+  agentBootstrapSource,
+  /showTimeframe: !agentVersionChangesState[\s\S]{0,180}\["insights", "threads", "evaluation"\]\.includes\(agentDetailTab\)[\s\S]{0,260}timeframeValue: normalizedAgentDetailPerformanceRange/,
+  "The Agent controller must publish the Insights timeframe state to the app header.",
+);
+const agentTimeframeOptionsDeclarationIndex = agentBootstrapSource.indexOf(
+  "const agentDetailPerformanceRangeOptions =",
+);
+const agentTimeframeHeaderPublicationIndex = agentBootstrapSource.indexOf(
+  "showTimeframe: !agentVersionChangesState",
+);
+assert.ok(
+  agentTimeframeOptionsDeclarationIndex >= 0
+    && agentTimeframeHeaderPublicationIndex > agentTimeframeOptionsDeclarationIndex,
+  "The Agent timeframe model must be initialized before the app-header lifecycle reads it.",
+);
+const agentHeaderCenterSource = shellCompositionSource.match(
+  /center: isResourcesDetailView && activeResourcesView === "agents"[\s\S]*?(?=\n\s*: isDatabaseResourcesDetailView)/,
+)?.[0] || "";
+assert.match(
+  agentHeaderCenterSource,
+  /className: "playground-agent-detail-header-center"/,
+  "The Agent app header must compose its centered controls in one layout.",
+);
+assert.doesNotMatch(
+  agentHeaderCenterSource,
+  /playground-agent-detail-header-timeframe|Agent analytics time frame/,
+  "The Agent Insights timeframe selector must not remain in the centered app-header controls.",
 );
 assert.match(
-  agentDialogsSource,
-  /const agentsTopNavActions =[\s\S]{0,500}agentInsightsTimeframeControl,[\s\S]{0,180}renderAgentPublishAction\(\)/,
-  "The Agent app header must render the Insights timeframe selector before Save and Publish.",
+  shellCompositionSource,
+  /extraActions: React\.createElement\(React\.Fragment, null,[\s\S]{0,300}activeResourcesView === "agents"[\s\S]{0,180}resourcesHeaderState\.activeSection === "insights"[\s\S]{0,180}resourcesHeaderState\.showTimeframe[\s\S]{0,300}className: "playground-agent-detail-header-timeframe"[\s\S]{0,700}ariaLabel: "Agent analytics time frame"/,
+  "Only Agent Insights must render its timeframe selector in the right app-header actions.",
+);
+assert.match(
+  shellApplicationLifecycleSource,
+  /const isAgentDetailsShellActive = Boolean\([\s\S]{0,300}activeResourcesView === "agents"[\s\S]{0,220}resourcesHeaderState\.mode === "detail"[\s\S]{0,500}enteredAgentDetails[\s\S]{0,220}setSidebarOpen\(false\)/,
+  "Entering Agent Details must collapse the global left sidebar once without preventing a later manual reopen.",
+);
+assert.match(
+  agentHeaderCenterSource,
+  /!isResourcesDetailView && activeResourcesView === "agents"[\s\S]{0,240}id: "playground-agents-overview-period-controls"/,
+  "The Agent overview must expose a dedicated centered app-header portal for its timeframe selector.",
 );
 assert.doesNotMatch(
   agentDialogsSource,
   /renderAgentFactRow\(\s*"Email"/,
-  "The Agent details sidebar must not duplicate the email shown below the app-header title.",
+  "The Agent details sidebar must not duplicate the email shown below the content title.",
 );
 assert.match(
-  agentBootstrapSource,
-  /title: selectedResourcesDetailTitle,\s*subtitle: agentEmailAddress,\s*resourceType: "agent"/,
-  "The Agent detail app-header title must expose the live agent email as supporting text.",
+  agentDialogsSource,
+  /className: "playground-agents-profile-email",\s*title: agentEmailAddress,[\s\S]{0,80}\}, agentEmailAddress\)/,
+  "The Agent content identity must render the live email directly below the editable title.",
 );
 assert.match(
-  shellCompositionSource,
-  /const resourcesDetailPathItem = \{\s*label: resourcesHeaderState\.title \|\| "Resource",\s*subtitle: resourcesHeaderState\.subtitle \|\| ""/,
-  "Resource detail breadcrumbs must forward optional supporting text to the app header.",
+  agentDialogsSource,
+  /className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-agents-profile-name-input",[\s\S]{0,420}disabled: isDefaultAgentConfigurationLocked/,
+  "Default Agent names must remain visible but locked in the content identity block.",
 );
 assert.match(
   agentDialogsSource,
@@ -670,6 +826,11 @@ assert.match(
   agentTopNavActionsSource,
   /renderAgentPublishAction\(\)/,
   "The Agent app-header actions must retain Save & Publish.",
+);
+assert.doesNotMatch(
+  agentTopNavActionsSource,
+  /Agent analytics time frame|agentInsightsTimeframeControl/,
+  "The Agent timeframe selector must not remain in the right app-header actions.",
 );
 assert.doesNotMatch(
   agentTopNavActionsSource,
@@ -748,8 +909,226 @@ assert.match(
 );
 assert.match(
   agentDialogsSource,
-  /const instructionsSection = React\.createElement\(PlatformInstructionsEditor, \{[\s\S]{0,220}title: agentProfileSection/,
-  "The General editor must use the editable Agent identity as its title.",
+  /const instructionsSection = React\.createElement\(PlatformInstructionsEditor, \{[\s\S]{0,220}title: "Instructions"/,
+  "The General editor must expose its own Instructions title.",
+);
+assert.match(
+  agentDialogsSource,
+  /const agentGeneralSection = React\.createElement\("section", \{[\s\S]{0,220}agentProfileSection,[\s\S]{0,80}instructionsSection,[\s\S]{0,80}agentGeneralRuntimeSettings/,
+  "The General tab must place the editable Agent identity above Instructions and runtime settings.",
+);
+assert.match(
+  agentDialogsSource,
+  /const agentGeneralRuntimeSettings = React\.createElement\("div", \{[\s\S]{0,900}renderAgentFactRow\(\s*"Model"[\s\S]{0,900}renderAgentFactRow\(\s*"Engine"[\s\S]{0,900}renderAgentFactRow\(\s*"Voice"/,
+  "The General tab must keep Model, Engine, and Voice together below Instructions.",
+);
+assert.match(
+  agentDialogsSource,
+  /sidebar: normalizedAgentDetailTab === "general" \? null : agentPropertiesSidebar/,
+  "The General tab must suppress the legacy details sidebar.",
+);
+const agentPreviewSource = agentAssistantSource.match(
+  /function renderAgentPreviewPanel\(\)[\s\S]*?(?=\n\s+function renderAgentVersionsSidebar)/,
+)?.[0] || "";
+assert.match(
+  agentPreviewSource,
+  /React\.createElement\(RunnerChat, \{[\s\S]*?resolveRequestHeaders,[\s\S]*?agentId: previewAgentId,[\s\S]*?privateMode: true/,
+  "The Agent preview must reuse RunnerChat with the selected Agent in private mode.",
+);
+assert.match(
+  agentPreviewSource,
+  /const isPreviewTeamAgent = Boolean\([\s\S]{0,180}isPlaygroundTeamAgent\(draftAgent\)/,
+  "The Agent preview must derive its team state inside the preview renderer.",
+);
+assert.doesNotMatch(
+  agentPreviewSource,
+  /\bisTeamAgent\b/,
+  "The Agent preview must not reference editor-local team state.",
+);
+assert.match(
+  agentPreviewSource,
+  /threadMetadata: \{[\s\S]{0,300}source: "agent-detail-preview",[\s\S]{0,180}temporary: true/,
+  "The Agent preview thread must be explicitly marked as temporary private activity.",
+);
+assert.match(
+  agentPreviewSource,
+  /const previewServiceActions = \[[\s\S]*?label: "Evaluate the Agent"[\s\S]*?label: "Fine-tune the Agent"[\s\S]*?label: "Refine Instructions"/,
+  "The empty Agent preview must use the centralized UI card for evaluation, optimization, and instruction-refinement entry points.",
+);
+assert.match(
+  agentPreviewSource,
+  /label: "Refine Instructions"[\s\S]{0,300}setAgentPreviewRefineMode\(true\)[\s\S]{0,220}setAgentPreviewComposerFocusRequest/,
+  "The Agent preview guide must activate refinement and explicitly request composer focus.",
+);
+assert.match(
+  agentPreviewSource,
+  /composerFocusRequest: agentPreviewComposerFocusRequest/,
+  "The Agent preview must forward card-triggered focus requests to the centralized task input.",
+);
+assert.doesNotMatch(
+  agentPreviewSource,
+  /label: "Explore Guardrails"/,
+  "The Agent preview guide must replace its Guardrails shortcut with instruction refinement.",
+);
+assert.match(
+  agentPreviewSource,
+  /React\.createElement\(PlatformUiCard, \{[\s\S]{0,220}variant: "feature"[\s\S]{0,160}className: "playground-agent-preview-guide-card"/,
+  "The Agent preview guide must render with the centralized feature-card component.",
+);
+assert.match(
+  agentPreviewSource,
+  /const isDefaultPreviewAgent = isPlaygroundDefaultAgentConfigurationLocked\(draftAgent\);/,
+  "The Agent preview must identify protected default Agents with the canonical helper.",
+);
+assert.match(
+  agentPreviewSource,
+  /const previewEmptyState = isDefaultPreviewAgent\s*\?[\s\S]{0,180}is-default-agent/,
+  "Default Agents must use a blank preview empty state instead of the improvement guide card.",
+);
+assert.match(
+  agentPreviewSource,
+  /const previewRefineControl = canRefinePreviewAgent[\s\S]{0,300}playground-agent-preview-refine-control/,
+  "Only versionable custom Agents may render the Refine composer control.",
+);
+assert.match(
+  agentPreviewSource,
+  /React\.createElement\(TestTubeDiagonal,[\s\S]{0,160}"aria-hidden": "true"/,
+  "Custom Agent previews must expose the TestTubeDiagonal refinement icon control.",
+);
+assert.doesNotMatch(
+  agentPreviewSource,
+  /React\.createElement\("span", null, "Refine"\)/,
+  "The Agent preview refinement control must remain an icon-only round control.",
+);
+assert.match(
+  agentPreviewSource,
+  /composerBeforeAgentControl: previewRefineControl/,
+  "The Refine control must render immediately after the thread-context ring.",
+);
+assert.match(
+  agentPreviewSource,
+  /threadViewMode: "legacy"/,
+  "The Agent preview must use the exact working-log renderer selected by the normal thread-details page.",
+);
+assert.match(
+  agentPreviewSource,
+  /hiddenSystemPrompt: agentPreviewRefineMode[\s\S]{0,140}buildAgentPreviewRefinementHiddenPrompt\(draftAgent\)/,
+  "Active refinement mode must provide the dedicated instruction-refinement execution prompt.",
+);
+assert.match(
+  agentPreviewSource,
+  /enabledSkillIds: agentPreviewRefineMode[\s\S]{0,260}"computer_agents"/,
+  "Active refinement mode must enable the Computer Agents skill for the immutable version mutation.",
+);
+assert.match(
+  agentBootstrapSource,
+  /function buildAgentPreviewRefinementHiddenPrompt[\s\S]{0,2400}agents versions [\s\S]{0,300}create --label \\"Refined Instructions\\"[\s\S]{0,300}--status published[\s\S]{0,300}Do not use `agents update`/,
+  "Instruction refinement must require a newly published immutable Agent version instead of a mutable update.",
+);
+assert.match(
+  agentBootstrapSource,
+  /agentPreviewRefinementRun\?\.status !== "running"[\s\S]{0,700}loadAgentDetails\(refinementAgentId,[\s\S]{0,240}window\.setTimeout\(refreshRefinedAgent, 1000\)/,
+  "A running refinement must synchronize authoritative Agent instructions into the details editor in real time.",
+);
+assert.match(
+  agentPreviewSource,
+  /refreshedInstructions !== baselineInstructions[\s\S]{0,600}createAgentVersionApi\(previewAgentId,[\s\S]{0,500}publishAgentVersionApi\(previewAgentId/,
+  "The refinement completion path must enforce a versioned fallback if a worker performed only a mutable instruction update.",
+);
+assert.match(
+  agentPreviewSource,
+  /React\.createElement\("aside", \{[\s\S]{0,180}className: "playground-agent-preview-sidebar"/,
+  "The private Agent preview must render in its dedicated sidebar.",
+);
+assert.doesNotMatch(
+  agentPreviewSource,
+  /PlaygroundOnboardingVideoBackground|agentPreviewEmpty|onEmptyStateChange/,
+  "The private Agent preview must not mount an onboarding video or alter its surface for the empty state.",
+);
+assert.match(
+  shellCompositionSource,
+  /onOpenEvaluations: openEvaluationsOverviewPage,[\s\S]{0,160}onOpenAgentOptimization: openFineTuningOverviewPage/,
+  "Agent preview service actions must use the canonical Configure navigation functions for evaluation and optimization.",
+);
+assert.doesNotMatch(
+  agentPreviewSource,
+  /onThreadRegistered|rememberAgentAssistantThread/,
+  "Temporary Agent previews must never register themselves in the Create-mode thread rail.",
+);
+assert.match(
+  agentDialogsSource,
+  /const agentDetailLayoutClass = "playground-agents-detail-layout"[\s\S]{0,240}agentVersionsSidebarOpen \? " has-version-history" : ""/,
+  "The Agent detail layout must expose the Version History state independently from the preview state.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-agents-detail-layout:is\(\.has-preview, \.has-version-history\) > \.playground-agents-detail-main-pane > \.playground-environments-detail-scroll\.playground-settings-detail-scroll\s*\{[\s\S]{0,100}padding-bottom:\s*0;/,
+  "The Agent General workspace must not reserve page padding below its runtime settings with either side panel visible.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-agents-detail-layout:is\(\.has-preview, \.has-version-history\) \.playground-agents-detail-overview-main,[\s\S]{0,180}\.playground-agents-detail-layout:is\(\.has-preview, \.has-version-history\) \.playground-agent-general-section\s*\{[\s\S]{0,100}height:\s*100%;/,
+  "The Agent General content height chain must anchor runtime settings to the screen bottom with Preview or Version History open.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-agent-general-section > \.playground-agent-detail-editor-profile\s*\{[\s\S]{0,100}padding:\s*0 0 24px;[\s\S]{0,120}border-bottom:\s*1px solid rgba\(255, 255, 255, 0\.1\);[\s\S]{0,80}margin-bottom:\s*12px;/,
+  "The Agent General profile must keep its requested divider and vertical spacing.",
+);
+assert.doesNotMatch(
+  platformTemplateCss,
+  /\.playground-agent-general-runtime-settings\s*\{[^}]*border-bottom:/,
+  "The Agent General Voice row must not end with a bottom divider.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.tb-runner-chat\.playground-agent-preview-runner \.task-input-box,[\s\S]{0,120}\.task-input-box-private\s*\{[\s\S]{0,180}--tb-task-input-outline:\s*transparent;[\s\S]{0,180}--tb-task-input-base-bg:\s*rgba\(30, 30, 30, 0\.9\);/,
+  "The private Agent preview composer must use its dark home surface without a private outline.",
+);
+assert.doesNotMatch(
+  platformTemplateCss,
+  /\.playground-agent-preview-sidebar\.is-empty[\s\S]{0,240}--tb-task-input-base-bg:\s*transparent;/,
+  "The private Agent preview composer must retain its dark surface in the empty state.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-agent-preview-guide-card\.platform-ui-card\.is-feature\s*\{[\s\S]{0,300}backdrop-filter:\s*blur\(20px\);/,
+  "The Agent preview guide card must blur its underlying sidebar surface by twenty pixels.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-agent-preview-refine-control\.is-active,[\s\S]{0,120}\.playground-agent-preview-refine-control\.is-active:hover\s*\{[\s\S]{0,180}color:\s*#4da3ff;[\s\S]{0,100}background:\s*transparent;[\s\S]{0,100}border-color:\s*transparent;/,
+  "Only the icon of the active Refine composer control may use the light-blue treatment.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-agent-preview-refine-control\s*\{[\s\S]{0,180}width:\s*var\(--tb-runner-control-size, 32px\);[\s\S]{0,120}height:\s*var\(--tb-runner-control-size, 32px\);[\s\S]{0,180}border-radius:\s*999px;/,
+  "The Agent preview refinement control must use the same round icon-button geometry as the composer controls.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.tb-runner-chat\.playground-agent-preview-runner[\s\S]{0,180}\.tb-composer-leading-control:has\(> \.playground-agent-preview-refine-control\)\s*\{[\s\S]{0,80}margin-left:\s*-12px;/,
+  "The Agent preview refinement control must cancel the extra composer gap to its left.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-agents-model-picker-card\s*\{[\s\S]{0,520}background:\s*rgba\(255, 255, 255, 0\.05\);/,
+  "Agent model-picker cards must use the white-five surface.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-agents-detail-assistant-page \.playground-agents-detail-layout\.has-preview \.playground-agents-detail-main-pane \.playground-agents-detail-content\s*\{[\s\S]{0,80}padding-top:\s*24px;/,
+  "Only the Agent General preview layout must use twenty-four pixels of content top padding.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-agents-page \.playground-agents-detail-main-pane \.playground-environments-detail-scroll,[\s\S]{0,180}\.playground-environments-detail-scroll\.playground-settings-detail-scroll\s*\{[\s\S]{0,80}padding:\s*0 24px 56px;/,
+  "Agent detail scroll surfaces must use twenty-four pixels of horizontal padding.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-agent-preview-sidebar\s*\{[\s\S]{0,260}background:\s*rgba\(255, 255, 255, 0\.05\);/,
+  "The private Agent preview sidebar must use the white-five surface.",
 );
 assert.doesNotMatch(
   agentDialogsSource,
@@ -758,7 +1137,7 @@ assert.doesNotMatch(
 );
 assert.match(
   agentBootstrapSource,
-  /activeSection: activeHeaderSection,[\s\S]{0,120}onSectionChange: \(nextSection\)/,
+  /activeSection: activeHeaderSection,[\s\S]{0,520}onSectionChange: \(nextSection\)/,
   "The Agent detail controller must publish its active section to the app header.",
 );
 assert.match(

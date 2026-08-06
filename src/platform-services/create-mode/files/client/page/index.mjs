@@ -1,4 +1,5 @@
 import { FILES_PAGE_BROWSER_VIEW_SCRIPT } from "./browser-view.mjs";
+import { FILES_PAGE_CONNECTOR_BROWSER_SCRIPT } from "./connector-browser.mjs";
 import { FILES_PAGE_DIALOGS_SCRIPT } from "./dialogs.mjs";
 import { FILES_PAGE_ENTRY_VIEWS_SCRIPT } from "./entry-views.mjs";
 import { FILES_PAGE_FILESYSTEM_ACTIONS_SCRIPT } from "./filesystem-actions.mjs";
@@ -18,6 +19,6 @@ export const FILES_PAGE_RUNTIME_SCRIPT = [
   FILES_PAGE_FILESYSTEM_ACTIONS_SCRIPT,
   FILES_PAGE_ENTRY_VIEWS_SCRIPT,
   FILES_PAGE_DIALOGS_SCRIPT,
+  FILES_PAGE_CONNECTOR_BROWSER_SCRIPT,
   FILES_PAGE_BROWSER_VIEW_SCRIPT,
 ].join("\n");
-

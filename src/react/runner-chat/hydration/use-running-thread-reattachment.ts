@@ -261,7 +261,6 @@ export function useRunnerRunningThreadReattachment({
               previousTurns,
               mergedTurns,
               {
-                defaultLatestExpanded: true,
                 collapseOnNewRunSummary: true,
               },
             ),

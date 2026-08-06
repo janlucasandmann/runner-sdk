@@ -37,7 +37,7 @@ function parseAcceptedEncodings(value) {
     .sort((left, right) => right.quality - left.quality);
 }
 
-function selectContentEncoding(headerValue) {
+export function selectContentEncoding(headerValue) {
   const encodings = parseAcceptedEncodings(headerValue);
   for (const encoding of encodings) {
     if (encoding.name === "br") return "br";
@@ -47,26 +47,40 @@ function selectContentEncoding(headerValue) {
   return "identity";
 }
 
-function createAsset(pathname, contentType, source) {
+export function createAsset(
+  pathname,
+  contentType,
+  source,
+  {
+    compress = true,
+    gzipLevel = 9,
+    brotliQuality = 9,
+  } = {},
+) {
   const identity = Buffer.from(source);
   const hash = hashContent(identity);
+  const variants = {
+    identity,
+    ...(compress
+      ? {
+          gzip: gzipSync(identity, { level: gzipLevel }),
+          br: brotliCompressSync(identity, {
+            params: {
+              [zlibConstants.BROTLI_PARAM_QUALITY]: brotliQuality,
+              [zlibConstants.BROTLI_PARAM_MODE]: contentType.startsWith("text/css")
+                ? zlibConstants.BROTLI_MODE_TEXT
+                : zlibConstants.BROTLI_MODE_TEXT,
+            },
+          }),
+        }
+      : {}),
+  };
   return Object.freeze({
     pathname,
     contentType,
     hash,
     etag: `"${hash}"`,
-    variants: Object.freeze({
-      identity,
-      gzip: gzipSync(identity, { level: 9 }),
-      br: brotliCompressSync(identity, {
-        params: {
-          [zlibConstants.BROTLI_PARAM_QUALITY]: 9,
-          [zlibConstants.BROTLI_PARAM_MODE]: contentType.startsWith("text/css")
-            ? zlibConstants.BROTLI_MODE_TEXT
-            : zlibConstants.BROTLI_MODE_TEXT,
-        },
-      }),
-    }),
+    variants: Object.freeze(variants),
   });
 }
 
@@ -227,8 +241,8 @@ export async function createPlatformDocumentAssets(
   const documentHtml = renderPlatformDocument(
     documentTemplate,
     {
-      styleTag: `<link rel="stylesheet" href="${cssPath}" />`,
-      moduleTag: `<script type="module" src="${modulePath}"></script>`,
+      styleTag: `<link rel="stylesheet" href="${cssPath}" fetchpriority="high" />`,
+      moduleTag: `<script type="module" src="${modulePath}" fetchpriority="high"></script>`,
     },
   );
 
@@ -282,8 +296,9 @@ export async function createPlatformDocumentAssets(
         return true;
       }
 
-      const encoding = selectContentEncoding(req.headers["accept-encoding"]);
-      const body = asset.variants[encoding] || asset.variants.identity;
+      const requestedEncoding = selectContentEncoding(req.headers["accept-encoding"]);
+      const encoding = asset.variants[requestedEncoding] ? requestedEncoding : "identity";
+      const body = asset.variants[encoding];
       const headers = {
         "Content-Type": asset.contentType,
         "Content-Length": body.byteLength,

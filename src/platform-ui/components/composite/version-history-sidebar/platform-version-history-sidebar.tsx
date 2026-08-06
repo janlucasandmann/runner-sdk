@@ -39,7 +39,6 @@ export interface PlatformVersionHistoryRecord {
   createdAt?: string;
   updatedAt?: string;
   publishedAt?: string | null;
-  [key: string]: unknown;
 }
 
 export interface PlatformVersionHistoryContext<TVersion extends PlatformVersionHistoryRecord> {
@@ -284,24 +283,24 @@ export function PlatformVersionHistorySidebar<
     };
   }, [actionMenuVersionId, filterMenuOpen]);
 
-  const footer = onViewChanges || footerExtra ? (
+  const footer = (
     <div className="platform-version-history-sidebar__footer-actions">
-      {onViewChanges ? (
-        <PlatformSecondaryButton
-          type="button"
-          size="small"
-          fullWidth
-          className="platform-version-history-sidebar__view-changes-button"
-          disabled={busy || resolvedVersions.length === 0}
-          onClick={() => void onViewChanges()}
-        >
-          <Code2 aria-hidden="true" />
-          <span>{viewChangesLabel}</span>
-        </PlatformSecondaryButton>
-      ) : null}
+      <PlatformSecondaryButton
+        type="button"
+        size="small"
+        fullWidth
+        className="platform-version-history-sidebar__view-changes-button"
+        disabled={!onViewChanges || busy || resolvedVersions.length === 0}
+        onClick={() => {
+          if (onViewChanges) void onViewChanges();
+        }}
+      >
+        <Code2 aria-hidden="true" />
+        <span>{viewChangesLabel}</span>
+      </PlatformSecondaryButton>
       {footerExtra}
     </div>
-  ) : null;
+  );
 
   const versionItems = resolvedVersions.map<PlatformVersionHistoryListItem<TVersion>>(
     (version, index) => {

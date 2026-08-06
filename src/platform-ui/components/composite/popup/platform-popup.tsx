@@ -25,7 +25,11 @@ export type PlatformPopupPlacement =
   | "bottom-start"
   | "bottom-end"
   | "top-start"
-  | "top-end";
+  | "top-end"
+  | "right-start"
+  | "right-end"
+  | "left-start"
+  | "left-end";
 
 export interface PlatformPopupAnchorPoint {
   x: number;
@@ -33,6 +37,7 @@ export interface PlatformPopupAnchorPoint {
 }
 
 export interface PlatformPopupSurfaceProps extends HTMLAttributes<HTMLDivElement> {
+  [dataAttribute: `data-${string}`]: string | number | undefined;
   animation?: PlatformPopupAnimation | false;
   animateHeight?: boolean;
   heightAnimationDurationMs?: number;
@@ -146,20 +151,35 @@ function getPlatformPopupPortalPosition({
   );
   const surfaceWidth = Math.max(surfaceRect.width, matchAnchorWidth ? anchorRect.width : 0);
   const surfaceHeight = surfaceRect.height;
-  const requestedSide = placement.startsWith("top") ? "top" : "bottom";
+  const requestedSide = placement.split("-")[0] as "bottom" | "top" | "right" | "left";
   const alignment = placement.endsWith("end") ? "end" : "start";
   const roomAbove = anchorRect.top - collisionPadding - offset;
   const roomBelow = viewportHeight - collisionPadding - anchorRect.bottom - offset;
-  const resolvedSide = requestedSide === "bottom"
-    ? (surfaceHeight > roomBelow && roomAbove > roomBelow ? "top" : "bottom")
-    : (surfaceHeight > roomAbove && roomBelow > roomAbove ? "bottom" : "top");
+  const roomLeft = anchorRect.left - collisionPadding - offset;
+  const roomRight = viewportWidth - collisionPadding - anchorRect.right - offset;
+  const isHorizontal = requestedSide === "right" || requestedSide === "left";
+  const resolvedSide = isHorizontal
+    ? requestedSide === "right"
+      ? (surfaceWidth > roomRight && roomLeft > roomRight ? "left" : "right")
+      : (surfaceWidth > roomLeft && roomRight > roomLeft ? "right" : "left")
+    : requestedSide === "bottom"
+      ? (surfaceHeight > roomBelow && roomAbove > roomBelow ? "top" : "bottom")
+      : (surfaceHeight > roomAbove && roomBelow > roomAbove ? "bottom" : "top");
   const resolvedPlacement = `${resolvedSide}-${alignment}` as PlatformPopupPlacement;
-  const preferredLeft = alignment === "end"
-    ? anchorRect.right - surfaceWidth
-    : anchorRect.left;
-  const preferredTop = resolvedSide === "top"
-    ? anchorRect.top - offset - surfaceHeight
-    : anchorRect.bottom + offset;
+  const preferredLeft = isHorizontal
+    ? resolvedSide === "left"
+      ? anchorRect.left - offset - surfaceWidth
+      : anchorRect.right + offset
+    : alignment === "end"
+      ? anchorRect.right - surfaceWidth
+      : anchorRect.left;
+  const preferredTop = isHorizontal
+    ? alignment === "end"
+      ? anchorRect.bottom - surfaceHeight
+      : anchorRect.top
+    : resolvedSide === "top"
+      ? anchorRect.top - offset - surfaceHeight
+      : anchorRect.bottom + offset;
 
   return {
     left: clampPlatformPopupCoordinate(

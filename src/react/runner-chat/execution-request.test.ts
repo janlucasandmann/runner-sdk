@@ -70,6 +70,9 @@ describe("runner execution request", () => {
       reasoningEffort: "high",
       executionContent: "hidden context\nVisible task",
       useExecutionContentForUpstream: true,
+      messageMetadata: {
+        runnerConnectorIds: ["linear"],
+      },
       persistFileChanges: false,
       enabledSkills: { webSearch: true },
       connectors: { linear: { enabled: true } },

@@ -90,6 +90,7 @@ export function ResourceOverviewPage<TData>({
   heroContent,
   showPeriodSelector = true,
   controlsPortalId = "",
+  periodPortalId = "",
   table,
   periodOptions = DEFAULT_PERIOD_OPTIONS,
   headerActions,
@@ -99,10 +100,30 @@ export function ResourceOverviewPage<TData>({
   const resolvedTable = primaryAction
     ? { ...table, toolbar: { ...table.toolbar, primaryAction: undefined } }
     : table;
+  const hasDedicatedPeriodPortal = Boolean(periodPortalId);
   const hasHeaderControls =
-    showPeriodSelector || Boolean(primaryAction) || Boolean(headerActions);
+    (showPeriodSelector && !hasDedicatedPeriodPortal) ||
+    Boolean(primaryAction) ||
+    Boolean(headerActions);
   const controlsPortalTarget =
     useOverviewControlsPortalTarget(controlsPortalId);
+  const periodPortalTarget = useOverviewControlsPortalTarget(periodPortalId);
+  const periodSelector = showPeriodSelector ? (
+    <PlatformSwitch
+      ariaLabel="Analytics time frame"
+      value={period}
+      options={periodOptions.map((option) => ({
+        value: option.id,
+        label: option.label,
+      }))}
+      onValueChange={(value) => {
+        const nextPeriod = periodOptions.find(
+          (option) => option.id === value,
+        );
+        if (nextPeriod) onPeriodChange(nextPeriod.id);
+      }}
+    />
+  ) : null;
   const overviewControls =
     hasHeaderControls && controlsPortalTarget
       ? createPortal(
@@ -110,32 +131,30 @@ export function ResourceOverviewPage<TData>({
             className="resource-overview-page__controls"
             data-resource-overview-controls="true"
           >
-            {showPeriodSelector ? (
-              <PlatformSwitch
-                ariaLabel="Analytics time frame"
-                value={period}
-                options={periodOptions.map((option) => ({
-                  value: option.id,
-                  label: option.label,
-                }))}
-                onValueChange={(value) => {
-                  const nextPeriod = periodOptions.find(
-                    (option) => option.id === value,
-                  );
-                  if (nextPeriod) onPeriodChange(nextPeriod.id);
-                }}
-              />
-            ) : null}
+            {!hasDedicatedPeriodPortal ? periodSelector : null}
             {renderPrimaryAction(primaryAction)}
             {renderHeaderActions(headerActions)}
           </div>,
           controlsPortalTarget,
         )
       : null;
+  const overviewPeriodControl =
+    periodSelector && periodPortalTarget
+      ? createPortal(
+          <div
+            className="resource-overview-page__controls resource-overview-page__period-controls"
+            data-resource-overview-period-controls="true"
+          >
+            {periodSelector}
+          </div>,
+          periodPortalTarget,
+        )
+      : null;
 
   return (
     <>
       {overviewControls}
+      {overviewPeriodControl}
       <div
         className={`resource-overview-page${className ? ` ${className}` : ""}`}
       >

@@ -23,6 +23,8 @@ assert.equal(assets.metrics.moduleGraphInputs, 1);
 assert.equal(assets.metrics.moduleChunkCount, 0);
 assert.deepEqual(assets.chunkPaths, []);
 assert.match(assets.documentHtml, /rel="stylesheet" href="\/platform\/assets\/platform\.[a-f0-9]+\.css"/);
+assert.match(assets.documentHtml, /rel="stylesheet"[^>]+fetchpriority="high"/);
+assert.match(assets.documentHtml, /type="module"[^>]+fetchpriority="high"/);
 assert.match(assets.documentHtml, /type="module" src="\/platform\/assets\/platform\.[a-f0-9]+\.js"/);
 assert.doesNotMatch(assets.documentHtml, /data-platform-style/);
 assert.doesNotMatch(assets.documentHtml, /data-platform-module/);

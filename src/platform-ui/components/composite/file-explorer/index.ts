@@ -1,4 +1,7 @@
 export {
+  PlatformFileExplorerBrowser,
+} from "./platform-file-explorer-browser.js";
+export {
   PlatformFileExplorerBrowserModal,
 } from "./platform-file-explorer-browser-modal.js";
 export {
@@ -10,6 +13,9 @@ export {
   resolvePlatformFileExplorerFileKind,
 } from "./platform-file-explorer-file-icon.js";
 
+export type {
+  PlatformFileExplorerBrowserProps,
+} from "./platform-file-explorer-browser.js";
 export type {
   PlatformFileExplorerBreadcrumb,
   PlatformFileExplorerBrowserModalProps,

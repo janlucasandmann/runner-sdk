@@ -85,6 +85,7 @@ const TERMINAL_EVALUATION_RUN_STATUSES = new Set([
 const CANONICAL_EVALUATION_RUN_BINDING_SCHEMA_VERSIONS = new Set([
   "computer_agents_evaluation_run_binding_v1",
   "computer_agents_evaluation_run_binding_v2",
+  "computer_agents_evaluation_run_binding_v3",
 ]);
 
 function readPlainObject(value) {
@@ -194,6 +195,51 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       const latestRecord = runsById.get(runId) || record;
       await runPersistence.enqueue(latestRecord, latestRecord.run);
     }
+  }
+
+  async function refreshPersistedRunFromBackend(req, record, runId) {
+    const body = {};
+    const requestRecord = {
+      ...record,
+      requestContext: cloneRequestContext(req),
+      upstreamUrl: parseUpstreamUrl(req, body),
+      apiKey: readOptionalApiKey(req, body),
+      body,
+    };
+    const data = await requestBackendJson(
+      requestRecord,
+      `/evaluations/runs/${encodeURIComponent(runId)}`,
+      { method: "GET" },
+      "Failed to refresh the persisted evaluation run.",
+    );
+    const persistedRunSource = data.run
+      || data.evaluationRun
+      || data.evaluation_run
+      || data.data
+      || data;
+    const persistedMetadata = readPlainObject(persistedRunSource?.metadata);
+    const persistedEmbeddedRun = readPlainObject(persistedMetadata.run);
+    const persistedCases = Array.isArray(persistedRunSource?.cases)
+      ? persistedRunSource.cases
+      : Array.isArray(persistedEmbeddedRun.cases)
+        ? persistedEmbeddedRun.cases
+        : null;
+    const persistedRun = recomputeRun({
+      ...record.run,
+      ...persistedRunSource,
+      cases: persistedCases || record.run.cases,
+    });
+    if (normalizeString(persistedRun.id) !== runId) {
+      throw createRuntimeError(
+        "The persisted evaluation response did not match the requested run.",
+        502,
+      );
+    }
+    storeRun({
+      ...record,
+      run: persistedRun,
+    });
+    return persistedRun;
   }
 
   function patchRunCase(runId, caseId, patch) {
@@ -339,6 +385,11 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
               kind: normalizeString(source.kind),
               id: normalizeString(source.id),
               versionId: normalizeString(source.versionId) || undefined,
+              ...(source.candidateAuthority
+                && typeof source.candidateAuthority === "object"
+                && !Array.isArray(source.candidateAuthority)
+                ? { candidateAuthority: source.candidateAuthority }
+                : {}),
             };
           })
         : [];
@@ -356,6 +407,11 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       versionId: binding.targetVersionId || undefined,
       environmentId: binding.environmentId || undefined,
       invocation: binding.invocation || undefined,
+      ...(binding.candidateAuthority
+        && typeof binding.candidateAuthority === "object"
+        && !Array.isArray(binding.candidateAuthority)
+        ? { candidateAuthority: binding.candidateAuthority }
+        : {}),
     };
   }
 
@@ -381,6 +437,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       agentId: normalizedRun.targetAgentId,
       environmentId: normalizedRun.environmentId,
       versionId: normalizedRun.evaluationVersionId,
+      purpose: normalizedRun.purpose,
       label: normalizedRun.label,
       metadata,
       run: normalizedRun,
@@ -2662,10 +2719,15 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       return recomputeRun(persistedRunSource);
     }
     await ensureRunPersisted(record);
-    if (!durableExecutionEnabled && isEvaluationRunActive(record.run)) {
-      scheduleRunExecution(record.run.id);
+    const refreshedRun = await refreshPersistedRunFromBackend(
+      req,
+      runsById.get(normalizedRunId) || record,
+      normalizedRunId,
+    );
+    if (!durableExecutionEnabled && isEvaluationRunActive(refreshedRun)) {
+      scheduleRunExecution(refreshedRun.id);
     }
-    return (runsById.get(normalizedRunId) || record).run;
+    return refreshedRun;
   }
 
   async function wakeRunForService(req, runId) {

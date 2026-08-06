@@ -25,12 +25,19 @@ export const FILES_PAGE_FILESYSTEM_ACTIONS_SCRIPT = `
           setContextMenu({
             x: Math.max(12, x),
             y: Math.max(12, y),
+            anchorPoint: options.anchorPoint
+              ? {
+                  x: Number(options.anchorPoint.x || 0),
+                  y: Number(options.anchorPoint.y || 0),
+                }
+              : null,
             targetPath: targetEntry ? targetEntry.path : "",
             multiFileSelection: isMultiFileSelectionMenu,
+            popupVariant: options.popupVariant === "minimal" ? "minimal" : "default",
           });
         }
 
-        function handleEntryContextMenuButtonClick(entry, event) {
+        function handleEntryContextMenuButtonClick(entry, event, options = {}) {
           event.preventDefault();
           event.stopPropagation();
           const rect = event.currentTarget.getBoundingClientRect();
@@ -39,10 +46,17 @@ export const FILES_PAGE_FILESYSTEM_ACTIONS_SCRIPT = `
               selectTarget: false,
               multiFileSelection: true,
               alignRight: true,
+              popupVariant: options.popupVariant,
+              anchorPoint: { x: rect.right, y: rect.bottom },
             });
             return;
           }
-          openContextMenuAt(entry, rect.right, rect.bottom + 8, { selectTarget: false, alignRight: true });
+          openContextMenuAt(entry, rect.right, rect.bottom + 8, {
+            selectTarget: false,
+            alignRight: true,
+            popupVariant: options.popupVariant,
+            anchorPoint: { x: rect.right, y: rect.bottom },
+          });
         }
 
         function handleSearchResultSelect(entry) {
@@ -619,6 +633,8 @@ export const FILES_PAGE_FILESYSTEM_ACTIONS_SCRIPT = `
           : availableChangeActors.find((option) => option.id === changesActorFilter) || { id: changesActorFilter, label: "Contributor" };
         const activeSortOption = sortOptions.find((option) => option.id === sortMode) || sortOptions[0];
         const isChangesMode = contentMode === "changes";
+        const isConnectorsMode = contentMode === "connectors";
+        const isFilesMode = contentMode === "files";
         const hasActiveChangesFilters = changesOperationFilter !== "all" || changesActorFilter !== "__all__";
         const changesActorOptions = [
           {
@@ -690,6 +706,7 @@ export const FILES_PAGE_FILESYSTEM_ACTIONS_SCRIPT = `
           setProjectFilterScope("");
           setProjectFilterScopeLabel("");
           setFilesEnvironmentMenuMode("computers");
+          if (isConnectorsMode) setContentMode("files");
           setToolbarPopover("");
           applyFilesEnvironmentSelection(nextEnvironmentId);
         }

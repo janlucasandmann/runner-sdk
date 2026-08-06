@@ -40,11 +40,14 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
               return React.createElement("div", { className: "playground-team-role-assigned-shell" },
                 React.createElement("button", {
                   type: "button",
-                  className: "playground-team-badge playground-team-role-assigned-button" + (isOpen ? " is-open" : ""),
+                  className: "playground-team-role-assigned-button" + (isOpen ? " is-open" : ""),
                   onClick: () => setTeamPageRoleMembersPopover((current) => current === role.id ? "" : role.id),
                   "aria-haspopup": "dialog",
                   "aria-expanded": isOpen ? "true" : "false",
-                }, assignedCount + " assigned"),
+                }, React.createElement(PlatformLabel, {
+                  variant: "gray",
+                  className: "playground-team-role-assigned-label",
+                }, assignedCount + " assigned")),
                 isOpen ? renderAssignedUsersPopup(role) : null
               );
             };
@@ -54,7 +57,10 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
                   id: role.id,
                   label: role.label,
                   description: role.description,
-                  meta: getRoleRowCount(role.id) + " assigned",
+                  meta: React.createElement(PlatformLabel, {
+                    variant: "gray",
+                    className: "playground-team-role-assigned-label",
+                  }, getRoleRowCount(role.id) + " assigned"),
                 })),
                 value: selectedRoleDefinition.id,
                 onValueChange: (roleId) => {
@@ -86,6 +92,76 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
           const teamDetailName = String(selectedTeam?.name || "Team").trim() || "Team";
           const teamDetailProfileImageUrl = getTeamPageProfileImageUrl(selectedTeam);
           const teamDetailMemberCount = visibleTeamMembers.length;
+          const selectedTeamCreatorUserId = String(
+            selectedTeam?.createdByUserId
+            || selectedTeam?.created_by_user_id
+            || selectedTeam?.creatorUserId
+            || selectedTeam?.creator_user_id
+            || selectedTeam?.createdBy?.userId
+            || selectedTeam?.createdBy?.id
+            || selectedTeam?.creator?.userId
+            || selectedTeam?.creator?.id
+            || ""
+          ).trim();
+          const selectedTeamCreatorEmail = String(
+            selectedTeam?.createdByEmail
+            || selectedTeam?.created_by_email
+            || selectedTeam?.creatorEmail
+            || selectedTeam?.creator_email
+            || selectedTeam?.createdBy?.email
+            || selectedTeam?.creator?.email
+            || ""
+          ).trim().toLowerCase();
+          const selectedTeamCreatorRow = memberRows.find((row) => {
+            if (row?.kind !== "member") {
+              return false;
+            }
+            const memberUserId = getTeamMemberUserId(row.item);
+            const memberEmail = getTeamMemberEmail(row.item);
+            return Boolean(
+              (selectedTeamCreatorUserId && memberUserId && selectedTeamCreatorUserId === memberUserId)
+              || (selectedTeamCreatorEmail && memberEmail && selectedTeamCreatorEmail === memberEmail)
+            );
+          }) || null;
+          const selectedTeamCreatorIsCurrentUser = Boolean(
+            (selectedTeamCreatorUserId && selectedTeamCreatorUserId === String(sessionState.userId || "").trim())
+            || (selectedTeamCreatorEmail && selectedTeamCreatorEmail === String(accountEmail || sessionState.email || "").trim().toLowerCase())
+          );
+          const selectedTeamCreatorLabel = String(
+            selectedTeam?.createdByName
+            || selectedTeam?.created_by_name
+            || selectedTeam?.creatorName
+            || selectedTeam?.creator_name
+            || selectedTeam?.createdBy?.name
+            || selectedTeam?.createdBy?.displayName
+            || selectedTeam?.creator?.name
+            || selectedTeam?.creator?.displayName
+            || (selectedTeamCreatorRow ? getTeamMemberRowDisplayName(selectedTeamCreatorRow) : "")
+            || (selectedTeamCreatorIsCurrentUser ? getTrustedDisplayName(accountName, accountEmail) : "")
+            || selectedTeamCreatorEmail
+            || "Unknown"
+          ).trim() || "Unknown";
+          const rawSelectedTeamCreatorAvatarUrl = String(
+            selectedTeam?.createdByAvatarUrl
+            || selectedTeam?.createdByPhotoUrl
+            || selectedTeam?.createdByPhotoURL
+            || selectedTeam?.creatorAvatarUrl
+            || selectedTeam?.creatorPhotoUrl
+            || selectedTeam?.creatorPhotoURL
+            || selectedTeam?.createdBy?.avatarUrl
+            || selectedTeam?.createdBy?.photoUrl
+            || selectedTeam?.createdBy?.photoURL
+            || selectedTeam?.creator?.avatarUrl
+            || selectedTeam?.creator?.photoUrl
+            || selectedTeam?.creator?.photoURL
+            || (selectedTeamCreatorRow ? getTeamMemberAvatarUrl(selectedTeamCreatorRow.item, false) : "")
+            || (selectedTeamCreatorIsCurrentUser ? accountAvatarUrl : "")
+            || ""
+          ).trim();
+          const normalizedSelectedTeamCreatorAvatarUrl = normalizeSessionPhotoUrl(rawSelectedTeamCreatorAvatarUrl);
+          const selectedTeamCreatorAvatarUrl = canRenderAvatarImage(normalizedSelectedTeamCreatorAvatarUrl)
+            ? normalizedSelectedTeamCreatorAvatarUrl
+            : "";
           const currentUserIsTeamOwner = currentMemberRoleId === "owner"
             || Boolean(currentMember && isTeamOwnerMember(currentMember, false));
           const teamOwnerCandidateRows = memberRows.filter((row) => {
@@ -171,27 +247,26 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
             popupClassName: "playground-agents-detail-owner-menu playground-team-detail-owner-popup",
             optionClassName: "playground-agents-detail-owner-option playground-team-detail-owner-option",
           });
+          const teamCreatorValue = React.createElement("span", {
+              className: "playground-team-member-cell playground-team-detail-creator",
+            },
+            React.createElement(AccountAvatar, {
+              className: "playground-team-member-avatar playground-team-detail-creator-avatar",
+              imageClassName: "playground-team-member-avatar-image",
+              fallbackLabel: getAccountInitials(selectedTeamCreatorLabel),
+              photoUrl: selectedTeamCreatorAvatarUrl,
+            }),
+            React.createElement("span", { className: "playground-team-table-title" }, selectedTeamCreatorLabel)
+          );
           const renderTeamSidebarFact = (label, value, options = {}) => React.createElement("div", {
               className: "playground-team-detail-sidebar-fact" + (options.isOwner ? " is-owner" : ""),
             },
             React.createElement("span", { className: "playground-team-detail-sidebar-fact-label" }, label),
             React.createElement("span", {
               className: "playground-team-detail-sidebar-fact-value",
-              title: options.title || String(value || ""),
+              title: options.title || (typeof value === "string" ? value : ""),
             }, value)
           );
-          const renderTeamSidebarAction = (label, icon, onClick, options = {}) =>
-            React.createElement(PlatformSecondaryButton, {
-                key: label,
-                size: "small",
-                fullWidth: true,
-                className: "playground-team-detail-sidebar-action",
-                onClick,
-                disabled: Boolean(options.disabled),
-              },
-              icon,
-              React.createElement("span", null, label)
-            );
           const teamDetailHeader = selectedTeam
             ? React.createElement("div", { className: "playground-agents-profile-section playground-team-detail-profile-section" },
                 React.createElement(PlatformProfileImagePicker, {
@@ -215,7 +290,7 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
                 )
               )
             : null;
-          const teamDetailAppHeaderActions = canManageTeam
+          const teamDetailAddResourceAction = canManageTeam
             ? React.createElement(PlatformButtonSelector, {
                 mode: "popup",
                 buttonVariant: "primary",
@@ -257,7 +332,9 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
               })
             )
             : null;
-          const teamDetailSidebarToggle = React.createElement("button", {
+          const teamDetailSidebarToggle = ["resources", "roles"].includes(normalizedTeamDetailTab)
+            ? null
+            : React.createElement("button", {
               type: "button",
               className: "playground-project-overview-sidebar-toggle",
               onClick: () => setTeamPageDetailSidebarCollapsed((current) => !current),
@@ -267,47 +344,35 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
             },
             React.createElement(PanelRight, { width: 15, height: 15, strokeWidth: 1.8 })
           );
+          const teamDetailAppHeaderActions = React.createElement(React.Fragment, null,
+            teamDetailAddResourceAction,
+            teamDetailSidebarToggle
+          );
           const teamDetailSidebar = selectedTeam
-            ? React.createElement(React.Fragment, null,
-                React.createElement(PlatformUiCard, {
+            ? React.createElement(PlatformUiCard, {
                     variant: "sidebar",
-                    cardTitle: "About",
+                    cardTitle: "Details",
                     className: "playground-team-detail-sidebar-card",
                   },
                   React.createElement("div", { className: "playground-team-detail-sidebar-facts" },
                     renderTeamSidebarFact("Team ID", selectedTeam.id || "-"),
                     renderTeamSidebarFact("Members", String(teamDetailMemberCount)),
                     renderTeamSidebarFact("Created", selectedTeam.createdAt ? formatDate(selectedTeam.createdAt) : "-"),
+                    renderTeamSidebarFact("Creator", teamCreatorValue, { title: selectedTeamCreatorLabel }),
                     React.createElement("div", { className: "playground-team-detail-sidebar-fact playground-team-detail-sidebar-owner-row" },
                       React.createElement("span", { className: "playground-team-detail-sidebar-fact-label" }, "Owner"),
                       React.createElement("div", { className: "playground-team-detail-sidebar-owner-cell" }, teamOwnerSelector)
-                    )
-                  )
-                ),
-                React.createElement(PlatformUiCard, {
-                    variant: "sidebar",
-                    cardTitle: "Actions",
-                    className: "playground-team-detail-sidebar-card",
-                  },
-                  React.createElement("div", { className: "playground-team-detail-sidebar-actions" },
-                    renderTeamSidebarAction(
-                      "Invite Member",
-                      React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      () => setTeamPageInviteModalOpen(true),
-                      { disabled: !canManageTeam }
                     ),
-                    renderTeamSidebarAction(
-                      "Edit Team",
-                      React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      () => {
-                        setTeamPageRenameName(teamDetailName);
-                        setTeamPageRenameModalOpen(true);
-                      },
-                      { disabled: !canManageTeam }
-                    )
+                    React.createElement(PlatformPrimaryButton, {
+                      type: "button",
+                      size: "small",
+                      fullWidth: true,
+                      className: "playground-team-detail-invite-button",
+                      onClick: () => setTeamPageInviteModalOpen(true),
+                      disabled: !canManageTeam,
+                    }, "Invite Member")
                   )
                 )
-              )
             : null;
           const teamDetailContent = normalizedTeamDetailTab === "resources"
             ? renderResourcesTab()
@@ -327,10 +392,8 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
                         header: teamDetailHeader,
                         appHeaderActions: teamDetailAppHeaderActions,
                         appHeaderActionsPortalId: "playground-team-detail-controls",
-                        sidebarToggle: teamDetailSidebarToggle,
                         sidebar: teamDetailSidebar,
                         activeTab: normalizedTeamDetailTab,
-                        onTabChange: (tab) => setTeamPageActiveTab(tab),
                         sidebarCollapsed: teamPageDetailSidebarCollapsed,
                       },
                       teamPageError

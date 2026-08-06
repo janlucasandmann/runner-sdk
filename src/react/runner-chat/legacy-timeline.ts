@@ -37,6 +37,33 @@ export type RunnerTurnTimelineState = {
   displayedTimelineItems: RunnerTimelineItem[];
 };
 
+const RUNNER_TIMELINE_TOOL_CALL_EVENT_TYPES = new Set([
+  "command_execution",
+  "mcp_tool_call",
+  "mcp_log",
+  "file_change",
+  "todo_list",
+  "deep_research",
+  "subagent_invocation",
+]);
+
+export function isRunnerTimelineToolCallItem(item: RunnerTimelineItem): boolean {
+  if (item.kind !== "log") {
+    return true;
+  }
+  const log = item.log;
+  if (
+    log.eventType === "reasoning"
+    || log.eventType === "planning"
+    || log.isReasoning
+    || log.isPlanning
+  ) {
+    return false;
+  }
+  return RUNNER_TIMELINE_TOOL_CALL_EVENT_TYPES.has(String(log.eventType || ""))
+    || Boolean(log.metadata?.toolName || log.metadata?.toolId || log.metadata?.isToolStarted);
+}
+
 export function stepRowKey(turnId: string, index: number, log: RunnerLog): string {
   return `${turnId}-${index}-${log.eventType || "log"}-${(log.message || "").slice(0, 24)}`;
 }

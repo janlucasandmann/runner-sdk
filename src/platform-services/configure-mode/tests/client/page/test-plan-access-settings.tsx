@@ -20,7 +20,7 @@ import type { PlatformPermissionSet } from "../../../../../platform-ui/pages/per
 import type { TestsApi } from "../api/index.js";
 import type { TestPlan } from "../domain/index.js";
 
-interface TestAccessTeam extends PlatformAccessPrincipal {
+export interface TestAccessTeam extends PlatformAccessPrincipal {
   roleId: string;
 }
 
@@ -38,25 +38,61 @@ function asRecord(value: unknown): Record<string, unknown> {
     : {};
 }
 
-function normalizeTeam(value: unknown): TestAccessTeam | null {
+export function normalizeTestAccessTeam(value: unknown): TestAccessTeam | null {
   const source = asRecord(value);
+  const metadata = asRecord(source.metadata);
+  const profile = asRecord(metadata.profile);
   const id = String(source.id || source.teamId || source.team_id || "").trim();
   if (!id) return null;
   const name = String(source.name || source.title || source.label || "Team").trim();
+  const rawRoleId = String(
+    source.roleId
+    || source.role
+    || source.memberRole
+    || source.member_role
+    || source.membershipRole
+    || source.membership_role
+    || source.currentUserRole
+    || source.current_user_role
+    || source.viewerRole
+    || source.viewer_role
+    || source.myRole
+    || source.my_role
+    || "admin",
+  ).trim().toLowerCase();
+  const roleId = ({
+    administrator: "admin",
+    manage: "admin",
+  } as Record<string, string>)[rawRoleId] || rawRoleId;
   return {
     id,
     name,
     kind: "team",
     description: String(source.description || "").trim(),
-    roleId: String(source.roleId || source.role || source.memberRole || "member")
-      .trim()
-      .toLowerCase(),
-    roleLabel: String(source.roleLabel || source.role || "Member").trim(),
+    roleId,
+    roleLabel: String(
+      source.roleLabel
+      || source.role_label
+      || (roleId ? roleId.charAt(0).toUpperCase() + roleId.slice(1) : "Team"),
+    ).trim(),
     createdAt: String(source.createdAt || source.created_at || "").trim(),
     profileImageUrl: String(
       source.profileImageUrl
+      || source.profile_image_url
       || source.avatarUrl
+      || source.avatar_url
       || source.imageUrl
+      || source.image_url
+      || source.photoURL
+      || source.photoUrl
+      || profile.photoURL
+      || profile.photoUrl
+      || profile.imageUrl
+      || profile.image_url
+      || metadata.profileImageUrl
+      || metadata.profile_image_url
+      || metadata.avatarUrl
+      || metadata.avatar_url
       || "",
     ).trim(),
   };
@@ -79,7 +115,9 @@ export function TestPlanAccessSettings({
     [metadata],
   );
   const allTeams = useMemo(
-    () => workspaceTeams.map(normalizeTeam).filter((team): team is TestAccessTeam => Boolean(team)),
+    () => workspaceTeams
+      .map(normalizeTestAccessTeam)
+      .filter((team): team is TestAccessTeam => Boolean(team)),
     [workspaceTeams],
   );
   const sharedTeams = useMemo(

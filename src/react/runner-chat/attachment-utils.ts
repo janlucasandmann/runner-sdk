@@ -364,6 +364,12 @@ export function isAttachmentDocumentPreviewable(
     return true;
   }
   if (
+    attachment.previewKindOverride === "connector-action" &&
+    attachment.connectorActionPreview
+  ) {
+    return true;
+  }
+  if (
     attachment.previewKindOverride === "image-generation-prompt" &&
     attachment.imageGenerationPromptPreview
   ) {

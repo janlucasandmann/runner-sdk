@@ -1,4 +1,5 @@
 export * from "./agents-list-log-box.js";
+export * from "./atlassian-activity-view.js";
 export * from "./environments-list-log-box.js";
 export * from "./git-commit-log-box.js";
 export * from "./git-diff-log-box.js";

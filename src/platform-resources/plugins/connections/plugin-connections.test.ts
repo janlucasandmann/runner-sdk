@@ -127,6 +127,50 @@ describe("plugin connection registry", () => {
     }
   });
 
+  it("force-refreshes stale connector status and replaces the shared cache", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ connected: false, credentials: [] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            connected: true,
+            credentials: [{ id: "box-work", name: "Work Box" }],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+    vi.stubGlobal("fetch", request);
+    try {
+      const initial = await fetchPlatformPluginConnectionStatus("box", {
+        organizationId: "organization-force-refresh",
+      });
+      const cached = await fetchPlatformPluginConnectionStatus("box", {
+        organizationId: "organization-force-refresh",
+      });
+      const refreshed = await fetchPlatformPluginConnectionStatus("box", {
+        organizationId: "organization-force-refresh",
+        forceRefresh: true,
+      });
+      const refreshedCache = await fetchPlatformPluginConnectionStatus("box", {
+        organizationId: "organization-force-refresh",
+      });
+
+      expect(initial.connected).toBe(false);
+      expect(cached.connected).toBe(false);
+      expect(refreshed.connected).toBe(true);
+      expect(refreshedCache.connected).toBe(true);
+      expect(request).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("starts and disconnects providers through the registered endpoints", async () => {
     const request = vi
       .fn()

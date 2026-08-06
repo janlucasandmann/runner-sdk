@@ -89,18 +89,26 @@
               return "";
             }
           });
-          const [sessionState, setSessionState] = useState({
-            status: isDemoMode ? "unauthenticated" : "loading",
-            userId: "",
-            email: isDemoMode ? "demo@computer-agents.com" : "",
-            projectId: "",
-            displayName: isDemoMode ? "ACP Demo Workspace" : "",
-            photoURL: "",
-            emailVerified: false,
-            subscriptionTier: isDemoMode ? "enterprise" : "",
-            subscriptionStatus: isDemoMode ? "active" : "",
-            onboardingCompleted: null,
-            error: "",
+          const [sessionState, setSessionState] = useState(() => {
+            if (!isDemoMode) {
+              const cachedSession = readPlaygroundAuthSessionSnapshot();
+              if (cachedSession) {
+                return cachedSession;
+              }
+            }
+            return {
+              status: isDemoMode ? "unauthenticated" : "loading",
+              userId: "",
+              email: isDemoMode ? "demo@computer-agents.com" : "",
+              projectId: "",
+              displayName: isDemoMode ? "ACP Demo Workspace" : "",
+              photoURL: "",
+              emailVerified: false,
+              subscriptionTier: isDemoMode ? "enterprise" : "",
+              subscriptionStatus: isDemoMode ? "active" : "",
+              onboardingCompleted: null,
+              error: "",
+            };
           });
           const [platformAuthForm, setPlatformAuthForm] = useState({
             email: "",
@@ -276,7 +284,6 @@
   ${SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.state}
           ${PLAN_GATE_APP_SCRIPT_FRAGMENTS.state}
           const [contentMode, setContentMode] = useState("chat");
-          const [threadActivityHierarchyLevel, setThreadActivityHierarchyLevel] = useState("groups");
           const [changesNavigationTarget, setChangesNavigationTarget] = useState(null);
           const [threadExecutionWorkbenchOpen, setThreadExecutionWorkbenchOpen] = useState(false);
           const [threadExecutionWorkbenchAvailable, setThreadExecutionWorkbenchAvailable] = useState(false);
@@ -532,6 +539,7 @@
   ${INFERENCE_APP_SCRIPT_FRAGMENTS.refs}        const authRedirectStartedRef = useRef(false);
           const hasAuthenticatedSessionThisMountRef = useRef(false);
           const explicitSignOutInProgressRef = useRef(false);
+          const sessionRefreshGenerationRef = useRef(0);
           const sessionBudgetSyncKeyRef = useRef("");
           const demoReadyAnnouncedRef = useRef(false);
           const connectorBrowserRestoreScheduledKeyRef = useRef("");
@@ -603,6 +611,10 @@
   ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.requestScope}        const requestHeaders = useMemo(() => {
             return authRequestHeaders;
           }, [authRequestHeaders]);
+          const resolveRunnerRequestHeaders = useCallback(
+            () => buildRunnerAuthenticatedRequestHeaders(authRequestHeaders),
+            [authRequestHeaders],
+          );
           const requestHeadersSignature = useMemo(() => (
             Object.keys(requestHeaders || {})
               .sort()
@@ -634,11 +646,16 @@
             : String(effectiveApiKey || "").trim();
           useEffect(() => {
             if (!hasRealAccess) return undefined;
-            const preloadTimer = window.setTimeout(() => {
+            const preloadDatabaseList = () => {
               void fetchPlaygroundDatabaseList(proxyBackendBase, authRequestHeaders, {
                 identity: databaseListIdentity,
               }).catch(() => {});
-            }, 0);
+            };
+            if (typeof window.requestIdleCallback === "function") {
+              const idleCallback = window.requestIdleCallback(preloadDatabaseList, { timeout: 2500 });
+              return () => window.cancelIdleCallback(idleCallback);
+            }
+            const preloadTimer = window.setTimeout(preloadDatabaseList, 1500);
             return () => window.clearTimeout(preloadTimer);
           }, [authRequestHeaders, databaseListIdentity, hasRealAccess, proxyBackendBase]);
   ${INFERENCE_APP_SCRIPT_FRAGMENTS.runtimeLifecycle}${MODELS_APP_SCRIPT_FRAGMENTS.catalogLifecycle}        const activeProjectId = projectId.trim() || sessionState.projectId || "";
@@ -1144,6 +1161,7 @@
   
             authRedirectStartedRef.current = true;
             clearPlaygroundAuthSessionMarker();
+            clearPlaygroundAuthSessionSnapshot();
             clearPlaygroundAuthRedirectState();
             try {
               localStorage.removeItem("runner_demo_api_key");
@@ -1183,17 +1201,21 @@
           }
   
           async function handleSignOutFromComputerAgents() {
+            sessionRefreshGenerationRef.current += 1;
             explicitSignOutInProgressRef.current = true;
             authRedirectStartedRef.current = true;
             clearPlaygroundAuthRedirectState();
             clearPlaygroundAuthSessionMarker();
+            clearPlaygroundAuthSessionSnapshot();
             setPlatformAuthBusy("signout");
             setPlatformAuthError("");
             try {
               if (PLATFORM_IDENTITY_PROVIDER === "firebase") {
-                const auth = await ensurePlaygroundFirebaseAuth();
-                if (auth) {
-                  await signOutFirebaseAuth(auth).catch(() => {});
+                const firebaseAuthContext = await ensurePlaygroundFirebaseAuthContext();
+                if (firebaseAuthContext?.auth) {
+                  await firebaseAuthContext.firebaseBrowserModule
+                    .signOutFirebaseAuth(firebaseAuthContext.auth)
+                    .catch(() => {});
                 }
               }
             } finally {
@@ -2536,6 +2558,8 @@
           }
   
           const refreshSessionState = useCallback(async function refreshSessionState() {
+            const sessionRefreshGeneration = sessionRefreshGenerationRef.current + 1;
+            sessionRefreshGenerationRef.current = sessionRefreshGeneration;
             if (isDemoMode) {
               setSessionStreamingConfig({
                 status: "idle",
@@ -2561,7 +2585,10 @@
   
             setSessionState((current) => ({
               ...current,
-              status: "loading",
+              // A recently verified, tab-scoped snapshot keeps the shell
+              // visible during revalidation. First visits still use the
+              // loading gate until the server verifies the session.
+              status: current.status === "authenticated" ? "authenticated" : "loading",
               error: "",
             }));
             setSessionStreamingConfig((current) => ({
@@ -2571,37 +2598,28 @@
             }));
   
             let firebaseIdentity = null;
-            try {
+            const loadFirebaseIdentityFallback = async () => {
+              if (firebaseIdentity) {
+                return firebaseIdentity;
+              }
               try {
-                await syncFirebaseSessionCookieFromCurrentUser(false);
                 firebaseIdentity = await lookupFirebaseSessionIdentity();
               } catch {
                 firebaseIdentity = null;
               }
-  
-              if (firebaseIdentity) {
-                setSessionState((current) => ({
-                  ...current,
-                  userId: firebaseIdentity.userId || current.userId || "",
-                  email: firebaseIdentity.email || current.email || "",
-                  projectId: current.projectId || "",
-                  displayName: firebaseIdentity.displayName || current.displayName || "",
-                  photoURL: firebaseIdentity.photoURL || current.photoURL || "",
-                  emailVerified:
-                    typeof firebaseIdentity.emailVerified === "boolean"
-                      ? firebaseIdentity.emailVerified
-                      : current.emailVerified,
-                  subscriptionTier: current.subscriptionTier || "sandbox",
-                  subscriptionStatus: current.subscriptionStatus || "",
-                  error: "",
-                }));
-              }
-  
-              const loadSession = () => fetchJsonWithTimeout("/api/aios/user/session", {
+              return firebaseIdentity;
+            };
+            try {
+              // The profile is the only prerequisite for revealing the shell.
+              // Runner access and billing hydrate independently after this
+              // request so an upstream provisioning delay cannot hold the
+              // entire application behind the full-screen loading state.
+              const loadSession = () => fetchJsonWithTimeout("/api/aios/user/profile", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
-              }, 20000);
+                priority: "high",
+              }, 10000);
   
               let { response, data } = await loadSession();
   
@@ -2620,13 +2638,31 @@
               }
   
               if (!response.ok) {
+                firebaseIdentity = await loadFirebaseIdentityFallback();
                 if (firebaseIdentity) {
                   setSessionStreamingConfig({
-                    status: "idle",
+                    status: "error",
                     apiKey: "",
                     backendUrl: "",
-                    error: "",
+                    error: data.message || data.error || "Failed to load runner access.",
                   });
+                  setSessionState((current) => ({
+                    ...current,
+                    status: "authenticated",
+                    userId: firebaseIdentity.userId || current.userId || "",
+                    email: firebaseIdentity.email || current.email || "",
+                    projectId: current.projectId || "",
+                    displayName: firebaseIdentity.displayName || current.displayName || "",
+                    photoURL: firebaseIdentity.photoURL || current.photoURL || "",
+                    emailVerified:
+                      typeof firebaseIdentity.emailVerified === "boolean"
+                        ? firebaseIdentity.emailVerified
+                        : current.emailVerified,
+                    subscriptionTier: current.subscriptionTier || "sandbox",
+                    subscriptionStatus: current.subscriptionStatus || "",
+                    onboardingCompleted: current.onboardingCompleted,
+                    error: "",
+                  }));
                   return;
                 }
                 setSessionStreamingConfig({
@@ -2635,136 +2671,86 @@
                   backendUrl: "",
                   error: data.message || data.error || "Failed to load runner access.",
                 });
-                setSessionState({
-                  status: "error",
-                  userId: "",
-                  email: "",
-                  projectId: "",
-                  displayName: "",
-                  photoURL: "",
-                  emailVerified: false,
-                  subscriptionTier: "sandbox",
-                  subscriptionStatus: "",
-                  onboardingCompleted: null,
-                  error: data.message || data.error || "Failed to load account session.",
-                });
+                const profileError = data.message || data.error || "Failed to load account session.";
+                setSessionState((current) => current.status === "authenticated" && current.userId
+                  ? { ...current, error: profileError }
+                  : {
+                      status: "error",
+                      userId: "",
+                      email: "",
+                      projectId: "",
+                      displayName: "",
+                      photoURL: "",
+                      emailVerified: false,
+                      subscriptionTier: "sandbox",
+                      subscriptionStatus: "",
+                      onboardingCompleted: null,
+                      error: profileError,
+                    });
                 return;
               }
   
-              const sessionBootstrapData = data && typeof data === "object" && !Array.isArray(data) ? data : {};
-              const sessionProfileData = sessionBootstrapData.profile && typeof sessionBootstrapData.profile === "object" && !Array.isArray(sessionBootstrapData.profile)
-                ? sessionBootstrapData.profile
-                : sessionBootstrapData;
-              const sessionStreamingData = sessionBootstrapData.profile && sessionBootstrapData.streaming && typeof sessionBootstrapData.streaming === "object" && !Array.isArray(sessionBootstrapData.streaming)
-                ? sessionBootstrapData.streaming
-                : null;
-              const sessionStreamingOk = Boolean(sessionBootstrapData.profile && sessionBootstrapData.streamingOk);
-              data = sessionProfileData;
-  
               const payloadIdentity = extractSessionIdentityFromPayload(data);
-              let nextStreamingConfig = {
-                status: "error",
-                apiKey: "",
-                backendUrl: "",
-                error: "Failed to load runner access.",
+              const nextSessionState = {
+                status: "authenticated",
+                userId: typeof data.userId === "string" ? data.userId : "",
+                email: payloadIdentity.email || "",
+                projectId: typeof data.profile?.projectId === "string" ? data.profile.projectId : "",
+                displayName: payloadIdentity.displayName || "",
+                photoURL: payloadIdentity.photoURL || "",
+                emailVerified: typeof payloadIdentity.emailVerified === "boolean"
+                  ? payloadIdentity.emailVerified
+                  : !!data.emailVerified,
+                subscriptionTier: typeof data.subscription?.tier === "string" ? data.subscription.tier : "sandbox",
+                subscriptionStatus: typeof data.subscription?.status === "string" ? data.subscription.status : "",
+                onboardingCompleted: typeof data?.onboardingCompleted === "boolean" ? data.onboardingCompleted : null,
+                error: "",
               };
-              try {
-                let streamingData = sessionStreamingData;
-                let streamingResponseOk = sessionStreamingOk;
-                if (!streamingData) {
+              writePlaygroundAuthSessionSnapshot(nextSessionState);
+              setSessionState(nextSessionState);
+
+              void (async () => {
+                let nextStreamingConfig;
+                try {
                   const streamingResult = await fetchJsonWithTimeout("/api/aios/user/streaming-key", {
                     method: "GET",
                     credentials: "include",
                     cache: "no-store",
+                    priority: "low",
                   }, 15000);
-                  streamingData = streamingResult.data;
-                  streamingResponseOk = streamingResult.response.ok;
-                }
-  
-                if (!streamingResponseOk) {
-                  throw new Error(streamingData?.message || streamingData?.error || "Failed to load runner access.");
-                }
-  
-                const nextApiKey = typeof streamingData?.apiKey === "string" ? streamingData.apiKey.trim() : "";
-                const nextBackendUrl = typeof streamingData?.backendUrl === "string" ? streamingData.backendUrl.trim() : "";
-                if (!nextApiKey) {
-                  throw new Error("Failed to load runner access.");
-                }
-  
-                nextStreamingConfig = {
-                  status: "ready",
-                  apiKey: nextApiKey,
-                  backendUrl: nextBackendUrl,
-                  error: "",
-                };
-              } catch (streamingError) {
-                nextStreamingConfig = {
-                  status: "error",
-                  apiKey: "",
-                  backendUrl: "",
-                  error: streamingError instanceof Error ? streamingError.message : "Failed to load runner access.",
-                };
-              }
-  
-              setSessionStreamingConfig(nextStreamingConfig);
-  
-              let resolvedSubscriptionTier = typeof data.subscription?.tier === "string" ? data.subscription.tier : "sandbox";
-              let resolvedSubscriptionStatus = typeof data.subscription?.status === "string" ? data.subscription.status : "";
-              try {
-                const budgetHeaders = {
-                  ...(nextStreamingConfig.status === "ready" && nextStreamingConfig.apiKey
-                    ? { "X-API-Key": nextStreamingConfig.apiKey }
-                    : {}),
-                  "X-Runner-Upstream-Url": resolvedUpstreamUrl,
-                };
-                const budgetResponse = await fetch(proxyBackendBase + "/billing/budget", {
-                  method: "GET",
-                  credentials: "include",
-                  cache: "no-store",
-                  headers: budgetHeaders,
-                });
-                const budgetData = await budgetResponse.json().catch(() => ({}));
-                if (budgetResponse.ok) {
-                  setSettingsBudgetStatus(budgetData);
-                  sessionBudgetSyncKeyRef.current = [
-                    typeof data.userId === "string" ? data.userId : "",
-                    nextStreamingConfig.status === "ready" && nextStreamingConfig.apiKey
-                      ? nextStreamingConfig.apiKey
-                      : SESSION_API_KEY_SENTINEL,
-                    resolvedUpstreamUrl,
-                  ].join(":");
-                  const resolvedBudgetPlanId = String(
-                    budgetData?.planId
-                    || budgetData?.organizationPlan?.id
-                    || budgetData?.tier
-                    || ""
-                  ).trim();
-                  if (resolvedBudgetPlanId) {
-                    resolvedSubscriptionTier = resolvedBudgetPlanId;
+                  const streamingData = streamingResult.data;
+                  if (isUnauthorizedStatus(streamingResult.response.status)) {
+                    triggerPlatformSessionRecovery();
+                    return;
                   }
-                  if (typeof budgetData?.subscriptionStatus === "string") {
-                    resolvedSubscriptionStatus = budgetData.subscriptionStatus;
+                  if (!streamingResult.response.ok) {
+                    throw new Error(streamingData?.message || streamingData?.error || "Failed to load runner access.");
                   }
+                  const nextApiKey = typeof streamingData?.apiKey === "string" ? streamingData.apiKey.trim() : "";
+                  const nextBackendUrl = typeof streamingData?.backendUrl === "string" ? streamingData.backendUrl.trim() : "";
+                  if (!nextApiKey) {
+                    throw new Error("Failed to load runner access.");
+                  }
+                  nextStreamingConfig = {
+                    status: "ready",
+                    apiKey: nextApiKey,
+                    backendUrl: nextBackendUrl,
+                    error: "",
+                  };
+                } catch (streamingError) {
+                  nextStreamingConfig = {
+                    status: "error",
+                    apiKey: "",
+                    backendUrl: "",
+                    error: streamingError instanceof Error ? streamingError.message : "Failed to load runner access.",
+                  };
                 }
-              } catch {}
-  
-              setSessionState({
-                status: "authenticated",
-                userId: typeof data.userId === "string" ? data.userId : "",
-                email: firebaseIdentity?.email || payloadIdentity.email || "",
-                projectId: typeof data.profile?.projectId === "string" ? data.profile.projectId : "",
-                displayName: firebaseIdentity?.displayName || payloadIdentity.displayName || "",
-                photoURL: firebaseIdentity?.photoURL || payloadIdentity.photoURL || "",
-                emailVerified:
-                  typeof firebaseIdentity?.emailVerified === "boolean"
-                    ? firebaseIdentity.emailVerified
-                    : (typeof payloadIdentity.emailVerified === "boolean" ? payloadIdentity.emailVerified : !!data.emailVerified),
-                subscriptionTier: resolvedSubscriptionTier,
-                subscriptionStatus: resolvedSubscriptionStatus,
-                onboardingCompleted: typeof data?.onboardingCompleted === "boolean" ? data.onboardingCompleted : null,
-                error: "",
-              });
+                if (sessionRefreshGenerationRef.current === sessionRefreshGeneration) {
+                  setSessionStreamingConfig(nextStreamingConfig);
+                }
+              })();
             } catch (error) {
+              firebaseIdentity = await loadFirebaseIdentityFallback();
               const fallbackErrorMessage = error && typeof error === "object" && error.name === "AbortError"
                 ? "Session check timed out. Retry or sign in again."
                 : (error instanceof Error ? error.message : "Failed to load account session.");
@@ -2802,19 +2788,21 @@
                 backendUrl: "",
                 error: fallbackErrorMessage,
               });
-              setSessionState({
-                status: "error",
-                userId: "",
-                email: "",
-                projectId: "",
-                displayName: "",
-                photoURL: "",
-                emailVerified: false,
-                subscriptionTier: "sandbox",
-                subscriptionStatus: "",
-                onboardingCompleted: null,
-                error: fallbackErrorMessage,
-              });
+              setSessionState((current) => current.status === "authenticated" && current.userId
+                ? { ...current, error: fallbackErrorMessage }
+                : {
+                    status: "error",
+                    userId: "",
+                    email: "",
+                    projectId: "",
+                    displayName: "",
+                    photoURL: "",
+                    emailVerified: false,
+                    subscriptionTier: "sandbox",
+                    subscriptionStatus: "",
+                    onboardingCompleted: null,
+                    error: fallbackErrorMessage,
+                  });
             }
           }, [isDemoMode, triggerPlatformSessionRecovery]);
   
@@ -2876,12 +2864,14 @@
             let unsubscribe = () => {};
   
             void (async () => {
-              const auth = await ensurePlaygroundFirebaseAuth();
-              if (!auth || disposed) {
+              const firebaseAuthContext = await ensurePlaygroundFirebaseAuthContext();
+              if (!firebaseAuthContext?.auth || disposed) {
                 return;
               }
   
-              unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
+              unsubscribe = firebaseAuthContext.firebaseBrowserModule.onIdTokenChanged(
+                firebaseAuthContext.auth,
+                async (currentUser) => {
                 if (disposed) {
                   return;
                 }
@@ -2895,7 +2885,8 @@
                     writeFirebaseSessionCookie(idToken);
                   }
                 } catch {}
-              });
+                },
+              );
             })();
   
             return () => {
@@ -2922,11 +2913,12 @@
             setPlatformAuthBusy("password");
             setPlatformAuthError("");
             try {
-              const auth = await ensurePlaygroundFirebaseAuth();
-              if (!auth) {
+              const firebaseAuthContext = await ensurePlaygroundFirebaseAuthContext();
+              if (!firebaseAuthContext?.auth) {
                 throw new Error("Firebase authentication is not configured for this environment.");
               }
-              const result = await signInWithEmailAndPassword(auth, email, password);
+              const result = await firebaseAuthContext.firebaseBrowserModule
+                .signInWithEmailAndPassword(firebaseAuthContext.auth, email, password);
               const idToken = await result.user.getIdToken(true);
               writeFirebaseSessionCookie(idToken);
               clearPlaygroundAuthRedirectState();
@@ -2952,12 +2944,13 @@
             setPlatformAuthBusy("google");
             setPlatformAuthError("");
             try {
-              const auth = await ensurePlaygroundFirebaseAuth();
-              if (!auth) {
+              const firebaseAuthContext = await ensurePlaygroundFirebaseAuthContext();
+              if (!firebaseAuthContext?.auth) {
                 throw new Error("Firebase authentication is not configured for this environment.");
               }
-              const provider = new GoogleAuthProvider();
-              const result = await signInWithPopup(auth, provider);
+              const provider = new firebaseAuthContext.firebaseBrowserModule.GoogleAuthProvider();
+              const result = await firebaseAuthContext.firebaseBrowserModule
+                .signInWithPopup(firebaseAuthContext.auth, provider);
               const idToken = await result.user.getIdToken(true);
               writeFirebaseSessionCookie(idToken);
               clearPlaygroundAuthRedirectState();
@@ -2993,6 +2986,7 @@
             try {
               setStatus(await fetchPlatformPluginConnectionStatus(provider, {
                 ...(organizationId ? { organizationId } : {}),
+                ...(options.forceRefresh ? { forceRefresh: true } : {}),
               }));
             } catch {
               setStatus({ connected: false });
@@ -3161,15 +3155,15 @@
           function isConnectorStatusConnected(provider) {
             return Boolean(getConnectorStatusRecord(provider)?.connected);
           }
-  
+
           function refreshConnectorStatusAfterRedirect(provider) {
             const refreshStatus = getConnectorStatusRefresh(provider);
             if (typeof refreshStatus !== "function") {
               return;
             }
-            void refreshStatus({ clearPendingOnFailure: true });
+            void refreshStatus({ clearPendingOnFailure: true, forceRefresh: true });
             window.setTimeout(() => {
-              void refreshStatus();
+              void refreshStatus({ forceRefresh: true });
             }, 900);
           }
   
@@ -5639,7 +5633,12 @@
           }, [isDemoMode, refreshSessionState]);
   
           useEffect(() => {
-            if (!hasRealAccess || sessionState.status !== "authenticated" || !sessionState.userId) {
+            if (
+              !hasRealAccess
+              || sessionState.status !== "authenticated"
+              || !sessionState.userId
+              || sessionStreamingConfig.status === "loading"
+            ) {
               if (sessionState.status !== "authenticated") {
                 sessionBudgetSyncKeyRef.current = "";
               }
@@ -5663,11 +5662,12 @@
             hasRealAccess,
             refreshSessionBudgetStatus,
             resolvedUpstreamUrl,
+            sessionStreamingConfig.status,
             sessionState.status,
             sessionState.userId,
           ]);
   
-          useEffect(() => {
+          useLayoutEffect(() => {
             const urlConnectorRestoreState = consumePlaygroundConnectorBrowserRestoreUrlState();
             const connectorAuthReturnState = consumePlaygroundPluginConnectionReturnUrlState();
             persistPlaygroundConnectorAuthReturnState(connectorAuthReturnState);
@@ -5691,9 +5691,8 @@
             if (projectComposerConnectorRestoreState && isConnectorStatusConnected(projectComposerConnectorRestoreState.provider)) {
               scheduleProjectComposerConnectorBrowserRestore(projectComposerConnectorRestoreState);
             }
-            const integrationSourcesToRefresh = PLAYGROUND_TASK_CONNECTOR_OPTIONS
-              .map((option) => option.source)
-              .concat("gmail", "jira");
+            if (connectorAuthReturnState) restoreTagPluginConnectionReturnTarget(connectorAuthReturnState);
+            const integrationSourcesToRefresh = listManagedConnectorStatusProviderIds();
             integrationSourcesToRefresh.forEach((source) => {
               const shouldRefresh =
                 pendingIds.includes(source)
@@ -5742,6 +5741,7 @@
                 return;
               }
               if (connectorAuthReturnState) {
+                restoreTagPluginConnectionReturnTarget(connectorAuthReturnState);
                 refreshConnectorStatusAfterRedirect(connectorAuthReturnState.provider);
               }
               if (restoreState) {
@@ -6010,6 +6010,7 @@
             notionStatus.credentials,
             oneDriveStatus.connected,
             oneDriveStatus.credentials,
+            genericConnectorStatuses,
           ]);
   
           useEffect(() => {
