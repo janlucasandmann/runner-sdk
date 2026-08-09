@@ -682,6 +682,24 @@ const distPlatformComponentsSwitchCssPath = path.join(
   "switch",
   "switch.css",
 );
+const platformToggleCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "ui",
+  "toggle",
+  "toggle.css",
+);
+const distPlatformComponentsToggleCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "ui",
+  "toggle",
+  "toggle.css",
+);
 const platformModalCssPath = path.join(
   packageRoot,
   "src",
@@ -937,6 +955,7 @@ async function copy() {
     platformUiCardCssText,
     platformPageHeroCssText,
     platformSwitchCssText,
+    platformToggleCssText,
     platformModalCssText,
     platformGlobalSearchModalCssText,
     platformPlanGateModalCssText,
@@ -990,6 +1009,7 @@ async function copy() {
     fs.readFile(platformUiCardCssPath, "utf8"),
     fs.readFile(platformPageHeroCssPath, "utf8"),
     fs.readFile(platformSwitchCssPath, "utf8"),
+    fs.readFile(platformToggleCssPath, "utf8"),
     fs.readFile(platformModalCssPath, "utf8"),
     fs.readFile(platformGlobalSearchModalCssPath, "utf8"),
     fs.readFile(platformPlanGateModalCssPath, "utf8"),
@@ -1291,6 +1311,14 @@ async function copy() {
   await fs.writeFile(
     distPlatformComponentsSwitchCssPath,
     platformSwitchCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformComponentsToggleCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformComponentsToggleCssPath,
+    platformToggleCssText,
     "utf8",
   );
   await fs.mkdir(path.dirname(distPlatformComponentsModalCssPath), {

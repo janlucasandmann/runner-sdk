@@ -162,6 +162,7 @@ export function createConnectorExecutionPolicy({
       protectedResourceContext,
     );
     const agent = unwrapRecord(agentPayload, ["agent", "item", "data"]);
+    const agentName = readAgentName(agent);
     const agentPermissionSet = readPermissionSet(agent);
     if (!agentPermissionSet) {
       throw new ConnectorPolicyError(
@@ -195,6 +196,7 @@ export function createConnectorExecutionPolicy({
         request,
         principal,
         agentId,
+        agentName,
         organization,
         roleId,
         agentPermissionSet,
@@ -376,6 +378,7 @@ async function evaluateRequestedConnector({
   request,
   principal,
   agentId,
+  agentName,
   organization,
   roleId,
   agentPermissionSet,
@@ -530,6 +533,7 @@ async function evaluateRequestedConnector({
   return Object.freeze({
     enabled: true,
     agentId,
+    ...(agentName ? { agentName } : {}),
     actorUserId: requestingUserId,
     credentialId: credential.credentialId,
     organizationId: organization.id,
@@ -1153,6 +1157,26 @@ function readThreadAgentId(thread) {
       || thread.assigneeAgentId
       || "",
   ).trim();
+}
+
+function readAgentName(agent) {
+  if (!isRecord(agent)) return "";
+  const value = [
+    agent.name,
+    agent.displayName,
+    agent.display_name,
+    agent.label,
+    agent.title,
+  ].find((candidate) => typeof candidate === "string" && candidate.trim());
+  return normalizeDisplayName(value);
+}
+
+function normalizeDisplayName(value) {
+  return String(value || "")
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200);
 }
 
 function readThreadProjectId(thread) {

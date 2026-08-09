@@ -32,6 +32,7 @@ assert.doesNotThrow(() => new Function(`
 `));
 
 assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.loading, /async function loadTeamPageData/);
+assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.loading, /headers: teamListRequestHeaders/);
 assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.membership, /async function handleCreateTeam/);
 assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.administration, /async function handleTeamProfileImageSelection/);
 assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.administration, /async function handleTransferTeamOwnership/);
@@ -60,7 +61,8 @@ assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.loadLifecycle, /activePage !== "team"/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.historyCapture, /page: "team"/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.page === "team"/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderTeamPageNav/);
-assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "team"/);
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.adminSidebarEntry, /id: "admin-teams"/);
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.navigation, /setSidebarWorkspaceMode\("admin"\)/);
 assert.doesNotThrow(() => new Function(`
   function teamsShellHost() {
     ${TEAMS_APP_SCRIPT_FRAGMENTS.statePrimary}
@@ -79,13 +81,12 @@ assert.doesNotThrow(() => new Function(`
       ${TEAMS_APP_SCRIPT_FRAGMENTS.historyRestore}
     };
     ${TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation}
-    const sidebarEntries = [${TEAMS_APP_SCRIPT_FRAGMENTS.sidebarEntry}];
+    const sidebarEntries = [${TEAMS_APP_SCRIPT_FRAGMENTS.adminSidebarEntry}];
     return { captureHistory, restoreHistory, sidebarEntries };
   }
 `));
 
-const documentationUrl = "https://platform.example.test/developers/teams";
-const pageFragments = createTeamsPageScriptFragments({ documentationUrl });
+const pageFragments = createTeamsPageScriptFragments();
 assert.deepEqual(Object.keys(pageFragments), [
   "setup",
   "overview",
@@ -97,7 +98,6 @@ assert.deepEqual(Object.keys(pageFragments), [
 assert.match(pageFragments.setup, /function renderTeamPage/);
 assert.match(pageFragments.setup, /const teamOverviewRows =/);
 assert.match(pageFragments.setup, /React\.createElement\(PlatformProfileImagePicker/);
-assert.match(pageFragments.overview, new RegExp(JSON.stringify(documentationUrl).replace(/[.*+?^\${}()|[\]\\]/g, "\\$&")));
 assert.match(pageFragments.overview, /React\.createElement\(TeamsOverviewPage/);
 assert.match(pageFragments.members, /const renderMembersTab/);
 assert.match(pageFragments.members, /variant: "minimalistic-ui"/);
@@ -144,7 +144,7 @@ assert.match(platformEntrySource, /\$\{TEAMS_STYLE_FRAGMENTS\.foundation\}/);
 assert.match(platformEntrySource, /\$\{TEAMS_DOMAIN_SCRIPT_FRAGMENTS\.memberIdentity\}/);
 assert.match(platformEntrySource, /\$\{TEAMS_RUNTIME_SCRIPT_FRAGMENTS\.loading\}/);
 assert.match(platformEntrySource, /\$\{TEAMS_PAGE_SCRIPT_FRAGMENTS\.setup\}/);
-assert.match(platformEntrySource, /configurePrimaryEntries:[^\n]*TEAMS_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
+assert.match(platformEntrySource, /adminEntries:[\s\S]*TEAMS_APP_SCRIPT_FRAGMENTS\.adminSidebarEntry/);
 assert.doesNotMatch(platformEntrySource, /^\s*\.playground-team-page \{/m);
 assert.doesNotMatch(platformEntrySource, /function getTeamPageApiErrorMessage\(/);
 assert.doesNotMatch(platformEntrySource, /async function loadTeamPageData\(/);

@@ -842,45 +842,23 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           isEvaluationDetailPage,
         ]);
 
-        useEffect(() => {
-          if (typeof onNavigationGuardChange !== "function") {
-            return;
-          }
-	          const evaluationName = String(activeSet?.name || "").trim() || "this evaluation";
-	          const caseName = String(evaluationCaseEditorState?.draft?.title || "").trim() || "this case";
-	          onNavigationGuardChange(hasUnsavedEvaluationCaseChanges
-	            ? {
-	                id: "evaluation-case-unsaved-changes",
-	                active: true,
-	                title: "Leave without saving?",
-	                description: "Your changes to " + caseName + " have not been saved. If you leave now, they will be lost.",
-	                onDiscard: discardEvaluationCaseEditorDraft,
-	              }
-	            : hasUnsavedEvaluationChanges
-	            ? {
-                id: "evaluation-details-unsaved-changes",
-                active: true,
-                title: "Leave without saving?",
-                description: "Your changes to " + evaluationName + " have not been saved. If you leave now, they will be lost.",
-                onDiscard: discardUnsavedEvaluationDraft,
-              }
-            : null
-          );
-        }, [
-	          activeSet?.id,
-	          activeSet?.name,
-	          evaluationCaseEditorState,
-	          hasUnsavedEvaluationCaseChanges,
-	          hasUnsavedEvaluationChanges,
+        usePlatformVersionNavigationGuard({
+          dirty: hasUnsavedEvaluationCaseChanges || hasUnsavedEvaluationChanges,
+          guardId: hasUnsavedEvaluationCaseChanges
+            ? "evaluation-case-unsaved-changes"
+            : "evaluation-details-unsaved-changes",
+          resourceId: hasUnsavedEvaluationCaseChanges
+            ? String(evaluationCaseEditorState?.draft?.id || "")
+            : String(activeSet?.id || ""),
+          resourceName: hasUnsavedEvaluationCaseChanges
+            ? String(evaluationCaseEditorState?.draft?.title || "").trim() || "this case"
+            : String(activeSet?.name || "").trim() || "this evaluation",
+          resourceType: hasUnsavedEvaluationCaseChanges ? "Evaluation case" : "Evaluation",
+          onDiscard: hasUnsavedEvaluationCaseChanges
+            ? discardEvaluationCaseEditorDraft
+            : discardUnsavedEvaluationDraft,
           onNavigationGuardChange,
-        ]);
-
-        useEffect(() => {
-          if (typeof onNavigationGuardChange !== "function") {
-            return undefined;
-          }
-          return () => onNavigationGuardChange(null);
-        }, [onNavigationGuardChange]);
+        });
 
 	        useEffect(() => {
 	          if (isEvaluationDetailPage) {

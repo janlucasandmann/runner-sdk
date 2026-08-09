@@ -17,6 +17,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -133,7 +134,11 @@ const DEFAULT_ITEM_HEIGHT = 44;
 const COMPACT_ITEM_HEIGHT = 36;
 const PLOT_TOP_PADDING = 18;
 const PLOT_BOTTOM_PADDING = 22;
-const HIERARCHY_INDENT_PX = 24;
+// Keep nested cards visually grouped without allowing a parent scope to drift
+// far away from its first child. The parent still gets a small lead so the
+// hierarchy reads clearly, while single-action groups stay aligned with the
+// action they contain.
+const HIERARCHY_INDENT_PX = 8;
 const MINIMAP_TEXTURE_BARS = Array.from({ length: 224 }, (_, index) => index);
 
 function getActivityItemHeight(item: Pick<PlatformActivityOverviewItem, "density">) {
@@ -372,7 +377,11 @@ function normalizeItems(
     ...resolveScopeBounds(item),
   }));
 
-  const sortedItems = scopedItems.sort((left, right) => {
+  // Keep hidden descendants in the temporal scope calculation above so
+  // collapsing a group never changes its horizontal position. They should,
+  // however, release their vertical rows so following activity can move up.
+  const layoutItems = scopedItems.filter((item) => !item.hidden);
+  const sortedItems = layoutItems.sort((left, right) => {
     const leftOrder = Number(left.hierarchy?.order);
     const rightOrder = Number(right.hierarchy?.order);
     if (Number.isFinite(leftOrder) && Number.isFinite(rightOrder) && leftOrder !== rightOrder) {
@@ -647,6 +656,7 @@ export function PlatformActivityOverview({
   const heightResizeDragRef = useRef<HeightResizeDrag | null>(null);
   const synchronizingTimelineScrollRef = useRef(false);
   const onTimeRangeChangeRef = useRef(onTimeRangeChange);
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [timeRangeWindow, setTimeRangeWindow] = useState<TimeRangeWindow>({
     start: 0,
     end: 100,
@@ -681,7 +691,7 @@ export function PlatformActivityOverview({
   const visibleDomainEnd = fitTimeline ? visibleTimeRange.endAt : domain.end;
   const stableNormalizedItems = useMemo(
     () => normalizeItems(items, visibleDomainStart, visibleDomainEnd),
-    [items, visibleDomainEnd, visibleDomainStart],
+    [items, visibleDomainEnd, visibleDomainStart, viewportSize.width],
   );
   const visibleItemIds = useMemo(
     () => new Set(visibleItems.map((item) => item.id)),
@@ -708,6 +718,7 @@ export function PlatformActivityOverview({
   const plotHeight = Math.max(
     240,
     plotTopPadding + normalizedItemsHeight + PLOT_BOTTOM_PADDING,
+    viewportSize.height,
   );
   const selectedRangePercent = Math.max(
     normalizedMinimumRangePercent,
@@ -720,6 +731,32 @@ export function PlatformActivityOverview({
     minWidth: fitTimeline ? "0" : `${Math.max(720, minTimelineWidth)}px`,
     height: `${plotHeight}px`,
   } as CSSProperties;
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return;
+    }
+    const updateViewportSize = () => {
+      const nextSize = {
+        width: viewport.clientWidth,
+        height: viewport.clientHeight,
+      };
+      setViewportSize((current) => (
+        current.width === nextSize.width && current.height === nextSize.height
+          ? current
+          : nextSize
+      ));
+    };
+    updateViewportSize();
+    if (typeof ResizeObserver === "function") {
+      const observer = new ResizeObserver(updateViewportSize);
+      observer.observe(viewport);
+      return () => observer.disconnect();
+    }
+    window.addEventListener("resize", updateViewportSize);
+    return () => window.removeEventListener("resize", updateViewportSize);
+  }, [loading, minimapItems.length]);
 
   useEffect(() => {
     onTimeRangeChangeRef.current = onTimeRangeChange;
@@ -747,7 +784,7 @@ export function PlatformActivityOverview({
     synchronizingTimelineScrollRef.current = true;
     viewport.scrollLeft = nextScrollLeft;
     synchronizingTimelineScrollRef.current = false;
-  }, [fitTimeline, selectedRangePercent, timeRangeWindow.start]);
+  }, [fitTimeline, selectedRangePercent, timeRangeWindow.start, viewportSize.width]);
 
   const handleTimelineScroll = useCallback(() => {
     if (fitTimeline || synchronizingTimelineScrollRef.current) {

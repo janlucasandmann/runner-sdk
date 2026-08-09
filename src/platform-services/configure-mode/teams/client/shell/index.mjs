@@ -23,6 +23,5 @@ export const TEAMS_APP_SCRIPT_FRAGMENTS = Object.freeze({
   historyCapture: TEAMS_HISTORY_CAPTURE_SCRIPT,
   historyRestore: TEAMS_HISTORY_RESTORE_SCRIPT,
   topNavigation: TEAMS_TOP_NAVIGATION_SCRIPT,
-  sidebarEntry: TEAMS_SIDEBAR_ENTRY_SCRIPT,
+  adminSidebarEntry: TEAMS_SIDEBAR_ENTRY_SCRIPT,
 });
-

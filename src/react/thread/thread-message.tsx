@@ -88,8 +88,13 @@ export function RunnerThreadMessageView({
   renderUserContent,
   onCorrectRoute,
 }: RunnerThreadMessageViewProps) {
-  const participantKind = participant?.kind || "system";
-  const displayName = participant?.displayName || (participantKind === "human" ? "You" : "Communicator");
+  const rawParticipantKind = participant?.kind || "system";
+  const isInternalAssistant = rawParticipantKind === "communicator" || rawParticipantKind === "observer";
+  const participantKind = isInternalAssistant ? "worker" : rawParticipantKind;
+  const publicParticipant = isInternalAssistant && participant
+    ? { ...participant, kind: "worker", displayName: "Agent", avatarUrl: null }
+    : participant;
+  const displayName = publicParticipant?.displayName || (participantKind === "human" ? "You" : "Agent");
   const isHuman = participantKind === "human";
 
   if (isHuman) {
@@ -112,7 +117,7 @@ export function RunnerThreadMessageView({
 
   return (
     <article className={`tb-thread-message is-${participantKind} is-agent`}>
-      <RunnerThreadParticipantAvatar participant={participant} />
+      <RunnerThreadParticipantAvatar participant={publicParticipant} />
       <div className="tb-thread-message-main">
         <div className="tb-thread-message-meta">
           <span className="tb-thread-message-author">{displayName}</span>

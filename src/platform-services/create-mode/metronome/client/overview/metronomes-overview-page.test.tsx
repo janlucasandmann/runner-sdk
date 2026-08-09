@@ -4,21 +4,9 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MetronomesOverviewPage } from "./metronomes-overview-page.js";
-import {
-  createMetronomesOverviewAnalytics,
-  type MetronomeOverviewRow,
-} from "./metronomes-overview-model.js";
+import { type MetronomeOverviewRow } from "./metronomes-overview-model.js";
 
 const CONTROLS_PORTAL_ID = "metronome-overview-test-controls";
-const analytics = {
-  title: "Metronome activity",
-  metrics: [
-    { id: "workflows", label: "Metronomes", value: "2", color: "#8fc4ff" },
-    { id: "active", label: "Active", value: "1", color: "#7effff" },
-  ],
-  labels: [],
-  series: [],
-};
 
 const rows: MetronomeOverviewRow[] = [
   {
@@ -60,7 +48,6 @@ function renderPage(overrides: Partial<React.ComponentProps<typeof MetronomesOve
       <MetronomesOverviewPage
         rows={rows}
         controlsPortalId={CONTROLS_PORTAL_ID}
-        analytics={analytics}
         onOpen={vi.fn()}
         onCreate={vi.fn()}
         onEdit={vi.fn()}
@@ -78,23 +65,24 @@ function renderPage(overrides: Partial<React.ComponentProps<typeof MetronomesOve
 afterEach(cleanup);
 
 describe("MetronomesOverviewPage", () => {
-  it("composes the shared analytics, table, pagination, and app-header controls", () => {
+  it("matches the Tests overview composition without analytics or pagination", () => {
     const onCreate = vi.fn();
     const { container } = renderPage({ onCreate });
 
     expect(container.querySelector(".resource-overview-page.is-metronomes")).not.toBeNull();
-    expect(container.querySelector(".platform-analytics")).not.toBeNull();
     expect(
-      container.querySelector(".platform-data-table.is-fill-layout.is-minimalistic-ui"),
+      screen.getByRole("heading", {
+        name: "Orchestrate reliable work from trigger to completion",
+      }),
     ).not.toBeNull();
-    expect(screen.getByRole("heading", { name: "All Workflows", level: 2 })).not.toBeNull();
-    expect(screen.getByRole("navigation", { name: "Metronomes pagination" })).not.toBeNull();
-    expect(screen.getByText("1-2 of 2")).not.toBeNull();
+    expect(container.querySelector(".platform-analytics")).toBeNull();
+    expect(container.querySelector(".platform-data-table.is-catalog-ui")).not.toBeNull();
+    expect(container.querySelector(".platform-data-table__footer")).toBeNull();
+    expect(screen.queryByRole("navigation", { name: "Metronomes pagination" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "All Workflows" })).toBeNull();
 
     const controls = screen.getByTestId("overview-controls");
-    expect(
-      within(controls).getByRole("radiogroup", { name: "Analytics time frame" }),
-    ).not.toBeNull();
+    expect(within(controls).queryByRole("radiogroup")).toBeNull();
     expect(within(controls).getByRole("button", { name: "Metronome" })).not.toBeNull();
 
     const lastRunHeader = screen.getByRole("columnheader", { name: /Last run/ });
@@ -129,30 +117,5 @@ describe("MetronomesOverviewPage", () => {
     expect(screen.queryByRole("menuitem", { name: "Delete" })).toBeNull();
     await user.click(screen.getByRole("menuitem", { name: "Duplicate" }));
     expect(onDuplicate).toHaveBeenCalledWith(rows[0]);
-  });
-
-  it("derives instant overview analytics from loaded workflow metadata", () => {
-    const analytics = createMetronomesOverviewAnalytics({
-      rows: [
-        rows[0],
-        rows[1],
-        {
-          ...rows[1],
-          id: "removed",
-          name: "Removed",
-          isTeamShared: true,
-          isHiddenTeamShared: true,
-          runsToday: 100,
-          waitingApprovals: 100,
-        },
-      ],
-      period: "day",
-      now: new Date("2026-07-18T12:00:00Z"),
-    });
-
-    expect(analytics.metrics.map((metric) => metric.value)).toEqual(["2", "1", "4", "1"]);
-    expect(analytics.labels).toHaveLength(24);
-    expect(analytics.series).toHaveLength(1);
-    expect(analytics.series[0].values.reduce((sum, value) => sum + value, 0)).toBe(1);
   });
 });

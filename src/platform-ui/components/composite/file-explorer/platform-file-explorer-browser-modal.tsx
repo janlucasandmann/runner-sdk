@@ -1,10 +1,10 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
-import { type PlatformDetailTab, PlatformDetailTabBar } from "../detail-tab-bar/index.js";
-import { PlatformLoadingState } from "../loading-state/index.js";
 import { PlatformPrimaryButton, PlatformSecondaryButton } from "../../ui/button/index.js";
 import { PlatformSearch } from "../../ui/search/index.js";
+import { type PlatformDetailTab, PlatformDetailTabBar } from "../detail-tab-bar/index.js";
+import { PlatformLoadingState } from "../loading-state/index.js";
 import {
   PlatformFileExplorerModal,
   type PlatformFileExplorerModalProps,
@@ -168,49 +168,47 @@ export function PlatformFileExplorerBrowserModal<TItem>({
       className={joinClassNames("is-browser-layout", className)}
       onClose={onClose}
       sidebarHeader={null}
-      sidebar={
-        <>
-          {sourceGroups.map((group) =>
-            group.items.length > 0 ? (
-              <section
-                key={group.id}
-                className={joinClassNames(
-                  "tb-file-browser-sidebar-section",
-                  group.id === "computers" && "tb-file-browser-sidebar-section-environments",
-                )}
-              >
-                <div className="tb-file-browser-sidebar-title">{group.label}</div>
-                <div
+      sidebar={sourceGroups.map((group) =>
+        group.items.length > 0 ? (
+          <section
+            key={group.id}
+            className={joinClassNames(
+              "tb-file-browser-sidebar-section",
+              group.id === "computers" && "tb-file-browser-sidebar-section-environments",
+            )}
+          >
+            {group.label ? (
+              <div className="tb-file-browser-sidebar-title">{group.label}</div>
+            ) : null}
+            <div
+              className={joinClassNames(
+                "tb-file-browser-sidebar-list",
+                group.id === "computers" && "tb-file-browser-sidebar-list-environments",
+              )}
+            >
+              {group.items.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
                   className={joinClassNames(
-                    "tb-file-browser-sidebar-list",
-                    group.id === "computers" && "tb-file-browser-sidebar-list-environments",
+                    "tb-file-browser-source-row",
+                    item.active && "active",
+                    item.disabled && "disabled",
                   )}
+                  disabled={item.disabled}
+                  onClick={item.onSelect}
                 >
-                  {group.items.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={joinClassNames(
-                        "tb-file-browser-source-row",
-                        item.active && "active",
-                        item.disabled && "disabled",
-                      )}
-                      disabled={item.disabled}
-                      onClick={item.onSelect}
-                    >
-                      {item.icon}
-                      <span className="tb-file-browser-source-label">{item.label}</span>
-                      {item.note != null ? (
-                        <span className="tb-file-browser-source-note">{item.note}</span>
-                      ) : null}
-                    </button>
-                  ))}
-                </div>
-              </section>
-            ) : null,
-          )}
-        </>
-      }
+                  {item.icon}
+                  <span className="tb-file-browser-source-label">{item.label}</span>
+                  {item.note != null ? (
+                    <span className="tb-file-browser-source-note">{item.note}</span>
+                  ) : null}
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : null,
+      )}
       contentHeader={
         <div className="tb-file-browser-header">
           <button

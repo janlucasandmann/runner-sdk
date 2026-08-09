@@ -11,16 +11,12 @@ const TEAMS_PAGE_OVERVIEW_TEMPLATE = `	          const renderTeamOverview = () =
                 setTeamPageRenameName(team?.name || "");
                 setTeamPageRenameModalOpen(true);
               },
-              onOpenDocumentation: () => window.open(__TEAMS_DOCUMENTATION_URL__, "_blank", "noopener,noreferrer"),
             }),
             renderCreateTeamModal()
           );
 
 `;
 
-export function createTeamsPageOverviewScript(documentationUrl) {
-  return TEAMS_PAGE_OVERVIEW_TEMPLATE.replace(
-    "__TEAMS_DOCUMENTATION_URL__",
-    JSON.stringify(String(documentationUrl || "").trim()),
-  );
+export function createTeamsPageOverviewScript() {
+  return TEAMS_PAGE_OVERVIEW_TEMPLATE;
 }

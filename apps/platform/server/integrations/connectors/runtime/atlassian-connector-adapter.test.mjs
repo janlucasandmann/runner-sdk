@@ -37,6 +37,8 @@ test("Atlassian adapter creates Jira issues with the resolved scoped credential"
     grant: {
       organizationId: "org_test",
       credentialId: "credential_project",
+      agentId: "agent_spark",
+      agentName: "Spark",
     },
     name: "create_issue",
     arguments: {
@@ -60,6 +62,128 @@ test("Atlassian adapter creates Jira issues with the resolved scoped credential"
   assert.equal(body.fields.project.key, "TEST");
   assert.equal(body.fields.issuetype.name, "Task");
   assert.equal(body.fields.description.type, "doc");
+  assert.deepEqual(body.historyMetadata, {
+    activityDescription: "Created by Spark through Computer Agents",
+    actor: {
+      id: "agent_spark",
+      displayName: "Spark",
+      type: "computer-agents-agent",
+    },
+    generator: {
+      id: "computer-agents",
+      displayName: "Computer Agents",
+      type: "computer-agents-application",
+    },
+    type: "computer-agents:agent-action",
+  });
+  assert.deepEqual(body.properties, [{
+    key: "computer-agents.attribution",
+    value: {
+      agentId: "agent_spark",
+      agentName: "Spark",
+      source: "computer-agents",
+    },
+  }]);
+});
+
+test("Atlassian adapter leaves legacy issue creation un-attributed", async () => {
+  let requestBody;
+  const adapter = createAtlassianConnectorAdapter({
+    async resolveCredential() {
+      return {
+        token: {
+          accessToken: "provider-token",
+          cloudId: "cloud-123",
+        },
+      };
+    },
+    async fetchImpl(_url, init) {
+      requestBody = JSON.parse(init.body);
+      return new Response(JSON.stringify({ id: "10002", key: "TEST-2" }), {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+  });
+
+  await adapter.invoke({
+    grant: {
+      organizationId: "org_test",
+      credentialId: "credential_project",
+    },
+    name: "create_issue",
+    arguments: {
+      projectKey: "TEST",
+      issueType: "Task",
+      summary: "Legacy connector runtime test",
+    },
+  });
+
+  assert.equal("historyMetadata" in requestBody, false);
+  assert.equal("properties" in requestBody, false);
+});
+
+test("Atlassian adapter refreshes once and retries an expired provider token", async () => {
+  const resolverRequests = [];
+  const requests = [];
+  const adapter = createAtlassianConnectorAdapter({
+    async resolveCredential(input) {
+      resolverRequests.push(input);
+      return {
+        token: {
+          accessToken: resolverRequests.length === 1
+            ? "expired-provider-token"
+            : "refreshed-provider-token",
+          cloudId: "cloud-123",
+        },
+      };
+    },
+    async fetchImpl(url, init) {
+      requests.push({ url: String(url), init });
+      if (requests.length === 1) {
+        return new Response(JSON.stringify({
+          errorMessages: ["Token expired"],
+        }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({
+        accountId: "jira-account-1",
+        displayName: "Agent account",
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+  });
+
+  const result = await adapter.invoke({
+    grant: {
+      organizationId: "org_test",
+      credentialId: "credential_project",
+    },
+    name: "get_myself",
+    arguments: {},
+  });
+
+  assert.equal(result.displayName, "Agent account");
+  assert.equal(resolverRequests.length, 2);
+  assert.deepEqual(resolverRequests[0], {
+    organizationId: "org_test",
+    credentialId: "credential_project",
+    envFileCandidates: [],
+  });
+  assert.deepEqual(resolverRequests[1], {
+    organizationId: "org_test",
+    credentialId: "credential_project",
+    envFileCandidates: [],
+    forceRefresh: true,
+  });
+  assert.equal(
+    requests[1].init.headers.Authorization,
+    "Bearer refreshed-provider-token",
+  );
 });
 
 test("Atlassian adapter only lists requested capabilities", () => {

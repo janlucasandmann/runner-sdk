@@ -933,7 +933,7 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
       .playground-project-overview-summary-kpi-value {
         font-size: 18px;
         line-height: 1.1;
-        font-weight: 600;
+        font-weight: 400;
         color: rgba(255, 255, 255, 0.98);
       }
 

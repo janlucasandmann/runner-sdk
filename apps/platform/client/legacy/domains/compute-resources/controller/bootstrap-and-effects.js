@@ -33,6 +33,7 @@
           embeddedResourcesView = "computers",
           embeddedServerKind = "",
           topNavActionsPortalId = "",
+          computerTitleActionsPortalId = "",
           databaseTitleActionsPortalId = "",
           serverTitleActionsPortalId = "",
           onResourcesHeaderChange,
@@ -108,7 +109,6 @@
           const environmentComposerRuntimePopoverRef = useRef(null);
           const environmentCreationNameInputRef = useRef(null);
           const lastAppliedCreationRequestTokenRef = useRef("");
-          const environmentActionsPopoverRef = useRef(null);
           const environmentVersionDescriptionTextareaRef = useRef(null);
           const environmentVersionModalCloseTimerRef = useRef(null);
           const environmentVersionModalFrameRef = useRef(null);
@@ -144,6 +144,7 @@
           const databasePermissionSaveInFlightRef = useRef(false);
           const databaseWorkspaceTeamsRequestedRef = useRef(false);
           const databaseOwnerTeamMembersRequestedRef = useRef(new Set());
+          const environmentOwnerTeamMembersRequestedRef = useRef(new Set());
           const serverPermissionSaveTimerRef = useRef(null);
           const serverPermissionSaveQueuedRef = useRef(null);
           const serverPermissionSaveInFlightRef = useRef(false);
@@ -216,6 +217,7 @@
           const isServersMode = resourceMode === "servers";
           const [isHomeViewActive, setIsHomeViewActive] = useState(true);
           const [topNavActionsContainer, setTopNavActionsContainer] = useState(null);
+          const [computerTitleActionsContainer, setComputerTitleActionsContainer] = useState(null);
           const [databaseTitleActionsContainer, setDatabaseTitleActionsContainer] = useState(null);
           const [serverTitleActionsContainer, setServerTitleActionsContainer] = useState(null);
           const handledBackRequestTokenRef = useRef(backRequestToken);
@@ -376,11 +378,44 @@
           const [environmentPermissionRoleId, setEnvironmentPermissionRoleId] = useState("member");
           const [selectedEnvironmentAccessTeamIds, setSelectedEnvironmentAccessTeamIds] = useState(() => new Set());
           const [environmentAccessTeamMenuOpen, setEnvironmentAccessTeamMenuOpen] = useState(false);
+          const [environmentOwnerPopoverOpen, setEnvironmentOwnerPopoverOpen] = useState(false);
+          const [environmentOwnerTeamMembersById, setEnvironmentOwnerTeamMembersById] = useState({});
           const [environmentTeamAccessState, setEnvironmentTeamAccessState] = useState({
             teamId: "",
             action: "",
             error: "",
           });
+          const normalizedEnvironmentDetailTab = environmentDetailTab === "settings"
+            ? "settings"
+            : environmentDetailTab === "runtime" || environmentDetailTab === "advanced"
+              ? "runtime"
+              : "general";
+          const handleEnvironmentDetailTabChange = useCallback((nextTab) => {
+            const normalizedNextTab = nextTab === "settings"
+              ? "settings"
+              : nextTab === "runtime" || nextTab === "advanced"
+                ? "runtime"
+                : "general";
+            if (normalizedNextTab !== "settings" && environmentPermissionPrincipalId) {
+              if (environmentDetailsCollapsedBeforeAccessRef.current !== null) {
+                setEnvironmentDetailsCollapsed(Boolean(environmentDetailsCollapsedBeforeAccessRef.current));
+                environmentDetailsCollapsedBeforeAccessRef.current = null;
+              }
+              setEnvironmentPermissionRoleId("member");
+              setEnvironmentPermissionPrincipalId("");
+            }
+            setEnvironmentDetailTab(normalizedNextTab);
+            if (normalizedNextTab === "settings") {
+              setEnvironmentPermissionChartAnimationKey((current) => current + 1);
+              if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
+                onWorkspaceTeamsRequest({});
+              }
+            }
+          }, [
+            environmentPermissionPrincipalId,
+            onWorkspaceTeamsRequest,
+            workspaceTeamsLoading,
+          ]);
           const [serverDetailChartTimescale, setServerDetailChartTimescale] = useState("day");
   	        const [serverPermissionChartAnimationKey, setServerPermissionChartAnimationKey] = useState(0);
   	        const [serverPermissionTeamId, setServerPermissionTeamId] = useState("");
@@ -1532,6 +1567,15 @@
           }, [topNavActionsPortalId]);
 
           useLayoutEffect(() => {
+            if (!computerTitleActionsPortalId || typeof document === "undefined") {
+              setComputerTitleActionsContainer((current) => current === null ? current : null);
+              return;
+            }
+            const nextContainer = document.getElementById(computerTitleActionsPortalId);
+            setComputerTitleActionsContainer((current) => current === nextContainer ? current : nextContainer);
+          });
+
+          useLayoutEffect(() => {
             if (!databaseTitleActionsPortalId || typeof document === "undefined") {
               setDatabaseTitleActionsContainer((current) => current === null ? current : null);
               return;
@@ -1625,6 +1669,8 @@
                     resourceType: selectedResourcesDetailType,
                     ...(selectedResourcesDetailType === "computer"
                       ? {
+                          activeSection: normalizedEnvironmentDetailTab,
+                          onSectionChange: handleEnvironmentDetailTabChange,
                           versionNumber: Number.isFinite(selectedEnvironmentVersionNumber)
                             ? selectedEnvironmentVersionNumber
                             : null,
@@ -1780,11 +1826,13 @@
             databaseDetailTab,
             embeddedInResources,
             environmentComposerOpen,
+            handleEnvironmentDetailTabChange,
             environmentVersionState.status,
             environmentVersionsSidebarOpen,
             isHomeViewActive,
             isServersMode,
             normalizedEmbeddedServerKind,
+            normalizedEnvironmentDetailTab,
             onResourcesHeaderChange,
             resourceMode,
             saveState.isSaving,

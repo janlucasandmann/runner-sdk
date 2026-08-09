@@ -95,8 +95,11 @@ assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /normalizedTarge
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /openPlatformResourceCreationModal\(normalizedTargetId\)/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /openToolsView\("skills", \{ create: true/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "configure-home"/);
-assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "configure-notifications"/);
-assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: Bell/);
+assert.doesNotMatch(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Notifications/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.adminSidebarEntry, /id: "admin-notifications"/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.adminSidebarEntry, /Icon: Bell/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationNavigation, /setSidebarWorkspaceMode\("admin"\)/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /isNotificationsPage \? "Admin" : "Configure"/);
 assert.doesNotThrow(() => new Function(`
   function configureHomeShellHost() {
     ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationsState}
@@ -116,7 +119,7 @@ assert.doesNotThrow(() => new Function(`
       return "";
     };
     ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation}
-    const sidebarEntries = [${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry}];
+    const sidebarEntries = [${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry}${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.adminSidebarEntry}];
     return { captureHistory, restoreHistory, getTitle, sidebarEntries };
   }
 `));
@@ -156,6 +159,7 @@ assert.match(platformEntrySource, /\$\{CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS\.
 assert.match(platformEntrySource, /\$\{CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS\.home\}/);
 assert.match(platformEntrySource, /\$\{CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS\.notifications\}/);
 assert.match(platformEntrySource, /configurePrimaryEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
+assert.match(platformEntrySource, /adminEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS\.adminSidebarEntry/);
 assert.doesNotMatch(platformEntrySource, /^\s*\.configure-home-overview__teaser \{/m);
 assert.doesNotMatch(platformEntrySource, /function readStoredNotificationIds\(/);
 assert.doesNotMatch(platformEntrySource, /const notificationItems = useMemo\(/);

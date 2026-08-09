@@ -15,6 +15,8 @@ export const ASSURANCE_APP_PAGE_VIEW_SCRIPT = String.raw`        function render
             defaultProjectId: latestInteractedProjectId || "",
             projects: runnerWorkspaceProjects,
             workspaceTeams: teamPageTeams,
+            onNavigationGuardChange: registerPlatformNavigationGuard,
+            onNavigationRequest: requestPlatformNavigation,
             onOpenPolicy: (policyId, policyName = "") => {
               openAssurancePolicyDetailPage(policyId, policyName);
             },

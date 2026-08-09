@@ -22,6 +22,9 @@ describe("plugin file browser client", () => {
       "github",
       "google-drive",
       "one-drive",
+      "gitlab",
+      "notion",
+      "sharepoint",
     ]);
   });
 
@@ -74,9 +77,18 @@ describe("plugin file browser client", () => {
       }),
       expect.objectContaining({ id: "google-drive", connected: true }),
       expect.objectContaining({ id: "one-drive", connected: false, accounts: [] }),
+      expect.objectContaining({ id: "gitlab", connected: false, accounts: [] }),
+      expect.objectContaining({ id: "notion", connected: false, accounts: [] }),
+      expect.objectContaining({ id: "sharepoint", connected: false, accounts: [] }),
     ]));
-    expect(request).toHaveBeenCalledTimes(3);
+    expect(request).toHaveBeenCalledTimes(6);
     expect(request.mock.calls.every(([input]) => String(input).includes("organizationId=organization-acme"))).toBe(true);
+  });
+
+  it("does not route unsupported connector sources through a Drive endpoint", async () => {
+    await expect(fetchPlatformPluginFiles("gitlab", "root", {
+      fetch: vi.fn(),
+    })).rejects.toThrow("GitLab file browsing is not available yet.");
   });
 
   it("normalizes Google Drive files and folders", async () => {

@@ -161,6 +161,14 @@ export const CONFIGURE_HOME_NOTIFICATION_ACTIONS_SCRIPT = `        function hand
             setReadTeamInvitationNotificationIds((current) => Array.from(new Set([...current, invitationId])));
             setNotificationsOpen(false);
             if (normalizedAction === "accept") {
+              const organizationId = String(data?.organizationId || data?.data?.organizationId || item.organizationId || "").trim();
+              if (organizationId) {
+                setTeamPageOrganizationId(organizationId);
+              }
+              const teamId = String(data?.teamId || data?.data?.teamId || item.teamId || "").trim();
+              if (teamId) {
+                setTeamPageSelectedTeamId(teamId);
+              }
               openTeamPage();
             }
           } catch (error) {

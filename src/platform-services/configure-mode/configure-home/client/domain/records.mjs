@@ -29,6 +29,7 @@ export const CONFIGURE_HOME_NOTIFICATION_RECORDS_SCRIPT = `      function normal
         const teamName = String(value.teamName || value.team_name || "Team").trim() || "Team";
         return {
           id,
+          organizationId: String(value.organizationId || value.organization_id || "").trim(),
           teamId: String(value.teamId || value.team_id || "").trim(),
           teamName,
           role: String(value.role || "create").trim() || "create",

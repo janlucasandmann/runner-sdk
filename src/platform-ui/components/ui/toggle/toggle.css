@@ -1,0 +1,74 @@
+.platform-toggle {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  min-width: 42px;
+  height: 22px;
+  min-height: 22px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    opacity 160ms ease;
+}
+
+.platform-toggle:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.platform-toggle.is-checked {
+  border-color: rgba(12, 111, 255, 0.94);
+  background: rgba(12, 111, 255, 0.94);
+}
+
+.platform-toggle.is-checked:hover:not(:disabled) {
+  border-color: #0c6fff;
+  background: #0c6fff;
+}
+
+.platform-toggle__thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  box-sizing: border-box;
+  width: 23px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  transform: translateX(0);
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.platform-toggle.is-checked .platform-toggle__thumb {
+  transform: translateX(15px);
+}
+
+.platform-toggle:focus-visible {
+  outline: 1px solid rgba(126, 255, 255, 0.84);
+  outline-offset: 2px;
+}
+
+.platform-toggle:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-toggle,
+  .platform-toggle__thumb {
+    transition-duration: 1ms;
+  }
+}

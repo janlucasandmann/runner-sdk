@@ -192,6 +192,11 @@ export const FILES_CONTENT_CSS = `
         transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
       }
 
+      .playground-files-entry-selection-checkbox {
+        flex: 0 0 14px;
+        margin: 0;
+      }
+
       .playground-files-entry-row:hover {
         background: rgba(255, 255, 255, 0.06);
       }
@@ -387,7 +392,7 @@ export const FILES_CONTENT_CSS = `
 
       .playground-files-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 14px;
         margin-top: 12px;
       }

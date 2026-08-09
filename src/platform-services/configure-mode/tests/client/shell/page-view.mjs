@@ -20,6 +20,8 @@ export const TESTS_APP_PAGE_VIEW_SCRIPT = String.raw`        function renderTest
               ? "playground-agent-versions-drawer-root"
               : undefined,
             onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
+            onNavigationGuardChange: registerPlatformNavigationGuard,
+            onNavigationRequest: requestPlatformNavigation,
             defaultProjectId: latestInteractedProjectId || "",
             defaultEnvironmentId: resolvedEnvironmentId || environmentId || "",
             defaultAgentId: resolvedComposerAgentId || resolvedPreferredAgentId || "",

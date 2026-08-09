@@ -33,7 +33,13 @@ export const FILES_PAGE_FILESYSTEM_ACTIONS_SCRIPT = `
               : null,
             targetPath: targetEntry ? targetEntry.path : "",
             multiFileSelection: isMultiFileSelectionMenu,
-            popupVariant: options.popupVariant === "minimal" ? "minimal" : "default",
+            popupVariant: options.popupVariant === "default" ? "default" : "minimal",
+            pointerAnchor: Boolean(options.pointerAnchor),
+            placement: options.placement || (options.pointerAnchor
+              ? "bottom-start"
+              : options.anchorPoint
+                ? "bottom-end"
+                : "bottom-start"),
           });
         }
 
@@ -47,6 +53,7 @@ export const FILES_PAGE_FILESYSTEM_ACTIONS_SCRIPT = `
               multiFileSelection: true,
               alignRight: true,
               popupVariant: options.popupVariant,
+              placement: options.placement || "bottom-end",
               anchorPoint: { x: rect.right, y: rect.bottom },
             });
             return;
@@ -55,6 +62,7 @@ export const FILES_PAGE_FILESYSTEM_ACTIONS_SCRIPT = `
             selectTarget: false,
             alignRight: true,
             popupVariant: options.popupVariant,
+            placement: options.placement || "bottom-end",
             anchorPoint: { x: rect.right, y: rect.bottom },
           });
         }
@@ -459,10 +467,17 @@ export const FILES_PAGE_FILESYSTEM_ACTIONS_SCRIPT = `
             openContextMenuAt(null, event.clientX, event.clientY, {
               selectTarget: false,
               multiFileSelection: true,
+              anchorPoint: { x: event.clientX, y: event.clientY },
+              pointerAnchor: true,
+              placement: "bottom-start",
             });
             return;
           }
-          openContextMenuAt(targetEntry, event.clientX, event.clientY);
+          openContextMenuAt(targetEntry, event.clientX, event.clientY, {
+            anchorPoint: { x: event.clientX, y: event.clientY },
+            pointerAnchor: true,
+            placement: "bottom-start",
+          });
         }
 
         function handleDragStart(event, entry) {

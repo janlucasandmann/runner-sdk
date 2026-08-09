@@ -6,6 +6,7 @@ interface RunnerTurnIdentityProps {
   agentName: string;
   agentPhotoUrl?: string | null;
   environmentName: string;
+  isGenerating?: boolean;
   onAgentClick?: () => void;
   style?: CSSProperties;
 }
@@ -14,6 +15,7 @@ export function RunnerTurnIdentity({
   agentName,
   agentPhotoUrl,
   environmentName,
+  isGenerating = false,
   onAgentClick,
   style,
 }: RunnerTurnIdentityProps) {
@@ -21,7 +23,7 @@ export function RunnerTurnIdentity({
   const normalizedEnvironmentName = String(environmentName || "").trim() || "Environment";
   const agentContent = (
     <>
-      {renderTurnAgentAvatar(normalizedAgentName, agentPhotoUrl)}
+      {renderTurnAgentAvatar(normalizedAgentName, agentPhotoUrl, { isGenerating })}
       <span className="tb-turn-agent-name">{normalizedAgentName}</span>
     </>
   );

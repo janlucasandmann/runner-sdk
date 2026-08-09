@@ -96,22 +96,47 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     min-width: 0;
   }
 
+  .tests-cases-table .platform-data-table__toolbar-title {
+    font-size: 18px;
+  }
+
   .tests-detail-run-button.platform-button {
     width: 100%;
     margin-top: 8px;
   }
 
-  .tests-detail-truncated-property .platform-service-detail-page__property-value {
+  .tests-detail-target-row .platform-service-detail-page__property-value {
+    min-width: 0;
+    overflow: visible;
+  }
+
+  .tests-detail-target-selector,
+  .tests-detail-target-trigger {
+    width: 100%;
+  }
+
+  .tests-detail-target-trigger {
+    max-width: 100%;
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  .tests-detail-target-selector-value {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    width: 100%;
     min-width: 0;
   }
 
-  .tests-detail-truncated-property__value {
-    display: block;
-    flex: 1 1 auto;
-    width: 100%;
+  .tests-detail-target-selector-value > svg {
+    flex: 0 0 auto;
+  }
+
+  .tests-detail-target-selector-value > span {
     min-width: 0;
     overflow: hidden;
-    text-align: right;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -361,6 +386,13 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     font-weight: 600;
   }
 
+  .tests-form-field > small {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.45;
+  }
+
   .tests-form-field.is-span-2 {
     grid-column: 1 / -1;
   }
@@ -442,24 +474,6 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     font-weight: 450;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .tests-version-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: rgba(255, 255, 255, 0.84);
-    font-weight: 600;
-  }
-
-  .tests-version-label em {
-    border-radius: 999px;
-    padding: 3px 7px;
-    color: #86e29d;
-    background: rgba(45, 147, 72, 0.13);
-    font-size: 10px;
-    font-style: normal;
-    font-weight: 650;
   }
 
   .tests-inline-error {
@@ -847,93 +861,6 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     overflow-wrap: anywhere;
   }
 
-  .tests-run-evidence-card.platform-ui-card {
-    width: 100%;
-  }
-
-  .tests-run-evidence-card.is-trusted {
-    border-color: rgba(74, 222, 128, 0.28);
-  }
-
-  .tests-run-evidence-card.is-untrusted {
-    border-color: rgba(250, 204, 21, 0.28);
-  }
-
-  .tests-evidence-banner-copy {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .tests-evidence-banner-copy > svg {
-    flex: 0 0 auto;
-    margin-top: 1px;
-    color: #8cc7ff;
-  }
-
-  .tests-run-evidence-card.is-trusted .tests-evidence-banner-copy > svg {
-    color: #86e29d;
-  }
-
-  .tests-run-evidence-card.is-untrusted .tests-evidence-banner-copy > svg {
-    color: #f4c978;
-  }
-
-  .tests-evidence-banner-copy > div {
-    display: grid;
-    gap: 4px;
-  }
-
-  .tests-evidence-banner-copy strong {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .tests-evidence-banner-copy span {
-    color: rgba(255, 255, 255, 0.62);
-    font-size: 12px;
-    line-height: 1.55;
-  }
-
-  .tests-run-evidence-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px 24px;
-    margin: 18px 0 0;
-    padding-top: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
-  .tests-run-evidence-grid > div {
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .tests-run-evidence-grid dt,
-  .tests-run-evidence-grid dd {
-    min-width: 0;
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.4;
-  }
-
-  .tests-run-evidence-grid dt {
-    color: rgba(255, 255, 255, 0.52);
-  }
-
-  .tests-run-evidence-grid dd {
-    overflow: hidden;
-    color: rgba(255, 255, 255, 0.9);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    text-align: right;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   .tests-evidence-identity {
     display: grid;
     margin: 0;
@@ -971,6 +898,376 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     color: #b8ddff;
   }
 
+  .tests-plan-settings-identity {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .tests-plan-settings-identity__icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.62);
+    background: rgba(255, 255, 255, 0.075);
+  }
+
+  .tests-plan-settings-identity__copy {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .tests-plan-settings-identity__name,
+  .tests-plan-settings-identity__description {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tests-plan-settings-identity__name {
+    max-width: none;
+    color: rgba(255, 255, 255, 0.96);
+    font: inherit;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .tests-plan-settings-identity__description {
+    max-width: 620px;
+    color: rgba(255, 255, 255, 0.6);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.35;
+  }
+
+  .tests-plan-settings-identity__name::placeholder,
+  .tests-plan-settings-identity__description::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .tests-plan-settings-identity__description:focus {
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .tests-settings-page .tests-evidence-policy {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .tests-run-summary-card.platform-ui-card {
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.045);
+  }
+
+  .tests-run-summary-card.is-passed {
+    border-color: rgba(134, 226, 157, 0.2);
+  }
+
+  .tests-run-summary-card.is-failed,
+  .tests-run-summary-card.is-completed_with_errors {
+    border-color: rgba(255, 91, 91, 0.22);
+  }
+
+  .tests-run-summary-card__content {
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+  }
+
+  .tests-run-summary-card__icon {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 34px;
+    border-radius: 50%;
+    color: #8cc7ff;
+    background: rgba(74, 167, 255, 0.1);
+  }
+
+  .tests-run-summary-card.is-passed .tests-run-summary-card__icon {
+    color: #86e29d;
+    background: rgba(45, 147, 72, 0.12);
+  }
+
+  .tests-run-summary-card.is-failed .tests-run-summary-card__icon,
+  .tests-run-summary-card.is-completed_with_errors .tests-run-summary-card__icon {
+    color: #ff9b9b;
+    background: rgba(181, 42, 42, 0.12);
+  }
+
+  .tests-run-summary-card__content > div {
+    min-width: 0;
+    display: grid;
+    gap: 5px;
+    flex: 1 1 auto;
+  }
+
+  .tests-run-summary-card h2,
+  .tests-run-summary-card p {
+    margin: 0;
+  }
+
+  .tests-run-summary-card h2 {
+    color: rgba(255, 255, 255, 0.94);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.35;
+  }
+
+  .tests-run-summary-card p {
+    max-width: 760px;
+    color: rgba(255, 255, 255, 0.56);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .tests-run-summary-card__content > .platform-label {
+    flex: 0 0 auto;
+  }
+
+  .tests-table-summary {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.58);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tests-run-case-output-list {
+    display: grid;
+  }
+
+  .tests-run-case-output {
+    min-width: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  }
+
+  .tests-run-case-output:first-child {
+    border-top: 1px solid rgba(255, 255, 255, 0.075);
+  }
+
+  .tests-run-case-output > summary {
+    min-width: 0;
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 4px;
+    color: inherit;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .tests-run-case-output > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .tests-run-case-output__icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .tests-run-case-output.is-passed .tests-run-case-output__icon {
+    color: #86e29d;
+  }
+
+  .tests-run-case-output.is-failed .tests-run-case-output__icon,
+  .tests-run-case-output.is-error .tests-run-case-output__icon {
+    color: #ff9b9b;
+  }
+
+  .tests-run-case-output__copy {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+    flex: 1 1 auto;
+  }
+
+  .tests-run-case-output__copy strong,
+  .tests-run-case-output__copy small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tests-run-case-output__copy strong {
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .tests-run-case-output__copy small {
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 10px;
+  }
+
+  .tests-run-case-output__body {
+    display: grid;
+    gap: 14px;
+    padding: 4px 4px 18px 30px;
+  }
+
+  .tests-run-case-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin: 0;
+  }
+
+  .tests-run-case-metadata > div {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .tests-run-case-metadata dt,
+  .tests-run-case-metadata dd {
+    margin: 0;
+    font-size: 10px;
+  }
+
+  .tests-run-case-metadata dt {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .tests-run-case-metadata dd {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .tests-run-verification-card.platform-ui-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 18px;
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .tests-run-verification-card > svg {
+    flex: 0 0 auto;
+    margin-top: 1px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .tests-run-verification-card.is-trusted > svg {
+    color: #86e29d;
+  }
+
+  .tests-run-verification-card.is-recorded > svg {
+    color: #f4c978;
+  }
+
+  .tests-run-verification-card > div {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+    flex: 1 1 auto;
+  }
+
+  .tests-run-verification-card h2,
+  .tests-run-verification-card p {
+    margin: 0;
+  }
+
+  .tests-run-verification-card h2 {
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .tests-run-verification-card p {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .tests-run-verification-card > .platform-label {
+    flex: 0 0 auto;
+  }
+
+  .tests-run-technical-details {
+    min-width: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .tests-run-technical-details > summary {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .tests-run-technical-details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .tests-run-technical-details > summary > span {
+    display: grid;
+    gap: 4px;
+  }
+
+  .tests-run-technical-details > summary strong {
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .tests-run-technical-details > summary small {
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 10px;
+  }
+
+  .tests-run-technical-details__body {
+    display: grid;
+    gap: 20px;
+    padding: 4px 6px 18px;
+  }
+
+  .tests-run-raw-evidence {
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.075);
+  }
+
+  .tests-run-raw-evidence > summary {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .tests-run-raw-evidence[open] .tests-evidence-json {
+    margin-top: 12px;
+  }
+
   .tests-access-add-label {
     display: inline-flex;
     align-items: center;
@@ -998,9 +1295,22 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     .tests-overview-guide__cards,
     .tests-case-method-grid,
     .tests-form-grid,
-    .tests-result-evidence-grid,
-    .tests-run-evidence-grid {
+    .tests-result-evidence-grid {
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tests-run-summary-card__content,
+    .tests-run-verification-card.platform-ui-card {
+      flex-wrap: wrap;
+    }
+
+    .tests-run-summary-card__content > .platform-label,
+    .tests-run-verification-card > .platform-label {
+      margin-left: 46px;
+    }
+
+    .tests-run-case-output__body {
+      padding-left: 4px;
     }
 
     .tests-assertion-builder__header {

@@ -1453,7 +1453,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
           projectTaskDetailScreenOpen
           && selectedProjectId
           && selectedTaskId
-          && (taskView === "overview" || taskView === "backlog" || taskView === "board" || taskView === "activity")
+          && (taskView === "overview" || taskView === "backlog" || taskView === "board")
         );
         const directTaskNavigationProjectId = String(navigationRequest?.projectId || "").trim();
         const directTaskNavigationTaskId = String(navigationRequest?.taskId || "").trim();

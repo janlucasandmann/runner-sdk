@@ -67,7 +67,7 @@ export interface PlatformGitHubRepositoryBranch {
 
 export type PlatformPluginFileConnectionId = Extract<
   PlatformPluginConnectionId,
-  "github" | "google-drive" | "one-drive"
+  "github" | "google-drive" | "one-drive" | "gitlab" | "notion" | "sharepoint"
 >;
 
 export interface PlatformPluginFileSourceDefinition {

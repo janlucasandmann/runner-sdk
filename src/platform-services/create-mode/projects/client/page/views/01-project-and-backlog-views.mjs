@@ -73,15 +73,92 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
             );
         }
 
+        function getProjectCardCreatorName(project) {
+          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+            ? project.metadata
+            : {};
+          const creator = project?.createdBy && typeof project.createdBy === "object" && !Array.isArray(project.createdBy)
+            ? project.createdBy
+            : {};
+          const metadataCreator = metadata.createdBy && typeof metadata.createdBy === "object" && !Array.isArray(metadata.createdBy)
+            ? metadata.createdBy
+            : {};
+          const owner = project?.owner && typeof project.owner === "object" && !Array.isArray(project.owner)
+            ? project.owner
+            : {};
+          const metadataOwner = metadata.owner && typeof metadata.owner === "object" && !Array.isArray(metadata.owner)
+            ? metadata.owner
+            : {};
+          const creatorUserId = [
+            project?.createdByUserId,
+            project?.creatorUserId,
+            metadata.createdByUserId,
+            metadata.creatorUserId,
+            creator.userId,
+            creator.id,
+            metadataCreator.userId,
+            metadataCreator.id,
+            project?.ownerUserId,
+            metadata.ownerUserId,
+            owner.userId,
+            owner.id,
+            metadataOwner.userId,
+            metadataOwner.id,
+          ]
+            .map((value) => String(value || "").trim())
+            .find(Boolean) || "";
+          const creatorEmail = [
+            project?.createdByEmail,
+            project?.creatorEmail,
+            metadata.createdByEmail,
+            metadata.creatorEmail,
+            creator.email,
+            metadataCreator.email,
+            project?.ownerEmail,
+            metadata.ownerEmail,
+            owner.email,
+            metadataOwner.email,
+          ]
+            .map((value) => String(value || "").trim())
+            .find(Boolean) || "";
+          const creatorName = [
+            project?.createdByName,
+            project?.creatorName,
+            metadata.createdByName,
+            metadata.creatorName,
+            creator.name,
+            creator.displayName,
+            metadataCreator.name,
+            metadataCreator.displayName,
+            project?.ownerName,
+            metadata.ownerName,
+            owner.name,
+            owner.displayName,
+            metadataOwner.name,
+            metadataOwner.displayName,
+          ]
+            .map((value) => String(value || "").trim())
+            .find(Boolean) || "";
+          const normalizedCreatorEmail = creatorEmail || (creatorName.includes("@") ? creatorName : "");
+          const isCurrentUser = Boolean(
+            (creatorUserId && creatorUserId === String(currentUserId || "").trim())
+            || (
+              normalizedCreatorEmail
+              && normalizedCreatorEmail.toLowerCase() === String(currentUserEmail || "").trim().toLowerCase()
+            )
+          );
+          return formatAccountDisplayName(
+            isCurrentUser ? currentUserName : creatorName,
+            isCurrentUser ? currentUserEmail : normalizedCreatorEmail,
+            isCurrentUser ? "You" : "Project member"
+          );
+        }
+
         function renderProjectCard(project, index) {
-          const summary = {
-            ...buildEmptyPlaygroundProjectSummary(),
-            ...(project.summary && typeof project.summary === "object" ? project.summary : {}),
-          };
-          const wallpaper = getPlaygroundProjectWallpaperConfig(project, index);
           const projectIconConfig = getPlaygroundProjectIconConfig(project.icon);
           const ProjectIcon = projectIconConfig.icon;
-          const projectBlueprint = getPlaygroundProjectBlueprint(project.projectType || project.type || project.metadata?.projectType || project.metadata?.blueprintId);
+          const projectAccent = getPlaygroundProjectAccent(project, index);
+          const creatorName = getProjectCardCreatorName(project);
           const isProjectCardMenuOpen = projectCardMenuProjectId === project.id;
 
           return React.createElement("div", {
@@ -89,9 +166,6 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
               className: "playground-tasks-project-card",
               role: "button",
               tabIndex: 0,
-              style: {
-                backgroundImage: 'linear-gradient(180deg, rgba(9, 10, 12, 0.12), rgba(9, 10, 12, 0.48)), url("' + wallpaper.url + '")',
-              },
               onClick: () => handleSelectProject(project.id),
               onKeyDown: (event) => {
                 if (event.key === "Enter" || event.key === " ") {
@@ -100,16 +174,30 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                 }
             },
             },
-              React.createElement("div", { className: "playground-tasks-project-card-hero" },
+              React.createElement("div", {
+                  className: "playground-tasks-project-card-hero",
+                  style: { "--project-icon-color": projectAccent },
+                },
                 React.createElement("div", { className: "playground-tasks-project-card-top" },
-                  React.createElement("div", { className: "playground-tasks-project-card-icon" },
-                    React.createElement(ProjectIcon, { width: 20, height: 20, strokeWidth: 1.9 })
-                  ),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-project-card-actions" },
-                    React.createElement("button", {
+                  React.createElement(PlatformPopup, {
+                      open: isProjectCardMenuOpen,
+                      variant: "minimal",
+                      portal: true,
+                      placement: "bottom-end",
+                      portalOffset: 6,
+                      rootClassName: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-project-card-actions",
+                      surfaceClassName: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-project-card-menu",
+                      surfaceProps: {
+                        role: "menu",
+                        "aria-label": "Project actions",
+                        onClick: (event) => event.stopPropagation(),
+                      },
+                      animation: "down-in",
+                      trigger: React.createElement("button", {
                       type: "button",
                       className: "playground-files-header-icon-button is-plain" + (isProjectCardMenuOpen ? " is-active" : ""),
                       "aria-label": "Project actions",
+                      "aria-haspopup": "menu",
                       "aria-expanded": isProjectCardMenuOpen ? "true" : "false",
                       onClick: (event) => {
                         event.preventDefault();
@@ -117,13 +205,10 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                         setProjectCardMenuProjectId((current) => current === project.id ? "" : project.id);
                       },
                     }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
-                    isProjectCardMenuOpen
-                      ? React.createElement(PlatformPopupSurface, {
-                          className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in",
-                          onClick: (event) => event.stopPropagation(),
-                        },
-                          React.createElement("button", {
+                    },
+                    React.createElement("button", {
                             type: "button",
+                            role: "menuitem",
                             className: "tb-popup-row",
                             onClick: (event) => {
                               event.stopPropagation();
@@ -132,14 +217,12 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                             },
                           },
                             React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "Edit Project"),
-                              React.createElement("span", null, "Change icon, title, description, and card background.")
-                            )
+                            React.createElement("span", null, "Edit Project")
                           ),
-                          React.createElement("button", {
+                    React.createElement("button", {
                             type: "button",
-                            className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+                            role: "menuitem",
+                            className: "tb-popup-row",
                             onClick: (event) => {
                               event.stopPropagation();
                               setProjectCardMenuProjectId("");
@@ -147,28 +230,24 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                             },
                           },
                             React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "Delete Project"),
-                              React.createElement("span", null, "Remove this project and its planning scope.")
-                            )
+                            React.createElement("span", null, "Delete Project")
                           )
-                        )
-                      : null
                   )
                 ),
-                React.createElement("div", { className: "playground-tasks-project-card-kicker" }, projectBlueprint.shortTitle || "Project Workspace"),
+                React.createElement("div", {
+                    className: "playground-tasks-project-card-icon",
+                    "aria-hidden": "true",
+                  },
+                  React.createElement(ProjectIcon, { width: 30, height: 30, strokeWidth: 1.7 })
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-project-card-body" },
                 React.createElement("div", { className: "playground-tasks-project-card-title" }, project.name || "Untitled Project"),
                 React.createElement(PlaygroundTaskDescriptionMarkdown, {
                   content: project.description || "Open this project to access its environments, active threads, and sprint-driven task board.",
                   className: "playground-tasks-project-card-copy tb-message-markdown",
-                })
-              ),
-              React.createElement("div", { className: "playground-tasks-project-card-body" },
-                React.createElement("div", { className: "playground-tasks-project-card-metrics" },
-                  React.createElement("span", { className: "playground-tasks-chip" }, summary.threadsCount + " threads"),
-                  React.createElement("span", { className: "playground-tasks-chip" }, summary.openTasksCount + " open tasks"),
-                  React.createElement("span", { className: "playground-tasks-chip" }, projectBlueprint.shortTitle || "Project")
-                )
+                }),
+                React.createElement("div", { className: "playground-tasks-project-card-creator" }, "By " + creatorName)
               )
             );
         }

@@ -481,6 +481,65 @@
             return selectedSkill.isDraft || buildSkillVersionSaveDialogData().diffFiles.length > 0;
           }
 
+          function discardUnsavedSkillVersionChanges() {
+            if (!selectedSkill?.id || !selectedSkill.isCustom) return;
+            if (selectedSkill.isDraft) {
+              setLoadedSkills((current) => current.filter((skill) => (
+                skill.id !== PLAYGROUND_CUSTOM_SKILL_DRAFT_ID
+              )));
+              setSelectedSkillId("");
+              setSkillTitleDraft("");
+              setSkillCodeEditorState({
+                fileId: "",
+                value: "",
+                initialValue: "",
+                isSaving: false,
+                error: "",
+                message: "",
+              });
+              return;
+            }
+            const selectedVersion = getSelectedSkillVersion();
+            if (!selectedVersion) return;
+            const snapshot = normalizeSkillVersionDiffSnapshot(selectedVersion);
+            const codeFiles = normalizeSkillCodeFiles(snapshot.codeFiles);
+            const activeFile = codeFiles.find((file) => file.id === skillCodeEditorState.fileId)
+              || codeFiles[0]
+              || null;
+            const markdownFile = codeFiles.find((file) => (
+              normalizeHistoryPath(file.name).toLowerCase() === "skill.md"
+            ));
+            updateSelectedSkillLocal((current) => ({
+              ...current,
+              name: snapshot.name,
+              description: snapshot.skillDescription,
+              codeFiles,
+              markdown: markdownFile?.content || "",
+              icon: snapshot.icon,
+              category: snapshot.category,
+            }));
+            setSkillTitleDraft(snapshot.name);
+            setSkillCodeEditorState({
+              fileId: activeFile?.id || "",
+              value: activeFile?.content || "",
+              initialValue: activeFile?.content || "",
+              isSaving: false,
+              error: "",
+              message: "",
+            });
+            setSkillSaveState({ isSaving: false, error: "" });
+          }
+
+          usePlatformVersionNavigationGuard({
+            dirty: skillsPageMode === "detail" && hasSelectedSkillVersionChanges(),
+            guardId: "skill-details-unsaved-changes",
+            resourceId: String(selectedSkill?.id || ""),
+            resourceName: String(selectedSkill?.name || skillTitleDraft || "").trim() || "this skill",
+            resourceType: "Skill",
+            onDiscard: discardUnsavedSkillVersionChanges,
+            onNavigationGuardChange,
+          });
+
           function openSkillVersionSaveDialog(options = {}) {
             if (
               !selectedSkill?.id

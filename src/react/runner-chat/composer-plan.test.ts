@@ -13,7 +13,7 @@ describe("composer plan presentation", () => {
   });
 
   it("maps plans to stable user-facing labels", () => {
-    expect(getRunnerComposerPlanDisplay("business").label).toBe("Business Plan");
+    expect(getRunnerComposerPlanDisplay("business").label).toBe("Enterprise Plan");
     expect(getRunnerComposerPlanDisplay("sandbox").label).toBe(
       "Upgrade to Builder",
     );

@@ -18,6 +18,8 @@
 .resource-overview-page.is-skills,
 .resource-overview-page.is-evaluations,
 .resource-overview-page.is-tests,
+.resource-overview-page.is-teams,
+.resource-overview-page.is-metronomes,
 .resource-overview-page.is-assurance,
 .resource-overview-page.is-guardrails,
 .resource-overview-page.is-fine-tuning {
@@ -26,7 +28,6 @@
   padding: 24px;
 }
 
-.resource-overview-page.is-teams,
 .resource-overview-page.is-organizations,
 .resource-overview-page.is-marketplace,
 .resource-overview-page.is-inference {
@@ -423,7 +424,6 @@
 }
 
 @media (max-width: 900px) {
-  .resource-overview-page.is-teams,
   .resource-overview-page.is-organizations,
   .resource-overview-page.is-marketplace,
   .resource-overview-page.is-inference {
@@ -448,7 +448,6 @@
 }
 
 @media (max-width: 700px) {
-  .resource-overview-page.is-teams,
   .resource-overview-page.is-organizations,
   .resource-overview-page.is-marketplace,
   .resource-overview-page.is-inference {

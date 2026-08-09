@@ -10,6 +10,13 @@ export {
   type PlatformVersionPublishAction,
   type PlatformVersionPublishControlProps,
 } from "./platform-version-publish-control.js";
+export {
+  buildPlatformVersionNavigationGuard,
+  usePlatformVersionNavigationGuard,
+  type PlatformVersionNavigationGuard,
+  type PlatformVersionNavigationGuardOptions,
+  type PlatformVersionNavigationGuardRegistrar,
+} from "./use-platform-version-navigation-guard.js";
 
 export * from "../version-history-sidebar/index.js";
 export * from "../../ui/version-label/index.js";

@@ -3127,8 +3127,14 @@
             setDatabaseOwnerPopoverOpen(false);
   	      setDatabaseOwnerTransferTarget(null);
   	      setDatabaseOwnerTransferModalVisible(false);
-  	      setDatabaseOwnerTransferModalClosing(false);
+            setDatabaseOwnerTransferModalClosing(false);
           }, [selectedDatabaseId]);
+
+          useEffect(() => {
+            environmentOwnerTeamMembersRequestedRef.current = new Set();
+            setEnvironmentOwnerTeamMembersById({});
+            setEnvironmentOwnerPopoverOpen(false);
+          }, [selectedEnvironmentId]);
 
   	    useEffect(() => () => {
   	      if (databaseOwnerTransferModalCloseTimerRef.current !== null && typeof window !== "undefined") {
@@ -3171,6 +3177,27 @@
               void loadDatabaseOwnerTeamMembers(teamId);
             });
           }, [databaseOwnerPopoverOpen, databaseOwnerTeamMembersById, draftDatabase]);
+
+          useEffect(() => {
+            if (!environmentOwnerPopoverOpen || !draftEnvironment) return;
+            const sharedTeamIds = getEnvironmentSharedTeamIds(draftEnvironment);
+            const ownerLookupTeamIds = sharedTeamIds.length > 0
+              ? sharedTeamIds
+              : normalizedEnvironmentWorkspaceTeams.map((team) => String(team?.id || "").trim()).filter(Boolean);
+            const missingTeamIds = ownerLookupTeamIds.filter((teamId) => (
+              !Object.prototype.hasOwnProperty.call(environmentOwnerTeamMembersById, teamId)
+              && !environmentOwnerTeamMembersRequestedRef.current.has(teamId)
+            ));
+            missingTeamIds.forEach((teamId) => {
+              environmentOwnerTeamMembersRequestedRef.current.add(teamId);
+              void loadEnvironmentOwnerTeamMembers(teamId);
+            });
+          }, [
+            draftEnvironment,
+            environmentOwnerPopoverOpen,
+            environmentOwnerTeamMembersById,
+            normalizedEnvironmentWorkspaceTeams,
+          ]);
 
           useEffect(() => {
             if (!databaseTeamMenuId) {
@@ -3656,31 +3683,6 @@
               window.removeEventListener("keydown", handleEnvironmentComposerRuntimePopoverEscape);
             };
           }, [environmentComposerRuntimePopover]);
-
-          useEffect(() => {
-            if (!environmentActionsPopoverOpen) return undefined;
-
-            function handleEnvironmentActionsPopoverPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (!target || !environmentActionsPopoverRef.current || environmentActionsPopoverRef.current.contains(target)) {
-                return;
-              }
-              setEnvironmentActionsPopoverOpen(false);
-            }
-
-            function handleEnvironmentActionsPopoverEscape(event) {
-              if (event.key === "Escape") {
-                setEnvironmentActionsPopoverOpen(false);
-              }
-            }
-
-            document.addEventListener("mousedown", handleEnvironmentActionsPopoverPointerDown);
-            window.addEventListener("keydown", handleEnvironmentActionsPopoverEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleEnvironmentActionsPopoverPointerDown);
-              window.removeEventListener("keydown", handleEnvironmentActionsPopoverEscape);
-            };
-          }, [environmentActionsPopoverOpen]);
 
           useEffect(() => {
             if (!serverPublishMenuOpen) return undefined;

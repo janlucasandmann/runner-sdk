@@ -7,4 +7,5 @@ export * from "./search/index.js";
 export * from "./selector/index.js";
 export * from "./switch/index.js";
 export * from "./ticket-item/index.js";
+export * from "./toggle/index.js";
 export * from "./version-label/index.js";

@@ -469,11 +469,37 @@ const computerDetailControllerSource = await fs.readFile(
 if (!computerDetailControllerSource.includes("React.createElement(ComputerDetailPage")) {
   failures.push("the computer detail controller must consume the modular ComputerDetailPage");
 }
+if (/React\.createElement\(ComputerDetailPage, \{[\s\S]{0,500}\bsidebar:/.test(computerDetailControllerSource)) {
+  failures.push("ComputerDetailPage must not retain the removed Computer Details sidebar");
+}
 if (!computerDetailControllerSource.includes("React.createElement(PlatformAnalyticsSection")) {
   failures.push("computer detail analytics must use PlatformAnalyticsSection");
 }
-if (!computerDetailControllerSource.includes("React.createElement(PlatformInstructionsEditor")) {
-  failures.push("computer descriptions must use PlatformInstructionsEditor");
+if (
+  !computerDetailControllerSource.includes("const environmentDetailsSection =")
+  || !computerDetailControllerSource.includes("environmentAnalyticsSection,\n              environmentDetailsSection")
+) {
+  failures.push("computer details must follow Analytics in the General content section");
+}
+if (
+  !computerDetailControllerSource.includes("React.createElement(PlatformResourceActionsMenu")
+  || !computerDetailControllerSource.includes('label: "Use via API"')
+  || !computerDetailControllerSource.includes('label: "Rename"')
+  || !computerDetailControllerSource.includes('label: "Delete"')
+) {
+  failures.push("computer operations must use the centralized breadcrumb resource-actions menu");
+}
+if (
+  !computerDetailControllerSource.includes('className: "playground-computer-detail-profile-description"')
+  || !computerDetailControllerSource.includes('updateEnvironmentField("description", event.target.value)')
+) {
+  failures.push("computer descriptions must use the inline editable identity field");
+}
+if (computerDetailControllerSource.includes("const descriptionSection = React.createElement(PlatformInstructionsEditor")) {
+  failures.push("computer descriptions must not retain a standalone instructions editor");
+}
+if (!computerDetailControllerSource.includes('className: "playground-computer-detail-profile-icon"')) {
+  failures.push("computer identity must include its icon tile");
 }
 if (!computerDetailControllerSource.includes("React.createElement(PlatformSettingsSectionList")) {
   failures.push("computer advanced settings must use PlatformSettingsSectionList");

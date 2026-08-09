@@ -1,12 +1,12 @@
 const FALLBACK_CATALOG = Object.freeze({
-  version: "2026-07-14.v2",
+  version: "2026-08-09.v4",
   billingAccountScope: "organization",
   plans: [
     {
       id: "sandbox",
-      name: "Sandbox",
-      audience: "Evaluation",
-      description: "Evaluate Computer Agents with a default agent and a constrained cloud computer.",
+      name: "Pay-as-you-go",
+      audience: "Usage-based",
+      description: "Pay only for the Computer Agents resources and services your organization uses.",
       price: { monthlyUsd: 0, annualMonthlyUsd: 0, annualTotalUsd: 0, additionalBuilderSeatMonthlyUsd: null, additionalBuilderSeatAnnualMonthlyUsd: null },
       includedUsageUsd: 1,
       includedUsageCadence: "one_time",
@@ -88,8 +88,8 @@ const FALLBACK_CATALOG = Object.freeze({
       features: ["$15 pooled monthly usage credit", "Three builder seats", "Unlimited operators and viewers", "Shared agents, projects, and computers", "Squads, roles, and pooled billing", "Bring your own inference endpoint"],
     },
     {
-      id: "business",
-      name: "Business",
+      id: "enterprise",
+      name: "Enterprise",
       audience: "Governed organizations",
       description: "Add security, policy, identity, and organization-wide analytics for production use.",
       price: { monthlyUsd: 249, annualMonthlyUsd: 209, annualTotalUsd: 2508, additionalBuilderSeatMonthlyUsd: 12, additionalBuilderSeatAnnualMonthlyUsd: 10 },
@@ -130,52 +130,6 @@ const FALLBACK_CATALOG = Object.freeze({
       ],
       features: ["$40 pooled monthly usage credit", "Ten builder seats", "Audit logs and approval policies", "SAML SSO and SCIM", "Service accounts and organization analytics", "Priority support"],
     },
-    {
-      id: "enterprise",
-      name: "Enterprise",
-      audience: "Regulated and large organizations",
-      description: "Contracted capacity, deployment controls, compliance, and support for critical operations.",
-      price: { monthlyUsd: null, annualMonthlyUsd: null, annualTotalUsd: null, additionalBuilderSeatMonthlyUsd: null, additionalBuilderSeatAnnualMonthlyUsd: null },
-      includedUsageUsd: 40,
-      includedUsageCadence: "commitment",
-      includedBuilderSeats: "unlimited",
-      includedOperatorSeats: "unlimited",
-      defaultMonthlyOverageLimitUsd: 0,
-      selfServe: false,
-      entitlements: [
-        "agents.default.use",
-        "agents.custom.create",
-        "projects.use",
-        "imagine.generate",
-        "metronomes.use",
-        "tags.use",
-        "computers.cloud.use",
-        "computers.cloud.create",
-        "schedules.use",
-        "api.access",
-        "evaluations.use",
-        "tests.use",
-        "guardrails.use",
-        "fine_tuning.use",
-        "security.repositories.use",
-        "servers.deploy",
-        "organizations.collaborate",
-        "squads.use",
-        "billing.pooled",
-        "governance.roles",
-        "inference.byo",
-        "audit_logs.use",
-        "governance.approvals",
-        "sso.saml",
-        "scim.use",
-        "service_accounts.use",
-        "analytics.organization",
-        "private_networking.use",
-        "data_residency.configure",
-        "support.sla",
-      ],
-      features: ["Contracted usage commitment", "Private networking and data residency", "Custom retention and dedicated capacity", "Security and architecture review", "SLA and enterprise support"],
-    },
   ],
   topUps: [
     { id: "starter", name: "Starter Pack", priceUsd: 10, creditsUsd: 10, description: "A small one-time top-up for quick follow-ups and lighter agent runs." },
@@ -193,13 +147,13 @@ const TIER_ALIASES = Object.freeze({
   pro: "builder",
   team: "team",
   scale: "team",
-  business: "business",
+  business: "enterprise",
   enterprise: "enterprise",
   max: "enterprise",
-  company: "business",
-  corporate: "business",
-  organization: "business",
-  org: "business",
+  company: "enterprise",
+  corporate: "enterprise",
+  organization: "enterprise",
+  org: "enterprise",
   enterprise_plan: "enterprise",
 });
 
@@ -213,7 +167,6 @@ export const PLAYGROUND_BILLING_CATALOG_SCRIPT = `
         sandbox: Battery,
         builder: BatteryLow,
         team: BatteryMedium,
-        business: BatteryFull,
         enterprise: BatteryFull,
       });
       const SETTINGS_TIER_ALIAS_MAP = Object.freeze(${inlineJson(TIER_ALIASES)});
@@ -221,7 +174,7 @@ export const PLAYGROUND_BILLING_CATALOG_SCRIPT = `
       function normalizeSettingsTierId(value) {
         const normalized = String(value || "").trim().toLowerCase();
         if (!normalized) return "";
-        if (normalized === "sandbox" || normalized === "builder" || normalized === "team" || normalized === "business" || normalized === "enterprise") {
+        if (normalized === "sandbox" || normalized === "builder" || normalized === "team" || normalized === "enterprise") {
           return normalized;
         }
         const normalizedAlias = normalized.replace(/[\\s-]+/g, "_");
@@ -231,7 +184,7 @@ export const PLAYGROUND_BILLING_CATALOG_SCRIPT = `
       function formatSubscriptionTier(value) {
         const tierId = normalizeSettingsTierId(value) || "sandbox";
         const plan = SETTINGS_PLAN_CATALOG.find((candidate) => candidate.id === tierId);
-        return plan?.name || "Sandbox";
+        return plan?.name || "Pay-as-you-go";
       }
 
       function mapSettingsBillingPlan(plan) {
@@ -240,8 +193,12 @@ export const PLAYGROUND_BILLING_CATALOG_SCRIPT = `
         const yearlyPrice = plan?.price?.annualMonthlyUsd == null ? null : Math.max(0, Number(plan.price.annualMonthlyUsd) || 0);
         return {
           ...plan,
-          id: String(plan?.id || "sandbox"),
-          name: String(plan?.name || "Sandbox"),
+          id: normalizeSettingsTierId(plan?.id) || "sandbox",
+          name: normalizeSettingsTierId(plan?.id) === "sandbox"
+            ? "Pay-as-you-go"
+            : normalizeSettingsTierId(plan?.id) === "enterprise"
+              ? "Enterprise"
+              : String(plan?.name || "Pay-as-you-go"),
           monthlyPrice,
           yearlyPrice,
           annualTotalUsd: plan?.price?.annualTotalUsd == null ? null : Math.max(0, Number(plan.price.annualTotalUsd) || 0),
@@ -266,6 +223,24 @@ export const PLAYGROUND_BILLING_CATALOG_SCRIPT = `
         };
       }
 
+      function mapSettingsBillingPlans(plans) {
+        const mappedPlans = (Array.isArray(plans) ? plans : []).map(mapSettingsBillingPlan);
+        const plansById = new Map();
+        mappedPlans.forEach((plan) => {
+          const current = plansById.get(plan.id);
+          if (!current) {
+            plansById.set(plan.id, plan);
+            return;
+          }
+          const currentScore = (current.selfServe === false ? 0 : 2) + (current.monthlyPrice == null ? 0 : 1);
+          const candidateScore = (plan.selfServe === false ? 0 : 2) + (plan.monthlyPrice == null ? 0 : 1);
+          if (candidateScore > currentScore) plansById.set(plan.id, plan);
+        });
+        return ["sandbox", "builder", "team", "enterprise"]
+          .map((planId) => plansById.get(planId))
+          .filter(Boolean);
+      }
+
       function mapSettingsBillingTopUp(topUp) {
         const creditsUsd = Math.max(0, Number(topUp?.creditsUsd) || 0);
         return {
@@ -280,7 +255,7 @@ export const PLAYGROUND_BILLING_CATALOG_SCRIPT = `
       }
 
       let settingsBillingCatalogVersion = SETTINGS_BILLING_FALLBACK_CATALOG.version;
-      let SETTINGS_PLAN_CATALOG = SETTINGS_BILLING_FALLBACK_CATALOG.plans.map(mapSettingsBillingPlan);
+      let SETTINGS_PLAN_CATALOG = mapSettingsBillingPlans(SETTINGS_BILLING_FALLBACK_CATALOG.plans);
       let SETTINGS_TOP_UP_CATALOG = SETTINGS_BILLING_FALLBACK_CATALOG.topUps.map(mapSettingsBillingTopUp);
 
       function getSettingsPlanById(value) {
@@ -316,10 +291,7 @@ export const PLAYGROUND_BILLING_CATALOG_SCRIPT = `
       }
 
       function getSettingsPlanOptions(currentTierId) {
-        const normalizedCurrentTierId = normalizeSettingsTierId(currentTierId) || "sandbox";
-        return SETTINGS_PLAN_CATALOG.filter((plan) =>
-          plan.id !== "sandbox" || normalizedCurrentTierId === "sandbox"
-        );
+        return SETTINGS_PLAN_CATALOG.filter((plan) => plan.id !== "sandbox");
       }
 
       function openSettingsContactSales() {
@@ -330,7 +302,7 @@ export const PLAYGROUND_BILLING_CATALOG_SCRIPT = `
         const tierId = normalizeSettingsTierId(value);
         if (tierId === "builder") return "/img/logos/proicon.png";
         if (tierId === "team") return "/img/logos/scaleicon.png";
-        if (tierId === "business" || tierId === "enterprise") return "/img/logos/maxicon.png";
+        if (tierId === "enterprise") return "/img/logos/maxicon.png";
         return "/img/logos/settingsicon.png";
       }
 
@@ -346,7 +318,7 @@ export const PLAYGROUND_BILLING_CATALOG_SCRIPT = `
           throw new Error("The billing catalog response is invalid.");
         }
         settingsBillingCatalogVersion = String(payload.version || settingsBillingCatalogVersion);
-        SETTINGS_PLAN_CATALOG = payload.plans.map(mapSettingsBillingPlan);
+        SETTINGS_PLAN_CATALOG = mapSettingsBillingPlans(payload.plans);
         if (Array.isArray(payload.topUps) && payload.topUps.length > 0) {
           SETTINGS_TOP_UP_CATALOG = payload.topUps.map(mapSettingsBillingTopUp);
         }

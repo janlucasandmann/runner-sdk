@@ -1,5 +1,5 @@
-import { Globe as LucideGlobe } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeft, ChevronRight, Globe as LucideGlobe } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { PlatformConnectorActionDetail } from "../../composite/connector-action-detail/index.js";
 import type {
   RunnerConnectorActionPreviewData,
@@ -8,8 +8,8 @@ import type {
   RunnerWebSearchPreviewData,
   RunnerWebSearchPreviewSource,
 } from "./preview-contracts.js";
-import { RunnerImagePreviewSurface } from "./image-preview-surface.js";
 import { RunnerMarkdown } from "../shared/runner-markdown.js";
+import { RunnerImagePreviewSurface } from "./image-preview-surface.js";
 
 function getWebSearchPreviewSourceDomain(source: RunnerWebSearchPreviewSource): string {
   if (source.domain) {
@@ -63,38 +63,141 @@ export function RunnerWebSearchSidebarPreview({ data }: { data: RunnerWebSearchP
     : [];
   const sources = Array.isArray(data.sources) ? data.sources.filter((source) => source?.url) : [];
   const hasRawJson = Boolean(data.rawJsonText?.trim());
+  const imageKey = images
+    .map((image, index) => image.url || image.thumbnail || `image-${index}`)
+    .join("|");
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [imageTransition, setImageTransition] = useState<{
+    direction: "next" | "prev";
+    fromIndex: number;
+    toIndex: number;
+  } | null>(null);
+  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previousImageKeyRef = useRef(imageKey);
+
+  useEffect(() => {
+    if (previousImageKeyRef.current === imageKey) {
+      return;
+    }
+    previousImageKeyRef.current = imageKey;
+    setSelectedImageIndex(0);
+    setImageTransition(null);
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current);
+      transitionTimerRef.current = null;
+    }
+  }, [imageKey]);
+
+  useEffect(() => {
+    return () => {
+      if (transitionTimerRef.current) {
+        clearTimeout(transitionTimerRef.current);
+      }
+    };
+  }, []);
+
+  const moveImage = (direction: "next" | "prev") => {
+    if (images.length < 2) {
+      return;
+    }
+    const step = direction === "next" ? 1 : -1;
+    const fromIndex = selectedImageIndex;
+    const toIndex = (fromIndex + step + images.length) % images.length;
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current);
+    }
+    setSelectedImageIndex(toIndex);
+    setImageTransition({ direction, fromIndex, toIndex });
+    transitionTimerRef.current = setTimeout(() => {
+      setImageTransition(null);
+      transitionTimerRef.current = null;
+    }, 360);
+  };
+
+  const selectedImage = images[selectedImageIndex] || null;
+  const transitionFromImage = imageTransition ? images[imageTransition.fromIndex] || null : null;
+  const transitionToImage = imageTransition ? images[imageTransition.toIndex] || null : null;
+
+  const renderImage = (image: (typeof images)[number] | null, index: number, className: string) => {
+    if (!image) {
+      return null;
+    }
+    const imageUrl = image.url || image.thumbnail || "";
+    return (
+      <img
+        key={`${imageUrl}-${index}`}
+        className={className}
+        src={imageUrl}
+        alt={image.title || `Search image ${index + 1}`}
+        loading="lazy"
+        referrerPolicy="no-referrer"
+      />
+    );
+  };
 
   return (
     <main className="tb-web-search-sidebar-preview">
-      <header className="tb-web-search-sidebar-title">
-        <h1>Web Search</h1>
-        {data.query ? <p>{data.query}</p> : null}
-      </header>
       {data.isError ? (
         <section className="tb-web-search-sidebar-error">
           {data.errorMessage || "Web search failed."}
         </section>
       ) : null}
-      {images.length > 0 ? (
+      {selectedImage ? (
         <section className="tb-web-search-sidebar-section">
-          <div className="tb-web-search-sidebar-image-grid">
-            {images.map((image, index) => {
-              const imageUrl = image.url || image.thumbnail || "";
-              return (
-                <figure key={imageUrl} className="tb-web-search-sidebar-image-card">
-                  <img
-                    src={imageUrl}
-                    alt={image.title || `Search image ${index + 1}`}
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
-                  />
-                  {image.title ? <figcaption>{image.title}</figcaption> : null}
-                </figure>
-              );
-            })}
+          <div className="tb-web-search-sidebar-image-carousel">
+            <div
+              className={`tb-web-search-sidebar-image-carousel-frame${
+                imageTransition ? ` is-${imageTransition.direction}` : ""
+              }`}
+            >
+              {imageTransition
+                ? renderImage(
+                    transitionFromImage,
+                    imageTransition.fromIndex,
+                    "tb-web-search-sidebar-image-carousel-image is-outgoing",
+                  )
+                : renderImage(
+                    selectedImage,
+                    selectedImageIndex,
+                    "tb-web-search-sidebar-image-carousel-image is-current",
+                  )}
+              {imageTransition
+                ? renderImage(
+                    transitionToImage,
+                    imageTransition.toIndex,
+                    "tb-web-search-sidebar-image-carousel-image is-incoming",
+                  )
+                : null}
+            </div>
+            <div className="tb-web-search-sidebar-image-carousel-controls">
+              <button
+                type="button"
+                className="tb-web-search-sidebar-image-carousel-button"
+                onClick={() => moveImage("prev")}
+                disabled={images.length < 2}
+                aria-label="Previous search image"
+                title="Previous search image"
+              >
+                <ChevronLeft width={16} height={16} strokeWidth={1.8} />
+              </button>
+              <div className="tb-web-search-sidebar-image-carousel-label">
+                {selectedImage.title || `${selectedImageIndex + 1} / ${images.length}`}
+              </div>
+              <button
+                type="button"
+                className="tb-web-search-sidebar-image-carousel-button"
+                onClick={() => moveImage("next")}
+                disabled={images.length < 2}
+                aria-label="Next search image"
+                title="Next search image"
+              >
+                <ChevronRight width={16} height={16} strokeWidth={1.8} />
+              </button>
+            </div>
           </div>
         </section>
       ) : null}
+      {data.query ? <p className="tb-web-search-sidebar-query">{data.query}</p> : null}
       {data.summary ? (
         <section className="tb-web-search-sidebar-summary">
           <RunnerMarkdown
@@ -157,21 +260,19 @@ export function RunnerImageUnderstandingSidebarPreview({
   const images = Array.isArray(data.images)
     ? data.images.filter((image) => image && (image.url || image.path))
     : [];
+  const imageTitle =
+    data.imageName?.trim()
+    || images[0]?.name?.trim()
+    || images[0]?.path?.split(/[\\/]/).filter(Boolean).pop()
+    || (images.length > 1 ? `${images.length} images` : "Image");
   const layoutClassName = ["tb-image-understanding-layout", images.length > 1 ? "is-multiple" : ""]
     .filter(Boolean)
     .join(" ");
 
   return (
     <main className="tb-image-understanding-sidebar-preview">
-      <header className="tb-image-understanding-title">
-        <h1>Image Understanding</h1>
-        <p>
-          {data.imageName || (images.length === 1 ? images[0]?.name : `${images.length} images`)}
-        </p>
-      </header>
       <section className={layoutClassName}>
         <div className="tb-image-understanding-preview">
-          <div className="tb-image-understanding-preview-title">Image Understanding</div>
           {images.length > 0 ? (
             <div className="tb-image-understanding-preview-list">
               {images.map((image) => {
@@ -189,7 +290,6 @@ export function RunnerImageUnderstandingSidebarPreview({
                     ) : (
                       <div className="tb-image-understanding-empty">Image preview unavailable.</div>
                     )}
-                    <figcaption>{image.name || image.path || "Image"}</figcaption>
                   </figure>
                 );
               })}
@@ -199,6 +299,7 @@ export function RunnerImageUnderstandingSidebarPreview({
           )}
         </div>
         <div className="tb-image-understanding-result">
+          <h2 className="tb-image-understanding-result-title">{imageTitle}</h2>
           {data.resultText ? (
             data.isError ? (
               <div className="tb-image-understanding-error">{data.resultText}</div>

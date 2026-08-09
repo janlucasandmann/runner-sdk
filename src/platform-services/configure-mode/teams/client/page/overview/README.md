@@ -9,7 +9,7 @@ This directory contains overview models, analytics, tables, and page composition
 ## Contents
 
 - [`index.ts`](index.ts) — Public barrel or composition entry point.
-- [`teams-overview-guide.tsx`](teams-overview-guide.tsx) — Focused implementation of Teams Overview Guide.
+- [`teams-overview-guide.tsx`](teams-overview-guide.tsx) — Focused hero composition for Teams Overview.
 - [`teams-overview-page.test.tsx`](teams-overview-page.test.tsx) — Regression coverage for Teams Overview Page.
 - [`teams-overview-page.tsx`](teams-overview-page.tsx) — Presentation composition for Teams Overview Page.
 

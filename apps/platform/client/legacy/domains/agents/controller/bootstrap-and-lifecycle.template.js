@@ -804,6 +804,7 @@
           const agentProfilePhotoUrl = !agentProfileAvatarBroken && canRenderAvatarImage(rawAgentProfilePhotoUrl)
             ? rawAgentProfilePhotoUrl
             : "";
+          const agentProfileHoverPhotoUrl = getPlaygroundAgentProfileHoverPhotoUrl(agentProfilePhotoUrl);
           const hasExplicitAgentProfilePhoto = Boolean(explicitAgentProfilePhotoUrl);
           const canEditAgentProfilePhoto = Boolean(
             draftAgent

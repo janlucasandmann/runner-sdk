@@ -18,7 +18,7 @@ export const CONFIGURE_HOME_TOP_NAVIGATION_SCRIPT = `        function openConfig
               return;
             }
             if (normalizedTargetId === "organization") {
-              openOrganizationOverviewPage();
+              openOrganizationPage();
               setOrganizationPageCreateModalOpen(true);
             }
           });
@@ -75,7 +75,7 @@ export const CONFIGURE_HOME_TOP_NAVIGATION_SCRIPT = `        function openConfig
           return renderAppHeader({
             className: "playground-configure-navbar",
             pathItems: [
-              { label: "Configure" },
+              { label: isNotificationsPage ? "Admin" : "Configure" },
               { label: isNotificationsPage ? "Notifications" : "Overview" },
             ],
             includeSearchDivider: true,

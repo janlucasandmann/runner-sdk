@@ -56,9 +56,35 @@ export const APP_SIDEBAR_MENU_LIFECYCLE_SCRIPT = `        useEffect(() => {
 `;
 
 export const APP_SIDEBAR_PAGE_MODE_LIFECYCLE_SCRIPT = `        useEffect(() => {
-          if ((activePage === "team" || activePage === "organization") && sidebarWorkspaceMode !== "configure") {
-            setSidebarWorkspaceMode("configure");
+          const isAdminPage = activePage === "team"
+            || activePage === "organization"
+            || (activePage === "configure" && configureHomeTab === "notifications");
+          if (isAdminPage && sidebarWorkspaceMode !== "admin") {
+            setSidebarWorkspaceMode("admin");
           }
-        }, [activePage, sidebarWorkspaceMode]);
+        }, [activePage, configureHomeTab, sidebarWorkspaceMode]);
+
+`;
+
+export const APP_SIDEBAR_KEYBOARD_LIFECYCLE_SCRIPT = `        useEffect(() => {
+          function handleSidebarShortcutKeyDown(event) {
+            if (
+              event.defaultPrevented
+              || event.repeat
+              || !(event.metaKey || event.ctrlKey)
+              || event.altKey
+              || event.shiftKey
+              || String(event.key || "").toLowerCase() !== "b"
+            ) {
+              return;
+            }
+
+            event.preventDefault();
+            setSidebarOpen((current) => !current);
+          }
+
+          window.addEventListener("keydown", handleSidebarShortcutKeyDown);
+          return () => window.removeEventListener("keydown", handleSidebarShortcutKeyDown);
+        }, []);
 
 `;

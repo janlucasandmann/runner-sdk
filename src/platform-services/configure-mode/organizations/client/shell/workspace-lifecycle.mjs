@@ -9,6 +9,8 @@ export const ORGANIZATIONS_WORKSPACE_LIFECYCLE_SCRIPT = `	        useEffect(() =
 	          setSettingsBudgetStatus(null);
 	          setSettingsInvoices([]);
 	          setSettingsSubscriptions([]);
+	          setOrganizationPageProviderBilling(null);
+	          setOrganizationPageBillingDocuments([]);
 	          setSettingsUsageSummary(createEmptySettingsUsageSummary());
 	          setSettingsUsageBreakdown([]);
 	          setSettingsUsageResourceItems([]);

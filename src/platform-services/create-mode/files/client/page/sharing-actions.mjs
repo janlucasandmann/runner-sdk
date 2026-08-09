@@ -54,6 +54,57 @@ export const FILES_PAGE_SHARING_ACTIONS_SCRIPT = `
           setIsPreviewOpen(shouldOpenPreview && Boolean(normalizedPath));
         }
 
+        function handleEntryCheckboxToggle(entry, event) {
+          event?.preventDefault?.();
+          event?.stopPropagation?.();
+          const targetPath = normalizeHistoryPath(entry?.path || "");
+          if (!targetPath) {
+            return;
+          }
+          setSelectedPaths((current) => {
+            const next = new Set(current);
+            if (next.has(targetPath)) {
+              next.delete(targetPath);
+            } else {
+              next.add(targetPath);
+            }
+            return next;
+          });
+          setSelectionAnchorPath(targetPath);
+          setContextMenu(null);
+          setToolbarPopover("");
+        }
+
+        function handleVisibleEntriesCheckboxToggle(entries, event) {
+          event?.preventDefault?.();
+          event?.stopPropagation?.();
+          const paths = [];
+          const seen = new Set();
+          for (const entry of Array.isArray(entries) ? entries : []) {
+            const path = normalizeHistoryPath(entry?.path || "");
+            if (!path || seen.has(path)) continue;
+            seen.add(path);
+            paths.push(path);
+          }
+          if (!paths.length) return;
+          const allVisibleEntriesSelected = paths.every((path) => selectedPaths.has(path));
+          setSelectedPaths((current) => {
+            const next = new Set(current);
+            paths.forEach((path) => {
+              if (allVisibleEntriesSelected) next.delete(path);
+              else next.add(path);
+            });
+            return next;
+          });
+          setSelectionAnchorPath(allVisibleEntriesSelected ? "" : paths[paths.length - 1]);
+          if (allVisibleEntriesSelected && paths.includes(normalizeHistoryPath(previewTargetPath))) {
+            setPreviewTargetPath("");
+            setIsPreviewOpen(false);
+          }
+          setContextMenu(null);
+          setToolbarPopover("");
+        }
+
         function pushPath(nextPath, nextSelectionPaths = []) {
           const normalizedPath = normalizeHistoryPath(nextPath);
           if (normalizedPath !== currentPath) {

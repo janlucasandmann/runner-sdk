@@ -254,6 +254,17 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
             : canGoForward;
           return React.createElement("div", { className: "playground-files-library-path-row" },
             React.createElement("div", { className: "playground-files-library-path-actions" },
+              React.createElement(PlatformCheckbox, {
+                className: "playground-files-select-all-checkbox",
+                checked: visibleSelectionState.allSelected,
+                indeterminate: visibleSelectionState.indeterminate,
+                disabled: visibleSelectionState.paths.length === 0,
+                "aria-label": visibleSelectionState.allSelected
+                  ? "Deselect all visible files"
+                  : "Select all visible files",
+                onPointerDown: (event) => event.stopPropagation(),
+                onClick: (event) => handleVisibleEntriesCheckboxToggle(visibleSelectionState.entries, event),
+              }),
               React.createElement("button", {
                 type: "button",
                 className: "playground-files-nav-button",

@@ -41,6 +41,45 @@ describe("PlatformSwitch", () => {
     expect(onValueChange).toHaveBeenCalledWith("squads");
   });
 
+  it("moves one shared indicator between variable-width options", () => {
+    const { container, rerender } = render(
+      <PlatformSwitch
+        ariaLabel="Agent type"
+        value="agents"
+        options={OPTIONS}
+        onValueChange={() => undefined}
+      />
+    );
+    const agentOption = screen.getByRole("radio", { name: "Agents" });
+    const squadOption = screen.getByRole("radio", { name: "Squads" });
+    Object.defineProperties(agentOption, {
+      offsetLeft: { configurable: true, value: 0 },
+      offsetWidth: { configurable: true, value: 72 },
+    });
+    Object.defineProperties(squadOption, {
+      offsetLeft: { configurable: true, value: 72 },
+      offsetWidth: { configurable: true, value: 84 },
+    });
+    fireEvent(window, new Event("resize"));
+
+    const indicator = container.querySelector<HTMLElement>(
+      ".platform-switch__indicator",
+    );
+    expect(indicator?.style.width).toBe("72px");
+    expect(indicator?.style.transform).toBe("translateX(0px)");
+
+    rerender(
+      <PlatformSwitch
+        ariaLabel="Agent type"
+        value="squads"
+        options={OPTIONS}
+        onValueChange={() => undefined}
+      />
+    );
+    expect(indicator?.style.width).toBe("84px");
+    expect(indicator?.style.transform).toBe("translateX(72px)");
+  });
+
   it("supports arrow-key selection", () => {
     const onValueChange = vi.fn();
     render(

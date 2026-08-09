@@ -17,19 +17,25 @@ export const APP_SIDEBAR_COMPONENT_SCRIPT = `        function renderExpandedSide
               ),
               renderAppSidebarModeSelector(),
               React.createElement("div", { className: "app-sidebar-top-actions" },
-                React.createElement("button", {
-                  type: "button",
+                React.createElement(PlatformIconButton, {
                   className: "app-sidebar-top-action",
                   onClick: openThreadSearch,
                   "aria-label": "Search",
-                  title: "Search",
+                  "aria-keyshortcuts": "Meta+K Control+K",
+                  tooltip: "Search",
+                  tooltipShortcut: "⌘ K",
+                  tooltipPlacement: "bottom",
+                  tooltipAlign: "end",
                 }, React.createElement(Search, { className: "app-sidebar-top-action-icon", strokeWidth: 1.7 })),
-                React.createElement("button", {
-                  type: "button",
+                React.createElement(PlatformIconButton, {
                   className: "app-sidebar-top-action",
                   onClick: () => setSidebarOpen(false),
                   "aria-label": "Collapse sidebar",
-                  title: "Collapse sidebar",
+                  "aria-keyshortcuts": "Meta+B Control+B",
+                  tooltip: "Close sidebar",
+                  tooltipShortcut: "⌘ B",
+                  tooltipPlacement: "bottom",
+                  tooltipAlign: "end",
                 }, React.createElement(PanelLeft, { className: "app-sidebar-top-action-icon", strokeWidth: 1.7 }))
               )
             ),
@@ -127,7 +133,8 @@ export const APP_SIDEBAR_COMPONENT_SCRIPT = `        function renderExpandedSide
                 className: "sidebar-rail-logo-button",
                 onClick: () => setSidebarOpen(true),
                 "aria-label": "Open sidebar",
-                title: "Open sidebar"
+                "aria-keyshortcuts": "Meta+B Control+B",
+                title: "Open sidebar · ⌘ B"
               },
                 React.createElement("img", {
                   className: "sidebar-rail-logo",

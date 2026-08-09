@@ -12962,9 +12962,9 @@
         }
   
         .playground-resources-page.is-develop-configure-page .playground-computer-detail-fact-rows {
-          margin-top: 2px;
-          padding-top: 16px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          margin-top: 0;
+          padding-top: 0;
+          border-top: 0;
         }
   
         .playground-server-detail-chart-block.playground-database-overview-chart-block {
@@ -13375,11 +13375,103 @@
         .playground-computer-detail-fact-rows {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 0;
           padding-top: 0;
           border-top: 0;
         }
-  
+
+        .playground-computer-details-section {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .playground-computer-details-section-title {
+          margin: 0;
+          padding: 0 0 12px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          color: #fff;
+          font-size: 14px;
+          font-weight: 400;
+          line-height: 1.35;
+        }
+
+        .playground-computer-details-section .playground-tasks-detail-fact {
+          min-height: 46px;
+          grid-template-columns: minmax(140px, 1fr) minmax(0, 1fr);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+        }
+
+        .playground-computer-details-section .playground-tasks-detail-fact:last-child {
+          border-bottom: 0;
+        }
+
+        .playground-computer-details-section .playground-tasks-detail-fact-control {
+          overflow: visible;
+        }
+
+        .playground-computer-details-section .playground-environments-editor-fact-value {
+          min-width: 0;
+          max-width: 100%;
+          overflow: hidden;
+          color: rgba(255, 255, 255, 0.68);
+          text-align: right;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .playground-computer-details-section .playground-develop-resource-identity-value {
+          min-width: 0;
+          max-width: 100%;
+          justify-content: flex-end;
+        }
+
+        .playground-computer-details-section .playground-computer-profile-select-popup {
+          width: min(280px, 100%);
+          margin-left: auto;
+        }
+
+        .playground-computer-detail-copy-value {
+          min-width: 0;
+          width: 100%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 8px;
+        }
+
+        .playground-computer-detail-copy-value .playground-environments-editor-fact-value {
+          flex: 0 1 auto;
+        }
+
+        .playground-computer-detail-copy-button {
+          flex: 0 0 auto;
+          width: 18px;
+          height: 18px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          border: 0;
+          border-radius: 999px;
+          background: transparent;
+          color: rgba(255, 255, 255, 0.62);
+          cursor: pointer;
+          transition: color 160ms ease, background 160ms ease;
+        }
+
+        .playground-computer-detail-copy-button:hover,
+        .playground-computer-detail-copy-button:focus-visible {
+          outline: none;
+          background: rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.92);
+        }
+
+        .playground-computer-detail-copy-button:disabled {
+          opacity: 0.35;
+          cursor: default;
+        }
+
         .playground-server-detail-fact-rows {
           display: flex;
           flex-direction: column;
@@ -17129,7 +17221,7 @@
           display: flex;
           flex-direction: column;
           border-left: 1px solid rgba(255, 255, 255, 0.075);
-          background: rgba(255, 255, 255, 0.05);
+          background: #000;
           overflow: hidden;
         }
 
@@ -26613,10 +26705,10 @@
         }
   
         .playground-settings-page .playground-settings-usage-top-chart .playground-project-overview-chart-kpis {
-          width: calc(100% + 40px);
+          width: calc(100% + 38px);
           margin-top: -20px;
-          margin-left: -20px;
-          margin-right: -20px;
+          margin-left: -19px;
+          margin-right: -19px;
           background: rgba(255, 255, 255, 0.05);
         }
   
@@ -26656,6 +26748,17 @@
   
         .playground-settings-usage-chart-panel .playground-settings-usage-chart-frame {
           margin-top: 6px;
+        }
+
+        .playground-settings-usage-chart-frame.is-chartjs {
+          position: relative;
+        }
+
+        .playground-settings-usage-chart-frame.is-chartjs .platform-analytics-chart__frame,
+        .playground-settings-usage-chart-frame.is-chartjs .platform-analytics-chart__state {
+          width: 100%;
+          height: 100%;
+          padding: 0;
         }
   
         .playground-settings-usage-chart-loading-frame {
@@ -27432,6 +27535,76 @@
         .playground-computer-detail-profile-section.playground-agents-profile-section {
           width: 100%;
           min-width: 0;
+          flex-direction: row;
+          align-items: center;
+          gap: 16px;
+          padding-bottom: 24px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .playground-computer-details-section .playground-develop-resource-identity-value .playground-team-member-avatar,
+        .playground-computer-details-section .playground-computer-owner-selector .playground-team-member-avatar {
+          width: 20px;
+          height: 20px;
+          flex: 0 0 20px;
+          font-size: 8px;
+        }
+
+        .playground-computer-details-section .playground-computer-owner-selector {
+          width: min(260px, 100%);
+          margin-left: auto;
+        }
+
+        .playground-computer-detail-profile-icon {
+          width: 48px;
+          height: 48px;
+          flex: 0 0 48px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          color: rgba(255, 255, 255, 0.62);
+          background: rgba(255, 255, 255, 0.075);
+        }
+
+        .playground-computer-detail-profile-section .playground-agents-profile-copy {
+          gap: 8px;
+        }
+
+        .playground-computer-detail-profile-timeframe {
+          flex: 0 0 auto;
+          margin-left: auto;
+        }
+
+        .playground-computer-detail-profile-description {
+          box-sizing: border-box;
+          width: 100%;
+          min-width: 0;
+          max-width: 620px;
+          padding: 0;
+          overflow: hidden;
+          border: 0;
+          outline: 0;
+          background: transparent;
+          color: rgba(255, 255, 255, 0.6);
+          font: inherit;
+          font-size: 13px;
+          font-weight: 400;
+          line-height: 1.35;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .playground-computer-detail-profile-description::placeholder {
+          color: rgba(255, 255, 255, 0.35);
+        }
+
+        .playground-computer-detail-profile-description:focus {
+          color: rgba(255, 255, 255, 0.82);
+        }
+
+        .playground-computer-detail-profile-description:read-only {
+          cursor: default;
         }
   
         .playground-computer-detail-profile-avatar.profile-editor-avatar {
@@ -27447,28 +27620,9 @@
           margin: 0;
         }
   
-        .playground-computer-detail-profile-actions.playground-agents-detail-profile-actions,
-        .playground-computer-detail-sidebar-controls.playground-agents-detail-sidebar-controls {
+        .playground-computer-detail-profile-actions.playground-agents-detail-profile-actions {
           justify-content: flex-end;
           gap: 6px;
-        }
-  
-        .playground-computer-detail-sidebar-controls.playground-agents-detail-sidebar-controls {
-          width: auto;
-          margin-left: auto;
-          margin-top: 2px;
-        }
-  
-        .playground-computer-detail-top-controls-actions.playground-computer-detail-sidebar-controls.playground-agents-detail-sidebar-controls {
-          width: auto;
-          margin: 0;
-          justify-content: flex-end;
-          gap: 6px;
-        }
-  
-        .playground-computer-detail-tabs .playground-project-overview-chart-tabs {
-          width: 100%;
-          gap: 24px;
         }
   
         .playground-computer-detail-advanced-tab.platform-settings-section-list {
@@ -27510,8 +27664,7 @@
           box-shadow: none;
         }
   
-        .playground-computer-detail-profile-actions .playground-plugin-detail-connect-button,
-        .playground-computer-detail-sidebar-controls .playground-plugin-detail-connect-button {
+        .playground-computer-detail-profile-actions .playground-plugin-detail-connect-button {
           margin-right: 0;
           min-height: 30px;
           padding-left: 11px;
@@ -27520,8 +27673,7 @@
           font-weight: 400;
         }
   
-        .playground-computer-detail-profile-actions .playground-project-overview-sidebar-toggle,
-        .playground-computer-detail-sidebar-controls .playground-project-overview-sidebar-toggle {
+        .playground-computer-detail-profile-actions .playground-project-overview-sidebar-toggle {
           margin: 0;
         }
   
@@ -28020,30 +28172,6 @@
           text-align: right;
         }
   
-        .playground-computer-detail-sidebar .playground-project-overview-sidebar-row-value {
-          justify-content: flex-end;
-          text-align: right;
-        }
-  
-        .playground-computer-detail-sidebar .playground-environments-editor-fact-value {
-          text-align: right;
-        }
-  
-        .playground-computer-detail-sidebar .playground-environments-editor-fact-value.is-id {
-          max-width: 100%;
-        }
-  
-        .playground-computer-detail-sidebar .playground-computer-detail-profile-row.playground-project-overview-sidebar-row {
-          align-items: flex-start;
-          grid-template-columns: minmax(90px, 0.85fr) minmax(0, 1.35fr);
-        }
-  
-        .playground-computer-detail-sidebar .playground-computer-detail-profile-value {
-          min-width: 0;
-          justify-content: flex-end;
-          overflow: visible;
-        }
-  
         .playground-computer-profile-select-popup.playground-agents-model-select-popup {
           width: 100%;
         }
@@ -28053,60 +28181,6 @@
           left: auto;
           width: min(220px, calc(100vw - 32px));
           min-width: 190px;
-        }
-  
-        .playground-computer-detail-sidebar .playground-environment-profile-selector.is-compact {
-          width: 100%;
-          max-width: 160px;
-          margin-left: auto;
-          grid-template-columns: minmax(0, 1fr);
-          gap: 6px;
-        }
-  
-        .playground-computer-detail-sidebar .playground-environment-profile-card {
-          min-width: 0;
-          padding: 8px 9px;
-          border-radius: 8px;
-          text-align: left;
-        }
-  
-        .playground-computer-detail-sidebar .playground-environment-profile-card-top,
-        .playground-computer-detail-sidebar .playground-environment-profile-card-meta {
-          min-width: 0;
-        }
-  
-        .playground-computer-detail-sidebar-status-value.playground-project-overview-sidebar-row-value,
-        .playground-computer-detail-sidebar-toggle-value.playground-project-overview-sidebar-row-value {
-          overflow: visible;
-        }
-  
-        .playground-computer-detail-sidebar-status.playground-environments-desktop-status {
-          min-height: 24px;
-          padding: 0;
-          border-radius: 0;
-          background: transparent;
-          font-size: 12px;
-          font-weight: 400;
-        }
-  
-        .playground-computer-detail-sidebar-status.playground-environments-desktop-status.is-running {
-          color: rgba(167, 243, 208, 0.96);
-        }
-  
-        .playground-computer-detail-sidebar-status.playground-environments-desktop-status.is-starting {
-          color: rgba(254, 240, 138, 0.96);
-        }
-  
-        .playground-computer-detail-sidebar-status.playground-environments-desktop-status.is-error {
-          color: rgba(254, 202, 202, 0.96);
-        }
-  
-        .playground-computer-detail-sidebar-status.playground-environments-desktop-status.is-stopped {
-          color: rgba(255, 255, 255, 0.66);
-        }
-  
-        .playground-computer-detail-sidebar-action.playground-project-overview-sidebar-resource-row {
-          min-height: 34px;
         }
   
         .playground-computer-detail-add-icon-button {
@@ -29310,16 +29384,6 @@
           flex: 0 0 auto;
         }
   
-        .playground-computer-detail-filebase-tab.playground-project-overview-chart-tab {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-        }
-  
-        .playground-computer-detail-filebase-tab.playground-project-overview-chart-tab svg {
-          flex: 0 0 auto;
-        }
-  
         .playground-agents-detail-metrics.playground-environments-home-metrics {
           margin: 0;
           gap: 0;
@@ -29506,6 +29570,10 @@
           border-bottom: 1px solid rgba(255, 255, 255, 0.075);
           background: #000;
           box-sizing: border-box;
+        }
+
+        .playground-tools-navbar.playground-thread-welcome-navbar {
+          border-bottom: 0;
         }
   
         .playground-tasks-project-home-navbar .playground-tasks-project-navbar-title,

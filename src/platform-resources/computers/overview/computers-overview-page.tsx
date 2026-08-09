@@ -53,6 +53,7 @@ export interface ComputersOverviewPageProps {
   onPeriodChange: (period: ResourceOverviewPeriod) => void;
   analytics: ResourceOverviewAnalyticsModel;
   controlsPortalId?: string;
+  periodPortalId?: string;
   loading?: boolean;
   error?: React.ReactNode;
   mutating?: boolean;
@@ -71,6 +72,7 @@ export function ComputersOverviewPage({
   onPeriodChange,
   analytics,
   controlsPortalId,
+  periodPortalId,
   loading = false,
   error,
   mutating = false,
@@ -172,6 +174,7 @@ export function ComputersOverviewPage({
       onPeriodChange={onPeriodChange}
       analytics={analytics}
       controlsPortalId={controlsPortalId}
+      periodPortalId={periodPortalId}
       headerActions={headerActions}
       className="is-computers"
       table={{

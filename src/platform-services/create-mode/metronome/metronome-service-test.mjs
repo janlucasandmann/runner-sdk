@@ -47,7 +47,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Metronome controller runtime",
     source: METRONOME_PAGE_CONTROLLER_SCRIPT,
-    expectedSha256: "f59be632121fb524e738f22458955f5425d9304e34e25cbe26f3e29a3f291a6e",
+    expectedSha256: "d602ed3bbfadd3867ee602ddfe84d9049b5968a4b285fe86108bbbe6471bcece",
     fragmentGroups: [{
       baseUrl: metronomePageUrl,
       paths: METRONOME_PAGE_CONTROLLER_FRAGMENT_PATHS,
@@ -187,8 +187,7 @@ assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const \[activeMetronomeVersionChang
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const resetActiveMetronomeVisitBaseline = \(workflow, sourceNodes, sourceEdges\) => \{/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /createMetronomeVisitEditorKey\(activeMetronomeEditorWorkflow, nodes, edges\)[\s\S]{0,120}metronomeVisitBaselineKeyRef\.current/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const hasUnsavedMetronomeChanges = Boolean\(\s*isEditor\s*&& activeWorkflow\s*&& !isActiveWorkflowBuiltIn\s*&& activeMetronomeVersionChanges\s*\)/);
-assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /id: "metronome-details-unsaved-changes"[\s\S]{0,220}title: "Leave without saving\?"/);
-assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /onNavigationGuardChange\(hasUnsavedMetronomeChanges/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /usePlatformVersionNavigationGuard\(\{[\s\S]{0,220}guardId: "metronome-details-unsaved-changes"/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /onDiscard: discardActiveMetronomeDraft/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /requestMetronomeNavigation\(performReturnToMetronomeOverview\)/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /requestMetronomeNavigation\(\(\) => \(\s*onThreadOpen\(thread\.id, \{ contentMode: "chat" \}\)/);

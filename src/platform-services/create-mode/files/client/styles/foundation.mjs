@@ -624,8 +624,13 @@ export const FILES_FOUNDATION_CSS = `
       .playground-files-library-path-actions {
         display: inline-flex;
         align-items: center;
-        gap: 2px;
+        gap: 4px;
         flex: 0 0 auto;
+      }
+
+      .playground-files-select-all-checkbox {
+        flex: 0 0 14px;
+        margin: 0 2px 0 0;
       }
 
       .playground-files-library-path-actions .playground-files-nav-button {

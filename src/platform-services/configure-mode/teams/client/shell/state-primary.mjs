@@ -1,9 +1,31 @@
-export const TEAMS_STATE_PRIMARY_SCRIPT = `        const teamPageRef = useRef(null);
+export const TEAMS_STATE_PRIMARY_SCRIPT = `        const TEAM_SCOPED_ORGANIZATION_STORAGE_KEY = "runner_demo_team_scope_organization_id_v1";
+        function readTeamPageOrganizationId() {
+          try {
+            return String(window.localStorage.getItem(TEAM_SCOPED_ORGANIZATION_STORAGE_KEY) || "").trim();
+          } catch (error) {
+            return "";
+          }
+        }
+        function writeTeamPageOrganizationId(organizationId) {
+          const normalizedOrganizationId = String(organizationId || "").trim();
+          try {
+            if (normalizedOrganizationId) {
+              window.localStorage.setItem(TEAM_SCOPED_ORGANIZATION_STORAGE_KEY, normalizedOrganizationId);
+            } else {
+              window.localStorage.removeItem(TEAM_SCOPED_ORGANIZATION_STORAGE_KEY);
+            }
+          } catch (error) {
+            // Storage is optional; team access remains request-scoped in memory.
+          }
+        }
+
+        const teamPageRef = useRef(null);
         const teamPageLoadAbortControllerRef = useRef(null);
         const teamPageLoadSequenceRef = useRef(0);
         const [teamPageLoading, setTeamPageLoading] = useState(false);
         const [teamPageError, setTeamPageError] = useState("");
         const [teamPageRequiresPlan, setTeamPageRequiresPlan] = useState(false);
+        const [teamPageOrganizationId, setTeamPageOrganizationId] = useState(() => readTeamPageOrganizationId());
         const [teamPageTeams, setTeamPageTeams] = useState([]);
         const [teamPageSelectedTeamId, setTeamPageSelectedTeamId] = useState("");
         const [teamPageActiveTab, setTeamPageActiveTab] = useState("members");
@@ -44,4 +66,8 @@ export const TEAMS_STATE_PRIMARY_SCRIPT = `        const teamPageRef = useRef(nu
         const [teamPageShares, setTeamPageShares] = useState([]);
         const [teamPageProjectResourceIndexes, setTeamPageProjectResourceIndexes] = useState({});
         const [teamPageMetronomeWorkflows, setTeamPageMetronomeWorkflows] = useState([]);
+
+        useEffect(() => {
+          writeTeamPageOrganizationId(teamPageOrganizationId);
+        }, [teamPageOrganizationId]);
 `;

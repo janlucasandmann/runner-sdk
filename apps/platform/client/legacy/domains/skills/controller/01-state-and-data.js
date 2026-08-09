@@ -21,6 +21,8 @@
           enabledSkillIds = [],
           onSkillsChange = null,
 	          workspaceTeams = [],
+	          onNavigationGuardChange,
+	          onNavigationRequest,
 	        }) {
 	          const PLAYGROUND_CUSTOM_SKILL_DRAFT_ID = "__custom_skill_draft__";
 	          const searchPopupInputRef = useRef(null);

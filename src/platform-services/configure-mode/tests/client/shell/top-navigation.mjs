@@ -4,14 +4,16 @@ export const TESTS_APP_TOP_NAVIGATION_SCRIPT = `        function renderTestsPage
             { label: "Configure" },
             {
               label: "Tests",
-              onClick: openTestsOverviewPage,
+              onClick: () => requestPlatformNavigation(openTestsOverviewPage),
             },
           ];
           if (testsPageMode === "detail" || testsPageMode === "case" || testsPageMode === "run") {
             pathItems.push({
               label: selectedTestPlanName || "Test Plan",
               onClick: testsPageMode === "run" || testsPageMode === "case"
-                ? () => openTestPlanDetailPage(selectedTestPlanId, selectedTestPlanName)
+                ? () => requestPlatformNavigation(() => (
+                    openTestPlanDetailPage(selectedTestPlanId, selectedTestPlanName)
+                  ))
                 : undefined,
               trailing: testsPageMode === "detail"
                 ? React.createElement("span", {

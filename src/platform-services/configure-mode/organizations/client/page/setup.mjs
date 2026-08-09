@@ -59,22 +59,6 @@ export const ORGANIZATIONS_PAGE_SETUP_SCRIPT = `        function renderOrganizat
               : selectElement;
           };
           const formatOrganizationType = (type) => String(type || "").trim().toLowerCase() === "personal" ? "Personal" : "Company";
-	          const openOrganizationDetail = (organizationId) => {
-	            const normalizedOrganizationId = String(organizationId || "").trim();
-	            if (!normalizedOrganizationId) return;
-	            setOrganizationPageActiveTab("members");
-	            setOrganizationPageBillingSection("costs-plans");
-	            setOrganizationPagePendingDestination(null);
-	            setOrganizationPageSelectedRoleId("member");
-	            setOrganizationPageSelectedOrganizationId(normalizedOrganizationId);
-	            setOrganizationPageMembers([]);
-	            setOrganizationPageInvitations([]);
-	            setOrganizationPageResources([]);
-	            setOrganizationMemberSearchQuery("");
-	            setOrganizationMemberToolbarPopover("");
-	            setOrganizationMemberMenuId("");
-	            setSelectedOrganizationMemberIds(new Set());
-	          };
           const renderOrganizationCreateModal = () => organizationPageCreateModalOpen
             ? React.createElement(PlatformModalBackdrop, {
                 className: "playground-team-modal-backdrop",

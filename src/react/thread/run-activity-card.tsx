@@ -18,6 +18,7 @@ import type {
   RunnerThreadControlAction,
 } from "../../thread/types.js";
 import { selectRunnerThreadRunWorkingLabel } from "../../thread/selectors.js";
+import { resolveRunnerPublicThreadParticipant } from "../../thread/public-presentation.js";
 import { DotLoader } from "../dot-loader.js";
 import {
   RunnerThreadActivityGroupTree,
@@ -231,12 +232,16 @@ export function RunnerThreadRunActivityCard({
   const ungroupedActions = actions.filter((action) => (
     !groupedActionIds.has(action.id) && (!action.activityGroupId || !groupIds.has(action.activityGroupId))
   ));
-  const actor = run.actorParticipantId ? projection.participantsById[run.actorParticipantId] : null;
+  const actor = resolveRunnerPublicThreadParticipant(
+    projection,
+    run.actorParticipantId ? projection.participantsById[run.actorParticipantId] : null,
+    fallbackAgentName,
+  );
   const runAgentName = metadataText(run.metadata, ["agentName", "agent_name", "workerName", "worker_name"])
     || metadataText(run.projection?.metadata, ["agentName", "agent_name", "workerName", "worker_name"])
     || String(fallbackAgentName || "").trim()
     || actor?.displayName?.trim()
-    || (run.runKind === "worker" ? "Worker" : run.runKind);
+    || "Agent";
   const runWorkspaceName = metadataText(run.metadata, [
     "projectName", "project_name", "computerName", "computer_name", "environmentName", "environment_name",
   ]) || metadataText(run.projection?.metadata, [
@@ -424,7 +429,7 @@ export function RunnerThreadRunActivityCard({
                   : "This run answered directly without commands, file changes, or external actions."}
               </div>
               {progressEvents.length > 0 ? (
-                <ol className="tb-thread-progress-only-list" aria-label="Observer progress summaries">
+                <ol className="tb-thread-progress-only-list" aria-label="Progress summaries">
                   {progressEvents.map(({ event, summary }) => (
                     <li key={event.id}>{summary}</li>
                   ))}

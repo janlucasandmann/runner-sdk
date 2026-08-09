@@ -10,6 +10,9 @@ The switch has the same 28px outer height as default platform buttons and shared
 
 Pass stable string-valued `options`, the current `value`, and `onValueChange`. The component owns option rendering, active state, radio-group semantics, roving focus, and arrow/Home/End keyboard navigation.
 
+The selected option is represented by one measured indicator that transitions
+between tabs, including when option labels have different widths.
+
 Use `fullWidth` when a switch should fill its parent. The shared variant
 distributes each option evenly without requiring page-specific option styles.
 

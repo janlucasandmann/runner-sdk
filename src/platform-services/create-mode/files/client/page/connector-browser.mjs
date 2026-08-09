@@ -326,6 +326,7 @@ export const FILES_PAGE_CONNECTOR_BROWSER_SCRIPT = `
             canExpandFolder: entry.isFolder,
             draggable: false,
             readOnly: true,
+            showSelection: false,
             useThumbnail: false,
             environmentId: "",
             onSelect: (value) => openFileConnectorEntry(value),
@@ -368,7 +369,7 @@ export const FILES_PAGE_CONNECTOR_BROWSER_SCRIPT = `
                 icon: Cloud,
                 iconSize: 22,
                 title: "No file connectors connected",
-                description: "Connect GitHub, Google Drive, or OneDrive from Tags and Plugins to browse their files here.",
+                description: "Connect GitHub, GitLab, Google Drive, OneDrive, Notion, or SharePoint from Tags and Plugins to browse their files here.",
               });
           }
           if (connectorSourceState.status === "loading" || isCurrentLocationLoading) {

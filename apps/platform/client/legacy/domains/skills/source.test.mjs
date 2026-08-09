@@ -20,7 +20,7 @@ assert.deepEqual(
 );
 assert.equal(
   createHash("sha256").update(SKILLS_PAGE_SCRIPT).digest("hex"),
-  "ea43df4b725044803028b989f27543e3eb1a3f34757ef0049ea12996d554f099",
+  "d0d98dfbe04c4078b75427029afb536701ab4609470de388d998bdcb27635b9e",
   "The Skills fragment composition must remain byte-compatible with the reviewed controller.",
 );
 
@@ -56,6 +56,7 @@ for (const functionName of [
 }
 
 assert.match(SKILLS_PAGE_SCRIPT, /requestedAction === "create"/);
+assert.match(SKILLS_PAGE_SCRIPT, /usePlatformVersionNavigationGuard/);
 assert.match(SKILLS_PAGE_SCRIPT, /createAndOpenCustomSkill\(\)/);
 assert.match(
   SKILLS_PAGE_SCRIPT,

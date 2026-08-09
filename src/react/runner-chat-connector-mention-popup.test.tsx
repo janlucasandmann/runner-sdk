@@ -84,9 +84,11 @@ describe("RunnerChat connector mention popup", () => {
     );
     expect(textareaRule).not.toMatch(/padding:[^;]*--tb-staged-thread-command-offset/);
     expect(messageFlowRule).toContain("display: flow-root;");
+    expect(messageFlowRule).toContain("width: max-content;");
+    expect(messageFlowRule).toContain("max-width: 100%;");
     expect(messageConnectorsRule).toContain("float: left;");
     expect(composerCss).toMatch(
-      /\.tb-user-turn-prompt-with-connectors[\s\S]*?\.tb-user-turn-collapsible-copy\s*\{\s*overflow: clip;/,
+      /\.tb-user-turn-prompt-with-connectors[\s\S]*?\.tb-user-turn-collapsible-copy\s*\{\s*overflow: clip;\s*width: max-content;\s*max-width: 100%;/,
     );
   });
 

@@ -1,6 +1,7 @@
 import Chart from "chart.js/auto";
 import { useEffect, useMemo, useRef } from "react";
 import { DotLoader } from "../../ui/dot-loader/index.js";
+import { resolvePlatformAnalyticsHasData } from "./platform-analytics-data.js";
 import { PlatformAnalyticsEmptyState } from "./platform-analytics-empty-state.js";
 import type {
   PlatformAnalyticsAxis,
@@ -80,10 +81,7 @@ export function PlatformAnalyticsChart({
       Array.from(analytics.series || []).filter((entry) => entry.values.length === labels.length),
     [analytics.series, labels.length],
   );
-  const hasData =
-    typeof analytics.hasData === "boolean"
-      ? analytics.hasData && labels.length > 0 && series.length > 0
-      : labels.length > 0 && series.some((entry) => entry.values.some((value) => Number(value) !== 0));
+  const hasData = resolvePlatformAnalyticsHasData(analytics);
 
   useEffect(() => {
     return () => {

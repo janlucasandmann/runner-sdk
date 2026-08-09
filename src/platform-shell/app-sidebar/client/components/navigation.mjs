@@ -5,19 +5,23 @@ export function createAppSidebarNavigationScript(options = {}) {
   const developPrimaryEntries = String(options.developPrimaryEntries || "");
   const developAgentServiceEntries = String(options.developAgentServiceEntries || "");
   const createPrimaryEntries = String(options.createPrimaryEntries || "");
+  const adminEntries = String(options.adminEntries || "");
   return `        function getSidebarNavigationItemsForMode(targetMode = sidebarWorkspaceMode) {
           const normalizedTargetMode = targetMode === "develop"
             ? "develop"
             : targetMode === "configure"
               ? "configure"
-              : "work";
+              : targetMode === "admin"
+                ? "admin"
+                : "work";
+          if (normalizedTargetMode === "admin") {
+            return [
+${adminEntries}            ];
+          }
+
           if (normalizedTargetMode === "configure") {
             return [
-${configurePrimaryEntries}              {
-                id: "configure-resources-label",
-                type: "subtitle",
-                label: "Resources",
-              },
+${configurePrimaryEntries}
               {
                 id: "agents",
                 label: "Agents",
@@ -197,6 +201,7 @@ ${createPrimaryEntries}
             { id: "work", label: "Create" },
             { id: "configure", label: "Configure" },
             { id: "develop", label: "Develop" },
+            { id: "admin", label: "Admin" },
           ];
           const excludedIds = new Set(["new-thread", "configure-home", "develop-home"]);
           const serviceItems = modeOptions.flatMap((modeOption) => (

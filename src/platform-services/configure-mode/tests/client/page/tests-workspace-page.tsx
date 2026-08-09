@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
 import { PlatformConfirmationModal } from "../../../../../platform-ui/components/composite/modal/index.js";
 import { PlatformServiceDetailFrame } from "../../../../../platform-ui/pages/details/index.js";
+import type { PlatformVersionNavigationGuardRegistrar } from "../../../../../platform-ui/components/composite/versioning/index.js";
 import { TestsApi } from "../api/index.js";
 import {
   initializeTestPlanIdentityMetadata,
@@ -69,6 +70,8 @@ export interface TestsWorkspacePageProps {
     runLabel?: string;
   }) => void;
   onVersionsSidebarOpenChange?: (open: boolean) => void;
+  onNavigationGuardChange?: PlatformVersionNavigationGuardRegistrar;
+  onNavigationRequest?: (continuation: () => void) => boolean;
 }
 
 interface ActiveTestCaseContext {
@@ -125,6 +128,8 @@ export function TestsWorkspacePage({
   onOpenRun,
   onIdentityChange,
   onVersionsSidebarOpenChange,
+  onNavigationGuardChange,
+  onNavigationRequest,
 }: TestsWorkspacePageProps) {
   const api = useMemo(
     () => new TestsApi(backendUrl, requestHeaders),
@@ -292,10 +297,18 @@ export function TestsWorkspacePage({
         lastRunStatus: lastRun?.status || "",
         updatedAt: Date.parse(plan.updatedAt) || 0,
         updatedLabel: formatRelativeTimestamp(plan.updatedAt),
-        searchText: `${plan.name} ${plan.description} ${plan.status} ${plan.projectId || ""}`,
+        searchText: `${plan.name} ${plan.description} ${plan.projectId || ""}`,
       };
     });
   }, [normalizedProjects, plans, runs]);
+
+  const requestWorkspaceNavigation = useCallback((continuation: () => void) => {
+    if (typeof onNavigationRequest === "function") {
+      return onNavigationRequest(continuation);
+    }
+    continuation();
+    return true;
+  }, [onNavigationRequest]);
 
   async function createPlan(input: TestPlanCreateInput): Promise<TestPlan> {
     const created = await api.createPlan({
@@ -315,7 +328,7 @@ export function TestsWorkspacePage({
     setRuns((current) => [created, ...current]);
     setActiveRun(created);
     setActiveRunPlan(plan);
-    onOpenRun(plan.id, created.id, plan.name);
+    requestWorkspaceNavigation(() => onOpenRun(plan.id, created.id, plan.name));
     return created;
   }
 
@@ -360,6 +373,7 @@ export function TestsWorkspacePage({
             titleActionsPortalId={titleActionsPortalId}
             versionsDrawerPortalId={versionsDrawerPortalId}
             onVersionsSidebarOpenChange={onVersionsSidebarOpenChange}
+            onNavigationGuardChange={onNavigationGuardChange}
             onPlanChange={replacePlan}
             onDeleted={(deletedPlan) => {
               setActivePlan(null);
@@ -369,20 +383,24 @@ export function TestsWorkspacePage({
             }}
             onReload={() => loadPlan(activePlan.id)}
             onRun={setRunPlan}
-            onOpenRun={(run) => onOpenRun(activePlan.id, run.id, activePlan.name)}
+            onOpenRun={(run) => requestWorkspaceNavigation(() => (
+              onOpenRun(activePlan.id, run.id, activePlan.name)
+            ))}
             onOpenCase={(testCase, definition: TestPlanDefinition) => {
-              const contextPlan: TestPlan = {
-                ...activePlan,
-                definition,
-                caseCount: definition.cases.length,
-              };
-              setActiveCaseContext({ plan: contextPlan, testCase });
-              onOpenCase(
-                activePlan.id,
-                testCase.id,
-                activePlan.name,
-                testCase.name,
-              );
+              requestWorkspaceNavigation(() => {
+                const contextPlan: TestPlan = {
+                  ...activePlan,
+                  definition,
+                  caseCount: definition.cases.length,
+                };
+                setActiveCaseContext({ plan: contextPlan, testCase });
+                onOpenCase(
+                  activePlan.id,
+                  testCase.id,
+                  activePlan.name,
+                  testCase.name,
+                );
+              });
             }}
           />
         </PlatformServiceDetailFrame>

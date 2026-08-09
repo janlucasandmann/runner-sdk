@@ -15,6 +15,7 @@ import {
   type PlatformSystemAccessPrincipalId,
 } from "../../../../../platform-resources/access-control/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
+import type { PlatformVersionNavigationGuardRegistrar } from "../../../../../platform-ui/components/composite/versioning/index.js";
 import { PlatformSecondaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformSwitch } from "../../../../../platform-ui/components/ui/switch/index.js";
 import {
@@ -90,7 +91,7 @@ export interface DevelopSecurityWorkspacePageProps {
   onDisconnectGitHub?: () => void | Promise<void>;
   onResourcesHeaderChange?: (state: SecurityRepositoryHeaderState) => void;
   onVersionsSidebarOpenChange?: (open: boolean) => void;
-  onNavigationGuardChange?: (guard: Record<string, unknown> | null) => void;
+  onNavigationGuardChange?: PlatformVersionNavigationGuardRegistrar;
 }
 
 function getErrorMessage(error: unknown): string {

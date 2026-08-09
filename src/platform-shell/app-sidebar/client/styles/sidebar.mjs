@@ -30,7 +30,7 @@ export function createAppSidebarFoundationStyles(options = {}) {
         padding: 0;
         border-right: 1px solid rgba(255, 255, 255, 0.075);
         overflow: hidden;
-        background: rgba(255, 255, 255, 0.05);
+        background: #000;
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
         transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -370,6 +370,10 @@ export function createAppSidebarFoundationStyles(options = {}) {
         justify-content: center;
         cursor: pointer;
         transition: color 160ms ease, background-color 160ms ease;
+      }
+
+      .app-sidebar-top-action.platform-icon-button {
+        border-radius: 5px !important;
       }
 
       .app-sidebar-top-action:hover,

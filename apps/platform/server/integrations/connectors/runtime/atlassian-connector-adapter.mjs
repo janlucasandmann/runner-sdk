@@ -3,6 +3,7 @@ import {
 } from "../../jira-oauth.mjs";
 
 const ATLASSIAN_API_ORIGIN = "https://api.atlassian.com";
+const COMPUTER_AGENTS_ISSUE_PROPERTY_KEY = "computer-agents.attribution";
 
 const string = (description, options = {}) => ({
   type: "string",
@@ -478,19 +479,14 @@ export function createAtlassianConnectorAdapter({
       });
     }
     const args = isRecord(rawArguments) ? rawArguments : {};
-    const credential = await resolveCredential({
+    const credentialRequest = {
       organizationId: grant.organizationId,
       credentialId: grant.credentialId,
       envFileCandidates,
-    });
-    const accessToken = String(credential?.token?.accessToken || "").trim();
-    const cloudId = String(
-      credential?.token?.cloudId
-        || credential?.profile?.cloudId
-        || credential?.identity?.cloudId
-        || "",
-    ).trim();
-    if (!credential || !accessToken || !cloudId) {
+    };
+    const credential = await resolveCredential(credentialRequest);
+    const clientDetails = getAtlassianClientDetails(credential);
+    if (!clientDetails) {
       throw new AtlassianConnectorError(
         "The selected Atlassian credentials are unavailable or incomplete.",
         {
@@ -500,11 +496,35 @@ export function createAtlassianConnectorAdapter({
       );
     }
     const client = createAtlassianClient({
-      accessToken,
-      cloudId,
+      ...clientDetails,
       fetchImpl,
     });
-    return invokeAtlassianAction(client, definition.name, args);
+    try {
+      return await invokeAtlassianAction(client, definition.name, args, grant);
+    } catch (error) {
+      if (error?.statusCode !== 401) throw error;
+
+      // Access tokens can expire before their stored expiry. Refresh exactly
+      // once and retry the original action; permission failures (403) still
+      // surface directly to the caller.
+      const refreshedCredential = await resolveCredential({
+        ...credentialRequest,
+        forceRefresh: true,
+      });
+      const refreshedDetails = getAtlassianClientDetails(refreshedCredential);
+      if (
+        !refreshedDetails
+        || refreshedDetails.accessToken === clientDetails.accessToken
+      ) {
+        throw error;
+      }
+      return invokeAtlassianAction(
+        createAtlassianClient({ ...refreshedDetails, fetchImpl }),
+        definition.name,
+        args,
+        grant,
+      );
+    }
   }
 
   return Object.freeze({
@@ -516,7 +536,18 @@ export function createAtlassianConnectorAdapter({
   });
 }
 
-async function invokeAtlassianAction(client, name, args) {
+function getAtlassianClientDetails(credential) {
+  const accessToken = String(credential?.token?.accessToken || "").trim();
+  const cloudId = String(
+    credential?.token?.cloudId
+      || credential?.profile?.cloudId
+      || credential?.identity?.cloudId
+      || "",
+  ).trim();
+  return accessToken && cloudId ? { accessToken, cloudId } : null;
+}
+
+async function invokeAtlassianAction(client, name, args, grant = {}) {
   switch (name) {
     case "get_myself":
       return client.jira("GET", "/rest/api/3/myself");
@@ -602,7 +633,7 @@ async function invokeAtlassianAction(client, name, args) {
       );
     case "create_issue":
       return client.jira("POST", "/rest/api/3/issue", {
-        body: {
+        body: compactObject({
           fields: compactObject({
             ...(isRecord(args.fields) ? args.fields : {}),
             project: { key: args.projectKey },
@@ -617,7 +648,8 @@ async function invokeAtlassianAction(client, name, args) {
             parent: args.parentKey ? { key: args.parentKey } : undefined,
             labels: args.labels,
           }),
-        },
+          ...buildAgentAttribution(grant),
+        }),
       });
     case "update_issue":
       return client.jira(
@@ -975,6 +1007,46 @@ function toAtlassianDocument(value) {
     version: 1,
     content: content.length ? content : [{ type: "paragraph", content: [] }],
   };
+}
+
+function buildAgentAttribution(grant) {
+  const agentId = normalizeAttributionValue(grant?.agentId, 200);
+  const agentName = normalizeAttributionValue(grant?.agentName, 200);
+  if (!agentId && !agentName) return {};
+
+  const displayName = agentName || agentId;
+  return {
+    historyMetadata: {
+      activityDescription: `Created by ${displayName} through Computer Agents`,
+      actor: {
+        id: agentId || displayName,
+        displayName,
+        type: "computer-agents-agent",
+      },
+      generator: {
+        id: "computer-agents",
+        displayName: "Computer Agents",
+        type: "computer-agents-application",
+      },
+      type: "computer-agents:agent-action",
+    },
+    properties: [{
+      key: COMPUTER_AGENTS_ISSUE_PROPERTY_KEY,
+      value: {
+        agentId: agentId || undefined,
+        agentName: displayName,
+        source: "computer-agents",
+      },
+    }],
+  };
+}
+
+function normalizeAttributionValue(value, maximumLength) {
+  return String(value || "")
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maximumLength);
 }
 
 function parseJson(text) {

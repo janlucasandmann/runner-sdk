@@ -3,11 +3,12 @@ export const CONFIGURE_HOME_NAVIGATION_SCRIPT = `        function openConfigureH
             openOrganizationBillingPage("usage");
             return;
           }
+          const isNotificationsPage = options.tab === "notifications";
           setAccountMenuOpen(false);
           setProfileEditorOpen(false);
-          setConfigureHomeTab(options.tab === "notifications" ? "notifications" : "overview");
+          setConfigureHomeTab(isNotificationsPage ? "notifications" : "overview");
           if (!options.preserveSidebarMode) {
-            setSidebarWorkspaceMode("configure");
+            setSidebarWorkspaceMode(isNotificationsPage ? "admin" : "configure");
           }
           setResourcesHeaderState({
             mode: "overview",

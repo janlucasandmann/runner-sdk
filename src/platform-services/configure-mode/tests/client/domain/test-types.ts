@@ -1,4 +1,3 @@
-export type TestPlanStatus = "draft" | "active" | "archived";
 export type TestRunStatus =
   | "queued"
   | "running"
@@ -139,7 +138,6 @@ export interface TestPlan {
   projectId: string | null;
   name: string;
   description: string;
-  status: TestPlanStatus;
   targetType: string;
   targetId: string | null;
   defaultEnvironmentId: string | null;

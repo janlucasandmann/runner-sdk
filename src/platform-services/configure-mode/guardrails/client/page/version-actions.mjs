@@ -28,6 +28,49 @@ export const GUARDRAILS_PAGE_VERSION_ACTIONS_SCRIPT = `          function getGua
             });
           }
 
+          function discardUnsavedGuardrailVersionChanges() {
+            const versions = readSelectedGuardrailVersions();
+            const selectedVersion = getSelectedGuardrailVersion()
+              || getSelectedGuardrailActiveVersion()
+              || versions[0]
+              || null;
+            if (!selectedGuardrailSet?.id || !selectedVersion) return;
+            const restoredSet = createPlaygroundGuardrailFromVersionSnapshot(
+              selectedGuardrailSet,
+              selectedVersion,
+              versions,
+              selectedVersion.id
+            );
+            setGuardrailSets((current) => (Array.isArray(current) ? current : []).map((set) => (
+              set?.id === selectedGuardrailSet.id ? restoredSet : set
+            )));
+            guardrailVersionDraftTouchedRef.current = false;
+            playgroundGuardrailVersionController.rememberBaseline(
+              restoredSet,
+              guardrailVersionBaselineRef,
+              { force: true }
+            );
+            setGuardrailsBackendSyncState({ status: "idle", error: "" });
+            resetGuardrailVersionTransientState();
+          }
+
+          const hasUnsavedGuardrailVersionChanges = Boolean(
+            activePage === "guardrails"
+            && guardrailsPageMode === "detail"
+            && selectedGuardrailSet
+            && !selectedGuardrailSetReadonly
+            && hasSelectedGuardrailVersionChanges()
+          );
+          usePlatformVersionNavigationGuard({
+            dirty: hasUnsavedGuardrailVersionChanges,
+            guardId: "guardrail-details-unsaved-changes",
+            resourceId: String(selectedGuardrailSet?.id || ""),
+            resourceName: String(selectedGuardrailSet?.name || "").trim() || "this guardrail",
+            resourceType: "Guardrail",
+            onDiscard: discardUnsavedGuardrailVersionChanges,
+            onNavigationGuardChange: registerPlatformNavigationGuard,
+          });
+
           function buildGuardrailVersionSaveDialogData() {
             const versions = readSelectedGuardrailVersions();
             const selectedVersion = getSelectedGuardrailVersion()

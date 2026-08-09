@@ -19,6 +19,7 @@ export * from "./floating-sidebar/index.js";
 export * from "./instructions-editor/index.js";
 export * from "./loading-state/index.js";
 export * from "./modal/index.js";
+export * from "./owner-selector/index.js";
 export * from "./page-hero/index.js";
 export * from "./popup/index.js";
 export * from "./profile-image-picker/index.js";

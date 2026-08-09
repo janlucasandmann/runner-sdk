@@ -18,6 +18,12 @@ export const APP_SIDEBAR_MODE_SELECTOR_SCRIPT = `        function getAppSidebarM
               description: "Servers, actions, code",
               Icon: Code2,
             },
+            {
+              id: "admin",
+              label: "Admin",
+              description: "Organization, billing, access",
+              Icon: ShieldCheck,
+            },
           ];
         }
 

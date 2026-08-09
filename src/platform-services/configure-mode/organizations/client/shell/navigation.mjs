@@ -1,48 +1,37 @@
-export const ORGANIZATIONS_NAVIGATION_SCRIPT = `        function openOrganizationPage() {
-          setAccountMenuOpen(false);
-          setNotificationsOpen(false);
-          setProfileEditorOpen(false);
-          setSidebarWorkspaceMode("configure");
-          setActivePage("organization");
+export const ORGANIZATIONS_NAVIGATION_SCRIPT = `        function normalizeOrganizationAdminPageId(value) {
+          return ["organization", "members", "subscription", "billing", "usage", "roles", "identity-access"].includes(value)
+            ? value
+            : "organization";
         }
 
-        function openOrganizationOverviewPage() {
-          setOrganizationPageSelectedOrganizationId("");
-          setOrganizationPageActiveTab("members");
-          setOrganizationPageSelectedRoleId("member");
-          setOrganizationPagePendingDestination(null);
-          setOrganizationPageMembers([]);
-          setOrganizationPageInvitations([]);
-          setOrganizationPageResources([]);
-          openOrganizationPage();
-        }
-
-        function openOrganizationBillingPage(tab = "billing", billingSection = "costs-plans", options = {}) {
-          const normalizedTab = tab === "usage" ? "usage" : "billing";
-          const normalizedBillingSection = ["costs-plans", "costs-plan-options", "costs-records"].includes(billingSection)
-            ? billingSection
+        function openOrganizationAdminPage(tab = "organization", options = {}) {
+          const normalizedTab = normalizeOrganizationAdminPageId(tab);
+          const normalizedBillingSection = ["costs-plans", "costs-plan-options", "costs-records"].includes(options?.billingSection)
+            ? options.billingSection
             : "costs-plans";
-          const viewedOrganizationId = activePage === "organization"
-            ? String(organizationPageSelectedOrganizationId || "").trim()
-            : "";
-          const personalOrganizationId = String(getOrganizationPagePersonalOrganization(organizationPageOrganizations)?.id || "").trim();
+          const activeOrganization = organizationPageOrganizations.find((organization) => (
+            String(organization?.id || "").trim() === String(activeOrganizationId || "").trim()
+          )) || getOrganizationPagePersonalOrganization(organizationPageOrganizations);
           const targetOrganizationId = String(
             options?.organizationId
-            || viewedOrganizationId
-            || activeOrganizationId
-            || personalOrganizationId
-            || "",
+            || activeOrganization?.id
+            || organizationPageSelectedOrganizationId
+            || ""
           ).trim();
 
           setAccountMenuOpen(false);
           setNotificationsOpen(false);
           setProfileEditorOpen(false);
-          setSidebarWorkspaceMode("configure");
+          setSidebarWorkspaceMode("admin");
           setOrganizationPageActiveTab(normalizedTab);
-          setOrganizationPageBillingSection(normalizedBillingSection);
-          setSettingsBillingError("");
-          setSettingsBillingSuccess("");
-          setSettingsBillingPeriodOffset(0);
+          if (normalizedTab === "billing") {
+            setOrganizationPageBillingSection(normalizedBillingSection);
+          }
+          if (normalizedTab === "subscription" || normalizedTab === "billing" || normalizedTab === "usage") {
+            setSettingsBillingError("");
+            setSettingsBillingSuccess("");
+            setSettingsBillingPeriodOffset(0);
+          }
           if (targetOrganizationId) {
             setOrganizationPageSelectedOrganizationId(targetOrganizationId);
             setOrganizationPagePendingDestination(null);
@@ -53,5 +42,20 @@ export const ORGANIZATIONS_NAVIGATION_SCRIPT = `        function openOrganizatio
             });
           }
           setActivePage("organization");
+        }
+
+        function openOrganizationPage() {
+          openOrganizationAdminPage("organization");
+        }
+
+        function openOrganizationBillingPage(tab = "billing", billingSection = "costs-plans", options = {}) {
+          const normalizedTab = tab === "usage" ? "usage" : "billing";
+          const normalizedBillingSection = ["costs-plans", "costs-plan-options", "costs-records"].includes(billingSection)
+            ? billingSection
+            : "costs-plans";
+          openOrganizationAdminPage(normalizedTab, {
+            ...options,
+            billingSection: normalizedBillingSection,
+          });
         }
 `;

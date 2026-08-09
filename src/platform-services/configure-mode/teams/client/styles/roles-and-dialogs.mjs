@@ -168,7 +168,7 @@ export const TEAMS_ROLES_AND_DIALOGS_CSS = `      .playground-team-roles-panel {
       .playground-team-table-title {
         color: rgba(255, 255, 255, 0.94);
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 400;
         line-height: 1.35;
       }
 

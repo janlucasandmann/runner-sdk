@@ -2,13 +2,11 @@ import type {
   TestCaseDefinition,
   TestPlan,
   TestPlanDefinition,
-  TestPlanStatus,
 } from "./test-types.js";
 
 export interface TestPlanDraft {
   name: string;
   description: string;
-  status: TestPlanStatus;
   projectId: string;
   environmentId: string;
   definition: TestPlanDefinition;
@@ -51,7 +49,6 @@ export function createTestPlanDraft(plan: TestPlan): TestPlanDraft {
   return {
     name: plan.name,
     description: plan.description,
-    status: plan.status,
     projectId: plan.projectId || "",
     environmentId: plan.defaultEnvironmentId || "",
     definition: cloneTestPlanDefinition(plan.definition),
@@ -100,7 +97,6 @@ export function getTestPlanDraftSignature(draft: TestPlanDraft): string {
   return JSON.stringify({
     name: draft.name.trim(),
     description: draft.description.trim(),
-    status: draft.status,
     projectId: draft.projectId,
     environmentId: draft.environmentId,
     definition: draft.definition,
@@ -165,4 +161,3 @@ export function duplicateTestCaseInDefinition(
     name: `${source.name} copy`,
   });
 }
-

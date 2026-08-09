@@ -57,8 +57,118 @@
   --platform-icon-button-icon-size: 16px;
 }
 
+.platform-icon-button__tooltip {
+  position: absolute;
+  z-index: 200;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: #363636;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease,
+    visibility 0s linear 120ms;
+}
+
+.platform-icon-button__tooltip-label,
+.platform-icon-button__tooltip-shortcut {
+  display: block;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.platform-icon-button__tooltip-shortcut {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+}
+
+.platform-icon-button[data-platform-icon-button-tooltip-placement="top"] > .platform-icon-button__tooltip,
+.platform-icon-button[data-platform-icon-button-tooltip-placement="bottom"] > .platform-icon-button__tooltip {
+  left: 50%;
+  transform: translateX(-50%) translateY(var(--platform-icon-button-tooltip-shift));
+}
+
+.platform-icon-button[data-platform-icon-button-tooltip-placement="top"] > .platform-icon-button__tooltip {
+  --platform-icon-button-tooltip-shift: 2px;
+  right: auto;
+  bottom: calc(100% + var(--platform-icon-button-tooltip-offset, 8px));
+}
+
+.platform-icon-button[data-platform-icon-button-tooltip-placement="bottom"] > .platform-icon-button__tooltip {
+  --platform-icon-button-tooltip-shift: -2px;
+  right: auto;
+  top: calc(100% + var(--platform-icon-button-tooltip-offset, 8px));
+}
+
+.platform-icon-button[data-platform-icon-button-tooltip-placement="top"][data-platform-icon-button-tooltip-align="start"] > .platform-icon-button__tooltip,
+.platform-icon-button[data-platform-icon-button-tooltip-placement="bottom"][data-platform-icon-button-tooltip-align="start"] > .platform-icon-button__tooltip {
+  right: auto;
+  left: 0;
+  transform: translateY(var(--platform-icon-button-tooltip-shift));
+}
+
+.platform-icon-button[data-platform-icon-button-tooltip-placement="top"][data-platform-icon-button-tooltip-align="end"] > .platform-icon-button__tooltip,
+.platform-icon-button[data-platform-icon-button-tooltip-placement="bottom"][data-platform-icon-button-tooltip-align="end"] > .platform-icon-button__tooltip {
+  right: 0;
+  left: auto;
+  transform: translateY(var(--platform-icon-button-tooltip-shift));
+}
+
+.platform-icon-button[data-platform-icon-button-tooltip-placement="left"] > .platform-icon-button__tooltip,
+.platform-icon-button[data-platform-icon-button-tooltip-placement="right"] > .platform-icon-button__tooltip {
+  top: 50%;
+  transform: translateX(var(--platform-icon-button-tooltip-shift)) translateY(-50%);
+}
+
+.platform-icon-button[data-platform-icon-button-tooltip-placement="left"] > .platform-icon-button__tooltip {
+  --platform-icon-button-tooltip-shift: 2px;
+  right: calc(100% + var(--platform-icon-button-tooltip-offset, 8px));
+  left: auto;
+}
+
+.platform-icon-button[data-platform-icon-button-tooltip-placement="right"] > .platform-icon-button__tooltip {
+  --platform-icon-button-tooltip-shift: -2px;
+  right: auto;
+  left: calc(100% + var(--platform-icon-button-tooltip-offset, 8px));
+}
+
+.platform-icon-button[data-platform-icon-button-tooltip-placement="left"][data-platform-icon-button-tooltip-align="start"] > .platform-icon-button__tooltip,
+.platform-icon-button[data-platform-icon-button-tooltip-placement="right"][data-platform-icon-button-tooltip-align="start"] > .platform-icon-button__tooltip {
+  top: 0;
+  transform: translateX(var(--platform-icon-button-tooltip-shift));
+}
+
+.platform-icon-button[data-platform-icon-button-tooltip-placement="left"][data-platform-icon-button-tooltip-align="end"] > .platform-icon-button__tooltip,
+.platform-icon-button[data-platform-icon-button-tooltip-placement="right"][data-platform-icon-button-tooltip-align="end"] > .platform-icon-button__tooltip {
+  top: auto;
+  bottom: 0;
+  transform: translateX(var(--platform-icon-button-tooltip-shift));
+}
+
+.platform-icon-button[data-platform-icon-button-tooltip]:hover:not(:disabled) > .platform-icon-button__tooltip,
+.platform-icon-button[data-platform-icon-button-tooltip]:focus-visible > .platform-icon-button__tooltip {
+  --platform-icon-button-tooltip-shift: 0px;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .platform-icon-button {
+  .platform-icon-button,
+  .platform-icon-button__tooltip {
     transition-duration: 1ms;
   }
 }

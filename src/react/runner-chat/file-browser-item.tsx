@@ -167,16 +167,16 @@ export function RunnerFileBrowserItem(props: RunnerFileBrowserItemProps) {
         ]
       : githubBranchOptions;
   const effectiveItemType = getBrowserFileType(effectiveItem.mimeType, effectiveItem.name);
+  const shouldRenderImageThumbnail = !effectiveItem.isFolder && effectiveItemType === "image";
   const workspaceThumbnailUrl =
-    source === "workspace" && effectiveItemType === "image"
+    source === "workspace" && shouldRenderImageThumbnail
       ? buildEnvironmentFileThumbnailUrl(backendUrl, workspaceEnvironmentId, effectiveItem.path, 64)
       : null;
-  const imageThumbnailUrl =
-    effectiveItemType === "image"
-      ? String(effectiveItem.previewUrl || workspaceThumbnailUrl || "").trim()
-      : "";
+  const imageThumbnailUrl = shouldRenderImageThumbnail
+    ? String(effectiveItem.previewUrl || workspaceThumbnailUrl || "").trim()
+    : "";
   const imageThumbnailFallbackUrl =
-    source === "workspace" && effectiveItemType === "image"
+    source === "workspace" && shouldRenderImageThumbnail
       ? buildEnvironmentFileDownloadUrl(backendUrl, workspaceEnvironmentId, effectiveItem.path)
       : null;
 
@@ -321,7 +321,7 @@ export function RunnerFileBrowserItem(props: RunnerFileBrowserItemProps) {
             }}
           />
         ) : null}
-        {effectiveItemType === "image" ? (
+        {shouldRenderImageThumbnail ? (
           <PlatformFileExplorerThumbnail
             src={imageThumbnailUrl}
             fallbackSrc={imageThumbnailFallbackUrl}

@@ -1,9 +1,9 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
+import { PlatformSearch } from "../../ui/search/index.js";
 import { type PlatformDetailTab, PlatformDetailTabBar } from "../detail-tab-bar/index.js";
 import { PlatformLoadingState } from "../loading-state/index.js";
-import { PlatformSearch } from "../../ui/search/index.js";
 import type {
   PlatformFileExplorerBreadcrumb,
   PlatformFileExplorerEmptyContext,
@@ -89,9 +89,8 @@ export function PlatformFileExplorerBrowser<TItem>({
     contextKey: string;
     value: PlatformFileExplorerFilter;
   }>({ contextKey: filterContextKey, value: "all" });
-  const activeFilter = filterSelection.contextKey === filterContextKey
-    ? filterSelection.value
-    : "all";
+  const activeFilter =
+    filterSelection.contextKey === filterContextKey ? filterSelection.value : "all";
   const visibleItems = (() => {
     if (activeFilter === "all") return [...items];
     if (activeFilter === "images") return items.filter((item) => getItemKind(item) === "image");
@@ -103,9 +102,10 @@ export function PlatformFileExplorerBrowser<TItem>({
       .sort((left, right) => right.timestamp - left.timestamp)
       .map((entry) => entry.item);
   })();
-  const resolvedEmptyMessage = typeof emptyMessage === "function"
-    ? emptyMessage({ activeFilter, hasSearchQuery: Boolean(searchQuery.trim()) })
-    : emptyMessage;
+  const resolvedEmptyMessage =
+    typeof emptyMessage === "function"
+      ? emptyMessage({ activeFilter, hasSearchQuery: Boolean(searchQuery.trim()) })
+      : emptyMessage;
 
   return (
     <section
@@ -120,32 +120,36 @@ export function PlatformFileExplorerBrowser<TItem>({
     >
       {showSourceRail ? (
         <aside className="platform-file-explorer-browser__sidebar">
-          {sourceGroups.map((group) => group.items.length ? (
-            <section key={group.id} className="tb-file-browser-sidebar-section">
-              <div className="tb-file-browser-sidebar-title">{group.label}</div>
-              <div className="tb-file-browser-sidebar-list">
-                {group.items.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={joinClassNames(
-                      "tb-file-browser-source-row",
-                      item.active && "active",
-                      item.disabled && "disabled",
-                    )}
-                    disabled={item.disabled}
-                    onClick={item.onSelect}
-                  >
-                    {item.icon}
-                    <span className="tb-file-browser-source-label">{item.label}</span>
-                    {item.note != null ? (
-                      <span className="tb-file-browser-source-note">{item.note}</span>
-                    ) : null}
-                  </button>
-                ))}
-              </div>
-            </section>
-          ) : null)}
+          {sourceGroups.map((group) =>
+            group.items.length ? (
+              <section key={group.id} className="tb-file-browser-sidebar-section">
+                {group.label ? (
+                  <div className="tb-file-browser-sidebar-title">{group.label}</div>
+                ) : null}
+                <div className="tb-file-browser-sidebar-list">
+                  {group.items.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={joinClassNames(
+                        "tb-file-browser-source-row",
+                        item.active && "active",
+                        item.disabled && "disabled",
+                      )}
+                      disabled={item.disabled}
+                      onClick={item.onSelect}
+                    >
+                      {item.icon}
+                      <span className="tb-file-browser-source-label">{item.label}</span>
+                      {item.note != null ? (
+                        <span className="tb-file-browser-source-note">{item.note}</span>
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ) : null,
+          )}
         </aside>
       ) : null}
       <div className="platform-file-explorer-browser__content">
@@ -210,7 +214,9 @@ export function PlatformFileExplorerBrowser<TItem>({
           ) : null}
         </header>
         <main className="platform-file-explorer-browser__main">
-          {content != null ? content : (
+          {content != null ? (
+            content
+          ) : (
             <div className="tb-file-browser-list">
               {loading ? (
                 <PlatformLoadingState centered message={loadingMessage} />

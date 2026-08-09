@@ -51,9 +51,20 @@ export const ORGANIZATIONS_IDENTITY_SCRIPT = `        function getOrganizationPa
           };
         }
 
+        function isOrganizationPagePersonalOrganization(organization) {
+          const normalizedOrganization = normalizeOrganizationPageRecord(organization);
+          const metadata = normalizedOrganization.metadata && typeof normalizedOrganization.metadata === "object"
+            ? normalizedOrganization.metadata
+            : {};
+          return normalizedOrganization.type === "personal"
+            || normalizedOrganization.isPersonal === true
+            || metadata.isPersonal === true
+            || /^org_personal(?:_|$)/i.test(normalizedOrganization.id);
+        }
+
         function getOrganizationPagePersonalOrganization(organizations) {
           const list = Array.isArray(organizations) ? organizations : [];
-          return list.find((organization) => String(organization?.type || "").toLowerCase() === "personal")
+          return list.find((organization) => isOrganizationPagePersonalOrganization(organization))
             || list.find((organization) => String(organization?.ownerUserId || "") === String(sessionState.userId || ""))
             || list[0]
             || null;
@@ -62,7 +73,7 @@ export const ORGANIZATIONS_IDENTITY_SCRIPT = `        function getOrganizationPa
         function getOrganizationPageDisplayName(organization) {
           const normalizedOrganization = normalizeOrganizationPageRecord(organization);
           const name = normalizedOrganization.name || "Organization";
-          if (normalizedOrganization.type === "personal" && name.trim().toLowerCase() === "personal") {
+          if (isOrganizationPagePersonalOrganization(normalizedOrganization) && name.trim().toLowerCase() === "personal") {
             return "Personal Organization";
           }
           return name;
@@ -85,7 +96,7 @@ export const ORGANIZATIONS_IDENTITY_SCRIPT = `        function getOrganizationPa
           if (!normalizedOrganization.id) {
             return;
           }
-          setActiveOrganizationId(normalizedOrganization.type === "personal" ? "" : normalizedOrganization.id);
+          setActiveOrganizationId(isOrganizationPagePersonalOrganization(normalizedOrganization) ? "" : normalizedOrganization.id);
         }
 
         function getComposerOrganizationOptions() {
@@ -102,7 +113,7 @@ export const ORGANIZATIONS_IDENTITY_SCRIPT = `        function getOrganizationPa
               return {
                 id: normalizedOrganization.id,
                 name: getOrganizationPageDisplayName(normalizedOrganization),
-                description: normalizedOrganization.type === "personal" ? "Personal Organization" : "Company",
+                description: isOrganizationPagePersonalOrganization(normalizedOrganization) ? "Personal Organization" : "Company",
                 isDefault: isOrganizationPageActiveOrganization(normalizedOrganization),
               };
             })

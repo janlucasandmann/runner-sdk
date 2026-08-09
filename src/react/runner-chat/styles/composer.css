@@ -102,6 +102,8 @@
 
 .tb-runner-chat .tb-user-turn-prompt-with-connectors {
   display: flow-root;
+  width: max-content;
+  max-width: 100%;
   min-width: 0;
 }
 
@@ -186,6 +188,8 @@
   .tb-user-turn-prompt-with-connectors
   .tb-user-turn-collapsible-copy {
   overflow: clip;
+  width: max-content;
+  max-width: 100%;
 }
 
 .tb-runner-chat .sidebar-textarea {

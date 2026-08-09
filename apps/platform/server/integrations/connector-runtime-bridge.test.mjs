@@ -25,6 +25,7 @@ test("connector runtime bridge injects one scoped MCP server per connector", asy
       connectors: {
         jira: {
           agentId: "agent_test",
+          agentName: "Spark",
           actorUserId: "user_test",
           organizationId: "org_test",
           credentialId: "credential_project",
@@ -41,6 +42,7 @@ test("connector runtime bridge injects one scoped MCP server per connector", asy
   });
   assert.equal(issued.length, 1);
   assert.equal(issued[0].agentId, "agent_test");
+  assert.equal(issued[0].agentName, "Spark");
   assert.equal(issued[0].actorUserId, "user_test");
   assert.equal(issued[0].credentialSource, "project");
   assert.equal(issued[0].projectId, "project_test");

@@ -22,6 +22,8 @@ import {
   PlatformVersionHistorySidebar,
   PlatformVersionPublishControl,
   PlatformVersionSaveDialog,
+  usePlatformVersionNavigationGuard,
+  type PlatformVersionNavigationGuardRegistrar,
 } from "../../../../../platform-ui/components/composite/versioning/index.js";
 import {
   PlatformPrimaryButton,
@@ -71,7 +73,7 @@ export interface SecurityRepositoryVersionControlProps {
   onDelete: () => void;
   onHeaderChange?: (state: SecurityRepositoryHeaderState) => void;
   onVersionsSidebarOpenChange?: (open: boolean) => void;
-  onNavigationGuardChange?: (guard: Record<string, unknown> | null) => void;
+  onNavigationGuardChange?: PlatformVersionNavigationGuardRegistrar;
   children: (state: SecurityRepositoryVersionRenderState) => ReactNode;
 }
 
@@ -361,26 +363,15 @@ export function SecurityRepositoryVersionControl({
     setVersionError("");
   }, [baseline]);
 
-  useEffect(() => {
-    if (!onNavigationGuardChange) return undefined;
-    onNavigationGuardChange(
-      hasChanges
-        ? {
-            id: "security-repository-unsaved-changes",
-            active: true,
-            title: "Leave without saving?",
-            description: `Your changes to ${detail.repository.fullName} have not been saved. If you leave now, they will be lost.`,
-            onDiscard: revertDraft,
-          }
-        : null,
-    );
-    return () => onNavigationGuardChange(null);
-  }, [
-    detail.repository.fullName,
-    hasChanges,
+  usePlatformVersionNavigationGuard({
+    dirty: hasChanges,
+    guardId: "security-repository-unsaved-changes",
+    resourceId: repositoryId,
+    resourceName: detail.repository.fullName,
+    resourceType: "Security repository",
+    onDiscard: revertDraft,
     onNavigationGuardChange,
-    revertDraft,
-  ]);
+  });
 
   const resetFromPublishedState = useCallback(
     async (nextVersions?: SecurityRepositoryVersion[]) => {

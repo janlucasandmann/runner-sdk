@@ -41,6 +41,7 @@ export const PLATFORM_PROFILE_IMAGE_PRESET_OPTIONS: readonly PlatformProfileImag
 
 export interface PlatformProfileImagePickerProps {
   value?: string;
+  hoverValue?: string;
   fallback?: ReactNode;
   options?: readonly PlatformProfileImageOption[];
   editable?: boolean;
@@ -69,6 +70,7 @@ export function getPlatformProfileImageInitials(value: string, fallback = "?") {
 
 export function PlatformProfileImagePicker({
   value = "",
+  hoverValue = "",
   fallback = "?",
   options = PLATFORM_PROFILE_IMAGE_PRESET_OPTIONS,
   editable = true,
@@ -81,10 +83,15 @@ export function PlatformProfileImagePicker({
   onOpenChange,
 }: PlatformProfileImagePickerProps) {
   const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const [imageBroken, setImageBroken] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const surfaceRef = useRef<HTMLDivElement | null>(null);
   const normalizedValue = String(value || "").trim();
+  const normalizedHoverValue = String(hoverValue || "").trim();
+  const displayedValue = hovered && normalizedHoverValue
+    ? normalizedHoverValue
+    : normalizedValue;
   const canEdit = editable && !disabled && !busy && typeof onChange === "function";
   const style = { "--platform-profile-image-size": `${Math.max(24, size)}px` } as CSSProperties;
   const updateOpen = (nextOpen: boolean) => {
@@ -94,7 +101,7 @@ export function PlatformProfileImagePicker({
 
   useEffect(() => {
     setImageBroken(false);
-  }, [normalizedValue]);
+  }, [displayedValue]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -115,11 +122,12 @@ export function PlatformProfileImagePicker({
     };
   }, [open, onOpenChange]);
 
-  const imageContent = normalizedValue && !imageBroken ? (
+  const imageContent = displayedValue && !imageBroken ? (
     <img
       className="platform-profile-image-picker__image"
-      src={normalizedValue}
+      src={displayedValue}
       alt=""
+      decoding="async"
       draggable={false}
       onError={() => setImageBroken(true)}
     />
@@ -133,6 +141,8 @@ export function PlatformProfileImagePicker({
         className={joinClassNames("platform-profile-image-picker", "is-readonly", className)}
         style={style}
         aria-label={ariaLabel}
+        onMouseEnter={normalizedHoverValue ? () => setHovered(true) : undefined}
+        onMouseLeave={normalizedHoverValue ? () => setHovered(false) : undefined}
       >
         <span className="platform-profile-image-picker__surface">{imageContent}</span>
       </div>
@@ -145,7 +155,11 @@ export function PlatformProfileImagePicker({
       rootRef={rootRef}
       surfaceRef={surfaceRef}
       rootClassName={joinClassNames("platform-profile-image-picker", open && "is-open", className)}
-      rootProps={{ style }}
+      rootProps={{
+        style,
+        onMouseEnter: normalizedHoverValue ? () => setHovered(true) : undefined,
+        onMouseLeave: normalizedHoverValue ? () => setHovered(false) : undefined,
+      }}
       portal
       placement="bottom-start"
       portalOffset={8}

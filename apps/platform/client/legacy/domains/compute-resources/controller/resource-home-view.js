@@ -1121,6 +1121,7 @@
   	              onPeriodChange: updateEnvironmentHomeChartTimescale,
   	              analytics: computerAnalytics,
   	              controlsPortalId: "playground-resource-overview-controls",
+	              periodPortalId: "playground-computers-overview-period-controls",
   	              loading: false,
   	              mutating: Boolean(saveState.isSaving || fileEnvironmentMutationState.action || environmentShareTeamState.action),
   	              onOpen: (row) => handleEnvironmentSelect(row.id),

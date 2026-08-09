@@ -22,6 +22,8 @@ assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /selectedTestCaseName/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-tests-title-actions/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /versionsDrawerPortalId/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onVersionsSidebarOpenChange/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onNavigationGuardChange: registerPlatformNavigationGuard/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onNavigationRequest: requestPlatformNavigation/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onPlanDeleted/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /workspaceTeamsLoading: teamPageLoading/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onWorkspaceTeamsRequest/);
@@ -110,14 +112,30 @@ assert.match(detailSource, /PlatformResourceRenameModal/);
 assert.match(detailSource, /PlatformConfirmationModal/);
 assert.match(detailSource, /buildPlatformTeamAccessMetadata/);
 assert.match(detailSource, /TestPlanAccessSettings/);
-assert.match(detailSource, /sidebarCollapsed=\{accessDetailOpen \|\| versionHistoryOpen\}/);
+assert.match(
+  detailSource,
+  /sidebarCollapsed=\{activeTab === "cases" \|\| accessDetailOpen \|\| versionHistoryOpen\}/,
+);
 assert.match(detailSource, /onPermissionDetailOpenChange=\{setAccessDetailOpen\}/);
+assert.match(detailSource, /className="tests-plan-settings-identity"/);
+assert.match(detailSource, /aria-label="Test name"/);
+assert.match(detailSource, /aria-label="Test description"/);
+assert.match(detailSource, /usePlatformVersionNavigationGuard/);
+assert.match(detailSource, /label="Computer"/);
+assert.match(detailSource, /playground-project-overview-sidebar-selector/);
+assert.doesNotMatch(detailSource, /How this test works/);
+assert.doesNotMatch(detailSource, /title="Run target"/);
+assert.doesNotMatch(detailSource, /Runs continue to use the published immutable version/);
+assert.doesNotMatch(detailSource, /plan\.status/);
+assert.doesNotMatch(detailSource, /Test-plan status/);
+assert.doesNotMatch(detailSource, /Save Version/);
 assert.doesNotMatch(detailSource, /<PlatformServiceDetailProperty label="Cases">/);
 assert.doesNotMatch(detailSource, /CircleDot/);
 assert.doesNotMatch(
   detailSource,
   /primaryAction:\s*\{\s*label:\s*"Run Tests"/s,
 );
+assert.match(PLAYGROUND_TESTS_CSS, /\.tests-cases-table \.platform-data-table__toolbar-title\s*\{[\s\S]*?font-size:\s*18px/);
 
 const accessSettingsSource = await fs.readFile(
   new URL("./client/page/test-plan-access-settings.tsx", import.meta.url),
@@ -137,6 +155,9 @@ const runDetailSource = await fs.readFile(
 assert.match(runDetailSource, /PlatformServiceDetailPage/);
 assert.match(runDetailSource, /variant="run"/);
 assert.match(runDetailSource, /PlatformAnalyticsSection/);
+assert.match(runDetailSource, /Case results/);
+assert.match(runDetailSource, /Technical details/);
+assert.doesNotMatch(runDetailSource, /title="Canonical envelope"/);
 assert.doesNotMatch(runDetailSource, /activeTab/);
 
 const workspaceSource = await fs.readFile(

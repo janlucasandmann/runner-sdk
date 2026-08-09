@@ -589,6 +589,29 @@
               metadata,
             });
           }
+
+          function applyEnvironmentOwnerIdentity(environmentRecord, ownerIdentity) {
+            const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environmentRecord);
+            const owner = normalizeDatabaseOwnerIdentity(ownerIdentity);
+            const metadata = {
+              ...getEnvironmentMetadataRecord(normalizedEnvironment),
+              owner,
+              ownerId: owner.id,
+              owner_id: owner.id,
+              ownerUserId: owner.userId,
+              owner_user_id: owner.userId,
+              ownerName: owner.name,
+              owner_name: owner.name,
+              ownerEmail: owner.email,
+              owner_email: owner.email,
+              ownerAvatarUrl: owner.avatarUrl,
+              owner_avatar_url: owner.avatarUrl,
+            };
+            return normalizePlaygroundEnvironmentRecord({
+              ...normalizedEnvironment,
+              metadata,
+            });
+          }
   
           async function loadDatabaseOwnerTeamMembers(teamId) {
             const normalizedTeamId = String(teamId || "").trim();
@@ -628,6 +651,50 @@
   	            }
             } catch {
               setDatabaseOwnerTeamMembersById((current) => ({
+                ...current,
+                [normalizedTeamId]: Array.isArray(current[normalizedTeamId]) ? current[normalizedTeamId] : [],
+              }));
+            }
+          }
+
+          async function loadEnvironmentOwnerTeamMembers(teamId) {
+            const normalizedTeamId = String(teamId || "").trim();
+            if (!normalizedTeamId) return;
+            try {
+              const { response, data } = await fetchJsonWithTimeout(
+                backendUrl + "/teams/" + encodeURIComponent(normalizedTeamId)
+                  + "/members?includeProfiles=1&includeUsers=1&include=profile,user,account&expand=profile,user,account",
+                {
+                  method: "GET",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: requestHeaders,
+                },
+                15000
+              );
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load team members.");
+              }
+              const members = Array.isArray(data?.data)
+                ? data.data
+                : Array.isArray(data?.members)
+                  ? data.members
+                  : [];
+              const initialMembers = mergeDatabaseOwnerMemberProfiles(members, data);
+              setEnvironmentOwnerTeamMembersById((current) => ({
+                ...current,
+                [normalizedTeamId]: initialMembers,
+              }));
+              const profilePayload = await fetchDatabaseOwnerMemberProfilePayload(normalizedTeamId, members);
+              if (profilePayload) {
+                const enrichedMembers = mergeDatabaseOwnerMemberProfiles(members, data, profilePayload);
+                setEnvironmentOwnerTeamMembersById((current) => ({
+                  ...current,
+                  [normalizedTeamId]: enrichedMembers,
+                }));
+              }
+            } catch {
+              setEnvironmentOwnerTeamMembersById((current) => ({
                 ...current,
                 [normalizedTeamId]: Array.isArray(current[normalizedTeamId]) ? current[normalizedTeamId] : [],
               }));

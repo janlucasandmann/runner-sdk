@@ -681,7 +681,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
         }
 
         function renderProjectAppHeaderMilestoneSelector() {
-          const isBoardMilestoneSelector = taskView === "board" || taskView === "activity";
+          const isBoardMilestoneSelector = taskView === "board";
           return React.createElement(PlatformButtonSelector, {
               mode: "popup",
               buttonVariant: "secondary",

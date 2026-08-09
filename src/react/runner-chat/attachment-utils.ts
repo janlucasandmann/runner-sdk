@@ -37,7 +37,7 @@ export function getBrowserFileType(
   const ext = name?.split(".").pop()?.toLowerCase() || "";
   if (
     mimeType?.startsWith("image/") ||
-    ["png", "jpg", "jpeg", "gif", "svg", "webp", "bmp"].includes(ext)
+    ["png", "jpg", "jpeg", "gif", "svg", "webp", "bmp", "avif"].includes(ext)
   ) {
     return "image";
   }

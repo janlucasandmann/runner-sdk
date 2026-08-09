@@ -4,22 +4,21 @@ import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
+import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
 import {
   PlatformLabel,
   type PlatformLabelVariant,
 } from "../../../../../platform-ui/components/ui/label/index.js";
 import {
-  ResourceOverviewIdentityCell,
   ResourceOverviewPage,
+  ResourceOverviewIdentityCell,
   ResourceOverviewValue,
-  type ResourceOverviewAnalyticsModel,
-  type ResourceOverviewPeriod,
 } from "../../../../../platform-ui/pages/overview/index.js";
 import {
-  createMetronomesOverviewAnalytics,
   type MetronomeOverviewRow,
   type MetronomeOverviewStatus,
 } from "./metronomes-overview-model.js";
+import { MetronomesOverviewGuide } from "./metronomes-overview-guide.js";
 
 type MetronomeOverviewAction = (row: MetronomeOverviewRow) => void | Promise<void>;
 
@@ -29,9 +28,6 @@ export interface MetronomesOverviewPageProps {
   loading?: boolean;
   mutating?: boolean;
   error?: React.ReactNode;
-  period?: ResourceOverviewPeriod;
-  onPeriodChange?: (period: ResourceOverviewPeriod) => void;
-  analytics?: ResourceOverviewAnalyticsModel;
   onOpen: MetronomeOverviewAction;
   onCreate: () => void;
   onEdit: MetronomeOverviewAction;
@@ -55,9 +51,6 @@ export function MetronomesOverviewPage({
   loading = false,
   mutating = false,
   error,
-  period,
-  onPeriodChange,
-  analytics,
   onOpen,
   onCreate,
   onEdit,
@@ -67,9 +60,7 @@ export function MetronomesOverviewPage({
   onRemoveShared,
   onRestoreShared,
 }: MetronomesOverviewPageProps) {
-  const [internalPeriod, setInternalPeriod] = useState<ResourceOverviewPeriod>("month");
   const [ownershipFilter, setOwnershipFilter] = useState("all");
-  const activePeriod = period || internalPeriod;
 
   const filteredRows = useMemo(
     () =>
@@ -86,18 +77,6 @@ export function MetronomesOverviewPage({
     [ownershipFilter, rows],
   );
 
-  const resolvedAnalytics = useMemo(
-    () =>
-      analytics ||
-      createMetronomesOverviewAnalytics({
-        rows,
-        period: activePeriod,
-        loading,
-        error: typeof error === "string" ? error : null,
-      }),
-    [activePeriod, analytics, error, loading, rows],
-  );
-
   const columns = useMemo<PlatformDataTableColumn<MetronomeOverviewRow>[]>(
     () => [
       {
@@ -106,14 +85,7 @@ export function MetronomesOverviewPage({
         accessor: "name",
         sortable: true,
         width: "minmax(220px, 1.35fr)",
-        cell: ({ row }) => (
-          <ResourceOverviewIdentityCell
-            title={row.name}
-            icon={Metronome}
-            iconClassName="is-connection"
-            size="compact"
-          />
-        ),
+        cell: ({ row }) => <span className="resource-overview-identity__title">{row.name}</span>,
       },
       {
         id: "status",
@@ -266,12 +238,8 @@ export function MetronomesOverviewPage({
 
   return (
     <ResourceOverviewPage<MetronomeOverviewRow>
-      period={activePeriod}
-      onPeriodChange={(nextPeriod) => {
-        if (!period) setInternalPeriod(nextPeriod);
-        onPeriodChange?.(nextPeriod);
-      }}
-      analytics={resolvedAnalytics}
+      heroContent={<MetronomesOverviewGuide />}
+      showPeriodSelector={false}
       controlsPortalId={controlsPortalId}
       className="is-metronomes"
       table={{
@@ -280,14 +248,15 @@ export function MetronomesOverviewPage({
         getRowId: (row) => row.id,
         ariaLabel: "Metronomes",
         className: "resource-overview-table is-metronomes",
+        variant: "catalog-ui",
         sorting: { defaultValue: { id: "lastRun", direction: "desc" } },
         selection: {
           enabled: true,
           isRowSelectable: (row) => !row.isHiddenTeamShared,
           ariaLabel: (row) => `Select ${row.name}`,
         },
+        pagination: false,
         toolbar: {
-          title: "All Workflows",
           search: {
             placeholder: "Search metronomes",
             getSearchText: (row) =>
@@ -326,9 +295,16 @@ export function MetronomesOverviewPage({
         loading,
         error,
         emptyState:
-          ownershipFilter === "removed"
-            ? "No removed shared metronomes."
-            : "No metronomes available.",
+          ownershipFilter === "removed" ? (
+            "No removed shared metronomes."
+          ) : (
+            <PlatformEmptyState
+              icon={Metronome}
+              title="No metronomes yet"
+              description="Create a workflow to coordinate agents, triggers, and deterministic actions."
+              primaryAction={{ label: "Create Metronome", onClick: onCreate }}
+            />
+          ),
         noResultsState: "No metronomes match this view.",
       }}
     />

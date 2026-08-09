@@ -7,7 +7,7 @@ import { PlatformAnalyticsSection } from "./platform-analytics-section.js";
 afterEach(cleanup);
 
 describe("PlatformAnalyticsSection", () => {
-  it("renders KPI values and the shared empty chart state", () => {
+  it("hides KPI values when the shared chart has no recorded data", () => {
     const { container } = render(
       <PlatformAnalyticsSection
         analytics={{
@@ -25,15 +25,17 @@ describe("PlatformAnalyticsSection", () => {
 
     expect(container.querySelectorAll(".platform-analytics")).toHaveLength(1);
     expect(screen.getByLabelText("Usage analytics")).not.toBeNull();
-    expect(screen.getByText("Runs")).not.toBeNull();
-    expect(screen.getByText("24,000")).not.toBeNull();
+    expect(screen.queryByText("Runs")).toBeNull();
+    expect(screen.queryByText("24,000")).toBeNull();
+    expect(container.querySelector(".platform-analytics__metrics")).toBeNull();
+    expect(container.querySelector(".platform-analytics")?.classList.contains("has-no-metrics")).toBe(true);
     expect(screen.getByText("No data available yet")).not.toBeNull();
     expect(screen.getByText("Analytics will appear here once activity has been recorded.")).not.toBeNull();
     expect(container.querySelector(".platform-analytics-empty-state svg")).not.toBeNull();
     expect(screen.queryByRole("heading", { name: "Usage" })).toBeNull();
   });
 
-  it("renders the framed analytics composition with title, timeframe, KPIs, and the shared chart state", () => {
+  it("renders the framed analytics composition without KPIs in the shared empty state", () => {
     const onTimeframeValueChange = vi.fn();
     const { container } = render(
       <PlatformAnalyticsSection
@@ -63,7 +65,7 @@ describe("PlatformAnalyticsSection", () => {
     expect(section.getAttribute("data-platform-analytics-variant")).toBe("framed");
     expect(screen.getByRole("heading", { name: "Analytics", level: 2 })).not.toBeNull();
     expect(screen.getByRole("radiogroup", { name: "Performance range" })).not.toBeNull();
-    expect(screen.getByText("Total Runs")).not.toBeNull();
+    expect(screen.queryByText("Total Runs")).toBeNull();
     expect(screen.getByText("No data available yet")).not.toBeNull();
     expect(screen.getByText("Analytics will appear here once activity has been recorded.")).not.toBeNull();
     expect(container.querySelector(".platform-analytics-empty-state svg")).not.toBeNull();
@@ -139,6 +141,7 @@ describe("PlatformAnalyticsSection", () => {
       <PlatformAnalyticsSection
         variant="compact"
         title="Progress"
+        showChart={false}
         analytics={{
           ariaLabel: "Project progress",
           metrics: [

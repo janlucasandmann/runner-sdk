@@ -26,9 +26,7 @@ export const ORGANIZATIONS_ROLE_LIFECYCLE_SCRIPT = `	        useEffect(() => {
 	          return () => document.removeEventListener("mousedown", handlePointerDown);
 	        }, [organizationPageRoleMembersPopover]);
 	        useEffect(() => {
-	          if (organizationPageActiveTab !== "resources") {
-	            setOrganizationResourceToolbarPopover("");
-	          }
+	          setOrganizationResourceToolbarPopover("");
 	          if (organizationPageActiveTab !== "members") {
 	            setOrganizationMemberToolbarPopover("");
 	            setOrganizationMemberMenuId("");

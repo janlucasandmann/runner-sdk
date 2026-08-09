@@ -51,6 +51,7 @@ const JIRA_REDIRECT_URI_KEYS = [
   "ATLASSIAN_OAUTH_REDIRECT_URI",
   "ATLASSIAN_OAUTH_REDIRECT_URL",
 ];
+const jiraRefreshes = new Map();
 
 export function isJiraApiRequestPath(pathname) {
   return pathname === "/api/jira/callback"
@@ -348,71 +349,78 @@ async function handleJiraUser(
         allowedOrigins,
       );
     }
+    let activeCredential = credential;
+    let normalizedProfile;
     try {
-      const sites = await fetchJiraAccessibleResources(
-        credential.token.accessToken,
-      );
-      const site =
-        sites.find((candidate) => candidate.id === credential.token.cloudId)
-        || sites[0];
-      if (!site?.id) {
-        throw unauthorizedProviderError();
-      }
-      const profile = await fetchJiraProfile(
-        credential.token.accessToken,
-        site.id,
-      );
-      const normalizedProfile = sanitizeJiraProfile(profile, site);
-      const store = await updateConnectorCredentialMetadata({
-        provider: JIRA_PROVIDER,
-        uid: user.uid,
-        credentialId: credential.credentialId,
-        metadata: {
-          profile: normalizedProfile,
-          identity: getJiraIdentity(normalizedProfile),
-          lastCheckedAt: Date.now(),
-          status: "valid",
-        },
-        envFileCandidates,
-      });
-      return sendConnectorJson(
-        req,
-        res,
-        200,
-        {
-          connected: true,
-          profile: normalizedProfile,
-          credentials: listPublicConnectorCredentials(store),
-          defaultCredentialId: store.defaultCredentialId || undefined,
-          scope: credential.token.scope || "",
-          tokenType: credential.token.tokenType || "bearer",
-          expiresAt: credential.token.expiresAt ?? null,
-        },
-        allowedOrigins,
-      );
+      normalizedProfile = await loadJiraCredentialProfile(activeCredential);
     } catch (error) {
-      if (error?.status === 401) {
-        const store = await deleteConnectorCredential({
-          provider: JIRA_PROVIDER,
-          uid: user.uid,
-          credentialId: credential.credentialId,
-          envFileCandidates,
-        });
-        return sendConnectorJson(
+      if (error?.status !== 401) throw error;
+      const refreshedCredential = await loadValidJiraCredential({
+        uid: user.uid,
+        credentialId: activeCredential.credentialId,
+        envFileCandidates,
+        forceRefresh: true,
+      }).catch(() => null);
+      if (
+        !refreshedCredential
+        || refreshedCredential.token?.accessToken
+          === activeCredential.token?.accessToken
+      ) {
+        return sendInvalidJiraCredentialResponse(
           req,
           res,
-          200,
           {
-            connected: Object.keys(store.credentials).length > 0,
-            credentials: listPublicConnectorCredentials(store),
-            defaultCredentialId: store.defaultCredentialId || undefined,
-            reason: "token_revoked",
+            uid: user.uid,
+            credentialId: activeCredential.credentialId,
+            envFileCandidates,
           },
           allowedOrigins,
         );
       }
-      throw error;
+      activeCredential = refreshedCredential;
+      try {
+        normalizedProfile = await loadJiraCredentialProfile(activeCredential);
+      } catch (retryError) {
+        if (retryError?.status !== 401) throw retryError;
+        return sendInvalidJiraCredentialResponse(
+          req,
+          res,
+          {
+            uid: user.uid,
+            credentialId: activeCredential.credentialId,
+            envFileCandidates,
+          },
+          allowedOrigins,
+        );
+      }
     }
+    const store = await updateConnectorCredentialMetadata({
+      provider: JIRA_PROVIDER,
+      uid: user.uid,
+      credentialId: activeCredential.credentialId,
+      metadata: {
+        profile: normalizedProfile,
+        identity: getJiraIdentity(normalizedProfile),
+        lastCheckedAt: Date.now(),
+        status: "valid",
+      },
+      envFileCandidates,
+    });
+    return sendConnectorJson(
+      req,
+      res,
+      200,
+      {
+        connected: true,
+        profile: normalizedProfile,
+        credentials: listPublicConnectorCredentials(store),
+        defaultCredentialId: store.defaultCredentialId || undefined,
+        scope: activeCredential.token.scope || "",
+        tokenType: activeCredential.token.tokenType || "bearer",
+        expiresAt: activeCredential.token.expiresAt ?? null,
+      },
+      allowedOrigins,
+    );
   } catch (error) {
     if (error?.code === "unauthorized") {
       return sendConnectorJson(
@@ -425,6 +433,52 @@ async function handleJiraUser(
     }
     throw error;
   }
+}
+
+async function loadJiraCredentialProfile(credential) {
+  const sites = await fetchJiraAccessibleResources(
+    credential.token.accessToken,
+  );
+  const site =
+    sites.find((candidate) => candidate.id === credential.token.cloudId)
+    || sites[0];
+  if (!site?.id) throw unauthorizedProviderError();
+  const profile = await fetchJiraProfile(
+    credential.token.accessToken,
+    site.id,
+  );
+  return sanitizeJiraProfile(profile, site);
+}
+
+async function sendInvalidJiraCredentialResponse(
+  req,
+  res,
+  { uid, credentialId, envFileCandidates },
+  allowedOrigins,
+) {
+  const store = await updateConnectorCredentialMetadata({
+    provider: JIRA_PROVIDER,
+    uid,
+    credentialId,
+    metadata: {
+      lastCheckedAt: Date.now(),
+      status: "invalid",
+    },
+    envFileCandidates,
+  });
+  return sendConnectorJson(
+    req,
+    res,
+    200,
+    {
+      connected: Object.values(store.credentials || {})
+        .some((candidate) => candidate.status !== "invalid"),
+      credentials: listPublicConnectorCredentials(store),
+      defaultCredentialId: store.defaultCredentialId || undefined,
+      reason: "token_revoked",
+    },
+    allowedOrigins,
+  );
 }
 
 async function handleJiraDisconnect(
@@ -475,6 +529,7 @@ async function loadValidJiraCredential({
   uid,
   credentialId,
   envFileCandidates,
+  forceRefresh = false,
 }) {
   let credential = await loadConnectorCredential({
     provider: JIRA_PROVIDER,
@@ -487,6 +542,7 @@ async function loadValidJiraCredential({
     credential,
     ownerUserId: uid,
     envFileCandidates,
+    forceRefresh,
   });
 }
 
@@ -495,6 +551,7 @@ export async function resolveJiraCredentialForOrganization({
   credentialId = "",
   requestingUserId = "",
   envFileCandidates = [],
+  forceRefresh = false,
 }) {
   const credential = await resolveConnectorCredentialForOrganization({
     provider: JIRA_PROVIDER,
@@ -508,6 +565,7 @@ export async function resolveJiraCredentialForOrganization({
     credential,
     ownerUserId: credential?.credentialOwnerId,
     envFileCandidates,
+    forceRefresh,
   });
 }
 
@@ -515,15 +573,47 @@ async function refreshJiraCredentialIfNeeded({
   credential,
   ownerUserId,
   envFileCandidates,
+  forceRefresh = false,
 }) {
   if (!credential) return null;
   if (
+    !forceRefresh
+    && (
     !credential.token?.expiresAt
     || credential.token.expiresAt > Date.now() + 60_000
+    )
   ) {
     return credential;
   }
   if (!credential.token.refreshToken) return credential;
+  const normalizedOwnerUserId = String(
+    ownerUserId || credential.credentialOwnerId || "",
+  ).trim();
+  if (!normalizedOwnerUserId) {
+    throw new Error("The Jira credential owner is unavailable.");
+  }
+  const refreshKey = [
+    JIRA_PROVIDER,
+    normalizedOwnerUserId,
+    credential.credentialId,
+  ].join(":");
+  if (jiraRefreshes.has(refreshKey)) return jiraRefreshes.get(refreshKey);
+  const refreshPromise = performJiraCredentialRefresh({
+    credential,
+    ownerUserId: normalizedOwnerUserId,
+    envFileCandidates,
+  }).finally(() => {
+    jiraRefreshes.delete(refreshKey);
+  });
+  jiraRefreshes.set(refreshKey, refreshPromise);
+  return refreshPromise;
+}
+
+async function performJiraCredentialRefresh({
+  credential,
+  ownerUserId,
+  envFileCandidates,
+}) {
   const configuration = await resolveJiraOAuthConfiguration({
     envFileCandidates,
   });
@@ -535,15 +625,9 @@ async function refreshJiraCredentialIfNeeded({
     clientSecret: configuration.clientSecret,
     refreshToken: credential.token.refreshToken,
   });
-  const normalizedOwnerUserId = String(
-    ownerUserId || credential.credentialOwnerId || "",
-  ).trim();
-  if (!normalizedOwnerUserId) {
-    throw new Error("The Jira credential owner is unavailable.");
-  }
   await saveConnectorCredential({
     provider: JIRA_PROVIDER,
-    uid: normalizedOwnerUserId,
+    uid: ownerUserId,
     credentialId: credential.credentialId,
     credentialName: credential.name,
     organizationId: credential.organizationId,
@@ -553,17 +637,17 @@ async function refreshJiraCredentialIfNeeded({
     envFileCandidates,
     encryptionKeyNames: JIRA_ENCRYPTION_KEYS,
   });
-  credential = await loadConnectorCredential({
+  const refreshedCredential = await loadConnectorCredential({
     provider: JIRA_PROVIDER,
-    uid: normalizedOwnerUserId,
+    uid: ownerUserId,
     credentialId: credential.credentialId,
     envFileCandidates,
     encryptionKeyNames: JIRA_ENCRYPTION_KEYS,
   });
-  return credential
+  return refreshedCredential
     ? {
-        ...credential,
-        credentialOwnerId: normalizedOwnerUserId,
+        ...refreshedCredential,
+        credentialOwnerId: ownerUserId,
       }
     : null;
 }
@@ -693,12 +777,17 @@ function sanitizeJiraProfile(profile, site) {
   };
 }
 
-function normalizeJiraToken(token, site) {
+export function normalizeJiraToken(token, site) {
   const now = Date.now();
   return {
     accessToken: String(token?.access_token || token?.accessToken || "").trim(),
+    // Atlassian may rotate refresh tokens, but it may also omit refresh_token
+    // from a successful refresh response. Never discard a still-valid token.
     refreshToken: String(
-      token?.refresh_token || token?.refreshToken || "",
+      token?.refresh_token
+      || token?.refreshToken
+      || site?.refreshToken
+      || "",
     ).trim(),
     tokenType: String(token?.token_type || token?.tokenType || "Bearer").trim(),
     scope: String(token?.scope || site?.scope || JIRA_DEFAULT_SCOPE).trim(),

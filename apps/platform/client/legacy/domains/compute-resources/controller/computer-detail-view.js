@@ -118,17 +118,10 @@
               error: shouldShowEnvironmentAnalytics && environmentAnalyticsError ? environmentAnalyticsError : undefined,
             };
             const environmentAnalyticsSection = React.createElement(PlatformAnalyticsSection, {
-              variant: "framed",
+              variant: "default",
               className: "playground-computer-detail-analytics",
               analytics: environmentDetailAnalyticsModel,
               chartType: "line",
-              title: "Analytics",
-              timeframe: {
-                value: normalizedEnvironmentDetailChartTimescale,
-                options: environmentDetailTimescaleOptions,
-                onValueChange: setEnvironmentDetailChartTimescale,
-                ariaLabel: "Computer analytics time frame",
-              },
             });
             const normalizedEnvironmentRuntimeStatus = String(environmentRuntimeState.status || "idle").trim().toLowerCase();
             const environmentDesktopStatusLabel = normalizedEnvironmentRuntimeStatus === "running"
@@ -138,6 +131,13 @@
                 : normalizedEnvironmentRuntimeStatus === "error"
                   ? "Unavailable"
                   : "Stopped";
+            const environmentDesktopStatusVariant = normalizedEnvironmentRuntimeStatus === "running"
+              ? "green"
+              : normalizedEnvironmentRuntimeStatus === "starting"
+                ? "yellow"
+                : normalizedEnvironmentRuntimeStatus === "error"
+                  ? "red"
+                  : "gray";
             const desktopLaunchers = [
               {
                 id: "browser",
@@ -320,23 +320,6 @@
                   )
                 )
               : null;
-            const descriptionSection = React.createElement(PlatformInstructionsEditor, {
-              value: draftEnvironment.description || "",
-              onChange: (value) => updateEnvironmentField("description", value),
-              title: "Description",
-              placeholder: "Add Description here",
-              ariaLabel: "Computer description",
-              readOnly: isEnvironmentDescriptionLocked,
-              stickyHeader: !isEnvironmentDescriptionLocked,
-              historyKey: draftEnvironment.id || "draft-computer",
-              className: "playground-computer-detail-description-section",
-              onEditingChange: (editing) => {
-                if (!editing) {
-                  commitDraftEnvironmentIfDirty();
-                }
-              },
-            });
-  
             const runtimesSection = React.createElement("div", { className: "playground-tasks-connectors playground-environments-runtimes-section" },
               React.createElement("div", { className: "playground-tasks-connectors-list" },
                 PLAYGROUND_RUNTIME_DEFINITIONS.map((runtime) => {
@@ -588,21 +571,6 @@
                 : React.createElement("div", { className: "playground-environments-empty-copy" }, "No setup scripts configured.")
             );
   
-            const environmentSidebarCollapsed = Boolean(environmentDetailsCollapsed);
-            const renderEnvironmentSidebarToggleButton = () => React.createElement("button", {
-                type: "button",
-                className: "playground-project-overview-sidebar-toggle",
-                onClick: () => setEnvironmentDetailsCollapsed((current) => !current),
-                title: environmentSidebarCollapsed ? "Show computer sidebar" : "Hide computer sidebar",
-                "aria-label": environmentSidebarCollapsed ? "Show computer sidebar" : "Hide computer sidebar",
-                "aria-pressed": environmentSidebarCollapsed ? "true" : "false",
-              },
-              React.createElement(PanelRight, {
-                width: 15,
-                height: 15,
-                strokeWidth: 1.8,
-              })
-            );
             const canShowEnvironmentDetailHeaderPublish = Boolean(
               draftEnvironment?.id
               && draftEnvironment.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
@@ -638,9 +606,17 @@
               menuAriaLabel: "Computer version save options",
               className: "playground-computer-detail-publish-control",
             });
-            const environmentDetailTabBarActions = null;
-            const environmentDetailSidebarToggle = renderEnvironmentSidebarToggleButton();
             const environmentProfileSection = React.createElement("div", { className: "playground-agents-profile-section playground-computer-detail-profile-section" },
+              React.createElement("span", {
+                  className: "playground-computer-detail-profile-icon",
+                  "aria-hidden": "true",
+                },
+                React.createElement(Monitor, {
+                  width: 22,
+                  height: 22,
+                  strokeWidth: 1.7,
+                })
+              ),
               React.createElement("div", { className: "playground-agents-profile-copy" },
                 React.createElement("div", { className: "playground-agents-profile-name-wrap" },
                   React.createElement("input", {
@@ -654,10 +630,36 @@
                     onChange: (event) => updateEnvironmentField("name", event.target.value),
                     onBlur: commitDraftEnvironmentIfDirty,
                   })
-                )
+                ),
+                React.createElement("input", {
+                  type: "text",
+                  className: "playground-computer-detail-profile-description",
+                  value: draftEnvironment.description || "",
+                  placeholder: "Describe this computer",
+                  "aria-label": "Computer description",
+                  title: draftEnvironment.description || "",
+                  readOnly: isEnvironmentDescriptionLocked,
+                  onKeyDown: (event) => event.stopPropagation(),
+                  onChange: isEnvironmentDescriptionLocked
+                    ? undefined
+                    : (event) => updateEnvironmentField("description", event.target.value),
+                  onBlur: isEnvironmentDescriptionLocked
+                    ? undefined
+                    : commitDraftEnvironmentIfDirty,
+                })
+              ),
+              React.createElement("div", {
+                  className: "playground-computer-detail-profile-timeframe",
+                },
+                React.createElement(PlatformSwitch, {
+                  value: normalizedEnvironmentDetailChartTimescale,
+                  options: environmentDetailTimescaleOptions,
+                  onValueChange: setEnvironmentDetailChartTimescale,
+                  ariaLabel: "Computer analytics time frame",
+                })
               )
             );
-            const renderEnvironmentSidebarValue = (value, className = "") =>
+            const renderEnvironmentDetailValue = (value, className = "") =>
               React.createElement("span", {
                 className: "playground-environments-editor-fact-value" + (className ? " " + className : ""),
                 title: String(value || ""),
@@ -667,7 +669,7 @@
               const isCopied = environmentDetailCopiedFact === fieldId;
               return React.createElement("button", {
                   type: "button",
-                  className: "playground-agents-detail-sidebar-copy-button",
+                  className: "playground-computer-detail-copy-button",
                   title: isCopied ? "Copied" : "Copy " + label,
                   "aria-label": isCopied ? label + " copied" : "Copy " + label,
                   disabled: !normalizedValue,
@@ -692,52 +694,18 @@
                   : React.createElement(Copy, { width: 12, height: 12, strokeWidth: 1.45 })
               );
             };
-            const renderEnvironmentCopyableSidebarValue = (fieldId, value, label, className = "", displayValue = value) =>
-              React.createElement("span", { className: "playground-agents-detail-sidebar-copy-value" },
+            const renderEnvironmentCopyableDetailValue = (fieldId, value, label, className = "", displayValue = value) =>
+              React.createElement("span", { className: "playground-computer-detail-copy-value" },
                 React.createElement("span", {
                   className: "playground-environments-editor-fact-value" + (className ? " " + className : ""),
                   title: String(displayValue || ""),
                 }, displayValue || "Not set"),
                 renderEnvironmentFactCopyButton(fieldId, value, label)
               );
-            const renderEnvironmentSidebarRow = (label, valueNode, props = {}) =>
-              React.createElement(props.asButton ? "button" : "div", {
-                  key: label,
-                  type: props.asButton ? "button" : undefined,
-                  className: "playground-project-overview-sidebar-row" + (props.className ? " " + props.className : ""),
-                  onClick: props.onClick,
-                },
-                React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, label),
-                React.createElement("div", {
-                  className: "playground-project-overview-sidebar-row-value"
-                    + (props.editable ? " is-editable" : "")
-                    + (props.valueClassName ? " " + props.valueClassName : ""),
-                }, valueNode)
-              );
-            const environmentRuntimeStatusNode = React.createElement("span", {
-              className: "playground-environments-desktop-status playground-computer-detail-sidebar-status is-" + (
-                normalizedEnvironmentRuntimeStatus === "running"
-                  ? "running"
-                  : normalizedEnvironmentRuntimeStatus === "starting"
-                    ? "starting"
-                    : normalizedEnvironmentRuntimeStatus === "error"
-                      ? "error"
-                      : "stopped"
-              ),
+            const environmentRuntimeStatusNode = React.createElement(PlatformLabel, {
+              variant: environmentDesktopStatusVariant,
+              className: "playground-computer-detail-status",
             }, environmentDesktopStatusLabel);
-            const renderEnvironmentActionRow = (key, label, Icon, onClick, options = {}) =>
-              React.createElement("button", {
-                  key,
-                  type: "button",
-                  className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-computer-detail-sidebar-action",
-                  onClick,
-                  disabled: Boolean(options.disabled),
-                },
-                React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                  React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.85 })
-                ),
-                React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, label)
-              );
             const selectedEnvironmentComputeProfile = activeEnvironmentComputeProfile || getPlaygroundEnvironmentComputeProfileConfig(draftEnvironment.computeProfile);
             const environmentComputeProfilePopoverOpen = environmentRuntimePopover === "compute-profile";
             const environmentComputeProfileSelector = React.createElement("div", {
@@ -800,134 +768,180 @@
             const environmentOwnerIdentity = draftEnvironment.isSystem || draftEnvironment.isDefault
               ? environmentSystemIdentity
               : getDevelopResourceOwnerIdentity(draftEnvironment, environmentIdentityFallback);
-            const environmentSidebar = React.createElement(React.Fragment, null,
-              React.createElement("section", { className: "playground-project-overview-sidebar-card playground-server-detail-properties-card playground-computer-detail-properties-card" },
-                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
-                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties")
-                ),
-                React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
-                  renderEnvironmentSidebarRow("Status", environmentRuntimeStatusNode, {
-                    valueClassName: "playground-computer-detail-sidebar-status-value",
+            const environmentOwnerIdentityKey = getDatabaseOwnerIdentityKey(environmentOwnerIdentity);
+            const environmentOwnerLookupTeamIds = environmentSharedTeamIds.length > 0
+              ? environmentSharedTeamIds
+              : normalizedEnvironmentWorkspaceTeams.map((team) => String(team?.id || "").trim()).filter(Boolean);
+            const environmentOwnerTeamById = new Map(
+              normalizedEnvironmentWorkspaceTeams.map((team) => [String(team?.id || "").trim(), team])
+            );
+            const environmentOwnerCandidatesByKey = new Map();
+            environmentOwnerLookupTeamIds.forEach((teamId) => {
+              const team = environmentOwnerTeamById.get(teamId) || { id: teamId, name: "Team" };
+              const members = Array.isArray(environmentOwnerTeamMembersById[teamId])
+                ? environmentOwnerTeamMembersById[teamId]
+                : [];
+              members.filter(isHumanDatabaseOwnerCandidate).forEach((member) => {
+                const identity = normalizeDatabaseOwnerIdentity(member);
+                const identityKey = getDatabaseOwnerIdentityKey(identity);
+                if (!identityKey) return;
+                const existing = environmentOwnerCandidatesByKey.get(identityKey);
+                const teamNames = Array.from(new Set([
+                  ...(Array.isArray(existing?.teamNames) ? existing.teamNames : []),
+                  String(team.name || "Team").trim(),
+                ].filter(Boolean)));
+                environmentOwnerCandidatesByKey.set(identityKey, {
+                  ...(existing || {}),
+                  ...identity,
+                  teamNames,
+                });
+              });
+            });
+            const environmentOwnerCandidates = Array.from(environmentOwnerCandidatesByKey.values()).sort((left, right) => (
+              String(left?.name || left?.email || "").localeCompare(String(right?.name || right?.email || ""), undefined, {
+                numeric: true,
+                sensitivity: "base",
+              })
+            ));
+            const environmentOwnerOptions = environmentOwnerCandidates.map((candidate) => {
+              const candidateKey = getDatabaseOwnerIdentityKey(candidate);
+              const candidateLabel = String(candidate.name || candidate.email || "Team member").trim();
+              const candidateDetail = candidate.email && candidateLabel.toLowerCase() !== candidate.email.toLowerCase()
+                ? candidate.email
+                : (Array.isArray(candidate.teamNames) ? candidate.teamNames.join(", ") : "");
+              return {
+                value: candidateKey,
+                label: candidateLabel,
+                description: candidateDetail || undefined,
+                ariaLabel: candidateDetail ? candidateLabel + ", " + candidateDetail : candidateLabel,
+                leading: React.createElement(AccountAvatar, {
+                  className: "playground-agents-detail-owner-option-avatar",
+                  imageClassName: "playground-agents-detail-owner-option-avatar-image",
+                  fallbackLabel: getAccountInitials(candidateLabel),
+                  photoUrl: candidate.avatarUrl || "",
+                }),
+                candidate,
+              };
+            });
+            const environmentOwnerMissingTeamIds = environmentOwnerLookupTeamIds.filter((teamId) => (
+              !Object.prototype.hasOwnProperty.call(environmentOwnerTeamMembersById, teamId)
+            ));
+            const environmentOwnerLabel = String(
+              environmentOwnerIdentity.name || environmentOwnerIdentity.email || "Owner"
+            ).trim();
+            const handleEnvironmentOwnerPopoverOpenChange = (nextOpen) => {
+              if (nextOpen && typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
+                onWorkspaceTeamsRequest({});
+              }
+              setEnvironmentOwnerPopoverOpen(Boolean(nextOpen));
+            };
+            const handleEnvironmentOwnerSelect = (ownerIdentity) => {
+              if (!canMutateEnvironmentRecord || !ownerIdentity) return;
+              setEnvironmentOwnerPopoverOpen(false);
+              updateDraftEnvironment(applyEnvironmentOwnerIdentity(draftEnvironment, ownerIdentity));
+            };
+            const environmentOwnerSelectorControl = React.createElement(PlatformSelector, {
+              value: environmentOwnerIdentityKey,
+              options: environmentOwnerOptions,
+              open: environmentOwnerPopoverOpen,
+              onOpenChange: handleEnvironmentOwnerPopoverOpenChange,
+              onValueChange: (nextValue) => {
+                const selectedOwner = environmentOwnerOptions.find((option) => option.value === nextValue)?.candidate;
+                if (!selectedOwner || nextValue === environmentOwnerIdentityKey) {
+                  setEnvironmentOwnerPopoverOpen(false);
+                  return;
+                }
+                handleEnvironmentOwnerSelect(selectedOwner);
+              },
+              ariaLabel: "Choose computer owner",
+              label: React.createElement("span", {
+                  className: "playground-agents-detail-owner-value",
+                },
+                React.createElement("span", {
+                    className: "playground-team-member-cell playground-agents-detail-owner-member-cell",
+                  },
+                  React.createElement(AccountAvatar, {
+                    className: "playground-team-member-avatar",
+                    imageClassName: "playground-team-member-avatar-image",
+                    fallbackLabel: getAccountInitials(environmentOwnerLabel),
+                    photoUrl: environmentOwnerIdentity.avatarUrl || "",
                   }),
-                  renderEnvironmentSidebarRow("Creator", renderDevelopResourceIdentityValue(environmentCreatorIdentity), {
-                    valueClassName: "playground-server-detail-sidebar-identity-cell",
-                  }),
-                  renderEnvironmentSidebarRow("Computer Profile",
-                    environmentComputeProfileSelector,
-                    {
-                      editable: true,
-                      className: "playground-computer-detail-profile-row",
-                      valueClassName: "playground-computer-detail-profile-value",
-                    }
-                  ),
-                  renderEnvironmentSidebarRow("Rate",
-                    renderEnvironmentSidebarValue(formatPlaygroundEnvironmentProfileRate(activeEnvironmentComputeProfile))
-                  ),
-                  renderEnvironmentSidebarRow("RAM",
-                    renderEnvironmentSidebarValue(formatPlaygroundEnvironmentProfileMemory(activeEnvironmentComputeProfile))
-                  ),
-                  renderEnvironmentSidebarRow("Computer ID",
-                    renderEnvironmentCopyableSidebarValue("computer-id", draftEnvironment.id, "computer ID", "is-id", draftEnvironment.id || "Unsaved computer")
-                  ),
-                  renderEnvironmentSidebarRow("Created", renderEnvironmentSidebarValue(formatPlaygroundFileDate(draftEnvironment.createdAt))),
-                  renderEnvironmentSidebarRow("Updated", renderEnvironmentSidebarValue(formatPlaygroundFileDate(draftEnvironment.updatedAt))),
-                  renderEnvironmentSidebarRow("Resources", renderEnvironmentSidebarValue(formatPlaygroundEnvironmentProfileResources(activeEnvironmentComputeProfile))),
-                  renderEnvironmentSidebarRow("Internet",
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-toggle" + (draftEnvironment.internetAccess ? " is-active" : ""),
-                      onClick: () => updateEnvironmentField("internetAccess", !draftEnvironment.internetAccess),
-                      "aria-pressed": draftEnvironment.internetAccess ? "true" : "false",
-                      title: draftEnvironment.internetAccess ? "Internet access enabled" : "Internet access disabled",
-                    }, React.createElement("span", { className: "playground-environments-toggle-thumb" })),
-                    { valueClassName: "playground-computer-detail-sidebar-toggle-value" }
-                  ),
-                  draftEnvironment.computeProfile === "desktop"
-                    ? renderEnvironmentSidebarRow("Office Apps",
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-toggle" + (officeAppsEnabled ? " is-active" : ""),
-                          onClick: () => updateEnvironmentField("officeAppsEnabled", !officeAppsEnabled),
-                          "aria-pressed": officeAppsEnabled ? "true" : "false",
-                          title: officeAppsEnabled ? "Office apps enabled" : "Office apps disabled",
-                        }, React.createElement("span", { className: "playground-environments-toggle-thumb" })),
-                        { valueClassName: "playground-computer-detail-sidebar-toggle-value" }
-                      )
-                    : null,
-                  draftEnvironment.isSystem
-                    ? renderEnvironmentSidebarRow("Type", renderEnvironmentSidebarValue("System"))
-                    : null,
-                  renderEnvironmentSidebarRow("Owner", renderDevelopResourceIdentityValue(environmentOwnerIdentity), {
-                    className: "playground-server-detail-sidebar-owner-row",
-                    valueClassName: "playground-server-detail-sidebar-identity-cell playground-server-detail-sidebar-owner-cell",
-                  })
+                  React.createElement("span", { className: "playground-team-member-copy" },
+                    React.createElement("span", {
+                      className: "playground-team-table-title",
+                      title: environmentOwnerLabel,
+                    }, environmentOwnerLabel)
+                  )
                 )
               ),
-              React.createElement("section", { className: "playground-project-overview-sidebar-card playground-agents-detail-actions-card playground-computer-detail-actions-card" },
-                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
-                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Actions")
+              alignment: "end",
+              popupAlignment: "right",
+              fullWidth: true,
+              disabled: !canMutateEnvironmentRecord || saveState.isSaving,
+              loading: environmentOwnerLookupTeamIds.length > 0 && environmentOwnerMissingTeamIds.length > 0,
+              loadingContent: "Loading team members...",
+              emptyContent: environmentOwnerLookupTeamIds.length === 0
+                ? "No organization teams are available."
+                : "No human team members are available.",
+              popupWidth: 260,
+              popupMaxHeight: "min(320px, calc(100vh - 180px))",
+              className: "playground-agents-detail-owner-popup-shell playground-tasks-detail-central-selector playground-computer-owner-selector",
+              triggerClassName: "playground-tasks-detail-central-selector-trigger playground-agents-detail-sidebar-owner-row playground-computer-owner-selector-trigger",
+              popupClassName: "playground-agents-detail-owner-menu playground-computer-owner-selector-popup",
+              optionClassName: "playground-agents-detail-owner-option",
+            });
+            const environmentDetailsSection = React.createElement("section", {
+                className: "playground-computer-details-section",
+                "aria-labelledby": "playground-computer-details-title",
+              },
+              React.createElement("h2", {
+                id: "playground-computer-details-title",
+                className: "playground-computer-details-section-title",
+              }, "Details"),
+              React.createElement("div", { className: "playground-computer-detail-fact-rows" },
+                renderEnvironmentFactRow("Status", environmentRuntimeStatusNode),
+                renderEnvironmentFactRow("Creator", renderDevelopResourceIdentityValue(environmentCreatorIdentity)),
+                renderEnvironmentFactRow("Computer Profile", environmentComputeProfileSelector),
+                renderEnvironmentFactRow("Rate",
+                  renderEnvironmentDetailValue(formatPlaygroundEnvironmentProfileRate(activeEnvironmentComputeProfile))
                 ),
-                React.createElement("div", { className: "playground-agents-detail-sidebar-actions" },
-                  canMutateEnvironmentRecord
-                    ? renderEnvironmentActionRow("share-team", "Share with Team", UsersRound, () => openEnvironmentShareTeamModal(), {
-                        disabled: saveState.isSaving || environmentShareTeamState.action === "share",
-                      })
-                    : null,
-                  draftEnvironment?.id && draftEnvironment.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
-                    ? renderEnvironmentActionRow("api", "Use via API", Code, () => openEnvironmentApiModal(), {
-                        disabled: saveState.isSaving,
-                      })
-                    : null,
-                  renderEnvironmentActionRow("open-gui", environmentGuiOpen ? "Show Desktop" : "Open GUI", Monitor, () => {
-                    void handleOpenEnvironmentGui();
-                  }, {
-                    disabled: !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID || environmentGuiState.isStarting || draftEnvironment.guiEnabled === false,
-                  }),
-                  renderEnvironmentActionRow("restart", environmentGuiState.isStarting ? "Restarting..." : "Restart", RefreshCw, () => {
-                    void handleOpenEnvironmentGui({ forceRestart: true });
-                  }, {
-                    disabled: !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID || environmentGuiState.isStarting,
-                  }),
-                  canMutateEnvironmentRecord
-                    ? renderEnvironmentActionRow("rename", "Rename", SquarePen, () => openEnvironmentRenameDialog(draftEnvironment), {
-                        disabled: saveState.isSaving,
-                      })
-                    : null,
-                  canMutateEnvironmentRecord
-                    ? renderEnvironmentActionRow("delete", "Delete", Trash2, () => {
-                        void handleDeleteEnvironment(draftEnvironment.id);
-                      }, {
-                        disabled: saveState.isSaving,
-                      })
-                    : null
-                )
+                renderEnvironmentFactRow("RAM",
+                  renderEnvironmentDetailValue(formatPlaygroundEnvironmentProfileMemory(activeEnvironmentComputeProfile))
+                ),
+                renderEnvironmentFactRow("Computer ID",
+                  renderEnvironmentCopyableDetailValue("computer-id", draftEnvironment.id, "computer ID", "is-id", draftEnvironment.id || "Unsaved computer")
+                ),
+                renderEnvironmentFactRow("Created", renderEnvironmentDetailValue(formatPlaygroundFileDate(draftEnvironment.createdAt))),
+                renderEnvironmentFactRow("Updated", renderEnvironmentDetailValue(formatPlaygroundFileDate(draftEnvironment.updatedAt))),
+                renderEnvironmentFactRow("Resources", renderEnvironmentDetailValue(formatPlaygroundEnvironmentProfileResources(activeEnvironmentComputeProfile))),
+                renderEnvironmentFactRow("Internet",
+                  React.createElement(PlatformToggle, {
+                    checked: Boolean(draftEnvironment.internetAccess),
+                    onCheckedChange: (nextChecked) => updateEnvironmentField("internetAccess", nextChecked),
+                    "aria-label": "Internet access",
+                    title: draftEnvironment.internetAccess ? "Internet access enabled" : "Internet access disabled",
+                  })
+                ),
+                draftEnvironment.computeProfile === "desktop"
+                  ? renderEnvironmentFactRow("Office Apps",
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-toggle" + (officeAppsEnabled ? " is-active" : ""),
+                        onClick: () => updateEnvironmentField("officeAppsEnabled", !officeAppsEnabled),
+                        "aria-pressed": officeAppsEnabled ? "true" : "false",
+                        title: officeAppsEnabled ? "Office apps enabled" : "Office apps disabled",
+                      }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
+                    )
+                  : null,
+                draftEnvironment.isSystem
+                  ? renderEnvironmentFactRow("Type", renderEnvironmentDetailValue("System"))
+                  : null,
+                renderEnvironmentFactRow("Owner", environmentOwnerSelectorControl)
               )
             );
-            const openEnvironmentFilebase = () => {
-              const normalizedEnvironmentId = String(draftEnvironment?.id || "").trim();
-              if (!normalizedEnvironmentId || normalizedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
-                return;
-              }
-              if (typeof onOpenFilesPage !== "function") {
-                return;
-              }
-              onOpenFilesPage({
-                token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                environmentId: normalizedEnvironmentId,
-                contentMode: "files",
-                path: "",
-                isFolder: true,
-              });
-            };
-            const normalizedEnvironmentDetailTab =
-              environmentDetailTab === "settings"
-                ? "settings"
-                : environmentDetailTab === "runtime" || environmentDetailTab === "advanced"
-                  ? "runtime"
-                  : "general";
             const environmentDetailGeneralSection = React.createElement(React.Fragment, null,
               environmentAnalyticsSection,
-              descriptionSection
+              environmentDetailsSection
             );
             const runtimeVersionsBox = React.createElement("div", {
                 className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-mission-control-modal-context-editor playground-mission-control-modal-outcomes-editor playground-computer-runtime-versions-box",
@@ -1737,47 +1751,169 @@
                 : modal;
             }
   
+            const environmentShareActionDisabled = saveState.isSaving || environmentShareTeamState.action === "share";
+            const environmentApiActionDisabled = saveState.isSaving;
+            const environmentGuiActionDisabled = !draftEnvironment?.id
+              || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID
+              || environmentGuiState.isStarting
+              || draftEnvironment.guiEnabled === false;
+            const environmentRestartActionDisabled = !draftEnvironment?.id
+              || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID
+              || environmentGuiState.isStarting;
+            const environmentRenameActionDisabled = saveState.isSaving;
+            const environmentDeleteActionDisabled = saveState.isSaving;
+            const invokeEnvironmentShareAction = () => {
+              setEnvironmentActionsPopoverOpen(false);
+              openEnvironmentShareTeamModal();
+            };
+            const invokeEnvironmentRenameAction = () => {
+              setEnvironmentActionsPopoverOpen(false);
+              openEnvironmentRenameDialog(draftEnvironment);
+            };
+            const invokeEnvironmentDeleteAction = () => {
+              setEnvironmentActionsPopoverOpen(false);
+              void handleDeleteEnvironment(draftEnvironment.id);
+            };
+            const environmentDetailTitleActions = computerTitleActionsContainer
+              ? createPortal(
+                  React.createElement(PlatformResourceHeaderActions, null,
+                    React.createElement(PlatformResourceActionsMenu, {
+                        open: environmentActionsPopoverOpen,
+                        onOpenChange: setEnvironmentActionsPopoverOpen,
+                        resourceLabel: "Computer",
+                        disabled: !draftEnvironment?.id,
+                        shortcutActions: canMutateEnvironmentRecord
+                          ? {
+                              share: {
+                                onInvoke: invokeEnvironmentShareAction,
+                                disabled: environmentShareActionDisabled,
+                              },
+                              rename: {
+                                onInvoke: invokeEnvironmentRenameAction,
+                                disabled: environmentRenameActionDisabled,
+                              },
+                              delete: {
+                                onInvoke: invokeEnvironmentDeleteAction,
+                                disabled: environmentDeleteActionDisabled,
+                              },
+                            }
+                          : {},
+                      },
+                      React.createElement(PlatformResourceActionsInformation, {
+                        resourceLabel: "Computer",
+                        items: [
+                          {
+                            id: "id",
+                            label: "ID",
+                            value: draftEnvironment.id || "Unsaved computer",
+                            title: draftEnvironment.id || "Unsaved computer",
+                            monospace: true,
+                            copyValue: draftEnvironment.id || undefined,
+                            copyAriaLabel: "Copy Computer ID",
+                          },
+                          {
+                            id: "created",
+                            label: "Created",
+                            value: formatPlaygroundFileDate(draftEnvironment.createdAt),
+                          },
+                          {
+                            id: "updated",
+                            label: "Updated",
+                            value: formatPlaygroundFileDate(draftEnvironment.updatedAt),
+                          },
+                        ],
+                      }),
+                      canShowEnvironmentDetailHeaderPublish
+                        ? React.createElement(PlatformResourceVersionHistoryMenuItem, {
+                            onClick: () => {
+                              setEnvironmentActionsPopoverOpen(false);
+                              openEnvironmentVersionsSidebar();
+                            },
+                          })
+                        : null,
+                      React.createElement(PlatformResourceActionsDivider),
+                      canMutateEnvironmentRecord
+                        ? React.createElement(PlatformResourceActionMenuItem, {
+                            icon: React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                            label: "Share with Team",
+                            shortcut: "share",
+                            disabled: environmentShareActionDisabled,
+                            onClick: invokeEnvironmentShareAction,
+                          })
+                        : null,
+                      draftEnvironment.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
+                        ? React.createElement(PlatformResourceActionMenuItem, {
+                            icon: React.createElement(Code, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                            label: "Use via API",
+                            disabled: environmentApiActionDisabled,
+                            onClick: () => {
+                              setEnvironmentActionsPopoverOpen(false);
+                              openEnvironmentApiModal();
+                            },
+                          })
+                        : null,
+                      React.createElement(PlatformResourceActionMenuItem, {
+                        icon: React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                        label: environmentGuiOpen ? "Show Desktop" : "Open GUI",
+                        disabled: environmentGuiActionDisabled,
+                        onClick: () => {
+                          setEnvironmentActionsPopoverOpen(false);
+                          void handleOpenEnvironmentGui();
+                        },
+                      }),
+                      React.createElement(PlatformResourceActionMenuItem, {
+                        icon: React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                        label: environmentGuiState.isStarting ? "Restarting..." : "Restart",
+                        disabled: environmentRestartActionDisabled,
+                        onClick: () => {
+                          setEnvironmentActionsPopoverOpen(false);
+                          void handleOpenEnvironmentGui({ forceRestart: true });
+                        },
+                      }),
+                      canMutateEnvironmentRecord
+                        ? React.createElement(PlatformResourceActionsDivider)
+                        : null,
+                      canMutateEnvironmentRecord
+                        ? React.createElement(PlatformResourceActionMenuItem, {
+                            icon: React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                            label: "Rename",
+                            shortcut: "rename",
+                            disabled: environmentRenameActionDisabled,
+                            onClick: invokeEnvironmentRenameAction,
+                          })
+                        : null,
+                      canMutateEnvironmentRecord
+                        ? React.createElement(PlatformResourceActionMenuItem, {
+                            icon: React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                            label: "Delete",
+                            shortcut: "delete",
+                            danger: true,
+                            disabled: environmentDeleteActionDisabled,
+                            onClick: invokeEnvironmentDeleteAction,
+                          })
+                        : null
+                    )
+                  ),
+                  computerTitleActionsContainer
+                )
+              : null;
             const environmentDetailWorkspaceSection = React.createElement(ComputerDetailPage, {
                 header: environmentProfileSection,
-                tabBarActions: environmentDetailTabBarActions,
-                sidebarToggle: environmentDetailSidebarToggle,
-                sidebar: environmentSidebar,
-                activeTab: normalizedEnvironmentDetailTab,
-                onTabChange: (tab) => {
-                  if (tab !== "settings" && environmentPermissionPrincipalId) {
-                    handleEnvironmentAccessPrincipalChange("");
-                  }
-                  setEnvironmentDetailTab(tab);
-                  if (tab === "settings") {
-                    setEnvironmentPermissionChartAnimationKey((current) => current + 1);
-                    if (
-                      typeof onWorkspaceTeamsRequest === "function"
-                      && !workspaceTeamsLoading
-                    ) {
-                      onWorkspaceTeamsRequest({});
-                    }
-                  }
-                },
-                onOpenFilebase: openEnvironmentFilebase,
-                filebaseDisabled: !draftEnvironment?.id
-                  || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID
-                  || typeof onOpenFilesPage !== "function",
-                sidebarCollapsed: environmentSidebarCollapsed,
-                sidebarPopoverOpen: environmentRuntimePopover === "compute-profile",
                 ariaLabel: "Computer details for " + (draftEnvironment.name || "Untitled"),
-                sidebarAriaLabel: (draftEnvironment.name || "Computer") + " settings",
               },
               environmentDetailActiveSection
             );
             const environmentDetailTopNavActions = topNavActionsContainer
-              && canShowEnvironmentDetailHeaderPublish
               ? createPortal(
-                  renderEnvironmentPublishAction(),
+                  canShowEnvironmentDetailHeaderPublish
+                    ? renderEnvironmentPublishAction()
+                    : null,
                   topNavActionsContainer
                 )
               : null;
   
             return React.createElement(React.Fragment, null,
+              environmentDetailTitleActions,
               environmentDetailTopNavActions,
               React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main playground-computer-detail-main", ref: environmentDetailMainRef },
               React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },

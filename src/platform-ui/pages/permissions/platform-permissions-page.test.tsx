@@ -99,10 +99,14 @@ describe("PlatformPermissionsPage", () => {
 
     expect(screen.getByRole("heading", { name: "Agent Permissions" })).not.toBeNull();
     expect(screen.getByRole("button", { name: "About Agent Permissions" })).not.toBeNull();
-    expect(container.querySelector("[data-platform-permissions-overview='compact']")).not.toBeNull();
+    expect(
+      container.querySelector("[data-platform-permissions-overview='compact']"),
+    ).not.toBeNull();
     const editButton = screen.getByRole("button", { name: "Edit" });
     expect(editButton.getAttribute("data-platform-button-variant")).toBe("primary");
-    expect(screen.getByRole("button", { name: "Ring 1 default permissions" }).hasAttribute("disabled")).toBe(true);
+    expect(
+      screen.getByRole("button", { name: "Ring 1 default permissions" }).hasAttribute("disabled"),
+    ).toBe(true);
 
     await user.click(editButton);
     expect(onEdit).toHaveBeenCalledTimes(1);
@@ -166,7 +170,9 @@ describe("PlatformPermissionsPage", () => {
     expect(container.querySelector("[data-platform-permissions-page='true']")).not.toBeNull();
     expect(screen.getByText("Read workspace")).not.toBeNull();
     expect(screen.queryByText("Invite members")).toBeNull();
-    expect(container.querySelectorAll("[data-platform-settings-section-list='true']")).toHaveLength(1);
+    expect(container.querySelectorAll("[data-platform-settings-section-list='true']")).toHaveLength(
+      1,
+    );
     expect(container.querySelectorAll("[data-platform-settings-section='true']")).toHaveLength(2);
     expect(container.querySelectorAll(".platform-permissions-page__ring-table")).toHaveLength(2);
     expect(container.querySelectorAll(".platform-settings-data-table")).toHaveLength(2);
@@ -180,16 +186,15 @@ describe("PlatformPermissionsPage", () => {
 
     const ringOneTable = screen.getByRole("table", { name: "Ring 1 permissions" });
     expect(
-      ringOneTable.querySelector<HTMLElement>(".platform-data-table__header")?.style.gridTemplateColumns,
+      ringOneTable.querySelector<HTMLElement>(".platform-data-table__header")?.style
+        .gridTemplateColumns,
     ).toBe("minmax(0, 1fr) 104px 126px");
     expect(within(ringOneTable).getByRole("columnheader", { name: /Ring 1/ })).not.toBeNull();
     expect(within(ringOneTable).getByRole("columnheader", { name: "Ring" })).not.toBeNull();
     expect(within(ringOneTable).getByRole("columnheader", { name: "Permission" })).not.toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Ring 1 default permissions" }));
-    expect(
-      document.body.querySelector(".platform-popup-surface.is-portaled"),
-    ).not.toBeNull();
+    expect(document.body.querySelector(".platform-popup-surface.is-portaled")).not.toBeNull();
     expect(container.querySelector(".platform-popup-surface")).toBeNull();
     await user.click(screen.getByRole("option", { name: "Read only" }));
 
@@ -198,7 +203,8 @@ describe("PlatformPermissionsPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Read workspace permissions" }));
     expect(
-      screen.getByRole("listbox", { name: "Read workspace permissions options" })
+      screen
+        .getByRole("listbox", { name: "Read workspace permissions options" })
         .closest(".platform-popup-surface")
         ?.getAttribute("data-platform-popup-placement"),
     ).toBe("bottom-end");
@@ -226,6 +232,11 @@ describe("PlatformPermissionsPage", () => {
         actionDefinitions={actions}
         subjectType="team_role"
       />,
+    );
+
+    const memberRole = screen.getByRole("tab", { name: /Member/ });
+    expect(within(memberRole).getByText("Member").parentElement).toBe(
+      within(memberRole).getByText("3 assigned").parentElement,
     );
 
     fireEvent.click(screen.getByRole("tab", { name: /Admin/ }));

@@ -29,6 +29,28 @@ assert.match(pageScript, /title: "Settings"/);
 assert.match(pageScript, /closeButtonLabel: "Close settings"/);
 assert.match(pageScript, /React\.createElement\(PlatformModalBody,/);
 assert.match(pageScript, /className: "platform-modal-split-layout playground-shell-settings-modal-layout"/);
+assert.match(
+  pageScript,
+  /React\.createElement\(PlatformAnalyticsChart, \{\s*analytics: activeUsageAnalyticsModel,\s*chartType: "bar",/,
+  "Admin usage charts must render through the centralized Chart.js analytics component.",
+);
+assert.match(pageScript, /id: "models",\s*label: "Usage by Models"/);
+assert.match(pageScript, /ariaLabel: "Compute token cost by LLM model"/);
+assert.doesNotMatch(
+  pageScript,
+  /resolvedAgentModelOptions/,
+  "The settings renderer must not reference agent-page component-local model options.",
+);
+assert.match(
+  pageScript,
+  /ariaLabel: "Usage consumers",[\s\S]{0,360}layout: "fill",\s*variant: "minimalistic-ui",\s*sticky: false,\s*pagination: \{\},\s*toolbar: \{\s*title: "Consumers",\s*search: \{\s*placeholder: "Search consumers",\s*ariaLabel: "Search usage consumers",\s*getSearchText:/,
+  "Admin usage consumers must use the resource-overview minimal data table treatment.",
+);
+assert.match(
+  pageScript,
+  /React\.createElement\(PlatformLoadingState, \{\s*className: "playground-settings-usage-chart-loading-frame",\s*message: "Loading usage\.\.\.",\s*centered: true,/,
+  "Admin usage charts must use the centralized loading indicator label.",
+);
 assert.match(pageScript, /\{ id: "profile", label: "Account", Icon: UserRound \}/);
 assert.match(pageScript, /\{ id: "password", label: "Password", Icon: KeyRound \}/);
 assert.match(pageScript, /\{ id: "delete", label: "Delete Account", Icon: Trash2, isDanger: true \}/);

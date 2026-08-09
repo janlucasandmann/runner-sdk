@@ -1519,6 +1519,7 @@
               },
                 React.createElement(PlatformProfileImagePicker, {
                   value: agentProfilePhotoUrl,
+                  hoverValue: agentProfileHoverPhotoUrl,
                   fallback: getAccountInitials(draftAgent.name || (isTeamAgent ? "Squad" : "Agent")),
                   options: PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS,
                   editable: canEditAgentProfilePhoto,

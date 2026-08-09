@@ -15,6 +15,9 @@ const PLATFORM_PLUGIN_FILE_CONNECTION_IDS = Object.freeze([
   "github",
   "google-drive",
   "one-drive",
+  "gitlab",
+  "notion",
+  "sharepoint",
 ] as const satisfies readonly PlatformPluginFileConnectionId[]);
 
 function getDefaultFetch() {
@@ -322,7 +325,11 @@ export async function fetchPlatformPluginFiles(
   options: PlatformPluginFileRequestOptions = {},
 ): Promise<PlatformPluginFileItem[]> {
   if (providerId === "github") return fetchGitHubFiles(folderId, options);
-  return fetchDriveFiles(providerId, folderId, options);
+  if (providerId === "google-drive" || providerId === "one-drive") {
+    return fetchDriveFiles(providerId, folderId, options);
+  }
+  const catalogEntry = getPlatformConnectorCatalogEntry(providerId);
+  throw new Error(`${catalogEntry?.label || providerId} file browsing is not available yet.`);
 }
 
 export async function fetchPlatformPluginFileContent(
@@ -337,9 +344,12 @@ export async function fetchPlatformPluginFileContent(
     const params = new URLSearchParams({ path: item.path });
     if (item.ref) params.set("ref", item.ref);
     requestUrl = `/api/aios/github/repos/${getGitHubRepositoryPath(item.repoFullName)}/download?${params.toString()}`;
-  } else {
+  } else if (item.providerId === "google-drive" || item.providerId === "one-drive") {
     const apiSegment = item.providerId === "one-drive" ? "onedrive" : "google-drive";
     requestUrl = `/api/aios/${apiSegment}/download?fileId=${encodeURIComponent(item.id)}`;
+  } else {
+    const catalogEntry = getPlatformConnectorCatalogEntry(item.providerId);
+    throw new Error(`${catalogEntry?.label || item.providerId} file browsing is not available yet.`);
   }
   const scopedRequest = getOrganizationScopedRequest(requestUrl, options);
   const response = await request(scopedRequest.path, {

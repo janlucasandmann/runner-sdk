@@ -1,4 +1,4 @@
-import { AlertCircle, Check, Clock3, CornerDownRight, MessageCircle, Route } from "lucide-react";
+import { AlertCircle, Check, Clock3, CornerDownRight, Route } from "lucide-react";
 import type { RunnerThreadRoutingReceipt } from "../../thread/types.js";
 
 export interface RunnerThreadRoutingReceiptProps {
@@ -14,7 +14,7 @@ function getReceiptPresentation(receipt: RunnerThreadRoutingReceipt) {
     return { label: "Checking intent", Icon: Clock3, tone: "pending" };
   }
   if (receipt.status === "answered") {
-    return { label: "Answered by Communicator", Icon: MessageCircle, tone: "success" };
+    return { label: "Answered", Icon: Check, tone: "success" };
   }
   if (receipt.status === "delivered") {
     const suffix = receipt.deliveredAtSequence
@@ -22,11 +22,11 @@ function getReceiptPresentation(receipt: RunnerThreadRoutingReceipt) {
       : receipt.deliveredAtStepId
         ? ` at ${receipt.deliveredAtStepId}`
         : "";
-    return { label: `Delivered to Worker${suffix}`, Icon: Check, tone: "success" };
+    return { label: `Delivered${suffix}`, Icon: Check, tone: "success" };
   }
   if (receipt.status === "queued") {
     return {
-      label: receipt.route === "worker" ? "Queued for Worker" : "Queued for delivery",
+      label: "Queued for delivery",
       Icon: CornerDownRight,
       tone: "pending",
     };
@@ -65,4 +65,3 @@ export function RunnerThreadRoutingReceiptView({
     </div>
   );
 }
-

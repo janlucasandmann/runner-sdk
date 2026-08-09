@@ -3,6 +3,12 @@ export const TEAMS_LOAD_LIFECYCLE_SCRIPT = `        useEffect(() => {
             return;
           }
           void loadTeamPageData();
-        }, [activePage, hasRealAccess, teamPageSelectedTeamId, proxyBackendBase, requestHeaders]);
+        }, [
+          activePage,
+          hasRealAccess,
+          proxyBackendBase,
+          requestHeaders,
+          teamListRequestHeaders,
+          teamPageSelectedTeamId,
+        ]);
 `;
-

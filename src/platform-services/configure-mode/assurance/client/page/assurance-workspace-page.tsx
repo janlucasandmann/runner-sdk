@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
 import { PlatformServiceDetailFrame } from "../../../../../platform-ui/pages/details/index.js";
+import type { PlatformVersionNavigationGuardRegistrar } from "../../../../../platform-ui/components/composite/versioning/index.js";
 import { AssuranceApi } from "../api/index.js";
 import {
   normalizeAssuranceWorkspaceOption,
@@ -38,6 +39,8 @@ export interface AssuranceWorkspacePageProps {
     runId?: string;
     runLabel?: string;
   }) => void;
+  onNavigationGuardChange?: PlatformVersionNavigationGuardRegistrar;
+  onNavigationRequest?: (continuation: () => void) => boolean;
 }
 
 function formatRelativeTimestamp(value: string): string {
@@ -74,6 +77,8 @@ export function AssuranceWorkspacePage({
   onOpenPolicy,
   onOpenRun,
   onIdentityChange,
+  onNavigationGuardChange,
+  onNavigationRequest,
 }: AssuranceWorkspacePageProps) {
   const api = useMemo(
     () => new AssuranceApi(backendUrl, requestHeaders),
@@ -248,6 +253,14 @@ export function AssuranceWorkspacePage({
     });
   }, [normalizedProjects, policies, runs]);
 
+  const requestWorkspaceNavigation = useCallback((continuation: () => void) => {
+    if (typeof onNavigationRequest === "function") {
+      return onNavigationRequest(continuation);
+    }
+    continuation();
+    return true;
+  }, [onNavigationRequest]);
+
   async function createPolicy(input: AssurancePolicyCreateInput): Promise<AssurancePolicy> {
     const created = await api.createPolicy(input);
     setPolicies((current) => [created, ...current]);
@@ -263,7 +276,7 @@ export function AssuranceWorkspacePage({
     setRuns((current) => [created, ...current]);
     setActiveRun(created);
     setActiveRunPolicy(policy);
-    onOpenRun(policy.id, created.id, policy.name);
+    requestWorkspaceNavigation(() => onOpenRun(policy.id, created.id, policy.name));
     return created;
   }
 
@@ -295,10 +308,13 @@ export function AssuranceWorkspacePage({
             workspaceTeams={workspaceTeams}
             controlsPortalId={controlsPortalId}
             sectionControlsPortalId={sectionControlsPortalId}
+            onNavigationGuardChange={onNavigationGuardChange}
             onPolicyChange={replacePolicy}
             onReload={() => loadPolicy(activePolicy.id)}
             onRun={setRunPolicy}
-            onOpenRun={(run) => onOpenRun(activePolicy.id, run.id, activePolicy.name)}
+            onOpenRun={(run) => requestWorkspaceNavigation(() => (
+              onOpenRun(activePolicy.id, run.id, activePolicy.name)
+            ))}
           />
         </PlatformServiceDetailFrame>
         <AssuranceRunCreateModal

@@ -58,6 +58,7 @@ export function createConnectorRuntimeBridge({
       const bearerToken = await grantService.issue({
         threadId,
         agentId: policy.agentId,
+        agentName: policy.agentName,
         actorUserId: policy.actorUserId,
         connectorId,
         provider: getConnectorCredentialProviderId(connectorId),

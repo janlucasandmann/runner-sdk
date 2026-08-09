@@ -98,5 +98,15 @@ export const FILES_RESPONSIVE_CSS = `
         .playground-files-toolbar-menu-wide {
           max-width: calc(100vw - 24px);
         }
+
+        .playground-files-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 560px) {
+        .playground-files-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
       }
 `;

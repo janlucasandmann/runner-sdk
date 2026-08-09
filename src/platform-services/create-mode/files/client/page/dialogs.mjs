@@ -1,4 +1,47 @@
 export const FILES_PAGE_DIALOGS_SCRIPT = `
+        function getFileContextActionShortcut(action) {
+          if (action === "share") {
+            return {
+              label: "⌘ ⌥ S",
+              ariaKeyShortcuts: "Meta+Alt+S Control+Alt+S",
+            };
+          }
+          if (action === "rename") {
+            return {
+              label: "⌘ ⌥ R",
+              ariaKeyShortcuts: "Meta+Alt+R Control+Alt+R",
+            };
+          }
+          if (action === "delete") {
+            return {
+              label: "⌘ ⌥ ⌫",
+              ariaKeyShortcuts: "Meta+Alt+Backspace Control+Alt+Backspace",
+            };
+          }
+          return null;
+        }
+
+        function getFileContextActionShortcutProps(action) {
+          const shortcut = getFileContextActionShortcut(action);
+          return shortcut
+            ? {
+                role: "menuitem",
+                "aria-keyshortcuts": shortcut.ariaKeyShortcuts,
+                "data-platform-resource-action-shortcut": action,
+              }
+            : {};
+        }
+
+        function renderFileContextActionShortcut(action) {
+          const shortcut = getFileContextActionShortcut(action);
+          return shortcut
+            ? React.createElement("span", {
+                className: "platform-resource-actions-menu__shortcut",
+                "aria-hidden": "true",
+              }, shortcut.label)
+            : null;
+        }
+
         function renderFileChatEmptyState() {
           if (!activePreviewEntry || activePreviewEntry.isFolder) {
             return null;
@@ -117,20 +160,24 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
                     React.createElement("button", {
                       type: "button",
                       className: "playground-files-context-item",
+                      ...getFileContextActionShortcutProps("share"),
                       disabled: isTeamSharePending,
                       onClick: () => openFileTeamPickerDialog(contextSelectedFileEntries),
                     },
                       React.createElement(UsersRound, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, isTeamSharePending ? "Sharing..." : "Share with Team")
+                      React.createElement("span", null, isTeamSharePending ? "Sharing..." : "Share with Team"),
+                      renderFileContextActionShortcut("share")
                     ),
                     React.createElement("div", { className: "playground-files-context-divider" },
                       React.createElement("button", {
                         type: "button",
                         className: "playground-files-context-item is-danger",
+                        ...getFileContextActionShortcutProps("delete"),
                         onClick: () => void handleDeleteEntries(contextSelectedFileEntries),
                       },
                         React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Delete")
+                        React.createElement("span", null, "Delete"),
+                        renderFileContextActionShortcut("delete")
                       )
                     )
                   )
@@ -140,10 +187,12 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
                     React.createElement("button", {
                       type: "button",
                       className: "playground-files-context-item",
+                      ...getFileContextActionShortcutProps("rename"),
                       onClick: () => startRename(contextTargetEntry, { showPreview: false }),
                     },
                       React.createElement(SquarePen, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Rename")
+                      React.createElement("span", null, "Rename"),
+                      renderFileContextActionShortcut("rename")
                     ),
                     React.createElement("button", {
                       type: "button",
@@ -196,21 +245,25 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
                     React.createElement("button", {
                       type: "button",
                       className: "playground-files-context-item",
+                      ...getFileContextActionShortcutProps("share"),
                       disabled: isTeamSharePending,
                       onClick: () => openFileTeamPickerDialog(contextTargetEntry),
                     },
                       React.createElement(UsersRound, { width: 13, height: 13, strokeWidth: 1.8 }),
-                      React.createElement("span", null, isTeamSharePending ? "Sharing..." : "Share with Team")
+                      React.createElement("span", null, isTeamSharePending ? "Sharing..." : "Share with Team"),
+                      renderFileContextActionShortcut("share")
                     ),
                     canDelete
                       ? React.createElement("div", { className: "playground-files-context-divider" },
                           React.createElement("button", {
                             type: "button",
                             className: "playground-files-context-item is-danger",
+                            ...getFileContextActionShortcutProps("delete"),
                             onClick: () => void handleDeleteEntries(contextSelectedEntries),
                           },
                             React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Delete")
+                            React.createElement("span", null, "Delete"),
+                            renderFileContextActionShortcut("delete")
                           )
                         )
                       : null
@@ -222,10 +275,12 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
                       ? React.createElement("button", {
                           type: "button",
                           className: "playground-files-context-item",
+                          ...getFileContextActionShortcutProps("rename"),
                           onClick: () => startRename(contextTargetEntry, { showPreview: false }),
                         },
                           React.createElement(SquarePen, { width: 13, height: 13, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "Rename")
+                          React.createElement("span", null, "Rename"),
+                          renderFileContextActionShortcut("rename")
                         )
                       : null,
                     isFolderContextTarget
@@ -265,10 +320,12 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
                           React.createElement("button", {
                             type: "button",
                             className: "playground-files-context-item is-danger",
+                            ...getFileContextActionShortcutProps("delete"),
                             onClick: () => void handleDeleteEntries(contextSelectedEntries),
                           },
                             React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }),
-                            React.createElement("span", null, contextSelectedEntries.length > 1 ? "Delete " + contextSelectedEntries.length + " Items" : "Delete")
+                            React.createElement("span", null, contextSelectedEntries.length > 1 ? "Delete " + contextSelectedEntries.length + " Items" : "Delete"),
+                            renderFileContextActionShortcut("delete")
                           )
                         )
                       : null
@@ -280,11 +337,13 @@ export const FILES_PAGE_DIALOGS_SCRIPT = `
                 open: true,
                 variant: "minimal",
                 portal: true,
-                placement: "bottom-end",
-                portalOffset: 8,
+                placement: contextMenu.placement || "bottom-start",
+                portalOffset: contextMenu.pointerAnchor
+                  ? 0
+                  : contextMenu.placement === "bottom-end" ? 8 : 4,
                 portalAnchorPoint: contextMenu.anchorPoint || {
-                  x: contextMenu.x + 264,
-                  y: Math.max(0, contextMenu.y - 8),
+                  x: contextMenu.x,
+                  y: contextMenu.y,
                 },
                 animation: contextMenuPhase === "exit" ? "down-out" : "down-in",
                 rootClassName: "playground-files-context-menu-anchor",

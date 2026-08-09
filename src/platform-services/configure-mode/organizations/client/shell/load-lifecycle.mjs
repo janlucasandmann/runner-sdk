@@ -23,7 +23,7 @@ export const ORGANIZATIONS_LOAD_LIFECYCLE_SCRIPT = `        useEffect(() => {
 	          if (!targetOrganizationId) {
 	            return;
 	          }
-	          setOrganizationPageActiveTab(organizationPagePendingDestination.tab === "usage" ? "usage" : "billing");
+	          setOrganizationPageActiveTab(normalizeOrganizationAdminPageId(organizationPagePendingDestination.tab));
 	          setOrganizationPageBillingSection(
 	            ["costs-plans", "costs-plan-options", "costs-records"].includes(organizationPagePendingDestination.billingSection)
 	              ? organizationPagePendingDestination.billingSection
@@ -38,6 +38,32 @@ export const ORGANIZATIONS_LOAD_LIFECYCLE_SCRIPT = `        useEffect(() => {
 	          organizationPagePendingDestination,
 	          organizationPageSelectedOrganizationId,
 	        ]);
+
+        useEffect(() => {
+          const selectedOrganizationId = String(organizationPageSelectedOrganizationId || "").trim();
+          if (!selectedOrganizationId) {
+            if (organizationPageRenameDraftOrganizationId) {
+              setOrganizationPageRenameDraftOrganizationId("");
+              setOrganizationPageRenameName("");
+            }
+            return;
+          }
+          if (organizationPageRenameDraftOrganizationId === selectedOrganizationId) {
+            return;
+          }
+          const selectedOrganization = organizationPageOrganizations.find((organization) => (
+            String(organization?.id || "").trim() === selectedOrganizationId
+          ));
+          if (!selectedOrganization) {
+            return;
+          }
+          setOrganizationPageRenameName(String(selectedOrganization.name || ""));
+          setOrganizationPageRenameDraftOrganizationId(selectedOrganizationId);
+        }, [
+          organizationPageOrganizations,
+          organizationPageRenameDraftOrganizationId,
+          organizationPageSelectedOrganizationId,
+        ]);
 
         useEffect(() => () => {
           if (organizationPageLoadAbortControllerRef.current) {

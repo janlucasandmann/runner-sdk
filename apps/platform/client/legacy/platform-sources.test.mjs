@@ -45,6 +45,12 @@ assert.match(
   sources.moduleSource,
   /renderAppSidebar\(\)[\s\S]*className: "playground-content-body"[\s\S]*React\.createElement\(React\.Suspense,[\s\S]*fallback: React\.createElement\(PlatformLoadingState,[\s\S]*className: "playground-content-route-loading"/,
 );
+assert.match(sources.moduleSource, /function openOrganizationAdminPage\(/);
+assert.match(
+  sources.moduleSource,
+  /id: "admin-organization"[\s\S]{0,240}openOrganizationAdminPage\("organization"\)/,
+);
+assert.doesNotMatch(sources.moduleSource, /id: "configure-resources-label"/);
 assert.match(
   sources.styleSource,
   /\.playground-content-body > \.playground-content-route-loading[\s\S]*position: absolute;[\s\S]*inset: 0;/,

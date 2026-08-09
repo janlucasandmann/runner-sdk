@@ -1155,7 +1155,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 
           function handleProjectCardMenuPointerDown(event) {
             const target = event?.target instanceof Element ? event.target : null;
-            if (target?.closest(".playground-tasks-project-card-actions")) {
+            if (target?.closest(".playground-tasks-project-card-actions, .playground-tasks-project-card-menu")) {
               return;
             }
             setProjectCardMenuProjectId("");

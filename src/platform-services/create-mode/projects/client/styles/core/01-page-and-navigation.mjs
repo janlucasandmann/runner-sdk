@@ -728,6 +728,182 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         gap: 26px;
       }
 
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card {
+        position: relative;
+        z-index: 0;
+        display: flex;
+        min-width: 0;
+        min-height: 302px;
+        overflow: visible;
+        cursor: pointer;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        isolation: isolate;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card:hover,
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card:focus-visible,
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card:focus-within {
+        z-index: 4;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card:focus-visible {
+        outline: 1px solid rgba(77, 163, 255, 0.9);
+        outline-offset: 3px;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-hero {
+        position: relative;
+        min-height: 0;
+        aspect-ratio: 1.45 / 1;
+        padding: 0;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px 10px 0 0;
+        background: color-mix(in srgb, var(--project-icon-color) 18%, transparent);
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-top {
+        position: absolute;
+        z-index: 5;
+        inset: 10px 10px auto auto;
+        margin: 0;
+        display: block;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-actions {
+        position: relative;
+        z-index: 6;
+        opacity: 0;
+        transition: opacity 140ms ease;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card:hover .playground-tasks-project-card-actions,
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card:focus-within .playground-tasks-project-card-actions {
+        opacity: 1;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-actions .playground-files-header-icon-button {
+        background: rgba(0, 0, 0, 0.38);
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-icon {
+        position: relative;
+        width: 64px;
+        height: 64px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: var(--project-icon-color);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        filter: none;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-icon::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-icon > span {
+        font-size: 30px;
+        line-height: 1;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-body {
+        min-height: 148px;
+        padding: 20px 20px 18px;
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        gap: 0;
+        border-radius: 0 0 10px 10px;
+        background: #242426;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-title {
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.98);
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.3;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-copy {
+        max-width: none;
+        max-height: calc(1.5em * 2);
+        margin-top: 12px;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-copy .tb-message-markdown-paragraph,
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-copy .tb-message-markdown-list,
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-copy .tb-message-markdown-heading {
+        margin: 0;
+        color: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
+      }
+
+      .playground-projects-overview-surface.is-card-grid .playground-tasks-project-card-creator {
+        margin-top: auto;
+        padding-top: 24px;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.38);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.3;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 1360px) {
+        .playground-projects-overview-surface.is-card-grid .playground-tasks-project-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 980px) {
+        .playground-projects-overview-surface.is-card-grid .playground-tasks-project-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .playground-projects-overview-surface.is-card-grid .playground-tasks-project-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
       .playground-projects-library-header {
         gap: 12px;
       }

@@ -344,7 +344,7 @@ describe("PlatformActivityOverview", () => {
       nestedCard?.style.getPropertyValue(
         "--platform-activity-overview-item-indent",
       ),
-    ).toBe("24px");
+    ).toBe("8px");
   });
 
   it("starts parent chart scopes at the earliest descendant", () => {
@@ -378,6 +378,56 @@ describe("PlatformActivityOverview", () => {
     expect(cards[0]?.style.getPropertyValue("--platform-activity-overview-item-left")).toBe(
       cards[1]?.style.getPropertyValue("--platform-activity-overview-item-left"),
     );
+  });
+
+  it("reclaims collapsed descendant rows for following activity", () => {
+    const baseItems = [
+      {
+        id: "group",
+        label: "Action group",
+        content: <span>Action group</span>,
+        startAt: 0,
+        hierarchy: { expandable: true, expanded: true, order: 0, depth: 0 },
+      },
+      {
+        id: "tool",
+        label: "Tool call",
+        content: <span>Tool call</span>,
+        startAt: 1,
+        hierarchy: { parentId: "group", order: 1, depth: 1 },
+      },
+      {
+        id: "following",
+        label: "Following activity",
+        content: <span>Following activity</span>,
+        startAt: 2,
+        hierarchy: { order: 2, depth: 0 },
+      },
+    ];
+    const { container, rerender } = render(
+      <PlatformActivityOverview items={baseItems} />,
+    );
+    const findRowTop = (label: string) => Array.from(
+      container.querySelectorAll<HTMLElement>(".platform-activity-overview__row"),
+    ).find((row) => row.textContent?.includes(label))?.style.top;
+    const expandedFollowingTop = findRowTop("Following activity");
+
+    rerender(
+      <PlatformActivityOverview
+        items={baseItems.map((item) => (
+          item.id === "group"
+            ? { ...item, hierarchy: { ...item.hierarchy, expanded: false } }
+            : item.id === "tool"
+              ? { ...item, hidden: true }
+              : item
+        ))}
+      />,
+    );
+
+    const collapsedFollowingTop = findRowTop("Following activity");
+    expect(expandedFollowingTop).toBe("134px");
+    expect(collapsedFollowingTop).toBe("76px");
+    expect(container.textContent).not.toContain("Tool call");
   });
 
   it("filters and rescales activity when either time-range edge moves", () => {

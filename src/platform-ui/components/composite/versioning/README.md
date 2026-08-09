@@ -13,6 +13,13 @@ description before the caller persists and publishes the resource.
 `PlatformVersionPublishControl` provides the primary split action and
 minimalistic version-options popup shared by versioned resources.
 
+`usePlatformVersionNavigationGuard` is the default navigation contract for
+every editable versioned detail surface. As soon as a draft differs from its
+selected immutable version, the hook registers the shared “Leave without
+saving?” confirmation with the platform shell. Callers provide only dirty
+state, resource identity, and a local draft-reset callback; the shell owns the
+modal, browser-unload protection, and continuation of the requested route.
+
 The package also re-exports `PlatformVersionLabel` and
 `PlatformVersionHistorySidebar` so resource modules can import the complete
 versioning surface from one stable entry point.
@@ -21,6 +28,12 @@ Mutation logic and resource-specific change mapping stay with the calling
 resource. File changes can use the canonical `PlatformDiffViewer` composite,
 while the save dialog remains independent of Metronome, Agent, or Computer API
 contracts.
+
+Versioned resource pages must use `usePlatformVersionNavigationGuard` rather
+than building navigation-guard records locally. This keeps copy, cleanup, and
+future navigation behavior consistent across Agents, Computers, Skills,
+Evaluations, Tests, Guardrails, Assurance, Metronome, and versioned development
+resources.
 
 ## Working in this directory
 

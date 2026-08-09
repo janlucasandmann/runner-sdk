@@ -4,6 +4,7 @@ export {
 } from "./state.mjs";
 export { APP_SIDEBAR_REFS_SCRIPT } from "./refs.mjs";
 export {
+  APP_SIDEBAR_KEYBOARD_LIFECYCLE_SCRIPT,
   APP_SIDEBAR_MENU_LIFECYCLE_SCRIPT,
   APP_SIDEBAR_PAGE_MODE_LIFECYCLE_SCRIPT,
 } from "./lifecycle.mjs";

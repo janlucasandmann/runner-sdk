@@ -1,4 +1,5 @@
-import { type ReactNode } from "react";
+import { Gitlab } from "lucide-react";
+import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
   PlatformFileExplorerBrowserModal,
@@ -163,7 +164,7 @@ export function RunnerFileBrowserDialog({
   const sourceGroups: PlatformFileExplorerSourceGroup[] = [
     {
       id: "computers",
-      label: "Computers",
+      label: null,
       items: environments.map((environment) => ({
         id: environment.id,
         label: environment.name,
@@ -174,21 +175,45 @@ export function RunnerFileBrowserDialog({
     {
       id: "integrations",
       label: "Integrations",
-      items: (["google-drive", "notion", "one-drive", "github"] as const).map(
-        (integrationSource) => ({
-          id: integrationSource,
-          label: SOURCE_LABELS[integrationSource],
+      items: [
+        ...(["google-drive", "notion", "one-drive", "github"] as const).map(
+          (integrationSource) => ({
+            id: integrationSource,
+            label: SOURCE_LABELS[integrationSource],
+            icon: (
+              <RunnerFileBrowserSourceIcon
+                source={integrationSource}
+                className="tb-file-browser-source-brand-icon"
+              />
+            ),
+            note: connections[integrationSource].connected ? undefined : "Connect",
+            active: source === integrationSource,
+            onSelect: () => onSourceChange(integrationSource),
+          }),
+        ),
+        {
+          id: "gitlab",
+          label: "GitLab",
+          icon: <Gitlab className="tb-file-browser-source-brand-icon" aria-hidden="true" />,
+          note: "Unavailable",
+          disabled: true,
+        },
+        {
+          id: "sharepoint",
+          label: "SharePoint",
           icon: (
-            <RunnerFileBrowserSourceIcon
-              source={integrationSource}
+            <img
+              src="/img/plugins/sharepoint.svg"
+              alt=""
+              aria-hidden="true"
               className="tb-file-browser-source-brand-icon"
+              draggable={false}
             />
           ),
-          note: connections[integrationSource].connected ? undefined : "Connect",
-          active: source === integrationSource,
-          onSelect: () => onSourceChange(integrationSource),
-        }),
-      ),
+          note: "Unavailable",
+          disabled: true,
+        },
+      ],
     },
   ];
   const customContent = authSource ? (

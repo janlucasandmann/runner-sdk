@@ -20,6 +20,7 @@ test("connector runtime grants round-trip without provider tokens", async () => 
     provider: "jira",
     organizationId: "org_test",
     agentId: "agent_test",
+    agentName: "  Spark Agent  ",
     actorUserId: "user_test",
     credentialId: "credential_test",
     credentialSource: "project",
@@ -33,6 +34,7 @@ test("connector runtime grants round-trip without provider tokens", async () => 
   const grant = await service.verify(token);
   assert.equal(grant.threadId, "thread_test");
   assert.equal(grant.agentId, "agent_test");
+  assert.equal(grant.agentName, "Spark Agent");
   assert.equal(grant.actorUserId, "user_test");
   assert.equal(grant.credentialSource, "project");
   assert.equal(grant.projectId, "project_test");

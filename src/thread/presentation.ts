@@ -7,6 +7,10 @@ import {
   selectRunnerThreadRuns,
   selectRunnerThreadRunWorkingLabel,
 } from "./selectors.js";
+import {
+  isRunnerPublicConversationRun,
+  resolveRunnerPublicThreadParticipant,
+} from "./public-presentation.js";
 import type {
   RunnerThreadParticipant,
   RunnerThreadPermissionRing,
@@ -184,9 +188,10 @@ export function buildRunnerThreadRunReceiptViewModel(
   return {
     id: run.id,
     run,
-    actor: run.actorParticipantId
-      ? projection.participantsById[run.actorParticipantId] || null
-      : null,
+    actor: resolveRunnerPublicThreadParticipant(
+      projection,
+      run.actorParticipantId ? projection.participantsById[run.actorParticipantId] : null,
+    ),
     active: isRunnerThreadRunActive(run),
     phase,
     phaseLabel: phaseLabel(phase),
@@ -222,9 +227,9 @@ export function buildRunnerThreadRunReceiptViewModel(
 export function buildRunnerThreadScreenViewModel(
   projection: RunnerThreadProjection,
 ): RunnerThreadScreenViewModel {
-  const receipts = selectRunnerThreadRuns(projection).map((run) =>
-    buildRunnerThreadRunReceiptViewModel(projection, run),
-  );
+  const receipts = selectRunnerThreadRuns(projection)
+    .filter(isRunnerPublicConversationRun)
+    .map((run) => buildRunnerThreadRunReceiptViewModel(projection, run));
   const activeRunIds = receipts.filter((receipt) => receipt.active).map((receipt) => receipt.id);
   return {
     receipts,

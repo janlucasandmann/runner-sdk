@@ -1,11 +1,12 @@
 import {
   AlertTriangle,
   Bookmark,
-  CheckCircle2,
   ChevronRight,
   Clock3,
   Copy,
   FlaskConical,
+  FolderOpen,
+  Monitor,
   Play,
   Plus,
   SquarePen,
@@ -16,6 +17,7 @@ import {
   createPortal,
 } from "react-dom";
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -52,10 +54,13 @@ import {
   PlatformResourceVersionLabel,
   PlatformResourceVersionHistoryMenuItem,
 } from "../../../../../platform-ui/components/composite/resource-header-actions/index.js";
-import { PlatformVersionHistorySidebar } from "../../../../../platform-ui/components/composite/versioning/index.js";
+import {
+  PlatformVersionHistorySidebar,
+  usePlatformVersionNavigationGuard,
+  type PlatformVersionNavigationGuardRegistrar,
+} from "../../../../../platform-ui/components/composite/versioning/index.js";
 import {
   PlatformPrimaryButton,
-  PlatformSecondaryButton,
 } from "../../../../../platform-ui/components/ui/button/index.js";
 import {
   PlatformLabel,
@@ -128,6 +133,7 @@ interface TestPlanDetailPageProps {
   titleActionsPortalId?: string;
   versionsDrawerPortalId?: string;
   onVersionsSidebarOpenChange?: (open: boolean) => void;
+  onNavigationGuardChange?: PlatformVersionNavigationGuardRegistrar;
   onPlanChange: (plan: TestPlan) => void;
   onDeleted: (plan: TestPlan) => void;
   onReload: () => Promise<void>;
@@ -241,6 +247,7 @@ export function TestPlanDetailPage({
   titleActionsPortalId,
   versionsDrawerPortalId,
   onVersionsSidebarOpenChange,
+  onNavigationGuardChange,
   onPlanChange,
   onDeleted,
   onReload,
@@ -254,7 +261,6 @@ export function TestPlanDetailPage({
   const activePlanIdRef = useRef(plan.id);
   const [name, setName] = useState(plan.name);
   const [description, setDescription] = useState(plan.description);
-  const [status, setStatus] = useState(plan.status);
   const [projectId, setProjectId] = useState(plan.projectId || "");
   const [environmentId, setEnvironmentId] = useState(plan.defaultEnvironmentId || "");
   const [definition, setDefinition] = useState<TestPlanDefinition>(() => (
@@ -300,7 +306,6 @@ export function TestPlanDetailPage({
   useEffect(() => {
     setName(plan.name);
     setDescription(plan.description);
-    setStatus(plan.status);
     setProjectId(plan.projectId || "");
     setEnvironmentId(plan.defaultEnvironmentId || "");
     setDefinition(JSON.parse(JSON.stringify(plan.definition)) as TestPlanDefinition);
@@ -343,14 +348,34 @@ export function TestPlanDetailPage({
     () => onVersionsSidebarOpenChange?.(false)
   ), [onVersionsSidebarOpenChange]);
 
+  const discardUnsavedChanges = useCallback(() => {
+    setName(plan.name);
+    setDescription(plan.description);
+    setProjectId(plan.projectId || "");
+    setEnvironmentId(plan.defaultEnvironmentId || "");
+    setDefinition(JSON.parse(JSON.stringify(plan.definition)) as TestPlanDefinition);
+    setDefinitionJson(serializeTestPlanDefinition(plan.definition));
+    setDefinitionJsonError("");
+    setSaveModalOpen(false);
+    setSaveError("");
+    setError("");
+  }, [plan]);
+
   const dirty = (
     name.trim() !== plan.name
     || description.trim() !== plan.description
-    || status !== plan.status
     || projectId !== (plan.projectId || "")
     || environmentId !== (plan.defaultEnvironmentId || "")
     || definitionJson !== serializeTestPlanDefinition(plan.definition)
   );
+  usePlatformVersionNavigationGuard({
+    dirty,
+    resourceId: plan.id,
+    resourceName: plan.name,
+    resourceType: "Test",
+    onDiscard: discardUnsavedChanges,
+    onNavigationGuardChange,
+  });
   const currentCases = parsedDefinition.definition?.cases || plan.definition.cases || [];
   const runs = Array.isArray(plan.runs) ? plan.runs : [];
   const versions = Array.isArray(plan.versions) ? plan.versions : [];
@@ -395,7 +420,7 @@ export function TestPlanDetailPage({
     ? Math.round((passedRuns / terminalRuns.length) * 100)
     : 0;
   const projectLabel = projects.find((project) => project.id === projectId)?.name || "Unassigned";
-  const environmentLabel = environments.find(
+  const computerLabel = environments.find(
     (environment) => environment.id === environmentId,
   )?.name || "Select when running";
   const viewerIdentity = useMemo(
@@ -560,10 +585,9 @@ export function TestPlanDetailPage({
       const updated = await api.updatePlan(plan.id, {
         name: name.trim(),
         description: description.trim(),
-        status,
         projectId: projectId || null,
-        targetType: projectId ? "project" : plan.targetType,
-        targetId: projectId || plan.targetId,
+        targetType: projectId ? "project" : "custom",
+        targetId: projectId || null,
         defaultEnvironmentId: environmentId || null,
         definition: parsedDefinition.definition,
       } as Partial<TestPlan>);
@@ -854,41 +878,6 @@ export function TestPlanDetailPage({
     ],
     [],
   );
-  const versionColumns = useMemo<PlatformDataTableColumn<TestPlanVersion>[]>(
-    () => [
-      {
-        id: "version",
-        header: "Version",
-        accessor: "version",
-        sortable: true,
-        sortDescFirst: true,
-        width: "minmax(170px, .8fr)",
-        cell: ({ row }) => (
-          <span className="tests-version-label">
-            v{row.version}
-            {row.id === plan.publishedVersionId ? <em>Published</em> : null}
-          </span>
-        ),
-      },
-      {
-        id: "label",
-        header: "Label",
-        accessor: "label",
-        width: "minmax(190px, 1fr)",
-      },
-      {
-        id: "created",
-        header: "Created",
-        accessor: (row) => Date.parse(row.createdAt) || 0,
-        sortable: true,
-        sortDescFirst: true,
-        width: "minmax(180px, .85fr)",
-        cell: ({ row }) => formatTimestamp(row.createdAt),
-      },
-    ],
-    [plan.publishedVersionId],
-  );
-
   const analyticsRuns = runs.slice().reverse();
   const planAnalytics = {
     ariaLabel: "Test plan analytics",
@@ -945,24 +934,89 @@ export function TestPlanDetailPage({
   };
   const properties = (
     <PlatformServiceDetailPropertyList>
-      <PlatformServiceDetailProperty label="Status">
-        <PlatformLabel variant={statusLabelVariant(plan.status)}>
-          {formatStatus(plan.status)}
-        </PlatformLabel>
-      </PlatformServiceDetailProperty>
       <PlatformServiceDetailProperty
         label="Project"
-        className="tests-detail-truncated-property"
+        className="tests-detail-target-row"
         title={projectLabel}
       >
-        <span className="tests-detail-truncated-property__value">{projectLabel}</span>
+        <PlatformSelector
+          value={projectId}
+          options={[
+            {
+              value: "",
+              label: "Unassigned",
+              leading: <FolderOpen width={14} height={14} strokeWidth={1.85} />,
+            },
+            ...projects.map((project) => ({
+              value: project.id,
+              label: project.name,
+              description: project.description,
+              leading: <FolderOpen width={14} height={14} strokeWidth={1.85} />,
+            })),
+          ]}
+          label={(
+            <span className="tests-detail-target-selector-value">
+              <FolderOpen width={14} height={14} strokeWidth={1.85} aria-hidden="true" />
+              <span title={projectLabel}>{projectLabel}</span>
+            </span>
+          )}
+          placeholder="Unassigned"
+          ariaLabel="Test project"
+          alignment="end"
+          popupAlignment="right"
+          fullWidth
+          disabled={Boolean(busyAction)}
+          emptyContent="No projects available."
+          popupWidth="min(280px, calc(100vw - 48px))"
+          popupMaxWidth="calc(100vw - 48px)"
+          popupMaxHeight="min(320px, calc(100vh - 120px))"
+          className="playground-tasks-detail-central-selector playground-project-overview-sidebar-selector tests-detail-target-selector"
+          triggerClassName="playground-tasks-detail-central-selector-trigger playground-project-overview-sidebar-selector-trigger tests-detail-target-trigger"
+          popupClassName="playground-tasks-detail-central-selector-popup playground-project-overview-sidebar-selector-popup tests-detail-target-popup"
+          onValueChange={setProjectId}
+        />
       </PlatformServiceDetailProperty>
       <PlatformServiceDetailProperty
-        label="Environment"
-        className="tests-detail-truncated-property"
-        title={environmentLabel}
+        label="Computer"
+        className="tests-detail-target-row"
+        title={computerLabel}
       >
-        <span className="tests-detail-truncated-property__value">{environmentLabel}</span>
+        <PlatformSelector
+          value={environmentId}
+          options={[
+            {
+              value: "",
+              label: "Select when running",
+              leading: <Monitor width={14} height={14} strokeWidth={1.85} />,
+            },
+            ...environments.map((environment) => ({
+              value: environment.id,
+              label: environment.name,
+              description: environment.description,
+              leading: <Monitor width={14} height={14} strokeWidth={1.85} />,
+            })),
+          ]}
+          label={(
+            <span className="tests-detail-target-selector-value">
+              <Monitor width={14} height={14} strokeWidth={1.85} aria-hidden="true" />
+              <span title={computerLabel}>{computerLabel}</span>
+            </span>
+          )}
+          placeholder="Select when running"
+          ariaLabel="Test computer"
+          alignment="end"
+          popupAlignment="right"
+          fullWidth
+          disabled={Boolean(busyAction)}
+          emptyContent="No computers available."
+          popupWidth="min(280px, calc(100vw - 48px))"
+          popupMaxWidth="calc(100vw - 48px)"
+          popupMaxHeight="min(320px, calc(100vh - 120px))"
+          className="playground-tasks-detail-central-selector playground-project-overview-sidebar-selector tests-detail-target-selector"
+          triggerClassName="playground-tasks-detail-central-selector-trigger playground-project-overview-sidebar-selector-trigger tests-detail-target-trigger"
+          popupClassName="playground-tasks-detail-central-selector-popup playground-project-overview-sidebar-selector-popup tests-detail-target-popup"
+          onValueChange={setEnvironmentId}
+        />
       </PlatformServiceDetailProperty>
       <PlatformServiceDetailProperty label="Updated">
         {formatTimestamp(plan.updatedAt)}
@@ -1009,7 +1063,6 @@ export function TestPlanDetailPage({
         className="tests-detail-run-button"
         disabled={
           Boolean(busyAction)
-          || status === "archived"
           || currentCases.length === 0
           || !plan.publishedVersionId
         }
@@ -1180,14 +1233,6 @@ export function TestPlanDetailPage({
               Add cases, save your changes, then publish an immutable version before running this plan.
             </span>
           </div>
-        ) : dirty ? (
-          <div className="tests-plan-state-banner" role="status">
-            <AlertTriangle width={15} height={15} aria-hidden="true" />
-            <span>
-              <strong>Unsaved changes</strong>
-              Runs continue to use the published immutable version until these changes are saved and published.
-            </span>
-          </div>
         ) : null}
         {error || parsedDefinition.error ? (
           <PlatformUiCard as="div" className="tests-inline-error" role="alert">
@@ -1309,18 +1354,43 @@ export function TestPlanDetailPage({
         ) : null}
 
         {activeTab === "settings" ? (
-          <div className="tests-detail-stack">
+          <div className="tests-detail-stack tests-settings-page">
+            <section className="tests-plan-settings-identity" aria-label="Test identity">
+              <span className="tests-plan-settings-identity__icon" aria-hidden="true">
+                <FlaskConical width={22} height={22} strokeWidth={1.7} />
+              </span>
+              <div className="tests-plan-settings-identity__copy">
+                <input
+                  type="text"
+                  className="tests-plan-settings-identity__name"
+                  value={name}
+                  placeholder="Test"
+                  aria-label="Test name"
+                  title={name || "Test"}
+                  onChange={(event) => setName(event.currentTarget.value)}
+                />
+                <input
+                  type="text"
+                  className="tests-plan-settings-identity__description"
+                  value={description}
+                  placeholder="Describe the behavior this test protects"
+                  aria-label="Test description"
+                  title={description}
+                  onChange={(event) => setDescription(event.currentTarget.value)}
+                />
+              </div>
+            </section>
             <PlatformSettingsSectionList>
               <PlatformSettingsSection
-                title="Plan execution"
-                description="Configure plan-wide lifecycle steps, scheduling, retries, and retained evidence."
+                title="Run behavior"
+                description="Control the setup, parallel work, retry behavior, and cleanup for every run."
               >
                 <div className="tests-form-grid">
                   <label className="tests-form-field is-span-2">
-                    <span>Setup command (optional)</span>
+                    <span>Before the first case (optional)</span>
                     <input
                       value={String(asRecord(definition.setup).command || "")}
-                      placeholder="Runs once before the first case"
+                      placeholder="Setup command"
                       onChange={(event) => commitDefinition({
                         ...definition,
                         setup: event.currentTarget.value.trim()
@@ -1328,12 +1398,13 @@ export function TestPlanDetailPage({
                           : null,
                       })}
                     />
+                    <small>Runs once before any case starts.</small>
                   </label>
                   <label className="tests-form-field is-span-2">
-                    <span>Teardown command (optional)</span>
+                    <span>After the final case (optional)</span>
                     <input
                       value={String(asRecord(definition.teardown).command || "")}
-                      placeholder="Runs once after the final case"
+                      placeholder="Cleanup command"
                       onChange={(event) => commitDefinition({
                         ...definition,
                         teardown: event.currentTarget.value.trim()
@@ -1341,9 +1412,10 @@ export function TestPlanDetailPage({
                           : null,
                       })}
                     />
+                    <small>Runs once after all cases finish.</small>
                   </label>
                   <label className="tests-form-field">
-                    <span>Concurrency</span>
+                    <span>Cases running at once</span>
                     <input
                       type="number"
                       min={1}
@@ -1354,9 +1426,10 @@ export function TestPlanDetailPage({
                         concurrency: Math.max(1, Math.min(20, Number(event.currentTarget.value) || 1)),
                       })}
                     />
+                    <small>Use 1 to run cases in order.</small>
                   </label>
                   <label className="tests-form-field">
-                    <span>Maximum attempts</span>
+                    <span>Attempts per case</span>
                     <input
                       type="number"
                       min={1}
@@ -1370,9 +1443,10 @@ export function TestPlanDetailPage({
                         },
                       })}
                     />
+                    <small>Includes the first attempt.</small>
                   </label>
                   <label className="tests-form-field">
-                    <span>Retry backoff (ms)</span>
+                    <span>Wait before retrying</span>
                     <input
                       type="number"
                       min={0}
@@ -1386,29 +1460,34 @@ export function TestPlanDetailPage({
                         },
                       })}
                     />
+                    <small>Delay in milliseconds.</small>
                   </label>
                   <div className="tests-form-field tests-form-checkbox-field">
-                    <span>Failure behavior</span>
+                    <span>When a case fails</span>
                     <label>
                       <PlatformCheckbox
                         checked={definition.stopOnFailure}
-                        aria-label="Stop on first failure"
+                        aria-label="Stop after the first failed case"
                         onClick={() => commitDefinition({
                           ...definition,
                           stopOnFailure: !definition.stopOnFailure,
                         })}
                       />
-                      Stop on first failure
+                      Stop the remaining cases
                     </label>
                   </div>
                 </div>
+              </PlatformSettingsSection>
+              <PlatformSettingsSection
+                title="Evidence to keep"
+                description="Select what should remain available after a run. Secrets are redacted before evidence is stored."
+              >
                 <div className="tests-evidence-policy">
-                  <strong>Evidence retention</strong>
                   {([
-                    ["retainLogs", "Logs"],
+                    ["retainLogs", "Console logs"],
                     ["retainScreenshots", "Screenshots"],
-                    ["retainTraces", "Traces"],
-                    ["retainArtifacts", "Artifacts"],
+                    ["retainTraces", "Execution traces"],
+                    ["retainArtifacts", "Files and reports"],
                     ["redactSecrets", "Redact secrets"],
                   ] as const).map(([key, label]) => (
                     <label key={key}>
@@ -1429,78 +1508,11 @@ export function TestPlanDetailPage({
                 </div>
               </PlatformSettingsSection>
               <PlatformSettingsSection
-                title="Properties"
-                description="Connect this verification contract to the project and environment it protects."
-              >
-                <div className="tests-form-grid">
-                  <label className="tests-form-field">
-                    <span>Name</span>
-                    <input value={name} onChange={(event) => setName(event.currentTarget.value)} />
-                  </label>
-                  <div className="tests-form-field">
-                    <span>Status</span>
-                    <PlatformSelector
-                      value={status}
-                      options={[
-                        { value: "draft", label: "Draft" },
-                        { value: "active", label: "Active" },
-                        { value: "archived", label: "Archived" },
-                      ]}
-                      fullWidth
-                      ariaLabel="Test-plan status"
-                      onValueChange={setStatus}
-                    />
-                  </div>
-                  <label className="tests-form-field is-span-2">
-                    <span>Description</span>
-                    <textarea
-                      rows={3}
-                      value={description}
-                      onChange={(event) => setDescription(event.currentTarget.value)}
-                    />
-                  </label>
-                  <div className="tests-form-field">
-                    <span>Project</span>
-                    <PlatformSelector
-                      value={projectId}
-                      options={[
-                        { value: "", label: "Unassigned" },
-                        ...projects.map((project) => ({
-                          value: project.id,
-                          label: project.name,
-                          description: project.description,
-                        })),
-                      ]}
-                      fullWidth
-                      ariaLabel="Test-plan project"
-                      onValueChange={setProjectId}
-                    />
-                  </div>
-                  <div className="tests-form-field">
-                    <span>Default environment</span>
-                    <PlatformSelector
-                      value={environmentId}
-                      options={[
-                        { value: "", label: "Select when running" },
-                        ...environments.map((environment) => ({
-                          value: environment.id,
-                          label: environment.name,
-                          description: environment.description,
-                        })),
-                      ]}
-                      fullWidth
-                      ariaLabel="Default test environment"
-                      onValueChange={setEnvironmentId}
-                    />
-                  </div>
-                </div>
-              </PlatformSettingsSection>
-              <PlatformSettingsSection
-                title="Advanced definition"
-                description="Edit the canonical plan contract directly. Invalid JSON cannot be saved."
+                title="Advanced configuration"
+                description="Edit the underlying JSON only when the form above does not expose a required option. Invalid JSON cannot be saved."
               >
                 <details className="tests-advanced-definition">
-                  <summary>Open JSON editor</summary>
+                  <summary>Open raw test configuration</summary>
                   <textarea
                     className="tests-definition-editor"
                     aria-label="Strict test-plan definition JSON"
@@ -1509,53 +1521,6 @@ export function TestPlanDetailPage({
                     onChange={(event) => editAdvancedDefinition(event.currentTarget.value)}
                   />
                 </details>
-              </PlatformSettingsSection>
-              <PlatformSettingsSection
-                title="Version history"
-                description="New runs always pin the currently published immutable version."
-                actions={(
-                  <PlatformSecondaryButton
-                    size="compact"
-                    disabled={dirty || Boolean(busyAction)}
-                    onClick={() => void createVersion()}
-                  >
-                    <Plus width={13} height={13} aria-hidden="true" />
-                    Save Version
-                  </PlatformSecondaryButton>
-                )}
-                bodyPresentation="flush"
-              >
-                <PlatformDataTable
-                  rows={versions}
-                  columns={versionColumns}
-                  getRowId={(version) => version.id}
-                  ariaLabel="Test-plan versions"
-                  variant="minimalistic-ui"
-                  surface="plain"
-                  sticky={false}
-                  pagination={false}
-                  getRowActions={(version) => [
-                    {
-                      id: "publish",
-                      label: version.id === plan.publishedVersionId ? "Published" : "Publish",
-                      icon: CheckCircle2,
-                      disabled: version.id === plan.publishedVersionId || Boolean(busyAction),
-                      onSelect: () => void publishVersion(version),
-                    },
-                  ]}
-                  emptyState="No saved versions."
-                />
-              </PlatformSettingsSection>
-              <PlatformSettingsSection
-                title="Execution boundary"
-                description="Tests execute only from immutable published snapshots inside Computer Agents environments."
-              >
-                <dl className="tests-evidence-identity">
-                  <div><dt>Execution</dt><dd>Computer Agents environment</dd></div>
-                  <div><dt>Definition</dt><dd>Immutable published snapshot</dd></div>
-                  <div><dt>Secrets</dt><dd>References only · redacted</dd></div>
-                  <div><dt>Evidence</dt><dd>Server fingerprinted</dd></div>
-                </dl>
               </PlatformSettingsSection>
             </PlatformSettingsSectionList>
             <TestPlanAccessSettings

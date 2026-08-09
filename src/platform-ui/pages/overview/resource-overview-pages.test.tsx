@@ -861,14 +861,15 @@ describe("resource overview pages", () => {
     expect(onPeriodChange).toHaveBeenCalledWith("week");
   });
 
-  it("portals the primary create action and time frame selector outside the page body", () => {
-    renderWithOverviewControls(
+  it("keeps the computer create action on the right and portals its time frame to the center", () => {
+    renderWithSeparateOverviewControls(
       <ComputersOverviewPage
         rows={[]}
         period="month"
         onPeriodChange={vi.fn()}
         analytics={analytics}
         controlsPortalId={CONTROLS_PORTAL_ID}
+        periodPortalId={PERIOD_PORTAL_ID}
         onOpen={vi.fn()}
         onCreate={vi.fn()}
         onRename={vi.fn()}
@@ -884,11 +885,21 @@ describe("resource overview pages", () => {
     );
     expect(
       screen
-        .getByTestId("overview-controls")
+        .getByTestId("overview-period")
         .contains(
           screen.getByRole("radiogroup", { name: "Analytics time frame" }),
         ),
     ).toBe(true);
+    expect(
+      within(screen.getByTestId("overview-controls")).queryByRole("radiogroup", {
+        name: "Analytics time frame",
+      }),
+    ).toBeNull();
+    expect(
+      within(screen.getByTestId("overview-period")).queryByRole("button", {
+        name: "Computer",
+      }),
+    ).toBeNull();
     expect(
       document.querySelector(".resource-overview-page__header"),
     ).toBeNull();

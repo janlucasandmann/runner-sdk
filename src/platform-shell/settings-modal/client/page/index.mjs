@@ -107,14 +107,6 @@ export function createSettingsModalPageScript(options = {}) {
                     );
                 } else if (isCurrentTier) {
                   actionContent = React.createElement("div", { className: "playground-settings-plan-card-cta-static" }, "Current Plan");
-                } else if (plan.id === "enterprise") {
-                  actionContent = React.createElement(PlatformButton, {
-                    variant: "secondary",
-                    size: "medium",
-                    type: "button",
-                    onClick: openSettingsContactSales,
-                    className: "playground-settings-plan-card-cta-button is-light",
-                  }, "Contact Sales");
                 } else if (hasPaidActiveSubscription) {
                   actionContent = React.createElement("button", {
                       type: "button",
@@ -303,17 +295,6 @@ export function createSettingsModalPageScript(options = {}) {
                         );
                     } else if (isCurrentTier) {
                       actionContent = React.createElement("div", { className: "playground-settings-plan-card-cta-static" }, "Current Plan");
-                    } else if (plan.id === "enterprise") {
-                      actionContent = React.createElement(PlatformButton, {
-                        variant: "secondary",
-                        size: "medium",
-                        type: "button",
-                        onClick: () => {
-                          setSettingsChangePlanModalOpen(false);
-                          openSettingsContactSales();
-                        },
-                        className: "playground-settings-plan-card-cta-button is-light",
-                      }, "Contact Sales");
                     } else if (hasPaidActiveSubscription) {
                       const actionClassName = isUpgrade
                         ? (isHighlighted ? "playground-settings-plan-card-cta-button is-primary" : "playground-settings-plan-card-cta-button is-light")
@@ -959,26 +940,6 @@ ${inferencePageCaseScript}            case "costs-records":
                   }
 
                   const totalUsedCT = Number(safeTotals.totalCT || 0);
-                  const attributedSourceItems = [...settingsUsageBreakdown]
-                    .map((item) => ({
-                      ...item,
-                      totalCT: Number(item.totalCT || 0),
-                      channel: getSettingsSourceChannel(item.id),
-                      displayName: getSettingsSourceLabel(item.id),
-                    }))
-                    .filter((item) => item.totalCT > 0);
-                  const attributedCT = attributedSourceItems.reduce((sum, item) => sum + item.totalCT, 0);
-                  const unattributedCT = Math.max(0, totalUsedCT - attributedCT);
-                  const sourceItems = [
-                    ...attributedSourceItems,
-                    ...(unattributedCT > 0 ? [{
-                      id: "unattributed",
-                      name: "Unattributed",
-                      totalCT: unattributedCT,
-                      channel: "unattributed",
-                      displayName: "Unattributed",
-                    }] : []),
-                  ].sort((left, right) => right.totalCT - left.totalCT);
                   const dailyLabels = dailyData.map((day) => {
                     const date = new Date(day.date);
                     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -1038,6 +999,14 @@ ${inferencePageCaseScript}            case "costs-records":
 	                        String(agent?.name || agent?.displayName || agent?.id || "").trim(),
 	                      ])
 	                      .filter(([id, name]) => id && name)
+	                  );
+	                  const agentModelById = new Map(
+	                    (Array.isArray(realAgents) ? realAgents : [])
+	                      .map((agent) => [
+	                        String(agent?.id || "").trim(),
+	                        String(agent?.model || agent?.modelId || agent?.model_id || "").trim(),
+	                      ])
+	                      .filter(([id, modelId]) => id && modelId)
 	                  );
 	                  const environmentNameById = new Map(
 	                    (Array.isArray(realEnvironments) ? realEnvironments : [])
@@ -1130,72 +1099,6 @@ ${inferencePageCaseScript}            case "costs-records":
                       },
                     ].filter((entry) => entry.values.some((value) => Number(value || 0) > 0));
                   };
-                  const getSkillUsageCategory = (item) => {
-                    const haystack = String([
-                      item?.id,
-                      item?.name,
-                      item?.displayName,
-                    ].filter(Boolean).join(" ")).toLowerCase();
-                    if (/(image|gpt-image|imagen|nanobanana|dall[-_ ]?e)/.test(haystack)) {
-                      return { id: "image_generation", label: "Image Generation" };
-                    }
-                    if (/(video|seedance|grok[_ -]?imagine|text[_ -]?to[_ -]?video|image[_ -]?to[_ -]?video)/.test(haystack)) {
-                      return { id: "video_generation", label: "Video Generation" };
-                    }
-                    if (/(firecrawl|web[_ -]?search|scrape|crawl|parse|document)/.test(haystack)) {
-                      return { id: "web_search", label: "Web Search & Scraping" };
-                    }
-                    if (/(deep[_ -]?research|research)/.test(haystack)) {
-                      return { id: "deep_research", label: "Deep Research" };
-                    }
-                    if (/(mcp|tool|skill)/.test(haystack)) {
-                      return { id: "tools", label: "Tools" };
-                    }
-                    return { id: "other_skills", label: "Other Skills" };
-                  };
-                  const skillUsageMap = new Map();
-                  sourceItems.forEach((item) => {
-                    const category = getSkillUsageCategory(item);
-                    if (category.id === "other_skills") {
-                      return;
-                    }
-                    const existing = skillUsageMap.get(category.id) || {
-                      id: category.id,
-                      name: category.label,
-                      displayName: category.label,
-                      totalCT: 0,
-                      agentCT: 0,
-                      environmentCT: 0,
-                      threadCount: 0,
-                    };
-                    existing.totalCT += Number(item.totalCT || 0);
-                    existing.agentCT += Number(item.agentCT || 0) > 0 || Number(item.environmentCT || 0) > 0
-                      ? Number(item.agentCT || 0)
-                      : Number(item.totalCT || 0);
-                    existing.environmentCT += Number(item.environmentCT || 0);
-                    existing.threadCount += Number(item.threadCount || 0);
-                    skillUsageMap.set(category.id, existing);
-                  });
-                  resourceUsageRows.forEach((item) => {
-                    const kind = String(item?.kind || item?.resourceKind || item?.resourceType || "").trim().toLowerCase();
-                    if (kind !== "mcp") {
-                      return;
-                    }
-                    const existing = skillUsageMap.get("tools") || {
-                      id: "tools",
-                      name: "Tools",
-                      displayName: "Tools",
-                      totalCT: 0,
-                      agentCT: 0,
-                      environmentCT: 0,
-                      threadCount: 0,
-                    };
-                    const ctAmount = Number(item.agentCT || item.totalCT || 0);
-                    existing.totalCT += ctAmount;
-                    existing.agentCT += ctAmount;
-                    existing.threadCount += Number(item.threadCount || 0);
-                    skillUsageMap.set("tools", existing);
-                  });
 	                  const agentUsageRows = buildUsageRows(settingsUsageAgentItems, "Agent", {
 	                    component: "agent",
 	                    resolveLabel: (item) => resolveUsageEntityLabel(item, agentNameById, "Agent"),
@@ -1205,6 +1108,42 @@ ${inferencePageCaseScript}            case "costs-records":
 	                    fallbackToTotal: false,
 	                    resolveLabel: (item) => resolveUsageEntityLabel(item, environmentNameById, "Computer"),
 	                  });
+	                  const modelUsageMap = new Map();
+	                  (Array.isArray(settingsUsageAgentItems) ? settingsUsageAgentItems : []).forEach((item) => {
+	                    const candidateAgentIds = [item?.agentId, item?.id, item?.resourceId]
+	                      .map((value) => String(value || "").trim())
+	                      .filter(Boolean);
+	                    const modelId = String(
+	                      item?.model
+	                      || item?.modelId
+	                      || item?.model_id
+	                      || candidateAgentIds.map((agentId) => agentModelById.get(agentId)).find(Boolean)
+	                      || "unattributed-model"
+	                    ).trim();
+	                    const modelMeta = getPlaygroundAgentModelMeta(modelId);
+	                    const modelLabel = modelId === "unattributed-model"
+	                      ? "Unattributed model"
+	                      : String(modelMeta?.label || modelId).trim();
+	                    const inferenceCT = readUsageRowComponent(item, "agent", { fallbackToTotal: false });
+	                    if (inferenceCT <= 0) {
+	                      return;
+	                    }
+	                    const existing = modelUsageMap.get(modelId) || {
+	                      id: modelId,
+	                      label: normalizeUsageChartLabel(modelLabel, modelId),
+	                      fullLabel: modelLabel,
+	                      totalCT: 0,
+	                      agentCT: 0,
+	                      environmentCT: 0,
+	                      threadCount: 0,
+	                    };
+	                    existing.totalCT += inferenceCT;
+	                    existing.agentCT += inferenceCT;
+	                    existing.threadCount += Math.max(0, Number(item?.threadCount || 0));
+	                    modelUsageMap.set(modelId, existing);
+	                  });
+	                  const modelUsageRows = Array.from(modelUsageMap.values())
+	                    .sort((left, right) => right.totalCT - left.totalCT);
                   const resourceChartRows = buildUsageRows(
                     resourceUsageRows.filter((item) => {
                       const kind = String(item?.kind || item?.resourceKind || item?.resourceType || "").trim().toLowerCase();
@@ -1213,7 +1152,6 @@ ${inferencePageCaseScript}            case "costs-records":
                     "Resource",
                     { component: "resource" }
                   );
-                  const skillUsageRows = buildUsageRows(Array.from(skillUsageMap.values()), "Skill", { component: "skill" });
                   const getUsageSeriesMax = (labels, series) => Math.max(1, ...labels.map((_, index) =>
                     series.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
                   ));
@@ -1263,17 +1201,40 @@ ${inferencePageCaseScript}            case "costs-records":
                       ariaLabel: "Compute token usage by resource",
                     }),
                     buildUsageChartTab({
-                      id: "skills",
-                      label: "Usage by Skills",
-                      value: formatSettingsComputeTokens(skillUsageRows.reduce((sum, item) => sum + item.totalCT, 0)),
-                      title: "Usage by Skills",
-                      labels: skillUsageRows.map((item) => item.label),
-                      series: buildUsageBreakdownSeries(skillUsageRows, { inferenceLabel: "Skills" }),
-                      emptyText: "No skill usage in this period",
-                      ariaLabel: "Compute token usage by skill",
+                      id: "models",
+                      label: "Usage by Models",
+                      value: formatSettingsComputeTokens(modelUsageRows.reduce((sum, item) => sum + item.totalCT, 0)),
+                      title: "Usage by Models",
+                      labels: modelUsageRows.map((item) => item.fullLabel),
+                      series: [{
+                        id: "inference",
+                        label: "LLM Inference",
+                        color: "rgb(143,196,255)",
+                        values: modelUsageRows.map((item) => item.totalCT),
+                      }],
+                      emptyText: "No model usage in this period",
+                      ariaLabel: "Compute token cost by LLM model",
                     }),
                   ];
                   const activeUsageChart = usageChartTabs.find((tab) => tab.id === settingsUsageChartTab) || usageChartTabs[0];
+                  const activeUsageAnalyticsModel = {
+                    title: activeUsageChart.title,
+                    ariaLabel: activeUsageChart.ariaLabel,
+                    metrics: [],
+                    labels: activeUsageChart.labels,
+                    series: activeUsageChart.series.map((entry) => ({
+                      ...entry,
+                      type: "bar",
+                      axis: "primary",
+                      stack: "usage-cost",
+                      valueKind: "tokens",
+                      fill: false,
+                    })),
+                  };
+                  const activeUsageChartHasData = activeUsageAnalyticsModel.labels.length > 0
+                    && activeUsageAnalyticsModel.series.some((entry) =>
+                      entry.values.some((value) => Number(value || 0) > 0)
+                    );
                   const renderSettingsUsagePeriodControls = (className) =>
                     React.createElement("div", { className },
                       React.createElement("div", { className: "playground-settings-usage-period-heading" },
@@ -1332,18 +1293,19 @@ ${inferencePageCaseScript}            case "costs-records":
                                       )
                                     ),
                                     settingsUsageLoading
-                                      ? React.createElement("div", { className: "playground-settings-loading-state playground-settings-usage-chart-loading-frame" },
-                                          React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                                        )
-                                      : renderSettingsUsageMultiStackedChart({
-                                          labels: activeUsageChart.labels,
-                                          series: activeUsageChart.series,
-                                          yMax: activeUsageChart.yMax,
-                                          tickFormatter: formatSettingsAxisComputeTokens,
-                                          tall: true,
-                                          ariaLabel: activeUsageChart.ariaLabel,
-                                          emptyText: activeUsageChart.emptyText,
-                                        }),
+                                      ? React.createElement(PlatformLoadingState, {
+                                          className: "playground-settings-usage-chart-loading-frame",
+                                          message: "Loading usage...",
+                                          centered: true,
+                                        })
+                                      : activeUsageChartHasData
+                                        ? React.createElement("div", { className: "playground-settings-usage-chart-frame is-tall is-chartjs" },
+                                            React.createElement(PlatformAnalyticsChart, {
+                                              analytics: activeUsageAnalyticsModel,
+                                              chartType: "bar",
+                                            })
+                                          )
+                                        : React.createElement("div", { className: "playground-settings-usage-chart-empty is-tall" }, activeUsageChart.emptyText),
                                     React.createElement("div", {
                                       className: "playground-settings-usage-inline-legend",
                                       style: { justifyContent: "flex-start" },
@@ -1366,18 +1328,31 @@ ${inferencePageCaseScript}            case "costs-records":
                           )
                         ),
                         React.createElement("section", { className: "playground-settings-usage-resource-table-wrap" },
-                          React.createElement("div", { className: "playground-settings-usage-card-header" },
-                            React.createElement("div", null,
-                              React.createElement("div", { className: "playground-settings-usage-card-title" }, "Consumers")
-                            )
-                          ),
                           React.createElement(PlatformDataTable, {
                             rows: resourceUsageRows,
                             getRowId: (item) => String(item.id),
                             ariaLabel: "Usage consumers",
                             className: "playground-settings-usage-platform-table",
                             surface: "plain",
+                            layout: "fill",
+                            variant: "minimalistic-ui",
                             sticky: false,
+                            pagination: {},
+                            toolbar: {
+                              title: "Consumers",
+                              search: {
+                                placeholder: "Search consumers",
+                                ariaLabel: "Search usage consumers",
+                                getSearchText: (item) => [
+                                  item?.name,
+                                  item?.resourceId,
+                                  item?.displayKind,
+                                  item?.kind,
+                                  item?.resourceKind,
+                                  item?.resourceType,
+                                ].filter(Boolean).join(" "),
+                              },
+                            },
                             loading: settingsUsageLoading,
                             emptyState: "No measured usage in this period.",
                             columns: [

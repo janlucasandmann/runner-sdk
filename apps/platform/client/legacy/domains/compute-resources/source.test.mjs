@@ -39,6 +39,10 @@ const databaseDetailViewSource = await fs.readFile(
   path.resolve(domainRoot, "controller/database-detail-view.js"),
   "utf8",
 );
+const computerDetailViewSource = await fs.readFile(
+  path.resolve(domainRoot, "controller/computer-detail-view.js"),
+  "utf8",
+);
 const databaseBrowserCssSource = await fs.readFile(
   path.resolve(
     domainRoot,
@@ -48,6 +52,10 @@ const databaseBrowserCssSource = await fs.readFile(
 );
 const platformTemplateSource = await fs.readFile(
   path.resolve(domainRoot, "../../templates/platform.template.js"),
+  "utf8",
+);
+const platformTemplateCssSource = await fs.readFile(
+  path.resolve(domainRoot, "../../templates/platform.template.css"),
   "utf8",
 );
 
@@ -60,6 +68,126 @@ assert.match(
   environmentsHomeThreadStartSource,
   /connectors: runRequest\.connectors \|\| null/,
   "The Compute Resources home handoff must preserve selected connectors.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /React\.createElement\(ComputersOverviewPage, \{[\s\S]{0,600}controlsPortalId: "playground-resource-overview-controls",[\s\S]{0,160}periodPortalId: "playground-computers-overview-period-controls"/,
+  "The Computers overview must route its timeframe to the dedicated centered app-header portal.",
+);
+assert.match(
+  bootstrapAndEffectsSource,
+  /selectedResourcesDetailType === "computer"[\s\S]{0,180}activeSection: normalizedEnvironmentDetailTab,[\s\S]{0,120}onSectionChange: handleEnvironmentDetailTabChange/,
+  "Computer Details must publish its supported section state to the app header.",
+);
+const computerDetailPageComposition = computerDetailViewSource.match(
+  /const environmentDetailWorkspaceSection = React\.createElement\(ComputerDetailPage, \{[\s\S]*?environmentDetailActiveSection\s*\n\s*\);/,
+)?.[0] || "";
+assert.ok(computerDetailPageComposition, "Computer Details must compose the centralized detail page.");
+assert.doesNotMatch(
+  computerDetailPageComposition,
+  /tabBarActions|sidebar|activeTab|onTabChange|onOpenFilebase|filebaseDisabled/,
+  "Computer Details must not retain its removed in-page tab bar, Filebase navigation, or right sidebar contract.",
+);
+assert.doesNotMatch(
+  computerDetailViewSource,
+  /const descriptionSection = React\.createElement\(PlatformInstructionsEditor/,
+  "Computer Details must not render its description as a standalone instructions editor.",
+);
+const computerDetailIdentityComposition = computerDetailViewSource.match(
+  /const environmentProfileSection = React\.createElement\("div",[\s\S]*?(?=\n\s*const renderEnvironmentDetailValue)/,
+)?.[0] || "";
+assert.match(
+  computerDetailIdentityComposition,
+  /className: "playground-computer-detail-profile-icon"/,
+  "Computer Details must render its icon in the identity block.",
+);
+assert.match(
+  computerDetailIdentityComposition,
+  /className: "playground-computer-detail-profile-description"[\s\S]{0,700}updateEnvironmentField\("description", event\.target\.value\)/,
+  "Computer Details must render an editable description directly below its name.",
+);
+assert.match(
+  computerDetailIdentityComposition,
+  /className: "playground-computer-detail-profile-timeframe"[\s\S]{0,500}React\.createElement\(PlatformSwitch,[\s\S]{0,320}ariaLabel: "Computer analytics time frame"/,
+  "Computer Details must render its centralized timeframe selector at the right of the identity header.",
+);
+assert.match(
+  computerDetailViewSource,
+  /const environmentDetailGeneralSection = React\.createElement\(React\.Fragment, null,[\s\S]{0,180}environmentAnalyticsSection,[\s\S]{0,120}environmentDetailsSection/,
+  "Computer Details must render its Details section below Analytics on General.",
+);
+assert.match(
+  computerDetailViewSource,
+  /const environmentAnalyticsSection = React\.createElement\(PlatformAnalyticsSection, \{[\s\S]{0,160}variant: "default"/,
+  "Computer Details must use the same unboxed analytics presentation as Agent Details.",
+);
+const computerDetailAnalyticsComposition = computerDetailViewSource.match(
+  /const environmentAnalyticsSection = React\.createElement\(PlatformAnalyticsSection, \{[\s\S]*?\n\s*\}\);/,
+)?.[0] || "";
+assert.doesNotMatch(
+  computerDetailAnalyticsComposition,
+  /timeframe:/,
+  "Computer Details analytics must not duplicate the timeframe selector below the identity header.",
+);
+assert.doesNotMatch(
+  computerDetailViewSource,
+  /const environmentAnalyticsSection = React\.createElement\(PlatformAnalyticsSection, \{[\s\S]{0,160}variant: "framed"/,
+  "Computer Details analytics must not retain the framed card presentation.",
+);
+assert.match(
+  computerDetailViewSource,
+  /const environmentRuntimeStatusNode = React\.createElement\(PlatformLabel, \{[\s\S]{0,160}variant: environmentDesktopStatusVariant/,
+  "Computer Details must render runtime status with the centralized label component.",
+);
+assert.match(
+  computerDetailViewSource,
+  /renderEnvironmentFactRow\("Internet",[\s\S]{0,180}React\.createElement\(PlatformToggle,[\s\S]{0,260}onCheckedChange: \(nextChecked\) => updateEnvironmentField\("internetAccess", nextChecked\)/,
+  "Computer Details must render Internet access with the centralized toggle component.",
+);
+assert.match(
+  platformTemplateSource,
+  /import \{ PlatformToggle \} from "\/dist\/platform-ui\/components\/ui\/toggle\/index\.js";/,
+  "The legacy platform shell must consume the centralized toggle through its public entry point.",
+);
+assert.match(
+  computerDetailViewSource,
+  /const environmentOwnerSelectorControl = React\.createElement\(PlatformSelector, \{[\s\S]{0,2600}ariaLabel: "Choose computer owner"/,
+  "Computer Details must use an editable, organization-aware owner selector.",
+);
+assert.match(
+  computerDetailViewSource,
+  /renderEnvironmentFactRow\("Owner", environmentOwnerSelectorControl\)/,
+  "Computer Details must render the owner selector in its Details section.",
+);
+assert.match(
+  catalogAndLifecycleSource,
+  /environmentOwnerPopoverOpen[\s\S]{0,1800}loadEnvironmentOwnerTeamMembers/,
+  "Computer owner candidates must load lazily when the selector opens.",
+);
+assert.match(
+  platformTemplateCssSource,
+  /\.playground-computer-detail-profile-section\.playground-agents-profile-section \{[\s\S]{0,360}padding-bottom: 24px;[\s\S]{0,160}border-bottom: 1px solid rgba\(255, 255, 255, 0\.1\);/,
+  "Computer Details must separate its profile block from the content below.",
+);
+assert.match(
+  platformTemplateCssSource,
+  /\.playground-computer-detail-profile-timeframe \{[\s\S]{0,120}margin-left: auto;/,
+  "Computer Details must align its timeframe selector to the far right of the identity header.",
+);
+assert.match(
+  platformTemplateCssSource,
+  /\.playground-computer-details-section \.playground-develop-resource-identity-value \.playground-team-member-avatar,[\s\S]{0,260}width: 20px;[\s\S]{0,100}height: 20px;/,
+  "Computer Details Creator and Owner avatars must render at 20 by 20 pixels.",
+);
+assert.match(
+  computerDetailViewSource,
+  /React\.createElement\(PlatformResourceActionsMenu,[\s\S]{0,8000}label: "Share with Team"[\s\S]{0,2400}label: "Use via API"[\s\S]{0,2400}label: environmentGuiOpen \? "Show Desktop" : "Open GUI"[\s\S]{0,2400}label: environmentGuiState\.isStarting \? "Restarting\.\.\." : "Restart"[\s\S]{0,3000}label: "Rename"[\s\S]{0,2400}label: "Delete"/,
+  "Computer Details must expose every former sidebar action through the centralized header menu.",
+);
+assert.ok(
+  bootstrapAndEffectsSource.includes('computerTitleActionsPortalId = ""')
+    && bootstrapAndEffectsSource.includes("document.getElementById(computerTitleActionsPortalId)"),
+  "Computer Details must resolve its breadcrumb title-actions portal.",
 );
 assert.match(
   bootstrapAndEffectsSource,
@@ -1410,8 +1538,8 @@ assert.doesNotMatch(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /renderEnvironmentSidebarRow\("Creator", renderDevelopResourceIdentityValue\(environmentCreatorIdentity\)[\s\S]{0,5200}renderEnvironmentSidebarRow\("Owner", renderDevelopResourceIdentityValue\(environmentOwnerIdentity\)/,
-  "Computer details must expose Creator and place Owner last in their shared Properties sidebar.",
+  /renderEnvironmentFactRow\("Creator", renderDevelopResourceIdentityValue\(environmentCreatorIdentity\)[\s\S]{0,12000}renderEnvironmentFactRow\("Owner", environmentOwnerSelectorControl\)/,
+  "Computer details must expose Creator and place Owner last in the General Details section.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,

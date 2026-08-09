@@ -16,12 +16,14 @@ const fragments = createAppSidebarScriptFragments({
   developPrimaryEntries: "              { id: \"develop-test\", label: \"Develop Test\" },\n",
   developAgentServiceEntries: "              { id: \"security-agents-test\", label: \"Security Agents\" },\n",
   createPrimaryEntries: "              { id: \"create-test\", label: \"Create Test\" },\n",
+  adminEntries: "              { id: \"admin-test\", label: \"Admin Test\" },\n",
 });
 
 assert.deepEqual(Object.keys(fragments), [
   "layoutState",
   "modeState",
   "refs",
+  "keyboardLifecycle",
   "menuLifecycle",
   "pageModeLifecycle",
   "modeNavigation",
@@ -40,6 +42,7 @@ assert.doesNotMatch(fragments.modeState, /sidebarWorkspaceMenuPhase/);
 assert.ok(fragments.modeSelector.includes('label: "Create"'));
 assert.ok(fragments.modeSelector.includes('label: "Configure"'));
 assert.ok(fragments.modeSelector.includes('label: "Develop"'));
+assert.ok(fragments.modeSelector.includes('label: "Admin"'));
 assert.ok(!fragments.modeSelector.includes("ActiveIcon"));
 assert.ok(fragments.modeSelector.includes("OptionIcon"));
 assert.match(fragments.navigationItems, /id: "new-thread"[\s\S]*active: showInitialThreadWelcome/);
@@ -60,6 +63,11 @@ assert.match(
   fragments.navigationItems,
   /function getSidebarNavigationItemsForMode\(targetMode = sidebarWorkspaceMode\)/,
 );
+assert.match(
+  fragments.navigationItems,
+  /normalizedTargetMode === "admin"[\s\S]*id: "admin-test"[\s\S]*label: "Admin Test"/,
+);
+assert.doesNotMatch(fragments.navigationItems, /id: "configure-resources-label"/);
 assert.match(
   fragments.navigationItems,
   /function getGlobalServiceNavigationItems\(searchQuery = ""\)/,
@@ -132,8 +140,96 @@ assert.ok(fragments.sidebar.includes("renderAppSidebarModeSelector()"));
 assert.ok(fragments.sidebar.includes("function renderAppSidebar()"));
 assert.match(fragments.sidebar, /onClick: \(\) => handleSidebarNavigationItemClick\(item\)/);
 assert.ok(fragments.sidebar.includes('className: "app-sidebar-top-actions"'));
+assert.match(fragments.sidebar, /React\.createElement\(PlatformIconButton,[\s\S]*tooltip: "Search"/);
+assert.match(fragments.sidebar, /"aria-keyshortcuts": "Meta\+K Control\+K"/);
+assert.match(fragments.sidebar, /tooltipShortcut: "⌘ K"/);
+assert.match(fragments.sidebar, /tooltip: "Close sidebar"/);
+assert.match(fragments.sidebar, /"aria-keyshortcuts": "Meta\+B Control\+B"/);
+assert.match(fragments.sidebar, /tooltipShortcut: "⌘ B"/);
+assert.match(fragments.sidebar, /tooltipPlacement: "bottom"/);
+assert.match(fragments.sidebar, /tooltipAlign: "end"/);
 assert.ok(fragments.sidebar.includes("onClick: openThreadSearch"));
 assert.ok(fragments.sidebar.includes("onClick: () => setSidebarOpen(false)"));
+assert.match(fragments.keyboardLifecycle, /String\(event\.key \|\| ""\)\.toLowerCase\(\) !== "b"/);
+assert.match(fragments.keyboardLifecycle, /setSidebarOpen\(\(current\) => !current\)/);
+assert.match(fragments.keyboardLifecycle, /event\.preventDefault\(\)/);
+
+let sidebarShortcutHandler = null;
+let sidebarShortcutCleanup = null;
+let sidebarShortcutOpen = true;
+const sidebarShortcutWindow = {
+  addEventListener(type, handler) {
+    if (type === "keydown") sidebarShortcutHandler = handler;
+  },
+  removeEventListener(type, handler) {
+    if (type === "keydown" && sidebarShortcutHandler === handler) sidebarShortcutHandler = null;
+  },
+};
+new Function(
+  "useEffect",
+  "window",
+  "setSidebarOpen",
+  fragments.keyboardLifecycle,
+)(
+  (effect) => {
+    sidebarShortcutCleanup = effect();
+  },
+  sidebarShortcutWindow,
+  (update) => {
+    sidebarShortcutOpen = typeof update === "function" ? update(sidebarShortcutOpen) : update;
+  },
+);
+assert.equal(typeof sidebarShortcutHandler, "function");
+let sidebarShortcutPrevented = false;
+sidebarShortcutHandler({
+  key: "b",
+  metaKey: true,
+  ctrlKey: false,
+  altKey: false,
+  shiftKey: false,
+  repeat: false,
+  defaultPrevented: false,
+  preventDefault() {
+    sidebarShortcutPrevented = true;
+  },
+});
+assert.equal(sidebarShortcutOpen, false);
+assert.equal(sidebarShortcutPrevented, true);
+sidebarShortcutHandler({
+  key: "B",
+  metaKey: false,
+  ctrlKey: true,
+  altKey: false,
+  shiftKey: false,
+  repeat: false,
+  defaultPrevented: false,
+  preventDefault() {},
+});
+assert.equal(sidebarShortcutOpen, true);
+sidebarShortcutHandler({
+  key: "b",
+  metaKey: true,
+  ctrlKey: false,
+  altKey: false,
+  shiftKey: false,
+  repeat: true,
+  defaultPrevented: false,
+  preventDefault() {},
+});
+assert.equal(sidebarShortcutOpen, true);
+sidebarShortcutHandler({
+  key: "b",
+  metaKey: true,
+  ctrlKey: false,
+  altKey: false,
+  shiftKey: false,
+  repeat: false,
+  defaultPrevented: true,
+  preventDefault() {},
+});
+assert.equal(sidebarShortcutOpen, true);
+sidebarShortcutCleanup();
+assert.equal(sidebarShortcutHandler, null);
 assert.match(fragments.sidebar, /React\.createElement\(PanelLeft,/);
 assert.doesNotMatch(fragments.sidebar, /React\.createElement\(PanelLeftClose,/);
 assert.ok(fragments.sidebar.includes('className: "sidebar-organization-profile-button"'));
@@ -212,6 +308,10 @@ assert.equal(
   "Connectors",
 );
 assert.equal(
+  globalServiceRuntime.getGlobalServiceNavigationItems("admin test")[0]?.workspaceMode,
+  "admin",
+);
+assert.equal(
   globalServiceRuntime.getGlobalServiceNavigationItems("functions")[0]?.globalSearchId,
   "service:develop:server-functions",
 );
@@ -237,7 +337,7 @@ assert.match(styles.foundation, /width: 250px/);
 assert.match(styles.foundation, /\.app-sidebar-top-actions/);
 assert.match(styles.foundation, /margin-left: auto/);
 assert.match(styles.foundation, /border-right: 1px solid rgba\(255, 255, 255, 0\.075\)/);
-assert.match(styles.foundation, /background: rgba\(255, 255, 255, 0\.05\)/);
+assert.match(styles.foundation, /\.playground-sidebar \{[\s\S]{0,520}background: #000;/);
 assert.match(styles.foundation, /\.sidebar-organization-profile-button/);
 assert.match(styles.foundation, /\.sidebar-action-subtitle[\s\S]*color: rgba\(255, 255, 255, 0\.5\);[\s\S]*font-weight: 400;/);
 assert.match(styles.foundation, /\.sidebar-action-subtitle[\s\S]*font-size: 11px;/);

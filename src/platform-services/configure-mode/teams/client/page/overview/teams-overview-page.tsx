@@ -1,9 +1,10 @@
-import { ChevronRight, Plus, SquarePen } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ChevronRight, Plus, SquarePen, UsersRound } from "lucide-react";
+import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
 } from "../../../../../../platform-ui/components/composite/data-table/index.js";
+import { PlatformEmptyState } from "../../../../../../platform-ui/components/composite/empty-state/index.js";
 import {
   ResourceOverviewIdentityCell,
   ResourceOverviewPage,
@@ -33,7 +34,6 @@ export interface TeamsOverviewPageProps {
   onOpen: (row: TeamOverviewRow) => void;
   onCreate: () => void;
   onRename: (row: TeamOverviewRow) => void;
-  onOpenDocumentation: () => void;
 }
 
 export function TeamsOverviewPage({
@@ -44,14 +44,7 @@ export function TeamsOverviewPage({
   onOpen,
   onCreate,
   onRename,
-  onOpenDocumentation,
 }: TeamsOverviewPageProps) {
-  const [ownershipFilter, setOwnershipFilter] = useState("all");
-  const filteredRows = useMemo(
-    () => rows.filter((row) => ownershipFilter === "all" || row.ownership === ownershipFilter),
-    [ownershipFilter, rows],
-  );
-
   const columns = useMemo<PlatformDataTableColumn<TeamOverviewRow>[]>(
     () => [
       {
@@ -109,55 +102,28 @@ export function TeamsOverviewPage({
     { id: "rename", label: "Rename", icon: SquarePen, onSelect: () => onRename(row) },
   ];
 
-  const browseTeams = () => {
-    if (typeof document === "undefined") return;
-    document
-      .querySelector(".resource-overview-page.is-teams .resource-overview-page__table-section")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   return (
     <ResourceOverviewPage<TeamOverviewRow>
-      heroContent={
-        <TeamsOverviewGuide
-          teamCount={rows.length}
-          onCreate={onCreate}
-          onBrowse={browseTeams}
-          onOpenDocumentation={onOpenDocumentation}
-        />
-      }
+      heroContent={<TeamsOverviewGuide />}
       showPeriodSelector={false}
       controlsPortalId={controlsPortalId}
       className="is-teams"
       table={{
-        rows: filteredRows,
+        rows,
         columns,
         getRowId: (row) => row.id,
         ariaLabel: "Teams",
         className: "resource-overview-table is-teams",
+        variant: "catalog-ui",
         sorting: { defaultValue: { id: "name", direction: "asc" } },
         selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
         pagination: false,
         toolbar: {
-          title: "All Teams",
           search: {
             placeholder: "Search teams",
             getSearchText: (row) =>
               row.searchText || `${row.name} ${row.roleLabel} ${row.ownerLabel}`,
           },
-          filters: [
-            {
-              id: "ownership",
-              label: "Ownership",
-              value: ownershipFilter,
-              onChange: setOwnershipFilter,
-              options: [
-                { id: "all", label: "All Teams" },
-                { id: "owned", label: "Owned by You" },
-                { id: "member", label: "Member Teams" },
-              ],
-            },
-          ],
           primaryAction: { label: "New Team", icon: Plus, onClick: onCreate },
         },
         getRowActions,
@@ -165,7 +131,14 @@ export function TeamsOverviewPage({
         getRowAriaLabel: (row) => row.name,
         loading,
         error: error || undefined,
-        emptyState: "No teams yet.",
+        emptyState: (
+          <PlatformEmptyState
+            icon={UsersRound}
+            title="No teams yet"
+            description="Create a team to organize members and share resources across your organization."
+            primaryAction={{ label: "Create Team", onClick: onCreate }}
+          />
+        ),
         noResultsState: "No teams match this view.",
       }}
     />

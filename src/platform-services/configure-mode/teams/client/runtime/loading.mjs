@@ -30,12 +30,18 @@ export const TEAMS_LOADING_SCRIPT = `        async function loadTeamPageData(opt
               credentials: "include",
               cache: "no-store",
               signal: loadAbortController.signal,
-              headers: requestHeaders,
+              // The collection endpoint intentionally ignores the active
+              // organization. Do not forward the organization-scoped headers
+              // used by the selected team's detail requests here.
+              headers: teamListRequestHeaders,
             }, 12000);
             if (!isCurrentLoad()) {
               return;
             }
             if (!response.ok) {
+              if (response.status === 403 && String(teamPageOrganizationId || "").trim()) {
+                setTeamPageOrganizationId("");
+              }
               if (response.status === 402 || data?.requiredPlan === "team") {
                 if (response.status !== 402) {
                   requestPlatformPlanGate({

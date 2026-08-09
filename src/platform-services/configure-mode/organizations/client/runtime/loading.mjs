@@ -1,4 +1,37 @@
-export const ORGANIZATIONS_LOADING_SCRIPT = `        async function loadOrganizationPageData(options = {}) {
+export const ORGANIZATIONS_LOADING_SCRIPT = `        async function fetchOrganizationPageMemberProfilePayload(organizationId, members = [], options = {}) {
+          const normalizedOrganizationId = String(organizationId || "").trim();
+          if (!normalizedOrganizationId) {
+            return null;
+          }
+          const requestSignal = options && typeof options === "object" ? options.signal : undefined;
+          try {
+            const { response, data } = await fetchJsonWithTimeout(
+              proxyBackendBase + "/organizations/" + encodeURIComponent(normalizedOrganizationId) + "/member-profiles/lookup",
+              {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                signal: requestSignal,
+                headers: {
+                  ...baseAuthRequestHeaders,
+                  [PLAYGROUND_ORGANIZATION_HEADER]: normalizedOrganizationId,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  organizationId: normalizedOrganizationId,
+                  members: Array.isArray(members) ? members : [],
+                }),
+              },
+              8000
+            );
+            if (response.ok) {
+              return data;
+            }
+          } catch {}
+          return null;
+        }
+
+        async function loadOrganizationPageData(options = {}) {
           if (!hasRealAccess) {
             if (organizationPageLoadAbortControllerRef.current) {
               organizationPageLoadAbortControllerRef.current.abort(createFetchAbortReason("AbortError", "Organization page access changed."));
@@ -52,9 +85,14 @@ export const ORGANIZATIONS_LOADING_SCRIPT = `        async function loadOrganiza
             if (activeOrganizationId && !organizations.some((organization) => organization.id === activeOrganizationId)) {
               setActiveOrganizationId("");
             }
+            const activeOrganization = organizations.find((organization) => (
+              String(organization?.id || "").trim() === String(activeOrganizationId || "").trim()
+            )) || getOrganizationPagePersonalOrganization(organizations);
             const selectedOrganization = requestedOrganizationId
-              ? organizations.find((organization) => organization.id === requestedOrganizationId) || null
-              : null;
+              ? organizations.find((organization) => organization.id === requestedOrganizationId) || activeOrganization
+              : activePage === "organization"
+                ? activeOrganization
+                : null;
             const selectedOrganizationId = selectedOrganization?.id || "";
             setOrganizationPageSelectedOrganizationId(selectedOrganizationId);
             if (!selectedOrganizationId || listOnly) {
@@ -68,7 +106,7 @@ export const ORGANIZATIONS_LOADING_SCRIPT = `        async function loadOrganiza
               [PLAYGROUND_ORGANIZATION_HEADER]: selectedOrganizationId,
             };
             const [membersResult, invitationsResult, resourcesResult] = await Promise.allSettled([
-              fetchJsonWithTimeout(proxyBackendBase + "/organizations/" + encodeURIComponent(selectedOrganizationId) + "/members", {
+              fetchJsonWithTimeout(proxyBackendBase + "/organizations/" + encodeURIComponent(selectedOrganizationId) + "/members?includeProfiles=1&includeUsers=1&include=profile,user,account&expand=profile,user,account", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
@@ -99,7 +137,34 @@ export const ORGANIZATIONS_LOADING_SCRIPT = `        async function loadOrganiza
             if (!membersResult.value.response.ok) {
               throw new Error(getOrganizationPageApiErrorMessage(membersResult.value.data, "Failed to load organization members."));
             }
-            setOrganizationPageMembers(Array.isArray(membersResult.value.data?.data) ? membersResult.value.data.data : []);
+            const organizationMembersPayload = membersResult.value.data && typeof membersResult.value.data === "object"
+              ? membersResult.value.data
+              : {};
+            const rawOrganizationMembers = Array.isArray(organizationMembersPayload?.data)
+              ? organizationMembersPayload.data
+              : Array.isArray(organizationMembersPayload?.data?.members)
+                ? organizationMembersPayload.data.members
+              : Array.isArray(organizationMembersPayload?.members)
+                ? organizationMembersPayload.members
+                : [];
+            const organizationMemberProfilesPayload = await fetchOrganizationPageMemberProfilePayload(
+              selectedOrganizationId,
+              rawOrganizationMembers,
+              { signal: loadAbortController.signal }
+            );
+            if (!isCurrentLoad()) {
+              return;
+            }
+            setOrganizationPageMembers(mergeTeamPageMemberProfiles(
+              rawOrganizationMembers,
+              organizationMembersPayload,
+              organizationMemberProfilesPayload,
+              organizationMembersPayload?.profiles,
+              organizationMembersPayload?.memberProfiles,
+              organizationMembersPayload?.users,
+              organizationMembersPayload?.accounts,
+              organizationMembersPayload?.included
+            ));
             setOrganizationPageInvitations(
               invitationsResult.status === "fulfilled"
               && invitationsResult.value.response.ok

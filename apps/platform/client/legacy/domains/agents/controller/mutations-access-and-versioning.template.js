@@ -2666,29 +2666,15 @@
             )
           );
   
-          useEffect(() => {
-            if (typeof onNavigationGuardChange !== "function") {
-              return;
-            }
-            const agentName = String(draftAgent?.name || "").trim() || "this agent";
-            onNavigationGuardChange(hasUnsavedAgentChanges
-              ? {
-                  id: "agent-details-unsaved-changes",
-                  active: true,
-                  title: "Leave without saving?",
-                  description: "Your changes to " + agentName + " have not been saved. If you leave now, they will be lost.",
-                  onDiscard: discardUnsavedAgentDraft,
-                }
-              : null
-            );
-          }, [draftAgent?.id, draftAgent?.name, hasUnsavedAgentChanges, onNavigationGuardChange]);
-  
-          useEffect(() => {
-            if (typeof onNavigationGuardChange !== "function") {
-              return undefined;
-            }
-            return () => onNavigationGuardChange(null);
-          }, [onNavigationGuardChange]);
+          usePlatformVersionNavigationGuard({
+            dirty: hasUnsavedAgentChanges,
+            guardId: "agent-details-unsaved-changes",
+            resourceId: String(draftAgent?.id || ""),
+            resourceName: String(draftAgent?.name || "").trim() || "this agent",
+            resourceType: "Agent",
+            onDiscard: discardUnsavedAgentDraft,
+            onNavigationGuardChange,
+          });
   
           function isDraftAgentSelectedVersionPublished() {
             const selectedVersion = getDraftAgentSelectedVersion();

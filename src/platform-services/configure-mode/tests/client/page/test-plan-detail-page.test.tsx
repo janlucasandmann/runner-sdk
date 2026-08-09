@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { TestsApi } from "../api/index.js";
 import type { TestPlan } from "../domain/index.js";
@@ -16,7 +16,6 @@ const plan: TestPlan = {
   projectId: "project-1",
   name: "Release readiness",
   description: "Release verification",
-  status: "active",
   targetType: "project",
   targetId: "project-1",
   defaultEnvironmentId: "environment-1",
@@ -76,6 +75,7 @@ describe("TestPlanDetailPage", () => {
     const projectName = "A human-readable project name that is intentionally very long";
     const environmentName = "A human-readable environment name that is intentionally very long";
     const onVersionsSidebarOpenChange = vi.fn();
+    const onNavigationGuardChange = vi.fn();
     const { container } = render(
       <TestPlanDetailPage
         plan={plan}
@@ -86,6 +86,7 @@ describe("TestPlanDetailPage", () => {
         sectionControlsPortalId="test-section-controls"
         versionsDrawerPortalId="test-version-drawer"
         onVersionsSidebarOpenChange={onVersionsSidebarOpenChange}
+        onNavigationGuardChange={onNavigationGuardChange}
         onPlanChange={vi.fn()}
         onDeleted={vi.fn()}
         onReload={vi.fn().mockResolvedValue(undefined)}
@@ -96,25 +97,28 @@ describe("TestPlanDetailPage", () => {
     );
 
     const projectProperty = findProperty(container, "Project");
-    const environmentProperty = findProperty(container, "Environment");
+    const computerProperty = findProperty(container, "Computer");
 
     expect(projectProperty).toBeDefined();
-    expect(environmentProperty).toBeDefined();
+    expect(computerProperty).toBeDefined();
+    expect(findProperty(container, "Environment")).toBeUndefined();
     expect(projectProperty?.textContent).toContain(projectName);
     expect(projectProperty?.textContent).not.toContain("project-1");
-    expect(environmentProperty?.textContent).toContain(environmentName);
+    expect(computerProperty?.textContent).toContain(environmentName);
     expect(
-      projectProperty?.querySelector(".tests-detail-truncated-property__value"),
+      projectProperty?.querySelector(".playground-project-overview-sidebar-selector"),
     ).not.toBeNull();
     expect(
-      environmentProperty?.querySelector(".tests-detail-truncated-property__value"),
+      computerProperty?.querySelector(".playground-project-overview-sidebar-selector"),
     ).not.toBeNull();
+    expect(projectProperty?.querySelector('button[aria-label="Test project"]')).not.toBeNull();
+    expect(computerProperty?.querySelector('button[aria-label="Test computer"]')).not.toBeNull();
     expect(
       projectProperty?.querySelector(".platform-service-detail-page__property-value")
         ?.getAttribute("title"),
     ).toBe(projectName);
     expect(
-      environmentProperty?.querySelector(".platform-service-detail-page__property-value")
+      computerProperty?.querySelector(".platform-service-detail-page__property-value")
         ?.getAttribute("title"),
     ).toBe(environmentName);
     expect(findProperty(container, "Published")).toBeUndefined();
@@ -127,8 +131,43 @@ describe("TestPlanDetailPage", () => {
     );
     expect(detailsSidebar?.dataset.collapsed).toBe("true");
     expect(screen.getByRole("table", { name: "Test cases" })).not.toBeNull();
+    expect(screen.getByText("All Cases").classList).toContain("platform-data-table__toolbar-title");
     expect(screen.getByPlaceholderText("Search cases")).not.toBeNull();
     expect(screen.getAllByRole("button", { name: "Add Case" }).length).toBeGreaterThan(0);
+
+    fireEvent.click(within(sectionSwitch).getByRole("radio", { name: "Settings" }));
+    expect(screen.queryByRole("heading", { name: "How this test works" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Test details" })).toBeNull();
+    expect(screen.getByRole("region", { name: "Test identity" })).not.toBeNull();
+    expect(
+      (screen.getByRole("textbox", { name: "Test name" }) as HTMLInputElement).value,
+    ).toBe(plan.name);
+    expect(
+      (screen.getByRole("textbox", { name: "Test description" }) as HTMLInputElement).value,
+    ).toBe(plan.description);
+    expect(screen.queryByText("Status")).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Run target" })).toBeNull();
+    expect(screen.getByRole("heading", { name: "Run behavior" })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Evidence to keep" })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Advanced configuration" })).not.toBeNull();
+    expect(screen.queryByRole("heading", { name: "Version history" })).toBeNull();
+    expect(screen.queryByText("Save Version")).toBeNull();
+
+    const descriptionInput = screen.getByRole("textbox", { name: "Test description" });
+    fireEvent.change(descriptionInput, { target: { value: "Changed locally" } });
+    await waitFor(() => {
+      expect(onNavigationGuardChange).toHaveBeenCalledWith(expect.objectContaining({
+        id: "test-plan-1-unsaved-version-changes",
+        title: "Leave without saving?",
+      }));
+    });
+    expect(screen.queryByText("Runs continue to use the published immutable version")).toBeNull();
+    const activeGuard = onNavigationGuardChange.mock.calls
+      .map(([guard]) => guard)
+      .filter((guard) => Boolean(guard))
+      .at(-1);
+    act(() => activeGuard?.onDiscard());
+    expect((descriptionInput as HTMLInputElement).value).toBe(plan.description);
 
     fireEvent.click(within(sectionSwitch).getByRole("radio", { name: "Overview" }));
     expect(detailsSidebar?.dataset.collapsed).toBe("false");

@@ -1091,13 +1091,12 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
             return;
           }
           handledProjectNavViewRequestTokenRef.current = requestToken;
+          const isLegacyActivityRequest = projectNavViewRequest?.view === "activity";
           const requestedView = projectNavViewRequest?.view === "board"
             ? "board"
             : projectNavViewRequest?.view === "backlog"
               ? "backlog"
-              : projectNavViewRequest?.view === "activity"
-                ? "activity"
-                : "overview";
+              : "overview";
           setMissionControlSetupOpen(false);
           setTaskView(requestedView);
           setSelectedTaskId("");
@@ -1105,7 +1104,9 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           setDraftTask(null);
           setProjectSidebarPopover("");
           const requestedSectionId = String(projectNavViewRequest?.sectionId || "").trim();
-          const requestedHomeTab = requestedSectionId === "resources"
+          const requestedHomeTab = isLegacyActivityRequest
+            ? "resources"
+            : requestedSectionId === "resources"
             || requestedSectionId === "milestones"
             || requestedSectionId === "delivery"
             || (selectedProjectHeaderCanViewSettings && requestedSectionId === "permissions")
@@ -1117,6 +1118,14 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           selectedProjectHeaderCanViewSettings,
           useUnifiedProjectNav,
         ]);
+
+        useEffect(() => {
+          if (taskView !== "activity") {
+            return;
+          }
+          setTaskView("overview");
+          setProjectOverviewHomeTab("resources");
+        }, [taskView]);
 
         useEffect(() => {
           const requestToken = String(projectNavTaskRequest?.token || "").trim();

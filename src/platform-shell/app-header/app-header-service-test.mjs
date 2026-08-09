@@ -262,7 +262,14 @@ assert.doesNotMatch(platformEntrySource, /const loadThreadSearchFileInventory = 
 assert.doesNotMatch(platformEntrySource, /SEARCH_THREAD_EXPANDED_FETCH_LIMIT/);
 assert.doesNotMatch(platformEntrySource, /refreshThreads\(SEARCH_THREAD_EXPANDED_FETCH_LIMIT\)/);
 assert.match(platformEntrySource, /renderAppHeader\(\{\s*className: "playground-thread-navbar"/);
-assert.match(platformEntrySource, /pathItems: \[\{ label: "Create" \}, \{ label: "New Thread" \}\]/);
+assert.match(
+  platformEntrySource,
+  /function renderInitialThreadWelcomeNav\(\) \{[\s\S]*?className: "playground-thread-welcome-navbar",[\s\S]*?pathItems: \[\{ label: "Create" \}\]/,
+);
+assert.doesNotMatch(
+  platformEntrySource,
+  /function renderInitialThreadWelcomeNav\(\) \{[\s\S]*?pathItems: \[[^\]]*label: "New Thread"/,
+);
 assert.doesNotMatch(platformEntrySource, /React\.createElement\("div", \{ className: "playground-content-nav" \}/);
 assert.match(platformEntrySource, /const \[showSubscriptionSuccessModal, setShowSubscriptionSuccessModal\]/);
 assert.doesNotMatch(platformEntrySource, /function renderUnifiedTopNav\(/);
@@ -272,7 +279,17 @@ assert.doesNotMatch(platformEntrySource, /renderAppHeaderSidebarToggle\(\)/);
 assert.match(platformEntrySource, /function getThreadPagePathItems\(\)/);
 assert.match(
   platformEntrySource,
-  /function renderThreadTitleActionMenu\(\) \{[\s\S]*?return React\.createElement\(PlatformPopup, \{[\s\S]*?variant: "minimal",[\s\S]*?placement: "bottom-start"/,
+  /function renderThreadTitleActionMenu\(\) \{[\s\S]*?return React\.createElement\(PlatformResourceHeaderActions,[\s\S]*?React\.createElement\(PlatformResourceActionsMenu, \{[\s\S]*?onOpenChange: handleThreadNavMenuOpenChange,[\s\S]*?resourceLabel: "Thread"/,
+);
+assert.match(
+  platformEntrySource,
+  /function renderThreadTitleActionMenu\(\) \{\s*if \(!selectedThreadNavRecord\?\.id\) \{/,
+  "The thread title menu must remain available while a thread side-detail drawer is open.",
+);
+assert.doesNotMatch(
+  platformEntrySource,
+  /function renderThreadTitleActionMenu\(\) \{\s*if \([^)]*isThreadSideDetailOpen/,
+  "Thread side-detail state must not hide the thread title menu.",
 );
 assert.equal(
   platformEntrySource.match(/playground-thread-nav-popup-shell/g)?.length,

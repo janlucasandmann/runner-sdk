@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -23,6 +24,10 @@ import {
   PlatformSettingsSectionList,
 } from "../../../../../platform-ui/components/composite/settings-section/index.js";
 import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
+import {
+  usePlatformVersionNavigationGuard,
+  type PlatformVersionNavigationGuardRegistrar,
+} from "../../../../../platform-ui/components/composite/versioning/index.js";
 import {
   PlatformPrimaryButton,
 } from "../../../../../platform-ui/components/ui/button/index.js";
@@ -56,6 +61,7 @@ interface AssurancePolicyDetailPageProps {
   onReload: () => Promise<void>;
   onRun: (policy: AssurancePolicy) => void;
   onOpenRun: (run: AssuranceRun) => void;
+  onNavigationGuardChange?: PlatformVersionNavigationGuardRegistrar;
 }
 
 interface AssuranceGateRow {
@@ -149,6 +155,7 @@ export function AssurancePolicyDetailPage({
   onReload,
   onRun,
   onOpenRun,
+  onNavigationGuardChange,
 }: AssurancePolicyDetailPageProps) {
   const [activeTab, setActiveTab] = useState<AssurancePolicyTab>("general");
   const [name, setName] = useState(policy.name);
@@ -187,6 +194,22 @@ export function AssurancePolicyDetailPage({
     || projectId !== (policy.projectId || "")
     || definitionJson !== baselineDefinition
   );
+  const discardUnsavedChanges = useCallback(() => {
+    setName(policy.name);
+    setDescription(policy.description);
+    setStatus(policy.status);
+    setProjectId(policy.projectId || "");
+    setDefinitionJson(JSON.stringify(cloneDefinition(policy.definition), null, 2));
+    setError("");
+  }, [policy]);
+  usePlatformVersionNavigationGuard({
+    dirty,
+    resourceId: policy.id,
+    resourceName: policy.name,
+    resourceType: "Assurance policy",
+    onDiscard: discardUnsavedChanges,
+    onNavigationGuardChange,
+  });
   const versions = Array.isArray(policy.versions) ? policy.versions : [];
   const runs = Array.isArray(policy.runs) ? policy.runs : [];
   const terminalRuns = runs.filter((run) => ["passed", "failed", "cancelled"].includes(run.status));

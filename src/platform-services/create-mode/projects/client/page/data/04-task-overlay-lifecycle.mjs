@@ -15,7 +15,6 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
               taskView !== "overview"
               && taskView !== "backlog"
               && taskView !== "board"
-              && taskView !== "activity"
             )
           ) {
             setProjectTaskDetailScreenOpen(false);
@@ -46,12 +45,10 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
             ? boardNavigationTaskIds
             : taskView === "backlog"
               ? backlogNavigationTaskIds
-              : taskView === "activity"
-                ? backlogNavigationTaskIds
-                : [];
+              : [];
 
           if (
-            (taskView !== "board" && taskView !== "backlog" && taskView !== "activity")
+            (taskView !== "board" && taskView !== "backlog")
             || !selectedProjectId
             || !selectedTaskId
             || activeTaskNavigationIds.length < 2

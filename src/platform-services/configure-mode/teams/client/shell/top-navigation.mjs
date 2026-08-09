@@ -11,9 +11,9 @@ export const TEAMS_TOP_NAVIGATION_SCRIPT = `        function renderTeamPageNav()
           return renderAppHeader({
             className: "playground-settings-top-navbar",
             pathItems: isTeamOverview
-              ? [{ label: "Configure" }, { label: "Teams" }]
+              ? [{ label: "Admin" }, { label: "Teams" }]
               : [
-                  { label: "Configure" },
+                  { label: "Admin" },
                   { label: "Teams", onClick: openTeamOverviewPage },
                   { label: String(selectedTeam?.name || "Team") },
                 ],

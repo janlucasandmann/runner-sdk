@@ -107,4 +107,51 @@ describe("thread screen presentation", () => {
     expect(activeReceipt?.metrics.outputTokens).toBe(30);
     expect(activeReceipt?.metrics.costUsd).toBe(0.04);
   });
+
+  it("keeps internal observer runs out of the public screen model", () => {
+    const projection = createInitialRunnerThreadProjection("thread-1");
+    const workerRun = run({ id: "run-worker", sequence: 1, status: "completed" });
+    const observerRun = run({
+      id: "run-observer",
+      sequence: 2,
+      runKind: "observer",
+      status: "completed",
+    });
+    projection.runsById = {
+      [workerRun.id]: workerRun,
+      [observerRun.id]: observerRun,
+    };
+
+    const screen = buildRunnerThreadScreenViewModel(projection);
+
+    expect(screen.receipts.map((receipt) => receipt.id)).toEqual([workerRun.id]);
+  });
+
+  it("normalizes communicator run actors to the public agent identity", () => {
+    const projection = createInitialRunnerThreadProjection("thread-1");
+    projection.participantsById.worker = {
+      id: "worker",
+      kind: "worker",
+      displayName: "Spark",
+      avatarUrl: "/spark.webp",
+    };
+    projection.participantsById.communicator = {
+      id: "communicator",
+      kind: "communicator",
+      displayName: "Communicator",
+    };
+    const communicatorRun = run({
+      runKind: "communicator",
+      actorParticipantId: "communicator",
+      status: "completed",
+    });
+
+    const receipt = buildRunnerThreadRunReceiptViewModel(projection, communicatorRun);
+
+    expect(receipt.actor).toMatchObject({
+      kind: "worker",
+      displayName: "Spark",
+      avatarUrl: "/spark.webp",
+    });
+  });
 });

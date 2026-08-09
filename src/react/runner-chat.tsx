@@ -22,7 +22,6 @@ import {
   Layers as LucideLayers,
   ListTodo as LucideListTodo,
   Mail as LucideMail,
-  MessageCircle as LucideMessageCircle,
   Maximize2 as LucideMaximize2,
   Minimize2 as LucideMinimize2,
   Monitor as LucideMonitor,
@@ -54,6 +53,7 @@ import {
   PlatformPrimaryButton,
   PlatformSecondaryButton,
 } from "../platform-ui/components/ui/button/index.js";
+import { PlatformIconButton } from "../platform-ui/components/ui/icon-button/index.js";
 import { PlatformSwitch } from "../platform-ui/components/ui/switch/index.js";
 import { ConnectionIdentityIcon } from "../platform-resources/shared/connections/connection-identity-icon.js";
 import { buildRunnerThreadScreenViewModel } from "../thread/presentation.js";
@@ -406,6 +406,10 @@ import { useRunnerRunStopController } from "./runner-chat/use-run-stop-controlle
 import { useRunnerThreadContextController } from "./runner-chat/use-thread-context-controller.js";
 import { useRunnerDeepResearchSessionsController } from "./runner-chat/use-deep-research-sessions-controller.js";
 import { tryRouteRunnerCommunicatorMessage } from "./runner-chat/communicator-router.js";
+import {
+  completeRunnerParticipantNeutralTurn,
+  createRunnerParticipantNeutralPendingTurn,
+} from "./runner-chat/participant-neutral-routing.js";
 import { useRunnerGithubBranchSelection } from "./runner-chat/use-github-branch-selection.js";
 import { useRunnerAgentSelectionController } from "./runner-chat/use-agent-selection-controller.js";
 import { useRunnerCustomSkillsController } from "./runner-chat/use-custom-skills-controller.js";
@@ -2040,8 +2044,12 @@ export function RunnerChat({
     }
   }
 
-  async function tryHandleThreadCommunicatorMessage(content: string): Promise<boolean> {
-    return tryRouteRunnerCommunicatorMessage({
+  async function tryHandleThreadCommunicatorMessage(
+    content: string,
+    pendingTurnId: string,
+  ): Promise<boolean> {
+    let didCompleteTurn = false;
+    const handled = await tryRouteRunnerCommunicatorMessage({
       activeRunId: activeCanonicalRun?.id || null,
       apiKey,
       backendUrl: normalizedBackendUrl,
@@ -2049,20 +2057,13 @@ export function RunnerChat({
       controlRun: canonicalThread.controlRun,
       hasRoutableActiveRun,
       onAnswer: (answer) => {
-        appendSyntheticActionTurn(
-          content.trim(),
-          answer.content,
-          "Communicator answered",
-          {
-            presentation: "btw",
-            messageMetadata: {
-              source: "thread_v2_communicator",
-              routingReceiptLabel: "Answered by Communicator",
-              routingReceiptStatus: answer.receiptStatus,
-              routingReceiptId: answer.receiptId,
-            },
-          },
-        );
+        didCompleteTurn = true;
+        const completedAtMs = Date.now();
+        updateTurn(pendingTurnId, (turn) => completeRunnerParticipantNeutralTurn(
+          turn,
+          answer,
+          completedAtMs,
+        ));
       },
       onError: (message) => setInlineError(message),
       onRestoreComposer: (restoredContent) => {
@@ -2076,6 +2077,10 @@ export function RunnerChat({
       threadId: currentThreadId,
       usesCanonicalThreadSurface: shouldUseCanonicalThreadSurface,
     });
+    if (handled && !didCompleteTurn) {
+      removeTurn(pendingTurnId);
+    }
+    return handled;
   }
 
   async function tryHandleActiveCanonicalWorkerInstruction(content: string): Promise<boolean> {
@@ -2408,6 +2413,34 @@ export function RunnerChat({
 
   function updateTurn(turnId: string, updater: (turn: RunnerTurn) => RunnerTurn) {
     setTurns((prev) => prev.map((turn) => (turn.id === turnId ? updater(turn) : turn)));
+  }
+
+  function appendParticipantNeutralPendingTurn(prompt: string): string {
+    const turnId = generateId("turn");
+    const startedAtMs = Date.now();
+    setTurns((previousTurns) => [
+      ...previousTurns,
+      createRunnerParticipantNeutralPendingTurn({
+        id: turnId,
+        prompt,
+        startedAtMs,
+        isInitialTurn: previousTurns.length === 0,
+        agentName: selectedAgent?.name || displayedAgentLabel,
+        environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
+      }),
+    ]);
+    setExpandedTurns((previous) => ({ ...previous, [turnId]: false }));
+    return turnId;
+  }
+
+  function removeTurn(turnId: string) {
+    setTurns((previousTurns) => previousTurns.filter((turn) => turn.id !== turnId));
+    setExpandedTurns((previous) => {
+      if (!(turnId in previous)) return previous;
+      const next = { ...previous };
+      delete next[turnId];
+      return next;
+    });
   }
 
   function collapseAllWorkingLogs(extraTurnId?: string) {
@@ -2917,24 +2950,22 @@ export function RunnerChat({
     return (
       <div className={`tb-run-summary-action-line ${options?.isLatest ? "is-latest" : ""}`.trim()} aria-label="Run summary actions">
         <span className="tb-run-summary-action-group">
-          <button
-            type="button"
+          <PlatformIconButton
             className="tb-run-summary-action-button"
-            data-label="Copy"
-            title="Copy run summary"
             aria-label="Copy run summary"
+            tooltip="Copy"
+            tooltipPlacement="bottom"
             onClick={() => {
               void copyRunSummaryText(summaryText);
             }}
           >
             <LucideCopy className="tb-run-summary-action-icon" strokeWidth={2} />
-          </button>
-          <button
-            type="button"
+          </PlatformIconButton>
+          <PlatformIconButton
             className="tb-run-summary-action-button"
-            data-label="Fork"
-            title="Fork from message"
             aria-label="Fork from message"
+            tooltip="Fork"
+            tooltipPlacement="bottom"
             onClick={() => openForkDialogForTurn(turn)}
           >
             {isForkingThisTurn ? (
@@ -2942,46 +2973,42 @@ export function RunnerChat({
             ) : (
               <LucideSplit className="tb-run-summary-action-icon" strokeWidth={2} />
             )}
-          </button>
-          <button
-            type="button"
+          </PlatformIconButton>
+          <PlatformIconButton
             className={`tb-run-summary-action-button ${threadFeedback.userRating === "up" ? "is-active" : ""}`.trim()}
-            data-label="Good"
-            title="Mark as helpful"
             aria-label="Mark as helpful"
+            tooltip="Good"
+            tooltipPlacement="bottom"
             aria-pressed={threadFeedback.userRating === "up"}
             onClick={() => submitThreadFeedback("up")}
           >
             <LucideThumbsUp className="tb-run-summary-action-icon" strokeWidth={2} />
-          </button>
-          <button
-            type="button"
+          </PlatformIconButton>
+          <PlatformIconButton
             className={`tb-run-summary-action-button ${threadFeedback.userRating === "down" ? "is-active" : ""}`.trim()}
-            data-label="Bad"
-            title="Mark as not helpful"
             aria-label="Mark as not helpful"
+            tooltip="Bad"
+            tooltipPlacement="bottom"
             aria-pressed={threadFeedback.userRating === "down"}
             onClick={() => submitThreadFeedback("down")}
           >
             <LucideThumbsDown className="tb-run-summary-action-icon" strokeWidth={2} />
-          </button>
-          <button
-            type="button"
+          </PlatformIconButton>
+          <PlatformIconButton
             className="tb-run-summary-action-button"
-            data-label="Rerun"
-            title="Rerun from message"
             aria-label="Rerun from message"
+            tooltip="Rerun"
+            tooltipPlacement="bottom"
             onClick={() => rerunTurnFromSummary(turn)}
           >
             <LucideRefreshCw className="tb-run-summary-action-icon" strokeWidth={2} />
-          </button>
+          </PlatformIconButton>
           <span className="tb-run-summary-more-anchor" ref={isMoreMenuOpen ? runSummaryMoreMenuRef : undefined}>
-            <button
-              type="button"
+            <PlatformIconButton
               className={`tb-run-summary-action-button ${isMoreMenuOpen ? "is-open" : ""}`.trim()}
-              data-label="More"
-              title="More"
               aria-label="More"
+              tooltip={isMoreMenuOpen ? undefined : "More"}
+              tooltipPlacement="bottom"
               aria-haspopup="menu"
               aria-expanded={isMoreMenuOpen}
               onClick={(event) => {
@@ -2991,7 +3018,7 @@ export function RunnerChat({
               }}
             >
               <LucideEllipsis className="tb-run-summary-action-icon" strokeWidth={2} />
-            </button>
+            </PlatformIconButton>
             {isMoreMenuOpen ? (
               <PlatformPopupSurface className="tb-run-summary-more-menu" role="menu" onClick={(event) => event.stopPropagation()}>
                 <button
@@ -4407,6 +4434,7 @@ export function RunnerChat({
     setInlineError(null);
     closeAllInputPopups();
     let ensuredThreadId: string | undefined;
+    let participantNeutralTurnId: string | null = null;
 
     try {
       if (!normalizedBackendUrl) {
@@ -4592,13 +4620,16 @@ export function RunnerChat({
         focusComposerSoon();
       }
       await stopSpeechToText();
-      if (
+      const shouldAttemptParticipantNeutralRouting = (
         executionAttachmentEntries.length === 0 &&
         !quotedSelection &&
-        !runConnectorPayload &&
-        await tryHandleThreadCommunicatorMessage(taskText)
-      ) {
-        return;
+        !runConnectorPayload
+      );
+      if (shouldAttemptParticipantNeutralRouting) {
+        participantNeutralTurnId = appendParticipantNeutralPendingTurn(taskText);
+        if (await tryHandleThreadCommunicatorMessage(taskText, participantNeutralTurnId)) {
+          return;
+        }
       }
       const hasSpecialExecutionCommand = Boolean(
         backlogCommand
@@ -4619,34 +4650,50 @@ export function RunnerChat({
         && !hasSpecialExecutionCommand
         && await tryHandleActiveCanonicalWorkerInstruction(taskText)
       ) {
+        if (participantNeutralTurnId) {
+          removeTurn(participantNeutralTurnId);
+        }
         return;
       }
       if (hasRoutableActiveRun) {
-        const queuedTurnId = generateId("turn");
-        setTurns((prev) => [
-          ...prev,
-          {
-            id: queuedTurnId,
-            prompt: taskText,
-            logs: [],
-            startedAtMs: Date.now(),
-            status: "queued",
-            animateOnRender: true,
-            isInitialTurn: prev.length === 0,
-            agentName: selectedAgent?.name || displayedAgentLabel,
-            environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
-            quotedSelection,
-            attachments: queuedTurnAttachments,
-            slideCreationCommand,
-            researchCreationCommand,
-            scrapeCreationCommand,
-            parseCreationCommand,
-            adCreationCommand,
-            messageMetadata: runConnectorIds.length > 0
-              ? { [RUNNER_CONNECTOR_IDS_METADATA_KEY]: runConnectorIds }
-              : null,
-          },
-        ]);
+        const queuedTurnId = participantNeutralTurnId || generateId("turn");
+        const queuedTurn = (existingTurn?: RunnerTurn): RunnerTurn => ({
+          ...(existingTurn || {}),
+          id: queuedTurnId,
+          prompt: taskText,
+          logs: [],
+          startedAtMs: existingTurn?.startedAtMs || Date.now(),
+          status: "queued",
+          animateOnRender: true,
+          isInitialTurn: existingTurn?.isInitialTurn,
+          agentName: selectedAgent?.name || displayedAgentLabel,
+          environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
+          quotedSelection,
+          attachments: queuedTurnAttachments,
+          slideCreationCommand,
+          researchCreationCommand,
+          scrapeCreationCommand,
+          parseCreationCommand,
+          adCreationCommand,
+          messageMetadata: runConnectorIds.length > 0
+            ? { [RUNNER_CONNECTOR_IDS_METADATA_KEY]: runConnectorIds }
+            : null,
+        });
+        if (participantNeutralTurnId) {
+          updateTurn(queuedTurnId, queuedTurn);
+        } else {
+          setTurns((prev) => [
+            ...prev,
+            queuedTurn({
+              id: queuedTurnId,
+              prompt: taskText,
+              logs: [],
+              startedAtMs: Date.now(),
+              status: "queued",
+              isInitialTurn: prev.length === 0,
+            }),
+          ]);
+        }
         setPendingQueuedMessages((prev) => [
           ...prev,
           {
@@ -4675,6 +4722,7 @@ export function RunnerChat({
 
       setIsPreparingRun(true);
         const execution = await executeThreadRun(executionTaskText, executionAttachmentEntries, {
+          turnId: participantNeutralTurnId || undefined,
           quotedSelection,
           backlogCommand,
           resourceCreationCommand,
@@ -6083,12 +6131,6 @@ export function RunnerChat({
                   ? null
                   : <div className="runner-log-empty">No logs yet. Run a task to start streaming.</div>
               : null}
-            {canonicalThreadEnabled && canonicalThread.error && !shouldUseCanonicalThreadSurface ? (
-              <div className="tb-canonical-thread-error is-compatibility" role="alert">
-                <span>Live observer activity is unavailable: {canonicalThread.error}</span>
-                <button type="button" onClick={() => void canonicalThread.refresh().catch(() => undefined)}>Retry</button>
-              </div>
-            ) : null}
             {shouldUseCanonicalThreadSurface ? (
               <RunnerCanonicalThreadSurface
                 availableConnectorOptions={availableConnectorOptions}
@@ -6196,7 +6238,10 @@ export function RunnerChat({
                   {baseUserPromptContent}
                 </RunnerUserMessageContent>
               );
-              const isBtwTurn = turn.presentation === "btw" || normalizedPrompt.toLowerCase().startsWith("/btw");
+              const isInternalRoutedResponseTurn = turn.messageMetadata?.source === "thread_v2_communicator";
+              const isBtwTurn = !isInternalRoutedResponseTurn && (
+                turn.presentation === "btw" || normalizedPrompt.toLowerCase().startsWith("/btw")
+              );
               const isEditingTurn = editingTurnId === turn.id;
               const canEditTurn = isEditableUserTurn(turn);
               const taskPreviewForTurn =
@@ -6264,6 +6309,7 @@ export function RunnerChat({
                   agentName={turnAgentLabel}
                   agentPhotoUrl={turnAgentPhotoUrl}
                   environmentName={turnEnvironmentLabel}
+                  isGenerating={isTurnActivelyWorking}
                   onAgentClick={
                     typeof onAgentTurnClick === "function" && turnAgentLabel.trim()
                       ? () => handleTurnAgentClick(turn, turnAgentLabel)
@@ -6451,20 +6497,10 @@ export function RunnerChat({
               }
 
               if (isBtwTurn) {
-                const isCommunicatorBtwTurn = turn.messageMetadata?.source === "thread_v2_communicator";
-                const routingReceiptLabel = typeof turn.messageMetadata?.routingReceiptLabel === "string"
-                  ? turn.messageMetadata.routingReceiptLabel.trim()
-                  : "";
                 return (
-                  <div key={turn.id} className={`tb-turn tb-turn-btw ${isCommunicatorBtwTurn ? "is-communicator" : ""}`.trim()}>
+                  <div key={turn.id} className="tb-turn tb-turn-btw">
                     {userMessageTime}
-                    <div className={`tb-btw-turn-card ${isCommunicatorBtwTurn ? "is-communicator" : ""}`.trim()} style={promptStyle}>
-                      {isCommunicatorBtwTurn ? (
-                        <div className="tb-btw-communicator-header">
-                          <span className="tb-btw-communicator-avatar" aria-hidden="true"><LucideMessageCircle strokeWidth={1.7} /></span>
-                          <span>Communicator</span>
-                        </div>
-                      ) : null}
+                    <div className="tb-btw-turn-card" style={promptStyle}>
                       <div
                         ref={(node) => setThreadHistoryAnchorElement(userThreadHistoryItemId, node)}
                         className="tb-btw-turn-prompt tb-thread-history-anchor"
@@ -6490,12 +6526,6 @@ export function RunnerChat({
                             softBreaks: true,
                             canPreviewSummaryWorkspacePaths,
                           })}
-                          {routingReceiptLabel ? (
-                            <div className="tb-thread-routing-receipt is-success" role="status">
-                              <LucideCheck className="tb-thread-routing-receipt-icon" strokeWidth={1.7} />
-                              <span>{routingReceiptLabel}</span>
-                            </div>
-                          ) : null}
                           {emailDeliveryDisplay ? (
                             <div className={`tb-email-delivery-status ${emailDeliveryDisplay.className}`}>
                               <LucideMail className="tb-email-delivery-status-icon" strokeWidth={1.7} />

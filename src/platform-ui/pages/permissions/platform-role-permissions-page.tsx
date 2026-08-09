@@ -41,17 +41,19 @@ export function PlatformRolePermissionsPage<TId extends string = string>({
             disabled={role.disabled}
             onClick={() => onValueChange(role.id)}
           >
-            <span className="platform-role-permissions-page__role-title playground-team-role-card-title">
-              {role.label}
+            <span className="platform-role-permissions-page__role-heading playground-team-role-card-heading">
+              <span className="platform-role-permissions-page__role-title playground-team-role-card-title">
+                {role.label}
+              </span>
+              {role.meta ? (
+                <span className="platform-role-permissions-page__role-meta playground-team-role-card-meta">
+                  {role.meta}
+                </span>
+              ) : null}
             </span>
             {role.description ? (
               <span className="platform-role-permissions-page__role-description playground-team-role-card-description">
                 {role.description}
-              </span>
-            ) : null}
-            {role.meta ? (
-              <span className="platform-role-permissions-page__role-meta playground-team-role-card-meta">
-                {role.meta}
               </span>
             ) : null}
           </button>

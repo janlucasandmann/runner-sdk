@@ -4,17 +4,19 @@ export const ASSURANCE_APP_TOP_NAVIGATION_SCRIPT = `        function renderAssur
             { label: "Configure" },
             {
               label: "Assurance",
-              onClick: openAssuranceOverviewPage,
+              onClick: () => requestPlatformNavigation(openAssuranceOverviewPage),
             },
           ];
           if (assurancePageMode === "detail" || assurancePageMode === "run") {
             pathItems.push({
               label: selectedAssurancePolicyName || "Assurance Policy",
               onClick: assurancePageMode === "run"
-                ? () => openAssurancePolicyDetailPage(
-                    selectedAssurancePolicyId,
-                    selectedAssurancePolicyName
-                  )
+                ? () => requestPlatformNavigation(() => (
+                    openAssurancePolicyDetailPage(
+                      selectedAssurancePolicyId,
+                      selectedAssurancePolicyName
+                    )
+                  ))
                 : undefined,
             });
           }

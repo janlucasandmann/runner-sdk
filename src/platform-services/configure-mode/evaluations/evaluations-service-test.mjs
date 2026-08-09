@@ -544,9 +544,13 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionActions, /openEvaluationVe
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionActions, /options\.persist === true \|\| \(options\.persist !== false && options\.markVersionTouched === false\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionActions, /function discardUnsavedEvaluationDraft\(\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionActions, /function returnToEvaluationsOverview\(\)/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /id: "evaluation-details-unsaved-changes"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /guardId: hasUnsavedEvaluationCaseChanges[\s\S]*"evaluation-details-unsaved-changes"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /usePlatformVersionNavigationGuard/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /const \[evaluationUnsavedRunDialog, setEvaluationUnsavedRunDialog\] = useState\(null\)/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /onDiscard: discardUnsavedEvaluationDraft/);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup,
+  /onDiscard: hasUnsavedEvaluationCaseChanges[\s\S]*discardUnsavedEvaluationDraft/,
+);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /const detailHeader =/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /const handleEvaluationDetailTabChange =/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /\bsidebarToggle,\s*\n\s*sidebarCollapsed: evaluationDetailSidebarCollapsed/);

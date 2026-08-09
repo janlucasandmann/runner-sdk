@@ -14,7 +14,7 @@
         import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, GitPullRequestArrow, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plug, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquareMousePointer, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
         import { RunnerClient, buildRunnerThreadActivityTree, collectRunnerConnectorIdsFromStructuredEvidence, describeRunnerThreadActivityGroup, extractRunnerThreadPlanSteps, flattenRunnerThreadActivityTree, presentRunnerThreadAction } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
-	      import { PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
+	      import { PlatformAnalyticsChart, PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
         import { PlatformAttachmentActionMenu, PlatformAttachments } from "/dist/platform-ui/components/composite/attachments/index.js";
         import { PlatformFileExplorerBrowser, PlatformFileExplorerBrowserModal, PlatformFileExplorerFileIcon, PlatformFileExplorerModal, resolvePlatformFileExplorerFileKind } from "/dist/platform-ui/components/composite/file-explorer/index.js";
         import { PlatformSubtasks } from "/dist/platform-ui/components/composite/subtasks/index.js";
@@ -30,23 +30,27 @@
         import { PlatformDiffViewer } from "/dist/platform-ui/components/composite/diff-viewer/index.js";
   	      import { PlatformEmptyState } from "/dist/platform-ui/components/composite/empty-state/index.js";
         import { PlatformEmojiPicker } from "/dist/platform-ui/components/composite/emoji-picker/index.js";
-        import { PlatformVersionHistorySidebar, PlatformVersionLabel, PlatformVersionPublishControl, PlatformVersionSaveDialog, formatPlatformVersionLabel, normalizePlatformVersionNumber } from "/dist/platform-ui/components/composite/versioning/index.js";
+        import { PlatformVersionHistorySidebar, PlatformVersionLabel, PlatformVersionPublishControl, PlatformVersionSaveDialog, formatPlatformVersionLabel, normalizePlatformVersionNumber, usePlatformVersionNavigationGuard } from "/dist/platform-ui/components/composite/versioning/index.js";
         import { PlatformInstructionsEditor, normalizePlatformInstructionsEditorImageSource, replacePlatformInstructionsEditorImageMarkdown, serializePlatformInstructionsEditorFileMarkdown, serializePlatformInstructionsEditorImageMarkdown } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
   	      import { PlatformLoadingState } from "/dist/platform-ui/components/composite/loading-state/index.js";
         import { PlatformSettingsSection, PlatformSettingsSectionList } from "/dist/platform-ui/components/composite/settings-section/index.js";
         import { PlatformResourceShareModal } from "/dist/platform-ui/components/composite/resource-action-modals/index.js";
         import { PlatformUiCard } from "/dist/platform-ui/components/composite/ui-card/index.js";
   	      import { PlatformButton, PlatformPrimaryButton, PlatformSecondaryButton } from "/dist/platform-ui/components/ui/button/index.js";
+        import { PlatformCheckbox } from "/dist/platform-ui/components/ui/checkbox/index.js";
         import { PlatformIconButton } from "/dist/platform-ui/components/ui/icon-button/index.js";
   	      import { PlatformLabel } from "/dist/platform-ui/components/ui/label/index.js";
   	      import { PlatformSearch } from "/dist/platform-ui/components/ui/search/index.js";
   	      import { PlatformButtonSelector, PlatformSelector } from "/dist/platform-ui/components/ui/selector/index.js";
         import { PlatformPopup, PlatformPopupDismissLayer, PlatformPopupSearchHeader, PlatformPopupSurface } from "/dist/platform-ui/components/composite/popup/index.js";
+        import { PlatformResourceActionMenuItem, PlatformResourceActionsDivider, PlatformResourceActionsInformation, PlatformResourceActionsMenu, PlatformResourceHeaderActions, PlatformResourceVersionHistoryMenuItem } from "/dist/platform-ui/components/composite/resource-header-actions/index.js";
         import { PLATFORM_PROFILE_IMAGE_PRESET_OPTIONS, PlatformProfileImagePicker, getPlatformProfileImageInitials } from "/dist/platform-ui/components/composite/profile-image-picker/index.js";
-  	      import { PlatformModal, PlatformModalBackdrop, PlatformModalBody, PlatformModalFooter, PlatformModalHeader, PlatformModalSurface, PlatformUnsavedChangesModal } from "/dist/platform-ui/components/composite/modal/index.js";
+	      import { PlatformOwnerSelector } from "/dist/platform-ui/components/composite/owner-selector/index.js";
+	      import { PlatformConfirmationModal, PlatformModal, PlatformModalBackdrop, PlatformModalBody, PlatformModalFooter, PlatformModalHeader, PlatformModalSurface, PlatformUnsavedChangesModal } from "/dist/platform-ui/components/composite/modal/index.js";
         import { PlatformGlobalSearchModal } from "/dist/platform-shell/app-header/global-search-modal/index.js";
         import { PlatformPlanGateModal, requestPlatformPlanGate, requestPlatformPlanGateFromResponse, subscribePlatformPlanGateRequests } from "/dist/platform-shell/plan-gate/plan-gate-modal/index.js";
 	      import { PlatformSwitch } from "/dist/platform-ui/components/ui/switch/index.js";
+        import { PlatformToggle } from "/dist/platform-ui/components/ui/toggle/index.js";
         import { PlatformTicketItem } from "/dist/platform-ui/components/ui/ticket-item/index.js";
 	      import { PlatformCalendarWidget, PlatformProjectWidget, PlatformProjectWidgetEmpty, PlatformProjectWidgetEmptyState, PlatformProjectWidgetTask, PlatformProjectWidgetTaskList, PlatformUsageWidget } from "/dist/platform-ui/components/composite/widgets/index.js";
   	      import {
@@ -3010,10 +3014,10 @@
             model: "gpt-5.4-mini",
             runtime: "claw",
             environment: "Default",
-            summary: "The plan unifies Builder, Team, Business, and Enterprise, keeps product access on subscription, and meters infrastructure separately after included organization credits.",
+            summary: "The plan unifies Builder, Team, and Enterprise, keeps product access on subscription, and meters infrastructure separately after included organization credits.",
             events: [
               { kind: "user", title: "Prompt", body: "Plan an enterprise settings flow for usage billing, BYOM inference, and seat-based team plans." },
-              { kind: "reasoning", title: "Framing", body: "Separate product entitlement from metered usage, then place customer-hosted inference under Team, Business, and Enterprise." },
+              { kind: "reasoning", title: "Framing", body: "Separate product entitlement from metered usage, then place customer-hosted inference under Team and Enterprise." },
               { kind: "tool", title: "notes", body: "Review current billing controls, organization inference settings, and plan naming inside ACP." },
               { kind: "reasoning", title: "Designing the flow", body: "Plans should govern entitlement. Inference settings should govern endpoint configuration. Usage billing should remain a separate safety control." },
               { kind: "message", title: "Result", body: "Add organization-scoped inference controls, monthly spend limits, and a dedicated Inference section for endpoint health, model discovery, and encrypted credentials." },
@@ -3868,6 +3872,7 @@
         }, null, 2) + "\n";
         const PLAYGROUND_AGENT_DRAFT_ID = "__playground_new_agent__";
         const PLAYGROUND_SPARK_AGENT_PROFILE_URL = "/img/agent-profile-pics/spark.webp";
+        const PLAYGROUND_SPARK_AGENT_ACTIVE_PROFILE_URL = "/img/agent-profile-pics/exp-spark.gif";
         const PLAYGROUND_FORGE_AGENT_PROFILE_URL = "/img/agent-profile-pics/forge.webp";
         const PLAYGROUND_FOUNDRY_AGENT_PROFILE_URL = "/img/agent-profile-pics/foundry.webp";
         const PLAYGROUND_AGENT_CREATOR_METADATA_ROLE = "agent_creator";
@@ -4690,6 +4695,14 @@
           }
   
           return PLAYGROUND_SPARK_AGENT_PROFILE_URL;
+        }
+
+        function getPlaygroundAgentProfileHoverPhotoUrl(photoUrl) {
+          const normalizedPhotoUrl = String(photoUrl || "").trim();
+          const photoPath = normalizedPhotoUrl.split(/[?#]/, 1)[0]?.toLowerCase() || "";
+          return /\/agent-profile-pics\/spark\.(?:jpe?g|png|webp)$/i.test(photoPath)
+            ? PLAYGROUND_SPARK_AGENT_ACTIVE_PROFILE_URL
+            : "";
         }
   
         function getPlaygroundAgentRunnerPhotoUrl(agent) {
@@ -14608,24 +14621,42 @@
             ));
             const chartRecordIds = new Set(chartRecords.map((record) => record.id));
             const recordsById = new Map(canonicalActivityTreeRecords.map((record) => [record.id, record]));
+            const chartGroupIdBySourceId = new Map(
+              chartRecords
+                .filter((record) => record.recordKind === "activity_group")
+                .map((record) => [
+                  String(record.group?.id || record.groupId || "").trim(),
+                  record.id,
+                ])
+                .filter(([sourceId]) => Boolean(sourceId))
+            );
             const chartParentById = new Map();
             const chartDepthById = new Map();
             for (const record of chartRecords) {
-              let parentId = record.parentId || null;
               let chartParentId = null;
-              let chartDepth = 0;
-              const visited = new Set();
-              while (parentId && !visited.has(parentId)) {
-                visited.add(parentId);
-                const parent = recordsById.get(parentId);
-                if (!parent) break;
-                if (chartRecordIds.has(parent.id)) {
-                  chartParentId = parent.id;
-                  chartDepth = (chartDepthById.get(parent.id) || 0) + 1;
-                  break;
+              // Action groups are independent visual scopes. A tool call may
+              // have several group references in the raw evidence, but the
+              // chart always chooses one direct group owner and never nests a
+              // group inside another group.
+              if (record.recordKind === "tool_call") {
+                const directGroupSourceId = String(record.groupId || "").trim();
+                chartParentId = chartGroupIdBySourceId.get(directGroupSourceId) || null;
+                if (!chartParentId) {
+                  let parentId = record.parentId || null;
+                  const visited = new Set();
+                  while (parentId && !visited.has(parentId)) {
+                    visited.add(parentId);
+                    const parent = recordsById.get(parentId);
+                    if (!parent) break;
+                    if (parent.recordKind === "activity_group" && chartRecordIds.has(parent.id)) {
+                      chartParentId = parent.id;
+                      break;
+                    }
+                    parentId = parent.parentId || null;
+                  }
                 }
-                parentId = parent.parentId || null;
               }
+              const chartDepth = chartParentId ? 1 : 0;
               chartParentById.set(record.id, chartParentId);
               chartDepthById.set(record.id, chartDepth);
             }
@@ -14649,12 +14680,21 @@
               if (visiting.has(record.id)) return ownStart;
               const nextVisiting = new Set(visiting);
               nextVisiting.add(record.id);
+              const children = chartChildrenById.get(record.id) || [];
               let scopeStart = ownStart;
-              for (const child of chartChildrenById.get(record.id) || []) {
+              let earliestDescendantStart = 0;
+              for (const child of children) {
                 const childStart = resolveChartScopeStart(child, nextVisiting);
-                if (childStart > 0 && (scopeStart <= 0 || childStart < scopeStart)) {
-                  scopeStart = childStart;
+                if (childStart > 0 && (earliestDescendantStart <= 0 || childStart < earliestDescendantStart)) {
+                  earliestDescendantStart = childStart;
                 }
+              }
+              // A group is a visual scope for its actions, not a separate
+              // event in the timeline. When it has children, anchor it to
+              // the earliest child so a tool call is never rendered far to
+              // the right simply because the group record was created early.
+              if (earliestDescendantStart > 0) {
+                scopeStart = earliestDescendantStart;
               }
               chartScopeStartById.set(record.id, scopeStart);
               return scopeStart;
@@ -14750,7 +14790,11 @@
                 id: record.id,
                 label: title,
                 ariaLabel: "Inspect " + title,
-                startAt: record.createdAt,
+                // Scope groups to the earliest action in their subtree. This
+                // keeps a one-action group immediately ahead of its first
+                // tool call instead of positioning the group from a later
+                // record-created timestamp.
+                startAt: chartScopeStartById.get(record.id) || record.createdAt,
                 endAt: record.endAt,
                 density: isToolCall ? "compact" : "default",
                 hidden: hiddenChartRecordIds.has(record.id),

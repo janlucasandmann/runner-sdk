@@ -603,106 +603,6 @@
             );
           }
   
-          function renderSettingsUsageMultiStackedChart(config) {
-            const labels = Array.isArray(config?.labels) ? config.labels : [];
-            const series = Array.isArray(config?.series)
-              ? config.series.filter((entry) => entry && Array.isArray(entry.values))
-              : [];
-            if (!labels.length || !series.length) {
-              return config?.emptyContent || React.createElement("div", { className: "playground-settings-usage-chart-empty" + (config?.tall ? " is-tall" : "") }, config?.emptyText || "No usage data in this period");
-            }
-  
-            const chartFrameHeight = Number(config?.tall) ? 288 : 228;
-            const baseSvgHeight = Number(config?.tall) ? 252 : 220;
-            const marginTop = 12;
-            const marginRight = 14;
-            const marginBottom = 38;
-            const marginLeft = 58;
-            const totals = labels.map((_, index) =>
-              series.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
-            );
-            const yMax = Math.max(1, Number(config?.yMax || Math.max(...totals, 1)));
-            const gridLineCount = 4;
-            const tickFormatter = typeof config?.tickFormatter === "function"
-              ? config.tickFormatter
-              : (value) => String(Math.round(value));
-            return React.createElement(PlaygroundSettingsResponsiveSvg, {
-                frameClassName: "playground-settings-usage-chart-frame" + (config?.tall ? " is-tall" : ""),
-                frameHeight: chartFrameHeight,
-                svgHeight: baseSvgHeight,
-                ariaLabel: config?.ariaLabel || "Usage chart",
-              }, ({ svgWidth, svgHeight }) => {
-                const plotWidth = svgWidth - marginLeft - marginRight;
-                const plotHeight = svgHeight - marginTop - marginBottom;
-                const slotWidth = plotWidth / Math.max(labels.length, 1);
-                const barWidth = Math.min(24, Math.max(8, slotWidth * 0.56));
-                const baselineY = marginTop + plotHeight;
-                const visibleLabelIndexes = getSettingsVisibleChartLabelIndexes(
-                  labels,
-                  Math.max(2, Math.floor(plotWidth / 84))
-                );
-  
-                return React.createElement(React.Fragment, null,
-                  Array.from({ length: gridLineCount + 1 }).map((_, index) => {
-                    const y = marginTop + (plotHeight / gridLineCount) * index;
-                    const tickValue = yMax - (yMax / gridLineCount) * index;
-                    return React.createElement(React.Fragment, { key: "grid:" + index },
-                      React.createElement("line", {
-                        x1: marginLeft,
-                        y1: y,
-                        x2: svgWidth - marginRight,
-                        y2: y,
-                        stroke: "rgba(255,255,255,0.10)",
-                        strokeWidth: "1",
-                      }),
-                      React.createElement("text", {
-                        x: 0,
-                        y: y + 3,
-                        textAnchor: "start",
-                        fill: "rgba(255,255,255,0.4)",
-                        fontSize: "10",
-                      }, tickFormatter(tickValue))
-                    );
-                  }),
-                  labels.map((label, index) => {
-                    const x = marginLeft + slotWidth * index + (slotWidth - barWidth) / 2;
-                    let stackOffsetY = baselineY;
-                    const stackRects = series.map((entry, seriesIndex) => {
-                      const rawValue = Math.max(0, Number(entry.values[index] || 0));
-                      if (rawValue <= 0) {
-                        return null;
-                      }
-                      const segmentHeight = (rawValue / yMax) * plotHeight;
-                      stackOffsetY -= segmentHeight;
-                      return React.createElement("rect", {
-                        key: "segment:" + seriesIndex,
-                        x,
-                        y: stackOffsetY,
-                        width: barWidth,
-                        height: Math.max(segmentHeight, 1),
-                        rx: "3",
-                        fill: entry.color || "rgba(255,255,255,0.8)",
-                      });
-                    });
-  
-                    return React.createElement(React.Fragment, { key: "stack:" + index },
-                      stackRects,
-                      visibleLabelIndexes.has(index)
-                        ? React.createElement("text", {
-                            x: marginLeft + slotWidth * index + slotWidth / 2,
-                            y: svgHeight - 10,
-                            textAnchor: "middle",
-                            fill: "rgba(255,255,255,0.4)",
-                            fontSize: "10",
-                          }, label)
-                        : null
-                    );
-                  })
-                );
-              }
-            );
-          }
-  
           function renderSettingsUsageDonutChart(config) {
             const items = Array.isArray(config?.items) ? config.items.filter(Boolean) : [];
             const totalValue = Math.max(0, items.reduce((sum, item) => sum + Math.max(0, Number(item.value || 0)), 0));
@@ -4646,7 +4546,9 @@
                 : isSkillsDetailView
                   ? [
                       { label: toolsWorkspaceRoot },
-                      { label: toolsOverviewTitle, onClick: () => setToolsSkillsBackRequestToken((current) => current + 1) },
+                      { label: toolsOverviewTitle, onClick: () => requestPlatformNavigation(() => {
+                        setToolsSkillsBackRequestToken((current) => current + 1);
+                      }) },
                       {
                         label: toolsSkillsHeaderState.title || "Skill",
                         trailing: React.createElement(React.Fragment, null,
@@ -4802,6 +4704,8 @@
                 enabledSkillIds: runnerEnabledSkillIds,
                 onSkillsChange: setRunnerEnabledSkillIds,
                 workspaceTeams: teamPageTeams,
+                onNavigationGuardChange: registerPlatformNavigationGuard,
+                onNavigationRequest: requestPlatformNavigation,
               });
             }
   

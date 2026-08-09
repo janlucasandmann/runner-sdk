@@ -22,7 +22,9 @@ export const GUARDRAILS_APP_TOP_NAVIGATION_SCRIPT = `        function renderGuar
             { label: "Configure" },
             {
               label: "Guardrails",
-              onClick: guardrailsPageMode === "detail" ? openGuardrailsOverviewPage : undefined,
+              onClick: guardrailsPageMode === "detail"
+                ? () => requestPlatformNavigation(openGuardrailsOverviewPage)
+                : undefined,
             },
           ];
           if (guardrailsPageMode === "detail" && activeGuardrailSet?.name) {

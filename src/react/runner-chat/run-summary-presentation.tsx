@@ -5,25 +5,61 @@ import {
   Cpu as LucideCpu,
   Rocket as LucideRocket,
 } from "lucide-react";
+import { useState } from "react";
 import type { RunnerCreatedResourcePreview } from "../../platform-ui/components/thread-components/log-boxes/index.js";
 
-export function renderTurnAgentAvatar(
-  name: string,
+export const RUNNER_SPARK_GENERATING_AVATAR_URL = "/img/agent-profile-pics/exp-spark.gif";
+
+export function resolveRunnerTurnAgentAvatarPhotoUrl(
   photoUrl?: string | null,
-) {
-  const normalizedName = String(name || "").trim();
-  if (!normalizedName) {
-    return null;
-  }
+  shouldAnimate = false,
+): string {
   const normalizedPhotoUrl = String(photoUrl || "").trim();
+  if (!shouldAnimate || !normalizedPhotoUrl) {
+    return normalizedPhotoUrl;
+  }
+  const photoPath = normalizedPhotoUrl.split(/[?#]/, 1)[0]?.toLowerCase() || "";
+  return /\/agent-profile-pics\/spark\.(?:jpe?g|png|webp)$/i.test(photoPath)
+    ? RUNNER_SPARK_GENERATING_AVATAR_URL
+    : normalizedPhotoUrl;
+}
+
+interface RunnerTurnAgentAvatarProps {
+  name: string;
+  photoUrl?: string | null;
+  isGenerating?: boolean;
+  animateOnHover?: boolean;
+}
+
+function RunnerTurnAgentAvatar({
+  name,
+  photoUrl,
+  isGenerating = false,
+  animateOnHover = true,
+}: RunnerTurnAgentAvatarProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const normalizedName = String(name || "").trim();
+  const normalizedPhotoUrl = resolveRunnerTurnAgentAvatarPhotoUrl(
+    photoUrl,
+    isGenerating || isHovered,
+  );
+
   return (
-    <span className="tb-turn-agent-avatar" aria-hidden="true" title={normalizedName}>
+    <span
+      className={`tb-turn-agent-avatar${isGenerating ? " is-generating" : ""}`}
+      aria-hidden="true"
+      title={normalizedName}
+      onMouseEnter={animateOnHover ? () => setIsHovered(true) : undefined}
+      onMouseLeave={animateOnHover ? () => setIsHovered(false) : undefined}
+    >
       {normalizedPhotoUrl
         ? (
           <img
             className="tb-turn-agent-avatar-image"
             src={normalizedPhotoUrl}
             alt={normalizedName.charAt(0).toUpperCase()}
+            decoding="async"
+            draggable={false}
           />
         )
         : (
@@ -32,6 +68,25 @@ export function renderTurnAgentAvatar(
           </span>
         )}
     </span>
+  );
+}
+
+export function renderTurnAgentAvatar(
+  name: string,
+  photoUrl?: string | null,
+  options: { isGenerating?: boolean; animateOnHover?: boolean } = {},
+) {
+  const normalizedName = String(name || "").trim();
+  if (!normalizedName) {
+    return null;
+  }
+  return (
+    <RunnerTurnAgentAvatar
+      name={normalizedName}
+      photoUrl={photoUrl}
+      isGenerating={options.isGenerating}
+      animateOnHover={options.animateOnHover}
+    />
   );
 }
 

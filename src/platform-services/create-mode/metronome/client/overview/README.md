@@ -6,8 +6,9 @@
 
 The Metronome overview is a workflow-specific adapter around the shared
 `ResourceOverviewPage`. It owns Metronome row semantics and actions while the
-platform overview, analytics, table, toolbar, sorting, selection, pagination,
-and app-header controls remain centralized.
+platform page hero, catalog table, toolbar, sorting, selection, empty states,
+and app-header controls remain centralized. The overview intentionally omits
+analytics and pagination to match the Tests overview composition.
 
 ## Working in this directory
 

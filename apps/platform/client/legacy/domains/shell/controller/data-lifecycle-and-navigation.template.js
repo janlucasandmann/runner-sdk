@@ -2,14 +2,16 @@
   	          if (
   	            activePage === "organization"
   	            && organizationPageSelectedOrganizationId
-  	            && (organizationPageActiveTab === "billing" || organizationPageActiveTab === "usage")
+	            && (organizationPageActiveTab === "subscription" || organizationPageActiveTab === "billing" || organizationPageActiveTab === "usage")
   	          ) {
   	            if (settingsBillingScopeIdRef.current !== billingOrganizationId) {
   	              settingsBillingScopeIdRef.current = billingOrganizationId;
   	              setSettingsBudgetStatus(null);
-  	              setSettingsInvoices([]);
-  	              setSettingsSubscriptions([]);
-  	              setSettingsUsageSummary(createEmptySettingsUsageSummary());
+	              setSettingsInvoices([]);
+	              setSettingsSubscriptions([]);
+	              setOrganizationPageProviderBilling(null);
+	              setOrganizationPageBillingDocuments([]);
+	              setSettingsUsageSummary(createEmptySettingsUsageSummary());
   	              setSettingsUsageBreakdown([]);
   	              setSettingsUsageResourceItems([]);
   	              setSettingsUsageAgentItems([]);
@@ -17,11 +19,18 @@
   	              setOrganizationPageBillingSummary(null);
   	              setSettingsBillingPeriodOffset(0);
   	            }
-  	            if (organizationPageActiveTab === "usage") {
-  	              void loadSettingsBudgetStatus();
-  	              void loadSettingsUsageData();
-  	              return;
-  	            }
+	            if (organizationPageActiveTab === "usage") {
+	              void loadSettingsBudgetStatus();
+	              void loadSettingsUsageData();
+	              return;
+	            }
+	            if (organizationPageActiveTab === "subscription") {
+	              void loadSettingsPlatformConfig();
+	              void loadSettingsBudgetStatus();
+	              void loadSettingsInvoices();
+	              void loadSettingsUsageData();
+	              return;
+	            }
   	            void loadSettingsPlatformConfig();
   	            void loadSettingsBudgetStatus();
   	            void loadSettingsInvoices();
@@ -862,7 +871,7 @@
             ) || "sandbox";
           }, [settingsBudgetStatus, sessionState.subscriptionTier, settingsSubscriptions]);
           const settingsCanConfigureUsageBilling = settingsCurrentTierId !== "sandbox";
-          const settingsCanConfigureBusinessFeatures = settingsCurrentTierId === "team" || settingsCurrentTierId === "business" || settingsCurrentTierId === "enterprise";
+          const settingsCanConfigureBusinessFeatures = settingsCurrentTierId === "team" || settingsCurrentTierId === "enterprise";
           const canGenerateVideo = hasDemoAccess || (normalizeSettingsTierId(settingsCurrentTierId || accountTierId || "sandbox") || "sandbox") !== "sandbox";
           const canGenerateImagineVideo = canGenerateVideo;
           const demoSkills = useMemo(() => baseDemoSkills.map((skill) => (
@@ -2550,16 +2559,15 @@
             }
           }
   
-          function toggleThreadNavMenu(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            if (!selectedThreadNavRecord?.id) {
+          function handleThreadNavMenuOpenChange(open) {
+            const nextOpen = Boolean(open);
+            if (nextOpen && !selectedThreadNavRecord?.id) {
               return;
             }
             setThreadActionMenuState(null);
             setThreadTaskListMenuOpen(false);
             setMetronomeRunActionMenuState(null);
-            setThreadNavMenuOpen((current) => !current);
+            setThreadNavMenuOpen(nextOpen);
           }
   
           function openThreadRenameDialog(thread) {
@@ -3141,14 +3149,18 @@
                 || activePage === "metronome"
                 || activePage === "calendar";
             }
+            if (mode === "admin") {
+              return (activePage === "configure" && configureHomeTab === "notifications")
+                || activePage === "organization"
+                || activePage === "team";
+            }
             if (mode === "configure") {
-              return activePage === "configure"
+              return (activePage === "configure" && configureHomeTab !== "notifications")
                 || activePage === "tests"
                 || activePage === "assurance"
                 || activePage === "models"
                 || activePage === "resource-templates"
                 || activePage === "inference"
-                || activePage === "organization"
                 || (isResourcesPage && (activeResourcesView === "agents" || activeResourcesView === "computers"))
                 || (activePage === "tools" && (toolsView === "plugins" || toolsView === "tags" || toolsView === "skills"));
             }
@@ -3298,10 +3310,9 @@
             setSettingsPlatformConfigError("");
             setSettingsPlatformConfigSuccess("");
             try {
-              const nextBillingPreferences = {
-                ...normalizeDemoSettingsBillingPreferences(billingPreferencesOverride || settingsBillingPreferences),
-                usageBillingEnabled: true,
-              };
+              const nextBillingPreferences = normalizeDemoSettingsBillingPreferences(
+                billingPreferencesOverride || settingsBillingPreferences,
+              );
               const nextBillingPreferencesBody = {
                 ...nextBillingPreferences,
                 resourceEmailAlerts: nextBillingPreferences.emailAlerts,
@@ -3327,6 +3338,18 @@
                   usageBillingEnabled: data?.controls?.overageEnabled,
                   monthlyResourceSpendLimit: data?.controls?.monthlyOverageLimitUsd,
                 }));
+                setOrganizationPageBillingSummary((current) => current && typeof current === "object"
+                  ? {
+                      ...current,
+                      plan: current.plan && typeof current.plan === "object"
+                        ? {
+                            ...current.plan,
+                            overageEnabled: Boolean(data?.controls?.overageEnabled),
+                            monthlyOverageLimitUsd: Math.max(0, Number(data?.controls?.monthlyOverageLimitUsd || 0)),
+                          }
+                        : current.plan,
+                    }
+                  : current);
               } else {
                 await new Promise((resolve) => window.setTimeout(resolve, 180));
                 setSettingsBillingPreferences(nextBillingPreferences);

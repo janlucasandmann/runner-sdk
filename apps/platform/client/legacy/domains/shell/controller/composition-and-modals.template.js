@@ -736,6 +736,9 @@
                 ? "Computers"
                 : "Agents";
             const isConfigureResourcesPage = !activeDevelopServerPageItem;
+            const isComputerResourcesDetailView = isResourcesDetailView
+              && activeResourcesView === "computers"
+              && resourcesHeaderState.resourceType === "computer";
             const isDatabaseResourcesDetailView = isResourcesDetailView
               && activeResourcesView === "servers"
               && resourcesHeaderState.resourceType === "database";
@@ -808,6 +811,11 @@
                   id: "playground-agent-title-actions",
                   className: "playground-agent-title-actions-root",
                 })
+              : activeResourcesView === "computers"
+                ? React.createElement("span", {
+                    id: "playground-computer-title-actions",
+                    className: "playground-agent-title-actions-root playground-computer-title-actions-root",
+                  })
               : isDatabaseResourcesDetailView
                 ? React.createElement("span", {
                     id: "playground-database-title-actions",
@@ -882,10 +890,33 @@
                       ariaLabel: "Agent section",
                     })
                   )
+                  : isComputerResourcesDetailView
+                    ? React.createElement(PlatformSwitch, {
+                        className: "playground-computer-detail-header-switch",
+                        value: ["general", "runtime", "settings"].includes(resourcesHeaderState.activeSection)
+                          ? resourcesHeaderState.activeSection
+                          : "general",
+                        options: [
+                          { value: "general", label: "General" },
+                          { value: "runtime", label: "Runtime" },
+                          { value: "settings", label: "Settings" },
+                        ],
+                        onValueChange: (nextSection) => {
+                          if (typeof resourcesHeaderState.onSectionChange === "function") {
+                            resourcesHeaderState.onSectionChange(nextSection);
+                          }
+                        },
+                        ariaLabel: "Computer section",
+                      })
                   : !isResourcesDetailView && activeResourcesView === "agents"
                     ? React.createElement("div", {
                         id: "playground-agents-overview-period-controls",
                         className: "playground-agent-overview-period-controls-slot",
+                      })
+                  : !isResourcesDetailView && activeResourcesView === "computers"
+                    ? React.createElement("div", {
+                        id: "playground-computers-overview-period-controls",
+                        className: "playground-computer-overview-period-controls-slot",
                       })
                   : isDatabaseResourcesDetailView
                     ? React.createElement(PlatformSwitch, {
@@ -2012,7 +2043,7 @@
 	          }
 
           function renderThreadTitleActionMenu() {
-            if (!selectedThreadNavRecord?.id || isThreadSideDetailOpen) {
+            if (!selectedThreadNavRecord?.id) {
               return null;
             }
 
@@ -2036,33 +2067,16 @@
                 )
               );
 
-            return React.createElement(PlatformPopup, {
+            return React.createElement(PlatformResourceHeaderActions, {
+                className: "playground-thread-nav-popup-shell playground-thread-title-actions",
+              },
+              React.createElement(PlatformResourceActionsMenu, {
                 open: threadNavMenuOpen,
-                rootRef: threadNavMenuRef,
-                rootClassName: "playground-thread-nav-popup-shell playground-thread-title-actions",
-                surfaceClassName: "playground-tasks-toolbar-popup-menu playground-thread-nav-popup-menu",
-                surfaceProps: {
-                  role: "menu",
-                  "aria-label": "Thread actions",
-                  onClick: (event) => event.stopPropagation(),
-                },
-                animation: "down-in",
-                variant: "minimal",
-                placement: "bottom-start",
-                trigger: React.createElement(PlatformIconButton, {
-                  size: "compact",
-                  active: threadNavMenuOpen,
-                  className: "playground-thread-title-actions-trigger",
-                  "aria-label": "Thread actions",
-                  "aria-expanded": threadNavMenuOpen ? "true" : "false",
-                  onClick: toggleThreadNavMenu,
-                  disabled: !selectedThreadNavRecord?.id,
-                }, React.createElement(Ellipsis, {
-                  width: 14,
-                  height: 14,
-                  strokeWidth: 1.8,
-                  "aria-hidden": "true",
-                })),
+                onOpenChange: handleThreadNavMenuOpenChange,
+                resourceLabel: "Thread",
+                disabled: !selectedThreadNavRecord?.id,
+                width: 280,
+                maxWidth: "min(280px, calc(100vw - 16px))",
               },
               React.createElement("div", {
                   className: "tb-popup-row playground-thread-nav-popup-static-row",
@@ -2232,6 +2246,7 @@
                   )
                 )
                 : null
+              )
             );
           }
 
@@ -2339,17 +2354,17 @@
                 strokeWidth: 1.8,
               })
             );
+            const activeProjectSectionId = String(tasksHeaderState.sectionId || "").trim().toLowerCase();
             const activeProjectWorkspaceView = tasksHeaderState.view === "board"
               ? "board"
               : tasksHeaderState.view === "backlog"
                 ? "backlog"
-                : tasksHeaderState.view === "activity"
-                  ? "activity"
+                : activeProjectSectionId === "resources"
+                  ? "resources"
                   : "overview";
             const activeProjectView = activeProjectWorkspaceView === "board"
               ? "backlog"
               : activeProjectWorkspaceView;
-            const activeProjectSectionId = String(tasksHeaderState.sectionId || "").trim().toLowerCase();
             const activeTicketNumber = String(tasksHeaderState.ticketNumber || "").trim();
             const activeTicketType = tasksHeaderState.taskType === "subtask"
               ? "subtask"
@@ -2510,7 +2525,8 @@
                             leading: projectBreadcrumbLeading,
                             trailing: projectBreadcrumbTrailing,
                             onClick: () => setTasksProjectViewRequest({
-                              view: activeProjectWorkspaceView,
+                              view: activeProjectWorkspaceView === "resources" ? "overview" : activeProjectWorkspaceView,
+                              sectionId: activeProjectWorkspaceView === "resources" ? "resources" : "general",
                               token: Date.now().toString(36) + Math.random().toString(36).slice(2),
                             }),
                           },
@@ -2555,11 +2571,12 @@
                       options: [
                         { value: "overview", label: "General" },
                         { value: "backlog", label: "Backlog" },
-                        { value: "activity", label: "Activity" },
+                        { value: "resources", label: "Resources" },
                       ],
                       onValueChange: (nextView) => {
                         setTasksProjectViewRequest({
-                          view: nextView,
+                          view: nextView === "resources" ? "overview" : nextView,
+                          sectionId: nextView === "resources" ? "resources" : "general",
                           token: Date.now().toString(36) + Math.random().toString(36).slice(2),
                         });
                       },
@@ -2581,7 +2598,6 @@
                     (
                       activeProjectWorkspaceView === "backlog"
                       || activeProjectWorkspaceView === "board"
-                      || activeProjectWorkspaceView === "activity"
                     ) && !isProjectTaskDetailView
                       ? tasksHeaderState.extraActions || null
                       : null,
@@ -2667,7 +2683,7 @@
           function renderInitialThreadWelcomeNav() {
             return renderAppHeader({
               className: "playground-thread-welcome-navbar",
-              pathItems: [{ label: "Create" }, { label: "New Thread" }],
+              pathItems: [{ label: "Create" }],
               includeGhost: true,
               ghostVariant: "private-chat",
               includeSearchDivider: true,
@@ -2998,6 +3014,7 @@
                   serverCreationRequestKind: resourcesNavigationTarget.serverCreationKind,
                   resourceTemplatePreviewResources,
                   topNavActionsPortalId: "playground-resources-nav-actions",
+                  computerTitleActionsPortalId: "playground-computer-title-actions",
                   databaseTitleActionsPortalId: "playground-database-title-actions",
                   serverTitleActionsPortalId: "playground-server-title-actions",
                   versionsDrawerPortalId: "playground-agent-versions-drawer-root",

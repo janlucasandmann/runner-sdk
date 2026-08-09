@@ -509,29 +509,15 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
             && activeMetronomeVersionChanges
           );
 
-          useEffect(() => {
-            if (typeof onNavigationGuardChange !== "function") {
-              return;
-            }
-            const workflowName = String(activeWorkflow?.name || "").trim() || "this Metronome workflow";
-            onNavigationGuardChange(hasUnsavedMetronomeChanges
-              ? {
-                  id: "metronome-details-unsaved-changes",
-                  active: true,
-                  title: "Leave without saving?",
-                  description: "Your changes to " + workflowName + " have not been saved. If you leave now, they will be lost.",
-                  onDiscard: discardActiveMetronomeDraft,
-                }
-              : null
-            );
-          }, [activeWorkflow?.id, activeWorkflow?.name, discardActiveMetronomeDraft, hasUnsavedMetronomeChanges, onNavigationGuardChange]);
-
-          useEffect(() => {
-            if (typeof onNavigationGuardChange !== "function") {
-              return undefined;
-            }
-            return () => onNavigationGuardChange(null);
-          }, [onNavigationGuardChange]);
+          usePlatformVersionNavigationGuard({
+            dirty: hasUnsavedMetronomeChanges,
+            guardId: "metronome-details-unsaved-changes",
+            resourceId: String(activeWorkflow?.id || ""),
+            resourceName: String(activeWorkflow?.name || "").trim() || "this Metronome workflow",
+            resourceType: "Metronome workflow",
+            onDiscard: discardActiveMetronomeDraft,
+            onNavigationGuardChange,
+          });
 
           const unpublishActiveWorkflow = useCallback(async () => {
             if (!activeWorkflowId || !activeWorkflow) return;

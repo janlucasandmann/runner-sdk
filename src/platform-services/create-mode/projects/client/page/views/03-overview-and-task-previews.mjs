@@ -1418,22 +1418,21 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             return null;
           }
 
-	          const projectWorkspaceTitle = selectedProjectWorkspaceTitle;
-	          const selectedProjectAccessLevel = String(
-	            selectedProject?.teamAccessLevel
-	            || selectedProject?.metadata?.teamAccessLevel
-	            || ""
-	          ).trim().toLowerCase();
-	          const canManageSelectedProject = Boolean(
-	            isProjectCreatedByCurrentViewer(selectedProject)
-	            || selectedProjectAccessLevel === "owner"
-	            || selectedProjectAccessLevel === "manage"
-	          );
-	          const projectWorkspaceScrollClassName = "playground-environments-detail-scroll playground-tasks-project-workspace-scroll"
-	            + (taskView === "overview" ? " is-overview" : "")
-	            + (taskView === "backlog" ? " is-backlog" : "")
-            + (taskView === "board" ? " is-board" : "")
-            + (taskView === "activity" ? " is-activity" : "");
+          const projectWorkspaceTitle = selectedProjectWorkspaceTitle;
+          const selectedProjectAccessLevel = String(
+            selectedProject?.teamAccessLevel
+            || selectedProject?.metadata?.teamAccessLevel
+            || ""
+          ).trim().toLowerCase();
+          const canManageSelectedProject = Boolean(
+            isProjectCreatedByCurrentViewer(selectedProject)
+            || selectedProjectAccessLevel === "owner"
+            || selectedProjectAccessLevel === "manage"
+          );
+          const projectWorkspaceScrollClassName = "playground-environments-detail-scroll playground-tasks-project-workspace-scroll"
+            + (taskView === "overview" ? " is-overview" : "")
+            + (taskView === "backlog" ? " is-backlog" : "")
+            + (taskView === "board" ? " is-board" : "");
           const projectWorkspaceScrollStyle = undefined;
 
           return React.createElement("div", {
@@ -1586,8 +1585,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                 React.createElement("div", {
                   className: "playground-project-workspace-inner"
                     + (taskView === "backlog" ? " is-backlog-work-view" : "")
-                    + (taskView === "board" ? " is-board-work-view" : "")
-                    + (taskView === "activity" ? " is-activity-work-view" : ""),
+                    + (taskView === "board" ? " is-board-work-view" : ""),
                 },
                   taskLoadState.status === "error" && tasks.length > 0
                     ? React.createElement("div", { className: "playground-environments-error" },
@@ -1616,13 +1614,11 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                           }, "Retry")
                         )
                       : React.createElement(React.Fragment, null,
-                          taskView === "overview"
-                            ? renderProjectOverviewView()
-                            : taskView === "board"
-                              ? renderBoardView()
-                              : taskView === "activity"
-                                ? renderProjectActivityOverviewView()
-                                : renderBacklogView()
+                          taskView === "board"
+                            ? renderBoardView()
+                            : taskView === "backlog"
+                              ? renderBacklogView()
+                              : renderProjectOverviewView()
                         )
                 )
               )

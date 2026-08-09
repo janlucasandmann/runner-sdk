@@ -946,38 +946,16 @@
             )
           );
 
-          useEffect(() => {
-            if (
-              typeof onNavigationGuardChange !== "function"
-              || resourceMode === "servers"
-            ) {
-              return;
-            }
-            const environmentName = String(draftEnvironment?.name || "").trim() || "this computer";
-            onNavigationGuardChange(hasUnsavedEnvironmentChanges
-              ? {
-                  id: "computer-details-unsaved-changes",
-                  active: true,
-                  title: "Leave without saving?",
-                  description: "Your changes to " + environmentName + " have not been saved. If you leave now, they will be lost.",
-                  onDiscard: discardUnsavedEnvironmentDraft,
-                }
-              : null
-            );
-          }, [
-            draftEnvironment?.id,
-            draftEnvironment?.name,
-            hasUnsavedEnvironmentChanges,
+          usePlatformVersionNavigationGuard({
+            dirty: hasUnsavedEnvironmentChanges,
+            enabled: resourceMode !== "servers",
+            guardId: "computer-details-unsaved-changes",
+            resourceId: String(draftEnvironment?.id || ""),
+            resourceName: String(draftEnvironment?.name || "").trim() || "this computer",
+            resourceType: "Computer",
+            onDiscard: discardUnsavedEnvironmentDraft,
             onNavigationGuardChange,
-            resourceMode,
-          ]);
-
-          useEffect(() => {
-            if (typeof onNavigationGuardChange !== "function") {
-              return undefined;
-            }
-            return () => onNavigationGuardChange(null);
-          }, [onNavigationGuardChange]);
+          });
 
           function openEditEnvironmentVersionModal(versionId) {
             if (!draftEnvironment || environmentVersionState.status === "loading" || saveState.isSaving) {

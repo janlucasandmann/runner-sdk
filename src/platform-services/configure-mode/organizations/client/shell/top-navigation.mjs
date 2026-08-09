@@ -1,38 +1,18 @@
 export const ORGANIZATIONS_TOP_NAVIGATION_SCRIPT = `        function renderOrganizationPageNav() {
-	          const selectedOrganization = organizationPageOrganizations.find((organization) => (
-	            String(organization?.id || "").trim() === String(organizationPageSelectedOrganizationId || "").trim()
-	          ));
-	          const isOrganizationOverview = !selectedOrganization;
 	          const organizationTabLabel = {
+	            organization: "Organization",
 	            members: "Members",
-	            resources: "Resources",
+	            subscription: "Subscription",
 	            roles: "Roles",
+	            "identity-access": "Identity & Access",
 	            billing: "Billing",
 	            usage: "Usage",
-	          }[organizationPageActiveTab] || "Members";
+	          }[organizationPageActiveTab] || "Organization";
           return renderAppHeader({
             className: "playground-settings-top-navbar",
-	            pathItems: selectedOrganization
-	              ? [
-	                  { label: "Configure" },
-	                  {
-	                    label: "Organizations",
-	                    onClick: () => {
-	                      setOrganizationPageSelectedOrganizationId("");
-	                      setOrganizationPagePendingDestination(null);
-	                    },
-	                  },
-	                  { label: getOrganizationPageDisplayName(selectedOrganization) },
-	                  { label: organizationTabLabel },
-	                ]
-	              : [{ label: "Configure" }, { label: "Organizations" }],
-            includeSearchDivider: isOrganizationOverview,
-            extraActions: isOrganizationOverview
-              ? React.createElement("div", {
-                  id: "playground-organizations-overview-controls",
-                  className: "playground-tools-overview-controls-slot",
-                })
-              : null,
+	            pathItems: [{ label: "Admin" }, { label: organizationTabLabel }],
+            includeSearchDivider: false,
+            extraActions: null,
           });
         }
 `;

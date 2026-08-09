@@ -8,7 +8,6 @@ export type RunnerComposerPlanTier =
   | "sandbox"
   | "builder"
   | "team"
-  | "business"
   | "enterprise";
 
 export function normalizeRunnerComposerPlanTier(
@@ -27,7 +26,7 @@ export function normalizeRunnerComposerPlanTier(
     return "enterprise";
   }
   if (normalized === "business" || normalized === "business_plan") {
-    return "business";
+    return "enterprise";
   }
   if (
     normalized === "team"
@@ -56,8 +55,6 @@ export function getRunnerComposerPlanDisplay(
   switch (normalizeRunnerComposerPlanTier(tierId)) {
     case "enterprise":
       return { label: "Enterprise Plan", Icon: LucideStar };
-    case "business":
-      return { label: "Business Plan", Icon: LucideUsersRound };
     case "team":
       return { label: "Team Plan", Icon: LucideUsersRound };
     case "builder":

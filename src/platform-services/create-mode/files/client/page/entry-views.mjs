@@ -34,7 +34,8 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
 
         function renderEntryRow(row, options = {}) {
           const entry = row.entry;
-          const isActive = options.isActive === undefined ? selectedPaths.has(entry.path) : Boolean(options.isActive);
+          const normalizedEntryPath = normalizeHistoryPath(entry.path || "");
+          const isActive = options.isActive === undefined ? selectedPaths.has(normalizedEntryPath) : Boolean(options.isActive);
           const isExpanded = entry.isFolder && (
             options.isExpanded === undefined ? expandedFolders.has(entry.path) : Boolean(options.isExpanded)
           );
@@ -64,6 +65,7 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
           const useThumbnail = options.useThumbnail !== false;
           const iconEnvironmentId = options.environmentId === undefined ? selectedEnvironmentId : options.environmentId;
           const iconBackendUrl = options.backendUrl === undefined ? backendUrl : options.backendUrl;
+          const showSelection = options.showSelection !== false;
 
           return React.createElement("div", {
               key: entry.id,
@@ -74,8 +76,18 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
               "data-playground-file-path": entry.path,
               style: { paddingLeft: 12 + row.level * 18 + "px" },
               draggable: options.draggable === false ? false : renamingPath !== entry.path,
-              onClick: (event) => onSelect(entry, event),
-              onDoubleClick: () => onOpen(entry),
+              onClick: (event) => {
+                if (event?.target?.closest?.('[data-platform-checkbox="true"]')) {
+                  return;
+                }
+                onSelect(entry, event);
+              },
+              onDoubleClick: (event) => {
+                if (event?.target?.closest?.('[data-platform-checkbox="true"]')) {
+                  return;
+                }
+                onOpen(entry);
+              },
               onContextMenu: options.onContextMenu === false
                 ? undefined
                 : (event) => options.onContextMenu
@@ -87,6 +99,19 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
               onDragLeave: options.draggable === false ? undefined : handleDragLeave,
               onDrop: options.draggable === false || !entry.isFolder ? undefined : (event) => void handleFolderDrop(event, entry),
             },
+              showSelection
+                ? React.createElement(PlatformCheckbox, {
+                    className: "playground-files-entry-selection-checkbox",
+                    checked: selectedPaths.has(normalizedEntryPath),
+                    "aria-label": "Select " + (entry.isFolder ? "folder " : "file ") + entry.name,
+                    onPointerDown: (event) => event.stopPropagation(),
+                    onClick: (event) => handleEntryCheckboxToggle(entry, event),
+                    onDoubleClick: (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    },
+                  })
+                : null,
               canExpandFolder
                 ? React.createElement("button", {
                     type: "button",

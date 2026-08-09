@@ -277,10 +277,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   cursor: pointer;
 }
 
-.tb-runner-chat .tb-canonical-thread-error.is-compatibility {
-  margin: 18px 0 0;
-}
-
 .tb-runner-chat .tb-canonical-thread-connection {
   display: flex;
   width: max-content;
@@ -2482,6 +2478,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-run-summary-action-button {
+  --platform-icon-button-size: 14px;
+  --platform-icon-button-icon-size: 14px;
+  --platform-icon-button-tooltip-offset: 10px;
   position: relative;
   width: auto;
   height: auto;
@@ -2500,48 +2499,18 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-run-summary-action-button:hover:enabled {
-  color: #ffffff;
+  background: transparent !important;
+  color: #ffffff !important;
 }
 
 .tb-runner-chat .tb-run-summary-action-button.is-active {
-  color: rgba(255, 255, 255, 0.62);
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.62) !important;
 }
 
 .tb-runner-chat .tb-run-summary-action-button.is-active .tb-run-summary-action-icon,
 .tb-runner-chat .tb-run-summary-action-button.is-active .tb-run-summary-action-icon * {
   fill: currentColor;
-}
-
-.tb-runner-chat .tb-run-summary-action-button::after {
-  content: attr(data-label);
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 50%;
-  z-index: 20;
-  transform: translateX(-50%) translateY(-2px);
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: #363636;
-  color: #ffffff;
-  font-size: 13px;
-  line-height: 1;
-  font-weight: 400;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
-  transition: opacity 120ms ease, transform 120ms ease;
-}
-
-.tb-runner-chat .tb-run-summary-action-button:hover::after,
-.tb-runner-chat .tb-run-summary-action-button:focus-visible::after {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.tb-runner-chat .tb-run-summary-action-button.is-open::after {
-  display: none;
 }
 
 .tb-runner-chat .tb-run-summary-action-button:disabled {

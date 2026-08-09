@@ -214,12 +214,17 @@ export function createLegacyPlatformApplicationBindings({
   const APP_SIDEBAR_APP_SCRIPT_FRAGMENTS = createAppSidebarScriptFragments({
     metronomeSidebarEntryScript: METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     metronomeRunActionMenuScript: METRONOME_APP_SCRIPT_FRAGMENTS.runActionMenu,
-    configurePrimaryEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry + TEAMS_APP_SCRIPT_FRAGMENTS.sidebarEntry + ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+    configurePrimaryEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     configureGovernanceEntries: TESTS_APP_SCRIPT_FRAGMENTS.sidebarEntry + EVALUATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry + FINE_TUNING_APP_SCRIPT_FRAGMENTS.sidebarEntry + ASSURANCE_APP_SCRIPT_FRAGMENTS.sidebarEntry + GUARDRAILS_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     configureInfrastructureEntries: MODELS_APP_SCRIPT_FRAGMENTS.sidebarEntry + MARKETPLACE_APP_SCRIPT_FRAGMENTS.sidebarEntry + INFERENCE_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     developPrimaryEntries: DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry + API_KEYS_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     developAgentServiceEntries: SECURITY_APP_SCRIPT_FRAGMENTS.sidebarEntry + EVIDENCE_AGENTS_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     createPrimaryEntries: IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+    adminEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.adminSidebarEntry
+      + ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminPrimarySidebarEntries
+      + TEAMS_APP_SCRIPT_FRAGMENTS.adminSidebarEntry
+      + ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminSubscriptionSidebarEntries
+      + ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminPermissionsSidebarEntries,
   });
 
   const APP_SIDEBAR_STYLE_FRAGMENTS = createAppSidebarStyleFragments({

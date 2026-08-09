@@ -98,6 +98,13 @@
     "./platform-ui/components/ui/switch/styles.css": {
       "default": "./dist/platform-ui/components/ui/switch/switch.css"
     },
+    "./platform-ui/components/ui/toggle": {
+      "types": "./dist/platform-ui/components/ui/toggle/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/toggle/index.js"
+    },
+    "./platform-ui/components/ui/toggle/styles.css": {
+      "default": "./dist/platform-ui/components/ui/toggle/toggle.css"
+    },
     "./platform-ui/components/ui/ticket-item": {
       "types": "./dist/platform-ui/components/ui/ticket-item/index.d.ts",
       "default": "./dist/platform-ui/components/ui/ticket-item/index.js"
@@ -280,6 +287,13 @@
     },
     "./platform-ui/components/composite/profile-image-picker/styles.css": {
       "default": "./dist/platform-ui/components/composite/profile-image-picker/profile-image-picker.css"
+    },
+    "./platform-ui/components/composite/owner-selector": {
+      "types": "./dist/platform-ui/components/composite/owner-selector/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/owner-selector/index.js"
+    },
+    "./platform-ui/components/composite/owner-selector/styles.css": {
+      "default": "./dist/platform-ui/components/composite/owner-selector/owner-selector.css"
     },
     "./platform-ui/components/composite/resource-action-modals": {
       "types": "./dist/platform-ui/components/composite/resource-action-modals/index.d.ts",
@@ -536,6 +550,7 @@
     "platform-popup-test": "vitest run src/platform-ui/components/composite/popup",
     "platform-modal-test": "vitest run src/platform-ui/components/composite/modal",
     "platform-switch-test": "vitest run src/platform-ui/components/ui/switch",
+    "platform-toggle-test": "vitest run src/platform-ui/components/ui/toggle",
     "platform-widget-invariants": "node ./scripts/platform-widget-invariants.mjs",
     "platform-widget-test": "npm run platform-widget-invariants && vitest run src/platform-ui/components/composite/widgets",
     "develop-mode-service-test": "node ./src/platform-services/develop-mode/develop-mode-service-test.mjs",

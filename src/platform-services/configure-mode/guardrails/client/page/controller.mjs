@@ -181,27 +181,29 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
           }
 
           function returnToGuardrailsOverview() {
-            setGuardrailsPageMode("overview");
-            setGuardrailDetailTab("general");
-            setGuardrailAccessTeamId("");
-            setGuardrailAccessRoleId("member");
-            setGuardrailShareTeamModalOpen(false);
-            setGuardrailShareTeamId("");
-            setGuardrailShareTeamState({ status: "idle", error: "" });
-            setGuardrailOwnerSelectorOpen(false);
-            setGuardrailAccessMenuOpen(false);
-            setGuardrailEvaluationRunModalOpen(false);
-            setGuardrailsToolbarPopover("");
-            setGuardrailSetActionMenuId("");
-            setGuardrailDetailActionsMenuOpen(false);
-            setGuardrailVersionsSidebarOpen(false);
-            setGuardrailPublishMenuOpen(false);
-            setGuardrailVersionsHeaderMenuOpen(false);
-            setGuardrailVersionChangesState(null);
-            setGuardrailVersionSaveDialog(null);
-            setOpenGuardrailVersionMenuId("");
-            finishCloseGuardrailVersionModal();
-            guardrailVersionDraftTouchedRef.current = false;
+            requestPlatformNavigation(() => {
+              setGuardrailsPageMode("overview");
+              setGuardrailDetailTab("general");
+              setGuardrailAccessTeamId("");
+              setGuardrailAccessRoleId("member");
+              setGuardrailShareTeamModalOpen(false);
+              setGuardrailShareTeamId("");
+              setGuardrailShareTeamState({ status: "idle", error: "" });
+              setGuardrailOwnerSelectorOpen(false);
+              setGuardrailAccessMenuOpen(false);
+              setGuardrailEvaluationRunModalOpen(false);
+              setGuardrailsToolbarPopover("");
+              setGuardrailSetActionMenuId("");
+              setGuardrailDetailActionsMenuOpen(false);
+              setGuardrailVersionsSidebarOpen(false);
+              setGuardrailPublishMenuOpen(false);
+              setGuardrailVersionsHeaderMenuOpen(false);
+              setGuardrailVersionChangesState(null);
+              setGuardrailVersionSaveDialog(null);
+              setOpenGuardrailVersionMenuId("");
+              finishCloseGuardrailVersionModal();
+              guardrailVersionDraftTouchedRef.current = false;
+            });
           }
 
           function updateGuardrailSet(setId, updater, options = {}) {

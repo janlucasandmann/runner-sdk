@@ -75,11 +75,16 @@ describe("RunnerFileBrowserDialog", () => {
     expect(
       document.querySelector(".platform-file-explorer__content-header")?.contains(search),
     ).toBe(true);
-    expect(
-      document.querySelector(".platform-file-explorer__sidebar")?.contains(search),
-    ).toBe(false);
+    expect(document.querySelector(".platform-file-explorer__sidebar")?.contains(search)).toBe(
+      false,
+    );
     expect(screen.getByRole("tab", { name: "All Files" })).toBeTruthy();
     expect(screen.getByText("notes.txt")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /GitLab/ })).toHaveProperty("disabled", true);
+    expect(screen.getByRole("button", { name: /SharePoint/ })).toHaveProperty("disabled", true);
+    expect(
+      screen.queryByText("Computers", { selector: ".tb-file-browser-sidebar-title" }),
+    ).toBeNull();
 
     fireEvent.click(screen.getByRole("tab", { name: "Images" }));
     expect(screen.getByText("hero.png")).toBeTruthy();

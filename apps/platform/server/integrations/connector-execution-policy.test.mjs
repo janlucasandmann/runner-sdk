@@ -112,6 +112,7 @@ function createFixture({
     if (controlPath === "/agents/agent_1") {
       return response({
         id: "agent_1",
+        name: "Spark",
         permissionSet: agentPermissions,
       });
     }
@@ -286,6 +287,7 @@ test("builds a server-owned connector envelope without provider secrets", async 
     "create_branch",
   ]);
   assert.equal(payload.connectors.github.credentialId, "cred_1");
+  assert.equal(payload.connectors.github.agentName, "Spark");
   assert.equal(payload.connectors.github.organizationId, "org_1");
   assert.deepEqual(payload.connectors.github.credentialResolution, {
     source: "explicit",

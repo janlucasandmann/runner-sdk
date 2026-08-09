@@ -56,7 +56,6 @@ const plan: TestPlan = {
   projectId: "project-1",
   name: "Release readiness",
   description: "Release verification",
-  status: "active",
   targetType: "project",
   targetId: "project-1",
   defaultEnvironmentId: "environment-1",

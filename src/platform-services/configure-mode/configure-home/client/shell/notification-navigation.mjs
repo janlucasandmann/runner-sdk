@@ -2,7 +2,7 @@ export const CONFIGURE_HOME_NOTIFICATION_NAVIGATION_SCRIPT = `        function o
           setAccountMenuOpen(false);
           setNotificationsOpen(false);
           setProfileEditorOpen(false);
-          setSidebarWorkspaceMode("configure");
+          setSidebarWorkspaceMode("admin");
           setConfigureHomeTab("notifications");
 	          setResourcesHeaderState({
 	            mode: "overview",

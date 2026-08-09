@@ -8,10 +8,6 @@
   overflow: hidden;
 }
 
-.platform-detail-tab-bar.has-divider {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
 .platform-detail-tab-bar__list {
   flex: 1 1 auto;
   min-width: 0;

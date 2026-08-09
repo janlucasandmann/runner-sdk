@@ -439,7 +439,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             seen.add(threadId);
             merged.push(normalizedThread);
           });
-          return merged;
+          return merged.sort(compareThreadsByRecent);
         }
 
         function buildOptimisticMetronomeRunThread(payload) {
@@ -707,7 +707,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
                 const workflowId = String(workflow?.id || "").trim();
                 try {
                   const runsResult = await fetchJsonWithTimeout(
-                    proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId) + "/runs?limit=3",
+                    proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId) + "/runs?limit=1",
                     {
                       method: "GET",
                       credentials: "include",
@@ -777,6 +777,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             return undefined;
           }
           if (activePage !== "metronome") {
+            metronomeSidebarRunsLoadKeyRef.current = "";
             return undefined;
           }
           void loadRecentMetronomeSidebarRuns();

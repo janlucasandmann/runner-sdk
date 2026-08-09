@@ -1,6 +1,6 @@
   ${SETTINGS_MODAL_PAGE_SCRIPT}
   
-  ${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.setup}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.identityAndBilling}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.identityAccess}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.overview}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.members}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.resources}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.rolesAndView}
+  ${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.setup}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.subscription}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.identityAndBilling}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.identityAccess}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.members}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.rolesAndView}
   ${TEAMS_PAGE_SCRIPT_FRAGMENTS.setup}${TEAMS_PAGE_SCRIPT_FRAGMENTS.overview}${TEAMS_PAGE_SCRIPT_FRAGMENTS.members}${TEAMS_PAGE_SCRIPT_FRAGMENTS.resourcesFoundation}${IMAGINE_APP_SCRIPT_FRAGMENTS.teamResourceNavigation}
   
   ${TEAMS_PAGE_SCRIPT_FRAGMENTS.resourcesView}${TEAMS_PAGE_SCRIPT_FRAGMENTS.rolesAndView}
@@ -538,32 +538,13 @@
               return;
             }
   
-            function handlePointerDown(event) {
-              const target = event.target instanceof Node ? event.target : null;
-              if (!target || !threadNavMenuRef.current || threadNavMenuRef.current.contains(target)) {
-                return;
-              }
-              setThreadNavMenuOpen(false);
-            }
-  
-            function handleKeyDown(event) {
-              if (event.key === "Escape") {
-                event.preventDefault();
-                setThreadNavMenuOpen(false);
-              }
-            }
-  
             function handleViewportChange() {
               setThreadNavMenuOpen(false);
             }
-  
-            document.addEventListener("mousedown", handlePointerDown);
-            window.addEventListener("keydown", handleKeyDown);
+
             window.addEventListener("resize", handleViewportChange);
             window.addEventListener("scroll", handleViewportChange, true);
             return () => {
-              document.removeEventListener("mousedown", handlePointerDown);
-              window.removeEventListener("keydown", handleKeyDown);
               window.removeEventListener("resize", handleViewportChange);
               window.removeEventListener("scroll", handleViewportChange, true);
             };
@@ -818,7 +799,10 @@
           }, [evaluationThreadIds, hasDemoAccess, hasRealAccess, privateThreadIds, realThreads]);
   
           const recentThreadItems = useMemo(() => {
-            return baseThreadItems.filter((thread) => !thread.isPinned);
+            return baseThreadItems
+              .filter((thread) => !thread.isPinned)
+              .slice()
+              .sort(compareThreadsByRecent);
           }, [baseThreadItems]);
   
   ${APP_HEADER_APP_SCRIPT_FRAGMENTS.searchProjection}

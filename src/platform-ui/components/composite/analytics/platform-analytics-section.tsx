@@ -1,5 +1,6 @@
 import { PlatformSwitch } from "../../ui/switch/index.js";
 import { PlatformAnalyticsChart } from "./platform-analytics-chart.js";
+import { resolvePlatformAnalyticsHasData } from "./platform-analytics-data.js";
 import type { PlatformAnalyticsSectionProps } from "./platform-analytics-types.js";
 
 export function PlatformAnalyticsSection({
@@ -16,10 +17,12 @@ export function PlatformAnalyticsSection({
   const showTitle = (variant === "framed" || variant === "compact")
     && Boolean(resolvedTitle);
   const hasHeader = showTitle || Boolean(timeframe);
+  const hasRecordedData = resolvePlatformAnalyticsHasData(analytics);
+  const showMetrics = analytics.metrics.length > 0 && (!showChart || hasRecordedData);
 
   return (
     <section
-      className={`platform-analytics is-${variant}${className ? ` ${className}` : ""}`}
+      className={`platform-analytics is-${variant}${showMetrics ? " has-metrics" : " has-no-metrics"}${className ? ` ${className}` : ""}`}
       aria-label={analytics.ariaLabel || analytics.title || (typeof title === "string" ? title : "Analytics")}
       data-platform-analytics-variant={variant}
     >
@@ -40,21 +43,23 @@ export function PlatformAnalyticsSection({
           ) : null}
         </div>
       ) : null}
-      <div className="platform-analytics__metrics">
-        {analytics.metrics.map((metric) => (
-          <div key={metric.id} className="platform-analytics__metric">
-            <div className="platform-analytics__metric-label">
-              <span
-                className="platform-analytics__metric-dot"
-                style={{ backgroundColor: metric.color || "#fff", color: metric.color || "#fff" }}
-                aria-hidden="true"
-              />
-              <span>{metric.label}</span>
+      {showMetrics ? (
+        <div className="platform-analytics__metrics">
+          {analytics.metrics.map((metric) => (
+            <div key={metric.id} className="platform-analytics__metric">
+              <div className="platform-analytics__metric-label">
+                <span
+                  className="platform-analytics__metric-dot"
+                  style={{ backgroundColor: metric.color || "#fff", color: metric.color || "#fff" }}
+                  aria-hidden="true"
+                />
+                <span>{metric.label}</span>
+              </div>
+              <div className="platform-analytics__metric-value">{metric.value}</div>
             </div>
-            <div className="platform-analytics__metric-value">{metric.value}</div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : null}
       {showChart ? (
         <div className="platform-analytics__chart">
           <PlatformAnalyticsChart

@@ -3,6 +3,10 @@ import {
   type HTMLAttributes,
   type KeyboardEvent,
   type ReactNode,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
 } from "react";
 
 export interface PlatformSwitchOption {
@@ -40,6 +44,11 @@ export const PlatformSwitch = forwardRef<HTMLDivElement, PlatformSwitchProps>(
     className = "",
     ...props
   }, ref) {
+    const rootRef = useRef<HTMLDivElement | null>(null);
+    const [indicatorMetrics, setIndicatorMetrics] = useState<{
+      offset: number;
+      width: number;
+    } | null>(null);
     const enabledOptionIndices = options.reduce<number[]>((indices, option, index) => {
       if (!disabled && !option.disabled) indices.push(index);
       return indices;
@@ -48,6 +57,58 @@ export const PlatformSwitch = forwardRef<HTMLDivElement, PlatformSwitchProps>(
     const focusableIndex = enabledOptionIndices.includes(selectedIndex)
       ? selectedIndex
       : enabledOptionIndices[0] ?? -1;
+
+    const setRootElement = useCallback((node: HTMLDivElement | null) => {
+      rootRef.current = node;
+      if (typeof ref === "function") {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+    }, [ref]);
+
+    const updateIndicatorMetrics = useCallback(() => {
+      const root = rootRef.current;
+      const selectedOption = selectedIndex >= 0
+        ? root?.querySelector<HTMLElement>(
+            `[data-platform-switch-option-index="${selectedIndex}"]`,
+          )
+        : null;
+      if (!root || !selectedOption) {
+        setIndicatorMetrics(null);
+        return;
+      }
+      const nextMetrics = {
+        offset: selectedOption.offsetLeft,
+        width: selectedOption.offsetWidth,
+      };
+      setIndicatorMetrics((currentMetrics) => (
+        currentMetrics
+        && currentMetrics.offset === nextMetrics.offset
+        && currentMetrics.width === nextMetrics.width
+          ? currentMetrics
+          : nextMetrics
+      ));
+    }, [selectedIndex]);
+
+    useLayoutEffect(() => {
+      updateIndicatorMetrics();
+      const root = rootRef.current;
+      if (!root) return undefined;
+
+      const resizeObserver = typeof ResizeObserver === "function"
+        ? new ResizeObserver(updateIndicatorMetrics)
+        : null;
+      resizeObserver?.observe(root);
+      root.querySelectorAll<HTMLElement>("[data-platform-switch-option-index]")
+        .forEach((option) => resizeObserver?.observe(option));
+      window.addEventListener("resize", updateIndicatorMetrics);
+
+      return () => {
+        resizeObserver?.disconnect();
+        window.removeEventListener("resize", updateIndicatorMetrics);
+      };
+    }, [options.length, updateIndicatorMetrics]);
 
     function selectOption(option: PlatformSwitchOption) {
       if (!disabled && !option.disabled && option.value !== value) {
@@ -89,7 +150,7 @@ export const PlatformSwitch = forwardRef<HTMLDivElement, PlatformSwitchProps>(
     return (
       <div
         {...props}
-        ref={ref}
+        ref={setRootElement}
         role="radiogroup"
         aria-label={ariaLabel}
         aria-disabled={disabled || undefined}
@@ -101,6 +162,17 @@ export const PlatformSwitch = forwardRef<HTMLDivElement, PlatformSwitchProps>(
         )}
         data-platform-switch="true"
       >
+        <span
+          className="platform-switch__indicator"
+          aria-hidden="true"
+          style={indicatorMetrics
+            ? {
+                opacity: 1,
+                width: `${indicatorMetrics.width}px`,
+                transform: `translateX(${indicatorMetrics.offset}px)`,
+              }
+            : undefined}
+        />
         {options.map((option, index) => {
           const isActive = option.value === value;
           const isDisabled = disabled || Boolean(option.disabled);

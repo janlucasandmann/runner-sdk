@@ -742,6 +742,26 @@ assert.match(
   /!isResourcesDetailView && activeResourcesView === "agents"[\s\S]{0,240}id: "playground-agents-overview-period-controls"/,
   "The Agent overview must expose a dedicated centered app-header portal for its timeframe selector.",
 );
+assert.match(
+  agentHeaderCenterSource,
+  /!isResourcesDetailView && activeResourcesView === "computers"[\s\S]{0,240}id: "playground-computers-overview-period-controls"/,
+  "The Computers overview must expose a dedicated centered app-header portal for its timeframe selector.",
+);
+assert.match(
+  shellCompositionSource,
+  /isComputerResourcesDetailView[\s\S]{0,300}React\.createElement\(PlatformSwitch,[\s\S]{0,500}\{ value: "general", label: "General" \},[\s\S]{0,180}\{ value: "runtime", label: "Runtime" \},[\s\S]{0,180}\{ value: "settings", label: "Settings" \}/,
+  "Computer Details must use the centralized General, Runtime, and Settings app-header switch.",
+);
+assert.match(
+  shellCompositionSource,
+  /activeResourcesView === "computers"[\s\S]{0,180}id: "playground-computer-title-actions"/,
+  "Computer Details must expose a breadcrumb-adjacent resource-actions portal.",
+);
+assert.match(
+  shellCompositionSource,
+  /computerTitleActionsPortalId: "playground-computer-title-actions"/,
+  "The Compute Resources page must receive the Computer title-actions portal ID.",
+);
 assert.doesNotMatch(
   agentDialogsSource,
   /renderAgentFactRow\(\s*"Email"/,
@@ -751,6 +771,21 @@ assert.match(
   agentDialogsSource,
   /className: "playground-agents-profile-email",\s*title: agentEmailAddress,[\s\S]{0,80}\}, agentEmailAddress\)/,
   "The Agent content identity must render the live email directly below the editable title.",
+);
+assert.match(
+  platformTemplateSource,
+  /PLAYGROUND_SPARK_AGENT_ACTIVE_PROFILE_URL = "\/img\/agent-profile-pics\/exp-spark\.gif"/,
+  "The Agent identity must resolve the optimized active Spark avatar without affecting other profile images.",
+);
+assert.match(
+  platformTemplateSource,
+  /function getPlaygroundAgentProfileHoverPhotoUrl\(photoUrl\)[\s\S]{0,500}PLAYGROUND_SPARK_AGENT_ACTIVE_PROFILE_URL/,
+  "Only a recognized Spark profile image may opt into the active hover asset.",
+);
+assert.match(
+  agentDialogsSource,
+  /React\.createElement\(PlatformProfileImagePicker, \{\s*value: agentProfilePhotoUrl,\s*hoverValue: agentProfileHoverPhotoUrl/,
+  "Agent Details must lazily animate the Spark profile image while it is hovered.",
 );
 assert.match(
   agentDialogsSource,
@@ -1127,8 +1162,8 @@ assert.match(
 );
 assert.match(
   platformTemplateCss,
-  /\.playground-agent-preview-sidebar\s*\{[\s\S]{0,260}background:\s*rgba\(255, 255, 255, 0\.05\);/,
-  "The private Agent preview sidebar must use the white-five surface.",
+  /\.playground-agent-preview-sidebar\s*\{[\s\S]{0,260}background:\s*#000;/,
+  "The private Agent preview sidebar must use a solid-black surface.",
 );
 assert.doesNotMatch(
   agentDialogsSource,

@@ -1069,31 +1069,16 @@
             && hasDraftServerVersionChanges()
           );
 
-          useEffect(() => {
-            if (
-              typeof onNavigationGuardChange !== "function"
-              || resourceMode !== "servers"
-            ) {
-              return;
-            }
-            const resourceName = String(draftServer?.name || "").trim() || "this resource";
-            onNavigationGuardChange(hasUnsavedServerChanges
-              ? {
-                  id: "develop-resource-details-unsaved-changes",
-                  active: true,
-                  title: "Leave without saving?",
-                  description: "Your changes to " + resourceName + " have not been saved. If you leave now, they will be lost.",
-                  onDiscard: discardUnsavedServerDraft,
-                }
-              : null
-            );
-          }, [
-            draftServer?.id,
-            draftServer?.name,
-            hasUnsavedServerChanges,
+          usePlatformVersionNavigationGuard({
+            dirty: hasUnsavedServerChanges,
+            enabled: resourceMode === "servers",
+            guardId: "develop-resource-details-unsaved-changes",
+            resourceId: String(draftServer?.id || ""),
+            resourceName: String(draftServer?.name || "").trim() || "this resource",
+            resourceType: "Develop resource",
+            onDiscard: discardUnsavedServerDraft,
             onNavigationGuardChange,
-            resourceMode,
-          ]);
+          });
 
           useEffect(() => {
             if (

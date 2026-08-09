@@ -5,6 +5,7 @@ import {
   buildJiraAuthorizationUrl,
   isJiraApiRequestPath,
   JIRA_OAUTH_DEFAULT_SCOPE,
+  normalizeJiraToken,
   resolveJiraOAuthConfiguration,
 } from "./jira-oauth.mjs";
 
@@ -35,6 +36,20 @@ test("builds the Atlassian authorization-code request", () => {
   assert.equal(url.searchParams.get("response_type"), "code");
   assert.equal(url.searchParams.get("prompt"), "consent");
   assert.equal(url.searchParams.get("scope"), JIRA_OAUTH_DEFAULT_SCOPE);
+});
+
+test("preserves the existing Jira refresh token when Atlassian omits a replacement", () => {
+  const token = normalizeJiraToken({
+    access_token: "refreshed-access-token",
+    expires_in: 3600,
+  }, {
+    cloudId: "cloud-123",
+    refreshToken: "existing-refresh-token",
+  });
+
+  assert.equal(token.accessToken, "refreshed-access-token");
+  assert.equal(token.refreshToken, "existing-refresh-token");
+  assert.equal(token.cloudId, "cloud-123");
 });
 
 test("resolves a complete Atlassian OAuth client through supported aliases", async () => {

@@ -61,17 +61,20 @@
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
+  transition: height 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .platform-activity-overview__custom-item {
   position: absolute;
-  left: clamp(
+  left: max(
     24px,
-    calc(
-      var(--platform-activity-overview-item-left) +
-      var(--platform-activity-overview-item-indent, 0px)
-    ),
-    max(24px, calc(100% - 340px))
+    min(
+      calc(
+        var(--platform-activity-overview-item-left) +
+        var(--platform-activity-overview-item-indent, 0px)
+      ),
+      calc(100% - 344px)
+    )
   );
   top: 1px;
   box-sizing: border-box;
@@ -234,6 +237,19 @@
   background: #454545;
 }
 
+.platform-activity-overview__custom-content > .platform-activity-overview-card {
+  width: 100%;
+  max-width: 100%;
+}
+
+.platform-activity-overview__custom-content > .platform-activity-overview-card.is-tool-call,
+.platform-activity-overview__custom-content > .platform-activity-overview-card.is-tool-call:hover,
+.platform-activity-overview__custom-content > .platform-activity-overview-card.is-tool-call.is-selected,
+.platform-activity-overview__custom-content > .platform-activity-overview-card.is-tool-call.is-selected:hover {
+  width: fit-content;
+  max-width: 100%;
+}
+
 .platform-activity-overview-card:focus-visible {
   outline: 1px solid #4da3ff;
   outline-offset: 2px;
@@ -353,6 +369,7 @@
   min-height: 240px;
   overflow: hidden;
   background: transparent;
+  transition: height 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .platform-activity-overview__range-empty {
@@ -386,6 +403,7 @@
   width: 100%;
   height: 46px;
   pointer-events: none;
+  transition: top 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .platform-activity-overview__tree-toggle {

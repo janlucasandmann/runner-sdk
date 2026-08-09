@@ -95,8 +95,22 @@ export const METRONOME_APP_SIDEBAR_STATE_SCRIPT = `
               latestThread: entry?.latestThread || null,
             });
           });
-          return entries;
-        }, [displayedThreadItems, metronomeRunStatusByKey, optimisticMetronomeRunEntries, visibleThreadItems]);
+          const getSidebarEntryThread = (entry) => {
+            if (entry?.kind === "metronome-run") {
+              return entry.latestThread
+                || (Array.isArray(entry.threads) ? entry.threads[0] : null)
+                || {};
+            }
+            return entry?.thread || {};
+          };
+          return entries
+            .slice()
+            .sort((left, right) => compareThreadsByRecent(
+              getSidebarEntryThread(left),
+              getSidebarEntryThread(right),
+            ))
+            .slice(0, Math.max(1, Number(threadDisplayCount) || 10));
+        }, [displayedThreadItems, metronomeRunStatusByKey, optimisticMetronomeRunEntries, threadDisplayCount, visibleThreadItems]);
         const selectedMetronomeRunEntry = useMemo(() => {
           const selectedKey = String(metronomeRunTraceSelection?.key || "").trim();
           if (!selectedKey) {

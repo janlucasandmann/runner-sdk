@@ -38,11 +38,10 @@ afterEach(() => {
 });
 
 describe("TeamsOverviewPage", () => {
-  it("uses the shared hero, UI cards, overview shell, and minimal data table", async () => {
+  it("uses the shared hero, catalog table, and overview shell", async () => {
     const user = userEvent.setup();
     const onOpen = vi.fn();
     const onCreate = vi.fn();
-    const onOpenDocumentation = vi.fn();
     const controls = document.createElement("div");
     controls.id = CONTROLS_PORTAL_ID;
     document.body.append(controls);
@@ -54,31 +53,26 @@ describe("TeamsOverviewPage", () => {
         onOpen={onOpen}
         onCreate={onCreate}
         onRename={vi.fn()}
-        onOpenDocumentation={onOpenDocumentation}
       />,
     );
 
     expect(container.querySelector(".resource-overview-page.is-teams")).not.toBeNull();
     expect(container.querySelector("[data-platform-page-hero='true']")).not.toBeNull();
     expect(screen.getByRole("heading", { name: "Coordinate work across teams" })).not.toBeNull();
-    expect(container.querySelectorAll(".platform-ui-card")).toHaveLength(2);
+    expect(container.querySelectorAll(".platform-ui-card")).toHaveLength(0);
     expect(screen.getByRole("table", { name: "Teams" })).not.toBeNull();
     expect(
       container.querySelector<HTMLImageElement>(
         'img[src="/img/team-platform.webp"]',
       ),
     ).not.toBeNull();
-    expect(container.querySelector(".platform-data-table.is-minimalistic-ui")).not.toBeNull();
+    expect(container.querySelector(".platform-data-table.is-catalog-ui")).not.toBeNull();
     expect(container.querySelector(".platform-data-table__footer")).toBeNull();
-    expect(screen.getByText("All Teams")).not.toBeNull();
     expect(screen.getByPlaceholderText("Search teams")).not.toBeNull();
 
     const createButton = await screen.findByRole("button", { name: "New Team" });
     await user.click(createButton);
     expect(onCreate).toHaveBeenCalledOnce();
-
-    await user.click(screen.getByRole("button", { name: "Team Documentation" }));
-    expect(onOpenDocumentation).toHaveBeenCalledOnce();
 
     await user.click(screen.getByText("Platform Team"));
     expect(onOpen).toHaveBeenCalledWith(rows[0]);

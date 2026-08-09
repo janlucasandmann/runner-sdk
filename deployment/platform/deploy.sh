@@ -16,6 +16,7 @@ RELEASE_OUTPUT_FILE="${RELEASE_OUTPUT_FILE:-}"
 HARDENED_DEPLOYMENT="${HARDENED_DEPLOYMENT:-0}"
 CLOUD_RUN_SECRET_BINDINGS="${CLOUD_RUN_SECRET_BINDINGS:-}"
 CLOUD_RUN_SERVICE_ACCOUNT="${CLOUD_RUN_SERVICE_ACCOUNT:-}"
+CONNECTOR_TOKEN_ENCRYPTION_KEY_SECRET_NAME="${CONNECTOR_TOKEN_ENCRYPTION_KEY_SECRET_NAME:-connector-token-encryption-key}"
 PLATFORM_MIN_INSTANCES="${PLATFORM_MIN_INSTANCES:-1}"
 PLATFORM_CPU_ALWAYS_ALLOCATED="${PLATFORM_CPU_ALWAYS_ALLOCATED:-1}"
 APP_ORIGIN="${APP_ORIGIN:-https://computer-agents.com}"
@@ -350,6 +351,21 @@ fi
 if [[ ! "${DEPLOY_IMAGE_URI}" =~ @sha256:[a-f0-9]{64}$ ]]; then
   echo "Refusing mutable deploy image: ${DEPLOY_IMAGE_URI}" >&2
   exit 1
+fi
+
+if [[ "${DEPLOYMENT_STAGE}" == "prod" ]]; then
+  # Connector credentials are encrypted once and must remain decryptable by
+  # every production revision. Bind the canonical Secret Manager value on
+  # every production rollout instead of relying on a local env file.
+  gcloud secrets describe "${CONNECTOR_TOKEN_ENCRYPTION_KEY_SECRET_NAME}" \
+    --project "${PROJECT_ID}" \
+    --format='value(name)' >/dev/null
+  connector_secret_binding="CONNECTOR_TOKEN_ENCRYPTION_KEY=${CONNECTOR_TOKEN_ENCRYPTION_KEY_SECRET_NAME}:latest"
+  if [[ -n "${CLOUD_RUN_SECRET_BINDINGS}" ]]; then
+    CLOUD_RUN_SECRET_BINDINGS="${CLOUD_RUN_SECRET_BINDINGS},${connector_secret_binding}"
+  else
+    CLOUD_RUN_SECRET_BINDINGS="${connector_secret_binding}"
+  fi
 fi
 
 echo "Deploying Cloud Run service: ${SERVICE_NAME}"

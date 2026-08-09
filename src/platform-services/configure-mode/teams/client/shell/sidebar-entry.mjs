@@ -1,5 +1,5 @@
 export const TEAMS_SIDEBAR_ENTRY_SCRIPT = `              {
-                id: "team",
+                id: "admin-teams",
                 label: "Teams",
                 Icon: UsersRound,
                 active: activePage === "team",

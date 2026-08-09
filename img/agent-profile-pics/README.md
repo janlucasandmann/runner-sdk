@@ -8,7 +8,9 @@ This directory contains agent profile images consumed by platform presentation. 
 
 ## Contents
 
-- Asset inventory — 1 .jpeg file, 1 .jpg file, 4 .png files, 9 .webp files.
+- Asset inventory — 1 .gif file, 1 .jpeg file, 1 .jpg file, 1 .mp4 source file, 4 .png files, 9 .webp files.
+- `exp-spark.mp4` — retained source animation for the active Spark identity.
+- `exp-spark.gif` — optimized 96×96, 15 fps ping-pong derivative; it traverses the source in about two seconds, reverses through the exact same frames, and loops indefinitely.
 
 ## Working in this directory
 

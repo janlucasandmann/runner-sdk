@@ -691,7 +691,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
         }
 
         const projectSearchPlaceholder = useMemo(() => {
-          if (selectedReleaseId && (taskView === "backlog" || taskView === "board" || taskView === "activity")) {
+          if (selectedReleaseId && (taskView === "backlog" || taskView === "board")) {
             return "Search milestone tasks, ticket numbers, assignees, or environments...";
           }
           if (taskView === "overview") {

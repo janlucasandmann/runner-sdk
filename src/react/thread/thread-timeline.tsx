@@ -2,6 +2,10 @@ import { Activity, ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { buildRunnerThreadRunReceiptViewModel } from "../../thread/presentation.js";
+import {
+  isRunnerPublicConversationRun,
+  resolveRunnerPublicThreadParticipant,
+} from "../../thread/public-presentation.js";
 import type {
   RunnerThreadControlAction,
   RunnerThreadAction,
@@ -124,7 +128,8 @@ export function RunnerThreadTimeline({
     () => projection.timeline.filter((reference) => {
       const item = getReferenceItem(projection, reference);
       if (!item) return false;
-      if (item.kind === "message" || item.kind === "run") return true;
+      if (item.kind === "message") return true;
+      if (item.kind === "run") return isRunnerPublicConversationRun(item);
       if (item.kind === "permission") {
         return item.status === "pending" || !item.runId || !projection.runsById[item.runId];
       }
@@ -212,12 +217,17 @@ export function RunnerThreadTimeline({
         if (!item) return null;
 
         if (item.kind === "message") {
+          const receipt = getMessageReceipt(projection, item);
           return (
             <RunnerThreadMessageView
               key={`message:${item.id}`}
               message={item}
-              participant={projection.participantsById[item.authorParticipantId]}
-              receipt={getMessageReceipt(projection, item)}
+              participant={resolveRunnerPublicThreadParticipant(
+                projection,
+                projection.participantsById[item.authorParticipantId],
+                fallbackRunAgentName,
+              )}
+              receipt={receipt?.status === "failed" ? receipt : null}
               renderContent={renderMessageContent}
               renderUserContent={renderUserMessageContent}
               onCorrectRoute={onCorrectRoute}

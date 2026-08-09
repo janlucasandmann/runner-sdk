@@ -22,6 +22,10 @@
   color: rgba(255, 255, 255, 0.96);
 }
 
+.platform-analytics.is-framed.has-no-metrics {
+  min-height: 0;
+}
+
 .platform-analytics__header {
   min-width: 0;
   margin-bottom: 12px;

@@ -16,6 +16,7 @@ export const RUNNER_CHAT_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/ui/search/search.css",
   "src/platform-ui/components/ui/checkbox/checkbox.css",
   "src/platform-ui/components/ui/switch/switch.css",
+  "src/platform-ui/components/ui/toggle/toggle.css",
   "src/platform-ui/components/composite/modal/modal.css",
   "src/platform-ui/components/composite/file-explorer/file-explorer.css",
   "src/platform-ui/components/composite/loading-state/loading-state.css",

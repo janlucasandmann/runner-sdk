@@ -27,6 +27,29 @@ export const FILES_PAGE_WORKSPACE_SCRIPT = `
           [currentPath, environmentTree, expandedFolders, filterMode, filteredCurrentEntries, normalizedFilesLibrarySearchQuery, projectFilterScope, sortMode]
         );
         const selectionScopeEntries = viewMode === "list" ? visibleRows.map((row) => row.entry) : filteredCurrentEntries;
+        const visibleSelectionState = useMemo(() => {
+          const entries = [];
+          const paths = [];
+          const seen = new Set();
+          for (const entry of selectionScopeEntries) {
+            const path = normalizeHistoryPath(entry?.path || "");
+            if (!path || seen.has(path)) continue;
+            seen.add(path);
+            entries.push(entry);
+            paths.push(path);
+          }
+          const selectedCount = paths.reduce(
+            (count, path) => count + (selectedPaths.has(path) ? 1 : 0),
+            0
+          );
+          return {
+            entries,
+            paths,
+            selectedCount,
+            allSelected: paths.length > 0 && selectedCount === paths.length,
+            indeterminate: selectedCount > 0 && selectedCount < paths.length,
+          };
+        }, [selectedPaths, selectionScopeEntries]);
         const breadcrumbs = useMemo(() => buildPlaygroundEnvironmentBreadcrumbs(currentPath), [currentPath]);
         const canGoBack = pathHistoryIndex > 0;
         const canGoForward = pathHistoryIndex < pathHistory.length - 1;
@@ -84,6 +107,70 @@ export const FILES_PAGE_WORKSPACE_SCRIPT = `
           }
           return selectedFileEntries[selectedFileEntries.length - 1] || null;
         }, [environmentTree, previewTargetPath, selectedFileEntries, selectedPaths]);
+
+        useEffect(() => {
+          function isEditableFilesShortcutTarget(target) {
+            if (!(target instanceof Element)) return false;
+            return Boolean(target.closest("input, textarea, select, [contenteditable='true'], [role='textbox']"));
+          }
+
+          function matchesFilesResourceActionShortcut(event, key, code) {
+            return (event.metaKey || event.ctrlKey)
+              && event.altKey
+              && !event.shiftKey
+              && (event.code === code || String(event.key || "").toLowerCase() === key);
+          }
+
+          function handleFilesResourceActionShortcut(event) {
+            if (
+              contentMode !== "files"
+              || !selectedEnvironmentId
+              || event.defaultPrevented
+              || event.repeat
+              || isEditableFilesShortcutTarget(event.target)
+              || document.querySelector(".platform-modal-backdrop, .sidebar-thread-rename-scrim, [role='dialog'][aria-modal='true']")
+            ) {
+              return;
+            }
+
+            const actionEntries = selectedEntries.length > 0
+              ? selectedEntries
+              : activePreviewEntry
+                ? [activePreviewEntry]
+                : [];
+            if (actionEntries.length === 0) return;
+
+            if (matchesFilesResourceActionShortcut(event, "s", "KeyS")) {
+              const fileEntries = actionEntries.filter((entry) => entry && !entry.isFolder);
+              if (fileEntries.length === 0) return;
+              event.preventDefault();
+              event.stopPropagation();
+              setToolbarPopover("");
+              closeContextMenu();
+              openFileTeamPickerDialog(fileEntries);
+              return;
+            }
+
+            if (matchesFilesResourceActionShortcut(event, "r", "KeyR")) {
+              if (actionEntries.length !== 1) return;
+              event.preventDefault();
+              event.stopPropagation();
+              setToolbarPopover("");
+              startRename(actionEntries[0], { showPreview: false });
+              return;
+            }
+
+            if (matchesFilesResourceActionShortcut(event, "backspace", "Backspace")) {
+              event.preventDefault();
+              event.stopPropagation();
+              setToolbarPopover("");
+              void handleDeleteEntries(actionEntries);
+            }
+          }
+
+          window.addEventListener("keydown", handleFilesResourceActionShortcut, true);
+          return () => window.removeEventListener("keydown", handleFilesResourceActionShortcut, true);
+        }, [activePreviewEntry, contentMode, selectedEntries, selectedEnvironmentId]);
 
         useEffect(() => {
           setIsStartingImagePreviewThread(false);

@@ -152,6 +152,7 @@ function normalizeGrantPayload(value) {
     ),
     organizationId: normalizeIdentifier(input.organizationId, 200),
     agentId: normalizeOptionalIdentifier(input.agentId, 200),
+    agentName: normalizeDisplayName(input.agentName),
     actorUserId: normalizeOptionalIdentifier(input.actorUserId, 200),
     credentialId: normalizeIdentifier(input.credentialId, 120),
     credentialSource: normalizeCredentialSource(
@@ -227,6 +228,14 @@ function normalizeIdentifier(value, maximumLength) {
 function normalizeOptionalIdentifier(value, maximumLength) {
   if (!value) return "";
   return normalizeIdentifier(value, maximumLength);
+}
+
+function normalizeDisplayName(value) {
+  return String(value || "")
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200);
 }
 
 function normalizeCredentialSource(value) {

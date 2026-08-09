@@ -157,6 +157,62 @@ describe("RunnerFileBrowserItem", () => {
     expect(documentHtml).not.toContain("platform-file-explorer__thumbnail");
   });
 
+  it("never uses thumbnails for non-image previews or image-named folders", () => {
+    const imageNamedFolder: RunnerChatFileNode = {
+      id: "exports/photo.png",
+      name: "photo.png",
+      path: "/exports/photo.png",
+      isFolder: true,
+      previewUrl: "/preview/photo.png",
+    };
+    const documentWithPreview: RunnerChatFileNode = {
+      id: "exports/report.pdf",
+      name: "report.pdf",
+      path: "/exports/report.pdf",
+      isFolder: false,
+      mimeType: "application/pdf",
+      previewUrl: "/preview/report.png",
+    };
+    const baseProps = {
+      allItems: [imageNamedFolder, documentWithPreview],
+      backendUrl: "https://api.example.com",
+      branchLoadingRepoFullNames: [],
+      branchesByRepoFullName: {},
+      buildEffectiveGithubRootItem: (item: RunnerChatFileNode) => item,
+      expandedFolderIds: [],
+      githubLoadingFolderIds: [],
+      googleDriveLoadingFolderIds: [],
+      onBranchChange: vi.fn(),
+      onEnsureBranchesLoaded: vi.fn(),
+      onItemClick: vi.fn(),
+      onOpenItem: vi.fn(),
+      onToggleSelection: vi.fn(),
+      onToggleFolder: vi.fn(),
+      onToggleGithubSelection: vi.fn(),
+      oneDriveLoadingFolderIds: [],
+      previewItemId: null,
+      resolveSelectedGithubBranch: () => "main",
+      searchQuery: "",
+      selectedItemIds: [],
+      source: "workspace" as const,
+      workspaceFolderErrorsById: {},
+      workspaceEnvironmentId: "computer_1",
+      workspaceLoadingFolderIds: [],
+    };
+
+    const folderHtml = renderToStaticMarkup(
+      <RunnerFileBrowserItem {...baseProps} item={imageNamedFolder} />,
+    );
+    const documentHtml = renderToStaticMarkup(
+      <RunnerFileBrowserItem {...baseProps} item={documentWithPreview} />,
+    );
+
+    expect(folderHtml).not.toContain("platform-file-explorer__thumbnail");
+    expect(documentHtml).not.toContain("platform-file-explorer__thumbnail");
+    expect(folderHtml).toContain("folder.png");
+    expect(documentHtml).toContain("txtfile.png");
+  });
+
   it("selects from the checkbox without opening the preview", () => {
     const file: RunnerChatFileNode = {
       id: "notes.txt",

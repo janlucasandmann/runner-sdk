@@ -110,6 +110,12 @@ export {
   buildRunnerThreadScreenViewModel,
 } from "./presentation.js";
 
+export {
+  isRunnerInternalAssistantParticipant,
+  isRunnerPublicConversationRun,
+  resolveRunnerPublicThreadParticipant,
+} from "./public-presentation.js";
+
 export type {
   DescribeRunnerThreadActivityGroupInput,
   RunnerThreadActionIconKind,

@@ -381,7 +381,7 @@ export function RunnerThreadExecutionWorkbench({
       subtitle={
         receipt.actor?.displayName || receipt.workspaceLabel
           ? [receipt.actor?.displayName, receipt.workspaceLabel].filter(Boolean).join(" on ")
-          : receipt.run.runKind
+          : "Agent"
       }
       status={
         <span className={`platform-thread-workbench__status ${statusClass(run.status)}`}>

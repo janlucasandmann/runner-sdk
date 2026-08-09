@@ -490,7 +490,7 @@
           const [settingsTriggersSuccess, setSettingsTriggersSuccess] = useState("");
           const pluginsNavActionsRef = useRef(null);
   ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.refs}
-  ${MARKETPLACE_APP_SCRIPT_FRAGMENTS.lifecycle}${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.menuLifecycle}
+  ${MARKETPLACE_APP_SCRIPT_FRAGMENTS.lifecycle}${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.menuLifecycle}${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.keyboardLifecycle}
           const [settingsSelectedTriggerId, setSettingsSelectedTriggerId] = useState("");
           const [settingsShowTriggerSecret, setSettingsShowTriggerSecret] = useState(false);
           const [settingsCopiedField, setSettingsCopiedField] = useState("");
@@ -531,7 +531,6 @@
           const authGateEmailInputRef = useRef(null);
   ${APP_HEADER_APP_SCRIPT_FRAGMENTS.refs}
           const threadRenameInputRef = useRef(null);
-          const threadNavMenuRef = useRef(null);
           const threadTaskListMenuRef = useRef(null);
           const settingsPlansMenuRef = useRef(null);
           const settingsResourceCapInfoRef = useRef(null);
@@ -4255,8 +4254,12 @@
             setSettingsBudgetLoading(true);
             try {
               if (hasRealAccess) {
-  	              const shouldLoadOrganizationSummary = activePage === "organization"
-  	                && (organizationPageActiveTab === "billing" || organizationPageActiveTab === "usage");
+	              const shouldLoadOrganizationSummary = activePage === "organization"
+	                && (
+	                  organizationPageActiveTab === "subscription"
+	                  || organizationPageActiveTab === "billing"
+	                  || organizationPageActiveTab === "usage"
+	                );
   	              let realBudgetResponse = await fetch(
   	                proxyBackendBase + (shouldLoadOrganizationSummary ? "/billing/organization/summary?activityLimit=8" : "/billing/budget"),
   	                {
@@ -4483,6 +4486,8 @@
             if (!hasSessionAuth) {
               setSettingsInvoices([]);
               setSettingsSubscriptions([]);
+              setOrganizationPageProviderBilling(null);
+              setOrganizationPageBillingDocuments([]);
               return;
             }
   
@@ -4505,12 +4510,28 @@
               if (!response.ok) {
                 throw new Error(data?.message || data?.error || "Failed to load billing records.");
               }
-  
+
+              setSettingsBillingError("");
               setSettingsInvoices(Array.isArray(data?.invoices) ? data.invoices : []);
               setSettingsSubscriptions(Array.isArray(data?.subscriptions) ? data.subscriptions : []);
+              setOrganizationPageProviderBilling(
+                data?.billing && typeof data.billing === "object" ? data.billing : null
+              );
+              setOrganizationPageBillingDocuments(
+                Array.isArray(data?.documents)
+                  ? data.documents
+                  : (Array.isArray(data?.invoices) ? data.invoices : []).map((invoice) => ({
+                      ...invoice,
+                      documentType: "subscription_invoice",
+                      reference: invoice?.id || "",
+                      downloadUrl: invoice?.invoiceUrl || null,
+                    }))
+              );
             } catch (error) {
               setSettingsInvoices([]);
               setSettingsSubscriptions([]);
+              setOrganizationPageProviderBilling(null);
+              setOrganizationPageBillingDocuments([]);
               setSettingsBillingError(error instanceof Error ? error.message : "Failed to load billing records.");
             } finally {
               setSettingsInvoicesLoading(false);
@@ -4743,7 +4764,7 @@
             }
           }, [hasSessionAuth, settingsProjectRoutingId]);
   
-          async function handleSettingsSubscribe(tierId) {
+          async function handleSettingsSubscribe(tierId, options = {}) {
             if (!hasSessionAuth) {
               handleSignInWithComputerAgents();
               return;
@@ -4771,7 +4792,10 @@
                 },
                 body: JSON.stringify({
                   tier: tierId,
-                  billingInterval: "monthly",
+                  billingInterval: options?.billingInterval === "annual" ? "annual" : "monthly",
+                  ...(Number.isInteger(Number(options?.builderSeats)) && Number(options.builderSeats) > 0
+                    ? { builderSeats: Number(options.builderSeats) }
+                    : {}),
                   ...(String(billingOrganizationId || settingsBudgetStatus?.organizationId || "").trim()
                     ? { organizationId: String(billingOrganizationId || settingsBudgetStatus?.organizationId).trim() }
                     : {}),
@@ -4857,11 +4881,16 @@
             }
           }
   
-          async function handleSettingsChangePlan(tierId) {
+          async function handleSettingsChangePlan(tierId, options = {}) {
             if (!hasSessionAuth) {
               handleSignInWithComputerAgents();
               return;
             }
+
+            const normalizedBuilderSeats = Number(options?.builderSeats);
+            const builderSeatPayload = Number.isInteger(normalizedBuilderSeats) && normalizedBuilderSeats > 0
+              ? { builderSeats: normalizedBuilderSeats }
+              : {};
   
             setSettingsSubscriptionActionId(tierId);
             setSettingsBillingError("");
@@ -4876,6 +4905,7 @@
                 body: JSON.stringify({
                   newTier: tierId,
                   preview: true,
+                  ...builderSeatPayload,
                   ...(String(billingOrganizationId || settingsBudgetStatus?.organizationId || "").trim()
                     ? { organizationId: String(billingOrganizationId || settingsBudgetStatus?.organizationId).trim() }
                     : {}),
@@ -4907,6 +4937,7 @@
                 body: JSON.stringify({
                   newTier: tierId,
                   preview: false,
+                  ...builderSeatPayload,
                   ...(String(billingOrganizationId || settingsBudgetStatus?.organizationId || "").trim()
                     ? { organizationId: String(billingOrganizationId || settingsBudgetStatus?.organizationId).trim() }
                     : {}),

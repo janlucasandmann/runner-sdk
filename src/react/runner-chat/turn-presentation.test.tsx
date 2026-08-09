@@ -31,6 +31,75 @@ describe("RunnerTurnIdentity", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open agent details for Spark" }));
     expect(onAgentClick).toHaveBeenCalledTimes(1);
   });
+
+  it("animates the Spark avatar only while that agent is generating", () => {
+    const { container, rerender } = render(
+      <RunnerTurnIdentity
+        agentName="Spark"
+        agentPhotoUrl="/img/agent-profile-pics/spark.webp"
+        environmentName="Default"
+      />,
+    );
+
+    expect(container.querySelector(".tb-turn-agent-avatar-image")?.getAttribute("src")).toBe(
+      "/img/agent-profile-pics/spark.webp",
+    );
+
+    rerender(
+      <RunnerTurnIdentity
+        agentName="Spark"
+        agentPhotoUrl="/img/agent-profile-pics/spark.webp"
+        environmentName="Default"
+        isGenerating
+      />,
+    );
+
+    expect(container.querySelector(".tb-turn-agent-avatar-image")?.getAttribute("src")).toBe(
+      "/img/agent-profile-pics/exp-spark.gif",
+    );
+    expect(container.querySelector(".tb-turn-agent-avatar")?.classList.contains("is-generating")).toBe(true);
+
+    rerender(
+      <RunnerTurnIdentity
+        agentName="Forge"
+        agentPhotoUrl="/img/agent-profile-pics/forge.webp"
+        environmentName="Default"
+        isGenerating
+      />,
+    );
+
+    expect(container.querySelector(".tb-turn-agent-avatar-image")?.getAttribute("src")).toBe(
+      "/img/agent-profile-pics/forge.webp",
+    );
+  });
+
+  it("animates the Spark avatar on hover without changing other agent images", () => {
+    const { container, rerender } = render(
+      <RunnerTurnIdentity
+        agentName="Spark"
+        agentPhotoUrl="/img/agent-profile-pics/spark.webp"
+        environmentName="Default"
+      />,
+    );
+    const avatar = () => container.querySelector(".tb-turn-agent-avatar") as Element;
+    const image = () => container.querySelector(".tb-turn-agent-avatar-image")?.getAttribute("src");
+
+    expect(image()).toBe("/img/agent-profile-pics/spark.webp");
+    fireEvent.mouseEnter(avatar());
+    expect(image()).toBe("/img/agent-profile-pics/exp-spark.gif");
+    fireEvent.mouseLeave(avatar());
+    expect(image()).toBe("/img/agent-profile-pics/spark.webp");
+
+    rerender(
+      <RunnerTurnIdentity
+        agentName="Forge"
+        agentPhotoUrl="/img/agent-profile-pics/forge.webp"
+        environmentName="Default"
+      />,
+    );
+    fireEvent.mouseEnter(avatar());
+    expect(image()).toBe("/img/agent-profile-pics/forge.webp");
+  });
 });
 
 describe("RunnerWorkStatusDisclosure", () => {

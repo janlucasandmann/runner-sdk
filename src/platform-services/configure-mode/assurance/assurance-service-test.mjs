@@ -13,6 +13,8 @@ assert.match(PLAYGROUND_ASSURANCE_CSS, /\.assurance-detail-page/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.state, /selectedAssurancePolicyId/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.navigation, /openAssurancePage/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.pageView, /AssuranceWorkspacePage/);
+assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.pageView, /onNavigationGuardChange: registerPlatformNavigationGuard/);
+assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.pageView, /onNavigationRequest: requestPlatformNavigation/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /label: "Assurance"/);
 assert.match(
   ASSURANCE_APP_SCRIPT_FRAGMENTS.topNavigation,
@@ -88,6 +90,7 @@ assert.match(detailSource, /sidebarCollapsed=\{accessDetailOpen\}/);
 assert.match(detailSource, /onPermissionDetailOpenChange=\{setAccessDetailOpen\}/);
 assert.match(detailSource, /createVersion/);
 assert.match(detailSource, /publishVersion/);
+assert.match(detailSource, /usePlatformVersionNavigationGuard/);
 
 const accessSource = await fs.readFile(
   new URL("./client/page/assurance-policy-access-settings.tsx", import.meta.url),
