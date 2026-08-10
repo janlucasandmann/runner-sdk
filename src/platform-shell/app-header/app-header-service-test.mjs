@@ -264,11 +264,11 @@ assert.doesNotMatch(platformEntrySource, /refreshThreads\(SEARCH_THREAD_EXPANDED
 assert.match(platformEntrySource, /renderAppHeader\(\{\s*className: "playground-thread-navbar"/);
 assert.match(
   platformEntrySource,
-  /function renderInitialThreadWelcomeNav\(\) \{[\s\S]*?className: "playground-thread-welcome-navbar",[\s\S]*?pathItems: \[\{ label: "Create" \}\]/,
+  /function renderInitialThreadWelcomeNav\(\) \{[\s\S]*?className: "playground-thread-welcome-navbar",[\s\S]*?hidePath: true/,
 );
 assert.doesNotMatch(
   platformEntrySource,
-  /function renderInitialThreadWelcomeNav\(\) \{[\s\S]*?pathItems: \[[^\]]*label: "New Thread"/,
+  /className: "playground-thread-welcome-navbar",\s*pathItems:/,
 );
 assert.doesNotMatch(platformEntrySource, /React\.createElement\("div", \{ className: "playground-content-nav" \}/);
 assert.match(platformEntrySource, /const \[showSubscriptionSuccessModal, setShowSubscriptionSuccessModal\]/);

@@ -364,10 +364,63 @@ const PLATFORM_SKILL_RESOURCE_PERMISSION_ACTIONS: readonly PlatformPermissionAct
   },
 ];
 
+const PLATFORM_PROMPT_RESOURCE_PERMISSION_ACTIONS: readonly PlatformPermissionActionDefinition[] = [
+  {
+    id: "prompt_view",
+    ringId: "ring_1",
+    label: "View prompt",
+    description: "View this prompt's metadata, instructions, versions, and access settings.",
+    subjectTypes: ["prompt", "prompt_team_role"],
+  },
+  {
+    id: "prompt_use",
+    ringId: "ring_1",
+    label: "Use prompt",
+    description: "Attach this prompt to an agent or workflow and use it during a run.",
+    subjectTypes: ["prompt", "prompt_team_role"],
+  },
+  {
+    id: "prompt_manage",
+    ringId: "ring_2",
+    label: "Edit prompt",
+    description: "Change this prompt's name, description, and Markdown instructions.",
+    subjectTypes: ["prompt", "prompt_team_role"],
+  },
+  {
+    id: "prompt_versions_manage",
+    ringId: "ring_2",
+    label: "Manage versions",
+    description: "Create, restore, compare, or remove saved versions of this prompt.",
+    subjectTypes: ["prompt", "prompt_team_role"],
+  },
+  {
+    id: "prompt_publish",
+    ringId: "ring_3",
+    label: "Publish versions",
+    description: "Publish a saved prompt version or change the active version used by agents.",
+    subjectTypes: ["prompt", "prompt_team_role"],
+  },
+  {
+    id: "prompt_access_manage",
+    ringId: "ring_3",
+    label: "Manage prompt access",
+    description: "Share this prompt with teams and change organization role permission policies.",
+    subjectTypes: ["prompt", "prompt_team_role"],
+  },
+  {
+    id: "prompt_delete",
+    ringId: "ring_3",
+    label: "Delete prompt",
+    description: "Permanently delete this prompt and its saved versions.",
+    subjectTypes: ["prompt", "prompt_team_role"],
+  },
+];
+
 const PLATFORM_MANAGED_RESOURCE_PERMISSION_ACTIONS: readonly PlatformPermissionActionDefinition[] = [
   ...PLATFORM_AGENT_RESOURCE_PERMISSION_ACTIONS,
   ...PLATFORM_COMPUTER_RESOURCE_PERMISSION_ACTIONS,
   ...PLATFORM_SKILL_RESOURCE_PERMISSION_ACTIONS,
+  ...PLATFORM_PROMPT_RESOURCE_PERMISSION_ACTIONS,
   ...createManagedResourcePermissionActions({
     subjectType: "web_app",
     noun: "web app",
@@ -1484,6 +1537,7 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
 export const PLATFORM_PERMISSION_RESOURCE_TYPES = [
   "agents",
   "skills",
+  "prompts",
   "servers",
   "computers",
   "files",
@@ -1506,6 +1560,8 @@ export const PLATFORM_PERMISSION_SUBJECT_TYPES = [
   "computer_team_role",
   "skill",
   "skill_team_role",
+  "prompt",
+  "prompt_team_role",
   "server",
   "web_app",
   "function",
@@ -1546,6 +1602,8 @@ export const PLATFORM_SCOPED_PERMISSION_SUBJECT_TYPES = [
   "computer_team_role",
   "skill",
   "skill_team_role",
+  "prompt",
+  "prompt_team_role",
   "server",
   "web_app",
   "function",

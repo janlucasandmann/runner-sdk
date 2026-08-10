@@ -18,6 +18,8 @@ export const RUNNER_CHAT_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/ui/switch/switch.css",
   "src/platform-ui/components/ui/toggle/toggle.css",
   "src/platform-ui/components/composite/modal/modal.css",
+  "src/platform-ui/components/composite/ui-card/ui-card.css",
+  "src/platform-ui/components/composite/attachments/attachments.css",
   "src/platform-ui/components/composite/file-explorer/file-explorer.css",
   "src/platform-ui/components/composite/loading-state/loading-state.css",
   "src/react/runner-chat.css",

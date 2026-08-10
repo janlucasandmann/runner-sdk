@@ -4,10 +4,10 @@ import {
   ChevronRight,
   Clock3,
   Copy,
+  FileJson2,
   FlaskConical,
   FolderOpen,
   Monitor,
-  Play,
   Plus,
   SquarePen,
   Trash2,
@@ -35,6 +35,10 @@ import {
 import { PlatformAnalyticsSection } from "../../../../../platform-ui/components/composite/analytics/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
 import { PlatformConfirmationModal } from "../../../../../platform-ui/components/composite/modal/index.js";
+import {
+  PlatformOwnerSelector,
+  type PlatformOwnerOption,
+} from "../../../../../platform-ui/components/composite/owner-selector/index.js";
 import {
   PlatformResourceRenameModal,
   PlatformResourceShareModal,
@@ -67,11 +71,11 @@ import {
   type PlatformLabelVariant,
 } from "../../../../../platform-ui/components/ui/label/index.js";
 import {
+  PlatformButtonSelector,
   PlatformSelector,
-  type PlatformSelectorOption,
 } from "../../../../../platform-ui/components/ui/selector/index.js";
 import { PlatformSwitch } from "../../../../../platform-ui/components/ui/switch/index.js";
-import { PlatformCheckbox } from "../../../../../platform-ui/components/ui/checkbox/index.js";
+import { PlatformToggle } from "../../../../../platform-ui/components/ui/toggle/index.js";
 import {
   PlatformServiceDetailPage,
   PlatformServiceDetailProperty,
@@ -91,7 +95,6 @@ import {
   getTestPlanOwnerIdentity,
   mergeTestOwnerCandidates,
   normalizeTestPersonIdentity,
-  parseTestPlanDefinition,
   removeTestCaseFromDefinition,
   serializeTestPlanDefinition,
   setTestPlanOwnerMetadata,
@@ -138,6 +141,7 @@ interface TestPlanDetailPageProps {
   onDeleted: (plan: TestPlan) => void;
   onReload: () => Promise<void>;
   onRun: (plan: TestPlan) => void;
+  onOpenRawConfiguration?: () => void;
   onOpenRun: (run: TestRun) => void;
   onOpenCase: (
     testCase: TestCaseDefinition,
@@ -169,16 +173,6 @@ function TestPlanIdentity({ identity }: { identity: TestPersonIdentity }) {
       fallback={getIdentityInitials(identity)}
       size="compact"
     />
-  );
-}
-
-function TestPlanOwnerOptionAvatar({ identity }: { identity: TestPersonIdentity }) {
-  return (
-    <span className="tests-detail-owner-option-avatar" aria-hidden="true">
-      {identity.avatarUrl ? (
-        <img src={identity.avatarUrl} alt="" />
-      ) : getIdentityInitials(identity)}
-    </span>
   );
 }
 
@@ -252,6 +246,7 @@ export function TestPlanDetailPage({
   onDeleted,
   onReload,
   onRun,
+  onOpenRawConfiguration,
   onOpenRun,
   onOpenCase,
 }: TestPlanDetailPageProps) {
@@ -463,7 +458,7 @@ export function TestPlanDetailPage({
     ])),
     [ownerCandidates],
   );
-  const ownerOptions = useMemo<PlatformSelectorOption<string>[]>(
+  const ownerOptions = useMemo<PlatformOwnerOption<string, { candidate: TestPersonIdentity }>[]>(
     () => ownerCandidates.map((candidate) => {
       const value = getTestOwnerCandidateKey(candidate);
       const label = getIdentityLabel(candidate);
@@ -473,10 +468,12 @@ export function TestPlanDetailPage({
         : undefined;
       return {
         value,
-        label,
+        name: label,
+        email: candidate.email || "",
+        avatarUrl: candidate.avatarUrl || "",
         description,
         ariaLabel: description ? `${label}, ${description}` : label,
-        leading: <TestPlanOwnerOptionAvatar identity={candidate} />,
+        data: { candidate },
       };
     }),
     [ownerCandidates],
@@ -499,13 +496,6 @@ export function TestPlanDetailPage({
     setDefinition(nextDefinition);
     setDefinitionJson(serializeTestPlanDefinition(nextDefinition));
     setDefinitionJsonError("");
-  }
-
-  function editAdvancedDefinition(nextValue: string) {
-    setDefinitionJson(nextValue);
-    const parsed = parseTestPlanDefinition(nextValue);
-    setDefinitionJsonError(parsed.error);
-    if (parsed.definition) setDefinition(parsed.definition);
   }
 
   async function loadOwnerCandidates() {
@@ -568,9 +558,11 @@ export function TestPlanDetailPage({
         runs: plan.runs,
       });
     } catch (nextError) {
-      setError(nextError instanceof Error
-        ? nextError.message
-        : "Failed to change the test plan owner.");
+      const normalizedError = nextError instanceof Error
+        ? nextError
+        : new Error("Failed to change the test plan owner.");
+      setError(normalizedError.message);
+      throw normalizedError;
     } finally {
       setBusyAction("");
     }
@@ -1033,14 +1025,19 @@ export function TestPlanDetailPage({
         className="tests-detail-owner-row"
         title={ownerIdentity.email || getIdentityLabel(ownerIdentity)}
       >
-        <PlatformSelector
-          value={selectedOwnerValue}
+        <PlatformOwnerSelector
+          owner={{
+            value: selectedOwnerValue,
+            name: getIdentityLabel(ownerIdentity),
+            email: ownerIdentity.email || "",
+            avatarUrl: ownerIdentity.avatarUrl || "",
+          }}
           options={ownerOptions}
           open={ownerSelectorOpen}
           onOpenChange={handleOwnerSelectorOpenChange}
-          onValueChange={(nextValue) => void changeOwner(nextValue)}
+          onTransfer={(nextValue) => changeOwner(nextValue)}
           ariaLabel="Choose test plan owner"
-          label={<TestPlanIdentity identity={ownerIdentity} />}
+          resourceLabel="test plan"
           alignment="end"
           popupAlignment="right"
           fullWidth
@@ -1057,23 +1054,44 @@ export function TestPlanDetailPage({
           title={dirty ? "Save test plan changes before changing the owner." : undefined}
         />
       </PlatformServiceDetailProperty>
-      <PlatformPrimaryButton
-        size="small"
+      <PlatformButtonSelector
+        mode="split-action"
+        buttonVariant="primary"
+        buttonSize="small"
+        label="Run Test"
+        actionAriaLabel="Run Test"
+        popupAriaLabel="Run test options"
+        popupAlignment="right"
+        popupRole="menu"
+        popupVariant="minimal"
+        popupWidth={210}
+        closeOnSelect
         fullWidth
         className="tests-detail-run-button"
-        disabled={
+        actionDisabled={
           Boolean(busyAction)
           || currentCases.length === 0
           || !plan.publishedVersionId
         }
-        title={!plan.publishedVersionId
-          ? "Publish an immutable version before starting a run."
-          : undefined}
-        onClick={() => onRun(plan)}
+        popupDisabled={Boolean(busyAction) || !onOpenRawConfiguration}
+        onAction={() => onRun(plan)}
       >
-        <Play width={14} height={14} aria-hidden="true" />
-        Run Tests
-      </PlatformPrimaryButton>
+        <button
+          type="button"
+          role="menuitem"
+          className="platform-data-table__menu-item"
+          onClick={() => onOpenRawConfiguration?.()}
+        >
+          <FileJson2
+            className="platform-data-table__menu-icon"
+            width={14}
+            height={14}
+            strokeWidth={1.8}
+            aria-hidden="true"
+          />
+          <span className="platform-data-table__menu-copy">Raw Configuration</span>
+        </button>
+      </PlatformButtonSelector>
     </PlatformServiceDetailPropertyList>
   );
   const titleActions = (
@@ -1274,7 +1292,7 @@ export function TestPlanDetailPage({
                   icon={Clock3}
                   title="No test runs yet"
                   description="Run the published plan to retain case-level verification evidence."
-                  primaryAction={{ label: "Run Tests", onClick: () => onRun(plan) }}
+                  primaryAction={{ label: "Run Test", onClick: () => onRun(plan) }}
                 />
               )}
             />
@@ -1383,58 +1401,34 @@ export function TestPlanDetailPage({
             <PlatformSettingsSectionList>
               <PlatformSettingsSection
                 title="Run behavior"
-                description="Control the setup, parallel work, retry behavior, and cleanup for every run."
+                className="tests-settings-detail-section tests-run-behavior-section"
+                bodyPresentation="flush"
               >
-                <div className="tests-form-grid">
-                  <label className="tests-form-field is-span-2">
-                    <span>Before the first case (optional)</span>
-                    <input
-                      value={String(asRecord(definition.setup).command || "")}
-                      placeholder="Setup command"
-                      onChange={(event) => commitDefinition({
-                        ...definition,
-                        setup: event.currentTarget.value.trim()
-                          ? { ...asRecord(definition.setup), command: event.currentTarget.value }
-                          : null,
-                      })}
-                    />
-                    <small>Runs once before any case starts.</small>
-                  </label>
-                  <label className="tests-form-field is-span-2">
-                    <span>After the final case (optional)</span>
-                    <input
-                      value={String(asRecord(definition.teardown).command || "")}
-                      placeholder="Cleanup command"
-                      onChange={(event) => commitDefinition({
-                        ...definition,
-                        teardown: event.currentTarget.value.trim()
-                          ? { ...asRecord(definition.teardown), command: event.currentTarget.value }
-                          : null,
-                      })}
-                    />
-                    <small>Runs once after all cases finish.</small>
-                  </label>
-                  <label className="tests-form-field">
-                    <span>Cases running at once</span>
+                <PlatformServiceDetailPropertyList className="tests-settings-detail-list tests-run-behavior-list">
+                  <PlatformServiceDetailProperty label="Cases running at once">
                     <input
                       type="number"
                       min={1}
                       max={20}
+                      className="tests-settings-detail-number-input"
                       value={definition.concurrency}
+                      aria-label="Cases running at once"
+                      title="Use 1 to run cases in order"
                       onChange={(event) => commitDefinition({
                         ...definition,
                         concurrency: Math.max(1, Math.min(20, Number(event.currentTarget.value) || 1)),
                       })}
                     />
-                    <small>Use 1 to run cases in order.</small>
-                  </label>
-                  <label className="tests-form-field">
-                    <span>Attempts per case</span>
+                  </PlatformServiceDetailProperty>
+                  <PlatformServiceDetailProperty label="Attempts per case">
                     <input
                       type="number"
                       min={1}
                       max={10}
+                      className="tests-settings-detail-number-input"
                       value={definition.retryPolicy.maxAttempts}
+                      aria-label="Attempts per case"
+                      title="The agent decides when to retry; this limit includes the first attempt"
                       onChange={(event) => commitDefinition({
                         ...definition,
                         retryPolicy: {
@@ -1443,46 +1437,25 @@ export function TestPlanDetailPage({
                         },
                       })}
                     />
-                    <small>Includes the first attempt.</small>
-                  </label>
-                  <label className="tests-form-field">
-                    <span>Wait before retrying</span>
-                    <input
-                      type="number"
-                      min={0}
-                      max={300000}
-                      value={definition.retryPolicy.backoffMs}
-                      onChange={(event) => commitDefinition({
+                  </PlatformServiceDetailProperty>
+                  <PlatformServiceDetailProperty label="Stop remaining cases">
+                    <PlatformToggle
+                      checked={definition.stopOnFailure}
+                      aria-label="Stop after the first failed case"
+                      onCheckedChange={(nextChecked) => commitDefinition({
                         ...definition,
-                        retryPolicy: {
-                          ...definition.retryPolicy,
-                          backoffMs: Math.max(0, Math.min(300_000, Number(event.currentTarget.value) || 0)),
-                        },
+                        stopOnFailure: nextChecked,
                       })}
                     />
-                    <small>Delay in milliseconds.</small>
-                  </label>
-                  <div className="tests-form-field tests-form-checkbox-field">
-                    <span>When a case fails</span>
-                    <label>
-                      <PlatformCheckbox
-                        checked={definition.stopOnFailure}
-                        aria-label="Stop after the first failed case"
-                        onClick={() => commitDefinition({
-                          ...definition,
-                          stopOnFailure: !definition.stopOnFailure,
-                        })}
-                      />
-                      Stop the remaining cases
-                    </label>
-                  </div>
-                </div>
+                  </PlatformServiceDetailProperty>
+                </PlatformServiceDetailPropertyList>
               </PlatformSettingsSection>
               <PlatformSettingsSection
                 title="Evidence to keep"
-                description="Select what should remain available after a run. Secrets are redacted before evidence is stored."
+                className="tests-settings-detail-section tests-evidence-settings-section"
+                bodyPresentation="flush"
               >
-                <div className="tests-evidence-policy">
+                <PlatformServiceDetailPropertyList className="tests-settings-detail-list tests-evidence-policy">
                   {([
                     ["retainLogs", "Console logs"],
                     ["retainScreenshots", "Screenshots"],
@@ -1490,37 +1463,21 @@ export function TestPlanDetailPage({
                     ["retainArtifacts", "Files and reports"],
                     ["redactSecrets", "Redact secrets"],
                   ] as const).map(([key, label]) => (
-                    <label key={key}>
-                      <PlatformCheckbox
+                    <PlatformServiceDetailProperty key={key} label={label}>
+                      <PlatformToggle
                         checked={definition.evidencePolicy[key]}
                         aria-label={label}
-                        onClick={() => commitDefinition({
+                        onCheckedChange={(nextChecked) => commitDefinition({
                           ...definition,
                           evidencePolicy: {
                             ...definition.evidencePolicy,
-                            [key]: !definition.evidencePolicy[key],
+                            [key]: nextChecked,
                           },
                         })}
                       />
-                      {label}
-                    </label>
+                    </PlatformServiceDetailProperty>
                   ))}
-                </div>
-              </PlatformSettingsSection>
-              <PlatformSettingsSection
-                title="Advanced configuration"
-                description="Edit the underlying JSON only when the form above does not expose a required option. Invalid JSON cannot be saved."
-              >
-                <details className="tests-advanced-definition">
-                  <summary>Open raw test configuration</summary>
-                  <textarea
-                    className="tests-definition-editor"
-                    aria-label="Strict test-plan definition JSON"
-                    spellCheck={false}
-                    value={definitionJson}
-                    onChange={(event) => editAdvancedDefinition(event.currentTarget.value)}
-                  />
-                </details>
+                </PlatformServiceDetailPropertyList>
               </PlatformSettingsSection>
             </PlatformSettingsSectionList>
             <TestPlanAccessSettings

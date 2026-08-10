@@ -4,6 +4,10 @@ export {
   type TestCaseDetailPageProps,
 } from "./test-case-detail-page.js";
 export {
+  TestPlanRawConfigurationPage,
+  type TestPlanRawConfigurationPageProps,
+} from "./test-plan-raw-configuration-page.js";
+export {
   TestsOverviewPage,
   type TestsOverviewPageProps,
   type TestPlanOverviewRow,

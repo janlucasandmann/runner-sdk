@@ -51,6 +51,7 @@ import { PlatformPrimaryButton } from "../../ui/button/platform-button.js";
 import { PlatformCheckbox } from "../../ui/checkbox/platform-checkbox.js";
 import { PlatformSearch } from "../../ui/search/platform-search.js";
 import { PlatformPopupSurface } from "../popup/platform-popup.js";
+import { PlatformLoadingState } from "../loading-state/index.js";
 import type {
   PlatformDataTableAction,
   PlatformDataTableActionContext,
@@ -208,6 +209,7 @@ export function PlatformDataTable<TData>({
   sorting,
   selection,
   pagination,
+  incrementalLoading,
   toolbar,
   rowGrouping,
   getRowActions,
@@ -238,6 +240,8 @@ export function PlatformDataTable<TData>({
   style,
 }: PlatformDataTableProps<TData>): ReactNode {
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const incrementalRequestInFlightRef = useRef(false);
   const rowMenuRef = useRef<HTMLDivElement | null>(null);
   const toolbarMenuRef = useRef<HTMLDivElement | null>(null);
   const rowSelectionControlRefs = useRef(
@@ -285,6 +289,49 @@ export function PlatformDataTable<TData>({
     left: VIEWPORT_GUTTER,
     top: VIEWPORT_GUTTER,
   });
+
+  const requestMoreRows = useCallback(() => {
+    if (
+      !incrementalLoading?.hasMore ||
+      incrementalLoading.loading ||
+      incrementalRequestInFlightRef.current
+    ) {
+      return;
+    }
+    incrementalRequestInFlightRef.current = true;
+    try {
+      Promise.resolve(incrementalLoading.onLoadMore())
+        .catch((loadError) => {
+          console.error(
+            "[PlatformDataTable] Incremental row loading failed",
+            loadError,
+          );
+        })
+        .finally(() => {
+          incrementalRequestInFlightRef.current = false;
+        });
+    } catch (loadError) {
+      incrementalRequestInFlightRef.current = false;
+      console.error(
+        "[PlatformDataTable] Incremental row loading failed",
+        loadError,
+      );
+    }
+  }, [incrementalLoading]);
+
+  const handleIncrementalScroll = useCallback(() => {
+    const scrollElement = scrollRef.current;
+    if (!scrollElement || !incrementalLoading?.hasMore) return;
+    const requestedThreshold = Number(incrementalLoading.threshold);
+    const threshold = Number.isFinite(requestedThreshold)
+      ? Math.max(0, requestedThreshold)
+      : 24;
+    const remainingScrollDistance =
+      scrollElement.scrollHeight -
+      scrollElement.scrollTop -
+      scrollElement.clientHeight;
+    if (remainingScrollDistance <= threshold) requestMoreRows();
+  }, [incrementalLoading?.hasMore, incrementalLoading?.threshold, requestMoreRows]);
 
   const data = useMemo(() => Array.from(rows || []), [rows]);
   const sortingControlled = sorting?.value !== undefined;
@@ -1922,8 +1969,20 @@ export function PlatformDataTable<TData>({
         ),
         createElement(
           "div",
-          { className: "platform-data-table__scroll" },
+          {
+            ref: scrollRef,
+            className: "platform-data-table__scroll",
+            onScroll: incrementalLoading ? handleIncrementalScroll : undefined,
+          },
           renderBody(),
+          incrementalLoading?.loading
+            ? createElement(PlatformLoadingState, {
+                className: "platform-data-table__incremental-loading",
+                message:
+                  incrementalLoading.loadingMessage || "Loading more...",
+                centered: true,
+              })
+            : null,
         ),
       ),
       footer

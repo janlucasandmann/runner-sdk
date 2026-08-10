@@ -1,5 +1,5 @@
 import { Copy, Metronome, Plus, RotateCcw, SquarePen, Trash2, UsersRound } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
@@ -36,6 +36,24 @@ export interface MetronomesOverviewPageProps {
   onDelete: MetronomeOverviewAction;
   onRemoveShared: MetronomeOverviewAction;
   onRestoreShared: MetronomeOverviewAction;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void | Promise<void>;
+}
+
+const INITIAL_WORKFLOW_LIMIT = 20;
+const WORKFLOW_LOAD_MORE_COUNT = 10;
+
+function getOwnerIdentity(row: MetronomeOverviewRow) {
+  const candidateName = String(row.ownerName || row.creatorName || "").trim();
+  const name = candidateName && candidateName.toLowerCase() !== "me"
+    ? candidateName
+    : "User";
+  return {
+    name,
+    avatarUrl: row.ownerAvatarUrl || row.creatorAvatarUrl,
+    fallback: row.ownerFallback || row.creatorFallback,
+  };
 }
 
 function getStatusVariant(status: MetronomeOverviewStatus): PlatformLabelVariant {
@@ -59,23 +77,49 @@ export function MetronomesOverviewPage({
   onDelete,
   onRemoveShared,
   onRestoreShared,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore,
 }: MetronomesOverviewPageProps) {
-  const [ownershipFilter, setOwnershipFilter] = useState("all");
-
-  const filteredRows = useMemo(
-    () =>
-      rows.filter((row) => {
-        if (ownershipFilter === "owned") {
-          return !row.isBuiltIn && !row.isTeamShared;
-        }
-        if (ownershipFilter === "shared") {
-          return row.isTeamShared && !row.isHiddenTeamShared;
-        }
-        if (ownershipFilter === "removed") return row.isHiddenTeamShared;
-        return !row.isHiddenTeamShared;
-      }),
-    [ownershipFilter, rows],
+  const availableRows = useMemo(
+    () => rows.filter((row) => !row.isHiddenTeamShared),
+    [rows],
   );
+  const [visibleRowCount, setVisibleRowCount] = useState(INITIAL_WORKFLOW_LIMIT);
+  const [isRevealingMore, setIsRevealingMore] = useState(false);
+  const visibleRows = useMemo(
+    () => availableRows.slice(0, visibleRowCount),
+    [availableRows, visibleRowCount],
+  );
+
+  useEffect(() => {
+    setVisibleRowCount((current) =>
+      Math.min(current, Math.max(INITIAL_WORKFLOW_LIMIT, availableRows.length)),
+    );
+  }, [availableRows.length]);
+
+  const canLoadMore =
+    visibleRowCount < availableRows.length || Boolean(hasMore && onLoadMore);
+  const handleLoadMore = useCallback(async () => {
+    if (isRevealingMore || loadingMore || !canLoadMore) return;
+    setIsRevealingMore(true);
+    try {
+      const needsRemoteRows =
+        visibleRowCount + WORKFLOW_LOAD_MORE_COUNT > availableRows.length;
+      if (needsRemoteRows && hasMore && onLoadMore) await onLoadMore();
+      setVisibleRowCount((current) => current + WORKFLOW_LOAD_MORE_COUNT);
+    } finally {
+      setIsRevealingMore(false);
+    }
+  }, [
+    availableRows.length,
+    canLoadMore,
+    hasMore,
+    isRevealingMore,
+    loadingMore,
+    onLoadMore,
+    visibleRowCount,
+  ]);
 
   const columns = useMemo<PlatformDataTableColumn<MetronomeOverviewRow>[]>(
     () => [
@@ -98,29 +142,23 @@ export function MetronomesOverviewPage({
         ),
       },
       {
-        id: "trigger",
-        header: "Trigger",
-        accessor: "triggerLabel",
-        sortable: true,
-        width: "minmax(120px, 0.72fr)",
-        hideBelow: 720,
-        cell: ({ row }) => <ResourceOverviewValue>{row.triggerLabel}</ResourceOverviewValue>,
-      },
-      {
-        id: "creator",
-        header: "Creator",
-        accessor: "creatorName",
+        id: "owner",
+        header: "Owner",
+        accessor: (row) => getOwnerIdentity(row).name,
         sortable: true,
         width: "minmax(170px, 0.9fr)",
         hideBelow: 860,
-        cell: ({ row }) => (
-          <ResourceOverviewIdentityCell
-            title={row.creatorName}
-            imageUrl={row.creatorAvatarUrl}
-            fallback={row.creatorFallback}
-            iconClassName="is-creator"
-          />
-        ),
+        cell: ({ row }) => {
+          const owner = getOwnerIdentity(row);
+          return (
+            <ResourceOverviewIdentityCell
+              title={owner.name}
+              imageUrl={owner.avatarUrl}
+              fallback={owner.fallback}
+              iconClassName="is-creator"
+            />
+          );
+        },
       },
       {
         id: "lastRun",
@@ -234,8 +272,6 @@ export function MetronomesOverviewPage({
     ];
   };
 
-  const removedCount = rows.filter((row) => row.isHiddenTeamShared).length;
-
   return (
     <ResourceOverviewPage<MetronomeOverviewRow>
       heroContent={<MetronomesOverviewGuide />}
@@ -243,7 +279,7 @@ export function MetronomesOverviewPage({
       controlsPortalId={controlsPortalId}
       className="is-metronomes"
       table={{
-        rows: filteredRows,
+        rows: visibleRows,
         columns,
         getRowId: (row) => row.id,
         ariaLabel: "Metronomes",
@@ -256,30 +292,19 @@ export function MetronomesOverviewPage({
           ariaLabel: (row) => `Select ${row.name}`,
         },
         pagination: false,
+        incrementalLoading: {
+          hasMore: canLoadMore,
+          loading: isRevealingMore || loadingMore,
+          onLoadMore: handleLoadMore,
+          loadingMessage: "Loading more workflows...",
+        },
         toolbar: {
           search: {
             placeholder: "Search metronomes",
             getSearchText: (row) =>
               row.searchText ||
-              [row.name, row.statusLabel, row.triggerLabel, row.creatorName].join(" "),
+              [row.name, row.statusLabel, row.triggerLabel, getOwnerIdentity(row).name].join(" "),
           },
-          filters: [
-            {
-              id: "ownership",
-              label: "Ownership",
-              value: ownershipFilter,
-              onChange: setOwnershipFilter,
-              options: [
-                { id: "all", label: "All Metronomes" },
-                { id: "owned", label: "Owned" },
-                { id: "shared", label: "Shared" },
-                {
-                  id: "removed",
-                  label: removedCount ? `Removed shared (${removedCount})` : "Removed shared",
-                },
-              ],
-            },
-          ],
           primaryAction: {
             label: "Metronome",
             icon: Plus,
@@ -294,17 +319,14 @@ export function MetronomesOverviewPage({
           row.isHiddenTeamShared ? "is-removed-shared" : row.isBuiltIn ? "is-built-in" : "",
         loading,
         error,
-        emptyState:
-          ownershipFilter === "removed" ? (
-            "No removed shared metronomes."
-          ) : (
-            <PlatformEmptyState
-              icon={Metronome}
-              title="No metronomes yet"
-              description="Create a workflow to coordinate agents, triggers, and deterministic actions."
-              primaryAction={{ label: "Create Metronome", onClick: onCreate }}
-            />
-          ),
+        emptyState: (
+          <PlatformEmptyState
+            icon={Metronome}
+            title="No metronomes yet"
+            description="Create a workflow to coordinate agents, triggers, and deterministic actions."
+            primaryAction={{ label: "Create Metronome", onClick: onCreate }}
+          />
+        ),
         noResultsState: "No metronomes match this view.",
       }}
     />

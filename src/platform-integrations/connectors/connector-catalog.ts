@@ -33,8 +33,10 @@ export const PLATFORM_CONNECTOR_IDS = Object.freeze([
 
 type ConnectorDefinition = Omit<
   PlatformConnectorCatalogEntry<LegacyConnectorId>,
-  "permissionSubjectType" | "permissionTeamSubjectType" | "capabilities"
->;
+  "permissionSubjectType" | "permissionTeamSubjectType" | "capabilities" | "surfaces"
+> & {
+  surfaces?: PlatformConnectorCatalogEntry<LegacyConnectorId>["surfaces"];
+};
 
 const pluginSubject = (id: LegacyConnectorId) =>
   `${id.replaceAll("-", "_")}_plugin`;
@@ -336,6 +338,7 @@ const DEFINITIONS: Readonly<Record<LegacyConnectorId, ConnectorDefinition>> =
       logoUrl: "/img/plugins/atlassian.svg",
       authentication: "oauth2",
       authenticationLabel: "OAuth 2.0",
+      surfaces: ["tools", "inbound", "delivery"],
       functionsLabel: "Search, Triage, Document",
       samplePrompt:
         "Triage the current sprint, identify blockers, update Jira, and publish the delivery summary in Confluence.",
@@ -520,6 +523,7 @@ function createLegacyEntry(
     permissionSubjectType: subjectPrefix,
     permissionTeamSubjectType: `${subjectPrefix}_team_role`,
     capabilities: PLATFORM_CONNECTOR_CAPABILITIES[id],
+    surfaces: Object.freeze([...(definition.surfaces || ["tools"])]),
     features: Object.freeze([...definition.features]),
   });
 }

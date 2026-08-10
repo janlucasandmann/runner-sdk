@@ -321,7 +321,7 @@
   align-items: center;
   gap: 7px;
   min-height: 26px;
-  padding: 0 9px;
+  padding: 0 9px 0 0;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -1181,6 +1181,13 @@
 }
 
 .tb-runner-chat .runner-attachment-file .runner-attachment-file-brand-icon-github {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.tb-runner-chat .runner-attachment-file-reference-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
   color: rgba(255, 255, 255, 0.94);
 }
 

@@ -28,6 +28,10 @@ allowlisted built-in `control_plane_readiness` contract is executed directly by
 the durable platform worker; it checks only the canonical readiness endpoint
 and cannot carry a user command.
 
+Test Plans intentionally have no implicit setup or teardown commands. Any
+preparation or cleanup that is part of the verification contract must be an
+explicit, observable Test Case with its own result and evidence.
+
 ## Lifecycle
 
 ```text

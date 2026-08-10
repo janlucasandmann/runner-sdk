@@ -435,45 +435,35 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
                 : "";
             return {
               value,
-              label,
+              name: label,
+              email: candidate.email || "",
+              avatarUrl: candidate.avatarUrl || "",
               description: description || undefined,
               ariaLabel: description ? label + ", " + description : label,
-              leading: React.createElement(AccountAvatar, {
-                className: "playground-agents-detail-owner-option-avatar",
-                imageClassName: "playground-agents-detail-owner-option-avatar-image",
-                fallbackLabel: getAccountInitials(label),
-                photoUrl: candidate.avatarUrl || "",
-              }),
-              candidate,
+              data: { candidate },
             };
           });
           const ownerIdentityKeys = new Set(getEvaluationPersonIdentityKeys(ownerIdentity));
           const selectedOption = ownerOptions.find((option) =>
-            getEvaluationPersonIdentityKeys(option.candidate).some((key) => ownerIdentityKeys.has(key))
+            getEvaluationPersonIdentityKeys(option.data?.candidate).some((key) => ownerIdentityKeys.has(key))
           ) || null;
           const candidateState = evaluationOwnerCandidateStateBySetId?.[set?.id] || {};
-          return React.createElement(PlatformSelector, {
-            value: selectedOption?.value || getEvaluationOwnerCandidateKey(ownerIdentity),
+          return React.createElement(PlatformOwnerSelector, {
+            owner: {
+              value: selectedOption?.value || getEvaluationOwnerCandidateKey(ownerIdentity),
+              name: ownerLabel,
+              email: ownerIdentity.email || "",
+              avatarUrl: ownerIdentity.avatarUrl || "",
+            },
             options: ownerOptions,
             open: evaluationOwnerSelectorOpen,
             onOpenChange: handleEvaluationOwnerSelectorOpenChange,
-            onValueChange: (nextValue) => {
-              const nextOwner = ownerOptions.find((option) => option.value === nextValue)?.candidate;
+            onTransfer: (_nextValue, option) => {
+              const nextOwner = option?.data?.candidate;
               if (nextOwner) updateEvaluationOwner(nextOwner);
             },
             ariaLabel: "Choose evaluation owner",
-            label: React.createElement("span", { className: "playground-evaluations-detail-owner-value" },
-              React.createElement(AccountAvatar, {
-                className: "playground-team-member-avatar playground-evaluations-detail-owner-avatar",
-                imageClassName: "playground-team-member-avatar-image",
-                fallbackLabel: getAccountInitials(ownerLabel),
-                photoUrl: ownerIdentity.avatarUrl || "",
-              }),
-              React.createElement("span", {
-                className: "playground-evaluations-detail-owner-name",
-                title: ownerIdentity.email ? ownerLabel + " · " + ownerIdentity.email : ownerLabel,
-              }, ownerLabel)
-            ),
+            resourceLabel: "evaluation",
             alignment: "end",
             popupAlignment: "right",
             disabled: !isCurrentEvaluationOwner(set),

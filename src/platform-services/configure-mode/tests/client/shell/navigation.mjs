@@ -23,8 +23,12 @@ export const TESTS_APP_NAVIGATION_SCRIPT = `        function openTestsPage(optio
           setTestsPageMode(
             options.mode === "case" || requestedCaseId
               ? "case"
-              : options.mode === "run" || requestedRunId
-                ? "run"
+              : options.mode === "run-technical"
+                ? "run-technical"
+                : options.mode === "run" || requestedRunId
+                  ? "run"
+                : options.mode === "configuration"
+                  ? "configuration"
                 : options.mode === "detail" || requestedPlanId
                   ? "detail"
                   : "overview"
@@ -59,6 +63,23 @@ export const TESTS_APP_NAVIGATION_SCRIPT = `        function openTestsPage(optio
           });
         }
 
+        function openTestRawConfigurationPage(testPlanId, testPlanName = "") {
+          const normalizedPlanId = String(testPlanId || "").trim();
+          if (!normalizedPlanId) {
+            openTestsOverviewPage();
+            return;
+          }
+          setSelectedTestCaseId("");
+          setSelectedTestCaseName("");
+          setSelectedTestRunId("");
+          setSelectedTestRunName("");
+          openTestsPage({
+            mode: "configuration",
+            testPlanId: normalizedPlanId,
+            testPlanName,
+          });
+        }
+
         function openTestRunDetailPage(testPlanId, testRunId, testPlanName = "", testRunName = "") {
           const normalizedPlanId = String(testPlanId || "").trim();
           const normalizedRunId = String(testRunId || "").trim();
@@ -70,6 +91,24 @@ export const TESTS_APP_NAVIGATION_SCRIPT = `        function openTestsPage(optio
           setSelectedTestCaseName("");
           openTestsPage({
             mode: "run",
+            testPlanId: normalizedPlanId,
+            testRunId: normalizedRunId,
+            testPlanName,
+            testRunName,
+          });
+        }
+
+        function openTestRunTechnicalDetailsPage(testPlanId, testRunId, testPlanName = "", testRunName = "") {
+          const normalizedPlanId = String(testPlanId || "").trim();
+          const normalizedRunId = String(testRunId || "").trim();
+          if (!normalizedRunId) {
+            openTestPlanDetailPage(normalizedPlanId, testPlanName);
+            return;
+          }
+          setSelectedTestCaseId("");
+          setSelectedTestCaseName("");
+          openTestsPage({
+            mode: "run-technical",
             testPlanId: normalizedPlanId,
             testRunId: normalizedRunId,
             testPlanName,

@@ -1,5 +1,6 @@
 export const METRONOME_APP_STATE_SCRIPT = `
         const [metronomeProjectFilterId, setMetronomeProjectFilterId] = useState("");
+        const [metronomeOverviewScope, setMetronomeOverviewScope] = useState("all");
         const [metronomeOpenWorkflowRequest, setMetronomeOpenWorkflowRequest] = useState(null);
         const [metronomeTopNavState, setMetronomeTopNavState] = useState(null);
         const [metronomeTopNavMenuOpen, setMetronomeTopNavMenuOpen] = useState(false);
@@ -32,7 +33,6 @@ export const METRONOME_APP_STATE_SCRIPT = `
           keys: new Set(),
         });
         const absorbedMetronomeTriggerThreadIdsRef = useRef({});
-        const metronomeTopNavMenuRef = useRef(null);
         const wasMetronomeVisualEditorOpenRef = useRef(false);
         const metronomeTopNavActionsRef = useRef({
           edit: null,

@@ -1139,12 +1139,14 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
               versionsBusy: metronomePublishState.status === "loading",
               versionNumber: selectedVersionNumber,
               versionIsLatest: selectedVersionNumber === latestVersionNumber,
+              createdAt: activeWorkflow.createdAt || "",
+              updatedAt: activeWorkflow.updatedAt || activeWorkflow.createdAt || "",
             };
             const nextTopNavStateKey = JSON.stringify(nextTopNavState);
             if (metronomeTopNavStateKeyRef.current === nextTopNavStateKey) return;
             metronomeTopNavStateKeyRef.current = nextTopNavStateKey;
             onTopNavStateChange(nextTopNavState);
-          }, [onTopNavStateChange, activeWorkflow?.id, activeWorkflow?.name, activeWorkflow?.status, activeWorkflow?.activeDeploymentId, activeWorkflow?.metadata?.restoredFromDeploymentId, activeWorkflow?.metadata?.restored_from_deployment_id, activeWorkflowDeployment?.id, activeWorkflowDeployments, activeMetronomeVersionChanges, isActiveWorkflowBuiltIn, isActiveWorkflowTeamShared, metronomePublishState.status, metronomeEditorMode, metronomeVersionChangesState, selectedMetronomeRunId]);
+          }, [onTopNavStateChange, activeWorkflow?.id, activeWorkflow?.name, activeWorkflow?.status, activeWorkflow?.activeDeploymentId, activeWorkflow?.createdAt, activeWorkflow?.updatedAt, activeWorkflow?.metadata?.restoredFromDeploymentId, activeWorkflow?.metadata?.restored_from_deployment_id, activeWorkflowDeployment?.id, activeWorkflowDeployments, activeMetronomeVersionChanges, isActiveWorkflowBuiltIn, isActiveWorkflowTeamShared, metronomePublishState.status, metronomeEditorMode, metronomeVersionChangesState, selectedMetronomeRunId]);
 
           useEffect(() => () => {
             if (metronomeVersionComparisonTimerRef.current) {

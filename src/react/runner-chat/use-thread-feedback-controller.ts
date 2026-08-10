@@ -22,6 +22,13 @@ export interface RunnerThreadFeedbackReportTarget {
   summaryText: string;
 }
 
+export interface RunnerThreadFeedbackReportOpenOptions {
+  /** Allow the feedback surface to open before a thread has been persisted. */
+  allowUnavailable?: boolean;
+  /** Select the initial report category for contextual entry points. */
+  reportType?: RunnerThreadFeedbackReportType;
+}
+
 export interface RunnerThreadFeedbackClient {
   fetch: typeof fetchThreadFeedback;
   set: typeof setThreadFeedback;
@@ -167,8 +174,12 @@ export function useRunnerThreadFeedbackController({
   );
 
   const openReport = useCallback(
-    (turnId: string, summaryText: string) => {
-      if (!available) {
+    (
+      turnId: string,
+      summaryText: string,
+      options?: RunnerThreadFeedbackReportOpenOptions,
+    ) => {
+      if (!available && !options?.allowUnavailable) {
         callbacksRef.current.onUnavailable?.("Reporting an issue requires a saved thread.");
         return false;
       }
@@ -177,7 +188,7 @@ export function useRunnerThreadFeedbackController({
         turnId: String(turnId || "").trim(),
         summaryText,
       });
-      setReportTypeState("bug");
+      setReportTypeState(options?.reportType || "bug");
       setReportMessageState("");
       setReportError("");
       setReportSubmitting(false);

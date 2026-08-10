@@ -55,10 +55,14 @@ export const TEAMS_FOUNDATION_CSS = `      .playground-team-page {
       .playground-team-detail-profile-section .playground-team-detail-title {
         margin: 0;
         color: rgba(255, 255, 255, 0.96);
-        font-size: 18px;
-        line-height: 1;
-        font-weight: 500;
+        font-size: 24px;
+        line-height: 1.2;
+        font-weight: 600;
         letter-spacing: 0;
+      }
+
+      .playground-team-detail-description {
+        max-width: 620px;
       }
 
       .playground-team-detail-role-label {
@@ -1337,9 +1341,9 @@ export const TEAMS_FOUNDATION_CSS = `      .playground-team-page {
         border: 0;
         background: transparent;
         color: rgba(255, 255, 255, 0.96);
-        font-size: 18px;
-        font-weight: 500;
-        line-height: 1;
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 1.2;
       }
 
       .playground-team-detail-meta {

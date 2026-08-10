@@ -111,11 +111,11 @@ describe("SecurityRepositorySidebar", () => {
     const ownerRow = screen.getByLabelText("Owner: Grace Hopper");
     expect(ownerRow.classList.contains("is-owner")).toBe(true);
     expect(
-      ownerRow.querySelector(".playground-evaluations-detail-owner-value"),
+      ownerRow.querySelector(".platform-owner-selector__identity"),
     ).not.toBeNull();
     expect(within(ownerRow).getByText("Grace Hopper")).toBeTruthy();
     expect(
-      ownerRow.querySelector(".playground-evaluations-detail-owner-avatar"),
+      ownerRow.querySelector(".platform-owner-selector__avatar"),
     ).not.toBeNull();
     const ownerSelector = within(ownerRow).getByRole("button", {
       name: "Choose repository owner",
@@ -205,6 +205,14 @@ describe("SecurityRepositorySidebar", () => {
     });
     expect(onLoadOwnerCandidates).toHaveBeenCalledTimes(1);
     fireEvent.click(adaOption);
+    expect(
+      await screen.findByRole("heading", {
+        name: "Transfer security repository ownership?",
+      }),
+    ).toBeTruthy();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Transfer Ownership" }),
+    );
 
     await waitFor(() =>
       expect(onOwnerChange).toHaveBeenCalledWith(

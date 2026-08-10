@@ -3125,9 +3125,6 @@
             databaseOwnerTeamMembersRequestedRef.current = new Set();
             setDatabaseOwnerTeamMembersById({});
             setDatabaseOwnerPopoverOpen(false);
-  	      setDatabaseOwnerTransferTarget(null);
-  	      setDatabaseOwnerTransferModalVisible(false);
-            setDatabaseOwnerTransferModalClosing(false);
           }, [selectedDatabaseId]);
 
           useEffect(() => {
@@ -3135,15 +3132,6 @@
             setEnvironmentOwnerTeamMembersById({});
             setEnvironmentOwnerPopoverOpen(false);
           }, [selectedEnvironmentId]);
-
-  	    useEffect(() => () => {
-  	      if (databaseOwnerTransferModalCloseTimerRef.current !== null && typeof window !== "undefined") {
-  	        window.clearTimeout(databaseOwnerTransferModalCloseTimerRef.current);
-  	      }
-  	      if (databaseOwnerTransferModalFrameRef.current !== null && typeof window !== "undefined") {
-  	        window.cancelAnimationFrame(databaseOwnerTransferModalFrameRef.current);
-  	      }
-  	    }, []);
 
           useEffect(() => {
             if (
@@ -3257,12 +3245,6 @@
               void loadDatabaseOwnerTeamMembers(teamId);
             });
           }, [databaseOwnerTeamMembersById, draftServer, serverOwnerPopoverOpen]);
-
-          useEffect(() => () => {
-            if (serverOwnerTransferModalCloseTimerRef.current !== null && typeof window !== "undefined") {
-              window.clearTimeout(serverOwnerTransferModalCloseTimerRef.current);
-            }
-          }, []);
 
           useEffect(() => {
             if (resourceMode !== "servers") {

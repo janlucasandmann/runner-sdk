@@ -2683,7 +2683,7 @@
           function renderInitialThreadWelcomeNav() {
             return renderAppHeader({
               className: "playground-thread-welcome-navbar",
-              pathItems: [{ label: "Create" }],
+              hidePath: true,
               includeGhost: true,
               ghostVariant: "private-chat",
               includeSearchDivider: true,
@@ -2701,7 +2701,7 @@
 	                  { label: "Metronome", onClick: () => metronomeTopNavActionsRef.current?.goOverview?.() },
 	                  {
 	                    label: metronomeTopNavState?.title || "Untitled Metronome",
-	                    trailing: renderMetronomeBreadcrumbVersionSelector(),
+		                    trailing: renderMetronomeBreadcrumbActions(),
 	                  },
 	                ]
               : [{ label: "Create" }, { label: "Metronome" }];
@@ -2718,7 +2718,19 @@
                 ? renderImagineModeSwitch()
                 : isMetronomeEditor
                   ? renderMetronomeModeSwitch()
-                  : null,
+                  : isMetronomeOverview
+                    ? React.createElement(PlatformSwitch, {
+                        className: "playground-metronome-overview-scope-switch",
+                        value: metronomeOverviewScope,
+                        options: [
+                          { value: "all", label: "All Workflows" },
+                          { value: "created", label: "Created by me" },
+                          { value: "shared", label: "Shared with me" },
+                        ],
+                        onValueChange: setMetronomeOverviewScope,
+                        ariaLabel: "Workflow scope",
+                      })
+                    : null,
               includeSearchDivider: activePage === "calendar" || isMetronomeEditor || isMetronomeOverview,
               extraActions: activePage === "imagine"
                 ? renderImagineTopNavControls()
@@ -3714,6 +3726,7 @@
                                 environments: realEnvironments,
                                 projects: realProjects,
                                 projectFilterId: metronomeProjectFilterId,
+                                overviewScope: metronomeOverviewScope,
                                 openWorkflowRequest: metronomeOpenWorkflowRequest,
                                 onOpenWorkflowRequestHandled: (token) => {
                                   setMetronomeOpenWorkflowRequest((current) => (
@@ -3724,7 +3737,7 @@
                                 apiKey: effectiveApiKey,
                                 requestHeaders,
                                 currentUserId: hasSessionAuth ? (sessionState.userId || "") : "",
-                                currentUserName: hasSessionAuth ? accountName : "Me",
+                                currentUserName: hasSessionAuth ? accountName : "User",
                                 currentUserEmail: hasSessionAuth ? accountEmail : "",
                                 currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
                                 onNavigationGuardChange: registerPlatformNavigationGuard,
@@ -4029,6 +4042,12 @@
                                       onOpenPluginsOverview: () => {
                                         setSelectedPluginId("");
                                         openToolsView("plugins");
+                                      },
+                                      onOpenPromptSearch: (onSelect) => {
+                                        openPromptSearch(onSelect);
+                                      },
+                                      onOpenThreadSearch: (onSelect) => {
+                                        openThreadReferenceSearch(onSelect);
                                       },
                                       onOpenPlansBudget: () => {
                                         requestPlatformPlanGate({

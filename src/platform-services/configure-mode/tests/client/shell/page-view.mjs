@@ -51,6 +51,9 @@ export const TESTS_APP_PAGE_VIEW_SCRIPT = String.raw`        function renderTest
             onOpenPlan: (planId, planName = "") => {
               openTestPlanDetailPage(planId, planName);
             },
+            onOpenRawConfiguration: (planId, planName = "") => {
+              openTestRawConfigurationPage(planId, planName);
+            },
             onPlanDeleted: () => {
               openTestsOverviewPage();
             },
@@ -63,6 +66,19 @@ export const TESTS_APP_PAGE_VIEW_SCRIPT = String.raw`        function renderTest
                 runId,
                 planName,
                 "Run " + String(runId || "").slice(-8)
+              );
+            },
+            onOpenRunTechnicalDetails: (
+              planId,
+              runId,
+              planName = "",
+              runName = ""
+            ) => {
+              openTestRunTechnicalDetailsPage(
+                planId,
+                runId,
+                planName,
+                runName || ("Run " + String(runId || "").slice(-8))
               );
             },
             onIdentityChange: (identity = {}) => {

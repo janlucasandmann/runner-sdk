@@ -107,7 +107,11 @@ export const METRONOME_RUNS_CSS = String.raw`
       .playground-metronome-runs-layout {
         flex: 0 0 auto;
         min-height: 0;
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+        column-gap: 42px;
+        row-gap: 24px;
+        align-items: flex-start;
         width: 100%;
       }
 
@@ -119,19 +123,48 @@ export const METRONOME_RUNS_CSS = String.raw`
       }
 
       .playground-metronome-runs-table-section.playground-team-grid-table-section {
-        flex: 0 0 auto;
+        flex: 1 1 0;
         min-height: 0;
+        min-width: 0;
         margin: 0;
         display: flex;
         flex-direction: column;
         height: auto;
-        width: 100%;
+        width: auto;
         align-self: stretch;
         padding: 0;
         border: 0;
         border-radius: 0;
         background: transparent;
         box-shadow: none;
+      }
+
+      .playground-metronome-runs-sidebar.platform-ui-card {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        position: sticky;
+        top: 0;
+      }
+
+      .playground-metronome-runs-trigger-button.platform-button {
+        width: 100%;
+        margin-top: 8px;
+      }
+
+      @media (max-width: 980px) {
+        .playground-metronome-runs-view {
+          overflow-y: auto;
+        }
+
+        .playground-metronome-runs-layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .playground-metronome-runs-sidebar.platform-ui-card {
+          position: static;
+          width: 100%;
+        }
       }
 
       .playground-metronome-runs-table-section .playground-project-overview-threads-table,
@@ -827,128 +860,4 @@ export const METRONOME_RUNS_CSS = String.raw`
         margin-top: 6px;
       }
 
-      .playground-metronome-top-nav-menu-shell {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-      }
-
-      .playground-top-nav-private-chat-button.playground-metronome-top-nav-menu-trigger {
-        width: 30px;
-        min-width: 30px;
-        padding: 0;
-      }
-
-      .playground-top-nav-private-chat-button.playground-metronome-top-nav-menu-trigger::before {
-        display: none !important;
-        content: none !important;
-      }
-
-      .playground-metronome-top-nav-menu {
-        --playground-top-nav-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
-        position: absolute;
-        z-index: 2200;
-        top: calc(100% + 8px);
-        right: 0;
-        width: 230px;
-        min-width: 230px;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 0 !important;
-        padding: 4px 0 !important;
-        border-radius: 25px;
-        overflow: hidden;
-        border: 0 !important;
-        background: rgba(30, 30, 30, 0.5) !important;
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35) !important;
-        -webkit-backdrop-filter: blur(5px);
-        backdrop-filter: blur(5px);
-      }
-
-      .playground-metronome-top-nav-menu::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        z-index: 5;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-top-nav-popup-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-metronome-top-nav-menu-id {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        padding: 12px 14px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.48);
-        font-size: 11px;
-        font-weight: 500;
-        line-height: 1.2;
-      }
-
-      .playground-metronome-top-nav-menu-id code {
-        display: block;
-        max-width: 100%;
-        color: rgba(255, 255, 255, 0.85);
-        font-family: var(--font-mono, "SFMono-Regular", Consolas, "Liberation Mono", monospace);
-        font-size: 11px;
-        font-weight: 500;
-        line-height: 1.35;
-        white-space: normal;
-        overflow-wrap: anywhere;
-      }
-
-      .playground-metronome-top-nav-menu .tb-popup-row {
-        width: 100% !important;
-        min-height: 40px;
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-        gap: 12px !important;
-        padding: 10px 14px !important;
-        border: 0 !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-        color: white !important;
-        font-size: 13px !important;
-        font-weight: 500 !important;
-        line-height: 1.2 !important;
-        text-align: left !important;
-        cursor: pointer;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .playground-metronome-top-nav-menu .tb-popup-row:hover,
-      .playground-metronome-top-nav-menu .tb-popup-row:focus-visible {
-        background: rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
-        outline: none;
-      }
-
-      .playground-metronome-top-nav-menu .tb-popup-row .tb-popup-icon {
-        width: 14px !important;
-        height: 14px !important;
-        flex: 0 0 auto;
-        color: currentColor !important;
-      }
-
-      .playground-metronome-top-nav-menu .tb-popup-row.is-danger {
-        color: rgba(255, 118, 118, 0.96) !important;
-      }
-
-      .playground-metronome-top-nav-menu .tb-popup-row.is-danger:hover,
-      .playground-metronome-top-nav-menu .tb-popup-row.is-danger:focus-visible {
-        background: rgba(255, 80, 80, 0.12) !important;
-        color: rgba(255, 142, 142, 0.98) !important;
-      }
 `;

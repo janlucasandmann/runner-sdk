@@ -156,7 +156,8 @@
   object-fit: cover;
 }
 .resource-overview-identity__visual.is-agent,
-.resource-overview-identity__visual.is-creator {
+.resource-overview-identity__visual.is-creator,
+.resource-overview-identity__visual.is-team {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.075);
 }
@@ -249,6 +250,56 @@
 }
 
 .resource-overview-table.is-skills.is-catalog-ui
+  .resource-overview-identity__visual.is-creator {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.resource-overview-table.is-teams.is-catalog-ui
+  .resource-overview-identity__visual.is-team {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  outline: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.resource-overview-table.is-teams.is-catalog-ui
+  .resource-overview-identity__visual.is-team img {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  outline: 0;
+  box-shadow: none;
+}
+
+.resource-overview-table.is-teams.is-catalog-ui
+  .resource-overview-identity__visual.is-creator {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.resource-overview-table.is-teams.is-catalog-ui
+  .resource-overview-identity__visual.is-creator img {
+  border: 0;
+  border-radius: 50%;
+}
+
+.resource-overview-table.is-metronomes.is-catalog-ui
   .resource-overview-identity__visual.is-creator {
   width: 26px;
   height: 26px;

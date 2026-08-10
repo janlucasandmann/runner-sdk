@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MetronomesOverviewPage } from "./metronomes-overview-page.js";
@@ -16,8 +16,8 @@ const rows: MetronomeOverviewRow[] = [
     statusLabel: "Default",
     statusRank: 0,
     triggerLabel: "Manual",
-    creatorName: "Computer Agents",
-    creatorAvatarUrl: "/img/agent-profile-pics/ca-profilepic.jpg",
+    ownerName: "Computer Agents",
+    ownerAvatarUrl: "/img/agent-profile-pics/ca-profilepic.jpg",
     lastRunLabel: "Ready to run",
     sortTimestamp: 0,
     runsToday: 0,
@@ -31,8 +31,8 @@ const rows: MetronomeOverviewRow[] = [
     statusLabel: "Active",
     statusRank: 1,
     triggerLabel: "Schedule",
-    creatorName: "Me",
-    creatorFallback: "ME",
+    ownerName: "Jan Luca Sandmann",
+    ownerFallback: "JL",
     lastRunLabel: "Jul 18",
     lastRunAt: Date.parse("2026-07-18T08:00:00Z"),
     sortTimestamp: Date.parse("2026-07-18T08:00:00Z"),
@@ -84,6 +84,12 @@ describe("MetronomesOverviewPage", () => {
     const controls = screen.getByTestId("overview-controls");
     expect(within(controls).queryByRole("radiogroup")).toBeNull();
     expect(within(controls).getByRole("button", { name: "Metronome" })).not.toBeNull();
+    expect(screen.queryByRole("button", { name: /filter/i })).toBeNull();
+    expect(screen.queryByRole("columnheader", { name: /trigger/i })).toBeNull();
+    expect(screen.getByRole("columnheader", { name: /owner/i })).not.toBeNull();
+    expect(screen.queryByRole("columnheader", { name: /creator/i })).toBeNull();
+    expect(screen.getByText("Jan Luca Sandmann")).not.toBeNull();
+    expect(screen.queryByText("Me")).toBeNull();
 
     const lastRunHeader = screen.getByRole("columnheader", { name: /Last run/ });
     expect(lastRunHeader.getAttribute("aria-sort")).toBe("descending");
@@ -111,11 +117,69 @@ describe("MetronomesOverviewPage", () => {
         ?.querySelector("img")
         ?.getAttribute("src"),
     ).toBe("/img/agent-profile-pics/ca-profilepic.jpg");
+    expect(
+      screen
+        .getByText("Computer Agents")
+        .closest(".resource-overview-identity")
+        ?.querySelector(".resource-overview-identity__visual.is-creator.is-size-standard"),
+    ).not.toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Open actions for Loop" }));
     expect(screen.getByRole("menuitem", { name: "Duplicate" })).not.toBeNull();
     expect(screen.queryByRole("menuitem", { name: "Delete" })).toBeNull();
     await user.click(screen.getByRole("menuitem", { name: "Duplicate" }));
     expect(onDuplicate).toHaveBeenCalledWith(rows[0]);
+  });
+
+  it("shows 20 workflows initially and reveals the next 10 at the table bottom", async () => {
+    let resolveLoadMore: (() => void) | undefined;
+    const onLoadMore = vi.fn(
+      () => new Promise<void>((resolve) => {
+        resolveLoadMore = resolve;
+      }),
+    );
+    const manyRows: MetronomeOverviewRow[] = Array.from({ length: 25 }, (_, index) => ({
+      id: `workflow-${index + 1}`,
+      name: `Workflow ${String(index + 1).padStart(2, "0")}`,
+      status: "active",
+      statusLabel: "Active",
+      statusRank: 1,
+      triggerLabel: "Manual",
+      ownerName: "Jan Luca Sandmann",
+      ownerFallback: "JL",
+      lastRunLabel: "Never",
+      sortTimestamp: 25 - index,
+      runsToday: 0,
+      waitingApprovals: 0,
+    }));
+    const { container } = renderPage({
+      rows: manyRows,
+      hasMore: true,
+      onLoadMore,
+    });
+
+    expect(screen.getByText("Workflow 20")).not.toBeNull();
+    expect(screen.queryByText("Workflow 21")).toBeNull();
+    const scroll = container.querySelector<HTMLElement>(
+      ".platform-data-table__scroll",
+    );
+    expect(scroll).not.toBeNull();
+    Object.defineProperties(scroll as HTMLElement, {
+      scrollHeight: { configurable: true, value: 1000 },
+      clientHeight: { configurable: true, value: 400 },
+      scrollTop: { configurable: true, value: 600, writable: true },
+    });
+
+    fireEvent.scroll(scroll as HTMLElement);
+    await waitFor(() => expect(onLoadMore).toHaveBeenCalledTimes(1));
+    expect(
+      screen.getByRole("status", { name: "Loading more workflows..." }),
+    ).not.toBeNull();
+
+    resolveLoadMore?.();
+    await waitFor(() => expect(screen.getByText("Workflow 25")).not.toBeNull());
+    expect(
+      screen.queryByRole("status", { name: "Loading more workflows..." }),
+    ).toBeNull();
   });
 });

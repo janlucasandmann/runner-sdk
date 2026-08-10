@@ -429,6 +429,15 @@
             onOpenVersions: null,
           });
           const [toolsSkillsBackRequestToken, setToolsSkillsBackRequestToken] = useState(0);
+          const [toolsPromptsOpenRequest, setToolsPromptsOpenRequest] = useState(null);
+          const [toolsPromptsHeaderState, setToolsPromptsHeaderState] = useState({
+            mode: "overview",
+            title: "Prompts",
+            promptId: "",
+            versionNumber: 0,
+            versionQualifier: "",
+          });
+          const [toolsPromptsBackRequestToken, setToolsPromptsBackRequestToken] = useState(0);
           const [resourcesHeaderState, setResourcesHeaderState] = useState({
             mode: "overview",
             title: "",

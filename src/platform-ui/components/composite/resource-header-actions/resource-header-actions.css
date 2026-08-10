@@ -93,6 +93,17 @@
   align-items: start;
 }
 
+.platform-resource-actions-information__metadata .platform-resource-actions-menu__metadata-row.is-resource-id
+  .platform-resource-actions-menu__metadata-content {
+  justify-content: flex-end;
+}
+
+.platform-resource-actions-information__metadata .platform-resource-actions-menu__metadata-row.is-resource-id
+  .platform-resource-actions-menu__metadata-value.is-copyable {
+  flex: 0 1 auto;
+  text-align: right;
+}
+
 .platform-resource-actions-menu__metadata.platform-resource-actions-information__metadata {
   border-bottom: 0;
 }

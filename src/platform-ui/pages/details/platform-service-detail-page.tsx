@@ -6,8 +6,9 @@ export type PlatformServiceDetailVariant = "resource" | "run";
 
 export interface PlatformServiceDetailPageProps {
   children: ReactNode;
-  properties: ReactNode;
+  properties?: ReactNode;
   actions?: ReactNode;
+  sidebarContent?: ReactNode;
   sidebarCollapsed?: boolean;
   sidebarPopoverOpen?: boolean;
   ariaLabel?: string;
@@ -111,6 +112,7 @@ export function PlatformServiceDetailPage({
   children,
   properties,
   actions,
+  sidebarContent,
   sidebarCollapsed = false,
   sidebarPopoverOpen = false,
   ariaLabel = "Service details",
@@ -123,40 +125,41 @@ export function PlatformServiceDetailPage({
   variant = "resource",
 }: PlatformServiceDetailPageProps) {
   const isRun = variant === "run";
+  const resolvedSidebar = sidebarContent === undefined ? (
+    <>
+      <PlatformUiCard
+        as="section"
+        variant="sidebar"
+        className={joinClassNames(
+          "playground-ticket-detail-sidebar-section",
+          "playground-ticket-detail-sidebar-details",
+          "platform-service-detail-page__sidebar-card",
+          propertiesCardClassName,
+        )}
+      >
+        {properties}
+      </PlatformUiCard>
+      {actions !== undefined && actions !== null ? (
+        <PlatformUiCard
+          as="section"
+          variant="sidebar"
+          cardTitle="Actions"
+          className={joinClassNames(
+            "platform-service-detail-page__sidebar-card",
+            actionsCardClassName,
+          )}
+        >
+          {actions}
+        </PlatformUiCard>
+      ) : null}
+    </>
+  ) : sidebarContent;
 
   return (
     <ResourceDetailPage
       tabs={[]}
       sidebarCollapsed={sidebarCollapsed}
-      sidebar={(
-        <>
-          <PlatformUiCard
-            as="section"
-            variant="sidebar"
-            className={joinClassNames(
-              "playground-ticket-detail-sidebar-section",
-              "playground-ticket-detail-sidebar-details",
-              "platform-service-detail-page__sidebar-card",
-              propertiesCardClassName,
-            )}
-          >
-            {properties}
-          </PlatformUiCard>
-          {actions !== undefined && actions !== null ? (
-            <PlatformUiCard
-              as="section"
-              variant="sidebar"
-              cardTitle="Actions"
-              className={joinClassNames(
-                "platform-service-detail-page__sidebar-card",
-                actionsCardClassName,
-              )}
-            >
-              {actions}
-            </PlatformUiCard>
-          ) : null}
-        </>
-      )}
+      sidebar={resolvedSidebar}
       ariaLabel={ariaLabel}
       tabAriaLabel={isRun ? "Run sections" : "Service sections"}
       sidebarAriaLabel={sidebarAriaLabel}

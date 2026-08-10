@@ -21,12 +21,10 @@ const plan: TestPlan = {
   defaultEnvironmentId: "environment-1",
   definition: {
     schemaVersion: "1",
-    setup: null,
     cases: [],
-    teardown: null,
     concurrency: 1,
     stopOnFailure: false,
-    retryPolicy: { maxAttempts: 1, backoffMs: 0 },
+    retryPolicy: { maxAttempts: 1 },
     evidencePolicy: {
       retainLogs: true,
       retainScreenshots: true,
@@ -76,6 +74,7 @@ describe("TestPlanDetailPage", () => {
     const environmentName = "A human-readable environment name that is intentionally very long";
     const onVersionsSidebarOpenChange = vi.fn();
     const onNavigationGuardChange = vi.fn();
+    const onOpenRawConfiguration = vi.fn();
     const { container } = render(
       <TestPlanDetailPage
         plan={plan}
@@ -91,6 +90,7 @@ describe("TestPlanDetailPage", () => {
         onDeleted={vi.fn()}
         onReload={vi.fn().mockResolvedValue(undefined)}
         onRun={vi.fn()}
+        onOpenRawConfiguration={onOpenRawConfiguration}
         onOpenRun={vi.fn()}
         onOpenCase={vi.fn()}
       />,
@@ -148,8 +148,23 @@ describe("TestPlanDetailPage", () => {
     expect(screen.queryByText("Status")).toBeNull();
     expect(screen.queryByRole("heading", { name: "Run target" })).toBeNull();
     expect(screen.getByRole("heading", { name: "Run behavior" })).not.toBeNull();
-    expect(screen.getByRole("heading", { name: "Evidence to keep" })).not.toBeNull();
-    expect(screen.getByRole("heading", { name: "Advanced configuration" })).not.toBeNull();
+    expect(screen.queryByText("Before the first case (optional)")).toBeNull();
+    expect(screen.queryByText("After the final case (optional)")).toBeNull();
+    expect(screen.queryByPlaceholderText("Setup command")).toBeNull();
+    expect(screen.queryByPlaceholderText("Cleanup command")).toBeNull();
+    expect(screen.queryByText("Wait before retrying")).toBeNull();
+    const runBehaviorSection = screen.getByRole("heading", { name: "Run behavior" }).closest("section");
+    expect(runBehaviorSection?.querySelectorAll(".platform-service-detail-page__property")).toHaveLength(3);
+    expect(within(runBehaviorSection as HTMLElement).getByRole("switch", {
+      name: "Stop after the first failed case",
+    })).not.toBeNull();
+    const evidenceSection = screen.getByRole("heading", { name: "Evidence to keep" }).closest("section");
+    expect(evidenceSection?.querySelectorAll(".platform-service-detail-page__property")).toHaveLength(5);
+    expect(within(evidenceSection as HTMLElement).getAllByRole("switch")).toHaveLength(5);
+    expect(screen.queryByRole("heading", { name: "Advanced configuration" })).toBeNull();
+    expect(screen.queryByText("Edit the underlying JSON only when the form above does not expose a required option. Invalid JSON cannot be saved.")).toBeNull();
+    expect(screen.queryByText("Open raw test configuration")).toBeNull();
+    expect(screen.queryByRole("textbox", { name: "Strict test-plan definition JSON" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Version history" })).toBeNull();
     expect(screen.queryByText("Save Version")).toBeNull();
 
@@ -212,6 +227,15 @@ describe("TestPlanDetailPage", () => {
     expect(detailsSidebar?.dataset.collapsed).toBe("false");
     expect(onVersionsSidebarOpenChange).toHaveBeenLastCalledWith(false);
     expect(screen.getByRole("radiogroup", { name: "Test plan section" })).not.toBeNull();
+
+    expect(
+      container.querySelector(".tests-detail-run-button .platform-button-selector__action svg"),
+    ).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Run test options" }));
+    const runOptions = screen.getByRole("menu", { name: "Run test options" });
+    expect(runOptions.getAttribute("data-platform-popup-variant")).toBe("minimal");
+    fireEvent.click(within(runOptions).getByRole("menuitem", { name: "Raw Configuration" }));
+    expect(onOpenRawConfiguration).toHaveBeenCalledTimes(1);
 
     fireEvent.keyDown(document, {
       key: "ß",

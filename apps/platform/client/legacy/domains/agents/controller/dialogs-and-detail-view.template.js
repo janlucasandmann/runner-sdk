@@ -1309,21 +1309,11 @@
                 }, displayValue),
                 renderAgentFactCopyButton(fieldId, value, label)
               );
-            const renderAgentOwnerAvatar = (className, imageClassName, fallbackLabel, photoUrl) =>
-              React.createElement(AccountAvatar, {
-                className,
-                imageClassName,
-                fallbackLabel,
-                photoUrl,
-              });
             const renderAgentOwnerRow = (options = {}) => {
               const isCompact = Boolean(options.compact);
               const ownerIdentityForDisplay = resolvedAgentOwnerIdentity || agentOwnerIdentity || {};
               const ownerLabel = String(ownerIdentityForDisplay?.name || ownerIdentityForDisplay?.email || "Owner").trim();
               const ownerEmail = String(ownerIdentityForDisplay?.email || "").trim();
-              const ownerDetail = ownerEmail && ownerLabel.toLowerCase() !== ownerEmail.toLowerCase()
-                ? ownerEmail
-                : "";
               const ownerMenuIsLoading = agentOwnerPopoverOpen && agentOwnerMissingTeamIds.length > 0;
               const currentOwnerKeys = new Set(getAgentIdentityMatchKeys(agentOwnerIdentity, agentOwnerIdentity));
               const ownerOptions = enrichedAgentOwnerCandidateRows.map((candidate) => {
@@ -1336,50 +1326,33 @@
                   : (Array.isArray(candidate.teamNames) ? candidate.teamNames.join(", ") : "");
                 return {
                   value: candidateKey || candidateLabel.toLowerCase(),
-                  label: candidateLabel,
+                  name: candidateLabel,
+                  email: candidate.email || "",
+                  avatarUrl: candidate.avatarUrl || "",
                   description: candidateDetail || undefined,
                   ariaLabel: candidateDetail ? candidateLabel + ", " + candidateDetail : candidateLabel,
-                  leading: renderAgentOwnerAvatar(
-                    "playground-agents-detail-owner-option-avatar",
-                    "playground-agents-detail-owner-option-avatar-image",
-                    getAccountInitials(candidateLabel),
-                    candidate.avatarUrl || ""
-                  ),
-                  candidate,
-                  candidateKeys,
+                  data: { candidate, candidateKeys },
                 };
               });
               const selectedOwnerOption = ownerOptions.find((option) =>
-                option.candidateKeys.some((key) => currentOwnerKeys.has(key))
+                option.data.candidateKeys.some((key) => currentOwnerKeys.has(key))
               ) || null;
-              return React.createElement(PlatformSelector, {
-                value: selectedOwnerOption?.value || "",
+              return React.createElement(PlatformOwnerSelector, {
+                owner: {
+                  value: selectedOwnerOption?.value || getAgentIdentityMatchKeys(ownerIdentityForDisplay, ownerIdentityForDisplay)[0] || "current-owner",
+                  name: ownerLabel,
+                  email: ownerEmail,
+                  avatarUrl: ownerIdentityForDisplay?.avatarUrl || "",
+                },
                 options: ownerOptions,
                 open: agentOwnerPopoverOpen,
                 onOpenChange: handleAgentOwnerPopoverOpenChange,
-                onValueChange: (nextValue) => {
-                  const selectedOwner = ownerOptions.find((option) => option.value === nextValue)?.candidate;
+                onTransfer: (_nextValue, option) => {
+                  const selectedOwner = option?.data?.candidate;
                   if (selectedOwner) handleAgentOwnerSelect(selectedOwner);
                 },
                 ariaLabel: "Choose agent owner",
-                label: React.createElement("span", {
-                    className: "playground-agents-detail-owner-value",
-                  },
-                  React.createElement("span", { className: "playground-team-member-cell playground-agents-detail-owner-member-cell" },
-                    renderAgentOwnerAvatar(
-                      "playground-team-member-avatar",
-                      "playground-team-member-avatar-image",
-                      getAccountInitials(ownerLabel),
-                      ownerIdentityForDisplay?.avatarUrl || ""
-                    ),
-                    React.createElement("span", { className: "playground-team-member-copy" },
-                      React.createElement("span", {
-                        className: "playground-team-table-title",
-                        title: ownerDetail ? ownerLabel + " · " + ownerDetail : ownerLabel,
-                      }, ownerLabel)
-                    )
-                  )
-                ),
+                resourceLabel: "agent",
                 alignment: options.alignment || "start",
                 fullWidth: true,
                 loading: ownerOptions.length === 0 && (workspaceTeamsLoading || ownerMenuIsLoading),

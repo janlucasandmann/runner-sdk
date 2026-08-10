@@ -44,6 +44,7 @@ describe("composer selector controls", () => {
     expect(html).toContain("tb-selector-anchor-agent");
     expect(html).toContain('class="tb-inline-selector-label"');
     expect(html).toContain('title="Forge"');
+    expect(html).toContain('data-platform-hover-label="Agent"');
   });
 
   it("marks the selected workspace label as a truncation target", () => {
@@ -74,6 +75,7 @@ describe("composer selector controls", () => {
     expect(html).toContain("tb-selector-anchor-workspace");
     expect(html).toContain('class="tb-inline-selector-label"');
     expect(html).toContain(`title="${workspaceName}"`);
+    expect(html).toContain('data-platform-hover-label="Environment"');
   });
 
   it("resolves the default organization label", () => {

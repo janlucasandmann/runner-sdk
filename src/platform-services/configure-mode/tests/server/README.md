@@ -13,6 +13,10 @@ thread in the selected environment, executes the immutable published plan
 snapshot, requires a strict `test_run_json` result, and persists case evidence
 while holding a fenced run lease.
 
+The plan contract contains only explicit cases; it has no setup or teardown
+lifecycle commands. Preparation and cleanup must therefore be represented as
+ordinary cases and receive the same result and evidence treatment.
+
 The hidden thread authors the structured result, so this execution path is
 explicitly labeled `self_reported` and `unverified`. It must not be presented as
 independently trusted release evidence. Trusted evidence requires a separate

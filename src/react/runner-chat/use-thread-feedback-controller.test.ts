@@ -114,4 +114,28 @@ describe("useRunnerThreadFeedbackController", () => {
     expect(onUnavailable).toHaveBeenCalledWith("Reporting an issue requires a saved thread.");
     expect(result.current.reportTarget).toBeNull();
   });
+
+  it("can open general feedback before a thread is persisted", () => {
+    const onReportOpen = vi.fn();
+    const { result } = renderHook(() =>
+      useRunnerThreadFeedbackController({
+        onReportOpen,
+        client: createClient(),
+      }),
+    );
+
+    act(() => {
+      expect(result.current.openReport("composer", "Feedback from home", {
+        allowUnavailable: true,
+        reportType: "general",
+      })).toBe(true);
+    });
+
+    expect(onReportOpen).toHaveBeenCalledOnce();
+    expect(result.current.reportType).toBe("general");
+    expect(result.current.reportTarget).toEqual({
+      turnId: "composer",
+      summaryText: "Feedback from home",
+    });
+  });
 });

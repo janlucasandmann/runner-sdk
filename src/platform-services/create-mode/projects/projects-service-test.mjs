@@ -62,7 +62,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "448cb76c133476a5fe838e3c71209eca010f8a3ff1bd22dd262a00c976f4e301",
+    expectedSha256: "8f7d78169846f999220c5ae6f1d15dcc0ecc7c61228d67aa05d2a83f71cdf10a",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -122,7 +122,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "8bca9c80c63f4b7af9590cd5a0d81f4081a9f75b89c88e16b83dd5241251ba12",
+    expectedSha256: "1f6c9e3ffdcd79e23909362ddb0383d624a9ec4eb24af8a3865913b6af74b148",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -134,7 +134,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects core styles",
     source: PROJECTS_CORE_CSS,
-    expectedSha256: "e1963e2a02c5e5f7c791637528099abda0141389d33150b66195efe128e0a0f4",
+    expectedSha256: "c9c81e5580d874693396c7d2a7ed981013598b337dbfed371ae30fb96b3b990b",
     fragmentGroups: [
       {
         baseUrl: projectsStylesUrl,
@@ -756,11 +756,13 @@ assert.match(PROJECT_OVERVIEW_SCRIPT, /return React\.createElement\(PlatformSele
 assert.equal(
   (
     PROJECT_OVERVIEW_SCRIPT.match(
-      /renderProjectOverviewSidebarSelectControl\(\s*"(?:status|priority|computer|owner)"/g,
+      /renderProjectOverviewSidebarSelectControl\(\s*"(?:status|priority|computer)"/g,
     ) || []
   ).length,
-  4,
+  3,
 );
+assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\(PlatformOwnerSelector, \{/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /ariaLabel: "Project owner"/);
 assert.doesNotMatch(
   PROJECT_OVERVIEW_SCRIPT,
   /renderProjectOverviewSidebarRow\("Type"/,

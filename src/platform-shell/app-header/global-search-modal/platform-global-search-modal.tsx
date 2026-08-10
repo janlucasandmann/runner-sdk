@@ -3,6 +3,7 @@ import {
   Check,
   FileText,
   ListTodo,
+  MessageSquareText,
   MessageSquare,
   Pencil,
   SlidersHorizontal,
@@ -31,7 +32,13 @@ import { PlatformPopup } from "../../../platform-ui/components/composite/popup/i
 import { PlatformSecondaryButton } from "../../../platform-ui/components/ui/button/index.js";
 import { PlatformIconButton } from "../../../platform-ui/components/ui/icon-button/index.js";
 
-export type PlatformGlobalSearchMode = "threads" | "files" | "tickets" | "agents" | "workflows";
+export type PlatformGlobalSearchMode =
+  | "threads"
+  | "files"
+  | "tickets"
+  | "agents"
+  | "workflows"
+  | "prompts";
 
 export interface PlatformGlobalSearchModeOption {
   id: PlatformGlobalSearchMode;
@@ -64,6 +71,11 @@ export const PLATFORM_GLOBAL_SEARCH_MODE_OPTIONS: readonly PlatformGlobalSearchM
     id: "workflows",
     label: "Workflows",
     description: "Metronome workflows",
+  },
+  {
+    id: "prompts",
+    label: "Prompts",
+    description: "Reusable prompts in your workspace",
   },
 ] as const;
 
@@ -100,6 +112,8 @@ export interface PlatformGlobalSearchModalProps {
   onClose: () => void;
   mode?: PlatformGlobalSearchMode;
   modeOptions?: readonly PlatformGlobalSearchModeOption[];
+  /** Keeps the selected mode visible while preventing switching from this modal context. */
+  modeLocked?: boolean;
   onModeChange?: (mode: PlatformGlobalSearchMode) => void;
   actions?: readonly PlatformGlobalSearchAction[];
   onActionSelect?: (actionId: string) => void;
@@ -143,6 +157,7 @@ function getModeIcon(mode: PlatformGlobalSearchMode) {
   if (mode === "tickets") return ListTodo;
   if (mode === "agents") return Bot;
   if (mode === "workflows") return Workflow;
+  if (mode === "prompts") return MessageSquareText;
   return MessageSquare;
 }
 
@@ -162,6 +177,7 @@ function getModeItemLabel(mode: PlatformGlobalSearchMode) {
   if (mode === "tickets") return "ticket";
   if (mode === "agents") return "agent";
   if (mode === "workflows") return "workflow";
+  if (mode === "prompts") return "prompt";
   return "thread";
 }
 
@@ -430,6 +446,7 @@ export function PlatformGlobalSearchModal({
   onClose,
   mode = "threads",
   modeOptions = PLATFORM_GLOBAL_SEARCH_MODE_OPTIONS,
+  modeLocked = false,
   onModeChange,
   actions = EMPTY_ACTIONS,
   onActionSelect,
@@ -636,6 +653,18 @@ export function PlatformGlobalSearchModal({
 
   const modeControl =
     modeOptions.length > 0 ? (
+      modeLocked ? (
+        <PlatformSecondaryButton
+          type="button"
+          size="small"
+          className="platform-global-search-modal__mode-button"
+          disabled
+          aria-label={`Search mode: ${activeModeOption.label}`}
+        >
+          <SlidersHorizontal width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
+          <span>{activeModeOption.label}</span>
+        </PlatformSecondaryButton>
+      ) : (
       <PlatformPopup
         open={modeMenuOpen}
         variant="minimal"
@@ -689,6 +718,7 @@ export function PlatformGlobalSearchModal({
           );
         })}
       </PlatformPopup>
+      )
     ) : null;
 
   const footer = (

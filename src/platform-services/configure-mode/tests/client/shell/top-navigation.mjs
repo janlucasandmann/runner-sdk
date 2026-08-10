@@ -7,10 +7,19 @@ export const TESTS_APP_TOP_NAVIGATION_SCRIPT = `        function renderTestsPage
               onClick: () => requestPlatformNavigation(openTestsOverviewPage),
             },
           ];
-          if (testsPageMode === "detail" || testsPageMode === "case" || testsPageMode === "run") {
+          if (
+            testsPageMode === "detail"
+            || testsPageMode === "configuration"
+            || testsPageMode === "case"
+            || testsPageMode === "run"
+            || testsPageMode === "run-technical"
+          ) {
             pathItems.push({
               label: selectedTestPlanName || "Test Plan",
-              onClick: testsPageMode === "run" || testsPageMode === "case"
+              onClick: testsPageMode === "run"
+                || testsPageMode === "run-technical"
+                || testsPageMode === "case"
+                || testsPageMode === "configuration"
                 ? () => requestPlatformNavigation(() => (
                     openTestPlanDetailPage(selectedTestPlanId, selectedTestPlanName)
                   ))
@@ -23,14 +32,34 @@ export const TESTS_APP_TOP_NAVIGATION_SCRIPT = `        function renderTestsPage
                 : null,
             });
           }
+          if (testsPageMode === "configuration") {
+            pathItems.push({
+              label: "Raw Configuration",
+            });
+          }
           if (testsPageMode === "case") {
             pathItems.push({
               label: selectedTestCaseName || "Test Case",
             });
           }
-          if (testsPageMode === "run") {
+          if (testsPageMode === "run" || testsPageMode === "run-technical") {
             pathItems.push({
               label: selectedTestRunName || "Test Run",
+              onClick: testsPageMode === "run-technical"
+                ? () => requestPlatformNavigation(() => (
+                    openTestRunDetailPage(
+                      selectedTestPlanId,
+                      selectedTestRunId,
+                      selectedTestPlanName,
+                      selectedTestRunName
+                    )
+                  ))
+                : undefined,
+            });
+          }
+          if (testsPageMode === "run-technical") {
+            pathItems.push({
+              label: "Technical Details",
             });
           }
           return renderAppHeader({

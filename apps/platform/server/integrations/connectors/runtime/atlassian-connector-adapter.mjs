@@ -29,6 +29,19 @@ const object = (description) => ({
   description,
   additionalProperties: true,
 });
+const entityProperties = (description) => ({
+  type: "array",
+  description,
+  items: {
+    type: "object",
+    properties: {
+      key: string("Entity property key."),
+      value: object("JSON object stored as the entity property value."),
+    },
+    required: ["key", "value"],
+    additionalProperties: false,
+  },
+});
 const input = (properties = {}, required = []) => ({
   type: "object",
   properties,
@@ -115,6 +128,7 @@ const TOOL_DEFINITIONS = Object.freeze([
     input({
       ...ISSUE_KEY,
       orderBy: string("Comment sort order."),
+      expand: string("Comma-separated comment expansions, such as properties."),
       ...START_PAGINATION,
     }, ["issueIdOrKey"]),
   ),
@@ -230,6 +244,7 @@ const TOOL_DEFINITIONS = Object.freeze([
         enum: ["group", "role"],
       }),
       visibilityValue: string("Visibility group or project role."),
+      properties: entityProperties("Optional Jira entity properties stored with the comment."),
     }, ["issueIdOrKey", "body"]),
   ),
   tool(
@@ -586,7 +601,7 @@ async function invokeAtlassianAction(client, name, args, grant = {}) {
       return client.jira(
         "GET",
         `/rest/api/3/issue/${path(args.issueIdOrKey)}/comment`,
-        { query: compactQuery(args, ["orderBy", "startAt", "maxResults"]) },
+        { query: compactQuery(args, ["orderBy", "startAt", "maxResults", "expand"]) },
       );
     case "get_transitions":
       return client.jira(
@@ -708,6 +723,9 @@ async function invokeAtlassianAction(client, name, args, grant = {}) {
                   type: args.visibilityType,
                   value: args.visibilityValue,
                 }
+              : undefined,
+            properties: Array.isArray(args.properties) && args.properties.length
+              ? args.properties
               : undefined,
           }),
         },

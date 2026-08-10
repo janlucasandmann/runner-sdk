@@ -6,7 +6,10 @@ import type {
   RunnerAttachment,
   RunnerTurnAttachment,
 } from "./attachment-types.js";
-import { attachmentTypeForFile } from "./attachment-utils.js";
+import {
+  attachmentTypeForFile,
+  mergeAttachmentReferenceMetadata,
+} from "./attachment-utils.js";
 import { prepareGithubRepositorySelection, startEnvironment } from "./environment-api.js";
 import { generateRunnerClientId } from "./id-utils.js";
 
@@ -282,15 +285,19 @@ export function useRunnerAttachmentController({
           : options.environmentIdOverride;
       const uploadPromise = resolveSingleAttachment(attachment, targetEnvironmentId)
         .then((resolvedAttachment) => {
-          attachment.resolvedAttachment = resolvedAttachment;
+          const resolvedWithReferenceMetadata = mergeAttachmentReferenceMetadata(
+            attachment,
+            resolvedAttachment,
+          );
+          attachment.resolvedAttachment = resolvedWithReferenceMetadata;
           attachment.uploadStatus = "uploaded";
           attachment.uploadError = null;
           applyAttachmentStatePatch(attachment.id, {
-            resolvedAttachment,
+            resolvedAttachment: resolvedWithReferenceMetadata,
             uploadStatus: "uploaded",
             uploadError: null,
           });
-          return resolvedAttachment;
+          return resolvedWithReferenceMetadata;
         })
         .catch((error) => {
           const normalizedError = error instanceof Error ? error : new Error(String(error));
@@ -422,7 +429,11 @@ export function useRunnerAttachmentController({
       );
 
       const resolvedAttachments = files
-        .map((entry) => entry.resolvedAttachment)
+        .map((entry) => (
+          entry.resolvedAttachment
+            ? mergeAttachmentReferenceMetadata(entry, entry.resolvedAttachment)
+            : null
+        ))
         .filter((attachment): attachment is RunnerAttachment => Boolean(attachment));
       const unresolvedFiles = files.filter((entry) => !entry.resolvedAttachment);
       if (!unresolvedFiles.length) {

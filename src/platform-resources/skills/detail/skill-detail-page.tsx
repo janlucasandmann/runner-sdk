@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { FileResourceDetailPage } from "../../../platform-ui/pages/details/index.js";
+import { MarkdownResourceDetailPage } from "../../../platform-ui/pages/details/index.js";
 
 export type SkillDetailTab = "code" | "settings";
 
@@ -28,7 +28,7 @@ export function SkillDetailPage({
     activeTab === "settings" ? "settings" : "code";
 
   return (
-    <FileResourceDetailPage
+    <MarkdownResourceDetailPage
       activeTab={normalizedTab}
       metadata={metadata}
       notice={notice}

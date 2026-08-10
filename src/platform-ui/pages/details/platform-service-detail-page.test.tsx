@@ -63,4 +63,18 @@ describe("PlatformServiceDetailPage", () => {
     expect(page.classList.contains("is-run-detail")).toBe(true);
     expect(screen.queryByRole("tab")).toBeNull();
   });
+
+  it("accepts a centralized sidebar override without nesting the legacy property card", () => {
+    const { container } = render(
+      <PlatformServiceDetailPage
+        ariaLabel="Custom sidebar details"
+        sidebarContent={<aside>Centralized details sidebar</aside>}
+      >
+        <div>Page content</div>
+      </PlatformServiceDetailPage>,
+    );
+
+    expect(screen.getByText("Centralized details sidebar")).not.toBeNull();
+    expect(container.querySelector(".platform-service-detail-page__sidebar-card")).toBeNull();
+  });
 });

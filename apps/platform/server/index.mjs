@@ -116,6 +116,8 @@ const platformServices = createPlatformServices({
   identityService,
   connectorOauthEnvFileCandidates,
   connectorRuntimeSigningSecret: platformControlPlaneSecret,
+  defaultUpstreamOrigin,
+  platformControlPlaneSecret,
   platformOrigin,
   playgroundSystemSkillsRoot,
   port,
@@ -185,6 +187,7 @@ server.listen(port, bindAddress, () => {
     + `modules=${platformDocumentAssets.metrics.moduleGraphInputs || 1}`,
   );
   executionDispatcherRuntime.start();
+  platformServices.externalAgentService.start();
 });
 
 let shutdownStarted = false;
@@ -192,7 +195,10 @@ async function shutdownPlatform(signal) {
   if (shutdownStarted) return;
   shutdownStarted = true;
   console.log(`[platform] Received ${signal}; stopping execution dispatch and HTTP intake.`);
-  await executionDispatcherRuntime.stop({ wait: false });
+  await Promise.all([
+    executionDispatcherRuntime.stop({ wait: false }),
+    platformServices.externalAgentService.stop({ wait: false }),
+  ]);
   const forceExitTimer = setTimeout(() => {
     console.error("[platform] Graceful shutdown timed out.");
     process.exit(1);

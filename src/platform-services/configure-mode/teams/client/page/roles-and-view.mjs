@@ -90,6 +90,13 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
               ? teamPageActiveTab
               : "members";
           const teamDetailName = String(selectedTeam?.name || "Team").trim() || "Team";
+          const teamDetailDescription = String(
+            selectedTeam?.description
+            || selectedTeam?.summary
+            || selectedTeam?.purpose
+            || selectedTeam?.metadata?.description
+            || "Manage members, resources, and permissions for this team."
+          ).replace(/\s+/g, " ").trim();
           const teamDetailProfileImageUrl = getTeamPageProfileImageUrl(selectedTeam);
           const teamDetailMemberCount = visibleTeamMembers.length;
           const selectedTeamCreatorUserId = String(
@@ -182,111 +189,44 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
             const memberDetail = getTeamMemberRowDetail(row);
             return {
               value: memberId,
-              label: memberLabel,
+              name: memberLabel,
+              email: memberDetail || "",
+              avatarUrl: getTeamMemberAvatarUrl(row.item, false),
               description: memberDetail || undefined,
               ariaLabel: memberDetail ? memberLabel + ", " + memberDetail : memberLabel,
-              leading: React.createElement(AccountAvatar, {
-                className: "playground-team-detail-owner-option-avatar",
-                imageClassName: "playground-team-member-avatar-image",
-                fallbackLabel: getAccountInitials(memberLabel),
-                photoUrl: getTeamMemberAvatarUrl(row.item, false),
-              }),
-              memberRow: row,
+              data: { memberRow: row },
             };
           }).filter((option) => option.value);
           if (!teamOwnerOptions.some((option) => option.value === selectedTeamOwnerMemberId)) {
             teamOwnerOptions.unshift({
               value: selectedTeamOwnerMemberId,
-              label: selectedTeamOwnerLabel || "Owner",
-              leading: React.createElement(AccountAvatar, {
-                className: "playground-team-detail-owner-option-avatar",
-                imageClassName: "playground-team-member-avatar-image",
-                fallbackLabel: getAccountInitials(selectedTeamOwnerLabel || "Owner"),
-                photoUrl: selectedTeamOwnerAvatarUrl,
-              }),
+              name: selectedTeamOwnerLabel || "Owner",
+              avatarUrl: selectedTeamOwnerAvatarUrl,
               disabled: true,
-              memberRow: null,
+              data: { memberRow: null },
             });
           }
-          const teamOwnerSelector = React.createElement(PlatformSelector, {
-            value: selectedTeamOwnerMemberId,
-            options: teamOwnerOptions,
-            onValueChange: (nextValue) => {
-              if (nextValue === selectedTeamOwnerMemberId) {
-                return;
-              }
-              const selectedOption = teamOwnerOptions.find((option) => option.value === nextValue);
-              const selectedRow = selectedOption?.memberRow || null;
-              const memberId = getTeamMemberActionId(selectedRow);
-              if (!selectedRow || !memberId) {
-                return;
-              }
-              void handleTransferTeamOwnership(memberId, getTeamMemberRowDisplayName(selectedRow));
-            },
-            ariaLabel: "Choose team owner",
-            label: React.createElement("span", { className: "playground-team-member-cell playground-team-detail-owner" },
-              React.createElement(AccountAvatar, {
-                className: "playground-team-member-avatar playground-team-detail-owner-avatar",
-                imageClassName: "playground-team-member-avatar-image",
-                fallbackLabel: getAccountInitials(selectedTeamOwnerLabel || "Owner"),
-                photoUrl: selectedTeamOwnerAvatarUrl,
-              }),
-              React.createElement("span", { className: "playground-team-table-title" }, selectedTeamOwnerLabel || "Owner")
-            ),
-            alignment: "end",
-            popupAlignment: "right",
-            fullWidth: true,
-            disabled: !currentUserIsTeamOwner || teamOwnerTransferPending,
-            loading: teamOwnerTransferPending,
-            loadingContent: "Transferring ownership...",
-            emptyContent: "No active team members are available.",
-            popupWidth: 260,
-            popupMaxHeight: "min(320px, calc(100vh - 180px))",
-            className: "playground-team-detail-owner-selector",
-            triggerClassName: "playground-team-detail-owner-trigger",
-            popupClassName: "playground-agents-detail-owner-menu playground-team-detail-owner-popup",
-            optionClassName: "playground-agents-detail-owner-option playground-team-detail-owner-option",
-          });
-          const teamCreatorValue = React.createElement("span", {
-              className: "playground-team-member-cell playground-team-detail-creator",
-            },
-            React.createElement(AccountAvatar, {
-              className: "playground-team-member-avatar playground-team-detail-creator-avatar",
-              imageClassName: "playground-team-member-avatar-image",
-              fallbackLabel: getAccountInitials(selectedTeamCreatorLabel),
-              photoUrl: selectedTeamCreatorAvatarUrl,
-            }),
-            React.createElement("span", { className: "playground-team-table-title" }, selectedTeamCreatorLabel)
-          );
-          const renderTeamSidebarFact = (label, value, options = {}) => React.createElement("div", {
-              className: "playground-team-detail-sidebar-fact" + (options.isOwner ? " is-owner" : ""),
-            },
-            React.createElement("span", { className: "playground-team-detail-sidebar-fact-label" }, label),
-            React.createElement("span", {
-              className: "playground-team-detail-sidebar-fact-value",
-              title: options.title || (typeof value === "string" ? value : ""),
-            }, value)
-          );
           const teamDetailHeader = selectedTeam
-            ? React.createElement("div", { className: "playground-agents-profile-section playground-team-detail-profile-section" },
+            ? React.createElement("section", {
+                className: "platform-service-detail-identity playground-team-detail-profile-section",
+                "aria-label": "Team identity",
+              },
                 React.createElement(PlatformProfileImagePicker, {
                   value: teamDetailProfileImageUrl,
                   fallback: getPlatformProfileImageInitials(teamDetailName, "T"),
                   editable: canManageTeam,
                   busy: teamPageActionId === "team-profile-image",
                   ariaLabel: "Choose team profile picture",
-                  className: "profile-editor-avatar playground-agents-profile-avatar playground-team-detail-profile-image-picker",
+                  className: "platform-service-detail-identity__avatar playground-team-detail-profile-image-picker",
                   onChange: (url) => void handleTeamProfileImageSelection(url),
                 }),
-                React.createElement("div", { className: "playground-agents-profile-copy" },
-                  React.createElement("div", { className: "playground-agents-profile-name-wrap" },
-                    React.createElement("h1", {
-                      className: "playground-content-title playground-team-detail-title",
-                    }, teamDetailName),
-                    React.createElement("span", {
-                      className: "playground-team-detail-role-label",
-                    }, formatRole(currentMemberRoleId))
-                  )
+                React.createElement("div", { className: "platform-service-detail-identity__copy" },
+                  React.createElement("h1", {
+                    className: "platform-service-detail-identity__title playground-team-detail-title",
+                  }, teamDetailName),
+                  React.createElement("p", {
+                    className: "platform-service-detail-identity__description playground-team-detail-description",
+                  }, teamDetailDescription)
                 )
               )
             : null;
@@ -349,30 +289,58 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
             teamDetailSidebarToggle
           );
           const teamDetailSidebar = selectedTeam
-            ? React.createElement(PlatformUiCard, {
-                    variant: "sidebar",
-                    cardTitle: "Details",
-                    className: "playground-team-detail-sidebar-card",
-                  },
-                  React.createElement("div", { className: "playground-team-detail-sidebar-facts" },
-                    renderTeamSidebarFact("Team ID", selectedTeam.id || "-"),
-                    renderTeamSidebarFact("Members", String(teamDetailMemberCount)),
-                    renderTeamSidebarFact("Created", selectedTeam.createdAt ? formatDate(selectedTeam.createdAt) : "-"),
-                    renderTeamSidebarFact("Creator", teamCreatorValue, { title: selectedTeamCreatorLabel }),
-                    React.createElement("div", { className: "playground-team-detail-sidebar-fact playground-team-detail-sidebar-owner-row" },
-                      React.createElement("span", { className: "playground-team-detail-sidebar-fact-label" }, "Owner"),
-                      React.createElement("div", { className: "playground-team-detail-sidebar-owner-cell" }, teamOwnerSelector)
-                    ),
-                    React.createElement(PlatformPrimaryButton, {
-                      type: "button",
-                      size: "small",
-                      fullWidth: true,
-                      className: "playground-team-detail-invite-button",
-                      onClick: () => setTeamPageInviteModalOpen(true),
-                      disabled: !canManageTeam,
-                    }, "Invite Member")
-                  )
-                )
+            ? React.createElement(PlatformResourceDetailSidebar, {
+                className: "playground-team-detail-sidebar-card",
+                attributes: [
+                  { id: "team-id", label: "Team ID", value: selectedTeam.id || "-" },
+                  { id: "members", label: "Members", value: String(teamDetailMemberCount) },
+                  { id: "created", label: "Created", value: selectedTeam.createdAt ? formatDate(selectedTeam.createdAt) : "-" },
+                ],
+                creator: {
+                  name: selectedTeamCreatorLabel,
+                  email: selectedTeamCreatorEmail,
+                  avatarUrl: selectedTeamCreatorAvatarUrl,
+                },
+                owner: {
+                  value: selectedTeamOwnerMemberId,
+                  name: selectedTeamOwnerLabel || "Owner",
+                  avatarUrl: selectedTeamOwnerAvatarUrl,
+                },
+                ownerOptions: teamOwnerOptions,
+                onOwnerTransfer: async (_nextValue, selectedOption) => {
+                  const selectedRow = selectedOption?.data?.memberRow || null;
+                  const memberId = getTeamMemberActionId(selectedRow);
+                  if (!selectedRow || !memberId) {
+                    return;
+                  }
+                  await handleTransferTeamOwnership(memberId);
+                },
+                ownerSelectorProps: {
+                  ariaLabel: "Choose team owner",
+                  resourceLabel: "team",
+                  alignment: "end",
+                  popupAlignment: "right",
+                  fullWidth: true,
+                  disabled: !currentUserIsTeamOwner || teamOwnerTransferPending,
+                  loading: teamOwnerTransferPending,
+                  loadingContent: "Transferring ownership...",
+                  emptyContent: "No active team members are available.",
+                  popupWidth: 260,
+                  popupMaxHeight: "min(320px, calc(100vh - 180px))",
+                  className: "playground-team-detail-owner-selector",
+                  triggerClassName: "playground-team-detail-owner-trigger",
+                  popupClassName: "playground-agents-detail-owner-menu playground-team-detail-owner-popup",
+                  optionClassName: "playground-agents-detail-owner-option playground-team-detail-owner-option",
+                },
+                children: React.createElement(PlatformPrimaryButton, {
+                  type: "button",
+                  size: "small",
+                  fullWidth: true,
+                  className: "playground-team-detail-invite-button",
+                  onClick: () => setTeamPageInviteModalOpen(true),
+                  disabled: !canManageTeam,
+                }, "Invite Member")
+              })
             : null;
           const teamDetailContent = normalizedTeamDetailTab === "resources"
             ? renderResourcesTab()

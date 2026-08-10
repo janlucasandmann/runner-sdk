@@ -171,23 +171,24 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
           const ownerLabel = String(owner.name || owner.email || owner.id || "Owner").trim();
           const options = getFineTuningOwnerCandidates(job).map((candidate) => ({
             value: getFineTuningIdentityKey(candidate),
-            label: candidate.name || candidate.email || "Team member",
+            name: candidate.name || candidate.email || "Team member",
+            email: candidate.email || "",
+            avatarUrl: candidate.avatarUrl || "",
             description: candidate.email && candidate.name !== candidate.email ? candidate.email : undefined,
-            leading: React.createElement(AccountAvatar, {
-              className: "playground-fine-tuning-owner-option-avatar",
-              imageClassName: "playground-fine-tuning-owner-option-avatar-image",
-              fallbackLabel: getAccountInitials(candidate.name || candidate.email || "Owner"),
-              photoUrl: candidate.avatarUrl || "",
-            }),
-            candidate,
+            data: { candidate },
           }));
           const ownerKeys = new Set(getFineTuningIdentityKeys(owner));
           const selectedOption = options.find((option) =>
-            getFineTuningIdentityKeys(option.candidate).some((key) => ownerKeys.has(key))
+            getFineTuningIdentityKeys(option.data?.candidate).some((key) => ownerKeys.has(key))
           );
           const candidateState = fineTuningOwnerCandidatesByJobId?.[job?.id] || {};
-          return React.createElement(PlatformSelector, {
-            value: selectedOption?.value || getFineTuningIdentityKey(owner),
+          return React.createElement(PlatformOwnerSelector, {
+            owner: {
+              value: selectedOption?.value || getFineTuningIdentityKey(owner),
+              name: ownerLabel,
+              email: owner.email || "",
+              avatarUrl: owner.avatarUrl || "",
+            },
             options,
             open: fineTuningOwnerSelectorOpen,
             onOpenChange: (nextOpen) => {
@@ -195,20 +196,12 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
               setFineTuningOwnerSelectorOpen(Boolean(nextOpen));
               if (nextOpen) void loadFineTuningOwnerCandidates(job);
             },
-            onValueChange: (nextValue) => {
-              const nextOwner = options.find((option) => option.value === nextValue)?.candidate;
+            onTransfer: (_nextValue, option) => {
+              const nextOwner = option?.data?.candidate;
               if (nextOwner) updateFineTuningOwner(job, nextOwner);
             },
             ariaLabel: "Choose optimization owner",
-            label: React.createElement("span", { className: "playground-fine-tuning-owner-value" },
-              React.createElement(AccountAvatar, {
-                className: "playground-team-member-avatar playground-fine-tuning-owner-avatar",
-                imageClassName: "playground-team-member-avatar-image",
-                fallbackLabel: getAccountInitials(ownerLabel),
-                photoUrl: owner.avatarUrl || "",
-              }),
-              React.createElement("span", { title: owner.email ? ownerLabel + " · " + owner.email : ownerLabel }, ownerLabel)
-            ),
+            resourceLabel: "optimization job",
             alignment: "start",
             popupAlignment: "right",
             disabled: !isCurrentFineTuningOwner(job),

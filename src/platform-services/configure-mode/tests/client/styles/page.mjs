@@ -75,6 +75,180 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     min-width: 0;
   }
 
+  .tests-raw-configuration-page {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    margin: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .tests-raw-configuration-page__content,
+  .tests-raw-configuration-page__code,
+  .tests-raw-configuration-page__workspace,
+  .tests-raw-configuration-workspace,
+  .tests-run-technical-workspace,
+  .tests-raw-configuration-monaco {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .tests-raw-configuration-page__content {
+    flex: 1 1 0;
+    align-self: stretch;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .tests-raw-configuration-page__code {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  .tests-raw-configuration-page__metadata {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    padding: 24px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .tests-raw-configuration-identity {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .tests-raw-configuration-identity__icon {
+    box-sizing: border-box;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .tests-raw-configuration-identity__copy {
+    min-width: 0;
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tests-raw-configuration-identity__copy h1,
+  .tests-raw-configuration-identity__copy p {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tests-raw-configuration-identity__copy h1 {
+    color: rgba(255, 255, 255, 0.96);
+    font-size: 20px;
+    line-height: 1.3;
+    font-weight: 400;
+  }
+
+  .tests-raw-configuration-identity__copy p {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .tests-raw-configuration-page__notice {
+    flex: 0 0 auto;
+  }
+
+  .tests-raw-configuration-error {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 20px;
+    border-bottom: 1px solid rgba(255, 91, 91, 0.2);
+    color: #ff9b9b;
+    background: rgba(155, 37, 37, 0.1);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .tests-raw-configuration-page__workspace,
+  .tests-raw-configuration-workspace,
+  .tests-run-technical-workspace {
+    display: flex;
+    flex: 1 1 0;
+    align-self: stretch;
+    overflow: hidden;
+  }
+
+  .tests-raw-configuration-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tests-raw-configuration-workspace .platform-code-editor-workspace__editor,
+  .tests-raw-configuration-workspace .platform-code-editor-workspace__editor-body,
+  .tests-run-technical-workspace .platform-code-editor-workspace__editor,
+  .tests-run-technical-workspace .platform-code-editor-workspace__editor-body,
+  .tests-raw-configuration-monaco,
+  .tests-raw-configuration-monaco > section {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+
+  .tests-raw-configuration-monaco {
+    height: 100%;
+    flex: 1 1 0;
+    align-self: stretch;
+    overflow: hidden;
+  }
+
+  .tests-raw-configuration-page,
+  .tests-raw-configuration-page__content,
+  .tests-raw-configuration-page__code,
+  .tests-raw-configuration-page__workspace,
+  .tests-raw-configuration-workspace,
+  .tests-run-technical-workspace,
+  .tests-raw-configuration-workspace .platform-code-editor-workspace__editor,
+  .tests-raw-configuration-workspace .platform-code-editor-workspace__editor-header,
+  .tests-raw-configuration-workspace .platform-code-editor-workspace__editor-body,
+  .tests-run-technical-workspace .platform-code-editor-workspace__sidebar,
+  .tests-run-technical-workspace .platform-code-editor-workspace__editor,
+  .tests-run-technical-workspace .platform-code-editor-workspace__editor-header,
+  .tests-run-technical-workspace .platform-code-editor-workspace__editor-body,
+  .tests-raw-configuration-monaco,
+  .tests-raw-configuration-monaco > section,
+  .tests-raw-configuration-monaco .monaco-editor,
+  .tests-raw-configuration-monaco .monaco-editor-background,
+  .tests-raw-configuration-monaco .margin,
+  .tests-raw-configuration-monaco .overflow-guard {
+    background: #000 !important;
+  }
+
+  .playground-content-body:has(> .tests-raw-configuration-page) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .playground-content-body:has(> .tests-raw-configuration-page) > .tests-raw-configuration-page {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
   .tests-detail-stack {
     display: grid;
     align-content: start;
@@ -100,9 +274,13 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     font-size: 18px;
   }
 
-  .tests-detail-run-button.platform-button {
+  .tests-detail-run-button {
     width: 100%;
     margin-top: 8px;
+  }
+
+  .tests-detail-run-button .platform-button-selector__group {
+    width: 100%;
   }
 
   .tests-detail-target-row .platform-service-detail-page__property-value {
@@ -398,8 +576,7 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
   }
 
   .tests-form-field input,
-  .tests-form-field textarea,
-  .tests-definition-editor {
+  .tests-form-field textarea {
     width: 100%;
     box-sizing: border-box;
     border: 1px solid rgba(255, 255, 255, 0.11);
@@ -424,20 +601,9 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
   }
 
   .tests-form-field input:focus,
-  .tests-form-field textarea:focus,
-  .tests-definition-editor:focus {
+  .tests-form-field textarea:focus {
     border-color: rgba(74, 167, 255, 0.58);
     background: rgba(74, 167, 255, 0.045);
-  }
-
-  .tests-definition-editor {
-    min-height: 420px;
-    padding: 16px;
-    resize: vertical;
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-    font-size: 12px;
-    line-height: 1.55;
-    tab-size: 2;
   }
 
   .tests-table-identity {
@@ -584,15 +750,13 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     align-self: end;
   }
 
-  .tests-case-create-modal__checks,
-  .tests-evidence-policy {
+  .tests-case-create-modal__checks {
     display: flex;
     flex-wrap: wrap;
     gap: 12px 18px;
   }
 
   .tests-case-create-modal__checks label,
-  .tests-evidence-policy label,
   .tests-form-checkbox-field label {
     display: inline-flex;
     align-items: center;
@@ -609,7 +773,6 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
   }
 
   .tests-case-create-modal__assertions strong,
-  .tests-evidence-policy > strong,
   .tests-case-detail-assertion-editor > div:first-child span {
     color: rgba(255, 255, 255, 0.86);
     font-size: 12px;
@@ -720,31 +883,6 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     white-space: nowrap;
   }
 
-  .tests-evidence-policy {
-    margin-top: 18px;
-    padding-top: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
-  }
-
-  .tests-evidence-policy > strong {
-    flex: 0 0 100%;
-  }
-
-  .tests-advanced-definition {
-    display: grid;
-    gap: 14px;
-  }
-
-  .tests-advanced-definition summary {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 12px;
-    cursor: pointer;
-  }
-
-  .tests-advanced-definition[open] .tests-definition-editor {
-    margin-top: 14px;
-  }
-
   .tests-plan-save-modal__summary,
   .tests-run-contract-summary {
     display: flex;
@@ -809,14 +947,6 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     font-size: 12px;
   }
 
-  .tests-section-kicker {
-    color: rgba(255, 255, 255, 0.42);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
   .tests-spin {
     animation: tests-spin 900ms linear infinite;
   }
@@ -843,8 +973,7 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     font-weight: 650;
   }
 
-  .tests-result-evidence-grid pre,
-  .tests-evidence-json {
+  .tests-result-evidence-grid pre {
     min-height: 72px;
     max-height: 300px;
     margin: 0;
@@ -858,31 +987,6 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     font-size: 11px;
     line-height: 1.5;
     white-space: pre-wrap;
-    overflow-wrap: anywhere;
-  }
-
-  .tests-evidence-identity {
-    display: grid;
-    margin: 0;
-    gap: 13px;
-  }
-
-  .tests-evidence-identity > div {
-    display: grid;
-    grid-template-columns: minmax(150px, 0.4fr) minmax(0, 1fr);
-    gap: 20px;
-  }
-
-  .tests-evidence-identity dt {
-    color: rgba(255, 255, 255, 0.45);
-    font-size: 12px;
-  }
-
-  .tests-evidence-identity dd {
-    margin: 0;
-    color: rgba(255, 255, 255, 0.78);
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-    font-size: 11px;
     overflow-wrap: anywhere;
   }
 
@@ -971,84 +1075,47 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     color: rgba(255, 255, 255, 0.82);
   }
 
-  .tests-settings-page .tests-evidence-policy {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
+  .tests-settings-page .tests-settings-detail-section .platform-settings-section__title {
+    font-size: 14px;
   }
 
-  .tests-run-summary-card.platform-ui-card {
-    padding: 18px;
-    background: rgba(255, 255, 255, 0.045);
+  .tests-settings-page .tests-settings-detail-list.platform-service-detail-page__property-list {
+    gap: 0;
   }
 
-  .tests-run-summary-card.is-passed {
-    border-color: rgba(134, 226, 157, 0.2);
+  .tests-settings-page .tests-settings-detail-list .platform-service-detail-page__property {
+    min-height: 46px;
+    grid-template-columns: minmax(140px, 1fr) minmax(0, 1fr);
+    padding: 0 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.075);
   }
 
-  .tests-run-summary-card.is-failed,
-  .tests-run-summary-card.is-completed_with_errors {
-    border-color: rgba(255, 91, 91, 0.22);
+  .tests-settings-page .tests-settings-detail-list .platform-service-detail-page__property:last-child {
+    border-bottom: 0;
   }
 
-  .tests-run-summary-card__content {
-    min-width: 0;
-    display: flex;
-    align-items: flex-start;
-    gap: 13px;
+  .tests-settings-page .tests-settings-detail-list .platform-service-detail-page__property-value {
+    overflow: visible;
   }
 
-  .tests-run-summary-card__icon {
-    width: 34px;
-    height: 34px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 34px;
-    border-radius: 50%;
-    color: #8cc7ff;
-    background: rgba(74, 167, 255, 0.1);
+  .tests-settings-detail-number-input {
+    box-sizing: border-box;
+    width: 82px;
+    height: 30px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 8px;
+    outline: 0;
+    color: rgba(255, 255, 255, 0.88);
+    background: rgba(255, 255, 255, 0.035);
+    font: inherit;
+    text-align: right;
+    transition: border-color 140ms ease, background 140ms ease;
   }
 
-  .tests-run-summary-card.is-passed .tests-run-summary-card__icon {
-    color: #86e29d;
-    background: rgba(45, 147, 72, 0.12);
-  }
-
-  .tests-run-summary-card.is-failed .tests-run-summary-card__icon,
-  .tests-run-summary-card.is-completed_with_errors .tests-run-summary-card__icon {
-    color: #ff9b9b;
-    background: rgba(181, 42, 42, 0.12);
-  }
-
-  .tests-run-summary-card__content > div {
-    min-width: 0;
-    display: grid;
-    gap: 5px;
-    flex: 1 1 auto;
-  }
-
-  .tests-run-summary-card h2,
-  .tests-run-summary-card p {
-    margin: 0;
-  }
-
-  .tests-run-summary-card h2 {
-    color: rgba(255, 255, 255, 0.94);
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.35;
-  }
-
-  .tests-run-summary-card p {
-    max-width: 760px;
-    color: rgba(255, 255, 255, 0.56);
-    font-size: 12px;
-    line-height: 1.5;
-  }
-
-  .tests-run-summary-card__content > .platform-label {
-    flex: 0 0 auto;
+  .tests-settings-detail-number-input:focus {
+    outline: 0;
+    background: rgba(74, 167, 255, 0.045);
   }
 
   .tests-table-summary {
@@ -1060,48 +1127,12 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     white-space: nowrap;
   }
 
-  .tests-run-case-output-list {
-    display: grid;
-  }
-
   .tests-run-case-output {
     min-width: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.075);
   }
 
-  .tests-run-case-output:first-child {
-    border-top: 1px solid rgba(255, 255, 255, 0.075);
-  }
-
-  .tests-run-case-output > summary {
-    min-width: 0;
-    min-height: 54px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 4px;
-    color: inherit;
+  .tests-results-table .platform-data-table__row.tests-run-case-output {
     cursor: pointer;
-    list-style: none;
-  }
-
-  .tests-run-case-output > summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .tests-run-case-output__icon {
-    display: inline-flex;
-    flex: 0 0 auto;
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  .tests-run-case-output.is-passed .tests-run-case-output__icon {
-    color: #86e29d;
-  }
-
-  .tests-run-case-output.is-failed .tests-run-case-output__icon,
-  .tests-run-case-output.is-error .tests-run-case-output__icon {
-    color: #ff9b9b;
   }
 
   .tests-run-case-output__copy {
@@ -1132,7 +1163,7 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
   .tests-run-case-output__body {
     display: grid;
     gap: 14px;
-    padding: 4px 4px 18px 30px;
+    padding: 4px;
   }
 
   .tests-run-case-metadata {
@@ -1212,62 +1243,6 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     flex: 0 0 auto;
   }
 
-  .tests-run-technical-details {
-    min-width: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .tests-run-technical-details > summary {
-    min-height: 58px;
-    display: flex;
-    align-items: center;
-    padding: 0 6px;
-    cursor: pointer;
-    list-style: none;
-  }
-
-  .tests-run-technical-details > summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .tests-run-technical-details > summary > span {
-    display: grid;
-    gap: 4px;
-  }
-
-  .tests-run-technical-details > summary strong {
-    color: rgba(255, 255, 255, 0.86);
-    font-size: 12px;
-    font-weight: 400;
-  }
-
-  .tests-run-technical-details > summary small {
-    color: rgba(255, 255, 255, 0.42);
-    font-size: 10px;
-  }
-
-  .tests-run-technical-details__body {
-    display: grid;
-    gap: 20px;
-    padding: 4px 6px 18px;
-  }
-
-  .tests-run-raw-evidence {
-    padding-top: 14px;
-    border-top: 1px solid rgba(255, 255, 255, 0.075);
-  }
-
-  .tests-run-raw-evidence > summary {
-    color: rgba(255, 255, 255, 0.62);
-    font-size: 11px;
-    cursor: pointer;
-  }
-
-  .tests-run-raw-evidence[open] .tests-evidence-json {
-    margin-top: 12px;
-  }
-
   .tests-access-add-label {
     display: inline-flex;
     align-items: center;
@@ -1299,12 +1274,10 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
       grid-template-columns: minmax(0, 1fr);
     }
 
-    .tests-run-summary-card__content,
     .tests-run-verification-card.platform-ui-card {
       flex-wrap: wrap;
     }
 
-    .tests-run-summary-card__content > .platform-label,
     .tests-run-verification-card > .platform-label {
       margin-left: 46px;
     }

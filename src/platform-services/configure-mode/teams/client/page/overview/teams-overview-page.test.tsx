@@ -15,6 +15,8 @@ const rows: readonly TeamOverviewRow[] = [
     profileFallback: "PT",
     roleLabel: "Owner",
     ownerLabel: "Jan",
+    ownerAvatarUrl: "/img/jan.webp",
+    ownerFallback: "J",
     ownership: "owned",
     createdAt: 1_720_000_000_000,
     createdLabel: "Jul 3",
@@ -64,6 +66,17 @@ describe("TeamsOverviewPage", () => {
     expect(
       container.querySelector<HTMLImageElement>(
         'img[src="/img/team-platform.webp"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(
+        ".resource-overview-table.is-teams .resource-overview-identity__visual.is-team",
+      ),
+    ).not.toBeNull();
+    expect(container.querySelector('img[src="/img/jan.webp"]')).not.toBeNull();
+    expect(
+      container.querySelector(
+        ".resource-overview-table.is-teams .resource-overview-identity__visual.is-creator",
       ),
     ).not.toBeNull();
     expect(container.querySelector(".platform-data-table.is-catalog-ui")).not.toBeNull();

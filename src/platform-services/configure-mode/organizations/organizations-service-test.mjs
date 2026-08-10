@@ -88,6 +88,19 @@ assert.match(
 );
 assert.match(
   ORGANIZATIONS_STYLE_FRAGMENTS.subscription,
+  /\.playground-organization-plan-chooser-catalog-header::after\s*\{[\s\S]*?right:\s*50%;[\s\S]*?background:\s*rgba\(255, 255, 255, 0\.075\);/,
+  "The catalog header should divide the Team and Enterprise columns.",
+);
+assert.doesNotMatch(
+  ORGANIZATIONS_STYLE_FRAGMENTS.subscription,
+  /\.playground-organization-plan-chooser-intro \{[\s\S]*?min-height:\s*238px;/,
+);
+assert.doesNotMatch(
+  ORGANIZATIONS_STYLE_FRAGMENTS.subscription,
+  /\.playground-organization-plan-chooser-catalog-header \{[\s\S]*?min-height:\s*238px;/,
+);
+assert.match(
+  ORGANIZATIONS_STYLE_FRAGMENTS.subscription,
   /\.playground-organization-plan-chooser-footer-cell \+ \.playground-organization-plan-chooser-footer-cell \{[\s\S]*?border-left:\s*1px solid rgba\(255, 255, 255, 0\.1\);/,
   "The chooser footer must retain the three-column separators.",
 );
@@ -216,6 +229,9 @@ assert.match(pageFragments.subscription, /React\.createElement\("span", null, "B
 assert.match(pageFragments.subscription, /src: RUNNER_TRANSPARENT_LOGO_URL/);
 assert.match(pageFragments.subscription, /React\.createElement\(PlatformSwitch/);
 assert.match(pageFragments.subscription, /builderSeats: seatCount/);
+assert.doesNotMatch(pageFragments.subscription, /Your current interval is preserved when switching plans/);
+assert.doesNotMatch(pageFragments.subscription, /React\.createElement\("span", null, "Billing period"\)/);
+assert.doesNotMatch(pageFragments.subscription, /playground-organization-plan-chooser-close/);
 assert.match(pageFragments.subscription, /const canAdjustSeats = includedSeats != null/);
 assert.match(pageFragments.subscription, /const canUpdateCurrentSeats = isCurrentPlan && candidatePlan\.id === "enterprise"/);
 assert.match(pageFragments.subscription, /handleSettingsChangePlan\(candidatePlan\.id, \{ builderSeats: seatCount \}\)/);

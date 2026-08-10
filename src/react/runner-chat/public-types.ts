@@ -146,6 +146,24 @@ export interface RunnerChatSchedulePreset {
   cron?: string;
 }
 
+/** A saved Markdown prompt selected from the global search modal for the composer. */
+export interface RunnerChatPromptAttachment {
+  id: string;
+  name: string;
+  description?: string;
+  markdown: string;
+  currentVersionId?: string;
+  currentVersionNumber?: number;
+}
+
+/** A saved conversation selected from the global search modal for the composer. */
+export interface RunnerChatThreadAttachment {
+  id: string;
+  title: string;
+  description?: string;
+  markdown?: string;
+}
+
 export interface RunnerChatGithubConfig {
   connected?: boolean;
   repositories?: RunnerChatOption[];
@@ -405,6 +423,14 @@ export interface RunnerChatProps {
     commandType: RunnerSkillCreationCommandType | null,
   ) => void;
   onOpenPluginsOverview?: () => void;
+  /** Opens the host shell's prompt search. The callback receives the selected prompt. */
+  onOpenPromptSearch?: (
+    onSelect: (prompt: RunnerChatPromptAttachment) => void | Promise<void>,
+  ) => void;
+  /** Opens the host shell's thread search. The callback receives the selected thread. */
+  onOpenThreadSearch?: (
+    onSelect: (thread: RunnerChatThreadAttachment) => void | Promise<void>,
+  ) => void;
   onOpenPlansBudget?: () => void;
   onBacklogMissionControlSubmit?: (payload: {
     prompt: string;

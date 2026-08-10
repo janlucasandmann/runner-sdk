@@ -566,10 +566,18 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
           return String(options.backendUrl || "/api/real").trim().replace(new RegExp("/+$"), "") || "/api/real";
         }
 
-        async function fetchMetronomeWorkflowsFromApi(projectId = "", options = {}) {
+        async function fetchMetronomeWorkflowPageFromApi(projectId = "", options = {}) {
           const normalizedProjectId = String(projectId || "").trim();
           const requestTarget = new URL(getMetronomeApiBaseUrl(options) + "/metronomes", window.location.origin);
           requestTarget.searchParams.set("includeArchived", "false");
+          const limit = Number.isFinite(Number(options.limit))
+            ? Math.max(1, Math.floor(Number(options.limit)))
+            : 0;
+          const offset = Number.isFinite(Number(options.offset))
+            ? Math.max(0, Math.floor(Number(options.offset)))
+            : 0;
+          if (limit) requestTarget.searchParams.set("limit", String(limit));
+          if (offset) requestTarget.searchParams.set("offset", String(offset));
           if (normalizedProjectId) {
             requestTarget.searchParams.set("projectId", normalizedProjectId);
           }
@@ -591,7 +599,29 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
                 ? data.workflows
                 : [];
           const items = rawItems.map(normalizeMetronomeWorkflow);
-          return filterMetronomeWorkflowsByProject(items, normalizedProjectId);
+          const filteredItems = filterMetronomeWorkflowsByProject(items, normalizedProjectId);
+          const responseHasMore = data?.hasMore
+            ?? data?.pagination?.hasMore
+            ?? data?.meta?.hasMore;
+          const nextOffset = Number(
+            data?.nextOffset
+            ?? data?.pagination?.nextOffset
+            ?? data?.meta?.nextOffset
+          );
+          return {
+            items: filteredItems,
+            hasMore: typeof responseHasMore === "boolean"
+              ? responseHasMore
+              : Boolean(limit && rawItems.length >= limit),
+            nextOffset: Number.isFinite(nextOffset)
+              ? Math.max(offset + rawItems.length, nextOffset)
+              : offset + rawItems.length,
+          };
+        }
+
+        async function fetchMetronomeWorkflowsFromApi(projectId = "", options = {}) {
+          const page = await fetchMetronomeWorkflowPageFromApi(projectId, options);
+          return page.items;
         }
 
         async function fetchMetronomeWorkflowFromApi(workflowId) {

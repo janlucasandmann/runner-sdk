@@ -267,8 +267,7 @@ export const ORGANIZATIONS_SUBSCRIPTION_CSS = `      .playground-organization-ad
         }
       }
 
-      .playground-organization-plan-chooser-back,
-      .playground-organization-plan-chooser-close {
+      .playground-organization-plan-chooser-back {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -286,24 +285,12 @@ export const ORGANIZATIONS_SUBSCRIPTION_CSS = `      .playground-organization-ad
         transition: color 140ms ease, background 140ms ease;
       }
 
-      .playground-organization-plan-chooser-close {
-        position: fixed;
-        top: 18px;
-        right: 18px;
-        z-index: 4;
-        width: 34px;
-        padding: 0;
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .playground-organization-plan-chooser-back:hover,
-      .playground-organization-plan-chooser-close:hover {
+      .playground-organization-plan-chooser-back:hover {
         background: rgba(255, 255, 255, 0.075);
         color: #fff;
       }
 
       .playground-organization-plan-chooser-back:focus-visible,
-      .playground-organization-plan-chooser-close:focus-visible,
       .playground-organization-plan-chooser-stepper button:focus-visible {
         outline: 2px solid rgba(77, 163, 255, 0.8);
         outline-offset: 2px;
@@ -366,8 +353,8 @@ export const ORGANIZATIONS_SUBSCRIPTION_CSS = `      .playground-organization-ad
         grid-column: 1;
         grid-row: 1;
         min-width: 0;
-        min-height: 238px;
         box-sizing: border-box;
+        overflow: hidden;
         padding: 40px 32px 32px;
         border-right: 1px solid rgba(255, 255, 255, 0.075);
         border-bottom: 1px solid rgba(255, 255, 255, 0.075);
@@ -399,42 +386,32 @@ export const ORGANIZATIONS_SUBSCRIPTION_CSS = `      .playground-organization-ad
       }
 
       .playground-organization-plan-chooser-catalog-header {
+        position: relative;
         display: flex;
         align-items: flex-end;
         justify-content: space-between;
         grid-column: 2 / -1;
         grid-row: 1;
         gap: 24px;
-        min-height: 238px;
         box-sizing: border-box;
+        overflow: hidden;
         padding: 40px 32px 32px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.075);
       }
 
-      .playground-organization-plan-chooser-billing-copy {
-        display: grid;
-        gap: 3px;
-        min-width: 0;
-      }
-
-      .playground-organization-plan-chooser-billing-copy > span {
-        color: rgba(255, 255, 255, 0.78);
-        font-size: 11px;
-        line-height: 1.3;
-        font-weight: 400;
-      }
-
-      .playground-organization-plan-chooser-billing-copy > small {
-        overflow: hidden;
-        color: rgba(255, 255, 255, 0.38);
-        font-size: 11px;
-        line-height: 1.3;
-        font-weight: 400;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+      .playground-organization-plan-chooser-catalog-header::after {
+        position: absolute;
+        top: 0;
+        right: 50%;
+        bottom: 0;
+        width: 1px;
+        content: "";
+        pointer-events: none;
+        background: rgba(255, 255, 255, 0.075);
       }
 
       .playground-organization-plan-chooser-interval-switch {
+        margin-left: auto;
         flex: 0 0 auto;
         min-width: 220px;
       }
@@ -748,11 +725,6 @@ export const ORGANIZATIONS_SUBSCRIPTION_CSS = `      .playground-organization-ad
           padding: 16px 12px 28px;
         }
 
-        .playground-organization-plan-chooser-close {
-          top: 10px;
-          right: 10px;
-        }
-
         .playground-organization-plan-chooser-intro {
           grid-column: 1;
           grid-row: 1;
@@ -769,11 +741,12 @@ export const ORGANIZATIONS_SUBSCRIPTION_CSS = `      .playground-organization-ad
           padding: 18px 20px;
         }
 
-        .playground-organization-plan-chooser-billing-copy > small {
-          white-space: normal;
+        .playground-organization-plan-chooser-catalog-header::after {
+          display: none;
         }
 
         .playground-organization-plan-chooser-interval-switch {
+          margin-left: 0;
           width: 100%;
           min-width: 0;
         }

@@ -1,9 +1,21 @@
 export const METRONOME_PAGE_OVERVIEW_SCRIPT = String.raw`
           const renderOverview = () => {
-            const overviewWorkflows = [
-              ...(Array.isArray(metronomeAvailableWorkflowRows) ? metronomeAvailableWorkflowRows : []),
+            const normalizedOverviewScope = ["created", "shared"].includes(String(overviewScope || "").trim())
+              ? String(overviewScope).trim()
+              : "all";
+            const ownedOverviewWorkflows = Array.isArray(visibleWorkflows) ? visibleWorkflows : [];
+            const sharedOverviewWorkflows = [
+              ...(Array.isArray(visibleUniqueSharedMetronomeWorkflows) ? visibleUniqueSharedMetronomeWorkflows : []),
               ...(Array.isArray(removedUniqueSharedMetronomeWorkflows) ? removedUniqueSharedMetronomeWorkflows : []),
             ];
+            const overviewWorkflows = normalizedOverviewScope === "created"
+              ? ownedOverviewWorkflows
+              : normalizedOverviewScope === "shared"
+                ? sharedOverviewWorkflows
+                : [
+                    ...(Array.isArray(metronomeAvailableWorkflowRows) ? metronomeAvailableWorkflowRows : []),
+                    ...(Array.isArray(removedUniqueSharedMetronomeWorkflows) ? removedUniqueSharedMetronomeWorkflows : []),
+                  ];
             const workflowById = new Map(overviewWorkflows.map((workflow) => [
               String(workflow?.id || "").trim(),
               workflow,
@@ -31,83 +43,11 @@ export const METRONOME_PAGE_OVERVIEW_SCRIPT = String.raw`
                 ? "Email"
                 : summary;
             };
-            const getWorkflowCreator = (workflow, isBuiltInWorkflow, isTeamSharedWorkflow) => {
-              const workflowCreator = normalizeMetronomeWorkflowCreator(workflow);
-              const creatorAgentId = String(
-                workflowCreator?.agentId
-                || (workflowCreator?.type === "agent" ? workflowCreator?.id : "")
-                || ""
-              ).trim();
-              const creatorName = String(workflowCreator?.name || "").trim();
-              const creatorId = String(workflowCreator?.id || "").trim();
-              const normalizedCreatorName = creatorName.toLowerCase();
-              const normalizedCreatorId = creatorId.toLowerCase();
-              const creatorAgent = isBuiltInWorkflow
-                ? null
-                : metronomeAgentOptions.find((agent) => {
-                    const agentId = String(agent?.id || "").trim();
-                    const agentName = String(agent?.name || "").trim();
-                    const agentEmail = String(agent?.email || agent?.profile?.email || "").trim();
-                    return Boolean(
-                      creatorAgentId && agentId === creatorAgentId
-                      || normalizedCreatorId && (
-                        agentId.toLowerCase() === normalizedCreatorId
-                        || agentName.toLowerCase() === normalizedCreatorId
-                        || agentEmail.toLowerCase() === normalizedCreatorId
-                      )
-                      || normalizedCreatorName && agentName.toLowerCase() === normalizedCreatorName
-                    );
-                  }) || null;
-              const isAgentCreator = Boolean(
-                !isBuiltInWorkflow
-                && (
-                  workflowCreator?.type === "agent"
-                  || creatorAgentId
-                  || creatorAgent && (creatorId || creatorName)
-                )
-              );
-              const isSharedUserCreator = Boolean(
-                isTeamSharedWorkflow
-                && !isAgentCreator
-                && workflowCreator
-                && (
-                  workflowCreator.type === "user"
-                  || workflowCreator.userId
-                  || creatorName
-                  || creatorId
-                )
-              );
-              const name = isBuiltInWorkflow
-                ? "Computer Agents"
-                : isAgentCreator
-                  ? (creatorAgent?.name || creatorName || "Agent")
-                  : isSharedUserCreator
-                    ? (creatorName || workflowCreator?.email || creatorId || "User")
-                    : "Me";
-              const identity = isBuiltInWorkflow
-                ? "Computer Agents"
-                : isAgentCreator
-                  ? (creatorAgent?.name || creatorName || creatorId || "Agent")
-                  : isSharedUserCreator
-                    ? (creatorName || workflowCreator?.email || creatorId || "User")
-                    : (currentUserName || currentUserEmail || "Me");
-              const avatarUrl = isBuiltInWorkflow
-                ? METRONOME_COMPUTER_AGENTS_CREATOR_PROFILE_URL
-                : isAgentCreator
-                  ? (workflowCreator?.avatarUrl || getMetronomeProfileImageUrl(creatorAgent) || "")
-                  : isSharedUserCreator
-                    ? (workflowCreator?.avatarUrl || workflowCreator?.photoUrl || "")
-                    : currentUserAvatarUrl;
-              return {
-                name,
-                avatarUrl: canRenderMetronomeAvatarImage(avatarUrl)
-                  ? normalizeMetronomeAvatarUrl(avatarUrl)
-                  : "",
-                fallback: getMetronomeOwnerInitials(
-                  identity,
-                  isBuiltInWorkflow ? "CA" : isAgentCreator ? "AG" : "ME"
-                ),
-              };
+            const getWorkflowOwner = (workflow, isBuiltInWorkflow, isTeamSharedWorkflow) => {
+              return resolveMetronomeWorkflowOwnerPresentation(workflow, {
+                isBuiltIn: isBuiltInWorkflow,
+                isTeamShared: isTeamSharedWorkflow,
+              });
             };
             const rows = overviewWorkflows
               .map((workflow) => {
@@ -152,7 +92,7 @@ export const METRONOME_PAGE_OVERVIEW_SCRIPT = String.raw`
                       : normalizedStatus === "shared"
                         ? 3
                         : 4;
-                const creator = getWorkflowCreator(
+                const owner = getWorkflowOwner(
                   workflow,
                   isBuiltInWorkflow,
                   isTeamSharedWorkflow
@@ -173,15 +113,18 @@ export const METRONOME_PAGE_OVERVIEW_SCRIPT = String.raw`
                     getMetronomeWorkflowSearchText(workflow),
                     statusLabel,
                     formatWorkflowTrigger(workflow),
-                    creator.name,
+                    owner.name,
                   ].join(" "),
                   status: normalizedStatus,
                   statusLabel,
                   statusRank,
                   triggerLabel: formatWorkflowTrigger(workflow),
-                  creatorName: creator.name,
-                  creatorAvatarUrl: creator.avatarUrl,
-                  creatorFallback: creator.fallback,
+                  ownerName: owner.name,
+                  ownerAvatarUrl: owner.avatarUrl,
+                  ownerFallback: owner.fallback,
+                  creatorName: owner.name,
+                  creatorAvatarUrl: owner.avatarUrl,
+                  creatorFallback: owner.fallback,
                   lastRunAt,
                   sortTimestamp: getMetronomeWorkflowSortTimestamp(workflow),
                   lastRunLabel,
@@ -201,9 +144,13 @@ export const METRONOME_PAGE_OVERVIEW_SCRIPT = String.raw`
             const resolveWorkflow = (row) => workflowById.get(String(row?.id || "").trim()) || null;
 
             return React.createElement(MetronomesOverviewPage, {
+              key: "metronome-overview:" + normalizedOverviewScope,
               rows,
               controlsPortalId: overviewControlsPortalId,
               loading: isLoadingMetronomes,
+              hasMore: normalizedOverviewScope !== "shared" && hasMoreMetronomeWorkflows,
+              loadingMore: isLoadingMoreMetronomes,
+              onLoadMore: normalizedOverviewScope === "shared" ? undefined : loadMoreMetronomeWorkflows,
               onOpen: (row) => {
                 const workflow = resolveWorkflow(row);
                 if (workflow && !row?.isHiddenTeamShared) openMetronomeWorkflow(workflow);

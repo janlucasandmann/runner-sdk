@@ -68,12 +68,12 @@ export const TEAMS_ADMINISTRATION_ACTIONS_SCRIPT = `        async function handl
           }
         }
 
-        async function handleTransferTeamOwnership(memberId, memberLabel = "") {
+        async function handleTransferTeamOwnership(memberId) {
           const teamId = String(teamPageSelectedTeamId || "").trim();
           const normalizedMemberId = String(memberId || "").trim();
           const selectedTeamRecord = teamPageTeams.find((team) => String(team?.id || "") === teamId) || null;
           if (!teamId || !normalizedMemberId || !selectedTeamRecord) {
-            return;
+            throw new Error("A saved team and active member are required to transfer ownership.");
           }
           const currentOwnerUserId = String(
             selectedTeamRecord?.ownerUserId
@@ -111,25 +111,21 @@ export const TEAMS_ADMINISTRATION_ACTIONS_SCRIPT = `        async function handl
             || normalizePlaygroundTeamRoleId(currentMember?.role, "") === "owner"
           );
           if (!currentUserIsOwner) {
-            setTeamPageError("Only the current team owner can transfer ownership.");
-            return;
+            const error = new Error("Only the current team owner can transfer ownership.");
+            setTeamPageError(error.message);
+            throw error;
           }
           const targetMember = teamPageMembers.find((member) => String(member?.id || "").trim() === normalizedMemberId) || null;
           if (!targetMember) {
-            setTeamPageError("The new owner must be an active team member.");
-            return;
+            const error = new Error("The new owner must be an active team member.");
+            setTeamPageError(error.message);
+            throw error;
           }
           const targetStatus = String(targetMember?.status || "active").trim().toLowerCase();
           if (targetStatus && targetStatus !== "active") {
-            setTeamPageError("The new owner must be an active team member.");
-            return;
-          }
-          const targetLabel = String(memberLabel || readTeamPageIdentityDisplayName(targetMember) || readTeamPageIdentityEmail(targetMember) || "this member").trim();
-          const confirmed = window.confirm(
-            "Transfer team ownership to " + targetLabel + "? You will no longer be able to transfer ownership unless the new owner transfers it back."
-          );
-          if (!confirmed) {
-            return;
+            const error = new Error("The new owner must be an active team member.");
+            setTeamPageError(error.message);
+            throw error;
           }
           setTeamPageActionId("team-owner:" + normalizedMemberId);
           setTeamPageError("");
@@ -149,7 +145,9 @@ export const TEAMS_ADMINISTRATION_ACTIONS_SCRIPT = `        async function handl
             }
             await loadTeamPageData({ selectedTeamId: teamId });
           } catch (error) {
-            setTeamPageError(error instanceof Error ? error.message : "Failed to transfer team ownership.");
+            const normalizedError = error instanceof Error ? error : new Error("Failed to transfer team ownership.");
+            setTeamPageError(normalizedError.message);
+            throw normalizedError;
           } finally {
             setTeamPageActionId("");
           }

@@ -19,6 +19,8 @@ export interface TeamOverviewRow {
   profileFallback?: string;
   roleLabel: string;
   ownerLabel: string;
+  ownerAvatarUrl?: string;
+  ownerFallback?: string;
   ownership: "owned" | "member";
   createdAt: number;
   createdLabel: string;
@@ -58,7 +60,7 @@ export function TeamsOverviewPage({
             title={row.name}
             imageUrl={row.profileImageUrl}
             fallback={row.profileFallback}
-            iconClassName="is-agent"
+            iconClassName="is-team"
           />
         ),
       },
@@ -77,7 +79,14 @@ export function TeamsOverviewPage({
         sortable: true,
         width: "minmax(170px, 0.88fr)",
         hideBelow: 760,
-        cell: ({ row }) => <ResourceOverviewValue>{row.ownerLabel}</ResourceOverviewValue>,
+        cell: ({ row }) => (
+          <ResourceOverviewIdentityCell
+            title={row.ownerLabel}
+            imageUrl={row.ownerAvatarUrl}
+            fallback={row.ownerFallback}
+            iconClassName="is-creator"
+          />
+        ),
       },
       {
         id: "created",

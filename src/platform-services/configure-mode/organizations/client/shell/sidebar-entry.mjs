@@ -49,7 +49,7 @@ export const ORGANIZATIONS_ADMIN_PERMISSIONS_SIDEBAR_ENTRIES_SCRIPT = `         
               },
               {
                 id: "admin-roles",
-                label: "Roles",
+                label: "Permissions",
                 Icon: ShieldCheck,
                 active: activePage === "organization" && organizationPageActiveTab === "roles",
                 onClick: () => openOrganizationAdminPage("roles"),

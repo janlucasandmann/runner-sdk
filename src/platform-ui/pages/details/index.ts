@@ -4,6 +4,10 @@ export {
   type FileResourceDetailTab,
 } from "./file-resource-detail-page.js";
 export {
+  MarkdownResourceDetailPage,
+  type MarkdownResourceDetailPageProps,
+} from "./markdown-resource-detail-page.js";
+export {
   PlatformServiceDetailFrame,
   PlatformServiceDetailPage,
   PlatformServiceDetailProperty,

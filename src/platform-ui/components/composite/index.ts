@@ -24,6 +24,7 @@ export * from "./page-hero/index.js";
 export * from "./popup/index.js";
 export * from "./profile-image-picker/index.js";
 export * from "./resource-action-modals/index.js";
+export * from "./resource-detail-sidebar/index.js";
 export * from "./resource-header-actions/index.js";
 export * from "./settings-section/index.js";
 export * from "./subtasks/index.js";

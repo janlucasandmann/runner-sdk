@@ -1,55 +1,157 @@
 export const METRONOME_APP_TOP_NAV_ACTIONS_SCRIPT = `
-        function renderMetronomeBreadcrumbVersionSelector() {
-          const state = metronomeTopNavState && metronomeTopNavState.mode === "editor"
-            ? metronomeTopNavState
-            : null;
-          if (!state || !state.showVersions) {
-            return null;
-          }
-          const isBusy = Boolean(state.versionsBusy);
-          const title = String(state.title || "").trim() || "Untitled Metronome";
-          const canOpenHistory = typeof metronomeTopNavActionsRef.current?.openVersionHistory === "function";
-          return React.createElement(PlatformVersionLabel, {
-            version: state.versionNumber ?? 0,
-            qualifier: state.versionIsLatest ? "Latest" : null,
-            className: "playground-metronome-breadcrumb-version-label",
-            disabled: isBusy || !canOpenHistory,
-            "aria-label": "Open version history for " + title + ", "
-              + formatPlatformVersionLabel(state.versionNumber ?? 0),
-            onClick: () => {
-              if (isBusy || !canOpenHistory) return;
-              setMetronomeTopNavMenuOpen(false);
-              setMetronomeTopNavPublishMenuOpen(false);
-              metronomeTopNavActionsRef.current?.openVersionHistory?.();
-            },
-          });
-        }
+	        function formatMetronomeHeaderTimestamp(value) {
+	          if (!value) return "-";
+	          const date = new Date(value);
+	          if (Number.isNaN(date.getTime())) return "-";
+	          return date.toLocaleString(undefined, {
+	            month: "short",
+	            day: "numeric",
+	            year: "numeric",
+	            hour: "2-digit",
+	            minute: "2-digit",
+	          });
+	        }
 
-        function renderMetronomeTopNavActions() {
+	        function invokeMetronomeHeaderAction(actionName) {
+	          setMetronomeTopNavMenuOpen(false);
+	          setMetronomeTopNavPublishMenuOpen(false);
+	          const action = metronomeTopNavActionsRef.current?.[actionName];
+	          if (typeof action === "function") {
+	            return action();
+	          }
+	          return undefined;
+	        }
+
+	        function renderMetronomeBreadcrumbActions() {
+	          const state = metronomeTopNavState && metronomeTopNavState.mode === "editor"
+	            ? metronomeTopNavState
+	            : null;
+	          if (!state) {
+	            return null;
+	          }
+	          const title = String(state.title || "").trim() || "Untitled Metronome";
+	          const workflowId = String(state.workflowId || "").trim();
+	          const isBusy = Boolean(state.versionsBusy);
+	          const isReadOnly = Boolean(state.readOnly);
+	          const canOpenHistory = Boolean(state.showVersions)
+	            && typeof metronomeTopNavActionsRef.current?.openVersionHistory === "function";
+	          const canShareWithTeam = !isReadOnly
+	            && typeof metronomeTopNavActionsRef.current?.share === "function";
+	          const informationItems = [
+	            workflowId
+	              ? {
+	                  id: "id",
+	                  label: "ID",
+	                  value: workflowId,
+	                  title: workflowId,
+	                  monospace: true,
+	                  copyValue: workflowId,
+	                  copyAriaLabel: "Copy Metronome workflow ID",
+	                }
+	              : null,
+	            state.createdAt
+	              ? { id: "created", label: "Created", value: formatMetronomeHeaderTimestamp(state.createdAt) }
+	              : null,
+	            state.updatedAt
+	              ? { id: "updated", label: "Updated", value: formatMetronomeHeaderTimestamp(state.updatedAt) }
+	              : null,
+	          ].filter(Boolean);
+
+	          return React.createElement(PlatformResourceHeaderActions, {
+	              className: "playground-metronome-breadcrumb-actions",
+	            },
+	            state.showVersions
+	              ? React.createElement(PlatformResourceVersionLabel, {
+	                  resourceLabel: "Metronome workflow",
+	                  version: state.versionNumber ?? 0,
+	                  isLatest: Boolean(state.versionIsLatest),
+	                  className: "playground-metronome-breadcrumb-version-label",
+	                  disabled: isBusy || !canOpenHistory,
+	                  onOpenVersionHistory: () => {
+	                    if (isBusy || !canOpenHistory) return;
+	                    invokeMetronomeHeaderAction("openVersionHistory");
+	                  },
+	                })
+	              : null,
+	            React.createElement(PlatformResourceActionsMenu, {
+	                open: metronomeTopNavMenuOpen,
+	                onOpenChange: (nextOpen) => {
+	                  if (nextOpen) {
+	                    setMetronomeTopNavPublishMenuOpen(false);
+	                  }
+	                  setMetronomeTopNavMenuOpen(nextOpen);
+	                },
+	                resourceLabel: "Metronome workflow",
+	                disabled: isBusy,
+	                shortcutActions: isReadOnly
+	                  ? {}
+	                  : {
+	                      ...(canShareWithTeam
+	                        ? { share: { onInvoke: () => invokeMetronomeHeaderAction("share") } }
+	                        : {}),
+	                      rename: { onInvoke: () => invokeMetronomeHeaderAction("rename") },
+	                      delete: { onInvoke: () => invokeMetronomeHeaderAction("delete") },
+	                    },
+	              },
+	              informationItems.length
+	                ? React.createElement(PlatformResourceActionsInformation, {
+	                    resourceLabel: "Metronome workflow",
+	                    items: informationItems,
+	                  })
+	                : null,
+	              canOpenHistory
+	                ? React.createElement(PlatformResourceVersionHistoryMenuItem, {
+	                    onClick: () => invokeMetronomeHeaderAction("openVersionHistory"),
+	                  })
+	                : null,
+	              informationItems.length || canOpenHistory
+	                ? React.createElement(PlatformResourceActionsDivider, null)
+	                : null,
+	              canShareWithTeam
+	                ? React.createElement(PlatformResourceActionMenuItem, {
+	                    icon: React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+	                    label: "Share with Team",
+	                    shortcut: "share",
+	                    onClick: () => invokeMetronomeHeaderAction("share"),
+	                  })
+	                : null,
+	              React.createElement(PlatformResourceActionMenuItem, {
+	                icon: React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+	                label: "Duplicate",
+	                onClick: () => invokeMetronomeHeaderAction("duplicate"),
+	              }),
+	              !isReadOnly ? React.createElement(PlatformResourceActionsDivider, null) : null,
+	              !isReadOnly
+	                ? React.createElement(PlatformResourceActionMenuItem, {
+	                    icon: React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+	                    label: "Rename",
+	                    shortcut: "rename",
+	                    onClick: () => invokeMetronomeHeaderAction("rename"),
+	                  })
+	                : null,
+	              !isReadOnly
+	                ? React.createElement(PlatformResourceActionMenuItem, {
+	                    icon: React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+	                    label: "Delete",
+	                    shortcut: "delete",
+	                    danger: true,
+	                    onClick: () => invokeMetronomeHeaderAction("delete"),
+	                  })
+	                : null
+	            )
+	          );
+	        }
+
+	        function renderMetronomeTopNavActions() {
           const state = metronomeTopNavState && metronomeTopNavState.mode === "editor"
             ? metronomeTopNavState
             : null;
           if (!state) {
             return null;
           }
-          const isReadOnly = Boolean(state.readOnly);
-          const canShareWithTeam = !isReadOnly && typeof metronomeTopNavActionsRef.current?.share === "function";
-          const menuRows = isReadOnly
-            ? [
-                { id: "duplicate", label: "Duplicate", icon: Copy, action: () => metronomeTopNavActionsRef.current?.duplicate?.() },
-              ]
-            : [
-                { id: "rename", label: "Edit", icon: SquarePen, action: () => metronomeTopNavActionsRef.current?.rename?.() },
-                { id: "duplicate", label: "Duplicate", icon: Copy, action: () => metronomeTopNavActionsRef.current?.duplicate?.() },
-                ...(canShareWithTeam
-                  ? [{ id: "share", label: "Share with Team", icon: UsersRound, action: () => metronomeTopNavActionsRef.current?.share?.() }]
-                  : []),
-                { id: "delete", label: "Delete", icon: Trash2, action: () => metronomeTopNavActionsRef.current?.delete?.(), danger: true },
-              ];
-          const workflowId = String(state.workflowId || "").trim();
-          const showPublishControl = !isReadOnly
-            && state.showPublish
-            && (state.editorMode === "edit" || state.editorMode === "code");
+	          const showPublishControl = !state.readOnly
+	            && state.showPublish
+	            && (state.editorMode === "edit" || state.editorMode === "code");
           const publishBusy = Boolean(state.publishBusy);
           const publishDisabled = Boolean(state.publishDisabled);
           const publishActions = [
@@ -61,9 +163,8 @@ export const METRONOME_APP_TOP_NAV_ACTIONS_SCRIPT = `
               action: () => metronomeTopNavActionsRef.current?.revertVersion?.(),
             },
           ];
-          return React.createElement(React.Fragment, null,
-            showPublishControl
-              ? React.createElement(PlatformButtonSelector, {
+	          return showPublishControl
+	            ? React.createElement(PlatformButtonSelector, {
                   mode: "split-action",
                   buttonVariant: "primary",
                   buttonSize: "small",
@@ -118,48 +219,8 @@ export const METRONOME_APP_TOP_NAV_ACTIONS_SCRIPT = `
                         }, action.shortcut)
                       : null
                   ))
-                )
-              : null,
-            React.createElement("div", { className: "playground-metronome-top-nav-menu-shell", ref: metronomeTopNavMenuRef },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-top-nav-private-chat-button playground-metronome-top-nav-menu-trigger" + (metronomeTopNavMenuOpen ? " is-active" : ""),
-                "aria-label": "Metronome actions",
-                "aria-expanded": metronomeTopNavMenuOpen ? "true" : "false",
-                onClick: () => {
-                  setMetronomeTopNavPublishMenuOpen(false);
-                  setMetronomeTopNavMenuOpen((current) => !current);
-                },
-              },
-                React.createElement(Ellipsis, { strokeWidth: 1.8 })
-              ),
-              metronomeTopNavMenuOpen
-                ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-metronome-top-nav-menu" },
-                    workflowId
-                      ? React.createElement("div", { className: "playground-metronome-top-nav-menu-id" },
-                          React.createElement("span", null, "Workflow ID"),
-                          React.createElement("code", null, workflowId)
-                        )
-                      : null,
-                    menuRows.map((row) => {
-                      const Icon = row.icon;
-                      return React.createElement("button", {
-                        key: row.id,
-                        type: "button",
-                        className: "tb-popup-row" + (row.danger ? " is-danger" : ""),
-                        onClick: () => {
-                          setMetronomeTopNavMenuOpen(false);
-                          row.action();
-                        },
-                      },
-                        React.createElement(Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, row.label)
-                      );
-                    })
-                  )
-                : null
-            )
-          );
-        }
+	                )
+	            : null;
+	        }
 
 `;

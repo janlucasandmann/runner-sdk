@@ -295,12 +295,6 @@ export const ORGANIZATIONS_PAGE_SUBSCRIPTION_SCRIPT = `          const renderOrg
                     "aria-modal": "true",
                     "aria-labelledby": "organization-plan-chooser-title",
                   },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-organization-plan-chooser-close",
-                    onClick: closePlanChooser,
-                    "aria-label": "Close plan chooser",
-                  }, React.createElement(X, { width: 17, height: 17, strokeWidth: 1.8 })),
                   React.createElement("main", { className: "playground-organization-plan-chooser-main" },
                     React.createElement("section", { className: "playground-organization-plan-chooser-shell" },
                       React.createElement("aside", { className: "playground-organization-plan-chooser-intro" },
@@ -315,16 +309,6 @@ export const ORGANIZATIONS_PAGE_SUBSCRIPTION_SCRIPT = `          const renderOrg
                       ),
                       React.createElement("div", { className: "playground-organization-plan-chooser-catalog" },
                         React.createElement("header", { className: "playground-organization-plan-chooser-catalog-header" },
-                          React.createElement("div", { className: "playground-organization-plan-chooser-billing-copy" },
-                            React.createElement("span", null, "Billing period"),
-                            React.createElement("small", null,
-                              hasPaidPlan
-                                ? "Your current interval is preserved when switching plans."
-                                : maximumAnnualSaving > 0
-                                  ? "Save up to " + maximumAnnualSaving + "% with annual billing."
-                                  : "Choose monthly or annual billing."
-                            )
-                          ),
                           React.createElement(PlatformSwitch, {
                             className: "playground-organization-plan-chooser-interval-switch",
                             value: organizationSubscriptionBillingInterval,

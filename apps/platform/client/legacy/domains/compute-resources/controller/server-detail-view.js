@@ -3193,43 +3193,31 @@
                 : (candidate.teamNames || []).join(", ");
               return {
                 value: key,
-                label,
+                name: label,
+                email: candidate.email || "",
+                avatarUrl: candidate.avatarUrl || "",
                 description: detail || undefined,
                 ariaLabel: detail ? label + ", " + detail : label,
-                leading: React.createElement(AccountAvatar, {
-                  className: "playground-agents-detail-owner-option-avatar",
-                  imageClassName: "playground-agents-detail-owner-option-avatar-image",
-                  fallbackLabel: getAccountInitials(label),
-                  photoUrl: candidate.avatarUrl || "",
-                }),
-                candidate,
+                data: { candidate },
               };
             });
-            const serverOwnerSelectorControl = React.createElement(PlatformSelector, {
-                value: serverOwnerIdentityKey,
+            const serverOwnerSelectorControl = React.createElement(PlatformOwnerSelector, {
+                owner: {
+                  value: serverOwnerIdentityKey || "current-owner",
+                  name: serverOwnerLabel,
+                  email: serverOwnerIdentity.email || "",
+                  avatarUrl: serverOwnerIdentity.avatarUrl || "",
+                },
                 options: serverOwnerOptions,
                 open: serverOwnerPopoverOpen,
                 onOpenChange: setServerOwnerPopoverOpen,
-                onValueChange: (nextValue) => {
-                  const selectedOwner = serverOwnerOptions.find((option) => option.value === nextValue)?.candidate;
-                  if (!selectedOwner || nextValue === serverOwnerIdentityKey) {
-                    setServerOwnerPopoverOpen(false);
-                    return;
-                  }
-                  openServerOwnerTransferModal(selectedOwner);
+                onTransfer: async (_nextValue, option) => {
+                  const selectedOwner = option?.data?.candidate;
+                  if (!selectedOwner) return;
+                  await handleServerOwnerSelect(selectedOwner);
                 },
                 ariaLabel: "Choose " + serverKindLabel.toLowerCase() + " owner",
-                label: React.createElement("span", { className: "playground-team-member-cell" },
-                  React.createElement(AccountAvatar, {
-                    className: "playground-team-member-avatar",
-                    imageClassName: "playground-team-member-avatar-image",
-                    fallbackLabel: getAccountInitials(serverOwnerLabel),
-                    photoUrl: serverOwnerIdentity.avatarUrl || "",
-                  }),
-                  React.createElement("span", { className: "playground-team-member-copy" },
-                    React.createElement("span", { className: "playground-team-table-title" }, serverOwnerLabel)
-                  )
-                ),
+                resourceLabel: serverKindLabel.toLowerCase(),
                 alignment: isOperationalDetailServer ? "end" : "start",
                 popupAlignment: "right",
                 fullWidth: true,
@@ -3250,56 +3238,6 @@
               React.createElement("span", { className: "playground-database-access-owner-label" }, "Owner"),
               serverOwnerSelectorControl
             );
-            const serverOwnerTransferTargetLabel = String(serverOwnerTransferTarget?.name || serverOwnerTransferTarget?.email || "New owner").trim();
-            const serverOwnerTransferModalContent = serverOwnerTransferTarget
-              ? renderPlaygroundPlatformModal({
-                  open: true,
-                  visible: !serverOwnerTransferModalClosing,
-                  closing: serverOwnerTransferModalClosing,
-                  onClose: () => closeServerOwnerTransferModal(),
-                  as: "form",
-                  backdropClassName: "playground-tasks-project-issue-backdrop playground-database-owner-transfer-backdrop",
-                  className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-database-owner-transfer-modal",
-                  ariaLabel: "Transfer " + serverKindLabel.toLowerCase() + " ownership",
-                  surfaceProps: { onSubmit: (event) => { event.preventDefault(); void handleServerOwnerTransferConfirm(); } },
-                  children: React.createElement(React.Fragment, null,
-                    React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                        React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" }, React.createElement(Shield, { width: 17, height: 17 })),
-                        React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input" }, "Transfer " + serverKindLabel + " Ownership")
-                      ),
-                      React.createElement("button", { type: "button", className: "playground-settings-icon-button playground-tasks-project-modal-close", onClick: () => closeServerOwnerTransferModal() }, React.createElement(X, { width: 16, height: 16 }))
-                    ),
-                    React.createElement("div", { className: "playground-database-owner-transfer-copy" },
-                      React.createElement("div", { className: "playground-database-owner-transfer-person" },
-                        React.createElement(AccountAvatar, {
-                          className: "playground-team-member-avatar",
-                          imageClassName: "playground-team-member-avatar-image",
-                          fallbackLabel: getAccountInitials(serverOwnerTransferTargetLabel),
-                          photoUrl: serverOwnerTransferTarget.avatarUrl || "",
-                        }),
-                        React.createElement("div", { className: "playground-database-owner-transfer-person-copy" },
-                          React.createElement("span", { className: "playground-database-owner-transfer-person-name" }, serverOwnerTransferTargetLabel),
-                          serverOwnerTransferTarget.email ? React.createElement("span", { className: "playground-database-owner-transfer-person-email" }, serverOwnerTransferTarget.email) : null
-                        )
-                      ),
-                      React.createElement("p", { className: "playground-database-owner-transfer-warning" },
-                        "This transfers ownership immediately. You will keep only the privileges granted through your team access and will no longer be able to change the owner."
-                      )
-                    ),
-                    serverSaveState.error ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, serverSaveState.error) : null,
-                    React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                      React.createElement("button", { type: "button", className: "playground-environments-action-button", onClick: () => closeServerOwnerTransferModal(), disabled: serverSaveState.isSaving }, "Cancel"),
-                      React.createElement(PlatformPrimaryButton, {
-                        size: "medium", type: "submit", className: "playground-environments-action-button is-primary", disabled: serverSaveState.isSaving }, serverSaveState.isSaving ? "Transferring..." : "Transfer Owner")
-                    )
-                  ),
-                })
-              : null;
-            const serverOwnerTransferModal = serverOwnerTransferModalContent && typeof document !== "undefined" && document.body
-              ? createPortal(serverOwnerTransferModalContent, document.body)
-              : serverOwnerTransferModalContent;
-  
             const selectedServerSystemPrincipal = getPlatformSystemAccessPrincipal(serverPermissionTeamId);
             const serverPermissionTeam = serverPermissionTeamId && !selectedServerSystemPrincipal
               ? serverWorkspaceTeamById.get(String(serverPermissionTeamId)) || serverSharedTeams.find((team) => String(team.id) === String(serverPermissionTeamId))
@@ -4495,8 +4433,7 @@
                     className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll",
                   }, paymentsDetailWorkspace)
                 ),
-                paymentsTopNavActions,
-                serverOwnerTransferModal
+                paymentsTopNavActions
               );
             }
   
@@ -4813,8 +4750,7 @@
 	              React.createElement("div", { className: secretsEditorMainClassName, ref: serverDetailMainRef },
 	                React.createElement("div", { className: secretsEditorScrollClassName }, secretsDetailWorkspace)
 	              ),
-	              secretComposerModal,
-	              serverOwnerTransferModal
+	              secretComposerModal
 	            );
             }
   
@@ -5732,8 +5668,7 @@
                     ),
                   }, agentRuntimeDetailWorkspace)
                 ),
-                agentRuntimeRunComposerModal,
-                serverOwnerTransferModal
+                agentRuntimeRunComposerModal
               );
             }
 
@@ -5979,8 +5914,7 @@
                 authTopNavActions,
                 React.createElement("div", { className: authEditorMainClassName, ref: serverDetailMainRef },
                   React.createElement("div", { className: authEditorScrollClassName }, authDetailWorkspace)
-                ),
-                serverOwnerTransferModal
+                )
               );
             }
   

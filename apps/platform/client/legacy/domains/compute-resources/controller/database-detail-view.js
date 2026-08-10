@@ -1203,43 +1203,31 @@
 	              : (Array.isArray(candidate.teamNames) ? candidate.teamNames.join(", ") : "");
 	            return {
 	              value: candidateKey,
-	              label: candidateLabel,
+	              name: candidateLabel,
+	              email: candidate.email || "",
+	              avatarUrl: candidate.avatarUrl || "",
 	              description: candidateDetail || undefined,
 	              ariaLabel: candidateDetail ? candidateLabel + ", " + candidateDetail : candidateLabel,
-	              leading: React.createElement(AccountAvatar, {
-	                className: "playground-agents-detail-owner-option-avatar",
-	                imageClassName: "playground-agents-detail-owner-option-avatar-image",
-	                fallbackLabel: getAccountInitials(candidateLabel),
-	                photoUrl: candidate.avatarUrl || "",
-	              }),
-	              candidate,
+	              data: { candidate },
 	            };
 	          });
-	          const databaseOwnerSelectorControl = React.createElement(PlatformSelector, {
-	            value: databaseOwnerIdentityKey,
+	          const databaseOwnerSelectorControl = React.createElement(PlatformOwnerSelector, {
+	            owner: {
+	              value: databaseOwnerIdentityKey || "current-owner",
+	              name: databaseOwnerLabel,
+	              email: databaseOwnerIdentity.email || "",
+	              avatarUrl: databaseOwnerIdentity.avatarUrl || "",
+	            },
 	            options: databaseOwnerOptions,
 	            open: databaseOwnerPopoverOpen,
 	            onOpenChange: setDatabaseOwnerPopoverOpen,
-	            onValueChange: (nextValue) => {
-	              const selectedOwner = databaseOwnerOptions.find((option) => option.value === nextValue)?.candidate;
-	              if (!selectedOwner || nextValue === databaseOwnerIdentityKey) {
-	                setDatabaseOwnerPopoverOpen(false);
-	                return;
-	              }
-	              openDatabaseOwnerTransferModal(selectedOwner);
+	            onTransfer: async (_nextValue, option) => {
+	              const selectedOwner = option?.data?.candidate;
+	              if (!selectedOwner) return;
+	              await handleDatabaseOwnerSelect(selectedOwner);
 	            },
 	            ariaLabel: "Choose database owner",
-	            label: React.createElement("span", { className: "playground-team-member-cell" },
-	              React.createElement(AccountAvatar, {
-	                className: "playground-team-member-avatar",
-	                imageClassName: "playground-team-member-avatar-image",
-	                fallbackLabel: getAccountInitials(databaseOwnerLabel),
-	                photoUrl: databaseOwnerIdentity.avatarUrl || "",
-	              }),
-	              React.createElement("span", { className: "playground-team-member-copy" },
-	                React.createElement("span", { className: "playground-team-table-title" }, databaseOwnerLabel)
-	              )
-	            ),
+	            resourceLabel: "database",
 	            alignment: "end",
 	            popupAlignment: "right",
 	            fullWidth: true,
@@ -1256,89 +1244,6 @@
 	            popupClassName: "playground-agents-detail-owner-menu playground-server-owner-selector-popup",
 	            optionClassName: "playground-agents-detail-owner-option",
 	          });
-  	          const databaseOwnerTransferTargetLabel = String(
-  	            databaseOwnerTransferTarget?.name || databaseOwnerTransferTarget?.email || "New owner"
-  	          ).trim();
-  	          const databaseOwnerTransferModalContent = databaseOwnerTransferTarget
-  	            ? renderPlaygroundPlatformModal({
-  	                open: true,
-  	                visible: databaseOwnerTransferModalVisible,
-  	                closing: databaseOwnerTransferModalClosing,
-  	                onClose: () => closeDatabaseOwnerTransferModal(),
-  	                as: "form",
-  	                backdropClassName: "playground-tasks-project-issue-backdrop playground-database-owner-transfer-backdrop",
-  	                className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-database-owner-transfer-modal",
-  	                ariaLabel: "Transfer database ownership",
-  	                surfaceProps: {
-  	                  onSubmit: (event) => {
-  	                    event.preventDefault();
-  	                    void handleDatabaseOwnerTransferConfirm();
-  	                  },
-  	                },
-  	                children: React.createElement(React.Fragment, null,
-  	                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
-  	                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-  	                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-  	                        React.createElement(Shield, { width: 17, height: 17, strokeWidth: 1.8 })
-  	                      ),
-  	                      React.createElement("div", {
-  	                        className: "playground-content-title playground-tasks-project-modal-name-input",
-  	                      }, "Transfer Database Ownership")
-  	                    ),
-  	                    React.createElement("button", {
-  	                      type: "button",
-  	                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-  	                      onClick: () => closeDatabaseOwnerTransferModal(),
-  	                      disabled: databaseSaveState.isSaving,
-  	                      title: "Close",
-  	                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-  	                  ),
-  	                  React.createElement("div", { className: "playground-database-owner-transfer-copy" },
-  	                    React.createElement("div", { className: "playground-database-owner-transfer-person" },
-  	                      React.createElement(AccountAvatar, {
-  	                        className: "playground-team-member-avatar",
-  	                        imageClassName: "playground-team-member-avatar-image",
-  	                        fallbackLabel: getAccountInitials(databaseOwnerTransferTargetLabel),
-  	                        photoUrl: databaseOwnerTransferTarget.avatarUrl || "",
-  	                      }),
-  	                      React.createElement("div", { className: "playground-database-owner-transfer-person-copy" },
-  	                        React.createElement("span", { className: "playground-database-owner-transfer-person-name" }, databaseOwnerTransferTargetLabel),
-  	                        databaseOwnerTransferTarget.email
-  	                          ? React.createElement("span", { className: "playground-database-owner-transfer-person-email" }, databaseOwnerTransferTarget.email)
-  	                          : null
-  	                      )
-  	                    ),
-  	                    React.createElement("p", { className: "playground-database-owner-transfer-warning" },
-  	                      "This transfers ownership immediately. The new owner will be able to transfer ownership again. "
-  	                        + "You will keep only the privileges granted through your team access and will no longer be able to change the owner."
-  	                    )
-  	                  ),
-  	                  databaseSaveState.error
-  	                    ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, databaseSaveState.error)
-  	                    : null,
-  	                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-  	                    React.createElement("button", {
-  	                      type: "button",
-  	                      className: "playground-environments-action-button",
-  	                      onClick: () => closeDatabaseOwnerTransferModal(),
-  	                      disabled: databaseSaveState.isSaving,
-  	                    }, "Cancel"),
-  	                    React.createElement(PlatformPrimaryButton, {
-  	                      size: "medium",
-  	                      type: "submit",
-  	                      className: "playground-environments-action-button is-primary",
-  	                      disabled: databaseSaveState.isSaving,
-  	                    }, databaseSaveState.isSaving ? "Transferring..." : "Transfer Owner")
-  	                  )
-  	                ),
-  	              })
-  	            : null;
-  	          const databaseOwnerTransferModal = databaseOwnerTransferModalContent
-  	            && typeof createPortal === "function"
-  	            && typeof document !== "undefined"
-  	            && document.body
-  	              ? createPortal(databaseOwnerTransferModalContent, document.body)
-  	              : databaseOwnerTransferModalContent;
 	          const databaseAddTeamsControl = canManageDatabaseTeamAccess
 	            ? React.createElement(PlatformPopup, {
 	                open: databaseTeamMenuId === "add-teams",
@@ -1608,7 +1513,6 @@
 	                databaseDetailWorkspace
 	                )
 	              ),
-	              databaseOwnerTransferModal,
 	              renderDatabaseRenameModal(),
 	              databaseCollectionComposerModal,
               databaseDocumentComposerModal,

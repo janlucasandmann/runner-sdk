@@ -533,7 +533,13 @@ export function PlatformResourceActionsMetadata({
   return (
     <div className={joinClassNames("platform-resource-actions-menu__metadata", className)}>
       {items.map((item) => (
-        <div key={item.id} className="platform-resource-actions-menu__metadata-row">
+        <div
+          key={item.id}
+          className={joinClassNames(
+            "platform-resource-actions-menu__metadata-row",
+            String(item.id || "").trim().toLowerCase() === "id" && "is-resource-id",
+          )}
+        >
           <span className="platform-resource-actions-menu__metadata-label">{item.label}</span>
           <span className="platform-resource-actions-menu__metadata-content">
             <span

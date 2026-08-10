@@ -5,6 +5,26 @@ import type {
   RunnerTurnAttachment,
 } from "./attachment-types.js";
 
+export function mergeAttachmentReferenceMetadata(
+  local: LocalAttachment,
+  resolved: RunnerAttachment,
+): RunnerAttachment {
+  return {
+    ...resolved,
+    ...(local.referenceType ? { referenceType: local.referenceType } : {}),
+    ...(local.displayName ? { displayName: local.displayName } : {}),
+    ...(local.promptId ? { promptId: local.promptId } : {}),
+    ...(local.promptVersionId ? { promptVersionId: local.promptVersionId } : {}),
+    ...(typeof local.promptVersionNumber === "number"
+      ? { promptVersionNumber: local.promptVersionNumber }
+      : {}),
+    ...(local.threadId ? { threadId: local.threadId } : {}),
+    ...(local.runnerAttachmentRole
+      ? { runnerAttachmentRole: local.runnerAttachmentRole }
+      : {}),
+  };
+}
+
 export type RunnerBrowserFileType =
   | "image"
   | "video"
@@ -225,6 +245,10 @@ export function getGithubAttachmentDisplayName(
 export function getAttachmentDisplayName(
   attachment: LocalAttachment | RunnerTurnAttachment
 ): string {
+  const referenceName = String(attachment.displayName || "").trim();
+  if (referenceName) {
+    return referenceName;
+  }
   if (isGithubAttachmentSelection(attachment)) {
     return getGithubAttachmentDisplayName(attachment);
   }

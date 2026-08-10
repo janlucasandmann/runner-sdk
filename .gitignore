@@ -1,5 +1,6 @@
 node_modules/
 dist/
 .platform-dev/
+.platform-data/
 *.log
 .DS_Store

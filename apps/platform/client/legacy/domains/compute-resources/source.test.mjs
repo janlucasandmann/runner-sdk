@@ -151,7 +151,7 @@ assert.match(
 );
 assert.match(
   computerDetailViewSource,
-  /const environmentOwnerSelectorControl = React\.createElement\(PlatformSelector, \{[\s\S]{0,2600}ariaLabel: "Choose computer owner"/,
+  /const environmentOwnerSelectorControl = React\.createElement\(PlatformOwnerSelector, \{[\s\S]{0,2600}ariaLabel: "Choose computer owner"/,
   "Computer Details must use an editable, organization-aware owner selector.",
 );
 assert.match(
@@ -770,7 +770,7 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const serverOwnerSelectorControl = React\.createElement\(PlatformSelector,[\s\S]{0,3000}popupClassName: "playground-agents-detail-owner-menu playground-server-owner-selector-popup"/,
+  /const serverOwnerSelectorControl = React\.createElement\(PlatformOwnerSelector,[\s\S]{0,3000}popupClassName: "playground-agents-detail-owner-menu playground-server-owner-selector-popup"/,
   "Function ownership must use the centralized avatar selector and its minimal popup.",
 );
 assert.match(
@@ -1358,7 +1358,7 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const databaseOwnerSelectorControl = React\.createElement\(PlatformSelector,[\s\S]{0,3000}popupClassName: "playground-agents-detail-owner-menu playground-server-owner-selector-popup"/,
+  /const databaseOwnerSelectorControl = React\.createElement\(PlatformOwnerSelector,[\s\S]{0,3000}popupClassName: "playground-agents-detail-owner-menu playground-server-owner-selector-popup"/,
   "Database ownership must use the centralized avatar selector and minimal popup.",
 );
 assert.match(

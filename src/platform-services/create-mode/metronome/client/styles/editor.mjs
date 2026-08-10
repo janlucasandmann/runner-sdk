@@ -128,6 +128,20 @@ export const METRONOME_EDITOR_CSS = String.raw`
         min-height: 0;
         height: 100%;
         max-height: 100%;
+        background: #000;
+      }
+
+      .playground-metronome-code-workspace .platform-code-editor-workspace__sidebar,
+      .playground-metronome-code-workspace .platform-code-editor-workspace__editor,
+      .playground-metronome-code-workspace .platform-code-editor-workspace__editor-header,
+      .playground-metronome-code-workspace .platform-code-editor-workspace__editor-body,
+      .playground-metronome-code-monaco-editor,
+      .playground-metronome-code-monaco-editor > section,
+      .playground-metronome-code-monaco-editor .monaco-editor,
+      .playground-metronome-code-monaco-editor .monaco-editor-background,
+      .playground-metronome-code-monaco-editor .margin,
+      .playground-metronome-code-monaco-editor .overflow-guard {
+        background: #000 !important;
       }
 
       .playground-metronome-code-monaco {

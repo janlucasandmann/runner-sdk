@@ -20,20 +20,17 @@ export interface ParsedTestPlanDefinition {
 export function cloneTestPlanDefinition(
   definition: TestPlanDefinition,
 ): TestPlanDefinition {
-  return JSON.parse(JSON.stringify(definition)) as TestPlanDefinition;
+  return sanitizeTestPlanDefinition(JSON.parse(JSON.stringify(definition)));
 }
 
 export function createDefaultTestPlanDefinition(): TestPlanDefinition {
   return {
     schemaVersion: "computer_agents_test_plan_v1",
-    setup: null,
     cases: [],
-    teardown: null,
     concurrency: 1,
     stopOnFailure: false,
     retryPolicy: {
       maxAttempts: 1,
-      backoffMs: 1_000,
     },
     evidencePolicy: {
       retainLogs: true,
@@ -41,6 +38,41 @@ export function createDefaultTestPlanDefinition(): TestPlanDefinition {
       retainTraces: true,
       retainArtifacts: true,
       redactSecrets: true,
+    },
+  };
+}
+
+function asDefinitionRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function finiteNumber(value: unknown, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function sanitizeTestPlanDefinition(value: unknown): TestPlanDefinition {
+  const source = asDefinitionRecord(value);
+  const retryPolicy = asDefinitionRecord(source.retryPolicy);
+  const evidencePolicy = asDefinitionRecord(source.evidencePolicy);
+  return {
+    schemaVersion: "computer_agents_test_plan_v1",
+    cases: Array.isArray(source.cases)
+      ? source.cases as TestCaseDefinition[]
+      : [],
+    concurrency: finiteNumber(source.concurrency, 1),
+    stopOnFailure: source.stopOnFailure === true,
+    retryPolicy: {
+      maxAttempts: finiteNumber(retryPolicy.maxAttempts, 1),
+    },
+    evidencePolicy: {
+      retainLogs: evidencePolicy.retainLogs !== false,
+      retainScreenshots: evidencePolicy.retainScreenshots !== false,
+      retainTraces: evidencePolicy.retainTraces !== false,
+      retainArtifacts: evidencePolicy.retainArtifacts !== false,
+      redactSecrets: evidencePolicy.redactSecrets !== false,
     },
   };
 }
@@ -56,7 +88,7 @@ export function createTestPlanDraft(plan: TestPlan): TestPlanDraft {
 }
 
 export function serializeTestPlanDefinition(definition: TestPlanDefinition): string {
-  return JSON.stringify(definition, null, 2);
+  return JSON.stringify(sanitizeTestPlanDefinition(definition), null, 2);
 }
 
 export function parseTestPlanDefinition(value: string): ParsedTestPlanDefinition {
@@ -68,21 +100,17 @@ export function parseTestPlanDefinition(value: string): ParsedTestPlanDefinition
     if (!Array.isArray(parsed.cases)) {
       return { definition: null, error: "The definition must contain a cases array." };
     }
-    const fallback = createDefaultTestPlanDefinition();
+    if (
+      Object.prototype.hasOwnProperty.call(parsed, "setup")
+      || Object.prototype.hasOwnProperty.call(parsed, "teardown")
+    ) {
+      return {
+        definition: null,
+        error: "Test lifecycle commands are not supported. Model preparation and cleanup as explicit test cases.",
+      };
+    }
     return {
-      definition: {
-        ...fallback,
-        ...parsed,
-        cases: parsed.cases as TestCaseDefinition[],
-        retryPolicy: {
-          ...fallback.retryPolicy,
-          ...(parsed.retryPolicy || {}),
-        },
-        evidencePolicy: {
-          ...fallback.evidencePolicy,
-          ...(parsed.evidencePolicy || {}),
-        },
-      },
+      definition: sanitizeTestPlanDefinition(parsed),
       error: "",
     };
   } catch (error) {

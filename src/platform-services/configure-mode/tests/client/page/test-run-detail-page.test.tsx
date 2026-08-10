@@ -1,9 +1,15 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { TestPlan, TestRun } from "../domain/index.js";
 import { TestRunDetailPage } from "./test-run-detail-page.js";
+
+vi.mock("chart.js/auto", () => ({
+  default: class ChartMock {
+    destroy() {}
+  },
+}));
 
 afterEach(cleanup);
 
@@ -17,12 +23,10 @@ const plan: TestPlan = {
   defaultEnvironmentId: "environment-1",
   definition: {
     schemaVersion: "1",
-    setup: null,
     cases: [],
-    teardown: null,
     concurrency: 1,
     stopOnFailure: false,
-    retryPolicy: { maxAttempts: 1, backoffMs: 0 },
+    retryPolicy: { maxAttempts: 1 },
     evidencePolicy: {
       retainLogs: true,
       retainScreenshots: true,
@@ -134,46 +138,62 @@ const run: TestRun = {
 };
 
 describe("TestRunDetailPage", () => {
-  it("leads with the outcome and keeps implementation evidence secondary", () => {
+  it("leads with run analytics and keeps implementation evidence secondary", () => {
+    const onOpenTechnicalDetails = vi.fn();
     const { container } = render(
       <TestRunDetailPage
         run={run}
         plan={plan}
-        projects={[{ id: "project-1", name: "Platform" }]}
         environments={[{ id: "environment-1", name: "Staging" }]}
-        agents={[{ id: "agent-1", name: "Release agent" }]}
         onRefresh={vi.fn()}
         onRunAgain={vi.fn()}
+        onOpenTechnicalDetails={onOpenTechnicalDetails}
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "1 of 2 cases need attention" })).not.toBeNull();
-    expect(screen.getByText(/Review the failed cases below/)).not.toBeNull();
-    expect(screen.getByLabelText("Test run summary")).not.toBeNull();
+    expect(screen.queryByText("Run summary")).toBeNull();
+    expect(container.querySelector('section[aria-label="Test run analytics"]')).not.toBeNull();
     expect(container.querySelectorAll(".platform-analytics__metric")).toHaveLength(4);
-    expect(container.querySelector(".platform-analytics__chart")).toBeNull();
+    expect(container.querySelector(".platform-analytics__chart")).not.toBeNull();
 
     const resultsTable = screen.getByRole("table", { name: "Test case results" });
     expect(within(resultsTable).getByText("Case")).not.toBeNull();
     expect(within(resultsTable).getByText("Status")).not.toBeNull();
-    expect(within(resultsTable).getByText("Summary")).not.toBeNull();
+    expect(within(resultsTable).queryByText("Summary")).toBeNull();
+    expect(within(resultsTable).getByText("Build completed successfully.")).not.toBeNull();
+    expect(within(resultsTable).queryByText("Build completed successfully.")
+      ?.closest(".tests-run-case-output__copy")
+      ?.querySelector("svg")).toBeNull();
     expect(within(resultsTable).queryByText("Exit code")).toBeNull();
     expect(within(resultsTable).queryByText("Attempt")).toBeNull();
     expect(screen.getByRole("searchbox", { name: "Search case results" })).not.toBeNull();
+    expect(screen.queryByRole("heading", { name: "Case output" })).toBeNull();
+
+    expect(screen.getByRole("searchbox", { name: "Search artifacts" })).not.toBeNull();
+    expect(screen.queryByText("Files, screenshots, traces, and reports retained by this run.")).toBeNull();
+
+    fireEvent.click(within(resultsTable).getByRole("button", {
+      name: "Open actions for Build succeeds, Passed",
+    }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Expand" }));
+    expect(within(resultsTable).getByText("Attempt")).not.toBeNull();
+    expect(within(resultsTable).getByText("Exit code")).not.toBeNull();
+    expect(within(resultsTable).getByText("Standard output")).not.toBeNull();
+    expect(within(resultsTable).getByText("done")).not.toBeNull();
 
     expect(screen.getByRole("heading", { name: "Run evidence" })).not.toBeNull();
     expect(screen.getByText("Worker verified")).not.toBeNull();
-    const technicalDetails = screen.getByText("Technical details").closest("details");
-    expect(technicalDetails).not.toBeNull();
-    expect(technicalDetails?.hasAttribute("open")).toBe(false);
-    expect(screen.queryByRole("heading", { name: "Canonical envelope" })).toBeNull();
-
     expect(screen.getByText("v3")).not.toBeNull();
     const detailsSidebar = container.querySelector<HTMLElement>(
       '[data-platform-detail-sidebar="true"]',
     );
     expect(detailsSidebar).not.toBeNull();
-    expect(within(detailsSidebar as HTMLElement).queryByText("Commit")).toBeNull();
-    expect(within(detailsSidebar as HTMLElement).queryByText("Thread")).toBeNull();
+    expect(detailsSidebar?.querySelector(".platform-resource-detail-sidebar")).not.toBeNull();
+    expect(within(detailsSidebar as HTMLElement).queryByText("Project")).toBeNull();
+    expect(within(detailsSidebar as HTMLElement).queryByText("Executor")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Test run actions" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Technical details" }));
+    expect(onOpenTechnicalDetails).toHaveBeenCalledTimes(1);
   });
 });

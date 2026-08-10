@@ -47,7 +47,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Metronome controller runtime",
     source: METRONOME_PAGE_CONTROLLER_SCRIPT,
-    expectedSha256: "d602ed3bbfadd3867ee602ddfe84d9049b5968a4b285fe86108bbbe6471bcece",
+    expectedSha256: "fa431620981914f66a725eb96f30ba1e1122584c4f58b7ded14649bb58cb15cb",
     fragmentGroups: [{
       baseUrl: metronomePageUrl,
       paths: METRONOME_PAGE_CONTROLLER_FRAGMENT_PATHS,
@@ -87,7 +87,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Metronome workflow runtime",
     source: METRONOME_WORKFLOW_DOMAIN_RUNTIME_SCRIPT,
-    expectedSha256: "0d14c5219a3c1f4e99b55b71710fc8ea07ddc2a614cf1c206ce7a21cb57ef41b",
+    expectedSha256: "4bc8b4dfddd6d2e5acbba1e9a4e571d43cc3a76183d8b37ad21e43d043c3ad62",
     fragmentGroups: [{
       baseUrl: metronomeRuntimeUrl,
       paths: METRONOME_WORKFLOW_DOMAIN_FRAGMENT_PATHS,
@@ -162,15 +162,22 @@ assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const openMetronomeVersionHistorySi
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /openVersionHistory: openMetronomeVersionHistorySidebar/);
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /openVersionHistory: openMetronomeVersionChangesPage/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /onViewChanges: \(\) => openMetronomeVersionChangesPage\(\)/);
-assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /function renderMetronomeBreadcrumbVersionSelector/);
-assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /React\.createElement\(PlatformVersionLabel, \{/);
-assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /openVersionHistory\?\.\(\)/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /function renderMetronomeBreadcrumbActions/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /React\.createElement\(PlatformResourceHeaderActions/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /React\.createElement\(PlatformResourceVersionLabel/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /React\.createElement\(PlatformResourceActionsMenu/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /React\.createElement\(PlatformResourceActionsInformation/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /React\.createElement\(PlatformResourceVersionHistoryMenuItem/);
+assert.doesNotMatch(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /playground-metronome-top-nav-menu-shell/);
+assert.doesNotMatch(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /React\.createElement\(PlatformPopupSurface/);
 assert.doesNotMatch(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /Choose Metronome version/);
 assert.doesNotMatch(METRONOME_STYLE_FRAGMENTS.overview, /\.playground-metronome-breadcrumb-version-trigger/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /showVersions: !isActiveWorkflowBuiltIn/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /showPublish: !isActiveWorkflowBuiltIn/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const shouldGenerateMetronomePythonFiles = metronomeEditorMode === "code"/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformCodeEditorWorkspace, \{/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformMonacoCodeEditor, \{/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /className: "playground-metronome-code-monaco-editor"/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /ariaLabel: "Metronome code editor"/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /variant: "full-screen"/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /historyControls: \{\s*onUndo: handleMetronomeCodeUndo,\s*onRedo: handleMetronomeCodeRedo/);
@@ -179,6 +186,7 @@ assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const \[metronomeCodeRedoStack, set
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /id: "revert",\s*label: "Revert"/);
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /id: "save",\s*label: "Save"/);
 assert.match(METRONOME_STYLE_FRAGMENTS.editor, /\.playground-metronome-code-view\.is-full-screen-workspace,[\s\S]*?max-width:\s*none/);
+assert.match(METRONOME_STYLE_FRAGMENTS.editor, /\.playground-metronome-code-monaco-editor[\s\S]*?background:\s*#000\s*!important/);
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /playground-metronome-code-header/);
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /renderMetronomeCodeFileRow/);
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /const metronomeWorkflowDefinition = useMemo/);
@@ -205,10 +213,29 @@ assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /toolbar: \{\s*title: "Runs",\s*sear
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /header: "Run ID"[\s\S]{0,180}accessor: \(run\) => String\(run\?\.id \|\| ""\)/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /status === "failed"\s*\? "red"/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformLabel, \{ variant \}, label\)/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformResourceDetailSidebar, \{/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /className: "playground-metronome-runs-sidebar"/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /propertiesClassName: "playground-metronome-runs-property-list"/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /label: "Updated"/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /creator: creatorIdentity/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /owner: ownerIdentity/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /createMetronomeRunApi\(activeWorkflow\.id/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /"Trigger Run"/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(280px,\s*340px\)/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /column-gap:\s*42px/);
+assert.doesNotMatch(METRONOME_STYLE_FRAGMENTS.runs, /flex:\s*0 0 280px/);
+assert.doesNotMatch(METRONOME_STYLE_FRAGMENTS.runs, /playground-metronome-runs-owner-row/);
 assert.doesNotMatch(METRONOME_STYLE_FRAGMENTS.runs, /playground-metronome-run-status/);
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /playground-metronome-runs-header/);
 assert.match(METRONOME_PAGE_OVERVIEW_SCRIPT, /const renderPalette = \(\) => React\.createElement\("aside"[\s\S]*playground-metronome-palette-list/);
 assert.doesNotMatch(METRONOME_PAGE_OVERVIEW_SCRIPT, /playground-metronome-palette-(?:header|back-button|title)/);
+assert.match(METRONOME_PAGE_OVERVIEW_SCRIPT, /const getWorkflowOwner =/);
+assert.match(METRONOME_PAGE_OVERVIEW_SCRIPT, /ownerName: owner\.name/);
+assert.match(METRONOME_PAGE_OVERVIEW_SCRIPT, /creatorName: owner\.name/);
+assert.doesNotMatch(METRONOME_PAGE_OVERVIEW_SCRIPT, /["']Me["']/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /fetchMetronomeWorkflowPageFromApi[\s\S]{0,500}limit: 20,[\s\S]{0,80}offset: 0/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const loadMoreMetronomeWorkflows = useCallback/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /limit: 10,\s*offset,/);
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /renderPlaygroundPlatformPopup/);
 assert.match(METRONOME_TEMPLATES_RUNTIME_SCRIPT, /function createTriggerOnlyMetronomeGraph[\s\S]*nodes: \[trigger\],[\s\S]*edges: \[\]/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /function renderMetronomeRunTraceThreadSurface/);
@@ -225,7 +252,12 @@ assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-service
 assert.match(platformEntrySource, /metronomeService\.handleRequest\(req, res, url\)/);
 assert.match(platformEntrySource, /MetronomesOverviewPage/);
 assert.match(platformEntrySource, /playground-metronome-overview-controls/);
-assert.match(platformEntrySource, /trailing: renderMetronomeBreadcrumbVersionSelector\(\)/);
+assert.match(platformEntrySource, /ariaLabel: "Workflow scope"/);
+assert.match(platformEntrySource, /label: "All Workflows"/);
+assert.match(platformEntrySource, /label: "Created by me"/);
+assert.match(platformEntrySource, /label: "Shared with me"/);
+assert.match(platformEntrySource, /overviewScope: metronomeOverviewScope/);
+assert.match(platformEntrySource, /trailing: renderMetronomeBreadcrumbActions\(\)/);
 assert.match(platformEntrySource, /React\.createElement\(PlaygroundMetronomePage, \{[\s\S]*?onNavigationGuardChange: registerPlatformNavigationGuard,\s*onNavigationRequest: requestPlatformNavigation/);
 assert.match(platformEntrySource, /id: "playground-metronome-node-drawer-root",\s*className: "platform-floating-sidebar-portal"/);
 assert.match(platformEntrySource, /PlatformVersionHistorySidebar/);
@@ -260,6 +292,11 @@ let result = dispatch("GET", "/api/real/metronomes?limit=20&projectId=project_1"
 assert.equal(result.handled, true);
 assert.equal(result.call.adapter, "get");
 assert.equal(result.call.args[2], "/metronomes?limit=20&projectId=project_1");
+
+result = dispatch("GET", "/api/real/metronomes?limit=10&offset=20&projectId=project_1");
+assert.equal(result.handled, true);
+assert.equal(result.call.adapter, "get");
+assert.equal(result.call.args[2], "/metronomes?limit=10&offset=20&projectId=project_1");
 
 result = dispatch("GET", "/api/real/metronomes/workflow%201/runs/run%2F1/timeline");
 assert.equal(result.handled, true);

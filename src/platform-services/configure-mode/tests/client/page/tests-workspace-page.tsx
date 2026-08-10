@@ -18,15 +18,23 @@ import {
 } from "../domain/index.js";
 import { TestPlanCreateModal } from "./test-plan-create-modal.js";
 import { TestPlanDetailPage } from "./test-plan-detail-page.js";
+import { TestPlanRawConfigurationPage } from "./test-plan-raw-configuration-page.js";
 import { TestCaseDetailPage } from "./test-case-detail-page.js";
 import { TestRunCreateModal } from "./test-run-create-modal.js";
 import { TestRunDetailPage } from "./test-run-detail-page.js";
+import { TestRunTechnicalDetailsPage } from "./test-run-technical-details-page.js";
 import {
   TestsOverviewPage,
   type TestPlanOverviewRow,
 } from "./tests-overview-page.js";
 
-export type TestsWorkspaceMode = "overview" | "detail" | "case" | "run";
+export type TestsWorkspaceMode =
+  | "overview"
+  | "detail"
+  | "configuration"
+  | "case"
+  | "run"
+  | "run-technical";
 
 export interface TestsWorkspacePageProps {
   shouldLoadData?: boolean;
@@ -53,6 +61,7 @@ export interface TestsWorkspacePageProps {
   activeOrganizationId?: string;
   currentUser?: TestPersonIdentityInput;
   onOpenPlan: (planId: string, planName?: string) => void;
+  onOpenRawConfiguration: (planId: string, planName?: string) => void;
   onPlanDeleted?: (planId: string) => void;
   onOpenCase: (
     planId: string,
@@ -61,6 +70,12 @@ export interface TestsWorkspacePageProps {
     caseName?: string,
   ) => void;
   onOpenRun: (planId: string, runId: string, planName?: string) => void;
+  onOpenRunTechnicalDetails: (
+    planId: string,
+    runId: string,
+    planName?: string,
+    runName?: string,
+  ) => void;
   onIdentityChange?: (identity: {
     planId: string;
     planName: string;
@@ -123,9 +138,11 @@ export function TestsWorkspacePage({
   activeOrganizationId = "",
   currentUser = {},
   onOpenPlan,
+  onOpenRawConfiguration,
   onPlanDeleted,
   onOpenCase,
   onOpenRun,
+  onOpenRunTechnicalDetails,
   onIdentityChange,
   onVersionsSidebarOpenChange,
   onNavigationGuardChange,
@@ -242,11 +259,14 @@ export function TestsWorkspacePage({
       void loadOverview();
       return;
     }
-    if ((mode === "detail" || mode === "case") && selectedTestPlanId) {
+    if (
+      (mode === "detail" || mode === "configuration" || mode === "case")
+      && selectedTestPlanId
+    ) {
       void loadPlan(selectedTestPlanId);
       return;
     }
-    if (mode === "run" && selectedTestRunId) {
+    if ((mode === "run" || mode === "run-technical") && selectedTestRunId) {
       void loadRun(selectedTestRunId);
     }
   }, [
@@ -383,6 +403,9 @@ export function TestsWorkspacePage({
             }}
             onReload={() => loadPlan(activePlan.id)}
             onRun={setRunPlan}
+            onOpenRawConfiguration={() => requestWorkspaceNavigation(() => (
+              onOpenRawConfiguration(activePlan.id, activePlan.name)
+            ))}
             onOpenRun={(run) => requestWorkspaceNavigation(() => (
               onOpenRun(activePlan.id, run.id, activePlan.name)
             ))}
@@ -415,6 +438,29 @@ export function TestsWorkspacePage({
           onRun={startRun}
         />
       </>
+    );
+  }
+
+  if (mode === "configuration") {
+    if (detailLoading || !activePlan || activePlan.id !== selectedTestPlanId) {
+      return (
+        <div className="tests-centered-state">
+          {error ? <p className="tests-page-error" role="alert">{error}</p> : (
+            <PlatformLoadingState centered message="Loading test configuration…" />
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <TestPlanRawConfigurationPage
+        plan={activePlan}
+        api={api}
+        controlsPortalId={controlsPortalId}
+        onNavigationGuardChange={onNavigationGuardChange}
+        onPlanChange={replacePlan}
+        onReload={() => loadPlan(activePlan.id)}
+      />
     );
   }
 
@@ -511,13 +557,19 @@ export function TestsWorkspacePage({
           <TestRunDetailPage
             run={activeRun}
             plan={activeRunPlan}
-            projects={normalizedProjects}
             environments={normalizedEnvironments}
-            agents={normalizedAgents}
             controlsPortalId={controlsPortalId}
             refreshing={refreshingRun}
             onRefresh={() => void loadRun(activeRun.id, true)}
             onRunAgain={() => setRunPlan(activeRunPlan)}
+            onOpenTechnicalDetails={() => requestWorkspaceNavigation(() => (
+              onOpenRunTechnicalDetails(
+                activeRunPlan.id,
+                activeRun.id,
+                activeRunPlan.name,
+                `Run ${activeRun.id.slice(-8)}`,
+              )
+            ))}
           />
         </PlatformServiceDetailFrame>
         <TestRunCreateModal
@@ -531,6 +583,30 @@ export function TestsWorkspacePage({
           onRun={startRun}
         />
       </>
+    );
+  }
+
+  if (mode === "run-technical") {
+    if (
+      detailLoading
+      || !activeRun
+      || !activeRunPlan
+      || activeRun.id !== selectedTestRunId
+    ) {
+      return (
+        <div className="tests-centered-state">
+          {error ? <p className="tests-page-error" role="alert">{error}</p> : (
+            <PlatformLoadingState centered message="Loading technical details…" />
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <TestRunTechnicalDetailsPage
+        run={activeRun}
+        plan={activeRunPlan}
+      />
     );
   }
 

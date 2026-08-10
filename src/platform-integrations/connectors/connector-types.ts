@@ -1,5 +1,7 @@
 export type PlatformConnectorKind = "plugin" | "tag";
 
+export type PlatformConnectorSurface = "tools" | "inbound" | "delivery";
+
 export type PlatformConnectorCapabilityAccess = "interactive" | "read-only";
 
 export type PlatformConnectorAuthentication =
@@ -58,6 +60,7 @@ export interface PlatformConnectorCatalogEntry<TId extends string = string> {
   privacyUrl: string;
   permissionSubjectType: string;
   permissionTeamSubjectType: string;
+  surfaces: readonly PlatformConnectorSurface[];
   capabilities: readonly PlatformConnectorCapability[];
   categoryLabel: string;
   functionsLabel: string;

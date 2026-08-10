@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { Copy } from "lucide-react";
 import type { ComponentProps } from "react";
@@ -674,6 +674,51 @@ describe("PlatformDataTable", () => {
         .getByRole("cell")
         .getAttribute("aria-colspan"),
     ).toBe("2");
+  });
+
+  it("loads the next increment at the bottom and renders the shared loading state", () => {
+    const onLoadMore = vi.fn();
+    const { container, rerender } = renderTable({
+      incrementalLoading: {
+        hasMore: true,
+        onLoadMore,
+        threshold: 0,
+      },
+    });
+    const scroll = container.querySelector<HTMLElement>(
+      ".platform-data-table__scroll",
+    );
+    expect(scroll).not.toBeNull();
+    Object.defineProperties(scroll as HTMLElement, {
+      scrollHeight: { configurable: true, value: 1000 },
+      clientHeight: { configurable: true, value: 400 },
+      scrollTop: { configurable: true, value: 600, writable: true },
+    });
+
+    fireEvent.scroll(scroll as HTMLElement);
+    fireEvent.scroll(scroll as HTMLElement);
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <PlatformDataTable<TestRow>
+        rows={rows}
+        columns={columns}
+        getRowId={(row) => row.id}
+        ariaLabel="Test resources"
+        incrementalLoading={{
+          hasMore: true,
+          loading: true,
+          onLoadMore,
+          loadingMessage: "Loading more workflows...",
+        }}
+      />,
+    );
+    expect(
+      screen.getByRole("status", { name: "Loading more workflows..." }),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(".platform-data-table__incremental-loading"),
+    ).not.toBeNull();
   });
 
   it("renders filtered no-results content in the canonical empty table row", () => {

@@ -111,6 +111,24 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
               deleteDisabled: !actionAvailability.canDelete,
             };
           });
+          const promptItems = filteredThreadSearchPromptItems.map((prompt) => {
+            const actionAvailability = getThreadSearchResultActionAvailability("prompts", prompt);
+            const versionNumber = Number(prompt?.currentVersionNumber || 0);
+            return {
+              id: prompt.id,
+              title: prompt.name || "Untitled prompt",
+              meta: versionNumber > 0 ? "Version " + String(versionNumber) : "Prompt",
+              renameDisabled: !actionAvailability.canRename,
+              deleteDisabled: !actionAvailability.canDelete,
+              icon: React.createElement(MessageSquareText, {
+                width: 16,
+                height: 16,
+                strokeWidth: 1.8,
+              }),
+              iconClassName: "is-prompt",
+              actionsHidden: true,
+            };
+          });
 
           const globalServiceNavigationItems = isGlobalServiceSearchQuery
             ? getGlobalServiceNavigationItems(globalServiceSearchQuery)
@@ -140,7 +158,9 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                 ? (ticketItems.length > 0 ? [{ id: "tickets", label: "Tickets", items: ticketItems }] : [])
                 : threadSearchMode === "agents"
                   ? (agentItems.length > 0 ? [{ id: "agents", label: "Agents", items: agentItems }] : [])
-                  : (workflowItems.length > 0 ? [{ id: "workflows", label: "Workflows", items: workflowItems }] : []);
+                  : threadSearchMode === "workflows"
+                    ? (workflowItems.length > 0 ? [{ id: "workflows", label: "Workflows", items: workflowItems }] : [])
+                    : (promptItems.length > 0 ? [{ id: "prompts", label: "Prompts", items: promptItems }] : []);
           const resultGroups = isGlobalServiceSearchQuery
             ? (
                 globalServiceItems.length > 0
@@ -154,6 +174,7 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
             tickets: "Tickets",
             agents: "Agents",
             workflows: "Workflows",
+            prompts: "Prompts",
           })[threadSearchMode] || "Results";
           const emptyStateCopy = isGlobalServiceSearchQuery
             ? {
@@ -195,6 +216,10 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                   workflows: {
                     title: "No workflows yet",
                     description: "Metronome workflows will appear here.",
+                  },
+                  prompts: {
+                    title: "No prompts yet",
+                    description: "Reusable prompts will appear here.",
                   },
                 })[threadSearchMode];
           const actions = isGlobalServiceSearchQuery
@@ -272,7 +297,8 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                         strokeWidth: 1.9,
                       }),
                     }]
-                  : [{
+                  : threadSearchMode === "workflows"
+                    ? [{
                       id: "create-workflow",
                       label: "Create new workflow",
                       icon: React.createElement(Workflow, {
@@ -280,7 +306,8 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                         height: 16,
                         strokeWidth: 1.9,
                       }),
-                    }];
+                    }]
+                    : [];
 
           return React.createElement(PlatformGlobalSearchModal, {
             open: threadSearchOpen,
@@ -290,6 +317,7 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
               if (
                 resolveGlobalServiceSearchQuery(nextQuery) === null
                 && resolveExactThreadSearchId(nextQuery)
+                && !threadSearchModeLocked
                 && threadSearchMode !== "threads"
               ) {
                 setThreadSearchMode("threads");
@@ -298,7 +326,14 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
             },
             onClose: closeThreadSearch,
             mode: threadSearchMode,
+            modeLocked: threadSearchModeLocked,
+            modeOptions: threadSearchModeLocked
+              ? [threadSearchMode === "threads"
+                ? { id: "threads", label: "Threads", description: "Conversations in your workspace" }
+                : { id: "prompts", label: "Prompts", description: "Reusable prompts in your workspace" }]
+              : undefined,
             onModeChange: (nextMode) => {
+              if (threadSearchModeLocked) return;
               setThreadSearchMode(nextMode);
               setThreadSearchQuery("");
               setThreadSearchAllActionsVisible(false);
@@ -344,7 +379,10 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                 return;
               }
               if (threadSearchMode === "threads") {
-                handleThreadSearchSelect(resultId);
+                const thread = filteredThreadSearchItems.find((item) => item.id === resultId);
+                if (thread) {
+                  void handleThreadSearchThreadSelect(thread);
+                }
                 return;
               }
               if (threadSearchMode === "files") {
@@ -368,9 +406,16 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                 }
                 return;
               }
-              const workflow = filteredThreadSearchWorkflowItems.find((item) => item.id === resultId);
-              if (workflow) {
-                handleThreadSearchWorkflowSelect(workflow);
+              if (threadSearchMode === "workflows") {
+                const workflow = filteredThreadSearchWorkflowItems.find((item) => item.id === resultId);
+                if (workflow) {
+                  handleThreadSearchWorkflowSelect(workflow);
+                }
+                return;
+              }
+              const prompt = filteredThreadSearchPromptItems.find((item) => item.id === resultId);
+              if (prompt) {
+                void handleThreadSearchPromptSelect(prompt);
               }
             },
             resultCount: isGlobalServiceSearchQuery

@@ -13,6 +13,7 @@ import {
   type PlatformPopupAnimation,
 } from "../../platform-ui/components/composite/popup/index.js";
 import { PlatformSecondaryButton } from "../../platform-ui/components/ui/button/index.js";
+import { PlatformHoverLabel } from "../../platform-ui/components/ui/icon-button/index.js";
 import { renderComposerPopupPortal } from "./composer-popup.js";
 import {
   EMPTY_THREAD_CONTEXT_CATEGORIES,
@@ -382,23 +383,29 @@ export function RunnerThreadContextControl(
 
   return (
     <div className="tb-selector-anchor tb-context-indicator-anchor">
-      <button
-        ref={buttonRef}
-        type="button"
-        className={`tb-context-indicator-button ${open ? "active" : ""} ${indicatorLoading ? "loading" : ""}`.trim()}
-        onClick={onIndicatorClick}
-        aria-label="Conversation context remaining"
-        title={title}
+      <PlatformHoverLabel
+        className="tb-context-indicator-hover-label"
+        label="Context"
+        placement="top"
       >
-        <span
-          className="tb-context-indicator-ring"
-          style={
-            {
-              "--tb-context-progress": String(progress),
-            } as CSSProperties
-          }
-        />
-      </button>
+        <button
+          ref={buttonRef}
+          type="button"
+          className={`tb-context-indicator-button ${open ? "active" : ""} ${indicatorLoading ? "loading" : ""}`.trim()}
+          onClick={onIndicatorClick}
+          aria-label="Conversation context remaining"
+          title={title}
+        >
+          <span
+            className="tb-context-indicator-ring"
+            style={
+              {
+                "--tb-context-progress": String(progress),
+              } as CSSProperties
+            }
+          />
+        </button>
+      </PlatformHoverLabel>
 
       {renderComposerPopupPortal(
         open ? (

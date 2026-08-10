@@ -1,4 +1,9 @@
-import { LoaderCircle as LucideLoaderCircle, X as LucideX } from "lucide-react";
+import {
+  LoaderCircle as LucideLoaderCircle,
+  MessageSquare as LucideMessageSquare,
+  MessageSquareText as LucideMessageSquareText,
+  X as LucideX,
+} from "lucide-react";
 import { RunnerImagePreviewSurface } from "../runner-image-preview-surface.js";
 import {
   LazyMediaPreviewMount,
@@ -56,6 +61,10 @@ export function RunnerAttachmentPreviewChip({
   const previewUrl = getAttachmentPreviewUrl(attachment);
   const isImage = attachment.type === "image";
   const isGithubAttachment = isGithubAttachmentSelection(attachment);
+  const referenceType = attachment.referenceType;
+  const isPromptReference = referenceType === "prompt";
+  const isThreadReference = referenceType === "thread";
+  const isReference = isPromptReference || isThreadReference;
   const isEmailContextAttachment = isRunnerEmailContextAttachment(attachment);
   const isUploading = attachment.uploadStatus === "uploading";
   const isAttachmentPreviewable =
@@ -82,6 +91,22 @@ export function RunnerAttachmentPreviewChip({
   }
 
   function renderAttachmentFileIcon() {
+    if (isPromptReference) {
+      return (
+        <LucideMessageSquareText
+          className="runner-attachment-file-reference-icon runner-attachment-file-reference-icon-prompt"
+          strokeWidth={1.8}
+        />
+      );
+    }
+    if (isThreadReference) {
+      return (
+        <LucideMessageSquare
+          className="runner-attachment-file-reference-icon runner-attachment-file-reference-icon-thread"
+          strokeWidth={1.8}
+        />
+      );
+    }
     if (isUploading) {
       return (
         <LucideLoaderCircle
@@ -119,7 +144,7 @@ export function RunnerAttachmentPreviewChip({
 
   return (
     <div
-      className={`runner-attachment ${isImage ? "runner-attachment-image" : "runner-attachment-file"} ${isGithubAttachment ? "runner-attachment-github" : ""} ${isUploading ? "runner-attachment-uploading" : ""} ${removable ? "runner-attachment-removable" : "runner-attachment-readonly"} ${isAttachmentPreviewable ? "runner-attachment-document-previewable" : ""} ${isDocumentPreviewActive ? "runner-attachment-document-active" : ""}`.trim()}
+      className={`runner-attachment ${isImage ? "runner-attachment-image" : "runner-attachment-file"} ${isGithubAttachment ? "runner-attachment-github" : ""} ${isReference ? `runner-attachment-reference runner-attachment-reference-${referenceType}` : ""} ${isUploading ? "runner-attachment-uploading" : ""} ${removable ? "runner-attachment-removable" : "runner-attachment-readonly"} ${isAttachmentPreviewable ? "runner-attachment-document-previewable" : ""} ${isDocumentPreviewActive ? "runner-attachment-document-active" : ""}`.trim()}
     >
       {isImage ? (
         <>

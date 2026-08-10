@@ -39,6 +39,8 @@ export type {
   RunnerChatNotionDatabase,
   RunnerChatOption,
   RunnerChatProps,
+  RunnerChatPromptAttachment,
+  RunnerChatThreadAttachment,
   RunnerChatScheduleConfig,
   RunnerChatSchedulePreset,
   RunnerChatSkill,

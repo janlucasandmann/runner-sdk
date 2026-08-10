@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   addTestCaseToDefinition,
+  cloneTestPlanDefinition,
   createDefaultTestPlanDefinition,
   duplicateTestCaseInDefinition,
   parseTestPlanDefinition,
 } from "./test-plan-draft.js";
-import type { TestCaseDefinition } from "./test-types.js";
+import type { TestCaseDefinition, TestPlanDefinition } from "./test-types.js";
 
 const testCase: TestCaseDefinition = {
   id: "case-1",
@@ -40,9 +41,28 @@ describe("test plan draft", () => {
   });
 
   it("parses advanced JSON into a normalized draft shape", () => {
-    const parsed = parseTestPlanDefinition('{"cases":[]}');
+    const parsed = parseTestPlanDefinition(
+      '{"cases":[],"retryPolicy":{"maxAttempts":2,"backoffMs":30000}}',
+    );
     expect(parsed.error).toBe("");
-    expect(parsed.definition?.retryPolicy.maxAttempts).toBe(1);
+    expect(parsed.definition?.retryPolicy.maxAttempts).toBe(2);
+    expect(parsed.definition?.retryPolicy).not.toHaveProperty("backoffMs");
+  });
+
+  it("removes lifecycle commands from the Test Plan contract", () => {
+    const parsed = parseTestPlanDefinition(
+      '{"setup":{"command":"prepare"},"cases":[],"teardown":{"command":"cleanup"}}',
+    );
+    expect(parsed.definition).toBeNull();
+    expect(parsed.error).toContain("explicit test cases");
+
+    const legacyDefinition = {
+      ...createDefaultTestPlanDefinition(),
+      setup: { command: "prepare" },
+      teardown: { command: "cleanup" },
+    } as unknown as TestPlanDefinition;
+    const sanitized = cloneTestPlanDefinition(legacyDefinition);
+    expect(sanitized).not.toHaveProperty("setup");
+    expect(sanitized).not.toHaveProperty("teardown");
   });
 });
-

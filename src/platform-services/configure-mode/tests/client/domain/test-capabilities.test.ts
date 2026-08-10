@@ -31,12 +31,10 @@ function testCase(overrides: Partial<TestCaseDefinition> = {}): TestCaseDefiniti
 function definition(cases: TestCaseDefinition[]): TestPlanDefinition {
   return {
     schemaVersion: "computer_agents_test_plan_v1",
-    setup: null,
     cases,
-    teardown: null,
     concurrency: 1,
     stopOnFailure: false,
-    retryPolicy: { maxAttempts: 1, backoffMs: 1_000 },
+    retryPolicy: { maxAttempts: 1 },
     evidencePolicy: {
       retainLogs: true,
       retainScreenshots: true,
@@ -65,4 +63,3 @@ describe("test capabilities", () => {
     expect(getTestPlanExecutionProfile(definition([contract, testCase()])).method).toBe("agent");
   });
 });
-

@@ -46,5 +46,6 @@ describe("RunnerThreadContextControl", () => {
 
     expect(html).toContain("Conversation context remaining: 75%");
     expect(html).toContain("--tb-context-progress:0.25");
+    expect(html).toContain('data-platform-hover-label="Context"');
   });
 });

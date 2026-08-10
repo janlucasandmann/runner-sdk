@@ -1207,82 +1207,27 @@
             return savedDatabase;
           }
   
-  	    function openDatabaseOwnerTransferModal(ownerIdentity) {
-  	      const target = normalizeDatabaseOwnerIdentity(ownerIdentity);
-  	      if (!getDatabaseOwnerIdentityKey(target) || !isCurrentUserDatabaseOwner(draftDatabase)) return;
-  	      if (databaseOwnerTransferModalCloseTimerRef.current !== null) {
-  	        window.clearTimeout(databaseOwnerTransferModalCloseTimerRef.current);
-  	        databaseOwnerTransferModalCloseTimerRef.current = null;
-  	      }
-  	      if (databaseOwnerTransferModalFrameRef.current !== null) {
-  	        window.cancelAnimationFrame(databaseOwnerTransferModalFrameRef.current);
-  	        databaseOwnerTransferModalFrameRef.current = null;
-  	      }
-  	      setDatabaseOwnerPopoverOpen(false);
-  	      setDatabaseSaveState((current) => ({ ...current, error: "", message: "" }));
-  	      setDatabaseOwnerTransferTarget(target);
-  	      setDatabaseOwnerTransferModalClosing(false);
-  	      setDatabaseOwnerTransferModalVisible(false);
-  	      databaseOwnerTransferModalFrameRef.current = window.requestAnimationFrame(() => {
-  	        databaseOwnerTransferModalFrameRef.current = window.requestAnimationFrame(() => {
-  	          databaseOwnerTransferModalFrameRef.current = null;
-  	          setDatabaseOwnerTransferModalVisible(true);
-  	        });
-  	      });
-  	    }
-  
-  	    function closeDatabaseOwnerTransferModal(options = {}) {
-  	      if (databaseSaveState.isSaving && options.force !== true) return;
-  	      if (databaseOwnerTransferModalFrameRef.current !== null) {
-  	        window.cancelAnimationFrame(databaseOwnerTransferModalFrameRef.current);
-  	        databaseOwnerTransferModalFrameRef.current = null;
-  	      }
-  	      if (databaseOwnerTransferModalCloseTimerRef.current !== null) {
-  	        window.clearTimeout(databaseOwnerTransferModalCloseTimerRef.current);
-  	        databaseOwnerTransferModalCloseTimerRef.current = null;
-  	      }
-  	      if (options.force === true || typeof window === "undefined") {
-  	        setDatabaseOwnerTransferModalVisible(false);
-  	        setDatabaseOwnerTransferModalClosing(false);
-  	        setDatabaseOwnerTransferTarget(null);
-  	        return;
-  	      }
-  	      setDatabaseOwnerTransferModalVisible(false);
-  	      setDatabaseOwnerTransferModalClosing(true);
-  	      databaseOwnerTransferModalCloseTimerRef.current = window.setTimeout(() => {
-  	        databaseOwnerTransferModalCloseTimerRef.current = null;
-  	        setDatabaseOwnerTransferModalClosing(false);
-  	        setDatabaseOwnerTransferTarget(null);
-  	      }, 90);
-  	    }
-  
           async function handleDatabaseOwnerSelect(ownerIdentity) {
             const currentDatabase = normalizePlaygroundDatabaseRecord(draftDatabase);
             if (!currentDatabase.id || currentDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || isSelectedDatabaseTemplatePreview) {
-              return;
+              throw new Error("Save the database before transferring ownership.");
             }
-  	      if (!isCurrentUserDatabaseOwner(currentDatabase)) {
-  	        setDatabaseSaveState({
-  	          isSaving: false,
-  	          error: "Only the current database owner can transfer ownership.",
-  	          message: "",
-  	        });
-  	        return null;
-  	      }
-  	      const targetIdentityKey = getDatabaseOwnerIdentityKey(ownerIdentity);
-  	      const targetIsAccessibleTeamMember = getDatabaseSharedTeamIds(currentDatabase).some((teamId) => (
-  	        (Array.isArray(databaseOwnerTeamMembersById[teamId]) ? databaseOwnerTeamMembersById[teamId] : [])
-  	          .filter(isHumanDatabaseOwnerCandidate)
-  	          .some((member) => getDatabaseOwnerIdentityKey(member) === targetIdentityKey)
-  	      ));
-  	      if (!targetIdentityKey || !targetIsAccessibleTeamMember) {
-  	        setDatabaseSaveState({
-  	          isSaving: false,
-  	          error: "The new owner must be a human member of a team with database access.",
-  	          message: "",
-  	        });
-  	        return null;
-  	      }
+            if (!isCurrentUserDatabaseOwner(currentDatabase)) {
+              const error = new Error("Only the current database owner can transfer ownership.");
+              setDatabaseSaveState({ isSaving: false, error: error.message, message: "" });
+              throw error;
+            }
+            const targetIdentityKey = getDatabaseOwnerIdentityKey(ownerIdentity);
+            const targetIsAccessibleTeamMember = getDatabaseSharedTeamIds(currentDatabase).some((teamId) => (
+              (Array.isArray(databaseOwnerTeamMembersById[teamId]) ? databaseOwnerTeamMembersById[teamId] : [])
+                .filter(isHumanDatabaseOwnerCandidate)
+                .some((member) => getDatabaseOwnerIdentityKey(member) === targetIdentityKey)
+            ));
+            if (!targetIdentityKey || !targetIsAccessibleTeamMember) {
+              const error = new Error("The new owner must be a human member of a team with database access.");
+              setDatabaseSaveState({ isSaving: false, error: error.message, message: "" });
+              throw error;
+            }
             const nextDatabase = applyDatabaseOwnerIdentity(currentDatabase, ownerIdentity);
             setDatabaseOwnerPopoverOpen(false);
             setDatabaseSaveState({ isSaving: true, error: "", message: "" });
@@ -1295,20 +1240,15 @@
             } catch (error) {
               setDraftDatabase(currentDatabase);
               upsertLocalDatabaseRecord(currentDatabase);
+              const normalizedError = error instanceof Error ? error : new Error("Failed to update database owner.");
               setDatabaseSaveState({
                 isSaving: false,
-                error: error instanceof Error ? error.message : "Failed to update database owner.",
+                error: normalizedError.message,
                 message: "",
               });
-              return null;
+              throw normalizedError;
             }
           }
-  
-  	    async function handleDatabaseOwnerTransferConfirm() {
-  	      if (!databaseOwnerTransferTarget || databaseSaveState.isSaving) return;
-  	      const savedDatabase = await handleDatabaseOwnerSelect(databaseOwnerTransferTarget);
-  	      if (savedDatabase) closeDatabaseOwnerTransferModal({ force: true });
-  	    }
   
           async function findDatabaseTeamResourceShare(teamId, databaseId) {
             const { response, data } = await fetchJsonWithTimeout(
@@ -2249,64 +2189,37 @@
             setServerTeamAccessState({ teamId: "", action: "", error: "" });
           }
   
-          function openServerOwnerTransferModal(ownerIdentity) {
-            const target = normalizeDatabaseOwnerIdentity(ownerIdentity);
-            if (!getDatabaseOwnerIdentityKey(target) || !isCurrentUserServerOwner(draftServer)) return;
-            if (serverOwnerTransferModalCloseTimerRef.current !== null) {
-              window.clearTimeout(serverOwnerTransferModalCloseTimerRef.current);
-              serverOwnerTransferModalCloseTimerRef.current = null;
-            }
-            setServerOwnerPopoverOpen(false);
-            setServerOwnerTransferModalClosing(false);
-            setServerOwnerTransferTarget(target);
-          }
-  
-          function closeServerOwnerTransferModal(options = {}) {
-            if (!serverOwnerTransferTarget) return;
-            if (serverOwnerTransferModalCloseTimerRef.current !== null) {
-              window.clearTimeout(serverOwnerTransferModalCloseTimerRef.current);
-              serverOwnerTransferModalCloseTimerRef.current = null;
-            }
-            if (options.animate === false || typeof window === "undefined") {
-              setServerOwnerTransferModalClosing(false);
-              setServerOwnerTransferTarget(null);
-              return;
-            }
-            setServerOwnerTransferModalClosing(true);
-            serverOwnerTransferModalCloseTimerRef.current = window.setTimeout(() => {
-              serverOwnerTransferModalCloseTimerRef.current = null;
-              setServerOwnerTransferModalClosing(false);
-              setServerOwnerTransferTarget(null);
-            }, 90);
-          }
-  
-          async function handleServerOwnerTransferConfirm() {
-            if (!serverOwnerTransferTarget || serverSaveState.isSaving) return;
+          async function handleServerOwnerSelect(ownerIdentity) {
             const currentServer = normalizePlaygroundServerRecord(draftServer);
             if (!isCurrentUserServerOwner(currentServer)) {
-              setServerSaveState({ isSaving: false, error: "Only the current owner can transfer ownership.", message: "" });
-              return;
+              const error = new Error("Only the current owner can transfer ownership.");
+              setServerSaveState({ isSaving: false, error: error.message, message: "" });
+              throw error;
             }
-            const targetKey = getDatabaseOwnerIdentityKey(serverOwnerTransferTarget);
+            const target = normalizeDatabaseOwnerIdentity(ownerIdentity);
+            const targetKey = getDatabaseOwnerIdentityKey(target);
             const targetHasAccess = getServerSharedTeamIds(currentServer).some((teamId) => (
               (Array.isArray(databaseOwnerTeamMembersById[teamId]) ? databaseOwnerTeamMembersById[teamId] : [])
                 .filter(isHumanDatabaseOwnerCandidate)
                 .some((member) => getDatabaseOwnerIdentityKey(member) === targetKey)
             ));
             if (!targetHasAccess) {
-              setServerSaveState({ isSaving: false, error: "The new owner must be a human member of a team with access.", message: "" });
-              return;
+              const error = new Error("The new owner must be a human member of a team with access.");
+              setServerSaveState({ isSaving: false, error: error.message, message: "" });
+              throw error;
             }
-            const nextServer = applyServerOwnerIdentity(currentServer, serverOwnerTransferTarget);
+            const nextServer = applyServerOwnerIdentity(currentServer, target);
             setServerSaveState({ isSaving: true, error: "", message: "" });
             setDraftServer(nextServer);
             try {
               await persistServerTeamAccessRecord(nextServer);
               setServerSaveState({ isSaving: false, error: "", message: "Saved" });
-              closeServerOwnerTransferModal({ animate: false });
+              setServerOwnerPopoverOpen(false);
             } catch (error) {
               setDraftServer(currentServer);
-              setServerSaveState({ isSaving: false, error: error instanceof Error ? error.message : "Failed to transfer ownership.", message: "" });
+              const normalizedError = error instanceof Error ? error : new Error("Failed to transfer ownership.");
+              setServerSaveState({ isSaving: false, error: normalizedError.message, message: "" });
+              throw normalizedError;
             }
           }
   

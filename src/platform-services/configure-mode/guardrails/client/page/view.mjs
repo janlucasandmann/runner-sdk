@@ -54,47 +54,35 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
                 : "";
             return {
               value,
-              label,
+              name: label,
+              email: candidate.email || "",
+              avatarUrl: candidate.avatarUrl || "",
               description: description || undefined,
               ariaLabel: description ? label + ", " + description : label,
-              leading: React.createElement(AccountAvatar, {
-                className: "playground-agents-detail-owner-option-avatar",
-                imageClassName: "playground-agents-detail-owner-option-avatar-image",
-                fallbackLabel: getAccountInitials(label),
-                photoUrl: candidate.avatarUrl || "",
-              }),
-              candidate,
+              data: { candidate },
             };
           });
           const guardrailOwnerIdentityKeys = new Set(getGuardrailPersonIdentityKeys(guardrailOwnerIdentity));
           const selectedGuardrailOwnerOption = guardrailOwnerOptions.find((option) =>
-            getGuardrailPersonIdentityKeys(option.candidate).some((key) => guardrailOwnerIdentityKeys.has(key))
+            getGuardrailPersonIdentityKeys(option.data?.candidate).some((key) => guardrailOwnerIdentityKeys.has(key))
           ) || null;
           const guardrailOwnerCandidateState = guardrailOwnerCandidateStateBySetId?.[selectedGuardrailSet.id] || {};
-          const guardrailOwnerSelector = React.createElement(PlatformSelector, {
-            value: selectedGuardrailOwnerOption?.value || getGuardrailOwnerCandidateKey(guardrailOwnerIdentity),
+          const guardrailOwnerSelector = React.createElement(PlatformOwnerSelector, {
+            owner: {
+              value: selectedGuardrailOwnerOption?.value || getGuardrailOwnerCandidateKey(guardrailOwnerIdentity),
+              name: guardrailOwnerLabel,
+              email: guardrailOwnerIdentity.email || "",
+              avatarUrl: guardrailOwnerIdentity.avatarUrl || "",
+            },
             options: guardrailOwnerOptions,
             open: guardrailOwnerSelectorOpen,
             onOpenChange: handleGuardrailOwnerSelectorOpenChange,
-            onValueChange: (nextValue) => {
-              const nextOwner = guardrailOwnerOptions.find((option) => option.value === nextValue)?.candidate;
+            onTransfer: (_nextValue, option) => {
+              const nextOwner = option?.data?.candidate;
               if (nextOwner) updateGuardrailOwner(nextOwner);
             },
             ariaLabel: "Choose guardrail owner",
-            label: React.createElement("span", { className: "playground-guardrails-detail-owner-value" },
-              React.createElement(AccountAvatar, {
-                className: "playground-team-member-avatar playground-guardrails-detail-owner-avatar",
-                imageClassName: "playground-team-member-avatar-image",
-                fallbackLabel: getAccountInitials(guardrailOwnerLabel),
-                photoUrl: guardrailOwnerIdentity.avatarUrl || "",
-              }),
-              React.createElement("span", {
-                className: "playground-guardrails-detail-owner-name",
-                title: guardrailOwnerIdentity.email
-                  ? guardrailOwnerLabel + " · " + guardrailOwnerIdentity.email
-                  : guardrailOwnerLabel,
-              }, guardrailOwnerLabel)
-            ),
+            resourceLabel: "guardrail",
             alignment: "end",
             popupAlignment: "right",
             disabled: selectedGuardrailSetReadonly || !isCurrentGuardrailOwner(selectedGuardrailSet),

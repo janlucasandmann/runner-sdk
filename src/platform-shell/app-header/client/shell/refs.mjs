@@ -8,4 +8,6 @@ export const APP_HEADER_REFS_SCRIPT = `        const accountMenuAnimationTimerRe
         const threadSearchResourceLoadingRequestKeysRef = useRef(new Set());
         const threadSearchThreadAbortControllerRef = useRef(null);
         const threadSearchThreadResultsCacheRef = useRef(new Map());
+        const threadSearchPromptSelectHandlerRef = useRef(null);
+        const threadSearchThreadSelectHandlerRef = useRef(null);
 `;

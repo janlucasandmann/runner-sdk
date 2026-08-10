@@ -31,6 +31,9 @@ import {
   SKILLS_PAGE_SCRIPT,
 } from "./domains/skills/source.mjs";
 import {
+  PROMPTS_PAGE_SCRIPT,
+} from "./domains/prompts/source.mjs";
+import {
   IMAGINE_APP_SCRIPT_FRAGMENTS,
   IMAGINE_PAGE_CSS,
   IMAGINE_PAGE_SCRIPT,
@@ -336,6 +339,7 @@ export function createLegacyPlatformApplicationBindings({
     SETTINGS_MODAL_PAGE_SCRIPT,
     SECURITY_APP_SCRIPT_FRAGMENTS,
     SKILLS_PAGE_SCRIPT,
+    PROMPTS_PAGE_SCRIPT,
     TEAMS_APP_SCRIPT_FRAGMENTS,
     TEAMS_DOMAIN_SCRIPT_FRAGMENTS,
     TEAMS_PAGE_SCRIPT_FRAGMENTS,

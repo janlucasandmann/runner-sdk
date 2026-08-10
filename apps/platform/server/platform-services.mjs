@@ -15,6 +15,7 @@ import { createMarketplaceService } from "../../../src/platform-services/configu
 import { createMetronomeService } from "../../../src/platform-services/create-mode/metronome/index.mjs";
 import { createModelsService } from "../../../src/platform-services/configure-mode/models/index.mjs";
 import { createOrganizationsService } from "../../../src/platform-services/configure-mode/organizations/index.mjs";
+import { createPromptsService } from "../../../src/platform-services/configure-mode/prompts/index.mjs";
 import { createProjectsService } from "../../../src/platform-services/create-mode/projects/index.mjs";
 import { createTeamsService } from "../../../src/platform-services/configure-mode/teams/index.mjs";
 import { createTestsService } from "../../../src/platform-services/configure-mode/tests/index.mjs";
@@ -42,12 +43,15 @@ import {
 import {
   createConnectorMcpService,
 } from "./integrations/connectors/runtime/connector-mcp-service.mjs";
+import { createExternalAgentService } from "./integrations/external-agents/index.mjs";
 
 export function createPlatformServices({
   gateway,
   identityService,
   connectorOauthEnvFileCandidates = [],
   connectorRuntimeSigningSecret = "",
+  defaultUpstreamOrigin,
+  platformControlPlaneSecret = "",
   platformOrigin,
   playgroundSystemSkillsRoot,
   port,
@@ -167,6 +171,19 @@ export function createPlatformServices({
   );
   const enrichThreadPayloadWithAgentGuardrails =
     guardrailsService.enrichThreadPayload;
+  const externalAgentService = createExternalAgentService({
+    identityService,
+    fetchOrganizationApi: fetchAiosCloud,
+    upstreamOrigin: defaultUpstreamOrigin,
+    platformOrigin,
+    encryptionKey: process.env.EXTERNAL_AGENT_WEBHOOK_ENCRYPTION_KEY
+      || platformControlPlaneSecret
+      || connectorRuntimeSigningSecret,
+    connectorRuntimeBridge,
+    adapterRegistry: connectorAdapterRegistry,
+    enrichThreadPayload: enrichThreadPayloadWithAgentGuardrails,
+    sendJson,
+  });
 
   const evaluationsService = createEvaluationsService({
     sendJson,
@@ -234,6 +251,7 @@ export function createPlatformServices({
       proxyUpstreamGet,
       proxyUpstreamJsonRequest,
     }),
+    externalAgentService,
     filesService: createFilesService({
       fetchAiosApi,
       fetchAiosCloud,
@@ -289,6 +307,10 @@ export function createPlatformServices({
       readRequestBody,
       sendJson,
       withProxyOrganizationHeader,
+    }),
+    promptsService: createPromptsService({
+      readRequestBody,
+      sendJson,
     }),
     securityService: createSecurityService({
       proxyUpstreamGet,

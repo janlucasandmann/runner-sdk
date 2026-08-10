@@ -454,6 +454,54 @@ describe("PlatformInstructionsEditor", () => {
     ).toBeNull();
   });
 
+  it("navigates slash commands with the arrow keys and runs the active command with Enter", async () => {
+    const user = userEvent.setup();
+    let persistedValue = "";
+
+    function Example() {
+      const [value, setValue] = useState("");
+      return (
+        <PlatformInstructionsEditor
+          value={value}
+          onChange={(nextValue) => {
+            persistedValue = nextValue;
+            setValue(nextValue);
+          }}
+        />
+      );
+    }
+
+    render(<Example />);
+    const editor = screen.getByRole("textbox", { name: "Instructions" });
+    await user.click(editor);
+    await user.keyboard("/");
+
+    const paragraphOption = await screen.findByRole("menuitem", {
+      name: "Paragraph",
+    });
+    const headingOneOption = screen.getByRole("menuitem", {
+      name: "Heading 1",
+    });
+    const headingTwoOption = screen.getByRole("menuitem", {
+      name: "Heading 2",
+    });
+
+    expect(paragraphOption.classList.contains("is-selected")).toBe(true);
+
+    await user.keyboard("{ArrowDown}");
+    expect(headingOneOption.classList.contains("is-selected")).toBe(true);
+
+    await user.keyboard("{ArrowDown}");
+    expect(headingTwoOption.classList.contains("is-selected")).toBe(true);
+
+    await user.keyboard("{ArrowUp}{Enter}Keyboard heading");
+
+    expect(persistedValue.trim()).toBe("# Keyboard heading");
+    expect(
+      screen.queryByRole("menu", { name: "Formatting commands" }),
+    ).toBeNull();
+  });
+
   it("creates checklists from the toolbar and slash command", async () => {
     const user = userEvent.setup();
 

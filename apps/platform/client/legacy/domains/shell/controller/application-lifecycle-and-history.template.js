@@ -1097,12 +1097,14 @@
           const hasEvaluationsVersionsDrawerSlot = activePage === "evaluations";
           const hasSecurityVersionsDrawerSlot = activePage === "develop-security";
           const hasSkillsVersionsDrawerSlot = activePage === "tools" && toolsView === "skills";
+          const hasPromptsVersionsDrawerSlot = activePage === "tools" && toolsView === "prompts";
           const hasTestsVersionsDrawerSlot = activePage === "tests";
           const hasResourcesVersionsDrawerSlot = (
             isResourcesPage
             && (activeResourcesView === "agents" || activeResourcesView === "computers" || activeResourcesView === "servers")
           ) || hasGuardrailsVersionsDrawerSlot || hasEvaluationsVersionsDrawerSlot
             || hasSecurityVersionsDrawerSlot || hasSkillsVersionsDrawerSlot
+            || hasPromptsVersionsDrawerSlot
             || hasTestsVersionsDrawerSlot;
           const selectedGlobalGuardrailSet = allGuardrailSets.find((set) => set?.id === selectedGuardrailSetId) || null;
           const isGuardrailsVersionsDrawerOpen = Boolean(
@@ -1118,6 +1120,9 @@
             && isAgentVersionsDetailOpen
           ) || (
             hasSkillsVersionsDrawerSlot
+            && isAgentVersionsDetailOpen
+          ) || (
+            hasPromptsVersionsDrawerSlot
             && isAgentVersionsDetailOpen
           ) || isGuardrailsVersionsDrawerOpen || (
             hasEvaluationsVersionsDrawerSlot
@@ -1202,10 +1207,15 @@
             if (activePage === "tools" || activePage === "plugins" || activePage === "skills") {
               return {
                 page: "tools",
-                mode: ((toolsView === "plugins" || toolsView === "tags") && selectedPluginId) || (toolsView === "skills" && toolsSkillsHeaderState.mode === "detail") ? "detail" : "overview",
+                mode: ((toolsView === "plugins" || toolsView === "tags") && selectedPluginId)
+                  || (toolsView === "skills" && toolsSkillsHeaderState.mode === "detail")
+                  || (toolsView === "prompts" && toolsPromptsHeaderState.mode === "detail")
+                  ? "detail"
+                  : "overview",
                 toolsView,
                 pluginId: toolsView === "plugins" || toolsView === "tags" ? selectedPluginId : "",
                 skillId: toolsView === "skills" ? toolsSkillsHeaderState.skillId : "",
+                promptId: toolsView === "prompts" ? toolsPromptsHeaderState.promptId : "",
               };
             }
   
@@ -1302,6 +1312,8 @@
             teamPageSelectedTeamId,
             toolsSkillsHeaderState.mode,
             toolsSkillsHeaderState.skillId,
+            toolsPromptsHeaderState.mode,
+            toolsPromptsHeaderState.promptId,
             toolsView,
           ]);
   
@@ -1427,14 +1439,25 @@
                 ? "actions"
                 : entry.toolsView === "skills"
                   ? "skills"
+                  : entry.toolsView === "prompts"
+                    ? "prompts"
                   : entry.toolsView === "tags"
                     ? "tags"
                   : "plugins";
-              openToolsView(nextToolsView, nextToolsView === "skills" && entry.skillId ? { skillId: entry.skillId } : {});
+              openToolsView(
+                nextToolsView,
+                nextToolsView === "skills" && entry.skillId
+                  ? { skillId: entry.skillId }
+                  : nextToolsView === "prompts" && entry.promptId
+                    ? { promptId: entry.promptId }
+                    : {},
+              );
               if (nextToolsView === "plugins" || nextToolsView === "tags") {
                 setSelectedPluginId(entry.pluginId || "");
               } else if (nextToolsView === "skills" && !entry.skillId) {
                 setToolsSkillsBackRequestToken((current) => current + 1);
+              } else if (nextToolsView === "prompts" && !entry.promptId) {
+                setToolsPromptsBackRequestToken((current) => current + 1);
               }
               return;
             }

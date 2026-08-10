@@ -11,6 +11,7 @@ import {
   PlatformPopupSurface,
   type PlatformPopupAnimation,
 } from "../../platform-ui/components/composite/popup/index.js";
+import { PlatformHoverLabel } from "../../platform-ui/components/ui/icon-button/index.js";
 import { PlatformSwitch } from "../../platform-ui/components/ui/switch/index.js";
 import {
   RUNNER_REASONING_EFFORT_OPTIONS,
@@ -236,20 +237,26 @@ export function RunnerAgentSelectorControl({
 
   return (
     <div className="tb-selector-anchor tb-selector-anchor-agent">
-      <button
-        ref={buttonRef}
-        type="button"
-        className={`tb-inline-selector tb-inline-selector-agent ${open ? "active" : ""}`.trim()}
-        onClick={onToggle}
+      <PlatformHoverLabel
+        className="tb-composer-selector-hover-label"
+        label="Agent"
+        placement="top"
       >
-        <span className="tb-inline-selector-label" title={displayedAgentLabel}>
-          {displayedAgentLabel}
-        </span>
-        <span className="tb-composer-agent-button-effort">
-          {selectedReasoningEffort.label}
-        </span>
-        <IconChevronDown className="tb-inline-selector-chevron" />
-      </button>
+        <button
+          ref={buttonRef}
+          type="button"
+          className={`tb-inline-selector tb-inline-selector-agent ${open ? "active" : ""}`.trim()}
+          onClick={onToggle}
+        >
+          <span className="tb-inline-selector-label" title={displayedAgentLabel}>
+            {displayedAgentLabel}
+          </span>
+          <span className="tb-composer-agent-button-effort">
+            {selectedReasoningEffort.label}
+          </span>
+          <IconChevronDown className="tb-inline-selector-chevron" />
+        </button>
+      </PlatformHoverLabel>
 
       {renderComposerPopupPortal(
         open ? (
@@ -453,17 +460,23 @@ export function RunnerWorkspaceSelectorControl({
 
   return (
     <div className="tb-selector-anchor tb-selector-anchor-workspace">
-      <button
-        ref={buttonRef}
-        type="button"
-        className={`tb-inline-selector ${open ? "active" : ""}`.trim()}
-        onClick={onToggle}
+      <PlatformHoverLabel
+        className="tb-composer-selector-hover-label"
+        label="Environment"
+        placement="top"
       >
-        <span className="tb-inline-selector-label" title={displayedWorkspaceLabel}>
-          {displayedWorkspaceLabel}
-        </span>
-        <IconChevronDown className="tb-inline-selector-chevron" />
-      </button>
+        <button
+          ref={buttonRef}
+          type="button"
+          className={`tb-inline-selector ${open ? "active" : ""}`.trim()}
+          onClick={onToggle}
+        >
+          <span className="tb-inline-selector-label" title={displayedWorkspaceLabel}>
+            {displayedWorkspaceLabel}
+          </span>
+          <IconChevronDown className="tb-inline-selector-chevron" />
+        </button>
+      </PlatformHoverLabel>
 
       {renderComposerPopupPortal(
         open ? (

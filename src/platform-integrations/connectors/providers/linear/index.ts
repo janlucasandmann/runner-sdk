@@ -143,4 +143,5 @@ export const LINEAR_CONNECTOR_PROVIDER = defineConnectorProvider({
   websiteUrl: "https://linear.app/",
   termsUrl: "https://linear.app/terms",
   privacyUrl: "https://linear.app/privacy",
+  surfaces: ["tools", "inbound", "delivery"],
 }, capabilities);

@@ -14,6 +14,7 @@ This directory contains immutable Architecture Decision Records. Supersede an ac
 - [`0004-explicit-platform-source-assets.md`](0004-explicit-platform-source-assets.md) — Engineering documentation for 0004 Explicit Platform Source Assets.
 - [`0005-route-capability-migration.md`](0005-route-capability-migration.md) — Engineering documentation for 0005 Route Capability Migration.
 - [`0006-single-platform-document.md`](0006-single-platform-document.md) — Engineering documentation for 0006 Single Platform Document.
+- [`0007-external-agent-gateway.md`](0007-external-agent-gateway.md) — Provider-neutral gateway for invoking and continuing agent threads from external work systems.
 
 ## Working in this directory
 

@@ -9,6 +9,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           environments = [],
           projects = [],
           projectFilterId = "",
+          overviewScope = "all",
           openWorkflowRequest = null,
           onOpenWorkflowRequestHandled,
           backendUrl = "/api/real",
@@ -18,7 +19,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           onNavigationGuardChange,
           onNavigationRequest,
           currentUserId = "",
-          currentUserName = "Me",
+          currentUserName = "User",
           currentUserEmail = "",
           currentUserAvatarUrl = "",
         } = {}) {
@@ -26,6 +27,14 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const [sharedMetronomeWorkflows, setSharedMetronomeWorkflows] = useState([]);
           const [isMetronomeApiAvailable, setIsMetronomeApiAvailable] = useState(true);
           const [isLoadingMetronomes, setIsLoadingMetronomes] = useState(true);
+          const [hasMoreMetronomeWorkflows, setHasMoreMetronomeWorkflows] = useState(false);
+          const [isLoadingMoreMetronomes, setIsLoadingMoreMetronomes] = useState(false);
+          const metronomeWorkflowPaginationRef = useRef({
+            requestKey: "",
+            offset: 0,
+            hasMore: false,
+            loading: false,
+          });
           const [activeWorkflowId, setActiveWorkflowId] = useState("");
           const [nodes, setNodes, onNodesChange] = useNodesState([]);
           const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -247,17 +256,23 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               return "";
             }
           }, [requestHeaders]);
+          const currentMetronomeUserDisplayName = useMemo(() => {
+            const candidate = String(currentUserName || "").trim();
+            return candidate && candidate.toLowerCase() !== "me"
+              ? candidate
+              : String(currentUserEmail || "").trim() || "User";
+          }, [currentUserName, currentUserEmail]);
           const currentMetronomeUserCreator = useMemo(() => normalizeMetronomeWorkflowCreator({
             creator: {
               type: "user",
-              id: currentUserId || currentUserEmail || currentUserName || "me",
-              userId: currentUserId || currentUserEmail || currentUserName || "me",
-              name: currentUserName || currentUserEmail || "Me",
+              id: currentUserId || currentUserEmail || currentMetronomeUserDisplayName,
+              userId: currentUserId || currentUserEmail || currentMetronomeUserDisplayName,
+              name: currentMetronomeUserDisplayName,
               email: currentUserEmail || "",
               avatarUrl: currentUserAvatarUrl || "",
               photoUrl: currentUserAvatarUrl || "",
             },
-          }), [currentUserId, currentUserName, currentUserEmail, currentUserAvatarUrl]);
+          }), [currentUserId, currentUserEmail, currentUserAvatarUrl, currentMetronomeUserDisplayName]);
           const currentMetronomeUserIdentityKeys = useMemo(() => createMetronomeIdentityKeySet([
             currentUserId,
             currentUserEmail,
@@ -269,6 +284,99 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const isMetronomeWorkflowOwnedByCurrentUser = useCallback((workflow) => {
             return isMetronomeWorkflowOwnedByIdentityKeys(workflow, currentMetronomeUserIdentityKeys);
           }, [currentMetronomeUserIdentityKeys]);
+          const resolveMetronomeWorkflowCreatorPresentation = useCallback((workflow, options = {}) => {
+            const isBuiltInWorkflow = options?.isBuiltIn === true || isMetronomeWorkflowBuiltIn(workflow);
+            if (isBuiltInWorkflow) {
+              return {
+                name: "Computer Agents",
+                avatarUrl: METRONOME_COMPUTER_AGENTS_CREATOR_PROFILE_URL,
+                fallback: "CA",
+              };
+            }
+            const workflowCreator = normalizeMetronomeWorkflowCreator(workflow) || {};
+            const creatorAgentId = String(
+              workflowCreator.agentId
+              || (workflowCreator.type === "agent" ? workflowCreator.id : "")
+              || ""
+            ).trim();
+            const creatorName = String(workflowCreator.name || "").trim();
+            const creatorId = String(workflowCreator.id || "").trim();
+            const normalizedCreatorName = creatorName.toLowerCase();
+            const normalizedCreatorId = creatorId.toLowerCase();
+            const creatorAgent = metronomeAgentOptions.find((agent) => {
+              const agentId = String(agent?.id || "").trim();
+              const agentName = String(agent?.name || "").trim();
+              const agentEmail = String(agent?.email || agent?.profile?.email || "").trim();
+              return Boolean(
+                creatorAgentId && agentId === creatorAgentId
+                || normalizedCreatorId && (
+                  agentId.toLowerCase() === normalizedCreatorId
+                  || agentName.toLowerCase() === normalizedCreatorId
+                  || agentEmail.toLowerCase() === normalizedCreatorId
+                )
+                || normalizedCreatorName && agentName.toLowerCase() === normalizedCreatorName
+              );
+            }) || null;
+            const isAgentCreator = Boolean(
+              workflowCreator.type === "agent"
+              || creatorAgentId
+              || creatorAgent && (creatorId || creatorName)
+            );
+            if (isAgentCreator) {
+              const name = String(creatorAgent?.name || creatorName || creatorId || "Agent").trim() || "Agent";
+              const avatarUrl = workflowCreator.avatarUrl || getMetronomeProfileImageUrl(creatorAgent) || "";
+              return {
+                name,
+                avatarUrl: canRenderMetronomeAvatarImage(avatarUrl)
+                  ? normalizeMetronomeAvatarUrl(avatarUrl)
+                  : "",
+                fallback: getMetronomeOwnerInitials(name, "AG"),
+              };
+            }
+            const creatorIdentityKeys = createMetronomeIdentityKeySet([
+              workflowCreator.id,
+              workflowCreator.userId,
+              workflowCreator.email,
+            ]);
+            const isCurrentUserCreator = Array.from(creatorIdentityKeys).some((key) => (
+              currentMetronomeUserIdentityKeys.has(key)
+            ));
+            const normalizedUserName = normalizedCreatorName === "me" ? "" : creatorName;
+            const name = isCurrentUserCreator
+              ? currentMetronomeUserDisplayName
+              : normalizedUserName || workflowCreator.email || creatorId || "User";
+            const avatarUrl = isCurrentUserCreator
+              ? currentUserAvatarUrl
+              : workflowCreator.avatarUrl || workflowCreator.photoUrl || "";
+            return {
+              name,
+              avatarUrl: canRenderMetronomeAvatarImage(avatarUrl)
+                ? normalizeMetronomeAvatarUrl(avatarUrl)
+                : "",
+              fallback: getMetronomeOwnerInitials(name, "US"),
+            };
+          }, [currentMetronomeUserDisplayName, currentMetronomeUserIdentityKeys, currentUserAvatarUrl, metronomeAgentOptions]);
+          const resolveMetronomeWorkflowOwnerPresentation = useCallback((workflow, options = {}) => {
+            const isBuiltInWorkflow = options?.isBuiltIn === true || isMetronomeWorkflowBuiltIn(workflow);
+            if (isBuiltInWorkflow) {
+              return resolveMetronomeWorkflowCreatorPresentation(workflow, { isBuiltIn: true });
+            }
+            const ownerIdentityKeys = getMetronomeWorkflowOwnerIdentityKeys(workflow);
+            const isCurrentUserOwner = Array.from(ownerIdentityKeys).some((key) => (
+              currentMetronomeUserIdentityKeys.has(key)
+            ));
+            if (isCurrentUserOwner || !isMetronomeWorkflowTeamShared(workflow)) {
+              const avatarUrl = canRenderMetronomeAvatarImage(currentUserAvatarUrl)
+                ? normalizeMetronomeAvatarUrl(currentUserAvatarUrl)
+                : "";
+              return {
+                name: currentMetronomeUserDisplayName,
+                avatarUrl,
+                fallback: getMetronomeOwnerInitials(currentMetronomeUserDisplayName, "US"),
+              };
+            }
+            return resolveMetronomeWorkflowCreatorPresentation(workflow);
+          }, [currentMetronomeUserDisplayName, currentMetronomeUserIdentityKeys, currentUserAvatarUrl, resolveMetronomeWorkflowCreatorPresentation]);
           const metronomeHiddenTeamSharedWorkflowStorageScope = useMemo(() => {
             return String(currentUserEmail || currentUserName || "anonymous").trim().toLowerCase() || "anonymous";
           }, [currentUserEmail, currentUserName]);
@@ -1057,31 +1165,142 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
 
           useEffect(() => {
             let cancelled = false;
+            const requestKey = [
+              String(backendUrl || ""),
+              String(apiKey || ""),
+              metronomeRequestHeadersKey,
+              normalizedMetronomeProjectFilterId,
+            ].join("::");
+            metronomeWorkflowPaginationRef.current = {
+              requestKey,
+              offset: 0,
+              hasMore: false,
+              loading: true,
+            };
             setIsLoadingMetronomes(true);
-            void fetchMetronomeWorkflowsFromApi(normalizedMetronomeProjectFilterId, {
+            setIsLoadingMoreMetronomes(false);
+            setHasMoreMetronomeWorkflows(false);
+            void fetchMetronomeWorkflowPageFromApi(normalizedMetronomeProjectFilterId, {
               backendUrl,
               apiKey,
               requestHeaders,
+              limit: 20,
+              offset: 0,
             })
-              .then((items) => {
-                if (cancelled) return;
+              .then((page) => {
+                if (cancelled || metronomeWorkflowPaginationRef.current.requestKey !== requestKey) return;
+                const items = Array.isArray(page?.items) ? page.items : [];
                 const storedItems = filterMetronomeWorkflowsByProject(readMetronomeWorkflowsFromStorage(), normalizedMetronomeProjectFilterId);
                 setWorkflows((current) => mergeMetronomeWorkflowListPreservingGraphs(items, current, storedItems));
+                metronomeWorkflowPaginationRef.current = {
+                  requestKey,
+                  offset: Number(page?.nextOffset) || items.length,
+                  hasMore: Boolean(page?.hasMore),
+                  loading: false,
+                };
+                setHasMoreMetronomeWorkflows(Boolean(page?.hasMore));
                 setIsMetronomeApiAvailable(true);
               })
               .catch((error) => {
-                if (cancelled) return;
+                if (cancelled || metronomeWorkflowPaginationRef.current.requestKey !== requestKey) return;
                 console.warn("[Metronome] Falling back to local drafts", error);
+                metronomeWorkflowPaginationRef.current = {
+                  requestKey,
+                  offset: 0,
+                  hasMore: false,
+                  loading: false,
+                };
+                setHasMoreMetronomeWorkflows(false);
                 setIsMetronomeApiAvailable(false);
                 setWorkflows(filterMetronomeWorkflowsByProject(readMetronomeWorkflowsFromStorage(), normalizedMetronomeProjectFilterId));
               })
               .finally(() => {
-                if (!cancelled) setIsLoadingMetronomes(false);
+                if (!cancelled && metronomeWorkflowPaginationRef.current.requestKey === requestKey) {
+                  metronomeWorkflowPaginationRef.current.loading = false;
+                  setIsLoadingMetronomes(false);
+                }
               });
             return () => {
               cancelled = true;
             };
           }, [apiKey, backendUrl, metronomeRequestHeadersKey, normalizedMetronomeProjectFilterId]);
+
+          const loadMoreMetronomeWorkflows = useCallback(async () => {
+            const requestKey = [
+              String(backendUrl || ""),
+              String(apiKey || ""),
+              metronomeRequestHeadersKey,
+              normalizedMetronomeProjectFilterId,
+            ].join("::");
+            const pagination = metronomeWorkflowPaginationRef.current;
+            if (
+              !isMetronomeApiAvailable
+              || pagination.requestKey !== requestKey
+              || pagination.loading
+              || !pagination.hasMore
+            ) {
+              return;
+            }
+
+            const offset = pagination.offset;
+            metronomeWorkflowPaginationRef.current = {
+              ...pagination,
+              loading: true,
+            };
+            setIsLoadingMoreMetronomes(true);
+            try {
+              const page = await fetchMetronomeWorkflowPageFromApi(normalizedMetronomeProjectFilterId, {
+                backendUrl,
+                apiKey,
+                requestHeaders,
+                limit: 10,
+                offset,
+              });
+              if (metronomeWorkflowPaginationRef.current.requestKey !== requestKey) return;
+              const items = Array.isArray(page?.items) ? page.items : [];
+              setWorkflows((current) => {
+                const currentItems = Array.isArray(current) ? current : [];
+                const normalizedItems = mergeMetronomeWorkflowListPreservingGraphs(items, currentItems);
+                const incomingById = new Map(normalizedItems
+                  .map((workflow) => [String(workflow?.id || "").trim(), workflow])
+                  .filter(([workflowId]) => Boolean(workflowId)));
+                const existingIds = new Set();
+                const next = currentItems.map((workflow) => {
+                  const workflowId = String(workflow?.id || "").trim();
+                  if (workflowId) existingIds.add(workflowId);
+                  return incomingById.get(workflowId) || workflow;
+                });
+                normalizedItems.forEach((workflow) => {
+                  const workflowId = String(workflow?.id || "").trim();
+                  if (!workflowId || existingIds.has(workflowId)) return;
+                  existingIds.add(workflowId);
+                  next.push(workflow);
+                });
+                return next;
+              });
+              metronomeWorkflowPaginationRef.current = {
+                requestKey,
+                offset: Number(page?.nextOffset) || offset + items.length,
+                hasMore: Boolean(page?.hasMore),
+                loading: false,
+              };
+              setHasMoreMetronomeWorkflows(Boolean(page?.hasMore));
+            } catch (error) {
+              if (metronomeWorkflowPaginationRef.current.requestKey !== requestKey) return;
+              console.warn("[Metronome] Failed to load more workflows", error);
+              metronomeWorkflowPaginationRef.current = {
+                ...metronomeWorkflowPaginationRef.current,
+                hasMore: false,
+                loading: false,
+              };
+              setHasMoreMetronomeWorkflows(false);
+            } finally {
+              if (metronomeWorkflowPaginationRef.current.requestKey === requestKey) {
+                metronomeWorkflowPaginationRef.current.loading = false;
+                setIsLoadingMoreMetronomes(false);
+              }
+            }
+          }, [apiKey, backendUrl, isMetronomeApiAvailable, metronomeRequestHeadersKey, normalizedMetronomeProjectFilterId]);
 
           useEffect(() => {
             let cancelled = false;

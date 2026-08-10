@@ -15,6 +15,13 @@ export interface RunnerAttachment {
   githubRef?: string | null;
   githubItemPath?: string;
   githubSelectionType?: "repo" | "file";
+  /** Identifies attachments created from a saved prompt or thread reference. */
+  referenceType?: "prompt" | "thread";
+  displayName?: string;
+  promptId?: string;
+  promptVersionId?: string;
+  promptVersionNumber?: number;
+  threadId?: string;
   [key: string]: unknown;
 }
 
@@ -43,6 +50,13 @@ export interface LocalAttachment {
   githubRef?: string | null;
   githubItemPath?: string;
   githubSelectionType?: "repo" | "file";
+  /** Identifies attachments created from a saved prompt or thread reference. */
+  referenceType?: "prompt" | "thread";
+  displayName?: string;
+  promptId?: string;
+  promptVersionId?: string;
+  promptVersionNumber?: number;
+  threadId?: string;
   resolvedAttachment?: RunnerAttachment;
   uploadStatus?: "idle" | "uploading" | "uploaded" | "failed";
   uploadError?: string | null;

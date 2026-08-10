@@ -72,6 +72,14 @@ export const SkillDetailPage = lazyNamed(
   () => import("../../platform-resources/skills/detail/skill-detail-page.js"),
   "SkillDetailPage",
 );
+export const PromptsOverviewPage = lazyNamed(
+  () => import("../../platform-resources/prompts/overview/index.js"),
+  "PromptsOverviewPage",
+);
+export const PromptDetailPage = lazyNamed(
+  () => import("../../platform-resources/prompts/detail/prompt-detail-page.js"),
+  "PromptDetailPage",
+);
 export const TagsOverviewPage = lazyNamed(
   () => import("../../platform-resources/tags/overview/tags-overview-page.js"),
   "TagsOverviewPage",

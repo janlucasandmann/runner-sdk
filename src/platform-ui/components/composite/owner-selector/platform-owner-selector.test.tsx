@@ -11,6 +11,35 @@ afterEach(() => {
 });
 
 describe("PlatformOwnerSelector", () => {
+  it("renders a compact circular avatar before the owner name", () => {
+    const { container } = render(
+      <PlatformOwnerSelector
+        owner={{
+          value: "member-1",
+          name: "Current Owner",
+          avatarUrl: "/avatars/current-owner.png",
+        }}
+        options={[
+          {
+            value: "member-1",
+            name: "Current Owner",
+            avatarUrl: "/avatars/current-owner.png",
+          },
+        ]}
+        onTransfer={vi.fn()}
+      />,
+    );
+
+    const identity = container.querySelector(".platform-owner-selector__identity");
+    const avatar = identity?.querySelector(".platform-owner-selector__avatar");
+    const image = avatar?.querySelector(".platform-owner-selector__avatar-image");
+    const name = identity?.querySelector(".platform-owner-selector__name");
+
+    expect(identity?.firstElementChild).toBe(avatar);
+    expect(image?.getAttribute("src")).toBe("/avatars/current-owner.png");
+    expect(name?.textContent).toBe("Current Owner");
+  });
+
   it("confirms an ownership transfer before invoking the mutation", async () => {
     const user = userEvent.setup();
     const onTransfer = vi.fn().mockResolvedValue(undefined);

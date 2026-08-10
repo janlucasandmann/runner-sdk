@@ -140,6 +140,7 @@ export interface PlatformCodeEditorWorkspaceProps {
   /** @deprecated The workspace footer has been removed. */
   showFooter?: boolean;
   variant?: PlatformCodeEditorWorkspaceVariant;
+  sidebarHidden?: boolean;
   ariaLabel?: string;
   className?: string;
   onDragOver?: DragEventHandler<HTMLElement>;
@@ -243,6 +244,7 @@ export function PlatformCodeEditorWorkspace({
   emptyEditor = "Select a file to edit.",
   historyControls,
   variant = "default",
+  sidebarHidden = false,
   ariaLabel = "Code editor",
   className = "",
   onDragOver,
@@ -638,6 +640,7 @@ export function PlatformCodeEditorWorkspace({
       className={joinClassNames(
         "platform-code-editor-workspace",
         variant === "full-screen" && "is-full-screen",
+        sidebarHidden && "is-sidebar-hidden",
         className,
       )}
       aria-label={ariaLabel}
@@ -649,7 +652,7 @@ export function PlatformCodeEditorWorkspace({
       onKeyDown={stopEditorKeyboardPropagation}
       onKeyUp={stopEditorKeyboardPropagation}
     >
-      <aside className="platform-code-editor-workspace__sidebar">
+      {!sidebarHidden ? <aside className="platform-code-editor-workspace__sidebar">
         <div
           className={joinClassNames(
             "platform-code-editor-workspace__sidebar-header",
@@ -794,7 +797,7 @@ export function PlatformCodeEditorWorkspace({
             </div>
           )}
         </div>
-      </aside>
+      </aside> : null}
 
       <div
         className={joinClassNames(

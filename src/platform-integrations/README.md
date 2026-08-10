@@ -9,6 +9,8 @@ This directory contains typed browser integrations with external platforms. Each
 ## Contents
 
 - [`google-drive/`](google-drive/) — This directory owns the browser-side Google Drive picker adapter and its provider-specific contract.
+- [`connectors/`](connectors/) — Provider capability metadata shared by connector configuration and runtime surfaces.
+- [`external-agents/`](external-agents/) — Typed provider-neutral contracts for installations, project bindings, identities, conversations, and inbound events.
 
 ## Working in this directory
 

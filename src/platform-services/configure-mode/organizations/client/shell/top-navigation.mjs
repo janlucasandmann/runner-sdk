@@ -3,7 +3,7 @@ export const ORGANIZATIONS_TOP_NAVIGATION_SCRIPT = `        function renderOrgan
 	            organization: "Organization",
 	            members: "Members",
 	            subscription: "Subscription",
-	            roles: "Roles",
+	            roles: "Permissions",
 	            "identity-access": "Identity & Access",
 	            billing: "Billing",
 	            usage: "Usage",

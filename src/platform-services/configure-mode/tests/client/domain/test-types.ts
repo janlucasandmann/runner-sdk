@@ -34,14 +34,11 @@ export interface TestCaseDefinition {
 
 export interface TestPlanDefinition {
   schemaVersion: string;
-  setup: Record<string, unknown> | null;
   cases: TestCaseDefinition[];
-  teardown: Record<string, unknown> | null;
   concurrency: number;
   stopOnFailure: boolean;
   retryPolicy: {
     maxAttempts: number;
-    backoffMs: number;
   };
   evidencePolicy: {
     retainLogs: boolean;

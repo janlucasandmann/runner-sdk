@@ -144,8 +144,6 @@ export function getTestPlanExecutionProfile(
 ): TestPlanExecutionProfile {
   const enabledCases = definition.cases.filter((testCase) => testCase.enabled !== false);
   const deterministic = enabledCases.length > 0
-    && !definition.setup
-    && !definition.teardown
     && enabledCases.every(isSupportedDeterministicTestCase);
   if (deterministic) {
     return {
@@ -222,4 +220,3 @@ export function applyTestCasePresentation(
     request,
   };
 }
-

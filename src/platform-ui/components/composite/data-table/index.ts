@@ -8,6 +8,7 @@ export type {
   PlatformDataTableFilter,
   PlatformDataTableFilterOption,
   PlatformDataTableIcon,
+  PlatformDataTableIncrementalLoadingConfig,
   PlatformDataTableLayout,
   PlatformDataTablePaginationConfig,
   PlatformDataTablePaginationState,

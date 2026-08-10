@@ -43,6 +43,24 @@ const stringArrayField = (description: string): PlatformConnectorJsonSchema => (
   items: { type: "string" },
 });
 
+const entityPropertyArrayField = (description: string): PlatformConnectorJsonSchema => ({
+  type: "array",
+  description,
+  items: {
+    type: "object",
+    properties: {
+      key: stringField("Entity property key."),
+      value: {
+        type: "object",
+        description: "JSON object stored as the entity property value.",
+        additionalProperties: true,
+      },
+    },
+    required: ["key", "value"],
+    additionalProperties: false,
+  },
+});
+
 function defineCapabilities(
   definitions: readonly CapabilityInput[],
 ): readonly PlatformConnectorCapability[] {
@@ -1014,6 +1032,7 @@ export const JIRA_CONNECTOR_CAPABILITIES = defineCapabilities([
     properties: {
       ...jiraIssueKey,
       orderBy: stringField("Comment sort order."),
+      expand: stringField("Comma-separated comment expansions, such as properties."),
       ...jiraPagination,
     },
     required: ["issueIdOrKey"],
@@ -1166,6 +1185,7 @@ export const JIRA_CONNECTOR_CAPABILITIES = defineCapabilities([
         enum: ["group", "role"],
       }),
       visibilityValue: stringField("Visibility group or project role."),
+      properties: entityPropertyArrayField("Optional Jira entity properties stored with the comment."),
     },
     required: ["issueIdOrKey", "body"],
   },

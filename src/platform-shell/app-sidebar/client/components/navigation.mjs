@@ -52,6 +52,13 @@ ${configurePrimaryEntries}
                 onClick: handleOpenSkillsShortcut,
               },
               {
+                id: "prompts",
+                label: "Prompts",
+                Icon: MessageSquareText,
+                active: activePage === "tools" && toolsView === "prompts",
+                onClick: handleOpenPromptsShortcut,
+              },
+              {
                 id: "configure-governance-label",
                 type: "subtitle",
                 label: "Governance",

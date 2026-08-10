@@ -72,6 +72,14 @@ export interface PlatformDataTablePaginationConfig {
   manual?: boolean;
 }
 
+export interface PlatformDataTableIncrementalLoadingConfig {
+  hasMore: boolean;
+  loading?: boolean;
+  onLoadMore: () => void | Promise<void>;
+  threshold?: number;
+  loadingMessage?: ReactNode;
+}
+
 export interface PlatformDataTableSearchConfig<TData> {
   value?: string;
   defaultValue?: string;
@@ -197,6 +205,7 @@ export interface PlatformDataTableProps<TData> {
   sorting?: PlatformDataTableSortingConfig;
   selection?: PlatformDataTableSelectionConfig<TData>;
   pagination?: PlatformDataTablePaginationConfig | false;
+  incrementalLoading?: PlatformDataTableIncrementalLoadingConfig;
   toolbar?: PlatformDataTableToolbarConfig<TData>;
   rowGrouping?: PlatformDataTableRowGroupingConfig<TData>;
   getRowActions?: (row: TData, state: PlatformDataTableRowActionState<TData>) => readonly PlatformDataTableAction<TData>[];

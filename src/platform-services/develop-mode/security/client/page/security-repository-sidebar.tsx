@@ -7,12 +7,12 @@ import {
 } from "react";
 import { Play } from "lucide-react";
 import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
+import {
+  PlatformOwnerSelector,
+  type PlatformOwnerOption,
+} from "../../../../../platform-ui/components/composite/owner-selector/index.js";
 import { PlatformPrimaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformLabel } from "../../../../../platform-ui/components/ui/label/index.js";
-import {
-  PlatformSelector,
-  type PlatformSelectorOption,
-} from "../../../../../platform-ui/components/ui/selector/index.js";
 import { ResourceOverviewIdentityCell } from "../../../../../platform-ui/pages/overview/index.js";
 import {
   getDevelopResourceCreatorIdentity,
@@ -102,58 +102,6 @@ function RepositoryCreator({
   );
 }
 
-function RepositoryOwner({ identity }: { identity: DevelopResourceIdentity }) {
-  const label = getIdentityLabel(identity);
-  const title = identity.email ? `${label} · ${identity.email}` : label;
-  return (
-    <span className="playground-evaluations-detail-owner-value">
-      <span
-        className="playground-team-member-avatar playground-evaluations-detail-owner-avatar"
-        aria-hidden="true"
-      >
-        {identity.avatarUrl ? (
-          <img
-            src={identity.avatarUrl}
-            alt=""
-            className="playground-team-member-avatar-image"
-          />
-        ) : (
-          <span className="playground-team-member-avatar-fallback">
-            {getIdentityInitials(label)}
-          </span>
-        )}
-      </span>
-      <span className="playground-evaluations-detail-owner-name" title={title}>
-        {label}
-      </span>
-    </span>
-  );
-}
-
-function RepositoryOwnerOptionAvatar({
-  identity,
-}: {
-  identity: DevelopResourceIdentity;
-}) {
-  const label = getIdentityLabel(identity);
-  return (
-    <span
-      className="playground-agents-detail-owner-option-avatar"
-      aria-hidden="true"
-    >
-      {identity.avatarUrl ? (
-        <img
-          src={identity.avatarUrl}
-          alt=""
-          className="playground-agents-detail-owner-option-avatar-image"
-        />
-      ) : (
-        getIdentityInitials(label)
-      )}
-    </span>
-  );
-}
-
 export interface SecurityRepositorySidebarProps {
   detail: SecurityRepositoryDetail;
   busy?: boolean;
@@ -217,7 +165,7 @@ export function SecurityRepositorySidebar({
       ),
     [ownerCandidates],
   );
-  const ownerOptions = useMemo<PlatformSelectorOption<string>[]>(
+  const ownerOptions = useMemo<PlatformOwnerOption<string, { candidate: DevelopResourceIdentity }>[]>(
     () =>
       ownerCandidates.map((candidate) => {
         const value = getSecurityRepositoryOwnerCandidateKey(candidate);
@@ -231,10 +179,12 @@ export function SecurityRepositorySidebar({
               : undefined;
         return {
           value,
-          label,
+          name: label,
+          email: candidate.email || "",
+          avatarUrl: candidate.avatarUrl || "",
           description,
           ariaLabel: description ? `${label}, ${description}` : label,
-          leading: <RepositoryOwnerOptionAvatar identity={candidate} />,
+          data: { candidate },
         };
       }),
     [ownerCandidates],
@@ -306,20 +256,16 @@ export function SecurityRepositorySidebar({
   );
 
   const handleOwnerChange = useCallback(
-    (nextValue: string) => {
+    async (nextValue: string) => {
       const nextOwner = ownerCandidateByValue.get(nextValue);
       if (!nextOwner || !onOwnerChange || !canManageOwner) return;
       setOwnerSelectorOpen(false);
       setOwnerSaving(true);
-      void (async () => {
-        try {
-          await onOwnerChange(nextOwner);
-        } catch {
-          // The workspace mutation boundary owns actionable error reporting.
-        } finally {
-          setOwnerSaving(false);
-        }
-      })();
+      try {
+        await onOwnerChange(nextOwner);
+      } finally {
+        setOwnerSaving(false);
+      }
     },
     [canManageOwner, onOwnerChange, ownerCandidateByValue],
   );
@@ -388,14 +334,19 @@ export function SecurityRepositorySidebar({
           valueClassName="playground-server-detail-sidebar-owner-cell"
           control
         >
-          <PlatformSelector
-            value={selectedOwnerValue}
+          <PlatformOwnerSelector
+            owner={{
+              value: selectedOwnerValue,
+              name: ownerLabel,
+              email: owner.email || "",
+              avatarUrl: owner.avatarUrl || "",
+            }}
             options={ownerOptions}
             open={ownerSelectorOpen}
             onOpenChange={handleOwnerSelectorOpenChange}
-            onValueChange={handleOwnerChange}
+            onTransfer={(nextValue) => handleOwnerChange(nextValue)}
             ariaLabel="Choose repository owner"
-            label={<RepositoryOwner identity={owner} />}
+            resourceLabel="security repository"
             alignment="end"
             popupAlignment="right"
             disabled={busy || ownerSaving || !canManageOwner}

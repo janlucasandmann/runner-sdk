@@ -335,7 +335,7 @@ export const ORGANIZATIONS_PAGE_ROLES_AND_VIEW_SCRIPT = `
 	            subscription: "Subscription",
 	            billing: "Billing",
 	            usage: "Usage",
-	            roles: "Roles",
+	            roles: "Permissions",
 	            "identity-access": "Identity & Access",
 	          };
 	          const normalizedOrganizationAdminPage = normalizeOrganizationAdminPageId(organizationPageActiveTab);

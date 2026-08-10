@@ -4407,12 +4407,16 @@
   
             const isPluginsView = toolsView === "plugins";
             const isSkillsView = toolsView === "skills";
+            const isPromptsView = toolsView === "prompts";
             const isActionsView = toolsView === "actions";
             const isPluginsDetailView = (isPluginsView || isTagsView) && Boolean(selectedPlugin);
             const isSkillsDetailView = isSkillsView && toolsSkillsHeaderState.mode === "detail";
+            const isPromptsDetailView = isPromptsView && toolsPromptsHeaderState.mode === "detail";
             const hasMenu = isActionsView;
             const toolsOverviewTitle = isActionsView
               ? "Actions"
+              : isPromptsView
+                ? "Prompts"
               : isSkillsView
                 ? "Skills"
                 : "Connectors";
@@ -4443,6 +4447,103 @@
                     }
                   },
                 })
+              : null;
+            const promptDetailVersionLabel = isPromptsDetailView
+              ? React.createElement(PlatformResourceVersionLabel, {
+                  resourceLabel: "prompt",
+                  version: Number.isFinite(Number(toolsPromptsHeaderState.versionNumber))
+                    ? Number(toolsPromptsHeaderState.versionNumber)
+                    : 1,
+                  latestVersion: Number.isFinite(Number(toolsPromptsHeaderState.latestVersionNumber))
+                    ? Number(toolsPromptsHeaderState.latestVersionNumber)
+                    : 1,
+                  className: "prompt-detail-header__version-label",
+                  disabled: toolsPromptsHeaderState.versionQualifier === "Draft",
+                  onOpenVersionHistory: () => {
+                    if (typeof toolsPromptsHeaderState.onOpenVersions === "function") {
+                      toolsPromptsHeaderState.onOpenVersions();
+                    }
+                  },
+                })
+              : null;
+            const promptDetailActions = isPromptsDetailView
+              ? React.createElement(PlatformResourceActionsMenu, {
+                  open: Boolean(toolsPromptsHeaderState.actionsOpen),
+                  onOpenChange: (nextOpen) => {
+                    if (typeof toolsPromptsHeaderState.onActionsOpenChange === "function") {
+                      toolsPromptsHeaderState.onActionsOpenChange(nextOpen);
+                    }
+                  },
+                  resourceLabel: "Prompt",
+                  disabled: toolsPromptsHeaderState.versionQualifier === "Draft",
+                  shortcutActions: {
+                    share: {
+                      onInvoke: () => toolsPromptsHeaderState.onShare?.(),
+                      disabled: toolsPromptsHeaderState.versionQualifier === "Draft" || Boolean(toolsPromptsHeaderState.hasUnsavedChanges),
+                    },
+                    rename: {
+                      onInvoke: () => toolsPromptsHeaderState.onRename?.(),
+                      disabled: toolsPromptsHeaderState.versionQualifier === "Draft" || Boolean(toolsPromptsHeaderState.hasUnsavedChanges),
+                    },
+                    delete: {
+                      onInvoke: () => toolsPromptsHeaderState.onDelete?.(),
+                    },
+                  },
+                },
+                  React.createElement(PlatformResourceActionsInformation, {
+                    resourceLabel: "Prompt",
+                    items: [
+                      {
+                        id: "id",
+                        label: "ID",
+                        value: toolsPromptsHeaderState.promptId || "Unsaved prompt",
+                        title: toolsPromptsHeaderState.promptId || "Unsaved prompt",
+                        monospace: true,
+                        copyValue: toolsPromptsHeaderState.promptId || undefined,
+                        copyAriaLabel: "Copy Prompt ID",
+                      },
+                      { id: "created", label: "Created", value: toolsPromptsHeaderState.createdAt || "—" },
+                      { id: "updated", label: "Updated", value: toolsPromptsHeaderState.updatedAt || "—" },
+                    ],
+                  }),
+                  React.createElement(PlatformResourceVersionHistoryMenuItem, {
+                    onClick: () => {
+                      toolsPromptsHeaderState.onActionsOpenChange?.(false);
+                      toolsPromptsHeaderState.onOpenVersions?.();
+                    },
+                  }),
+                  React.createElement(PlatformResourceActionsDivider),
+                  React.createElement(PlatformResourceActionMenuItem, {
+                    icon: React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    label: "Share",
+                    shortcut: "share",
+                    disabled: toolsPromptsHeaderState.versionQualifier === "Draft" || Boolean(toolsPromptsHeaderState.hasUnsavedChanges),
+                    title: toolsPromptsHeaderState.versionQualifier === "Draft" || Boolean(toolsPromptsHeaderState.hasUnsavedChanges) ? "Save the prompt before sharing it." : undefined,
+                    onClick: () => toolsPromptsHeaderState.onShare?.(),
+                  }),
+                  React.createElement(PlatformResourceActionMenuItem, {
+                    icon: React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    label: "Copy Prompt ID",
+                    disabled: !toolsPromptsHeaderState.promptId,
+                    onClick: () => toolsPromptsHeaderState.onCopyId?.(),
+                  }),
+                  React.createElement(PlatformResourceActionsDivider),
+                  React.createElement(PlatformResourceActionMenuItem, {
+                    icon: React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    label: "Rename",
+                    shortcut: "rename",
+                    disabled: toolsPromptsHeaderState.versionQualifier === "Draft" || Boolean(toolsPromptsHeaderState.hasUnsavedChanges),
+                    title: toolsPromptsHeaderState.versionQualifier === "Draft" || Boolean(toolsPromptsHeaderState.hasUnsavedChanges) ? "Save the prompt before renaming it." : undefined,
+                    onClick: () => toolsPromptsHeaderState.onRename?.(),
+                  }),
+                  React.createElement(PlatformResourceActionMenuItem, {
+                    icon: React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    label: "Delete",
+                    shortcut: "delete",
+                    disabled: !toolsPromptsHeaderState.promptId,
+                    onClick: () => toolsPromptsHeaderState.onDelete?.(),
+                  }),
+                )
               : null;
             const tagsAndPluginsOverviewMenu =
               (isPluginsView || isTagsView) && !isPluginsDetailView
@@ -4560,16 +4661,47 @@
                         ),
                       },
                     ]
+                : isPromptsDetailView
+                  ? [
+                      { label: toolsWorkspaceRoot },
+                      { label: toolsOverviewTitle, onClick: () => requestPlatformNavigation(() => {
+                        setToolsPromptsBackRequestToken((current) => current + 1);
+                      }) },
+                      {
+                        label: toolsPromptsHeaderState.title || "Prompt",
+                        trailing: React.createElement(PlatformResourceHeaderActions, null,
+                          promptDetailVersionLabel,
+                          promptDetailActions,
+                        ),
+                      },
+                    ]
                   : [
                       { label: toolsWorkspaceRoot },
                       {
                         label: toolsOverviewTitle,
                         trailing: isSkillsView
                           ? skillsOverviewMenu
+                          : isPromptsView
+                            ? null
                           : tagsAndPluginsOverviewMenu,
                       },
                     ],
-              center: isSkillsDetailView
+              center: isPromptsDetailView
+                ? React.createElement(PlatformSwitch, {
+                    className: "prompt-detail-header__switch",
+                    value: toolsPromptsHeaderState.activeTab === "settings" ? "settings" : "general",
+                    options: [
+                      { value: "general", label: "General" },
+                      { value: "settings", label: "Settings" },
+                    ],
+                    onValueChange: (nextTab) => {
+                      if (typeof toolsPromptsHeaderState.onTabChange === "function") {
+                        toolsPromptsHeaderState.onTabChange(nextTab === "settings" ? "settings" : "general");
+                      }
+                    },
+                    ariaLabel: "Prompt section",
+                  })
+                : isSkillsDetailView
                   ? React.createElement(PlatformSwitch, {
                       className: "skill-detail-header__switch",
                       value: toolsSkillsHeaderState.activeTab === "settings" ? "settings" : "code",
@@ -4586,7 +4718,7 @@
                     })
                 : null,
               rightRef: isActionsView ? pluginsNavActionsRef : null,
-              includeSearchDivider: isSkillsView || isPluginsView || isTagsView,
+              includeSearchDivider: isSkillsView || isPromptsView || isPluginsView || isTagsView,
               extraActions: React.createElement(React.Fragment, null,
                 isPluginsDetailView && isTagsView && normalizedConnectionDetailTab === "overview"
                   ? React.createElement(PlatformSwitch, {
@@ -4642,6 +4774,12 @@
                 isSkillsView
                   ? React.createElement("div", {
                       id: "playground-tools-skills-nav-actions",
+                      className: "playground-tools-skills-nav-actions-slot",
+                    })
+                  : null,
+                isPromptsView
+                  ? React.createElement("div", {
+                      id: "playground-tools-prompts-nav-actions",
                       className: "playground-tools-skills-nav-actions-slot",
                     })
                   : null,
@@ -4708,7 +4846,43 @@
                 onNavigationRequest: requestPlatformNavigation,
               });
             }
-  
+
+            if (toolsView === "prompts") {
+              return React.createElement(PlaygroundPromptsPage, {
+                requestHeaders,
+                backendUrl: proxyBackendBase,
+                activeOrganizationId,
+                currentUserId: hasSessionAuth ? (sessionState.userId || "") : "",
+                currentUserName: hasSessionAuth ? accountName : "Me",
+                currentUserEmail: hasSessionAuth ? accountEmail : "",
+                currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
+                workspaceTeams: teamPageTeams,
+                workspaceTeamsLoading: teamPageLoading,
+                workspaceTeamsRequiresPlan: teamPageRequiresPlan,
+                onWorkspaceTeamsRequest: () => {
+                  if (
+                    !teamPageLoading
+                    && !teamPageRequiresPlan
+                    && (!Array.isArray(teamPageTeams) || teamPageTeams.length === 0)
+                  ) {
+                    void loadTeamPageData({ selectedTeamId: "" });
+                  }
+                },
+                topNavActionsPortalId: "playground-tools-prompts-nav-actions",
+                versionsDrawerPortalId: "playground-agent-versions-drawer-root",
+                onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
+                onToolsPromptsHeaderChange: setToolsPromptsHeaderState,
+                onStartThread: () => {
+                  setActivePage("thread");
+                  setCurrentThreadId("");
+                },
+                backRequestToken: toolsPromptsBackRequestToken,
+                openPromptRequest: toolsPromptsOpenRequest,
+                onNavigationGuardChange: registerPlatformNavigationGuard,
+                onNavigationRequest: requestPlatformNavigation,
+              });
+            }
+
             if (toolsView === "actions") {
               return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail" },
                 React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },

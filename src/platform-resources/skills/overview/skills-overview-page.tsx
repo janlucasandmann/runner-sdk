@@ -46,6 +46,15 @@ export interface SkillsOverviewPageProps {
   onEdit: (row: SkillOverviewRow) => void;
   onRename: (row: SkillOverviewRow) => void;
   onDelete: (rows: readonly SkillOverviewRow[]) => void;
+  resourceName?: string;
+  systemGroupLabel?: string;
+  customGroupLabel?: string;
+  searchPlaceholder?: string;
+  emptyState?: ReactNode;
+  noResultsState?: ReactNode;
+  heroContent?: ReactNode;
+  pageClassName?: string;
+  grouping?: "skills" | "flat";
 }
 
 function getCreatorName(row: SkillOverviewRow): string {
@@ -75,6 +84,15 @@ export function SkillsOverviewPage({
   onEdit,
   onRename,
   onDelete,
+  resourceName = "Skills",
+  systemGroupLabel = "System Skills",
+  customGroupLabel = "Custom Skills",
+  searchPlaceholder = "Search skills",
+  emptyState = "No skills available.",
+  noResultsState = "No skills match this view.",
+  heroContent = <SkillsOverviewGuide />,
+  pageClassName = "is-skills",
+  grouping = "skills",
 }: SkillsOverviewPageProps) {
   const columns = useMemo<PlatformDataTableColumn<SkillOverviewRow>[]>(() => [
     {
@@ -167,30 +185,30 @@ export function SkillsOverviewPage({
       period={period}
       onPeriodChange={onPeriodChange}
       analytics={analytics}
-      heroContent={<SkillsOverviewGuide />}
+      heroContent={heroContent}
       showPeriodSelector={false}
       controlsPortalId={controlsPortalId}
       headerActions={headerActions}
-      className="is-skills"
+      className={pageClassName}
       table={{
         rows,
         columns,
         getRowId: (row) => row.id,
-        ariaLabel: "Skills",
-        className: "resource-overview-table is-skills",
+        ariaLabel: resourceName,
+        className: `resource-overview-table ${pageClassName}`,
         variant: "catalog-ui",
         sorting: { defaultValue: { id: "updated", direction: "desc" } },
-        rowGrouping: {
+        rowGrouping: grouping === "flat" ? undefined : {
           groups: [
             {
               id: "system",
-              label: "System Skills",
-              ariaLabel: "System Skills",
+              label: systemGroupLabel,
+              ariaLabel: systemGroupLabel,
             },
             {
               id: "custom",
-              label: "Custom Skills",
-              ariaLabel: "Custom Skills",
+              label: customGroupLabel,
+              ariaLabel: customGroupLabel,
             },
           ],
           getGroupId: (row) => row.isCustom ? "custom" : "system",
@@ -198,7 +216,7 @@ export function SkillsOverviewPage({
         pagination: false,
         toolbar: {
           search: {
-            placeholder: "Search skills",
+            placeholder: searchPlaceholder,
             getSearchText: (row) =>
               `${row.searchText || row.name} ${getCreatorName(row)}`,
           },
@@ -207,8 +225,8 @@ export function SkillsOverviewPage({
         onRowActivate: onOpen,
         getRowAriaLabel: (row) => row.name,
         loading,
-        emptyState: "No skills available.",
-        noResultsState: "No skills match this view.",
+        emptyState,
+        noResultsState,
       }}
     />
   );

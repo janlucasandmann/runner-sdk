@@ -24,26 +24,6 @@ export const METRONOME_APP_LIFECYCLE_SCRIPT = `
         }, [activePage]);
 
         useEffect(() => {
-          if (!metronomeTopNavMenuOpen) {
-            return;
-          }
-          const handleMetronomeTopNavMenuPointerDown = (event) => {
-            const target = event.target;
-            if (
-              metronomeTopNavMenuRef.current
-              && target
-              && !metronomeTopNavMenuRef.current.contains(target)
-            ) {
-              setMetronomeTopNavMenuOpen(false);
-            }
-          };
-          document.addEventListener("mousedown", handleMetronomeTopNavMenuPointerDown);
-          return () => {
-            document.removeEventListener("mousedown", handleMetronomeTopNavMenuPointerDown);
-          };
-        }, [metronomeTopNavMenuOpen]);
-
-        useEffect(() => {
           setMetronomeTopNavPublishMenuOpen(false);
         }, [metronomeTopNavState?.workflowId]);
 

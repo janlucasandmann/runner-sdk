@@ -13,12 +13,20 @@ assert.match(TESTS_APP_SCRIPT_FRAGMENTS.state, /selectedTestPlanId/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.state, /selectedTestCaseId/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestsPage/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestCaseDetailPage/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestRawConfigurationPage/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestRunTechnicalDetailsPage/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.historyCapture, /testCaseId/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.mode === "case"/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.mode === "configuration"/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.mode === "run-technical"/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /TestsWorkspacePage/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onOpenCase/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onOpenRawConfiguration/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onOpenRunTechnicalDetails/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-tests-section-controls/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /selectedTestCaseName/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /Raw Configuration/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /Technical Details/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-tests-title-actions/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /versionsDrawerPortalId/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onVersionsSidebarOpenChange/);
@@ -100,6 +108,7 @@ const detailSource = await fs.readFile(
 assert.match(detailSource, /PlatformServiceDetailPage/);
 assert.match(detailSource, /PlatformAnalyticsSection/);
 assert.match(detailSource, /PlatformSwitch/);
+assert.match(detailSource, /PlatformButtonSelector/);
 assert.match(detailSource, /PlatformDataTable/);
 assert.match(detailSource, /PlatformLabel/);
 assert.match(detailSource, /onRowActivate=\{\(testCase\) => onOpenCase/);
@@ -125,6 +134,17 @@ assert.match(detailSource, /label="Computer"/);
 assert.match(detailSource, /playground-project-overview-sidebar-selector/);
 assert.doesNotMatch(detailSource, /How this test works/);
 assert.doesNotMatch(detailSource, /title="Run target"/);
+assert.doesNotMatch(detailSource, /Before the first case/);
+assert.doesNotMatch(detailSource, /After the final case/);
+assert.doesNotMatch(detailSource, /definition\.setup/);
+assert.doesNotMatch(detailSource, /definition\.teardown/);
+assert.doesNotMatch(detailSource, /Wait before retrying/);
+assert.doesNotMatch(detailSource, /backoffMs/);
+assert.doesNotMatch(detailSource, /Open raw test configuration/);
+assert.doesNotMatch(detailSource, /tests-definition-editor/);
+assert.doesNotMatch(detailSource, /Run Tests/);
+assert.match(detailSource, /label="Run Test"/);
+assert.match(detailSource, /Raw Configuration/);
 assert.doesNotMatch(detailSource, /Runs continue to use the published immutable version/);
 assert.doesNotMatch(detailSource, /plan\.status/);
 assert.doesNotMatch(detailSource, /Test-plan status/);
@@ -155,8 +175,21 @@ const runDetailSource = await fs.readFile(
 assert.match(runDetailSource, /PlatformServiceDetailPage/);
 assert.match(runDetailSource, /variant="run"/);
 assert.match(runDetailSource, /PlatformAnalyticsSection/);
+assert.match(runDetailSource, /PlatformResourceDetailSidebar/);
+assert.match(runDetailSource, /PlatformButtonSelector/);
+assert.doesNotMatch(runDetailSource, /tests-run-summary-card/);
+assert.match(runDetailSource, /showXAxisLabels=\{false\}/);
+assert.match(runDetailSource, /label: "Pass rate"/);
 assert.match(runDetailSource, /Case results/);
-assert.match(runDetailSource, /Technical details/);
+assert.match(runDetailSource, /getRowActions=/);
+assert.match(runDetailSource, /label: expandedResultIds\.has\(result\.id\) \? "Collapse" : "Expand"/);
+assert.doesNotMatch(runDetailSource, /tests-run-case-output__icon/);
+assert.match(runDetailSource, /placeholder: "Search artifacts"/);
+assert.doesNotMatch(runDetailSource, /Files, screenshots, traces, and reports retained by this run\./);
+assert.doesNotMatch(runDetailSource, /title="Case output"/);
+assert.match(runDetailSource, /renderExpandedRow/);
+assert.match(runDetailSource, /onOpenTechnicalDetails/);
+assert.doesNotMatch(runDetailSource, /tests-run-technical-details/);
 assert.doesNotMatch(runDetailSource, /title="Canonical envelope"/);
 assert.doesNotMatch(runDetailSource, /activeTab/);
 
@@ -167,8 +200,46 @@ const workspaceSource = await fs.readFile(
 assert.match(workspaceSource, /PlatformServiceDetailFrame/);
 assert.match(workspaceSource, /sectionControlsPortalId/);
 assert.match(workspaceSource, /mode === "case"/);
+assert.match(workspaceSource, /mode === "configuration"/);
+assert.match(workspaceSource, /mode === "run-technical"/);
 assert.match(workspaceSource, /TestCaseDetailPage/);
+assert.match(workspaceSource, /TestPlanRawConfigurationPage/);
+assert.match(workspaceSource, /TestRunTechnicalDetailsPage/);
 assert.match(workspaceSource, /onPlanDeleted/);
+
+const rawConfigurationSource = await fs.readFile(
+  new URL("./client/page/test-plan-raw-configuration-page.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(rawConfigurationSource, /MarkdownResourceDetailPage/);
+assert.match(rawConfigurationSource, /PlatformCodeEditorWorkspace/);
+assert.match(rawConfigurationSource, /PlatformMonacoCodeEditor/);
+assert.match(rawConfigurationSource, /language="json"/);
+assert.match(rawConfigurationSource, /parseTestPlanDefinition/);
+assert.match(rawConfigurationSource, /usePlatformVersionNavigationGuard/);
+assert.match(rawConfigurationSource, /TestPlanSaveModal/);
+assert.match(
+  PLAYGROUND_TESTS_CSS,
+  /\.tests-raw-configuration-workspace\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/,
+);
+assert.match(
+  PLAYGROUND_TESTS_CSS,
+  /\.tests-raw-configuration-monaco \.monaco-editor-background,[\s\S]*?background:\s*#000\s*!important/,
+);
+assert.doesNotMatch(PLAYGROUND_TESTS_CSS, /\.tests-advanced-definition/);
+
+const runTechnicalDetailsSource = await fs.readFile(
+  new URL("./client/page/test-run-technical-details-page.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(runTechnicalDetailsSource, /MarkdownResourceDetailPage/);
+assert.match(runTechnicalDetailsSource, /PlatformCodeEditorWorkspace/);
+assert.match(runTechnicalDetailsSource, /sidebarTitle="Run data"/);
+assert.match(runTechnicalDetailsSource, /label: "Technical details"/);
+assert.match(runTechnicalDetailsSource, /label: "JSON"/);
+assert.match(runTechnicalDetailsSource, /PlatformMonacoCodeEditor/);
+assert.match(runTechnicalDetailsSource, /readOnly/);
+assert.match(runTechnicalDetailsSource, /language="json"/);
 
 const caseDetailSource = await fs.readFile(
   new URL("./client/page/test-case-detail-page.tsx", import.meta.url),

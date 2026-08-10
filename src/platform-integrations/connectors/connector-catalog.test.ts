@@ -76,6 +76,19 @@ describe("platform connector catalog", () => {
     );
   });
 
+  it("exposes bidirectional work-item surfaces for Jira and Linear", () => {
+    expect(getPlatformConnectorCatalogEntry("jira")?.surfaces).toEqual([
+      "tools",
+      "inbound",
+      "delivery",
+    ]);
+    expect(getPlatformConnectorCatalogEntry("linear")?.surfaces).toEqual([
+      "tools",
+      "inbound",
+      "delivery",
+    ]);
+  });
+
   it("uses the requested Wikimedia artwork for Figma", () => {
     expect(getPlatformConnectorCatalogEntry("figma")?.logoUrl).toBe(
       "https://upload.wikimedia.org/wikipedia/commons/3/33/Figma-logo.svg",

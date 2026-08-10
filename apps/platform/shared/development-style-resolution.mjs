@@ -52,6 +52,7 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/pages/permissions/permission-page.css",
   "src/platform-resources/agents/detail/agent-publish-control.css",
   "src/platform-resources/skills/detail/skill-detail-page.css",
+  "src/platform-resources/prompts/detail/prompt-detail-page.css",
   "src/platform-resources/tags/detail/tag-detail-page.css",
   "src/platform-resources/access-control/page/platform-resource-access-table.css",
 ]);

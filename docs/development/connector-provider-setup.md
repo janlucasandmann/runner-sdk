@@ -7,6 +7,10 @@ persistence, and runtime tools are already wired. After registering the
 provider apps, add their client IDs and secrets to the runtime environment,
 restart the platform, and connect each provider from Configure → Connectors.
 
+Connector OAuth grants agent tools. To also trigger and continue an agent
+thread from Jira or Linear, complete the separate
+[external agent gateway setup](external-agent-gateway-setup.md).
+
 ## Before creating provider apps
 
 Use these callback URLs exactly. Providers compare redirect URLs literally.

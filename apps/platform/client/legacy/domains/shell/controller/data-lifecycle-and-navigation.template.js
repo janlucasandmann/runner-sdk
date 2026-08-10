@@ -198,6 +198,19 @@
               setPluginsNavPopover("");
             }
           }, [activePage, toolsView]);
+
+          useEffect(() => {
+            if (activePage === "tools" && toolsView === "prompts") {
+              return;
+            }
+            setToolsPromptsHeaderState({
+              mode: "overview",
+              title: "Prompts",
+              promptId: "",
+              versionNumber: 0,
+              versionQualifier: "",
+            });
+          }, [activePage, toolsView]);
   
           useEffect(() => {
             const returnTarget = normalizePlatformPluginConnectionReturnTarget(
@@ -3097,6 +3110,8 @@
               ? "actions"
               : nextView === "skills"
                 ? "skills"
+                : nextView === "prompts"
+                  ? "prompts"
                 : nextView === "tags"
                   ? "tags"
                   : "plugins";
@@ -3120,11 +3135,30 @@
                 setToolsSkillsOpenRequest(null);
               }
             }
+            if (normalizedView === "prompts") {
+              if (options.create === true) {
+                setToolsPromptsOpenRequest({
+                  action: "create",
+                  promptId: "",
+                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                });
+              } else if (options.promptId) {
+                setToolsPromptsOpenRequest({
+                  action: "open",
+                  promptId: String(options.promptId || "").trim(),
+                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                });
+              } else {
+                setToolsPromptsOpenRequest(null);
+              }
+            }
             if (options.forceOverview) {
               if (normalizedView === "plugins" || normalizedView === "tags") {
                 setSelectedPluginId("");
               } else if (normalizedView === "skills") {
                 setToolsSkillsBackRequestToken((current) => current + 1);
+              } else if (normalizedView === "prompts") {
+                setToolsPromptsBackRequestToken((current) => current + 1);
               }
             }
             if (!options.preserveSidebarMode) {
@@ -3162,7 +3196,7 @@
                 || activePage === "resource-templates"
                 || activePage === "inference"
                 || (isResourcesPage && (activeResourcesView === "agents" || activeResourcesView === "computers"))
-                || (activePage === "tools" && (toolsView === "plugins" || toolsView === "tags" || toolsView === "skills"));
+                || (activePage === "tools" && (toolsView === "plugins" || toolsView === "tags" || toolsView === "skills" || toolsView === "prompts"));
             }
             return activePage === "develop"
               || activePage === "develop-webhooks"
@@ -3184,6 +3218,10 @@
   
           function handleOpenSkillsShortcut() {
             openToolsView("skills", { forceOverview: true });
+          }
+
+          function handleOpenPromptsShortcut() {
+            openToolsView("prompts", { forceOverview: true });
           }
   
           function handleOpenActionsShortcut() {

@@ -9,7 +9,6 @@ afterEach(cleanup);
 
 const definition = {
   schemaVersion: "computer_agents_test_plan_v1",
-  setup: null,
   cases: [{
     id: "ready",
     name: "Ready",
@@ -27,10 +26,9 @@ const definition = {
     enabled: true,
     tags: ["smoke"],
   }],
-  teardown: null,
   concurrency: 1,
   stopOnFailure: false,
-  retryPolicy: { maxAttempts: 1, backoffMs: 1_000 },
+  retryPolicy: { maxAttempts: 1 },
   evidencePolicy: {
     retainLogs: true,
     retainScreenshots: true,

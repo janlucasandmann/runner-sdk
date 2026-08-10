@@ -277,50 +277,6 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 	        display: none;
 	      }
 
-	      .playground-database-owner-transfer-modal.playground-tasks-project-modal {
-	        width: min(500px, calc(100vw - 48px));
-	      }
-
-	      .playground-database-owner-transfer-copy {
-	        display: flex;
-	        flex-direction: column;
-	        gap: 12px;
-	        padding: 4px 0 8px;
-	      }
-
-	      .playground-database-owner-transfer-person {
-	        display: flex;
-	        align-items: center;
-	        gap: 10px;
-	      }
-
-	      .playground-database-owner-transfer-person .playground-team-member-avatar {
-	        width: 28px;
-	        height: 28px;
-	        flex: 0 0 28px;
-	      }
-
-	      .playground-database-owner-transfer-person-copy {
-	        min-width: 0;
-	        display: flex;
-	        flex-direction: column;
-	        gap: 2px;
-	      }
-
-	      .playground-database-owner-transfer-person-name {
-	        color: #fff;
-	        font-size: 13px;
-	        font-weight: 500;
-	      }
-
-	      .playground-database-owner-transfer-person-email,
-	      .playground-database-owner-transfer-warning {
-	        color: rgba(255, 255, 255, 0.58);
-	        font-size: 12px;
-	        font-weight: 400;
-	        line-height: 1.5;
-	      }
-
 	      .playground-database-access-table-toolbar.playground-develop-server-kind-table-toolbar {
 	        display: flex;
 	        align-items: center;

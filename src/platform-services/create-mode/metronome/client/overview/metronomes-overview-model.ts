@@ -14,8 +14,14 @@ export interface MetronomeOverviewRow {
   statusLabel: string;
   statusRank: number;
   triggerLabel: string;
-  creatorName: string;
+  ownerName: string;
+  ownerAvatarUrl?: string;
+  ownerFallback?: string;
+  /** @deprecated Transitional compatibility for previously loaded overview bundles. */
+  creatorName?: string;
+  /** @deprecated Transitional compatibility for previously loaded overview bundles. */
   creatorAvatarUrl?: string;
+  /** @deprecated Transitional compatibility for previously loaded overview bundles. */
   creatorFallback?: string;
   lastRunAt?: number;
   sortTimestamp?: number;

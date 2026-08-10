@@ -838,6 +838,18 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
             return Number.isFinite(timestamp) ? timestamp : 0;
           };
           const getTeamOverviewOwnerLabel = (team) => {
+            const ownerId = String(
+              team?.ownerUserId
+              || team?.owner_user_id
+              || team?.ownerId
+              || team?.owner_id
+              || team?.owner?.userId
+              || team?.owner?.user_id
+              || team?.owner?.id
+              || ""
+            ).trim();
+            const isCurrentUser = Boolean(ownerId)
+              && ownerId === String(sessionState.userId || "").trim();
             const ownerName = String(
               team?.ownerName
               || team?.owner_name
@@ -861,10 +873,46 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
             if (ownerEmail) {
               return ownerEmail;
             }
-            if (String(team?.ownerUserId || team?.ownerId || "").trim() === String(sessionState.userId || "").trim()) {
-              return "You";
+            if (isCurrentUser) {
+              return getTrustedDisplayName(accountName, accountEmail) || "You";
             }
             return "Team";
+          };
+          const getTeamOverviewOwnerAvatarUrl = (team) => {
+            const ownerId = String(
+              team?.ownerUserId
+              || team?.owner_user_id
+              || team?.ownerId
+              || team?.owner_id
+              || team?.owner?.userId
+              || team?.owner?.user_id
+              || team?.owner?.id
+              || ""
+            ).trim();
+            const isCurrentUser = Boolean(ownerId)
+              && ownerId === String(sessionState.userId || "").trim();
+            const rawAvatarUrl = String(
+              team?.ownerAvatarUrl
+              || team?.owner_avatar_url
+              || team?.ownerPhotoUrl
+              || team?.owner_photo_url
+              || team?.ownerPhotoURL
+              || team?.owner?.avatarUrl
+              || team?.owner?.avatar_url
+              || team?.owner?.photoUrl
+              || team?.owner?.photoURL
+              || team?.createdByAvatarUrl
+              || team?.created_by_avatar_url
+              || team?.createdByPhotoUrl
+              || team?.createdByPhotoURL
+              || team?.createdBy?.avatarUrl
+              || team?.createdBy?.photoUrl
+              || team?.createdBy?.photoURL
+              || (isCurrentUser ? accountAvatarUrl : "")
+              || ""
+            ).trim();
+            const normalizedAvatarUrl = normalizeSessionPhotoUrl(rawAvatarUrl);
+            return canRenderAvatarImage(normalizedAvatarUrl) ? normalizedAvatarUrl : "";
           };
           const getTeamOverviewRoleLabel = (team) => formatRole(team?.role);
           const teamOverviewRows = (Array.isArray(teamPageTeams) ? teamPageTeams : [])
@@ -883,6 +931,8 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
                 profileFallback: getPlatformProfileImageInitials(name, "T"),
                 roleLabel,
                 ownerLabel,
+                ownerAvatarUrl: getTeamOverviewOwnerAvatarUrl(team),
+                ownerFallback: getPlatformProfileImageInitials(ownerLabel, "O"),
                 ownership: isOwned ? "owned" : "member",
                 createdAt: getTeamOverviewCreatedTimestamp(team),
                 createdLabel: formatDate(createdValue) || "-",

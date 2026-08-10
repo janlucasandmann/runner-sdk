@@ -19,6 +19,7 @@ export interface PlatformOwnerOption<
 > extends PlatformOwnerIdentity<TValue> {
   description?: ReactNode;
   ariaLabel?: string;
+  title?: string;
   disabled?: boolean;
   data?: TData;
 }
@@ -34,6 +35,7 @@ export interface PlatformOwnerSelectorProps<
     option: PlatformOwnerOption<TValue, TData>,
   ) => void | Promise<void>;
   ariaLabel?: string;
+  title?: string;
   resourceLabel?: string;
   disabled?: boolean;
   loading?: boolean;
@@ -104,6 +106,7 @@ export function PlatformOwnerSelector<
   options,
   onTransfer,
   ariaLabel = "Choose owner",
+  title,
   resourceLabel = "resource",
   disabled = false,
   loading = false,
@@ -141,8 +144,11 @@ export function PlatformOwnerSelector<
     ),
     disabled: option.disabled || option.value === owner.value,
     leading: <PlatformOwnerAvatar identity={option} />,
-    ownerOption: option,
   })), [options, owner.value]);
+  const ownerOptionByValue = useMemo(
+    () => new Map(options.map((option) => [option.value, option])),
+    [options],
+  );
 
   const selectedOption = normalizedOptions.find((option) => option.value === owner.value);
   const selectorOptions = selectedOption
@@ -154,7 +160,6 @@ export function PlatformOwnerSelector<
         ariaLabel: owner.email ? `${owner.name}, ${owner.email}` : owner.name,
         disabled: true,
         leading: <PlatformOwnerAvatar identity={owner} />,
-        ownerOption: { ...owner, disabled: true } as PlatformOwnerOption<TValue, TData>,
       }, ...normalizedOptions];
 
   const resolvedConfirmationTitle = pendingOption
@@ -163,7 +168,7 @@ export function PlatformOwnerSelector<
     : "Transfer ownership?";
   const resolvedConfirmationDescription = pendingOption
     ? resolveContent(confirmationDescription, pendingOption)
-      || `Transfer ownership to ${pendingOption.name}? You will lose owner privileges and cannot take the owner role back yourself.`
+      || `Transfer ownership to ${pendingOption.name}? This action is irreversible. You will lose your owner permission entitlements immediately and cannot take the owner role back yourself.`
     : null;
 
   return (
@@ -171,8 +176,12 @@ export function PlatformOwnerSelector<
       <PlatformSelector
         value={owner.value}
         options={selectorOptions}
-        onValueChange={(_value, option) => setPendingOption(option.ownerOption)}
+        onValueChange={(value) => {
+          const nextOwner = ownerOptionByValue.get(value);
+          if (nextOwner) setPendingOption(nextOwner);
+        }}
         ariaLabel={ariaLabel}
+        title={title}
         label={(
           <span className="platform-owner-selector__identity">
             <PlatformOwnerAvatar identity={owner} />

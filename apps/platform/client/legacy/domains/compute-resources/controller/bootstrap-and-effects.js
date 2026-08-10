@@ -127,9 +127,6 @@
           const environmentRenameInputRef = useRef(null);
           const databaseActionsPopoverRef = useRef(null);
           const databaseActionsPopoverSurfaceRef = useRef(null);
-          const serverOwnerTransferModalCloseTimerRef = useRef(null);
-          const databaseOwnerTransferModalCloseTimerRef = useRef(null);
-          const databaseOwnerTransferModalFrameRef = useRef(null);
           const databaseRenameInputRef = useRef(null);
           const agentRuntimeSkillsActionsRef = useRef(null);
           const agentRuntimeSkillsPopupSurfaceRef = useRef(null);
@@ -427,8 +424,6 @@
   	        const [serverAccessSortDirection, setServerAccessSortDirection] = useState("asc");
   	        const [selectedServerAccessTeamIds, setSelectedServerAccessTeamIds] = useState(() => new Set());
   	        const [serverOwnerPopoverOpen, setServerOwnerPopoverOpen] = useState(false);
-  	        const [serverOwnerTransferTarget, setServerOwnerTransferTarget] = useState(null);
-  	        const [serverOwnerTransferModalClosing, setServerOwnerTransferModalClosing] = useState(false);
   	        const [serverTeamAccessState, setServerTeamAccessState] = useState({
   	          teamId: "",
   	          action: "",
@@ -444,9 +439,6 @@
 	        const [selectedDatabaseAccessTeamIds, setSelectedDatabaseAccessTeamIds] = useState(() => new Set());
   	        const [databaseOwnerPopoverOpen, setDatabaseOwnerPopoverOpen] = useState(false);
   	        const [databaseOwnerTeamMembersById, setDatabaseOwnerTeamMembersById] = useState({});
-  	        const [databaseOwnerTransferTarget, setDatabaseOwnerTransferTarget] = useState(null);
-  	        const [databaseOwnerTransferModalVisible, setDatabaseOwnerTransferModalVisible] = useState(false);
-  	        const [databaseOwnerTransferModalClosing, setDatabaseOwnerTransferModalClosing] = useState(false);
   	        const [databaseTeamAccessState, setDatabaseTeamAccessState] = useState({
   	          teamId: "",
   	          action: "",
@@ -2095,8 +2087,6 @@
             setServerAccessSearchQuery("");
             setServerAccessFilter("all");
             setServerOwnerPopoverOpen(false);
-            setServerOwnerTransferTarget(null);
-            setServerOwnerTransferModalClosing(false);
             setSelectedServerAccessTeamIds(new Set());
             setServerTeamAccessState({ teamId: "", action: "", error: "" });
             setServerRuntimeState({

@@ -13,6 +13,7 @@ This directory contains server-side adapters for external providers. Provider cr
 - [`github-oauth.mjs`](github-oauth.mjs) — GitHub OAuth and repository API adapter.
 - [`jira-oauth.mjs`](jira-oauth.mjs) — Atlassian OAuth 2.0 (3LO), Jira and Confluence scope negotiation, site discovery, identity validation, and rotating refresh-token adapter.
 - [`connectors/runtime`](connectors/runtime) — Server-owned connector tool catalogs and provider API adapters exposed through the authenticated connector MCP bridge.
+- [`external-agents/`](external-agents/) — Provider-neutral inbound agent gateway, durable event/outbox processing, Jira and Linear adapters, thread continuation, and provider reply delivery.
 
 ## Working in this directory
 
@@ -105,5 +106,6 @@ build output, or application composition.
 
 - [Parent directory guide](../README.md)
 - [Connector provider setup](../../../../docs/development/connector-provider-setup.md)
+- [External agent gateway setup](../../../../docs/development/external-agent-gateway-setup.md)
 - [Platform architecture](../../../../docs/platform-architecture.md)
 - [Directory README standard](../../../../docs/development/readme-standard.md)

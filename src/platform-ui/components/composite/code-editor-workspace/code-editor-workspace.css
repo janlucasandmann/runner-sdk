@@ -24,6 +24,10 @@
   border-radius: 0;
 }
 
+.platform-code-editor-workspace.is-sidebar-hidden {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .platform-code-editor-workspace__sidebar {
   position: relative;
   z-index: 1;
@@ -273,6 +277,8 @@
 .platform-code-editor-workspace__editor {
   position: relative;
   z-index: 1;
+  width: 100%;
+  max-width: none;
   min-width: 0;
   min-height: 0;
   display: flex;
@@ -577,6 +583,8 @@
 }
 
 .platform-code-editor-workspace__editor-body {
+  width: 100%;
+  max-width: none;
   min-height: 0;
   flex: 1 1 0;
   display: flex;
@@ -587,6 +595,8 @@
 .platform-code-editor-workspace__editor-body > * {
   box-sizing: border-box;
   width: 100%;
+  max-width: none;
+  min-width: 0;
   min-height: 0;
   flex: 1 1 0;
 }
@@ -605,6 +615,8 @@
 .platform-monaco-code-editor > .monaco-editor,
 .platform-monaco-code-editor > .monaco-editor-background {
   width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
   height: 100% !important;
 }
 

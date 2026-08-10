@@ -35,6 +35,7 @@ const compositeComponents = [
   "page-hero",
   "popup",
   "resource-action-modals",
+  "resource-detail-sidebar",
   "resource-header-actions",
   "settings-section",
   "subtasks",
@@ -241,6 +242,10 @@ const canonicalExports = new Map([
   [
     "./platform-ui/components/composite/resource-action-modals",
     "./dist/platform-ui/components/composite/resource-action-modals/index.js",
+  ],
+  [
+    "./platform-ui/components/composite/resource-detail-sidebar",
+    "./dist/platform-ui/components/composite/resource-detail-sidebar/index.js",
   ],
   [
     "./platform-ui/components/composite/resource-header-actions",

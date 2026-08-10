@@ -13,7 +13,9 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           }
           return normalizedValue.slice(1).trim();
         }
-        const globalServiceSearchQuery = resolveGlobalServiceSearchQuery(threadSearchQuery);
+        const globalServiceSearchQuery = threadSearchModeLocked
+          ? null
+          : resolveGlobalServiceSearchQuery(threadSearchQuery);
         const isGlobalServiceSearchQuery = globalServiceSearchQuery !== null;
 
         useEffect(() => {
@@ -36,6 +38,10 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
               query: "",
               items: [],
               total: 0,
+            },
+            prompts: {
+              scopeKey: threadSearchResourceScopeKey,
+              items: [],
             },
           }));
           setThreadSearchResourceLoadingByMode((current) => ({
@@ -115,7 +121,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           const normalizedMode = String(targetMode || "").trim();
           if (
             !hasRealAccess
-            || !["agents", "tickets", "workflows"].includes(normalizedMode)
+            || !["agents", "tickets", "workflows", "prompts"].includes(normalizedMode)
           ) {
             return [];
           }
@@ -178,6 +184,22 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
                 throw new Error(data?.message || data?.error || "Failed to load tickets.");
               }
               items = parsePlaygroundTaskListResponse(data);
+            } else if (normalizedMode === "prompts") {
+              const response = await fetch(proxyBackendBase + "/prompts", {
+                method: "GET",
+                headers: authRequestHeaders,
+                credentials: "include",
+                cache: "no-store",
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load prompts.");
+              }
+              items = Array.isArray(data?.prompts)
+                ? data.prompts
+                : Array.isArray(data?.data)
+                  ? data.data
+                  : [];
             } else {
               const workflowResults = await Promise.allSettled([
                 fetchMetronomeWorkflowsFromApi("", {
@@ -264,7 +286,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           if (
             !threadSearchOpen
             || isGlobalServiceSearchQuery
-            || !["agents", "tickets", "workflows"].includes(threadSearchMode)
+            || !["agents", "tickets", "workflows", "prompts"].includes(threadSearchMode)
           ) {
             return;
           }
@@ -636,6 +658,13 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
             : [];
         }, [threadSearchResourceDataByMode.workflows, threadSearchResourceScopeKey]);
 
+        const currentThreadSearchPromptItems = useMemo(() => {
+          const state = threadSearchResourceDataByMode.prompts;
+          return state?.scopeKey === threadSearchResourceScopeKey && Array.isArray(state.items)
+            ? state.items
+            : [];
+        }, [threadSearchResourceDataByMode.prompts, threadSearchResourceScopeKey]);
+
         const threadSearchProjectsById = useMemo(() => {
           return new Map((Array.isArray(realProjects) ? realProjects : [])
             .map((project) => [String(project?.id || "").trim(), project])
@@ -741,6 +770,42 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           threadSearchMode,
         ]);
 
+        const filteredThreadSearchPromptItems = useMemo(() => {
+          if (threadSearchMode !== "prompts") {
+            return [];
+          }
+          return currentThreadSearchPromptItems
+            .filter((prompt) => {
+              if (!prompt?.id) return false;
+              if (!normalizedThreadSearchQuery) return true;
+              return [
+                prompt?.name,
+                prompt?.description,
+                prompt?.id,
+                prompt?.creatorName,
+                prompt?.ownerName,
+              ].map((value) => String(value || "")).join(" ").toLowerCase()
+                .includes(normalizedThreadSearchQuery);
+            })
+            .slice()
+            .sort((left, right) => {
+              const timestampDelta = (
+                Date.parse(String(right?.updatedAt || right?.createdAt || "")) || 0
+              ) - (
+                Date.parse(String(left?.updatedAt || left?.createdAt || "")) || 0
+              );
+              return timestampDelta || String(left?.name || "").localeCompare(
+                String(right?.name || ""),
+                undefined,
+                { sensitivity: "base" },
+              );
+            });
+        }, [
+          currentThreadSearchPromptItems,
+          normalizedThreadSearchQuery,
+          threadSearchMode,
+        ]);
+
         const isThreadSearchSelectedModeLoading = isGlobalServiceSearchQuery
           ? false
           : threadSearchMode === "threads"
@@ -769,5 +834,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
               ? filteredThreadSearchTicketItems.length
               : threadSearchMode === "agents"
                 ? filteredThreadSearchAgentItems.length
-                : filteredThreadSearchWorkflowItems.length;
+                : threadSearchMode === "workflows"
+                  ? filteredThreadSearchWorkflowItems.length
+                  : filteredThreadSearchPromptItems.length;
 `;

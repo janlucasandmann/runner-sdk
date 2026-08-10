@@ -123,6 +123,62 @@ test("Atlassian adapter leaves legacy issue creation un-attributed", async () =>
   assert.equal("properties" in requestBody, false);
 });
 
+test("Atlassian adapter stores and expands invisible Jira comment properties", async () => {
+  const requests = [];
+  const adapter = createAtlassianConnectorAdapter({
+    async resolveCredential() {
+      return {
+        token: {
+          accessToken: "provider-token",
+          cloudId: "cloud-123",
+        },
+      };
+    },
+    async fetchImpl(url, init) {
+      requests.push({ url: String(url), init });
+      return new Response(JSON.stringify({ comments: [] }), {
+        status: init.method === "POST" ? 201 : 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+  });
+  const grant = {
+    organizationId: "org_test",
+    credentialId: "credential_project",
+  };
+
+  await adapter.invoke({
+    grant,
+    name: "list_comments",
+    arguments: {
+      issueIdOrKey: "TEST-1",
+      maxResults: 100,
+      expand: "properties",
+    },
+  });
+  await adapter.invoke({
+    grant,
+    name: "add_comment",
+    arguments: {
+      issueIdOrKey: "TEST-1",
+      body: "Completed without a visible retry marker.",
+      properties: [{
+        key: "computer-agents.delivery",
+        value: { eventId: "event_1", kind: "completion" },
+      }],
+    },
+  });
+
+  assert.equal(
+    requests[0].url,
+    "https://api.atlassian.com/ex/jira/cloud-123/rest/api/3/issue/TEST-1/comment?maxResults=100&expand=properties",
+  );
+  assert.deepEqual(JSON.parse(requests[1].init.body).properties, [{
+    key: "computer-agents.delivery",
+    value: { eventId: "event_1", kind: "completion" },
+  }]);
+});
+
 test("Atlassian adapter refreshes once and retries an expired provider token", async () => {
   const resolverRequests = [];
   const requests = [];

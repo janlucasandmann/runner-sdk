@@ -2,8 +2,12 @@ export const TESTS_APP_HISTORY_RESTORE_SCRIPT = `          if (entry.page === "t
             openTestsPage({
               mode: entry.mode === "case"
                 ? "case"
-                : entry.mode === "run"
-                  ? "run"
+                : entry.mode === "run-technical"
+                  ? "run-technical"
+                  : entry.mode === "run"
+                    ? "run"
+                  : entry.mode === "configuration"
+                    ? "configuration"
                   : entry.mode === "detail"
                     ? "detail"
                     : "overview",

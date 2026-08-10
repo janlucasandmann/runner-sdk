@@ -238,11 +238,24 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                   activeFileId: activeCodeFilePath,
                   onFileSelect: handleMetronomeCodeFileSelect,
                   editor: activeMetronomeCodeFile
-                    ? React.createElement(MetronomeGeneratedCodeEditor, {
-                        file: activeMetronomeCodeFile,
-                        value: activeMetronomeCodeFile.value,
+                    ? React.createElement(PlatformMonacoCodeEditor, {
+                        className: "playground-metronome-code-monaco-editor",
+                        value: String(activeMetronomeCodeFile.value || ""),
                         onChange: handleMetronomeCodeFileChange,
+                        language: String(
+                          activeMetronomeCodeFile.language
+                          || (String(activeMetronomeCodeFile.path || "").endsWith(".txt") ? "plaintext" : "python")
+                        ),
+                        path: "metronome/" + String(activeMetronomeCodeFile.path || "main.py"),
+                        ariaLabel: String(activeMetronomeCodeFile.label || activeMetronomeCodeFile.path || "Metronome code") + " editor",
                         readOnly: isActiveWorkflowBuiltIn,
+                        theme: typeof PLAYGROUND_CODE_EDITOR_THEME_NAME === "string" ? PLAYGROUND_CODE_EDITOR_THEME_NAME : "vs-dark",
+                        beforeMount: ensurePlaygroundCodeEditorTheme,
+                        options: {
+                          smoothScrolling: true,
+                          renderLineHighlight: "none",
+                          wordWrap: "on",
+                        },
                       })
                     : null,
                   status: codeStatusMessage,
@@ -882,6 +895,47 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             };
             const getRunStepsCount = (run) => (run?.output?.steps || []).length || 0;
             const getRunThreadsCount = (run) => (run?.output?.threads || []).length || 0;
+            const isTriggeringMetronomeRun = metronomeRunState.status === "loading";
+            const isRunTriggerDisabled = !activeWorkflow?.id || isMetronomeWorkflowBuiltIn(activeWorkflow);
+            const creatorIdentity = resolveMetronomeWorkflowCreatorPresentation(activeWorkflow, {
+              isBuiltIn: isMetronomeWorkflowBuiltIn(activeWorkflow),
+            });
+            const ownerIdentity = resolveMetronomeWorkflowOwnerPresentation(activeWorkflow, {
+              isBuiltIn: isMetronomeWorkflowBuiltIn(activeWorkflow),
+              isTeamShared: isActiveWorkflowTeamShared,
+            });
+            const triggerMetronomeRun = async () => {
+              if (isRunTriggerDisabled || isTriggeringMetronomeRun) return;
+              const workflowDraft = activeMetronomeEditorWorkflow || activeWorkflow;
+              setMetronomeRunState({ status: "loading", message: "" });
+              setMetronomeRunsError("");
+              try {
+                const run = await createMetronomeRunApi(activeWorkflow.id, {
+                  definition: createMetronomeWorkflowDefinition(workflowDraft, nodes, edges),
+                  inputs: { source: "manual_ui" },
+                });
+                if (!run?.id) {
+                  throw new Error("Metronome run did not return an id.");
+                }
+                setMetronomeRuns((current) => [
+                  run,
+                  ...current.filter((item) => String(item?.id || "") !== String(run.id)),
+                ]);
+                setSelectedMetronomeRunId(run.id);
+                setMetronomeRunState({ status: "idle", message: "" });
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("playground:metronome-run-upserted", {
+                    detail: { workflow: activeWorkflow, run },
+                  }));
+                }
+              } catch (error) {
+                const message = error instanceof Error
+                  ? error.message
+                  : "Failed to start Metronome run.";
+                setMetronomeRunState({ status: "error", message });
+                setMetronomeRunsError(message);
+              }
+            };
             const activeRunFilter = METRONOME_RUN_FILTER_OPTIONS.find((option) => option.id === metronomeRunFilter) || METRONOME_RUN_FILTER_OPTIONS[0];
             const visibleMetronomeRunRows = metronomeRuns
               .filter((run) => {
@@ -1108,13 +1162,34 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               ),
               noResultsState: "No matching runs.",
             });
+            const metronomeRunsDetailsSidebar = React.createElement(PlatformResourceDetailSidebar, {
+                className: "playground-metronome-runs-sidebar",
+                propertiesClassName: "playground-metronome-runs-property-list",
+                attributes: [{
+                  id: "updated",
+                  label: "Updated",
+                  value: formatMetronomeRunTimestamp(activeWorkflow?.updatedAt || activeWorkflow?.createdAt),
+                }],
+                creator: creatorIdentity,
+                owner: ownerIdentity,
+                primaryAction: React.createElement(PlatformPrimaryButton, {
+                    size: "small",
+                    fullWidth: true,
+                    className: "playground-metronome-runs-trigger-button",
+                    disabled: isRunTriggerDisabled || isTriggeringMetronomeRun,
+                    onClick: () => void triggerMetronomeRun(),
+                  },
+                  "Trigger Run"
+                ),
+              });
             return React.createElement("div", { className: "playground-metronome-runs-view" },
               React.createElement("div", { className: "playground-metronome-runs-layout" },
                 React.createElement("section", {
                     className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-team-grid-table-section playground-metronome-runs-table-section",
                   },
                   metronomeRunsPlatformTable
-                )
+                ),
+                metronomeRunsDetailsSidebar
               )
             );
           };

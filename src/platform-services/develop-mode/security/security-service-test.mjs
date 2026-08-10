@@ -353,9 +353,9 @@ assert.match(pageSources, /<DevelopServerDetailPage/);
 assert.match(pageSources, /playground-server-detail-properties-card/);
 assert.match(pageSources, /playground-project-overview-sidebar-rows/);
 assert.match(pageSources, /ResourceOverviewIdentityCell/);
-assert.match(pageSources, /playground-evaluations-detail-owner-value/);
 assert.match(repositorySidebarSource, /ariaLabel="Choose repository owner"/);
-assert.match(repositorySidebarSource, /PlatformSelector/);
+assert.match(repositorySidebarSource, /PlatformOwnerSelector/);
+assert.match(repositorySidebarSource, /playground-evaluations-detail-owner-selector/);
 assert.match(
   repositorySidebarSource,
   /<PlatformPrimaryButton[\s\S]*className="develop-security-repository-run-scan"[\s\S]*Run scan/,

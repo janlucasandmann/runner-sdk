@@ -4,6 +4,7 @@ import type {
   PlatformConnectorCatalogEntry,
   PlatformConnectorFeature,
   PlatformConnectorJsonSchema,
+  PlatformConnectorSurface,
 } from "../connector-types.js";
 
 export interface ConnectorCapabilityDefinition {
@@ -29,6 +30,7 @@ export interface ConnectorProviderDefinition<TId extends string = string> {
   websiteUrl: string;
   termsUrl: string;
   privacyUrl: string;
+  surfaces?: readonly PlatformConnectorSurface[];
   features?: readonly PlatformConnectorFeature[];
 }
 
@@ -128,6 +130,7 @@ export function defineConnectorProvider<TId extends string>(
     categoryLabel: "Workspace Integration",
     permissionSubjectType: subjectPrefix,
     permissionTeamSubjectType: `${subjectPrefix}_team_role`,
+    surfaces: Object.freeze([...(definition.surfaces || ["tools"])]),
     capabilities,
     features: Object.freeze([
       ...(definition.features || defaultFeatures(definition)),

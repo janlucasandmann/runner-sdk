@@ -16,6 +16,9 @@ export const APP_HEADER_SEARCH_RESULT_ACTIONS_SCRIPT = `        const THREAD_SEA
           if (normalizedMode === "agents") {
             return filteredThreadSearchAgentItems.find((item) => String(item?.id || "").trim() === normalizedResultId) || null;
           }
+          if (normalizedMode === "prompts") {
+            return filteredThreadSearchPromptItems.find((item) => String(item?.id || "").trim() === normalizedResultId) || null;
+          }
           return filteredThreadSearchWorkflowItems.find((item) => String(item?.id || "").trim() === normalizedResultId) || null;
         }
 
@@ -37,6 +40,9 @@ export const APP_HEADER_SEARCH_RESULT_ACTIONS_SCRIPT = `        const THREAD_SEA
               canRename: !builtIn && (!teamShared || canEditMetronomeTeamSharedWorkflow(record)),
               canDelete: !builtIn && !teamShared,
             };
+          }
+          if (normalizedMode === "prompts") {
+            return { canRename: false, canDelete: false };
           }
           return { canRename: true, canDelete: true };
         }
@@ -75,6 +81,13 @@ export const APP_HEADER_SEARCH_RESULT_ACTIONS_SCRIPT = `        const THREAD_SEA
               mode: "detail",
               resourceView: "agents",
               resourceId: String(record.id || "").trim(),
+            };
+          }
+          if (normalizedMode === "prompts") {
+            return {
+              page: "tools",
+              toolsView: "prompts",
+              promptId: String(record.id || "").trim(),
             };
           }
           return {

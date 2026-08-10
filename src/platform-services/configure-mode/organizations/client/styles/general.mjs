@@ -13,6 +13,29 @@ export const ORGANIZATIONS_GENERAL_CSS = `      .playground-organization-admin-p
         line-height: 1.4;
       }
 
+      .playground-organization-owner-selector .platform-owner-selector__avatar {
+        width: 20px !important;
+        height: 20px !important;
+        min-width: 20px;
+        max-width: 20px;
+        min-height: 20px;
+        max-height: 20px;
+        flex: 0 0 20px;
+        overflow: hidden;
+        border-radius: 50%;
+      }
+
+      .playground-organization-owner-selector .platform-owner-selector__avatar-image {
+        width: 100% !important;
+        height: 100% !important;
+        min-width: 0;
+        max-width: 100%;
+        min-height: 0;
+        max-height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
       .playground-organization-general {
         width: 100%;
       }

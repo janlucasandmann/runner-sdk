@@ -405,6 +405,12 @@ export function normalizeTurnAttachment(
     githubRef?: unknown;
     githubItemPath?: unknown;
     githubSelectionType?: unknown;
+    referenceType?: unknown;
+    displayName?: unknown;
+    promptId?: unknown;
+    promptVersionId?: unknown;
+    promptVersionNumber?: unknown;
+    threadId?: unknown;
     hiddenFromTurnDisplay?: unknown;
     runnerAttachmentRole?: unknown;
     purpose?: unknown;
@@ -599,6 +605,30 @@ export function normalizeTurnAttachment(
       candidate.githubSelectionType === "file"
         ? candidate.githubSelectionType
         : undefined,
+    referenceType:
+      candidate.referenceType === "prompt" || candidate.referenceType === "thread"
+        ? candidate.referenceType
+        : undefined,
+    displayName:
+      typeof candidate.displayName === "string" && candidate.displayName.trim()
+        ? candidate.displayName.trim()
+        : undefined,
+    promptId:
+      typeof candidate.promptId === "string" && candidate.promptId.trim()
+        ? candidate.promptId.trim()
+        : undefined,
+    promptVersionId:
+      typeof candidate.promptVersionId === "string" && candidate.promptVersionId.trim()
+        ? candidate.promptVersionId.trim()
+        : undefined,
+    promptVersionNumber:
+      Number.isFinite(Number(candidate.promptVersionNumber))
+        ? Number(candidate.promptVersionNumber)
+        : undefined,
+    threadId:
+      typeof candidate.threadId === "string" && candidate.threadId.trim()
+        ? candidate.threadId.trim()
+        : undefined,
     previewKindOverride: imageUnderstandingPreview
       ? "image-understanding"
       : webSearchPreview
@@ -666,6 +696,12 @@ export function buildTurnAttachmentsFromLocalAttachments(
     githubRef: attachment.githubRef,
     githubItemPath: attachment.githubItemPath,
     githubSelectionType: attachment.githubSelectionType,
+    referenceType: attachment.referenceType,
+    displayName: attachment.displayName,
+    promptId: attachment.promptId,
+    promptVersionId: attachment.promptVersionId,
+    promptVersionNumber: attachment.promptVersionNumber,
+    threadId: attachment.threadId,
     uploadStatus: attachment.uploadStatus,
     runnerAttachmentRole: attachment.runnerAttachmentRole,
   }));

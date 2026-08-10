@@ -811,16 +811,12 @@
                 : (Array.isArray(candidate.teamNames) ? candidate.teamNames.join(", ") : "");
               return {
                 value: candidateKey,
-                label: candidateLabel,
+                name: candidateLabel,
+                email: candidate.email || "",
+                avatarUrl: candidate.avatarUrl || "",
                 description: candidateDetail || undefined,
                 ariaLabel: candidateDetail ? candidateLabel + ", " + candidateDetail : candidateLabel,
-                leading: React.createElement(AccountAvatar, {
-                  className: "playground-agents-detail-owner-option-avatar",
-                  imageClassName: "playground-agents-detail-owner-option-avatar-image",
-                  fallbackLabel: getAccountInitials(candidateLabel),
-                  photoUrl: candidate.avatarUrl || "",
-                }),
-                candidate,
+                data: { candidate },
               };
             });
             const environmentOwnerMissingTeamIds = environmentOwnerLookupTeamIds.filter((teamId) => (
@@ -840,40 +836,23 @@
               setEnvironmentOwnerPopoverOpen(false);
               updateDraftEnvironment(applyEnvironmentOwnerIdentity(draftEnvironment, ownerIdentity));
             };
-            const environmentOwnerSelectorControl = React.createElement(PlatformSelector, {
-              value: environmentOwnerIdentityKey,
+            const environmentOwnerSelectorControl = React.createElement(PlatformOwnerSelector, {
+              owner: {
+                value: environmentOwnerIdentityKey || "current-owner",
+                name: environmentOwnerLabel,
+                email: environmentOwnerIdentity.email || "",
+                avatarUrl: environmentOwnerIdentity.avatarUrl || "",
+              },
               options: environmentOwnerOptions,
               open: environmentOwnerPopoverOpen,
               onOpenChange: handleEnvironmentOwnerPopoverOpenChange,
-              onValueChange: (nextValue) => {
-                const selectedOwner = environmentOwnerOptions.find((option) => option.value === nextValue)?.candidate;
-                if (!selectedOwner || nextValue === environmentOwnerIdentityKey) {
-                  setEnvironmentOwnerPopoverOpen(false);
-                  return;
-                }
+              onTransfer: (_nextValue, option) => {
+                const selectedOwner = option?.data?.candidate;
+                if (!selectedOwner) return;
                 handleEnvironmentOwnerSelect(selectedOwner);
               },
               ariaLabel: "Choose computer owner",
-              label: React.createElement("span", {
-                  className: "playground-agents-detail-owner-value",
-                },
-                React.createElement("span", {
-                    className: "playground-team-member-cell playground-agents-detail-owner-member-cell",
-                  },
-                  React.createElement(AccountAvatar, {
-                    className: "playground-team-member-avatar",
-                    imageClassName: "playground-team-member-avatar-image",
-                    fallbackLabel: getAccountInitials(environmentOwnerLabel),
-                    photoUrl: environmentOwnerIdentity.avatarUrl || "",
-                  }),
-                  React.createElement("span", { className: "playground-team-member-copy" },
-                    React.createElement("span", {
-                      className: "playground-team-table-title",
-                      title: environmentOwnerLabel,
-                    }, environmentOwnerLabel)
-                  )
-                )
-              ),
+              resourceLabel: "computer",
               alignment: "end",
               popupAlignment: "right",
               fullWidth: true,

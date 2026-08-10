@@ -61,12 +61,10 @@ const plan: TestPlan = {
   defaultEnvironmentId: "environment-1",
   definition: {
     schemaVersion: "1",
-    setup: null,
     cases: [testCase],
-    teardown: null,
     concurrency: 1,
     stopOnFailure: false,
-    retryPolicy: { maxAttempts: 1, backoffMs: 0 },
+    retryPolicy: { maxAttempts: 1 },
     evidencePolicy: {
       retainLogs: true,
       retainScreenshots: true,

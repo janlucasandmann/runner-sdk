@@ -16,12 +16,15 @@ import {
   ChevronUp as LucideChevronUp,
   Ellipsis as LucideEllipsis,
   FileText as LucideFileText,
+  FolderOpen as LucideFolderOpen,
   GitBranch as LucideGitBranch,
   Globe as LucideGlobe,
   Images as LucideImages,
   Layers as LucideLayers,
   ListTodo as LucideListTodo,
   Mail as LucideMail,
+  MessageSquare as LucideMessageSquare,
+  MessageSquareText as LucideMessageSquareText,
   Maximize2 as LucideMaximize2,
   Minimize2 as LucideMinimize2,
   Monitor as LucideMonitor,
@@ -198,6 +201,7 @@ import {
   mergeRunnerChatOptions,
   normalizeRunnerReasoningEffort,
   orderOptionsWithPinnedTop,
+  RUNNER_REASONING_EFFORT_OPTIONS,
   type RunnerChatOption,
   type RunnerChatProjectOption,
 } from "./runner-chat/agent-options.js";
@@ -401,6 +405,7 @@ import {
 import { useRunnerFileDropController } from "./runner-chat/use-file-drop-controller.js";
 import { useRunnerFileBrowserAttachmentController } from "./runner-chat/use-file-browser-attachment-controller.js";
 import { useRunnerAttachmentController } from "./runner-chat/use-attachment-controller.js";
+import { generateRunnerClientId } from "./runner-chat/id-utils.js";
 import { useRunnerForkConfigurationController } from "./runner-chat/use-fork-configuration-controller.js";
 import { useRunnerRunStopController } from "./runner-chat/use-run-stop-controller.js";
 import { useRunnerThreadContextController } from "./runner-chat/use-thread-context-controller.js";
@@ -443,6 +448,8 @@ import {
 import type {
   RunnerChatConnectorOption,
   RunnerChatFollowUpAction,
+  RunnerChatPromptAttachment,
+  RunnerChatThreadAttachment,
   RunnerChatProps,
 } from "./runner-chat/public-types.js";
 export type {
@@ -460,6 +467,8 @@ export type {
   RunnerChatProjectTaskSubmitPayload,
   RunnerChatProjectsConfig,
   RunnerChatProps,
+  RunnerChatPromptAttachment,
+  RunnerChatThreadAttachment,
   RunnerChatScheduleConfig,
   RunnerChatSchedulePreset,
   RunnerChatSummaryWorkspacePathClickPayload,
@@ -500,7 +509,7 @@ import { RunnerFileBrowserDialog } from "./runner-chat/file-browser-dialog.js";
 import {
   RunnerEditConfirmationDialog,
   RunnerForkThreadDialog,
-  RunnerReportIssueDialog,
+  RunnerFeedbackDialog,
 } from "./runner-chat/workflow-dialogs.js";
 import {
   getRunnerComposerPlanDisplay,
@@ -510,6 +519,7 @@ import {
   renderComposerPopupPortal,
   useComposerAnchoredPopupStyle,
 } from "./runner-chat/composer-popup.js";
+import { RunnerComposerSuggestionPopup } from "./runner-chat/composer-suggestion-popup.js";
 import {
   useRunnerComposerPopupController,
 } from "./runner-chat/use-composer-popup-controller.js";
@@ -621,6 +631,7 @@ interface RunnerSelectedDeepResearchDetailPresentation {
 
 const ATTACH_FILES_SHORTCUT_KEY = "u";
 const SCHEDULE_SHORTCUT_KEY = "s";
+const PROMPTS_SHORTCUT_KEY = "p";
 const RUNNER_CHAT_TAG_CONNECTOR_IDS = new Set(["discord", "email", "telegram"]);
 
 function getRunnerChatConnectorIdentityKind(
@@ -637,6 +648,16 @@ function getRunnerChatConnectorIdentityKind(
   }
   return "plugins";
 }
+
+function formatRunnerSlashCommandLabel(command: string): string {
+  const normalizedCommand = command.replace(/^\/+/, "").trim();
+  if (!normalizedCommand) {
+    return "";
+  }
+  return `${normalizedCommand.charAt(0).toUpperCase()}${normalizedCommand.slice(1)}`;
+}
+
+type RunnerSlashPopupView = "commands" | "projects" | "reasoning";
 
 export function RunnerChat({
   backendUrl,
@@ -748,6 +769,8 @@ export function RunnerChat({
   skillCreationCommandHiddenPrompt,
   onSkillCreationCommandChange,
   onOpenPluginsOverview,
+  onOpenPromptSearch,
+  onOpenThreadSearch,
   onOpenPlansBudget,
   onBacklogMissionControlSubmit,
   followUpActions = [],
@@ -757,6 +780,7 @@ export function RunnerChat({
 }: RunnerChatProps) {
   const [input, setInput] = useState(initialTask);
   const [inputSelectionStart, setInputSelectionStart] = useState(() => initialTask.length);
+  const [slashPopupView, setSlashPopupView] = useState<RunnerSlashPopupView>("commands");
   const [localSelectedConnectorIds, setLocalSelectedConnectorIds] = useState<string[]>(() =>
     normalizeRunnerSelectedConnectorIds(computerAgents?.selectedConnectorIds),
   );
@@ -1491,14 +1515,14 @@ export function RunnerChat({
     items.push({
       id: "slides",
       command: "/slides",
-      description: "Create slides",
+      description: "Create or adapt slides",
       icon: <LucidePresentation className="tb-popup-icon" strokeWidth={1.75} />,
       stage: () => stageSlideCreationCommand(slashCommandInputState?.prompt || ""),
     });
     items.push({
       id: "ad",
       command: "/ad",
-      description: "Create ad",
+      description: "Create or adapt an ad",
       icon: <LucideImages className="tb-popup-icon" strokeWidth={1.75} />,
       stage: () => stageAdCreationCommand(slashCommandInputState?.prompt || ""),
     });
@@ -1527,14 +1551,14 @@ export function RunnerChat({
       items.push({
         id: "agent",
         command: "/agent",
-        description: "Create agent",
+        description: "Create or adapt an agent",
         icon: <LucideBot className="tb-popup-icon" strokeWidth={1.75} />,
         stage: () => stageAgentCreationCommand("agent", slashCommandInputState?.prompt || ""),
       });
       items.push({
         id: "team",
         command: "/team",
-        description: "Create team",
+        description: "Create or adapt a team",
         icon: <LucideLayers className="tb-popup-icon" strokeWidth={1.75} />,
         stage: () => stageAgentCreationCommand("team", slashCommandInputState?.prompt || ""),
       });
@@ -1543,21 +1567,21 @@ export function RunnerChat({
       items.push({
         id: "computer",
         command: "/computer",
-        description: "Create computer",
+        description: "Create or adapt a computer",
         icon: <LucideCpu className="tb-popup-icon" strokeWidth={1.75} />,
         stage: () => stageResourceCreationCommand("computer", slashCommandInputState?.prompt || ""),
       });
       items.push({
         id: "app",
         command: "/app",
-        description: "Create app",
+        description: "Create or adapt an app",
         icon: <LucideMonitor className="tb-popup-icon" strokeWidth={1.75} />,
         stage: () => stageResourceCreationCommand("app", slashCommandInputState?.prompt || ""),
       });
       items.push({
         id: "function",
         command: "/function",
-        description: "Create function",
+        description: "Create or adapt a cloud function",
         icon: <LucideCode className="tb-popup-icon" strokeWidth={1.75} />,
         stage: () => stageResourceCreationCommand("function", slashCommandInputState?.prompt || ""),
       });
@@ -1566,7 +1590,7 @@ export function RunnerChat({
       items.push({
         id: "skill",
         command: "/skill",
-        description: "Create skill",
+        description: "Create or adapt a skill",
         icon: <LucideWand2 className="tb-popup-icon" strokeWidth={1.75} />,
         stage: () => stageSkillCreationCommand("skill", slashCommandInputState?.prompt || ""),
       });
@@ -2190,6 +2214,7 @@ export function RunnerChat({
     preserveStagedCommand?: boolean;
   }) {
     setInput("");
+    setSlashPopupView("commands");
     if (!options?.preserveStagedCommand) {
       clearAllStagedCommands();
     }
@@ -3027,7 +3052,7 @@ export function RunnerChat({
                   role="menuitem"
                   onClick={() => openReportIssueModal(turn.id, summaryText)}
                 >
-                  Report issue
+                  Feedback
                 </button>
               </PlatformPopupSurface>
             ) : null}
@@ -3980,6 +4005,113 @@ export function RunnerChat({
     event.target.value = "";
   }
 
+  function handlePromptAttachmentSelect(prompt: RunnerChatPromptAttachment) {
+    const promptName = String(prompt?.name || "Untitled prompt").trim() || "Untitled prompt";
+    const safeFilename = promptName
+      .replace(/[\\/:*?"<>|]+/g, "-")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 120) || "prompt";
+    const filename = /\.md$/i.test(safeFilename) ? safeFilename : `${safeFilename}.md`;
+    const markdown = typeof prompt?.markdown === "string" ? prompt.markdown : "";
+    const file = new File([markdown], filename, { type: "text/markdown" });
+    addReferenceAttachment({
+      file,
+      displayName: promptName,
+      referenceType: "prompt",
+      promptId: String(prompt?.id || "").trim() || undefined,
+      promptVersionId: String(prompt?.currentVersionId || "").trim() || undefined,
+      promptVersionNumber: Number.isFinite(Number(prompt?.currentVersionNumber))
+        ? Number(prompt.currentVersionNumber)
+        : undefined,
+    });
+    closeAllInputPopups();
+    window.requestAnimationFrame(() => textareaRef.current?.focus());
+  }
+
+  function handleThreadAttachmentSelect(thread: RunnerChatThreadAttachment) {
+    const threadTitle = String(thread?.title || "Untitled thread").trim() || "Untitled thread";
+    const safeFilename = threadTitle
+      .replace(/[\\/:*?"<>|]+/g, "-")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 120) || "thread";
+    const filename = /\.md$/i.test(safeFilename) ? safeFilename : `${safeFilename}.md`;
+    const markdown = typeof thread?.markdown === "string" && thread.markdown.trim()
+      ? thread.markdown
+      : [
+          `# ${threadTitle}`,
+          `Thread ID: ${String(thread?.id || "").trim()}`,
+          String(thread?.description || "").trim(),
+        ].filter(Boolean).join("\n\n");
+    const file = new File([markdown], filename, { type: "text/markdown" });
+    addReferenceAttachment({
+      file,
+      displayName: threadTitle,
+      referenceType: "thread",
+      threadId: String(thread?.id || "").trim() || undefined,
+    });
+    closeAllInputPopups();
+    window.requestAnimationFrame(() => textareaRef.current?.focus());
+  }
+
+  function addReferenceAttachment({
+    file,
+    displayName,
+    referenceType,
+    promptId,
+    promptVersionId,
+    promptVersionNumber,
+    threadId,
+  }: {
+    file: File;
+    displayName: string;
+    referenceType: "prompt" | "thread";
+    promptId?: string;
+    promptVersionId?: string;
+    promptVersionNumber?: number;
+    threadId?: string;
+  }) {
+    if (attachments.length >= maxAttachments) {
+      return;
+    }
+    const shouldUpload = Boolean(
+      uploadFiles || mapFileToAttachment || (normalizedBackendUrl && apiKey.trim()),
+    );
+    const attachment: LocalAttachment = {
+      id: generateRunnerClientId(referenceType),
+      file,
+      type: "document",
+      source: "local",
+      referenceType,
+      displayName,
+      promptId,
+      promptVersionId,
+      promptVersionNumber,
+      threadId,
+      runnerAttachmentRole: `${referenceType}_reference`,
+      uploadStatus: shouldUpload ? "uploading" : "idle",
+      uploadError: null,
+    };
+    addAttachments([attachment]);
+    if (shouldUpload) {
+      const uploadPromise = beginAttachmentUpload(attachment);
+      if (uploadPromise) {
+        void uploadPromise.catch(() => undefined);
+      }
+    }
+  }
+
+  function handlePromptsMenuClick() {
+    closeAllInputPopups();
+    onOpenPromptSearch?.(handlePromptAttachmentSelect);
+  }
+
+  function handleThreadsMenuClick() {
+    closeAllInputPopups();
+    onOpenThreadSearch?.(handleThreadAttachmentSelect);
+  }
+
   function handleAttachFilesMenuClick() {
     setActiveInputPopup("attach-files");
   }
@@ -4237,6 +4369,36 @@ export function RunnerChat({
       environmentId: nextEnvironmentId,
     });
     setActiveInputPopup(null);
+  }
+
+  function resetSlashPopupComposer() {
+    setSlashPopupView("commands");
+    setInputSelectionStart(0);
+    clearComposerDraft({ preserveSelectedConnectors: true });
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus({ preventScroll: true });
+    });
+  }
+
+  function handleSlashFeedbackClick() {
+    const reportTurn = [...turns].reverse().find((turn) => Boolean(String(turn.prompt || "").trim()));
+    const targetId = reportTurn?.id || currentThreadId || "composer";
+    const summaryText = reportTurn?.prompt || input.trim() || "Feedback from the composer";
+    resetSlashPopupComposer();
+    openReportIssueModal(targetId, summaryText, {
+      allowUnavailable: true,
+      reportType: "general",
+    });
+  }
+
+  function handleSlashProjectSelect(nextProjectId: string) {
+    selectProject(nextProjectId);
+    resetSlashPopupComposer();
+  }
+
+  function handleSlashReasoningSelect(nextReasoningEffort: RunnerReasoningEffortId) {
+    selectReasoningEffort(nextReasoningEffort);
+    resetSlashPopupComposer();
   }
 
   function handleWorkspaceFileBrowserEnvironmentSelect(nextEnvironmentId: string) {
@@ -4799,6 +4961,7 @@ export function RunnerChat({
 
   function applyComposerInputValue(nextValue: string, selectionStart: number) {
     setInputSelectionStart(selectionStart);
+    setSlashPopupView("commands");
     setDismissedConnectorMentionKey("");
     if (tryAutoStageInput(nextValue, {
       agentCreation: enableAgentCreationCommand,
@@ -6030,12 +6193,18 @@ export function RunnerChat({
       if (shortcutKey === SCHEDULE_SHORTCUT_KEY) {
         event.preventDefault();
         setActiveInputPopup("schedule");
+        return;
+      }
+      if (shortcutKey === PROMPTS_SHORTCUT_KEY && onOpenPromptSearch) {
+        event.preventDefault();
+        handlePromptsMenuClick();
+        return;
       }
     }
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [disabled, isPreparingRun, showFileBrowserModal, useComputerAgentsMode]);
+  }, [disabled, isPreparingRun, onOpenPromptSearch, showFileBrowserModal, useComputerAgentsMode]);
 
   const hasCustomEmptyState = turns.length === 0 && emptyState !== undefined && emptyState !== null;
   const shouldRenderInlineComposerWithEmptyState =
@@ -6890,15 +7059,25 @@ export function RunnerChat({
               className={`task-input-box ${privateMode ? "task-input-box-private" : ""} ${stagedComposerToneValue ? `task-input-box-thread-context task-input-box-thread-context-${stagedComposerToneValue}` : ""}`.trim()}
             >
               {showConnectorMentionPopup && connectorMentionInputState ? (
-                <PlatformPopupSurface
-                  className={`tb-popup-menu-main tb-popup-menu-connector-mention is-placement-${hasCurrentThread ? "top" : "bottom"}`}
-                  animation={hasCurrentThread ? "up-in" : "down-in"}
-                  variant="minimal"
-                  role="listbox"
-                  aria-label="Connectors"
-                  data-connector-mention-placement={hasCurrentThread ? "top" : "bottom"}
+                <RunnerComposerSuggestionPopup
+                  className="tb-popup-menu-connector-mention"
+                  placement={hasCurrentThread ? "top" : "bottom"}
+                  ariaLabel="Connectors"
+                  footer={onOpenPluginsOverview ? (
+                    <button
+                      type="button"
+                      className="tb-connector-mention-manage"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setDismissedConnectorMentionKey(connectorMentionKey);
+                        onOpenPluginsOverview();
+                      }}
+                    >
+                      <LucidePlug strokeWidth={1.7} />
+                      <span>Manage connectors</span>
+                    </button>
+                  ) : null}
                 >
-                  <div className="tb-connector-mention-list">
                     {filteredConnectorOptions.length > 0 ? (
                       filteredConnectorOptions.map((option, index) => {
                         const isSelected = selectedConnectorIds.includes(
@@ -6974,24 +7153,129 @@ export function RunnerChat({
                         No connectors match that input.
                       </div>
                     )}
-                  </div>
-                  {onOpenPluginsOverview ? (
-                    <button
-                      type="button"
-                      className="tb-connector-mention-manage"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => {
-                        setDismissedConnectorMentionKey(
-                          connectorMentionKey,
-                        );
-                        onOpenPluginsOverview();
-                      }}
-                    >
-                      <LucidePlug strokeWidth={1.7} />
-                      <span>Manage connectors</span>
-                    </button>
+                </RunnerComposerSuggestionPopup>
+              ) : null}
+              {showSlashCommandPopup ? (
+                <RunnerComposerSuggestionPopup
+                  className="tb-popup-menu-slash"
+                  placement={hasCurrentThread ? "top" : "bottom"}
+                  ariaLabel="Slash commands"
+                  keyboardNavigation
+                  header={slashPopupView === "commands" ? (
+                    <div className="tb-composer-suggestion-popup-header tb-popup-menu-slash-header">
+                      <div className="tb-popup-menu-slash-actions" role="group" aria-label="Composer actions">
+                        <button
+                          type="button"
+                          className="tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={handleSlashFeedbackClick}
+                        >
+                          <LucideMessageSquareText className="tb-popup-icon" strokeWidth={1.75} />
+                          <span className="tb-popup-label">Feedback</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => setSlashPopupView("projects")}
+                        >
+                          <LucideFolderOpen className="tb-popup-icon" strokeWidth={1.75} />
+                          <span className="tb-popup-label">Work in Project</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => setSlashPopupView("reasoning")}
+                        >
+                          <LucideBrain className="tb-popup-icon" strokeWidth={1.75} />
+                          <span className="tb-popup-label">Reasoning</span>
+                        </button>
+                      </div>
+                      <div className="tb-popup-menu-section-label">Capabilities</div>
+                    </div>
+                  ) : (
+                    <div className="tb-composer-suggestion-popup-header tb-popup-menu-slash-header tb-popup-menu-slash-subheader">
+                      <button
+                        type="button"
+                        className="tb-popup-menu-slash-back"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => setSlashPopupView("commands")}
+                      >
+                        <IconChevronLeft className="tb-popup-icon" />
+                        <span>{slashPopupView === "projects" ? "Projects" : "Reasoning"}</span>
+                      </button>
+                    </div>
+                  )}
+                  emptyState={slashPopupView === "commands" && filteredSlashCommandItems.length === 0 ? (
+                    <div className="tb-popup-menu-slash-empty">
+                      <div className="tb-popup-empty-state">No slash commands match that input.</div>
+                    </div>
                   ) : null}
-                </PlatformPopupSurface>
+                >
+                  {slashPopupView === "commands" ? filteredSlashCommandItems.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className="tb-popup-row tb-popup-row-core-action"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                        }}
+                        onClick={() => {
+                          item.stage();
+                          window.requestAnimationFrame(() => {
+                            textareaRef.current?.focus();
+                          });
+                        }}
+                      >
+                        {item.icon}
+                        <span className="tb-popup-label">{formatRunnerSlashCommandLabel(item.command)}</span>
+                        <span className="tb-popup-value">{item.description}</span>
+                      </button>
+                    )) : slashPopupView === "projects" ? (
+                      orderedProjects.length > 0 ? orderedProjects.map((project) => {
+                        const projectEnvironmentId = getRunnerProjectEnvironmentId(project);
+                        const projectEnvironment = orderedEnvironments.find((environment) => environment.id === projectEnvironmentId);
+                        const isSelected = selectedProjectId === project.id;
+                        return (
+                          <button
+                            key={project.id}
+                            type="button"
+                            className={`tb-popup-row tb-popup-row-core-action ${isSelected ? "is-active" : ""}`.trim()}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => handleSlashProjectSelect(project.id)}
+                          >
+                            <LucideFolderOpen className="tb-popup-icon" strokeWidth={1.75} />
+                            <span className="tb-popup-label">{project.name}</span>
+                            <span className="tb-popup-value">{project.description || projectEnvironment?.name || "Project"}</span>
+                            {isSelected ? <LucideCheck className="tb-popup-check" strokeWidth={1.9} /> : null}
+                          </button>
+                        );
+                      }) : (
+                        <div className="tb-popup-menu-slash-empty">
+                          <div className="tb-popup-empty-state">No projects available.</div>
+                        </div>
+                      )
+                    ) : (
+                      RUNNER_REASONING_EFFORT_OPTIONS.map((option) => {
+                        const isSelected = normalizeRunnerReasoningEffort(effectiveReasoningEffort) === option.id;
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            className={`tb-popup-row tb-popup-row-core-action ${isSelected ? "is-active" : ""}`.trim()}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => handleSlashReasoningSelect(option.id)}
+                          >
+                            <LucideBrain className="tb-popup-icon" strokeWidth={1.75} />
+                            <span className="tb-popup-label">{option.label}</span>
+                            <span className="tb-popup-value">{option.description}</span>
+                            {isSelected ? <LucideCheck className="tb-popup-check" strokeWidth={1.9} /> : null}
+                          </button>
+                        );
+                      })
+                    )}
+                </RunnerComposerSuggestionPopup>
               ) : null}
               {stagedAdCreationCommand ? (
                 <PlatformPopupSurface className="tb-popup-menu-main tb-ad-creation-popup" animation="up-in" role="dialog" aria-label="Create Ad settings">
@@ -7126,36 +7410,6 @@ export function RunnerChat({
                     : undefined
                 }
               >
-                {showSlashCommandPopup ? (
-                  <PlatformPopupSurface className="tb-popup-menu-main tb-popup-menu-slash" animation="up-in">
-                    {filteredSlashCommandItems.length > 0 ? (
-                      filteredSlashCommandItems.map((item) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          className="tb-popup-row tb-popup-row-core-action"
-                          onMouseDown={(event) => {
-                            event.preventDefault();
-                          }}
-                          onClick={() => {
-                            item.stage();
-                            window.requestAnimationFrame(() => {
-                              textareaRef.current?.focus();
-                            });
-                          }}
-                        >
-                          {item.icon}
-                          <span className="tb-popup-label">{item.command}</span>
-                          <span className="tb-popup-value">{item.description}</span>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="tb-popup-menu-slash-empty">
-                        <div className="tb-popup-empty-state">No slash commands match that input.</div>
-                      </div>
-                    )}
-                  </PlatformPopupSurface>
-                ) : null}
                 {hasStagedComposerCommand ? (
                   <span
                     className={`tb-staged-thread-command ${stagedComposerToneValue ? `tb-staged-thread-command-${stagedComposerToneValue}` : ""}`.trim()}
@@ -7253,27 +7507,27 @@ export function RunnerChat({
                           </button>
                           <button
                             type="button"
-                            className="tb-popup-row"
-                            onClick={() => openFileBrowserModal("github")}
+                            className="tb-popup-row tb-popup-row-prompts"
+                            onClick={handlePromptsMenuClick}
+                            disabled={!onOpenPromptSearch}
+                            aria-disabled={!onOpenPromptSearch}
                           >
-                            <IconGithub className="tb-popup-icon tb-popup-brand-icon" />
-                            <span className="tb-popup-label">{githubConnected ? "GitHub" : "Connect GitHub"}</span>
+                            <LucideMessageSquareText className="tb-popup-icon" strokeWidth={1.75} />
+                            <span className="tb-popup-label">Prompts</span>
+                            <span className="tb-popup-shortcut" aria-label="Keyboard shortcut Command P">
+                              <span className="tb-popup-shortcut-key">⌘</span>
+                              <span className="tb-popup-shortcut-key tb-popup-shortcut-key-letter">{PROMPTS_SHORTCUT_KEY.toUpperCase()}</span>
+                            </span>
                           </button>
                           <button
                             type="button"
-                            className="tb-popup-row"
-                            onClick={() => openFileBrowserModal("google-drive")}
+                            className="tb-popup-row tb-popup-row-threads tb-popup-row-divider"
+                            onClick={handleThreadsMenuClick}
+                            disabled={!onOpenThreadSearch}
+                            aria-disabled={!onOpenThreadSearch}
                           >
-                            <IconGoogleDrive className="tb-popup-icon tb-popup-brand-icon" />
-                            <span className="tb-popup-label">{googleDriveConnected ? "Google Drive" : "Connect Google Drive"}</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="tb-popup-row tb-popup-row-divider"
-                            onClick={() => openFileBrowserModal("notion")}
-                          >
-                            <IconNotion className="tb-popup-icon tb-popup-brand-icon" />
-                            <span className="tb-popup-label">{notionConnected ? "Notion" : "Connect Notion"}</span>
+                            <LucideMessageSquare className="tb-popup-icon" strokeWidth={1.75} />
+                            <span className="tb-popup-label">Threads</span>
                           </button>
                           <button
                             type="button"
@@ -7961,7 +8215,7 @@ export function RunnerChat({
 
       {shouldRenderInlineComposerWithEmptyState ? emptyStateAfterComposer : null}
 
-      <RunnerReportIssueDialog
+      <RunnerFeedbackDialog
         open={Boolean(reportIssueTurn)}
         type={reportIssueType}
         message={reportIssueMessage}

@@ -484,13 +484,17 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
               }
             } catch (error) {
               commitProjectOverviewSidebarProjectRecord(baseProject);
+              const normalizedError = error instanceof Error
+                ? error
+                : new Error("Failed to transfer project ownership.");
               if (typeof setProjectSaveState === "function") {
                 setProjectSaveState({
                   isSaving: false,
-                  error: error instanceof Error ? error.message : "Failed to transfer project ownership.",
+                  error: normalizedError.message,
                   message: "",
                 });
               }
+              throw normalizedError;
             }
           }
 
@@ -916,28 +920,46 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                     renderProjectOverviewSidebarRow("Owner", owner.name, {
                       className: "is-owner",
                       editable: true,
-                      content: renderProjectOverviewSidebarSelectControl(
-                        "owner",
-                        selectedOwnerId,
-                        React.createElement("span", { className: "playground-project-overview-sidebar-lead" },
-                          renderProjectOverviewSidebarAvatar(owner.name, owner.avatarUrl),
-                          React.createElement("span", null, owner.name)
-                        ),
-                        {
-                          ariaLabel: "Project owner",
-                          disabled: !canTransferOwnership || projectSaveState?.isSaving,
-                          loading: ownerCandidatesAreLoading,
-                          emptyContent: projectOverviewOwnerCandidatesState?.error || "No eligible organization members.",
-                          options: ownerOptions.map((option) => createProjectOverviewSidebarSelectorOption({
-                            id: option.userId,
-                            label: option.name,
-                            description: option.email,
-                            selected: option.userId === selectedOwnerId,
-                            icon: renderProjectOverviewSidebarAvatar(option.name, option.avatarUrl),
-                            onSelect: () => void transferProjectOverviewOwnership(option),
-                          })),
-                        }
-                      ),
+                      content: React.createElement(PlatformOwnerSelector, {
+                        owner: {
+                          value: selectedOwnerId || "current-owner",
+                          name: owner.name,
+                          email: owner.email || "",
+                          avatarUrl: owner.avatarUrl || "",
+                        },
+                        options: ownerOptions.map((option) => ({
+                          value: option.userId,
+                          name: option.name,
+                          email: option.email || "",
+                          avatarUrl: option.avatarUrl || "",
+                          data: { owner: option },
+                        })),
+                        onTransfer: async (_nextValue, option) => {
+                          if (option?.data?.owner) {
+                            await transferProjectOverviewOwnership(option.data.owner);
+                          }
+                        },
+                        ariaLabel: "Project owner",
+                        resourceLabel: "project",
+                        open: projectOverviewSidebarPropertyPopover === "owner",
+                        onOpenChange: (nextOpen) => {
+                          if (nextOpen) void requestProjectOverviewOwnerCandidates();
+                          if (typeof setProjectOverviewSidebarPropertyPopover === "function") {
+                            setProjectOverviewSidebarPropertyPopover(nextOpen ? "owner" : "");
+                          }
+                        },
+                        disabled: !canTransferOwnership || projectSaveState?.isSaving,
+                        loading: ownerCandidatesAreLoading,
+                        emptyContent: projectOverviewOwnerCandidatesState?.error || "No eligible organization members.",
+                        alignment: "end",
+                        popupAlignment: "right",
+                        fullWidth: true,
+                        popupWidth: "min(280px, calc(100vw - 48px))",
+                        popupMaxHeight: "min(320px, calc(100vh - 120px))",
+                        className: "playground-tasks-detail-central-selector playground-project-overview-sidebar-selector",
+                        triggerClassName: "playground-tasks-detail-central-selector-trigger playground-project-overview-sidebar-selector-trigger",
+                        popupClassName: "playground-tasks-detail-central-selector-popup playground-project-overview-sidebar-selector-popup",
+                      }),
                     }),
                     React.createElement(PlatformButtonSelector, {
                       mode: "split-action",
