@@ -542,10 +542,6 @@ export function TestCaseDetailPage({
           language="json"
           path={`tests/${plan.id}/cases/${testCase.id}/request.json`}
           ariaLabel={activeFileAriaLabel}
-          options={{
-            bracketPairColorization: { enabled: true },
-            guides: { bracketPairs: true, indentation: true },
-          }}
         />
       ) : (
         <textarea

@@ -12,8 +12,12 @@
   paragraph quotes, block quotes, and unboxed preformatted text
 - Bold, italic, underline, list, and ordered-list controls plus a centralized
   insert menu for code, links, optional files, and dividers
-- A slash-anchored, scrollable `/` command menu that exposes the same formatting
-  and insert commands with shortcut hints, filtering, and full keyboard navigation
+- A selection-aware right-click menu for toggling bold, italic, and underline
+  plus persistent left, center, and right paragraph/heading alignment
+- A slash-anchored, scrollable `/` command menu that exposes formatting,
+  alignment, and insert commands with shortcut hints, filtering, and full
+  keyboard navigation; the same menu opens at the caret when unselected editor
+  text is right-clicked
 - Explicit character deletion and deterministic link insertion for both text
   selections and collapsed cursors
 - GFM table insertion from the toolbar, slash menu, or `Shift+Alt+T`, with a

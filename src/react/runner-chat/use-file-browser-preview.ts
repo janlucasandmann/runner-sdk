@@ -7,6 +7,7 @@ import {
 } from "./attachment-api.js";
 import { getBrowserFileType } from "./attachment-utils.js";
 import type { RunnerFileBrowserSource } from "./file-browser-source.js";
+import type { RunnerChatConnectorFetchOptions } from "./public-types.js";
 import {
   buildEnvironmentFileDownloadUrl,
   isBrowserFilePreviewable,
@@ -19,11 +20,15 @@ export interface UseRunnerFileBrowserPreviewOptions {
   apiKey: string;
   backendUrl: string;
   environmentId?: string | null;
-  fetchConnectorContent?: (file: RunnerChatFileNode) => Promise<RunnerChatFetchedFileContent>;
+  fetchConnectorContent?: (
+    file: RunnerChatFileNode,
+    options?: RunnerChatConnectorFetchOptions,
+  ) => Promise<RunnerChatFetchedFileContent>;
   fetchImpl?: typeof fetch;
   item: RunnerChatFileNode | null;
   requestHeaders?: HeadersInit;
   source: RunnerFileBrowserSource;
+  accountId?: string;
 }
 
 export interface RunnerFileBrowserPreviewController {
@@ -41,6 +46,7 @@ export function useRunnerFileBrowserPreview({
   item,
   requestHeaders,
   source,
+  accountId,
 }: UseRunnerFileBrowserPreviewOptions): RunnerFileBrowserPreviewController {
   const [content, setContent] = useState<string | null>(null);
   const [kind, setKind] = useState<RunnerFileBrowserPreviewKind | null>(null);
@@ -72,7 +78,7 @@ export function useRunnerFileBrowserPreview({
       setContent(null);
       setKind(null);
 
-      void fetchConnectorContent(item)
+      void fetchConnectorContent(item, accountId ? { accountId } : undefined)
         .then((payload) => {
           if (cancelled) return;
           if (!payload?.content) {
@@ -185,6 +191,7 @@ export function useRunnerFileBrowserPreview({
     return () => controller.abort();
   }, [
     apiKey,
+    accountId,
     backendUrl,
     environmentId,
     fetchConnectorContent,

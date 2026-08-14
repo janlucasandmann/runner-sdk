@@ -155,7 +155,7 @@ export function createAiosAndAdminRoutes(bindings) {
             return true;
         }
         if (req.method === "GET" && url.pathname === "/api/aios/google-drive/files") {
-            void proxyAiosJsonRequest(req, res, "/api/google-drive/files", "GET");
+            void proxyAiosJsonRequest(req, res, "/api/google-drive/files" + url.search, "GET");
             return true;
         }
         if (req.method === "GET" && url.pathname === "/api/aios/gmail/messages") {
@@ -163,15 +163,15 @@ export function createAiosAndAdminRoutes(bindings) {
             return true;
         }
         if (req.method === "GET" && url.pathname === "/api/aios/onedrive/files") {
-            void proxyAiosJsonRequest(req, res, "/api/onedrive/files", "GET");
+            void proxyAiosJsonRequest(req, res, "/api/onedrive/files" + url.search, "GET");
             return true;
         }
         if (req.method === "GET" && url.pathname === "/api/aios/notion/databases") {
-            void proxyAiosJsonRequest(req, res, "/api/notion/databases", "GET");
+            void proxyAiosJsonRequest(req, res, "/api/notion/databases" + url.search, "GET");
             return true;
         }
         if (req.method === "GET" && url.pathname === "/api/aios/github/repos") {
-            void proxyAiosJsonRequest(req, res, "/api/github/repos", "GET");
+            void proxyAiosJsonRequest(req, res, "/api/github/repos" + url.search, "GET");
             return true;
         }
         if (req.method === "GET" && url.pathname === "/api/real/admin/feedback-summary") {
@@ -188,7 +188,7 @@ export function createAiosAndAdminRoutes(bindings) {
         }
         const githubRepoMatch = url.pathname.match(/^\/api\/aios\/github\/repos\/(.+)$/);
         if (req.method === "GET" && githubRepoMatch) {
-            void proxyAiosJsonRequest(req, res, `/api/github/repos/${githubRepoMatch[1]}`, "GET");
+            void proxyAiosJsonRequest(req, res, `/api/github/repos/${githubRepoMatch[1]}` + url.search, "GET");
             return true;
         }
         if (req.method === "GET" && url.pathname === "/api/aios/google-drive/picker-config") {
@@ -196,11 +196,11 @@ export function createAiosAndAdminRoutes(bindings) {
             return true;
         }
         if (req.method === "GET" && url.pathname === "/api/aios/google-drive/download") {
-            void proxyAiosJsonRequest(req, res, "/api/google-drive/download", "GET");
+            void proxyAiosJsonRequest(req, res, "/api/google-drive/download" + url.search, "GET");
             return true;
         }
         if (req.method === "GET" && url.pathname === "/api/aios/onedrive/download") {
-            void proxyAiosJsonRequest(req, res, "/api/onedrive/download", "GET");
+            void proxyAiosJsonRequest(req, res, "/api/onedrive/download" + url.search, "GET");
             return true;
         }
         if (req.method === "POST" && url.pathname === "/api/aios/google-drive/login") {

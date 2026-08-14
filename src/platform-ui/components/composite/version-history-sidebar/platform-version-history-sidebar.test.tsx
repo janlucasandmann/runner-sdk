@@ -11,6 +11,55 @@ afterEach(() => {
 });
 
 describe("PlatformVersionHistorySidebar", () => {
+  it("uses canonical number fields instead of formatting opaque IDs as v0", async () => {
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      callback(0);
+      return 1;
+    });
+
+    render(
+      <PlatformVersionHistorySidebar
+        open
+        versions={[
+          { id: "prompt_version_opaque_one", number: 1 },
+          { id: "prompt_version_opaque_two", versionNumber: 2 },
+        ]}
+        onClose={() => {}}
+      />,
+    );
+
+    await act(async () => {});
+    expect(screen.getByText("v1")).not.toBeNull();
+    expect(screen.getByText("v2")).not.toBeNull();
+    expect(screen.queryByText("v0")).toBeNull();
+  });
+
+  it("sorts the newest canonical version to the top", async () => {
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      callback(0);
+      return 1;
+    });
+
+    render(
+      <PlatformVersionHistorySidebar
+        open
+        versions={[
+          { id: "one", number: 1 },
+          { id: "three", number: 3 },
+          { id: "two", number: 2 },
+        ]}
+        onClose={() => {}}
+      />,
+    );
+
+    await act(async () => {});
+    const titles = Array.from(
+      document.querySelectorAll(".platform-version-history-sidebar__row-title"),
+      (element) => element.textContent,
+    );
+    expect(titles).toEqual(["v3", "v2", "v1"]);
+  });
+
   it("renders versions and keeps comparison behind an explicit action", async () => {
     const onViewChanges = vi.fn();
     const onSelectVersion = vi.fn();

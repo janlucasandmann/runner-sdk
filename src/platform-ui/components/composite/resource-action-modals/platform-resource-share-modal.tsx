@@ -48,7 +48,7 @@ export function PlatformResourceShareModal({
   open,
   resourceLabel,
   teams,
-  selectionMode = "single",
+  selectionMode = "multiple",
   selectedTeamId = "",
   selectedTeamIds = [],
   onSelectedTeamIdChange = () => {},
@@ -86,7 +86,7 @@ export function PlatformResourceShareModal({
   );
   const initialTeamId =
     (isMultiple ? selectedTeams[0]?.id : selectedTeam?.id) ||
-    teams.find((team) => !team.disabled)?.id ||
+    teams.find((team) => !team.disabled && !team.shared)?.id ||
     "";
   const normalizedResourceLabel = String(resourceLabel || "Resource").trim() || "Resource";
   const shareableSelectedTeams = selectedTeams.filter((team) => !team.shared && !team.disabled);
@@ -95,6 +95,8 @@ export function PlatformResourceShareModal({
     : Boolean(selectedTeam && !selectedTeam.shared && !selectedTeam.disabled && !busy);
 
   const toggleTeam = (teamId: string) => {
+    const team = teams.find((candidate) => candidate.id === teamId);
+    if (!team || team.disabled || team.shared || busy) return;
     const nextTeamIds = new Set(normalizedSelectedTeamIds);
     if (nextTeamIds.has(teamId)) {
       nextTeamIds.delete(teamId);
@@ -144,8 +146,8 @@ export function PlatformResourceShareModal({
           <PlatformPrimaryButton type="submit" size="medium" disabled={!canShare}>
             {busy
               ? "Sharing…"
-              : isMultiple && shareableSelectedTeams.length > 1
-                ? `Share with ${shareableSelectedTeams.length} Teams`
+              : isMultiple
+                ? `Share with ${shareableSelectedTeams.length} ${shareableSelectedTeams.length === 1 ? "Team" : "Teams"}`
                 : "Share"}
           </PlatformPrimaryButton>
         </>
@@ -164,12 +166,18 @@ export function PlatformResourceShareModal({
               ? selectedTeamIdSet.has(team.id)
               : team.id === selectedTeamId;
             const teamMeta = getTeamMeta(team);
+            const unavailable = Boolean(team.disabled || team.shared);
             const TeamRow = isMultiple ? "div" : "label";
             return (
               <TeamRow
                 key={team.id}
-                className={`platform-resource-share-modal__team${selected ? " is-selected" : ""}${team.shared ? " is-shared" : ""}`}
+                className={`platform-resource-share-modal__team${selected ? " is-selected" : ""}${team.shared ? " is-shared" : ""}${unavailable ? " is-disabled" : ""}`}
                 title={team.disabledReason}
+                {...(isMultiple
+                  ? {
+                      onClick: () => toggleTeam(team.id),
+                    }
+                  : {})}
               >
                 {isMultiple ? null : (
                   <input
@@ -186,7 +194,7 @@ export function PlatformResourceShareModal({
                     value={team.id}
                     aria-label={`${team.name} ${teamMeta}`.trim()}
                     checked={selected}
-                    disabled={busy || team.disabled}
+                    disabled={busy || unavailable}
                     onChange={() => onSelectedTeamIdChange(team.id)}
                   />
                 )}
@@ -212,7 +220,7 @@ export function PlatformResourceShareModal({
                     }
                     aria-label={`${selected ? "Deselect" : "Select"} ${team.name}${teamMeta ? `, ${teamMeta}` : ""}`}
                     checked={selected}
-                    disabled={busy || team.disabled || team.shared}
+                    disabled={busy || unavailable}
                     onClick={(event) => {
                       event.stopPropagation();
                       toggleTeam(team.id);

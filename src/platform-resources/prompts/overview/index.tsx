@@ -1,4 +1,6 @@
+import { MessageSquareText, Plus } from "lucide-react";
 import type { ReactNode } from "react";
+import { PlatformEmptyState } from "../../../platform-ui/components/composite/empty-state/index.js";
 import {
   SkillsOverviewGuide,
   SkillsOverviewPage,
@@ -29,11 +31,33 @@ export interface PromptsOverviewPageProps
 /** Catalog shell for saved, versioned Markdown prompts. */
 export function PromptsOverviewPage({
   heroContent = <SkillsOverviewGuide title="Create reusable prompts" />,
+  rows,
+  onCreate,
+  emptyState,
   ...props
 }: PromptsOverviewPageProps) {
+  const promptRows = rows.map((row) => ({
+    ...row,
+    icon: <MessageSquareText width={16} height={16} strokeWidth={1.8} />,
+  }));
+  const promptEmptyState = (
+    <PlatformEmptyState
+      icon={MessageSquareText}
+      title={emptyState || "No prompts available."}
+      description="Create a reusable prompt to keep instructions consistent across threads."
+      primaryAction={{
+        label: "Create prompt",
+        icon: Plus,
+        onClick: onCreate,
+      }}
+    />
+  );
+
   return (
     <SkillsOverviewPage
       {...props}
+      onCreate={onCreate}
+      rows={promptRows}
       mode="custom"
       onModeChange={() => undefined}
       period="month"
@@ -42,7 +66,7 @@ export function PromptsOverviewPage({
       customGroupLabel="Prompts"
       systemGroupLabel="Prompts"
       searchPlaceholder="Search prompts"
-      emptyState="No prompts available."
+      emptyState={promptEmptyState}
       noResultsState="No prompts match this view."
       heroContent={heroContent}
       pageClassName="is-skills is-prompts"

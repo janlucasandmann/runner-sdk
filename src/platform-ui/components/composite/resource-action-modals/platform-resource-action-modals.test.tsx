@@ -22,6 +22,7 @@ describe("resource action modals", () => {
         <PlatformResourceShareModal
           open
           portal={false}
+          selectionMode="single"
           resourceLabel="Test"
           resourceName="Release readiness"
           teams={[
@@ -90,7 +91,6 @@ describe("resource action modals", () => {
           open
           portal={false}
           resourceLabel="File"
-          selectionMode="multiple"
           teams={[
             { id: "team-1", name: "Platform", roleLabel: "Admin" },
             { id: "team-2", name: "Security", roleLabel: "Admin" },
@@ -104,10 +104,36 @@ describe("resource action modals", () => {
     }
 
     render(<MultiShareHarness />);
-    fireEvent.click(screen.getByRole("checkbox", { name: /Select Platform/ }));
+    fireEvent.click(screen.getByText("Platform").closest(".platform-resource-share-modal__team")!);
     fireEvent.click(screen.getByRole("checkbox", { name: /Select Security/ }));
     fireEvent.click(screen.getByRole("button", { name: "Share with 2 Teams" }));
     expect(onShareTeams).toHaveBeenCalledWith(["team-1", "team-2"]);
+  });
+
+  it("keeps teams that already have access unavailable in multi-select mode", () => {
+    const onShareTeams = vi.fn();
+    const { container } = render(
+      <PlatformResourceShareModal
+        open
+        portal={false}
+        resourceLabel="Prompt"
+        teams={[
+          { id: "team-1", name: "Platform", shared: true },
+          { id: "team-2", name: "Security" },
+        ]}
+        selectedTeamIds={[]}
+        onSelectedTeamIdsChange={() => {}}
+        onClose={() => {}}
+        onShareTeams={onShareTeams}
+      />,
+    );
+
+    const sharedTeamCheckbox = screen.getByRole("checkbox", { name: /Select Platform/ });
+    expect((sharedTeamCheckbox as HTMLButtonElement).disabled).toBe(true);
+    expect(
+      container.querySelector(".platform-resource-share-modal__team.is-shared.is-disabled"),
+    ).not.toBeNull();
+    expect(screen.getByText("Already shared")).not.toBeNull();
   });
 
   it("submits a trimmed changed resource name", () => {

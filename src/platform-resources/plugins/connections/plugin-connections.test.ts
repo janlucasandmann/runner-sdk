@@ -333,14 +333,23 @@ describe("plugin connection registry", () => {
     );
 
     await expect(
-      fetchPlatformGitHubRepositoryBranches("computer-agents/platform", { fetch: request }),
+      fetchPlatformGitHubRepositoryBranches("computer-agents/platform", {
+        fetch: request,
+        credentialId: "github-account-1",
+        organizationId: "org-1",
+      }),
     ).resolves.toEqual([
       { name: "main", protected: true },
       { name: "release/next", protected: false },
     ]);
     expect(request).toHaveBeenCalledWith(
-      "/api/aios/github/repos/computer-agents/platform/branches",
-      expect.objectContaining({ method: "GET", credentials: "include", cache: "no-store" }),
+      "/api/aios/github/repos/computer-agents/platform/branches?credentialId=github-account-1&organizationId=org-1",
+      expect.objectContaining({
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+        headers: { "X-Computer-Agents-Organization": "org-1" },
+      }),
     );
   });
 });

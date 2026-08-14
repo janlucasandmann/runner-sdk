@@ -505,6 +505,11 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         color: rgba(255, 214, 92, 0.92);
       }
 
+      .playground-metronome-dynamic-content-popup-shell {
+        display: inline-flex;
+        align-items: center;
+      }
+
       .playground-metronome-node-inspector .playground-metronome-instructions-field .playground-metronome-dynamic-content-trigger.is-active,
       .playground-metronome-node-inspector .playground-metronome-instructions-attachments-trigger.is-active {
         background: rgba(255, 255, 255, 0.1);
@@ -517,19 +522,9 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
       }
 
       .playground-metronome-dynamic-content-picker {
-        position: fixed;
-        width: min(360px, calc(100vw - 24px));
-        max-height: min(520px, calc(100dvh - 28px));
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        border: 0;
-        border-radius: 15px;
-        background: #1A1A1A;
-        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-        z-index: 2147483004;
       }
 
       .playground-metronome-dynamic-content-picker-header {
@@ -581,36 +576,19 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
       }
 
       .playground-metronome-dynamic-content-search {
-        position: relative;
         margin: 10px 14px 12px;
-      }
-
-      .playground-metronome-dynamic-content-search svg {
-        position: absolute;
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: rgba(255, 255, 255, 0.44);
-        pointer-events: none;
-      }
-
-      .playground-metronome-dynamic-content-search input {
-        width: 100%;
-        min-width: 0;
-        height: 34px;
-        border: 0;
+        min-height: 34px;
         border-radius: 10px;
         background: rgba(255, 255, 255, 0.06);
-        color: rgba(255, 255, 255, 0.9);
-        padding: 0 10px 0 32px;
-        font-size: 12px;
-        outline: none;
-        box-sizing: border-box;
       }
 
-      .playground-metronome-dynamic-content-search input:focus {
-        border-color: transparent;
-        background: rgba(255, 255, 255, 0.08);
+      .playground-metronome-dynamic-content-search .platform-popup-search-header__icon {
+        color: rgba(255, 255, 255, 0.44);
+      }
+
+      .playground-metronome-dynamic-content-search .platform-popup-search-header__input {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
       }
 
       .playground-metronome-dynamic-content-list {

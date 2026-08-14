@@ -13,6 +13,12 @@ rename/delete controls.
 editors should compose this row instead of recreating attachment name, metadata,
 hover action, rename, or remove behavior.
 
+`PlatformAttachmentPreview` is the inline attachment surface used by the chat
+composer and thread messages. Select the `composer` or `message` variant and
+provide the domain-neutral icon, type label, metadata, and preview callbacks.
+The message variant renders file metadata below the title while image
+attachments remain media previews.
+
 Callers provide normalized rows and domain callbacks. Preview retrieval,
 authorization headers, persistence, and resource-specific upload targets remain
 outside this component.
@@ -27,6 +33,17 @@ outside this component.
 ```
 
 Import it from `platform-ui/components/composite/attachments`.
+
+```tsx
+<PlatformAttachmentPreview
+  name={attachment.name}
+  typeLabel="Prompt"
+  icon={<PromptIcon />}
+  variant="message"
+  previewable
+  onActivate={openPreview}
+/>
+```
 
 ## Working in this directory
 

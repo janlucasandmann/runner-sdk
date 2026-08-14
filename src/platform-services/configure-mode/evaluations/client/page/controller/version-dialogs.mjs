@@ -239,27 +239,24 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
             return null;
           }
           const diffFiles = buildPlaygroundEvaluationVersionDiffFilesFromSnapshots(leftSource.snapshot, rightSource.snapshot);
-          const compareOptions = sources.map((source) =>
-            React.createElement("option", { key: source.id, value: source.id }, source.label)
-          );
-          const renderCompareSelect = (value, side) =>
-            React.createElement("label", { className: "playground-version-changes-select-shell" },
-              React.createElement("span", { className: "playground-version-changes-select-control-wrap" },
-                React.createElement("select", {
-                  className: "playground-version-changes-select-control",
-                  value,
-                  onChange: (event) => handleEvaluationVersionCompareSourceChange(side, event.target.value),
-                }, compareOptions),
-                React.createElement(ChevronDown, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" })
-              )
-            );
+          const compareOptions = sources.map((source) => ({
+            value: source.id,
+            label: source.label,
+          }));
           return renderPlaygroundVersionChangesPage({
             title: "Changes",
-            compareControls: React.createElement(React.Fragment, null,
-              renderCompareSelect(leftSource.id, "left"),
-              React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
-              renderCompareSelect(rightSource.id, "right")
-            ),
+            leftSelector: {
+              value: leftSource.id,
+              options: compareOptions,
+              onValueChange: (value) => handleEvaluationVersionCompareSourceChange("left", value),
+              ariaLabel: "Select base evaluation version",
+            },
+            rightSelector: {
+              value: rightSource.id,
+              options: compareOptions,
+              onValueChange: (value) => handleEvaluationVersionCompareSourceChange("right", value),
+              ariaLabel: "Select target evaluation version",
+            },
             actions: renderEvaluationPublishSplitButton(),
             files: diffFiles,
             backIcon: ArrowLeft,

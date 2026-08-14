@@ -19,8 +19,14 @@ import { readPlatformCompositionSource } from "../../../../apps/platform/testing
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.foundation, /function normalizePlaygroundImagineTemplateAssets/);
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.templateMedia, /function PlaygroundImagineTemplatePreviewMedia/);
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.controller, /function PlaygroundImaginePage/);
+assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.controller, /onOpenPromptSearch/);
+assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.controller, /onOpenThreadSearch/);
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.templateEditor, /handleCreateTemplateSubmit/);
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.generation, /imagineThreadMetadata/);
+assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.generation, /onOpenPromptSearch/);
+assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.generation, /onOpenThreadSearch/);
+assert.doesNotMatch(IMAGINE_PAGE_SCRIPT_FRAGMENTS.view, /openPromptSearch\(/);
+assert.doesNotMatch(IMAGINE_PAGE_SCRIPT_FRAGMENTS.generation, /openPromptSearch\(/);
 assert.match(IMAGINE_PAGE_SCRIPT, /function PlaygroundImaginePage/);
 assert.match(IMAGINE_PAGE_CSS_FRAGMENTS.foundation, /\.playground-content-body\.is-imagine-page/);
 assert.match(IMAGINE_PAGE_CSS_FRAGMENTS.gallery, /\.playground-imagine-grid-scroll/);
@@ -29,7 +35,10 @@ assert.match(IMAGINE_PAGE_CSS, /\.playground-imagine-composer-wrap/);
 
 assert.match(IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS.foundation, /function normalizePlaygroundImagineTemplatePageAssets/);
 assert.match(IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS.controller, /function PlaygroundImagineTemplatePage/);
+assert.match(IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS.controller, /onOpenPromptSearch/);
+assert.match(IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS.controller, /onOpenThreadSearch/);
 assert.match(IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS.sharing, /handleShareTemplateWithTeam/);
+assert.doesNotMatch(IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS.view, /openPromptSearch\(/);
 assert.match(IMAGINE_TEMPLATE_PAGE_SCRIPT, /function PlaygroundImagineTemplatePage/);
 assert.match(IMAGINE_TEMPLATE_PAGE_CSS_FRAGMENTS.configuration, /\.playground-imagine-template-config/);
 assert.match(IMAGINE_TEMPLATE_PAGE_CSS_FRAGMENTS.detailSurface, /\.playground-imagine-template-action-rail/);

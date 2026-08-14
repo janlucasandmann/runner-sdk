@@ -52,6 +52,7 @@ export function TeamDetailPage({
         tabBarActions={tabBarActions}
         sidebar={sidebar}
         sidebarCollapsed={sidebarCollapsed}
+        sidebarAlignTop
         sidebarAutoCollapseTabs={["resources", "roles"]}
         ariaLabel={ariaLabel}
         tabAriaLabel="Team sections"

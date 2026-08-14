@@ -21,7 +21,7 @@ describe("RunnerFileBrowserDialog", () => {
         onEnvironmentSelect={vi.fn()}
         onSourceChange={vi.fn()}
         connections={{
-          "google-drive": { connected: false },
+          "google-drive": { connected: true },
           notion: { connected: false },
           "one-drive": { connected: false },
           github: { connected: false },
@@ -80,8 +80,12 @@ describe("RunnerFileBrowserDialog", () => {
     );
     expect(screen.getByRole("tab", { name: "All Files" })).toBeTruthy();
     expect(screen.getByText("notes.txt")).toBeTruthy();
-    expect(screen.getByRole("button", { name: /GitLab/ })).toHaveProperty("disabled", true);
-    expect(screen.getByRole("button", { name: /SharePoint/ })).toHaveProperty("disabled", true);
+    expect(screen.getByRole("button", { name: /Google Drive/ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Notion/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /OneDrive/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /GitHub/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /GitLab/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /SharePoint/ })).toBeNull();
     expect(
       screen.queryByText("Computers", { selector: ".tb-file-browser-sidebar-title" }),
     ).toBeNull();
@@ -94,5 +98,69 @@ describe("RunnerFileBrowserDialog", () => {
     fireEvent.click(screen.getByRole("tab", { name: "PDFs" }));
     expect(screen.getByText("report.pdf")).toBeTruthy();
     expect(screen.queryByText("hero.png")).toBeNull();
+  });
+
+  it("renders a default-first connector account selector and resets through its callback", () => {
+    const onAccountChange = vi.fn();
+    render(
+      <RunnerFileBrowserDialog
+        open
+        apiKeyPromptOpen={false}
+        source="github"
+        searchQuery=""
+        onSearchQueryChange={vi.fn()}
+        environments={[]}
+        selectedEnvironmentId={null}
+        onEnvironmentSelect={vi.fn()}
+        onSourceChange={vi.fn()}
+        connections={{
+          "google-drive": { connected: false },
+          notion: { connected: false },
+          "one-drive": { connected: false },
+          github: {
+            connected: true,
+            accounts: [
+              { id: "work", name: "Work", identity: "work@example.com" },
+              { id: "personal", name: "Personal", identity: "me@example.com", isDefault: true },
+            ],
+            selectedAccountId: "personal",
+            onAccountChange,
+          },
+        }}
+        authSource={null}
+        path={[{ id: null, name: "Repositories" }]}
+        historyIndex={0}
+        historyLength={1}
+        onBack={vi.fn()}
+        onForward={vi.fn()}
+        onBreadcrumbSelect={vi.fn()}
+        googleDriveItemCount={0}
+        isGoogleDrivePickerLoading={false}
+        loading={false}
+        error={null}
+        showGoogleDrivePickerPrompt={false}
+        items={[]}
+        renderItem={() => null}
+        previewItem={null}
+        previewContent={null}
+        previewKind={null}
+        isPreviewLoading={false}
+        renderPreviewIcon={() => null}
+        selectedItemCount={0}
+        selectedItemLabel="0 files"
+        isAttaching={false}
+        onAttach={vi.fn()}
+        onPreviewClose={vi.fn()}
+        onClose={vi.fn()}
+        onApiKeyPromptClose={vi.fn()}
+      />,
+    );
+
+    const selector = screen.getByRole("button", { name: "Select GitHub account" });
+    expect(selector.textContent).toContain("me@example.com");
+    fireEvent.click(selector);
+    expect(screen.getByRole("option", { name: /work@example\.com/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole("option", { name: /work@example\.com/i }));
+    expect(onAccountChange).toHaveBeenCalledWith("work");
   });
 });

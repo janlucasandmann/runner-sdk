@@ -32,6 +32,22 @@ export const TEAMS_MEMBER_IDENTITY_SCRIPT = `        function getTeamPageApiErro
           };
         }
 
+        function getTeamPageDescription(team) {
+          const source = team && typeof team === "object" && !Array.isArray(team) ? team : {};
+          const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+            ? source.metadata
+            : {};
+          return String(
+            source.description
+            || source.summary
+            || source.purpose
+            || metadata.description
+            || metadata.summary
+            || metadata.purpose
+            || ""
+          ).replace(/\s+/g, " ").trim();
+        }
+
         function getTeamPageProfileImageUrl(team) {
           const source = team && typeof team === "object" && !Array.isArray(team) ? team : {};
           const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
@@ -58,7 +74,7 @@ export const TEAMS_MEMBER_IDENTITY_SCRIPT = `        function getTeamPageApiErro
           return canRenderAvatarImage(normalizedUrl) ? normalizedUrl : "";
         }
 
-        function buildTeamPageMetadataWithProfileImage(team, profileImageUrl) {
+        function buildTeamPageMetadataWithProfileImage(team, profileImageUrl, description) {
           const source = team && typeof team === "object" && !Array.isArray(team) ? team : {};
           const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
             ? { ...source.metadata }
@@ -83,6 +99,14 @@ export const TEAMS_MEMBER_IDENTITY_SCRIPT = `        function getTeamPageApiErro
             delete metadata.profile_image_url;
             delete metadata.avatarUrl;
             delete metadata.avatar_url;
+          }
+          if (typeof description === "string") {
+            const normalizedDescription = description.replace(/\s+/g, " ").trim();
+            if (normalizedDescription) {
+              metadata.description = normalizedDescription;
+            } else {
+              delete metadata.description;
+            }
           }
           return metadata;
         }

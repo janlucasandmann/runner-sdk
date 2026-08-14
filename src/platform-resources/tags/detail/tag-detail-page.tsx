@@ -38,7 +38,11 @@ import {
   type ConnectionIdentityKind,
 } from "../../shared/connections/connection-identity-icon.js";
 
-export type TagDetailTab = "overview" | "authentication" | "permissions";
+export type TagDetailTab =
+  | "overview"
+  | "authentication"
+  | "agent-triggers"
+  | "permissions";
 
 export interface TagDetailCredentialField {
   id: string;
@@ -102,6 +106,7 @@ export interface TagDetailPageProps {
   authenticationTitle?: ReactNode;
   authenticationEmptyTitle?: ReactNode;
   authenticationEmptyDescription?: ReactNode;
+  agentTriggers?: ReactNode;
   overviewInformation?: readonly TagDetailInformationRow[];
   overviewIncludedItems?: readonly TagDetailIncludedItem[];
   sidebar?: ReactNode;
@@ -114,18 +119,6 @@ export interface TagDetailPageProps {
   sidebarAriaLabel?: string;
   className?: string;
 }
-
-const TAG_DETAIL_TABS = [
-  { id: "overview", label: "Overview" },
-  { id: "authentication", label: "Authentication" },
-  { id: "permissions", label: "Permissions" },
-] as const;
-
-const TAG_DETAIL_SIDEBAR_AUTO_COLLAPSE_TABS = [
-  "overview",
-  "authentication",
-  "permissions",
-] as const;
 
 function ConnectionButton({
   action,
@@ -680,6 +673,7 @@ export function TagDetailPage({
   authenticationTitle = "Credentials available for this connector",
   authenticationEmptyTitle = "No authentication yet",
   authenticationEmptyDescription = "Connect this integration to use its protected data and actions.",
+  agentTriggers,
   overviewInformation = [],
   overviewIncludedItems = [],
   sidebar,
@@ -739,6 +733,22 @@ export function TagDetailPage({
     normalizedCredentials,
   ]);
   const hasCredentials = resolvedCredentials.length > 0;
+  const hasAgentTriggers = agentTriggers !== undefined && agentTriggers !== null;
+  const detailTabs = useMemo<readonly { id: TagDetailTab; label: string }[]>(
+    () => [
+      { id: "overview", label: "Overview" },
+      { id: "authentication", label: "Authentication" },
+      ...(hasAgentTriggers
+        ? [{ id: "agent-triggers" as const, label: "Agent Triggers" }]
+        : []),
+      { id: "permissions", label: "Permissions" },
+    ],
+    [hasAgentTriggers],
+  );
+  const sidebarAutoCollapseTabs = useMemo<readonly TagDetailTab[]>(
+    () => detailTabs.map((tab) => tab.id),
+    [detailTabs],
+  );
 
   useEffect(() => {
     if (!credentialModalOpen) return;
@@ -821,6 +831,8 @@ export function TagDetailPage({
         addCredentialsDisabled={connectionAction?.disabled}
         onCredentialDisconnect={onCredentialDisconnect}
       />
+    ) : activeTab === "agent-triggers" && hasAgentTriggers ? (
+      agentTriggers
     ) : activeTab === "permissions" && permissions ? (
       <section
         className="playground-agents-permissions-section playground-tags-detail-permissions-section"
@@ -857,14 +869,14 @@ export function TagDetailPage({
             />
           ) : undefined
         }
-        tabs={TAG_DETAIL_TABS}
+        tabs={detailTabs}
         activeTab={activeTab}
         onTabChange={onTabChange}
         tabBarActions={tabBarActions}
         sidebarToggle={sidebarToggle}
         sidebar={sidebar}
         sidebarCollapsed={sidebarCollapsed}
-        sidebarAutoCollapseTabs={TAG_DETAIL_SIDEBAR_AUTO_COLLAPSE_TABS}
+        sidebarAutoCollapseTabs={sidebarAutoCollapseTabs}
         ariaLabel={ariaLabel}
         tabAriaLabel="Connector sections"
         sidebarAriaLabel={sidebarAriaLabel}

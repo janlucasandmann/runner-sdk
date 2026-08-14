@@ -154,7 +154,6 @@ export function ApiKeyRevealDialog({ state, onClose, onCopy }: ApiKeyRevealDialo
     <PlatformModal
       open={Boolean(state)}
       title={state?.name || "API Key"}
-      description="Use this key to authenticate SDK and API requests."
       onClose={onClose}
       size="medium"
       className="platform-api-key-management-modal playground-api-key-reveal-modal"
@@ -173,10 +172,16 @@ export function ApiKeyRevealDialog({ state, onClose, onCopy }: ApiKeyRevealDialo
       ) : state?.key ? (
         <>
           <div className="playground-settings-code-row">
-            <code className="playground-settings-code">{state.key}</code>
+            <input
+              type="text"
+              className="playground-settings-code playground-settings-code-input"
+              value={state.key}
+              readOnly
+              aria-label="API key"
+            />
             <button
               type="button"
-              className="playground-settings-icon-button"
+              className="playground-settings-icon-button playground-settings-code-copy"
               onClick={() => void onCopy()}
               aria-label="Copy API key"
             >

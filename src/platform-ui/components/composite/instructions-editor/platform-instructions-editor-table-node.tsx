@@ -166,6 +166,18 @@ function PlatformInstructionsEditorTableNodeView({
       className={`platform-instructions-editor__table-node${selectionState.inside ? " is-focused" : ""}${menuOpen ? " is-menu-open" : ""}`}
       data-platform-table-focused={selectionState.inside || undefined}
       onContextMenu={(event: ReactMouseEvent<HTMLElement>) => {
+        const domSelection =
+          typeof window === "undefined" ? null : window.getSelection();
+        if (
+          domSelection &&
+          !domSelection.isCollapsed &&
+          domSelection.anchorNode &&
+          domSelection.focusNode &&
+          event.currentTarget.contains(domSelection.anchorNode) &&
+          event.currentTarget.contains(domSelection.focusNode)
+        ) {
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
         focusTable();

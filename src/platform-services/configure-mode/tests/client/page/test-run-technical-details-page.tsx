@@ -154,10 +154,6 @@ export function TestRunTechnicalDetailsPage({
           path={activePath}
           ariaLabel={activeAriaLabel}
           readOnly
-          options={{
-            bracketPairColorization: { enabled: true },
-            guides: { bracketPairs: true, indentation: true },
-          }}
         />
       )}
     />

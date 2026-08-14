@@ -1825,6 +1825,7 @@ export function PlatformDataTable<TData>({
           ref: rowMenuRef,
           className: "platform-data-table__floating-menu",
           mode: "fixed",
+          variant: "minimal",
           animation: "down-in",
           role: "menu",
           style: { left: rowMenuPosition.left, top: rowMenuPosition.top },

@@ -30,8 +30,8 @@ export const TEAMS_STATE_PRIMARY_SCRIPT = `        const TEAM_SCOPED_ORGANIZATIO
         const [teamPageSelectedTeamId, setTeamPageSelectedTeamId] = useState("");
         const [teamPageActiveTab, setTeamPageActiveTab] = useState("members");
         const [teamPageDetailSidebarCollapsed, setTeamPageDetailSidebarCollapsed] = useState(false);
+        const [teamPageActionsOpen, setTeamPageActionsOpen] = useState(false);
         const [teamPageSelectedRoleId, setTeamPageSelectedRoleId] = useState("member");
-        const [teamPageRoleMembersPopover, setTeamPageRoleMembersPopover] = useState("");
         const [teamPermissionChartAnimationKey, setTeamPermissionChartAnimationKey] = useState(0);
 	        const [teamPageResourceFilter, setTeamPageResourceFilter] = useState("all");
 	        const [teamPageResourceSearchQuery, setTeamPageResourceSearchQuery] = useState("");
@@ -70,4 +70,8 @@ export const TEAMS_STATE_PRIMARY_SCRIPT = `        const TEAM_SCOPED_ORGANIZATIO
         useEffect(() => {
           writeTeamPageOrganizationId(teamPageOrganizationId);
         }, [teamPageOrganizationId]);
+
+        useEffect(() => {
+          setTeamPageActionsOpen(false);
+        }, [activePage, teamPageSelectedTeamId]);
 `;

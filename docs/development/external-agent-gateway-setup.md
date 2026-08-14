@@ -35,6 +35,13 @@ Generate the encryption key with `openssl rand -base64 32`. The gateway never
 persists a plaintext webhook secret and only returns a generated value during
 installation creation or rotation.
 
+On loopback development origins only, the platform generates this key on first
+use at `.platform-data/external-agent-webhook.key` when no explicit key is
+configured. The file is ignored by Git, created with owner-only permissions,
+and reused across local restarts. Hosted deployments never generate a fallback
+and must provide `EXTERNAL_AGENT_WEBHOOK_ENCRYPTION_KEY` or the platform
+control-plane secret explicitly.
+
 `EXTERNAL_AGENT_STORE_PATH` must be on persistent storage. The bundled adapter
 is a singleton repository. Deployments with more than one server replica must
 inject a shared transactional repository before enabling inbound traffic.

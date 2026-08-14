@@ -733,8 +733,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   border-radius: var(--tb-runner-radius-md);
   border-bottom-right-radius: 3px;
   overflow: hidden;
-  color: white;
-  background: rgba(255, 255, 255, 0.1);
+  color: #000;
+  background: rgba(255, 255, 255, 0.9);
   border: 0;
   font-size: 14px;
   line-height: 1.5;
@@ -1184,6 +1184,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .tb-runner-chat .tb-user-turn-editor {
@@ -1198,6 +1199,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   background: transparent;
   color: white;
   font: inherit;
+  font-weight: 400;
   line-height: 1.5;
 }
 

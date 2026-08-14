@@ -8,6 +8,7 @@ import {
 import { PlatformPopup } from "../../platform-ui/components/composite/popup/index.js";
 import { PlatformCheckbox } from "../../platform-ui/components/ui/checkbox/index.js";
 import { PlatformIconButton } from "../../platform-ui/components/ui/icon-button/index.js";
+import { PlatformSelector } from "../../platform-ui/components/ui/selector/index.js";
 import type { RunnerChatOption } from "./agent-options.js";
 import { getBrowserFileType } from "./attachment-utils.js";
 import type { RunnerFileBrowserSource } from "./file-browser-source.js";
@@ -377,26 +378,31 @@ export function RunnerFileBrowserItem(props: RunnerFileBrowserItemProps) {
         )}
         {isGithubRepoRootRow ? (
           <div className="tb-file-browser-item-branch-slot">
-            <select
-              className="tb-file-browser-item-branch-select"
+            <PlatformSelector
               value={githubSelectedBranch}
-              disabled={isGithubBranchLoading}
-              onFocus={() => {
-                onEnsureBranchesLoaded(githubRepoFullName, effectiveItem.ref);
+              options={githubBranchSelectOptions.map((option) => ({
+                value: option.id,
+                label: option.name,
+              }))}
+              ariaLabel={`Select branch for ${githubRepoFullName}`}
+              alignment="start"
+              popupAlignment="right"
+              fullWidth
+              loading={isGithubBranchLoading}
+              loadingContent="Loading branches..."
+              triggerClassName="tb-file-browser-item-branch-select"
+              popupClassName="tb-file-browser-item-branch-popup"
+              onOpenChange={(open) => {
+                if (open) {
+                  onEnsureBranchesLoaded(githubRepoFullName, effectiveItem.ref);
+                }
               }}
               onClick={(event) => event.stopPropagation()}
-              onMouseDown={(event) => event.stopPropagation()}
-              onChange={(event) => {
-                event.stopPropagation();
-                onBranchChange(effectiveItem, event.target.value);
+              onPointerDown={(event) => event.stopPropagation()}
+              onValueChange={(branch) => {
+                onBranchChange(effectiveItem, branch);
               }}
-            >
-              {githubBranchSelectOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
         ) : (
           <>

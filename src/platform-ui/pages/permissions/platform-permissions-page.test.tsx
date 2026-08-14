@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { PLATFORM_PERMISSION_ACCESS_OPTIONS } from "./permission-model.js";
 import {
   PlatformPermissionsPage,
   PlatformPermissionsSettingsSummary,
 } from "./platform-permissions-page.js";
 import { PlatformRolePermissionsPage } from "./platform-role-permissions-page.js";
-import { PLATFORM_PERMISSION_ACCESS_OPTIONS } from "./permission-model.js";
 
 const rings = [
   {
@@ -154,7 +154,7 @@ describe("PlatformPermissionsPage", () => {
             ring_2: { defaultAccess: "ask_for_permission" },
           },
           actions: {
-            workspace_read: { ringId: "ring_1" },
+            workspace_read: { ringId: "ring_1", access: "read_only" },
           },
         }}
         accessOptions={PLATFORM_PERMISSION_ACCESS_OPTIONS}
@@ -169,6 +169,7 @@ describe("PlatformPermissionsPage", () => {
 
     expect(container.querySelector("[data-platform-permissions-page='true']")).not.toBeNull();
     expect(screen.getByText("Read workspace")).not.toBeNull();
+    expect(screen.getByText("Override").getAttribute("data-platform-label-variant")).toBe("blue");
     expect(screen.queryByText("Invite members")).toBeNull();
     expect(container.querySelectorAll("[data-platform-settings-section-list='true']")).toHaveLength(
       1,
@@ -235,13 +236,70 @@ describe("PlatformPermissionsPage", () => {
     );
 
     const memberRole = screen.getByRole("tab", { name: /Member/ });
-    expect(within(memberRole).getByText("Member").parentElement).toBe(
-      within(memberRole).getByText("3 assigned").parentElement,
-    );
+    expect(within(memberRole).getByText("Member")).not.toBeNull();
+    expect(within(memberRole).queryByText("3 assigned")).toBeNull();
+    expect(within(memberRole).queryByText("Member access")).toBeNull();
+    expect(
+      within(screen.getByRole("tab", { name: /Admin/ })).queryByText("Admin access"),
+    ).toBeNull();
 
     fireEvent.click(screen.getByRole("tab", { name: /Admin/ }));
     expect(onValueChange).toHaveBeenCalledWith("admin");
     expect(screen.getByRole("heading", { name: "Member" })).not.toBeNull();
     expect(screen.getByText("Invite members")).not.toBeNull();
+  });
+
+  it("renders assigned member avatars and opens the shared minimal member popup", async () => {
+    const user = userEvent.setup();
+    render(
+      <PlatformRolePermissionsPage
+        roles={[
+          {
+            id: "member",
+            label: "Member",
+            assignedMembers: [
+              { id: "ada", name: "Ada Lovelace", detail: "ada@example.com", avatarUrl: "/ada.png" },
+              { id: "grace", name: "Grace Hopper", detail: "grace@example.com" },
+            ],
+          },
+          { id: "owner", label: "Owner" },
+        ]}
+        value="member"
+        onValueChange={vi.fn()}
+        permissionSet={{ subjectType: "team_role" }}
+        accessOptions={PLATFORM_PERMISSION_ACCESS_OPTIONS}
+        ringDefinitions={rings}
+        actionDefinitions={actions}
+        subjectType="team_role"
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Member assigned members" });
+    expect(trigger.querySelectorAll("img")).toHaveLength(1);
+    expect(screen.queryByText("2 assigned")).toBeNull();
+
+    await user.click(trigger);
+
+    const popup = screen.getByRole("dialog", { name: "Member members" });
+    expect(popup.closest(".platform-popup-surface")?.classList.contains("is-minimal")).toBe(true);
+    expect(within(popup).getByText("Ada Lovelace")).not.toBeNull();
+    expect(within(popup).getByText("Grace Hopper")).not.toBeNull();
+  });
+
+  it("does not render an assigned-member control for an empty role", () => {
+    render(
+      <PlatformRolePermissionsPage
+        roles={[{ id: "member", label: "Member", assignedMembers: [] }]}
+        value="member"
+        onValueChange={vi.fn()}
+        permissionSet={{ subjectType: "team_role" }}
+        accessOptions={PLATFORM_PERMISSION_ACCESS_OPTIONS}
+        ringDefinitions={rings}
+        actionDefinitions={actions}
+        subjectType="team_role"
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Member assigned members" })).toBeNull();
   });
 });

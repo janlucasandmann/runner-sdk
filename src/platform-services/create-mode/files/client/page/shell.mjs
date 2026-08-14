@@ -45,6 +45,10 @@ export const FILES_PAGE_SHELL_SCRIPT = `
           error: "",
         });
         const [connectorBrowserSearchQuery, setConnectorBrowserSearchQuery] = useState("");
+        const [connectorGithubBranchesByRepoFullName, setConnectorGithubBranchesByRepoFullName] = useState({});
+        const [connectorGithubSelectedBranchesByRepoFullName, setConnectorGithubSelectedBranchesByRepoFullName] = useState({});
+        const [connectorGithubBranchLoadingRepoFullNames, setConnectorGithubBranchLoadingRepoFullNames] = useState([]);
+        const connectorGithubBranchLoadingRepoFullNamesRef = useRef(new Set());
         const [changesViewMode, setChangesViewMode] = useState("timeline");
         const [toolbarPopover, setToolbarPopover] = useState("");
         const [filesToolbarMenuAnimation, setFilesToolbarMenuAnimation] = useState({

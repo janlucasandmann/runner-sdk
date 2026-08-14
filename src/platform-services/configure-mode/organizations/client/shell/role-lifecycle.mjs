@@ -12,20 +12,6 @@ export const ORGANIZATIONS_ROLE_LIFECYCLE_SCRIPT = `	        useEffect(() => {
 	          return () => window.cancelAnimationFrame(frameId);
 	        }, [organizationPageActiveTab, organizationPageSelectedRoleId, organizationPageSelectedOrganizationId]);
 	        useEffect(() => {
-	          if (!organizationPageRoleMembersPopover || typeof document === "undefined") {
-	            return undefined;
-	          }
-	          const handlePointerDown = (event) => {
-	            const target = event.target;
-	            if (target && typeof target.closest === "function" && target.closest(".playground-team-role-assigned-shell")) {
-	              return;
-	            }
-	            setOrganizationPageRoleMembersPopover("");
-	          };
-	          document.addEventListener("mousedown", handlePointerDown);
-	          return () => document.removeEventListener("mousedown", handlePointerDown);
-	        }, [organizationPageRoleMembersPopover]);
-	        useEffect(() => {
 	          setOrganizationResourceToolbarPopover("");
 	          if (organizationPageActiveTab !== "members") {
 	            setOrganizationMemberToolbarPopover("");

@@ -450,36 +450,24 @@
             ) || currentSource;
             if (!leftSource || !rightSource) return null;
             const orderedSources = orderSkillVersionCompareSources(leftSource, rightSource);
-            const options = sources.map((source) =>
-              React.createElement("option", { key: source.id, value: source.id }, source.label)
-            );
-            const renderCompareSelect = (value, side) =>
-              React.createElement("label", { className: "playground-version-changes-select-shell" },
-                React.createElement("span", { className: "playground-version-changes-select-control-wrap" },
-                  React.createElement("select", {
-                    className: "playground-version-changes-select-control",
-                    value,
-                    onChange: (event) =>
-                      handleSkillVersionCompareSourceChange(side, event.target.value),
-                  }, options),
-                  React.createElement(ChevronDown, {
-                    width: 13,
-                    height: 13,
-                    strokeWidth: 1.8,
-                    "aria-hidden": "true",
-                  })
-                )
-              );
+            const options = sources.map((source) => ({
+              value: source.id,
+              label: source.label,
+            }));
             return renderPlaygroundVersionChangesPage({
               title: "Changes",
-              compareControls: React.createElement(React.Fragment, null,
-                renderCompareSelect(orderedSources.leftSource.id, orderedSources.leftStateSide),
-                React.createElement("span", {
-                  className: "playground-version-changes-select-arrow",
-                  "aria-hidden": "true",
-                }, "→"),
-                renderCompareSelect(orderedSources.rightSource.id, orderedSources.rightStateSide)
-              ),
+              leftSelector: {
+                value: orderedSources.leftSource.id,
+                options,
+                onValueChange: (value) => handleSkillVersionCompareSourceChange(orderedSources.leftStateSide, value),
+                ariaLabel: "Select base skill version",
+              },
+              rightSelector: {
+                value: orderedSources.rightSource.id,
+                options,
+                onValueChange: (value) => handleSkillVersionCompareSourceChange(orderedSources.rightStateSide, value),
+                ariaLabel: "Select target skill version",
+              },
               actions,
               files: buildSkillVersionDiffFilesFromSnapshots(
                 orderedSources.leftSource.snapshot,

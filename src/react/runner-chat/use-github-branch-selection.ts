@@ -1,16 +1,22 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { RunnerChatOption } from "./agent-options.js";
 import { createGithubBrowserRepoFolderId } from "./attachment-utils.js";
 import type { RunnerChatFileNode } from "./workspace-files.js";
+import type { RunnerChatConnectorFetchOptions } from "./public-types.js";
 
 export interface UseRunnerGithubBranchSelectionOptions {
+  accountId?: string;
   defaultBranch?: string | null;
-  fetchBranches?: (repoFullName: string) => Promise<RunnerChatOption[]>;
+  fetchBranches?: (
+    repoFullName: string,
+    options?: RunnerChatConnectorFetchOptions,
+  ) => Promise<RunnerChatOption[]>;
   onError?: (message: string) => void;
 }
 
 export function useRunnerGithubBranchSelection({
+  accountId,
   defaultBranch,
   fetchBranches,
   onError,
@@ -23,6 +29,11 @@ export function useRunnerGithubBranchSelection({
   >({});
   const [loadingRepoFullNames, setLoadingRepoFullNames] = useState<string[]>([]);
   const loadingReposRef = useRef(new Set<string>());
+
+  const accountIdRef = useRef(accountId);
+  if (accountIdRef.current !== accountId) {
+    accountIdRef.current = accountId;
+  }
 
   const resolveSelectedBranch = useCallback(
     (repoFullName: string, fallbackRef?: string | null): string => {
@@ -81,12 +92,17 @@ export function useRunnerGithubBranchSelection({
       }
 
       loadingReposRef.current.add(normalizedRepoFullName);
+      const requestAccountId = accountIdRef.current;
       setLoadingRepoFullNames((current) =>
         current.includes(normalizedRepoFullName) ? current : [...current, normalizedRepoFullName],
       );
 
       try {
-        const branches = await fetchBranches(normalizedRepoFullName);
+        const branches = await fetchBranches(
+          normalizedRepoFullName,
+          requestAccountId ? { accountId: requestAccountId } : undefined,
+        );
+        if (accountIdRef.current !== requestAccountId) return;
         setBranchesByRepoFullName((current) => ({
           ...current,
           [normalizedRepoFullName]: branches,
@@ -103,20 +119,33 @@ export function useRunnerGithubBranchSelection({
           );
         }
       } catch (error) {
+        if (accountIdRef.current !== requestAccountId) return;
         onError?.(
           error instanceof Error && error.message
             ? error.message
             : "Failed to load GitHub branches.",
         );
       } finally {
-        loadingReposRef.current.delete(normalizedRepoFullName);
-        setLoadingRepoFullNames((current) =>
-          current.filter((name) => name !== normalizedRepoFullName),
-        );
+        if (accountIdRef.current === requestAccountId) {
+          loadingReposRef.current.delete(normalizedRepoFullName);
+          setLoadingRepoFullNames((current) =>
+            current.filter((name) => name !== normalizedRepoFullName),
+          );
+        }
       }
     },
     [branchesByRepoFullName, fetchBranches, onError, resolveSelectedBranch],
   );
+
+  const previousAccountIdRef = useRef(accountId);
+  useEffect(() => {
+    if (previousAccountIdRef.current === accountId) return;
+    loadingReposRef.current.clear();
+    setBranchesByRepoFullName({});
+    setSelectedBranchByRepoFullName({});
+    setLoadingRepoFullNames([]);
+    previousAccountIdRef.current = accountId;
+  }, [accountId]);
 
   return {
     branchesByRepoFullName,

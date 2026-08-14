@@ -88,6 +88,7 @@ async function requireSuccessfulJson(
 }
 
 export interface PlatformPluginConnectionRequestOptions {
+  credentialId?: string;
   fetch?: PluginFetch;
   signal?: AbortSignal;
   organizationId?: string;
@@ -286,9 +287,18 @@ export async function fetchPlatformGitHubRepositoryBranches(
   options: PlatformPluginConnectionRequestOptions = {},
 ): Promise<PlatformGitHubRepositoryBranch[]> {
   const [owner, repository] = requireGitHubRepositoryFullName(fullName);
-  const path = `/api/aios/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/branches`;
+  const params = new URLSearchParams();
+  const credentialId = String(options.credentialId || "").trim();
+  const organizationId = String(options.organizationId || "").trim();
+  if (credentialId) params.set("credentialId", credentialId);
+  if (organizationId) params.set("organizationId", organizationId);
+  const query = params.toString();
+  const path = `/api/aios/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/branches${query ? `?${query}` : ""}`;
   const response = await (options.fetch || getDefaultFetch())(path, {
     method: "GET",
+    headers: organizationId
+      ? { "X-Computer-Agents-Organization": organizationId }
+      : undefined,
     credentials: "include",
     cache: "no-store",
     signal: options.signal,

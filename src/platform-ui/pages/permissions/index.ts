@@ -78,6 +78,7 @@ export type {
   PlatformPermissionRingPolicy,
   PlatformPermissionResourcePolicy,
   PlatformPermissionRole,
+  PlatformPermissionRoleMember,
   PlatformPermissionRule,
   PlatformPermissionSet,
   PlatformPermissionsOverviewProps,

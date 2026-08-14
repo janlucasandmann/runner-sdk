@@ -274,7 +274,7 @@ export function TestPlanDetailPage({
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const [titleActionsOpen, setTitleActionsOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [selectedShareTeamId, setSelectedShareTeamId] = useState("");
+  const [selectedShareTeamIds, setSelectedShareTeamIds] = useState<string[]>([]);
   const [shareError, setShareError] = useState("");
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [renameError, setRenameError] = useState("");
@@ -318,7 +318,7 @@ export function TestPlanDetailPage({
     setVersionHistoryOpen(false);
     setTitleActionsOpen(false);
     setShareModalOpen(false);
-    setSelectedShareTeamId("");
+    setSelectedShareTeamIds([]);
     setShareError("");
     setRenameModalOpen(false);
     setRenameError("");
@@ -400,12 +400,6 @@ export function TestPlanDetailPage({
     [sharedTeamIds, workspaceTeams],
   );
 
-  useEffect(() => {
-    if (!shareModalOpen || selectedShareTeamId || shareTeams.length === 0) return;
-    const defaultTeam = shareTeams.find((team) => !team.shared && !team.disabled)
-      || shareTeams[0];
-    setSelectedShareTeamId(defaultTeam?.id || "");
-  }, [selectedShareTeamId, shareModalOpen, shareTeams]);
   const lastRun = runs[0] || null;
   const terminalRuns = runs.filter((run) => (
     ["passed", "failed", "completed_with_errors", "cancelled"].includes(run.status)
@@ -655,41 +649,55 @@ export function TestPlanDetailPage({
 
   function openShareModal() {
     onWorkspaceTeamsRequest?.();
-    const defaultTeam = shareTeams.find((team) => !team.shared && !team.disabled)
-      || shareTeams[0]
-      || null;
     setTitleActionsOpen(false);
-    setSelectedShareTeamId(defaultTeam?.id || "");
+    setSelectedShareTeamIds([]);
     setShareError("");
     setShareModalOpen(true);
   }
 
-  async function shareWithTeam(teamId: string) {
-    const team = shareTeams.find((candidate) => candidate.id === teamId);
-    if (!team || team.shared || team.disabled || busyAction || dirty) return;
+  async function shareWithTeams(teamIds: string[]) {
+    if (busyAction || dirty) return;
+    const requestedTeamIds = new Set(
+      teamIds.map((teamId) => String(teamId || "").trim()).filter(Boolean),
+    );
+    const teamsToShare = shareTeams.filter((team) => (
+      requestedTeamIds.has(team.id) && !team.shared && !team.disabled
+    ));
+    if (teamsToShare.length === 0) {
+      setShareError("Choose at least one team first.");
+      return;
+    }
     setBusyAction("share");
     setShareError("");
-    let createdShareId = "";
+    const createdShares: Array<{ teamId: string; shareId: string }> = [];
     try {
       const metadata = asRecord(plan.metadata);
-      const withTeam = buildPlatformTeamAccessMetadata(
-        metadata,
-        team.id,
-        true,
-        "test_plan_team_role",
-      );
-      const teamRolePermissionSets = asRecord(withTeam.teamRolePermissionSets);
-      const share = await api.addTeamShare(team.id, plan.id, {
-        permissionSets: asRecord(teamRolePermissionSets[team.id]),
+      let nextMetadata = { ...metadata };
+      for (const team of teamsToShare) {
+        nextMetadata = buildPlatformTeamAccessMetadata(
+          nextMetadata,
+          team.id,
+          true,
+          "test_plan_team_role",
+        );
+      }
+      const teamRolePermissionSets = asRecord(nextMetadata.teamRolePermissionSets);
+      for (const team of teamsToShare) {
+        const share = await api.addTeamShare(team.id, plan.id, {
+          permissionSets: asRecord(teamRolePermissionSets[team.id]),
+        });
+        const shareId = String(share.id || "").trim();
+        if (!shareId) throw new Error(`The team share for ${team.name} did not return an ID.`);
+        createdShares.push({ teamId: team.id, shareId });
+      }
+      const nextShareIds = { ...asRecord(metadata.teamAccessShareIds) };
+      createdShares.forEach(({ teamId, shareId }) => {
+        nextShareIds[teamId] = shareId;
       });
-      createdShareId = String(share.id || "").trim();
       const updated = await api.updatePlan(plan.id, {
         metadata: {
-          ...withTeam,
-          teamAccessShareIds: {
-            ...asRecord(metadata.teamAccessShareIds),
-            [team.id]: createdShareId,
-          },
+          ...nextMetadata,
+          teamAccessShareIds: nextShareIds,
         },
       } as Partial<TestPlan>);
       onPlanChange({
@@ -698,13 +706,14 @@ export function TestPlanDetailPage({
         versions: plan.versions,
         runs: plan.runs,
       });
+      setSelectedShareTeamIds([]);
       setShareModalOpen(false);
     } catch (nextError) {
-      if (createdShareId) {
-        await api.removeTeamShare(team.id, createdShareId).catch(() => undefined);
-      }
+      await Promise.all(createdShares.map(({ teamId, shareId }) => (
+        api.removeTeamShare(teamId, shareId).catch(() => undefined)
+      )));
       setShareError(
-        nextError instanceof Error ? nextError.message : "Failed to share the test with the team.",
+        nextError instanceof Error ? nextError.message : "Failed to share the test with the selected teams.",
       );
     } finally {
       setBusyAction("");
@@ -1540,12 +1549,13 @@ export function TestPlanDetailPage({
         resourceName={plan.name}
         teams={shareTeams}
         loading={workspaceTeamsLoading}
-        selectedTeamId={selectedShareTeamId}
-        onSelectedTeamIdChange={setSelectedShareTeamId}
+        selectionMode="multiple"
+        selectedTeamIds={selectedShareTeamIds}
+        onSelectedTeamIdsChange={setSelectedShareTeamIds}
         onClose={() => {
           if (busyAction !== "share") setShareModalOpen(false);
         }}
-        onShare={shareWithTeam}
+        onShareTeams={shareWithTeams}
         busy={busyAction === "share"}
         error={shareError}
         emptyMessage={workspaceTeamsRequiresPlan

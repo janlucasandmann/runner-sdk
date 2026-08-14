@@ -200,6 +200,13 @@ export const TagDetailPage = lazyNamed(
   () => import("../../platform-resources/tags/detail/tag-detail-page.js"),
   "TagDetailPage",
 );
+export const ExternalAgentTriggersPage = lazyNamed(
+  () =>
+    import(
+      "../../platform-resources/plugins/external-agent-triggers/external-agent-triggers-page.js"
+    ),
+  "ExternalAgentTriggersPage",
+);
 export const ConfigureHomeOverviewPage = lazyNamed(
   () =>
     import(

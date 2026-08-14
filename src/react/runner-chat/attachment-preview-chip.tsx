@@ -2,8 +2,11 @@ import {
   LoaderCircle as LucideLoaderCircle,
   MessageSquare as LucideMessageSquare,
   MessageSquareText as LucideMessageSquareText,
-  X as LucideX,
 } from "lucide-react";
+import {
+  PlatformAttachmentPreview,
+  type PlatformAttachmentPreviewVariant,
+} from "../../platform-ui/components/composite/attachments/index.js";
 import { RunnerImagePreviewSurface } from "../runner-image-preview-surface.js";
 import {
   LazyMediaPreviewMount,
@@ -43,6 +46,7 @@ interface RunnerAttachmentPreviewChipProps {
   onPreview?: (attachment: RunnerTurnAttachment) => void;
   onRemove?: () => void;
   removable?: boolean;
+  variant?: PlatformAttachmentPreviewVariant;
 }
 
 export function RunnerAttachmentPreviewChip({
@@ -53,6 +57,7 @@ export function RunnerAttachmentPreviewChip({
   onPreview,
   onRemove,
   removable = false,
+  variant = "composer",
 }: RunnerAttachmentPreviewChipProps) {
   const filename = getAttachmentDisplayName(attachment);
   const githubBranch = isGithubAttachmentSelection(attachment)
@@ -64,7 +69,6 @@ export function RunnerAttachmentPreviewChip({
   const referenceType = attachment.referenceType;
   const isPromptReference = referenceType === "prompt";
   const isThreadReference = referenceType === "thread";
-  const isReference = isPromptReference || isThreadReference;
   const isEmailContextAttachment = isRunnerEmailContextAttachment(attachment);
   const isUploading = attachment.uploadStatus === "uploading";
   const isAttachmentPreviewable =
@@ -72,7 +76,6 @@ export function RunnerAttachmentPreviewChip({
     !removable &&
     !isLocalAttachmentRecord(attachment) &&
     isAttachmentDocumentPreviewable(attachment);
-  const isDocumentPreviewable = !isImage && isAttachmentPreviewable;
   const isImagePreviewable = isImage && isAttachmentPreviewable;
   const isDocumentPreviewActive =
     isAttachmentPreviewable && activePreviewAttachmentId === attachment.id;
@@ -92,33 +95,18 @@ export function RunnerAttachmentPreviewChip({
 
   function renderAttachmentFileIcon() {
     if (isPromptReference) {
-      return (
-        <LucideMessageSquareText
-          className="runner-attachment-file-reference-icon runner-attachment-file-reference-icon-prompt"
-          strokeWidth={1.8}
-        />
-      );
+      return <LucideMessageSquareText strokeWidth={1.8} />;
     }
     if (isThreadReference) {
-      return (
-        <LucideMessageSquare
-          className="runner-attachment-file-reference-icon runner-attachment-file-reference-icon-thread"
-          strokeWidth={1.8}
-        />
-      );
+      return <LucideMessageSquare strokeWidth={1.8} />;
     }
     if (isUploading) {
       return (
-        <LucideLoaderCircle
-          className="runner-attachment-file-upload-indicator tb-context-action-notice-icon-spinner"
-          strokeWidth={1.9}
-        />
+        <LucideLoaderCircle className="tb-context-action-notice-icon-spinner" strokeWidth={1.9} />
       );
     }
     if (isGithubAttachment) {
-      return (
-        <IconGithub className="runner-attachment-file-brand-icon runner-attachment-file-brand-icon-github" />
-      );
+      return <IconGithub />;
     }
     if (isEmailContextAttachment) {
       return (
@@ -127,132 +115,76 @@ export function RunnerAttachmentPreviewChip({
           alt=""
           aria-hidden="true"
           draggable={false}
-          className="runner-attachment-file-icon runner-attachment-file-email-icon"
         />
       );
     }
-    return (
-      <img
-        src={RUNNER_TEXT_FILE_ICON_URL}
-        alt=""
-        aria-hidden="true"
-        draggable={false}
-        className="runner-attachment-file-icon"
-      />
-    );
+    return <img src={RUNNER_TEXT_FILE_ICON_URL} alt="" aria-hidden="true" draggable={false} />;
   }
 
-  return (
-    <div
-      className={`runner-attachment ${isImage ? "runner-attachment-image" : "runner-attachment-file"} ${isGithubAttachment ? "runner-attachment-github" : ""} ${isReference ? `runner-attachment-reference runner-attachment-reference-${referenceType}` : ""} ${isUploading ? "runner-attachment-uploading" : ""} ${removable ? "runner-attachment-removable" : "runner-attachment-readonly"} ${isAttachmentPreviewable ? "runner-attachment-document-previewable" : ""} ${isDocumentPreviewActive ? "runner-attachment-document-active" : ""}`.trim()}
+  const attachmentTypeLabel = isPromptReference
+    ? "Prompt"
+    : isThreadReference
+      ? "Thread"
+      : isEmailContextAttachment
+        ? "Email"
+        : isGithubAttachment && attachment.githubSelectionType === "repo"
+          ? "Repository"
+          : "File";
+  const branchMetadata = githubBranch ? <span title={githubBranch}>{githubBranch}</span> : null;
+  const imageContent = previewUrl ? (
+    <LazyMediaPreviewMount
+      mediaKey={`${attachment.id}:${previewUrl}`}
+      className="platform-attachment-preview__image-lazy-preview"
+      placeholder={
+        <span className="platform-attachment-preview__image-placeholder" aria-hidden="true">
+          <RunnerLazyMediaPreviewLoader dotSize={3} gap={2} />
+        </span>
+      }
     >
-      {isImage ? (
-        <>
-          <span className="runner-attachment-image-frame">
-            {previewUrl ? (
-              <LazyMediaPreviewMount
-                mediaKey={`${attachment.id}:${previewUrl}`}
-                className="runner-attachment-image-lazy-preview"
-                placeholder={
-                  <span className="runner-attachment-image-placeholder" aria-hidden="true">
-                    <RunnerLazyMediaPreviewLoader dotSize={3} gap={2} />
-                  </span>
-                }
-              >
-                <RunnerImagePreviewSurface
-                  src={previewUrl}
-                  alt={filename}
-                  mimeType={
-                    isLocalAttachmentRecord(attachment) ? attachment.file.type : attachment.mimeType
-                  }
-                  className={`runner-attachment-image-button ${previewUrl && isImagePreviewable ? "is-clickable" : ""}`.trim()}
-                  imageClassName="runner-attachment-image-preview"
-                  fetchHeaders={imageFetchHeaders}
-                  loadStrategy="immediate"
-                  interactive={Boolean(previewUrl && isImagePreviewable)}
-                  onActivate={previewUrl && isImagePreviewable ? openAttachmentPreview : undefined}
-                />
-              </LazyMediaPreviewMount>
-            ) : (
-              <span className="runner-attachment-image-placeholder" aria-hidden="true">
-                <img src={RUNNER_IMAGE_FILE_ICON_URL} alt="" aria-hidden="true" draggable={false} />
-              </span>
-            )}
-            {isUploading ? (
-              <span className="runner-attachment-upload-indicator" aria-hidden="true">
-                <LucideLoaderCircle
-                  className="runner-attachment-upload-indicator-icon tb-context-action-notice-icon-spinner"
-                  strokeWidth={1.9}
-                />
-              </span>
-            ) : null}
+      <RunnerImagePreviewSurface
+        src={previewUrl}
+        alt={filename}
+        mimeType={isLocalAttachmentRecord(attachment) ? attachment.file.type : attachment.mimeType}
+        className={`platform-attachment-preview__image-button ${previewUrl && isImagePreviewable ? "is-clickable" : ""}`.trim()}
+        imageClassName="platform-attachment-preview__image"
+        fetchHeaders={imageFetchHeaders}
+        loadStrategy="immediate"
+        interactive={Boolean(previewUrl && isImagePreviewable)}
+        onActivate={previewUrl && isImagePreviewable ? openAttachmentPreview : undefined}
+      />
+    </LazyMediaPreviewMount>
+  ) : (
+    <span className="platform-attachment-preview__image-placeholder" aria-hidden="true">
+      <img src={RUNNER_IMAGE_FILE_ICON_URL} alt="" aria-hidden="true" draggable={false} />
+    </span>
+  );
+
+  return (
+    <PlatformAttachmentPreview
+      name={filename}
+      typeLabel={attachmentTypeLabel}
+      metadata={branchMetadata}
+      icon={renderAttachmentFileIcon()}
+      imageContent={imageContent}
+      uploadingOverlay={
+        isUploading ? (
+          <span className="platform-attachment-preview__upload-indicator" aria-hidden="true">
+            <LucideLoaderCircle
+              className="tb-context-action-notice-icon-spinner"
+              strokeWidth={1.9}
+            />
           </span>
-          {removable && onRemove ? (
-            <button
-              type="button"
-              className="runner-attachment-remove runner-attachment-remove-image"
-              onClick={(event) => {
-                event.stopPropagation();
-                onRemove();
-              }}
-              aria-label={`Remove ${filename}`}
-            >
-              <LucideX className="runner-attachment-remove-icon" strokeWidth={2} />
-            </button>
-          ) : null}
-        </>
-      ) : (
-        <>
-          {isDocumentPreviewable ? (
-            <button
-              type="button"
-              className="runner-attachment-file-button"
-              onClick={openAttachmentPreview}
-              aria-label={`Preview ${filename}`}
-            >
-              <span className="runner-attachment-file-icon-slot" aria-hidden="true">
-                {renderAttachmentFileIcon()}
-              </span>
-              <div className="runner-attachment-file-copy">
-                <div className="runner-attachment-file-name" title={filename}>
-                  {filename}
-                </div>
-                {githubBranch ? (
-                  <span className="runner-attachment-file-branch" title={githubBranch}>
-                    {githubBranch}
-                  </span>
-                ) : null}
-              </div>
-            </button>
-          ) : (
-            <>
-              <span className="runner-attachment-file-icon-slot" aria-hidden="true">
-                {renderAttachmentFileIcon()}
-              </span>
-              <div className="runner-attachment-file-copy">
-                <div className="runner-attachment-file-name" title={filename}>
-                  {filename}
-                </div>
-                {githubBranch ? (
-                  <span className="runner-attachment-file-branch" title={githubBranch}>
-                    {githubBranch}
-                  </span>
-                ) : null}
-              </div>
-            </>
-          )}
-          {removable && onRemove ? (
-            <button
-              type="button"
-              className="runner-attachment-remove runner-attachment-remove-file"
-              onClick={onRemove}
-              aria-label={`Remove ${filename}`}
-            >
-              <LucideX className="runner-attachment-remove-icon" strokeWidth={2} />
-            </button>
-          ) : null}
-        </>
-      )}
-    </div>
+        ) : null
+      }
+      variant={variant}
+      isImage={isImage}
+      previewable={isAttachmentPreviewable}
+      active={isDocumentPreviewActive}
+      uploading={isUploading}
+      removable={removable}
+      onActivate={openAttachmentPreview}
+      onRemove={onRemove}
+      className={isGithubAttachment ? "platform-attachment-preview--github" : undefined}
+    />
   );
 }

@@ -121,15 +121,66 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
           const projectName = readMetronomeWorkflowProjectName(workflow);
           const metadata = buildMetronomeWorkflowProjectMetadata(workflow);
           const creator = normalizeMetronomeWorkflowCreator(workflow, metadata);
-          const userId = String(
-            workflow.userId
-            || workflow.user_id
-            || workflow.ownerUserId
+          const rawOwner = workflow.owner && typeof workflow.owner === "object" && !Array.isArray(workflow.owner)
+            ? workflow.owner
+            : metadata.owner && typeof metadata.owner === "object" && !Array.isArray(metadata.owner)
+              ? metadata.owner
+              : {};
+          const ownerUserId = String(
+            workflow.ownerUserId
             || workflow.owner_user_id
-            || metadata.userId
-            || metadata.user_id
+            || workflow.userId
+            || workflow.user_id
             || metadata.ownerUserId
             || metadata.owner_user_id
+            || metadata.userId
+            || metadata.user_id
+            || rawOwner.userId
+            || rawOwner.user_id
+            || rawOwner.id
+            || ""
+          ).trim();
+          const ownerName = String(
+            workflow.ownerName
+            || workflow.owner_name
+            || metadata.ownerName
+            || metadata.owner_name
+            || rawOwner.name
+            || rawOwner.displayName
+            || rawOwner.display_name
+            || ""
+          ).trim();
+          const ownerEmail = String(
+            workflow.ownerEmail
+            || workflow.owner_email
+            || metadata.ownerEmail
+            || metadata.owner_email
+            || rawOwner.email
+            || ""
+          ).trim().toLowerCase();
+          const ownerAvatarUrl = String(
+            workflow.ownerAvatarUrl
+            || workflow.owner_avatar_url
+            || metadata.ownerAvatarUrl
+            || metadata.owner_avatar_url
+            || rawOwner.avatarUrl
+            || rawOwner.avatar_url
+            || rawOwner.photoURL
+            || rawOwner.photoUrl
+            || ""
+          ).trim();
+          const owner = ownerUserId || ownerName || ownerEmail
+            ? {
+                userId: ownerUserId,
+                name: ownerName || ownerEmail || "Workflow owner",
+                email: ownerEmail,
+                avatarUrl: ownerAvatarUrl,
+              }
+            : null;
+          const userId = String(
+            ownerUserId
+            || workflow.ownerUserId
+            || workflow.owner_user_id
             || creator?.userId
             || ""
           ).trim();
@@ -195,6 +246,12 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
             runsToday: Number(workflow.runsToday || workflow.runs_today || 0) || 0,
             waitingApprovals: Number(workflow.waitingApprovals || workflow.waiting_approvals || 0) || 0,
             userId,
+            ownerUserId,
+            ownerName,
+            ownerEmail,
+            ownerAvatarUrl,
+            ...(owner ? { owner } : {}),
+            canTransferOwnership: workflow.canTransferOwnership === true || workflow.can_transfer_ownership === true,
             projectId,
             projectName,
             ...(creator ? { creator } : {}),
@@ -202,7 +259,16 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
             metadata: {
               ...metadata,
               ...buildMetronomeWorkflowCreatorMetadata(creator),
-              ...(userId ? { userId, user_id: userId, ownerUserId: userId, owner_user_id: userId } : {}),
+              ...(ownerUserId ? {
+                userId: ownerUserId,
+                user_id: ownerUserId,
+                ownerUserId,
+                owner_user_id: ownerUserId,
+                ownerName,
+                ownerEmail,
+                ownerAvatarUrl,
+                owner,
+              } : {}),
               ...(wallpaperId ? { wallpaperId, workflowWallpaperId: wallpaperId } : {}),
               deployments,
               metronomeDeployments: deployments,
@@ -432,11 +498,17 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
           const baseWorkflow = normalizeMetronomeWorkflow(workflow || {});
           const deployments = normalizeMetronomeDeployments(versions);
           const previousSelectedId = readMetronomeSelectedDeploymentId(baseWorkflow);
-          const selectedDeployment = deployments.find((deployment) => deployment.id === String(preferredSelectedId || "").trim())
-            || deployments.find((deployment) => deployment.id === previousSelectedId)
-            || deployments.find((deployment) => deployment.status === "active")
-            || deployments[0]
-            || null;
+          const explicitPreferredId = String(preferredSelectedId || "").trim();
+          const selectedDeployment = (
+            explicitPreferredId
+              ? deployments.find((deployment) => deployment.id === explicitPreferredId) || null
+              : null
+          ) || resolveMetronomeVersionGraphBase(
+            deployments,
+            baseWorkflow.nodes,
+            baseWorkflow.edges,
+            previousSelectedId
+          );
           const activeDeployment = deployments.find((deployment) => deployment.status === "active")
             || deployments.find((deployment) => deployment.id === String(baseWorkflow.activeDeploymentId || baseWorkflow.metadata?.activeDeploymentId || "").trim())
             || null;
@@ -454,11 +526,26 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
             restored_from_deployment_version: selectedDeployment?.version || 0,
             ...(activeDeployment?.publishedAt ? { publishedAt: activeDeployment.publishedAt, published_at: activeDeployment.publishedAt } : {}),
           };
-          const selectedNodes = selectedDeployment && Array.isArray(selectedDeployment.nodes) && selectedDeployment.nodes.length
-            ? selectedDeployment.nodes
+          // A deployment is one atomic graph. Falling back nodes and edges
+          // independently can create a hybrid graph that never existed (most
+          // visibly when a valid version intentionally has zero edges).
+          const selectedDefinition = selectedDeployment?.definition
+            && typeof selectedDeployment.definition === "object"
+            ? selectedDeployment.definition
+            : {};
+          const selectedNodes = selectedDeployment
+            ? (
+                Array.isArray(selectedDeployment.nodes)
+                  ? selectedDeployment.nodes
+                  : (Array.isArray(selectedDefinition.nodes) ? selectedDefinition.nodes : [])
+              )
             : baseWorkflow.nodes;
-          const selectedEdges = selectedDeployment && Array.isArray(selectedDeployment.edges) && selectedDeployment.edges.length
-            ? selectedDeployment.edges
+          const selectedEdges = selectedDeployment
+            ? (
+                Array.isArray(selectedDeployment.edges)
+                  ? selectedDeployment.edges
+                  : (Array.isArray(selectedDefinition.edges) ? selectedDefinition.edges : [])
+              )
             : baseWorkflow.edges;
           return normalizeMetronomeWorkflow({
             ...baseWorkflow,
@@ -642,6 +729,52 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
                 ? data.workflow
                 : data;
           return normalizeMetronomeWorkflow(rawWorkflow);
+        }
+
+        async function fetchMetronomeOwnerCandidatesApi(workflowId, options = {}) {
+          const normalizedWorkflowId = String(workflowId || "").trim();
+          if (!normalizedWorkflowId) return [];
+          const response = await fetch(
+            getMetronomeApiBaseUrl(options) + "/metronomes/" + encodeURIComponent(normalizedWorkflowId) + "/owner-candidates",
+            {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: buildMetronomeApiHeaders(options),
+            }
+          );
+          const data = await readMetronomeApiJson(response, "Failed to load workflow owners");
+          return (Array.isArray(data?.data) ? data.data : [])
+            .map((candidate) => {
+              const userId = String(candidate?.userId || candidate?.user_id || candidate?.id || "").trim();
+              if (!userId) return null;
+              return {
+                userId,
+                name: String(candidate?.name || candidate?.displayName || candidate?.email || "Organization member").trim(),
+                email: String(candidate?.email || "").trim().toLowerCase(),
+                avatarUrl: String(candidate?.avatarUrl || candidate?.avatar_url || candidate?.photoURL || candidate?.photoUrl || "").trim(),
+              };
+            })
+            .filter(Boolean);
+        }
+
+        async function transferMetronomeWorkflowOwnershipApi(workflowId, ownerUserId, options = {}) {
+          const normalizedWorkflowId = String(workflowId || "").trim();
+          const normalizedOwnerUserId = String(ownerUserId || "").trim();
+          if (!normalizedWorkflowId || !normalizedOwnerUserId) {
+            throw new Error("Workflow and owner are required.");
+          }
+          const response = await fetch(
+            getMetronomeApiBaseUrl(options) + "/metronomes/" + encodeURIComponent(normalizedWorkflowId) + "/owner",
+            {
+              method: "PATCH",
+              credentials: "include",
+              headers: buildMetronomeApiHeaders(options, { "Content-Type": "application/json" }),
+              body: JSON.stringify({ ownerUserId: normalizedOwnerUserId }),
+            }
+          );
+          const data = await readMetronomeApiJson(response, "Failed to transfer workflow ownership");
+          return normalizeMetronomeWorkflow(data?.data || data?.workflow || data);
         }
 
         async function fetchMetronomeWorkflowWithGraphFromApi(workflowId, preferredSelectedVersionId = "") {

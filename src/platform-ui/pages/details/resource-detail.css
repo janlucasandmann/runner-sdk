@@ -19,6 +19,26 @@
 .resource-detail-page.is-sidebar-empty { grid-template-columns: minmax(0, 1fr); }
 .resource-detail-page.is-sidebar-collapsed { grid-template-columns: minmax(0, 1fr) minmax(0, 0); column-gap: 0; }
 
+.resource-detail-page.is-sidebar-top-aligned:not(.has-tabs) {
+  grid-template-areas:
+    "header sidebar"
+    "content sidebar";
+}
+
+.resource-detail-page.is-sidebar-top-aligned:not(.has-tabs) > .resource-detail-page__header {
+  grid-area: header;
+  grid-column: auto;
+}
+
+.resource-detail-page.is-sidebar-top-aligned:not(.has-tabs) > .resource-detail-page__content {
+  grid-area: content;
+}
+
+.resource-detail-page.is-sidebar-top-aligned:not(.has-tabs) > .platform-detail-sidebar {
+  grid-area: sidebar;
+  grid-row: 1 / -1;
+}
+
 .resource-detail-page__header,
 .resource-detail-page > .platform-detail-tab-bar {
   grid-column: 1 / -1;
@@ -83,6 +103,40 @@
   font-size: 13px;
   line-height: 1.45;
   font-weight: 400;
+}
+
+.platform-service-detail-identity__title-input,
+.platform-service-detail-identity__description-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.96);
+  font-family: inherit;
+}
+
+.platform-service-detail-identity__title-input {
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.platform-service-detail-identity__description-input {
+  max-width: 620px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.platform-service-detail-identity__title-input::placeholder,
+.platform-service-detail-identity__description-input::placeholder {
+  color: rgba(255, 255, 255, 0.42);
+  opacity: 1;
 }
 
 .resource-detail-page__tab-bar-actions {
@@ -399,6 +453,17 @@
   .resource-detail-page,
   .resource-detail-page.is-sidebar-collapsed { grid-template-columns: minmax(0, 1fr); column-gap: 0; }
   .resource-detail-page > .platform-detail-sidebar { grid-column: 1; }
+
+  .resource-detail-page.is-sidebar-top-aligned:not(.has-tabs) {
+    grid-template-areas:
+      "header"
+      "content"
+      "sidebar";
+  }
+
+  .resource-detail-page.is-sidebar-top-aligned:not(.has-tabs) > .platform-detail-sidebar {
+    grid-row: auto;
+  }
 }
 
 @media (max-width: 760px) {

@@ -178,31 +178,27 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               return null;
             }
             const diffFiles = buildMetronomeVersionDiffFilesFromSnapshots(leftSource.snapshot, rightSource.snapshot);
-            const compareOptions = sources.map((source) =>
-              React.createElement("option", { key: source.id, value: source.id }, source.label)
-            );
-            const renderCompareSelect = (value, side, ariaLabel) =>
-              React.createElement("label", { className: "playground-version-changes-select-shell" },
-                React.createElement("span", { className: "playground-version-changes-select-control-wrap" },
-                  React.createElement("select", {
-                    className: "playground-version-changes-select-control",
-                    value,
-                    onChange: (event) => handleMetronomeVersionCompareSourceChange(side, event.target.value),
-                    "aria-label": ariaLabel,
-                  }, compareOptions),
-                  React.createElement(ChevronDown, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" })
-                )
-              );
+            const compareOptions = sources.map((source) => ({
+              value: source.id,
+              label: source.label,
+            }));
             return renderPlaygroundVersionChangesPage({
               title: "Changes",
               backText: "Back",
               backLabel: "Back to Metronome",
               onBack: closeMetronomeVersionChangesPage,
-              compareControls: React.createElement(React.Fragment, null,
-                renderCompareSelect(leftSource.id, "left", "Base version"),
-                React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
-                renderCompareSelect(rightSource.id, "right", "Compare version")
-              ),
+              leftSelector: {
+                value: leftSource.id,
+                options: compareOptions,
+                onValueChange: (value) => handleMetronomeVersionCompareSourceChange("left", value),
+                ariaLabel: "Select base Metronome version",
+              },
+              rightSelector: {
+                value: rightSource.id,
+                options: compareOptions,
+                onValueChange: (value) => handleMetronomeVersionCompareSourceChange("right", value),
+                ariaLabel: "Select target Metronome version",
+              },
               files: diffFiles,
               emptyMessage: "No changes between these versions.",
             });
@@ -854,7 +850,7 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                   onClick: () => setMetronomeRunInlineDetailId(""),
                 },
                   React.createElement(ChevronLeft, { width: 15, height: 15, strokeWidth: 1.9 }),
-                  React.createElement("span", null, "Runs")
+                  React.createElement("span", null, "Settings")
                 ),
                 React.createElement("div", { className: "playground-metronome-run-thread-heading" },
                   React.createElement("div", { className: "playground-metronome-run-thread-title-row" },
@@ -869,6 +865,129 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               ),
               React.createElement("div", { className: "playground-metronome-run-thread-body" },
                 renderMetronomeRunTrace(run, { includeComposerPrompt: true })
+              )
+            );
+          };
+
+          const renderMetronomeSettingsMode = () => {
+            const workflow = activeMetronomeEditorWorkflow || activeWorkflow;
+            if (!workflow?.id) return null;
+            const workflowMetadata = workflow.metadata
+              && typeof workflow.metadata === "object"
+              && !Array.isArray(workflow.metadata)
+              ? workflow.metadata
+              : {};
+            const deploymentRegion = String(
+              workflowMetadata.deploymentRegion
+              || workflowMetadata.region
+              || workflowMetadata.location
+              || "europe-west1"
+            ).trim() || "europe-west1";
+            const isTriggeringMetronomeRun = metronomeRunState.status === "loading";
+            const isRunTriggerDisabled = isMetronomeWorkflowBuiltIn(workflow);
+            const creatorIdentity = resolveMetronomeWorkflowCreatorPresentation(activeWorkflow, {
+              isBuiltIn: isMetronomeWorkflowBuiltIn(activeWorkflow),
+            });
+            const ownerIdentity = resolveMetronomeWorkflowOwnerPresentation(activeWorkflow, {
+              isBuiltIn: isMetronomeWorkflowBuiltIn(activeWorkflow),
+              isTeamShared: isActiveWorkflowTeamShared,
+            });
+            const triggerMetronomeRun = async () => {
+              if (isRunTriggerDisabled || isTriggeringMetronomeRun) return;
+              setMetronomeRunState({ status: "loading", message: "" });
+              setMetronomeRunsError("");
+              try {
+                const run = await createMetronomeRunApi(activeWorkflow.id, {
+                  definition: createMetronomeWorkflowDefinition(workflow, nodes, edges),
+                  inputs: { source: "manual_ui" },
+                });
+                if (!run?.id) throw new Error("Metronome run did not return an id.");
+                setMetronomeRuns((current) => [
+                  run,
+                  ...current.filter((item) => String(item?.id || "") !== String(run.id)),
+                ]);
+                setSelectedMetronomeRunId(run.id);
+                setMetronomeRunState({ status: "idle", message: "" });
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("playground:metronome-run-upserted", {
+                    detail: { workflow: activeWorkflow, run },
+                  }));
+                }
+              } catch (error) {
+                const message = error instanceof Error
+                  ? error.message
+                  : "Failed to start Metronome run.";
+                setMetronomeRunState({ status: "error", message });
+                setMetronomeRunsError(message);
+              }
+            };
+            const settingsSidebar = React.createElement(PlatformResourceDetailSidebar, {
+              className: "playground-metronome-settings-sidebar-card",
+              propertiesClassName: "playground-metronome-settings-property-list",
+              attributes: [{
+                id: "updated",
+                label: "Updated",
+                value: formatMetronomeRunTimestamp(activeWorkflow?.updatedAt || activeWorkflow?.createdAt),
+              }],
+              creator: creatorIdentity,
+              owner: ownerIdentity,
+              ownerOptions: activeMetronomeOwnerOptions,
+              onOwnerTransfer: canTransferActiveMetronomeOwnership
+                ? transferActiveMetronomeOwnership
+                : undefined,
+              ownerSelectorProps: {
+                resourceLabel: "workflow",
+                open: metronomeOwnerSelectorOpen,
+                onOpenChange: handleActiveMetronomeOwnerSelectorOpenChange,
+                loading: metronomeOwnerCandidateState.status === "loading"
+                  || metronomeOwnerTransferState.status === "loading",
+                disabled: metronomeOwnerTransferState.status === "loading",
+                loadingContent: metronomeOwnerTransferState.status === "loading"
+                  ? "Transferring ownership..."
+                  : "Loading organization members...",
+                emptyContent: metronomeOwnerCandidateState.status === "error"
+                  ? metronomeOwnerCandidateState.message || "Workflow owners could not be loaded."
+                  : "No active organization members are available.",
+              },
+              primaryAction: React.createElement(PlatformPrimaryButton, {
+                  size: "small",
+                  fullWidth: true,
+                  className: "playground-metronome-settings-trigger-button",
+                  disabled: isRunTriggerDisabled || isTriggeringMetronomeRun,
+                  onClick: () => void triggerMetronomeRun(),
+                },
+                "Trigger Run"
+              ),
+            });
+            return React.createElement(PlatformServiceDetailFrame, {
+                className: "playground-metronome-settings-frame",
+              },
+              React.createElement(PlatformServiceDetailPage, {
+                  sidebarContent: settingsSidebar,
+                  sidebarCollapsed: isMetronomeSettingsAccessDetailOpen,
+                  ariaLabel: (workflow.name || "Metronome") + " settings",
+                  sidebarAriaLabel: "Metronome workflow information",
+                  className: "playground-metronome-settings-page",
+                  contentClassName: "playground-metronome-settings-content",
+                  sidebarClassName: "playground-metronome-settings-sidebar",
+                },
+                React.createElement("div", { className: "playground-metronome-settings-stack" },
+                  React.createElement(PlatformDeploymentMap, {
+                    regionCode: deploymentRegion,
+                    title: "Deployment region",
+                    className: "playground-managed-server-deployment-map playground-source-server-deployment-map playground-function-deployment-map playground-metronome-deployment-map",
+                  }),
+                  React.createElement(MetronomeWorkflowAccessSettings, {
+                    workflow,
+                    workspaceTeams: metronomeShareTeams,
+                    disabled: isActiveWorkflowBuiltIn
+                      || (isActiveWorkflowTeamShared && !isActiveWorkflowTeamSharedManageable),
+                    onMetadataChange: persistMetronomeWorkflowAccessMetadata,
+                    onAddTeamShare: addMetronomeWorkflowTeamAccess,
+                    onRemoveTeamShare: removeMetronomeWorkflowTeamAccess,
+                    onPermissionDetailOpenChange: setIsMetronomeSettingsAccessDetailOpen,
+                  })
+                )
               )
             );
           };

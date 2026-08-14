@@ -353,9 +353,6 @@ export function isRunnerTurnDisplayHiddenAttachment(
   )
     .trim()
     .toLowerCase();
-  if (role === "image_edit_mask" || role === "image-edit-mask") {
-    return true;
-  }
   const filename = String(
     typeof candidate.filename === "string"
       ? candidate.filename
@@ -372,6 +369,15 @@ export function isRunnerTurnDisplayHiddenAttachment(
   )
     .trim()
     .toLowerCase();
+  if (role === "image_edit_mask" || role === "image-edit-mask") {
+    return true;
+  }
+  if (
+    (role === "prompt_supporting_attachment" || role === "prompt-supporting-attachment")
+    && (mimeType.startsWith("image/") || /\.(avif|bmp|gif|jpe?g|png|svg|webp)$/i.test(filename))
+  ) {
+    return true;
+  }
   return (
     filename.endsWith("-selected-region-mask.png") &&
     (!mimeType || mimeType === "image/png")
@@ -835,7 +841,7 @@ export function buildTurnAttachmentsForExecution(
     ) || []
   ).filter(
     (attachment) =>
-      !hiddenDisplayKeys.has(
+      !isRunnerTurnDisplayHiddenAttachment(attachment) && !hiddenDisplayKeys.has(
         turnAttachmentMatchKey(
           attachment.filename,
           attachment.mimeType,

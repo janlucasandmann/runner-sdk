@@ -1,4 +1,21 @@
 export const TEAMS_DIALOG_LIFECYCLE_SCRIPT = `	        useEffect(() => {
+          const selectedTeamId = String(teamPageSelectedTeamId || "").trim();
+          const selectedTeam = teamPageTeams.find((team) => String(team?.id || "").trim() === selectedTeamId) || null;
+          if (teamPageIdentityDraftTeamId === selectedTeamId) {
+            return;
+          }
+          if (!selectedTeamId || !selectedTeam) {
+            setTeamPageIdentityDraftTeamId("");
+            setTeamPageIdentityNameDraft("");
+            setTeamPageIdentityDescriptionDraft("");
+            return;
+          }
+          setTeamPageIdentityDraftTeamId(selectedTeamId);
+          setTeamPageIdentityNameDraft(String(selectedTeam.name || ""));
+          setTeamPageIdentityDescriptionDraft(getTeamPageDescription(selectedTeam));
+        }, [teamPageIdentityDraftTeamId, teamPageSelectedTeamId, teamPageTeams]);
+
+	        useEffect(() => {
           if ((!teamPageResourceToolbarPopover && !teamPageResourceMenuId) || typeof document === "undefined") {
             return undefined;
           }
@@ -140,4 +157,3 @@ export const TEAMS_DIALOG_LIFECYCLE_SCRIPT = `	        useEffect(() => {
           }, 75);
         }
 `;
-

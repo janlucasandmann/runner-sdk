@@ -472,6 +472,34 @@
   flex-shrink: 0;
 }
 
+.platform-file-explorer-modal.is-browser-layout .tb-file-browser-header-title {
+  min-width: 0;
+  max-width: min(240px, 28%);
+  flex: 0 1 240px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.platform-file-explorer-modal.is-browser-layout .tb-file-browser-account-selector-trigger {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 28px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.platform-file-explorer-modal.is-browser-layout .tb-file-browser-account-selector-trigger .platform-selector__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-file-explorer-modal.is-browser-layout .tb-file-browser-account-selector-popup {
+  z-index: 2147483002 !important;
+  min-width: 220px;
+}
+
 .platform-file-explorer-modal.is-browser-layout .tb-file-browser-breadcrumbs {
   min-width: 0;
   flex: 1;
@@ -754,11 +782,12 @@
 .platform-file-explorer-modal.is-browser-layout .tb-file-browser-item-branch-select {
   width: 100%;
   height: 28px;
-  padding: 0 28px 0 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
   outline: none;
-  background: rgba(255, 255, 255, 0.06);
+  background: transparent;
   color: rgba(255, 255, 255, 0.86);
   font-size: 12px;
   line-height: 1;
@@ -766,12 +795,15 @@
 }
 
 .platform-file-explorer-modal.is-browser-layout .tb-file-browser-item-branch-select:hover {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: transparent;
+  background: transparent;
+  color: #fff;
 }
 
 .platform-file-explorer-modal.is-browser-layout .tb-file-browser-item-branch-select:focus {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: transparent;
+  background: transparent;
+  outline: none;
 }
 
 .platform-file-explorer-modal.is-browser-layout .tb-file-browser-item-branch-select:disabled {
@@ -1074,6 +1106,19 @@
   --platform-popup-font-size: 12px;
   --platform-popup-icon-size: 13px;
   min-width: 164px;
+}
+
+/*
+ * The file browser uses a deliberately high backdrop z-index so it can sit
+ * above the composer and the rest of the thread surface.  These two menus are
+ * portaled to document.body by the shared popup primitives, so they must opt
+ * into the same stacking layer or they end up visually (and interactively)
+ * behind the explorer backdrop.
+ */
+.tb-file-browser-item-actions-menu.platform-popup-surface.is-portaled,
+.tb-file-browser-item-branch-popup.platform-popup-surface.is-portaled,
+.tb-file-browser-account-selector-popup.platform-popup-surface.is-portaled {
+  z-index: 2147483001 !important;
 }
 
 .tb-file-browser-item-actions-menu.platform-popup-surface .tb-popup-row {

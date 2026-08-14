@@ -12,10 +12,12 @@ export type {
   PlatformMarkdownRendererProps,
 } from "./platform-instructions-editor.js";
 export type {
+  PlatformInstructionsEditorFileMarkdownMatch,
   PlatformInstructionsEditorFileUpload,
   PlatformInstructionsEditorUploadedFile,
 } from "./platform-instructions-editor-file-node.js";
 export {
+  parsePlatformInstructionsEditorFileMarkdown,
   serializePlatformInstructionsEditorFileMarkdown,
 } from "./platform-instructions-editor-file-node.js";
 export {

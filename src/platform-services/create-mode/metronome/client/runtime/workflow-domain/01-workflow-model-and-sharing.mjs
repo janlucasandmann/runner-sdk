@@ -94,26 +94,24 @@ export const METRONOME_WORKFLOW_DOMAIN_01_FRAGMENT = String.raw`
         function getMetronomeWorkflowOwnerIdentityKeys(workflow) {
           const source = workflow && typeof workflow === "object" && !Array.isArray(workflow) ? workflow : {};
           const metadata = readMetronomeWorkflowMetadata(source);
-          const creator = normalizeMetronomeWorkflowCreator(source, metadata) || {};
-          const userCreatorId = creator.type === "user" ? creator.id : "";
+          const owner = source.owner && typeof source.owner === "object" && !Array.isArray(source.owner)
+            ? source.owner
+            : metadata.owner && typeof metadata.owner === "object" && !Array.isArray(metadata.owner)
+              ? metadata.owner
+              : {};
           return createMetronomeIdentityKeySet([
             source.userId,
             source.user_id,
             source.ownerUserId,
             source.owner_user_id,
-            source.createdByUserId,
-            source.created_by_user_id,
             metadata.userId,
             metadata.user_id,
             metadata.ownerUserId,
             metadata.owner_user_id,
-            metadata.createdByUserId,
-            metadata.created_by_user_id,
-            metadata.creatorUserId,
-            metadata.creator_user_id,
-            creator.userId,
-            creator.email,
-            userCreatorId,
+            owner.userId,
+            owner.user_id,
+            owner.id,
+            owner.email,
           ]);
         }
 
@@ -483,9 +481,9 @@ export const METRONOME_WORKFLOW_DOMAIN_01_FRAGMENT = String.raw`
               ...(memberCreator || {}),
               ...(profileCreator || {}),
             };
-            const mergedEmail = memberCreator?.email || profileCreator?.email || "";
-            const mergedUserId = memberCreator?.userId || profileCreator?.userId || "";
-            const mergedId = memberCreator?.id || profileCreator?.id || mergedUserId || mergedEmail || "";
+            const mergedEmail = profileCreator?.email || memberCreator?.email || "";
+            const mergedUserId = profileCreator?.userId || memberCreator?.userId || "";
+            const mergedId = profileCreator?.id || memberCreator?.id || mergedUserId || mergedEmail || "";
             const mergedName = getMetronomeTrustedDisplayName(profileCreator?.name, mergedEmail)
               || getMetronomeTrustedDisplayName(memberCreator?.name, mergedEmail)
               || mergedEmail
@@ -512,6 +510,23 @@ export const METRONOME_WORKFLOW_DOMAIN_01_FRAGMENT = String.raw`
             keys.forEach((key) => creatorMap.set(key, creator));
           });
           return creatorMap;
+        }
+
+        function buildMetronomeTeamOwnerCandidates(members = [], ...profilePayloads) {
+          const creatorMap = buildMetronomeTeamShareCreatorMap(members, ...profilePayloads);
+          const candidatesByUserId = new Map();
+          Array.from(creatorMap.values()).forEach((creator) => {
+            const userId = String(creator?.userId || "").trim();
+            if (!userId || candidatesByUserId.has(userId)) return;
+            candidatesByUserId.set(userId, {
+              userId,
+              value: userId,
+              name: String(creator?.name || creator?.email || "Organization member").trim(),
+              email: String(creator?.email || "").trim(),
+              avatarUrl: String(creator?.avatarUrl || creator?.photoUrl || "").trim(),
+            });
+          });
+          return Array.from(candidatesByUserId.values());
         }
 
         async function fetchMetronomeTeamMemberProfilePayload(normalizedBackendUrl, teamId, members = [], headers = new Headers()) {

@@ -312,6 +312,7 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /function finishClos
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /function openEvaluationJsonlWorkspacePicker/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /React\.createElement\(PlatformFileExplorerBrowserModal/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /buildPlaygroundEnvironmentDownloadUrl\(backendUrl, environmentId, entry\.path\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /src: PLAYGROUND_TEXT_FILE_ICON_URL/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /evaluationThreadCaseModalOpen/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /buildPlaygroundEnvironmentFilesListUrl\(backendUrl, environmentId, "", -1\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /evaluationRunHistoryLoadedRef = useRef\(new Set\(\)\)/);

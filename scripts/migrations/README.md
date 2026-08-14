@@ -8,7 +8,11 @@ This directory is reserved for explicit, reviewable repository or persisted-data
 
 ## Contents
 
-This directory currently has no implementation files. Keep this guide when introducing the first module, and update it with the new contract.
+- `migrate-legacy-prompts-to-api.mjs` moves the former repository-level prompt
+  JSON records into the selected deployment's authenticated prompt API. It is
+  idempotent, reconciles partial migrations by source ID and version number,
+  and deliberately leaves the explicitly supplied archive untouched for
+  rollback review. Runtime prompt storage never falls back to this archive.
 
 ## Working in this directory
 
@@ -20,6 +24,15 @@ Run the narrowest relevant checks from the repository root:
 
 ```bash
 npm run check:static
+```
+
+To preview or execute the prompt migration, provide the API key through the
+environment so it is never written to arguments or logs:
+
+```bash
+PROMPT_MIGRATION_API_KEY=... node scripts/migrations/migrate-legacy-prompts-to-api.mjs \
+  --source=/secure/path/to/prompts.repo-prompt-json-v1.json \
+  --origin=http://127.0.0.1:4177 --dry-run
 ```
 
 Escalate to `npm run check` before merging changes that affect shared contracts,

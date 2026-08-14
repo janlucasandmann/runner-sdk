@@ -265,6 +265,8 @@ export const IMAGINE_TEMPLATE_PAGE_VIEW_SCRIPT = String.raw`          const acti
                         : activeTemplate?.placeholder || activeTemplate?.title || "Describe an image",
                       composerLeadingControl: renderImagineTemplateMediaModeSwitch(),
                       composerBeforeAgentControl: renderImagineTemplateModelSelector(),
+                      onOpenPromptSearch,
+                      onOpenThreadSearch,
                       hiddenSystemPrompt,
                       threadMetadata: imagineTemplateThreadMetadata,
                       implicitAttachments: imagineTemplateReferenceAttachments,

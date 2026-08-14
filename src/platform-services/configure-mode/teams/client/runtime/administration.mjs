@@ -30,6 +30,69 @@ export const TEAMS_ADMINISTRATION_ACTIONS_SCRIPT = `        async function handl
           }
         }
 
+        async function handleSaveTeamIdentity() {
+          const teamId = String(teamPageSelectedTeamId || "").trim();
+          const name = String(teamPageIdentityNameDraft || "").trim();
+          const description = String(teamPageIdentityDescriptionDraft || "")
+            .replace(/\s+/g, " ")
+            .trim();
+          const selectedTeamRecord = teamPageTeams.find((team) => String(team?.id || "") === teamId) || null;
+          if (!teamId || !selectedTeamRecord || !name) {
+            setTeamPageError("A team name is required.");
+            return;
+          }
+          const metadata = buildTeamPageMetadataWithProfileImage(
+            selectedTeamRecord,
+            getTeamPageProfileImageUrl(selectedTeamRecord),
+            description
+          );
+          setTeamPageActionId("team-identity");
+          setTeamPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams/" + encodeURIComponent(teamId), {
+              method: "PATCH",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ name, metadata }),
+            }, 8000);
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to update the team.");
+            }
+            const responseTeam = data?.data && typeof data.data === "object" && !Array.isArray(data.data)
+              ? data.data
+              : data?.team && typeof data.team === "object" && !Array.isArray(data.team)
+                ? data.team
+                : {};
+            const updatedTeam = normalizeTeamPageTeamRecord({
+              ...selectedTeamRecord,
+              ...responseTeam,
+              name,
+              description,
+              metadata: {
+                ...metadata,
+                ...(responseTeam?.metadata && typeof responseTeam.metadata === "object" && !Array.isArray(responseTeam.metadata)
+                  ? responseTeam.metadata
+                  : {}),
+                description,
+              },
+            });
+            setTeamPageTeams((current) => current.map((team) =>
+              String(team?.id || "") === teamId ? updatedTeam : team
+            ));
+            setTeamPageIdentityDraftTeamId(teamId);
+            setTeamPageIdentityNameDraft(name);
+            setTeamPageIdentityDescriptionDraft(description);
+          } catch (error) {
+            setTeamPageError(error instanceof Error ? error.message : "Failed to update the team.");
+          } finally {
+            setTeamPageActionId("");
+          }
+        }
+
         async function handleTeamProfileImageSelection(nextProfileImageUrl) {
           const teamId = String(teamPageSelectedTeamId || "").trim();
           const selectedTeamRecord = teamPageTeams.find((team) => String(team?.id || "") === teamId) || null;

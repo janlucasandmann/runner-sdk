@@ -11,7 +11,6 @@ export const ORGANIZATIONS_STATE_PRIMARY_SCRIPT = `	        const organizationPa
 	        const [organizationPageBillingSection, setOrganizationPageBillingSection] = useState("costs-plans");
 	        const [organizationPagePendingDestination, setOrganizationPagePendingDestination] = useState(null);
 	        const [organizationPageSelectedRoleId, setOrganizationPageSelectedRoleId] = useState("member");
-	        const [organizationPageRoleMembersPopover, setOrganizationPageRoleMembersPopover] = useState("");
 	        const [organizationPermissionChartAnimationKey, setOrganizationPermissionChartAnimationKey] = useState(0);
 	        const [organizationPageMembers, setOrganizationPageMembers] = useState([]);
 	        const [organizationPageInvitations, setOrganizationPageInvitations] = useState([]);

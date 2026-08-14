@@ -16,6 +16,8 @@ export const IMAGINE_PAGE_CONTROLLER_SCRIPT = String.raw`        function Playgr
           onAgentChange,
           onEnvironmentChange,
           onOpenPlansBudget,
+          onOpenPromptSearch,
+          onOpenThreadSearch,
           onRequireAuth,
           canGenerateVideo = true,
           activeView,

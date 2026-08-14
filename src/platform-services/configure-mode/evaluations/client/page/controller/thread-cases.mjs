@@ -230,9 +230,11 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
                     draggable: false,
                     className: "tb-file-browser-item-icon tb-file-browser-icon-asset",
                   })
-                : React.createElement(FileText, {
-                    className: "tb-file-browser-item-icon tb-file-browser-item-icon-file",
-                    strokeWidth: 1.75,
+                : React.createElement("img", {
+                    src: PLAYGROUND_TEXT_FILE_ICON_URL,
+                    alt: "",
+                    draggable: false,
+                    className: "tb-file-browser-item-icon tb-file-browser-icon-asset",
                   }),
               React.createElement("span", { className: "tb-file-browser-item-name", title: entry.name }, entry.name),
               React.createElement("span", { className: "tb-file-browser-item-meta", title: metaValue }, metaValue || "-"),

@@ -33,6 +33,10 @@ import {
 export interface PlatformVersionHistoryRecord {
   id?: string | number;
   version?: string | number;
+  /** Canonical version number used by newer resource APIs. */
+  number?: string | number;
+  /** Compatibility alias used by a subset of resource APIs. */
+  versionNumber?: string | number;
   label?: string;
   description?: string;
   status?: string;
@@ -162,6 +166,46 @@ function normalizeId(value: unknown) {
   return String(value ?? "").trim();
 }
 
+function resolveVersionIdentifier(
+  version: PlatformVersionHistoryRecord,
+  index: number,
+) {
+  const explicitIdentifier = [
+    version.version,
+    version.versionNumber,
+    version.number,
+    version.label,
+  ].find((candidate) => normalizeId(candidate));
+  if (explicitIdentifier != null) return explicitIdentifier;
+
+  // Opaque database IDs are not version numbers. Only use an ID when it is
+  // itself a recognizable version label; otherwise retain a stable, positive
+  // positional fallback instead of formatting every UUID as `v0`.
+  const id = normalizeId(version.id);
+  if (/^(?:v|version\s*)?\d+$/i.test(id)) return id;
+  return index + 1;
+}
+
+function readSortableVersionNumber(version: PlatformVersionHistoryRecord) {
+  const candidate = [
+    version.version,
+    version.versionNumber,
+    version.number,
+    version.label,
+  ].find((value) => normalizeId(value));
+  if (candidate == null) return null;
+  const match = normalizeId(candidate).match(/^(?:v|version\s*)?(\d+)$/i);
+  if (!match) return null;
+  return Number(match[1]);
+}
+
+function readSortableVersionTimestamp(version: PlatformVersionHistoryRecord) {
+  const timestamp = Date.parse(normalizeId(
+    version.createdAt || version.updatedAt || version.publishedAt,
+  ));
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
 function isProductionVersion<
   TVersion extends PlatformVersionHistoryRecord,
 >(
@@ -187,7 +231,7 @@ function getAccessibleVersionTitle(
     if (normalizedTitle) return normalizedTitle;
   }
   const label = normalizeId(version.label);
-  const versionIdentifier = version.version ?? label ?? index;
+  const versionIdentifier = resolveVersionIdentifier(version, index);
   return formatPlatformVersionTitle(versionIdentifier, version.description);
 }
 
@@ -235,10 +279,26 @@ export function PlatformVersionHistorySidebar<
   const normalizedSelectedVersionId = normalizeId(
     selectedVersionId || normalizedActiveVersionId,
   );
-  const resolvedVersions = useMemo(
-    () => (Array.isArray(versions) ? versions : []),
-    [versions],
-  );
+  const resolvedVersions = useMemo(() => {
+    const records = Array.isArray(versions) ? versions : [];
+    return records
+      .map((version, originalIndex) => ({ version, originalIndex }))
+      .sort((left, right) => {
+        const leftNumber = readSortableVersionNumber(left.version);
+        const rightNumber = readSortableVersionNumber(right.version);
+        if (leftNumber != null && rightNumber != null && leftNumber !== rightNumber) {
+          return rightNumber - leftNumber;
+        }
+
+        const leftTimestamp = readSortableVersionTimestamp(left.version);
+        const rightTimestamp = readSortableVersionTimestamp(right.version);
+        if (leftTimestamp != null && rightTimestamp != null && leftTimestamp !== rightTimestamp) {
+          return rightTimestamp - leftTimestamp;
+        }
+        return left.originalIndex - right.originalIndex;
+      })
+      .map(({ version }) => version);
+  }, [versions]);
   const [versionFilter, setVersionFilter] = useState("all");
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [actionMenuVersionId, setActionMenuVersionId] = useState("");
@@ -319,10 +379,7 @@ export function PlatformVersionHistorySidebar<
         isBusy: busy,
         versionCount: resolvedVersions.length,
       };
-      const fallbackVersionIdentifier = version.version
-        ?? version.label
-        ?? version.id
-        ?? Math.max(0, resolvedVersions.length - index - 1);
+      const fallbackVersionIdentifier = resolveVersionIdentifier(version, index);
       const fallbackTitle = formatPlatformVersionTitle(
         fallbackVersionIdentifier,
         version.description,

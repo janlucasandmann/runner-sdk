@@ -21,6 +21,7 @@ describe("TeamDetailPage", () => {
     expect(container.querySelectorAll("[data-resource-detail-page='true']")).toHaveLength(1);
     expect(container.querySelectorAll("[data-platform-detail-tab-bar='true']")).toHaveLength(0);
     expect(container.querySelectorAll("[data-platform-detail-sidebar='true']")).toHaveLength(1);
+    expect(container.querySelector(".resource-detail-page")?.classList.contains("is-sidebar-top-aligned")).toBe(true);
     expect(screen.getByText("Team members table")).not.toBeNull();
     expect(screen.queryByRole("button", { name: /back/i })).toBeNull();
   });

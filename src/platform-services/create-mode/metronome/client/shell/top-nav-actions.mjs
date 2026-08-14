@@ -151,7 +151,7 @@ export const METRONOME_APP_TOP_NAV_ACTIONS_SCRIPT = `
           }
 	          const showPublishControl = !state.readOnly
 	            && state.showPublish
-	            && (state.editorMode === "edit" || state.editorMode === "code");
+	            && (state.editorMode === "edit" || state.editorMode === "code" || state.editorMode === "settings");
           const publishBusy = Boolean(state.publishBusy);
           const publishDisabled = Boolean(state.publishDisabled);
           const publishActions = [

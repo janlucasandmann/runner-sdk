@@ -658,14 +658,10 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
                       roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
                         id: role.id,
                         label: role.label,
-                        description: role.description,
-                        meta: "Guardrail access",
                       })),
                       value: selectedRole.id,
                       onValueChange: setGuardrailAccessRoleId,
                       roleAriaLabel: "Guardrail team roles",
-                      roleKicker: "Guardrail role",
-                      roleDescription: "Guardrail-specific permissions for " + selectedRole.label.toLowerCase() + "s in " + selectedAccessRow.name + ".",
                       readOnly: selectedRole.id === "owner" || selectedGuardrailSetReadonly,
                       permissionSet: roleScopedSystemPrincipal
                         ? getGuardrailSystemRolePermissionSet(systemPrincipal.id, selectedRole.id)

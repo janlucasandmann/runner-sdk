@@ -34,7 +34,7 @@
 }
 
 .platform-resource-share-modal__team:hover:not(
-  :has(.platform-resource-share-modal__team-radio:disabled)
+  .is-disabled
 ),
 .platform-resource-share-modal__team.is-selected {
   border-color: rgba(255, 255, 255, 0.14);
@@ -45,7 +45,7 @@
   color: rgba(255, 255, 255, 0.62);
 }
 
-.platform-resource-share-modal__team:has(.platform-resource-share-modal__team-radio:disabled) {
+.platform-resource-share-modal__team.is-disabled {
   cursor: default;
   opacity: 0.45;
 }

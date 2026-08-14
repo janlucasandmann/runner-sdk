@@ -1,18 +1,4 @@
-export const TEAMS_TABLE_LIFECYCLE_SCRIPT = `        useEffect(() => {
-          if (!teamPageRoleMembersPopover || typeof document === "undefined") {
-            return undefined;
-          }
-          const handlePointerDown = (event) => {
-            const target = event.target;
-            if (target && typeof target.closest === "function" && target.closest(".playground-team-role-assigned-shell")) {
-              return;
-            }
-            setTeamPageRoleMembersPopover("");
-          };
-          document.addEventListener("mousedown", handlePointerDown);
-          return () => document.removeEventListener("mousedown", handlePointerDown);
-        }, [teamPageRoleMembersPopover]);
-	        useEffect(() => {
+export const TEAMS_TABLE_LIFECYCLE_SCRIPT = `	        useEffect(() => {
 	          if (!teamPageMemberMenuId || typeof document === "undefined") {
 	            return undefined;
 	          }

@@ -17,14 +17,14 @@ export const ORGANIZATIONS_PAGE_ROLES_AND_VIEW_SCRIPT = `
 	            );
 	            const getOrganizationRoleMemberId = (member) => String(member?.id || "").trim();
 	            const getOrganizationRoleMemberUserId = (member) => String(member?.userId || member?.user_id || member?.uid || "").trim();
-	            const getOrganizationRoleMemberAvatarUrl = (member) => {
+            const getOrganizationRoleMemberAvatarUrl = (member) => {
 	              const memberUserId = getOrganizationRoleMemberUserId(member);
 	              const avatarUrl = normalizeSessionPhotoUrl(
 	                readTeamPageIdentityAvatarUrl(member)
 	                || (memberUserId === String(sessionState.userId || "").trim() ? accountAvatarUrl : "")
 	              );
-	              return canRenderAvatarImage(avatarUrl) ? avatarUrl : "";
-	            };
+              return canRenderAvatarImage(avatarUrl) ? avatarUrl : "";
+            };
 	            const activeOrganizationMembers = (Array.isArray(organizationPageMembers) ? organizationPageMembers : [])
 	              .filter((member) => String(member?.status || "active").trim().toLowerCase() === "active")
 	              .filter((member) => getOrganizationRoleMemberId(member));
@@ -53,38 +53,7 @@ export const ORGANIZATIONS_PAGE_ROLES_AND_VIEW_SCRIPT = `
 	              avatarUrl: getOrganizationRoleMemberAvatarUrl(member),
 	              data: { member },
 	            }));
-	            const renderAssignedUsersPopup = (role) => {
-	              const assignedMembers = assignedMembersForRole(role.id);
-	              return React.createElement(PlatformPopupSurface, {
-	                  className: "playground-team-role-assigned-popup",
-	                  onMouseDown: (event) => event.stopPropagation(),
-	                },
-	                React.createElement("div", { className: "playground-team-role-assigned-popup-title" }, role.label + " users"),
-	                assignedMembers.length
-	                  ? React.createElement("div", { className: "playground-team-role-assigned-list" },
-	                      assignedMembers.map((member) => React.createElement("div", { key: member.id, className: "playground-team-role-assigned-row" },
-	                        renderMemberIdentity(member),
-	                        React.createElement("span", { className: "playground-team-role-assigned-status" }, member.status || "active")
-	                      ))
-	                    )
-	                  : React.createElement("div", { className: "playground-team-role-assigned-empty" }, "No users assigned to this role.")
-	              );
-	            };
-	            const renderAssignedUsersButton = (role) => {
-	              const assignedCount = assignedMembersForRole(role.id).length;
-	              const isOpen = organizationPageRoleMembersPopover === role.id;
-	              return React.createElement("div", { className: "playground-team-role-assigned-shell" },
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-team-badge playground-team-role-assigned-button" + (isOpen ? " is-open" : ""),
-	                  onClick: () => setOrganizationPageRoleMembersPopover((current) => current === role.id ? "" : role.id),
-	                  "aria-haspopup": "dialog",
-	                  "aria-expanded": isOpen ? "true" : "false",
-	                }, assignedCount + " assigned"),
-	                isOpen ? renderAssignedUsersPopup(role) : null
-	              );
-	            };
-	            const renderOrganizationOwnerSelector = () => React.createElement(PlatformOwnerSelector, {
+            const renderOrganizationOwnerSelector = () => React.createElement(PlatformOwnerSelector, {
 	              owner: organizationOwnerIdentity,
 	              options: organizationOwnerOptions,
 	              onTransfer: (memberId) => handleTransferOrganizationOwnership(memberId),
@@ -102,24 +71,26 @@ export const ORGANIZATIONS_PAGE_ROLES_AND_VIEW_SCRIPT = `
 	              confirmationTitle: "Transfer organization ownership?",
 	              confirmationDescription: (option) => "Transfer ownership to " + option.name + "? You will lose owner privileges and cannot take the owner role back yourself.",
 	            });
-	            return React.createElement("div", { className: "playground-team-detail-panel playground-team-roles-panel" },
-	              React.createElement(PlatformRolePermissionsPage, {
-	                roles: visibleRoleDefinitions.map((role) => ({
-	                  id: role.id,
-	                  label: role.label,
-	                  meta: assignedMembersForRole(role.id).length + " assigned",
-	                })),
+            return React.createElement(PlatformRolePermissionsPage, {
+                roles: visibleRoleDefinitions.map((role) => ({
+                  id: role.id,
+                  label: role.label,
+                  assignedMembers: role.id === "owner"
+                    ? undefined
+                    : assignedMembersForRole(role.id).map((member) => ({
+                        id: getOrganizationRoleMemberId(member) || getOrganizationRoleMemberUserId(member),
+                        name: getMemberDisplayName(member),
+                        detail: readTeamPageIdentityEmail(member),
+                        avatarUrl: getOrganizationRoleMemberAvatarUrl(member),
+                        status: String(member?.status || "active").trim() || "active",
+                      })).filter((member) => member.id),
+                })),
 	                value: selectedRoleDefinition.id,
 	                onValueChange: (roleId) => {
 	                  setOrganizationPageSelectedRoleId(roleId);
-	                  setOrganizationPageRoleMembersPopover("");
-	                },
-	                roleAriaLabel: "Organization roles",
-	                roleKicker: null,
-	                roleDescription: selectedRoleDefinition.description,
-	                roleHeaderAction: isSelectedOwnerRole
-	                  ? renderOrganizationOwnerSelector()
-	                  : renderAssignedUsersButton(selectedRoleDefinition),
+                },
+                roleAriaLabel: "Organization roles",
+                ownerRoleHeaderAction: renderOrganizationOwnerSelector(),
 	                readOnly: isSelectedOwnerRole || !canManageOrganization,
 	                permissionSet: selectedRolePermissionSet,
 	                accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
@@ -131,8 +102,7 @@ export const ORGANIZATIONS_PAGE_ROLES_AND_VIEW_SCRIPT = `
 	                onRingAccessChange: (ringId, access) => updateOrganizationRolePermissionRingAccess(selectedRoleDefinition.id, ringId, access),
 	                onActionRingChange: (actionId, ringId) => updateOrganizationRolePermissionActionRing(selectedRoleDefinition.id, actionId, ringId),
 	                onActionAccessChange: (actionId, access) => updateOrganizationRolePermissionActionAccess(selectedRoleDefinition.id, actionId, access),
-	              })
-	            );
+              });
 	          };
 
 	          const renderOrganizationGeneral = () => {

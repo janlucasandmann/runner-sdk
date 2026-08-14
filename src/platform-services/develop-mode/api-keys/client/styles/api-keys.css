@@ -418,6 +418,39 @@
         user-select: all;
       }
 
+      .playground-api-key-reveal-modal .platform-modal-header {
+        border-bottom: 0;
+      }
+
+      .playground-api-key-reveal-modal .playground-settings-code-row {
+        position: relative;
+        display: block;
+        margin-top: -12px;
+      }
+
+      .playground-api-key-reveal-modal .playground-settings-code-input {
+        box-sizing: border-box;
+        padding-right: 52px;
+        border: none;
+        margin-bottom: 12px;
+        color: #fff;
+        outline: none;
+      }
+
+      .playground-api-key-reveal-modal .playground-settings-code-input:focus-visible {
+        border-color: rgba(77, 163, 255, 0.5);
+      }
+
+      .playground-api-key-reveal-modal .playground-settings-code-copy {
+        position: absolute;
+        top: 50%;
+        right: 8px;
+        width: 30px;
+        min-width: 30px;
+        height: 30px;
+        transform: translateY(-50%);
+      }
+
       .playground-api-key-reveal-error {
         color: rgba(255, 255, 255, 0.6);
         font-size: 12px;

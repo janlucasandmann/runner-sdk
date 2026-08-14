@@ -25,14 +25,11 @@ export interface PlatformFileExplorerFileDescriptor {
   isFolder?: boolean;
 }
 
-const PLATFORM_FOLDER_ICON_URL = new URL(
-  "../../thread-components/assets/folder.png",
-  import.meta.url,
-).toString();
-const PLATFORM_TEXT_FILE_ICON_URL = new URL(
-  "../../thread-components/assets/txtfile.png",
-  import.meta.url,
-).toString();
+// Keep these URLs aligned with the Files page. The platform serves the shared
+// artwork from `/img/logos`; resolving the source PNGs relative to the bundled
+// module produces a `/dist/...` URL that is not available in the browser.
+const PLATFORM_FOLDER_ICON_URL = "/img/logos/folder.png";
+const PLATFORM_TEXT_FILE_ICON_URL = "/img/logos/txtfile.png";
 
 function joinClassNames(...classNames: Array<string | undefined>) {
   return classNames

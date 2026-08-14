@@ -3251,16 +3251,10 @@
                   roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
                     id: role.id,
                     label: role.label,
-                    description: role.description,
-                    meta: serverKindLabel + " access",
                   })),
                   value: selectedServerRoleDefinition.id,
                   onValueChange: setServerPermissionRoleId,
                   roleAriaLabel: serverKindLabel + " team roles",
-                  roleKicker: serverKindLabel + " role",
-                  roleDescription: serverKindLabel + "-scoped permissions for "
-                    + selectedServerRoleDefinition.label.toLowerCase() + "s in "
-                    + (serverPermissionTeam.name || "this team") + ".",
                   readOnly: selectedServerRoleDefinition.id === "owner",
                   className: "playground-project-team-role-pages playground-database-team-role-pages",
                   roleListClassName: "playground-project-team-role-list",
@@ -3878,32 +3872,27 @@
                 return null;
               }
               const diffFiles = buildServerVersionDiffFilesFromSnapshots(leftSource.snapshot, rightSource.snapshot);
-              const compareOptions = sources.map((source) =>
-                React.createElement("option", { key: source.id, value: source.id }, source.label)
-              );
-              const renderCompareSelect = (value, side, ariaLabel) =>
-                React.createElement("label", { className: "playground-version-changes-select-shell" },
-                  React.createElement("span", { className: "playground-version-changes-select-control-wrap" },
-                    React.createElement("select", {
-                      className: "playground-version-changes-select-control",
-                      value,
-                      onChange: (event) => handleServerVersionCompareSourceChange(side, event.target.value),
-                      "aria-label": ariaLabel,
-                    }, compareOptions),
-                    React.createElement(ChevronDown, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" })
-                  )
-                );
-              const compareControls = React.createElement(React.Fragment, null,
-                renderCompareSelect(leftSource.id, "left", "Base version"),
-                React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
-                renderCompareSelect(rightSource.id, "right", "Compare version")
-              );
+              const compareOptions = sources.map((source) => ({
+                value: source.id,
+                label: source.label,
+              }));
               return renderPlaygroundVersionChangesPage({
                 title: "Changes",
                 backText: "Back to " + serverKindLabel,
                 backLabel: "Back to " + serverKindLabel,
                 onBack: closeServerVersionChangesPage,
-                compareControls,
+                leftSelector: {
+                  value: leftSource.id,
+                  options: compareOptions,
+                  onValueChange: (value) => handleServerVersionCompareSourceChange("left", value),
+                  ariaLabel: "Select base server version",
+                },
+                rightSelector: {
+                  value: rightSource.id,
+                  options: compareOptions,
+                  onValueChange: (value) => handleServerVersionCompareSourceChange("right", value),
+                  ariaLabel: "Select target server version",
+                },
                 actions: renderServerPublishSplitButton(),
                 files: diffFiles,
                 emptyMessage: "No changes between these versions.",

@@ -1393,7 +1393,13 @@
                   window.setTimeout(() => {
                     const setMode = metronomeTopNavActionsRef.current?.setMode;
                     if (typeof setMode === "function") {
-                      setMode(entry.editorMode === "runs" ? "runs" : entry.editorMode === "code" ? "code" : "edit");
+                      setMode(
+                        entry.editorMode === "runs" || entry.editorMode === "settings"
+                          ? "settings"
+                          : entry.editorMode === "code"
+                            ? "code"
+                            : "edit"
+                      );
                     }
                   }, delay);
                 });

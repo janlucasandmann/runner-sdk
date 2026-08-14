@@ -1,0 +1,223 @@
+.external-agent-triggers {
+  display: flex;
+  flex-direction: column;
+  gap: 42px;
+  min-width: 0;
+  padding-bottom: 24px;
+}
+
+.external-agent-triggers__intro,
+.external-agent-triggers__section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.external-agent-triggers__intro {
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.external-agent-triggers__intro h1,
+.external-agent-triggers__section-header h2 {
+  margin: 0;
+  color: #fff;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.external-agent-triggers__intro h1 {
+  font-size: 18px;
+}
+
+.external-agent-triggers__section-header h2 {
+  font-size: 14px;
+}
+
+.external-agent-triggers__intro p,
+.external-agent-triggers__section-header p {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.external-agent-triggers__health {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.external-agent-triggers__section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.external-agent-triggers__section-header {
+  align-items: center;
+}
+
+.external-agent-triggers__message {
+  margin-top: -24px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.075);
+  font-size: 12px;
+}
+
+.external-agent-triggers__message.is-error {
+  color: #ff8a89;
+  background: rgba(245, 59, 58, 0.12);
+}
+
+.external-agent-triggers__text-action {
+  max-width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  color: #4da3ff;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.external-agent-triggers__profile-option {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+}
+
+.external-agent-triggers__profile-option img,
+.external-agent-triggers__profile-option svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.external-agent-triggers__form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+}
+
+.external-agent-triggers__field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+}
+
+.external-agent-triggers__field input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  outline: none;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.075);
+  font: inherit;
+}
+
+.external-agent-triggers__field input:focus {
+  border-color: rgba(77, 163, 255, 0.75);
+}
+
+.external-agent-triggers__field small {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.external-agent-triggers__checks {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.external-agent-triggers__checks legend {
+  width: 100%;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+}
+
+.external-agent-triggers__checks label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+}
+
+.external-agent-triggers__setup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.external-agent-triggers__setup-guidance,
+.external-agent-triggers__secret-warning {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.external-agent-triggers__secret-warning {
+  color: #f3c969;
+}
+
+.external-agent-triggers__copy-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  align-items: center;
+}
+
+.external-agent-triggers__copy-field > span {
+  grid-column: 1 / -1;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+}
+
+.external-agent-triggers__copy-field code {
+  min-width: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(0, 0, 0, 0.5);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .external-agent-triggers__intro,
+  .external-agent-triggers__section-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .external-agent-triggers__form {
+    grid-template-columns: 1fr;
+  }
+}

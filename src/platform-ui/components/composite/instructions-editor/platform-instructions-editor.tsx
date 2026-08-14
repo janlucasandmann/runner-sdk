@@ -10,6 +10,9 @@ import {
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
   Bold,
   ChevronDown,
   CodeXml,
@@ -74,6 +77,14 @@ import {
   type InstructionsEditorSlashMenuAnchor,
 } from "./platform-instructions-editor-slash-menu.js";
 import { PlatformInstructionsEditorTableNode } from "./platform-instructions-editor-table-node.js";
+import {
+  PlatformInstructionsEditorHeading,
+  PlatformInstructionsEditorParagraph,
+  PlatformInstructionsEditorTextAlign,
+  remarkPlatformInstructionsEditorTextAlignment,
+  type PlatformInstructionsEditorTextAlignment,
+} from "./platform-instructions-editor-text-alignment.js";
+import { PlatformInstructionsEditorTextSelectionMenu } from "./platform-instructions-editor-text-selection-menu.js";
 import { InstructionsEditorToolbarPopup } from "./platform-instructions-editor-toolbar-popup.js";
 
 const HISTORY_LIMIT = 80;
@@ -145,6 +156,16 @@ interface InstructionsEditorSlashMenuState {
 interface InstructionsEditorDeletionRange {
   from: number;
   to: number;
+}
+
+interface InstructionsEditorTextSelectionMenuState {
+  from: number;
+  to: number;
+  anchorPoint: { x: number; y: number };
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  alignment: PlatformInstructionsEditorTextAlignment;
 }
 
 type InstructionsEditorToolbarMenu = "style" | "insert";
@@ -245,6 +266,53 @@ function getInstructionsEditorDeletionRange(
     : { from: selection.from, to: selection.from + deletionLength };
 }
 
+function getInstructionsEditorTextSelectionRange(
+  editor: TiptapEditor,
+): { from: number; to: number } | null {
+  if (typeof window !== "undefined") {
+    const domSelection = window.getSelection();
+    const editorDom = editor.view.dom;
+    if (
+      domSelection &&
+      !domSelection.isCollapsed &&
+      domSelection.anchorNode &&
+      domSelection.focusNode &&
+      editorDom.contains(domSelection.anchorNode) &&
+      editorDom.contains(domSelection.focusNode)
+    ) {
+      try {
+        const anchor = editor.view.posAtDOM(
+          domSelection.anchorNode,
+          domSelection.anchorOffset,
+        );
+        const focus = editor.view.posAtDOM(
+          domSelection.focusNode,
+          domSelection.focusOffset,
+        );
+        if (anchor !== focus) {
+          return {
+            from: Math.min(anchor, focus),
+            to: Math.max(anchor, focus),
+          };
+        }
+      } catch {
+        // ProseMirror's authoritative selection below remains the fallback.
+      }
+    }
+  }
+
+  const { from, to, empty } = editor.state.selection;
+  return empty || from === to ? null : { from, to };
+}
+
+function getInstructionsEditorTextAlignment(
+  editor: TiptapEditor,
+): PlatformInstructionsEditorTextAlignment {
+  if (editor.isActive({ textAlign: "center" })) return "center";
+  if (editor.isActive({ textAlign: "right" })) return "right";
+  return "left";
+}
+
 const EMPTY_TOOLBAR_STATE = {
   paragraph: false,
   heading1: false,
@@ -262,6 +330,7 @@ const EMPTY_TOOLBAR_STATE = {
   code: false,
   link: false,
   table: false,
+  alignment: "left" as PlatformInstructionsEditorTextAlignment,
 };
 
 function assignRef<T>(ref: Ref<T> | undefined, value: T | null) {
@@ -559,6 +628,7 @@ export function PlatformMarkdownRenderer({
           remarkGfm,
           remarkPlatformInstructionsEditorFiles,
           remarkParagraphQuotes,
+          remarkPlatformInstructionsEditorTextAlignment,
           remarkUnderline,
           remarkSoftbreaksToBreaks,
         ]}
@@ -670,6 +740,8 @@ export function PlatformInstructionsEditor({
   const [toolbarState, setToolbarState] = useState(EMPTY_TOOLBAR_STATE);
   const [activeToolbarMenu, setActiveToolbarMenu] =
     useState<InstructionsEditorToolbarMenu | null>(null);
+  const [textSelectionMenuState, setTextSelectionMenuState] =
+    useState<InstructionsEditorTextSelectionMenuState | null>(null);
   const [slashMenuState, setSlashMenuState] =
     useState<InstructionsEditorSlashMenuState | null>(null);
   const [slashMenuActiveIndex, setSlashMenuActiveIndex] = useState(0);
@@ -730,6 +802,7 @@ export function PlatformInstructionsEditor({
       code: editor.isActive("code"),
       link: editor.isActive("link"),
       table: editor.isActive("table"),
+      alignment: getInstructionsEditorTextAlignment(editor),
     });
   }, []);
 
@@ -759,6 +832,8 @@ export function PlatformInstructionsEditor({
     {
       extensions: [
         StarterKit.configure({
+          paragraph: false,
+          heading: false,
           link: {
             openOnClick: false,
             autolink: true,
@@ -766,6 +841,9 @@ export function PlatformInstructionsEditor({
           },
           undoRedo: { depth: HISTORY_LIMIT },
         }),
+        PlatformInstructionsEditorParagraph,
+        PlatformInstructionsEditorHeading,
+        PlatformInstructionsEditorTextAlign,
         Placeholder.configure({ placeholder }),
         PlatformInstructionsEditorImageNode.configure({
           allowBase64: false,
@@ -1127,6 +1205,101 @@ export function PlatformInstructionsEditor({
     void uploadFiles(files, target);
   };
 
+  const handleEditorContextMenu = (event: MouseEvent<HTMLElement>) => {
+    if (readOnly || richTextEditor.isDestroyed) return;
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest('[contenteditable="false"]')
+    )
+      return;
+
+    const selectedRange =
+      getInstructionsEditorTextSelectionRange(richTextEditor);
+    let contextPosition: number | undefined;
+    try {
+      contextPosition = richTextEditor.view.posAtCoords({
+        left: event.clientX,
+        top: event.clientY,
+      })?.pos;
+    } catch {
+      contextPosition = undefined;
+    }
+
+    const contextIsInsideSelection =
+      selectedRange !== null &&
+      (typeof contextPosition !== "number" ||
+        (contextPosition >= selectedRange.from &&
+          contextPosition <= selectedRange.to));
+
+    if (selectedRange && contextIsInsideSelection) {
+      event.preventDefault();
+      event.stopPropagation();
+      userInteractionRef.current = true;
+      richTextEditor.commands.setTextSelection(selectedRange);
+      setActiveToolbarMenu(null);
+      slashMenuStateRef.current = null;
+      setSlashMenuState(null);
+      setTextSelectionMenuState({
+        ...selectedRange,
+        anchorPoint: { x: event.clientX, y: event.clientY },
+        bold: richTextEditor.isActive("bold"),
+        italic: richTextEditor.isActive("italic"),
+        underline: richTextEditor.isActive("underline"),
+        alignment: getInstructionsEditorTextAlignment(richTextEditor),
+      });
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    userInteractionRef.current = true;
+    setTextSelectionMenuState(null);
+    setActiveToolbarMenu(null);
+    const fallbackPosition = richTextEditor.state.selection.from;
+    const requestedPosition =
+      typeof contextPosition === "number" ? contextPosition : fallbackPosition;
+    richTextEditor.chain().focus().setTextSelection(requestedPosition).run();
+    const caretPosition = richTextEditor.state.selection.from;
+    const contextMenuState: InstructionsEditorSlashMenuState = {
+      from: caretPosition,
+      to: caretPosition,
+      query: "",
+      anchor: {
+        left: event.clientX,
+        top: event.clientY,
+        bottom: event.clientY + 1,
+      },
+    };
+    slashMenuStateRef.current = contextMenuState;
+    setSlashMenuActiveIndex(0);
+    setSlashMenuState(contextMenuState);
+  };
+
+  const applyTextSelectionCommand = (
+    command:
+      | "bold"
+      | "italic"
+      | "underline"
+      | PlatformInstructionsEditorTextAlignment,
+  ) => {
+    const selectedRange = textSelectionMenuState;
+    if (!selectedRange || readOnly || richTextEditor.isDestroyed) return;
+    const documentEnd = richTextEditor.state.doc.content.size;
+    const from = Math.max(0, Math.min(selectedRange.from, documentEnd));
+    const to = Math.max(from, Math.min(selectedRange.to, documentEnd));
+    if (from === to) return;
+    userInteractionRef.current = true;
+    const chain = richTextEditor
+      .chain()
+      .focus()
+      .setTextSelection({ from, to });
+    if (command === "bold") chain.toggleBold().run();
+    else if (command === "italic") chain.toggleItalic().run();
+    else if (command === "underline") chain.toggleUnderline().run();
+    else chain.setTextAlign(command).run();
+  };
+
   const preserveEditorFocus = (event: MouseEvent<HTMLButtonElement>) =>
     event.preventDefault();
   const toolbarButton = (
@@ -1311,6 +1484,38 @@ export function PlatformInstructionsEditor({
       onSelect: () => richTextEditor.chain().focus().toggleUnderline().run(),
     },
   ];
+  const alignmentMenuOptions: InstructionsEditorSlashCommandOption[] = [
+    {
+      id: "align-left",
+      label: "Align left",
+      group: "Alignment",
+      keywords: ["text alignment", "left aligned"],
+      icon: <AlignLeft width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.alignment === "left",
+      onSelect: () =>
+        richTextEditor.chain().focus().setTextAlign("left").run(),
+    },
+    {
+      id: "align-center",
+      label: "Align center",
+      group: "Alignment",
+      keywords: ["text alignment", "centered", "centred"],
+      icon: <AlignCenter width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.alignment === "center",
+      onSelect: () =>
+        richTextEditor.chain().focus().setTextAlign("center").run(),
+    },
+    {
+      id: "align-right",
+      label: "Align right",
+      group: "Alignment",
+      keywords: ["text alignment", "right aligned"],
+      icon: <AlignRight width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.alignment === "right",
+      onSelect: () =>
+        richTextEditor.chain().focus().setTextAlign("right").run(),
+    },
+  ];
   const listMenuOptions: InstructionsEditorSlashCommandOption[] = [
     {
       id: "bullet-list",
@@ -1395,6 +1600,7 @@ export function PlatformInstructionsEditor({
   const slashCommandOptions = [
     ...styleMenuOptions,
     ...formattingMenuOptions,
+    ...alignmentMenuOptions,
     ...listMenuOptions,
     ...insertMenuOptions,
   ];
@@ -1429,11 +1635,19 @@ export function PlatformInstructionsEditor({
     const commandState = slashMenuStateRef.current;
     if (!commandState || option.disabled) return;
     dismissSlashMenu();
-    richTextEditor
-      .chain()
-      .focus()
-      .deleteRange({ from: commandState.from, to: commandState.to })
-      .run();
+    if (commandState.to > commandState.from) {
+      richTextEditor
+        .chain()
+        .focus()
+        .deleteRange({ from: commandState.from, to: commandState.to })
+        .run();
+    } else {
+      richTextEditor
+        .chain()
+        .focus()
+        .setTextSelection(commandState.to)
+        .run();
+    }
     option.onSelect();
   };
 
@@ -1727,6 +1941,7 @@ export function PlatformInstructionsEditor({
               onKeyDownCapture={handleEditorKeyDown}
               onKeyUpCapture={() => refreshSlashMenuState(richTextEditor)}
               onMouseUpCapture={() => refreshSlashMenuState(richTextEditor)}
+              onContextMenu={handleEditorContextMenu}
             />
           )}
         </div>
@@ -1751,6 +1966,23 @@ export function PlatformInstructionsEditor({
             {contentExpanded ? "Show less" : "Show more"}
           </PlatformSecondaryButton>
         </div>
+      ) : null}
+      {!readOnly ? (
+        <PlatformInstructionsEditorTextSelectionMenu
+          open={Boolean(textSelectionMenuState)}
+          anchorPoint={textSelectionMenuState?.anchorPoint || null}
+          bold={Boolean(textSelectionMenuState?.bold)}
+          italic={Boolean(textSelectionMenuState?.italic)}
+          underline={Boolean(textSelectionMenuState?.underline)}
+          alignment={textSelectionMenuState?.alignment || "left"}
+          onOpenChange={(open) => {
+            if (!open) setTextSelectionMenuState(null);
+          }}
+          onToggleBold={() => applyTextSelectionCommand("bold")}
+          onToggleItalic={() => applyTextSelectionCommand("italic")}
+          onToggleUnderline={() => applyTextSelectionCommand("underline")}
+          onAlign={applyTextSelectionCommand}
+        />
       ) : null}
       {!readOnly ? (
         <PlatformInstructionsEditorSlashMenu

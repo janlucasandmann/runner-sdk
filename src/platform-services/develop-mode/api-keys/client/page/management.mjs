@@ -212,58 +212,47 @@ export const API_KEYS_MANAGEMENT_PAGE_SCRIPT = `        function renderApiKeysMa
             : apiKeyDialogContent;
 
           const apiKeyRevealDialogContent = developApiKeyRevealModal
-            ? React.createElement(PlatformModalBackdrop, {
-                className: "playground-tasks-project-modal-backdrop playground-settings-api-key-modal-backdrop",
-                onClick: () => setDevelopApiKeyRevealModal(null),
+            ? React.createElement(PlatformModal, {
+                open: true,
+                title: developApiKeyRevealModal.apiKeyRecord?.name || "API Key",
+                onClose: () => setDevelopApiKeyRevealModal(null),
+                size: "medium",
+                className: "platform-api-key-management-modal playground-api-key-reveal-modal",
+                closeButtonLabel: "Close API key",
               },
-                React.createElement(PlatformModalSurface, {
-                    className: "playground-tasks-project-modal playground-agent-composer-modal playground-settings-api-key-modal playground-api-key-reveal-modal",
-                    role: "dialog",
-                    "aria-modal": "true",
-                    "aria-labelledby": "playground-api-key-reveal-title",
-                    onClick: (event) => event.stopPropagation(),
-                  },
-                  React.createElement("div", { className: "playground-tasks-project-modal-top playground-settings-api-key-modal-top" },
-                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-                        React.createElement(Eye, { width: 18, height: 18, strokeWidth: 1.9 })
-                      ),
-                      React.createElement("div", { className: "playground-settings-api-key-modal-title-shell" },
-                        React.createElement("div", { id: "playground-api-key-reveal-title", className: "playground-settings-api-key-modal-title" }, developApiKeyRevealModal.apiKeyRecord?.name || "API Key"),
-                        React.createElement("div", { className: "playground-settings-api-key-modal-subtitle" }, "Use this key to authenticate SDK and API requests.")
+                developApiKeyRevealModal.loading
+                  ? React.createElement("div", { className: "platform-api-key-management-modal__loading", role: "status" },
+                      React.createElement(Loader2, {
+                        className: "platform-api-key-management-modal__spinner",
+                        width: 16,
+                        height: 16,
+                        "aria-hidden": "true",
+                      }),
+                      React.createElement("span", null, "Loading API key")
+                    )
+                  : developApiKeyRevealModal.key
+                    ? React.createElement(React.Fragment, null,
+                        React.createElement("div", { className: "playground-settings-code-row" },
+                          React.createElement("input", {
+                            type: "text",
+                            className: "playground-settings-code playground-settings-code-input",
+                            value: developApiKeyRevealModal.key,
+                            readOnly: true,
+                            "aria-label": "API key",
+                          }),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-settings-icon-button playground-settings-code-copy",
+                            onClick: () => void handleSettingsCopyField(developApiKeyRevealModal.key, "revealed-api-key"),
+                            title: "Copy API key",
+                            "aria-label": "Copy API key",
+                          }, settingsCopiedField === "revealed-api-key"
+                            ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" })
+                            : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }))
+                        ),
+                        React.createElement("p", { className: "platform-api-key-management-modal__notice" }, "Keep this key private. Anyone with it can access resources allowed by its permissions.")
                       )
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: () => setDevelopApiKeyRevealModal(null),
-                      title: "Close",
-                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                  ),
-                  React.createElement("div", { className: "playground-agent-composer-modal-body playground-settings-api-key-modal-body" },
-                    developApiKeyRevealModal.loading
-                      ? React.createElement("div", { className: "playground-files-state" },
-                          React.createElement(Loader2, { className: "playground-files-state-loader", width: 16, height: 16, strokeWidth: 1.75 }),
-                          React.createElement("span", null, "Loading API key")
-                        )
-                      : developApiKeyRevealModal.key
-                        ? React.createElement(React.Fragment, null,
-                            React.createElement("div", { className: "playground-settings-code-row" },
-                              React.createElement("code", { className: "playground-settings-code" }, developApiKeyRevealModal.key),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-settings-icon-button",
-                                onClick: () => void handleSettingsCopyField(developApiKeyRevealModal.key, "revealed-api-key"),
-                                title: "Copy API key",
-                              }, settingsCopiedField === "revealed-api-key"
-                                ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
-                                : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8 }))
-                            ),
-                            React.createElement("div", { className: "playground-settings-muted-copy" }, "Keep this key private. Anyone with it can access resources allowed by its permissions.")
-                          )
-                        : React.createElement("div", { className: "playground-api-key-reveal-error" }, developApiKeyRevealModal.error || "The API key value is unavailable.")
-                  )
-                )
+                    : React.createElement("p", { className: "platform-api-key-management-modal__error", role: "alert" }, developApiKeyRevealModal.error || "The API key value is unavailable.")
               )
             : null;
           const apiKeyRevealDialog = apiKeyRevealDialogContent && typeof document !== "undefined" && document.body

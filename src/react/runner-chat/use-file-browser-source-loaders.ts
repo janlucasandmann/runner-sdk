@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 
 import { buildRunnerHeaders } from "./api-utils.js";
 import type { RunnerFileBrowserSource } from "./file-browser-source.js";
+import type { RunnerChatConnectorFetchOptions } from "./public-types.js";
 import type { RunnerFileBrowserSourceStateController } from "./use-file-browser-source-state.js";
 import {
   buildEnvironmentFileListUrl,
@@ -24,10 +25,11 @@ export interface UseRunnerFileBrowserSourceLoadersOptions {
   backendUrl: string;
   currentFolderId: string | null;
   currentSource: RunnerFileBrowserSource;
-  fetchGithubItems?: (folderId: string) => Promise<RunnerChatFileNode[]>;
-  fetchGoogleDriveItems?: (folderId: string) => Promise<RunnerChatFileNode[]>;
-  fetchNotionDatabases?: () => Promise<RunnerChatNotionDatabase[]>;
-  fetchOneDriveItems?: (folderId: string) => Promise<RunnerChatFileNode[]>;
+  accountId?: string;
+  fetchGithubItems?: (folderId: string, options?: RunnerChatConnectorFetchOptions) => Promise<RunnerChatFileNode[]>;
+  fetchGoogleDriveItems?: (folderId: string, options?: RunnerChatConnectorFetchOptions) => Promise<RunnerChatFileNode[]>;
+  fetchNotionDatabases?: (options?: RunnerChatConnectorFetchOptions) => Promise<RunnerChatNotionDatabase[]>;
+  fetchOneDriveItems?: (folderId: string, options?: RunnerChatConnectorFetchOptions) => Promise<RunnerChatFileNode[]>;
   fetchImpl?: typeof fetch;
   githubConnected: boolean;
   googleDriveConnected: boolean;
@@ -95,6 +97,7 @@ export function useRunnerFileBrowserSourceLoaders({
   backendUrl,
   currentFolderId,
   currentSource,
+  accountId,
   fetchGithubItems,
   fetchGoogleDriveItems,
   fetchNotionDatabases,
@@ -117,6 +120,7 @@ export function useRunnerFileBrowserSourceLoaders({
   const workspaceEnvironmentIdentityRef = useRef(workspaceEnvironmentId);
   const workspaceEnvironmentGenerationRef = useRef(0);
   const workspaceStateEnvironmentIdRef = useRef(workspaceEnvironmentId);
+  const connectorRequestGenerationRef = useRef(0);
 
   if (workspaceEnvironmentIdentityRef.current !== workspaceEnvironmentId) {
     workspaceEnvironmentIdentityRef.current = workspaceEnvironmentId;
@@ -126,6 +130,10 @@ export function useRunnerFileBrowserSourceLoaders({
   useEffect(() => {
     mapGithubRootItemRef.current = mapGithubRootItem;
   }, [mapGithubRootItem]);
+
+  useEffect(() => {
+    connectorRequestGenerationRef.current += 1;
+  }, [accountId, currentSource]);
 
   const loadWorkspaceFolder = useCallback(
     async (folderId: string | null, options?: RunnerFileBrowserLoadOptions) => {
@@ -247,17 +255,22 @@ export function useRunnerFileBrowserSourceLoaders({
     async (
       source: RunnerFileBrowserFolderSourceActions,
       folderId: string,
-      fetchItems: ((nextFolderId: string) => Promise<RunnerChatFileNode[]>) | undefined,
+      fetchItems: ((nextFolderId: string, options?: RunnerChatConnectorFetchOptions) => Promise<RunnerChatFileNode[]>) | undefined,
       fallbackError: string,
       options?: RunnerFileBrowserLoadOptions,
       mapRootItems?: boolean,
     ) => {
       if (!fetchItems) return;
+      const requestGeneration = connectorRequestGenerationRef.current;
       const normalizedFolderId = folderId || "root";
       const inline = Boolean(options?.inline);
       markFolderLoading(source, normalizedFolderId, inline);
       try {
-        const fetchedItems = await fetchItems(normalizedFolderId);
+        const fetchedItems = await fetchItems(
+          normalizedFolderId,
+          accountId ? { accountId } : undefined,
+        );
+        if (connectorRequestGenerationRef.current !== requestGeneration) return;
         const nextItems =
           mapRootItems && normalizedFolderId === "root"
             ? fetchedItems.map((item) => mapGithubRootItemRef.current?.(item) || item)
@@ -268,12 +281,15 @@ export function useRunnerFileBrowserSourceLoaders({
         );
         source.setError(null);
       } catch (error) {
+        if (connectorRequestGenerationRef.current !== requestGeneration) return;
         source.setError(readErrorMessage(error, fallbackError));
       } finally {
-        finishFolderLoading(source, normalizedFolderId, inline);
+        if (connectorRequestGenerationRef.current === requestGeneration) {
+          finishFolderLoading(source, normalizedFolderId, inline);
+        }
       }
     },
-    [],
+    [accountId],
   );
 
   const loadGoogleDriveFolder = useCallback(
@@ -402,6 +418,7 @@ export function useRunnerFileBrowserSourceLoaders({
     }
     void loadWorkspaceFolder(folderId);
   }, [
+    accountId,
     currentFolderId,
     currentSource,
     hasApiKey,
@@ -434,6 +451,7 @@ export function useRunnerFileBrowserSourceLoaders({
     }
     void loadGoogleDriveFolder(folderId);
   }, [
+    accountId,
     currentFolderId,
     currentSource,
     fetchGoogleDriveItems,
@@ -464,6 +482,7 @@ export function useRunnerFileBrowserSourceLoaders({
     }
     void loadOneDriveFolder(folderId);
   }, [
+    accountId,
     currentFolderId,
     currentSource,
     fetchOneDriveItems,
@@ -491,6 +510,7 @@ export function useRunnerFileBrowserSourceLoaders({
     }
     void loadGithubFolder(folderId);
   }, [
+    accountId,
     currentFolderId,
     currentSource,
     fetchGithubItems,
@@ -517,7 +537,7 @@ export function useRunnerFileBrowserSourceLoaders({
     let cancelled = false;
     notion.setLoading(true);
     notion.setError(null);
-    void fetchNotionDatabases()
+    void fetchNotionDatabases(accountId ? { accountId } : undefined)
       .then((databases) => {
         if (cancelled) return;
         notion.setDatabases(databases || []);
@@ -538,6 +558,7 @@ export function useRunnerFileBrowserSourceLoaders({
       cancelled = true;
     };
   }, [
+    accountId,
     currentSource,
     fetchNotionDatabases,
     notionConnected,

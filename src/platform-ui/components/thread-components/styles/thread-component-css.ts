@@ -974,7 +974,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .platform-resource-share-modal__team:hover:not(
-  :has(.platform-resource-share-modal__team-radio:disabled)
+  .is-disabled
 ),
 .platform-resource-share-modal__team.is-selected {
   border-color: rgba(255, 255, 255, 0.14);
@@ -985,7 +985,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   color: rgba(255, 255, 255, 0.62);
 }
 
-.platform-resource-share-modal__team:has(.platform-resource-share-modal__team-radio:disabled) {
+.platform-resource-share-modal__team.is-disabled {
   cursor: default;
   opacity: 0.45;
 }
@@ -2634,7 +2634,7 @@ button.platform-attachments__computer-upload.platform-button.is-secondary.is-act
   padding: 20px 16px;
   border: 0;
   border-radius: inherit;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
   color: inherit;
   cursor: pointer;
 }
@@ -2813,6 +2813,321 @@ button.platform-attachments__item-main {
   font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/*
+ * Inline attachment previews used by RunnerChat and other thread surfaces.
+ * Keep the card domain-neutral; callers provide the icon, image preview, and
+ * type label while this component owns the shared layout and interaction.
+ */
+.platform-attachment-preview {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.platform-attachment-preview--removable {
+  overflow: visible;
+}
+
+.platform-attachment-preview--composer {
+  height: 46px;
+  max-width: min(220px, 100%);
+  flex: 0 0 auto;
+  gap: 10px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  background: transparent;
+  backdrop-filter: blur(20px);
+}
+
+.platform-attachment-preview--message {
+  width: fit-content;
+  max-width: min(640px, 100%);
+  min-height: 0;
+  flex: 0 1 auto;
+  align-self: flex-start;
+  gap: 14px;
+  padding: 10px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.platform-attachment-preview--message:hover,
+.platform-attachment-preview--message.platform-attachment-preview--active {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.platform-attachment-preview--message.platform-attachment-preview--removable,
+.platform-attachment-preview--image.platform-attachment-preview--removable {
+  overflow: visible;
+  z-index: 1;
+}
+
+.platform-attachment-preview--image {
+  width: 53px;
+  height: 53px;
+  min-height: 53px;
+  flex: 0 0 53px;
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: none;
+}
+
+.platform-attachment-preview__image-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.platform-attachment-preview__image-frame > .platform-attachment-preview__image-lazy-preview,
+.platform-attachment-preview__image-frame > .tb-runner-image-preview-surface,
+.platform-attachment-preview__image-frame > .platform-attachment-preview__image-button {
+  width: 100%;
+  height: 100%;
+}
+
+.platform-attachment-preview__image-frame .tb-runner-image-preview-surface,
+.platform-attachment-preview__image-lazy-preview > .tb-runner-image-preview-surface {
+  width: 100%;
+  height: 100%;
+}
+
+.platform-attachment-preview__image-button {
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.platform-attachment-preview__image-button.is-clickable {
+  cursor: pointer;
+}
+
+.platform-attachment-preview__image-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.platform-attachment-preview__image-placeholder img,
+.platform-attachment-preview__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.platform-attachment-preview__file-main {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+button.platform-attachment-preview__file-main {
+  cursor: pointer;
+}
+
+.platform-attachment-preview__file-main:focus-visible {
+  outline: 1px solid rgba(77, 163, 255, 0.72);
+  outline-offset: -1px;
+}
+
+.platform-attachment-preview__file-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.platform-attachment-preview--composer .platform-attachment-preview__file-icon {
+  width: 20px;
+  height: 20px;
+  flex-basis: 20px;
+}
+
+.platform-attachment-preview__file-icon > svg,
+.platform-attachment-preview__file-icon > img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.platform-attachment-preview--composer .platform-attachment-preview__file-icon > svg,
+.platform-attachment-preview--composer .platform-attachment-preview__file-icon > img {
+  width: 20px;
+  height: 20px;
+}
+
+.platform-attachment-preview__file-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.platform-attachment-preview--composer .platform-attachment-preview__file-copy {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.platform-attachment-preview__name {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-attachment-preview--composer .platform-attachment-preview__name {
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.platform-attachment-preview__type,
+.platform-attachment-preview__metadata {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-attachment-preview--composer .platform-attachment-preview__metadata {
+  max-width: 92px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 12px;
+  line-height: 1.1;
+}
+
+.platform-attachment-preview__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 2px;
+  border: 0;
+  color: #000;
+  background: rgb(255 255 255 / 90%);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  cursor: pointer;
+}
+
+.platform-attachment-preview__remove:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.platform-attachment-preview__remove-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.platform-attachment-preview--message.platform-attachment-preview--removable
+  .platform-attachment-preview__remove-icon {
+  width: 10px;
+  height: 10px;
+}
+
+.platform-attachment-preview__remove--image,
+.platform-attachment-preview__remove--file {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+  z-index: 2;
+}
+
+.platform-attachment-preview--message.platform-attachment-preview--removable
+  .platform-attachment-preview__remove--image,
+.platform-attachment-preview--message.platform-attachment-preview--removable
+  .platform-attachment-preview__remove--file {
+  top: -7px;
+  right: -7px;
+  width: 20px;
+  height: 20px;
+}
+
+.platform-attachment-preview--image:hover .platform-attachment-preview__remove--image,
+.platform-attachment-preview--image:focus-within .platform-attachment-preview__remove--image,
+.platform-attachment-preview--file:hover .platform-attachment-preview__remove--file,
+.platform-attachment-preview--file:focus-within .platform-attachment-preview__remove--file {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 3;
+}
+
+.platform-attachment-preview--uploading .platform-attachment-preview__image-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.platform-attachment-preview__upload-indicator {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .platform-attachments__item-actions {
@@ -3372,6 +3687,34 @@ button.platform-attachments__item-main {
   flex-shrink: 0;
 }
 
+.platform-file-explorer-modal.is-browser-layout .tb-file-browser-header-title {
+  min-width: 0;
+  max-width: min(240px, 28%);
+  flex: 0 1 240px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.platform-file-explorer-modal.is-browser-layout .tb-file-browser-account-selector-trigger {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 28px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.platform-file-explorer-modal.is-browser-layout .tb-file-browser-account-selector-trigger .platform-selector__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-file-explorer-modal.is-browser-layout .tb-file-browser-account-selector-popup {
+  z-index: 2147483002 !important;
+  min-width: 220px;
+}
+
 .platform-file-explorer-modal.is-browser-layout .tb-file-browser-breadcrumbs {
   min-width: 0;
   flex: 1;
@@ -3654,11 +3997,12 @@ button.platform-attachments__item-main {
 .platform-file-explorer-modal.is-browser-layout .tb-file-browser-item-branch-select {
   width: 100%;
   height: 28px;
-  padding: 0 28px 0 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
   outline: none;
-  background: rgba(255, 255, 255, 0.06);
+  background: transparent;
   color: rgba(255, 255, 255, 0.86);
   font-size: 12px;
   line-height: 1;
@@ -3666,12 +4010,15 @@ button.platform-attachments__item-main {
 }
 
 .platform-file-explorer-modal.is-browser-layout .tb-file-browser-item-branch-select:hover {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: transparent;
+  background: transparent;
+  color: #fff;
 }
 
 .platform-file-explorer-modal.is-browser-layout .tb-file-browser-item-branch-select:focus {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: transparent;
+  background: transparent;
+  outline: none;
 }
 
 .platform-file-explorer-modal.is-browser-layout .tb-file-browser-item-branch-select:disabled {
@@ -3974,6 +4321,19 @@ button.platform-attachments__item-main {
   --platform-popup-font-size: 12px;
   --platform-popup-icon-size: 13px;
   min-width: 164px;
+}
+
+/*
+ * The file browser uses a deliberately high backdrop z-index so it can sit
+ * above the composer and the rest of the thread surface.  These two menus are
+ * portaled to document.body by the shared popup primitives, so they must opt
+ * into the same stacking layer or they end up visually (and interactively)
+ * behind the explorer backdrop.
+ */
+.tb-file-browser-item-actions-menu.platform-popup-surface.is-portaled,
+.tb-file-browser-item-branch-popup.platform-popup-surface.is-portaled,
+.tb-file-browser-account-selector-popup.platform-popup-surface.is-portaled {
+  z-index: 2147483001 !important;
 }
 
 .tb-file-browser-item-actions-menu.platform-popup-surface .tb-popup-row {
@@ -4779,8 +5139,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   border-radius: var(--tb-runner-radius-md);
   border-bottom-right-radius: 3px;
   overflow: hidden;
-  color: white;
-  background: rgba(255, 255, 255, 0.1);
+  color: #000;
+  background: rgba(255, 255, 255, 0.9);
   border: 0;
   font-size: 14px;
   line-height: 1.5;
@@ -5230,6 +5590,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .tb-runner-chat .tb-user-turn-editor {
@@ -5244,6 +5605,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   background: transparent;
   color: white;
   font: inherit;
+  font-weight: 400;
   line-height: 1.5;
 }
 
@@ -12934,7 +13296,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-message-markdown-user {
-  color: #fff;
+  color: #000;
   font-weight: 400;
   margin-bottom: 0 !important;
 }
@@ -12973,6 +13335,11 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .tb-message-markdown-user .tb-message-markdown-link {
   color: inherit;
   font-weight: inherit;
+}
+
+.tb-runner-chat .task-prompt-in-session-context .tb-message-markdown-user,
+.tb-runner-chat .task-prompt-in-session-context .tb-message-markdown-user * {
+  color: #000;
 }
 
 .tb-runner-chat .tb-turn-summary .tb-message-markdown-summary {
@@ -13812,10 +14179,13 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .runner-attachments {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   padding: 14px 14px 0;
+  overflow: visible;
 }
 
 .tb-runner-chat .runner-attachments-turn {
@@ -14178,25 +14548,28 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  padding: 2px;
   border: 0;
-  color: white;
+  color: #000;
+  background: rgb(255 255 255 / 90%);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   cursor: pointer;
 }
 
 .tb-runner-chat .runner-attachment-remove-icon {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
 }
 
 .tb-runner-chat .runner-attachment-remove-image {
   position: absolute;
   top: -8px;
   right: -8px;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 999px;
-  background: rgba(24, 24, 24, 0.92);
+  background: rgb(255 255 255 / 90%);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
   opacity: 0;
   pointer-events: none;
@@ -14212,8 +14585,15 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-runner-chat .runner-attachment-remove-file {
   flex: 0 0 auto;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.92);
+  padding: 2px;
+  background: rgb(255 255 255 / 90%);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  color: #000;
+}
+
+.tb-runner-chat .runner-attachment:has(.runner-attachment-remove) {
+  overflow: visible;
 }
 
 
@@ -14366,7 +14746,36 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   min-width: 0;
 }
 
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-header-title-row {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-header-title-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-header-title-actions .platform-resource-actions-menu {
+  display: inline-flex;
+  align-items: center;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-header-title-actions .platform-icon-button {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  flex-basis: 24px;
+}
+
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-name {
+  min-width: 0;
+  max-width: 100%;
   color: rgba(255, 255, 255, 0.96);
   font-size: 13px;
   line-height: 1.2;
@@ -14374,6 +14783,11 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.tb-document-preview-resource-actions-menu {
+  --platform-popup-font-size: 12px;
+  min-width: 0;
 }
 
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-resize-handle {
@@ -15773,7 +16187,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .tb-user-turn-connector-name {
   min-width: 0;
   overflow: hidden;
-  color: white;
+  color: #000;
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
@@ -16686,11 +17100,11 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-runner-chat .tb-popup-menu-section-label {
   margin: 6px 0 0;
-  padding: 9px 10px 7px;
+  padding: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.075);
   color: rgba(255, 255, 255, 0.58);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: 0.02em;
   text-transform: none;
 }
@@ -16720,7 +17134,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-composer-suggestion-popup .tb-popup-row {
-  min-height: 48px;
+  min-height: 42px;
   gap: 10px;
   padding: 8px 10px !important;
   border: 0;
@@ -16734,6 +17148,23 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .tb-composer-suggestion-popup .tb-popup-row:focus-visible {
   background: rgba(255, 255, 255, 0.1);
   outline: none;
+}
+
+/* Keep slash-menu scrolling on the popup itself so the header and capability
+ * rows move together instead of creating a nested scroll region. */
+.tb-runner-chat .tb-composer-suggestion-popup.tb-popup-menu-slash {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.tb-runner-chat .tb-composer-suggestion-popup.tb-popup-menu-slash
+  .tb-composer-suggestion-popup-list {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.tb-runner-chat .tb-popup-menu-section-label {
+  padding-bottom: 0;
 }
 
 @media (max-width: 640px) {
@@ -16763,7 +17194,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-popup-menu-slash .tb-popup-row {
-  min-height: 40px;
+  min-height: 42px;
   gap: 10px;
   padding-top: 4px !important;
   padding-bottom: 4px !important;
@@ -17871,219 +18302,26 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   width: min(560px, 100%);
 }
 
-/* Full-screen feedback surface shared by composer and run-summary actions. */
-.tb-feedback-modal {
-  width: min(1080px, calc(100vw - 16px));
-  max-width: none;
-  height: min(900px, calc(100dvh - 16px));
-  max-height: none;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: #000 !important;
-  box-shadow: none !important;
-}
-
-.platform-modal-surface.tb-feedback-modal {
-  width: min(1080px, calc(100vw - 16px));
-  max-width: none;
-  height: min(900px, calc(100dvh - 16px));
-  max-height: none;
-}
-
-.tb-feedback-modal .platform-modal-header {
-  min-height: 92px;
-  padding: 12px 14px;
-  border-bottom: 0;
-}
-
-.tb-feedback-modal .platform-modal-header__title {
-  color: #fff;
-  font-size: 34px;
-  font-weight: 500;
-  line-height: 1.1;
-}
-
-.tb-feedback-modal .platform-modal-header__close {
-  width: 36px;
-  height: 36px;
-  margin: 0;
-}
-
-.tb-feedback-modal .platform-modal-header__close svg {
-  width: 25px;
-  height: 25px;
-}
-
 .tb-feedback-modal-body {
-  display: flex;
-  min-height: 0;
-  padding: 12px 8px 14px;
-  overflow: auto;
-}
-
-.tb-feedback-modal-content {
-  display: flex;
-  flex: 1 1 auto;
-  min-height: 0;
-  flex-direction: column;
-  gap: 34px;
-}
-
-.tb-feedback-modal-textarea {
-  width: 100%;
-  min-height: 390px;
-  flex: 1 1 auto;
-  box-sizing: border-box;
-  padding: 38px 34px;
-  resize: vertical;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 42px;
-  outline: none;
-  background: transparent;
-  color: #fff;
-  font: inherit;
-  font-size: 28px;
-  line-height: 1.4;
-}
-
-.tb-feedback-modal-textarea::placeholder {
-  color: rgba(255, 255, 255, 0.62);
-}
-
-.tb-feedback-modal-textarea:focus {
-  border-color: rgba(255, 255, 255, 0.24);
-}
-
-.tb-feedback-modal .platform-attachments {
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-.tb-feedback-modal .platform-attachments__header {
-  margin-bottom: 18px;
-  padding: 0;
-  border: 0;
-}
-
-.tb-feedback-modal .platform-attachments__title,
-.tb-feedback-modal-label {
-  color: #fff;
-  font-size: 28px;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.tb-feedback-modal-count,
-.tb-feedback-modal-label span {
-  color: rgba(255, 255, 255, 0.62);
+  padding: 0 20px;
+  font-size: 20px;
   font-weight: 400;
 }
 
-.tb-feedback-modal .platform-attachments__drop-target {
-  min-height: 190px;
-  border: 2px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 30px;
-  background: transparent;
+.tb-feedback-modal-body .platform-instructions-editor {
+  min-height: 520px;
+  margin-bottom: 0;
 }
 
-.tb-feedback-modal .platform-attachments__empty {
-  gap: 18px;
+.tb-feedback-modal-body .platform-instructions-editor__title {
+  font-size: 14px;
 }
 
-.tb-feedback-modal .platform-attachments__empty-icon {
-  width: 72px;
-  height: 72px;
-  padding: 18px;
-  box-sizing: border-box;
-  border-radius: 999px;
-  color: rgba(255, 255, 255, 0.68);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.tb-feedback-modal .platform-attachments__empty-title {
-  color: #fff;
-  font-size: 24px;
-}
-
-.tb-feedback-modal .platform-attachments__empty-description {
-  display: none;
-}
-
-.tb-feedback-modal-field {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.tb-feedback-modal-select {
-  width: 100%;
-  height: 78px;
-  box-sizing: border-box;
-  padding: 0 28px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 28px;
-  outline: none;
-  background: transparent;
-  color: #fff;
-  color-scheme: dark;
-  font: inherit;
-  font-size: 24px;
-}
-
-.tb-feedback-modal-select:focus {
-  border-color: rgba(255, 255, 255, 0.24);
-}
-
-.tb-feedback-modal-error {
-  margin: 0;
-}
-
-.tb-feedback-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  padding-bottom: 0;
-}
-
-.tb-feedback-modal-submit {
-  min-width: 124px;
-  min-height: 76px;
-  border-radius: 24px;
-  font-size: 24px;
-}
-
-@media (max-width: 640px) {
-  .tb-feedback-modal {
-    width: 100vw;
-    height: 100dvh;
-  }
-
-  .tb-feedback-modal .platform-modal-header__title {
-    font-size: 28px;
-  }
-
-  .tb-feedback-modal-content {
-    gap: 24px;
-  }
-
-  .tb-feedback-modal-textarea {
-    min-height: 260px;
-    padding: 24px;
-    border-radius: 30px;
-    font-size: 22px;
-  }
-
-  .tb-feedback-modal .platform-attachments__title,
-  .tb-feedback-modal-label {
-    font-size: 24px;
-  }
-
-  .tb-feedback-modal .platform-attachments__empty-title,
-  .tb-feedback-modal-select,
-  .tb-feedback-modal-submit {
-    font-size: 20px;
-  }
+.tb-feedback-modal-body .platform-instructions-editor__body,
+.tb-feedback-modal-body .platform-instructions-editor__content-viewport,
+.tb-feedback-modal-body .platform-instructions-editor__content,
+.tb-feedback-modal-body .platform-instructions-editor__prosemirror {
+  min-height: 520px;
 }
 
 .tb-runner-chat .tb-report-issue-modal-header {

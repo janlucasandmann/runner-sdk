@@ -580,6 +580,66 @@ function createTestPlanRolePermissionSet(roleId: string): PlatformPermissionSet 
   return permissionSet;
 }
 
+function createMetronomeWorkflowRolePermissionSet(roleId: string): PlatformPermissionSet {
+  if (roleId === "owner" || roleId === "admin")
+    return createAdminPermissionSet("metronome_workflow_team_role");
+  const permissionSet = createPlatformDefaultPermissionSet(
+    "metronome_workflow_team_role",
+  );
+  if (roleId === "contributor" || roleId === "developer") {
+    setRingAccess(permissionSet, "ring_1", "full_access");
+    setRingAccess(permissionSet, "ring_2", "full_access");
+    setRingAccess(permissionSet, "ring_3", "ask_for_permission");
+    applyAccess(
+      permissionSet,
+      [
+        "metronome_workflow_view",
+        "metronome_run_results_view",
+        "metronome_run",
+        "metronome_workflow_manage",
+        "metronome_workflow_versions_manage",
+      ],
+      "full_access",
+    );
+    setActionAccess(
+      permissionSet,
+      "metronome_workflow_publish",
+      "ask_for_permission",
+    );
+    applyAccess(
+      permissionSet,
+      ["metronome_workflow_access_manage", "metronome_workflow_delete"],
+      "no_access",
+    );
+    return permissionSet;
+  }
+  setRingAccess(permissionSet, "ring_1", "read_only");
+  setRingAccess(permissionSet, "ring_2", "no_access");
+  setRingAccess(permissionSet, "ring_3", "no_access");
+  applyAccess(
+    permissionSet,
+    ["metronome_workflow_view", "metronome_run_results_view"],
+    "read_only",
+  );
+  setActionAccess(
+    permissionSet,
+    "metronome_run",
+    roleId === "member" ? "full_access" : "no_access",
+  );
+  applyAccess(
+    permissionSet,
+    [
+      "metronome_workflow_manage",
+      "metronome_workflow_versions_manage",
+      "metronome_workflow_publish",
+      "metronome_workflow_access_manage",
+      "metronome_workflow_delete",
+    ],
+    "no_access",
+  );
+  return permissionSet;
+}
+
 function createAssurancePolicyRolePermissionSet(roleId: string): PlatformPermissionSet {
   if (roleId === "owner" || roleId === "admin") {
     return createAdminPermissionSet("assurance_policy_team_role");
@@ -747,6 +807,14 @@ export function createPlatformRolePermissionSet(
   }
   if (subjectType === "test_plan" || subjectType === "test_plan_team_role") {
     const permissionSet = createTestPlanRolePermissionSet(normalizedRoleId);
+    permissionSet.subjectType = subjectType;
+    return permissionSet;
+  }
+  if (
+    subjectType === "metronome_workflow"
+    || subjectType === "metronome_workflow_team_role"
+  ) {
+    const permissionSet = createMetronomeWorkflowRolePermissionSet(normalizedRoleId);
     permissionSet.subjectType = subjectType;
     return permissionSet;
   }

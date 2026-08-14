@@ -1,14 +1,21 @@
 export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
           const renderEditor = () => metronomeVersionChangesState
             ? renderMetronomeChangesMode()
+            : metronomeRunInlineDetailId
+            ? React.createElement(React.Fragment, null,
+                renderMetronomeInlineRunDetail(
+                  metronomeRuns.find((run) => run.id === metronomeRunInlineDetailId) || null
+                ),
+                renderMetronomeVersionHistorySidebarPortal()
+              )
             : metronomeEditorMode === "code"
             ? React.createElement(React.Fragment, null,
                 renderCodeMode(),
                 renderMetronomeVersionHistorySidebarPortal()
               )
-            : metronomeEditorMode === "runs"
+            : metronomeEditorMode === "settings"
               ? React.createElement(React.Fragment, null,
-                  renderRunsMode(),
+                  renderMetronomeSettingsMode(),
                   renderMetronomeVersionHistorySidebarPortal()
                 )
               : React.createElement(React.Fragment, null,

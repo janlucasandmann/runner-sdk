@@ -1336,16 +1336,10 @@
   	                roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
   	                  id: role.id,
   	                  label: role.label,
-  	                  description: role.description,
-  	                  meta: "Database access",
   	                })),
   	                value: selectedDatabaseRoleDefinition.id,
   	                onValueChange: setDatabasePermissionRoleId,
   	                roleAriaLabel: "Database team roles",
-  	                roleKicker: "Database role",
-  	                roleDescription: "Database-scoped permissions for "
-  	                  + selectedDatabaseRoleDefinition.label.toLowerCase() + "s in "
-  	                  + (selectedDatabasePermissionTeam.name || "this team") + ".",
   	                readOnly: selectedDatabaseRoleDefinition.id === "owner",
   	                className: "playground-project-team-role-pages playground-database-team-role-pages",
   	                roleListClassName: "playground-project-team-role-list",

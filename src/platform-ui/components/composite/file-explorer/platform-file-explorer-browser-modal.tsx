@@ -61,6 +61,8 @@ export interface PlatformFileExplorerBrowserModalProps<TItem>
   canGoBack?: boolean;
   canGoForward?: boolean;
   headerIcon?: ReactNode;
+  /** Optional control rendered as the source title immediately after the icon. */
+  headerTitle?: ReactNode;
   headerActions?: ReactNode;
   filterContextKey?: string;
   items?: readonly TItem[];
@@ -108,6 +110,7 @@ export function PlatformFileExplorerBrowserModal<TItem>({
   canGoBack = false,
   canGoForward = false,
   headerIcon,
+  headerTitle,
   headerActions,
   filterContextKey = "default",
   items = [],
@@ -231,6 +234,9 @@ export function PlatformFileExplorerBrowserModal<TItem>({
           </button>
           {headerIcon != null ? (
             <div className="tb-file-browser-header-icon">{headerIcon}</div>
+          ) : null}
+          {headerTitle != null ? (
+            <div className="tb-file-browser-header-title">{headerTitle}</div>
           ) : null}
           <div className="tb-file-browser-breadcrumbs">
             {breadcrumbs.map((crumb, index) => (

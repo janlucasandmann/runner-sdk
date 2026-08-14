@@ -20,6 +20,7 @@ assert.match(TEAMS_STYLE_FRAGMENTS.responsive, /@media \(max-width: 900px\)/);
 assert.equal(Object.values(TEAMS_STYLE_FRAGMENTS).join(""), TEAMS_PAGE_CSS);
 
 assert.match(TEAMS_DOMAIN_SCRIPT_FRAGMENTS.memberIdentity, /function normalizeTeamPageTeamRecord/);
+assert.match(TEAMS_DOMAIN_SCRIPT_FRAGMENTS.memberIdentity, /function getTeamPageDescription/);
 assert.match(TEAMS_DOMAIN_SCRIPT_FRAGMENTS.memberIdentity, /function getTeamPageProfileImageUrl/);
 assert.match(TEAMS_DOMAIN_SCRIPT_FRAGMENTS.memberIdentity, /function buildTeamPageMetadataWithProfileImage/);
 assert.match(TEAMS_DOMAIN_SCRIPT_FRAGMENTS.memberIdentity, /function mergeTeamPageMemberProfiles/);
@@ -36,6 +37,9 @@ assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.loading, /headers: teamListRequestHe
 assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.membership, /async function handleCreateTeam/);
 assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.administration, /async function handleTeamProfileImageSelection/);
 assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.administration, /async function handleTransferTeamOwnership/);
+assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.administration, /async function handleSaveTeamIdentity/);
+assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.administration, /body: JSON\.stringify\(\{ name, metadata \}\)/);
+assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.administration, /buildTeamPageMetadataWithProfileImage\(/);
 assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.administration, /getPlaygroundTeamRoleApiValue\("owner"\)/);
 assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.membership, /async function handleUpdateTeamMemberRole/);
 assert.match(TEAMS_RUNTIME_SCRIPT_FRAGMENTS.administration, /async function handleRenameTeam/);
@@ -110,11 +114,18 @@ assert.match(pageFragments.resourcesView, /React\.createElement\(PlatformDataTab
 assert.match(pageFragments.resourcesView, /variant: "minimalistic-ui"/);
 assert.doesNotMatch(pageFragments.resourcesView, /newButtonLabel: "Add Resource"/);
 assert.match(pageFragments.rolesAndView, /const renderRolesTab/);
+assert.match(pageFragments.rolesAndView, /React\.createElement\(PlatformRolePermissionsPage/);
+assert.match(pageFragments.rolesAndView, /platform-service-detail-identity__title-input/);
+assert.match(pageFragments.rolesAndView, /platform-service-detail-identity__description-input/);
+assert.match(pageFragments.rolesAndView, /onBlur: canManageTeam/);
+assert.doesNotMatch(pageFragments.rolesAndView, /platform-service-detail-identity__edit-trigger/);
+assert.doesNotMatch(pageFragments.rolesAndView, /teamDetailSidebarToggle/);
 assert.match(pageFragments.rolesAndView, /React\.createElement\(TeamDetailPage/);
 assert.match(pageFragments.rolesAndView, /React\.createElement\(PlatformProfileImagePicker/);
 assert.match(pageFragments.rolesAndView, /React\.createElement\(PlatformResourceDetailSidebar/);
-assert.match(pageFragments.rolesAndView, /React\.createElement\(PlatformLabel/);
-assert.match(pageFragments.rolesAndView, /playground-team-role-assigned-label/);
+assert.match(pageFragments.rolesAndView, /React\.createElement\(PlatformOwnerSelector/);
+assert.match(pageFragments.rolesAndView, /assignedMembers:/);
+assert.doesNotMatch(pageFragments.rolesAndView, /playground-team-role-assigned-label/);
 assert.match(pageFragments.rolesAndView, /await handleTransferTeamOwnership/);
 assert.doesNotMatch(pageFragments.rolesAndView, /cardTitle: "Owner"/);
 assert.doesNotMatch(pageFragments.rolesAndView, /cardTitle: "Access"/);
@@ -132,6 +143,13 @@ assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-team-detail-c
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformSwitch/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /ariaLabel: "Team section"/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /includeSearchDivider: true/);
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.statePrimary, /teamPageActionsOpen/);
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /PlatformResourceActionsMenu/);
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /PlatformResourceActionsInformation/);
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /Copy Team ID/);
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /shortcut: "rename"/);
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /shortcut: "delete"/);
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /trailing: renderTeamDetailActions\(\)/);
 assert.match(TEAMS_STYLE_FRAGMENTS.foundation, /\.playground-team-detail-sidebar-owner-row[\s\S]*margin-top: 12px;[\s\S]*padding-top: 12px;[\s\S]*border-top: 1px solid rgba\(255, 255, 255, 0\.1\);/);
 
 const platformEntrySource = await readPlatformCompositionSource();

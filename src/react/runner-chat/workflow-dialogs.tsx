@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type RefObject } from "react";
+import { type RefObject } from "react";
 import {
   Cloud as LucideCloud,
   GitBranch as LucideGitBranch,
@@ -6,11 +6,13 @@ import {
 } from "lucide-react";
 import {
   PlatformModal,
+  PlatformModalBody,
+  PlatformModalFooter,
 } from "../../platform-ui/components/composite/modal/index.js";
 import {
-  PlatformAttachments,
-  type PlatformAttachmentItem,
-} from "../../platform-ui/components/composite/attachments/index.js";
+  PlatformInstructionsEditor,
+  type PlatformInstructionsEditorUploadedFile,
+} from "../../platform-ui/components/composite/instructions-editor/index.js";
 import {
   PlatformPopupSurface,
 } from "../../platform-ui/components/composite/popup/index.js";
@@ -23,24 +25,20 @@ import {
   IconCheck,
   IconChevronDown,
 } from "./icons.js";
-import {
-  RUNNER_THREAD_FEEDBACK_REPORT_OPTIONS,
-  type RunnerThreadFeedbackReportType,
-} from "./thread-feedback.js";
 import type {
   RunnerForkExistingEnvironmentFileCopyMode,
   RunnerForkFileCopyMode,
   RunnerForkTarget,
 } from "./thread-api.js";
+import type { RunnerAttachment } from "./attachment-types.js";
 
 export interface RunnerFeedbackDialogProps {
   open: boolean;
-  type: RunnerThreadFeedbackReportType;
   message: string;
   error: string;
   submitting: boolean;
-  onTypeChange: (type: RunnerThreadFeedbackReportType) => void;
   onMessageChange: (message: string) => void;
+  onUploadFiles: (files: File[]) => Promise<RunnerAttachment[]>;
   onSubmit: () => void | Promise<void>;
   onClose: () => void;
 }
@@ -49,111 +47,75 @@ export type RunnerReportIssueDialogProps = RunnerFeedbackDialogProps;
 /** Shared feedback surface used by composer actions and run-summary actions. */
 export function RunnerFeedbackDialog({
   open,
-  type,
   message,
   error,
   submitting,
-  onTypeChange,
   onMessageChange,
+  onUploadFiles,
   onSubmit,
   onClose,
 }: RunnerFeedbackDialogProps) {
-  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
-
-  useEffect(() => {
-    if (!open) {
-      setAttachmentFiles([]);
-    }
-  }, [open]);
-
-  const attachmentItems = useMemo<PlatformAttachmentItem[]>(
-    () => attachmentFiles.map((file, index) => ({
-      id: `${file.name}:${file.size}:${file.lastModified}:${index}`,
-      name: file.name,
-      metadata: `${Math.max(1, Math.round(file.size / 1024))} KB`,
-      onRemove: () => {
-        setAttachmentFiles((current) => current.filter((_, fileIndex) => fileIndex !== index));
-      },
-    })),
-    [attachmentFiles],
-  );
-
-  const appendAttachments = (files: File[]) => {
-    setAttachmentFiles((current) => [...current, ...files].slice(0, 5));
-  };
-
   if (!open) return null;
+
+  const uploadFiles = async (
+    files: File[],
+  ): Promise<PlatformInstructionsEditorUploadedFile[]> => {
+    const uploaded = await onUploadFiles(files);
+    return uploaded.map((attachment) => ({
+      src: attachment.url || `/attachments/${encodeURIComponent(attachment.id)}`,
+      name: attachment.filename,
+      size: attachment.size,
+      mimeType: attachment.mimeType,
+      attachmentId: attachment.id,
+      metadata: attachment,
+    }));
+  };
 
   return (
     <PlatformModal
       open
       visible
-      size="full"
-      title="Feedback"
-      backdropClassName="tb-popup-modal-scrim"
-      className="tb-popup-modal tb-feedback-modal"
-      bodyClassName="tb-feedback-modal-body"
+      size="large"
+      scrollable
+      showHeader={false}
+      title=""
       onClose={onClose}
       closeButtonLabel="Close feedback dialog"
       closeButtonDisabled={submitting}
     >
-      <div className="tb-feedback-modal-content">
-        <textarea
-          className="tb-feedback-modal-textarea"
+      <PlatformModalBody className="tb-feedback-modal-body">
+        <PlatformInstructionsEditor
           value={message}
+          onChange={(nextValue) => onMessageChange(nextValue.slice(0, 5000))}
+          title="Feedback"
           placeholder="Give us your feedback"
-          maxLength={5000}
-          onChange={(event) => onMessageChange(event.target.value)}
-          disabled={submitting}
+          ariaLabel="Feedback"
+          readOnly={submitting}
+          stickyHeader={false}
+          variant="minimalistic-ui"
+          contentVariant="file-enabled"
+          historyKey="runner-feedback"
+          fileUpload={{
+            upload: uploadFiles,
+            accept: "*/*",
+            disabled: submitting,
+          }}
           autoFocus
         />
 
-        <PlatformAttachments
-          className="tb-feedback-modal-attachments"
-          title={<>Attachments <span className="tb-feedback-modal-count">({attachmentFiles.length}/5)</span></>}
-          items={attachmentItems}
-          accept="*/*"
-          disabled={submitting || attachmentFiles.length >= 5}
-          emptyTitle="Drag and drop or click to select"
-          emptyDescription={null}
-          onInputChange={(event) => {
-            appendAttachments(Array.from(event.target.files || []));
-            event.currentTarget.value = "";
-          }}
-          onFilesDrop={(files) => appendAttachments(files)}
-        />
-
-        <label className="tb-feedback-modal-field">
-          <span className="tb-feedback-modal-label">Feedback type <span>(optional)</span></span>
-          <PlatformSelector
-            className="tb-feedback-modal-selector"
-            triggerClassName="tb-feedback-modal-select"
-            value={type}
-            options={RUNNER_THREAD_FEEDBACK_REPORT_OPTIONS}
-            onValueChange={(value) => onTypeChange(value)}
-            ariaLabel="Feedback type"
-            fullWidth
-            placeholder="Select report type"
-            disabled={submitting}
-          />
-        </label>
-
         {error ? (
-          <div className="runner-inline-error tb-feedback-modal-error">{error}</div>
+          <div className="runner-inline-error" role="alert">{error}</div>
         ) : null}
-
-        <div className="tb-feedback-modal-actions">
-          <PlatformPrimaryButton
-            size="large"
-            type="button"
-            className={`tb-feedback-modal-submit ${submitting ? "loading" : ""}`.trim()}
-            onClick={() => void onSubmit()}
-            disabled={submitting || !message.trim()}
-          >
-            {submitting ? "Sending..." : "Send"}
-          </PlatformPrimaryButton>
-        </div>
-      </div>
+      </PlatformModalBody>
+      <PlatformModalFooter>
+        <PlatformPrimaryButton
+          type="button"
+          onClick={() => void onSubmit()}
+          disabled={submitting || !message.trim()}
+        >
+          {submitting ? "Sending..." : "Send"}
+        </PlatformPrimaryButton>
+      </PlatformModalFooter>
     </PlatformModal>
   );
 }

@@ -23,6 +23,11 @@ assert.match(FILES_PREVIEW_COMPONENTS_SCRIPT, /React\.createElement\(PlatformLoa
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function PlaygroundImageSelectionMaskOverlay/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function PlaygroundFilesPage/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function renderFilesBrowserContent/);
+assert.match(
+  FILES_PAGE_RUNTIME_SCRIPT,
+  /currentEntries\.length === 0[\s\S]{0,260}React\.createElement\(PlatformEmptyState,[\s\S]{0,220}title: "This folder is empty"/,
+  "Empty computer folders must use the centralized empty-state component.",
+);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformSwitch/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /\{ value: "changes", label: "Activity" \}/);
 assert.doesNotMatch(FILES_PAGE_RUNTIME_SCRIPT, /\{ value: "connectors", label: "Connectors" \}/);
@@ -32,6 +37,15 @@ assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function selectFileConnectorAccount\(cr
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /toolbarPopover === "connector-account"/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /React\.createElement\(ChevronRight, \{/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function renderFileConnectorsBrowser\(\)/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /fetchPlatformGitHubRepositoryBranches\(normalizedRepositoryFullName/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /createPlatformGitHubRepositoryFolderId\(repositoryFullName, normalizedBranch\)/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /connectorGithubBranchLoadingRepoFullNames/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /renderMeta: isGithubRepository/);
+assert.match(
+  FILES_PAGE_RUNTIME_SCRIPT,
+  /visibleConnectorBrowserItems\.length === 0[\s\S]{0,500}React\.createElement\(PlatformEmptyState,[\s\S]{0,220}title: "This folder is empty"/,
+  "Empty connector folders must use the centralized empty-state component.",
+);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /fetchPlatformPluginFileSourceStatuses\(\{[\s\S]*organizationId: fileConnectorOrganizationId/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /connectorConnectionStatuses\?\.\[source\.id\]/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function normalizeKnownFileConnectorAccounts\(source, knownStatus\)/);

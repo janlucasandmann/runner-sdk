@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { uploadAttachment } from "./attachment-api.js";
+import { buildRunnerHeaders } from "./api-utils.js";
 import type {
   LocalAttachment,
   RunnerAttachment,
@@ -12,6 +13,7 @@ import {
 } from "./attachment-utils.js";
 import { prepareGithubRepositorySelection, startEnvironment } from "./environment-api.js";
 import { generateRunnerClientId } from "./id-utils.js";
+import { resolveRunnerPromptAttachmentSourceUrl } from "./prompt-attachments.js";
 
 type RunnerFileAttachmentMapper = (file: File) => Promise<RunnerAttachment> | RunnerAttachment;
 
@@ -19,11 +21,52 @@ type RunnerFileAttachmentUploader = (files: File[]) => Promise<RunnerAttachment[
 
 interface RunnerAttachmentControllerServices {
   createObjectUrl: (file: File) => string;
+  fetchAttachmentSource: (params: {
+    filename: string;
+    mimeType: string;
+    requestHeaders?: HeadersInit;
+    url: string;
+  }) => Promise<File>;
   now: () => Date;
   prepareGithubRepository: typeof prepareGithubRepositorySelection;
   revokeObjectUrl: (url: string) => void;
   startEnvironment: typeof startEnvironment;
   uploadAttachment: typeof uploadAttachment;
+}
+
+async function fetchAttachmentSource({
+  filename,
+  mimeType,
+  requestHeaders,
+  url,
+}: {
+  filename: string;
+  mimeType: string;
+  requestHeaders?: HeadersInit;
+  url: string;
+}): Promise<File> {
+  const response = await fetch(url, {
+    credentials: "same-origin",
+    headers: requestHeaders,
+  });
+  if (!response.ok) {
+    throw new Error(
+      `Failed to load saved prompt attachment ${filename} (${response.status}).`,
+    );
+  }
+  const blob = await response.blob();
+  if (blob.size <= 0) {
+    throw new Error(`Saved prompt attachment ${filename} is empty.`);
+  }
+  const responseMimeType = String(response.headers.get("content-type") || "")
+    .split(";", 1)[0]
+    .trim();
+  const normalizedMimeType = !mimeType || mimeType.endsWith("/*")
+    ? responseMimeType || "application/octet-stream"
+    : mimeType;
+  return new File([blob], filename, {
+    type: normalizedMimeType,
+  });
 }
 
 export interface UseRunnerAttachmentControllerOptions {
@@ -70,6 +113,7 @@ export function useRunnerAttachmentController({
   const githubPreparationPromisesRef = useRef<Record<string, Promise<void> | undefined>>({});
   const serviceRef = useRef<RunnerAttachmentControllerServices>({
     createObjectUrl: (file) => URL.createObjectURL(file),
+    fetchAttachmentSource,
     now: () => new Date(),
     prepareGithubRepository: prepareGithubRepositorySelection,
     revokeObjectUrl: (url) => URL.revokeObjectURL(url),
@@ -81,6 +125,7 @@ export function useRunnerAttachmentController({
   useEffect(() => {
     serviceRef.current = {
       createObjectUrl: (file) => URL.createObjectURL(file),
+      fetchAttachmentSource,
       now: () => new Date(),
       prepareGithubRepository: prepareGithubRepositorySelection,
       revokeObjectUrl: (url) => URL.revokeObjectURL(url),
@@ -221,17 +266,39 @@ export function useRunnerAttachmentController({
         return attachment.resolvedAttachment;
       }
 
+      let uploadFile = attachment.file;
+      if (attachment.sourceAttachmentUrl && attachment.sourceAttachmentId) {
+        const trustedSourceUrl = resolveRunnerPromptAttachmentSourceUrl(
+          attachment.sourceAttachmentUrl,
+          attachment.sourceAttachmentId,
+          { backendUrl },
+        );
+        if (!trustedSourceUrl) {
+          throw new Error(
+            `Saved prompt attachment ${attachment.file.name} has an invalid source.`,
+          );
+        }
+        uploadFile = await serviceRef.current.fetchAttachmentSource({
+          filename: attachment.file.name,
+          mimeType: attachment.file.type,
+          requestHeaders: buildRunnerHeaders(requestHeaders, apiKey.trim()),
+          url: trustedSourceUrl,
+        });
+        attachment.file = uploadFile;
+        attachment.type = attachmentTypeForFile(uploadFile.type, uploadFile.name);
+      }
+
       if (uploadFiles) {
-        const uploaded = await uploadFiles([attachment.file]);
+        const uploaded = await uploadFiles([uploadFile]);
         const uploadedAttachment = uploaded[0];
         if (!uploadedAttachment) {
-          throw new Error(`Failed to upload ${attachment.file.name}.`);
+          throw new Error(`Failed to upload ${uploadFile.name}.`);
         }
         return uploadedAttachment;
       }
 
       if (mapFileToAttachment) {
-        return mapFileToAttachment(attachment.file);
+        return mapFileToAttachment(uploadFile);
       }
 
       if (backendUrl && apiKey.trim()) {
@@ -239,12 +306,12 @@ export function useRunnerAttachmentController({
           backendUrl,
           apiKey: apiKey.trim(),
           requestHeaders,
-          file: attachment.file,
+          file: uploadFile,
           ...(environmentIdOverride ? { environmentId: environmentIdOverride } : {}),
         });
       }
 
-      return createDefaultAttachment(attachment.file, serviceRef.current.now);
+      return createDefaultAttachment(uploadFile, serviceRef.current.now);
     },
     [
       apiKey,

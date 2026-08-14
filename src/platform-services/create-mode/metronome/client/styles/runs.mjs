@@ -1,4 +1,60 @@
 export const METRONOME_RUNS_CSS = String.raw`
+      .playground-metronome-settings-page {
+        width: 100%;
+        min-height: 0;
+      }
+
+      .playground-metronome-settings-content {
+        min-width: 0;
+      }
+
+      .playground-metronome-settings-stack {
+        display: grid;
+        align-content: start;
+        gap: 24px;
+        min-width: 0;
+        padding: 0;
+      }
+
+      .playground-metronome-settings-sidebar {
+        padding-top: 0;
+      }
+
+      .playground-metronome-settings-trigger-button.platform-button {
+        width: 100%;
+        margin-top: 8px;
+      }
+
+      .metronome-access-add-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .metronome-access-add-selector {
+        align-self: center;
+      }
+
+      .metronome-access-add-selector .platform-selector__trigger {
+        min-height: var(--platform-control-height, 32px);
+        line-height: 1;
+      }
+
+      .metronome-access-add-selector .platform-selector__value {
+        align-items: center;
+        overflow: visible;
+      }
+
+      .metronome-access-add-label > svg {
+        display: block;
+        flex: 0 0 14px;
+        width: 14px;
+        height: 14px;
+        transform: none;
+      }
+
       .playground-metronome-runs-view {
         box-sizing: border-box;
         width: min(100%, calc(var(--playground-centered-page-max-width) + 88px));

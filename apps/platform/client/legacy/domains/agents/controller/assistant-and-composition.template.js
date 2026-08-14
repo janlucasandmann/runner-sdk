@@ -132,6 +132,8 @@
                     onThreadRegistered(normalizedThreadId, { private: true });
                   }
                 },
+                onOpenPromptSearch,
+                onOpenThreadSearch,
                 externalRunRequest: assistantRunRequest && assistantThreadId
                   ? assistantRunRequest
                   : null,
@@ -382,6 +384,8 @@
                   ? buildAgentPreviewRefinementHiddenPrompt(draftAgent)
                   : "",
                 composerBeforeAgentControl: previewRefineControl,
+                onOpenPromptSearch,
+                onOpenThreadSearch,
                 emptyState: previewEmptyState,
                 onRunStart: (threadId) => {
                   if (!agentPreviewRefineMode) {
@@ -715,27 +719,24 @@
             const displayLeftSource = orderedCompareSources.leftSource;
             const displayRightSource = orderedCompareSources.rightSource;
             const diffFiles = buildAgentVersionDiffFilesFromSnapshots(displayLeftSource.snapshot, displayRightSource.snapshot);
-            const compareOptions = sources.map((source) =>
-              React.createElement("option", { key: source.id, value: source.id }, source.label)
-            );
-            const renderCompareSelect = (value, side) =>
-              React.createElement("label", { className: "playground-version-changes-select-shell" },
-                React.createElement("span", { className: "playground-version-changes-select-control-wrap" },
-                  React.createElement("select", {
-                    className: "playground-version-changes-select-control",
-                    value,
-                    onChange: (event) => handleAgentVersionCompareSourceChange(side, event.target.value),
-                  }, compareOptions),
-                  React.createElement(ChevronDown, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" })
-                )
-              );
+            const compareOptions = sources.map((source) => ({
+              value: source.id,
+              label: source.label,
+            }));
             return renderPlaygroundVersionChangesPage({
               title: "Changes",
-              compareControls: React.createElement(React.Fragment, null,
-                renderCompareSelect(displayLeftSource.id, orderedCompareSources.leftStateSide),
-                React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
-                renderCompareSelect(displayRightSource.id, orderedCompareSources.rightStateSide)
-              ),
+              leftSelector: {
+                value: displayLeftSource.id,
+                options: compareOptions,
+                onValueChange: (value) => handleAgentVersionCompareSourceChange(orderedCompareSources.leftStateSide, value),
+                ariaLabel: "Select base agent version",
+              },
+              rightSelector: {
+                value: displayRightSource.id,
+                options: compareOptions,
+                onValueChange: (value) => handleAgentVersionCompareSourceChange(orderedCompareSources.rightStateSide, value),
+                ariaLabel: "Select target agent version",
+              },
               actions: renderAgentPublishAction(),
               files: diffFiles,
               backIcon: ArrowLeft,
@@ -1482,6 +1483,8 @@
                             agentCreationCommand: agentsHomeCreationCommandRequest,
                             agentCreationCommandHiddenPrompt: buildAgentsHomeCreationHiddenPrompt,
                             onExternalRunRequestCreate: handleAgentsHomeThreadStartRequest,
+                            onOpenPromptSearch,
+                            onOpenThreadSearch,
                             onAgentCreationCommandChange: (commandType) => {
                               setAgentsHomeActiveCreationCommand(commandType || "");
                             },

@@ -9,7 +9,7 @@ export const METRONOME_APP_MODE_SWITCH_SCRIPT = `
           const isReadOnly = Boolean(state.readOnly);
           const activeMode = isReadOnly
             ? (state.editorMode === "code" ? "code" : "edit")
-            : state.editorMode === "runs" ? "runs" : state.editorMode === "code" ? "code" : "edit";
+            : state.editorMode === "settings" ? "settings" : state.editorMode === "code" ? "code" : "edit";
           const options = isReadOnly
             ? [
                 { value: "edit", label: "Details" },
@@ -18,7 +18,7 @@ export const METRONOME_APP_MODE_SWITCH_SCRIPT = `
             : [
                 { value: "edit", label: "Edit" },
                 { value: "code", label: "Code" },
-                { value: "runs", label: "Runs" },
+                { value: "settings", label: "Settings" },
               ];
           return React.createElement(PlatformSwitch, {
             value: activeMode,

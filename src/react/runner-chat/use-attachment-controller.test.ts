@@ -90,6 +90,73 @@ describe("useRunnerAttachmentController", () => {
     );
   });
 
+  it("materializes a saved prompt asset before uploading it for execution", async () => {
+    const sourceFile = new File(["image-bytes"], "diagram.png", {
+      type: "image/png",
+    });
+    const fetchAttachmentSource = vi.fn().mockResolvedValue(sourceFile);
+    const uploaded = createResolvedAttachment({
+      id: "attachment-copy-1",
+      filename: "diagram.png",
+      mimeType: "image/png",
+      size: sourceFile.size,
+      type: "image",
+      gcsPath: "user/environment/uploads/diagram.png",
+      workspacePath: "/workspace/uploads/diagram.png",
+    });
+    const uploadFiles = vi.fn().mockResolvedValue([uploaded]);
+    const { result } = renderHook(() =>
+      useRunnerAttachmentController({
+        apiKey: "key",
+        backendUrl: "http://localhost/api/real",
+        maxAttachments: 5,
+        onTurnAttachmentPatch: vi.fn(),
+        services: { fetchAttachmentSource },
+        uploadFiles,
+      }),
+    );
+    const promptAttachment: LocalAttachment = {
+      id: "prompt-image-local-1",
+      file: new File([], "diagram.png", { type: "image/png" }),
+      type: "image",
+      source: "local",
+      sourceAttachmentId: "attachment-source-1",
+      sourceAttachmentUrl: "/api/real/attachments/attachment-source-1",
+      runnerAttachmentRole: "prompt_supporting_attachment",
+      promptId: "prompt-1",
+      uploadStatus: "uploading",
+      uploadError: null,
+    };
+
+    let payload: RunnerAttachment[] | undefined;
+    await act(async () => {
+      result.current.addAttachments([promptAttachment]);
+      const uploadPromise = result.current.beginAttachmentUpload(promptAttachment);
+      payload = await result.current.resolveAttachmentPayload([promptAttachment]);
+      await uploadPromise;
+    });
+
+    expect(fetchAttachmentSource).toHaveBeenCalledWith(expect.objectContaining({
+      filename: "diagram.png",
+      mimeType: "image/png",
+      requestHeaders: expect.any(Headers),
+      url: "http://localhost:3000/api/real/attachments/attachment-source-1",
+    }));
+    const sourceRequest = fetchAttachmentSource.mock.calls[0]?.[0];
+    expect(new Headers(sourceRequest?.requestHeaders).get("X-API-Key"))
+      .toBe("key");
+    expect(uploadFiles).toHaveBeenCalledWith([sourceFile]);
+    expect(payload).toEqual([
+      expect.objectContaining({
+        gcsPath: "user/environment/uploads/diagram.png",
+        workspacePath: "/workspace/uploads/diagram.png",
+        sourceAttachmentId: "attachment-source-1",
+        runnerAttachmentRole: "prompt_supporting_attachment",
+        promptId: "prompt-1",
+      }),
+    ]);
+  });
+
   it("deduplicates GitHub preparation for the same environment and ref", async () => {
     const startEnvironment = vi.fn().mockResolvedValue(undefined);
     const prepareGithubRepository = vi.fn().mockResolvedValue(undefined);

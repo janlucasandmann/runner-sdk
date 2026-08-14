@@ -309,8 +309,8 @@ export function createPlatformServices({
       withProxyOrganizationHeader,
     }),
     promptsService: createPromptsService({
-      readRequestBody,
-      sendJson,
+      proxyUpstreamGet,
+      proxyUpstreamJsonRequest,
     }),
     securityService: createSecurityService({
       proxyUpstreamGet,

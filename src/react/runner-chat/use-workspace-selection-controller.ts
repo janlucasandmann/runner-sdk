@@ -76,17 +76,17 @@ export function useRunnerWorkspaceSelectionController({
     if (!availableEnvironments.length) return;
     setSelectedEnvironmentId((current) => {
       if (
-        activeThreadEnvironmentId &&
-        availableEnvironments.some((environment) => environment.id === activeThreadEnvironmentId)
-      ) {
-        return activeThreadEnvironmentId;
-      }
-      if (
         effectiveWorkspaceSelectorMode === "projects" &&
         selectedProjectEnvironmentId &&
         availableEnvironments.some((environment) => environment.id === selectedProjectEnvironmentId)
       ) {
         return selectedProjectEnvironmentId;
+      }
+      if (
+        activeThreadEnvironmentId &&
+        availableEnvironments.some((environment) => environment.id === activeThreadEnvironmentId)
+      ) {
+        return activeThreadEnvironmentId;
       }
       if (current && availableEnvironments.some((environment) => environment.id === current)) {
         return current;

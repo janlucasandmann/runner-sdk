@@ -273,8 +273,8 @@ assert.match(ORGANIZATIONS_RUNTIME_SCRIPT_FRAGMENTS.loading, /organizationMember
 assert.match(pageFragments.rolesAndView, /const renderOrganizationRoles/);
 assert.match(pageFragments.rolesAndView, /React\.createElement\(PlatformOwnerSelector/);
 assert.match(pageFragments.rolesAndView, /Choose organization owner/);
-assert.match(pageFragments.rolesAndView, /roleKicker:\s*null/);
-assert.match(pageFragments.rolesAndView, /roleDescription:\s*selectedRoleDefinition\.description/);
+assert.doesNotMatch(pageFragments.rolesAndView, /roleKicker:/);
+assert.doesNotMatch(pageFragments.rolesAndView, /roleDescription:/);
 assert.doesNotMatch(
   pageFragments.rolesAndView,
   /label:\s*role\.label,\s*description:\s*role\.description,\s*meta:/,

@@ -91,6 +91,7 @@ export interface RunnerDocumentPreviewDrawerProps {
   onClose?: () => void;
   onResizeStart?: (event: ReactPointerEvent<HTMLButtonElement>) => void;
   headerCopy?: ReactNode;
+  headerTitleActions?: ReactNode;
   headerActions?: ReactNode;
   headerActionsAfterPreviewToggle?: ReactNode;
   showPreviewCodeToggle?: boolean;
@@ -125,6 +126,7 @@ export function RunnerDocumentPreviewDrawer({
   onClose,
   onResizeStart,
   headerCopy,
+  headerTitleActions,
   headerActions,
   headerActionsAfterPreviewToggle,
   showPreviewCodeToggle = true,
@@ -1356,6 +1358,11 @@ export function RunnerDocumentPreviewDrawer({
               headerCopy ? (
                 <div className="tb-attachment-preview-drawer-header-copy">
                   {headerCopy}
+                  {headerTitleActions ? (
+                    <span className="tb-attachment-preview-drawer-header-title-actions">
+                      {headerTitleActions}
+                    </span>
+                  ) : null}
                 </div>
               ) : (
                 <div className="tb-attachment-preview-drawer-header-copy">
@@ -1377,8 +1384,15 @@ export function RunnerDocumentPreviewDrawer({
                     />
                   )}
                   <div className="tb-attachment-preview-drawer-header-text">
-                    <div className="tb-attachment-preview-drawer-name" title={attachment.filename}>
-                      {attachment.filename}
+                    <div className="tb-attachment-preview-drawer-header-title-row">
+                      <div className="tb-attachment-preview-drawer-name" title={attachment.filename}>
+                        {attachment.filename}
+                      </div>
+                      {headerTitleActions ? (
+                        <span className="tb-attachment-preview-drawer-header-title-actions">
+                          {headerTitleActions}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                 </div>

@@ -2047,25 +2047,12 @@
               return null;
             }
 
-            const renderThreadFact = (label, value, className = "") =>
-              React.createElement("div", {
-                  className: "tb-popup-row playground-thread-nav-popup-static-row"
-                    + (className ? " " + className : ""),
-                },
-                React.createElement("span", {
-                  className: "tb-popup-check-slot",
-                  "aria-hidden": "true",
-                }),
-                React.createElement("div", { className: "playground-thread-nav-popup-fact" },
-                  React.createElement("span", {
-                    className: "playground-thread-nav-popup-fact-label",
-                  }, label),
-                  React.createElement("span", {
-                    className: "playground-thread-nav-popup-fact-value",
-                    title: value,
-                  }, value)
-                )
-              );
+            const threadId = String(selectedThreadNavRecord.id || "").trim();
+            const threadCanMutate = Boolean(showThreadNavMutationActions && selectedKnownThread?.id);
+            const threadMutationIs = (action) =>
+              threadMutationState.action === action
+              && threadMutationState.threadId === selectedKnownThread?.id;
+            const closeThreadActions = () => setThreadNavMenuOpen(false);
 
             return React.createElement(PlatformResourceHeaderActions, {
                 className: "playground-thread-nav-popup-shell playground-thread-title-actions",
@@ -2075,176 +2062,104 @@
                 onOpenChange: handleThreadNavMenuOpenChange,
                 resourceLabel: "Thread",
                 disabled: !selectedThreadNavRecord?.id,
-                width: 280,
-                maxWidth: "min(280px, calc(100vw - 16px))",
-              },
-              React.createElement("div", {
-                  className: "tb-popup-row playground-thread-nav-popup-static-row",
+                width: 360,
+                maxWidth: "min(360px, calc(100vw - 16px))",
+                popupClassName: "playground-thread-nav-popup-menu",
+                shortcutActions: {
+                  rename: {
+                    onInvoke: () => openThreadRenameDialog(selectedKnownThread),
+                    disabled: !threadCanMutate || Boolean(threadMutationState.action),
+                  },
+                  delete: {
+                    onInvoke: () => {
+                      if (selectedKnownThread?.id) void handleThreadDelete(selectedKnownThread.id);
+                    },
+                    disabled: !threadCanMutate || threadMutationIs("delete"),
+                  },
                 },
-                React.createElement("span", {
-                  className: "tb-popup-check-slot",
-                  "aria-hidden": "true",
-                }),
-                React.createElement("div", {
-                    className: "playground-tasks-toolbar-popup-item-copy",
+              },
+              React.createElement(PlatformResourceActionsInformation, {
+                resourceLabel: "Thread",
+                items: [
+                  {
+                    id: "id",
+                    label: "ID",
+                    value: threadId,
+                    title: threadId,
+                    monospace: true,
+                    copyValue: threadId,
+                    copyAriaLabel: "Copy Thread ID",
                   },
-                  React.createElement("span", null, "Thread ID"),
-                  React.createElement("span", {
-                    className: "playground-thread-nav-popup-thread-id",
-                    title: selectedThreadNavRecord.id,
-                  }, selectedThreadNavRecord.id)
-                )
-              ),
-              showThreadNavMutationActions && selectedThreadProjectName
-                ? React.createElement("div", {
-                    className: "tb-popup-row playground-thread-nav-popup-static-row",
-                  },
-                  React.createElement("span", {
-                    className: "tb-popup-check-slot",
-                    "aria-hidden": "true",
-                  }),
-                  React.createElement("div", {
-                      className: "playground-tasks-toolbar-popup-item-copy",
+                  { id: "project", label: "Project", value: selectedThreadProjectName || "None", title: selectedThreadProjectName || "None" },
+                  { id: "task", label: "Task", value: selectedThreadTaskTitle || "None", title: selectedThreadTaskTitle || "None" },
+                  { id: "started", label: "Started", value: selectedThreadStartedLabel },
+                  { id: "updated", label: "Last updated", value: selectedThreadUpdatedLabel },
+                  { id: "inference", label: "LLM inference", value: selectedThreadAgentCtLabel },
+                  { id: "resources", label: "Resources", value: selectedThreadEnvironmentCtLabel },
+                ],
+              }),
+              threadCanMutate && selectedThreadProjectName
+                ? React.createElement(PlatformResourceActionMenuItem, {
+                    icon: React.createElement(FolderOpen, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    label: "Open project",
+                    onClick: () => {
+                      closeThreadActions();
+                      openSelectedThreadProject();
                     },
-                    React.createElement("span", null, "Project"),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-thread-nav-popup-link-button",
-                      title: selectedThreadProjectName,
-                      onClick: openSelectedThreadProject,
-                    }, selectedThreadProjectName)
-                  )
-                )
-                : null,
-              showThreadNavMutationActions && selectedThreadTaskTitle
-                ? React.createElement("div", {
-                    className: "tb-popup-row playground-thread-nav-popup-static-row",
-                  },
-                  React.createElement("span", {
-                    className: "tb-popup-check-slot",
-                    "aria-hidden": "true",
-                  }),
-                  React.createElement("div", {
-                      className: "playground-tasks-toolbar-popup-item-copy",
-                    },
-                    React.createElement("span", null, "Task"),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-thread-nav-popup-link-button",
-                      title: selectedThreadTaskTitle,
-                      onClick: openSelectedThreadTaskDetail,
-                    }, selectedThreadTaskTitle)
-                  )
-                )
-                : null,
-              renderThreadFact("Started", selectedThreadStartedLabel),
-              renderThreadFact("Last updated", selectedThreadUpdatedLabel),
-              renderThreadFact("LLM Inference", selectedThreadAgentCtLabel),
-              renderThreadFact("Resources", selectedThreadEnvironmentCtLabel),
-              showThreadNavMutationActions
-                ? React.createElement("div", {
-                    className: "playground-thread-nav-popup-divider",
-                    role: "separator",
                   })
                 : null,
-              showThreadNavMutationActions
-                ? React.createElement("button", {
-                    type: "button",
-                    className: "tb-popup-row",
+              threadCanMutate && selectedThreadTaskTitle
+                ? React.createElement(PlatformResourceActionMenuItem, {
+                    icon: React.createElement(FileText, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    label: "Open task",
+                    onClick: () => {
+                      closeThreadActions();
+                      openSelectedThreadTaskDetail();
+                    },
+                  })
+                : null,
+              threadCanMutate ? React.createElement(PlatformResourceActionsDivider, null) : null,
+              threadCanMutate
+                ? React.createElement(PlatformResourceActionMenuItem, {
+                    icon: React.createElement(Pin, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    label: threadMutationIs("pin")
+                      ? (selectedKnownThread.isPinned ? "Unpinning thread..." : "Pinning thread...")
+                      : (selectedKnownThread.isPinned ? "Unpin thread" : "Pin thread"),
+                    disabled: threadMutationIs("pin"),
                     onClick: () => {
                       void handleThreadPinToggle(selectedKnownThread.id);
                     },
-                    disabled: threadMutationState.action === "pin"
-                      && threadMutationState.threadId === selectedKnownThread.id,
-                  },
-                  React.createElement(Pin, {
-                    className: "tb-popup-icon",
-                    width: 14,
-                    height: 14,
-                    strokeWidth: 1.8,
-                  }),
-                  React.createElement("div", {
-                      className: "playground-tasks-toolbar-popup-item-copy",
-                    },
-                    React.createElement("span", null,
-                      threadMutationState.action === "pin"
-                        && threadMutationState.threadId === selectedKnownThread.id
-                        ? (selectedKnownThread.isPinned ? "Unpinning thread..." : "Pinning thread...")
-                        : (selectedKnownThread.isPinned ? "Unpin thread" : "Pin thread")
-                    )
-                  )
-                )
+                  })
                 : null,
-              showThreadNavMutationActions
-                ? React.createElement("button", {
-                    type: "button",
-                    className: "tb-popup-row",
+              threadCanMutate
+                ? React.createElement(PlatformResourceActionMenuItem, {
+                    icon: React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    label: "Rename thread",
+                    shortcut: "rename",
                     onClick: () => openThreadRenameDialog(selectedKnownThread),
-                  },
-                  React.createElement(SquarePen, {
-                    className: "tb-popup-icon",
-                    width: 14,
-                    height: 14,
-                    strokeWidth: 1.8,
-                  }),
-                  React.createElement("div", {
-                    className: "playground-tasks-toolbar-popup-item-copy",
-                  }, React.createElement("span", null, "Rename thread"))
-                )
+                  })
                 : null,
-              showThreadNavMutationActions
-                ? React.createElement("button", {
-                    type: "button",
-                    className: "tb-popup-row",
+              threadCanMutate
+                ? React.createElement(PlatformResourceActionMenuItem, {
+                    icon: React.createElement(FolderOpen, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    label: threadMutationIs("project")
+                      ? (selectedThreadProjectId ? "Removing from project..." : "Adding to project...")
+                      : (selectedThreadProjectId ? "Remove from Project" : "Add to Project"),
+                    disabled: threadMutationIs("project"),
                     onClick: () => handleOpenThreadProjectAction(selectedKnownThread),
-                    disabled: threadMutationState.action === "project"
-                      && threadMutationState.threadId === selectedKnownThread.id,
-                  },
-                  React.createElement(FolderOpen, {
-                    className: "tb-popup-icon",
-                    width: 14,
-                    height: 14,
-                    strokeWidth: 1.8,
-                  }),
-                  React.createElement("div", {
-                      className: "playground-tasks-toolbar-popup-item-copy",
-                    },
-                    React.createElement("span", null,
-                      threadMutationState.action === "project"
-                        && threadMutationState.threadId === selectedKnownThread.id
-                        ? (selectedThreadProjectId ? "Removing from project..." : "Adding to project...")
-                        : (selectedThreadProjectId ? "Remove from Project" : "Add to Project")
-                    )
-                  )
-                )
+                  })
                 : null,
-              showThreadNavMutationActions
-                ? React.createElement("button", {
-                    type: "button",
-                    className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+              threadCanMutate
+                ? React.createElement(PlatformResourceActionMenuItem, {
+                    icon: React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    label: threadMutationIs("delete") ? "Deleting thread..." : "Delete Thread",
+                    shortcut: "delete",
+                    danger: true,
+                    disabled: threadMutationIs("delete"),
                     onClick: () => {
                       void handleThreadDelete(selectedKnownThread.id);
                     },
-                    disabled: threadMutationState.action === "delete"
-                      && threadMutationState.threadId === selectedKnownThread.id,
-                  },
-                  React.createElement(Trash2, {
-                    className: "tb-popup-icon",
-                    width: 14,
-                    height: 14,
-                    strokeWidth: 1.8,
-                  }),
-                  React.createElement("div", {
-                      className: "playground-tasks-toolbar-popup-item-copy",
-                    },
-                    React.createElement("span", null,
-                      threadMutationState.action === "delete"
-                        && threadMutationState.threadId === selectedKnownThread.id
-                        ? "Deleting thread..."
-                        : "Delete Thread"
-                    )
-                  )
-                )
+                  })
                 : null
               )
             );
@@ -2787,6 +2702,12 @@
                     createAgentRequestToken: agentCreationPageRequestToken,
                     createAgentModelId: agentCreationPageModelId,
                     subscriptionTierId: accountTierId || "",
+                    onOpenPromptSearch: (onSelect) => {
+                      openPromptSearch(onSelect);
+                    },
+                    onOpenThreadSearch: (onSelect) => {
+                      openThreadReferenceSearch(onSelect);
+                    },
                     onPreferredAgentChange: (nextAgentId) => {
                       setPreferredAgentId(String(nextAgentId || "").trim());
                     },
@@ -3635,6 +3556,12 @@
                                 skills: computerAgentsMode ? demoSkills : [],
                                 skillDefaults: getDemoImageGenerationSkillDefaults(),
                                 canGenerateVideo: canGenerateImagineVideo,
+                                onOpenPromptSearch: (onSelect) => {
+                                  openPromptSearch(onSelect);
+                                },
+                                onOpenThreadSearch: (onSelect) => {
+                                  openThreadReferenceSearch(onSelect);
+                                },
                                 environmentId: resolvedEnvironmentId || "",
                                 agentId: resolvedComposerAgentId || "",
                                 onAgentChange: (nextAgentId) => {
@@ -4072,6 +3999,14 @@
                                       externalRunRequest: pendingThreadRunRequest && pendingThreadRunRequest.threadId === activeRunnerThreadId
                                         ? pendingThreadRunRequest
                                         : null,
+                                      externalPromptAttachmentRequest: !activeRunnerThreadId
+                                        ? pendingThreadPromptAttachmentRequest
+                                        : null,
+                                      onExternalPromptAttachmentRequestHandled: (token) => {
+                                        setPendingThreadPromptAttachmentRequest((current) => (
+                                          current && current.token === token ? null : current
+                                        ));
+                                      },
                                       onExternalRunRequestHandled: (token) => {
                                         setPendingThreadRunRequest((current) => (
                                           current && current.token === token ? null : current

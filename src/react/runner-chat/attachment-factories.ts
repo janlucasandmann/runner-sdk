@@ -16,6 +16,7 @@ import type {
 import { attachmentTypeForFile, getGithubRepoName } from "./attachment-utils.js";
 import { generateRunnerClientId } from "./id-utils.js";
 import type { RunnerChatFileNode } from "./workspace-files.js";
+import type { RunnerChatConnectorFetchOptions } from "./public-types.js";
 
 export interface CreateRunnerWorkspaceAttachmentOptions {
   backendUrl: string;
@@ -135,7 +136,11 @@ export async function createRunnerImplicitAttachments(
 export interface CreateRunnerIntegrationAttachmentOptions {
   apiKey: string;
   backendUrl: string;
-  fetchFileContent: (file: RunnerChatFileNode) => Promise<RunnerChatFetchedFileContent>;
+  fetchFileContent: (
+    file: RunnerChatFileNode,
+    options?: RunnerChatConnectorFetchOptions,
+  ) => Promise<RunnerChatFetchedFileContent>;
+  accountId?: string;
   item: RunnerChatFileNode;
   requestHeaders?: HeadersInit;
   source: "google-drive" | "one-drive" | "github";
@@ -147,13 +152,14 @@ export async function createRunnerIntegrationAttachment({
   apiKey,
   backendUrl,
   fetchFileContent,
+  accountId,
   item,
   requestHeaders,
   source,
   targetEnvironmentId,
   uploadContent = uploadAttachmentContent,
 }: CreateRunnerIntegrationAttachmentOptions): Promise<LocalAttachment> {
-  const payload = await fetchFileContent(item);
+  const payload = await fetchFileContent(item, accountId ? { accountId } : undefined);
   const filename = String(payload?.name || item.name || "file").trim() || "file";
   const mimeType =
     String(payload?.mimeType || item.mimeType || "application/octet-stream").trim() ||

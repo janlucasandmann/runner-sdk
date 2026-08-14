@@ -3343,9 +3343,12 @@
             })();
             const normalizedTagDetailTab = pluginDetailTab === "permissions"
               ? "permissions"
-              : pluginDetailTab === "tutorial"
-                ? "authentication"
-                : "overview";
+              : pluginDetailTab === "agent-triggers"
+                ? "agent-triggers"
+                : pluginDetailTab === "tutorial"
+                  ? "authentication"
+                  : "overview";
+            const tagSupportsAgentTriggers = tagId === "jira" || tagId === "linear";
             const accessSection = renderTagPluginAccessSettings({
               resourceId: tagId,
               resourceLabel: selectedTag.label || "Tag",
@@ -3419,6 +3422,24 @@
                 onCredentialDisconnect: (credentialId) =>
                   disconnectTagPluginCredential(tagId, credentialId),
                 authenticationEmptyDescription: "Connect " + (selectedTag.label || "this tag") + " to receive and continue agent work from this channel.",
+                agentTriggers: tagSupportsAgentTriggers
+                  ? React.createElement(ExternalAgentTriggersPage, {
+                      provider: tagId,
+                      organizationId: String(
+                        activeOrganizationId
+                        || billingOrganizationId
+                        || settingsBudgetStatus?.organizationId
+                        || "",
+                      ).trim(),
+                      credentials: getTagPluginCredentials(tagId),
+                      agents: runtimeAgents,
+                      environments: runtimeEnvironments,
+                      projects: runnerWorkspaceProjects,
+                      connectionProfile: getConnectorStatusRecord(tagId),
+                      organizationApiBaseUrl: proxyBackendBase,
+                      onOpenThread: handleThreadSelect,
+                    })
+                  : undefined,
                 overviewInformation: tagOverviewInformation,
                 overviewIncludedItems: tagOverviewIncludedItems,
                 sidebar,
@@ -3733,9 +3754,12 @@
                 });
             const normalizedPluginDetailTab = pluginDetailTab === "permissions"
               ? "permissions"
-              : pluginDetailTab === "tutorial"
-                ? "authentication"
-                : "overview";
+              : pluginDetailTab === "agent-triggers"
+                ? "agent-triggers"
+                : pluginDetailTab === "tutorial"
+                  ? "authentication"
+                  : "overview";
+            const pluginSupportsAgentTriggers = pluginId === "jira" || pluginId === "linear";
             const pluginSidebarToggle = React.createElement("button", {
                 type: "button",
                 className: "playground-project-overview-sidebar-toggle",
@@ -3801,6 +3825,24 @@
                 onCredentialDisconnect: (credentialId) =>
                   disconnectTagPluginCredential(pluginId, credentialId),
                 authenticationEmptyDescription: "Connect " + (selectedPlugin.label || "this plugin") + " to use its protected data and actions.",
+                agentTriggers: pluginSupportsAgentTriggers
+                  ? React.createElement(ExternalAgentTriggersPage, {
+                      provider: pluginId,
+                      organizationId: String(
+                        activeOrganizationId
+                        || billingOrganizationId
+                        || settingsBudgetStatus?.organizationId
+                        || "",
+                      ).trim(),
+                      credentials: getTagPluginCredentials(pluginId),
+                      agents: runtimeAgents,
+                      environments: runtimeEnvironments,
+                      projects: runnerWorkspaceProjects,
+                      connectionProfile: getConnectorStatusRecord(pluginId),
+                      organizationApiBaseUrl: proxyBackendBase,
+                      onOpenThread: handleThreadSelect,
+                    })
+                  : undefined,
                 overviewInformation: pluginOverviewInformation,
                 overviewIncludedItems: pluginOverviewIncludedItems,
                 sidebar: pluginSidebar,
@@ -4423,9 +4465,11 @@
             const toolsWorkspaceRoot = isActionsView ? "Develop" : "Configure";
             const normalizedConnectionDetailTab = pluginDetailTab === "permissions"
               ? "permissions"
-              : pluginDetailTab === "tutorial"
-                ? "authentication"
-                : "overview";
+              : pluginDetailTab === "agent-triggers"
+                ? "agent-triggers"
+                : pluginDetailTab === "tutorial"
+                  ? "authentication"
+                  : "overview";
             const skillDetailVersionLabel = isSkillsDetailView
               ? React.createElement(PlatformVersionLabel, {
                   version: Number.isFinite(Number(toolsSkillsHeaderState.versionNumber))
@@ -4701,6 +4745,24 @@
                     },
                     ariaLabel: "Prompt section",
                   })
+                : isPromptsView
+                  ? React.createElement(PlatformSwitch, {
+                      className: "playground-prompts-overview-scope-switch",
+                      value: toolsPromptsHeaderState.overviewScope === "created"
+                        ? "created"
+                        : toolsPromptsHeaderState.overviewScope === "shared"
+                          ? "shared"
+                          : "all",
+                      options: [
+                        { value: "all", label: "All Prompts" },
+                        { value: "created", label: "Created by me" },
+                        { value: "shared", label: "Shared with me" },
+                      ],
+                      onValueChange: (nextScope) => {
+                        toolsPromptsHeaderState.onOverviewScopeChange?.(nextScope);
+                      },
+                      ariaLabel: "Prompt scope",
+                    })
                 : isSkillsDetailView
                   ? React.createElement(PlatformSwitch, {
                       className: "skill-detail-header__switch",
@@ -4872,9 +4934,8 @@
                 versionsDrawerPortalId: "playground-agent-versions-drawer-root",
                 onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
                 onToolsPromptsHeaderChange: setToolsPromptsHeaderState,
-                onStartThread: () => {
-                  setActivePage("thread");
-                  setCurrentThreadId("");
+                onStartThread: (prompt) => {
+                  handleNewThread({ promptAttachment: prompt });
                 },
                 backRequestToken: toolsPromptsBackRequestToken,
                 openPromptRequest: toolsPromptsOpenRequest,

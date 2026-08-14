@@ -1,12 +1,14 @@
 export const TESTS_APP_TOP_NAVIGATION_SCRIPT = `        function renderTestsPageNav() {
           const isOverview = testsPageMode === "overview";
-          const pathItems = [
-            { label: "Configure" },
-            {
+          const isRunLevel = testsPageMode === "run"
+            || testsPageMode === "run-technical";
+          const pathItems = [{ label: "Configure" }];
+          if (!isRunLevel) {
+            pathItems.push({
               label: "Tests",
               onClick: () => requestPlatformNavigation(openTestsOverviewPage),
-            },
-          ];
+            });
+          }
           if (
             testsPageMode === "detail"
             || testsPageMode === "configuration"
@@ -59,7 +61,7 @@ export const TESTS_APP_TOP_NAVIGATION_SCRIPT = `        function renderTestsPage
           }
           if (testsPageMode === "run-technical") {
             pathItems.push({
-              label: "Technical Details",
+              label: "Details",
             });
           }
           return renderAppHeader({

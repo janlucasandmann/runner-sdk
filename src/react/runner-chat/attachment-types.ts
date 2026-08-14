@@ -21,6 +21,8 @@ export interface RunnerAttachment {
   promptId?: string;
   promptVersionId?: string;
   promptVersionNumber?: number;
+  /** Durable source attachment copied into this run attachment. */
+  sourceAttachmentId?: string;
   threadId?: string;
   [key: string]: unknown;
 }
@@ -56,6 +58,10 @@ export interface LocalAttachment {
   promptId?: string;
   promptVersionId?: string;
   promptVersionNumber?: number;
+  /** Authenticated attachment endpoint used to materialize saved prompt assets. */
+  sourceAttachmentUrl?: string;
+  /** Original durable attachment identifier retained for provenance and deduplication. */
+  sourceAttachmentId?: string;
   threadId?: string;
   resolvedAttachment?: RunnerAttachment;
   uploadStatus?: "idle" | "uploading" | "uploaded" | "failed";

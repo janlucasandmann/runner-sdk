@@ -2,8 +2,10 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
+import * as React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RunnerFileBrowserItem } from "./file-browser-item.js";
+import type { RunnerChatOption } from "./agent-options.js";
 import type { RunnerChatFileNode } from "./workspace-files.js";
 
 describe("RunnerFileBrowserItem", () => {
@@ -213,6 +215,65 @@ describe("RunnerFileBrowserItem", () => {
     expect(documentHtml).toContain("txtfile.png");
   });
 
+  it("uses the centralized minimal selector for GitHub branches", async () => {
+    const repo: RunnerChatFileNode = {
+      id: "github:acme/widgets",
+      name: "widgets",
+      isFolder: true,
+      repoFullName: "acme/widgets",
+      ref: "main",
+    };
+    const onBranchChange = vi.fn();
+    const onEnsureBranchesLoaded = vi.fn();
+
+    render(
+      <RunnerFileBrowserItem
+        allItems={[repo]}
+        backendUrl="https://api.example.com"
+        branchLoadingRepoFullNames={[]}
+        branchesByRepoFullName={{
+          "acme/widgets": [
+            { id: "main", name: "main" },
+            { id: "release", name: "release" },
+          ],
+        }}
+        buildEffectiveGithubRootItem={(item) => item}
+        expandedFolderIds={[]}
+        githubLoadingFolderIds={[]}
+        googleDriveLoadingFolderIds={[]}
+        item={repo}
+        onBranchChange={onBranchChange}
+        onEnsureBranchesLoaded={onEnsureBranchesLoaded}
+        onItemClick={vi.fn()}
+        onOpenItem={vi.fn()}
+        onToggleSelection={vi.fn()}
+        onToggleFolder={vi.fn()}
+        onToggleGithubSelection={vi.fn()}
+        oneDriveLoadingFolderIds={[]}
+        previewItemId={null}
+        resolveSelectedGithubBranch={() => "main"}
+        searchQuery=""
+        selectedItemIds={[]}
+        source="github"
+        workspaceFolderErrorsById={{}}
+        workspaceEnvironmentId="computer_1"
+        workspaceLoadingFolderIds={[]}
+      />,
+    );
+
+    const branchSelector = screen.getByRole("button", {
+      name: "Select branch for acme/widgets",
+    });
+    expect(branchSelector.textContent).toContain("main");
+
+    fireEvent.click(branchSelector);
+    expect(onEnsureBranchesLoaded).toHaveBeenCalledWith("acme/widgets", "main");
+    expect(screen.getByRole("listbox", { name: "Select branch for acme/widgets options" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("option", { name: "release" }));
+    expect(onBranchChange).toHaveBeenCalledWith(repo, "release");
+  });
+
   it("selects from the checkbox without opening the preview", () => {
     const file: RunnerChatFileNode = {
       id: "notes.txt",
@@ -305,5 +366,73 @@ describe("RunnerFileBrowserItem", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Open" }));
 
     expect(onOpenItem).toHaveBeenCalledWith(file);
+  });
+
+  it("keeps GitHub row controls interactive when branch data updates", () => {
+    const repo: RunnerChatFileNode = {
+      id: "github:acme/widgets",
+      name: "widgets",
+      isFolder: true,
+      repoFullName: "acme/widgets",
+      ref: "main",
+    };
+    const onOpenItem = vi.fn();
+    const onBranchChange = vi.fn();
+    const onEnsureBranchesLoaded = vi.fn();
+
+    function Harness() {
+      const [branches, setBranches] = React.useState<RunnerChatOption[]>([
+        { id: "main", name: "main" },
+      ]);
+      return (
+        <RunnerFileBrowserItem
+          allItems={[repo]}
+          backendUrl="https://api.example.com"
+          branchLoadingRepoFullNames={[]}
+          branchesByRepoFullName={{ "acme/widgets": branches }}
+          buildEffectiveGithubRootItem={(item) => item}
+          expandedFolderIds={[]}
+          githubLoadingFolderIds={[]}
+          googleDriveLoadingFolderIds={[]}
+          item={repo}
+          onBranchChange={(item, branch) => {
+            onBranchChange(item, branch);
+            setBranches((current) => [...current, { id: branch, name: branch }]);
+          }}
+          onEnsureBranchesLoaded={(...args) => {
+            onEnsureBranchesLoaded(...args);
+            setBranches([
+              { id: "main", name: "main" },
+              { id: "release", name: "release" },
+            ]);
+          }}
+          onItemClick={vi.fn()}
+          onOpenItem={onOpenItem}
+          onToggleSelection={vi.fn()}
+          onToggleFolder={vi.fn()}
+          onToggleGithubSelection={vi.fn()}
+          oneDriveLoadingFolderIds={[]}
+          previewItemId={null}
+          resolveSelectedGithubBranch={() => "main"}
+          searchQuery=""
+          selectedItemIds={[]}
+          source="github"
+          workspaceFolderErrorsById={{}}
+          workspaceEnvironmentId="computer_1"
+          workspaceLoadingFolderIds={[]}
+        />
+      );
+    }
+
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "Select branch for acme/widgets" }));
+    expect(onEnsureBranchesLoaded).toHaveBeenCalledWith("acme/widgets", "main");
+    fireEvent.click(screen.getByRole("option", { name: "release" }));
+    expect(onBranchChange).toHaveBeenCalledWith(repo, "release");
+
+    fireEvent.click(screen.getByRole("button", { name: "Actions for widgets" }));
+    expect(screen.getByRole("menu")).toBeTruthy();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Open" }));
+    expect(onOpenItem).toHaveBeenCalled();
   });
 });

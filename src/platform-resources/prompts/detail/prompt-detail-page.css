@@ -24,6 +24,15 @@
   overflow: auto;
 }
 
+.prompt-detail-page__settings-content,
+.prompt-detail-page__settings-layout {
+  min-width: 0;
+}
+
+.prompt-detail-page__storage-map {
+  margin-block: 0;
+}
+
 .prompt-detail-page__access-settings,
 .prompt-detail-page__access-table {
   width: 100%;

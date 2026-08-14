@@ -1079,6 +1079,21 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     font-size: 14px;
   }
 
+  .tests-settings-page .tests-evidence-settings-section {
+    box-sizing: border-box;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.075);
+  }
+
+  .tests-settings-page .tests-evidence-settings-section .platform-settings-section__header,
+  .tests-settings-page .tests-evidence-settings-section .platform-settings-section__body,
+  .tests-settings-page .tests-evidence-settings-section .tests-evidence-policy,
+  .tests-settings-page .tests-evidence-settings-section .platform-service-detail-page__property {
+    background: transparent;
+  }
+
   .tests-settings-page .tests-settings-detail-list.platform-service-detail-page__property-list {
     gap: 0;
   }

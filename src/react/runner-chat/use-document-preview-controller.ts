@@ -201,6 +201,11 @@ export function useRunnerDocumentPreviewController({
       if (target instanceof Node && actionMenuRef.current?.contains(target)) {
         return;
       }
+      const targetElement =
+        target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
+      if (targetElement?.closest("[data-platform-resource-actions-owner]")) {
+        return;
+      }
       setActionMenuOpen(false);
     };
     document.addEventListener("pointerdown", handlePointerDown);

@@ -1,4 +1,3 @@
-import { Gitlab } from "lucide-react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -10,13 +9,13 @@ import {
   PlatformPrimaryButton,
   PlatformSecondaryButton,
 } from "../../platform-ui/components/ui/button/index.js";
+import { PlatformSelector } from "../../platform-ui/components/ui/selector/index.js";
 import { getBrowserFileType } from "./attachment-utils.js";
 import {
   IconFolderPlus,
   IconGithub,
   IconGoogleDrive,
   IconLoader2,
-  IconLogout,
   IconNotion,
   IconOneDrive,
 } from "./icons.js";
@@ -25,6 +24,7 @@ import {
   formatBrowserFileSize,
   type RunnerChatFileNode,
 } from "./workspace-files.js";
+import type { RunnerChatConnectorAccount } from "./public-types.js";
 
 export type RunnerFileBrowserSource =
   | "workspace"
@@ -37,6 +37,9 @@ type RunnerFileBrowserIntegrationSource = Exclude<RunnerFileBrowserSource, "work
 
 interface RunnerFileBrowserConnection {
   connected: boolean;
+  accounts?: RunnerChatConnectorAccount[];
+  selectedAccountId?: string;
+  onAccountChange?: (accountId: string) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
 }
@@ -113,6 +116,37 @@ function getFileBrowserAuthCopy(source: RunnerFileBrowserIntegrationSource): str
   return "Connect your GitHub to browse and attach repository files.";
 }
 
+const DEFAULT_ACCOUNT_VALUE = "__default__";
+
+function normalizeFileBrowserAccounts(
+  connection: RunnerFileBrowserConnection | null,
+  sourceLabel: string,
+): RunnerChatConnectorAccount[] {
+  if (!connection?.connected) return [];
+  const accounts = (Array.isArray(connection.accounts) ? connection.accounts : [])
+    .map((account) => ({
+      ...account,
+      id: String(account?.id || "").trim(),
+      name: String(account?.name || account?.identity || "Connected account").trim(),
+      identity: String(account?.identity || account?.name || "Connected").trim(),
+    }))
+    .filter((account) => account.id && account.name);
+  if (accounts.length > 0) {
+    return accounts.slice().sort((left, right) => {
+      if (Boolean(left.isDefault) !== Boolean(right.isDefault)) {
+        return left.isDefault ? -1 : 1;
+      }
+      return left.name.localeCompare(right.name);
+    });
+  }
+  return [{
+    id: DEFAULT_ACCOUNT_VALUE,
+    name: `${sourceLabel} account`,
+    identity: "Default account",
+    isDefault: true,
+  }];
+}
+
 export function RunnerFileBrowserDialog({
   open,
   apiKeyPromptOpen,
@@ -156,11 +190,55 @@ export function RunnerFileBrowserDialog({
 
   const selectedConnection = source === "workspace" ? null : connections[source];
   const sourceLabel = source === "workspace" ? "Workspace" : SOURCE_LABELS[source];
+  const accountOptions = normalizeFileBrowserAccounts(selectedConnection, sourceLabel);
+  const selectedAccountId = selectedConnection?.selectedAccountId;
+  const selectedAccount = accountOptions.find((account) => account.id === selectedAccountId)
+    || accountOptions.find((account) => account.isDefault)
+    || accountOptions[0]
+    || null;
+  const accountSelector = selectedConnection && accountOptions.length > 0 ? (
+    <PlatformSelector
+      value={selectedAccount?.id || DEFAULT_ACCOUNT_VALUE}
+      options={accountOptions.map((account) => ({
+        value: account.id,
+        label: account.identity || account.name,
+        description:
+          account.name && account.name !== (account.identity || account.name)
+            ? account.name
+            : account.isDefault
+              ? "Default account"
+              : undefined,
+        disabled: account.disabled,
+        title: account.name,
+      }))}
+      ariaLabel={`Select ${sourceLabel} account`}
+      popupAriaLabel={`${sourceLabel} accounts`}
+      triggerClassName="tb-file-browser-account-selector-trigger"
+      popupClassName="tb-file-browser-account-selector-popup"
+      onValueChange={(accountId) => selectedConnection.onAccountChange?.(
+        accountId === DEFAULT_ACCOUNT_VALUE ? "" : accountId,
+      )}
+    />
+  ) : null;
+  const headerBreadcrumbs = accountSelector
+    ? path.slice(1).map((crumb, index) => ({
+        id: `${crumb.id || "root"}:${index + 1}`,
+        label: crumb.name,
+        onSelect: () => onBreadcrumbSelect(index + 1),
+      }))
+    : path.map((crumb, index) => ({
+        id: `${crumb.id || "root"}:${index}`,
+        label: crumb.name,
+        onSelect: () => onBreadcrumbSelect(index),
+      }));
   const actionVerb = source === "notion" ? "Use" : "Attach";
   const defaultSelectionLabel = source === "notion" ? "Database" : "Files";
   const filterContextKey = `${source}:${selectedEnvironmentId || ""}:${path
     .map((entry) => `${entry.id || "root"}:${entry.name}`)
     .join("/")}`;
+  const authenticatedIntegrationSources = (
+    ["google-drive", "notion", "one-drive", "github"] as const
+  ).filter((integrationSource) => connections[integrationSource].connected);
   const sourceGroups: PlatformFileExplorerSourceGroup[] = [
     {
       id: "computers",
@@ -175,45 +253,18 @@ export function RunnerFileBrowserDialog({
     {
       id: "integrations",
       label: "Integrations",
-      items: [
-        ...(["google-drive", "notion", "one-drive", "github"] as const).map(
-          (integrationSource) => ({
-            id: integrationSource,
-            label: SOURCE_LABELS[integrationSource],
-            icon: (
-              <RunnerFileBrowserSourceIcon
-                source={integrationSource}
-                className="tb-file-browser-source-brand-icon"
-              />
-            ),
-            note: connections[integrationSource].connected ? undefined : "Connect",
-            active: source === integrationSource,
-            onSelect: () => onSourceChange(integrationSource),
-          }),
+      items: authenticatedIntegrationSources.map((integrationSource) => ({
+        id: integrationSource,
+        label: SOURCE_LABELS[integrationSource],
+        icon: (
+          <RunnerFileBrowserSourceIcon
+            source={integrationSource}
+            className="tb-file-browser-source-brand-icon"
+          />
         ),
-        {
-          id: "gitlab",
-          label: "GitLab",
-          icon: <Gitlab className="tb-file-browser-source-brand-icon" aria-hidden="true" />,
-          note: "Unavailable",
-          disabled: true,
-        },
-        {
-          id: "sharepoint",
-          label: "SharePoint",
-          icon: (
-            <img
-              src="/img/plugins/sharepoint.svg"
-              alt=""
-              aria-hidden="true"
-              className="tb-file-browser-source-brand-icon"
-              draggable={false}
-            />
-          ),
-          note: "Unavailable",
-          disabled: true,
-        },
-      ],
+        active: source === integrationSource,
+        onSelect: () => onSourceChange(integrationSource),
+      })),
     },
   ];
   const customContent = authSource ? (
@@ -318,16 +369,6 @@ export function RunnerFileBrowserDialog({
           )}
         </button>
       ) : null}
-      {selectedConnection?.onDisconnect ? (
-        <button
-          type="button"
-          className="tb-file-browser-toolbar-button"
-          onClick={selectedConnection.onDisconnect}
-          title={`Disconnect ${sourceLabel}`}
-        >
-          <IconLogout className="tb-file-browser-toolbar-icon" />
-        </button>
-      ) : null}
     </>
   );
 
@@ -347,11 +388,7 @@ export function RunnerFileBrowserDialog({
                 onClose={onClose}
                 closeButtonLabel="Close file browser"
                 sourceGroups={sourceGroups}
-                breadcrumbs={path.map((crumb, index) => ({
-                  id: `${crumb.id || "root"}:${index}`,
-                  label: crumb.name,
-                  onSelect: () => onBreadcrumbSelect(index),
-                }))}
+                breadcrumbs={headerBreadcrumbs}
                 searchQuery={searchQuery}
                 onSearchQueryChange={onSearchQueryChange}
                 searchPlaceholder={source === "notion" ? "Search Databases" : "Search Files"}
@@ -367,6 +404,7 @@ export function RunnerFileBrowserDialog({
                     />
                   )
                 }
+                headerTitle={accountSelector}
                 headerActions={toolbarActions}
                 filterContextKey={filterContextKey}
                 items={items}

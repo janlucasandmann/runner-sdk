@@ -66,6 +66,7 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
           const iconEnvironmentId = options.environmentId === undefined ? selectedEnvironmentId : options.environmentId;
           const iconBackendUrl = options.backendUrl === undefined ? backendUrl : options.backendUrl;
           const showSelection = options.showSelection !== false;
+          const renderMeta = typeof options.renderMeta === "function" ? options.renderMeta : null;
 
           return React.createElement("div", {
               key: entry.id,
@@ -137,10 +138,12 @@ export const FILES_PAGE_ENTRY_VIEWS_SCRIPT = `
                 }),
                 React.createElement("div", { className: "playground-files-entry-copy" }, renderName(entry))
               ),
-              React.createElement("div", { className: "playground-files-entry-meta" },
-                React.createElement("span", { className: "playground-files-entry-date" }, formatPlaygroundFileDate(entry.modifiedTime)),
-                React.createElement("span", { className: "playground-files-entry-size" }, entry.isFolder ? "-" : formatPlaygroundFileSize(entry.size))
-              ),
+              renderMeta
+                ? renderMeta(entry)
+                : React.createElement("div", { className: "playground-files-entry-meta" },
+                    React.createElement("span", { className: "playground-files-entry-date" }, formatPlaygroundFileDate(entry.modifiedTime)),
+                    React.createElement("span", { className: "playground-files-entry-size" }, entry.isFolder ? "-" : formatPlaygroundFileSize(entry.size))
+                  ),
               showOptions
                 ? React.createElement("button", {
                     type: "button",

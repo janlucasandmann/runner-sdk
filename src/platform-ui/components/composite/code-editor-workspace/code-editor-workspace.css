@@ -620,6 +620,21 @@
   height: 100% !important;
 }
 
+.platform-monaco-code-editor .monaco-editor,
+.platform-monaco-code-editor .monaco-editor-background,
+.platform-monaco-code-editor .monaco-editor .margin,
+.platform-monaco-code-editor .monaco-editor .sticky-widget,
+.platform-monaco-code-editor .monaco-editor .sticky-widget-lines,
+.platform-monaco-code-editor .monaco-editor .sticky-widget-line-numbers,
+.platform-monaco-code-editor .monaco-editor .sticky-line-content,
+.platform-monaco-code-editor .monaco-editor .sticky-line-number {
+  background: #000 !important;
+}
+
+.platform-monaco-code-editor .monaco-editor .sticky-widget {
+  box-shadow: none !important;
+}
+
 .platform-monaco-code-editor__loading.platform-loading-state {
   min-height: 100%;
 }

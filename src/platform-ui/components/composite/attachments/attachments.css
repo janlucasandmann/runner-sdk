@@ -78,7 +78,7 @@ button.platform-attachments__computer-upload.platform-button.is-secondary.is-act
   padding: 20px 16px;
   border: 0;
   border-radius: inherit;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
   color: inherit;
   cursor: pointer;
 }
@@ -257,6 +257,321 @@ button.platform-attachments__item-main {
   font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/*
+ * Inline attachment previews used by RunnerChat and other thread surfaces.
+ * Keep the card domain-neutral; callers provide the icon, image preview, and
+ * type label while this component owns the shared layout and interaction.
+ */
+.platform-attachment-preview {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.platform-attachment-preview--removable {
+  overflow: visible;
+}
+
+.platform-attachment-preview--composer {
+  height: 46px;
+  max-width: min(220px, 100%);
+  flex: 0 0 auto;
+  gap: 10px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  background: transparent;
+  backdrop-filter: blur(20px);
+}
+
+.platform-attachment-preview--message {
+  width: fit-content;
+  max-width: min(640px, 100%);
+  min-height: 0;
+  flex: 0 1 auto;
+  align-self: flex-start;
+  gap: 14px;
+  padding: 10px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.platform-attachment-preview--message:hover,
+.platform-attachment-preview--message.platform-attachment-preview--active {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.platform-attachment-preview--message.platform-attachment-preview--removable,
+.platform-attachment-preview--image.platform-attachment-preview--removable {
+  overflow: visible;
+  z-index: 1;
+}
+
+.platform-attachment-preview--image {
+  width: 53px;
+  height: 53px;
+  min-height: 53px;
+  flex: 0 0 53px;
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: none;
+}
+
+.platform-attachment-preview__image-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.platform-attachment-preview__image-frame > .platform-attachment-preview__image-lazy-preview,
+.platform-attachment-preview__image-frame > .tb-runner-image-preview-surface,
+.platform-attachment-preview__image-frame > .platform-attachment-preview__image-button {
+  width: 100%;
+  height: 100%;
+}
+
+.platform-attachment-preview__image-frame .tb-runner-image-preview-surface,
+.platform-attachment-preview__image-lazy-preview > .tb-runner-image-preview-surface {
+  width: 100%;
+  height: 100%;
+}
+
+.platform-attachment-preview__image-button {
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.platform-attachment-preview__image-button.is-clickable {
+  cursor: pointer;
+}
+
+.platform-attachment-preview__image-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.platform-attachment-preview__image-placeholder img,
+.platform-attachment-preview__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.platform-attachment-preview__file-main {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+button.platform-attachment-preview__file-main {
+  cursor: pointer;
+}
+
+.platform-attachment-preview__file-main:focus-visible {
+  outline: 1px solid rgba(77, 163, 255, 0.72);
+  outline-offset: -1px;
+}
+
+.platform-attachment-preview__file-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.platform-attachment-preview--composer .platform-attachment-preview__file-icon {
+  width: 20px;
+  height: 20px;
+  flex-basis: 20px;
+}
+
+.platform-attachment-preview__file-icon > svg,
+.platform-attachment-preview__file-icon > img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.platform-attachment-preview--composer .platform-attachment-preview__file-icon > svg,
+.platform-attachment-preview--composer .platform-attachment-preview__file-icon > img {
+  width: 20px;
+  height: 20px;
+}
+
+.platform-attachment-preview__file-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.platform-attachment-preview--composer .platform-attachment-preview__file-copy {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.platform-attachment-preview__name {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-attachment-preview--composer .platform-attachment-preview__name {
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.platform-attachment-preview__type,
+.platform-attachment-preview__metadata {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-attachment-preview--composer .platform-attachment-preview__metadata {
+  max-width: 92px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 12px;
+  line-height: 1.1;
+}
+
+.platform-attachment-preview__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 2px;
+  border: 0;
+  color: #000;
+  background: rgb(255 255 255 / 90%);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  cursor: pointer;
+}
+
+.platform-attachment-preview__remove:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.platform-attachment-preview__remove-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.platform-attachment-preview--message.platform-attachment-preview--removable
+  .platform-attachment-preview__remove-icon {
+  width: 10px;
+  height: 10px;
+}
+
+.platform-attachment-preview__remove--image,
+.platform-attachment-preview__remove--file {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+  z-index: 2;
+}
+
+.platform-attachment-preview--message.platform-attachment-preview--removable
+  .platform-attachment-preview__remove--image,
+.platform-attachment-preview--message.platform-attachment-preview--removable
+  .platform-attachment-preview__remove--file {
+  top: -7px;
+  right: -7px;
+  width: 20px;
+  height: 20px;
+}
+
+.platform-attachment-preview--image:hover .platform-attachment-preview__remove--image,
+.platform-attachment-preview--image:focus-within .platform-attachment-preview__remove--image,
+.platform-attachment-preview--file:hover .platform-attachment-preview__remove--file,
+.platform-attachment-preview--file:focus-within .platform-attachment-preview__remove--file {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 3;
+}
+
+.platform-attachment-preview--uploading .platform-attachment-preview__image-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.platform-attachment-preview__upload-indicator {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .platform-attachments__item-actions {

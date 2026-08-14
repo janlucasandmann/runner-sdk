@@ -894,6 +894,14 @@ const tagDetailCssPath = path.join(
   "detail",
   "tag-detail-page.css",
 );
+const externalAgentTriggersCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-resources",
+  "plugins",
+  "external-agent-triggers",
+  "external-agent-triggers-page.css",
+);
 const platformResourceAccessTableCssPath = path.join(
   packageRoot,
   "src",
@@ -997,6 +1005,7 @@ async function copy() {
     skillDetailCssText,
     promptDetailCssText,
     tagDetailCssText,
+    externalAgentTriggersCssText,
     platformResourceAccessTableCssText,
   ] = await Promise.all([
     loadBundledCss(),
@@ -1053,6 +1062,7 @@ async function copy() {
     fs.readFile(skillDetailCssPath, "utf8"),
     fs.readFile(promptDetailCssPath, "utf8"),
     fs.readFile(tagDetailCssPath, "utf8"),
+    fs.readFile(externalAgentTriggersCssPath, "utf8"),
     fs.readFile(platformResourceAccessTableCssPath, "utf8"),
   ]);
   await fs.mkdir(path.dirname(distCssPath), { recursive: true });
@@ -1418,7 +1428,7 @@ async function copy() {
   await fs.mkdir(path.dirname(distPlatformPagesCssPath), { recursive: true });
   await fs.writeFile(
     distPlatformPagesCssPath,
-    `${platformPopupCssText}\n\n${platformResourceActionModalsCssText}\n\n${platformResourceHeaderActionsCssText}\n\n${platformProfileImagePickerCssText}\n\n${platformOwnerSelectorCssText}\n\n${platformSelectorCssText}\n\n${platformCheckboxCssText}\n\n${platformAttachmentsCssText}\n\n${platformActivityOverviewCssText}\n\n${platformActivityTimelineCssText}\n\n${platformActivityWorkspaceCssText}\n\n${platformCommentsCssText}\n\n${platformConnectorActionDetailCssText}\n\n${platformSubtasksCssText}\n\n${platformTicketItemCssText}\n\n${platformFileExplorerCssText}\n\n${platformDataTableCssText}\n\n${platformAnalyticsCssText}\n\n${platformDeploymentMapCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformCodeEditorWorkspaceCssText}\n\n${platformCodePreviewBoxCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformVersionLabelCssText}\n\n${platformHomePageCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformFloatingSidebarCssText}\n\n${platformVersionHistorySidebarCssText}\n\n${platformVersionSaveDialogCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformSettingsSectionCssText}\n\n${platformDetailPageCssText}\n\n${developServerDetailPageCssText}\n\n${securityPageCssText}\n\n${evidenceAgentsPageCssText}\n\n${platformPermissionsPageCssText}\n\n${agentDetailCssText}\n\n${skillDetailCssText}\n\n${promptDetailCssText}\n\n${tagDetailCssText}\n\n${platformResourceAccessTableCssText}\n\n${platformPlanGateModalCssText}`,
+    `${platformPopupCssText}\n\n${platformResourceActionModalsCssText}\n\n${platformResourceHeaderActionsCssText}\n\n${platformProfileImagePickerCssText}\n\n${platformOwnerSelectorCssText}\n\n${platformSelectorCssText}\n\n${platformCheckboxCssText}\n\n${platformAttachmentsCssText}\n\n${platformActivityOverviewCssText}\n\n${platformActivityTimelineCssText}\n\n${platformActivityWorkspaceCssText}\n\n${platformCommentsCssText}\n\n${platformConnectorActionDetailCssText}\n\n${platformSubtasksCssText}\n\n${platformTicketItemCssText}\n\n${platformFileExplorerCssText}\n\n${platformDataTableCssText}\n\n${platformAnalyticsCssText}\n\n${platformDeploymentMapCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformCodeEditorWorkspaceCssText}\n\n${platformCodePreviewBoxCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformVersionLabelCssText}\n\n${platformHomePageCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformFloatingSidebarCssText}\n\n${platformVersionHistorySidebarCssText}\n\n${platformVersionSaveDialogCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformSettingsSectionCssText}\n\n${platformDetailPageCssText}\n\n${developServerDetailPageCssText}\n\n${securityPageCssText}\n\n${evidenceAgentsPageCssText}\n\n${platformPermissionsPageCssText}\n\n${agentDetailCssText}\n\n${skillDetailCssText}\n\n${promptDetailCssText}\n\n${tagDetailCssText}\n\n${externalAgentTriggersCssText}\n\n${platformResourceAccessTableCssText}\n\n${platformPlanGateModalCssText}`,
     "utf8",
   );
   await fs.mkdir(distAssetsDir, { recursive: true });

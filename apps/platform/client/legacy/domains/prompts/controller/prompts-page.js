@@ -25,6 +25,7 @@
             const [promptRows, setPromptRows] = useState([]);
             const [promptsLoading, setPromptsLoading] = useState(true);
             const [promptsError, setPromptsError] = useState("");
+            const [promptOverviewScope, setPromptOverviewScope] = useState("all");
             const [selectedPromptId, setSelectedPromptId] = useState("");
             const [selectedPrompt, setSelectedPrompt] = useState(null);
             const [draft, setDraft] = useState(EMPTY_DRAFT);
@@ -42,7 +43,7 @@
             const [promptAccessTeamMenuOpen, setPromptAccessTeamMenuOpen] = useState(false);
             const [promptAccessSelectedTeamIds, setPromptAccessSelectedTeamIds] = useState(() => new Set());
             const [promptShareModalOpen, setPromptShareModalOpen] = useState(false);
-            const [promptShareTeamId, setPromptShareTeamId] = useState("");
+            const [promptShareTeamIds, setPromptShareTeamIds] = useState([]);
             const [promptShareError, setPromptShareError] = useState("");
             const [promptShareSaving, setPromptShareSaving] = useState(false);
             const [promptAccessState, setPromptAccessState] = useState({ isSaving: false, error: "" });
@@ -68,16 +69,35 @@
 
             function normalizePromptRecord(value) {
               const source = value && typeof value === "object" ? value : {};
-              const versions = Array.isArray(source.versions) ? source.versions : [];
+              const versions = Array.isArray(source.versions)
+                ? source.versions.map((version, index) => {
+                    const rawNumber = Number(
+                      version?.number ?? version?.versionNumber ?? version?.version ?? index + 1,
+                    );
+                    const number = Number.isFinite(rawNumber) && rawNumber > 0
+                      ? Math.floor(rawNumber)
+                      : index + 1;
+                    return {
+                      ...(version && typeof version === "object" ? version : {}),
+                      number,
+                      versionNumber: number,
+                      markdown: String(version?.markdown ?? ""),
+                    };
+                  })
+                : [];
               const currentVersion = versions.find((version) => (
                 String(version?.id || "") === String(source.currentVersionId || "")
               )) || versions[versions.length - 1] || null;
               return {
                 ...source,
+                versions,
                 id: String(source.id || "").trim(),
                 name: String(source.name || currentVersion?.name || "new-prompt").trim() || "new-prompt",
                 description: String(source.description ?? currentVersion?.description ?? ""),
-                markdown: String(source.markdown ?? currentVersion?.markdown ?? ""),
+                // Version content is authoritative. In particular, an empty
+                // string is a valid saved prompt and must never fall through
+                // to stale top-level content from an earlier version.
+                markdown: String(currentVersion?.markdown ?? source.markdown ?? ""),
                 creatorId: String(source.creatorId || source.creatorUserId || "").trim(),
                 creatorEmail: String(source.creatorEmail || "").trim(),
                 creatorName: String(source.creatorName || "").trim(),
@@ -89,7 +109,8 @@
                 currentVersion: currentVersion
                   ? { ...currentVersion, markdown: String(currentVersion.markdown ?? "") }
                   : null,
-                currentVersionNumber: Number(source.currentVersionNumber || currentVersion?.number || 1),
+                currentVersionId: String(source.currentVersionId || currentVersion?.id || "").trim(),
+                currentVersionNumber: Number(currentVersion?.number ?? source.currentVersionNumber ?? 1),
                 publishedVersionId: String(source.publishedVersionId || "").trim(),
                 metadata: source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
                   ? source.metadata
@@ -140,6 +161,54 @@
                 throw new Error(payload?.message || payload?.error || "Prompt request failed.");
               }
               return payload;
+            }
+
+            async function uploadPromptEditorFiles(files) {
+              const selectedFiles = Array.from(files || []).filter((file) => (
+                typeof globalThis.File === "function" && file instanceof globalThis.File
+              ));
+              return Promise.all(selectedFiles.map(async (file) => {
+                const payload = await requestJson("/api/real/attachments/upload", {
+                  method: "POST",
+                  body: JSON.stringify({
+                    filename: file.name || "attachment",
+                    mimeType: file.type || "application/octet-stream",
+                    data: await readFileAsBase64(file),
+                  }),
+                });
+                const attachment = payload?.attachment && typeof payload.attachment === "object"
+                  ? payload.attachment
+                  : null;
+                const attachmentId = String(attachment?.id || attachment?.attachmentId || "").trim();
+                if (!attachment || !attachmentId) {
+                  throw new Error("Attachment upload succeeded but the attachment data is missing.");
+                }
+                const mimeType = String(
+                  attachment.mimeType || attachment.contentType || file.type || "application/octet-stream"
+                ).trim() || "application/octet-stream";
+                return {
+                  src: "/api/real/attachments/" + encodeURIComponent(attachmentId),
+                  name: String(attachment.filename || attachment.name || file.name || "Attachment").trim() || "Attachment",
+                  size: Number(attachment.size || attachment.byteSize || file.size || 0),
+                  mimeType,
+                  attachmentId,
+                  metadata: attachment,
+                };
+              }));
+            }
+
+            async function resolvePromptEditorFilePreviewSource(file, signal) {
+              const source = String(file?.src || "").trim();
+              if (!source) return null;
+              const response = await fetch(source, {
+                credentials: "same-origin",
+                headers: getRequestHeaders(),
+                signal,
+              });
+              if (!response.ok) {
+                throw new Error("Failed to load the prompt attachment preview.");
+              }
+              return response.blob();
             }
 
             const loadPrompts = useCallback(async () => {
@@ -203,10 +272,47 @@
             function getDraftFromPrompt(record) {
               const normalized = normalizePromptRecord(record);
               return {
-                name: normalized.name,
-                description: normalized.description,
-                markdown: normalized.currentVersion?.markdown || normalized.markdown || "",
+                name: String(normalized.currentVersion?.name ?? normalized.name ?? "new-prompt"),
+                description: String(normalized.currentVersion?.description ?? normalized.description ?? ""),
+                markdown: String(normalized.currentVersion?.markdown ?? normalized.markdown ?? ""),
               };
+            }
+
+            function normalizePromptMutationRecord(payload, fallbackRecord = selectedPrompt) {
+              const response = payload && typeof payload === "object" ? payload : {};
+              const responsePrompt = response.prompt && typeof response.prompt === "object"
+                ? response.prompt
+                : response;
+              const responseVersion = response.version && typeof response.version === "object"
+                ? response.version
+                : null;
+              const fallback = fallbackRecord && typeof fallbackRecord === "object"
+                ? fallbackRecord
+                : {};
+              const source = {
+                ...fallback,
+                ...responsePrompt,
+              };
+              if (responseVersion?.id) {
+                const versions = Array.isArray(source.versions) ? [...source.versions] : [];
+                const versionIndex = versions.findIndex((version) => (
+                  String(version?.id || "") === String(responseVersion.id || "")
+                ));
+                if (versionIndex >= 0) versions[versionIndex] = responseVersion;
+                else versions.push(responseVersion);
+                source.versions = versions;
+                source.currentVersionId = String(
+                  responsePrompt.currentVersionId || responseVersion.id || source.currentVersionId || "",
+                );
+                source.currentVersionNumber = Number(
+                  responseVersion.number
+                    ?? responseVersion.versionNumber
+                    ?? responsePrompt.currentVersionNumber
+                    ?? source.currentVersionNumber
+                    ?? versions.length,
+                );
+              }
+              return normalizePromptRecord(source);
             }
 
             function getCurrentPromptVersion(record = selectedPrompt) {
@@ -226,6 +332,38 @@
             function getPromptEditorVersion(record = selectedPrompt) {
               return getPromptVersionById(promptVersionSelectedId, record)
                 || getCurrentPromptVersion(record);
+            }
+
+            function getOrderedPromptVersions(record = selectedPrompt) {
+              const versions = Array.isArray(record?.versions) ? record.versions : [];
+              return versions
+                .map((version, index) => ({
+                  ...version,
+                  number: normalizePlatformVersionNumber(
+                    version?.number ?? version?.versionNumber ?? version?.version,
+                    index + 1,
+                  ),
+                  __promptVersionOrder: index,
+                }))
+                .filter((version) => String(version?.id || "").trim())
+                .sort((left, right) => (
+                  Number(left.number || 0) - Number(right.number || 0)
+                  || Number(left.__promptVersionOrder || 0) - Number(right.__promptVersionOrder || 0)
+                ));
+            }
+
+            function buildPromptVersionSelectorOptions(versions) {
+              const orderedVersions = Array.isArray(versions) ? versions : [];
+              const latestVersionId = String(orderedVersions.at(-1)?.id || "");
+              return [...orderedVersions].reverse().map((version) => {
+                const versionId = String(version?.id || "");
+                const versionLabel = formatPlatformVersionLabel(version?.number);
+                return {
+                  value: versionId,
+                  label: versionId === latestVersionId ? versionLabel + " · Latest" : versionLabel,
+                  description: String(version?.description || "").trim() || undefined,
+                };
+              });
             }
 
             function getPromptVersionDraft(version) {
@@ -285,7 +423,7 @@
                     + "/publish",
                   { method: "POST" },
                 );
-                const record = normalizePromptRecord(response?.prompt || response);
+                const record = normalizePromptMutationRecord(response);
                 setSelectedPrompt(record);
                 setPromptVersionSelectedId(normalizedVersionId);
                 setSaveState({ isSaving: false, error: "" });
@@ -330,36 +468,66 @@
             }
 
             function openPromptVersionChangesPage(versionId = "") {
-              const versions = Array.isArray(selectedPrompt?.versions) ? selectedPrompt.versions : [];
-              const target = getPromptVersionById(versionId) || getPromptEditorVersion();
+              const versions = getOrderedPromptVersions();
+              const requestedTarget = getPromptVersionById(versionId) || getPromptEditorVersion();
+              const target = versions.find((version) => (
+                String(version?.id || "") === String(requestedTarget?.id || "")
+              )) || versions.at(-1) || null;
               if (!target || !versions.length) return false;
+              const targetIndex = versions.findIndex((version) => String(version?.id || "") === String(target.id || ""));
+              const baseVersion = targetIndex > 0
+                ? versions[targetIndex - 1]
+                : versions[targetIndex + 1] || target;
               setPromptVersionSelectedId(String(target.id || versionId || ""));
               setPromptVersionsOpen(true);
-              setPromptVersionChangesState({ versionId: String(target.id || versionId || "") });
+              setPromptVersionChangesState({
+                leftVersionId: String(baseVersion?.id || target.id || ""),
+                rightVersionId: String(target.id || versionId || ""),
+              });
               return true;
             }
 
             function renderPromptVersionChangesSurface() {
               if (!promptVersionChangesState || !selectedPrompt) return null;
-              const versions = Array.isArray(selectedPrompt.versions) ? selectedPrompt.versions : [];
-              const target = getPromptVersionById(promptVersionChangesState.versionId) || getPromptEditorVersion();
-              if (!target) return null;
-              const targetIndex = versions.findIndex((version) => String(version?.id || "") === String(target.id || ""));
-              const previous = targetIndex > 0 ? versions[targetIndex - 1] : null;
-              const current = getCurrentPromptVersion(selectedPrompt);
-              let baseVersion = previous || target;
-              let targetVersion = target;
-              if (!previous && target.id !== current?.id && current) {
-                baseVersion = target;
-                targetVersion = current;
-              }
+              const versions = getOrderedPromptVersions();
+              if (!versions.length) return null;
+              const targetVersion = versions.find((version) => (
+                String(version?.id || "") === String(promptVersionChangesState.rightVersionId || "")
+              )) || versions.at(-1) || null;
+              const targetIndex = versions.findIndex((version) => (
+                String(version?.id || "") === String(targetVersion?.id || "")
+              ));
+              const baseVersion = versions.find((version) => (
+                String(version?.id || "") === String(promptVersionChangesState.leftVersionId || "")
+              )) || versions[Math.max(0, targetIndex - 1)] || targetVersion;
+              if (!baseVersion || !targetVersion) return null;
+              const selectorOptions = buildPromptVersionSelectorOptions(versions);
+              const updateComparedVersion = (side, value) => {
+                setPromptVersionChangesState((current) => current
+                  ? {
+                      ...current,
+                      [side === "left" ? "leftVersionId" : "rightVersionId"]: String(value || ""),
+                    }
+                  : current
+                );
+              };
               const files = buildPromptVersionDiffFilesFromVersions(baseVersion, targetVersion);
               const changesPage = typeof renderPlaygroundVersionChangesPage === "function"
                 ? renderPlaygroundVersionChangesPage({
                     title: "Changes",
-                    subtitle: String(target.description || "").trim(),
-                    leftLabel: baseVersion ? `Version ${baseVersion.number || ""}` : "Previous",
-                    rightLabel: targetVersion ? `Version ${targetVersion.number || ""}` : "Selected",
+                    subtitle: "Compare saved prompt versions and review the exact file changes.",
+                    leftSelector: {
+                      value: String(baseVersion.id || ""),
+                      options: selectorOptions,
+                      onValueChange: (value) => updateComparedVersion("left", value),
+                      ariaLabel: "Select base prompt version",
+                    },
+                    rightSelector: {
+                      value: String(targetVersion.id || ""),
+                      options: selectorOptions,
+                      onValueChange: (value) => updateComparedVersion("right", value),
+                      ariaLabel: "Select target prompt version",
+                    },
                     files,
                     backIcon: ArrowLeft,
                     backText: "Back",
@@ -575,10 +743,7 @@
                     onShare: () => {
                       setPromptActionsOpen(false);
                       setPromptShareError("");
-                      const defaultTeam = normalizedPromptWorkspaceTeams.find(
-                        (team) => !promptSharedTeamIdSet.has(String(team.id)),
-                      ) || normalizedPromptWorkspaceTeams[0];
-                      setPromptShareTeamId(defaultTeam?.id || "");
+                      setPromptShareTeamIds([]);
                       setPromptShareModalOpen(true);
                     },
                     onRename: () => {
@@ -601,8 +766,18 @@
                     createdAt: selectedPrompt?.createdAt || "",
                     updatedAt: selectedPrompt?.updatedAt || "",
                   }
-                : { mode: "overview", title: "Prompts", promptId: "", versionNumber: 0, versionQualifier: "" });
-            }, [draft.name, isDetail, isDirty, isDraft, onToolsPromptsHeaderChange, promptActionsOpen, promptDetailTab, promptVersionSelectedId, selectedPrompt, selectedPromptId]);
+                : {
+                    mode: "overview",
+                    title: "Prompts",
+                    promptId: "",
+                    versionNumber: 0,
+                    versionQualifier: "",
+                    overviewScope: promptOverviewScope,
+                    onOverviewScopeChange: (nextScope) => setPromptOverviewScope(
+                      nextScope === "created" || nextScope === "shared" ? nextScope : "all",
+                    ),
+                  });
+            }, [draft.name, isDetail, isDirty, isDraft, onToolsPromptsHeaderChange, promptActionsOpen, promptDetailTab, promptOverviewScope, promptVersionSelectedId, selectedPrompt, selectedPromptId]);
 
             function discardPromptChanges() {
               setPromptVersionSaveDialog(null);
@@ -678,7 +853,7 @@
                         body: JSON.stringify(payload),
                       },
                     );
-                const record = normalizePromptRecord(response?.prompt || response);
+                const record = normalizePromptMutationRecord(response, isDraft ? null : selectedPrompt);
                 const nextDraft = getDraftFromPrompt(record);
                 setSelectedPromptId(record.id);
                 setSelectedPrompt(record);
@@ -700,6 +875,21 @@
               return selectedPrompt?.metadata && typeof selectedPrompt.metadata === "object"
                 ? selectedPrompt.metadata
                 : {};
+            }
+
+            function getSelectedPromptStorageRegion(metadata = selectedPrompt?.metadata) {
+              const normalizedMetadata = metadata
+                && typeof metadata === "object"
+                && !Array.isArray(metadata)
+                ? metadata
+                : {};
+              return String(
+                normalizedMetadata.storageRegion
+                || normalizedMetadata.deploymentRegion
+                || normalizedMetadata.region
+                || normalizedMetadata.location
+                || "europe-west1"
+              ).trim() || "europe-west1";
             }
 
             function normalizePromptIdentity(value, fallback = {}) {
@@ -991,14 +1181,6 @@
               onWorkspaceTeamsRequest();
             }, [normalizedPromptWorkspaceTeams.length, onWorkspaceTeamsRequest, promptShareModalOpen]);
 
-            useEffect(() => {
-              if (!promptShareModalOpen || promptShareTeamId || !normalizedPromptWorkspaceTeams.length) return;
-              const defaultTeam = normalizedPromptWorkspaceTeams.find(
-                (team) => !promptSharedTeamIdSet.has(String(team.id)),
-              ) || normalizedPromptWorkspaceTeams[0];
-              setPromptShareTeamId(defaultTeam?.id || "");
-            }, [normalizedPromptWorkspaceTeams, promptShareModalOpen, promptShareTeamId, promptSharedTeamIdSet]);
-
             const promptWorkspaceTeamById = new Map(
               normalizedPromptWorkspaceTeams.map((team) => [String(team.id), team]),
             );
@@ -1094,49 +1276,86 @@
               ) || null;
             }
 
-            async function sharePromptWithTeam(teamId) {
+            async function sharePromptWithTeams(teamIds) {
               if (!selectedPrompt?.id || isDraft) {
                 setPromptShareError("Save this prompt before sharing it with a team.");
                 return;
               }
-              const team = normalizedPromptWorkspaceTeams.find((candidate) => String(candidate.id) === String(teamId));
-              if (!team) {
-                setPromptShareError("Choose a team first.");
+              const requestedTeamIds = new Set(
+                (Array.isArray(teamIds) ? teamIds : [])
+                  .map((teamId) => String(teamId || "").trim())
+                  .filter(Boolean),
+              );
+              const teamsToShare = normalizedPromptWorkspaceTeams.filter((team) => (
+                requestedTeamIds.has(String(team.id))
+                && !promptSharedTeamIdSet.has(String(team.id))
+              ));
+              if (!teamsToShare.length) {
+                setPromptShareError("Choose at least one team first.");
                 return;
               }
-              const nextMetadata = buildPlatformTeamAccessMetadata(
-                getPromptResourceMetadata(),
-                team.id,
-                true,
-                "prompt_team_role",
-                PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id),
-              );
+              let nextMetadata = getPromptResourceMetadata();
+              teamsToShare.forEach((team) => {
+                nextMetadata = buildPlatformTeamAccessMetadata(
+                  nextMetadata,
+                  team.id,
+                  true,
+                  "prompt_team_role",
+                  PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id),
+                );
+              });
               setPromptShareSaving(true);
               setPromptShareError("");
+              const createdShares = [];
               try {
                 if (!backendUrl) throw new Error("Sharing is unavailable until the team service is connected.");
-                const { response, data } = await fetchJsonWithTimeout(
-                  backendUrl + "/teams/" + encodeURIComponent(team.id) + "/resource-shares",
-                  {
-                    method: "POST",
-                    credentials: "include",
-                    cache: "no-store",
-                    headers: { ...requestHeaders, "Content-Type": "application/json" },
-                    body: JSON.stringify(buildPromptTeamSharePayload(team, nextMetadata)),
-                  },
-                  8000,
-                );
-                if (!response.ok && Number(response.status || 0) !== 409) {
-                  throw new Error(data?.message || data?.error || "Failed to share prompt with team.");
+                for (const team of teamsToShare) {
+                  const { response, data } = await fetchJsonWithTimeout(
+                    backendUrl + "/teams/" + encodeURIComponent(team.id) + "/resource-shares",
+                    {
+                      method: "POST",
+                      credentials: "include",
+                      cache: "no-store",
+                      headers: { ...requestHeaders, "Content-Type": "application/json" },
+                      body: JSON.stringify(buildPromptTeamSharePayload(team, nextMetadata)),
+                    },
+                    8000,
+                  );
+                  if (!response.ok && Number(response.status || 0) !== 409) {
+                    throw new Error(data?.message || data?.error || `Failed to share prompt with ${team.name}.`);
+                  }
+                  if (Number(response.status || 0) !== 409) {
+                    createdShares.push({
+                      teamId: team.id,
+                      shareId: String(data?.id || data?.data?.id || data?.share?.id || "").trim(),
+                    });
+                  }
                 }
                 await updatePromptAccessMetadata(nextMetadata);
                 setPromptShareSaving(false);
                 setPromptShareModalOpen(false);
-                setPromptShareTeamId("");
+                setPromptShareTeamIds([]);
               } catch (error) {
+                await Promise.all(createdShares.map(async ({ teamId, shareId }) => {
+                  try {
+                    const share = shareId ? { id: shareId } : await findPromptTeamResourceShare(teamId);
+                    if (!share?.id) return;
+                    await fetchJsonWithTimeout(
+                      backendUrl + "/teams/" + encodeURIComponent(teamId) + "/resource-shares/" + encodeURIComponent(share.id),
+                      { method: "DELETE", credentials: "include", cache: "no-store", headers: requestHeaders },
+                      8000,
+                    );
+                  } catch {
+                    // Preserve the original sharing error; stale shares remain removable in access settings.
+                  }
+                }));
                 setPromptShareSaving(false);
-                setPromptShareError(error instanceof Error ? error.message : "Failed to share prompt with team.");
+                setPromptShareError(error instanceof Error ? error.message : "Failed to share prompt with the selected teams.");
               }
+            }
+
+            async function sharePromptWithTeam(teamId) {
+              return sharePromptWithTeams([teamId]);
             }
 
             async function removePromptTeams(teams) {
@@ -1206,16 +1425,67 @@
               }
             }
 
-            const rows = useMemo(() => promptRows.map((prompt) => ({
-              ...prompt,
-              searchText: [prompt.name, prompt.description, prompt.id].join(" "),
-              isActive: true,
-              isCustom: true,
-              updatedAt: Date.parse(String(prompt.updatedAt || prompt.createdAt || "")) || 0,
-              updatedLabel: formatUpdatedLabel(prompt.updatedAt || prompt.createdAt),
-              creatorName: prompt.creatorName || currentUserName || "You",
-              creatorAvatarUrl: prompt.creatorAvatarUrl || currentUserAvatarUrl || "",
-            })), [currentUserAvatarUrl, currentUserName, promptRows]);
+            function isPromptCreatedByCurrentUser(prompt) {
+              const normalizeIdentityKey = (value) => String(value || "").trim().toLowerCase();
+              const currentIdentityKeys = new Set([
+                normalizeIdentityKey(currentUserId),
+                normalizeIdentityKey(currentUserEmail),
+              ].filter(Boolean));
+              const creatorIdentityKeys = [
+                normalizeIdentityKey(prompt?.creatorId),
+                normalizeIdentityKey(prompt?.creatorEmail),
+              ].filter(Boolean);
+              if (creatorIdentityKeys.some((key) => currentIdentityKeys.has(key))) return true;
+              if (creatorIdentityKeys.length) return false;
+
+              const creatorName = normalizeIdentityKey(prompt?.creatorName);
+              const currentName = normalizeIdentityKey(currentUserName);
+              if (!creatorName || ["you", "me", "current user"].includes(creatorName)) return true;
+              return Boolean(currentName && creatorName === currentName);
+            }
+
+            function resolvePromptCreatorName(prompt, isCreatedByCurrentUser) {
+              const creatorName = String(prompt?.creatorName || "").trim();
+              const isPlaceholder = ["you", "me", "current user"].includes(creatorName.toLowerCase());
+              if (creatorName && !isPlaceholder) return creatorName;
+              if (isCreatedByCurrentUser) {
+                return String(
+                  currentUserName
+                  || currentUserEmail
+                  || prompt?.creatorEmail
+                  || prompt?.creatorId
+                  || "Unknown user"
+                ).trim();
+              }
+              return String(prompt?.creatorEmail || prompt?.creatorId || "Unknown user").trim();
+            }
+
+            const normalizedPromptOverviewScope = promptOverviewScope === "created"
+              ? "created"
+              : promptOverviewScope === "shared"
+                ? "shared"
+                : "all";
+            const rows = useMemo(() => promptRows.map((prompt) => {
+              const isCreatedByCurrentUser = isPromptCreatedByCurrentUser(prompt);
+              return {
+                ...prompt,
+                searchText: [prompt.name, prompt.description, prompt.id].join(" "),
+                isActive: true,
+                isCustom: true,
+                isCreatedByCurrentUser,
+                updatedAt: Date.parse(String(prompt.updatedAt || prompt.createdAt || "")) || 0,
+                updatedLabel: formatUpdatedLabel(prompt.updatedAt || prompt.createdAt),
+                creatorName: resolvePromptCreatorName(prompt, isCreatedByCurrentUser),
+                creatorAvatarUrl: prompt.creatorAvatarUrl
+                  || (isCreatedByCurrentUser ? currentUserAvatarUrl : "")
+                  || "",
+              };
+            }), [currentUserAvatarUrl, currentUserEmail, currentUserId, currentUserName, promptRows]);
+            const scopedRows = useMemo(() => normalizedPromptOverviewScope === "created"
+              ? rows.filter((row) => row.isCreatedByCurrentUser)
+              : normalizedPromptOverviewScope === "shared"
+                ? rows.filter((row) => !row.isCreatedByCurrentUser)
+                : rows, [normalizedPromptOverviewScope, rows]);
 
             const promptAccessAddTeamsControl = !isDraft
               ? React.createElement(PlatformButtonSelector, {
@@ -1256,7 +1526,7 @@
               (definition) => Array.isArray(definition?.subjectTypes)
                 && definition.subjectTypes.some((subjectType) => subjectType === "prompt" || subjectType === "prompt_team_role"),
             );
-            const promptSettingsContent = !isDraft && selectedPrompt
+            const promptAccessSettings = !isDraft && selectedPrompt
               ? React.createElement(PlatformResourceAccessSettings, {
                   teams: promptAccessTeams,
                   resourceLabel: "Prompt",
@@ -1343,6 +1613,21 @@
                   title: "Save this prompt to manage access.",
                   iconSize: 18,
                 });
+            const promptStorageRegion = getSelectedPromptStorageRegion();
+            const promptSettingsContent = React.createElement("div", {
+                className: "playground-server-detail-content prompt-detail-page__settings-content",
+              },
+              React.createElement("div", {
+                  className: "playground-server-settings-tab is-function-settings-tab prompt-detail-page__settings-layout",
+                },
+                React.createElement(PlatformDeploymentMap, {
+                  regionCode: promptStorageRegion,
+                  title: "Storage region",
+                  className: "playground-managed-server-deployment-map playground-source-server-deployment-map playground-function-deployment-map prompt-detail-page__storage-map",
+                }),
+                promptAccessSettings
+              )
+            );
 
             const promptIdentity = React.createElement("section", {
                 className: "prompt-detail-page__identity",
@@ -1431,7 +1716,7 @@
                     fullWidth: true,
                     className: "prompt-detail-page__start-thread-button",
                     onClick: () => onStartThread?.(selectedPrompt),
-                  }, "Start Thread"),
+                  }, "New Thread"),
                 })
               : null;
 
@@ -1455,6 +1740,11 @@
                 placeholder: "Write your prompt in Markdown.",
                 ariaLabel: "Prompt Markdown content",
                 historyKey: selectedPromptId || PROMPT_DRAFT_ID,
+                contentVariant: "file-enabled",
+                fileUpload: {
+                  upload: uploadPromptEditorFiles,
+                  resolvePreviewSource: resolvePromptEditorFilePreviewSource,
+                },
                 autoFocus: true,
               },
             });
@@ -1514,14 +1804,15 @@
               resourceLabel: "Prompt",
               resourceName: draft.name || selectedPrompt?.name || "Prompt",
               teams: promptShareTeams,
-              selectedTeamId: promptShareTeamId,
-              onSelectedTeamIdChange: setPromptShareTeamId,
+              selectionMode: "multiple",
+              selectedTeamIds: promptShareTeamIds,
+              onSelectedTeamIdsChange: setPromptShareTeamIds,
               onClose: () => {
                 if (promptShareSaving) return;
                 setPromptShareModalOpen(false);
                 setPromptShareError("");
               },
-              onShare: (teamId) => void sharePromptWithTeam(teamId),
+              onShareTeams: (teamIds) => void sharePromptWithTeams(teamIds),
               busy: promptShareSaving,
               loading: workspaceTeamsLoading,
               error: promptShareError,
@@ -1621,7 +1912,7 @@
                 : isDetail
                 ? detailPage
                 : React.createElement(PromptsOverviewPage, {
-                    rows,
+                    rows: scopedRows,
                     loading: promptsLoading,
                     headerActions: null,
                     controlsPortalId: "playground-tools-overview-controls",

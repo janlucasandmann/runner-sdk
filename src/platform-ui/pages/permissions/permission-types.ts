@@ -1,6 +1,11 @@
 import type { ElementType, ReactNode } from "react";
 
-export type PlatformPermissionAccess = "full_access" | "ask_for_permission" | "read_only" | "no_access" | string;
+export type PlatformPermissionAccess =
+  | "full_access"
+  | "ask_for_permission"
+  | "read_only"
+  | "no_access"
+  | string;
 
 export interface PlatformPermissionAccessOption {
   id: PlatformPermissionAccess;
@@ -55,7 +60,10 @@ export interface PlatformPermissionSet {
   defaultAccess?: PlatformPermissionAccess;
   rings?: Record<string, PlatformPermissionRingPolicy | PlatformPermissionAccess | undefined>;
   actions?: Record<string, PlatformPermissionActionPolicy | PlatformPermissionAccess | undefined>;
-  resources?: Record<string, PlatformPermissionResourcePolicy | PlatformPermissionAccess | undefined>;
+  resources?: Record<
+    string,
+    PlatformPermissionResourcePolicy | PlatformPermissionAccess | undefined
+  >;
 }
 
 export interface PlatformPermissionActionPresentation {
@@ -77,8 +85,7 @@ export interface PlatformPermissionsOverviewProps {
   onRingAccessChange?: (ringId: string, access: PlatformPermissionAccess) => void;
 }
 
-export interface PlatformPermissionsSettingsSummaryProps
-  extends PlatformPermissionsOverviewProps {
+export interface PlatformPermissionsSettingsSummaryProps extends PlatformPermissionsOverviewProps {
   title?: ReactNode;
   tooltip?: string;
   editLabel?: ReactNode;
@@ -110,6 +117,15 @@ export interface PlatformPermissionRole<TId extends string = string> {
   description?: ReactNode;
   meta?: ReactNode;
   disabled?: boolean;
+  assignedMembers?: readonly PlatformPermissionRoleMember[];
+}
+
+export interface PlatformPermissionRoleMember {
+  id: string;
+  name: string;
+  detail?: string;
+  avatarUrl?: string;
+  status?: string;
 }
 
 export interface PlatformRolePermissionsPageProps<TId extends string = string>
@@ -122,6 +138,8 @@ export interface PlatformRolePermissionsPageProps<TId extends string = string>
   roleTitle?: ReactNode;
   roleDescription?: ReactNode;
   roleHeaderAction?: ReactNode;
+  ownerRoleId?: TId;
+  ownerRoleHeaderAction?: ReactNode;
   readOnly?: boolean;
   className?: string;
   roleListClassName?: string;

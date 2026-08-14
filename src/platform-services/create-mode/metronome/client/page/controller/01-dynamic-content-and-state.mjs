@@ -180,16 +180,26 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
           const METRONOME_VERSION_COMPARE_CURRENT_EDITOR_ID = "__current_metronome_editor__";
           const buildMetronomeVersionComparableSnapshot = (workflow, snapshotNodes, snapshotEdges) => {
             const baseWorkflow = workflow && typeof workflow === "object" ? workflow : {};
-            const persistedNodes = createMetronomePersistedNodes(snapshotNodes || baseWorkflow.nodes || []);
-            const persistedEdges = createMetronomePersistedEdges(snapshotEdges || baseWorkflow.edges || []);
+            const persistedGraph = createMetronomeVersionPersistedGraphSnapshot(
+              snapshotNodes || baseWorkflow.nodes || [],
+              snapshotEdges || baseWorkflow.edges || []
+            );
+            const persistedNodes = persistedGraph.nodes;
+            const persistedEdges = persistedGraph.edges;
             const comparableWorkflow = normalizeMetronomeWorkflow({
               ...baseWorkflow,
               nodes: persistedNodes,
               edges: persistedEdges,
               triggerSummary: deriveMetronomeTriggerSummary(persistedNodes),
             });
-            const definition = createMetronomeWorkflowDefinition(comparableWorkflow, persistedNodes, persistedEdges);
-            const files = generateMetronomePythonSdkFiles(comparableWorkflow, persistedNodes, persistedEdges);
+            const definition = createMetronomeVersionComparableDefinition(persistedNodes, persistedEdges);
+            // Generate review files from the same canonical graph used by the dirty
+            // check. Editor-only decorators must never appear as version changes.
+            const files = generateMetronomePythonSdkFiles(
+              comparableWorkflow,
+              definition.nodes,
+              definition.edges
+            );
             return {
               id: comparableWorkflow.id || "",
               name: comparableWorkflow.name || "Untitled Metronome",
@@ -203,8 +213,13 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
           const buildMetronomeVersionCompareSources = () => {
             const currentEditorSnapshot = buildMetronomeVersionComparableSnapshot(activeWorkflow || {}, nodes, edges);
             const versionSources = activeWorkflowDeployments.map((deployment) => {
-              const deploymentNodes = createMetronomePersistedNodes(deployment.nodes || deployment.definition?.nodes || []);
-              const deploymentEdges = createMetronomePersistedEdges(deployment.edges || deployment.definition?.edges || []);
+              const deploymentGraph = readMetronomeVersionGraph(deployment);
+              const deploymentSnapshot = createMetronomeVersionPersistedGraphSnapshot(
+                deploymentGraph.nodes,
+                deploymentGraph.edges
+              );
+              const deploymentNodes = deploymentSnapshot.nodes;
+              const deploymentEdges = deploymentSnapshot.edges;
               return {
                 id: "version:" + String(deployment.id || ""),
                 versionId: String(deployment.id || ""),
@@ -212,11 +227,11 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
                   deployment.version,
                   deployment.description
                 ),
-                snapshot: buildMetronomeVersionComparableSnapshot({
-                  ...(activeWorkflow || {}),
-                  status: deployment.status || activeWorkflow?.status || "draft",
-                  triggerSummary: deployment.triggerSummary || deriveMetronomeTriggerSummary(deploymentNodes),
-                }, deploymentNodes, deploymentEdges),
+                snapshot: buildMetronomeVersionComparableSnapshot(
+                  activeWorkflow || {},
+                  deploymentNodes,
+                  deploymentEdges
+                ),
               };
             });
             return [
@@ -237,58 +252,32 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
             const normalizedSourceId = String(sourceId || "").trim();
             return sources.find((source) => source.id === normalizedSourceId) || fallbackSource || sources[0] || null;
           };
-          const getDefaultMetronomeVersionCompareLeftSourceId = () => {
-            const selectedDeploymentId = readMetronomeSelectedDeploymentId(activeWorkflow);
-            const selectedDeployment = activeWorkflowDeployments.find((deployment) => deployment.id === selectedDeploymentId);
-            const activeDeployment = activeWorkflowDeployment || activeWorkflowDeployments.find((deployment) => deployment.status === "active") || null;
-            const fallbackDeployment = selectedDeployment || activeDeployment || activeWorkflowDeployments[0] || null;
-            return fallbackDeployment ? getMetronomeVersionCompareSourceId(fallbackDeployment.id) : "";
-          };
-          const getSelectedMetronomeDeploymentVersion = () => {
-            const selectedDeploymentId = readMetronomeSelectedDeploymentId(activeWorkflow);
-            return selectedDeploymentId
-              ? activeWorkflowDeployments.find((deployment) => deployment.id === selectedDeploymentId) || null
-              : null;
-          };
-          const buildMetronomeDefinitionForVersionCompare = (workflow, sourceNodes, sourceEdges) => (
-            createMetronomeWorkflowDefinition(
-              workflow || {},
-              createMetronomePersistedNodes(sourceNodes || []),
-              createMetronomePersistedEdges(sourceEdges || [])
-            )
+          const getMetronomeEditorBaseDeployment = () => resolveMetronomeVersionGraphBase(
+            activeWorkflowDeployments,
+            activeWorkflow?.nodes || [],
+            activeWorkflow?.edges || [],
+            readMetronomeSelectedDeploymentId(activeWorkflow)
           );
-          const getMetronomeDeploymentDefinitionForCompare = (deployment) => {
-            if (deployment?.definition && typeof deployment.definition === "object" && !Array.isArray(deployment.definition)) {
-              return deployment.definition;
-            }
-            return buildMetronomeDefinitionForVersionCompare(
-              activeWorkflow || {},
-              deployment?.nodes || [],
-              deployment?.edges || []
-            );
+          const getDefaultMetronomeVersionCompareLeftSourceId = () => {
+            const baseDeployment = getMetronomeEditorBaseDeployment();
+            return baseDeployment ? getMetronomeVersionCompareSourceId(baseDeployment.id) : "";
           };
+          const getSelectedMetronomeDeploymentVersion = () => getMetronomeEditorBaseDeployment();
           const hasSelectedMetronomeDeploymentEditorChanges = (deployment = null) => {
             const selectedDeployment = deployment || getSelectedMetronomeDeploymentVersion();
             if (!selectedDeployment || !activeWorkflow) {
               return false;
             }
-            const selectedDeploymentId = readMetronomeSelectedDeploymentId(activeWorkflow);
-            if (String(selectedDeployment.id || "") !== String(selectedDeploymentId || "")) {
-              return false;
-            }
-            const currentDefinition = buildMetronomeDefinitionForVersionCompare(activeWorkflow, nodes, edges);
-            const selectedDefinition = getMetronomeDeploymentDefinitionForCompare(selectedDeployment);
-            return stringifyPlaygroundVersionComparableValue(currentDefinition) !== stringifyPlaygroundVersionComparableValue(selectedDefinition);
+            const selectedGraph = readMetronomeVersionGraph(selectedDeployment);
+            return !areMetronomeVersionGraphsEqual(
+              nodes,
+              edges,
+              selectedGraph.nodes,
+              selectedGraph.edges
+            );
           };
-          const createMetronomeVisitEditorKey = (workflow, sourceNodes, sourceEdges) => (
-            stringifyPlaygroundVersionComparableValue({
-              description: String(workflow?.description || ""),
-              definition: buildMetronomeDefinitionForVersionCompare(
-                workflow,
-                sourceNodes,
-                sourceEdges
-              ),
-            })
+          const createMetronomeVisitEditorKey = (_workflow, sourceNodes, sourceEdges) => (
+            createMetronomeVersionGraphSignature(sourceNodes, sourceEdges)
           );
           const resetActiveMetronomeVisitBaseline = (workflow, sourceNodes, sourceEdges) => {
             setMetronomeWorkflowNameDraft(String(workflow?.name || ""));
@@ -307,11 +296,12 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
             )
           );
           const discardActiveMetronomeDraft = useCallback(() => {
-            const persistedNodes = createMetronomePersistedNodes(activeWorkflow?.nodes || []);
-            const persistedEdges = normalizeMetronomeEdgesForNodes(
-              activeWorkflow?.edges || [],
-              persistedNodes
+            const persistedGraph = createMetronomeVersionPersistedGraphSnapshot(
+              activeWorkflow?.nodes || [],
+              activeWorkflow?.edges || []
             );
+            const persistedNodes = persistedGraph.nodes;
+            const persistedEdges = persistedGraph.edges;
             setNodes(persistedNodes);
             setEdges(persistedEdges);
             setMetronomeWorkflowNameDraft(String(activeWorkflow?.name || ""));
@@ -327,6 +317,9 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
             setWorkflowVersionSaveDialog(null);
             metronomeVisitBaselineKeyRef.current = activeWorkflow
               ? createMetronomeVisitEditorKey(activeWorkflow, persistedNodes, persistedEdges)
+              : "";
+            metronomeLoadedGraphSignatureRef.current = activeWorkflow
+              ? createMetronomeVersionGraphSignature(persistedNodes, persistedEdges)
               : "";
             setActiveMetronomeVersionChanges(false);
           }, [activeWorkflow, setEdges, setNodes]);
@@ -406,35 +399,29 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
           const buildMetronomeVersionDiffFilesFromSnapshots = (leftSnapshot, rightSnapshot) => {
             const leftFiles = new Map((Array.isArray(leftSnapshot?.files) ? leftSnapshot.files : []).map((file) => [String(file?.path || ""), file]));
             const rightFiles = new Map((Array.isArray(rightSnapshot?.files) ? rightSnapshot.files : []).map((file) => [String(file?.path || ""), file]));
-            const paths = Array.from(new Set(["workflow.json", ...leftFiles.keys(), ...rightFiles.keys()])).filter(Boolean);
+            const paths = Array.from(new Set(["workflow.json", ...leftFiles.keys(), ...rightFiles.keys()]))
+              .filter(Boolean)
+              .sort((left, right) => {
+                if (left === "workflow.json") return -1;
+                if (right === "workflow.json") return 1;
+                return left.localeCompare(right);
+              });
             return paths.map((path) => {
+              let before = "";
+              let after = "";
               if (path === "workflow.json") {
-                return createPlaygroundVersionDiffFile({
-                  id: path,
-                  filePath: path,
-                  before: JSON.stringify({
-                    name: leftSnapshot?.name || "",
-                    description: leftSnapshot?.description || "",
-                    status: leftSnapshot?.status || "",
-                    triggerSummary: leftSnapshot?.triggerSummary || "",
-                    definition: leftSnapshot?.definition || { nodes: [], edges: [] },
-                  }, null, 2),
-                  after: JSON.stringify({
-                    name: rightSnapshot?.name || "",
-                    description: rightSnapshot?.description || "",
-                    status: rightSnapshot?.status || "",
-                    triggerSummary: rightSnapshot?.triggerSummary || "",
-                    definition: rightSnapshot?.definition || { nodes: [], edges: [] },
-                  }, null, 2),
-                });
+                before = JSON.stringify(leftSnapshot?.definition || { nodes: [], edges: [] }, null, 2);
+                after = JSON.stringify(rightSnapshot?.definition || { nodes: [], edges: [] }, null, 2);
+              } else {
+                before = String(leftFiles.get(path)?.value || "");
+                after = String(rightFiles.get(path)?.value || "");
               }
-              const leftFile = leftFiles.get(path) || {};
-              const rightFile = rightFiles.get(path) || {};
+              if (before === after) return null;
               return createPlaygroundVersionDiffFile({
                 id: path,
                 filePath: path,
-                before: leftFile.value || "",
-                after: rightFile.value || "",
+                before,
+                after,
               });
             }).filter(Boolean);
           };
@@ -442,32 +429,24 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
             const deployments = Array.isArray(activeWorkflowDeployments)
               ? activeWorkflowDeployments
               : [];
-            const selectedDeploymentId = readMetronomeSelectedDeploymentId(activeWorkflow);
-            const selectedDeployment = deployments.find(
-              (deployment) => String(deployment?.id || "") === String(selectedDeploymentId || "")
-            ) || activeWorkflowDeployment || deployments[0] || null;
+            const selectedDeployment = getMetronomeEditorBaseDeployment();
+            const selectedGraph = selectedDeployment
+              ? readMetronomeVersionGraph(selectedDeployment)
+              : { nodes: [], edges: [] };
+            const snapshotWorkflow = activeMetronomeEditorWorkflow || activeWorkflow || {};
             const currentSnapshot = buildMetronomeVersionComparableSnapshot(
-              activeMetronomeEditorWorkflow || {},
+              snapshotWorkflow,
               nodes,
               edges
             );
             const baseSnapshot = selectedDeployment
               ? buildMetronomeVersionComparableSnapshot(
-                  {
-                    ...(activeWorkflow || {}),
-                    status: selectedDeployment.status || activeWorkflow?.status || "draft",
-                    triggerSummary: selectedDeployment.triggerSummary
-                      || deriveMetronomeTriggerSummary(selectedDeployment.nodes || []),
-                  },
-                  selectedDeployment.nodes || selectedDeployment.definition?.nodes || [],
-                  selectedDeployment.edges || selectedDeployment.definition?.edges || []
+                  snapshotWorkflow,
+                  selectedGraph.nodes,
+                  selectedGraph.edges
                 )
               : buildMetronomeVersionComparableSnapshot(
-                  {
-                    ...(activeWorkflow || {}),
-                    status: "draft",
-                    triggerSummary: "",
-                  },
+                  snapshotWorkflow,
                   [],
                   []
                 );
@@ -804,7 +783,7 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
               && isMetronomeApiAvailable
               && (!hasMetronomeWorkflowGraphNodes(workflow) || !hasMetronomeWorkflowGraphEdges(workflow))
             ) {
-              void fetchMetronomeWorkflowWithGraphFromApi(workflowId, readMetronomeSelectedDeploymentId(workflow))
+              void fetchMetronomeWorkflowWithGraphFromApi(workflowId)
                 .then((loadedWorkflow) => {
                   if (!loadedWorkflow?.id) {
                     setActiveWorkflowId(workflowId);
@@ -1147,10 +1126,11 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
               ? "new"
               : "current";
             const versionDescription = String(options?.description || "").trim().slice(0, 240);
-            const existingDeployments = readMetronomeWorkflowDeployments(activeWorkflow);
-            const selectedDeploymentId = readMetronomeSelectedDeploymentId(activeWorkflow);
-            const selectedDeployment = saveMode === "current" && selectedDeploymentId
-              ? existingDeployments.find((deployment) => deployment.id === selectedDeploymentId)
+            const existingDeployments = activeWorkflowDeployments.length
+              ? activeWorkflowDeployments
+              : readMetronomeWorkflowDeployments(activeWorkflow);
+            const selectedDeployment = saveMode === "current"
+              ? getMetronomeEditorBaseDeployment()
               : null;
             if (selectedDeployment) {
               const now = new Date().toISOString();
@@ -1376,12 +1356,14 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
               setMetronomePublishState(getMetronomePublishErrorState(error));
               return false;
             }
-          }, [activeMetronomeEditorWorkflow, activeWorkflow, activeWorkflowId, nodes, edges, refreshMetronomeDeploymentEvents, validateMetronomeDefinitionForPublishUi, replaceMetronomeWorkflowInEditableState]);
+          }, [activeMetronomeEditorWorkflow, activeWorkflow, activeWorkflowDeployments, activeWorkflowId, nodes, edges, refreshMetronomeDeploymentEvents, validateMetronomeDefinitionForPublishUi, replaceMetronomeWorkflowInEditableState]);
 
           const saveActiveWorkflowVersion = useCallback(async (versionDetails = {}) => {
             if (!activeWorkflowId || !activeWorkflow) return;
             const workflowDraft = activeMetronomeEditorWorkflow || activeWorkflow;
-            const existingDeployments = readMetronomeWorkflowDeployments(activeWorkflow);
+            const existingDeployments = activeWorkflowDeployments.length
+              ? activeWorkflowDeployments
+              : readMetronomeWorkflowDeployments(activeWorkflow);
             const nextDeployment = createMetronomeDeploymentVersion(workflowDraft, nodes, edges, existingDeployments, {
               status: "saved",
               description: versionDetails?.description,
@@ -1458,17 +1440,15 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
               replaceMetronomeWorkflowInEditableState(activeWorkflowId, activeWorkflow);
               setMetronomePublishState(getMetronomePublishErrorState(error));
             }
-          }, [activeMetronomeEditorWorkflow, activeWorkflow, activeWorkflowId, nodes, edges, replaceMetronomeWorkflowInEditableState]);
+          }, [activeMetronomeEditorWorkflow, activeWorkflow, activeWorkflowDeployments, activeWorkflowId, nodes, edges, replaceMetronomeWorkflowInEditableState]);
 
           const saveCurrentWorkflowVersion = useCallback(async () => {
             if (!activeWorkflowId || !activeWorkflow) return;
             const workflowDraft = activeMetronomeEditorWorkflow || activeWorkflow;
-            const existingDeployments = readMetronomeWorkflowDeployments(activeWorkflow);
-            const selectedDeploymentId = readMetronomeSelectedDeploymentId(activeWorkflow);
-            const selectedDeployment = existingDeployments.find((deployment) => deployment.id === selectedDeploymentId)
-              || activeWorkflowDeployment
-              || existingDeployments[0]
-              || null;
+            const existingDeployments = activeWorkflowDeployments.length
+              ? activeWorkflowDeployments
+              : readMetronomeWorkflowDeployments(activeWorkflow);
+            const selectedDeployment = getMetronomeEditorBaseDeployment();
             if (!selectedDeployment) {
               await saveActiveWorkflowVersion({ description: "" });
               return;

@@ -7,6 +7,7 @@ import {
   PlatformSettingsSectionList,
 } from "../../components/composite/settings-section/index.js";
 import { PlatformPrimaryButton } from "../../components/ui/button/index.js";
+import { PlatformLabel } from "../../components/ui/label/index.js";
 import { PlatformSelector } from "../../components/ui/selector/index.js";
 import {
   PLATFORM_PERMISSION_ACTION_DEFINITIONS,
@@ -316,9 +317,12 @@ function PermissionRingTable({
           <div className="platform-permissions-page__action-title playground-agents-permission-title">
             {row.label}
             {row.explicitAccess ? (
-              <span className="platform-permissions-page__override-badge playground-agents-permission-action-badge">
+              <PlatformLabel
+                variant="blue"
+                className="platform-permissions-page__override-badge"
+              >
                 Override
-              </span>
+              </PlatformLabel>
             ) : null}
           </div>
           <div className="platform-permissions-page__action-description playground-agents-permission-description">

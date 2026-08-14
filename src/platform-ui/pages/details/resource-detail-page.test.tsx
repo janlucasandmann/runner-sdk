@@ -63,6 +63,20 @@ describe("ResourceDetailPage", () => {
     expect(screen.getByText("Ticket properties")).not.toBeNull();
   });
 
+  it("can align a tabless sidebar with the header", () => {
+    const { container } = render(
+      <ResourceDetailPage
+        header={<h1>Team Atlas</h1>}
+        sidebarAlignTop
+        sidebar={<div>Team properties</div>}
+      >
+        <div>Team members</div>
+      </ResourceDetailPage>,
+    );
+
+    expect(container.querySelector(".resource-detail-page")?.classList.contains("is-sidebar-top-aligned")).toBe(true);
+  });
+
   it("temporarily collapses the sidebar on designated tabs without replacing its preference", () => {
     const renderPage = (activeTab: "general" | "code", sidebarCollapsed = false) => (
       <ResourceDetailPage

@@ -2,6 +2,7 @@ import path from "node:path";
 
 import { ExternalAgentError, sanitizeExternalAgentRecord } from "./domain.mjs";
 import { createExternalAgentDeliveryService } from "./delivery.mjs";
+import { resolveExternalAgentEncryptionKey } from "./encryption-key.mjs";
 import { createExternalAgentGateway } from "./gateway.mjs";
 import {
   createExternalAgentManagementController,
@@ -32,6 +33,16 @@ import {
 const WEBHOOK_ROUTE = /^\/api\/integrations\/external-agents\/(webhooks|native)\/(jira|linear)\/([^/]+)\/?$/;
 const MAX_WEBHOOK_BYTES = 1024 * 1024;
 
+export function resolvePlatformDataPath(
+  fileName,
+  { env = process.env, cwd = process.cwd() } = {},
+) {
+  const configuredRoot = String(env.PLATFORM_DATA_ROOT || "").trim();
+  return configuredRoot
+    ? path.join(path.resolve(configuredRoot), fileName)
+    : path.join(cwd, ".platform-data", fileName);
+}
+
 export function createExternalAgentService({
   identityService,
   fetchOrganizationApi,
@@ -46,7 +57,7 @@ export function createExternalAgentService({
   fetchImpl = globalThis.fetch,
   repository = createFileExternalAgentRepository({
     storePath: process.env.EXTERNAL_AGENT_STORE_PATH
-      || path.join(process.cwd(), ".platform-data", "external-agents.json"),
+      || resolvePlatformDataPath("external-agents.json"),
   }),
   membershipService,
   policy,
@@ -59,9 +70,11 @@ export function createExternalAgentService({
   if (typeof sendJson !== "function") {
     throw new TypeError("External-agent service requires sendJson.");
   }
-  const effectiveEncryptionKey = String(
-    encryptionKey || process.env.EXTERNAL_AGENT_WEBHOOK_ENCRYPTION_KEY || "",
-  ).trim();
+  const effectiveEncryptionKey = resolveExternalAgentEncryptionKey({
+    encryptionKey,
+    platformOrigin,
+    logger,
+  });
   const effectiveMembership = membershipService || createExternalAgentMembershipService({
     identityService,
     fetchOrganizationApi,

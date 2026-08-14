@@ -147,7 +147,36 @@
   min-width: 0;
 }
 
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-header-title-row {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-header-title-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-header-title-actions .platform-resource-actions-menu {
+  display: inline-flex;
+  align-items: center;
+}
+
+:is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-header-title-actions .platform-icon-button {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  flex-basis: 24px;
+}
+
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-name {
+  min-width: 0;
+  max-width: 100%;
   color: rgba(255, 255, 255, 0.96);
   font-size: 13px;
   line-height: 1.2;
@@ -155,6 +184,11 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.tb-document-preview-resource-actions-menu {
+  --platform-popup-font-size: 12px;
+  min-width: 0;
 }
 
 :is(.tb-runner-chat, .tb-runner-document-preview-host) .tb-attachment-preview-drawer-resize-handle {

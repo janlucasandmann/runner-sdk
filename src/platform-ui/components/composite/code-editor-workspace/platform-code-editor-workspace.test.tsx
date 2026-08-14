@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   isPlatformCodeEditorMarkdownFile,
@@ -126,6 +126,56 @@ describe("PlatformCodeEditorWorkspace", () => {
     expect(
       container.querySelector(".platform-code-editor-workspace__editor.is-markdown"),
     ).toBeNull();
+  });
+
+  it("keeps Markdown file selection and drag uploads enabled through the workspace", async () => {
+    const upload = vi.fn(async (files: File[]) => files.map((file) => ({
+      src: `/api/real/attachments/${encodeURIComponent(file.name)}`,
+      name: file.name,
+      size: file.size,
+      mimeType: file.type,
+      attachmentId: `attachment-${file.name}`,
+    })));
+    const { container } = render(
+      <PlatformCodeEditorWorkspace
+        files={[{
+          id: "prompt-markdown",
+          label: "PROMPT.md",
+          editorMode: "markdown",
+        }]}
+        activeFileId="prompt-markdown"
+        sidebarHidden
+        markdownEditor={{
+          value: "# Prompt",
+          onChange: () => undefined,
+          contentVariant: "file-enabled",
+          fileUpload: { upload },
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Insert" }));
+    const fileMenuItem = screen.getByRole("menuitem", { name: "File" });
+    expect((fileMenuItem as HTMLButtonElement).disabled).toBe(false);
+
+    const file = new File(["reference"], "reference.txt", {
+      type: "text/plain",
+    });
+    const editor = container.querySelector(
+      "[data-platform-instructions-editor]",
+    ) as HTMLElement;
+    fireEvent.drop(editor, {
+      dataTransfer: {
+        files: [file],
+        items: [{ kind: "file", type: "text/plain" }],
+        types: ["Files"],
+        dropEffect: "none",
+      },
+      clientX: 10,
+      clientY: 10,
+    });
+
+    await waitFor(() => expect(upload).toHaveBeenCalledWith([file]));
   });
 
   it("moves file creation into the Files header and keeps nested file disclosures", () => {

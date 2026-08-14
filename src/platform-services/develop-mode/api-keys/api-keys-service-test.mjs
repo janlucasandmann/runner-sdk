@@ -93,6 +93,14 @@ assert.deepEqual(Object.keys(API_KEYS_PAGE_SCRIPT_FRAGMENTS), ["legacyCard", "le
 assert.match(API_KEYS_PAGE_SCRIPT_FRAGMENTS.management, /function renderApiKeysManagementPanel/);
 assert.match(API_KEYS_PAGE_SCRIPT_FRAGMENTS.management, /React\.createElement\(DevelopApiKeysOverviewPage/);
 assert.match(API_KEYS_PAGE_SCRIPT_FRAGMENTS.management, /openApiKeyRevealModal/);
+assert.match(
+  API_KEYS_PAGE_SCRIPT_FRAGMENTS.management,
+  /const apiKeyRevealDialogContent = developApiKeyRevealModal[\s\S]*?React\.createElement\(PlatformModal, \{[\s\S]*?title: developApiKeyRevealModal\.apiKeyRecord\?\.name/,
+);
+assert.doesNotMatch(
+  API_KEYS_PAGE_SCRIPT_FRAGMENTS.management,
+  /const apiKeyRevealDialogContent = developApiKeyRevealModal[\s\S]*?React\.createElement\(PlatformModal(?:Backdrop|Surface)/,
+);
 assert.match(API_KEYS_PAGE_SCRIPT_FRAGMENTS.management, /const getApiKeyCreator/);
 assert.match(API_KEYS_PAGE_SCRIPT_FRAGMENTS.management, /creatorAvatarUrl/);
 assert.doesNotMatch(API_KEYS_PAGE_SCRIPT_FRAGMENTS.management, /onShowUsage/);

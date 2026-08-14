@@ -248,6 +248,10 @@ assert.match(APP_HEADER_STYLE_FRAGMENTS.notificationsPopup, /\.notification-menu
 assert.match(APP_HEADER_STYLE_FRAGMENTS.notificationsPopup, /\.notification-menu-footer[\s\S]*border-top: 1px solid rgba\(255, 255, 255, 0\.075\)/);
 assert.match(APP_HEADER_STYLE_FRAGMENTS.searchModal, /\.platform-loading-state/);
 assert.match(APP_HEADER_STYLE_FRAGMENTS.searchModal, /\.platform-global-search-modal/);
+assert.match(
+  APP_HEADER_STYLE_FRAGMENTS.searchModal,
+  /\.platform-modal-backdrop\.platform-global-search-modal__backdrop\s*\{[\s\S]*?z-index:\s*10040;/,
+);
 assert.equal(Object.values(APP_HEADER_STYLE_FRAGMENTS).join(""), APP_HEADER_STYLES);
 
 const platformEntrySource = await readPlatformCompositionSource();

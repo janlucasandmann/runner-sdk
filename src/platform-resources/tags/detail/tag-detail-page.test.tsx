@@ -43,6 +43,31 @@ afterEach(() => {
 });
 
 describe("TagDetailPage", () => {
+  it("adds the optional Agent Triggers tab without changing other connectors", () => {
+    const onTabChange = vi.fn();
+    render(
+      <TagDetailPage
+        identityTitle="Jira"
+        activeTab="agent-triggers"
+        onTabChange={onTabChange}
+        agentTriggers={<div>Jira webhook routing</div>}
+      >
+        <div>Jira overview</div>
+      </TagDetailPage>,
+    );
+
+    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+      "Overview",
+      "Authentication",
+      "Agent Triggers",
+      "Permissions",
+    ]);
+    expect(screen.getByText("Jira webhook routing")).not.toBeNull();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Overview" }));
+    expect(onTabChange).toHaveBeenCalledWith("overview");
+  });
+
   it("renders the connector identity and canonical detail tabs", () => {
     const onTabChange = vi.fn();
     const onConnect = vi.fn();

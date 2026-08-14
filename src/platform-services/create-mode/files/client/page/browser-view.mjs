@@ -600,15 +600,21 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                           )
                         )
                       )
-                    : React.createElement("div", { className: "playground-files-state" },
-                        projectFilterScope
-                          ? projectFilterScope === "__all__"
+                    : projectFilterScope
+                      ? React.createElement("div", { className: "playground-files-state" },
+                          projectFilterScope === "__all__"
                             ? "No project-linked files found in this location."
                             : "No files linked to the selected project were found in this location."
-                          : currentEntries.length === 0
-                            ? "This folder is empty"
-                            : "No items match the current filter"
-                      )
+                        )
+                      : currentEntries.length === 0
+                        ? React.createElement(PlatformEmptyState, {
+                            className: "playground-files-state",
+                            icon: Folder,
+                            iconSize: 20,
+                            title: "This folder is empty",
+                            description: "Files and folders added here will be available to this computer and its agents.",
+                          })
+                        : React.createElement("div", { className: "playground-files-state" }, "No items match the current filter")
                   : viewMode === "list"
                     ? React.createElement("div", { className: "playground-files-entry-list" }, visibleRows.map(renderEntryRow))
                     : React.createElement("div", { className: "playground-files-grid" }, filteredCurrentEntries.map(renderGridItem));

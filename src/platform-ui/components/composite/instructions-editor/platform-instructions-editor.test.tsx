@@ -165,6 +165,84 @@ describe("PlatformInstructionsEditor", () => {
     expect(persistedValue).toBe("**Build carefully**");
   });
 
+  it("formats a selected range from the centralized right-click menu", async () => {
+    const user = userEvent.setup();
+    let persistedValue = "Build carefully";
+
+    function Example() {
+      const [value, setValue] = useState(persistedValue);
+      return (
+        <PlatformInstructionsEditor
+          value={value}
+          onChange={(nextValue) => {
+            persistedValue = nextValue;
+            setValue(nextValue);
+          }}
+          historyKey="selection-menu"
+        />
+      );
+    }
+
+    const { container } = render(<Example />);
+    const editor = screen.getByRole("textbox", { name: "Instructions" });
+    await user.click(editor);
+    await user.keyboard("{Control>}a{/Control}");
+    fireEvent.contextMenu(editor, { clientX: 4, clientY: 4 });
+
+    const menu = screen.getByRole("menu", { name: "Text formatting" });
+    expect(
+      menu
+        .closest(".platform-popup-surface")
+        ?.getAttribute("data-platform-popup-variant"),
+    ).toBe("minimal");
+    expect(screen.getByRole("menuitem", { name: "Bold" })).not.toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Italic" })).not.toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Underline" })).not.toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Align left" })).not.toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Align center" })).not.toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Align right" })).not.toBeNull();
+
+    await user.click(screen.getByRole("menuitem", { name: "Bold" }));
+    expect(persistedValue).toBe("**Build carefully**");
+
+    await user.click(editor);
+    await user.keyboard("{Control>}a{/Control}");
+    fireEvent.contextMenu(editor, { clientX: 4, clientY: 4 });
+    await user.click(screen.getByRole("menuitem", { name: "Align center" }));
+    expect(persistedValue).toBe(
+      "**Build carefully** <!-- computer-agents:text-align=center -->",
+    );
+    expect(
+      container
+        .querySelector(".platform-instructions-editor__prosemirror p")
+        ?.getAttribute("style"),
+    ).toContain("text-align: center");
+
+    await user.click(editor);
+    await user.keyboard("{Control>}a{/Control}");
+    fireEvent.contextMenu(editor, { clientX: 4, clientY: 4 });
+    await user.click(screen.getByRole("menuitem", { name: "Bold" }));
+    expect(persistedValue).toBe(
+      "Build carefully <!-- computer-agents:text-align=center -->",
+    );
+  });
+
+  it("renders persisted text alignment without exposing its Markdown marker", () => {
+    const { container } = render(
+      <PlatformInstructionsEditor
+        value="Centered instructions <!-- computer-agents:text-align=center -->"
+        onChange={() => undefined}
+        readOnly
+      />,
+    );
+
+    const paragraph = container.querySelector(
+      '.platform-markdown__paragraph[data-platform-text-align="center"]',
+    );
+    expect(paragraph?.textContent).toBe("Centered instructions");
+    expect(paragraph?.getAttribute("style")).toContain("text-align: center");
+  });
+
   it("uses minimal centralized popups for block styles and insert actions", async () => {
     const user = userEvent.setup();
     let persistedValue = "Build carefully";
@@ -420,6 +498,9 @@ describe("PlatformInstructionsEditor", () => {
     ).toBe("minimal");
     expect(screen.getByRole("menuitem", { name: "Paragraph" })).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "Bold" })).not.toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Align left" })).not.toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Align center" })).not.toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Align right" })).not.toBeNull();
     expect(
       screen.getByRole("menuitem", { name: "Bulleted list" }),
     ).not.toBeNull();
@@ -452,6 +533,53 @@ describe("PlatformInstructionsEditor", () => {
     expect(
       screen.queryByRole("menu", { name: "Formatting commands" }),
     ).toBeNull();
+  });
+
+  it("opens the full slash command menu for a right-click without selected text", async () => {
+    const user = userEvent.setup();
+    let persistedValue = "Align this paragraph";
+
+    function Example() {
+      const [value, setValue] = useState(persistedValue);
+      return (
+        <PlatformInstructionsEditor
+          value={value}
+          onChange={(nextValue) => {
+            persistedValue = nextValue;
+            setValue(nextValue);
+          }}
+          historyKey="unselected-context-menu"
+        />
+      );
+    }
+
+    render(<Example />);
+    const editor = screen.getByRole("textbox", { name: "Instructions" });
+    await user.click(editor);
+    fireEvent.contextMenu(editor, { clientX: 8, clientY: 8 });
+
+    const commandMenu = await screen.findByRole("menu", {
+      name: "Formatting commands",
+    });
+    expect(
+      screen.queryByRole("menu", { name: "Text formatting" }),
+    ).toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Paragraph" })).not.toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Align left" })).not.toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Align center" })).not.toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Align right" })).not.toBeNull();
+    expect(
+      screen
+        .getByRole("menuitem", { name: "Align center" })
+        .querySelector(".platform-instructions-editor__slash-shortcut")
+        ?.textContent,
+    ).toBe("⌘ ⇧ E");
+    expect(commandMenu).not.toBeNull();
+
+    await user.click(screen.getByRole("menuitem", { name: "Align center" }));
+    expect(persistedValue).toBe(
+      "Align this paragraph <!-- computer-agents:text-align=center -->",
+    );
   });
 
   it("navigates slash commands with the arrow keys and runs the active command with Enter", async () => {

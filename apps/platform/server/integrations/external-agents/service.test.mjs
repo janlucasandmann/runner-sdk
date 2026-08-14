@@ -3,11 +3,31 @@ import { Readable } from "node:stream";
 import test from "node:test";
 
 import { createInMemoryExternalAgentRepository } from "./repository.mjs";
-import { createExternalAgentService } from "./service.mjs";
+import {
+  createExternalAgentService,
+  resolvePlatformDataPath,
+} from "./service.mjs";
 import { sealWebhookSecret } from "./verification.mjs";
 
 const ENCRYPTION_KEY = "external-agent-test-encryption-key";
 const WEBHOOK_SECRET = "jira-webhook-secret";
+
+test("platform state uses the appliance data root without writing into the release", () => {
+  assert.equal(
+    resolvePlatformDataPath("external-agents.json", {
+      env: { PLATFORM_DATA_ROOT: "/var/lib/computer-agents/platform" },
+      cwd: "/opt/computer-agents/current/repos/runner-web-sdk",
+    }),
+    "/var/lib/computer-agents/platform/external-agents.json",
+  );
+  assert.equal(
+    resolvePlatformDataPath("external-agents.json", {
+      env: {},
+      cwd: "/workspace/runner-web-sdk",
+    }),
+    "/workspace/runner-web-sdk/.platform-data/external-agents.json",
+  );
+});
 
 test("the public Jira webhook route verifies before durably accepting an event", async () => {
   const repository = createInMemoryExternalAgentRepository({

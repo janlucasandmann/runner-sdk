@@ -18,6 +18,9 @@ export function mergeAttachmentReferenceMetadata(
     ...(typeof local.promptVersionNumber === "number"
       ? { promptVersionNumber: local.promptVersionNumber }
       : {}),
+    ...(local.sourceAttachmentId
+      ? { sourceAttachmentId: local.sourceAttachmentId }
+      : {}),
     ...(local.threadId ? { threadId: local.threadId } : {}),
     ...(local.runnerAttachmentRole
       ? { runnerAttachmentRole: local.runnerAttachmentRole }

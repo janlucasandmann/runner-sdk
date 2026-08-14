@@ -135,6 +135,75 @@ describe("permission policy", () => {
     },
   );
 
+  it.each(["metronome_workflow", "metronome_workflow_team_role"] as const)(
+    "shows only concrete Metronome capabilities for %s subjects",
+    (subjectType) => {
+      const visibleActionIds = PLATFORM_PERMISSION_ACTION_DEFINITIONS.filter(
+        (action) => shouldShowPlatformPermissionAction(action, subjectType),
+      ).map((action) => action.id);
+
+      expect(visibleActionIds).toEqual([
+        "metronome_workflow_view",
+        "metronome_run_results_view",
+        "metronome_run",
+        "metronome_workflow_manage",
+        "metronome_workflow_versions_manage",
+        "metronome_workflow_publish",
+        "metronome_workflow_access_manage",
+        "metronome_workflow_delete",
+      ]);
+      expect(visibleActionIds).not.toContain("test_run");
+      expect(visibleActionIds).not.toContain("workspace_read");
+    },
+  );
+
+  it("applies Metronome role defaults to run, edit, publish, and access operations", () => {
+    const owner = createPlatformRolePermissionSet(
+      "metronome_workflow_team_role",
+      "owner",
+    );
+    const contributor = createPlatformRolePermissionSet(
+      "metronome_workflow_team_role",
+      "contributor",
+    );
+    const member = createPlatformRolePermissionSet(
+      "metronome_workflow_team_role",
+      "member",
+    );
+    const viewer = createPlatformRolePermissionSet(
+      "metronome_workflow_team_role",
+      "viewer",
+    );
+
+    expect(
+      getPlatformPermissionActionAccessByDefinition(owner, "metronome_workflow_delete"),
+    ).toBe("full_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(
+        contributor,
+        "metronome_workflow_manage",
+      ),
+    ).toBe("full_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(
+        contributor,
+        "metronome_workflow_publish",
+      ),
+    ).toBe("ask_for_permission");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(member, "metronome_run"),
+    ).toBe("full_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(
+        member,
+        "metronome_workflow_manage",
+      ),
+    ).toBe("no_access");
+    expect(
+      getPlatformPermissionActionAccessByDefinition(viewer, "metronome_run"),
+    ).toBe("no_access");
+  });
+
   it.each([
     ["guardrail_team_role", "guardrail_edit"],
     ["fine_tuning_team_role", "fine_tuning_settings_manage"],

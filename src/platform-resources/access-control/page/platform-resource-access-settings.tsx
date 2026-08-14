@@ -329,16 +329,6 @@ export function PlatformResourceAccessSettings<TTeam extends PlatformAccessPrinc
               ? `${resourceLabel} organization member roles`
               : `${resourceLabel} team roles`
           }
-          roleKicker={
-            isRoleScopedSystemPrincipal
-              ? undefined
-              : `${resourceLabel} role`
-          }
-          roleDescription={
-            isRoleScopedSystemPrincipal
-              ? `${resourceLabel}-scoped permissions for organization members assigned this role.`
-              : `${resourceLabel}-scoped permissions for this role in ${principalName}.`
-          }
           readOnly={activeRoleId === "owner"}
           className="platform-resource-access-settings__role-page playground-project-team-role-pages"
           roleListClassName="platform-resource-access-settings__role-sidebar playground-project-team-role-list"

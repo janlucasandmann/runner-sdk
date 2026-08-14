@@ -15,6 +15,7 @@ export function ResourceDetailPage<TTab extends string = string>({
   children,
   sidebar,
   sidebarCollapsed = false,
+  sidebarAlignTop = false,
   sidebarAutoCollapseTabs = [],
   ariaLabel = "Resource details",
   tabAriaLabel = "Resource sections",
@@ -51,7 +52,7 @@ export function ResourceDetailPage<TTab extends string = string>({
 
   return (
     <section
-      className={`resource-detail-page${hasHeader ? " has-header" : " is-headerless"}${hasTabs ? " has-tabs" : " is-tabless"}${hasSidebar ? " has-sidebar" : " is-sidebar-empty"}${effectiveSidebarCollapsed ? " is-sidebar-collapsed" : ""}${isSidebarAutoCollapsed ? " is-sidebar-auto-collapsed" : ""}${className ? ` ${className}` : ""}`}
+      className={`resource-detail-page${hasHeader ? " has-header" : " is-headerless"}${hasTabs ? " has-tabs" : " is-tabless"}${hasSidebar ? " has-sidebar" : " is-sidebar-empty"}${effectiveSidebarCollapsed ? " is-sidebar-collapsed" : ""}${isSidebarAutoCollapsed ? " is-sidebar-auto-collapsed" : ""}${sidebarAlignTop ? " is-sidebar-top-aligned" : ""}${className ? ` ${className}` : ""}`}
       aria-label={ariaLabel}
       data-resource-detail-page="true"
     >

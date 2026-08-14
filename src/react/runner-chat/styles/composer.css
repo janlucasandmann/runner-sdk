@@ -172,7 +172,7 @@
 .tb-runner-chat .tb-user-turn-connector-name {
   min-width: 0;
   overflow: hidden;
-  color: white;
+  color: #000;
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
@@ -1085,11 +1085,11 @@
 
 .tb-runner-chat .tb-popup-menu-section-label {
   margin: 6px 0 0;
-  padding: 9px 10px 7px;
+  padding: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.075);
   color: rgba(255, 255, 255, 0.58);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: 0.02em;
   text-transform: none;
 }
@@ -1119,7 +1119,7 @@
 }
 
 .tb-runner-chat .tb-composer-suggestion-popup .tb-popup-row {
-  min-height: 48px;
+  min-height: 42px;
   gap: 10px;
   padding: 8px 10px !important;
   border: 0;
@@ -1133,6 +1133,23 @@
 .tb-runner-chat .tb-composer-suggestion-popup .tb-popup-row:focus-visible {
   background: rgba(255, 255, 255, 0.1);
   outline: none;
+}
+
+/* Keep slash-menu scrolling on the popup itself so the header and capability
+ * rows move together instead of creating a nested scroll region. */
+.tb-runner-chat .tb-composer-suggestion-popup.tb-popup-menu-slash {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.tb-runner-chat .tb-composer-suggestion-popup.tb-popup-menu-slash
+  .tb-composer-suggestion-popup-list {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.tb-runner-chat .tb-popup-menu-section-label {
+  padding-bottom: 0;
 }
 
 @media (max-width: 640px) {
@@ -1162,7 +1179,7 @@
 }
 
 .tb-runner-chat .tb-popup-menu-slash .tb-popup-row {
-  min-height: 40px;
+  min-height: 42px;
   gap: 10px;
   padding-top: 4px !important;
   padding-bottom: 4px !important;

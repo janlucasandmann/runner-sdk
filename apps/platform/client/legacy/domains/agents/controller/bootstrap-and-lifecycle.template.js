@@ -36,6 +36,8 @@
           onThreadActionMenuOpen,
           threadMutationSignal = null,
           onThreadStarted,
+          onOpenPromptSearch,
+          onOpenThreadSearch,
           onAgentMutated,
           onStartThreadWithAgent,
           onGenerateInstructions,

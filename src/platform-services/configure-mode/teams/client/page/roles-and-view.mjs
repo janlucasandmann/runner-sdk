@@ -14,61 +14,57 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
                   && !isTeamOwnerMember(row.item, false)
                   && normalizePlaygroundTeamRoleId(row.item?.role, "member") === roleId
             );
-            const getRoleRowCount = (roleId) => getAssignedRowsForRole(roleId).length;
-            const renderAssignedUsersPopup = (role) => {
-              const assignedRows = getAssignedRowsForRole(role.id);
-              return React.createElement(PlatformPopupSurface, {
-                  className: "playground-team-role-assigned-popup",
-                  onMouseDown: (event) => event.stopPropagation(),
-                },
-                React.createElement("div", { className: "playground-team-role-assigned-popup-title" }, role.label + " users"),
-                assignedRows.length > 0
-                  ? React.createElement("div", { className: "playground-team-role-assigned-list" },
-                      assignedRows.map((row) =>
-                        React.createElement("div", { key: row.kind + ":" + row.id, className: "playground-team-role-assigned-row" },
-                          renderTeamMemberIdentityCell(row.item, getTeamMemberRowDisplayName(row), getTeamMemberRowDetail(row), false),
-                          React.createElement("span", { className: "playground-team-role-assigned-status" }, row.item?.status || "active")
-                        )
-                      )
-                    )
-                  : React.createElement("div", { className: "playground-team-role-assigned-empty" }, "No users assigned to this role.")
-              );
-            };
-            const renderAssignedUsersButton = (role) => {
-              const assignedCount = getRoleRowCount(role.id);
-              const isOpen = teamPageRoleMembersPopover === role.id;
-              return React.createElement("div", { className: "playground-team-role-assigned-shell" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-team-role-assigned-button" + (isOpen ? " is-open" : ""),
-                  onClick: () => setTeamPageRoleMembersPopover((current) => current === role.id ? "" : role.id),
-                  "aria-haspopup": "dialog",
-                  "aria-expanded": isOpen ? "true" : "false",
-                }, React.createElement(PlatformLabel, {
-                  variant: "gray",
-                  className: "playground-team-role-assigned-label",
-                }, assignedCount + " assigned")),
-                isOpen ? renderAssignedUsersPopup(role) : null
-              );
-            };
-            return React.createElement("div", { className: "playground-team-detail-panel playground-team-roles-panel" },
-              React.createElement(PlatformRolePermissionsPage, {
+            const renderTeamRoleOwnerSelector = () => React.createElement(PlatformOwnerSelector, {
+              owner: {
+                value: selectedTeamOwnerMemberId,
+                name: selectedTeamOwnerLabel || "Owner",
+                avatarUrl: selectedTeamOwnerAvatarUrl,
+              },
+              options: teamOwnerOptions,
+              onTransfer: async (_nextValue, selectedOption) => {
+                const selectedRow = selectedOption?.data?.memberRow || null;
+                const memberId = getTeamMemberActionId(selectedRow);
+                if (!selectedRow || !memberId) {
+                  return;
+                }
+                await handleTransferTeamOwnership(memberId);
+              },
+              ariaLabel: "Choose team owner",
+              resourceLabel: "team",
+              alignment: "end",
+              popupAlignment: "right",
+              fullWidth: false,
+              disabled: !currentUserIsTeamOwner || teamOwnerTransferPending,
+              loading: teamOwnerTransferPending,
+              loadingContent: "Transferring ownership...",
+              emptyContent: "No active team members are available.",
+              popupWidth: 260,
+              popupMaxHeight: "min(320px, calc(100vh - 180px))",
+              className: "playground-team-role-owner-selector",
+              triggerClassName: "playground-team-role-owner-trigger",
+              popupClassName: "playground-agents-detail-owner-menu playground-team-role-owner-popup",
+              optionClassName: "playground-agents-detail-owner-option playground-team-role-owner-option",
+            });
+            return React.createElement(PlatformRolePermissionsPage, {
                 roles: visibleRoleDefinitions.map((role) => ({
                   id: role.id,
                   label: role.label,
-                  description: role.description,
-                  meta: React.createElement(PlatformLabel, {
-                    variant: "gray",
-                    className: "playground-team-role-assigned-label",
-                  }, getRoleRowCount(role.id) + " assigned"),
+                  assignedMembers: role.id === "owner"
+                    ? undefined
+                    : getAssignedRowsForRole(role.id).map((row) => ({
+                        id: row.kind + ":" + row.id,
+                        name: getTeamMemberRowDisplayName(row),
+                        detail: getTeamMemberRowDetail(row),
+                        avatarUrl: getTeamMemberAvatarUrl(row.item, false),
+                        status: String(row.item?.status || "active").trim() || "active",
+                      })),
                 })),
                 value: selectedRoleDefinition.id,
                 onValueChange: (roleId) => {
                   setTeamPageSelectedRoleId(roleId);
-                  setTeamPageRoleMembersPopover("");
                 },
                 roleAriaLabel: "Team roles",
-                roleHeaderAction: renderAssignedUsersButton(selectedRoleDefinition),
+                ownerRoleHeaderAction: renderTeamRoleOwnerSelector(),
                 readOnly: isSelectedOwnerRole || !canManageTeam,
                 permissionSet: selectedRolePermissionSet,
                 accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
@@ -80,8 +76,7 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
                 onRingAccessChange: (ringId, access) => updateTeamRolePermissionRingAccess(selectedRoleDefinition.id, ringId, access),
                 onActionRingChange: (actionId, ringId) => updateTeamRolePermissionActionRing(selectedRoleDefinition.id, actionId, ringId),
                 onActionAccessChange: (actionId, access) => updateTeamRolePermissionActionAccess(selectedRoleDefinition.id, actionId, access),
-              })
-            );
+              });
           };
 
           const normalizedTeamDetailTab = teamPageActiveTab === "permissions"
@@ -90,13 +85,8 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
               ? teamPageActiveTab
               : "members";
           const teamDetailName = String(selectedTeam?.name || "Team").trim() || "Team";
-          const teamDetailDescription = String(
-            selectedTeam?.description
-            || selectedTeam?.summary
-            || selectedTeam?.purpose
-            || selectedTeam?.metadata?.description
-            || "Manage members, resources, and permissions for this team."
-          ).replace(/\s+/g, " ").trim();
+          const teamDetailDescription = getTeamPageDescription(selectedTeam)
+            || "Manage members, resources, and permissions for this team.";
           const teamDetailProfileImageUrl = getTeamPageProfileImageUrl(selectedTeam);
           const teamDetailMemberCount = visibleTeamMembers.length;
           const selectedTeamCreatorUserId = String(
@@ -206,6 +196,35 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
               data: { memberRow: null },
             });
           }
+          const teamIdentityIsSaving = teamPageActionId === "team-identity";
+          const teamIdentityDraftMatchesSelection = Boolean(
+            selectedTeam && teamPageIdentityDraftTeamId === String(selectedTeam.id || "").trim()
+          );
+          const teamIdentityNameValue = teamIdentityDraftMatchesSelection
+            ? teamPageIdentityNameDraft
+            : teamDetailName;
+          const teamIdentityDescriptionValue = teamIdentityDraftMatchesSelection
+            ? teamPageIdentityDescriptionDraft
+            : teamDetailDescription;
+          const resetTeamIdentityDraft = () => {
+            if (teamIdentityIsSaving || !selectedTeam) {
+              return;
+            }
+            setTeamPageIdentityDraftTeamId(String(selectedTeam.id || "").trim());
+            setTeamPageIdentityNameDraft(teamDetailName);
+            setTeamPageIdentityDescriptionDraft(teamDetailDescription);
+          };
+          const handleTeamIdentityKeyDown = (event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              resetTeamIdentityDraft();
+              return;
+            }
+            if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+              event.preventDefault();
+              void handleSaveTeamIdentity();
+            }
+          };
           const teamDetailHeader = selectedTeam
             ? React.createElement("section", {
                 className: "platform-service-detail-identity playground-team-detail-profile-section",
@@ -221,12 +240,38 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
                   onChange: (url) => void handleTeamProfileImageSelection(url),
                 }),
                 React.createElement("div", { className: "platform-service-detail-identity__copy" },
-                  React.createElement("h1", {
-                    className: "platform-service-detail-identity__title playground-team-detail-title",
-                  }, teamDetailName),
-                  React.createElement("p", {
-                    className: "platform-service-detail-identity__description playground-team-detail-description",
-                  }, teamDetailDescription)
+                  React.createElement("input", {
+                    type: "text",
+                    className: "platform-service-detail-identity__title-input playground-team-detail-title-input",
+                    value: teamIdentityNameValue,
+                    onChange: canManageTeam
+                      ? (event) => {
+                          setTeamPageIdentityDraftTeamId(String(selectedTeam.id || "").trim());
+                          setTeamPageIdentityNameDraft(event.target.value);
+                        }
+                      : undefined,
+                    onBlur: canManageTeam ? () => void handleSaveTeamIdentity() : undefined,
+                    onKeyDown: handleTeamIdentityKeyDown,
+                    placeholder: "Team name",
+                    readOnly: !canManageTeam || teamIdentityIsSaving,
+                    "aria-label": "Team name",
+                  }),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "platform-service-detail-identity__description-input playground-team-detail-description-input",
+                    value: teamIdentityDescriptionValue,
+                    onChange: canManageTeam
+                      ? (event) => {
+                          setTeamPageIdentityDraftTeamId(String(selectedTeam.id || "").trim());
+                          setTeamPageIdentityDescriptionDraft(event.target.value);
+                        }
+                      : undefined,
+                    onBlur: canManageTeam ? () => void handleSaveTeamIdentity() : undefined,
+                    onKeyDown: handleTeamIdentityKeyDown,
+                    placeholder: "Add a short description",
+                    readOnly: !canManageTeam || teamIdentityIsSaving,
+                    "aria-label": "Team description",
+                  })
                 )
               )
             : null;
@@ -272,21 +317,8 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
               })
             )
             : null;
-          const teamDetailSidebarToggle = ["resources", "roles"].includes(normalizedTeamDetailTab)
-            ? null
-            : React.createElement("button", {
-              type: "button",
-              className: "playground-project-overview-sidebar-toggle",
-              onClick: () => setTeamPageDetailSidebarCollapsed((current) => !current),
-              title: teamPageDetailSidebarCollapsed ? "Show team sidebar" : "Hide team sidebar",
-              "aria-label": teamPageDetailSidebarCollapsed ? "Show team sidebar" : "Hide team sidebar",
-              "aria-pressed": teamPageDetailSidebarCollapsed ? "true" : "false",
-            },
-            React.createElement(PanelRight, { width: 15, height: 15, strokeWidth: 1.8 })
-          );
           const teamDetailAppHeaderActions = React.createElement(React.Fragment, null,
-            teamDetailAddResourceAction,
-            teamDetailSidebarToggle
+            teamDetailAddResourceAction
           );
           const teamDetailSidebar = selectedTeam
             ? React.createElement(PlatformResourceDetailSidebar, {

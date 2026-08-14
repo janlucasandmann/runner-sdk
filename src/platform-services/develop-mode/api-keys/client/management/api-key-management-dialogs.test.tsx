@@ -48,7 +48,7 @@ describe("API key management dialogs", () => {
       />,
     );
 
-    expect(screen.getByText("tb_secret")).toBeTruthy();
+    expect(screen.getByDisplayValue("tb_secret")).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Copy API key" }));
     expect(onCopy).toHaveBeenCalledOnce();
   });

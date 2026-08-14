@@ -1137,6 +1137,70 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
     subjectTypes: ["test_plan", "test_plan_team_role"],
   },
   {
+    id: "metronome_workflow_view",
+    ringId: "ring_1",
+    label: "View workflow",
+    description:
+      "View this Metronome workflow, its graph, configuration, trigger, and published versions.",
+    subjectTypes: ["metronome_workflow", "metronome_workflow_team_role"],
+  },
+  {
+    id: "metronome_run_results_view",
+    ringId: "ring_1",
+    label: "View run results",
+    description:
+      "Inspect Metronome runs, node results, linked threads, errors, and retained execution evidence.",
+    subjectTypes: ["metronome_workflow", "metronome_workflow_team_role"],
+  },
+  {
+    id: "metronome_run",
+    ringId: "ring_2",
+    label: "Run workflow",
+    description:
+      "Trigger this Metronome workflow manually or through an authorized published endpoint.",
+    subjectTypes: ["metronome_workflow", "metronome_workflow_team_role"],
+  },
+  {
+    id: "metronome_workflow_manage",
+    ringId: "ring_2",
+    label: "Manage workflow",
+    description:
+      "Change the workflow graph, node configuration, trigger, code, and execution settings.",
+    subjectTypes: ["metronome_workflow", "metronome_workflow_team_role"],
+  },
+  {
+    id: "metronome_workflow_versions_manage",
+    ringId: "ring_2",
+    label: "Manage versions",
+    description:
+      "Create, describe, restore, and compare immutable Metronome workflow versions.",
+    subjectTypes: ["metronome_workflow", "metronome_workflow_team_role"],
+  },
+  {
+    id: "metronome_workflow_publish",
+    ringId: "ring_3",
+    label: "Publish workflow",
+    description:
+      "Publish or unpublish the workflow version used by triggers and new runs.",
+    subjectTypes: ["metronome_workflow", "metronome_workflow_team_role"],
+  },
+  {
+    id: "metronome_workflow_access_manage",
+    ringId: "ring_3",
+    label: "Manage access",
+    description:
+      "Share this workflow with teams and change their role permission pages.",
+    subjectTypes: ["metronome_workflow", "metronome_workflow_team_role"],
+  },
+  {
+    id: "metronome_workflow_delete",
+    ringId: "ring_3",
+    label: "Delete workflow",
+    description:
+      "Permanently delete this Metronome workflow, its versions, and retained run history.",
+    subjectTypes: ["metronome_workflow", "metronome_workflow_team_role"],
+  },
+  {
     id: "assurance_policy_view",
     ringId: "ring_1",
     label: "View Assurance Policy",
@@ -1581,6 +1645,8 @@ export const PLATFORM_PERMISSION_SUBJECT_TYPES = [
   "evaluation_team_role",
   "test_plan",
   "test_plan_team_role",
+  "metronome_workflow",
+  "metronome_workflow_team_role",
   "assurance_policy",
   "assurance_policy_team_role",
   "fine_tuning",
@@ -1623,6 +1689,8 @@ export const PLATFORM_SCOPED_PERMISSION_SUBJECT_TYPES = [
   "evaluation_team_role",
   "test_plan",
   "test_plan_team_role",
+  "metronome_workflow",
+  "metronome_workflow_team_role",
   "assurance_policy",
   "assurance_policy_team_role",
   "fine_tuning",

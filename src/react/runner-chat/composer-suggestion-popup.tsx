@@ -1,4 +1,4 @@
-import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import {
   PlatformPopupSurface,
   type PlatformPopupAnimation,
@@ -13,6 +13,7 @@ export interface RunnerComposerSuggestionPopupProps {
   emptyState?: ReactNode;
   footer?: ReactNode;
   header?: ReactNode;
+  activeIndex?: number;
   keyboardNavigation?: boolean;
   placement?: RunnerComposerSuggestionPopupPlacement;
   role?: "listbox" | "dialog";
@@ -26,6 +27,7 @@ export function RunnerComposerSuggestionPopup({
   emptyState,
   footer,
   header,
+  activeIndex = -1,
   keyboardNavigation = false,
   placement = "top",
   role = "listbox",
@@ -40,61 +42,27 @@ export function RunnerComposerSuggestionPopup({
   ].filter(Boolean).join(" ");
 
   useEffect(() => {
-    if (!keyboardNavigation) {
-      return undefined;
-    }
-    let frameId = 0;
-    const focusFirst = () => {
-      const firstButton = surfaceRef.current?.querySelector<HTMLButtonElement>(
-        "button:not(:disabled)",
-      );
-      firstButton?.focus({ preventScroll: true });
-    };
-    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
-      frameId = window.requestAnimationFrame(focusFirst);
-    } else {
-      focusFirst();
-    }
-    return () => {
-      if (frameId && typeof window !== "undefined") {
-        window.cancelAnimationFrame(frameId);
-      }
-    };
-  }, [children, emptyState, header, keyboardNavigation]);
-
-  function handleKeyboardNavigation(event: KeyboardEvent<HTMLDivElement>) {
-    if (!keyboardNavigation || !surfaceRef.current) {
+    if (!keyboardNavigation || !surfaceRef.current || !Number.isFinite(activeIndex)) {
       return;
     }
     const buttons = Array.from(
-      surfaceRef.current.querySelectorAll<HTMLButtonElement>("button:not(:disabled)"),
+      surfaceRef.current.querySelectorAll<HTMLButtonElement>(
+        "button:not(:disabled):not([data-popup-navigation-ignore])",
+      ),
     );
-    if (buttons.length === 0) {
+    const activeButton = buttons[Math.max(0, Math.min(activeIndex, buttons.length - 1))];
+    const scrollContainer = surfaceRef.current.querySelector<HTMLElement>(
+      ".tb-composer-suggestion-popup-list",
+    );
+    if (!activeButton || !scrollContainer || !scrollContainer.contains(activeButton)) {
       return;
     }
-    const activeIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      event.stopPropagation();
-      const direction = event.key === "ArrowDown" ? 1 : -1;
-      const nextIndex = activeIndex < 0
-        ? (direction > 0 ? 0 : buttons.length - 1)
-        : (activeIndex + direction + buttons.length) % buttons.length;
-      buttons[nextIndex]?.focus({ preventScroll: true });
-      return;
+    const containerRect = scrollContainer.getBoundingClientRect();
+    const buttonRect = activeButton.getBoundingClientRect();
+    if (buttonRect.top < containerRect.top || buttonRect.bottom > containerRect.bottom) {
+      activeButton.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
     }
-    if (event.key === "Enter") {
-      const activeButton = document.activeElement instanceof HTMLButtonElement
-        && surfaceRef.current.contains(document.activeElement)
-        ? document.activeElement
-        : null;
-      if (activeButton) {
-        event.preventDefault();
-        event.stopPropagation();
-        activeButton.click();
-      }
-    }
-  }
+  }, [activeIndex, children, emptyState, header, keyboardNavigation]);
 
   return (
     <PlatformPopupSurface
@@ -105,7 +73,6 @@ export function RunnerComposerSuggestionPopup({
       role={role}
       aria-label={ariaLabel}
       data-composer-suggestion-placement={placement}
-      onKeyDown={handleKeyboardNavigation}
     >
       {header}
       <div className="tb-composer-suggestion-popup-list">

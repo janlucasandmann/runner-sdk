@@ -82,6 +82,31 @@ describe("useRunnerWorkspaceSelectionController", () => {
     });
   });
 
+  it("keeps a selected project environment ahead of the active thread environment", async () => {
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        mode: "projects",
+        projectId: "project-2",
+        environmentId: "environment-2",
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useRunnerWorkspaceSelectionController({
+        activeThreadEnvironmentId: "environment-1",
+        availableEnvironments: environments,
+        availableProjects: projects,
+        storageKey: STORAGE_KEY,
+        useComputerAgentsMode: true,
+      }),
+    );
+
+    await waitFor(() => expect(result.current.selectedProjectId).toBe("project-2"));
+    await waitFor(() => expect(result.current.selectedEnvironmentId).toBe("environment-2"));
+    expect(result.current.effectiveWorkspaceSelectorMode).toBe("projects");
+  });
+
   it("repairs a stale project and prioritizes an active thread environment", async () => {
     window.localStorage.setItem(
       STORAGE_KEY,

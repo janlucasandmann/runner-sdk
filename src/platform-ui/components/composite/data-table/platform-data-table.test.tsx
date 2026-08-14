@@ -611,6 +611,30 @@ describe("PlatformDataTable", () => {
     expect(duplicate.mock.calls[0]?.[0].rows).toHaveLength(2);
   });
 
+  it("uses the minimal popup variant for row actions", async () => {
+    const user = userEvent.setup();
+    renderTable({
+      getRowActions: () => [
+        {
+          id: "duplicate",
+          label: "Duplicate",
+          icon: Copy,
+          onSelect: vi.fn(),
+        },
+      ],
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: "Open actions for Alpha" }),
+    );
+
+    expect(
+      document.querySelector(
+        ".platform-data-table__floating-menu.platform-popup-surface.is-minimal",
+      ),
+    ).not.toBeNull();
+  });
+
   it("activates a focused row with the keyboard", async () => {
     const user = userEvent.setup();
     const onRowActivate = vi.fn();

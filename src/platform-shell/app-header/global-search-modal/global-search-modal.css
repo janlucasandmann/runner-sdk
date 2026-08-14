@@ -1,5 +1,5 @@
-.platform-global-search-modal__backdrop {
-  z-index: 94;
+.platform-modal-backdrop.platform-global-search-modal__backdrop {
+  z-index: 10040;
 }
 
 .platform-global-search-modal {

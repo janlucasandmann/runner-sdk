@@ -222,10 +222,6 @@ export function TestPlanRawConfigurationPage({
           language="json"
           path={`tests/${plan.id}/test-config.json`}
           ariaLabel="Raw test configuration JSON"
-          options={{
-            bracketPairColorization: { enabled: true },
-            guides: { bracketPairs: true, indentation: true },
-          }}
         />
       )}
     />

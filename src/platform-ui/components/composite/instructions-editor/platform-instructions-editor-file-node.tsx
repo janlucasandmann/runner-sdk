@@ -48,6 +48,13 @@ export interface PlatformInstructionsEditorFileUpload {
   ) => void | Promise<void>;
 }
 
+export interface PlatformInstructionsEditorFileMarkdownMatch {
+  raw: string;
+  start: number;
+  end: number;
+  file: PlatformInstructionsEditorUploadedFile;
+}
+
 interface PlatformInstructionsEditorFileNodeOptions {
   getFileUpload: () => PlatformInstructionsEditorFileUpload | undefined;
 }
@@ -106,6 +113,29 @@ export function serializePlatformInstructionsEditorFileMarkdown(
       attachmentId: normalizedFile.attachmentId || "",
     },
   });
+}
+
+export function parsePlatformInstructionsEditorFileMarkdown(
+  markdown: unknown,
+): PlatformInstructionsEditorFileMarkdownMatch[] {
+  const value = String(markdown || "");
+  const matches: PlatformInstructionsEditorFileMarkdownMatch[] = [];
+  const attachmentDirectivePattern =
+    /^:::attachment(?:[\t ]+\{([^}\r\n]*)\})?[\t ]+:::[\t ]*$/gm;
+  let match: RegExpExecArray | null = null;
+  while ((match = attachmentDirectivePattern.exec(value)) !== null) {
+    const file = normalizePlatformInstructionsEditorFile(
+      parseAttributes(match[1] || ""),
+    );
+    if (!file) continue;
+    matches.push({
+      raw: match[0],
+      start: match.index,
+      end: match.index + match[0].length,
+      file,
+    });
+  }
+  return matches;
 }
 
 export function formatPlatformInstructionsEditorFileSize(value: unknown) {

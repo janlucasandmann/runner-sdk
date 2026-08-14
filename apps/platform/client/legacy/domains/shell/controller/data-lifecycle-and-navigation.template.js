@@ -383,7 +383,26 @@
             setSettingsShowTriggerSecret(false);
             setSettingsCopiedField("");
           }, [settingsSelectedTriggerId]);
-  
+
+          function buildDemoConnectorAccounts(status, connectorLabel) {
+            const credentials = normalizePlatformConnectionCredentials(status?.credentials)
+              .filter((credential) => credential.status !== "invalid");
+            if (credentials.length === 0) {
+              return [];
+            }
+            const configuredDefaultId = String(status?.defaultCredentialId || "").trim();
+            const defaultCredential = credentials.find((credential) => (
+              credential.id === configuredDefaultId || credential.isDefault
+            )) || credentials[0];
+            return credentials.map((credential) => ({
+              id: credential.id,
+              name: credential.name || credential.identity || `${connectorLabel} account`,
+              identity: credential.identity || credential.name || "Connected account",
+              isDefault: credential.id === defaultCredential.id,
+              disabled: credential.status === "pending",
+            }));
+          }
+
           const demoComputerAgents = useMemo(() => {
             const connectorOptions = listPlatformConnectorCatalogEntries().map((connector) => {
               const providerStatus = getConnectorStatusRecord(connector.id);
@@ -430,6 +449,7 @@
               connectors: connectorOptions,
               github: {
                 connected: githubStatus.connected,
+                accounts: buildDemoConnectorAccounts(githubStatus, "GitHub"),
                 disconnectToken: githubDisconnectToken,
                 onConnect: handleGithubAuthConnect,
                 onDisconnect: handleGithubAuthDisconnect,
@@ -439,6 +459,7 @@
               },
               notion: {
                 connected: notionStatus.connected,
+                accounts: buildDemoConnectorAccounts(notionStatus, "Notion"),
                 databases: notionDatabases,
                 onConnect: handleNotionAuthConnect,
                 onDisconnect: handleNotionAuthDisconnect,
@@ -446,6 +467,7 @@
               },
               googleDrive: {
                 connected: googleDriveStatus.connected,
+                accounts: buildDemoConnectorAccounts(googleDriveStatus, "Google Drive"),
                 rootLabel: "My Drive",
                 onConnect: handleGoogleDriveAuthConnect,
                 onDisconnect: handleGoogleDriveAuthDisconnect,
@@ -455,6 +477,7 @@
               },
               oneDrive: {
                 connected: oneDriveStatus.connected,
+                accounts: buildDemoConnectorAccounts(oneDriveStatus, "OneDrive"),
                 rootLabel: "OneDrive",
                 onConnect: handleOneDriveAuthConnect,
                 onDisconnect: handleOneDriveAuthDisconnect,
@@ -480,12 +503,20 @@
           }, [
             githubDisconnectToken,
             githubStatus.connected,
+            githubStatus.credentials,
+            githubStatus.defaultCredentialId,
             gmailStatus.connected,
             googleDriveStatus.connected,
+            googleDriveStatus.credentials,
+            googleDriveStatus.defaultCredentialId,
             jiraStatus.connected,
             notionDatabases,
             notionStatus.connected,
+            notionStatus.credentials,
+            notionStatus.defaultCredentialId,
             oneDriveStatus.connected,
+            oneDriveStatus.credentials,
+            oneDriveStatus.defaultCredentialId,
             settingsDiscordStatus?.linked,
             settingsDiscordStatus?.verified,
             settingsEmailStatus?.linked,
@@ -2386,6 +2417,10 @@
   ${DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics}
           function handleNewThread(options = {}) {
             const nextInitialPrompt = normalizePlaygroundInitialPrompt(options?.initialPrompt);
+            const promptAttachment = options?.promptAttachment && typeof options.promptAttachment === "object"
+              ? options.promptAttachment
+              : null;
+            const normalizedPromptAttachmentId = String(promptAttachment?.id || "").trim();
             const previousThreadId = String(currentThreadId || "").trim();
             if (isPrivateThreadId(previousThreadId)) {
               discardPrivateThread(previousThreadId);
@@ -2399,6 +2434,31 @@
             setMetronomeRunTraceSelection(null);
             setThreadAgentSelectionOverride(null);
             setPendingThreadRunRequest(null);
+            setPendingThreadPromptAttachmentRequest(normalizedPromptAttachmentId
+              ? {
+                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                  prompt: {
+                    id: normalizedPromptAttachmentId,
+                    name: String(promptAttachment?.name || "Untitled prompt").trim() || "Untitled prompt",
+                    description: String(promptAttachment?.description || ""),
+                    markdown: String(
+                      promptAttachment?.markdown
+                      ?? promptAttachment?.currentVersion?.markdown
+                      ?? ""
+                    ),
+                    currentVersionId: String(
+                      promptAttachment?.currentVersionId
+                      || promptAttachment?.currentVersion?.id
+                      || ""
+                    ).trim(),
+                    currentVersionNumber: Number(
+                      promptAttachment?.currentVersionNumber
+                      || promptAttachment?.currentVersion?.number
+                      || 1
+                    ),
+                  },
+                }
+              : null);
             setContentMode("chat");
             setChangesNavigationTarget(null);
             setThreadListMode("threads");
@@ -2422,6 +2482,7 @@
             setThreadAgentSelectionOverride(null);
             setPendingThreadRunRequest(null);
             setPendingThreadDocumentPreviewRequest(null);
+            setPendingThreadPromptAttachmentRequest(null);
             setThreadTaskOpenRequest(null);
             setThreadSubagentDetailOpen(false);
             setThreadDeepResearchDetailOpen(false);

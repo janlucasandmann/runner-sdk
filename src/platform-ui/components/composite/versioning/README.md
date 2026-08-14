@@ -24,6 +24,12 @@ The package also re-exports `PlatformVersionLabel` and
 `PlatformVersionHistorySidebar` so resource modules can import the complete
 versioning surface from one stable entry point.
 
+`PlatformVersionChangesPage` owns the shared comparison surface: prompt-style
+resource heading, compact file/change summary, centralized minimal selectors
+for choosing base and target versions, and the canonical diff-file list.
+Legacy resource screens delegate to this component through their compatibility
+renderer instead of maintaining a second visual implementation.
+
 Mutation logic and resource-specific change mapping stay with the calling
 resource. File changes can use the canonical `PlatformDiffViewer` composite,
 while the save dialog remains independent of Metronome, Agent, or Computer API

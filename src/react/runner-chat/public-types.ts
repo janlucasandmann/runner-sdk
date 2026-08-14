@@ -121,6 +121,12 @@ export interface RunnerChatExternalFileBrowserRequest {
   source?: RunnerFileBrowserSource | string | null;
 }
 
+/** Attaches a saved prompt to the composer through the canonical prompt picker path. */
+export interface RunnerChatExternalPromptAttachmentRequest {
+  token: string | number;
+  prompt: RunnerChatPromptAttachment;
+}
+
 export interface RunnerChatProjectTaskSubmitPayload {
   prompt: string;
   taskPreview: RunnerTaskPreview;
@@ -164,8 +170,24 @@ export interface RunnerChatThreadAttachment {
   markdown?: string;
 }
 
+/** A connected account that can be used when browsing an integration. */
+export interface RunnerChatConnectorAccount {
+  id: string;
+  name: string;
+  identity?: string;
+  isDefault?: boolean;
+  disabled?: boolean;
+}
+
+export interface RunnerChatConnectorFetchOptions {
+  accountId?: string;
+}
+
 export interface RunnerChatGithubConfig {
   connected?: boolean;
+  accounts?: RunnerChatConnectorAccount[];
+  selectedAccountId?: string;
+  onAccountChange?: (accountId: string) => void;
   repositories?: RunnerChatOption[];
   selectedRepositoryId?: string;
   contexts?: RunnerChatOption[];
@@ -176,33 +198,52 @@ export interface RunnerChatGithubConfig {
   onContextChange?: (contextId: string) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
-  fetchItems?: (folderId: string) => Promise<RunnerChatFileNode[]>;
-  fetchBranches?: (repoFullName: string) => Promise<RunnerChatOption[]>;
+  fetchItems?: (
+    folderId: string,
+    options?: RunnerChatConnectorFetchOptions,
+  ) => Promise<RunnerChatFileNode[]>;
+  fetchBranches?: (
+    repoFullName: string,
+    options?: RunnerChatConnectorFetchOptions,
+  ) => Promise<RunnerChatOption[]>;
   fetchFileContent?: (
     file: RunnerChatFileNode,
+    options?: RunnerChatConnectorFetchOptions,
   ) => Promise<RunnerChatFetchedFileContent>;
 }
 
 export interface RunnerChatNotionConfig {
   connected?: boolean;
+  accounts?: RunnerChatConnectorAccount[];
+  selectedAccountId?: string;
+  onAccountChange?: (accountId: string) => void;
   databases?: RunnerChatNotionDatabase[];
   selectedDatabaseId?: string;
   onDatabaseChange?: (databaseId: string) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
-  fetchDatabases?: () => Promise<RunnerChatNotionDatabase[]>;
+  fetchDatabases?: (
+    options?: RunnerChatConnectorFetchOptions,
+  ) => Promise<RunnerChatNotionDatabase[]>;
 }
 
 export interface RunnerChatDriveConfig {
   connected?: boolean;
+  accounts?: RunnerChatConnectorAccount[];
+  selectedAccountId?: string;
+  onAccountChange?: (accountId: string) => void;
   items?: RunnerChatFileNode[];
   rootLabel?: string;
   onAttach?: (fileIds: string[]) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
-  fetchItems?: (folderId: string) => Promise<RunnerChatFileNode[]>;
+  fetchItems?: (
+    folderId: string,
+    options?: RunnerChatConnectorFetchOptions,
+  ) => Promise<RunnerChatFileNode[]>;
   fetchFileContent?: (
     file: RunnerChatFileNode,
+    options?: RunnerChatConnectorFetchOptions,
   ) => Promise<RunnerChatFetchedFileContent>;
   onManageAccess?: () => Promise<void> | void;
 }
@@ -366,6 +407,8 @@ export interface RunnerChatProps {
   disableSubagentDetailDrawer?: boolean;
   externalRunRequest?: RunnerChatExternalRunRequest | null;
   externalFileBrowserRequest?: RunnerChatExternalFileBrowserRequest | null;
+  externalPromptAttachmentRequest?: RunnerChatExternalPromptAttachmentRequest | null;
+  onExternalPromptAttachmentRequestHandled?: (token: string | number) => void;
   onExternalRunRequestHandled?: (token: string | number) => void;
   onExternalRunRequestCreate?: (
     request: RunnerChatExternalRunRequest,

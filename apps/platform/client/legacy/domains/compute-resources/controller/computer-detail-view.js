@@ -1364,27 +1364,24 @@
                 return null;
               }
               const diffFiles = buildEnvironmentVersionDiffFilesFromSnapshots(leftSource.snapshot, rightSource.snapshot);
-              const compareOptions = sources.map((source) =>
-                React.createElement("option", { key: source.id, value: source.id }, source.label)
-              );
-              const renderCompareSelect = (value, side) =>
-                React.createElement("label", { className: "playground-version-changes-select-shell" },
-                  React.createElement("span", { className: "playground-version-changes-select-control-wrap" },
-                    React.createElement("select", {
-                      className: "playground-version-changes-select-control",
-                      value,
-                      onChange: (event) => handleEnvironmentVersionCompareSourceChange(side, event.target.value),
-                    }, compareOptions),
-                    React.createElement(ChevronDown, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" })
-                  )
-                );
+              const compareOptions = sources.map((source) => ({
+                value: source.id,
+                label: source.label,
+              }));
               return renderPlaygroundVersionChangesPage({
                 title: "Changes",
-                compareControls: React.createElement(React.Fragment, null,
-                  renderCompareSelect(leftSource.id, "left"),
-                  React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
-                  renderCompareSelect(rightSource.id, "right")
-                ),
+                leftSelector: {
+                  value: leftSource.id,
+                  options: compareOptions,
+                  onValueChange: (value) => handleEnvironmentVersionCompareSourceChange("left", value),
+                  ariaLabel: "Select base computer version",
+                },
+                rightSelector: {
+                  value: rightSource.id,
+                  options: compareOptions,
+                  onValueChange: (value) => handleEnvironmentVersionCompareSourceChange("right", value),
+                  ariaLabel: "Select target computer version",
+                },
                 actions: renderEnvironmentPublishAction(),
                 files: diffFiles,
                 backIcon: ArrowLeft,

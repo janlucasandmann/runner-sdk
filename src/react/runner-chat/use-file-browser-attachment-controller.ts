@@ -34,11 +34,14 @@ export interface UseRunnerFileBrowserAttachmentControllerOptions {
   closeInputPopups: () => void;
   getGithubSelectedBranch: (repoFullName: string) => string;
   githubConfig?: RunnerChatGithubConfig;
+  githubAccountId?: string;
   githubItems: RunnerChatFileNode[];
   googleDriveConfig?: RunnerChatDriveConfig;
+  googleDriveAccountId?: string;
   googleDriveItems: RunnerChatFileNode[];
   maxAttachments: number;
   oneDriveConfig?: RunnerChatDriveConfig;
+  oneDriveAccountId?: string;
   oneDriveItems: RunnerChatFileNode[];
   onError: (message: string | null) => void;
   onWorkspaceError: (message: string | null) => void;
@@ -67,11 +70,14 @@ export function useRunnerFileBrowserAttachmentController({
   closeInputPopups,
   getGithubSelectedBranch,
   githubConfig,
+  githubAccountId,
   githubItems,
   googleDriveConfig,
+  googleDriveAccountId,
   googleDriveItems,
   maxAttachments,
   oneDriveConfig,
+  oneDriveAccountId,
   oneDriveItems,
   onError,
   onWorkspaceError,
@@ -215,6 +221,12 @@ export function useRunnerFileBrowserAttachmentController({
           apiKey,
           backendUrl,
           fetchFileContent,
+          accountId:
+            source === "google-drive"
+              ? googleDriveAccountId
+              : source === "one-drive"
+                ? oneDriveAccountId
+                : githubAccountId,
           item,
           requestHeaders,
           source,
@@ -280,12 +292,15 @@ export function useRunnerFileBrowserAttachmentController({
       createIntegrationAttachment,
       getGithubSelectedBranch,
       githubConfig,
+      githubAccountId,
       githubItems,
       googleDriveConfig,
+      googleDriveAccountId,
       googleDriveItems,
       maxAttachments,
       onError,
       oneDriveConfig,
+      oneDriveAccountId,
       oneDriveItems,
       requestHeaders,
       resolveUploadEnvironmentId,

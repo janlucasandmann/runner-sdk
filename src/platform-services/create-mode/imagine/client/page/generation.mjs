@@ -181,6 +181,8 @@ export const IMAGINE_PAGE_GENERATION_SCRIPT = String.raw`          const hiddenS
                         placeholder: "Select reference assets",
                         externalFileBrowserRequest: createReferenceFileBrowserRequest,
                         onThreadIdChange: () => {},
+                        onOpenPromptSearch,
+                        onOpenThreadSearch,
                         onEnvironmentChange: handleCreateReferenceEnvironmentChange,
                         onAgentChange,
                         onOpenPlansBudget,

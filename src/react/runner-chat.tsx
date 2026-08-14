@@ -15,6 +15,7 @@ import {
   ChevronRight as LucideChevronRight,
   ChevronUp as LucideChevronUp,
   Ellipsis as LucideEllipsis,
+  ExternalLink as LucideExternalLink,
   FileText as LucideFileText,
   FolderOpen as LucideFolderOpen,
   GitBranch as LucideGitBranch,
@@ -57,6 +58,12 @@ import {
   PlatformSecondaryButton,
 } from "../platform-ui/components/ui/button/index.js";
 import { PlatformIconButton } from "../platform-ui/components/ui/icon-button/index.js";
+import {
+  PlatformResourceActionMenuItem,
+  PlatformResourceActionsDivider,
+  PlatformResourceActionsInformation,
+  PlatformResourceActionsMenu,
+} from "../platform-ui/components/composite/resource-header-actions/index.js";
 import { PlatformSwitch } from "../platform-ui/components/ui/switch/index.js";
 import { ConnectionIdentityIcon } from "../platform-resources/shared/connections/connection-identity-icon.js";
 import { buildRunnerThreadScreenViewModel } from "../thread/presentation.js";
@@ -225,6 +232,7 @@ import {
   isAttachmentDocumentPreviewable,
   parseGithubBrowserFolderId,
 } from "./runner-chat/attachment-utils.js";
+import { parseRunnerPromptEmbeddedAttachments } from "./runner-chat/prompt-attachments.js";
 import { RunnerAttachmentPreviewChip } from "./runner-chat/attachment-preview-chip.js";
 import {
   RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH,
@@ -259,6 +267,7 @@ import {
 } from "./runner-chat/environment-api.js";
 import {
   buildFileFromFetchedContent,
+  uploadAttachment,
 } from "./runner-chat/attachment-api.js";
 import {
   createRunnerImplicitAttachments,
@@ -447,7 +456,10 @@ import {
 } from "./runner-chat/canonical-message-metadata.js";
 import type {
   RunnerChatConnectorOption,
+  RunnerChatDriveConfig,
   RunnerChatFollowUpAction,
+  RunnerChatGithubConfig,
+  RunnerChatNotionConfig,
   RunnerChatPromptAttachment,
   RunnerChatThreadAttachment,
   RunnerChatProps,
@@ -456,9 +468,12 @@ export type {
   RunnerChatActionSummaryClickPayload,
   RunnerChatAgentTurnClickPayload,
   RunnerChatComputerAgentsConfig,
+  RunnerChatConnectorAccount,
   RunnerChatConnectorOption,
+  RunnerChatConnectorFetchOptions,
   RunnerChatDriveConfig,
   RunnerChatExternalFileBrowserRequest,
+  RunnerChatExternalPromptAttachmentRequest,
   RunnerChatExternalRunRequest,
   RunnerChatFollowUpAction,
   RunnerChatGithubConfig,
@@ -659,6 +674,49 @@ function formatRunnerSlashCommandLabel(command: string): string {
 
 type RunnerSlashPopupView = "commands" | "projects" | "reasoning";
 
+type RunnerFileBrowserConnectorSource = "google-drive" | "notion" | "one-drive" | "github";
+
+const RUNNER_FILE_BROWSER_CONNECTOR_LABELS: Record<RunnerFileBrowserConnectorSource, string> = {
+  "google-drive": "Google Drive",
+  notion: "Notion",
+  "one-drive": "OneDrive",
+  github: "GitHub",
+};
+
+function buildRunnerFileBrowserAccountOptions(
+  source: RunnerFileBrowserConnectorSource,
+  config:
+    | RunnerChatGithubConfig
+    | RunnerChatNotionConfig
+    | RunnerChatDriveConfig
+    | undefined,
+) {
+  if (!config?.connected) return [];
+  const accounts = (Array.isArray(config.accounts) ? config.accounts : [])
+    .map((account) => ({
+      ...account,
+      id: String(account?.id || "").trim(),
+      name: String(account?.name || account?.identity || "Connected account").trim(),
+      identity: String(account?.identity || account?.name || "Connected").trim(),
+    }))
+    .filter((account) => account.id && account.name)
+    .sort((left, right) => {
+      if (Boolean(left.isDefault) !== Boolean(right.isDefault)) {
+        return left.isDefault ? -1 : 1;
+      }
+      return left.name.localeCompare(right.name);
+    });
+  if (accounts.length > 0) return accounts;
+  return [{
+    id: "__default__",
+    name: `${RUNNER_FILE_BROWSER_CONNECTOR_LABELS[source]} account`,
+    identity: "Default account",
+    isDefault: true,
+  }];
+}
+
+const RUNNER_SLASH_CORE_ACTION_COUNT = 7;
+
 export function RunnerChat({
   backendUrl,
   apiKey,
@@ -746,6 +804,8 @@ export function RunnerChat({
   disableSubagentDetailDrawer = false,
   externalRunRequest = null,
   externalFileBrowserRequest = null,
+  externalPromptAttachmentRequest = null,
+  onExternalPromptAttachmentRequestHandled,
   onExternalRunRequestHandled,
   onExternalRunRequestCreate,
   autoFocusComposer = false,
@@ -781,6 +841,7 @@ export function RunnerChat({
   const [input, setInput] = useState(initialTask);
   const [inputSelectionStart, setInputSelectionStart] = useState(() => initialTask.length);
   const [slashPopupView, setSlashPopupView] = useState<RunnerSlashPopupView>("commands");
+  const [activeSlashPopupIndex, setActiveSlashPopupIndex] = useState(0);
   const [localSelectedConnectorIds, setLocalSelectedConnectorIds] = useState<string[]>(() =>
     normalizeRunnerSelectedConnectorIds(computerAgents?.selectedConnectorIds),
   );
@@ -993,6 +1054,7 @@ export function RunnerChat({
   const lastEnvironmentStartRequestKeyRef = useRef<string | null>(null);
   const quotedSelectionPopupRef = useRef<HTMLDivElement | null>(null);
   const handledExternalRunRequestTokenRef = useRef<string | number | null>(null);
+  const handledExternalPromptAttachmentRequestTokenRef = useRef<string | number | null>(null);
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
@@ -1142,6 +1204,52 @@ export function RunnerChat({
   const workspaceConfig = computerAgents?.workspace;
   const scheduleConfig = computerAgents?.schedule;
   const projectsConfig = computerAgents?.projects;
+  const [fileBrowserAccountOverrides, setFileBrowserAccountOverrides] = useState<
+    Partial<Record<RunnerFileBrowserConnectorSource, string>>
+  >({});
+  const fileBrowserAccountOptionsBySource = useMemo(
+    () => ({
+      "google-drive": buildRunnerFileBrowserAccountOptions("google-drive", googleDriveConfig),
+      notion: buildRunnerFileBrowserAccountOptions("notion", notionConfig),
+      "one-drive": buildRunnerFileBrowserAccountOptions("one-drive", oneDriveConfig),
+      github: buildRunnerFileBrowserAccountOptions("github", githubConfig),
+    }),
+    [githubConfig, googleDriveConfig, notionConfig, oneDriveConfig],
+  );
+  const fileBrowserAccountIdsBySource = useMemo(() => {
+    const configs = {
+      "google-drive": googleDriveConfig,
+      notion: notionConfig,
+      "one-drive": oneDriveConfig,
+      github: githubConfig,
+    } as const;
+    const next = {} as Record<RunnerFileBrowserConnectorSource, string>;
+    (Object.keys(fileBrowserAccountOptionsBySource) as RunnerFileBrowserConnectorSource[]).forEach((source) => {
+      const options = fileBrowserAccountOptionsBySource[source];
+      const configuredId = String(configs[source]?.selectedAccountId || "").trim();
+      const overriddenId = String(fileBrowserAccountOverrides[source] || "").trim();
+      next[source] =
+        (overriddenId && options.some((option) => option.id === overriddenId) && overriddenId)
+        || (configuredId && options.some((option) => option.id === configuredId) && configuredId)
+        || options.find((option) => option.isDefault)?.id
+        || options[0]?.id
+        || "";
+    });
+    return next;
+  }, [
+    fileBrowserAccountOptionsBySource,
+    fileBrowserAccountOverrides,
+    githubConfig,
+    googleDriveConfig,
+    notionConfig,
+    oneDriveConfig,
+  ]);
+  const currentFileBrowserAccountId = currentFileBrowserSource === "workspace"
+    ? ""
+    : fileBrowserAccountIdsBySource[currentFileBrowserSource as RunnerFileBrowserConnectorSource] || "";
+  const activeFileBrowserAccountId = currentFileBrowserAccountId === "__default__"
+    ? ""
+    : currentFileBrowserAccountId;
   const {
     clearScheduledTask,
     scheduleEnabled,
@@ -1244,13 +1352,11 @@ export function RunnerChat({
     feedback: threadFeedback,
     submitRating: submitThreadFeedback,
     reportTarget: reportIssueTurn,
-    reportType: reportIssueType,
     reportMessage: reportIssueMessage,
     reportError: reportIssueError,
     reportSubmitting: isReportIssueSubmitting,
     openReport: openReportIssueModal,
     closeReport: closeReportIssueModal,
-    setReportType: setReportIssueType,
     setReportMessage: setReportIssueMessage,
     submitReport: submitReportIssue,
   } = useRunnerThreadFeedbackController({
@@ -1901,6 +2007,29 @@ export function RunnerChat({
   const attachmentUploadEnvironmentId = currentThreadId
     ? activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null
     : effectiveEnvironmentId || selectedEnvironment?.id || environmentId || null;
+  const uploadFeedbackFiles = useCallback(
+    async (files: File[]) => {
+      if (uploadFiles) {
+        return uploadFiles(files);
+      }
+      return Promise.all(
+        files.map((file) => uploadAttachment({
+          backendUrl: normalizedBackendUrl,
+          apiKey,
+          requestHeaders,
+          file,
+          environmentId: attachmentUploadEnvironmentId || undefined,
+        })),
+      );
+    },
+    [
+      apiKey,
+      attachmentUploadEnvironmentId,
+      normalizedBackendUrl,
+      requestHeaders,
+      uploadFiles,
+    ],
+  );
   const {
     addAttachments,
     appendFiles,
@@ -4015,16 +4144,66 @@ export function RunnerChat({
     const filename = /\.md$/i.test(safeFilename) ? safeFilename : `${safeFilename}.md`;
     const markdown = typeof prompt?.markdown === "string" ? prompt.markdown : "";
     const file = new File([markdown], filename, { type: "text/markdown" });
+    const promptId = String(prompt?.id || "").trim() || undefined;
+    const promptVersionId = String(prompt?.currentVersionId || "").trim() || undefined;
+    const promptVersionNumber = Number.isFinite(Number(prompt?.currentVersionNumber))
+      ? Number(prompt.currentVersionNumber)
+      : undefined;
     addReferenceAttachment({
       file,
       displayName: promptName,
       referenceType: "prompt",
-      promptId: String(prompt?.id || "").trim() || undefined,
-      promptVersionId: String(prompt?.currentVersionId || "").trim() || undefined,
-      promptVersionNumber: Number.isFinite(Number(prompt?.currentVersionNumber))
-        ? Number(prompt.currentVersionNumber)
-        : undefined,
+      promptId,
+      promptVersionId,
+      promptVersionNumber,
     });
+
+    const existingAttachmentIds = new Set(
+      attachments
+        .flatMap((attachment) => [
+          String(attachment.resolvedAttachment?.id || "").trim(),
+          String(attachment.sourceAttachmentId || "").trim(),
+        ])
+        .filter(Boolean),
+    );
+    const remainingCapacity = Math.max(
+      maxAttachments - attachments.length - 1,
+      0,
+    );
+    const embeddedAttachments: LocalAttachment[] =
+      parseRunnerPromptEmbeddedAttachments(markdown)
+        .filter((attachment) => !existingAttachmentIds.has(attachment.attachmentId))
+        .slice(0, remainingCapacity)
+        .map((attachment) => {
+          const supportingFile = new File([], attachment.filename, {
+            type: attachment.mimeType,
+          });
+          return {
+            id: generateRunnerClientId("prompt-file"),
+            file: supportingFile,
+            type: attachment.type,
+            source: "local",
+            promptId,
+            promptVersionId,
+            promptVersionNumber,
+            runnerAttachmentRole: "prompt_supporting_attachment",
+            // Prompt-owned images are sent with the prompt for model context,
+            // but are not independent user attachments in either the composer
+            // or the persisted turn presentation.
+            hiddenFromTurnDisplay: attachment.type === "image",
+            sourceAttachmentId: attachment.attachmentId,
+            sourceAttachmentUrl: attachment.url,
+            uploadStatus: "uploading",
+            uploadError: null,
+          };
+        });
+    addAttachments(embeddedAttachments);
+    for (const attachment of embeddedAttachments) {
+      const uploadPromise = beginAttachmentUpload(attachment);
+      if (uploadPromise) {
+        void uploadPromise.catch(() => undefined);
+      }
+    }
     closeAllInputPopups();
     window.requestAnimationFrame(() => textareaRef.current?.focus());
   }
@@ -4106,6 +4285,22 @@ export function RunnerChat({
     closeAllInputPopups();
     onOpenPromptSearch?.(handlePromptAttachmentSelect);
   }
+
+  useEffect(() => {
+    const requestToken = externalPromptAttachmentRequest?.token;
+    if (
+      requestToken === null
+      || requestToken === undefined
+      || requestToken === ""
+      || requestToken === handledExternalPromptAttachmentRequestTokenRef.current
+      || !externalPromptAttachmentRequest?.prompt
+    ) {
+      return;
+    }
+    handledExternalPromptAttachmentRequestTokenRef.current = requestToken;
+    handlePromptAttachmentSelect(externalPromptAttachmentRequest.prompt);
+    onExternalPromptAttachmentRequestHandled?.(requestToken);
+  }, [externalPromptAttachmentRequest, onExternalPromptAttachmentRequestHandled]);
 
   function handleThreadsMenuClick() {
     closeAllInputPopups();
@@ -4352,7 +4547,8 @@ export function RunnerChat({
   }
 
   function selectProject(nextProjectId: string) {
-    const project = availableProjects.find((entry) => entry.id === nextProjectId) || null;
+    const normalizedProjectId = String(nextProjectId || "").trim();
+    const project = availableProjects.find((entry) => entry.id === normalizedProjectId) || null;
     const nextEnvironmentId = getRunnerProjectEnvironmentId(project);
     if (!project || !nextEnvironmentId) {
       return;
@@ -4373,11 +4569,41 @@ export function RunnerChat({
 
   function resetSlashPopupComposer() {
     setSlashPopupView("commands");
+    setActiveSlashPopupIndex(0);
     setInputSelectionStart(0);
     clearComposerDraft({ preserveSelectedConnectors: true });
     window.requestAnimationFrame(() => {
       textareaRef.current?.focus({ preventScroll: true });
     });
+  }
+
+  function handleSlashAttachWorkspaceFilesClick() {
+    resetSlashPopupComposer();
+    openFileBrowserModal("workspace");
+  }
+
+  function handleSlashUploadFilesClick() {
+    if (attachments.length >= maxAttachments) {
+      return;
+    }
+    resetSlashPopupComposer();
+    handleUploadNewFilesClick();
+  }
+
+  function handleSlashPromptAttachmentClick() {
+    if (!onOpenPromptSearch) {
+      return;
+    }
+    resetSlashPopupComposer();
+    handlePromptsMenuClick();
+  }
+
+  function handleSlashThreadAttachmentClick() {
+    if (!onOpenThreadSearch) {
+      return;
+    }
+    resetSlashPopupComposer();
+    handleThreadsMenuClick();
   }
 
   function handleSlashFeedbackClick() {
@@ -4392,13 +4618,69 @@ export function RunnerChat({
   }
 
   function handleSlashProjectSelect(nextProjectId: string) {
-    selectProject(nextProjectId);
+    const normalizedProjectId = String(nextProjectId || "").trim();
+    const project = availableProjects.find((entry) => entry.id === normalizedProjectId) || null;
+    if (!project || !getRunnerProjectEnvironmentId(project)) {
+      return;
+    }
+    selectProject(normalizedProjectId);
     resetSlashPopupComposer();
   }
 
   function handleSlashReasoningSelect(nextReasoningEffort: RunnerReasoningEffortId) {
     selectReasoningEffort(nextReasoningEffort);
     resetSlashPopupComposer();
+  }
+
+  function handleSlashPopupItemSelect(index: number) {
+    if (slashPopupView === "commands") {
+      if (index === 0) {
+        handleSlashFeedbackClick();
+        return;
+      }
+      if (index === 1) {
+        setSlashPopupView("projects");
+        setActiveSlashPopupIndex(0);
+        return;
+      }
+      if (index === 2) {
+        setSlashPopupView("reasoning");
+        setActiveSlashPopupIndex(0);
+        return;
+      }
+      if (index === 3) {
+        handleSlashAttachWorkspaceFilesClick();
+        return;
+      }
+      if (index === 4) {
+        handleSlashUploadFilesClick();
+        return;
+      }
+      if (index === 5) {
+        handleSlashPromptAttachmentClick();
+        return;
+      }
+      if (index === 6) {
+        handleSlashThreadAttachmentClick();
+        return;
+      }
+      const item = filteredSlashCommandItems[index - RUNNER_SLASH_CORE_ACTION_COUNT];
+      if (!item) return;
+      item.stage();
+      window.requestAnimationFrame(() => textareaRef.current?.focus({ preventScroll: true }));
+      return;
+    }
+    if (slashPopupView === "projects") {
+      const project = orderedProjects[index];
+      if (project) {
+        handleSlashProjectSelect(project.id);
+      }
+      return;
+    }
+    const reasoningOption = RUNNER_REASONING_EFFORT_OPTIONS[index];
+    if (reasoningOption) {
+      handleSlashReasoningSelect(reasoningOption.id);
+    }
   }
 
   function handleWorkspaceFileBrowserEnvironmentSelect(nextEnvironmentId: string) {
@@ -4412,6 +4694,38 @@ export function RunnerChat({
   function switchFileBrowserSource(nextSource: RunnerFileBrowserSource) {
     resetFileBrowserSourceNavigation(nextSource);
     resetFileBrowserSourceData(nextSource);
+  }
+
+  function handleFileBrowserAccountChange(
+    source: RunnerFileBrowserConnectorSource,
+    nextAccountId: string,
+  ) {
+    const normalizedAccountId = String(nextAccountId || "").trim();
+    setFileBrowserAccountOverrides((current) => ({
+      ...current,
+      [source]: normalizedAccountId || "__default__",
+    }));
+    const config =
+      source === "google-drive"
+        ? googleDriveConfig
+        : source === "one-drive"
+          ? oneDriveConfig
+          : source === "notion"
+            ? notionConfig
+            : githubConfig;
+    config?.onAccountChange?.(normalizedAccountId);
+    setFileBrowserPreviewId(null);
+    if (source === "google-drive") {
+      setSelectedGoogleDriveFileIds([]);
+    } else if (source === "one-drive") {
+      setSelectedOneDriveFileIds([]);
+    } else if (source === "github") {
+      setSelectedGithubFileIds([]);
+    } else {
+      setSelectedNotionDatabaseId("");
+    }
+    resetFileBrowserSourceData(source);
+    resetFileBrowserSourceNavigation(source);
   }
 
   function navigateFileBrowserToBreadcrumb(index: number) {
@@ -4962,6 +5276,7 @@ export function RunnerChat({
   function applyComposerInputValue(nextValue: string, selectionStart: number) {
     setInputSelectionStart(selectionStart);
     setSlashPopupView("commands");
+    setActiveSlashPopupIndex(0);
     setDismissedConnectorMentionKey("");
     if (tryAutoStageInput(nextValue, {
       agentCreation: enableAgentCreationCommand,
@@ -5022,6 +5337,22 @@ export function RunnerChat({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (showSlashCommandPopup && slashPopupItemCount > 0) {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        const direction = event.key === "ArrowDown" ? 1 : -1;
+        setActiveSlashPopupIndex((currentIndex) => (
+          (currentIndex + direction + slashPopupItemCount) % slashPopupItemCount
+        ));
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        handleSlashPopupItemSelect(activeSlashPopupIndex);
+        return;
+      }
+    }
     if (
       showConnectorMentionPopup
       && connectorMentionInputState
@@ -5519,6 +5850,19 @@ export function RunnerChat({
     () => orderOptionsWithPinnedTop(availableProjects, selectedProjectId || null),
     [availableProjects, selectedProjectId]
   );
+  const slashPopupItemCount = slashPopupView === "commands"
+    ? RUNNER_SLASH_CORE_ACTION_COUNT + filteredSlashCommandItems.length
+    : slashPopupView === "projects"
+      ? orderedProjects.length
+      : RUNNER_REASONING_EFFORT_OPTIONS.length;
+  useEffect(() => {
+    setActiveSlashPopupIndex(0);
+  }, [slashCommandInputState?.query, slashPopupView]);
+  useEffect(() => {
+    setActiveSlashPopupIndex((currentIndex) => slashPopupItemCount > 0
+      ? Math.min(currentIndex, slashPopupItemCount - 1)
+      : 0);
+  }, [slashPopupItemCount]);
   const activeWorkspaceEnvironmentId = effectiveEnvironmentId || selectedEnvironment?.id || environmentId || "";
   useEffect(() => {
     if (availableAgentPopupModes.includes(agentPopupMode)) {
@@ -5541,6 +5885,9 @@ export function RunnerChat({
   const googleDriveConnected = googleDriveConfig?.connected ?? false;
   const oneDriveConnected = oneDriveConfig?.connected ?? false;
   const composerPlanDisplay = getRunnerComposerPlanDisplay(composerPlanTierId);
+  const visibleComposerAttachments = attachments.filter(
+    (attachment) => !attachment.hiddenFromTurnDisplay,
+  );
   const ComposerPlanIcon = composerPlanDisplay.Icon;
   const composerOrganizationOptions = useMemo<RunnerChatOption[]>(() => {
     const seenOrganizationIds = new Set<string>();
@@ -5581,6 +5928,7 @@ export function RunnerChat({
     setSelectedBranchByRepoFullName:
       setGithubSelectedBranchByRepoFullName,
   } = useRunnerGithubBranchSelection({
+    accountId: fileBrowserAccountIdsBySource.github === "__default__" ? "" : fileBrowserAccountIdsBySource.github,
     defaultBranch: defaultGithubBranchFromContext,
     fetchBranches: githubConfig?.fetchBranches,
     onError: setGithubBrowserError,
@@ -5600,11 +5948,14 @@ export function RunnerChat({
     closeInputPopups: closeAllInputPopups,
     getGithubSelectedBranch: getGithubSelectedBranchForRepo,
     githubConfig,
+    githubAccountId: fileBrowserAccountIdsBySource.github === "__default__" ? "" : fileBrowserAccountIdsBySource.github,
     githubItems,
     googleDriveConfig,
+    googleDriveAccountId: fileBrowserAccountIdsBySource["google-drive"] === "__default__" ? "" : fileBrowserAccountIdsBySource["google-drive"],
     googleDriveItems,
     maxAttachments,
     oneDriveConfig,
+    oneDriveAccountId: fileBrowserAccountIdsBySource["one-drive"] === "__default__" ? "" : fileBrowserAccountIdsBySource["one-drive"],
     oneDriveItems,
     onError: setInlineError,
     onWorkspaceError: setWorkspaceBrowserError,
@@ -5630,6 +5981,7 @@ export function RunnerChat({
   } = useRunnerFileBrowserSourceLoaders({
     apiKey,
     backendUrl: normalizedBackendUrl,
+    accountId: activeFileBrowserAccountId,
     currentFolderId: currentFileBrowserFolderId,
     currentSource: currentFileBrowserSource,
     fetchGithubItems: githubConfig?.fetchItems,
@@ -5807,6 +6159,7 @@ export function RunnerChat({
   } = useRunnerFileBrowserPreview({
     apiKey,
     backendUrl: normalizedBackendUrl,
+    accountId: activeFileBrowserAccountId,
     environmentId: activeWorkspaceEnvironmentId,
     fetchConnectorContent: fileBrowserConnectorFetchFileContent,
     item: previewFileBrowserItem,
@@ -5900,54 +6253,79 @@ export function RunnerChat({
     previewedDocumentAttachment?.workspacePath || previewedDocumentAttachment?.id || ""
   );
   const previewedDocumentOpenUrl = getDocumentPreviewOpenUrl(previewedDocumentAttachment);
+  const documentPreviewHeaderTitleActions = previewedDocumentAttachment ? (
+    <PlatformResourceActionsMenu
+      open={documentPreviewActionMenuOpen}
+      onOpenChange={setDocumentPreviewActionMenuOpen}
+      resourceLabel="File"
+      width={300}
+      maxWidth="min(300px, calc(100vw - 16px))"
+      popupClassName="tb-document-preview-resource-actions-menu"
+    >
+      <PlatformResourceActionsInformation
+        resourceLabel="File"
+        items={[
+          {
+            id: "name",
+            label: "Name",
+            value: previewedDocumentAttachment.displayName || previewedDocumentAttachment.filename,
+            title: previewedDocumentAttachment.displayName || previewedDocumentAttachment.filename,
+          },
+          {
+            id: "type",
+            label: "Type",
+            value: previewedDocumentAttachment.mimeType || "File",
+          },
+          previewedDocumentWorkspacePath
+            ? {
+                id: "path",
+                label: "Path",
+                value: `/workspace/${previewedDocumentWorkspacePath}`,
+                title: `/workspace/${previewedDocumentWorkspacePath}`,
+                monospace: true,
+                copyValue: `/workspace/${previewedDocumentWorkspacePath}`,
+                copyAriaLabel: "Copy file path",
+              }
+            : null,
+        ].filter(Boolean) as Array<{
+          id: string;
+          label: string;
+          value: string;
+          title?: string;
+          monospace?: boolean;
+          copyValue?: string;
+          copyAriaLabel?: string;
+        }>}
+      />
+      <PlatformResourceActionsDivider />
+      {previewedDocumentOpenUrl ? (
+        <PlatformResourceActionMenuItem
+          icon={<LucideExternalLink width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
+          label="Open in new tab"
+          onClick={() => {
+            setDocumentPreviewActionMenuOpen(false);
+            if (typeof window !== "undefined") {
+              window.open(previewedDocumentOpenUrl, "_blank", "noopener,noreferrer");
+            }
+          }}
+        />
+      ) : null}
+      <PlatformResourceActionMenuItem
+        icon={<LucideCopy width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
+        label="Copy filename"
+        onClick={() => copyDocumentPreviewValue(previewedDocumentAttachment.filename)}
+      />
+      {previewedDocumentWorkspacePath ? (
+        <PlatformResourceActionMenuItem
+          icon={<LucideCopy width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
+          label="Copy path"
+          onClick={() => copyDocumentPreviewValue(`/workspace/${previewedDocumentWorkspacePath}`)}
+        />
+      ) : null}
+    </PlatformResourceActionsMenu>
+  ) : null;
   const documentPreviewHeaderActions = previewedDocumentAttachment ? (
     <>
-      <span className="tb-document-preview-actions-shell" ref={documentPreviewActionMenuRef}>
-        <button
-          type="button"
-          className="tb-attachment-preview-drawer-action"
-          onClick={() => setDocumentPreviewActionMenuOpen((current) => !current)}
-          aria-label="File actions"
-          aria-expanded={documentPreviewActionMenuOpen}
-          title="File actions"
-        >
-          <LucideEllipsis className="tb-attachment-preview-drawer-action-icon" strokeWidth={1.9} />
-        </button>
-        {documentPreviewActionMenuOpen ? (
-          <PlatformPopupSurface className="tb-document-preview-actions-menu" role="menu">
-            {previewedDocumentOpenUrl ? (
-              <a
-                className="tb-document-preview-actions-menu-item"
-                href={previewedDocumentOpenUrl}
-                target="_blank"
-                rel="noreferrer"
-                role="menuitem"
-                onClick={() => setDocumentPreviewActionMenuOpen(false)}
-              >
-                Open in new tab
-              </a>
-            ) : null}
-            <button
-              type="button"
-              className="tb-document-preview-actions-menu-item"
-              role="menuitem"
-              onClick={() => copyDocumentPreviewValue(previewedDocumentAttachment.filename)}
-            >
-              Copy filename
-            </button>
-            {previewedDocumentWorkspacePath ? (
-              <button
-                type="button"
-                className="tb-document-preview-actions-menu-item"
-                role="menuitem"
-                onClick={() => copyDocumentPreviewValue(`/workspace/${previewedDocumentWorkspacePath}`)}
-              >
-                Copy path
-              </button>
-            ) : null}
-          </PlatformPopupSurface>
-        ) : null}
-      </span>
       <button
         type="button"
         className="tb-attachment-preview-drawer-action tb-document-preview-maximize-button"
@@ -5974,6 +6352,7 @@ export function RunnerChat({
       surface={hasPortalDocumentPreview}
       onClose={closeDocumentAttachmentPreview}
       onResizeStart={startDocumentPreviewResize}
+      headerTitleActions={documentPreviewHeaderTitleActions}
       headerActionsAfterPreviewToggle={documentPreviewHeaderActions}
       showResizeHandle={!documentPreviewPortalTarget}
       enableImageWheelZoom
@@ -6187,7 +6566,11 @@ export function RunnerChat({
       const shortcutKey = event.key.toLowerCase();
       if (shortcutKey === ATTACH_FILES_SHORTCUT_KEY) {
         event.preventDefault();
-        setActiveInputPopup("attach-files");
+        if (showSlashCommandPopup) {
+          handleSlashAttachWorkspaceFilesClick();
+        } else {
+          openFileBrowserModal("workspace");
+        }
         return;
       }
       if (shortcutKey === SCHEDULE_SHORTCUT_KEY) {
@@ -6204,7 +6587,14 @@ export function RunnerChat({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [disabled, isPreparingRun, onOpenPromptSearch, showFileBrowserModal, useComputerAgentsMode]);
+  }, [
+    disabled,
+    isPreparingRun,
+    onOpenPromptSearch,
+    showFileBrowserModal,
+    showSlashCommandPopup,
+    useComputerAgentsMode,
+  ]);
 
   const hasCustomEmptyState = turns.length === 0 && emptyState !== undefined && emptyState !== null;
   const shouldRenderInlineComposerWithEmptyState =
@@ -6814,6 +7204,7 @@ export function RunnerChat({
                               authenticatedFetchHeaders={authenticatedAttachmentFetchHeaders}
                               backendUrl={normalizedBackendUrl}
                               onPreview={toggleDocumentAttachmentPreview}
+                              variant="message"
                             />
                           ))}
                         </div>
@@ -7160,14 +7551,18 @@ export function RunnerChat({
                   className="tb-popup-menu-slash"
                   placement={hasCurrentThread ? "top" : "bottom"}
                   ariaLabel="Slash commands"
+                  activeIndex={activeSlashPopupIndex}
                   keyboardNavigation
                   header={slashPopupView === "commands" ? (
                     <div className="tb-composer-suggestion-popup-header tb-popup-menu-slash-header">
                       <div className="tb-popup-menu-slash-actions" role="group" aria-label="Composer actions">
                         <button
                           type="button"
-                          className="tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action"
+                          role="option"
+                          aria-selected={activeSlashPopupIndex === 0}
+                          className={`tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action ${activeSlashPopupIndex === 0 ? "is-active" : ""}`.trim()}
                           onMouseDown={(event) => event.preventDefault()}
+                          onMouseEnter={() => setActiveSlashPopupIndex(0)}
                           onClick={handleSlashFeedbackClick}
                         >
                           <LucideMessageSquareText className="tb-popup-icon" strokeWidth={1.75} />
@@ -7175,21 +7570,89 @@ export function RunnerChat({
                         </button>
                         <button
                           type="button"
-                          className="tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action"
+                          role="option"
+                          aria-selected={activeSlashPopupIndex === 1}
+                          className={`tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action ${activeSlashPopupIndex === 1 ? "is-active" : ""}`.trim()}
                           onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => setSlashPopupView("projects")}
+                          onMouseEnter={() => setActiveSlashPopupIndex(1)}
+                          onClick={() => {
+                            setSlashPopupView("projects");
+                            setActiveSlashPopupIndex(0);
+                          }}
                         >
                           <LucideFolderOpen className="tb-popup-icon" strokeWidth={1.75} />
                           <span className="tb-popup-label">Work in Project</span>
                         </button>
                         <button
                           type="button"
-                          className="tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action"
+                          role="option"
+                          aria-selected={activeSlashPopupIndex === 2}
+                          className={`tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action ${activeSlashPopupIndex === 2 ? "is-active" : ""}`.trim()}
                           onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => setSlashPopupView("reasoning")}
+                          onMouseEnter={() => setActiveSlashPopupIndex(2)}
+                          onClick={() => {
+                            setSlashPopupView("reasoning");
+                            setActiveSlashPopupIndex(0);
+                          }}
                         >
                           <LucideBrain className="tb-popup-icon" strokeWidth={1.75} />
                           <span className="tb-popup-label">Reasoning</span>
+                        </button>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={activeSlashPopupIndex === 3}
+                          className={`tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action ${activeSlashPopupIndex === 3 ? "is-active" : ""}`.trim()}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onMouseEnter={() => setActiveSlashPopupIndex(3)}
+                          onClick={handleSlashAttachWorkspaceFilesClick}
+                        >
+                          <LucideFolderOpen className="tb-popup-icon" strokeWidth={1.75} />
+                          <span className="tb-popup-label">Attach Files from Workspace</span>
+                          <span className="tb-popup-shortcut" aria-label="Keyboard shortcut Command U">
+                            <span className="tb-popup-shortcut-key">⌘</span>
+                            <span className="tb-popup-shortcut-key tb-popup-shortcut-key-letter">{ATTACH_FILES_SHORTCUT_KEY.toUpperCase()}</span>
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={activeSlashPopupIndex === 4}
+                          className={`tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action ${activeSlashPopupIndex === 4 ? "is-active" : ""}`.trim()}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onMouseEnter={() => setActiveSlashPopupIndex(4)}
+                          onClick={handleSlashUploadFilesClick}
+                        >
+                          <IconPaperclip className="tb-popup-icon" />
+                          <span className="tb-popup-label">Upload Files</span>
+                        </button>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={activeSlashPopupIndex === 5}
+                          className={`tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action ${activeSlashPopupIndex === 5 ? "is-active" : ""}`.trim()}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onMouseEnter={() => setActiveSlashPopupIndex(5)}
+                          onClick={handleSlashPromptAttachmentClick}
+                        >
+                          <LucideMessageSquareText className="tb-popup-icon" strokeWidth={1.75} />
+                          <span className="tb-popup-label">Attach Prompt</span>
+                          <span className="tb-popup-shortcut" aria-label="Keyboard shortcut Command P">
+                            <span className="tb-popup-shortcut-key">⌘</span>
+                            <span className="tb-popup-shortcut-key tb-popup-shortcut-key-letter">{PROMPTS_SHORTCUT_KEY.toUpperCase()}</span>
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={activeSlashPopupIndex === 6}
+                          className={`tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action ${activeSlashPopupIndex === 6 ? "is-active" : ""}`.trim()}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onMouseEnter={() => setActiveSlashPopupIndex(6)}
+                          onClick={handleSlashThreadAttachmentClick}
+                        >
+                          <LucideMessageSquare className="tb-popup-icon" strokeWidth={1.75} />
+                          <span className="tb-popup-label">Attach Thread</span>
                         </button>
                       </div>
                       <div className="tb-popup-menu-section-label">Capabilities</div>
@@ -7199,8 +7662,12 @@ export function RunnerChat({
                       <button
                         type="button"
                         className="tb-popup-menu-slash-back"
+                        data-popup-navigation-ignore
                         onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => setSlashPopupView("commands")}
+                        onClick={() => {
+                          setSlashPopupView("commands");
+                          setActiveSlashPopupIndex(0);
+                        }}
                       >
                         <IconChevronLeft className="tb-popup-icon" />
                         <span>{slashPopupView === "projects" ? "Projects" : "Reasoning"}</span>
@@ -7213,19 +7680,19 @@ export function RunnerChat({
                     </div>
                   ) : null}
                 >
-                  {slashPopupView === "commands" ? filteredSlashCommandItems.map((item) => (
+                  {slashPopupView === "commands" ? filteredSlashCommandItems.map((item, index) => (
                       <button
                         key={item.id}
                         type="button"
-                        className="tb-popup-row tb-popup-row-core-action"
+                        role="option"
+                        aria-selected={activeSlashPopupIndex === index + RUNNER_SLASH_CORE_ACTION_COUNT}
+                        className={`tb-popup-row tb-popup-row-core-action ${activeSlashPopupIndex === index + RUNNER_SLASH_CORE_ACTION_COUNT ? "is-active" : ""}`.trim()}
                         onMouseDown={(event) => {
                           event.preventDefault();
                         }}
+                        onMouseEnter={() => setActiveSlashPopupIndex(index + RUNNER_SLASH_CORE_ACTION_COUNT)}
                         onClick={() => {
-                          item.stage();
-                          window.requestAnimationFrame(() => {
-                            textareaRef.current?.focus();
-                          });
+                          handleSlashPopupItemSelect(index + RUNNER_SLASH_CORE_ACTION_COUNT);
                         }}
                       >
                         {item.icon}
@@ -7233,17 +7700,23 @@ export function RunnerChat({
                         <span className="tb-popup-value">{item.description}</span>
                       </button>
                     )) : slashPopupView === "projects" ? (
-                      orderedProjects.length > 0 ? orderedProjects.map((project) => {
+                      orderedProjects.length > 0 ? orderedProjects.map((project, index) => {
                         const projectEnvironmentId = getRunnerProjectEnvironmentId(project);
                         const projectEnvironment = orderedEnvironments.find((environment) => environment.id === projectEnvironmentId);
-                        const isSelected = selectedProjectId === project.id;
+                        const isSelected = effectiveWorkspaceSelectorMode === "projects" && selectedProjectId === project.id;
                         return (
                           <button
                             key={project.id}
                             type="button"
-                            className={`tb-popup-row tb-popup-row-core-action ${isSelected ? "is-active" : ""}`.trim()}
+                            role="option"
+                            aria-selected={activeSlashPopupIndex === index}
+                            aria-disabled={!projectEnvironmentId}
+                            disabled={!projectEnvironmentId}
+                            title={!projectEnvironmentId ? "This project has no linked computer." : project.name}
+                            className={`tb-popup-row tb-popup-row-core-action ${activeSlashPopupIndex === index ? "is-active" : ""}`.trim()}
                             onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => handleSlashProjectSelect(project.id)}
+                            onMouseEnter={() => setActiveSlashPopupIndex(index)}
+                            onClick={() => handleSlashPopupItemSelect(index)}
                           >
                             <LucideFolderOpen className="tb-popup-icon" strokeWidth={1.75} />
                             <span className="tb-popup-label">{project.name}</span>
@@ -7257,15 +7730,18 @@ export function RunnerChat({
                         </div>
                       )
                     ) : (
-                      RUNNER_REASONING_EFFORT_OPTIONS.map((option) => {
+                      RUNNER_REASONING_EFFORT_OPTIONS.map((option, optionIndex) => {
                         const isSelected = normalizeRunnerReasoningEffort(effectiveReasoningEffort) === option.id;
                         return (
                           <button
                             key={option.id}
                             type="button"
-                            className={`tb-popup-row tb-popup-row-core-action ${isSelected ? "is-active" : ""}`.trim()}
+                            role="option"
+                            aria-selected={activeSlashPopupIndex === optionIndex}
+                            className={`tb-popup-row tb-popup-row-core-action ${activeSlashPopupIndex === optionIndex ? "is-active" : ""}`.trim()}
                             onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => handleSlashReasoningSelect(option.id)}
+                            onMouseEnter={() => setActiveSlashPopupIndex(optionIndex)}
+                            onClick={() => handleSlashPopupItemSelect(optionIndex)}
                           >
                             <LucideBrain className="tb-popup-icon" strokeWidth={1.75} />
                             <span className="tb-popup-label">{option.label}</span>
@@ -7367,16 +7843,33 @@ export function RunnerChat({
                 </PlatformPopupSurface>
               ) : null}
 
-              {attachments.length > 0 ? (
+              {visibleComposerAttachments.length > 0 ? (
                 <div className="runner-attachments">
-                  {attachments.map((attachment) => (
+                  {visibleComposerAttachments.map((attachment) => (
                     <RunnerAttachmentPreviewChip
                       key={attachment.id}
                       attachment={attachment}
                       authenticatedFetchHeaders={authenticatedAttachmentFetchHeaders}
                       backendUrl={normalizedBackendUrl}
+                      variant="message"
                       removable
-                      onRemove={() => removeAttachment(attachment.id)}
+                      onRemove={() => {
+                        removeAttachment(attachment.id);
+                        if (
+                          attachment.referenceType === "prompt"
+                          && attachment.promptId
+                        ) {
+                          attachments
+                            .filter(
+                              (relatedAttachment) =>
+                                relatedAttachment.promptId === attachment.promptId
+                                && relatedAttachment.runnerAttachmentRole === "prompt_supporting_attachment",
+                            )
+                            .forEach((relatedAttachment) => {
+                              removeAttachment(relatedAttachment.id);
+                            });
+                        }
+                      }}
                     />
                   ))}
                 </div>
@@ -8217,12 +8710,11 @@ export function RunnerChat({
 
       <RunnerFeedbackDialog
         open={Boolean(reportIssueTurn)}
-        type={reportIssueType}
         message={reportIssueMessage}
         error={reportIssueError}
         submitting={isReportIssueSubmitting}
-        onTypeChange={setReportIssueType}
         onMessageChange={setReportIssueMessage}
+        onUploadFiles={uploadFeedbackFiles}
         onSubmit={() => {
           void submitReportIssue();
         }}
@@ -8285,21 +8777,33 @@ export function RunnerChat({
         connections={{
           "google-drive": {
             connected: googleDriveConnected,
+            accounts: fileBrowserAccountOptionsBySource["google-drive"],
+            selectedAccountId: fileBrowserAccountIdsBySource["google-drive"],
+            onAccountChange: (accountId) => handleFileBrowserAccountChange("google-drive", accountId),
             onConnect: googleDriveConfig?.onConnect,
             onDisconnect: googleDriveConfig?.onDisconnect,
           },
           notion: {
             connected: notionConnected,
+            accounts: fileBrowserAccountOptionsBySource.notion,
+            selectedAccountId: fileBrowserAccountIdsBySource.notion,
+            onAccountChange: (accountId) => handleFileBrowserAccountChange("notion", accountId),
             onConnect: notionConfig?.onConnect,
             onDisconnect: notionConfig?.onDisconnect,
           },
           "one-drive": {
             connected: oneDriveConnected,
+            accounts: fileBrowserAccountOptionsBySource["one-drive"],
+            selectedAccountId: fileBrowserAccountIdsBySource["one-drive"],
+            onAccountChange: (accountId) => handleFileBrowserAccountChange("one-drive", accountId),
             onConnect: oneDriveConfig?.onConnect,
             onDisconnect: oneDriveConfig?.onDisconnect,
           },
           github: {
             connected: githubConnected,
+            accounts: fileBrowserAccountOptionsBySource.github,
+            selectedAccountId: fileBrowserAccountIdsBySource.github,
+            onAccountChange: (accountId) => handleFileBrowserAccountChange("github", accountId),
             onConnect: githubConfig?.onConnect,
             onDisconnect: githubConfig?.onDisconnect,
           },
@@ -8350,7 +8854,14 @@ export function RunnerChat({
 	        items={filteredFileBrowserItems}
 	        renderItem={(item) => (
             <RunnerFileBrowserItem
-              key={buildGithubEffectiveRootItem(item).id}
+              key={
+                currentFileBrowserSource === "github" &&
+                item.isFolder &&
+                !item.parentId &&
+                item.repoFullName
+                  ? `github-repository:${item.repoFullName}`
+                  : buildGithubEffectiveRootItem(item).id
+              }
               allItems={fileBrowserItems}
               backendUrl={normalizedBackendUrl}
               branchLoadingRepoFullNames={githubBranchLoadingRepoFullNames}

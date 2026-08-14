@@ -81,6 +81,7 @@
 .platform-instructions-editor__toolbar-menu { display: inline-flex; flex: 0 0 auto; }
 .platform-instructions-editor__toolbar-menu-trigger { width: auto; min-width: 42px; padding: 0 7px; gap: 3px; }
 .platform-instructions-editor__toolbar-menu-trigger.is-style-trigger { min-width: 58px; gap: 5px; }
+.platform-instructions-editor__toolbar-menu-trigger.is-text-selection-context-trigger { display: none; }
 .platform-instructions-editor__toolbar-menu-label { font-size: 12px; line-height: 1; font-weight: 400; }
 .platform-instructions-editor__toolbar-popup { padding: 4px 0; }
 .platform-instructions-editor__toolbar-popup-option { min-height: 32px; }

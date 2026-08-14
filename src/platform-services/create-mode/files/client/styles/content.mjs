@@ -363,6 +363,36 @@ export const FILES_CONTENT_CSS = `
         text-align: right;
       }
 
+      .playground-files-connector-branch-meta {
+        min-width: 180px;
+        justify-content: flex-end;
+        gap: 0;
+      }
+
+      .playground-files-connector-branch-selector {
+        min-width: 172px;
+        display: inline-flex;
+        justify-content: flex-end;
+      }
+
+      .playground-files-connector-branch-trigger {
+        width: 172px;
+        min-height: 30px;
+        padding: 0 8px;
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.72);
+        justify-content: space-between;
+      }
+
+      .playground-files-connector-branch-trigger:hover:not(:disabled),
+      .playground-files-connector-branch-trigger:focus-visible {
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-files-connector-branch-popup {
+        min-width: 172px;
+      }
+
       .playground-files-entry-options-button {
         width: 28px;
         height: 28px;

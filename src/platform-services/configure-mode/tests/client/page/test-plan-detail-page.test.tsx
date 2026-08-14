@@ -212,7 +212,7 @@ describe("TestPlanDetailPage", () => {
     expect(screen.getByText("plan-1")).not.toBeNull();
 
     fireEvent.click(screen.getByRole("menuitem", { name: "Share" }));
-    expect(screen.getByRole("dialog", { name: "Share test with team" })).not.toBeNull();
+    expect(screen.getByRole("dialog", { name: "Share test with teams" })).not.toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Test actions" }));
@@ -243,7 +243,7 @@ describe("TestPlanDetailPage", () => {
       metaKey: true,
       altKey: true,
     });
-    expect(screen.getByRole("dialog", { name: "Share test with team" })).not.toBeNull();
+    expect(screen.getByRole("dialog", { name: "Share test with teams" })).not.toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
     fireEvent.keyDown(document, {
@@ -265,17 +265,19 @@ describe("TestPlanDetailPage", () => {
     expect(screen.getByRole("alertdialog", { name: "Delete Test?" })).not.toBeNull();
   });
 
-  it("persists a team resource share from the shared actions modal", async () => {
+  it("persists multiple team resource shares from one shared actions modal submission", async () => {
     document.body.insertAdjacentHTML(
       "beforeend",
       '<span id="test-share-title-actions"></span>',
     );
-    const addTeamShare = vi.fn().mockResolvedValue({ id: "share-1" });
+    const addTeamShare = vi.fn().mockImplementation(async (teamId: string) => ({
+      id: teamId === "team-1" ? "share-1" : "share-2",
+    }));
     const updatePlan = vi.fn().mockResolvedValue({
       ...plan,
       metadata: {
-        sharedTeamIds: ["team-1"],
-        teamAccessShareIds: { "team-1": "share-1" },
+        sharedTeamIds: ["team-1", "team-2"],
+        teamAccessShareIds: { "team-1": "share-1", "team-2": "share-2" },
       },
     });
     const onPlanChange = vi.fn();
@@ -289,6 +291,7 @@ describe("TestPlanDetailPage", () => {
         environments={[]}
         workspaceTeams={[
           { id: "team-1", name: "Platform" },
+          { id: "team-2", name: "Security" },
         ]}
         onWorkspaceTeamsRequest={onWorkspaceTeamsRequest}
         titleActionsPortalId="test-share-title-actions"
@@ -304,8 +307,9 @@ describe("TestPlanDetailPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Test actions" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Share" }));
     expect(onWorkspaceTeamsRequest).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("radio", { name: /Platform Admin/ })).not.toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Share" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Select Platform/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Select Security/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Share with 2 Teams" }));
 
     await waitFor(() => {
       expect(addTeamShare).toHaveBeenCalledWith(
@@ -313,12 +317,17 @@ describe("TestPlanDetailPage", () => {
         "plan-1",
         expect.objectContaining({ permissionSets: expect.any(Object) }),
       );
+      expect(addTeamShare).toHaveBeenCalledWith(
+        "team-2",
+        "plan-1",
+        expect.objectContaining({ permissionSets: expect.any(Object) }),
+      );
       expect(updatePlan).toHaveBeenCalledWith(
         "plan-1",
         expect.objectContaining({
           metadata: expect.objectContaining({
-            sharedTeamIds: ["team-1"],
-            teamAccessShareIds: { "team-1": "share-1" },
+            sharedTeamIds: ["team-1", "team-2"],
+            teamAccessShareIds: { "team-1": "share-1", "team-2": "share-2" },
           }),
         }),
       );
@@ -326,7 +335,7 @@ describe("TestPlanDetailPage", () => {
     });
   });
 
-  it("loads teams on demand and selects the first manageable result", async () => {
+  it("loads teams on demand and enables sharing after a team is selected", async () => {
     document.body.insertAdjacentHTML(
       "beforeend",
       '<span id="test-delayed-share-title-actions"></span>',
@@ -373,12 +382,13 @@ describe("TestPlanDetailPage", () => {
       />,
     );
 
-    const teamRadio = await screen.findByRole("radio", { name: /Platform Admin/ });
-    await waitFor(() => expect((teamRadio as HTMLInputElement).checked).toBe(true));
+    const teamCheckbox = await screen.findByRole("checkbox", { name: /Select Platform/ });
     expect(
-      teamRadio.parentElement?.querySelector('img[src="/img/team-platform.webp"]'),
+      teamCheckbox.parentElement?.querySelector('img[src="/img/team-platform.webp"]'),
     ).not.toBeNull();
-    expect((screen.getByRole("button", { name: "Share" }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByRole("button", { name: "Share with 0 Teams" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(teamCheckbox);
+    expect((screen.getByRole("button", { name: "Share with 1 Team" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("renames and deletes a test through the resource actions", async () => {

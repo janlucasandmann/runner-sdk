@@ -26,7 +26,9 @@ assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onOpenRunTechnicalDetails/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-tests-section-controls/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /selectedTestCaseName/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /Raw Configuration/);
-assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /Technical Details/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Details"/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /const isRunLevel = testsPageMode === "run"/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /if \(!isRunLevel\)/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-tests-title-actions/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /versionsDrawerPortalId/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onVersionsSidebarOpenChange/);
@@ -227,6 +229,14 @@ assert.match(
   /\.tests-raw-configuration-monaco \.monaco-editor-background,[\s\S]*?background:\s*#000\s*!important/,
 );
 assert.doesNotMatch(PLAYGROUND_TESTS_CSS, /\.tests-advanced-definition/);
+assert.match(
+  PLAYGROUND_TESTS_CSS,
+  /\.tests-settings-page \.tests-evidence-settings-section\s*\{[\s\S]*?padding:\s*10px;[\s\S]*?border:\s*1px solid rgba\(255, 255, 255, 0\.075\);[\s\S]*?border-radius:\s*15px;[\s\S]*?background:\s*rgba\(255, 255, 255, 0\.075\);/,
+);
+assert.match(
+  PLAYGROUND_TESTS_CSS,
+  /\.tests-evidence-settings-section \.platform-service-detail-page__property\s*\{\s*background:\s*transparent;/,
+);
 
 const runTechnicalDetailsSource = await fs.readFile(
   new URL("./client/page/test-run-technical-details-page.tsx", import.meta.url),
@@ -240,6 +250,7 @@ assert.match(runTechnicalDetailsSource, /label: "JSON"/);
 assert.match(runTechnicalDetailsSource, /PlatformMonacoCodeEditor/);
 assert.match(runTechnicalDetailsSource, /readOnly/);
 assert.match(runTechnicalDetailsSource, /language="json"/);
+assert.doesNotMatch(runTechnicalDetailsSource, /bracketPairColorization|bracketPairs/);
 
 const caseDetailSource = await fs.readFile(
   new URL("./client/page/test-case-detail-page.tsx", import.meta.url),

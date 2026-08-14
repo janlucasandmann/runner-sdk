@@ -93,8 +93,11 @@ for every production leaf module.
 - `use-file-drop-controller.ts`: screen and popup drop-target state, browser
   drag lifecycle, and file delivery.
 - `use-attachment-controller.ts`: local attachment ownership, preview cleanup,
-  upload and GitHub-preparation deduplication, turn-state mirroring, and
-  execution payload resolution.
+  trusted saved-prompt asset materialization, upload and GitHub-preparation
+  deduplication, turn-state mirroring, and execution payload resolution. Prompt
+  images and files are never treated as executable attachments until the
+  controller has copied their authenticated bytes through the normal durable
+  upload path for the target run environment.
 - `use-fork-configuration-controller.ts`: fork-dialog state, environment
   defaults, open/reset/cancel transitions, copy-mode derivation, and popup
   lifecycle.

@@ -152,6 +152,7 @@
           const privateThreadIdsRef = useRef(new Set());
           const [pendingThreadRunRequest, setPendingThreadRunRequest] = useState(null);
           const [pendingThreadDocumentPreviewRequest, setPendingThreadDocumentPreviewRequest] = useState(null);
+          const [pendingThreadPromptAttachmentRequest, setPendingThreadPromptAttachmentRequest] = useState(null);
           const [threadTaskPreviewOverrides, setThreadTaskPreviewOverrides] = useState({});
           const [threadProjectRecordsById, setThreadProjectRecordsById] = useState({});
           const [threadProjectContextById, setThreadProjectContextById] = useState({});
@@ -436,6 +437,8 @@
             promptId: "",
             versionNumber: 0,
             versionQualifier: "",
+            overviewScope: "all",
+            onOverviewScopeChange: null,
           });
           const [toolsPromptsBackRequestToken, setToolsPromptsBackRequestToken] = useState(0);
           const [resourcesHeaderState, setResourcesHeaderState] = useState({
@@ -3725,8 +3728,20 @@
             }
           }
   
-          async function handleGoogleDriveFetchItems(folderId) {
-            const response = await fetch("/api/aios/google-drive/files?folderId=" + encodeURIComponent(folderId), {
+          function withConnectorCredentialId(url, accountId) {
+            const normalizedAccountId = String(accountId || "").trim();
+            if (!normalizedAccountId) {
+              return url;
+            }
+            const separator = String(url).includes("?") ? "&" : "?";
+            return String(url) + separator + "credentialId=" + encodeURIComponent(normalizedAccountId);
+          }
+
+          async function handleGoogleDriveFetchItems(folderId, options = {}) {
+            const response = await fetch(withConnectorCredentialId(
+              "/api/aios/google-drive/files?folderId=" + encodeURIComponent(folderId),
+              options?.accountId,
+            ), {
               method: "GET",
               credentials: "include",
             });
@@ -3752,12 +3767,15 @@
             }));
           }
   
-          async function handleGoogleDriveFetchFileContent(file) {
+          async function handleGoogleDriveFetchFileContent(file, options = {}) {
             if (!file?.id) {
               throw new Error("Missing Google Drive file metadata");
             }
   
-            const response = await fetch("/api/aios/google-drive/download?fileId=" + encodeURIComponent(file.id), {
+            const response = await fetch(withConnectorCredentialId(
+              "/api/aios/google-drive/download?fileId=" + encodeURIComponent(file.id),
+              options?.accountId,
+            ), {
               method: "GET",
               credentials: "include",
             });
@@ -3778,8 +3796,11 @@
             };
           }
   
-          async function handleOneDriveFetchItems(folderId) {
-            const response = await fetch("/api/aios/onedrive/files?folderId=" + encodeURIComponent(folderId), {
+          async function handleOneDriveFetchItems(folderId, options = {}) {
+            const response = await fetch(withConnectorCredentialId(
+              "/api/aios/onedrive/files?folderId=" + encodeURIComponent(folderId),
+              options?.accountId,
+            ), {
               method: "GET",
               credentials: "include",
             });
@@ -3805,12 +3826,15 @@
             }));
           }
   
-          async function handleOneDriveFetchFileContent(file) {
+          async function handleOneDriveFetchFileContent(file, options = {}) {
             if (!file?.id) {
               throw new Error("Missing OneDrive file metadata");
             }
   
-            const response = await fetch("/api/aios/onedrive/download?fileId=" + encodeURIComponent(file.id), {
+            const response = await fetch(withConnectorCredentialId(
+              "/api/aios/onedrive/download?fileId=" + encodeURIComponent(file.id),
+              options?.accountId,
+            ), {
               method: "GET",
               credentials: "include",
             });
@@ -3831,11 +3855,14 @@
             };
           }
   
-          async function handleGithubFetchItems(folderId) {
+          async function handleGithubFetchItems(folderId, options = {}) {
             const parsedFolder = parseGithubFolderId(folderId);
-  
+
             if (parsedFolder.isRoot) {
-              const response = await fetch("/api/aios/github/repos?per_page=100", {
+              const response = await fetch(withConnectorCredentialId(
+                "/api/aios/github/repos?per_page=100",
+                options?.accountId,
+              ), {
                 method: "GET",
                 credentials: "include",
               });
@@ -3864,6 +3891,9 @@
             }
             if (parsedFolder.ref) {
               params.set("ref", parsedFolder.ref);
+            }
+            if (String(options?.accountId || "").trim()) {
+              params.set("credentialId", String(options.accountId).trim());
             }
             const response = await fetch(
               "/api/aios/github/repos/" + parsedFolder.repoFullName + "/contents" + (params.toString() ? "?" + params.toString() : ""),
@@ -3894,8 +3924,11 @@
             }));
           }
   
-          async function handleGithubFetchBranches(repoFullName) {
-            const response = await fetch("/api/aios/github/repos/" + repoFullName + "/branches", {
+          async function handleGithubFetchBranches(repoFullName, options = {}) {
+            const response = await fetch(withConnectorCredentialId(
+              "/api/aios/github/repos/" + repoFullName + "/branches",
+              options?.accountId,
+            ), {
               method: "GET",
               credentials: "include",
             });
@@ -3914,7 +3947,7 @@
             }));
           }
   
-          async function handleGithubFetchFileContent(file) {
+          async function handleGithubFetchFileContent(file, options = {}) {
             if (!file.repoFullName || !file.path) {
               throw new Error("Missing GitHub file metadata");
             }
@@ -3923,6 +3956,9 @@
             params.set("path", file.path);
             if (file.ref) {
               params.set("ref", file.ref);
+            }
+            if (String(options?.accountId || "").trim()) {
+              params.set("credentialId", String(options.accountId).trim());
             }
             const response = await fetch(
               "/api/aios/github/repos/" + file.repoFullName + "/download?" + params.toString(),
@@ -3973,8 +4009,11 @@
             });
           }
   
-          const handleNotionFetchDatabases = useCallback(async function handleNotionFetchDatabases() {
-            const response = await fetch("/api/aios/notion/databases", {
+          const handleNotionFetchDatabases = useCallback(async function handleNotionFetchDatabases(options = {}) {
+            const response = await fetch(withConnectorCredentialId(
+              "/api/aios/notion/databases",
+              options?.accountId,
+            ), {
               method: "GET",
               credentials: "include",
             });

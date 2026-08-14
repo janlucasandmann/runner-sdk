@@ -519,14 +519,10 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
                     roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
                       id: role.id,
                       label: role.label,
-                      description: role.description,
-                      meta: "Fine-tuning access",
                     })),
                     value: selectedRole.id,
                     onValueChange: setFineTuningAccessRoleId,
                     roleAriaLabel: "Fine-tuning team roles",
-                    roleKicker: "Fine-tuning role",
-                    roleDescription: "Fine-tuning-specific permissions for " + selectedRole.label.toLowerCase() + "s in " + selectedRow.name + ".",
                     readOnly: selectedRole.id === "owner",
                     permissionSet: roleScopedSystemPrincipal
                       ? getFineTuningSystemRolePermissionSet(job, systemPrincipal.id, selectedRole.id)
