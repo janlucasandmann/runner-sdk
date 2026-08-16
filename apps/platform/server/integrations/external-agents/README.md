@@ -30,10 +30,12 @@ visible user message. Provider context is passed as hidden execution context,
 and connector actions are restricted to the binding's validated allowlist.
 
 The bundled file repository performs atomic replacement and is suitable only
-for a singleton process backed by a persistent volume. A multi-replica
-deployment must inject a shared transactional repository implementing
-`snapshot()` and `transact()`; local container files do not provide cross-node
-claims or restart durability.
+for a singleton process backed by durable server storage. Local development
+uses `~/.computer-agents/platform` rather than an ignored directory inside a
+checkout, migrates the former checkout-local state automatically, and keeps a
+server-side backup. A multi-replica deployment must inject a shared
+transactional repository implementing `snapshot()` and `transact()`; local
+container files do not provide cross-node claims or restart durability.
 
 ## Working in this directory
 

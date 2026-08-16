@@ -7,6 +7,7 @@ export const ORGANIZATIONS_TOP_NAVIGATION_SCRIPT = `        function renderOrgan
 	            "identity-access": "Identity & Access",
 	            billing: "Billing",
 	            usage: "Usage",
+	            appliance: "Appliance",
 	          }[organizationPageActiveTab] || "Organization";
           return renderAppHeader({
             className: "playground-settings-top-navbar",

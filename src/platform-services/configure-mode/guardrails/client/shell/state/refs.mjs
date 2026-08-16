@@ -1,7 +1,6 @@
 export const GUARDRAILS_APP_REFS_SCRIPT = `        const guardrailsToolbarRef = useRef(null);
         const guardrailTitleInputRef = useRef(null);
         const guardrailSetActionMenuRef = useRef(null);
-        const guardrailDetailActionsMenuRef = useRef(null);
         const guardrailsDescriptionTextareaRef = useRef(null);
         const guardrailPublishMenuRef = useRef(null);
         const guardrailVersionDescriptionTextareaRef = useRef(null);
@@ -16,4 +15,5 @@ export const GUARDRAILS_APP_REFS_SCRIPT = `        const guardrailsToolbarRef = 
         const guardrailsBackendMigratedLocalRef = useRef(false);
         const guardrailPersistTimersRef = useRef(new Map());
         const guardrailPersistSignaturesRef = useRef(new Map());
+        const guardrailEvaluationRequestRef = useRef({ token: 0, guardrailSetId: "" });
 `;

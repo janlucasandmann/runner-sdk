@@ -1,90 +1,94 @@
-import { ChartColumnIncreasing, LayoutGrid, Settings } from "lucide-react";
 import type { ReactNode } from "react";
-import { PlatformUiCard } from "../../../../../../platform-ui/components/composite/ui-card/index.js";
-import { ResourceDetailPage } from "../../../../../../platform-ui/pages/details/index.js";
+import { useEffect, useRef } from "react";
+import {
+  MarkdownResourceDetailPage,
+  PlatformServiceDetailFrame,
+} from "../../../../../../platform-ui/pages/details/index.js";
 
 export type GuardrailDetailTab = "general" | "evaluation" | "settings";
 
 export interface GuardrailDetailPageProps {
-  header: ReactNode;
-  headerActions?: ReactNode;
-  tabBarActions?: ReactNode;
-  sidebarToggle?: ReactNode;
-  children: ReactNode;
-  properties: ReactNode;
-  actions?: ReactNode;
   activeTab: GuardrailDetailTab;
-  onTabChange: (tab: GuardrailDetailTab) => void;
+  metadata?: ReactNode;
+  notice?: ReactNode;
+  general: ReactNode;
+  evaluation: ReactNode;
+  settings: ReactNode;
+  sidebar?: ReactNode;
   sidebarCollapsed?: boolean;
-  sidebarPopoverOpen?: boolean;
-  ariaLabel?: string;
+  evaluationScopeKey?: string;
+  onEvaluationActivate?: () => void;
+  onSettingsActivate?: () => void;
   className?: string;
 }
 
-const GUARDRAIL_DETAIL_TABS = [
-  { id: "general", label: "General", icon: LayoutGrid },
-  { id: "evaluation", label: "Evaluation", icon: ChartColumnIncreasing },
-  { id: "settings", label: "Settings", icon: Settings },
-] as const;
-
+/**
+ * Guardrails use the same full-screen Markdown resource shell as Skills.
+ * General and Evaluation are primary workspaces; Settings owns the optional
+ * resource-properties sidebar.
+ */
 export function GuardrailDetailPage({
-  header,
-  headerActions,
-  tabBarActions,
-  sidebarToggle,
-  children,
-  properties,
-  actions,
   activeTab,
-  onTabChange,
+  metadata,
+  notice,
+  general,
+  evaluation,
+  settings,
+  sidebar,
   sidebarCollapsed = false,
-  sidebarPopoverOpen = false,
-  ariaLabel = "Guardrail details",
+  evaluationScopeKey = "",
+  onEvaluationActivate,
+  onSettingsActivate,
   className = "",
 }: GuardrailDetailPageProps) {
-  return (
-    <ResourceDetailPage<GuardrailDetailTab>
-      header={header}
-      headerActions={headerActions}
-      tabs={GUARDRAIL_DETAIL_TABS}
-      activeTab={activeTab}
-      onTabChange={onTabChange}
-      tabBarActions={tabBarActions}
-      sidebarToggle={sidebarToggle}
-      sidebarCollapsed={sidebarCollapsed}
-      sidebar={(
-        <>
-          <PlatformUiCard
-            as="section"
-            variant="sidebar"
-            cardTitle="Properties"
-            className="playground-guardrails-detail-sidebar-card"
-          >
-            {properties}
-          </PlatformUiCard>
-          {actions !== undefined && actions !== null ? (
-            <PlatformUiCard
-              as="section"
-              variant="sidebar"
-              cardTitle="Actions"
-              className="playground-guardrails-detail-sidebar-card"
-            >
-              {actions}
-            </PlatformUiCard>
-          ) : null}
-        </>
-      )}
-      ariaLabel={ariaLabel}
-      tabAriaLabel="Guardrail sections"
-      sidebarAriaLabel="Guardrail information and actions"
-      className={`playground-project-overview-layout playground-agents-detail-overview-layout playground-guardrails-detail-overview-layout${className ? ` ${className}` : ""}`}
-      headerClassName="playground-guardrails-detail-page-header"
-      tabBarClassName="playground-agents-overview-tabs playground-agents-detail-tabs playground-guardrails-detail-tabs"
-      tabBarActionsClassName="playground-agents-detail-tab-actions playground-guardrails-detail-tab-actions"
-      contentClassName="playground-project-overview-main playground-agents-detail-overview-main playground-guardrails-detail-overview-main"
-      sidebarClassName={`playground-project-overview-sidebar playground-agents-detail-sidebar playground-guardrails-detail-sidebar${sidebarPopoverOpen ? " is-popover-open" : ""}`}
-    >
-      {children}
-    </ResourceDetailPage>
+  const normalizedTab: GuardrailDetailTab =
+    activeTab === "evaluation"
+      ? "evaluation"
+      : activeTab === "settings"
+        ? "settings"
+        : "general";
+  const fileResourceTab = normalizedTab === "general" ? "code" : "settings";
+  const onEvaluationActivateRef = useRef(onEvaluationActivate);
+  const onSettingsActivateRef = useRef(onSettingsActivate);
+
+  useEffect(() => {
+    onEvaluationActivateRef.current = onEvaluationActivate;
+    onSettingsActivateRef.current = onSettingsActivate;
+  }, [onEvaluationActivate, onSettingsActivate]);
+
+  useEffect(() => {
+    if (normalizedTab === "evaluation") {
+      onEvaluationActivateRef.current?.();
+    } else if (normalizedTab === "settings") {
+      onSettingsActivateRef.current?.();
+    }
+  }, [evaluationScopeKey, normalizedTab]);
+
+  const detailPage = (
+    <MarkdownResourceDetailPage
+      activeTab={fileResourceTab}
+      metadata={metadata}
+      notice={notice}
+      code={general}
+      settings={normalizedTab === "evaluation" ? evaluation : settings}
+      sidebar={normalizedTab === "evaluation" ? undefined : sidebar}
+      sidebarCollapsed={normalizedTab === "settings" ? sidebarCollapsed : true}
+      ariaLabel="Guardrail details"
+      sidebarAriaLabel="Guardrail properties"
+      className={`guardrail-detail-page playground-project-overview-layout playground-agents-detail-overview-layout is-${normalizedTab}-tab${className ? ` ${className}` : ""}`}
+      contentClassName={`guardrail-detail-page__content playground-project-overview-main playground-agents-detail-overview-main is-${normalizedTab}-tab`}
+      codeClassName="guardrail-detail-page__code"
+      metadataClassName="guardrail-detail-page__metadata"
+      noticeClassName="guardrail-detail-page__notice"
+      workspaceClassName="guardrail-detail-page__workspace"
+      settingsClassName="guardrail-detail-page__settings"
+      sidebarClassName="guardrail-detail-page__sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar"
+    />
+  );
+
+  return normalizedTab === "general" ? detailPage : (
+    <PlatformServiceDetailFrame className="guardrail-detail-page__frame">
+      {detailPage}
+    </PlatformServiceDetailFrame>
   );
 }

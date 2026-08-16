@@ -1,6 +1,6 @@
 /** Ordered aios and admin compatibility routes. */
 export function createAiosAndAdminRoutes(bindings) {
-    const { assuranceService, evaluationsService, fineTuningService, testsService, handleAiosUserSessionRequest, proxyAiosJsonRequest, proxyAiosLatestBriefingHtml, proxyAiosNotionLoginRequest, proxyContactSalesSummaryGet, proxyFeedbackSummaryGet, proxyPlaygroundCustomSkills, proxyProductUsageSummaryGet, } = bindings;
+    const { assuranceService, evaluationsService, fineTuningService, testsService, handleAiosUserSessionRequest, proxyAiosJsonRequest, proxyAiosLatestBriefingHtml, proxyAiosNotionLoginRequest, proxyApplianceOverviewGet, proxyContactSalesSummaryGet, proxyFeedbackSummaryGet, proxyPlaygroundCustomSkills, proxyProductUsageSummaryGet, } = bindings;
     return function handleAiosAndAdminRoutes(req, res, url) {
         if (req.method === "GET" && (url.pathname === "/api/playground/custom-skills" || url.pathname === "/api/playground/skills")) {
             void proxyPlaygroundCustomSkills(req, res);
@@ -180,6 +180,10 @@ export function createAiosAndAdminRoutes(bindings) {
         }
         if (req.method === "GET" && url.pathname === "/api/real/admin/product-usage-summary") {
             void proxyProductUsageSummaryGet(req, res);
+            return true;
+        }
+        if (req.method === "GET" && url.pathname === "/api/real/admin/appliance-overview") {
+            void proxyApplianceOverviewGet(req, res);
             return true;
         }
         if (req.method === "GET" && url.pathname === "/api/real/admin/contact-sales") {

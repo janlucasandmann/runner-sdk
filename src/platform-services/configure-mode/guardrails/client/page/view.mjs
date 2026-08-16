@@ -1,10 +1,24 @@
 export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = renderGuardrailsTable();
           const isGuardrailsDetailPage = guardrailsPageMode === "detail" && selectedGuardrailSet;
           if (!isGuardrailsDetailPage) {
-            return listContent;
+            return React.createElement(React.Fragment, null,
+              guardrailVersionNavigationGuard,
+              listContent
+            );
           }
 
           const guardrailCreatorIdentity = getGuardrailCreatorIdentity(selectedGuardrailSet);
+          const guardrailResourceMetadata = selectedGuardrailSet?.metadata
+            && typeof selectedGuardrailSet.metadata === "object"
+            && !Array.isArray(selectedGuardrailSet.metadata)
+              ? selectedGuardrailSet.metadata
+              : {};
+          const guardrailDeploymentRegion = String(
+            guardrailResourceMetadata.deploymentRegion
+            || guardrailResourceMetadata.region
+            || guardrailResourceMetadata.location
+            || "europe-west1"
+          ).trim() || "europe-west1";
           const guardrailCreatorLabel = String(
             guardrailCreatorIdentity.name
             || guardrailCreatorIdentity.email
@@ -15,26 +29,40 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
           const renderGuardrailDetailSidebarRow = (key, label, value, options = {}) =>
             React.createElement("div", {
                 key,
-                className: "playground-guardrails-detail-sidebar-row" + (options.className ? " " + options.className : ""),
+                className: "playground-project-overview-sidebar-row" + (options.className ? " " + options.className : ""),
               },
-              React.createElement("span", { className: "playground-guardrails-detail-sidebar-label" }, label),
-              React.createElement(options.control ? "div" : "span", {
-                className: "playground-guardrails-detail-sidebar-value",
+              React.createElement("div", {
+                className: "playground-project-overview-sidebar-row-label",
+              }, label),
+              React.createElement("div", {
+                className: "playground-project-overview-sidebar-row-value" + (options.valueClassName ? " " + options.valueClassName : ""),
                 title: options.title || (typeof value === "string" ? value : undefined),
               }, value)
             );
-          const guardrailCreatorValue = React.createElement("span", {
-              className: "playground-guardrails-detail-creator",
-            },
-            React.createElement("span", {
-                className: "playground-guardrails-creator-avatar" + (guardrailCreatorIdentity.isSystem ? " is-system" : ""),
-                "aria-hidden": "true",
+          const renderGuardrailDetailIdentityValue = (identity, fallbackLabel = "Unknown") => {
+            const label = String(
+              identity?.name || identity?.email || identity?.id || fallbackLabel
+            ).trim() || fallbackLabel;
+            return React.createElement("span", {
+                className: "playground-team-member-cell guardrail-detail-page__identity-value",
               },
-              guardrailCreatorIdentity.avatarUrl
-                ? React.createElement("img", { src: guardrailCreatorIdentity.avatarUrl, alt: "" })
-                : guardrailCreatorInitial
-            ),
-            React.createElement("span", { className: "playground-guardrails-detail-creator-name" }, guardrailCreatorLabel)
+              React.createElement(AccountAvatar, {
+                className: "playground-team-member-avatar",
+                imageClassName: "playground-team-member-avatar-image",
+                fallbackLabel: getAccountInitials(label),
+                photoUrl: String(identity?.avatarUrl || ""),
+              }),
+              React.createElement("span", { className: "playground-team-member-copy" },
+                React.createElement("span", {
+                  className: "playground-team-table-title",
+                  title: label,
+                }, label)
+              )
+            );
+          };
+          const guardrailCreatorValue = renderGuardrailDetailIdentityValue(
+            guardrailCreatorIdentity,
+            guardrailCreatorInitial
           );
           const guardrailOwnerIdentity = getGuardrailOwnerIdentity(selectedGuardrailSet);
           const guardrailOwnerLabel = String(
@@ -96,219 +124,189 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
             popupClassName: "playground-agents-detail-owner-menu playground-guardrails-detail-owner-menu",
             optionClassName: "playground-agents-detail-owner-option",
           });
-          const guardrailDetailHeader = React.createElement("div", {
-              className: "playground-guardrails-detail-header-copy",
+          const guardrailMetadataSection = React.createElement("section", {
+              className: "guardrail-detail-page__identity",
+              "aria-label": "Guardrail identity",
             },
-            React.createElement("button", {
-                type: "button",
-                className: "playground-files-header-icon-button is-plain playground-guardrails-detail-back-button",
-                onClick: returnToGuardrailsOverview,
-                title: "Back to guardrails",
-                "aria-label": "Back to guardrails",
+            React.createElement("span", {
+                className: "guardrail-detail-page__icon",
+                "aria-hidden": "true",
               },
-              React.createElement(ArrowLeft, { width: 16, height: 16, strokeWidth: 1.8, "aria-hidden": "true" })
+              React.createElement(Shield, { width: 24, height: 24, strokeWidth: 1.8 })
             ),
+            React.createElement("div", { className: "guardrail-detail-page__identity-copy" },
             React.createElement("input", {
               ref: guardrailTitleInputRef,
               type: "text",
-              className: "playground-content-title playground-guardrails-title-input",
+              className: "guardrail-detail-page__name-input",
               value: selectedGuardrailSet.name || "",
               placeholder: "Untitled Guardrail Set",
               readOnly: selectedGuardrailSetReadonly,
-              disabled: selectedGuardrailSetReadonly,
               onChange: (event) => updateGuardrailSet(selectedGuardrailSet.id, { name: event.target.value }),
               "aria-label": "Guardrail set name",
+            }),
+            React.createElement("input", {
+              type: "text",
+              className: "file-resource-detail-page__description-input guardrail-detail-page__description-input",
+              value: selectedGuardrailSet.description || "",
+              placeholder: "Describe when this guardrail should be applied.",
+              readOnly: selectedGuardrailSetReadonly,
+              onChange: (event) => updateGuardrailSet(selectedGuardrailSet.id, { description: event.target.value }),
+              "aria-label": "Guardrail description",
             })
+            ),
+            selectedGuardrailSetReadonly
+              ? React.createElement(PlatformLabel, {
+                  variant: "gray",
+                  className: "guardrail-detail-page__default-label",
+                }, "Default Set")
+              : null
           );
-          const guardrailDetailHeaderActions = selectedGuardrailSetReadonly
-            ? React.createElement("span", { className: "playground-guardrails-readonly-pill" }, "Default Set")
-            : null;
-          const guardrailDetailProperties = React.createElement("div", {
-              className: "playground-guardrails-detail-sidebar-list",
-            },
-            renderGuardrailDetailSidebarRow(
-              "type",
-              "Type",
-              selectedGuardrailSetReadonly ? "Default set" : "Custom set"
-            ),
-            renderGuardrailDetailSidebarRow("creator", "Creator", guardrailCreatorValue, {
-              className: "is-creator",
-              title: guardrailCreatorLabel,
-            }),
-            renderGuardrailDetailSidebarRow("owner", "Owner", guardrailOwnerSelector, {
-              className: "is-owner",
-              control: true,
-            }),
-            renderGuardrailDetailSidebarRow(
-              "prompts",
-              "Prompts",
-              String(selectedGuardrailPrompts.length)
-            ),
-            renderGuardrailDetailSidebarRow(
-              "created",
-              "Created",
-              formatGuardrailDate(selectedGuardrailSet.createdAt)
-            ),
-            renderGuardrailDetailSidebarRow(
-              "updated",
-              "Updated",
-              formatGuardrailDate(selectedGuardrailSet.updatedAt)
-            )
-          );
-          const guardrailDetailActions = selectedGuardrailSetReadonly
-            ? null
-            : React.createElement("div", { className: "playground-guardrails-detail-sidebar-actions" },
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-guardrails-detail-sidebar-action",
-                    onClick: openGuardrailShareTeamModal,
-                  },
-                  React.createElement("span", {
-                      className: "playground-project-overview-sidebar-resource-icon",
-                      "aria-hidden": "true",
-                    },
-                    React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.85 })
-                  ),
-                  React.createElement("span", {
-                    className: "playground-project-overview-sidebar-resource-label",
-                  }, "Share with Team")
-                ),
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-guardrails-detail-sidebar-action",
-                    onClick: () => {
-                      setGuardrailPublishMenuOpen(false);
-                      setGuardrailVersionsHeaderMenuOpen(false);
-                      setGuardrailVersionsSidebarOpen(true);
-                    },
-                  },
-                  React.createElement("span", {
-                      className: "playground-project-overview-sidebar-resource-icon",
-                      "aria-hidden": "true",
-                    },
-                    React.createElement(History, { width: 14, height: 14, strokeWidth: 1.85 })
-                  ),
-                  React.createElement("span", {
-                    className: "playground-project-overview-sidebar-resource-label",
-                  }, "Version history")
-                )
-              );
-          const guardrailDescriptionSection = React.createElement(PlatformInstructionsEditor, {
-            value: selectedGuardrailSet.description || "",
-            onChange: (value) => updateGuardrailSet(selectedGuardrailSet.id, { description: value }),
-            title: "Description",
-            placeholder: "Add description here",
-            ariaLabel: "Guardrail description",
-            readOnly: selectedGuardrailSetReadonly,
-            stickyHeader: !selectedGuardrailSetReadonly,
-            historyKey: selectedGuardrailSet.id || "guardrail",
-            className: "playground-guardrails-description-section",
+          const guardrailPromptFiles = selectedGuardrailPrompts.map((prompt, index) => {
+            const title = String(prompt?.title || "Prompt " + (index + 1)).trim() || "Untitled prompt";
+            return {
+              id: String(prompt.id),
+              label: title,
+              tabLabel: title,
+              editorMode: "markdown",
+              icon: React.createElement(MessageSquareText, { width: 14, height: 14, strokeWidth: 1.8 }),
+              selectable: !selectedGuardrailSetReadonly,
+              renameDisabled: selectedGuardrailSetReadonly,
+              deleteDisabled: selectedGuardrailSetReadonly,
+              moveDisabled: true,
+            };
           });
-          const guardrailPromptsSection = React.createElement("section", {
-              className: "playground-guardrails-prompts-section",
+          const activeGuardrailPrompt = selectedGuardrailPrompts.find((prompt) => prompt?.id === guardrailActivePromptId)
+            || selectedGuardrailPrompts[0]
+            || null;
+          const renameGuardrailPromptFile = (file) => {
+            if (selectedGuardrailSetReadonly || !file?.id) return;
+            const prompt = selectedGuardrailPrompts.find((candidate) => candidate?.id === file.id);
+            if (!prompt) return;
+            const requestedTitle = window.prompt("Prompt name", String(prompt.title || "Untitled prompt"));
+            const nextTitle = String(requestedTitle || "").trim();
+            if (!nextTitle || nextTitle === String(prompt.title || "").trim()) return;
+            updateGuardrailPrompt(selectedGuardrailSet.id, prompt.id, { title: nextTitle });
+          };
+          const deleteGuardrailPromptFiles = (files) => {
+            if (selectedGuardrailSetReadonly || !Array.isArray(files) || !files.length) return;
+            const deletedIds = new Set(files.map((file) => String(file?.id || "")).filter(Boolean));
+            const remainingPrompts = selectedGuardrailPrompts.filter((prompt) => !deletedIds.has(String(prompt?.id || "")));
+            if (activeGuardrailPrompt && deletedIds.has(String(activeGuardrailPrompt.id))) {
+              setGuardrailActivePromptId(String(remainingPrompts[0]?.id || ""));
+            }
+            updateGuardrailSet(selectedGuardrailSet.id, (set) => ({
+              ...set,
+              prompts: (Array.isArray(set.prompts) ? set.prompts : [])
+                .filter((prompt) => !deletedIds.has(String(prompt?.id || ""))),
+            }));
+          };
+          const guardrailGeneralWorkspace = React.createElement(PlatformCodeEditorWorkspace, {
+            className: "guardrail-detail-page__prompt-workspace",
+            ariaLabel: (selectedGuardrailSet.name || "Guardrail") + " prompt editor",
+            variant: "full-screen",
+            sidebarTitle: "Prompts",
+            files: guardrailPromptFiles,
+            activeFileId: activeGuardrailPrompt?.id || "",
+            onFileSelect: setGuardrailActivePromptId,
+            onFileRename: selectedGuardrailSetReadonly ? undefined : renameGuardrailPromptFile,
+            onFilesDelete: selectedGuardrailSetReadonly ? undefined : deleteGuardrailPromptFiles,
+            onCreateFile: selectedGuardrailSetReadonly
+              ? undefined
+              : () => addGuardrailPrompt(selectedGuardrailSet.id),
+            createFileLabel: "Create Prompt",
+            createFileButtonLabel: "Add prompt",
+            emptyFiles: selectedGuardrailSetReadonly
+              ? "No prompts are exposed for this guardrail."
+              : "No prompts yet. Use the plus button to add one.",
+            emptyEditor: "Select a prompt to edit.",
+            markdownEditor: activeGuardrailPrompt
+              ? {
+                  value: activeGuardrailPrompt.prompt || "",
+                  title: React.createElement("input", {
+                    type: "text",
+                    className: "guardrail-detail-page__prompt-title-input",
+                    value: activeGuardrailPrompt.title || "",
+                    placeholder: "Untitled prompt",
+                    readOnly: selectedGuardrailSetReadonly,
+                    onChange: (event) => updateGuardrailPrompt(
+                      selectedGuardrailSet.id,
+                      activeGuardrailPrompt.id,
+                      { title: event.target.value }
+                    ),
+                    "aria-label": "Prompt title",
+                  }),
+                  onChange: (value) => updateGuardrailPrompt(
+                    selectedGuardrailSet.id,
+                    activeGuardrailPrompt.id,
+                    { prompt: value }
+                  ),
+                  placeholder: "Write guardrail instructions in Markdown...",
+                  ariaLabel: String(activeGuardrailPrompt.title || "Guardrail prompt") + " Markdown content",
+                  readOnly: selectedGuardrailSetReadonly,
+                  historyKey: "guardrail-prompt:" + selectedGuardrailSet.id + ":" + activeGuardrailPrompt.id,
+                }
+              : undefined,
+          });
+          const guardrailEvaluationWorkspace = React.createElement("div", {
+              className: "playground-server-detail-content guardrail-detail-page__evaluation-content",
             },
-            React.createElement("div", { className: "playground-guardrails-prompts-header" },
-              React.createElement("div", { className: "playground-guardrails-prompts-title" },
-                React.createElement("span", null, "Prompts")
-              ),
-              selectedGuardrailSetReadonly
-                ? null
-                : React.createElement(PlatformSecondaryButton, {
-                    type: "button",
-                    size: "small",
-                    className: "playground-guardrails-prompt-add-button",
-                    onClick: () => addGuardrailPrompt(selectedGuardrailSet.id),
-                  },
-                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-                  React.createElement("span", null, "Prompt")
-                )
-            ),
-            React.createElement("div", { className: "playground-guardrails-prompts-list" },
-              selectedGuardrailPrompts.length === 0
-                ? React.createElement("div", { className: "playground-guardrails-prompt-empty" }, "No prompts in this set.")
-                : selectedGuardrailPrompts.map((prompt) =>
-                    React.createElement("div", {
-                        key: prompt.id,
-                        className: "playground-tasks-backlog-item playground-guardrails-prompt-row",
-                      },
-                      React.createElement("div", { className: "playground-guardrails-prompt-card-header" },
-                        React.createElement("input", {
-                          type: "text",
-                          className: "playground-guardrails-prompt-title-input",
-                          value: prompt.title || "",
-                          placeholder: "Untitled prompt",
-                          readOnly: selectedGuardrailSetReadonly,
-                          "aria-label": "Prompt title",
-                          onChange: (event) => updateGuardrailPrompt(selectedGuardrailSet.id, prompt.id, { title: event.target.value }),
-                        }),
-                        selectedGuardrailSetReadonly
-                          ? null
-                          : React.createElement("button", {
-                              type: "button",
-                              className: "playground-guardrails-prompt-delete",
-                              onClick: () => deleteGuardrailPrompt(selectedGuardrailSet.id, prompt.id),
-                              "aria-label": "Delete prompt",
-                            },
-                            React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 })
-                          )
-                      ),
-                      React.createElement(PlatformInstructionsEditor, {
-                        variant: "minimalistic-ui",
-                        title: "Prompt text",
-                        value: prompt.prompt || "",
-                        onChange: (value) => updateGuardrailPrompt(selectedGuardrailSet.id, prompt.id, { prompt: value }),
-                        placeholder: "Add prompt text here",
-                        ariaLabel: "Prompt text for " + String(prompt.title || "untitled prompt"),
-                        readOnly: selectedGuardrailSetReadonly,
-                        stickyHeader: false,
-                        historyKey: "guardrail-prompt:" + selectedGuardrailSet.id + ":" + prompt.id,
-                        className: "playground-guardrails-prompt-editor",
-                      })
-                    )
-                  )
+            React.createElement("div", {
+                className: "playground-server-settings-tab guardrail-detail-page__evaluation-workspace",
+              },
+              renderGuardrailEvaluationSection()
             )
           );
-          const guardrailDetailContent = React.createElement("div", {
-              className: "playground-guardrails-editor",
+          const guardrailSettingsContent = React.createElement("div", {
+              className: "playground-server-detail-content guardrail-detail-page__settings-content",
             },
-            guardrailDescriptionSection,
-            guardrailPromptsSection
+            React.createElement("div", {
+                className: "playground-server-settings-tab is-function-settings-tab guardrail-detail-page__settings-inner",
+              },
+              React.createElement(PlatformDeploymentMap, {
+                regionCode: guardrailDeploymentRegion,
+                title: "Deployment region",
+                className: "playground-managed-server-deployment-map playground-source-server-deployment-map playground-function-deployment-map guardrail-detail-page__deployment-map",
+              }),
+              renderGuardrailAccessSettings()
+            )
           );
-          const handleGuardrailDetailTabChange = (nextTab) => {
-            const normalizedTab = ["general", "evaluation", "settings"].includes(String(nextTab || ""))
-              ? String(nextTab)
-              : "general";
-            setGuardrailDetailTab(normalizedTab);
-            setGuardrailAccessMenuOpen(false);
-            if (normalizedTab !== "settings") {
-              setGuardrailAccessTeamId("");
-            }
-            if (normalizedTab === "evaluation") {
-              void loadGuardrailEvaluationData();
-            }
-            if (normalizedTab === "settings" && !teamPageLoading && !guardrailWorkspaceTeams.length && typeof loadTeamPageData === "function") {
-              void loadTeamPageData({ selectedTeamId: "" });
-            }
-          };
-          const guardrailDetailActiveContent = guardrailDetailTab === "evaluation"
-            ? renderGuardrailEvaluationSection()
-            : guardrailDetailTab === "settings"
-              ? renderGuardrailAccessSettings()
-              : guardrailDetailContent;
-          const guardrailDetailSidebarToggle = React.createElement("button", {
-              type: "button",
-              className: "playground-project-overview-sidebar-toggle",
-              onClick: () => setGuardrailDetailSidebarCollapsed((current) => !current),
-              title: guardrailDetailSidebarCollapsed ? "Show guardrail sidebar" : "Hide guardrail sidebar",
-              "aria-label": guardrailDetailSidebarCollapsed ? "Show guardrail sidebar" : "Hide guardrail sidebar",
-              "aria-pressed": guardrailDetailSidebarCollapsed ? "true" : "false",
+          const guardrailSettingsSidebar = React.createElement(PlatformUiCard, {
+              as: "section",
+              variant: "sidebar",
+              cardTitle: undefined,
+              className: "playground-project-overview-sidebar-card playground-server-detail-properties-card guardrail-detail-page__properties-card",
             },
-            React.createElement(PanelRight, {
-              width: 15,
-              height: 15,
-              strokeWidth: 1.8,
-              "aria-hidden": "true",
-            })
+            React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
+              renderGuardrailDetailSidebarRow("status", "Status",
+                React.createElement(PlatformLabel, { variant: "green" }, "Active")
+              ),
+              renderGuardrailDetailSidebarRow(
+                "type",
+                "Type",
+                selectedGuardrailSetReadonly ? "Default set" : "Custom set"
+              ),
+              renderGuardrailDetailSidebarRow("region", "Region", guardrailDeploymentRegion),
+              renderGuardrailDetailSidebarRow("prompts", "Prompts", String(selectedGuardrailPrompts.length)),
+              renderGuardrailDetailSidebarRow("creator", "Creator", guardrailCreatorValue, {
+                title: guardrailCreatorLabel,
+                valueClassName: "playground-server-detail-sidebar-identity-cell",
+              }),
+              renderGuardrailDetailSidebarRow(
+                "created",
+                "Created",
+                formatGuardrailDate(selectedGuardrailSet.createdAt)
+              ),
+              renderGuardrailDetailSidebarRow(
+                "updated",
+                "Updated",
+                formatGuardrailDate(selectedGuardrailSet.updatedAt)
+              ),
+              renderGuardrailDetailSidebarRow("owner", "Owner", guardrailOwnerSelector, {
+                className: "playground-server-detail-sidebar-owner-row",
+                valueClassName: "playground-server-detail-sidebar-owner-cell",
+              })
+            )
           );
           const guardrailTopNavPublishPortal = guardrailDetailTopNavActionsContainer
             && !selectedGuardrailSetReadonly
@@ -324,6 +322,7 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
               className: "playground-files-page playground-guardrails-page playground-guardrails-detail-page-host",
               onKeyDownCapture: handleGuardrailsKeyboardShortcuts,
             },
+            guardrailVersionNavigationGuard,
             React.createElement("div", { className: "playground-files-shell playground-guardrails-shell" },
               React.createElement("section", { className: "playground-files-browser playground-guardrails-browser" },
                 React.createElement("div", {
@@ -334,15 +333,28 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
                         className: "playground-guardrails-detail playground-guardrails-version-changes-shell",
                       }, renderGuardrailVersionChangesPage())
                     : React.createElement(GuardrailDetailPage, {
-                        header: guardrailDetailHeader,
-                        headerActions: guardrailDetailHeaderActions,
                         activeTab: guardrailDetailTab,
-                        onTabChange: handleGuardrailDetailTabChange,
-                        sidebarToggle: guardrailDetailSidebarToggle,
-                        sidebarCollapsed: guardrailDetailSidebarCollapsed || Boolean(guardrailAccessTeamId),
-                        actions: guardrailDetailActions,
-                        properties: guardrailDetailProperties,
-                      }, guardrailDetailActiveContent)
+                        metadata: guardrailMetadataSection,
+                        notice: guardrailsBackendSyncState.error
+                          ? React.createElement("div", {
+                              className: "playground-environments-error playground-environments-editor-notice",
+                              role: "alert",
+                            }, guardrailsBackendSyncState.error)
+                          : null,
+                        general: guardrailGeneralWorkspace,
+                        evaluation: guardrailEvaluationWorkspace,
+                        settings: guardrailSettingsContent,
+                        sidebar: guardrailSettingsSidebar,
+                        sidebarCollapsed: guardrailDetailSidebarCollapsed,
+                        evaluationScopeKey: String(selectedGuardrailSet.id || ""),
+                        onEvaluationActivate: () => void loadGuardrailEvaluationData(),
+                        onSettingsActivate: () => {
+                          if (!teamPageLoading && !guardrailWorkspaceTeams.length && typeof loadTeamPageData === "function") {
+                            void loadTeamPageData({ selectedTeamId: "" });
+                          }
+                        },
+                        className: "playground-guardrails-detail-page",
+                      })
                 )
               ),
               guardrailTopNavPublishPortal,

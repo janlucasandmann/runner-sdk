@@ -111,3 +111,14 @@ export function usePlatformVersionNavigationGuard({
     options.title,
   ]);
 }
+
+/**
+ * Component boundary for legacy render composers that cannot call hooks
+ * directly without changing their owning component's hook order.
+ */
+export function PlatformVersionNavigationGuardRegistration(
+  options: PlatformVersionNavigationGuardOptions,
+): null {
+  usePlatformVersionNavigationGuard(options);
+  return null;
+}

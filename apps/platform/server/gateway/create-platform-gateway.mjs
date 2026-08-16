@@ -37,6 +37,7 @@ export function createPlatformGateway(config) {
         proxyAiosLatestBriefingHtml: modules.proxyAiosLatestBriefingHtml,
         proxyAiosNotionLoginRequest: modules.proxyAiosNotionLoginRequest,
         proxyContactSalesSummaryGet: modules.proxyContactSalesSummaryGet,
+        proxyApplianceOverviewGet: modules.proxyApplianceOverviewGet,
         proxyCreateThread: modules.proxyCreateThread,
         proxyEnvironmentGuiSession: modules.proxyEnvironmentGuiSession,
         proxyEnvironmentStart: modules.proxyEnvironmentStart,

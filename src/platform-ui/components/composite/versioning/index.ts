@@ -18,6 +18,7 @@ export {
 } from "./platform-version-changes-page.js";
 export {
   buildPlatformVersionNavigationGuard,
+  PlatformVersionNavigationGuardRegistration,
   usePlatformVersionNavigationGuard,
   type PlatformVersionNavigationGuard,
   type PlatformVersionNavigationGuardOptions,

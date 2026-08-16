@@ -241,6 +241,9 @@ export function createLegacyPlatformApplicationBindings({
       + (["billable", "observability_only"].includes(deploymentProfileEnvelope?.profile?.product?.usage?.mode)
         ? ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminUsageSidebarEntry
         : "")
+      + (deploymentProfileEnvelope?.profile?.topology === "on_prem"
+        ? ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminApplianceSidebarEntry
+        : "")
       + ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminPermissionsSidebarEntries,
   });
 

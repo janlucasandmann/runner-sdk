@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createAiosAndAdminRoutes } from "./aios-and-admin-routes.mjs";
 
 const proxiedRequests = [];
+let applianceOverviewRequests = 0;
 const service = {
     handleRequest() {
         return false;
@@ -19,6 +20,9 @@ const handleRoute = createAiosAndAdminRoutes({
     },
     proxyAiosLatestBriefingHtml() {},
     proxyAiosNotionLoginRequest() {},
+    proxyApplianceOverviewGet() {
+        applianceOverviewRequests += 1;
+    },
     proxyContactSalesSummaryGet() {},
     proxyFeedbackSummaryGet() {},
     proxyPlaygroundCustomSkills() {},
@@ -53,5 +57,15 @@ assert.equal(
     ),
     false,
 );
+
+assert.equal(
+    handleRoute(
+        { method: "GET" },
+        {},
+        new URL("http://localhost/api/real/admin/appliance-overview"),
+    ),
+    true,
+);
+assert.equal(applianceOverviewRequests, 1);
 
 console.log("aiOS project skill proxy route contracts passed.");

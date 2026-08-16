@@ -4,6 +4,7 @@ import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import {
   buildPlatformVersionNavigationGuard,
+  PlatformVersionNavigationGuardRegistration,
   usePlatformVersionNavigationGuard,
   type PlatformVersionNavigationGuardRegistrar,
 } from "./use-platform-version-navigation-guard.js";
@@ -68,6 +69,27 @@ describe("usePlatformVersionNavigationGuard", () => {
       <VersionedResource dirty={false} register={register} onDiscard={onDiscard} />,
     );
     expect(register.mock.calls.at(-1)?.[0]).toBeNull();
+
+    view.unmount();
+    expect(register.mock.calls.at(-1)?.[0]).toBeNull();
+  });
+
+  it("provides a component boundary for conditional legacy page composers", () => {
+    const register = vi.fn<PlatformVersionNavigationGuardRegistrar>();
+    const view = render(
+      <PlatformVersionNavigationGuardRegistration
+        dirty
+        resourceId="guardrail-1"
+        resourceName="Publishing policy"
+        resourceType="Guardrail"
+        onNavigationGuardChange={register}
+      />,
+    );
+
+    expect(register.mock.calls.at(-1)?.[0]).toMatchObject({
+      id: "guardrail-guardrail-1-unsaved-version-changes",
+      active: true,
+    });
 
     view.unmount();
     expect(register.mock.calls.at(-1)?.[0]).toBeNull();

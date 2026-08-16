@@ -365,7 +365,7 @@ button.tag-detail-page__function-item-trigger:focus-visible {
   align-items: stretch;
   flex-direction: column;
   justify-content: flex-start;
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(255, 255, 255, 0.075);
 }
 
 .tag-detail-page__authentication-surface.has-custom-content {

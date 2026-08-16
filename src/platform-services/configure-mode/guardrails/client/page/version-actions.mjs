@@ -2,6 +2,10 @@ export const GUARDRAILS_PAGE_VERSION_ACTIONS_SCRIPT = `          function getGua
             return playgroundGuardrailVersionController.getMetadata(set);
           }
 
+          function buildGuardrailVersionPublishRequestBody(snapshot) {
+            return snapshot === undefined ? {} : { snapshot };
+          }
+
           function readSelectedGuardrailVersions(set = selectedGuardrailSet) {
             return playgroundGuardrailVersionController.readVersions(set);
           }
@@ -61,7 +65,7 @@ export const GUARDRAILS_PAGE_VERSION_ACTIONS_SCRIPT = `          function getGua
             && !selectedGuardrailSetReadonly
             && hasSelectedGuardrailVersionChanges()
           );
-          usePlatformVersionNavigationGuard({
+          const guardrailVersionNavigationGuard = React.createElement(PlatformVersionNavigationGuardRegistration, {
             dirty: hasUnsavedGuardrailVersionChanges,
             guardId: "guardrail-details-unsaved-changes",
             resourceId: String(selectedGuardrailSet?.id || ""),
@@ -289,10 +293,7 @@ export const GUARDRAILS_PAGE_VERSION_ACTIONS_SCRIPT = `          function getGua
                 "/guardrails/" + encodeURIComponent(sourceSet.id) + "/versions/" + encodeURIComponent(version.id) + "/publish",
                 {
                   method: "POST",
-                  body: JSON.stringify({
-                    snapshot: currentSnapshot,
-                    description: versionDescription,
-                  }),
+                  body: JSON.stringify(buildGuardrailVersionPublishRequestBody(currentSnapshot)),
                 },
                 "Failed to publish guardrail version."
               );
@@ -502,7 +503,9 @@ export const GUARDRAILS_PAGE_VERSION_ACTIONS_SCRIPT = `          function getGua
                 "/guardrails/" + encodeURIComponent(sourceSet.id) + "/versions/" + encodeURIComponent(selectedVersion.id) + "/publish",
                 {
                   method: "POST",
-                  body: JSON.stringify({ snapshot: buildPlaygroundGuardrailVersionSnapshot(sourceSet) }),
+                  body: JSON.stringify(buildGuardrailVersionPublishRequestBody(
+                    buildPlaygroundGuardrailVersionSnapshot(sourceSet)
+                  )),
                 },
                 "Failed to publish guardrail version."
               );
@@ -570,9 +573,9 @@ export const GUARDRAILS_PAGE_VERSION_ACTIONS_SCRIPT = `          function getGua
                 "/guardrails/" + encodeURIComponent(sourceSet.id) + "/versions/" + encodeURIComponent(normalizedVersionId) + "/publish",
                 {
                   method: "POST",
-                  body: JSON.stringify({
-                    snapshot: shouldRepublishCurrentEditor ? buildPlaygroundGuardrailVersionSnapshot(sourceSet) : undefined,
-                  }),
+                  body: JSON.stringify(buildGuardrailVersionPublishRequestBody(
+                    shouldRepublishCurrentEditor ? buildPlaygroundGuardrailVersionSnapshot(sourceSet) : undefined
+                  )),
                 },
                 "Failed to publish guardrail version."
               );

@@ -1,3 +1,5 @@
+import { APPLIANCE_ADMIN_LIFECYCLE_SCRIPT } from "../../../../admin-mode/appliance/index.mjs";
+
 export const ORGANIZATIONS_LOAD_LIFECYCLE_SCRIPT = `        useEffect(() => {
           if (!hasRealAccess) {
             setOrganizationPageOrganizations([]);
@@ -71,4 +73,5 @@ export const ORGANIZATIONS_LOAD_LIFECYCLE_SCRIPT = `        useEffect(() => {
             organizationPageLoadAbortControllerRef.current = null;
           }
         }, []);
+${APPLIANCE_ADMIN_LIFECYCLE_SCRIPT}
 `;

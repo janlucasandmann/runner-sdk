@@ -21,6 +21,21 @@ const versioningCoreSource = await fs.readFile(
   new URL("../../versioning-core.mjs", import.meta.url),
   "utf8",
 );
+const promptDetailPageCss = await fs.readFile(
+  new URL("../../../../../../src/platform-resources/prompts/detail/prompt-detail-page.css", import.meta.url),
+  "utf8",
+);
+
+assert.match(
+  promptDetailPageCss,
+  /\.prompt-detail-page\.file-resource-detail-page\.is-settings-tab\s*\{[\s\S]{0,260}--playground-centered-page-max-width[\s\S]{0,120}margin-inline: auto/,
+  "Prompt Settings must use the centered Agent overview page width.",
+);
+assert.match(
+  promptDetailPageCss,
+  /\.prompt-detail-page \.prompt-detail-page__settings-content\s*\{[\s\S]{0,160}max-width: none/,
+  "Prompt Settings content must fill its Agent-style main grid column.",
+);
 
 assert.match(
   promptPageSource,

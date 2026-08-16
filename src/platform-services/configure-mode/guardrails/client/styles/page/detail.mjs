@@ -470,88 +470,213 @@ export const GUARDRAILS_PAGE_DETAIL_CSS = `      .playground-guardrails-editor {
       }
 
       .playground-guardrails-detail-page-host .playground-guardrails-browser-body.is-detail-page {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: none;
+        height: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .playground-guardrails-version-changes-shell {
+        box-sizing: border-box;
         width: 100%;
         max-width: none;
         padding: 42px 44px 56px;
         overflow: auto;
-        box-sizing: border-box;
       }
 
-      .playground-guardrails-detail-overview-layout {
+      .guardrail-detail-page {
         --platform-page-content-max-width: 87.5rem;
       }
 
-      .playground-guardrails-detail-page-header {
-        min-height: 32px;
+      .guardrail-detail-page.file-resource-detail-page.is-settings-tab {
+        width: min(100%, var(--playground-centered-page-max-width, 87.5rem));
+        max-width: var(--playground-centered-page-max-width, 87.5rem);
+        margin-inline: auto;
+        padding: 0;
+        overflow: visible;
       }
 
-      .playground-guardrails-detail-header-copy {
+      .guardrail-detail-page .guardrail-detail-page__evaluation-content,
+      .guardrail-detail-page .guardrail-detail-page__settings-content {
+        width: 100%;
+        max-width: none;
+        margin-inline: 0;
+      }
+
+      .guardrail-detail-page__identity {
+        box-sizing: border-box;
         min-width: 0;
         display: flex;
-        align-items: center;
-        gap: 0;
-      }
-
-      .playground-guardrails-detail-header-copy .playground-guardrails-title-input {
-        min-width: 0;
-        flex: 1 1 auto;
-        color: #fff;
-        font-size: 18px;
-        line-height: 1.3;
-        font-weight: 500;
-      }
-
-      .playground-guardrails-detail-overview-main {
-        min-width: 0;
-      }
-
-      .playground-guardrails-prompts-section {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
+        flex-direction: row;
+        align-items: flex-start;
         gap: 12px;
+        padding: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
-      .playground-guardrails-detail-sidebar-card {
-        min-width: 0;
+      .guardrail-detail-page__icon {
+        width: 52px;
+        height: 52px;
+        flex: 0 0 52px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
       }
 
-      .playground-guardrails-detail-sidebar-list {
+      .guardrail-detail-page__identity-copy {
         min-width: 0;
+        flex: 1 1 0;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 6px;
       }
 
-      .playground-guardrails-detail-sidebar-row {
+      .guardrail-detail-page__name-input,
+      .guardrail-detail-page__description-input {
+        box-sizing: border-box;
+        width: 100%;
         min-width: 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        font-size: 12px;
-        line-height: 1.35;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        outline: 0;
+        background: transparent;
+        font: inherit;
+        letter-spacing: 0;
+      }
+
+      .guardrail-detail-page__name-input {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 20px;
+        line-height: 1.3;
         font-weight: 400;
       }
 
-      .playground-guardrails-detail-sidebar-label {
-        min-width: 0;
-        flex: 0 0 auto;
-        color: rgba(255, 255, 255, 0.5);
+      .guardrail-detail-page__description-input {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        line-height: 1.5;
+        font-weight: 400;
       }
 
-      .playground-guardrails-detail-sidebar-value {
+      .guardrail-detail-page__name-input:read-only,
+      .guardrail-detail-page__description-input:read-only {
+        cursor: default;
+      }
+
+      .guardrail-detail-page__name-input::placeholder,
+      .guardrail-detail-page__description-input::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+      }
+
+      .guardrail-detail-page__default-label {
+        flex: 0 0 auto;
+        margin-top: 2px;
+      }
+
+      .guardrail-detail-page__workspace,
+      .guardrail-detail-page__prompt-workspace,
+      .guardrail-detail-page__evaluation-content,
+      .guardrail-detail-page__evaluation-workspace,
+      .guardrail-detail-page__settings-content,
+      .guardrail-detail-page__settings,
+      .guardrail-detail-page__settings-inner,
+      .guardrail-detail-page__properties-card {
         min-width: 0;
-        color: rgba(255, 255, 255, 0.92);
-        text-align: right;
-        white-space: nowrap;
-        overflow: hidden;
+      }
+
+      .guardrail-detail-page__prompt-title-input {
+        box-sizing: border-box;
+        display: block;
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        outline: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.9);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
         text-overflow: ellipsis;
       }
 
-      .playground-guardrails-detail-sidebar-row.is-owner .playground-guardrails-detail-sidebar-value {
-        flex: 1 1 auto;
-        overflow: visible;
+      .guardrail-detail-page__prompt-title-input::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+      }
+
+      .guardrail-detail-page__prompt-title-input:read-only {
+        cursor: default;
+      }
+
+      .guardrail-detail-page__evaluation-workspace {
+        min-width: 0;
+      }
+
+      .guardrail-detail-page__deployment-map {
+        margin-block: 0;
+      }
+
+      .guardrail-detail-page__identity-value {
+        min-width: 0;
+        width: 100%;
+      }
+
+      .guardrail-detail-page
+        .guardrail-detail-page__properties-card
+        .playground-project-overview-sidebar-row-value {
+        justify-content: flex-end;
+        text-align: right;
+      }
+
+      .guardrail-detail-page
+        .guardrail-detail-page__properties-card
+        .guardrail-detail-page__identity-value {
+        justify-content: flex-end;
+        text-align: right;
+      }
+
+      .guardrail-detail-page
+        .guardrail-detail-page__properties-card
+        .guardrail-detail-page__identity-value
+        .playground-team-member-avatar {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 20px;
+        font-size: 8px;
+      }
+
+      .guardrail-detail-page
+        .guardrail-detail-page__properties-card
+        .guardrail-detail-page__identity-value
+        .playground-team-member-avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .playground-guardrails-detail-page-host
+        .guardrail-detail-page.file-resource-detail-page.is-code-tab {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: none;
+        min-height: 0;
+        flex: 1 1 0;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
       }
 
       .playground-guardrails-detail-owner-selector {
@@ -577,74 +702,13 @@ export const GUARDRAILS_PAGE_DETAIL_CSS = `      .playground-guardrails-editor {
         background: transparent;
       }
 
-      .playground-guardrails-detail-owner-value {
-        min-width: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 7px;
-      }
-
-      .playground-guardrails-detail-owner-avatar.playground-team-member-avatar {
-        width: 18px;
-        height: 18px;
-        flex: 0 0 18px;
-      }
-
-      .playground-guardrails-detail-owner-name {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .playground-guardrails-detail-creator {
-        min-width: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
-      }
-
-      .playground-guardrails-detail-creator .playground-guardrails-creator-avatar.is-system {
-        width: 18px;
-        height: 18px;
-        flex: 0 0 18px;
-        border-radius: 999px;
-        overflow: hidden;
-      }
-
-      .playground-guardrails-detail-creator .playground-guardrails-creator-avatar.is-system img {
-        width: 100%;
-        height: 100%;
-        border-radius: inherit;
-        object-fit: cover;
-      }
-
-      .playground-guardrails-detail-creator-name {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .playground-guardrails-detail-sidebar-actions {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .playground-guardrails-detail-sidebar-action {
-        width: 100%;
-        min-width: 0;
-        justify-content: flex-start;
-        padding-left: 0;
-        padding-right: 0;
-      }
-
       @media (max-width: 760px) {
-        .playground-guardrails-detail-page-host .playground-guardrails-browser-body.is-detail-page {
-          padding: 16px;
+        .guardrail-detail-page__identity {
+          padding: 20px;
+        }
+
+        .playground-guardrails-version-changes-shell {
+          padding: 20px;
         }
       }
 

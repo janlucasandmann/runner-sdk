@@ -3,6 +3,7 @@ export const ORGANIZATIONS_NAVIGATION_SCRIPT = `        function normalizeOrgani
           if (platformHasCapability("subscriptions")) availablePages.push("subscription");
           if (platformHasCapability("billing")) availablePages.push("billing");
           if (["billable", "observability_only"].includes(platformDeploymentProfile.product?.usage?.mode)) availablePages.push("usage");
+          if (platformDeploymentProfile.topology === "on_prem") availablePages.push("appliance");
           return availablePages.includes(value)
             ? value
             : "organization";

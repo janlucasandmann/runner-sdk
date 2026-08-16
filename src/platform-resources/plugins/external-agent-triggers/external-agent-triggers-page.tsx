@@ -1,10 +1,7 @@
 import {
-  Activity,
   Bot,
   ClipboardCopy,
   KeyRound,
-  Plus,
-  RefreshCw,
   RotateCw,
   Route,
   Trash2,
@@ -16,11 +13,9 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
 import type {
   ExternalAgentBinding,
-  ExternalAgentEventRecord,
   ExternalAgentIdentity,
   ExternalAgentProvider,
   ExternalAgentTrigger,
@@ -30,6 +25,7 @@ import {
   type PlatformDataTableAction,
   type PlatformDataTableColumn,
 } from "../../../platform-ui/components/composite/data-table/index.js";
+import { PlatformDetailTabBar } from "../../../platform-ui/components/composite/detail-tab-bar/index.js";
 import { PlatformEmptyState } from "../../../platform-ui/components/composite/empty-state/index.js";
 import { PlatformLoadingState } from "../../../platform-ui/components/composite/loading-state/index.js";
 import {
@@ -43,6 +39,7 @@ import {
 } from "../../../platform-ui/components/ui/button/index.js";
 import { PlatformCheckbox } from "../../../platform-ui/components/ui/checkbox/index.js";
 import { PlatformLabel } from "../../../platform-ui/components/ui/label/index.js";
+import { PlatformIconButton } from "../../../platform-ui/components/ui/icon-button/index.js";
 import { PlatformSelector } from "../../../platform-ui/components/ui/selector/index.js";
 import type { PlatformConnectionCredential } from "../../shared/connections/connection-credentials.js";
 import {
@@ -95,6 +92,13 @@ interface ConfirmState {
   actionLabel: string;
   run: () => Promise<void>;
 }
+
+type AgentTriggerConfigurationTab = "webhooks" | "routing" | "identities";
+
+type AgentTriggerConfigurationRow =
+  | { kind: "webhooks"; value: ExternalAgentInstallationView }
+  | { kind: "routing"; value: ExternalAgentBinding }
+  | { kind: "identities"; value: ExternalAgentIdentity };
 
 export interface ExternalAgentTriggersPageProps {
   provider: ExternalAgentProvider;
@@ -234,31 +238,6 @@ function MemberOption({ member }: { member: ExternalAgentOrganizationMember }) {
   );
 }
 
-function Section({
-  title,
-  description,
-  action,
-  children,
-}: {
-  title: string;
-  description: string;
-  action?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <section className="external-agent-triggers__section">
-      <header className="external-agent-triggers__section-header">
-        <div>
-          <h2>{title}</h2>
-          <p>{description}</p>
-        </div>
-        {action}
-      </header>
-      {children}
-    </section>
-  );
-}
-
 function TextField({
   label,
   value,
@@ -310,7 +289,6 @@ function SetupModal({
     <PlatformModal
       open
       title={`${providerLabel(provider)} webhook setup`}
-      description="Complete the provider setup with these generated values."
       size="medium"
       onClose={onClose}
       footer={
@@ -327,23 +305,36 @@ function SetupModal({
         </p>
         <div className="external-agent-triggers__copy-field">
           <span>Callback URL</span>
-          <code>{callbackValue}</code>
-          <PlatformSecondaryButton size="small" onClick={() => void copy("url", callbackValue)}>
-            <ClipboardCopy aria-hidden="true" />
-            {copied === "url" ? "Copied" : "Copy"}
-          </PlatformSecondaryButton>
+          <div className="external-agent-triggers__copy-value">
+            <code>{callbackValue}</code>
+            <PlatformIconButton
+              className="external-agent-triggers__copy-button"
+              size="medium"
+              aria-label={copied === "url" ? "Callback URL copied" : "Copy callback URL"}
+              tooltip={copied === "url" ? "Copied" : "Copy"}
+              tooltipPlacement="top"
+              onClick={() => void copy("url", callbackValue)}
+            >
+              <ClipboardCopy aria-hidden="true" />
+            </PlatformIconButton>
+          </div>
         </div>
         {setup.verificationSecret ? (
           <div className="external-agent-triggers__copy-field">
             <span>{provider === "linear" ? "Signing secret" : "Verification token"}</span>
-            <code>{setup.verificationSecret}</code>
-            <PlatformSecondaryButton
-              size="small"
-              onClick={() => void copy("secret", setup.verificationSecret || "")}
-            >
-              <ClipboardCopy aria-hidden="true" />
-              {copied === "secret" ? "Copied" : "Copy"}
-            </PlatformSecondaryButton>
+            <div className="external-agent-triggers__copy-value">
+              <code>{setup.verificationSecret}</code>
+              <PlatformIconButton
+                className="external-agent-triggers__copy-button"
+                size="medium"
+                aria-label={copied === "secret" ? "Verification value copied" : "Copy verification value"}
+                tooltip={copied === "secret" ? "Copied" : "Copy"}
+                tooltipPlacement="top"
+                onClick={() => void copy("secret", setup.verificationSecret || "")}
+              >
+                <ClipboardCopy aria-hidden="true" />
+              </PlatformIconButton>
+            </div>
           </div>
         ) : null}
         {setup.verificationSecret ? (
@@ -366,7 +357,6 @@ export function ExternalAgentTriggersPage({
   connectionProfile,
   managementBaseUrl,
   organizationApiBaseUrl,
-  onOpenThread,
 }: ExternalAgentTriggersPageProps) {
   const terms = providerTerms(provider);
   const client = useMemo(
@@ -391,6 +381,8 @@ export function ExternalAgentTriggersPage({
   const [installationModalOpen, setInstallationModalOpen] = useState(false);
   const [bindingModalOpen, setBindingModalOpen] = useState(false);
   const [identityModalOpen, setIdentityModalOpen] = useState(false);
+  const [configurationTab, setConfigurationTab] =
+    useState<AgentTriggerConfigurationTab>("webhooks");
   const [setup, setSetup] = useState<ExternalAgentInstallationSetup | null>(null);
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
   const [installationForm, setInstallationForm] = useState<InstallationFormState>({
@@ -440,24 +432,28 @@ export function ExternalAgentTriggersPage({
     void refresh();
   }, [refresh]);
 
-  const runMutation = async (action: () => Promise<void>, successMessage: string) => {
-    setBusy(true);
-    setError("");
-    try {
-      await action();
-      setNotice(successMessage);
-      await refresh();
-    } catch (mutationError) {
-      setError(mutationError instanceof Error ? mutationError.message : "The operation failed.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  const runMutation = useCallback(
+    async (action: () => Promise<void>, successMessage: string) => {
+      setBusy(true);
+      setError("");
+      try {
+        await action();
+        setNotice(successMessage);
+        await refresh();
+      } catch (mutationError) {
+        setError(
+          mutationError instanceof Error ? mutationError.message : "The operation failed.",
+        );
+      } finally {
+        setBusy(false);
+      }
+    },
+    [refresh],
+  );
 
   const installations = snapshot?.installations || [];
   const bindings = snapshot?.bindings || [];
   const identities = snapshot?.identities || [];
-  const events = snapshot?.events || [];
   const members = snapshot?.members || [];
   const agentById = useMemo(() => new Map(agentOptions.map((item) => [item.id, item])), [agentOptions]);
   const environmentById = useMemo(
@@ -499,212 +495,221 @@ export function ExternalAgentTriggersPage({
     setIdentityModalOpen(true);
   };
 
-  const installationColumns = useMemo<PlatformDataTableColumn<ExternalAgentInstallationView>[]>(
-    () => [
-      { id: "name", header: "Connection", accessor: (row) => row.displayName },
-      { id: "tenant", header: terms.tenant, accessor: (row) => row.tenantId },
-      {
-        id: "callback",
-        header: "Webhook",
-        cell: ({ row }) => row.callbackUrl ? (
-          <button
-            type="button"
-            className="external-agent-triggers__text-action"
-            onClick={(event) => {
-              event.stopPropagation();
-              void navigator.clipboard?.writeText(row.callbackUrl || "");
-              setNotice("Webhook URL copied.");
-            }}
-          >
-            Copy URL
-          </button>
-        ) : "-",
-      },
-      {
-        id: "status",
-        header: "Status",
-        cell: ({ row }) => <StatusLabel value={row.enabled ? "enabled" : "disabled"} />,
-      },
-    ],
-    [terms.tenant],
-  );
+  const configurationRows: AgentTriggerConfigurationRow[] =
+    configurationTab === "webhooks"
+      ? installations.map((value) => ({ kind: "webhooks", value }))
+      : configurationTab === "routing"
+        ? bindings.map((value) => ({ kind: "routing", value }))
+        : identities.map((value) => ({ kind: "identities", value }));
 
-  const installationActions = useCallback(
-    (installation: ExternalAgentInstallationView): readonly PlatformDataTableAction<ExternalAgentInstallationView>[] => [
-      {
-        id: "rotate",
-        label: "Rotate webhook secret",
-        icon: RotateCw,
-        onSelect: () => void runMutation(async () => {
-          const result = await client.updateInstallation(installation.id, {
-            rotateWebhookSecret: true,
-          });
-          if (result.setup) setSetup(result.setup);
-        }, "Webhook secret rotated."),
-      },
-      {
-        id: "toggle",
-        label: installation.enabled ? "Disable" : "Enable",
-        icon: installation.enabled ? KeyRound : Webhook,
-        onSelect: () => void runMutation(async () => {
-          await client.updateInstallation(installation.id, { enabled: !installation.enabled });
-        }, installation.enabled ? "Webhook disabled." : "Webhook enabled."),
-      },
-      {
-        id: "delete",
-        label: "Delete",
-        icon: Trash2,
-        separatorBefore: true,
-        onSelect: () => setConfirmState({
-          title: "Delete webhook installation?",
-          description: "Its routes, identity mappings, and active external work will be removed.",
-          actionLabel: "Delete",
-          run: () => client.deleteInstallation(installation.id),
-        }),
-      },
-    ],
-    [client],
-  );
+  const configurationColumns = useMemo<PlatformDataTableColumn<AgentTriggerConfigurationRow>[]>(
+    () => {
+      if (configurationTab === "webhooks") {
+        return [
+          {
+            id: "name",
+            header: "Connection",
+            cell: ({ row }) => row.kind === "webhooks" ? row.value.displayName : "-",
+          },
+          {
+            id: "tenant",
+            header: terms.tenant,
+            cell: ({ row }) => row.kind === "webhooks" ? row.value.tenantId : "-",
+          },
+          {
+            id: "callback",
+            header: "Webhook",
+            cell: ({ row }) => {
+              if (row.kind !== "webhooks" || !row.value.callbackUrl) return "-";
+              return (
+                <button
+                  type="button"
+                  className="external-agent-triggers__text-action"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void navigator.clipboard?.writeText(row.value.callbackUrl || "");
+                    setNotice("Webhook URL copied.");
+                  }}
+                >
+                  Copy URL
+                </button>
+              );
+            },
+          },
+          {
+            id: "status",
+            header: "Status",
+            cell: ({ row }) => row.kind === "webhooks"
+              ? <StatusLabel value={row.value.enabled ? "enabled" : "disabled"} />
+              : "-",
+          },
+        ];
+      }
 
-  const bindingColumns = useMemo<PlatformDataTableColumn<ExternalAgentBinding>[]>(
-    () => [
-      {
-        id: "scope",
-        header: terms.externalProject,
-        cell: ({ row }) => row.externalProjectId || "Fallback route",
-      },
-      {
-        id: "agent",
-        header: "Agent",
-        cell: ({ row }) => agentById.get(row.agentId)?.label || row.agentName || row.agentId,
-      },
-      {
-        id: "environment",
-        header: "Environment",
-        cell: ({ row }) => row.projectId
-          ? projectById.get(row.projectId)?.label || row.projectId
-          : environmentById.get(row.environmentId || "")?.label || row.environmentId || "Default",
-      },
-      {
-        id: "triggers",
-        header: "Triggers",
-        cell: ({ row }) => row.triggerModes.join(", "),
-      },
-      {
-        id: "status",
-        header: "Status",
-        cell: ({ row }) => <StatusLabel value={row.enabled ? "enabled" : "disabled"} />,
-      },
-    ],
-    [agentById, environmentById, projectById, terms.externalProject],
-  );
+      if (configurationTab === "routing") {
+        return [
+          {
+            id: "scope",
+            header: terms.externalProject,
+            cell: ({ row }) => row.kind === "routing"
+              ? row.value.externalProjectId || "Fallback route"
+              : "-",
+          },
+          {
+            id: "agent",
+            header: "Agent",
+            cell: ({ row }) => row.kind === "routing"
+              ? agentById.get(row.value.agentId)?.label
+                || row.value.agentName
+                || row.value.agentId
+              : "-",
+          },
+          {
+            id: "environment",
+            header: "Environment",
+            cell: ({ row }) => {
+              if (row.kind !== "routing") return "-";
+              return row.value.projectId
+                ? projectById.get(row.value.projectId)?.label || row.value.projectId
+                : environmentById.get(row.value.environmentId || "")?.label
+                  || row.value.environmentId
+                  || "Default";
+            },
+          },
+          {
+            id: "triggers",
+            header: "Triggers",
+            cell: ({ row }) => row.kind === "routing" ? row.value.triggerModes.join(", ") : "-",
+          },
+          {
+            id: "status",
+            header: "Status",
+            cell: ({ row }) => row.kind === "routing"
+              ? <StatusLabel value={row.value.enabled ? "enabled" : "disabled"} />
+              : "-",
+          },
+        ];
+      }
 
-  const bindingActions = useCallback(
-    (binding: ExternalAgentBinding): readonly PlatformDataTableAction<ExternalAgentBinding>[] => [
-      {
-        id: "toggle",
-        label: binding.enabled ? "Disable" : "Enable",
-        icon: Route,
-        onSelect: () => void runMutation(async () => {
-          await client.updateBinding(binding.id, { enabled: !binding.enabled });
-        }, binding.enabled ? "Route disabled." : "Route enabled."),
-      },
-      {
-        id: "delete",
-        label: "Delete",
-        icon: Trash2,
-        separatorBefore: true,
-        onSelect: () => setConfirmState({
-          title: "Delete routing rule?",
-          description: "New provider events will no longer use this agent route.",
-          actionLabel: "Delete",
-          run: () => client.deleteBinding(binding.id),
-        }),
-      },
-    ],
-    [client],
-  );
-
-  const identityColumns = useMemo<PlatformDataTableColumn<ExternalAgentIdentity>[]>(
-    () => [
-      {
-        id: "provider",
-        header: terms.providerUser,
-        cell: ({ row }) => row.displayName || row.email || row.providerUserId,
-      },
-      {
-        id: "member",
-        header: "Organization member",
-        cell: ({ row }) => {
-          const member = memberById.get(row.platformUserId);
-          return member ? <MemberOption member={member} /> : row.platformUserId;
+      return [
+        {
+          id: "provider",
+          header: terms.providerUser,
+          cell: ({ row }) => row.kind === "identities"
+            ? row.value.displayName || row.value.email || row.value.providerUserId
+            : "-",
         },
-      },
-      { id: "verified", header: "Verified", cell: ({ row }) => formatDate(row.verifiedAt) },
+        {
+          id: "member",
+          header: "Organization member",
+          cell: ({ row }) => {
+            if (row.kind !== "identities") return "-";
+            const member = memberById.get(row.value.platformUserId);
+            return member ? <MemberOption member={member} /> : row.value.platformUserId;
+          },
+        },
+        {
+          id: "verified",
+          header: "Verified",
+          cell: ({ row }) => row.kind === "identities" ? formatDate(row.value.verifiedAt) : "-",
+        },
+      ];
+    },
+    [
+      agentById,
+      configurationTab,
+      environmentById,
+      memberById,
+      projectById,
+      terms.externalProject,
+      terms.providerUser,
+      terms.tenant,
     ],
-    [memberById, terms.providerUser],
   );
 
-  const identityActions = useCallback(
-    (identity: ExternalAgentIdentity): readonly PlatformDataTableAction<ExternalAgentIdentity>[] => [{
-      id: "delete",
-      label: "Remove mapping",
-      icon: Trash2,
-      onSelect: () => setConfirmState({
-        title: "Remove identity mapping?",
-        description: "This provider user will no longer inherit the linked organization member's access.",
-        actionLabel: "Remove",
-        run: () => client.deleteIdentity(identity.id),
-      }),
-    }],
-    [client],
-  );
+  const configurationActions = useCallback(
+    (
+      row: AgentTriggerConfigurationRow,
+    ): readonly PlatformDataTableAction<AgentTriggerConfigurationRow>[] => {
+      if (row.kind === "webhooks") {
+        const installation = row.value;
+        return [
+          {
+            id: "rotate",
+            label: "Rotate webhook secret",
+            icon: RotateCw,
+            onSelect: () => void runMutation(async () => {
+              const result = await client.updateInstallation(installation.id, {
+                rotateWebhookSecret: true,
+              });
+              if (result.setup) setSetup(result.setup);
+            }, "Webhook secret rotated."),
+          },
+          {
+            id: "toggle",
+            label: installation.enabled ? "Disable" : "Enable",
+            icon: installation.enabled ? KeyRound : Webhook,
+            onSelect: () => void runMutation(async () => {
+              await client.updateInstallation(installation.id, {
+                enabled: !installation.enabled,
+              });
+            }, installation.enabled ? "Webhook disabled." : "Webhook enabled."),
+          },
+          {
+            id: "delete",
+            label: "Delete",
+            icon: Trash2,
+            separatorBefore: true,
+            onSelect: () => setConfirmState({
+              title: "Delete webhook installation?",
+              description: "Its routes, identity mappings, and active external work will be removed.",
+              actionLabel: "Delete",
+              run: () => client.deleteInstallation(installation.id),
+            }),
+          },
+        ];
+      }
 
-  const eventColumns = useMemo<PlatformDataTableColumn<ExternalAgentEventRecord>[]>(
-    () => [
-      {
-        id: "resource",
-        header: "Resource",
-        cell: ({ row }) => row.envelope.resource.key || row.envelope.resource.title || row.envelope.resource.id,
-      },
-      { id: "trigger", header: "Trigger", accessor: (row) => row.envelope.trigger },
-      {
-        id: "thread",
-        header: "Thread",
-        cell: ({ row }) => row.threadId && onOpenThread ? (
-          <button
-            type="button"
-            className="external-agent-triggers__text-action"
-            onClick={(event) => {
-              event.stopPropagation();
-              onOpenThread?.(row.threadId || "");
-            }}
-          >
-            {row.threadId}
-          </button>
-        ) : row.threadId || "-",
-      },
-      { id: "status", header: "Status", cell: ({ row }) => <StatusLabel value={row.status} /> },
-      { id: "received", header: "Received", cell: ({ row }) => formatDate(row.receivedAt) },
-    ],
-    [onOpenThread],
-  );
+      if (row.kind === "routing") {
+        const binding = row.value;
+        return [
+          {
+            id: "toggle",
+            label: binding.enabled ? "Disable" : "Enable",
+            icon: Route,
+            onSelect: () => void runMutation(async () => {
+              await client.updateBinding(binding.id, { enabled: !binding.enabled });
+            }, binding.enabled ? "Route disabled." : "Route enabled."),
+          },
+          {
+            id: "delete",
+            label: "Delete",
+            icon: Trash2,
+            separatorBefore: true,
+            onSelect: () => setConfirmState({
+              title: "Delete routing rule?",
+              description: "New provider events will no longer use this agent route.",
+              actionLabel: "Delete",
+              run: () => client.deleteBinding(binding.id),
+            }),
+          },
+        ];
+      }
 
-  const eventActions = useCallback(
-    (event: ExternalAgentEventRecord): readonly PlatformDataTableAction<ExternalAgentEventRecord>[] => (
-      ["failed", "denied"].includes(event.status)
-        ? [{
-            id: "replay",
-            label: "Replay event",
-            icon: RefreshCw,
-            onSelect: () => void runMutation(
-              () => client.replayEvent(event.id),
-              "Event queued for replay.",
-            ),
-          }]
-        : []
-    ),
-    [client],
+      const identity = row.value;
+      return [{
+        id: "delete",
+        label: "Remove mapping",
+        icon: Trash2,
+        onSelect: () => setConfirmState({
+          title: "Remove identity mapping?",
+          description: "This provider user will no longer inherit the linked organization member's access.",
+          actionLabel: "Remove",
+          run: () => client.deleteIdentity(identity.id),
+        }),
+      }];
+    },
+    [client, runMutation],
   );
 
   if (loading && !snapshot) {
@@ -713,153 +718,91 @@ export function ExternalAgentTriggersPage({
 
   return (
     <div className="external-agent-triggers" data-external-agent-provider={provider}>
-      <header className="external-agent-triggers__intro">
-        <div>
-          <h1>Agent triggers</h1>
-          <p>
-            Start or continue Computer Agents threads from {providerLabel(provider)} {terms.resource}s,
-            while preserving requester identity and organization permissions.
-          </p>
-        </div>
-        <div className="external-agent-triggers__health">
-          <PlatformLabel variant={snapshot?.health.started === false ? "gray" : "green"}>
-            {snapshot?.health.started === false ? "Gateway offline" : "Gateway healthy"}
-          </PlatformLabel>
-          <PlatformSecondaryButton size="small" onClick={() => void refresh()} disabled={loading}>
-            <RefreshCw aria-hidden="true" />
-            Refresh
-          </PlatformSecondaryButton>
-        </div>
-      </header>
-
       {error ? <div className="external-agent-triggers__message is-error">{error}</div> : null}
       {notice ? <div className="external-agent-triggers__message">{notice}</div> : null}
 
-      <Section
-        title="Webhook installation"
-        description={`Connect a ${providerLabel(provider)} workspace and configure its verified callback.`}
-        action={
-          <PlatformPrimaryButton
-            size="small"
-            onClick={openInstallationModal}
-            disabled={!credentials.length || busy}
-            title={!credentials.length ? `Connect ${providerLabel(provider)} in Authentication first.` : undefined}
-          >
-            <Plus aria-hidden="true" />
-            Configure webhook
-          </PlatformPrimaryButton>
+      <PlatformDataTable
+        key={configurationTab}
+        rows={configurationRows}
+        columns={configurationColumns}
+        getRowId={(row) => row.value.id}
+        getRowActions={configurationActions}
+        ariaLabel={
+          configurationTab === "webhooks"
+            ? `${providerLabel(provider)} webhook installations`
+            : configurationTab === "routing"
+              ? `${providerLabel(provider)} agent routing`
+              : `${providerLabel(provider)} identity mappings`
         }
-      >
-        <PlatformDataTable
-          rows={installations}
-          columns={installationColumns}
-          getRowId={(row) => row.id}
-          getRowActions={installationActions}
-          ariaLabel={`${providerLabel(provider)} webhook installations`}
-          variant="minimalistic-ui"
-          pagination={false}
-          emptyState={
+        variant="minimalistic-ui"
+        pagination={false}
+        toolbar={{
+          leading: (
+            <PlatformDetailTabBar
+              ariaLabel="Agent trigger configuration"
+              value={configurationTab}
+              tabs={[
+                { id: "webhooks", label: "Webhooks" },
+                { id: "routing", label: "Routing" },
+                { id: "identities", label: "Identity mappings" },
+              ]}
+              onValueChange={setConfigurationTab}
+              variant="minimal"
+              className="agents-overview-tab-bar external-agent-triggers__table-tabs"
+            />
+          ),
+          primaryAction:
+            configurationTab === "webhooks"
+              ? {
+                  label: "Configure webhook",
+                  onClick: openInstallationModal,
+                  disabled: !credentials.length || busy,
+                  ariaLabel: !credentials.length
+                    ? `Connect ${providerLabel(provider)} in Authentication first`
+                    : "Configure webhook",
+                }
+              : configurationTab === "routing"
+                ? {
+                    label: "Add routing",
+                    onClick: openBindingModal,
+                    disabled:
+                      !installations.length
+                      || !agentOptions.length
+                      || (!environmentOptions.length && !projectOptions.length)
+                      || busy,
+                  }
+                : {
+                    label: "Map identity",
+                    onClick: openIdentityModal,
+                    disabled: !installations.length || !members.length || busy,
+                  },
+        }}
+        emptyState={
+          configurationTab === "webhooks" ? (
             <PlatformEmptyState
               icon={Webhook}
               title="No webhook installation"
-              description={credentials.length
-                ? `Configure the ${providerLabel(provider)} workspace that should invoke agents.`
-                : `Connect ${providerLabel(provider)} on the Authentication tab first.`}
+              description={
+                credentials.length
+                  ? `Configure the ${providerLabel(provider)} workspace that should invoke agents.`
+                  : `Connect ${providerLabel(provider)} on the Authentication tab first.`
+              }
             />
-          }
-        />
-      </Section>
-
-      <Section
-        title="Routing"
-        description={`Route a ${terms.externalProject.toLowerCase()} to an agent and its working environment.`}
-        action={
-          <PlatformSecondaryButton
-            size="small"
-            onClick={openBindingModal}
-            disabled={
-              !installations.length
-              || !agentOptions.length
-              || (!environmentOptions.length && !projectOptions.length)
-              || busy
-            }
-          >
-            <Plus aria-hidden="true" />
-            Add routing
-          </PlatformSecondaryButton>
-        }
-      >
-        <PlatformDataTable
-          rows={bindings}
-          columns={bindingColumns}
-          getRowId={(row) => row.id}
-          getRowActions={bindingActions}
-          ariaLabel={`${providerLabel(provider)} agent routing`}
-          variant="minimalistic-ui"
-          pagination={false}
-          emptyState={
+          ) : configurationTab === "routing" ? (
             <PlatformEmptyState
               icon={Route}
               title="No routing rules"
               description="Add a fallback route or map individual projects to different agents."
             />
-          }
-        />
-      </Section>
-
-      <Section
-        title="Identity mappings"
-        description={`Link ${providerLabel(provider)} users to organization members so platform permissions remain authoritative.`}
-        action={
-          <PlatformSecondaryButton
-            size="small"
-            onClick={openIdentityModal}
-            disabled={!installations.length || !members.length || busy}
-          >
-            <Plus aria-hidden="true" />
-            Map identity
-          </PlatformSecondaryButton>
-        }
-      >
-        <PlatformDataTable
-          rows={identities}
-          columns={identityColumns}
-          getRowId={(row) => row.id}
-          getRowActions={identityActions}
-          ariaLabel={`${providerLabel(provider)} identity mappings`}
-          variant="minimalistic-ui"
-          pagination={false}
-          emptyState={
+          ) : (
             <PlatformEmptyState
               icon={UserRound}
               title="No identity mappings"
               description="Unlinked users are denied by linked-member routes until an administrator maps them."
             />
-          }
-        />
-      </Section>
-
-      <Section
-        title="Recent activity"
-        description="Inspect accepted, denied, and failed external invocations."
-      >
-        <PlatformDataTable
-          rows={events}
-          columns={eventColumns}
-          getRowId={(row) => row.id}
-          getRowActions={eventActions}
-          ariaLabel={`${providerLabel(provider)} trigger activity`}
-          variant="minimalistic-ui"
-          pagination={false}
-          emptyState={
-            <PlatformEmptyState
-              icon={Activity}
-              title="No trigger activity"
-              description={`Verified ${providerLabel(provider)} events will appear here after the first invocation.`}
-            />
-          }
-        />
-      </Section>
+          )
+        }
+      />
 
       <PlatformSetupModal
         open={installationModalOpen}
@@ -890,10 +833,6 @@ export function ExternalAgentTriggersPage({
             description: "External identities are mapped before linked-member routes can run.",
           },
         ]}
-        introFooter={
-          `This creates a verified ${providerLabel(provider)} installation. ` +
-          "No agent runs until you add a routing rule."
-        }
         onClose={() => setInstallationModalOpen(false)}
         busy={busy}
         as="form"

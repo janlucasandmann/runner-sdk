@@ -128,6 +128,35 @@ describe("PlatformCodeEditorWorkspace", () => {
     ).toBeNull();
   });
 
+  it("allows a resource to replace the Markdown header title with an editable control", () => {
+    const onTitleChange = vi.fn();
+    const { container } = render(
+      <PlatformCodeEditorWorkspace
+        files={[{ id: "prompt-1", label: "Original title", editorMode: "markdown" }]}
+        activeFileId="prompt-1"
+        markdownEditor={{
+          value: "Keep responses grounded.",
+          onChange: () => undefined,
+          title: (
+            <input
+              aria-label="Prompt title"
+              value="Editable title"
+              onChange={(event) => onTitleChange(event.target.value)}
+            />
+          ),
+        }}
+      />,
+    );
+
+    expect(
+      container.querySelector(".platform-instructions-editor__title")?.textContent,
+    ).toBe("");
+    const titleInput = screen.getByRole("textbox", { name: "Prompt title" });
+    expect((titleInput as HTMLInputElement).value).toBe("Editable title");
+    fireEvent.change(titleInput, { target: { value: "Renamed prompt" } });
+    expect(onTitleChange).toHaveBeenCalledWith("Renamed prompt");
+  });
+
   it("keeps Markdown file selection and drag uploads enabled through the workspace", async () => {
     const upload = vi.fn(async (files: File[]) => files.map((file) => ({
       src: `/api/real/attachments/${encodeURIComponent(file.name)}`,
@@ -229,6 +258,23 @@ describe("PlatformCodeEditorWorkspace", () => {
     expect(folderIcon?.tagName.toLowerCase()).toBe("svg");
     expect(folderIcon?.getAttribute("aria-hidden")).toBe("true");
     expect(fileLabel?.previousElementSibling).toBe(folderIcon);
+  });
+
+  it("allows resource-specific labels for the shared creation control", () => {
+    const onCreateFile = vi.fn();
+    render(
+      <PlatformCodeEditorWorkspace
+        files={[]}
+        sidebarTitle="Prompts"
+        onCreateFile={onCreateFile}
+        createFileButtonLabel="Add prompt"
+        createFileLabel="Create Prompt"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Add prompt" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Create Prompt" }));
+    expect(onCreateFile).toHaveBeenCalledTimes(1);
   });
 
   it("moves dragged files into folders and back to the sidebar root", () => {

@@ -30,7 +30,7 @@
         import { PlatformDiffViewer } from "/dist/platform-ui/components/composite/diff-viewer/index.js";
   	      import { PlatformEmptyState } from "/dist/platform-ui/components/composite/empty-state/index.js";
         import { PlatformEmojiPicker } from "/dist/platform-ui/components/composite/emoji-picker/index.js";
-        import { PlatformVersionChangesPage, PlatformVersionHistorySidebar, PlatformVersionLabel, PlatformVersionPublishControl, PlatformVersionSaveDialog, formatPlatformVersionLabel, normalizePlatformVersionNumber, usePlatformVersionNavigationGuard } from "/dist/platform-ui/components/composite/versioning/index.js";
+        import { PlatformVersionChangesPage, PlatformVersionHistorySidebar, PlatformVersionLabel, PlatformVersionNavigationGuardRegistration, PlatformVersionPublishControl, PlatformVersionSaveDialog, formatPlatformVersionLabel, normalizePlatformVersionNumber, usePlatformVersionNavigationGuard } from "/dist/platform-ui/components/composite/versioning/index.js";
         import { PlatformInstructionsEditor, normalizePlatformInstructionsEditorImageSource, replacePlatformInstructionsEditorImageMarkdown, serializePlatformInstructionsEditorFileMarkdown, serializePlatformInstructionsEditorImageMarkdown } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
   	      import { PlatformLoadingState } from "/dist/platform-ui/components/composite/loading-state/index.js";
         import { PlatformSettingsSection, PlatformSettingsSectionList } from "/dist/platform-ui/components/composite/settings-section/index.js";

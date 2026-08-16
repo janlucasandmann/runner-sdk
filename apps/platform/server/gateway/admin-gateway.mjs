@@ -3,7 +3,7 @@ import { createDeploymentVmAdminClient } from "./deployment-vm-admin-client.mjs"
 import { readResponseJson } from "./http-utils.mjs";
 
 export function createAdminGateway(bindings) {
-    const { aiosOrigin, deploymentVmNameOverride, deploymentVmNamePrefix, deploymentVmProject, feedbackSummaryAdminEnvFileCandidates, feedbackSummaryAllowedEmail, fetchAiosApi, hasAiosSession, identityService, normalizeBackendUrl, parseUpstreamUrl, platformOrigin, port, sendJson, serveFeedbackSummaryPage, serveProductUsageSummaryPageV2, } = bindings;
+    const { aiosOrigin, deploymentTopology, deploymentVmNameOverride, deploymentVmNamePrefix, deploymentVmProject, feedbackSummaryAdminEnvFileCandidates, feedbackSummaryAllowedEmail, fetchAiosApi, hasAiosSession, identityService, normalizeBackendUrl, parseUpstreamUrl, platformOrigin, port, sendJson, serveFeedbackSummaryPage, serveProductUsageSummaryPageV2, } = bindings;
     const {
         fetchFeedbackSummaryViaDeploymentVm,
         fetchProductUsageSummaryViaDeploymentVm,
@@ -221,6 +221,53 @@ export function createAdminGateway(bindings) {
             });
         }
     }
+    async function proxyApplianceOverviewGet(req, res) {
+        if (deploymentTopology !== "on_prem") {
+            return sendJson(res, 404, {
+                error: "Not Found",
+                message: "The appliance overview is only available on an on-prem deployment.",
+            });
+        }
+        try {
+            const session = await fetchFeedbackSummarySessionEmail(req);
+            if (session.status === 401 || session.status === 403 || !session.email) {
+                return sendJson(res, 401, {
+                    error: "Unauthorized",
+                    message: "Sign in to view appliance information.",
+                });
+            }
+            const adminKey = await readFeedbackSummaryAdminKey();
+            if (!adminKey) {
+                return sendJson(res, 503, {
+                    error: "Appliance administration is not configured",
+                    message: "ADMIN_API_KEY is missing on the platform server.",
+                });
+            }
+            const upstreamUrl = parseUpstreamUrl(req, {});
+            const upstreamTarget = new URL("/admin/appliance-overview", upstreamUrl);
+            const upstream = await fetch(upstreamTarget.toString(), {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${adminKey}`,
+                    "X-Admin-Key": adminKey,
+                },
+            });
+            const parsed = await readResponseJson(upstream);
+            if (upstream.status === 401 || upstream.status === 403) {
+                return sendJson(res, 502, {
+                    error: "Failed to load appliance information",
+                    message: "The control-plane appliance overview request was rejected.",
+                });
+            }
+            return sendJson(res, upstream.status, parsed);
+        }
+        catch (error) {
+            return sendJson(res, 502, {
+                error: "Failed to load appliance information",
+                message: error instanceof Error ? error.message : String(error),
+            });
+        }
+    }
     async function proxyContactSalesSummaryGet(req, res) {
         if (identityService.provider === "oidc") {
             return sendJson(res, 501, {
@@ -315,6 +362,7 @@ export function createAdminGateway(bindings) {
         handleFeedbackSummaryPageRequest,
         handleProductUsageSummaryPageRequest,
         proxyContactSalesSummaryGet,
+        proxyApplianceOverviewGet,
         proxyFeedbackSummaryGet,
         proxyProductUsageSummaryGet,
     });

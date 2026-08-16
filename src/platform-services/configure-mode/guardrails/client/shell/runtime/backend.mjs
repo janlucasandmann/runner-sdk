@@ -206,6 +206,10 @@ export const GUARDRAILS_APP_BACKEND_SCRIPT = `        async function readGuardra
         async function persistGuardrailSetToBackend(set) {
           const normalizedSet = ensurePlaygroundGuardrailInitialVersion(normalizePlaygroundGuardrailSet(set));
           if (!normalizedSet.id || isPlaygroundDefaultGuardrailSet(normalizedSet)) return null;
+          if (hasPlaygroundGuardrailIncompletePrompts(normalizedSet)) {
+            setGuardrailsBackendSyncState({ status: "idle", error: "" });
+            return normalizedSet;
+          }
           const payload = buildPlaygroundGuardrailBackendPayload(normalizedSet);
           const signature = JSON.stringify(payload);
           if (guardrailPersistSignaturesRef.current.get(normalizedSet.id) === signature) {
@@ -227,7 +231,6 @@ export const GUARDRAILS_APP_BACKEND_SCRIPT = `        async function readGuardra
           const normalizedSet = ensurePlaygroundGuardrailInitialVersion(normalizePlaygroundGuardrailSet(set));
           if (!normalizedSet.id || isPlaygroundDefaultGuardrailSet(normalizedSet) || !String(proxyBackendBase || "").trim()) return;
           if (options.persist === false) return;
-          const delayMs = Math.max(0, Number(options.delayMs ?? 450) || 0);
           const existingTimer = guardrailPersistTimersRef.current.get(normalizedSet.id);
           if (existingTimer) {
             if (typeof window !== "undefined") {
@@ -235,7 +238,13 @@ export const GUARDRAILS_APP_BACKEND_SCRIPT = `        async function readGuardra
             } else {
               clearTimeout(existingTimer);
             }
+            guardrailPersistTimersRef.current.delete(normalizedSet.id);
           }
+          if (hasPlaygroundGuardrailIncompletePrompts(normalizedSet)) {
+            setGuardrailsBackendSyncState({ status: "idle", error: "" });
+            return;
+          }
+          const delayMs = Math.max(0, Number(options.delayMs ?? 450) || 0);
           const runPersist = () => {
             guardrailPersistTimersRef.current.delete(normalizedSet.id);
             void persistGuardrailSetToBackend(normalizedSet).catch((error) => {

@@ -1,3 +1,5 @@
+import { APPLIANCE_ADMIN_SIDEBAR_ENTRY_SCRIPT } from "../../../../admin-mode/appliance/index.mjs";
+
 export const ORGANIZATIONS_ADMIN_PRIMARY_SIDEBAR_ENTRIES_SCRIPT = `              {
                 id: "admin-organization",
                 label: "Organization",
@@ -43,6 +45,8 @@ export const ORGANIZATIONS_ADMIN_USAGE_SIDEBAR_ENTRY_SCRIPT = `              {
                 onClick: () => openOrganizationAdminPage("usage"),
               },
 `;
+
+export const ORGANIZATIONS_ADMIN_APPLIANCE_SIDEBAR_ENTRY_SCRIPT = APPLIANCE_ADMIN_SIDEBAR_ENTRY_SCRIPT;
 
 export const ORGANIZATIONS_ADMIN_PERMISSIONS_SIDEBAR_ENTRIES_SCRIPT = `              {
                 id: "admin-permissions-label",

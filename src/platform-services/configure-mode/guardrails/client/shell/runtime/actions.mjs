@@ -103,6 +103,32 @@ export const GUARDRAILS_APP_ACTIONS_SCRIPT = `        function clearGuardrailVer
                   )
                 )
               : null,
+            typeof options.onShareWithTeam === "function"
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row",
+                  role: "menuitem",
+                  onClick: options.onShareWithTeam,
+                },
+                React.createElement(UsersRound, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Share with Team")
+                )
+              )
+              : null,
+            typeof options.onVersionHistory === "function"
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row",
+                  role: "menuitem",
+                  onClick: options.onVersionHistory,
+                },
+                React.createElement(History, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Version history")
+                )
+              )
+              : null,
             React.createElement("button", {
               type: "button",
               className: "tb-popup-row",

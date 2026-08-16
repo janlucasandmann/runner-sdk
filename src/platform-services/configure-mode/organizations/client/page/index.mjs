@@ -4,6 +4,7 @@ import { ORGANIZATIONS_PAGE_MEMBERS_SCRIPT } from "./members.mjs";
 import { ORGANIZATIONS_PAGE_ROLES_AND_VIEW_SCRIPT } from "./roles-and-view.mjs";
 import { ORGANIZATIONS_PAGE_SETUP_SCRIPT } from "./setup.mjs";
 import { ORGANIZATIONS_PAGE_SUBSCRIPTION_SCRIPT } from "./subscription.mjs";
+import { APPLIANCE_ADMIN_PAGE_SCRIPT } from "../../../../admin-mode/appliance/index.mjs";
 
 export function createOrganizationsPageScriptFragments() {
   return Object.freeze({
@@ -12,6 +13,7 @@ export function createOrganizationsPageScriptFragments() {
     identityAndBilling: ORGANIZATIONS_PAGE_IDENTITY_AND_BILLING_SCRIPT,
     identityAccess: ORGANIZATIONS_PAGE_IDENTITY_ACCESS_SCRIPT,
     members: ORGANIZATIONS_PAGE_MEMBERS_SCRIPT,
+    appliance: APPLIANCE_ADMIN_PAGE_SCRIPT,
     rolesAndView: ORGANIZATIONS_PAGE_ROLES_AND_VIEW_SCRIPT,
   });
 }

@@ -35,13 +35,29 @@ export const GUARDRAILS_PERSISTENCE_SCRIPT = `      function readPlaygroundGuard
         };
       }
 
+      function isPlaygroundGuardrailPromptPersistable(prompt) {
+        const source = prompt && typeof prompt === "object" && !Array.isArray(prompt) ? prompt : {};
+        return Boolean(
+          String(source.title || "").trim()
+          && String(source.prompt || "").trim()
+        );
+      }
+
+      function hasPlaygroundGuardrailIncompletePrompts(set) {
+        const prompts = Array.isArray(set?.prompts) ? set.prompts : [];
+        return prompts.some((prompt) => !isPlaygroundGuardrailPromptPersistable(prompt));
+      }
+
       function buildPlaygroundGuardrailBackendPayload(set) {
         const normalizedSet = normalizePlaygroundGuardrailSet(set);
+        // The guardrail id identifies the resource in the request URL. The
+        // write contract deliberately rejects it in POST/PATCH bodies, while
+        // nested prompt ids remain valid and preserve prompt identity.
         return {
-          id: normalizedSet.id,
           name: normalizedSet.name,
           description: normalizedSet.description,
           prompts: (Array.isArray(normalizedSet.prompts) ? normalizedSet.prompts : [])
+            .filter((prompt) => isPlaygroundGuardrailPromptPersistable(prompt))
             .map((prompt) => createPlaygroundGuardrailPromptDraft(prompt)),
           metadata: buildPlaygroundGuardrailBackendMetadata(normalizedSet),
         };

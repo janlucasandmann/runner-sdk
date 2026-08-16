@@ -46,6 +46,13 @@ control-plane secret explicitly.
 is a singleton repository. Deployments with more than one server replica must
 inject a shared transactional repository before enabling inbound traffic.
 
+When running the platform locally without an explicit path, gateway state is
+stored server-side at `~/.computer-agents/platform/external-agents.json` with
+owner-only permissions. The former checkout-local `.platform-data` store and
+encryption key are migrated on first access. The repository also retains a
+server-side backup so deleting or replacing a source checkout cannot erase
+configured installations.
+
 ## Create an installation
 
 Management routes require an authenticated platform session and the target

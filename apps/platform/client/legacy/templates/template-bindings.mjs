@@ -153,7 +153,8 @@ export function createPlatformCompatibilityTemplateBindings(bindings) {
     METRONOME_PAGE_CSS,
     ORGANIZATIONS_STYLE_FRAGMENTS.general
       + ORGANIZATIONS_STYLE_FRAGMENTS.members
-      + ORGANIZATIONS_STYLE_FRAGMENTS.subscription,
+      + ORGANIZATIONS_STYLE_FRAGMENTS.subscription
+      + ORGANIZATIONS_STYLE_FRAGMENTS.appliance,
     "", // Retired duplicate Notifications table styles.
     API_KEYS_STYLE_FRAGMENTS.page,
     EVALUATIONS_AGENT_STYLE_FRAGMENTS.page,

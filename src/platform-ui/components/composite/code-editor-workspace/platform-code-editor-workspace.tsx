@@ -81,6 +81,8 @@ export interface PlatformCodeEditorMarkdownEditor {
     value: string,
     context?: PlatformInstructionsEditorChangeContext,
   ) => void;
+  /** Overrides the active file label in the Markdown editor header. */
+  title?: ReactNode;
   placeholder?: string;
   ariaLabel?: string;
   readOnly?: boolean;
@@ -102,6 +104,8 @@ export interface PlatformCodeEditorWorkspaceProps {
   onFilesDelete?: (files: readonly PlatformCodeEditorFile[]) => void | Promise<void>;
   onFilesMove?: (move: PlatformCodeEditorFileMove) => void | Promise<void>;
   onCreateFile?: () => void | Promise<void>;
+  createFileLabel?: ReactNode;
+  createFileButtonLabel?: string;
   onUploadFiles?: () => void | Promise<void>;
   onCreateFolder?: () => void | Promise<void>;
   fileCreationDisabled?: boolean;
@@ -230,6 +234,8 @@ export function PlatformCodeEditorWorkspace({
   onFilesDelete,
   onFilesMove,
   onCreateFile,
+  createFileLabel = "Create File",
+  createFileButtonLabel = "Add file",
   onUploadFiles,
   onCreateFolder,
   fileCreationDisabled = false,
@@ -597,8 +603,8 @@ export function PlatformCodeEditorWorkspace({
         <PlatformIconButton
           size="compact"
           active={open}
-          aria-label="Add file"
-          title="Add file"
+          aria-label={createFileButtonLabel}
+          title={createFileButtonLabel}
           aria-haspopup="menu"
           aria-expanded={open}
           disabled={creationControlsDisabled}
@@ -617,7 +623,7 @@ export function PlatformCodeEditorWorkspace({
           onClick={() => runFileAction(onCreateFile)}
         >
           <FilePlus2 className="tb-popup-icon" aria-hidden="true" />
-          <span className="tb-popup-label">Create File</span>
+          <span className="tb-popup-label">{createFileLabel}</span>
         </button>
       ) : null}
       {onUploadFiles ? (
@@ -809,7 +815,7 @@ export function PlatformCodeEditorWorkspace({
           <PlatformInstructionsEditor
             value={markdownEditor.value}
             onChange={markdownEditor.onChange}
-            title={activeFileTitle}
+            title={markdownEditor.title ?? activeFileTitle}
             placeholder={markdownEditor.placeholder || "Write Markdown..."}
             ariaLabel={
               markdownEditor.ariaLabel

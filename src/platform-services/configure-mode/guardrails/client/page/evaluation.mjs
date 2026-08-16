@@ -17,6 +17,50 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
               ? normalizePlaygroundEvaluationSet(set, index)
               : (set || {})
           );
+          const getGuardrailEvaluationRunTargetGuardrailId = (run) => {
+            const metadata = run?.metadata && typeof run.metadata === "object" && !Array.isArray(run.metadata)
+              ? run.metadata
+              : {};
+            const embeddedRun = metadata.run && typeof metadata.run === "object" && !Array.isArray(metadata.run)
+              ? metadata.run
+              : {};
+            const targetType = String(
+              run?.targetType
+              || run?.target_type
+              || metadata.targetType
+              || metadata.target_type
+              || embeddedRun.targetType
+              || embeddedRun.target_type
+              || ""
+            ).trim().toLowerCase();
+            const genericTargetId = ["guardrail", "guardrail_set", "guardrail-set"].includes(targetType)
+              ? String(
+                  run?.targetId
+                  || run?.target_id
+                  || metadata.targetId
+                  || metadata.target_id
+                  || embeddedRun.targetId
+                  || embeddedRun.target_id
+                  || ""
+                )
+              : "";
+            return String(
+              run?.targetGuardrailId
+              || run?.target_guardrail_id
+              || run?.guardrailId
+              || run?.guardrail_id
+              || metadata.targetGuardrailId
+              || metadata.target_guardrail_id
+              || metadata.guardrailId
+              || metadata.guardrail_id
+              || embeddedRun.targetGuardrailId
+              || embeddedRun.target_guardrail_id
+              || embeddedRun.guardrailId
+              || embeddedRun.guardrail_id
+              || genericTargetId
+              || ""
+            ).trim();
+          };
           const getGuardrailEvaluationRunTimestamp = (run) => {
             const timestamp = Date.parse(String(run?.completedAt || run?.updatedAt || run?.createdAt || ""));
             return Number.isFinite(timestamp) ? timestamp : 0;
@@ -54,13 +98,17 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
               : (Array.isArray(payload) ? payload : keys.reduce((items, key) => items.length ? items : (Array.isArray(payload?.[key]) ? payload[key] : []), []))
           );
           const loadGuardrailEvaluationData = async (options = {}) => {
-            if (!options.force && guardrailEvaluationLoadState.status === "loading") {
+            const targetGuardrailSetId = String(selectedGuardrailSet?.id || "").trim();
+            const loadStateMatchesTarget = String(guardrailEvaluationLoadState.guardrailSetId || "") === targetGuardrailSetId;
+            if (!options.force && loadStateMatchesTarget && guardrailEvaluationLoadState.status === "loading") {
               return { sets: guardrailEvaluationSets, runs: guardrailEvaluationRuns };
             }
-            if (!options.force && guardrailEvaluationLoadState.status === "loaded") {
+            if (!options.force && loadStateMatchesTarget && guardrailEvaluationLoadState.status === "loaded") {
               return { sets: guardrailEvaluationSets, runs: guardrailEvaluationRuns };
             }
-            setGuardrailEvaluationLoadState({ status: "loading", error: "" });
+            const requestToken = Number(guardrailEvaluationRequestRef.current?.token || 0) + 1;
+            guardrailEvaluationRequestRef.current = { token: requestToken, guardrailSetId: targetGuardrailSetId };
+            setGuardrailEvaluationLoadState({ status: "loading", error: "", guardrailSetId: targetGuardrailSetId });
             try {
               const [setsPayload, runsPayload] = await Promise.all([
                 requestGuardrailEvaluationJson("/evaluations?limit=500", { method: "GET" }, "Failed to load evaluations."),
@@ -71,13 +119,28 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
                 .filter((set) => String(set?.id || "").trim());
               const runs = readGuardrailEvaluationList(runsPayload, ["runs", "evaluationRuns", "evaluation_runs"])
                 .map((run, index) => normalizeGuardrailEvaluationRun(run, index))
-                .filter((run) => String(run?.id || "").trim());
+                .filter((run) => String(run?.id || "").trim())
+                .filter((run) => (
+                  Boolean(targetGuardrailSetId)
+                  && getGuardrailEvaluationRunTargetGuardrailId(run) === targetGuardrailSetId
+                ));
+              const requestIsCurrent = Number(guardrailEvaluationRequestRef.current?.token || 0) === requestToken
+                && String(guardrailEvaluationRequestRef.current?.guardrailSetId || "") === targetGuardrailSetId;
+              if (!requestIsCurrent) return { sets, runs };
               setGuardrailEvaluationSets(sets);
               setGuardrailEvaluationRuns(runs);
-              setGuardrailEvaluationLoadState({ status: "loaded", error: "" });
+              setGuardrailEvaluationLoadState({ status: "loaded", error: "", guardrailSetId: targetGuardrailSetId });
               return { sets, runs };
             } catch (error) {
-              setGuardrailEvaluationLoadState({ status: "error", error: error?.message || String(error) });
+              const requestIsCurrent = Number(guardrailEvaluationRequestRef.current?.token || 0) === requestToken
+                && String(guardrailEvaluationRequestRef.current?.guardrailSetId || "") === targetGuardrailSetId;
+              if (requestIsCurrent) {
+                setGuardrailEvaluationLoadState({
+                  status: "error",
+                  error: error?.message || String(error),
+                  guardrailSetId: targetGuardrailSetId,
+                });
+              }
               return { sets: [], runs: [] };
             }
           };
@@ -109,7 +172,12 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
           };
           const upsertGuardrailEvaluationRun = (run) => {
             const normalized = normalizeGuardrailEvaluationRun(run);
-            if (!normalized?.id) return;
+            const targetGuardrailSetId = String(selectedGuardrailSet?.id || "").trim();
+            if (
+              !normalized?.id
+              || !targetGuardrailSetId
+              || getGuardrailEvaluationRunTargetGuardrailId(normalized) !== targetGuardrailSetId
+            ) return;
             setGuardrailEvaluationRuns((current) => [
               normalized,
               ...(Array.isArray(current) ? current : []).filter((item) => String(item?.id || "") !== String(normalized.id)),
@@ -197,10 +265,11 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
             .map((set) => {
               const runs = (Array.isArray(guardrailEvaluationRuns) ? guardrailEvaluationRuns : [])
                 .filter((run) => String(run?.evaluationSetId || run?.evaluationId || "") === String(set.id))
-                .filter((run) => String(run?.targetGuardrailId || run?.metadata?.targetGuardrailId || run?.metadata?.run?.targetGuardrailId || "") === String(selectedGuardrailSet?.id || ""))
+                .filter((run) => getGuardrailEvaluationRunTargetGuardrailId(run) === String(selectedGuardrailSet?.id || ""))
                 .sort((left, right) => getGuardrailEvaluationRunTimestamp(right) - getGuardrailEvaluationRunTimestamp(left));
               return { set, runs, latestRun: runs[0] || null };
-            });
+            })
+            .filter((row) => row.runs.length > 0);
           const guardrailEvaluationFilteredRows = guardrailEvaluationRows.filter((row) => {
             const query = String(guardrailEvaluationSearchQuery || "").trim().toLowerCase();
             return !query || [row.set?.name, row.set?.description, row.latestRun?.label].join(" ").toLowerCase().includes(query);
@@ -281,8 +350,10 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
             )
           );
           const renderGuardrailEvaluationSection = () => {
-            const isLoading = guardrailEvaluationLoadState.status === "loading";
-            const emptyState = guardrailEvaluationLoadState.status === "error"
+            const selectedGuardrailEvaluationSetId = String(selectedGuardrailSet?.id || "").trim();
+            const loadStateMatchesTarget = String(guardrailEvaluationLoadState.guardrailSetId || "") === selectedGuardrailEvaluationSetId;
+            const isLoading = !loadStateMatchesTarget || guardrailEvaluationLoadState.status === "loading";
+            const emptyState = loadStateMatchesTarget && guardrailEvaluationLoadState.status === "error"
               ? React.createElement(PlatformEmptyState, {
                   icon: AlertCircle,
                   title: "Evaluations could not be loaded",
@@ -290,8 +361,8 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
                 })
               : React.createElement(PlatformEmptyState, {
                   icon: ChartColumnIncreasing,
-                  title: "No evaluations available yet",
-                  description: "Create an evaluation set, then run it against this guardrail.",
+                  title: "No evaluation runs yet",
+                  description: "Run an evaluation against this guardrail to see its results here.",
                 });
             return React.createElement("section", { className: "playground-guardrails-evaluation-section" },
               React.createElement(PlatformDataTable, {

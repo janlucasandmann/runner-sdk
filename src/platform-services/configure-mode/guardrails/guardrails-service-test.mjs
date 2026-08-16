@@ -10,6 +10,7 @@ import {
   GUARDRAILS_APP_STATE_SCRIPT,
   GUARDRAILS_CATALOG_SCRIPT,
   GUARDRAILS_DOMAIN_FRAGMENTS,
+  GUARDRAILS_DOMAIN_RUNTIME_SCRIPT_FRAGMENTS,
   GUARDRAILS_DOMAIN_RUNTIME_SCRIPT,
   GUARDRAILS_PAGE_CSS,
   GUARDRAILS_PAGE_RUNTIME_SCRIPT,
@@ -27,6 +28,49 @@ assert.match(GUARDRAILS_CATALOG_SCRIPT, /PLAYGROUND_DEFAULT_GUARDRAIL_SETS/);
 assert.match(GUARDRAILS_DOMAIN_RUNTIME_SCRIPT, /function normalizePlaygroundGuardrailSet/);
 assert.match(GUARDRAILS_DOMAIN_RUNTIME_SCRIPT, /const playgroundGuardrailVersionController/);
 assert.match(GUARDRAILS_DOMAIN_FRAGMENTS.runtime, /function buildPlaygroundGuardrailBackendPayload/);
+const buildGuardrailBackendPayload = new Function(
+  "normalizePlaygroundGuardrailSet",
+  "stripPlaygroundGuardrailVersionMetadata",
+  "createPlaygroundGuardrailPromptDraft",
+  `${GUARDRAILS_DOMAIN_RUNTIME_SCRIPT_FRAGMENTS.persistence}\nreturn buildPlaygroundGuardrailBackendPayload;`,
+)(
+  (value) => value,
+  (value) => value,
+  (value) => ({ ...value }),
+);
+const guardrailWritePayload = buildGuardrailBackendPayload({
+  id: "guardrail_client_only",
+  name: "Operational safety",
+  description: "Keep sensitive actions controlled.",
+  prompts: [{
+    id: "prompt_stable_identity",
+    title: "Confirm sensitive changes",
+    prompt: "Ask before changing production state.",
+  }, {
+    id: "prompt_local_draft",
+    title: "Draft title",
+    prompt: "",
+  }],
+  metadata: { owner: "team" },
+});
+assert.deepEqual(
+  Object.keys(guardrailWritePayload).sort(),
+  ["description", "metadata", "name", "prompts"],
+);
+assert.equal(guardrailWritePayload.prompts[0].id, "prompt_stable_identity");
+assert.equal(guardrailWritePayload.prompts.length, 1);
+assert.equal(
+  guardrailWritePayload.prompts.some((prompt) => prompt.id === "prompt_local_draft"),
+  false,
+);
+assert.match(
+  GUARDRAILS_DOMAIN_RUNTIME_SCRIPT_FRAGMENTS.versions,
+  /\.filter\(\(prompt\) => isPlaygroundGuardrailPromptPersistable\(prompt\)\)[\s\S]*\.map\(\(prompt\) => createPlaygroundGuardrailPromptDraft\(prompt\)\)/,
+);
+assert.match(
+  GUARDRAILS_APP_RUNTIME_SCRIPT,
+  /hasPlaygroundGuardrailIncompletePrompts\(normalizedSet\)[\s\S]*setGuardrailsBackendSyncState\(\{ status: "idle", error: "" \}\)[\s\S]*return normalizedSet/,
+);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.controller, /function renderGuardrailsPage/);
 assert.match(
   GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.controller,
@@ -34,7 +78,22 @@ assert.match(
 );
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionActions, /publishCurrentGuardrailVersion/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionActions, /saveAndPublishCurrentGuardrailVersion/);
-assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionActions, /usePlatformVersionNavigationGuard/);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionActions,
+  /function buildGuardrailVersionPublishRequestBody\(snapshot\) \{[\s\S]*return snapshot === undefined \? \{\} : \{ snapshot \};/,
+);
+assert.doesNotMatch(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionActions,
+  /\/publish",[\s\S]{0,220}description:/,
+);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionActions,
+  /React\.createElement\(PlatformVersionNavigationGuardRegistration/,
+);
+assert.doesNotMatch(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionActions,
+  /usePlatformVersionNavigationGuard\(/,
+);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionViews, /renderGuardrailVersionsSidebar/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionViews, /React\.createElement\(PlatformVersionHistorySidebar/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionViews, /React\.createElement\(PlatformVersionPublishControl/);
@@ -60,31 +119,85 @@ assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /const renderGuard
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /resourceType: "guardrail"/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /\/resource-shares/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation, /targetGuardrailId/);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation,
+  /const getGuardrailEvaluationRunTargetGuardrailId =/,
+);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation,
+  /guardrailEvaluationRequestRef[\s\S]*guardrailSetId: targetGuardrailSetId/,
+);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation,
+  /\.filter\(\(row\) => row\.runs\.length > 0\)/,
+);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation,
+  /title: "No evaluation runs yet"/,
+);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation, /Run Guardrail Evaluation/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.table, /function renderGuardrailsTable/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.table, /React\.createElement\(GuardrailsOverviewPage/);
 assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.table, /React\.createElement\(PlatformDataTable/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /React\.createElement\(GuardrailDetailPage/);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,
+  /guardrailVersionNavigationGuard,[\s\S]*listContent/,
+);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /activeTab: guardrailDetailTab/);
-assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /sidebarToggle: guardrailDetailSidebarToggle/);
 assert.match(
   GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,
-  /sidebarCollapsed: guardrailDetailSidebarCollapsed \|\| Boolean\(guardrailAccessTeamId\)/,
+  /sidebarCollapsed: guardrailDetailSidebarCollapsed/,
 );
-assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /React\.createElement\(PlatformInstructionsEditor/);
 assert.match(
   GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,
-  /className: "playground-guardrails-prompt-card-header"[\s\S]*React\.createElement\(PlatformInstructionsEditor, \{[\s\S]*variant: "minimalistic-ui"[\s\S]*historyKey: "guardrail-prompt:"/,
+  /React\.createElement\(PlatformCodeEditorWorkspace, \{[\s\S]*variant: "full-screen"[\s\S]*sidebarTitle: "Prompts"[\s\S]*editorMode: "markdown"|editorMode: "markdown"[\s\S]*React\.createElement\(PlatformCodeEditorWorkspace/,
 );
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /markdownEditor: activeGuardrailPrompt/);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,
+  /className: "playground-server-detail-content guardrail-detail-page__evaluation-content"/,
+);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,
+  /React\.createElement\(PlatformDeploymentMap, \{[\s\S]{0,240}regionCode: guardrailDeploymentRegion[\s\S]{0,160}title: "Deployment region"/,
+);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,
+  /evaluationScopeKey: String\(selectedGuardrailSet\.id \|\| ""\)/,
+);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,
+  /title: React\.createElement\("input", \{[\s\S]*className: "guardrail-detail-page__prompt-title-input"[\s\S]*"aria-label": "Prompt title"/,
+);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /onCreateFile:[\s\S]*addGuardrailPrompt/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /className: "guardrail-detail-page__identity"/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /React\.createElement\(Shield/);
+assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /playground-guardrails-prompt-card-header/);
 assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /playground-guardrails-prompt-body-input/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /ariaLabel: "Choose guardrail owner"/);
-assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /onClick: openGuardrailShareTeamModal[\s\S]*Share with Team/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /renderGuardrailShareTeamModal\(\)/);
 assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /renderGuardrailDetailSidebarRow\(\s*"id"/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.editor, /React\.createElement\(PlatformVersionSaveDialog/);
 assert.match(
   GUARDRAILS_PAGE_CSS,
-  /\.playground-guardrails-detail-page-host \.playground-guardrails-browser-body\.is-detail-page\s*\{[^}]*padding: 42px 44px 56px;/,
+  /\.playground-guardrails-detail-page-host \.playground-guardrails-browser-body\.is-detail-page\s*\{[^}]*padding: 0;/,
+);
+assert.match(
+  GUARDRAILS_PAGE_CSS,
+  /\.guardrail-detail-page\.file-resource-detail-page\.is-settings-tab\s*\{[\s\S]{0,260}--playground-centered-page-max-width[\s\S]{0,120}margin-inline: auto;[\s\S]{0,80}padding: 0;[\s\S]{0,80}overflow: visible;/,
+);
+assert.match(
+  GUARDRAILS_PAGE_CSS,
+  /\.guardrail-detail-page \.guardrail-detail-page__evaluation-content,[\s\S]{0,120}\.guardrail-detail-page \.guardrail-detail-page__settings-content\s*\{[\s\S]{0,160}max-width: none/,
+);
+assert.match(
+  GUARDRAILS_PAGE_CSS,
+  /\.guardrail-detail-page[\s\S]{0,120}\.guardrail-detail-page__properties-card[\s\S]{0,120}\.playground-project-overview-sidebar-row-value\s*\{[\s\S]{0,120}justify-content: flex-end;[\s\S]{0,80}text-align: right;/,
+);
+assert.match(
+  GUARDRAILS_PAGE_CSS,
+  /\.guardrail-detail-page__identity-value[\s\S]{0,120}\.playground-team-member-avatar\s*\{[\s\S]{0,100}width: 20px;[\s\S]{0,80}height: 20px;[\s\S]{0,80}flex: 0 0 20px;/,
 );
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT, /function renderGuardrailVersionChangesPage/);
 assert.match(GUARDRAILS_APP_STATE_SCRIPT, /guardrailsBackendLoadRef/);
@@ -99,9 +212,22 @@ assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.navigation, /function openGuardrail
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderGuardrailsPageNav/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-guardrails-overview-controls/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-guardrails-detail-publish-controls/);
-assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformVersionLabel/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformSwitch/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "general", label: "General" \}/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "evaluation", label: "Evaluation" \}/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "settings", label: "Settings" \}/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /trailing: guardrailBreadcrumbActions/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformResourceHeaderActions/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformResourceVersionLabel/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformResourceActionsMenu/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformResourceActionsInformation/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformResourceVersionHistoryMenuItem/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Share"/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Copy Guardrail ID"/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Rename"/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Delete"/);
+assert.doesNotMatch(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /renderPlaygroundPlatformPopup/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /isGuardrailVersionHistoryOpen/);
-assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /includeMetadata: true/);
 assert.doesNotMatch(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /isResourcesVersionsDrawerOpen/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation, /resolvedEnvironmentId \|\| defaultShellEnvironmentId/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation, /String\(proxyBackendBase \|\| ""\)/);

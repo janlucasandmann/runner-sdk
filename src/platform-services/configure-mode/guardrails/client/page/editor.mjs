@@ -233,18 +233,21 @@ export const GUARDRAILS_PAGE_EDITOR_SCRIPT = `          function applyGuardrailV
           }
 
           function addGuardrailPrompt(setId) {
+            const currentSet = (Array.isArray(allGuardrailSets) ? allGuardrailSets : [])
+              .find((set) => set?.id === setId);
+            const currentPrompts = Array.isArray(currentSet?.prompts) ? currentSet.prompts : [];
+            const nextPrompt = createPlaygroundGuardrailPromptDraft({
+              title: "Instruction " + (currentPrompts.length + 1),
+            });
+            setGuardrailActivePromptId(nextPrompt.id);
             updateGuardrailSet(setId, (set) => {
               const prompts = Array.isArray(set.prompts) ? set.prompts : [];
               return {
                 ...set,
-                prompts: [
-                  ...prompts,
-                  createPlaygroundGuardrailPromptDraft({
-                    title: "Instruction " + (prompts.length + 1),
-                  }),
-                ],
+                prompts: [...prompts, nextPrompt],
               };
             });
+            return nextPrompt.id;
           }
 
           function updateGuardrailPrompt(setId, promptId, patch) {
@@ -264,6 +267,13 @@ export const GUARDRAILS_PAGE_EDITOR_SCRIPT = `          function applyGuardrailV
           }
 
           function deleteGuardrailPrompt(setId, promptId) {
+            const currentSet = (Array.isArray(allGuardrailSets) ? allGuardrailSets : [])
+              .find((set) => set?.id === setId);
+            const remainingPrompts = (Array.isArray(currentSet?.prompts) ? currentSet.prompts : [])
+              .filter((prompt) => prompt?.id !== promptId);
+            if (guardrailActivePromptId === promptId) {
+              setGuardrailActivePromptId(String(remainingPrompts[0]?.id || ""));
+            }
             updateGuardrailSet(setId, (set) => ({
               ...set,
               prompts: (Array.isArray(set.prompts) ? set.prompts : []).filter((prompt) => prompt?.id !== promptId),

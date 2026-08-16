@@ -1,6 +1,10 @@
 import path from "node:path";
 
 import { ExternalAgentError, sanitizeExternalAgentRecord } from "./domain.mjs";
+import {
+  resolveLegacyPlatformDataPath,
+  resolvePlatformDataPath,
+} from "./data-path.mjs";
 import { createExternalAgentDeliveryService } from "./delivery.mjs";
 import { resolveExternalAgentEncryptionKey } from "./encryption-key.mjs";
 import { createExternalAgentGateway } from "./gateway.mjs";
@@ -33,15 +37,7 @@ import {
 const WEBHOOK_ROUTE = /^\/api\/integrations\/external-agents\/(webhooks|native)\/(jira|linear)\/([^/]+)\/?$/;
 const MAX_WEBHOOK_BYTES = 1024 * 1024;
 
-export function resolvePlatformDataPath(
-  fileName,
-  { env = process.env, cwd = process.cwd() } = {},
-) {
-  const configuredRoot = String(env.PLATFORM_DATA_ROOT || "").trim();
-  return configuredRoot
-    ? path.join(path.resolve(configuredRoot), fileName)
-    : path.join(cwd, ".platform-data", fileName);
-}
+export { resolvePlatformDataPath } from "./data-path.mjs";
 
 export function createExternalAgentService({
   identityService,
@@ -55,10 +51,7 @@ export function createExternalAgentService({
   enrichThreadPayload,
   sendJson,
   fetchImpl = globalThis.fetch,
-  repository = createFileExternalAgentRepository({
-    storePath: process.env.EXTERNAL_AGENT_STORE_PATH
-      || resolvePlatformDataPath("external-agents.json"),
-  }),
+  repository,
   membershipService,
   policy,
   threadInvoker,
@@ -70,9 +63,18 @@ export function createExternalAgentService({
   if (typeof sendJson !== "function") {
     throw new TypeError("External-agent service requires sendJson.");
   }
+  const storePath = process.env.EXTERNAL_AGENT_STORE_PATH
+    || resolvePlatformDataPath("external-agents.json");
+  const effectiveRepository = repository || createFileExternalAgentRepository({
+    storePath,
+    legacyStorePaths: [resolveLegacyPlatformDataPath("external-agents.json")],
+    logger,
+  });
   const effectiveEncryptionKey = resolveExternalAgentEncryptionKey({
     encryptionKey,
     platformOrigin,
+    dataRoot: path.dirname(storePath),
+    legacyKeyPaths: [resolveLegacyPlatformDataPath("external-agent-webhook.key")],
     logger,
   });
   const effectiveMembership = membershipService || createExternalAgentMembershipService({
@@ -101,14 +103,14 @@ export function createExternalAgentService({
     logger,
   });
   const effectiveGateway = gateway || createExternalAgentGateway({
-    repository,
+    repository: effectiveRepository,
     policy: effectivePolicy,
     threadInvoker: effectiveThreadInvoker,
     deliveryService: effectiveDelivery,
     logger,
   });
   const management = createExternalAgentManagementController({
-    repository,
+    repository: effectiveRepository,
     gateway: effectiveGateway,
     membershipService: effectiveMembership,
     adapterRegistry,
@@ -225,7 +227,7 @@ export function createExternalAgentService({
   return Object.freeze({
     gateway: effectiveGateway,
     handleRequest,
-    repository,
+    repository: effectiveRepository,
     start: () => effectiveGateway.start(),
     stop: (options) => effectiveGateway.stop(options),
   });

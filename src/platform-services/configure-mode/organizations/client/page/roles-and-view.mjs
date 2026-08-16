@@ -305,6 +305,7 @@ export const ORGANIZATIONS_PAGE_ROLES_AND_VIEW_SCRIPT = `
 	            subscription: "Subscription",
 	            billing: "Billing",
 	            usage: "Usage",
+	            appliance: "Appliance",
 	            roles: "Permissions",
 	            "identity-access": "Identity & Access",
 	          };
@@ -317,6 +318,7 @@ export const ORGANIZATIONS_PAGE_ROLES_AND_VIEW_SCRIPT = `
 	            if (normalizedOrganizationAdminPage === "identity-access") return renderOrganizationIdentityAccess();
 	            if (normalizedOrganizationAdminPage === "billing") return renderOrganizationBillingSection();
 	            if (normalizedOrganizationAdminPage === "usage") return renderOrganizationUsageSection();
+	            if (normalizedOrganizationAdminPage === "appliance") return renderApplianceOverviewPage();
 	            return renderOrganizationGeneral();
 	          };
 

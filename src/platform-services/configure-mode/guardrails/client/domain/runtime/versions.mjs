@@ -8,7 +8,9 @@ export const GUARDRAILS_VERSIONS_SCRIPT = `      function createPlaygroundGuardr
           name: String(normalizedSet.name || "").trim() || "Untitled Guardrail Set",
           description: typeof normalizedSet.description === "string" ? normalizedSet.description : "",
           prompts: Array.isArray(normalizedSet.prompts)
-            ? normalizedSet.prompts.map((prompt) => createPlaygroundGuardrailPromptDraft(prompt))
+            ? normalizedSet.prompts
+                .filter((prompt) => isPlaygroundGuardrailPromptPersistable(prompt))
+                .map((prompt) => createPlaygroundGuardrailPromptDraft(prompt))
             : [],
           metadata: stripPlaygroundGuardrailVersionMetadata(normalizedSet.metadata),
         };

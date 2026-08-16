@@ -10,6 +10,8 @@ export function resolveExternalAgentEncryptionKey({
   platformOrigin = "",
   env = process.env,
   cwd = process.cwd(),
+  dataRoot = "",
+  legacyKeyPaths = [],
   logger = console,
 } = {}) {
   const configured = String(
@@ -22,10 +24,15 @@ export function resolveExternalAgentEncryptionKey({
     String(env.EXTERNAL_AGENT_LOCAL_ENCRYPTION_KEY_PATH || "").trim()
       || (String(env.PLATFORM_DATA_ROOT || "").trim()
         ? path.join(String(env.PLATFORM_DATA_ROOT).trim(), LOCAL_KEY_FILENAME)
-        : path.join(cwd, ".platform-data", LOCAL_KEY_FILENAME)),
+        : dataRoot
+          ? path.join(dataRoot, LOCAL_KEY_FILENAME)
+          : path.join(cwd, ".platform-data", LOCAL_KEY_FILENAME)),
   );
   const existing = readKey(keyPath);
   if (existing) return existing;
+
+  const migrated = migrateLegacyKey({ keyPath, legacyKeyPaths, logger });
+  if (migrated) return migrated;
 
   fs.mkdirSync(path.dirname(keyPath), { recursive: true, mode: 0o700 });
   const generated = randomBytes(MINIMUM_KEY_BYTES).toString("base64url");
@@ -46,6 +53,33 @@ export function resolveExternalAgentEncryptionKey({
     path: keyPath,
   });
   return generated;
+}
+
+function migrateLegacyKey({ keyPath, legacyKeyPaths, logger }) {
+  for (const candidate of legacyKeyPaths) {
+    const legacyPath = path.resolve(String(candidate || ""));
+    if (!legacyPath || legacyPath === keyPath) continue;
+    const value = readKey(legacyPath);
+    if (!value) continue;
+    fs.mkdirSync(path.dirname(keyPath), { recursive: true, mode: 0o700 });
+    try {
+      fs.writeFileSync(keyPath, `${value}\n`, {
+        encoding: "utf8",
+        flag: "wx",
+        mode: 0o600,
+      });
+    } catch (error) {
+      if (error?.code !== "EEXIST") throw error;
+    }
+    const current = readKey(keyPath);
+    if (!current) continue;
+    logger.info?.("[external-agents] Migrated the webhook encryption key to durable server state.", {
+      from: legacyPath,
+      to: keyPath,
+    });
+    return current;
+  }
+  return "";
 }
 
 function readKey(keyPath) {

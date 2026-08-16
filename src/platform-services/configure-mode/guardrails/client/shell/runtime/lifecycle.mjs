@@ -9,7 +9,7 @@ export const GUARDRAILS_APP_LIFECYCLE_SCRIPT_BEFORE_EVALUATIONS = `        useEf
           guardrailPersistTimersRef.current.clear();
         }, []);
         useEffect(() => {
-          if (!guardrailSetActionMenuId && !guardrailDetailActionsMenuOpen) {
+          if (!guardrailSetActionMenuId) {
             return undefined;
           }
 
@@ -19,15 +19,10 @@ export const GUARDRAILS_APP_LIFECYCLE_SCRIPT_BEFORE_EVALUATIONS = `        useEf
               return;
             }
             const activeRowShell = guardrailSetActionMenuRef.current;
-            const detailShell = guardrailDetailActionsMenuRef.current;
-            if (
-              (activeRowShell && activeRowShell.contains(target))
-              || (detailShell && detailShell.contains(target))
-            ) {
+            if (activeRowShell && activeRowShell.contains(target)) {
               return;
             }
             setGuardrailSetActionMenuId("");
-            setGuardrailDetailActionsMenuOpen(false);
           }
 
           function handleGuardrailActionsEscape(event) {
@@ -35,7 +30,6 @@ export const GUARDRAILS_APP_LIFECYCLE_SCRIPT_BEFORE_EVALUATIONS = `        useEf
               return;
             }
             setGuardrailSetActionMenuId("");
-            setGuardrailDetailActionsMenuOpen(false);
           }
 
           document.addEventListener("mousedown", handleGuardrailActionsPointerDown);
@@ -44,13 +38,21 @@ export const GUARDRAILS_APP_LIFECYCLE_SCRIPT_BEFORE_EVALUATIONS = `        useEf
             document.removeEventListener("mousedown", handleGuardrailActionsPointerDown);
             window.removeEventListener("keydown", handleGuardrailActionsEscape);
           };
-        }, [guardrailDetailActionsMenuOpen, guardrailSetActionMenuId]);
+        }, [guardrailSetActionMenuId]);
         useEffect(() => {
           if (selectedGuardrailSetId && allGuardrailSets.some((set) => set.id === selectedGuardrailSetId)) {
             return;
           }
           setSelectedGuardrailSetId(allGuardrailSets[0]?.id || "");
         }, [allGuardrailSets, selectedGuardrailSetId]);
+        useEffect(() => {
+          const selectedSet = allGuardrailSets.find((set) => set?.id === selectedGuardrailSetId) || null;
+          const prompts = Array.isArray(selectedSet?.prompts) ? selectedSet.prompts : [];
+          if (guardrailActivePromptId && prompts.some((prompt) => prompt?.id === guardrailActivePromptId)) {
+            return;
+          }
+          setGuardrailActivePromptId(String(prompts[0]?.id || ""));
+        }, [allGuardrailSets, guardrailActivePromptId, selectedGuardrailSetId]);
         useEffect(() => {
           if (guardrailVersionsSidebarOpen) {
             if (guardrailDetailSidebarCollapsedBeforeVersionsRef.current === null) {

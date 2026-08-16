@@ -12,7 +12,7 @@ import { sealWebhookSecret } from "./verification.mjs";
 const ENCRYPTION_KEY = "external-agent-test-encryption-key";
 const WEBHOOK_SECRET = "jira-webhook-secret";
 
-test("platform state uses the appliance data root without writing into the release", () => {
+test("platform state uses durable server storage outside the release", () => {
   assert.equal(
     resolvePlatformDataPath("external-agents.json", {
       env: { PLATFORM_DATA_ROOT: "/var/lib/computer-agents/platform" },
@@ -24,8 +24,17 @@ test("platform state uses the appliance data root without writing into the relea
     resolvePlatformDataPath("external-agents.json", {
       env: {},
       cwd: "/workspace/runner-web-sdk",
+      homeDirectory: "/home/platform",
     }),
-    "/workspace/runner-web-sdk/.platform-data/external-agents.json",
+    "/home/platform/.computer-agents/platform/external-agents.json",
+  );
+  assert.equal(
+    resolvePlatformDataPath("external-agents.json", {
+      env: {},
+      cwd: "/another/release",
+      homeDirectory: "/home/platform",
+    }),
+    "/home/platform/.computer-agents/platform/external-agents.json",
   );
 });
 

@@ -1,3 +1,5 @@
+import { APPLIANCE_ADMIN_STATE_SCRIPT } from "../../../../admin-mode/appliance/index.mjs";
+
 export const ORGANIZATIONS_STATE_PRIMARY_SCRIPT = `	        const organizationPageRef = useRef(null);
 	        const organizationPageLoadAbortControllerRef = useRef(null);
 	        const organizationPageLoadSequenceRef = useRef(0);
@@ -21,4 +23,5 @@ export const ORGANIZATIONS_STATE_PRIMARY_SCRIPT = `	        const organizationPa
 	        const [organizationResourceToolbarPopover, setOrganizationResourceToolbarPopover] = useState("");
 	        const [organizationResourceSort, setOrganizationResourceSort] = useState("resource");
 	        const [organizationResourceSortDirection, setOrganizationResourceSortDirection] = useState("asc");
+${APPLIANCE_ADMIN_STATE_SCRIPT}
 `;

@@ -138,7 +138,18 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
               );
               const createdSet = normalizePlaygroundGuardrailSet(createdPayload?.guardrail || createdPayload?.data || createdPayload);
               const detailedSet = await fetchBackendGuardrailSetDetails(createdSet);
-              replaceGuardrailSetFromBackend(detailedSet, { select: true, rememberBaseline: true });
+              const localDraftPrompts = (Array.isArray(nextSet.prompts) ? nextSet.prompts : [])
+                .filter((prompt) => !isPlaygroundGuardrailPromptPersistable(prompt));
+              const detailedSetWithDrafts = localDraftPrompts.length
+                ? normalizePlaygroundGuardrailSet({
+                    ...detailedSet,
+                    prompts: [
+                      ...(Array.isArray(detailedSet?.prompts) ? detailedSet.prompts : []),
+                      ...localDraftPrompts,
+                    ],
+                  })
+                : detailedSet;
+              replaceGuardrailSetFromBackend(detailedSetWithDrafts, { select: true, rememberBaseline: true });
               setGuardrailsBackendSyncState({ status: "idle", error: "" });
               setGuardrailsPageMode("detail");
               setGuardrailDetailTab("general");
