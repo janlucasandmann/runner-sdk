@@ -271,7 +271,7 @@ export function TestCaseCreateModal({
                   <strong>{option.label}</strong>
                   <small>{option.description}</small>
                 </span>
-                <em>{option.trust === "verified_worker" ? "Verified worker" : "Agent-executed"}</em>
+                <em>{option.trust === "runner_captured" ? "Deterministic worker" : "Agent-executed"}</em>
               </button>
             );
           })}

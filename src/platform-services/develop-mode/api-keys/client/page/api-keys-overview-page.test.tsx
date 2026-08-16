@@ -22,6 +22,7 @@ const rows: DevelopApiKeysOverviewPageProps["rows"] = [
     creatorFallback: "CA",
     permissionsLabel: "Full Access",
     isStandard: true,
+    canReveal: true,
     canRevoke: false,
     searchText: "Default Web Key tb_default Computer Agents Full Access standard",
   },
@@ -38,6 +39,7 @@ const rows: DevelopApiKeysOverviewPageProps["rows"] = [
     creatorFallback: "JS",
     permissionsLabel: "Execute Only",
     isStandard: false,
+    canReveal: true,
     canRevoke: true,
     searchText: "Automation tb_automation jan@example.com Execute Only scoped",
   },
@@ -63,6 +65,7 @@ beforeEach(() => {
 function renderPage(overrides: Partial<DevelopApiKeysOverviewPageProps> = {}) {
   const props: DevelopApiKeysOverviewPageProps = {
     rows,
+    apiBaseUrl: "https://stockifi.computer-agents.com",
     controlsPortalId: "api-key-test-controls",
     period: "month",
     onPeriodChange: vi.fn(),
@@ -109,6 +112,7 @@ describe("DevelopApiKeysOverviewPage", () => {
     expect(container.querySelector(".platform-data-table.is-minimalistic-ui")).not.toBeNull();
     expect(screen.getByRole("region", { name: "API requests and token consumption over time" })).not.toBeNull();
     expect(screen.getByRole("table", { name: "API keys" })).not.toBeNull();
+    expect(screen.getByText("https://stockifi.computer-agents.com")).not.toBeNull();
     expect(screen.getByRole("heading", { name: "All API Keys", level: 2 })).not.toBeNull();
     expect(screen.getByRole("columnheader", { name: "Creator" })).not.toBeNull();
     expect(screen.queryByRole("columnheader", { name: "Created by" })).toBeNull();
@@ -128,6 +132,20 @@ describe("DevelopApiKeysOverviewPage", () => {
     expect(props.onPeriodChange).toHaveBeenCalledWith("week");
     await user.click(createButton);
     expect(props.onCreate).toHaveBeenCalledOnce();
+  });
+
+  it("does not offer reveal for hash-only keys", async () => {
+    const user = userEvent.setup();
+    const onReveal = vi.fn();
+    renderPage({
+      rows: [{ ...rows[1], canReveal: false }],
+      onReveal,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Open actions for Automation" }));
+    expect(screen.queryByRole("menuitem", { name: "View key" })).toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Delete" })).not.toBeNull();
+    expect(onReveal).not.toHaveBeenCalled();
   });
 
   it("filters rows and exposes reveal and delete actions through the shared table menu", async () => {
@@ -163,6 +181,7 @@ describe("DevelopApiKeysOverviewPage", () => {
     });
 
     expect(screen.getByText("tb_secret")).not.toBeNull();
+    expect(screen.getByText(/cannot be viewed again/i)).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Copy newly created API key" }));
     expect(onCopy).toHaveBeenCalledOnce();
     await user.click(screen.getByRole("button", { name: "Dismiss created API key" }));

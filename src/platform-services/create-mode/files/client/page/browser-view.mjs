@@ -283,10 +283,41 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
               }, React.createElement(ChevronRight, { strokeWidth: 1.8, width: 14, height: 14 }))
             ),
             React.createElement("div", { className: "playground-files-breadcrumbs", "aria-label": "Current folder path" },
-              activeBreadcrumbs.map((crumb, index) =>
-                React.createElement("span", {
+              activeBreadcrumbs.map((crumb, index) => {
+                const isGithubBranchSelector = isConnectorsMode && crumb.kind === "github-branch-selector";
+                const isActiveBreadcrumb = isConnectorsMode
+                  ? Boolean(crumb.isCurrent)
+                  : index === activeBreadcrumbs.length - 1;
+                const breadcrumbContent = isGithubBranchSelector
+                  ? React.createElement(PlatformSelector, {
+                      className: "playground-files-breadcrumb-branch-selector",
+                      value: crumb.value,
+                      options: crumb.options || [],
+                      ariaLabel: "Select GitHub branch",
+                      placeholder: crumb.name || "Branch",
+                      alignment: "start",
+                      popupAlignment: "left",
+                      popupWidth: "min(240px, calc(100vw - 24px))",
+                      loading: Boolean(crumb.loading),
+                      loadingContent: "Loading branches...",
+                      emptyContent: "No branches available.",
+                      triggerClassName: "playground-files-breadcrumb-branch-trigger",
+                      popupClassName: "playground-files-breadcrumb-branch-popup",
+                      onOpenChange: crumb.onOpenChange,
+                      onValueChange: crumb.onValueChange,
+                    })
+                  : React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-breadcrumb" + (isActiveBreadcrumb ? " is-active" : ""),
+                      onClick: isConnectorsMode ? crumb.onSelect : () => handleBreadcrumbClick(crumb.id),
+                      disabled: isConnectorsMode ? !crumb.onSelect : isActiveBreadcrumb,
+                    },
+                      React.createElement("span", null, isConnectorsMode ? crumb.name : index === 0 ? "Home" : crumb.name)
+                    );
+                return React.createElement("span", {
                     key: crumb.id || "root",
-                    className: "playground-files-breadcrumb-segment",
+                    className: "playground-files-breadcrumb-segment"
+                      + (isGithubBranchSelector ? " is-branch-selector" : ""),
                   },
                   index > 0
                     ? React.createElement(ChevronRight, {
@@ -295,16 +326,9 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                         "aria-hidden": "true",
                       })
                     : null,
-                  React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-breadcrumb" + (index === activeBreadcrumbs.length - 1 ? " is-active" : ""),
-                      onClick: isConnectorsMode ? crumb.onSelect : () => handleBreadcrumbClick(crumb.id),
-                      disabled: index === activeBreadcrumbs.length - 1,
-                    },
-                      React.createElement("span", null, isConnectorsMode ? crumb.name : index === 0 ? "Home" : crumb.name)
-                    )
-                  )
-              )
+                  breadcrumbContent
+                );
+              })
             )
           );
         }

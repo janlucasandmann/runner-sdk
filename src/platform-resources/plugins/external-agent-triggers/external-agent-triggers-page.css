@@ -143,6 +143,25 @@
   line-height: 1.4;
 }
 
+.external-agent-triggers__installation-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.external-agent-triggers__installation-fields .external-agent-triggers__field:only-child,
+.external-agent-triggers__installation-fields
+  .external-agent-triggers__field:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.external-agent-triggers__installation-error {
+  margin-right: auto;
+  color: rgba(248, 113, 113, 0.96);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .external-agent-triggers__checks {
   display: flex;
   flex-wrap: wrap;
@@ -219,5 +238,13 @@
 
   .external-agent-triggers__form {
     grid-template-columns: 1fr;
+  }
+
+  .external-agent-triggers__installation-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .external-agent-triggers__installation-fields .external-agent-triggers__field {
+    grid-column: auto;
   }
 }

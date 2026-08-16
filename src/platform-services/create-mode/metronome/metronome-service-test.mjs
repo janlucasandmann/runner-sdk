@@ -25,6 +25,8 @@ import {
   METRONOME_TEMPLATES_FRAGMENT_PATHS,
   METRONOME_TEMPLATES_RUNTIME_SCRIPT,
 } from "./client/runtime/templates-and-graph.mjs";
+import { METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT } from "./client/runtime/inspector-components.mjs";
+import { METRONOME_INSPECTOR_PROMPTS_RUNTIME_SCRIPT } from "./client/runtime/inspector-prompts.mjs";
 import {
   METRONOME_TRIGGERS_FRAGMENT_PATHS,
   METRONOME_TRIGGERS_RUNTIME_SCRIPT,
@@ -62,7 +64,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Metronome inspector runtime",
     source: METRONOME_PAGE_INSPECTOR_SCRIPT,
-    expectedSha256: "81691054c5dad283cc9e7591d796a756e4c221a9f3b7b47c7ee681f8750ff139",
+    expectedSha256: "7cc7dbb5b98e896ba699832cd907145a1bc4daace3fd3a50916319705acfcfa3",
     fragmentGroups: [{
       baseUrl: metronomePageUrl,
       paths: METRONOME_PAGE_INSPECTOR_FRAGMENT_PATHS,
@@ -102,7 +104,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Metronome inspector styles",
     source: METRONOME_INSPECTOR_CSS,
-    expectedSha256: "fc34d752ff13fed171a86bd68c333f665247c39de8c032b7f81d4b8ad4ef209b",
+    expectedSha256: "71bc37485f0e7f00d1f22094b19b889d1d9da9f77c1b38def7c6d42a64637d5d",
     fragmentGroups: [{
       baseUrl: metronomeStylesUrl,
       paths: METRONOME_INSPECTOR_CSS_FRAGMENT_PATHS,
@@ -115,6 +117,38 @@ assert.match(METRONOME_DOMAIN_RUNTIME_SCRIPT, /function getMetronomeNodeIOContra
 assert.match(METRONOME_DOMAIN_RUNTIME_SCRIPT, /function haveMetronomePersistedNodesChanged/);
 assert.match(METRONOME_DOMAIN_RUNTIME_SCRIPT, /function haveMetronomePersistedEdgesChanged/);
 assert.match(METRONOME_TEMPLATES_RUNTIME_SCRIPT, /function stopMetronomeInputKeyPropagation\(event\)\s*\{[\s\S]*?event\.stopPropagation\(\)/);
+assert.match(METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT, /function MetronomeInspectorField\(/);
+assert.match(METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT, /function MetronomeInspectorFieldHint\(/);
+assert.match(METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT, /React\.forwardRef\(function MetronomeInspectorInput\(/);
+assert.match(METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT, /React\.forwardRef\(function MetronomeInspectorTextarea\(/);
+assert.match(METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT, /React\.forwardRef\(function MetronomeInspectorNativeSelect\(/);
+assert.match(METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT, /function MetronomeInspectorSwitchRow\(/);
+assert.match(METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT, /function MetronomeInspectorSwitch\(/);
+assert.match(METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT, /function MetronomeInspectorToolbarPopup\(/);
+assert.match(METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT, /variant: "minimal"/);
+assert.match(METRONOME_INSPECTOR_PROMPTS_RUNTIME_SCRIPT, /function normalizeMetronomePromptOption\(/);
+assert.match(METRONOME_INSPECTOR_PROMPTS_RUNTIME_SCRIPT, /async function fetchMetronomePromptsApi\(/);
+assert.match(METRONOME_INSPECTOR_PROMPTS_RUNTIME_SCRIPT, /async function fetchMetronomePromptApi\(/);
+assert.match(METRONOME_INSPECTOR_PROMPTS_RUNTIME_SCRIPT, /getMetronomeApiBaseUrl\(options\) \+ "\/prompts"/);
+assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\(MetronomeInspectorField,/);
+assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\(MetronomeInspectorInput,/);
+assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\(MetronomeInspectorTextarea,/);
+assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\(MetronomeInspectorNativeSelect,/);
+assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\(MetronomeInspectorFieldHint,/);
+assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\(MetronomeInspectorSwitchRow,/);
+assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\(MetronomeInspectorSwitch,/);
+assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\(MetronomeInspectorToolbarPopup,/);
+assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /const renderMetronomePromptPicker = \(fieldKey,/);
+assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\(MessageSquareText,/);
+assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /surfaceClassName: "playground-metronome-instructions-attachments-popover"/);
+assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /surfaceClassName: "playground-metronome-dynamic-content-picker playground-metronome-prompt-picker"/);
+assert.doesNotMatch(METRONOME_PAGE_INSPECTOR_SCRIPT, /metronomeAttachmentPopoverRect/);
+assert.doesNotMatch(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\("input",/);
+assert.doesNotMatch(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\("textarea",/);
+assert.doesNotMatch(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\("select",/);
+assert.doesNotMatch(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\("div", \{ className: "playground-metronome-field/);
+assert.doesNotMatch(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\("div", \{ className: "playground-metronome-switch-row/);
+assert.doesNotMatch(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\("(?:div|p)", \{[^}]*className: "playground-metronome-field-hint/);
 assert.doesNotMatch(METRONOME_DOMAIN_RUNTIME_SCRIPT, /stopImmediatePropagation/);
 assert.match(METRONOME_DOMAIN_RUNTIME_SCRIPT, /onMount: \(\) => \{\s*setIsMonacoReady\(true\)/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /function PlaygroundMetronomePage/);
@@ -130,7 +164,7 @@ assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-runs-view\s
 assert.match(METRONOME_INSPECTOR_CSS, /\.playground-tasks-project-modal-label[\s\S]*font-weight:\s*400/);
 assert.match(METRONOME_INSPECTOR_CSS, /\.playground-environments-input,[\s\S]*border-radius:\s*8px/);
 assert.match(METRONOME_INSPECTOR_CSS, /\.playground-environments-input,[\s\S]*background:\s*rgba\(255,\s*255,\s*255,\s*0\.1\)/);
-assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\(PlatformPopup, \{[\s\S]{0,220}variant: "minimal"[\s\S]{0,220}portal: true[\s\S]{0,220}placement: "bottom-end"/);
+assert.match(METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT, /React\.createElement\(PlatformPopup, \{[\s\S]{0,220}variant: "minimal"[\s\S]{0,220}portal: true[\s\S]{0,220}placement: "bottom-end"/);
 assert.match(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\(PlatformPopupSearchHeader, \{[\s\S]{0,220}playground-metronome-dynamic-content-search/);
 assert.doesNotMatch(METRONOME_PAGE_INSPECTOR_SCRIPT, /React\.createElement\(PlatformPopupSurface, \{\s*className: "playground-metronome-dynamic-content-picker"/);
 assert.match(METRONOME_SHELL_RUNTIME_SCRIPT, /function getThreadMetronomeMetadata/);

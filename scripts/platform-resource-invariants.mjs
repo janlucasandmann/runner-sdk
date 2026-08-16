@@ -612,6 +612,19 @@ if (!tagDetailControllerSource.includes("React.createElement(PlatformInstruction
 if (!tagDetailControllerSource.includes("React.createElement(PlatformLoadingState")) {
   failures.push("Tag detail loading must use PlatformLoadingState");
 }
+if (
+  !tagDetailControllerSource.includes("React.createElement(PlatformSetupModal")
+  || !tagDetailControllerSource.includes("React.createElement(PlatformSetupModalStep")
+) {
+  failures.push("Webhook creation must use the centralized guided setup modal composition");
+}
+if (
+  tagDetailControllerSource.includes(
+    'React.createElement("div", { className: "playground-tasks-project-modal-title" }, "Create Webhook")',
+  )
+) {
+  failures.push("Webhook creation must not restore the legacy generic project modal shell");
+}
 
 const projectDetailPageSource = await fs.readFile(
   path.join(packageRoot, "src", "platform-services", "create-mode", "projects", "client", "detail", "project-detail-page.tsx"),

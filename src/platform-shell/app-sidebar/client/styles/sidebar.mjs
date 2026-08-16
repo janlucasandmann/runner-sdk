@@ -1569,28 +1569,19 @@ ${metronomeSidebarCss}
         align-items: center;
         gap: 8px;
         padding: 4px 0 4px 12px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
         color: rgba(255, 255, 255, 0.94);
         box-sizing: border-box;
-      }
-
-      .sidebar-organization-profile-button {
-        width: 30px;
-        height: 30px;
-        min-width: 30px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        color: inherit;
         cursor: pointer;
+        text-align: left;
+        transition: background-color 160ms ease;
       }
 
-      .sidebar-organization-profile-button:hover .sidebar-organization-avatar,
-      .sidebar-organization-profile-button.is-open .sidebar-organization-avatar {
-        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.16);
+      .sidebar-organization-card:focus-visible {
+        outline: 1px solid rgba(255, 255, 255, 0.28);
+        outline-offset: -1px;
       }
 
       .sidebar-organization-main {
@@ -1604,11 +1595,6 @@ ${metronomeSidebarCss}
         color: inherit;
         cursor: pointer;
         text-align: left;
-      }
-
-      .sidebar-organization-main:disabled {
-        cursor: default;
-        opacity: 0.7;
       }
 
       .sidebar-organization-avatar {
@@ -1687,12 +1673,12 @@ ${metronomeSidebarCss}
         border-radius: 999px;
         background: transparent;
         color: rgba(255, 255, 255, 0.58);
-        cursor: pointer;
+        pointer-events: none;
         transition: color 160ms ease, background-color 160ms ease;
       }
 
-      .sidebar-organization-menu-button:hover,
-      .sidebar-organization-menu-button.is-open {
+      .sidebar-organization-card:hover .sidebar-organization-menu-button,
+      .sidebar-organization-card.is-open .sidebar-organization-menu-button {
         color: rgba(255, 255, 255, 0.94);
         background: rgba(255, 255, 255, 0.06);
       }

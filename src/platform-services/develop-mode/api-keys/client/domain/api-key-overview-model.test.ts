@@ -11,7 +11,8 @@ describe("API key overview model", () => {
         keyPrefix: "tb_",
         createdAt: "2026-01-02T12:00:00.000Z",
         lastUsedAt: "2026-01-03T12:00:00.000Z",
-        permissions: ["*"],
+        scopes: ["*"],
+        canReveal: false,
         metadata: { isDefault: true },
       },
       { id: "key_2", revokedAt: "2026-01-04T12:00:00.000Z" },
@@ -23,6 +24,7 @@ describe("API key overview model", () => {
       creatorName: "Computer Agents",
       permissionsLabel: "Full Access",
       isStandard: true,
+      canReveal: false,
     });
     expect(rows[0].createdAt).toBeGreaterThan(0);
     expect(rows[0].lastUsedAt).toBeGreaterThan(0);

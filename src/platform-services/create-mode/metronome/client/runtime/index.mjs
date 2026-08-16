@@ -1,5 +1,7 @@
 import { METRONOME_CANVAS_RUNTIME_SCRIPT } from "./canvas-components.mjs";
 import { METRONOME_EXECUTION_RUNTIME_SCRIPT } from "./execution-and-code.mjs";
+import { METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT } from "./inspector-components.mjs";
+import { METRONOME_INSPECTOR_PROMPTS_RUNTIME_SCRIPT } from "./inspector-prompts.mjs";
 import { METRONOME_TEMPLATES_RUNTIME_SCRIPT } from "./templates-and-graph.mjs";
 import { METRONOME_TRIGGERS_RUNTIME_SCRIPT } from "./triggers-and-contracts.mjs";
 import { METRONOME_WORKFLOW_DOMAIN_RUNTIME_SCRIPT } from "./workflow-domain.mjs";
@@ -9,5 +11,10 @@ export const METRONOME_DOMAIN_RUNTIME_SCRIPT = [
   METRONOME_TEMPLATES_RUNTIME_SCRIPT,
   METRONOME_WORKFLOW_DOMAIN_RUNTIME_SCRIPT,
   METRONOME_EXECUTION_RUNTIME_SCRIPT,
+  METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT,
+  METRONOME_INSPECTOR_PROMPTS_RUNTIME_SCRIPT,
   METRONOME_CANVAS_RUNTIME_SCRIPT,
 ].join("\n");
+
+export { METRONOME_INSPECTOR_COMPONENTS_RUNTIME_SCRIPT } from "./inspector-components.mjs";
+export { METRONOME_INSPECTOR_PROMPTS_RUNTIME_SCRIPT } from "./inspector-prompts.mjs";

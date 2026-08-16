@@ -14,6 +14,50 @@ const config = Object.freeze({
 const bindings = createLegacyPlatformApplicationBindings(config);
 const sources = createLegacyPlatformApplicationSources(config);
 const repeatedSources = createLegacyPlatformApplicationSources(config);
+const applianceSources = createLegacyPlatformApplicationSources({
+  ...config,
+  deploymentProfileEnvelope: {
+    profile: {
+      schemaVersion: 2,
+      profileId: "dgx-spark-appliance-v1",
+      edition: "appliance",
+      stage: "prod",
+      topology: "on_prem",
+      readiness: "foundation",
+      capabilities: {
+        platform: true,
+        agentExecution: true,
+        schedules: true,
+        metronomes: true,
+        localInference: true,
+        deployableResources: false,
+        modelManagement: false,
+        modelSelection: false,
+        subscriptions: false,
+        billing: false,
+        pricing: false,
+        commercialUsageLimits: false,
+      },
+      product: {
+        inference: { mode: "deployment_fixed", fixedModelId: "local-model" },
+        agents: {
+          visibleBuiltIns: ["spark"],
+          defaultBuiltIn: "spark",
+          defaultTeam: { enabled: false, builtIns: [] },
+          customAgents: true,
+        },
+        commerce: {
+          mode: "none",
+          entitlementSource: "deployment_license",
+          commercialLimits: false,
+        },
+        usage: { mode: "observability_only" },
+      },
+    },
+    hash: "test-profile-hash",
+    source: "control_api",
+  },
+});
 
 assert.equal(Object.isFrozen(bindings), true);
 assert.equal(Object.isFrozen(sources), true);
@@ -54,6 +98,38 @@ assert.doesNotMatch(sources.moduleSource, /id: "configure-resources-label"/);
 assert.match(
   sources.styleSource,
   /\.playground-content-body > \.playground-content-route-loading[\s\S]*position: absolute;[\s\S]*inset: 0;/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /const platformDeploymentProfileEnvelope = Object\.freeze\(\{"profile":\{"schemaVersion":2,"profileId":"dgx-spark-appliance-v1"/,
+);
+assert.doesNotMatch(
+  applianceSources.moduleSource,
+  /id: "models",\s*label: "Models"/,
+);
+assert.doesNotMatch(
+  applianceSources.moduleSource,
+  /id: "admin-subscription",\s*label: "Subscription"/,
+);
+assert.doesNotMatch(
+  applianceSources.moduleSource,
+  /id: "admin-billing",\s*label: "Billing"/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /id: "admin-usage",\s*label: "Usage"/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /platformDeploymentProfile\.product\?\.usage\?\.mode === "observability_only" \? "Compute Usage" : "Usage Details"/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /if \(!platformHasCapability\("subscriptions"\)\) \{[\s\S]{0,180}return "enterprise";/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /const settingsCanConfigureUsageBilling = platformHasCapability\("commercialUsageLimits"\)/,
 );
 
 console.log(

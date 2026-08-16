@@ -316,14 +316,15 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
             const Icon = row.Icon;
             return React.createElement("div", {
                 key: row.title,
-                className: "playground-configure-resource-row playground-projects-feature-row",
+                className: "playground-projects-feature-row",
+                role: "listitem",
               },
-              React.createElement("span", { className: "playground-configure-resource-icon" },
+              React.createElement("span", { className: "playground-projects-feature-icon", "aria-hidden": "true" },
                 React.createElement(Icon, { strokeWidth: 1.75 })
               ),
-              React.createElement("span", { className: "playground-configure-row-copy" },
-                React.createElement("span", { className: "playground-configure-row-title" }, row.title),
-                React.createElement("span", { className: "playground-configure-row-subtitle" }, row.subtitle)
+              React.createElement("span", { className: "playground-projects-feature-copy" },
+                React.createElement("span", { className: "playground-projects-feature-title" }, row.title),
+                React.createElement("span", { className: "playground-projects-feature-subtitle" }, row.subtitle)
               )
             );
           };
@@ -351,14 +352,20 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
               )
             ),
             React.createElement("div", { className: "playground-projects-working-agent-features" },
-              React.createElement("div", { className: "playground-configure-sections" },
-                React.createElement("section", { className: "playground-configure-section" },
-                  React.createElement("div", { className: "playground-configure-resource-list" },
+              React.createElement("div", { className: "playground-projects-feature-grid" },
+                React.createElement("section", {
+                    className: "playground-projects-feature-column",
+                    "aria-label": "Planning capabilities",
+                  },
+                  React.createElement("div", { className: "playground-projects-feature-list", role: "list" },
                     planningRows.map(renderProjectFeatureRow)
                   )
                 ),
-                React.createElement("section", { className: "playground-configure-section" },
-                  React.createElement("div", { className: "playground-configure-action-list" },
+                React.createElement("section", {
+                    className: "playground-projects-feature-column",
+                    "aria-label": "Execution capabilities",
+                  },
+                  React.createElement("div", { className: "playground-projects-feature-list", role: "list" },
                     executionRows.map(renderProjectFeatureRow)
                   )
                 )

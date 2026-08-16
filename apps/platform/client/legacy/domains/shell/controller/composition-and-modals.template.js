@@ -406,7 +406,8 @@
   	            onOpenCalendar: () => handleWelcomeWidgetOpen("calendar"),
   	            onOpenDailyBriefingPreview: handleOpenWelcomeDailyBriefingPreview,
             });
-            const welcomeUsageWidget = React.createElement(PlatformUsageWidget, {
+            const welcomeUsageWidget = platformHasCapability("commercialUsageLimits")
+              ? React.createElement(PlatformUsageWidget, {
                 "aria-label": "Open usage cost details",
                 onActivate: () => openSettingsModal("costs-overview"),
                 percentageLabel: welcomeRemainingPercentageLabel,
@@ -416,7 +417,8 @@
                 remaining: welcomeRemainingStyleValue,
                 meterBars: welcomeUsageMeterBars,
                 full: welcomeUsageIsFull,
-              });
+              })
+              : null;
   
             const welcomeIntro = React.createElement("div", { className: "playground-thread-welcome playground-thread-welcome-intro" },
               React.createElement("div", { className: "playground-thread-welcome-copy" },
@@ -425,16 +427,21 @@
             );
   
             const welcomeAfterComposer = React.createElement("div", { className: "playground-thread-welcome playground-thread-welcome-sections" },
-              React.createElement("div", { className: "playground-thread-home-dashboard" },
+              React.createElement("div", {
+                className: "playground-thread-home-dashboard"
+                  + (platformHasCapability("commercialUsageLimits") ? "" : " is-without-commercial-usage"),
+              },
                 React.createElement("section", { className: "playground-thread-home-section playground-thread-home-project-column" },
                   welcomeProjectTaskListContent
                 ),
                 React.createElement("aside", { className: "playground-thread-home-section playground-thread-home-calendar-column", "aria-label": "Calendar" },
                   welcomeTodayWidget
                 ),
-                React.createElement("aside", { className: "playground-thread-home-section playground-thread-home-usage-column", "aria-label": "Usage credits" },
-                  welcomeUsageWidget
-                )
+                welcomeUsageWidget
+                  ? React.createElement("aside", { className: "playground-thread-home-section playground-thread-home-usage-column", "aria-label": "Usage credits" },
+                      welcomeUsageWidget
+                    )
+                  : null
               )
             );
   
@@ -2998,7 +3005,7 @@
           const subscriptionSuccessPlanLabel = settingsCurrentTierId && settingsCurrentTierId !== "sandbox"
             ? formatSubscriptionTier(settingsCurrentTierId)
             : "paid plan";
-          const renderedSubscriptionSuccessModal = showSubscriptionSuccessModal
+          const renderedSubscriptionSuccessModal = platformHasCapability("subscriptions") && showSubscriptionSuccessModal
             ? React.createElement(PlaygroundSubscriptionSuccessModal, {
                 open: showSubscriptionSuccessModal,
                 planLabel: subscriptionSuccessPlanLabel,

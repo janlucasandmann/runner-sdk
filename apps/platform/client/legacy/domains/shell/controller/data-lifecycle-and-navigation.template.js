@@ -20,7 +20,9 @@
   	              setSettingsBillingPeriodOffset(0);
   	            }
 	            if (organizationPageActiveTab === "usage") {
-	              void loadSettingsBudgetStatus();
+	              if (platformDeploymentProfile.product?.usage?.mode !== "observability_only") {
+	                void loadSettingsBudgetStatus();
+	              }
 	              void loadSettingsUsageData();
 	              return;
 	            }
@@ -57,6 +59,7 @@
             if (
               activePage !== "configure"
               || !hasSessionAuth
+              || !platformHasCapability("commercialUsageLimits")
               || sessionStreamingConfig.status === "loading"
             ) {
               return;
@@ -85,6 +88,7 @@
             if (
               !showInitialThreadWelcome
               || !hasSessionAuth
+              || !platformHasCapability("commercialUsageLimits")
               || sessionStreamingConfig.status === "loading"
               || settingsBudgetStatus
             ) {
@@ -900,6 +904,11 @@
             ].filter(Boolean).length;
           }, [githubStatus.connected, gmailStatus.connected, notionStatus.connected, googleDriveStatus.connected, oneDriveStatus.connected]);
           const settingsCurrentTierId = useMemo(() => {
+            if (!platformHasCapability("subscriptions")) {
+              // Deployment-license profiles use the existing enterprise UI
+              // feature paths without exposing subscription commerce.
+              return "enterprise";
+            }
             const activeSubscriptionTier = settingsSubscriptions.find((subscription) =>
               ["active", "on_trial", "past_due"].includes(String(subscription?.status || "").toLowerCase())
               && !subscription?.cancelled
@@ -914,7 +923,8 @@
               || sessionState.subscriptionTier
             ) || "sandbox";
           }, [settingsBudgetStatus, sessionState.subscriptionTier, settingsSubscriptions]);
-          const settingsCanConfigureUsageBilling = settingsCurrentTierId !== "sandbox";
+          const settingsCanConfigureUsageBilling = platformHasCapability("commercialUsageLimits")
+            && settingsCurrentTierId !== "sandbox";
           const settingsCanConfigureBusinessFeatures = settingsCurrentTierId === "team" || settingsCurrentTierId === "enterprise";
           const canGenerateVideo = hasDemoAccess || (normalizeSettingsTierId(settingsCurrentTierId || accountTierId || "sandbox") || "sandbox") !== "sandbox";
           const canGenerateImagineVideo = canGenerateVideo;
@@ -938,7 +948,9 @@
           }, [canGenerateVideo]);
           const sidebarPlanTierId = hasShellAccess ? (settingsCurrentTierId || accountTierId || "sandbox") : "";
           const sidebarPlanIsPaid = hasShellAccess && sidebarPlanTierId !== "sandbox";
-          const sidebarPlanName = hasShellAccess
+          const sidebarPlanName = hasShellAccess && !platformHasCapability("subscriptions")
+            ? "Appliance"
+            : hasShellAccess
             ? formatSubscriptionTier(sidebarPlanTierId || "sandbox") + " Plan"
             : "Computer Agents";
           const sidebarPlanActionLabel = hasShellAccess

@@ -11,6 +11,7 @@ export interface DevelopApiKeyOverviewRow {
   creatorFallback?: string;
   permissionsLabel: string;
   isStandard: boolean;
+  canReveal: boolean;
   canRevoke: boolean;
   searchText: string;
 }

@@ -28,7 +28,10 @@ assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /selectedTestCaseName/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /Raw Configuration/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Details"/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /const isRunLevel = testsPageMode === "run"/);
-assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /if \(!isRunLevel\)/);
+assert.match(
+  TESTS_APP_SCRIPT_FRAGMENTS.topNavigation,
+  /if \(!isRunLevel && testsPageMode !== "case"\)/,
+);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-tests-title-actions/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /versionsDrawerPortalId/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onVersionsSidebarOpenChange/);
@@ -59,6 +62,8 @@ assert.match(runtimeSource, /MISSING_TEST_CASE_RESULT/);
 assert.match(runtimeSource, /test_run_json/);
 assert.match(runtimeSource, /trustLevel: "self_reported"/);
 assert.match(runtimeSource, /verificationStatus: "unverified"/);
+assert.match(runtimeSource, /hybrid_test_worker_v1/);
+assert.match(runtimeSource, /partitionExecutionCases/);
 assert.doesNotMatch(runtimeSource, /child_process|execSync|spawnSync/);
 
 assert.throws(
@@ -257,11 +262,37 @@ const caseDetailSource = await fs.readFile(
   "utf8",
 );
 assert.match(caseDetailSource, /FileResourceDetailPage/);
-assert.match(caseDetailSource, /PlatformCodeEditorWorkspace/);
+assert.match(caseDetailSource, /TestCaseDefinitionBuilder/);
+assert.match(caseDetailSource, /TestCaseCodeEditor/);
 assert.match(caseDetailSource, /PlatformSwitch/);
-assert.match(caseDetailSource, /PlatformServiceDetailPropertyList/);
+assert.doesNotMatch(caseDetailSource, /PlatformServiceDetailPropertyList|PlatformUiCard/);
 assert.match(caseDetailSource, /Save Changes/);
 assert.match(caseDetailSource, /Delete Case/);
+
+const caseCodeEditorSource = await fs.readFile(
+  new URL("./client/page/test-case-code-editor.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(caseCodeEditorSource, /PlatformCodeEditorWorkspace/);
+assert.match(caseCodeEditorSource, /PlatformMonacoCodeEditor/);
+assert.match(caseCodeEditorSource, /case\.json/);
+assert.match(caseCodeEditorSource, /execution\.json/);
+assert.match(caseCodeEditorSource, /request\.json/);
+assert.match(caseCodeEditorSource, /assertions\.json/);
+assert.match(caseCodeEditorSource, /environment\.json/);
+
+const caseDefinitionBuilderSource = await fs.readFile(
+  new URL("./client/page/test-case-definition-builder.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(caseDefinitionBuilderSource, /TEST_CASE_TYPE_OPTIONS/);
+assert.match(caseDefinitionBuilderSource, /What are you testing\?/);
+assert.match(caseDefinitionBuilderSource, /Readiness requirements/);
+assert.match(caseDefinitionBuilderSource, /FunctionRequestFields/);
+assert.match(caseDefinitionBuilderSource, /WorkflowRequestFields/);
+assert.match(caseDefinitionBuilderSource, /ScenarioStepEditor/);
+assert.match(caseDefinitionBuilderSource, /TestAssertionBuilder/);
+assert.doesNotMatch(caseDefinitionBuilderSource, /PlatformMonacoCodeEditor/);
 
 const overviewSource = await fs.readFile(
   new URL("./client/page/tests-overview-page.tsx", import.meta.url),

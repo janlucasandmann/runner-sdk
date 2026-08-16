@@ -33,7 +33,11 @@ export function createSettingsModalPageScript(options = {}) {
 	          const selectedSection = effectiveSettingsSection === "inference"
               ? { id: "inference", label: "Inference", title: "Inference" }
               : effectiveSettingsSection === "costs-overview"
-                ? { id: "costs-overview", label: "Usage", title: "Usage Details" }
+                ? {
+                    id: "costs-overview",
+                    label: "Usage",
+                    title: platformDeploymentProfile.product?.usage?.mode === "observability_only" ? "Compute Usage" : "Usage Details",
+                  }
               : settingsTabs.find((item) => item.id === effectiveSettingsSection) || settingsTabs[0];
 
           const settingsDiscordAccountLabel = settingsDiscordStatus?.discordUsername || "";
@@ -882,11 +886,12 @@ ${inferencePageCaseScript}            case "costs-records":
               );
               break;
             case "costs-overview": {
+              const isComputeObservabilityUsage = platformDeploymentProfile.product?.usage?.mode === "observability_only";
               detailContent = React.createElement(React.Fragment, null,
                 React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-settings-plans-navbar" },
                   React.createElement("div", { className: "playground-environments-editor-navbar-title" },
                     React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-                      React.createElement("div", { className: "playground-settings-plans-title" }, "Usage Details")
+                      React.createElement("div", { className: "playground-settings-plans-title" }, isComputeObservabilityUsage ? "Compute Usage" : "Usage Details")
                     )
                   ),
                   React.createElement("div", { className: "playground-content-nav-center" }),
@@ -898,7 +903,17 @@ ${inferencePageCaseScript}            case "costs-records":
                   const periodEnd = settingsUsageSummary?.endDate ? new Date(settingsUsageSummary.endDate) : new Date();
                   const formatPeriodDate = (date) => date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
                   const safeByDay = Array.isArray(settingsUsageSummary?.byDay) ? settingsUsageSummary.byDay : [];
-                  const safeTotals = settingsUsageSummary?.totals || { totalCT: 0, agentCT: 0, environmentCT: 0, totalThreads: 0 };
+                  const safeTotals = settingsUsageSummary?.totals || {
+                    totalCT: 0,
+                    agentCT: 0,
+                    environmentCT: 0,
+                    totalThreads: 0,
+                    inputTokens: 0,
+                    outputTokens: 0,
+                    runtimeMinutes: 0,
+                    computerRuntimeMinutes: 0,
+                    serverRuntimeMinutes: 0,
+                  };
                   const byDayMap = new Map();
                   safeByDay.forEach((day) => {
                     if (!day?.date) {
@@ -909,6 +924,11 @@ ${inferencePageCaseScript}            case "costs-records":
                       totalCT: Number(day.totalCT || 0),
                       agentCT: Number(day.agentCT || 0),
                       environmentCT: Number(day.environmentCT || 0),
+                      inputTokens: Number(day.inputTokens || 0),
+                      outputTokens: Number(day.outputTokens || 0),
+                      runtimeMinutes: Number(day.runtimeMinutes || 0),
+                      computerRuntimeMinutes: Number(day.computerRuntimeMinutes || 0),
+                      serverRuntimeMinutes: Number(day.serverRuntimeMinutes || 0),
                     });
                   });
                   const threadByDayMap = new Map();
@@ -935,6 +955,11 @@ ${inferencePageCaseScript}            case "costs-records":
                       aiCT: Number(dayData?.agentCT || 0),
                       runtimeCT: Number(dayData?.environmentCT || 0),
                       threadCount: Number(threadByDayMap.get(dateKey) || 0),
+                      inputTokens: Number(dayData?.inputTokens || 0),
+                      outputTokens: Number(dayData?.outputTokens || 0),
+                      runtimeMinutes: Number(dayData?.runtimeMinutes || 0),
+                      computerRuntimeMinutes: Number(dayData?.computerRuntimeMinutes || 0),
+                      serverRuntimeMinutes: Number(dayData?.serverRuntimeMinutes || 0),
                       isFuture: dateKey > todayKey,
                     });
                   }
@@ -980,10 +1005,20 @@ ${inferencePageCaseScript}            case "costs-records":
                       .map((item) => ({
                         ...item,
                         totalCT: Number(item?.totalCT || 0),
+                        inputTokens: Math.max(0, Number(item?.inputTokens || 0)),
+                        outputTokens: Math.max(0, Number(item?.outputTokens || 0)),
+                        runtimeMinutes: Math.max(0, Number(item?.runtimeMinutes || 0)),
+                        threadCount: Math.max(0, Number(item?.threadCount || 0)),
                         displayKind: formatSettingsUsageResourceKind(item?.kind || item?.resourceKind || item?.resourceType),
                       }))
-                      .filter((item) => item.totalCT > 0)
-                      .sort((left, right) => right.totalCT - left.totalCT)
+                      .filter((item) => isComputeObservabilityUsage
+                        ? item.runtimeMinutes > 0 || item.inputTokens > 0 || item.outputTokens > 0 || item.threadCount > 0
+                        : item.totalCT > 0)
+                      .sort((left, right) => isComputeObservabilityUsage
+                        ? right.runtimeMinutes - left.runtimeMinutes
+                          || (right.inputTokens + right.outputTokens) - (left.inputTokens + left.outputTokens)
+                          || right.threadCount - left.threadCount
+                        : right.totalCT - left.totalCT)
                     : [];
 	                  const normalizeUsageChartLabel = (value, fallback) => {
 	                    const label = String(value || fallback || "Unknown").trim();
@@ -1070,10 +1105,19 @@ ${inferencePageCaseScript}            case "costs-records":
 	                        agentCT,
 	                        environmentCT,
                         threadCount: Math.max(0, Number(item?.threadCount || 0)),
+                        inputTokens: Math.max(0, Number(item?.inputTokens || 0)),
+                        outputTokens: Math.max(0, Number(item?.outputTokens || 0)),
+                        runtimeMinutes: Math.max(0, Number(item?.runtimeMinutes || 0)),
                       };
                     })
-                    .filter((item) => item.totalCT > 0 || item.threadCount > 0)
-                    .sort((left, right) => right.totalCT - left.totalCT);
+                    .filter((item) => isComputeObservabilityUsage
+                      ? item.runtimeMinutes > 0 || item.inputTokens > 0 || item.outputTokens > 0 || item.threadCount > 0
+                      : item.totalCT > 0 || item.threadCount > 0)
+                    .sort((left, right) => isComputeObservabilityUsage
+                      ? right.runtimeMinutes - left.runtimeMinutes
+                        || (right.inputTokens + right.outputTokens) - (left.inputTokens + left.outputTokens)
+                        || right.threadCount - left.threadCount
+                      : right.totalCT - left.totalCT);
                   const buildUsageBreakdownSeries = (rows, options = {}) => {
                     const inferenceValues = rows.map((row) => Math.max(0, Number(row.agentCT || 0)));
                     const computerValues = rows.map((row) => Math.max(0, Number(row.environmentCT || 0)));
@@ -1125,7 +1169,9 @@ ${inferencePageCaseScript}            case "costs-records":
 	                      ? "Unattributed model"
 	                      : String(modelMeta?.label || modelId).trim();
 	                    const inferenceCT = readUsageRowComponent(item, "agent", { fallbackToTotal: false });
-	                    if (inferenceCT <= 0) {
+	                    const inputTokens = Math.max(0, Number(item?.inputTokens || 0));
+	                    const outputTokens = Math.max(0, Number(item?.outputTokens || 0));
+	                    if (inferenceCT <= 0 && (!isComputeObservabilityUsage || inputTokens + outputTokens <= 0)) {
 	                      return;
 	                    }
 	                    const existing = modelUsageMap.get(modelId) || {
@@ -1136,17 +1182,28 @@ ${inferencePageCaseScript}            case "costs-records":
 	                      agentCT: 0,
 	                      environmentCT: 0,
 	                      threadCount: 0,
+	                      inputTokens: 0,
+	                      outputTokens: 0,
+	                      runtimeMinutes: 0,
 	                    };
 	                    existing.totalCT += inferenceCT;
 	                    existing.agentCT += inferenceCT;
 	                    existing.threadCount += Math.max(0, Number(item?.threadCount || 0));
+	                    existing.inputTokens += inputTokens;
+	                    existing.outputTokens += outputTokens;
 	                    modelUsageMap.set(modelId, existing);
 	                  });
 	                  const modelUsageRows = Array.from(modelUsageMap.values())
-	                    .sort((left, right) => right.totalCT - left.totalCT);
+	                    .sort((left, right) => isComputeObservabilityUsage
+	                      ? (right.inputTokens + right.outputTokens) - (left.inputTokens + left.outputTokens)
+	                      : right.totalCT - left.totalCT);
                   const resourceChartRows = buildUsageRows(
                     resourceUsageRows.filter((item) => {
                       const kind = String(item?.kind || item?.resourceKind || item?.resourceType || "").trim().toLowerCase();
+                      if (isComputeObservabilityUsage) {
+                        return String(item?.resourceType || "").trim().toLowerCase() === "server"
+                          && Number(item?.runtimeMinutes || 0) > 0;
+                      }
                       return !["llm", "thread_runtime", "computer", "mcp"].includes(kind);
                     }),
                     "Resource",
@@ -1159,7 +1216,7 @@ ${inferencePageCaseScript}            case "costs-records":
                     ...tab,
                     yMax: getUsageSeriesMax(tab.labels, tab.series),
                   });
-                  const usageChartTabs = [
+                  const commercialUsageChartTabs = [
                     buildUsageChartTab({
                       id: "overall",
                       label: "Overall usage cost",
@@ -1216,6 +1273,145 @@ ${inferencePageCaseScript}            case "costs-records":
                       ariaLabel: "Compute token cost by LLM model",
                     }),
                   ];
+                  const formatMeasuredDuration = (minutes) => {
+                    const numericMinutes = Math.max(0, Number(minutes || 0));
+                    if (numericMinutes < 60) {
+                      return Math.round(numericMinutes) + "m";
+                    }
+                    return (numericMinutes / 60).toFixed(numericMinutes >= 600 ? 0 : 1) + "h";
+                  };
+                  const formatMeasuredCount = (value) => new Intl.NumberFormat("en-US", {
+                    notation: Number(value || 0) >= 1000 ? "compact" : "standard",
+                    maximumFractionDigits: 1,
+                  }).format(Math.max(0, Number(value || 0)));
+                  const totalInferenceTokens = Math.max(0, Number(safeTotals.inputTokens || 0))
+                    + Math.max(0, Number(safeTotals.outputTokens || 0));
+                  const computeAgentRows = [...agentUsageRows]
+                    .filter((item) => item.threadCount > 0)
+                    .sort((left, right) => right.threadCount - left.threadCount);
+                  const computeModelRows = [...modelUsageRows]
+                    .filter((item) => item.inputTokens + item.outputTokens > 0);
+                  const computeComputerRows = [...computerUsageRows]
+                    .filter((item) => item.runtimeMinutes > 0)
+                    .sort((left, right) => right.runtimeMinutes - left.runtimeMinutes);
+                  const computeResourceRows = [...resourceChartRows]
+                    .filter((item) => item.runtimeMinutes > 0)
+                    .sort((left, right) => right.runtimeMinutes - left.runtimeMinutes);
+                  const totalRuntimeMinutes = Math.max(0, Number(safeTotals.runtimeMinutes || 0));
+                  const computerRuntimeMinutes = Math.max(0, Number(safeTotals.computerRuntimeMinutes || 0));
+                  const serverRuntimeMinutes = Math.max(0, Number(safeTotals.serverRuntimeMinutes || 0));
+                  const unclassifiedRuntimeValues = dailyData.map((day) => Math.max(
+                    0,
+                    day.runtimeMinutes - day.computerRuntimeMinutes - day.serverRuntimeMinutes,
+                  ));
+                  const computeRuntimeSeries = [
+                    {
+                      id: "computers",
+                      label: "Computers",
+                      color: "rgb(143,196,255)",
+                      values: dailyData.map((day) => day.computerRuntimeMinutes),
+                    },
+                    {
+                      id: "server-resources",
+                      label: "Server resources",
+                      color: "rgb(103,80,255)",
+                      values: dailyData.map((day) => day.serverRuntimeMinutes),
+                    },
+                    {
+                      id: "other-runtime",
+                      label: "Other runtime",
+                      color: "rgb(94,234,212)",
+                      values: unclassifiedRuntimeValues,
+                    },
+                  ].filter((entry) => entry.values.some((value) => value > 0));
+                  const observabilityUsageChartTabs = [
+                    buildUsageChartTab({
+                      id: "overall",
+                      label: "Compute runtime",
+                      value: formatMeasuredDuration(totalRuntimeMinutes),
+                      title: "Compute runtime",
+                      labels: dailyLabels,
+                      series: computeRuntimeSeries,
+                      valueKind: "duration",
+                      emptyText: "No compute runtime in this period",
+                      ariaLabel: "Measured compute runtime by day",
+                    }),
+                    buildUsageChartTab({
+                      id: "agents",
+                      label: "Agent runs",
+                      value: formatMeasuredCount(safeTotals.totalThreads || 0),
+                      title: "Agent runs",
+                      labels: computeAgentRows.map((item) => item.label),
+                      series: [{
+                        id: "runs",
+                        label: "Runs",
+                        color: "rgb(143,196,255)",
+                        values: computeAgentRows.map((item) => item.threadCount),
+                      }],
+                      valueKind: "count",
+                      emptyText: "No agent runs in this period",
+                      ariaLabel: "Agent runs by agent",
+                    }),
+                    buildUsageChartTab({
+                      id: "models",
+                      label: "Inference tokens",
+                      value: formatMeasuredCount(totalInferenceTokens),
+                      title: "Inference tokens",
+                      labels: computeModelRows.map((item) => item.fullLabel),
+                      series: [
+                        {
+                          id: "input-tokens",
+                          label: "Input tokens",
+                          color: "rgb(143,196,255)",
+                          values: computeModelRows.map((item) => item.inputTokens),
+                        },
+                        {
+                          id: "output-tokens",
+                          label: "Output tokens",
+                          color: "rgb(103,80,255)",
+                          values: computeModelRows.map((item) => item.outputTokens),
+                        },
+                      ],
+                      valueKind: "tokens",
+                      emptyText: "No inference tokens in this period",
+                      ariaLabel: "Inference tokens by model",
+                    }),
+                    buildUsageChartTab({
+                      id: "computers",
+                      label: "Computer runtime",
+                      value: formatMeasuredDuration(computerRuntimeMinutes),
+                      title: "Computer runtime",
+                      labels: computeComputerRows.map((item) => item.label),
+                      series: [{
+                        id: "computer-runtime",
+                        label: "Runtime",
+                        color: "rgb(143,196,255)",
+                        values: computeComputerRows.map((item) => item.runtimeMinutes),
+                      }],
+                      valueKind: "duration",
+                      emptyText: "No computer runtime in this period",
+                      ariaLabel: "Measured runtime by computer",
+                    }),
+                    buildUsageChartTab({
+                      id: "resources",
+                      label: "Resource runtime",
+                      value: formatMeasuredDuration(serverRuntimeMinutes),
+                      title: "Resource runtime",
+                      labels: computeResourceRows.map((item) => item.label),
+                      series: [{
+                        id: "resource-runtime",
+                        label: "Runtime",
+                        color: "rgb(103,80,255)",
+                        values: computeResourceRows.map((item) => item.runtimeMinutes),
+                      }],
+                      valueKind: "duration",
+                      emptyText: "No server resource runtime in this period",
+                      ariaLabel: "Measured runtime by server resource",
+                    }),
+                  ];
+                  const usageChartTabs = isComputeObservabilityUsage
+                    ? observabilityUsageChartTabs
+                    : commercialUsageChartTabs;
                   const activeUsageChart = usageChartTabs.find((tab) => tab.id === settingsUsageChartTab) || usageChartTabs[0];
                   const activeUsageAnalyticsModel = {
                     title: activeUsageChart.title,
@@ -1226,8 +1422,8 @@ ${inferencePageCaseScript}            case "costs-records":
                       ...entry,
                       type: "bar",
                       axis: "primary",
-                      stack: "usage-cost",
-                      valueKind: "tokens",
+                      stack: "usage",
+                      valueKind: entry.valueKind || activeUsageChart.valueKind || "tokens",
                       fill: false,
                     })),
                   };
@@ -1339,7 +1535,7 @@ ${inferencePageCaseScript}            case "costs-records":
                             sticky: false,
                             pagination: {},
                             toolbar: {
-                              title: "Consumers",
+                              title: isComputeObservabilityUsage ? "Compute resources" : "Consumers",
                               search: {
                                 placeholder: "Search consumers",
                                 ariaLabel: "Search usage consumers",
@@ -1358,7 +1554,7 @@ ${inferencePageCaseScript}            case "costs-records":
                             columns: [
                               {
                                 id: "resource",
-                                header: "Resource",
+                                header: isComputeObservabilityUsage ? "Compute Resource" : "Resource",
                                 accessor: (item) => item.name || "Unknown",
                                 width: "minmax(220px, 2fr)",
                                 cell: ({ row: item }) => React.createElement("div", { className: "playground-settings-usage-resource-name-cell" },
@@ -1368,12 +1564,31 @@ ${inferencePageCaseScript}            case "costs-records":
                               },
                               { id: "type", header: "Type", accessor: (item) => item.displayKind, width: "minmax(120px, 1fr)" },
                               {
-                                id: "cost",
-                                header: "Cost",
-                                accessor: (item) => Number(item.totalCT || 0),
+                                id: isComputeObservabilityUsage ? "usage" : "cost",
+                                header: isComputeObservabilityUsage ? "Usage" : "Cost",
+                                accessor: (item) => isComputeObservabilityUsage
+                                  ? Number(item.runtimeMinutes || 0)
+                                    || Number(item.inputTokens || 0) + Number(item.outputTokens || 0)
+                                    || Number(item.threadCount || 0)
+                                  : Number(item.totalCT || 0),
                                 width: "minmax(100px, 0.8fr)",
                                 align: "end",
-                                cell: ({ row: item }) => formatSettingsComputeTokens(item.totalCT),
+                                cell: ({ row: item }) => {
+                                  if (!isComputeObservabilityUsage) {
+                                    return formatSettingsComputeTokens(item.totalCT);
+                                  }
+                                  if (Number(item.runtimeMinutes || 0) > 0) {
+                                    return formatMeasuredDuration(item.runtimeMinutes);
+                                  }
+                                  const tokens = Number(item.inputTokens || 0) + Number(item.outputTokens || 0);
+                                  if (tokens > 0) {
+                                    return formatMeasuredCount(tokens) + " tokens";
+                                  }
+                                  if (Number(item.threadCount || 0) > 0) {
+                                    return formatMeasuredCount(item.threadCount) + " runs";
+                                  }
+                                  return "-";
+                                },
                               },
                             ],
                           })

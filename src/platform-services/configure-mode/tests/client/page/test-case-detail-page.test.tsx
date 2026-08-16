@@ -6,28 +6,6 @@ import type { TestsApi } from "../api/index.js";
 import type { TestCaseDefinition, TestPlan } from "../domain/index.js";
 import { TestCaseDetailPage } from "./test-case-detail-page.js";
 
-vi.mock("@monaco-editor/react", () => ({
-  default: ({
-    language,
-    value,
-    onChange,
-    options,
-  }: {
-    language?: string;
-    value?: string;
-    onChange?: (value: string) => void;
-    options?: { ariaLabel?: string };
-  }) => (
-    <textarea
-      data-monaco-editor="true"
-      data-monaco-language={language}
-      aria-label={options?.ariaLabel}
-      value={value}
-      onChange={(event) => onChange?.(event.currentTarget.value)}
-    />
-  ),
-}));
-
 afterEach(() => {
   cleanup();
   document.body.innerHTML = "";
@@ -44,7 +22,11 @@ const testCase: TestCaseDefinition = {
   retries: 1,
   env: { NODE_ENV: "test" },
   secretRefs: [],
-  request: { method: "GET", path: "/ready" },
+  request: {
+    target: "control_plane_readiness",
+    requireDatabase: false,
+    requireAgentRuntime: true,
+  },
   assertions: [{ path: "status", equals: "ready" }],
   agentId: "",
   enabled: true,
@@ -82,7 +64,7 @@ const plan: TestPlan = {
 };
 
 describe("TestCaseDetailPage", () => {
-  it("uses Monaco for request JSON inside the centralized case workspace", async () => {
+  it("keeps the structured General view and the multi-file Code view synchronized", () => {
     document.body.insertAdjacentHTML(
       "beforeend",
       '<div id="test-case-actions"></div><div id="test-case-sections"></div>',
@@ -102,15 +84,20 @@ describe("TestCaseDetailPage", () => {
 
     expect(container.querySelector(".file-resource-detail-page")).not.toBeNull();
     expect(container.querySelector(".tests-case-detail-page")).not.toBeNull();
+    expect(container.querySelector(".platform-detail-sidebar")).toBeNull();
+    expect(container.querySelector(".tests-case-detail-general__content")).not.toBeNull();
     expect(
       (screen.getByLabelText("Case name") as HTMLInputElement).value,
     ).toBe("Readiness contract");
-    const requestEditor = await screen.findByLabelText("Test request JSON");
-    expect(requestEditor.getAttribute("data-monaco-editor")).toBe("true");
-    expect(requestEditor.getAttribute("data-monaco-language")).toBe("json");
-    expect(
-      container.querySelector('[data-platform-monaco-code-editor="true"][data-language="json"]'),
-    ).not.toBeNull();
+    expect(screen.getByText("What are you testing?")).not.toBeNull();
+    expect(screen.getByText("Readiness requirements")).not.toBeNull();
+    expect(screen.getByLabelText("Require database readiness")).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Evidence" })).not.toBeNull();
+    expect(screen.getByText("Case Settings")).not.toBeNull();
+    expect(screen.getByText("Environment variables")).not.toBeNull();
+    expect(screen.getByText("Secret references")).not.toBeNull();
+    expect(screen.getAllByText("Category").length).toBeGreaterThan(0);
+    expect(container.querySelector(".platform-code-editor-workspace")).toBeNull();
     expect(screen.queryByRole("tab")).toBeNull();
     expect(
       screen.getByRole("radiogroup", { name: "Test case section" }),
@@ -119,19 +106,28 @@ describe("TestCaseDetailPage", () => {
       (screen.getByRole("button", { name: "Save Changes" }) as HTMLButtonElement).disabled,
     ).toBe(true);
 
-    fireEvent.change(requestEditor, {
-      target: { value: '{"method":"POST","path":"/ready"}' },
-    });
+    fireEvent.click(screen.getByLabelText("Require database readiness"));
     expect(
       (screen.getByRole("button", { name: "Save Changes" }) as HTMLButtonElement).disabled,
     ).toBe(false);
 
-    fireEvent.click(screen.getByRole("radio", { name: "Settings" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Code" }));
 
-    expect(screen.getByText("Case Settings")).not.toBeNull();
-    expect(screen.getByText("Case ID")).not.toBeNull();
-    expect(screen.getByText("Execution method")).not.toBeNull();
-    expect(screen.getAllByText("Category").length).toBeGreaterThan(0);
-    expect(screen.queryByLabelText("Test request JSON")).toBeNull();
+    expect(container.querySelector(".platform-code-editor-workspace")).not.toBeNull();
+    expect((screen.getByLabelText("Case name") as HTMLInputElement).value).toBe(
+      "Readiness contract",
+    );
+    expect(
+      (screen.getByLabelText("Case description") as HTMLInputElement).value,
+    ).toBe("Verifies the service readiness endpoint.");
+    expect(screen.getByRole("button", { name: "Case metadata" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Execution configuration" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Target request" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Assertions" })).not.toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Environment and secret references" }),
+    ).not.toBeNull();
+    expect(screen.queryByText("What are you testing?")).toBeNull();
+    expect(screen.queryByText("Case Settings")).toBeNull();
   });
 });

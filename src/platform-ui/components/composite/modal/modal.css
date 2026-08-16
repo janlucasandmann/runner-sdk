@@ -402,6 +402,202 @@
   line-height: 1.45;
 }
 
+.platform-modal-surface.platform-setup-modal {
+  width: min(1320px, calc(100vw - 48px));
+  height: min(720px, calc(100dvh - 48px));
+  max-width: none;
+  max-height: calc(100dvh - 48px);
+}
+
+.platform-setup-modal .platform-modal-header.is-media,
+.platform-setup-modal .platform-modal-header__media,
+.platform-setup-modal__layout {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.platform-setup-modal .platform-modal-header__close {
+  top: 24px;
+  right: 24px;
+  width: 32px;
+  height: 32px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.platform-setup-modal .platform-modal-header__close:hover,
+.platform-setup-modal .platform-modal-header__close:focus-visible {
+  background: rgba(255, 255, 255, 0.075);
+  color: #fff;
+}
+
+.platform-setup-modal__layout {
+  --platform-setup-modal-accent: #47a7ff;
+  display: grid;
+  grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
+  overflow: hidden;
+}
+
+.platform-setup-modal__intro,
+.platform-setup-modal__workspace {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+}
+
+.platform-setup-modal__intro {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(40px, 5vw, 72px);
+  border-right: 1px solid rgba(255, 255, 255, 0.075);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.platform-setup-modal__intro-copy {
+  margin: auto 0;
+}
+
+.platform-setup-modal__title {
+  max-width: 520px;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.platform-setup-modal__description {
+  max-width: 560px;
+  margin-top: 28px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.platform-setup-modal__features {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 52px;
+}
+
+.platform-setup-modal__feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.platform-setup-modal__feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  color: var(--platform-setup-modal-accent);
+}
+
+.platform-setup-modal__feature-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.platform-setup-modal__feature-copy {
+  min-width: 0;
+}
+
+.platform-setup-modal__feature-title {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.platform-setup-modal__feature-description {
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.platform-setup-modal__intro-footer {
+  margin-top: auto;
+  padding-top: 32px;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.platform-setup-modal__workspace {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.platform-setup-modal__workspace-body {
+  min-width: 0;
+  min-height: 0;
+  padding: 64px 48px 32px;
+  overflow: auto;
+}
+
+.platform-setup-modal__workspace-footer {
+  min-height: 64px;
+  padding: 14px 48px;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.platform-setup-modal-step + .platform-setup-modal-step {
+  margin-top: 34px;
+}
+
+.platform-setup-modal-step__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.platform-setup-modal-step__number {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.platform-setup-modal-step__copy {
+  min-width: 0;
+}
+
+.platform-setup-modal-step__title {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.platform-setup-modal-step__description {
+  max-width: 620px;
+  margin: 5px 0 0;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.platform-setup-modal-step__content {
+  margin-top: 14px;
+}
+
 @starting-style {
   .platform-modal-backdrop.is-visible {
     background: rgba(0, 0, 0, 0);
@@ -434,6 +630,55 @@
   .platform-modal-content__header {
     padding-right: 16px;
     padding-left: 16px;
+  }
+
+  .platform-modal-surface.platform-setup-modal {
+    width: 100%;
+    height: calc(100dvh - 24px);
+    max-height: calc(100dvh - 24px);
+  }
+
+  .platform-setup-modal__layout {
+    display: block;
+    overflow: auto;
+  }
+
+  .platform-setup-modal__intro {
+    min-height: auto;
+    padding: 44px 24px 32px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  }
+
+  .platform-setup-modal__title {
+    padding-right: 36px;
+    font-size: 24px;
+  }
+
+  .platform-setup-modal__description {
+    margin-top: 18px;
+    font-size: 14px;
+  }
+
+  .platform-setup-modal__features {
+    gap: 18px;
+    margin-top: 30px;
+  }
+
+  .platform-setup-modal__workspace {
+    overflow: visible;
+  }
+
+  .platform-setup-modal__workspace-body {
+    padding: 32px 24px;
+    overflow: visible;
+  }
+
+  .platform-setup-modal__workspace-footer {
+    position: sticky;
+    bottom: 0;
+    padding-right: 24px;
+    padding-left: 24px;
   }
 }
 

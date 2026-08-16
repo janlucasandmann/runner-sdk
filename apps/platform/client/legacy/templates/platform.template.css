@@ -1642,6 +1642,10 @@
           justify-content: center;
           align-items: start;
         }
+
+        .playground-thread-home-dashboard.is-without-commercial-usage {
+          grid-template-columns: repeat(2, minmax(0, 220px));
+        }
   
         .playground-thread-home-project-column {
           min-width: 0;
@@ -23295,29 +23299,54 @@
           white-space: nowrap;
         }
   
-        .playground-settings-trigger-composer-modal {
-          width: min(560px, 100%);
-        }
-  
-        .playground-settings-trigger-composer-modal .playground-agent-composer-modal-body {
-          gap: 18px;
-          padding-top: 4px;
-        }
-  
-        .playground-settings-trigger-composer-modal .playground-tasks-project-modal-field {
+        .playground-settings-trigger-setup-modal .playground-tasks-project-modal-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 12px;
         }
-  
-        .playground-settings-trigger-composer-modal .playground-settings-toggle-group {
-          gap: 12px;
+
+        .playground-settings-trigger-setup-modal .playground-tasks-project-modal-field {
+          gap: 8px;
         }
-  
-        .playground-settings-trigger-composer-modal .playground-settings-toggle-pill {
-          min-height: 36px;
+
+        .playground-settings-trigger-setup-modal .playground-environments-input,
+        .playground-settings-trigger-setup-modal .playground-environments-select {
+          box-sizing: border-box;
+          width: 100%;
+          min-width: 0;
+          min-height: 40px;
+          border-color: rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.05);
         }
-  
-        .playground-settings-trigger-composer-modal .playground-settings-trigger-composer-textarea {
+
+        .playground-settings-trigger-setup-modal .playground-tasks-detail-description-editor {
+          min-height: 112px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.04);
+        }
+
+        .playground-settings-trigger-setup-modal .playground-tasks-detail-description-input {
           min-height: 110px;
+        }
+
+        .playground-settings-trigger-setup-modal .playground-environment-composer-runtime-facts {
+          margin-top: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.075);
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.025);
+        }
+
+        .playground-settings-trigger-setup-modal .playground-tasks-detail-fact:last-child {
+          border-bottom: 0;
+        }
+
+        .playground-settings-trigger-setup-modal__error {
+          margin-right: auto;
+          color: #ffb0b0;
+          font-size: 12px;
+          line-height: 1.45;
         }
   
         .playground-settings-trigger-connect-card {
@@ -23325,6 +23354,17 @@
           align-items: center;
           justify-content: space-between;
           gap: 16px;
+        }
+
+        @media (max-width: 720px) {
+          .playground-settings-trigger-setup-modal .playground-tasks-project-modal-grid {
+            grid-template-columns: minmax(0, 1fr);
+          }
+
+          .playground-settings-trigger-connect-card {
+            align-items: flex-start;
+            flex-direction: column;
+          }
         }
   
         .playground-skill-composer-modal {

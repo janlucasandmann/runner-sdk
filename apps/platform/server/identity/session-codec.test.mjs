@@ -20,7 +20,13 @@ test("platform sessions are encrypted, typed, and time bounded", async () => {
   assert.deepEqual(await codec.open(token, "platform_session"), payload);
   assert.equal(await codec.open(token, "oidc_transaction"), null);
 
-  const tampered = `${token.slice(0, -1)}${token.endsWith("a") ? "b" : "a"}`;
+  const tokenParts = token.split(".");
+  const ciphertext = tokenParts[3];
+  const tamperIndex = Math.floor(ciphertext.length / 2);
+  tokenParts[3] = `${ciphertext.slice(0, tamperIndex)}`
+    + `${ciphertext[tamperIndex] === "a" ? "b" : "a"}`
+    + ciphertext.slice(tamperIndex + 1);
+  const tampered = tokenParts.join(".");
   assert.equal(await codec.open(tampered, "platform_session"), null);
 
   now += 306_000;

@@ -32,7 +32,11 @@ import {
 } from "../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../platform-ui/components/composite/empty-state/index.js";
 import { PlatformLoadingState } from "../../../platform-ui/components/composite/loading-state/index.js";
-import { PlatformModal } from "../../../platform-ui/components/composite/modal/index.js";
+import {
+  PlatformModal,
+  PlatformSetupModal,
+  PlatformSetupModalStep,
+} from "../../../platform-ui/components/composite/modal/index.js";
 import {
   PlatformPrimaryButton,
   PlatformSecondaryButton,
@@ -464,6 +468,7 @@ export function ExternalAgentTriggersPage({
   const memberById = useMemo(() => new Map(members.map((item) => [item.id, item])), [members]);
 
   const openInstallationModal = () => {
+    setError("");
     setInstallationForm((current) => ({
       ...current,
       credentialId: current.credentialId || credentials[0]?.id || "",
@@ -856,44 +861,98 @@ export function ExternalAgentTriggersPage({
         />
       </Section>
 
-      <PlatformModal
+      <PlatformSetupModal
         open={installationModalOpen}
-        title={`Configure ${providerLabel(provider)} webhook`}
-        size="medium"
-        onClose={() => !busy && setInstallationModalOpen(false)}
-        closeButtonDisabled={busy}
+        title={`Connect ${providerLabel(provider)} to Computer Agents`}
+        description={
+          `Let ${providerLabel(provider)} issue and comment activity start agent work ` +
+          "without giving the provider direct access to your organization."
+        }
+        features={[
+          {
+            id: "verified-events",
+            icon: <KeyRound />,
+            title: "Accept verified events only",
+            description:
+              "Installation-specific verification protects every incoming webhook request.",
+          },
+          {
+            id: "explicit-routing",
+            icon: <Route />,
+            title: "Route work intentionally",
+            description:
+              "After setup, choose which projects, agents, and computers handle each event.",
+          },
+          {
+            id: "identity-aware",
+            icon: <UserRound />,
+            title: "Keep organization permissions authoritative",
+            description: "External identities are mapped before linked-member routes can run.",
+          },
+        ]}
+        introFooter={
+          `This creates a verified ${providerLabel(provider)} installation. ` +
+          "No agent runs until you add a routing rule."
+        }
+        onClose={() => setInstallationModalOpen(false)}
+        busy={busy}
+        as="form"
+        surfaceProps={{
+          onSubmit: (event) => {
+            event.preventDefault();
+            if (!installationForm.credentialId || !installationForm.tenantId.trim() || busy) return;
+            void runMutation(async () => {
+              const result = await client.createInstallation({
+                provider,
+                credentialId: installationForm.credentialId,
+                tenantId: installationForm.tenantId.trim(),
+                displayName: installationForm.displayName.trim(),
+                siteUrl: installationForm.siteUrl.trim(),
+                appActorId: installationForm.appActorId.trim(),
+                mentionAliases: installationForm.mentionAliases
+                  .split(",")
+                  .map((value) => value.trim())
+                  .filter(Boolean),
+              });
+              setInstallationModalOpen(false);
+              setSetup(result.setup);
+            }, "Webhook installation created.");
+          },
+        }}
         footer={
           <>
-            <PlatformSecondaryButton size="medium" onClick={() => setInstallationModalOpen(false)} disabled={busy}>
+            {error ? (
+              <span className="external-agent-triggers__installation-error" role="alert">
+                {error}
+              </span>
+            ) : null}
+            <PlatformSecondaryButton
+              type="button"
+              size="medium"
+              onClick={() => setInstallationModalOpen(false)}
+              disabled={busy}
+            >
               Cancel
             </PlatformSecondaryButton>
             <PlatformPrimaryButton
+              type="submit"
               size="medium"
               disabled={!installationForm.credentialId || !installationForm.tenantId.trim() || busy}
-              onClick={() => void runMutation(async () => {
-                const result = await client.createInstallation({
-                  provider,
-                  credentialId: installationForm.credentialId,
-                  tenantId: installationForm.tenantId.trim(),
-                  displayName: installationForm.displayName.trim(),
-                  siteUrl: installationForm.siteUrl.trim(),
-                  appActorId: installationForm.appActorId.trim(),
-                  mentionAliases: installationForm.mentionAliases
-                    .split(",")
-                    .map((value) => value.trim())
-                    .filter(Boolean),
-                });
-                setInstallationModalOpen(false);
-                setSetup(result.setup);
-              }, "Webhook installation created.")}
             >
-              Configure webhook
+              Create webhook
             </PlatformPrimaryButton>
           </>
         }
       >
-        <div className="external-agent-triggers__form">
-          <label className="external-agent-triggers__field">
+        <PlatformSetupModalStep
+          number="1"
+          title="Choose the authenticated connection"
+          description={
+            `Computer Agents uses this saved ${providerLabel(provider)} credential for provider API calls. ` +
+            "The credential itself is never placed in the webhook URL."
+          }
+        >
+          <div className="external-agent-triggers__field">
             <span>Authentication</span>
             <PlatformSelector
               value={installationForm.credentialId}
@@ -905,46 +964,80 @@ export function ExternalAgentTriggersPage({
               ariaLabel={`${providerLabel(provider)} credentials`}
               fullWidth
               popupClassName="is-minimal"
-              onValueChange={(value) => setInstallationForm((current) => ({ ...current, credentialId: value }))}
+              onValueChange={(value) =>
+                setInstallationForm((current) => ({ ...current, credentialId: value }))
+              }
             />
-          </label>
-          <TextField
-            label={terms.tenant}
-            value={installationForm.tenantId}
-            required
-            placeholder={provider === "jira" ? "Atlassian cloud ID" : "Linear organization ID"}
-            onChange={(value) => setInstallationForm((current) => ({ ...current, tenantId: value }))}
-          />
-          <TextField
-            label="Connection name"
-            value={installationForm.displayName}
-            placeholder={`${providerLabel(provider)} workspace`}
-            onChange={(value) => setInstallationForm((current) => ({ ...current, displayName: value }))}
-          />
-          {provider === "jira" ? (
+          </div>
+        </PlatformSetupModalStep>
+
+        <PlatformSetupModalStep
+          number="2"
+          title={`Identify the ${providerLabel(provider)} workspace`}
+          description={
+            provider === "jira"
+              ? "The Atlassian cloud ID is the stable workspace identifier. The name and site URL make it recognizable to administrators."
+              : "The workspace ID is the stable organization identifier. Add a clear name so administrators can recognize it later."
+          }
+        >
+          <div className="external-agent-triggers__installation-fields">
             <TextField
-              label="Jira site URL"
-              value={installationForm.siteUrl}
-              placeholder="https://company.atlassian.net"
-              onChange={(value) => setInstallationForm((current) => ({ ...current, siteUrl: value }))}
+              label={terms.tenant}
+              value={installationForm.tenantId}
+              required
+              placeholder={provider === "jira" ? "Atlassian cloud ID" : "Linear organization ID"}
+              onChange={(value) =>
+                setInstallationForm((current) => ({ ...current, tenantId: value }))
+              }
             />
-          ) : null}
-          <TextField
-            label="App actor ID"
-            value={installationForm.appActorId}
-            placeholder={provider === "jira" ? "Atlassian app account ID" : "Linear app user ID"}
-            description="Prevents the integration from retriggering on its own replies and enables assignments."
-            onChange={(value) => setInstallationForm((current) => ({ ...current, appActorId: value }))}
-          />
-          <TextField
-            label="Mention aliases"
-            value={installationForm.mentionAliases}
-            placeholder="computer agents, @computer-agents"
-            description="Comma-separated names recognized in comments."
-            onChange={(value) => setInstallationForm((current) => ({ ...current, mentionAliases: value }))}
-          />
-        </div>
-      </PlatformModal>
+            <TextField
+              label="Connection name"
+              value={installationForm.displayName}
+              placeholder={`${providerLabel(provider)} workspace`}
+              onChange={(value) =>
+                setInstallationForm((current) => ({ ...current, displayName: value }))
+              }
+            />
+            {provider === "jira" ? (
+              <TextField
+                label="Jira site URL"
+                value={installationForm.siteUrl}
+                placeholder="https://company.atlassian.net"
+                onChange={(value) =>
+                  setInstallationForm((current) => ({ ...current, siteUrl: value }))
+                }
+              />
+            ) : null}
+          </div>
+        </PlatformSetupModalStep>
+
+        <PlatformSetupModalStep
+          number="3"
+          title="Control how agent activity is recognized"
+          description="These optional values prevent reply loops and determine which names count as an agent mention."
+        >
+          <div className="external-agent-triggers__installation-fields">
+            <TextField
+              label="App actor ID"
+              value={installationForm.appActorId}
+              placeholder={provider === "jira" ? "Atlassian app account ID" : "Linear app user ID"}
+              description="Prevents the integration from retriggering on its own replies and enables assignments."
+              onChange={(value) =>
+                setInstallationForm((current) => ({ ...current, appActorId: value }))
+              }
+            />
+            <TextField
+              label="Mention aliases"
+              value={installationForm.mentionAliases}
+              placeholder="computer agents, @computer-agents"
+              description="Comma-separated names recognized in comments."
+              onChange={(value) =>
+                setInstallationForm((current) => ({ ...current, mentionAliases: value }))
+              }
+            />
+          </div>
+        </PlatformSetupModalStep>
+      </PlatformSetupModal>
 
       <PlatformModal
         open={bindingModalOpen}

@@ -46,6 +46,24 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             fieldKey: "",
             query: "",
           });
+          const [metronomePromptPicker, setMetronomePromptPicker] = useState({
+            fieldKey: "",
+            query: "",
+            selectingPromptId: "",
+          });
+          const [metronomePromptPickerState, setMetronomePromptPickerState] = useState({
+            status: "idle",
+            prompts: [],
+            error: "",
+          });
+          const metronomePromptSelectionTokenRef = useRef(0);
+          const closeMetronomePromptPicker = useCallback(() => {
+            metronomePromptSelectionTokenRef.current += 1;
+            setMetronomePromptPicker({ fieldKey: "", query: "", selectingPromptId: "" });
+          }, []);
+          useEffect(() => () => {
+            metronomePromptSelectionTokenRef.current += 1;
+          }, []);
           const [isMetronomeSchedulePopoverOpen, setIsMetronomeSchedulePopoverOpen] = useState(false);
           const [metronomeSchedulePopoverRect, setMetronomeSchedulePopoverRect] = useState(null);
           const [isMetronomeSchedulePopoverClosing, setIsMetronomeSchedulePopoverClosing] = useState(false);
@@ -73,7 +91,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const promptExtensionTextareaRef = useRef(null);
           const metronomeAttachmentInputRef = useRef(null);
           const [isMetronomeAttachmentPopoverOpen, setIsMetronomeAttachmentPopoverOpen] = useState(false);
-          const [metronomeAttachmentPopoverRect, setMetronomeAttachmentPopoverRect] = useState(null);
           const [isMetronomeAttachmentPopoverClosing, setIsMetronomeAttachmentPopoverClosing] = useState(false);
           const metronomeAttachmentPopoverCloseTimerRef = useRef(null);
           const closeMetronomeAttachmentPopover = useCallback((options = {}) => {
@@ -85,7 +102,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             if (shouldCloseImmediately || typeof window === "undefined") {
               setIsMetronomeAttachmentPopoverClosing(false);
               setIsMetronomeAttachmentPopoverOpen(false);
-              setMetronomeAttachmentPopoverRect(null);
               return;
             }
             setIsMetronomeAttachmentPopoverClosing(true);
@@ -93,7 +109,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               metronomeAttachmentPopoverCloseTimerRef.current = null;
               setIsMetronomeAttachmentPopoverClosing(false);
               setIsMetronomeAttachmentPopoverOpen(false);
-              setMetronomeAttachmentPopoverRect(null);
             }, 180);
           }, []);
           const [metronomeInspectorSelectPopover, setMetronomeInspectorSelectPopover] = useState({
@@ -1190,6 +1205,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             setIsMetronomeWorkspaceSelectorOpen(false);
             setIsMetronomeAgentSelectorOpen(false);
             setMetronomeDynamicContentPicker({ fieldKey: "", query: "" });
+            closeMetronomePromptPicker();
             closeMetronomeSchedulePopover({ immediate: true });
             closeMetronomeAttachmentPopover({ immediate: true });
             closeMetronomeInspectorSelectPopover({ immediate: true });
@@ -1209,7 +1225,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               value: "",
               error: "",
             });
-          }, [selectedNodeId, closeMetronomeSchedulePopover, closeMetronomeAttachmentPopover, closeMetronomeInspectorSelectPopover]);
+          }, [selectedNodeId, closeMetronomePromptPicker, closeMetronomeSchedulePopover, closeMetronomeAttachmentPopover, closeMetronomeInspectorSelectPopover]);
 
           useEffect(() => {
             if (!metronomeDynamicContentPicker.fieldKey || typeof document === "undefined") return () => {};
@@ -1231,6 +1247,53 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               document.removeEventListener("keydown", handleDynamicContentKeyDown);
             };
           }, [metronomeDynamicContentPicker.fieldKey]);
+
+          useEffect(() => {
+            const fieldKey = String(metronomePromptPicker.fieldKey || "").trim();
+            if (!fieldKey) return () => {};
+            const controller = new AbortController();
+            setMetronomePromptPickerState({ status: "loading", prompts: [], error: "" });
+            void fetchMetronomePromptsApi({
+              backendUrl,
+              apiKey,
+              requestHeaders,
+              signal: controller.signal,
+            })
+              .then((prompts) => {
+                if (controller.signal.aborted) return;
+                setMetronomePromptPickerState({ status: "ready", prompts, error: "" });
+              })
+              .catch((error) => {
+                if (controller.signal.aborted) return;
+                setMetronomePromptPickerState({
+                  status: "error",
+                  prompts: [],
+                  error: error instanceof Error ? error.message : "Failed to load prompts.",
+                });
+              });
+            return () => controller.abort();
+          }, [metronomePromptPicker.fieldKey, backendUrl, apiKey, metronomeRequestHeadersKey]);
+
+          useEffect(() => {
+            if (!metronomePromptPicker.fieldKey || typeof document === "undefined") return () => {};
+            const handlePromptPickerPointerDown = (event) => {
+              const target = event.target;
+              if (target?.closest?.(".playground-metronome-prompt-picker-popup-shell")) return;
+              if (target?.closest?.(".playground-metronome-prompt-picker")) return;
+              closeMetronomePromptPicker();
+            };
+            const handlePromptPickerKeyDown = (event) => {
+              if (event.key === "Escape") {
+                closeMetronomePromptPicker();
+              }
+            };
+            document.addEventListener("pointerdown", handlePromptPickerPointerDown, true);
+            document.addEventListener("keydown", handlePromptPickerKeyDown);
+            return () => {
+              document.removeEventListener("pointerdown", handlePromptPickerPointerDown, true);
+              document.removeEventListener("keydown", handlePromptPickerKeyDown);
+            };
+          }, [metronomePromptPicker.fieldKey, closeMetronomePromptPicker]);
 
           useEffect(() => {
             if (!metronomeRunActionMenu || typeof document === "undefined") return () => {};

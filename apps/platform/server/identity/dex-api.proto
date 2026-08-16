@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package api;
+
+// This intentionally vendors only the password-management portion of the
+// Dex v2 API used by the appliance local-account adapter. Field and method
+// numbers match github.com/dexidp/dex v2.42.0.
+message Password {
+  string email = 1;
+  bytes hash = 2;
+  string username = 3;
+  string user_id = 4;
+}
+
+message CreatePasswordReq {
+  Password password = 1;
+}
+
+message CreatePasswordResp {
+  bool already_exists = 1;
+}
+
+service Dex {
+  rpc CreatePassword(CreatePasswordReq) returns (CreatePasswordResp) {};
+}

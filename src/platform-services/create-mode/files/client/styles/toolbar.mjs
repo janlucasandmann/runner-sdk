@@ -622,6 +622,35 @@ export const FILES_TOOLBAR_CSS = `
         cursor: default;
       }
 
+      .playground-files-breadcrumb-segment.is-branch-selector {
+        min-width: 0;
+        flex: 0 1 auto;
+      }
+
+      .playground-files-breadcrumb-branch-selector {
+        min-width: 0;
+        max-width: 180px;
+        flex: 0 1 auto;
+      }
+
+      .playground-files-breadcrumb-branch-trigger {
+        min-height: 28px;
+        max-width: 180px;
+        gap: 5px;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .playground-files-breadcrumb-branch-trigger .platform-selector__value {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-files-breadcrumb-branch-popup {
+        min-width: 180px;
+      }
+
       .playground-files-breadcrumb-separator {
         color: rgba(255, 255, 255, 0.24);
       }

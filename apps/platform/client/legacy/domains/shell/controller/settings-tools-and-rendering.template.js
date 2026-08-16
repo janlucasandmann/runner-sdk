@@ -3888,34 +3888,65 @@
             );
   
             const settingsTriggerComposerDialog = settingsCreatingTrigger
-              ? React.createElement(PlatformModalBackdrop, {
-                  className: "playground-modal-scrim",
-                  onClick: closeSettingsTriggerComposer,
-                },
-                  React.createElement(PlatformModalSurface, {
-                    className: "playground-tasks-project-modal",
-                    onClick: (event) => event.stopPropagation(),
-                  },
-                    React.createElement("div", { className: "playground-tasks-project-modal-header" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-copy" },
-                        React.createElement("div", { className: "playground-tasks-project-modal-title" }, "Create Webhook"),
-                        React.createElement("div", { className: "playground-tasks-project-modal-subtitle" }, "Route external events into a selected environment and agent.")
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-tasks-project-modal-close",
-                        onClick: closeSettingsTriggerComposer,
-                        "aria-label": "Close webhook composer",
-                      }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                    ),
-                    React.createElement("form", {
-                      className: "playground-tasks-project-modal-form",
+              ? React.createElement(PlatformSetupModal, {
+                  open: true,
+                  title: "Create a webhook",
+                  description: "Turn an external event into focused agent work. Choose what starts the webhook, where it runs, and exactly what the agent should do.",
+                  features: [
+                    {
+                      id: "external-events",
+                      icon: React.createElement(Webhook, { width: 18, height: 18, strokeWidth: 1.8 }),
+                      title: "Start work from external events",
+                      description: "Listen for GitHub, GitLab, or custom webhook events without polling.",
+                    },
+                    {
+                      id: "agent-routing",
+                      icon: React.createElement(Bot, { width: 18, height: 18, strokeWidth: 1.8 }),
+                      title: "Route work to the right agent",
+                      description: "Select the computer, action, and agent that should handle every matching event.",
+                    },
+                    {
+                      id: "event-filters",
+                      icon: React.createElement(Filter, { width: 18, height: 18, strokeWidth: 1.8 }),
+                      title: "Keep noisy events out",
+                      description: "Limit repository and branch matches before a run is created.",
+                    },
+                  ],
+                  introFooter: React.createElement("span", null, "You can edit, disable, or delete this webhook at any time."),
+                  onClose: closeSettingsTriggerComposer,
+                  busy: settingsTriggerSubmitting,
+                  as: "form",
+                  accentColor: "#47a7ff",
+                  className: "playground-settings-trigger-setup-modal",
+                  closeButtonLabel: "Close webhook setup",
+                  surfaceProps: {
                       onSubmit: (event) => {
                         event.preventDefault();
                         void handleSettingsCreateTrigger();
                       },
-                    },
-                      React.createElement("div", { className: "playground-tasks-project-modal-body" },
+                  },
+                  footer: React.createElement(React.Fragment, null,
+                    settingsTriggersError
+                      ? React.createElement("div", { className: "playground-settings-trigger-setup-modal__error", role: "alert" }, settingsTriggersError)
+                      : null,
+                    React.createElement(PlatformSecondaryButton, {
+                      size: "medium",
+                      type: "button",
+                      onClick: closeSettingsTriggerComposer,
+                      disabled: settingsTriggerSubmitting,
+                    }, "Cancel"),
+                    React.createElement(PlatformPrimaryButton, {
+                      size: "medium",
+                      type: "submit",
+                      disabled: settingsTriggerSubmitting || !canCreateSettingsTrigger,
+                    }, settingsTriggerSubmitting ? "Creating..." : "Create Webhook")
+                  ),
+                },
+                  React.createElement(PlatformSetupModalStep, {
+                    number: 1,
+                    title: "Name this webhook",
+                    description: "Use a name that makes the source and purpose easy to recognize later.",
+                  },
                         React.createElement("div", { className: "playground-tasks-project-modal-field" },
                           React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Name"),
                           React.createElement("input", {
@@ -3927,6 +3958,12 @@
                             disabled: settingsTriggerSubmitting,
                           })
                         ),
+                  ),
+                  React.createElement(PlatformSetupModalStep, {
+                    number: 2,
+                    title: "Choose what starts it",
+                    description: "The source receives the event; the event type decides which deliveries qualify.",
+                  },
                         React.createElement("div", { className: "playground-tasks-project-modal-grid" },
                           React.createElement("div", { className: "playground-tasks-project-modal-field" },
                             React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Source"),
@@ -3966,16 +4003,22 @@
                             )
                           )
                         ),
+                  ),
+                  React.createElement(PlatformSetupModalStep, {
+                    number: 3,
+                    title: "Define the agent work",
+                    description: "Choose where the run happens and give the agent a clear instruction for every matching event.",
+                  },
                         React.createElement("div", { className: "playground-tasks-project-modal-grid" },
                           React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                            React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Environment"),
+                            React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Computer"),
                             React.createElement("select", {
                               className: "playground-environments-select",
                               value: settingsTriggerForm.environmentId,
                               disabled: settingsTriggerSubmitting,
                               onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, environmentId: event.target.value })),
                             },
-                              React.createElement("option", { value: "" }, "Select environment"),
+                              React.createElement("option", { value: "" }, "Select computer"),
                               runtimeEnvironments.map((environment) =>
                                 React.createElement("option", { key: environment.id, value: environment.id }, environment.name || environment.id)
                               )
@@ -4003,7 +4046,7 @@
                           )
                         ),
                         React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Agent"),
+                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Agent (optional)"),
                           React.createElement("select", {
                             className: "playground-environments-select",
                             value: settingsTriggerForm.agentId,
@@ -4054,9 +4097,17 @@
                               ? React.createElement("div", { className: "playground-environments-muted", style: { marginTop: 8 } }, "The assistant response will be posted back to the matching GitLab merge request as a comment.")
                               : null
                         ),
+                  ),
+                  settingsTriggerForm.source === "github" || settingsTriggerForm.source === "gitlab"
+                    ? React.createElement(PlatformSetupModalStep, {
+                        number: 4,
+                        title: "Limit which events qualify",
+                        description: settingsTriggerForm.source === "github"
+                          ? "Optionally restrict this webhook to a connected repository and branch."
+                          : "Optionally restrict this webhook to a GitLab project and branch.",
+                      },
                         settingsTriggerForm.source === "github"
                           ? React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                              React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Filters"),
                               !githubStatus.connected
                                 ? React.createElement("div", { className: "playground-settings-trigger-connect-card" },
                                     React.createElement("div", { className: "playground-environments-muted" }, "Connect GitHub to choose one of your repositories for this webhook."),
@@ -4126,7 +4177,6 @@
                             )
                           : settingsTriggerForm.source === "gitlab"
                             ? React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                                React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Filters"),
                                 React.createElement("div", { className: "playground-settings-trigger-connect-card", style: { marginBottom: 8 } },
                                   React.createElement("div", { className: "playground-environments-muted" }, "Set a GitLab webhook secret in ACP, then configure the project webhook in GitLab. Add a GITLAB_TOKEN secret on the selected computer if you want ACP to comment back on merge requests.")
                                 ),
@@ -4160,26 +4210,8 @@
                                 )
                               )
                             : null
-                      ),
-                      settingsTriggersError
-                        ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, settingsTriggersError)
-                        : null,
-                      React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button",
-                          onClick: closeSettingsTriggerComposer,
-                          disabled: settingsTriggerSubmitting,
-                        }, "Cancel"),
-                        React.createElement(PlatformPrimaryButton, {
-                          size: "medium",
-                          type: "submit",
-                          className: "playground-environments-action-button is-primary",
-                          disabled: settingsTriggerSubmitting || !canCreateSettingsTrigger,
-                        }, settingsTriggerSubmitting ? "Creating..." : "Create Webhook")
                       )
-                    )
-                  )
+                    : null
                 )
               : null;
   

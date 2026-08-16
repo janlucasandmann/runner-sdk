@@ -10,6 +10,61 @@ export const API_KEYS_PAGE_CSS_FRAGMENT = `      .resource-overview-page.is-deve
         flex: 0 0 auto;
       }
 
+      .playground-develop-api-keys-base-url {
+        min-width: 0;
+        padding: 14px 16px;
+        display: grid;
+        grid-template-columns: minmax(220px, 0.7fr) minmax(320px, 1.3fr);
+        align-items: center;
+        gap: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .playground-develop-api-keys-base-url-title,
+      .playground-develop-api-keys-base-url-description {
+        margin: 0;
+      }
+
+      .playground-develop-api-keys-base-url-title {
+        color: #fff;
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-develop-api-keys-base-url-description {
+        margin-top: 4px;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .playground-develop-api-keys-base-url-description code {
+        color: rgba(255, 255, 255, 0.78);
+        font-family: "SFMono-Regular", ui-monospace, Menlo, Monaco, Consolas, monospace;
+      }
+
+      .playground-develop-api-keys-base-url-value {
+        min-width: 0;
+      }
+
+      .playground-develop-api-keys-base-url-value .playground-settings-code {
+        min-width: 0;
+        padding: 9px 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        user-select: all;
+      }
+
+      @media (max-width: 760px) {
+        .playground-develop-api-keys-base-url {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 12px;
+        }
+      }
+
       .playground-api-key-reveal-modal .playground-settings-code-row {
         margin-top: 4px;
       }

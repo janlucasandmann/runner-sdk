@@ -170,6 +170,7 @@ import { createLegacyPlatformSources } from "./create-legacy-platform-sources.mj
 export function createLegacyPlatformApplicationBindings({
   aiosOrigin,
   defaultUpstreamOrigin,
+  deploymentProfileEnvelope = null,
   identityProvider = "firebase",
   platformOrigin,
 }) {
@@ -219,14 +220,27 @@ export function createLegacyPlatformApplicationBindings({
     metronomeRunActionMenuScript: METRONOME_APP_SCRIPT_FRAGMENTS.runActionMenu,
     configurePrimaryEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     configureGovernanceEntries: TESTS_APP_SCRIPT_FRAGMENTS.sidebarEntry + EVALUATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry + FINE_TUNING_APP_SCRIPT_FRAGMENTS.sidebarEntry + ASSURANCE_APP_SCRIPT_FRAGMENTS.sidebarEntry + GUARDRAILS_APP_SCRIPT_FRAGMENTS.sidebarEntry,
-    configureInfrastructureEntries: MODELS_APP_SCRIPT_FRAGMENTS.sidebarEntry + MARKETPLACE_APP_SCRIPT_FRAGMENTS.sidebarEntry + INFERENCE_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+    configureInfrastructureEntries:
+      (deploymentProfileEnvelope?.profile?.capabilities?.modelManagement === false
+        ? ""
+        : MODELS_APP_SCRIPT_FRAGMENTS.sidebarEntry)
+      + MARKETPLACE_APP_SCRIPT_FRAGMENTS.sidebarEntry
+      + INFERENCE_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     developPrimaryEntries: DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry + API_KEYS_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     developAgentServiceEntries: SECURITY_APP_SCRIPT_FRAGMENTS.sidebarEntry + EVIDENCE_AGENTS_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     createPrimaryEntries: IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     adminEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.adminSidebarEntry
       + ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminPrimarySidebarEntries
       + TEAMS_APP_SCRIPT_FRAGMENTS.adminSidebarEntry
-      + ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminSubscriptionSidebarEntries
+      + (
+        deploymentProfileEnvelope?.profile?.capabilities?.subscriptions === false
+        && deploymentProfileEnvelope?.profile?.capabilities?.billing === false
+          ? ""
+          : ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminSubscriptionSidebarEntries
+      )
+      + (["billable", "observability_only"].includes(deploymentProfileEnvelope?.profile?.product?.usage?.mode)
+        ? ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminUsageSidebarEntry
+        : "")
       + ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminPermissionsSidebarEntries,
   });
 
@@ -349,6 +363,7 @@ export function createLegacyPlatformApplicationBindings({
     VERSION_SIDEBAR_SCRIPT,
     aiosOrigin,
     defaultUpstreamOrigin,
+    deploymentProfileEnvelope,
     identityProvider,
     platformOrigin,
   });

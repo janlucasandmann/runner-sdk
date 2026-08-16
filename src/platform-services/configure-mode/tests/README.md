@@ -21,12 +21,19 @@ uses Evaluation evidence after the software and workflow Test gates pass.
 ## Execution boundary
 
 The control API persists plans, versions, leases, results, artifacts, and
-dispatch state. The runner executes the immutable plan snapshot inside a
-selected Computer Agents environment through a hidden executor thread. User
-commands never execute in the platform web process or control API. A narrowly
-allowlisted built-in `control_plane_readiness` contract is executed directly by
-the durable platform worker; it checks only the canonical readiness endpoint
-and cannot carry a user command.
+dispatch state. At run time, each enabled case is routed independently:
+
+- readiness, Computer Agents Function, Metronome workflow, and supported
+  service-topology cases execute through deterministic platform adapters;
+- command, browser, integration, security, custom, and other agent-guided
+  cases execute in a selected Computer Agents environment through a hidden
+  executor thread;
+- a plan containing both kinds is a hybrid run. It keeps one immutable plan
+  snapshot while merging ordered results from both executors.
+
+User commands never execute in the platform web process or control API.
+Deterministic adapters accept only their typed, allowlisted request contracts
+and cannot carry an arbitrary command.
 
 Test Plans intentionally have no implicit setup or teardown commands. Any
 preparation or cleanup that is part of the verification contract must be an
@@ -41,12 +48,30 @@ draft plan -> published version -> queued run -> leased execution
 
 Each run records the exact plan fingerprint and optional commit SHA. Terminal
 evidence is fingerprinted by the control API after case results and the
-artifact manifest are persisted. Evidence also carries an explicit provenance
-classification. The current hidden-thread executor is self-reported; only an
-independently verified execution-worker attestation can satisfy a trusted
-Assurance gate. The built-in readiness contract supplies that attestation, and
-the control API validates it against the active dispatch lease and credential
-plus the exact immutable plan, commit, results, and artifacts.
+artifact manifest are persisted. Evidence also carries an explicit per-case
+provenance classification. Hidden-thread results are self-reported. Function,
+workflow, and topology results are captured directly by the runner, but are not
+presented as independently attested. Only the built-in readiness contract is
+currently eligible for an execution-worker attestation that can satisfy a
+trusted Assurance gate. The control API validates that attestation against the
+active dispatch lease and credential plus the exact immutable plan, commit,
+results, and artifacts.
+
+## Test Case authoring
+
+The Test Case detail screen provides two synchronized views over one draft:
+
+- **General** is the target-aware builder and includes the case category,
+  lifecycle, executor, timeout, retries, tags, environment variables, and
+  secret references.
+- **Code** exposes the complete case definition through the centralized editor
+  as `case.json`, `execution.json`, `request.json`, `assertions.json`, and
+  `environment.json`.
+
+Each persisted `TestCaseDefinition` field has one canonical file owner. A valid
+code edit updates the General form immediately; a General edit updates the
+corresponding file. Invalid JSON remains in the editor as an unsaved draft and
+blocks saving without replacing the last valid structured definition.
 
 ## Access control
 

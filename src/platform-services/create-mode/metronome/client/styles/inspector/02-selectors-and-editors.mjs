@@ -419,7 +419,6 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
 
       .playground-metronome-instructions-attachments-popover {
         --platform-popup-padding: 10px;
-        position: fixed;
         z-index: 100001;
         width: min(330px, calc(100vw - 32px));
         overflow: hidden;
@@ -510,8 +509,14 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         align-items: center;
       }
 
+      .playground-metronome-prompt-picker-popup-shell {
+        display: inline-flex;
+        align-items: center;
+      }
+
       .playground-metronome-node-inspector .playground-metronome-instructions-field .playground-metronome-dynamic-content-trigger.is-active,
-      .playground-metronome-node-inspector .playground-metronome-instructions-attachments-trigger.is-active {
+      .playground-metronome-node-inspector .playground-metronome-instructions-attachments-trigger.is-active,
+      .playground-metronome-node-inspector .playground-metronome-instructions-field .playground-metronome-prompt-picker-trigger.is-active {
         background: rgba(255, 255, 255, 0.1);
       }
 
@@ -700,6 +705,35 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         font-size: 12px;
         line-height: 1.45;
         text-align: center;
+      }
+
+      .playground-metronome-prompt-picker .playground-metronome-dynamic-content-row-path {
+        font-family: inherit;
+      }
+
+      .playground-metronome-prompt-picker-row:disabled {
+        cursor: default;
+      }
+
+      .playground-metronome-prompt-picker-row:disabled:not(.is-loading) {
+        opacity: 0.55;
+      }
+
+      .playground-metronome-prompt-picker-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .playground-metronome-prompt-picker-error {
+        margin: 4px 6px 6px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: rgba(255, 87, 87, 0.1);
+        color: rgba(255, 145, 145, 0.92);
+        font-size: 11px;
+        line-height: 1.4;
       }
 
       .playground-metronome-output-contract-builder {

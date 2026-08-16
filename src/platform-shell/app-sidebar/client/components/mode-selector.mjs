@@ -21,7 +21,9 @@ export const APP_SIDEBAR_MODE_SELECTOR_SCRIPT = `        function getAppSidebarM
             {
               id: "admin",
               label: "Admin",
-              description: "Organization, billing, access",
+              description: platformHasCapability("billing")
+                ? "Organization, billing, access"
+                : "Organization and access",
               Icon: ShieldCheck,
             },
           ];

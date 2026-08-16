@@ -1,4 +1,4 @@
-import { Bot, Loader2, Play, ShieldCheck } from "lucide-react";
+import { Bot, Cpu, Layers3, Loader2, Play, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { PlatformModal } from "../../../../../platform-ui/components/composite/modal/index.js";
 import {
@@ -171,6 +171,10 @@ export function TestRunCreateModal({
         <div className={`tests-run-trust-card is-${executionProfile.trust}`}>
           {executionProfile.trust === "verified_worker" ? (
             <ShieldCheck width={17} height={17} aria-hidden="true" />
+          ) : executionProfile.trust === "runner_captured" ? (
+            <Cpu width={17} height={17} aria-hidden="true" />
+          ) : executionProfile.trust === "mixed" ? (
+            <Layers3 width={17} height={17} aria-hidden="true" />
           ) : (
             <Bot width={17} height={17} aria-hidden="true" />
           )}

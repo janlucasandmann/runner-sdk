@@ -121,22 +121,73 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
         margin-bottom: 24px;
       }
 
-      .playground-projects-working-agent-features .playground-configure-sections {
+      .playground-projects-feature-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 0.82fr);
         gap: 48px;
+        align-items: flex-start;
+      }
+
+      .playground-projects-feature-column {
+        min-width: 0;
+      }
+
+      .playground-projects-feature-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
       }
 
       .playground-projects-feature-row {
+        width: 100%;
+        min-height: 58px;
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        align-items: center;
+        gap: 14px;
+        color: rgba(255, 255, 255, 0.9);
         cursor: default;
       }
 
-      .playground-projects-feature-row .playground-configure-row-title,
-      .playground-projects-feature-row .playground-configure-row-subtitle {
-        overflow: visible;
-        text-overflow: clip;
+      .playground-projects-feature-icon {
+        width: 44px;
+        height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-projects-feature-icon svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .playground-projects-feature-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-projects-feature-title,
+      .playground-projects-feature-subtitle {
         white-space: normal;
       }
 
-      .playground-projects-feature-row .playground-configure-row-subtitle {
+      .playground-projects-feature-title {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      .playground-projects-feature-subtitle {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        font-weight: 400;
         line-height: 1.45;
       }
 
@@ -302,7 +353,7 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
           margin-top: 14px;
         }
 
-        .playground-projects-working-agent-features .playground-configure-sections {
+        .playground-projects-feature-grid {
           grid-template-columns: minmax(0, 1fr);
           gap: 28px;
         }

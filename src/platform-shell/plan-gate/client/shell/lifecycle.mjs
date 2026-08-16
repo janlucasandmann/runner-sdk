@@ -1,4 +1,8 @@
 export const PLAN_GATE_LIFECYCLE_SCRIPT = String.raw`        const openPlatformPlanGate = useCallback((request = {}) => {
+          if (!platformHasCapability("subscriptions")) {
+            setPlatformPlanGateRequest(null);
+            return;
+          }
           const normalizedRequest = request && typeof request === "object"
             ? request
             : {};
@@ -74,4 +78,3 @@ export const PLAN_GATE_LIFECYCLE_SCRIPT = String.raw`        const openPlatformP
           openOrganizationBillingPage("billing", "costs-plans");
         }
 `;
-

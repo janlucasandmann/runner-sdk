@@ -16,6 +16,7 @@ export const APP_HEADER_ACCOUNT_MENU_SCRIPT = `        function renderAppHeaderA
             }),
             React.createElement(PlatformPopup, {
               open: renderedAccountMenu,
+              variant: "minimal",
               rootClassName: "account-menu-root",
               surfaceClassName: "account-menu" + (accountMenuPlacement === "top-nav" ? " is-top-nav" : (sidebarOpen ? " is-sidebar-open" : "")),
               animation: accountMenuAnimation,
@@ -28,7 +29,7 @@ export const APP_HEADER_ACCOUNT_MENU_SCRIPT = `        function renderAppHeaderA
             },
               React.createElement("button", {
                 type: "button",
-                className: "account-menu-account-button",
+                className: "tb-popup-row account-menu-account-button",
                 onClick: hasSessionAuth ? openProfileEditor : handleSignInWithComputerAgents,
               },
                 renderAccountAvatar("account-menu-avatar", "account-menu-avatar-image", accountInitials, accountAvatarUrl),
@@ -47,7 +48,7 @@ export const APP_HEADER_ACCOUNT_MENU_SCRIPT = `        function renderAppHeaderA
               React.createElement("div", { className: "account-menu-section" },
                 React.createElement("button", {
                   type: "button",
-                  className: "account-menu-item",
+                  className: "tb-popup-row account-menu-item",
                   onClick: openSettingsModal,
                 },
                   React.createElement(Settings, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
@@ -55,7 +56,7 @@ export const APP_HEADER_ACCOUNT_MENU_SCRIPT = `        function renderAppHeaderA
                 ),
                 React.createElement("button", {
                   type: "button",
-                  className: "account-menu-item",
+                  className: "tb-popup-row account-menu-item",
                   onClick: openHelpPage,
                 },
                   React.createElement(CircleHelp, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
@@ -64,7 +65,7 @@ export const APP_HEADER_ACCOUNT_MENU_SCRIPT = `        function renderAppHeaderA
                 ),
                 React.createElement("button", {
                   type: "button",
-                  className: "account-menu-item",
+                  className: "tb-popup-row account-menu-item",
                   onClick: openDocsPage,
                 },
                   React.createElement(FileText, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
@@ -75,7 +76,7 @@ export const APP_HEADER_ACCOUNT_MENU_SCRIPT = `        function renderAppHeaderA
                 hasSessionAuth
                   ? React.createElement("button", {
                       type: "button",
-                      className: "account-menu-item is-signout",
+                      className: "tb-popup-row account-menu-item is-signout",
                       onClick: handleSignOutFromComputerAgents,
                     },
                       React.createElement(LogOut, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
@@ -83,7 +84,7 @@ export const APP_HEADER_ACCOUNT_MENU_SCRIPT = `        function renderAppHeaderA
                     )
                   : React.createElement("button", {
                       type: "button",
-                      className: "account-menu-item is-signout",
+                      className: "tb-popup-row account-menu-item is-signout",
                       onClick: handleSignInWithComputerAgents,
                     },
                       React.createElement(LogIn, { className: "account-menu-item-icon", strokeWidth: 1.8 }),

@@ -1,3 +1,22 @@
+export type {
+  PlatformConfirmationModalProps,
+  PlatformConfirmationModalTone,
+} from "./platform-confirmation-modal.js";
+export { PlatformConfirmationModal } from "./platform-confirmation-modal.js";
+export type {
+  PlatformModalBackdropProps,
+  PlatformModalCloseReason,
+  PlatformModalContentProps,
+  PlatformModalHeaderProps,
+  PlatformModalHeaderSearchProps,
+  PlatformModalHeaderVariant,
+  PlatformModalProps,
+  PlatformModalSidebarProps,
+  PlatformModalSize,
+  PlatformModalSplitLayoutProps,
+  PlatformModalSurfaceProps,
+  PlatformModalVariant,
+} from "./platform-modal.js";
 export {
   PlatformModal,
   PlatformModalBackdrop,
@@ -9,25 +28,14 @@ export {
   PlatformModalSplitLayout,
   PlatformModalSurface,
 } from "./platform-modal.js";
-export { PlatformConfirmationModal } from "./platform-confirmation-modal.js";
-export { PlatformUnsavedChangesModal } from "./platform-unsaved-changes-modal.js";
-
 export type {
-  PlatformModalBackdropProps,
-  PlatformModalCloseReason,
-  PlatformModalContentProps,
-  PlatformModalHeaderSearchProps,
-  PlatformModalHeaderProps,
-  PlatformModalHeaderVariant,
-  PlatformModalProps,
-  PlatformModalSidebarProps,
-  PlatformModalSize,
-  PlatformModalSplitLayoutProps,
-  PlatformModalVariant,
-  PlatformModalSurfaceProps,
-} from "./platform-modal.js";
-export type {
-  PlatformConfirmationModalProps,
-  PlatformConfirmationModalTone,
-} from "./platform-confirmation-modal.js";
+  PlatformSetupModalFeature,
+  PlatformSetupModalProps,
+  PlatformSetupModalStepProps,
+} from "./platform-setup-modal.js";
+export {
+  PlatformSetupModal,
+  PlatformSetupModalStep,
+} from "./platform-setup-modal.js";
 export type { PlatformUnsavedChangesModalProps } from "./platform-unsaved-changes-modal.js";
+export { PlatformUnsavedChangesModal } from "./platform-unsaved-changes-modal.js";

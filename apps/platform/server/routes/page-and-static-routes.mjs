@@ -15,8 +15,22 @@ function isRetiredPlatformDocumentPath(pathname) {
 
 /** Ordered routes for the single platform document and its static assets. */
 export function createPageAndStaticRoutes(bindings) {
-    const { connectorOauthAllowedOrigins, connectorOauthEnvFileCandidates, handleFeedbackSummaryPageRequest, handleGenericConnectorApiRequest, handleGithubApiRequest, handleJiraApiRequest, handleProductUsageSummaryPageRequest, isGenericConnectorApiRequestPath, isGithubApiRequestPath, isJiraApiRequestPath, noVncNextRoot, platformDocumentHtml, platformOrigin, serveAiosPublicAsset, serveDistAsset, serveEnvironmentGuiViewerPage, serveVendorAsset, xlsxRoot, } = bindings;
+    const { connectorOauthAllowedOrigins, connectorOauthEnvFileCandidates, handleFeedbackSummaryPageRequest, handleGenericConnectorApiRequest, handleGithubApiRequest, handleJiraApiRequest, handleProductUsageSummaryPageRequest, isGenericConnectorApiRequestPath, isGithubApiRequestPath, isJiraApiRequestPath, noVncNextRoot, platformDocumentHtml, platformOrigin, serveAiosPublicAsset, serveDistAsset, serveEnvironmentGuiViewerPage, serveVendorAsset, stockifiPlatformOrigin, xlsxRoot, } = bindings;
     return function handlePageAndStaticRoutes(req, res, url) {
+        const stockifiPathMatch = url.pathname.match(/^\/stockifi(?:\/(.*))?$/);
+        if ((req.method === "GET" || req.method === "HEAD")
+            && stockifiPlatformOrigin
+            && stockifiPathMatch) {
+            const relativePath = stockifiPathMatch[1] || "";
+            const target = new URL(`/${relativePath}`, stockifiPlatformOrigin);
+            target.search = url.search;
+            res.writeHead(307, {
+                Location: target.toString(),
+                "Cache-Control": "no-store",
+            });
+            res.end();
+            return true;
+        }
         const rawThreadPathMatch = url.pathname.match(/^\/(thread[_-][A-Za-z0-9_-]+)\/?$/);
         if ((req.method === "GET" || req.method === "HEAD") && rawThreadPathMatch) {
             const target = new URL("/", platformOrigin);

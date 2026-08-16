@@ -236,7 +236,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
               React.createElement("div", { className: "tb-file-browser-search-wrap" },
                 React.createElement("div", { className: "tb-file-browser-search" },
                   React.createElement(Search, { className: "tb-file-browser-search-icon", strokeWidth: 1.9 }),
-                  React.createElement("input", {
+                  React.createElement(MetronomeInspectorInput, {
                     className: "tb-file-browser-search-input",
                     value: metronomeEnvironmentFilePickerSearch,
                     placeholder: "Search files...",
@@ -344,7 +344,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                     }, buttonLabel)
                   )
                 ),
-                React.createElement("input", {
+                React.createElement(MetronomeInspectorInput, {
                   ref: metronomeAttachmentInputRef,
                   type: "file",
                   multiple: true,
@@ -554,7 +554,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                 delete nextContract[fieldKey];
                 commitOutputContract(nextContract);
               };
-              const renderThreadOutputContractBuilder = () => React.createElement("div", { className: "playground-metronome-field" },
+              const renderThreadOutputContractBuilder = () => React.createElement(MetronomeInspectorField, null,
                 renderMetronomeFieldTitle("Output contract builder", "Define top-level structured fields. These become dynamic content for downstream nodes."),
                 React.createElement("div", { className: "playground-metronome-output-contract-builder" },
                   outputContractEntries.length
@@ -574,9 +574,9 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                           }, React.createElement(X, { width: 12, height: 12, strokeWidth: 2 }))
                         ))
                       )
-                    : React.createElement("p", { className: "playground-metronome-field-hint" }, "No structured fields yet."),
+                    : React.createElement(MetronomeInspectorFieldHint, { as: "p" }, "No structured fields yet."),
                   React.createElement("div", { className: "playground-metronome-output-contract-composer" },
-                    React.createElement("input", {
+                    React.createElement(MetronomeInspectorInput, {
                       type: "text",
                       className: "playground-metronome-input",
                       value: metronomeOutputContractComposer.key,
@@ -594,7 +594,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                         key: event.target.value,
                       })),
                     }),
-                    React.createElement("select", {
+                    React.createElement(MetronomeInspectorNativeSelect, {
                       className: "playground-metronome-select",
                       value: metronomeOutputContractComposer.type,
                       onChange: (event) => setMetronomeOutputContractComposer((current) => ({
@@ -624,16 +624,16 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
               }),
               renderMetronomeAgentSelector(),
               renderMetronomeWorkspaceSelector(),
-              React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
+              React.createElement(MetronomeInspectorSwitchRow, { className: "is-workflow-context" },
                 React.createElement("div", { className: "playground-metronome-switch-copy" },
                   React.createElement("span", { className: "playground-metronome-switch-title-with-tooltip" },
                     React.createElement("span", null, "Full workflow context"),
                     renderMetronomeFieldTooltip("Pass the full chain of previous node summaries into this thread. Turn off to pass only the latest node result.")
                   )
                 ),
-                React.createElement("button", {
+                React.createElement(MetronomeInspectorSwitch, {
                   type: "button",
-                  className: "playground-metronome-switch" + (normalizeMetronomeInputContextScope(config.inputContextScope || config.input_context_scope || config.contextScope || config.context_scope) !== "latest" ? " is-on" : ""),
+                  className: (normalizeMetronomeInputContextScope(config.inputContextScope || config.input_context_scope || config.contextScope || config.context_scope) !== "latest" ? " is-on" : ""),
                   role: "switch",
                   "aria-checked": normalizeMetronomeInputContextScope(config.inputContextScope || config.input_context_scope || config.contextScope || config.context_scope) !== "latest",
                   onClick: () => {
@@ -660,7 +660,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
               ),
               React.createElement("div", { className: "playground-metronome-thread-more-sections" + (isMetronomeThreadMoreOpen ? " is-open" : "") },
                 React.createElement("div", { className: "playground-metronome-thread-more-sections-inner" },
-                    React.createElement("div", { className: "playground-metronome-field playground-metronome-thread-output-field" },
+                    React.createElement(MetronomeInspectorField, { className: "playground-metronome-thread-output-field" },
                       renderMetronomeFieldTitle("Output mode", "Structured output lets downstream Firecrawl, Database, and Function nodes bind to JSON, URLs, files, records, and artifacts."),
                       renderMetronomeInspectorSelect({
                         id: "thread-output-mode-" + (selectedNodeId || "selected"),
@@ -673,25 +673,25 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                         searchPlaceholder: "Select output mode...",
                       })
                     ),
-                    React.createElement("div", { className: "playground-metronome-field playground-metronome-thread-output-field" },
+                    React.createElement(MetronomeInspectorField, { className: "playground-metronome-thread-output-field" },
                       renderMetronomeFieldTitle("Output key", "Name this thread output so downstream nodes can bind to it, for example previous.menu_detection.records."),
-                      React.createElement("input", {
+                      React.createElement(MetronomeInspectorInput, {
                         className: "playground-metronome-input",
                         value: config.outputKey || config.output_key || "thread",
                         onChange: (event) => updateSelectedNodeConfig("outputKey", event.target.value),
                         placeholder: "thread",
                       })
                     ),
-                    React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
+                    React.createElement(MetronomeInspectorSwitchRow, { className: "is-workflow-context" },
                       React.createElement("div", { className: "playground-metronome-switch-copy" },
                         React.createElement("span", { className: "playground-metronome-switch-title-with-tooltip" },
                           React.createElement("span", null, "Require JSON output"),
                           renderMetronomeFieldTooltip("Ask the agent to produce machine-readable output for deterministic downstream nodes.")
                         )
                       ),
-                      React.createElement("button", {
+                      React.createElement(MetronomeInspectorSwitch, {
                         type: "button",
-                        className: "playground-metronome-switch" + (config.requireJsonOutput || config.require_json_output ? " is-on" : ""),
+                        className: (config.requireJsonOutput || config.require_json_output ? " is-on" : ""),
                         role: "switch",
                         "aria-checked": config.requireJsonOutput || config.require_json_output ? "true" : "false",
                         onClick: () => updateSelectedNodeConfig("requireJsonOutput", !(config.requireJsonOutput || config.require_json_output)),
@@ -773,7 +773,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
               };
 
               return React.createElement(React.Fragment, null,
-                React.createElement("div", { className: "playground-metronome-field" },
+                React.createElement(MetronomeInspectorField, null,
                   renderMetronomeFieldTitle("Template"),
                   renderMetronomeInspectorSelect({
                     id: "imagine-template-" + (selectedNodeId || "selected"),
@@ -790,7 +790,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                     searchPlaceholder: "Select a template...",
                   })
                 ),
-                React.createElement("div", { className: "playground-metronome-field" },
+                React.createElement(MetronomeInspectorField, null,
                   renderMetronomeFieldTitle("Mode"),
                   renderMetronomeInspectorSelect({
                     id: "imagine-mode-" + (selectedNodeId || "selected"),
@@ -803,7 +803,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                     searchPlaceholder: "Select mode...",
                   })
                 ),
-                React.createElement("div", { className: "playground-metronome-field playground-metronome-imagine-model-field" },
+                React.createElement(MetronomeInspectorField, { className: "playground-metronome-imagine-model-field" },
                   renderMetronomeFieldTitle(
                     selectedMediaMode === "video" ? "Video model" : "Image model",
                     (modelOptions.find((option) => option.id === selectedModelId) || modelOptions[0])?.description || ""
@@ -829,16 +829,16 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                 }),
                 renderMetronomeAgentSelector(),
                 renderMetronomeWorkspaceSelector(),
-                React.createElement("div", { className: "playground-metronome-switch-row is-workflow-context" },
+                React.createElement(MetronomeInspectorSwitchRow, { className: "is-workflow-context" },
                   React.createElement("div", { className: "playground-metronome-switch-copy" },
                     React.createElement("span", { className: "playground-metronome-switch-title-with-tooltip" },
                       React.createElement("span", null, "Full workflow context"),
                       renderMetronomeFieldTooltip("Pass the full chain of previous node summaries into Imagine. Turn off to pass only the latest node result.")
                     )
                   ),
-                  React.createElement("button", {
+                  React.createElement(MetronomeInspectorSwitch, {
                     type: "button",
-                    className: "playground-metronome-switch" + (normalizeMetronomeInputContextScope(config.inputContextScope || config.input_context_scope || config.contextScope || config.context_scope) !== "latest" ? " is-on" : ""),
+                    className: (normalizeMetronomeInputContextScope(config.inputContextScope || config.input_context_scope || config.contextScope || config.context_scope) !== "latest" ? " is-on" : ""),
                     role: "switch",
                     "aria-checked": normalizeMetronomeInputContextScope(config.inputContextScope || config.input_context_scope || config.contextScope || config.context_scope) !== "latest",
                     onClick: () => {
@@ -894,7 +894,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                 const title = String(ticket?.title || ticket?.name || ticket?.id || "").trim();
                 return [ticketNumber, title].filter(Boolean).join(" · ") || title || "Untitled ticket";
               };
-              const renderTicketSelector = () => React.createElement("div", { className: "playground-metronome-field" },
+              const renderTicketSelector = () => React.createElement(MetronomeInspectorField, null,
                 renderMetronomeFieldTitle("Ticket"),
                 renderMetronomeInspectorSelect({
                   id: "ticket-target-" + (selectedNodeId || "selected"),
@@ -921,7 +921,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                 })
               );
               return React.createElement(React.Fragment, null,
-                React.createElement("div", { className: "playground-metronome-field" },
+                React.createElement(MetronomeInspectorField, null,
                   renderMetronomeFieldTitle("Project"),
                   renderMetronomeInspectorSelect({
                     id: "ticket-project-" + (selectedNodeId || "selected"),
@@ -948,7 +948,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                     searchPlaceholder: "Select a project...",
                   })
                 ),
-                React.createElement("div", { className: "playground-metronome-field" },
+                React.createElement(MetronomeInspectorField, null,
                   renderMetronomeFieldTitle("Action"),
                   renderMetronomeInspectorSelect({
                     id: "ticket-action-" + (selectedNodeId || "selected"),
@@ -997,7 +997,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                     )
                   : null,
                 isStatusUpdate
-                  ? React.createElement("div", { className: "playground-metronome-field" },
+                  ? React.createElement(MetronomeInspectorField, null,
                       renderMetronomeFieldTitle("Status"),
                       renderMetronomeInspectorSelect({
                         id: "ticket-status-" + (selectedNodeId || "selected"),
@@ -1030,9 +1030,9 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                   : null,
                 isAddSubtask
                   ? React.createElement(React.Fragment, null,
-                      React.createElement("div", { className: "playground-metronome-field" },
+                      React.createElement(MetronomeInspectorField, null,
                         renderMetronomeFieldTitle("Subtask title"),
-                        React.createElement("input", {
+                        React.createElement(MetronomeInspectorInput, {
                           type: "text",
                           className: "playground-metronome-input",
                           value: config.subtaskTitle || "",
@@ -1068,7 +1068,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                 : [];
               const isCredentialSecretsLoading = credentialVaultId && metronomeSecretVaultSecretsLoadingId === credentialVaultId;
               return React.createElement(React.Fragment, null,
-                React.createElement("div", { className: "playground-metronome-field" },
+                React.createElement(MetronomeInspectorField, null,
                   renderMetronomeFieldTitle("Credential", "Use the managed Computer Agents Firecrawl credential by default, billed as usage. Choose a Secrets resource to use your own key."),
                   renderMetronomeInspectorSelect({
                     id: "firecrawl-credential-vault-" + (selectedNodeId || "selected"),
@@ -1099,7 +1099,7 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                   })
                 ),
                 credentialVaultId
-                  ? React.createElement("div", { className: "playground-metronome-field" },
+                  ? React.createElement(MetronomeInspectorField, null,
                       renderMetronomeFieldTitle("Credential", "Select the Firecrawl API key stored in the chosen secrets resource."),
                       renderMetronomeInspectorSelect({
                         id: "firecrawl-credential-secret-" + (selectedNodeId || "selected"),
@@ -1127,13 +1127,13 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                     )
                   : null,
                 credentialVaultId && !isCredentialSecretsLoading && !credentialVaultSecrets.length
-                  ? React.createElement("p", { className: "playground-metronome-field-hint playground-metronome-firecrawl-credential-hint" }, "No credentials found in this secrets resource yet.")
+                  ? React.createElement(MetronomeInspectorFieldHint, { as: "p", className: "playground-metronome-firecrawl-credential-hint" }, "No credentials found in this secrets resource yet.")
                   : null,
                 !credentialVaultId
-                  ? React.createElement("p", { className: "playground-metronome-field-hint playground-metronome-firecrawl-credential-hint" }, "Managed by Computer Agents and billed as usage.")
+                  ? React.createElement(MetronomeInspectorFieldHint, { as: "p", className: "playground-metronome-firecrawl-credential-hint" }, "Managed by Computer Agents and billed as usage.")
                   : null,
                 !metronomeSecretVaultOptions.length
-                  ? React.createElement("p", { className: "playground-metronome-field-hint playground-metronome-firecrawl-credential-hint" }, "Create a Secrets resource in Develop mode to use your own Firecrawl key.")
+                  ? React.createElement(MetronomeInspectorFieldHint, { as: "p", className: "playground-metronome-firecrawl-credential-hint" }, "Create a Secrets resource in Develop mode to use your own Firecrawl key.")
                   : null,
                 isSearch
                   ? React.createElement(React.Fragment, null,
@@ -1149,9 +1149,9 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                           { id: "workflow.context", label: "Full workflow context" },
                         ],
                       }),
-                      React.createElement("div", { className: "playground-metronome-field playground-metronome-firecrawl-fallback-field" },
+                      React.createElement(MetronomeInspectorField, { className: "playground-metronome-firecrawl-fallback-field" },
                         renderMetronomeFieldTitle("Fallback", "Used when the selected binding does not provide a query."),
-                        React.createElement("input", {
+                        React.createElement(MetronomeInspectorInput, {
                           type: "text",
                           className: "playground-metronome-input",
                           value: config.query || "",
@@ -1176,9 +1176,9 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                           { id: "trigger.input.url", label: "Trigger input URL" },
                         ],
                       }),
-                      React.createElement("div", { className: "playground-metronome-field playground-metronome-firecrawl-fallback-field" },
+                      React.createElement(MetronomeInspectorField, { className: "playground-metronome-firecrawl-fallback-field" },
                         renderMetronomeFieldTitle("Fallback URL"),
-                        React.createElement("input", {
+                        React.createElement(MetronomeInspectorInput, {
                           type: "url",
                           className: "playground-metronome-input",
                           value: config.url || "",
@@ -1188,9 +1188,9 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                           onChange: (event) => updateSelectedNodeConfig("url", event.target.value),
                         })
                       ),
-                      React.createElement("div", { className: "playground-metronome-field" },
+                      React.createElement(MetronomeInspectorField, null,
                         renderMetronomeFieldTitle("Formats"),
-                        React.createElement("input", {
+                        React.createElement(MetronomeInspectorInput, {
                           type: "text",
                           className: "playground-metronome-input",
                           value: config.formats || "markdown,html",
@@ -1215,9 +1215,9 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                           { id: "last.json.filePath", label: "Previous node JSON file path" },
                         ],
                       }),
-                      React.createElement("div", { className: "playground-metronome-field playground-metronome-firecrawl-fallback-field" },
+                      React.createElement(MetronomeInspectorField, { className: "playground-metronome-firecrawl-fallback-field" },
                         renderMetronomeFieldTitle("Fallback file path"),
-                        React.createElement("input", {
+                        React.createElement(MetronomeInspectorInput, {
                           type: "text",
                           className: "playground-metronome-input",
                           value: config.filePath || config.file_path || "",

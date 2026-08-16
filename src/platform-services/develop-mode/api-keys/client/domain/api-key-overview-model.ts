@@ -136,7 +136,7 @@ export function normalizeApiKeyOverviewRows(
     );
     const name = asString(record.name) || "API Key";
     const keyPrefix = asString(record.keyPrefix || record.key_prefix) || "key";
-    const permissionsLabel = getPermissionsLabel(record.permissions);
+    const permissionsLabel = getPermissionsLabel(record.permissions || record.scopes);
     return [{
       id,
       name,
@@ -150,6 +150,7 @@ export function normalizeApiKeyOverviewRows(
       creatorFallback: creator.fallback,
       permissionsLabel,
       isStandard: standard,
+      canReveal: record.canReveal !== false,
       canRevoke: record.canRevoke !== false,
       searchText: [
         name,

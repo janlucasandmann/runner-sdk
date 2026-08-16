@@ -33,7 +33,9 @@ export const ORGANIZATIONS_ADMIN_SUBSCRIPTION_SIDEBAR_ENTRIES_SCRIPT = `        
                 active: activePage === "organization" && organizationPageActiveTab === "billing",
                 onClick: () => openOrganizationAdminPage("billing"),
               },
-              {
+`;
+
+export const ORGANIZATIONS_ADMIN_USAGE_SIDEBAR_ENTRY_SCRIPT = `              {
                 id: "admin-usage",
                 label: "Usage",
                 Icon: ChartColumnIncreasing,

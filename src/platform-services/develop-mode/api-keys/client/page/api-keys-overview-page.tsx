@@ -32,6 +32,7 @@ import type {
 
 export interface DevelopApiKeysOverviewPageProps {
   rows: readonly DevelopApiKeyOverviewRow[];
+  apiBaseUrl: string;
   controlsPortalId?: string;
   loading?: boolean;
   error?: string;
@@ -77,7 +78,7 @@ function ApiKeyCreatedNotice({
         <div style={{ minWidth: 0, flex: "1 1 auto" }}>
           <p className="playground-settings-created-key-title">API Key Created Successfully</p>
           <p className="playground-settings-created-key-copy">
-            Copy this key now or view it again from the API keys table.
+            Copy this key now. It cannot be viewed again after this notice is dismissed.
           </p>
           <div className="playground-settings-code-row">
             <code className="playground-settings-code">{notice.keyValue}</code>
@@ -107,8 +108,46 @@ function ApiKeyCreatedNotice({
   );
 }
 
+function ApiBaseUrlNotice({ apiBaseUrl }: { apiBaseUrl: string }) {
+  const [copied, setCopied] = useState(false);
+  const normalizedBaseUrl = apiBaseUrl.replace(/\/$/, "");
+
+  const copyBaseUrl = async () => {
+    if (!normalizedBaseUrl) return;
+    await navigator.clipboard.writeText(normalizedBaseUrl);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  };
+
+  return (
+    <section className="playground-develop-api-keys-base-url" aria-label="Computer Agents API endpoint">
+      <div className="playground-develop-api-keys-base-url-copy">
+        <p className="playground-develop-api-keys-base-url-title">API base URL</p>
+        <p className="playground-develop-api-keys-base-url-description">
+          Use this origin with the Computer Agents SDK. Public API routes are served under <code>/v1</code>.
+        </p>
+      </div>
+      <div className="playground-settings-code-row playground-develop-api-keys-base-url-value">
+        <code className="playground-settings-code">{normalizedBaseUrl}</code>
+        <button
+          type="button"
+          className="playground-settings-icon-button"
+          onClick={() => void copyBaseUrl()}
+          title="Copy API base URL"
+          aria-label="Copy API base URL"
+        >
+          {copied
+            ? <Check width={14} height={14} strokeWidth={1.8} />
+            : <Copy width={14} height={14} strokeWidth={1.8} />}
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function DevelopApiKeysOverviewPage({
   rows,
+  apiBaseUrl,
   controlsPortalId = "",
   loading = false,
   error = "",
@@ -218,23 +257,25 @@ export function DevelopApiKeysOverviewPage({
         onSelect: () => onDelete(deletableTargets),
       }];
     }
-    return [
-      {
+    const actions: PlatformDataTableAction<DevelopApiKeyOverviewRow>[] = [];
+    if (row.canReveal) {
+      actions.push({
         id: "view",
         label: "View key",
         icon: Eye,
         onSelect: () => onReveal(row),
-      },
-      {
+      });
+    }
+    actions.push({
         id: "delete",
         label: "Delete",
         icon: Trash2,
         danger: true,
-        separatorBefore: true,
+        separatorBefore: actions.length > 0,
         disabled: !row.canRevoke || Boolean(revokingKeyId),
         onSelect: () => onDelete([row]),
-      },
-    ];
+    });
+    return actions;
   };
 
   return (
@@ -244,6 +285,7 @@ export function DevelopApiKeysOverviewPage({
       heroContent={(
         <>
           <PlatformAnalyticsSection analytics={analytics} chartType="line" />
+          <ApiBaseUrlNotice apiBaseUrl={apiBaseUrl} />
           {createdNotice ? <ApiKeyCreatedNotice notice={createdNotice} /> : null}
         </>
       )}

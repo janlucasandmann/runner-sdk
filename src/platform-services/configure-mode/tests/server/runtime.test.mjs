@@ -757,3 +757,160 @@ test("canonical Mission Control topology requests stay deterministic", async () 
     false,
   );
 });
+
+test("mixed plans dispatch each case to its compatible executor and preserve plan order", async () => {
+  const definition = {
+    cases: [{
+      id: "readiness-contract",
+      name: "Control plane is ready",
+      kind: "contract",
+      enabled: true,
+      request: {
+        target: "control_plane_readiness",
+        requireDatabase: true,
+        requireAgentRuntime: true,
+      },
+    }, {
+      id: "browser-check",
+      name: "User can open the dashboard",
+      kind: "browser",
+      enabled: true,
+      command: "Open the dashboard and verify the project list.",
+      request: {},
+    }],
+  };
+  const requests = [];
+  let terminalReport = null;
+  const delegatedOutput = JSON.stringify({
+    summary: "The browser verification passed.",
+    results: [{
+      caseId: "browser-check",
+      name: "User can open the dashboard",
+      kind: "browser",
+      status: "passed",
+      attempt: 1,
+      durationMs: 420,
+      summary: "Dashboard project list was visible.",
+      evidence: { references: ["screenshot://dashboard"], redacted: true },
+    }],
+    artifacts: [],
+  });
+  const fetchImpl = async (input, init = {}) => {
+    const url = new URL(String(input));
+    const method = String(init.method || "GET").toUpperCase();
+    const body = init.body ? JSON.parse(String(init.body)) : null;
+    requests.push({ method, path: url.pathname, body });
+
+    if (method === "GET" && url.pathname.endsWith("/runs/test_run_hybrid")) {
+      return Response.json({
+        testRun: {
+          id: "test_run_hybrid",
+          status: "queued",
+          agentId: "agent_test_executor",
+          environmentId: "computer_test_environment",
+          metadata: { testPlanSnapshot: { definition } },
+        },
+        testPlan: { id: "test_plan_hybrid", name: "Hybrid plan", definition },
+      });
+    }
+    if (method === "POST" && url.pathname.endsWith("/lease")) {
+      return Response.json({
+        lease: {
+          owner: "tests-worker:test_run_hybrid",
+          token: "lease-token",
+          expiresAt: new Date(Date.now() + 90_000).toISOString(),
+        },
+      });
+    }
+    if (method === "GET" && url.pathname === "/ready") {
+      return Response.json({
+        status: "ready",
+        database: "PostgreSQL",
+        agentRuntime: { status: "available" },
+      });
+    }
+    if (method === "POST" && url.pathname === "/threads") {
+      assert.equal(body.hidden, true);
+      return Response.json({ thread: { id: "thread_test_executor" } });
+    }
+    if (
+      method === "POST"
+      && url.pathname === "/threads/thread_test_executor/messages"
+    ) {
+      assert.match(body.content, /browser-check/);
+      assert.doesNotMatch(body.content, /readiness-contract/);
+      return new Response("", { status: 200 });
+    }
+    if (method === "GET" && url.pathname === "/threads/thread_test_executor") {
+      return Response.json({ thread: { id: "thread_test_executor", status: "completed" } });
+    }
+    if (
+      method === "GET"
+      && url.pathname === "/threads/thread_test_executor/messages"
+    ) {
+      return Response.json([{ role: "assistant", content: delegatedOutput }]);
+    }
+    if (
+      method === "GET"
+      && [
+        "/threads/thread_test_executor/steps",
+        "/threads/thread_test_executor/logs",
+      ].includes(url.pathname)
+    ) {
+      return Response.json([]);
+    }
+    if (method === "PATCH" && url.pathname.endsWith("/runs/test_run_hybrid")) {
+      if (body.status === "passed") terminalReport = body;
+      return Response.json({ testRun: { id: "test_run_hybrid", status: body.status } });
+    }
+    if (method === "DELETE" && url.pathname.endsWith("/lease")) {
+      return Response.json({ released: true });
+    }
+    return Response.json({ error: "Unexpected request" }, { status: 500 });
+  };
+  const runtime = createTestsRuntime({
+    executionOwnerId: "durable-tests-worker",
+    threadPollAttempts: 1,
+    fetch: fetchImpl,
+    fetchAiosApi: async () => Response.json({}),
+    hasAiosSession: () => false,
+    parseUpstreamUrl: () => "https://api.example.test",
+    readOptionalApiKey: () => "dispatch-workload-key",
+    withProxyOrganizationHeader: (_request, _body, headers) => headers,
+  });
+
+  const result = await runtime.runs.wake({
+    method: "POST",
+    url: "/internal/dispatch",
+    headers: {},
+  }, "test_run_hybrid");
+
+  assert.equal(result.status, "passed");
+  assert.ok(terminalReport);
+  assert.equal(terminalReport.metadata.executionMode, "hybrid_test_worker_v1");
+  assert.deepEqual(terminalReport.metadata.executionModes, [
+    "deterministic_contract_worker_v2",
+    "computer_agents_thread_v1",
+  ]);
+  assert.deepEqual(
+    terminalReport.results.map((entry) => entry.caseId),
+    ["readiness-contract", "browser-check"],
+  );
+  assert.equal(
+    terminalReport.results[0].evidence.executionMode,
+    "deterministic_contract_worker_v2",
+  );
+  assert.equal(terminalReport.results[0].evidence.executorThreadId, undefined);
+  assert.equal(
+    terminalReport.results[1].evidence.executionMode,
+    "computer_agents_thread_v1",
+  );
+  assert.equal(
+    terminalReport.results[1].evidence.executorThreadId,
+    "thread_test_executor",
+  );
+  assert.equal(
+    requests.filter((request) => request.path === "/threads").length,
+    1,
+  );
+});

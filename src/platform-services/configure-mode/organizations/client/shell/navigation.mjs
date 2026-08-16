@@ -1,5 +1,9 @@
 export const ORGANIZATIONS_NAVIGATION_SCRIPT = `        function normalizeOrganizationAdminPageId(value) {
-          return ["organization", "members", "subscription", "billing", "usage", "roles", "identity-access"].includes(value)
+          const availablePages = ["organization", "members", "roles", "identity-access"];
+          if (platformHasCapability("subscriptions")) availablePages.push("subscription");
+          if (platformHasCapability("billing")) availablePages.push("billing");
+          if (["billable", "observability_only"].includes(platformDeploymentProfile.product?.usage?.mode)) availablePages.push("usage");
+          return availablePages.includes(value)
             ? value
             : "organization";
         }
@@ -50,6 +54,14 @@ export const ORGANIZATIONS_NAVIGATION_SCRIPT = `        function normalizeOrgani
 
         function openOrganizationBillingPage(tab = "billing", billingSection = "costs-plans", options = {}) {
           const normalizedTab = tab === "usage" ? "usage" : "billing";
+          if (
+            normalizedTab === "billing"
+              ? !platformHasCapability("billing")
+              : !["billable", "observability_only"].includes(platformDeploymentProfile.product?.usage?.mode)
+          ) {
+            openOrganizationAdminPage("organization", options);
+            return;
+          }
           const normalizedBillingSection = ["costs-plans", "costs-plan-options", "costs-records"].includes(billingSection)
             ? billingSection
             : "costs-plans";

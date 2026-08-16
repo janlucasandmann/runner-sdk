@@ -390,6 +390,9 @@
           }, [createAgentModelId, createAgentRequestToken]);
   
           function openAgentModelPicker(target) {
+            if (!platformHasCapability("modelSelection")) {
+              return;
+            }
             if (agentModelPickerCloseTimerRef.current) {
               window.clearTimeout(agentModelPickerCloseTimerRef.current);
               agentModelPickerCloseTimerRef.current = null;
@@ -488,7 +491,7 @@
                 type: "button",
                 className: "playground-environments-runtime-value-button playground-agents-model-picker-trigger" + (isDetailView ? "" : " playground-tasks-detail-select-trigger"),
                 onClick,
-                disabled: isDisabled,
+                disabled: isDisabled || !platformHasCapability("modelSelection"),
               },
               React.createElement("span", { className: "playground-agents-model-picker-trigger-copy" },
                 providerIcon
@@ -507,7 +510,9 @@
                   React.createElement("span", { className: "playground-environments-runtime-value-label" }, modelMeta?.label || "Select model")
                 )
               ),
-              React.createElement(ChevronDown, { className: isDetailView ? "" : "playground-tasks-detail-select-trigger-chevron", width: 14, height: 14, strokeWidth: 1.8 })
+              platformHasCapability("modelSelection")
+                ? React.createElement(ChevronDown, { className: isDetailView ? "" : "playground-tasks-detail-select-trigger-chevron", width: 14, height: 14, strokeWidth: 1.8 })
+                : null
             );
           }
   

@@ -47,7 +47,7 @@
         import { PlatformResourceDetailSidebar } from "/dist/platform-ui/components/composite/resource-detail-sidebar/index.js";
         import { PLATFORM_PROFILE_IMAGE_PRESET_OPTIONS, PlatformProfileImagePicker, getPlatformProfileImageInitials } from "/dist/platform-ui/components/composite/profile-image-picker/index.js";
 	      import { PlatformOwnerSelector } from "/dist/platform-ui/components/composite/owner-selector/index.js";
-	      import { PlatformConfirmationModal, PlatformModal, PlatformModalBackdrop, PlatformModalBody, PlatformModalFooter, PlatformModalHeader, PlatformModalSurface, PlatformUnsavedChangesModal } from "/dist/platform-ui/components/composite/modal/index.js";
+	      import { PlatformConfirmationModal, PlatformModal, PlatformModalBackdrop, PlatformModalBody, PlatformModalFooter, PlatformModalHeader, PlatformModalSurface, PlatformSetupModal, PlatformSetupModalStep, PlatformUnsavedChangesModal } from "/dist/platform-ui/components/composite/modal/index.js";
         import { PlatformGlobalSearchModal } from "/dist/platform-shell/app-header/global-search-modal/index.js";
         import { PlatformPlanGateModal, requestPlatformPlanGate, requestPlatformPlanGateFromResponse, subscribePlatformPlanGateRequests } from "/dist/platform-shell/plan-gate/plan-gate-modal/index.js";
 	      import { PlatformSwitch } from "/dist/platform-ui/components/ui/switch/index.js";
@@ -1952,6 +1952,11 @@
               agentCT: 0,
               environmentCT: 0,
               totalThreads: 0,
+              inputTokens: 0,
+              outputTokens: 0,
+              runtimeMinutes: 0,
+              computerRuntimeMinutes: 0,
+              serverRuntimeMinutes: 0,
             },
             byDay: [],
           };
@@ -4797,14 +4802,27 @@
         }
   
         function ensurePlaygroundComposerDefaultChoices(agents) {
-          const nextAgents = (Array.isArray(agents) ? agents : []).filter(Boolean).slice();
-          if (!nextAgents.some((agent) => isPlaygroundAssistantAgent(agent))) {
+          const defaultTeamEnabled = platformDeploymentProfile.product?.agents?.defaultTeam?.enabled === true;
+          const nextAgents = (Array.isArray(agents) ? agents : []).filter((agent) => {
+            if (!agent) return false;
+            if (isPlaygroundAssistantAgent(agent)) return platformHasBuiltInAgent("spark");
+            if (isPlaygroundDeveloperAgent(agent)) return platformHasBuiltInAgent("forge");
+            if (isPlaygroundResearcherAgent(agent)) return platformHasBuiltInAgent("foundry");
+            const isDefaultTeam = getPlaygroundAgentListMode(agent) === "teams"
+              && (
+                agent?.isDefault
+                || String(agent?.id || "").trim() === "agent_default_team"
+                || String(agent?.name || "").trim().toLowerCase() === "default team"
+              );
+            return !isDefaultTeam || defaultTeamEnabled;
+          }).slice();
+          if (platformHasBuiltInAgent("spark") && !nextAgents.some((agent) => isPlaygroundAssistantAgent(agent))) {
             nextAgents.push(buildPlaygroundComposerDefaultAgentFallback("spark"));
           }
-          if (!nextAgents.some((agent) => isPlaygroundDeveloperAgent(agent))) {
+          if (platformHasBuiltInAgent("forge") && !nextAgents.some((agent) => isPlaygroundDeveloperAgent(agent))) {
             nextAgents.push(buildPlaygroundComposerDefaultAgentFallback("forge"));
           }
-          if (!nextAgents.some((agent) => isPlaygroundResearcherAgent(agent))) {
+          if (platformHasBuiltInAgent("foundry") && !nextAgents.some((agent) => isPlaygroundResearcherAgent(agent))) {
             nextAgents.push(buildPlaygroundComposerDefaultAgentFallback("foundry"));
           }
           const hasDefaultTeam = nextAgents.some((agent) => (
@@ -4815,7 +4833,7 @@
               || String(agent?.name || "").trim().toLowerCase() === "default team"
             )
           ));
-          if (!hasDefaultTeam) {
+          if (defaultTeamEnabled && !hasDefaultTeam) {
             nextAgents.push(buildPlaygroundComposerDefaultTeamFallback(nextAgents));
           }
           return nextAgents;

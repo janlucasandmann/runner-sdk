@@ -122,7 +122,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "1f6c9e3ffdcd79e23909362ddb0383d624a9ec4eb24af8a3865913b6af74b148",
+    expectedSha256: "fd0b2b0869882dbb210112c1108573164dac74ba590ea69e66e2e1e5abed0f9b",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -134,7 +134,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects core styles",
     source: PROJECTS_CORE_CSS,
-    expectedSha256: "c9c81e5580d874693396c7d2a7ed981013598b337dbfed371ae30fb96b3b990b",
+    expectedSha256: "574ada97aa3912581e7f286156a241a7e1796efd83494b317861d9fb3d82bf99",
     fragmentGroups: [
       {
         baseUrl: projectsStylesUrl,
@@ -310,6 +310,27 @@ assert.match(
 assert.doesNotMatch(
   PROJECTS_VIEWS_02_FRAGMENT,
   /PlatformModalBackdrop|PlatformModalSurface|createPortal\(modalElement/,
+);
+assert.match(
+  PROJECTS_VIEWS_02_FRAGMENT,
+  /className: "playground-projects-feature-grid"[\s\S]*?className: "playground-projects-feature-list", role: "list"/,
+);
+assert.match(
+  PROJECTS_VIEWS_02_FRAGMENT,
+  /className: "playground-projects-feature-row",[\s\S]*?role: "listitem"/,
+);
+assert.doesNotMatch(PROJECTS_VIEWS_02_FRAGMENT, /playground-configure-resource-row/);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-projects-feature-grid\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) minmax\(280px, 0\.82fr\);/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-projects-feature-row\s*\{[\s\S]*?grid-template-columns: 44px minmax\(0, 1fr\);/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-projects-feature-copy\s*\{[\s\S]*?flex-direction: column;[\s\S]*?gap: 4px;/,
 );
 assert.match(
   PROJECTS_PAGE_SHELL_SCRIPT,

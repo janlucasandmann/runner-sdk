@@ -4,6 +4,7 @@ import type {
   TestPlanVersion,
   TestRun,
   TestRunCreateInput,
+  TestWorkspaceResourceOption,
 } from "../domain/index.js";
 
 export class TestsApiError extends Error {
@@ -24,6 +25,52 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? value as Record<string, unknown>
     : {};
+}
+
+function resourceArray(payload: unknown, keys: readonly string[]): unknown[] {
+  if (Array.isArray(payload)) return payload;
+  const source = asRecord(payload);
+  for (const key of keys) {
+    if (Array.isArray(source[key])) return source[key] as unknown[];
+  }
+  return [];
+}
+
+function normalizeResourceOptions(
+  payload: unknown,
+  keys: readonly string[],
+  fallbackLabel: string,
+): TestWorkspaceResourceOption[] {
+  return resourceArray(payload, keys).flatMap((value): TestWorkspaceResourceOption[] => {
+    const source = asRecord(value);
+    const metadata = asRecord(source.metadata);
+    const id = String(
+      source.id
+      || source.value
+      || source.serverId
+      || source.functionId
+      || source.workflowId
+      || source.versionId
+      || "",
+    ).trim();
+    if (!id) return [];
+    const ordinal = Number(source.version || source.versionNumber || source.number || 0);
+    return [{
+      id,
+      name: String(
+        source.name
+        || source.title
+        || source.label
+        || metadata.name
+        || (ordinal > 0 ? `Version ${ordinal}` : `${fallbackLabel} ${id.slice(-6)}`),
+      ).trim(),
+      description: String(
+        source.description
+        || metadata.description
+        || (ordinal > 0 ? `Immutable version ${ordinal}` : ""),
+      ).trim(),
+    }];
+  });
 }
 
 async function readResponse<T>(response: Response, fallback: string): Promise<T> {
@@ -110,6 +157,51 @@ export class TestsApi {
       `/test-plans/runs/${encodeURIComponent(id)}`,
       {},
       "Failed to load the test run.",
+    );
+  }
+
+  async listFunctions(projectId = ""): Promise<TestWorkspaceResourceOption[]> {
+    const query = new URLSearchParams({ kind: "function", limit: "200" });
+    if (projectId.trim()) query.set("projectId", projectId.trim());
+    const payload = await this.request<unknown>(
+      `/servers?${query.toString()}`,
+      {},
+      "Failed to load Functions.",
+    );
+    return normalizeResourceOptions(
+      payload,
+      ["servers", "serverResources", "functions", "data", "items", "results"],
+      "Function",
+    );
+  }
+
+  async listMetronomes(projectId = ""): Promise<TestWorkspaceResourceOption[]> {
+    const query = new URLSearchParams({ limit: "200" });
+    if (projectId.trim()) query.set("projectId", projectId.trim());
+    const payload = await this.request<unknown>(
+      `/metronomes?${query.toString()}`,
+      {},
+      "Failed to load Metronome workflows.",
+    );
+    return normalizeResourceOptions(
+      payload,
+      ["metronomes", "workflows", "data", "items", "results"],
+      "Workflow",
+    );
+  }
+
+  async listMetronomeVersions(workflowId: string): Promise<TestWorkspaceResourceOption[]> {
+    const normalizedId = workflowId.trim();
+    if (!normalizedId) return [];
+    const payload = await this.request<unknown>(
+      `/metronomes/${encodeURIComponent(normalizedId)}/versions`,
+      {},
+      "Failed to load workflow versions.",
+    );
+    return normalizeResourceOptions(
+      payload,
+      ["versions", "data", "items", "results"],
+      "Version",
     );
   }
 

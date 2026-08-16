@@ -32,6 +32,8 @@ test("uses fail-closed administrator configuration and portable local roots", ()
     config.githubOauthAllowedOrigins,
   );
   assert.equal(config.executionDispatcher.enabled, false);
+  assert.equal(config.deploymentProfileId, "cloud-saas-v1");
+  assert.equal(config.deploymentStage, "dev");
 });
 
 test("normalizes explicit origins, paths, and administrator settings", () => {
@@ -74,6 +76,25 @@ test("normalizes explicit origins, paths, and administrator settings", () => {
   );
 });
 
+test("normalizes the optional Stockifi platform redirect origin", () => {
+  const config = createPlatformConfig({
+    PLATFORM_STOCKIFI_ORIGIN: "https://stockifi.example.test/",
+  });
+  assert.equal(
+    config.stockifiPlatformOrigin,
+    "https://stockifi.example.test",
+  );
+});
+
+test("rejects an unsafe Stockifi platform redirect target", () => {
+  assert.throws(
+    () => createPlatformConfig({
+      PLATFORM_STOCKIFI_ORIGIN: "https://stockifi.example.test/path",
+    }),
+    /PLATFORM_STOCKIFI_ORIGIN must be an HTTPS origin/,
+  );
+});
+
 test("builds a fail-closed on-prem OIDC profile without normalizing its issuer identifier", () => {
   const config = createPlatformConfig(validOidcEnvironment({
     PLATFORM_CONTROL_PLANE_SECRET:
@@ -81,6 +102,8 @@ test("builds a fail-closed on-prem OIDC profile without normalizing its issuer i
   }));
 
   assert.equal(config.deploymentTopology, "on_prem");
+  assert.equal(config.deploymentProfileId, "dgx-spark-appliance-v1");
+  assert.equal(config.deploymentStage, "dev");
   assert.equal(config.identityProvider, "oidc");
   assert.equal(config.oidc.issuerUrl, "https://identity.example.test/realm/");
   assert.equal(config.oidc.clientId, "computer-agents-platform");
@@ -94,6 +117,33 @@ test("builds a fail-closed on-prem OIDC profile without normalizing its issuer i
   assert.equal(
     config.executionDispatcher.controlOrigin,
     "http://127.0.0.1:8080",
+  );
+});
+
+test("rejects deployment profiles that do not match the selected topology", () => {
+  assert.throws(
+    () => createPlatformConfig(validOidcEnvironment({
+      DEPLOYMENT_PROFILE_ID: "cloud-saas-v1",
+    })),
+    /requires topology "gcp_saas"/,
+  );
+});
+
+test("enables local account registration only through a loopback Dex API", () => {
+  const config = createPlatformConfig(validOidcEnvironment({
+    OIDC_LOCAL_ACCOUNTS_ENABLED: "true",
+    OIDC_LOCAL_ACCOUNTS_GRPC_ADDRESS: "127.0.0.1:5557",
+  }));
+  assert.deepEqual(config.oidc.localAccounts, {
+    enabled: true,
+    grpcAddress: "127.0.0.1:5557",
+  });
+  assert.throws(
+    () => createPlatformConfig(validOidcEnvironment({
+      OIDC_LOCAL_ACCOUNTS_ENABLED: "true",
+      OIDC_LOCAL_ACCOUNTS_GRPC_ADDRESS: "10.0.0.2:5557",
+    })),
+    /must use a loopback host and port/,
   );
 });
 

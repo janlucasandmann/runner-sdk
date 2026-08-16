@@ -571,10 +571,16 @@
   
           const proxyBackendBase = window.location.origin + "/api/real";
           const demoAgents = [
-            { id: "agent_assistant", name: "Spark", isDefault: true, isSystem: true },
-            { id: "agent_default", name: "Forge", isDefault: true, isSystem: true },
-            { id: "agent_research", name: "Foundry", isDefault: true, isSystem: true }
-          ];
+            platformHasBuiltInAgent("spark")
+              ? { id: "agent_assistant", name: "Spark", isDefault: true, isSystem: true }
+              : null,
+            platformHasBuiltInAgent("forge")
+              ? { id: "agent_default", name: "Forge", isDefault: true, isSystem: true }
+              : null,
+            platformHasBuiltInAgent("foundry")
+              ? { id: "agent_research", name: "Foundry", isDefault: true, isSystem: true }
+              : null
+          ].filter(Boolean);
           const demoEnvironments = [
             { id: "env_default", name: "Default", isDefault: true },
             { id: "env_staging", name: "Staging" },
@@ -678,9 +684,15 @@
               : "Sign in";
           const accountInitials = getAccountInitials(accountName);
           const accountEmail = hasSessionAuth ? (sessionState.email || "") : (hasDemoAccess ? "demo@computer-agents.com" : "");
-  ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationStorageKey}        const accountTierId = hasDemoAccess ? "enterprise" : normalizeSettingsTierId(sessionState.subscriptionTier);
+  ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationStorageKey}        const accountTierId = !platformHasCapability("subscriptions")
+            ? "enterprise"
+            : hasDemoAccess
+              ? "enterprise"
+              : normalizeSettingsTierId(sessionState.subscriptionTier);
           const accountTier = hasDemoAccess
             ? "Enterprise"
+            : !platformHasCapability("subscriptions")
+              ? "Appliance"
             : hasShellAccess && accountTierId
               ? formatSubscriptionTier(accountTierId)
               : hasShellAccess
@@ -4672,6 +4684,9 @@
                 agentCT: readSettingsComputeTokens(entry, "agentCT", "agentCost"),
                 environmentCT: readSettingsComputeTokens(entry, "environmentCT", "environmentCost"),
                 threadCount: Number(entry?.threadCount ?? entry?.totalThreads ?? entry?.totalRuns ?? entry?.runCount ?? 0),
+                inputTokens: Math.max(0, Number(entry?.inputTokens || 0)),
+                outputTokens: Math.max(0, Number(entry?.outputTokens || 0)),
+                runtimeMinutes: Math.max(0, Number(entry?.runtimeMinutes || 0)),
               });
   
               const normalizedByDay = Array.isArray(summaryData?.byDay)
@@ -4681,22 +4696,27 @@
                     agentCT: readSettingsComputeTokens(entry, "agentCT", "agentCost"),
                     environmentCT: readSettingsComputeTokens(entry, "environmentCT", "environmentCost"),
                     threadCount: Number(entry?.threadCount ?? entry?.totalThreads ?? entry?.totalRuns ?? entry?.runCount ?? 0),
+                    inputTokens: Math.max(0, Number(entry?.inputTokens || 0)),
+                    outputTokens: Math.max(0, Number(entry?.outputTokens || 0)),
+                    runtimeMinutes: Math.max(0, Number(entry?.runtimeMinutes || 0)),
+                    computerRuntimeMinutes: Math.max(0, Number(entry?.computerRuntimeMinutes || 0)),
+                    serverRuntimeMinutes: Math.max(0, Number(entry?.serverRuntimeMinutes || 0)),
                   }))
                 : [];
               const normalizedSources = Array.isArray(breakdownData?.sources)
                 ? breakdownData.sources
                   .map((entry) => normalizeUsageBreakdownEntry(entry, "unattributed"))
-                  .filter((entry) => entry.totalCT > 0 || entry.threadCount > 0)
+                  .filter((entry) => entry.totalCT > 0 || entry.threadCount > 0 || entry.inputTokens > 0 || entry.outputTokens > 0 || entry.runtimeMinutes > 0)
                 : [];
               const normalizedAgentItems = Array.isArray(agentBreakdownData?.agents)
                 ? agentBreakdownData.agents
                   .map((entry) => normalizeUsageBreakdownEntry(entry, "agent"))
-                  .filter((entry) => entry.totalCT > 0 || entry.threadCount > 0)
+                  .filter((entry) => entry.totalCT > 0 || entry.threadCount > 0 || entry.inputTokens > 0 || entry.outputTokens > 0 || entry.runtimeMinutes > 0)
                 : [];
               const normalizedEnvironmentItems = Array.isArray(environmentBreakdownData?.environments)
                 ? environmentBreakdownData.environments
                   .map((entry) => normalizeUsageBreakdownEntry(entry, "computer"))
-                  .filter((entry) => entry.totalCT > 0 || entry.threadCount > 0)
+                  .filter((entry) => entry.totalCT > 0 || entry.threadCount > 0 || entry.inputTokens > 0 || entry.outputTokens > 0 || entry.runtimeMinutes > 0)
                 : [];
               const normalizedResourceItems = Array.isArray(resourceBreakdownData?.resources)
                 ? resourceBreakdownData.resources
@@ -4711,8 +4731,11 @@
                     agentCT: readSettingsComputeTokens(entry, "agentCT", "agentCost"),
                     environmentCT: readSettingsComputeTokens(entry, "environmentCT", "environmentCost"),
                     threadCount: Number(entry?.threadCount ?? entry?.totalThreads ?? entry?.totalRuns ?? entry?.runCount ?? 0),
+                    inputTokens: Math.max(0, Number(entry?.inputTokens || 0)),
+                    outputTokens: Math.max(0, Number(entry?.outputTokens || 0)),
+                    runtimeMinutes: Math.max(0, Number(entry?.runtimeMinutes || 0)),
                   }))
-                  .filter((entry) => entry.totalCT > 0)
+                  .filter((entry) => entry.totalCT > 0 || entry.threadCount > 0 || entry.inputTokens > 0 || entry.outputTokens > 0 || entry.runtimeMinutes > 0)
                 : [];
   
               setSettingsUsageSummary({
@@ -4723,6 +4746,11 @@
                   agentCT: readSettingsComputeTokens(summaryData?.totals, "agentCT", "agentCost"),
                   environmentCT: readSettingsComputeTokens(summaryData?.totals, "environmentCT", "environmentCost"),
                   totalThreads: Number(summaryData?.totals?.totalThreads ?? summaryData?.totals?.totalRuns ?? 0),
+                  inputTokens: Math.max(0, Number(summaryData?.totals?.inputTokens || 0)),
+                  outputTokens: Math.max(0, Number(summaryData?.totals?.outputTokens || 0)),
+                  runtimeMinutes: Math.max(0, Number(summaryData?.totals?.runtimeMinutes || 0)),
+                  computerRuntimeMinutes: Math.max(0, Number(summaryData?.totals?.computerRuntimeMinutes || 0)),
+                  serverRuntimeMinutes: Math.max(0, Number(summaryData?.totals?.serverRuntimeMinutes || 0)),
                 },
                 byDay: normalizedByDay,
               });
@@ -4871,6 +4899,11 @@
           function handleSidebarPlanAction() {
             if (!hasShellAccess) {
               handleSignInWithComputerAgents();
+              return;
+            }
+
+            if (!platformHasCapability("subscriptions")) {
+              toggleAccountMenuFrom("sidebar");
               return;
             }
   
@@ -6263,7 +6296,7 @@
           }, [gmailStatus]);
   
           useEffect(() => {
-            if (!hasSessionAuth) {
+            if (!hasSessionAuth || !platformHasCapability("billing")) {
               return;
             }
   

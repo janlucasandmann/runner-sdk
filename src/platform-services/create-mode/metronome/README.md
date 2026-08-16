@@ -11,7 +11,8 @@ its page implementation, workflow domain, run supervision UI, or HTTP routing.
 ## Structure
 
 - `client/runtime/` contains trigger contracts, workflow graph/domain helpers,
-  execution helpers, code-mode behavior, and canvas components.
+  execution helpers, code-mode behavior, canvas components, and the stable
+  inspector form primitives shared by every node editor.
 - `client/page/` contains the Metronome React surface, split into the shell,
   controller, overview, inspector, editor, and modal fragments.
 - `client/styles/` contains cascade-preserving overview, editor, inspector,
@@ -38,6 +39,17 @@ The single platform document still composes ordered Metronome script and style
 fragments. This preserves the existing evaluation order while making ownership
 explicit and allowing typed modules to replace compatibility fragments without
 moving domain code back into the host.
+
+Node-specific editor behavior belongs in `client/page/inspector/`. Repeated
+editor structure must use the stable controls in
+`client/runtime/inspector-components.mjs` rather than recreating field, input,
+textarea, or switch markup for each node kind. This keeps keyboard isolation,
+forwarded refs, class contracts, and accessibility behavior consistent while
+allowing each node editor to retain its domain-specific configuration logic.
+The same runtime owns the shared minimal toolbar-popup shell; prompt discovery
+and normalization for instruction fields lives separately in
+`client/runtime/inspector-prompts.mjs` and reads from the Configure-mode prompts
+service only while its picker is open.
 
 ## Working in this directory
 

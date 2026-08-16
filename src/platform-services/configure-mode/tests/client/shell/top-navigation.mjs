@@ -3,7 +3,7 @@ export const TESTS_APP_TOP_NAVIGATION_SCRIPT = `        function renderTestsPage
           const isRunLevel = testsPageMode === "run"
             || testsPageMode === "run-technical";
           const pathItems = [{ label: "Configure" }];
-          if (!isRunLevel) {
+          if (!isRunLevel && testsPageMode !== "case") {
             pathItems.push({
               label: "Tests",
               onClick: () => requestPlatformNavigation(openTestsOverviewPage),

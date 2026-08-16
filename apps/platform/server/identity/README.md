@@ -31,6 +31,22 @@ Two adapters share this boundary:
 7. Gateway calls unwrap the session server-side and attach the workload
    credential to the local control API. Logout revokes it and clears the cookie.
 
+## Local account registration
+
+When the appliance enables Dex's local password database, `/signup` creates the
+password record through Dex's loopback-only gRPC API. The generated local user
+ID is encoded with Dex's own `IDTokenSubject` wire format (`user_id` plus the
+`local` connector ID), so registration and every later OIDC login resolve the
+same `(issuer, subject)` identity.
+
+After Dex accepts the account, the platform exchanges that principal with the
+control API and sets the same encrypted, HttpOnly platform session used by the
+normal authorization-code callback. The submitted password is used only to
+create the bcrypt-backed Dex record and is never copied into the session,
+control-plane assertion, logs, or browser response. If post-registration
+session provisioning is temporarily unavailable, the durable account remains
+valid and the browser falls back to the normal sign-in flow.
+
 The implementation follows
 [OpenID Connect Core](https://openid.net/specs/openid-connect-core-1_0-final.html),
 [OpenID Connect Discovery](https://openid.net/specs/openid-connect-discovery-1_0-22.html),

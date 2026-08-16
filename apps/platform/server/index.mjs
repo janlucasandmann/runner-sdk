@@ -20,6 +20,10 @@ import { createVncWebSocketProxy } from "./vnc-websocket-proxy.mjs";
 import { createPlatformRequestHandler } from "./request-handler.mjs";
 import { createPlatformGateway } from "./gateway/create-platform-gateway.mjs";
 import { createPlatformConfig } from "./platform-config.mjs";
+import {
+  createCloudCompatibilityDeploymentProfile,
+  loadPublicDeploymentProfile,
+} from "./deployment-profile-service.mjs";
 import { waitForLocalAiosBridge } from "./gateway/aios-readiness.mjs";
 import { createIdentityService } from "./identity/create-identity-service.mjs";
 import { createPlatformServices } from "./platform-services.mjs";
@@ -35,6 +39,9 @@ const {
   aiosPublicRoot,
   bindAddress,
   defaultUpstreamOrigin,
+  deploymentProfileId,
+  deploymentStage,
+  deploymentTopology,
   deploymentVmNameOverride,
   deploymentVmNamePrefix,
   deploymentVmProject,
@@ -47,6 +54,7 @@ const {
   notionOauthCallbackUri,
   packageRoot,
   platformOrigin,
+  stockifiPlatformOrigin,
   platformViteOrigin,
   playgroundSystemSkillsRoot,
   port,
@@ -58,6 +66,29 @@ const {
   platformPrincipalAssertionAudience,
   platformPrincipalAssertionIssuer,
 } = platformConfig;
+const deploymentProfileEnvelope = await loadPublicDeploymentProfile({
+  upstreamOrigin: defaultUpstreamOrigin,
+  expectedProfileId: deploymentProfileId,
+  expectedTopology: deploymentTopology,
+  expectedStage: deploymentStage,
+  fallbackEnvelope: deploymentTopology === "gcp_saas"
+    ? createCloudCompatibilityDeploymentProfile(deploymentStage)
+    : null,
+  attempts: deploymentTopology === "on_prem" ? 12 : 1,
+  retryDelayMs: 500,
+  timeoutMs: deploymentTopology === "on_prem" ? 1_000 : 1_500,
+});
+if (deploymentProfileEnvelope.source === "compatibility_fallback") {
+  console.warn(
+    "[platform] Control API deployment profile is unavailable; using the cloud rollout compatibility profile.",
+    { profileId: deploymentProfileEnvelope.profile.profileId },
+  );
+} else {
+  console.info("[platform] Loaded deployment profile from the control API.", {
+    profileId: deploymentProfileEnvelope.profile.profileId,
+    profileHash: deploymentProfileEnvelope.hash,
+  });
+}
 const identityService = createIdentityService(platformConfig);
 const {
   serveDistAsset,
@@ -81,6 +112,7 @@ const {
 const platformApplicationSources = createLegacyPlatformApplicationSources({
   aiosOrigin,
   defaultUpstreamOrigin,
+  deploymentProfileEnvelope,
   identityProvider,
   platformOrigin,
 });
@@ -97,6 +129,7 @@ const platformDocumentHtml = platformDocumentAssets.documentHtml;
 const platformGateway = createPlatformGateway({
   aiosOrigin,
   defaultUpstreamOrigin,
+  deploymentTopology,
   deploymentVmNameOverride,
   deploymentVmNamePrefix,
   deploymentVmProject,
@@ -155,6 +188,7 @@ const server = http.createServer(createPlatformRequestHandler({
   platformDocumentAssets,
   platformDocumentHtml,
   platformOrigin,
+  stockifiPlatformOrigin,
   platformViteOrigin,
   port,
   serveAiosPublicAsset,

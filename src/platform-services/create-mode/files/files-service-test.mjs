@@ -38,9 +38,14 @@ assert.match(FILES_PAGE_RUNTIME_SCRIPT, /toolbarPopover === "connector-account"/
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /React\.createElement\(ChevronRight, \{/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function renderFileConnectorsBrowser\(\)/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /fetchPlatformGitHubRepositoryBranches\(normalizedRepositoryFullName/);
-assert.match(FILES_PAGE_RUNTIME_SCRIPT, /createPlatformGitHubRepositoryFolderId\(repositoryFullName, normalizedBranch\)/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /createPlatformGitHubRepositoryFolderId\(normalizedRepositoryFullName, normalizedBranch\)/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /connectorGithubBranchLoadingRepoFullNames/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /renderMeta: isGithubRepository/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /kind: "github-branch-selector"/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function handleGithubConnectorBreadcrumbBranchChange\(/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /githubRepositoryFullName, githubBranch/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /className: "playground-files-breadcrumb-branch-selector"/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformSelector, \{/);
 assert.match(
   FILES_PAGE_RUNTIME_SCRIPT,
   /visibleConnectorBrowserItems\.length === 0[\s\S]{0,500}React\.createElement\(PlatformEmptyState,[\s\S]{0,220}title: "This folder is empty"/,

@@ -68,13 +68,51 @@ export const FILES_PAGE_CONNECTOR_BROWSER_SCRIPT = `
         }, [activeConnectorSourceId, connectorBrowserCredentialKey, connectorBrowserItems, connectorBrowserSearchQuery, connectorGithubSelectedBranchesByRepoFullName, filterMode, sortMode]);
         const connectorBrowserBreadcrumbs = connectorBrowserHistory
           .slice(0, connectorBrowserHistoryIndex + 1)
-          .map((entry, index) => ({
-            id: index + ":" + entry.folderId,
-            name: entry.label,
-            onSelect: index < connectorBrowserHistoryIndex
-              ? () => navigateFileConnectorHistory(index)
-              : undefined,
-          }));
+          .flatMap((entry, index) => {
+            const breadcrumb = {
+              id: index + ":" + entry.folderId,
+              name: entry.label,
+              isCurrent: index === connectorBrowserHistoryIndex,
+              onSelect: index < connectorBrowserHistoryIndex
+                ? () => navigateFileConnectorHistory(index)
+                : undefined,
+            };
+            const repositoryFullName = activeConnectorSourceId === "github"
+              ? String(entry?.githubRepositoryFullName || "").trim()
+              : "";
+            if (!repositoryFullName) return [breadcrumb];
+            const selectedBranch = String(
+              connectorGithubSelectedBranchesByRepoFullName[repositoryFullName]
+                || entry?.githubBranch
+                || "main",
+            ).trim() || "main";
+            const branchOptions = (connectorGithubBranchesByRepoFullName[repositoryFullName] || [])
+              .map((branch) => ({
+                value: String(branch?.name || "").trim(),
+                label: String(branch?.name || "").trim(),
+                ...(branch?.protected ? { description: "Protected" } : {}),
+              }))
+              .filter((option) => option.value);
+            return [
+              breadcrumb,
+              {
+                id: index + ":" + entry.folderId + ":branch",
+                kind: "github-branch-selector",
+                name: selectedBranch,
+                value: selectedBranch,
+                options: branchOptions,
+                loading: connectorGithubBranchLoadingRepoFullNames.includes(repositoryFullName),
+                onOpenChange: (open) => {
+                  if (open) void ensureGithubConnectorBranchesLoaded(repositoryFullName, selectedBranch);
+                },
+                onValueChange: (branch) => handleGithubConnectorBreadcrumbBranchChange(
+                  repositoryFullName,
+                  branch,
+                  index,
+                ),
+              },
+            ];
+          });
         const fileConnectorOrganizationId = String(organizationId || "").trim();
         function resetGithubConnectorBranchState() {
           connectorGithubBranchLoadingRepoFullNamesRef.current.clear();
@@ -312,15 +350,14 @@ export const FILES_PAGE_CONNECTOR_BROWSER_SCRIPT = `
           setToolbarPopover("");
         }
 
-        function handleGithubConnectorBranchChange(entry, nextBranch) {
-          const item = entry?._connectorItem || entry;
-          const repositoryFullName = String(item?.repoFullName || "").trim();
+        function updateGithubConnectorBranchSelection(repositoryFullName, nextBranch) {
+          const normalizedRepositoryFullName = String(repositoryFullName || "").trim();
           const normalizedBranch = String(nextBranch || "").trim();
-          if (!repositoryFullName || !normalizedBranch) return;
-          const nextRootId = createPlatformGitHubRepositoryFolderId(repositoryFullName, normalizedBranch);
+          if (!normalizedRepositoryFullName || !normalizedBranch) return "";
+          const nextRootId = createPlatformGitHubRepositoryFolderId(normalizedRepositoryFullName, normalizedBranch);
           setConnectorGithubSelectedBranchesByRepoFullName((current) => ({
             ...current,
-            [repositoryFullName]: normalizedBranch,
+            [normalizedRepositoryFullName]: normalizedBranch,
           }));
           const rootLocationKey = activeConnectorSourceId + "::" + connectorBrowserCredentialKey + "::root";
           setConnectorItemsByLocation((current) => {
@@ -330,7 +367,7 @@ export const FILES_PAGE_CONNECTOR_BROWSER_SCRIPT = `
               ...current,
               [rootLocationKey]: rootItems.map((rootItem) => {
                 if (
-                  String(rootItem?.repoFullName || "").trim() !== repositoryFullName
+                  String(rootItem?.repoFullName || "").trim() !== normalizedRepositoryFullName
                     || !rootItem?.isFolder
                     || String(rootItem?.path || "").trim()
                 ) return rootItem;
@@ -342,14 +379,63 @@ export const FILES_PAGE_CONNECTOR_BROWSER_SCRIPT = `
               }),
             };
           });
+          return nextRootId;
+        }
+
+        function handleGithubConnectorBranchChange(entry, nextBranch) {
+          const item = entry?._connectorItem || entry;
+          updateGithubConnectorBranchSelection(item?.repoFullName, nextBranch);
+        }
+
+        function handleGithubConnectorBreadcrumbBranchChange(repositoryFullName, nextBranch, repositoryHistoryIndex) {
+          const normalizedRepositoryFullName = String(repositoryFullName || "").trim();
+          const normalizedBranch = String(nextBranch || "").trim();
+          const nextRootId = updateGithubConnectorBranchSelection(normalizedRepositoryFullName, normalizedBranch);
+          if (!nextRootId) return;
+          const normalizedHistoryIndex = Number.isFinite(Number(repositoryHistoryIndex))
+            ? Math.max(0, Math.floor(Number(repositoryHistoryIndex)))
+            : -1;
+          const actualHistoryIndex = connectorBrowserHistory.findIndex((entry, index) => (
+            index === normalizedHistoryIndex
+              && String(entry?.githubRepositoryFullName || "").trim() === normalizedRepositoryFullName
+          ));
+          if (actualHistoryIndex < 0) return;
+          setConnectorBrowserHistory((current) => current
+            .slice(0, actualHistoryIndex + 1)
+            .map((entry, index) => index === actualHistoryIndex
+              ? {
+                  ...entry,
+                  folderId: nextRootId,
+                  githubRepositoryFullName: normalizedRepositoryFullName,
+                  githubBranch: normalizedBranch,
+                }
+              : entry));
+          setConnectorBrowserHistoryIndex(actualHistoryIndex);
+          setConnectorBrowserSearchQuery("");
         }
 
         function openFileConnectorFolder(entry) {
           const item = entry?._connectorItem || entry;
           if (!item?.isFolder || !activeConnectorSourceId) return;
+          const githubRepositoryFullName = activeConnectorSourceId === "github" && entry?._isGithubRepository
+            ? String(item?.repoFullName || "").trim()
+            : "";
+          const githubBranch = githubRepositoryFullName
+            ? String(
+                connectorGithubSelectedBranchesByRepoFullName[githubRepositoryFullName]
+                  || item?.ref
+                  || "main",
+              ).trim() || "main"
+            : "";
           const nextHistory = connectorBrowserHistory
             .slice(0, connectorBrowserHistoryIndex + 1)
-            .concat({ folderId: item.id, label: item.name || "Folder" });
+            .concat({
+              folderId: item.id,
+              label: item.name || "Folder",
+              ...(githubRepositoryFullName
+                ? { githubRepositoryFullName, githubBranch }
+                : {}),
+            });
           setConnectorBrowserHistory(nextHistory);
           setConnectorBrowserHistoryIndex(nextHistory.length - 1);
           setConnectorBrowserSearchQuery("");

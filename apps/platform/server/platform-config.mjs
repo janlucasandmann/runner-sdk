@@ -46,10 +46,87 @@ function normalizeDeploymentTopology(value) {
   );
 }
 
+function normalizeDeploymentProfileId(value, topology) {
+  const normalized = String(value || "").trim().toLowerCase().replaceAll("_", "-");
+  const fallback = topology === "on_prem"
+    ? "dgx-spark-appliance-v1"
+    : "cloud-saas-v1";
+  const aliases = new Map([
+    ["", fallback],
+    ["appliance", "dgx-spark-appliance-v1"],
+    ["cloud", "cloud-saas-v1"],
+    ["dgx-spark", "dgx-spark-appliance-v1"],
+    ["dgx-spark-appliance-v1", "dgx-spark-appliance-v1"],
+    ["cloud-saas-v1", "cloud-saas-v1"],
+  ]);
+  const profileId = aliases.get(normalized);
+  if (!profileId) {
+    throw new Error(
+      `Invalid deployment profile "${value}". Expected cloud-saas-v1 or dgx-spark-appliance-v1.`,
+    );
+  }
+  const expectedTopology = profileId === "dgx-spark-appliance-v1"
+    ? "on_prem"
+    : "gcp_saas";
+  if (expectedTopology !== topology) {
+    throw new Error(
+      `Deployment profile "${profileId}" requires topology "${expectedTopology}", but "${topology}" was configured.`,
+    );
+  }
+  return profileId;
+}
+
+function normalizeDeploymentStage(value, nodeEnvironment) {
+  const normalized = String(value || "").trim().toLowerCase();
+  const aliases = new Map([
+    ["dev", "dev"],
+    ["develop", "dev"],
+    ["development", "dev"],
+    ["cons", "cons"],
+    ["consolidation", "cons"],
+    ["stage", "cons"],
+    ["staging", "cons"],
+    ["prod", "prod"],
+    ["production", "prod"],
+  ]);
+  if (!normalized) return nodeEnvironment === "production" ? "prod" : "dev";
+  const stage = aliases.get(normalized);
+  if (!stage) {
+    throw new Error(
+      `Invalid deployment stage "${value}". Expected dev, cons, or prod.`,
+    );
+  }
+  return stage;
+}
+
 function readPositiveInteger(value, fallback, { minimum, maximum }) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(maximum, Math.max(minimum, Math.floor(parsed)));
+}
+
+function readBoolean(value, fallback = false) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return fallback;
+  if (normalized === "true") return true;
+  if (normalized === "false") return false;
+  throw new Error(`Expected true or false, received "${value}".`);
+}
+
+function normalizeLoopbackGrpcAddress(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "";
+  const match = normalized.match(/^([^:]+):(\d{1,5})$/);
+  if (!match || !["127.0.0.1", "localhost", "::1"].includes(match[1])) {
+    throw new Error(
+      "OIDC_LOCAL_ACCOUNTS_GRPC_ADDRESS must use a loopback host and port.",
+    );
+  }
+  const port = Number(match[2]);
+  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
+    throw new Error("OIDC_LOCAL_ACCOUNTS_GRPC_ADDRESS has an invalid port.");
+  }
+  return normalized;
 }
 
 function validateSecret(name, value) {
@@ -90,6 +167,28 @@ function isValidOidcIssuer(value) {
   return !parsed.search && !parsed.hash && value.length <= 2_048;
 }
 
+function normalizeOptionalHttpsOrigin(value, name) {
+  const normalized = trimOrigin(value);
+  if (!normalized) return "";
+  let parsed;
+  try {
+    parsed = new URL(normalized);
+  } catch {
+    throw new Error(`${name} must be a valid HTTPS origin.`);
+  }
+  if (
+    parsed.protocol !== "https:"
+    || parsed.username
+    || parsed.password
+    || parsed.pathname !== "/"
+    || parsed.search
+    || parsed.hash
+  ) {
+    throw new Error(`${name} must be an HTTPS origin without a path, query, or credentials.`);
+  }
+  return parsed.origin;
+}
+
 export function createPlatformConfig(env = process.env) {
   const port = Number(env.PORT || 4177);
   const bindAddress = String(
@@ -100,6 +199,14 @@ export function createPlatformConfig(env = process.env) {
   }
   const deploymentTopology = normalizeDeploymentTopology(
     env.DEPLOYMENT_TOPOLOGY || env.PLATFORM_TOPOLOGY,
+  );
+  const deploymentProfileId = normalizeDeploymentProfileId(
+    env.DEPLOYMENT_PROFILE_ID,
+    deploymentTopology,
+  );
+  const deploymentStage = normalizeDeploymentStage(
+    env.DEPLOYMENT_STAGE || env.PLATFORM_STAGE,
+    env.NODE_ENV,
   );
   const identityProvider = String(
     env.IDENTITY_PROVIDER || (deploymentTopology === "on_prem" ? "oidc" : "firebase"),
@@ -119,6 +226,10 @@ export function createPlatformConfig(env = process.env) {
     env.PLATFORM_APP_ORIGIN
     || env.NEXT_PUBLIC_PLATFORM_APP_URL
     || `http://localhost:${port}`,
+  );
+  const stockifiPlatformOrigin = normalizeOptionalHttpsOrigin(
+    env.PLATFORM_STOCKIFI_ORIGIN,
+    "PLATFORM_STOCKIFI_ORIGIN",
   );
   const defaultUpstreamOrigin = trimOrigin(
     env.RUNNER_UPSTREAM_ORIGIN
@@ -171,6 +282,13 @@ export function createPlatformConfig(env = process.env) {
     env.OIDC_TOKEN_ENDPOINT_AUTH_METHOD
     || (oidcClientSecret ? "client_secret_basic" : "none"),
   ).trim();
+  const oidcLocalAccountsEnabled = readBoolean(
+    env.OIDC_LOCAL_ACCOUNTS_ENABLED,
+    false,
+  );
+  const oidcLocalAccountsGrpcAddress = normalizeLoopbackGrpcAddress(
+    env.OIDC_LOCAL_ACCOUNTS_GRPC_ADDRESS,
+  );
   if (!["client_secret_basic", "client_secret_post", "none"].includes(oidcTokenEndpointAuthMethod)) {
     throw new Error(
       `Invalid OIDC_TOKEN_ENDPOINT_AUTH_METHOD "${oidcTokenEndpointAuthMethod}".`,
@@ -200,6 +318,11 @@ export function createPlatformConfig(env = process.env) {
     }
     if (!oidcScopes.includes("openid")) {
       throw new Error("OIDC_SCOPES must include openid.");
+    }
+    if (oidcLocalAccountsEnabled && !oidcLocalAccountsGrpcAddress) {
+      throw new Error(
+        "OIDC_LOCAL_ACCOUNTS_GRPC_ADDRESS is required when local account registration is enabled.",
+      );
     }
     if (
       oidcAllowedAlgorithms.length === 0
@@ -269,6 +392,8 @@ export function createPlatformConfig(env = process.env) {
     aiosPublicRoot: path.join(aiosHostingRoot, "public"),
     bindAddress,
     defaultUpstreamOrigin,
+    deploymentProfileId,
+    deploymentStage,
     deploymentTopology,
     deploymentVmNameOverride: String(
       env.TESTBASE_DEPLOYMENT_VM_NAME || "",
@@ -347,6 +472,10 @@ export function createPlatformConfig(env = process.env) {
       callbackPath: "/api/platform/auth/callback",
       tokenEndpointAuthMethod: oidcTokenEndpointAuthMethod,
       allowedAlgorithms: oidcAllowedAlgorithms,
+      localAccounts: Object.freeze({
+        enabled: oidcLocalAccountsEnabled,
+        grpcAddress: oidcLocalAccountsGrpcAddress,
+      }),
     }),
     platformControlPlaneSecret,
     platformPrincipalAssertionAudience: String(
@@ -358,6 +487,7 @@ export function createPlatformConfig(env = process.env) {
       || "computer-agents-platform",
     ).trim(),
     platformOrigin,
+    stockifiPlatformOrigin,
     platformSessionCookieName: String(
       env.PLATFORM_SESSION_COOKIE_NAME || "computer_agents_session",
     ).trim(),

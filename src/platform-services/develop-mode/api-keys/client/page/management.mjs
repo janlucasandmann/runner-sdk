@@ -263,7 +263,7 @@ export const API_KEYS_MANAGEMENT_PAGE_SCRIPT = `        function renderApiKeysMa
             const createdTimestamp = Date.parse(String(apiKeyRecord?.createdAt || ""));
             const lastUsedTimestamp = Date.parse(String(apiKeyRecord?.lastUsedAt || ""));
             const creator = getApiKeyCreator(apiKeyRecord);
-            const permissionsLabel = getSettingsApiKeyScopeLabel(apiKeyRecord?.permissions);
+            const permissionsLabel = getSettingsApiKeyScopeLabel(apiKeyRecord?.permissions || apiKeyRecord?.scopes);
             const name = String(apiKeyRecord?.name || "API Key");
             const keyPrefix = String(apiKeyRecord?.keyPrefix || "key");
             const isStandard = isStandardApiKey(apiKeyRecord);
@@ -280,6 +280,7 @@ export const API_KEYS_MANAGEMENT_PAGE_SCRIPT = `        function renderApiKeysMa
               creatorFallback: creator.fallback,
               permissionsLabel,
               isStandard,
+              canReveal: apiKeyRecord?.canReveal !== false,
               canRevoke: apiKeyRecord?.canRevoke !== false,
               searchText: [
                 name,
@@ -306,6 +307,9 @@ export const API_KEYS_MANAGEMENT_PAGE_SCRIPT = `        function renderApiKeysMa
           return React.createElement(React.Fragment, null,
             React.createElement(DevelopApiKeysOverviewPage, {
               rows: apiKeyRows,
+              apiBaseUrl: platformDeploymentProfileEnvelope?.profile?.topology === "on_prem"
+                ? window.location.origin
+                : "https://api.computer-agents.com",
               controlsPortalId: "playground-develop-api-keys-overview-controls",
               period: apiKeysAnalyticsPeriod,
               onPeriodChange: setDevelopApiKeysAnalyticsPeriod,

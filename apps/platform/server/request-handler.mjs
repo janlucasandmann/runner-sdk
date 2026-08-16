@@ -5,11 +5,13 @@ import { createResourceRoutes } from "./routes/resource-routes.mjs";
 import { createServiceRoutes } from "./routes/service-routes.mjs";
 import { createThreadRoutes } from "./routes/thread-routes.mjs";
 import { createIdentityRoutes } from "./routes/identity-routes.mjs";
+import { createPublicApiRoutes } from "./routes/public-api-routes.mjs";
 
 export function createPlatformRequestHandler(bindings) {
   const router = createRequestRouter([
     createIdentityRoutes(bindings),
     createServiceRoutes(bindings),
+    createPublicApiRoutes(bindings),
     createPageAndStaticRoutes(bindings),
     createAiosAndAdminRoutes(bindings),
     createThreadRoutes(bindings),

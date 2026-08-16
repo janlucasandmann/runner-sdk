@@ -34,7 +34,9 @@ const CONFIGURE_HOME_PAGE_TEMPLATE = `        function renderConfigureHomePage()
             onOpenNotifications: openNotificationsPage,
             onOpenEvaluations: openEvaluationsOverviewPage,
             onOpenGuardrails: openGuardrailsOverviewPage,
-            onOpenPricing: () => window.open(__CONFIGURE_HOME_PRICING_URL__, "_blank", "noopener,noreferrer"),
+            onOpenPricing: platformHasCapability("pricing")
+              ? () => window.open(__CONFIGURE_HOME_PRICING_URL__, "_blank", "noopener,noreferrer")
+              : undefined,
             onOpenDocumentation: openDocsPage,
           });
         }

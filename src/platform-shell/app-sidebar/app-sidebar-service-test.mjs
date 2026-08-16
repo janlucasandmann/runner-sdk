@@ -232,12 +232,14 @@ sidebarShortcutCleanup();
 assert.equal(sidebarShortcutHandler, null);
 assert.match(fragments.sidebar, /React\.createElement\(PanelLeft,/);
 assert.doesNotMatch(fragments.sidebar, /React\.createElement\(PanelLeftClose,/);
-assert.ok(fragments.sidebar.includes('className: "sidebar-organization-profile-button"'));
+assert.match(fragments.sidebar, /className: "sidebar-organization-card"[\s\S]*?onClick: \(\) => toggleAccountMenuFrom\("sidebar"\)/);
+assert.match(fragments.sidebar, /"aria-label": "Open account menu for " \+ sidebarOrganizationDisplay\.name/);
 assert.ok(fragments.sidebar.includes('renderAccountAvatar("sidebar-organization-avatar"'));
 assert.ok(fragments.sidebar.includes('className: "sidebar-rail-account"'));
 assert.ok(fragments.sidebar.includes('className: "sidebar-rail-section-spacer"'));
 assert.ok(!fragments.sidebar.includes("sidebar-rail-plan"));
 assert.ok(fragments.sidebar.includes("sidebar-organization-menu-button"));
+assert.doesNotMatch(fragments.sidebar, /onClick: platformHasCapability\("subscriptions"\)\s*\? handleSidebarPlanAction/);
 assert.ok(!fragments.sidebar.includes("playground-sidebar-brand-close-icon"));
 assert.doesNotMatch(fragments.sidebar, /sidebar-workspace-row/);
 assert.doesNotThrow(() => new Function(`
@@ -272,6 +274,7 @@ const globalServiceRuntime = new Function(
   Tag: StubIcon,
   Layers: StubIcon,
   SquareMousePointer: StubIcon,
+  MessageSquareText: StubIcon,
   SquarePen: StubIcon,
   Rocket: StubIcon,
   FolderOpen: StubIcon,
@@ -282,6 +285,7 @@ const globalServiceRuntime = new Function(
   handleOpenEnvironmentsShortcut: () => runtimeEvents.push("computers"),
   handleOpenTagsShortcut: () => runtimeEvents.push("tags"),
   handleOpenSkillsShortcut: () => runtimeEvents.push("skills"),
+  handleOpenPromptsShortcut: () => runtimeEvents.push("prompts"),
   handleNewThread: () => runtimeEvents.push("thread"),
   handleSignInWithComputerAgents: () => runtimeEvents.push("sign-in"),
   handleOpenTasksShortcut: () => runtimeEvents.push("projects"),
@@ -338,7 +342,9 @@ assert.match(styles.foundation, /\.app-sidebar-top-actions/);
 assert.match(styles.foundation, /margin-left: auto/);
 assert.match(styles.foundation, /border-right: 1px solid rgba\(255, 255, 255, 0\.075\)/);
 assert.match(styles.foundation, /\.playground-sidebar \{[\s\S]{0,520}background: #000;/);
-assert.match(styles.foundation, /\.sidebar-organization-profile-button/);
+assert.doesNotMatch(styles.foundation, /\.sidebar-organization-card:hover,\s*\.sidebar-organization-card\.is-open\s*\{\s*background:/);
+assert.match(styles.foundation, /\.sidebar-organization-card:focus-visible/);
+assert.match(styles.foundation, /\.sidebar-organization-card:hover \.sidebar-organization-menu-button/);
 assert.match(styles.foundation, /\.sidebar-action-subtitle[\s\S]*color: rgba\(255, 255, 255, 0\.5\);[\s\S]*font-weight: 400;/);
 assert.match(styles.foundation, /\.sidebar-action-subtitle[\s\S]*font-size: 11px;/);
 assert.match(styles.foundation, /\.sidebar-action-subtitle,\s*\.sidebar-thread-section-title[\s\S]*font-size: 11px;[\s\S]*font-weight: 400;/);

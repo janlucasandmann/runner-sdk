@@ -36,6 +36,12 @@ assert.match(
 );
 assert.match(pageScript, /id: "models",\s*label: "Usage by Models"/);
 assert.match(pageScript, /ariaLabel: "Compute token cost by LLM model"/);
+assert.match(pageScript, /label: "Compute runtime"/);
+assert.match(pageScript, /label: "Agent runs"/);
+assert.match(pageScript, /label: "Inference tokens"/);
+assert.match(pageScript, /label: "Computer runtime"/);
+assert.match(pageScript, /label: "Resource runtime"/);
+assert.match(pageScript, /valueKind: "duration"/);
 assert.doesNotMatch(
   pageScript,
   /resolvedAgentModelOptions/,
@@ -43,7 +49,7 @@ assert.doesNotMatch(
 );
 assert.match(
   pageScript,
-  /ariaLabel: "Usage consumers",[\s\S]{0,360}layout: "fill",\s*variant: "minimalistic-ui",\s*sticky: false,\s*pagination: \{\},\s*toolbar: \{\s*title: "Consumers",\s*search: \{\s*placeholder: "Search consumers",\s*ariaLabel: "Search usage consumers",\s*getSearchText:/,
+  /ariaLabel: "Usage consumers",[\s\S]{0,420}layout: "fill",\s*variant: "minimalistic-ui",\s*sticky: false,\s*pagination: \{\},\s*toolbar: \{\s*title: isComputeObservabilityUsage \? "Compute resources" : "Consumers",\s*search: \{\s*placeholder: "Search consumers",\s*ariaLabel: "Search usage consumers",\s*getSearchText:/,
   "Admin usage consumers must use the resource-overview minimal data table treatment.",
 );
 assert.match(

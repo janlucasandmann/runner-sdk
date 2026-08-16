@@ -1781,7 +1781,8 @@
             selectedThreadAgentId,
             threadAgentSelectionOverride,
           ]);
-          const isFreeComposerAgentPlan = (normalizeSettingsTierId(settingsCurrentTierId || accountTierId || "sandbox") || "sandbox") === "sandbox";
+          const isFreeComposerAgentPlan = platformHasCapability("subscriptions")
+            && (normalizeSettingsTierId(settingsCurrentTierId || accountTierId || "sandbox") || "sandbox") === "sandbox";
           const runtimeAgentsForComposer = useMemo(() => {
             const normalizedRuntimeAgents = Array.isArray(runtimeAgents) ? runtimeAgents : [];
             return ensurePlaygroundComposerDefaultChoices(normalizedRuntimeAgents);

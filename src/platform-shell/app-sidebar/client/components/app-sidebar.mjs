@@ -85,36 +85,30 @@ export const APP_SIDEBAR_COMPONENT_SCRIPT = `        function renderExpandedSide
             React.createElement("div", { className: "sidebar-footer" },
               renderStatusIndicators(),
               sidebarFooterNavigationItems.map(renderSidebarNavigationButton),
-              React.createElement("div", { className: "sidebar-organization-card", "aria-label": "Current organization and plan" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-organization-profile-button" + (accountMenuOpen && accountMenuPlacement === "sidebar" ? " is-open" : ""),
-                  onClick: () => toggleAccountMenuFrom("sidebar"),
-                  "aria-label": "Open account menu",
-                  "aria-expanded": accountMenuOpen && accountMenuPlacement === "sidebar" ? "true" : "false",
-                  title: hasShellAccess ? accountName : "Sign in",
-                },
-                  renderAccountAvatar("sidebar-organization-avatar", "sidebar-organization-avatar-image", accountInitials, accountAvatarUrl)
-                ),
-                React.createElement("button", {
-                  type: "button",
+              React.createElement("button", {
+                type: "button",
+                className: "sidebar-organization-card" + (accountMenuOpen && accountMenuPlacement === "sidebar" ? " is-open" : ""),
+                onClick: () => toggleAccountMenuFrom("sidebar"),
+                "aria-label": "Open account menu for " + sidebarOrganizationDisplay.name,
+                "aria-expanded": accountMenuOpen && accountMenuPlacement === "sidebar" ? "true" : "false",
+                title: platformHasCapability("subscriptions")
+                  ? sidebarOrganizationDisplay.name + " · " + sidebarPlanName
+                  : sidebarOrganizationDisplay.name,
+              },
+                renderAccountAvatar("sidebar-organization-avatar", "sidebar-organization-avatar-image", accountInitials, accountAvatarUrl),
+                React.createElement("span", {
                   className: "sidebar-organization-main",
-                  onClick: handleSidebarPlanAction,
-                  disabled: settingsCheckoutLoading && !sidebarPlanIsPaid,
-                  title: sidebarOrganizationDisplay.name + " · " + sidebarPlanName,
                 },
                   React.createElement("span", { className: "sidebar-organization-copy" },
                     React.createElement("span", { className: "sidebar-organization-name" }, sidebarOrganizationDisplay.name),
-                    React.createElement("span", { className: "sidebar-organization-plan" }, sidebarPlanName)
+                    platformHasCapability("subscriptions")
+                      ? React.createElement("span", { className: "sidebar-organization-plan" }, sidebarPlanName)
+                      : null
                   )
                 ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-organization-menu-button" + (accountMenuOpen && accountMenuPlacement === "sidebar" ? " is-open" : ""),
-                  onClick: () => toggleAccountMenuFrom("sidebar"),
-                  "aria-label": "Open account menu",
-                  "aria-expanded": accountMenuOpen && accountMenuPlacement === "sidebar" ? "true" : "false",
-                  title: "Account menu",
+                React.createElement("span", {
+                  className: "sidebar-organization-menu-button",
+                  "aria-hidden": "true",
                 },
                   React.createElement(EllipsisVertical, { className: "sidebar-organization-menu-icon", strokeWidth: 1.8 })
                 )

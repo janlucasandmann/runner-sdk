@@ -15,16 +15,20 @@ export const ONBOARDING_EXPERIENCE_SCRIPT = String.raw`        function Playgrou
           onUpgradeToIndividual,
         }) {
           const savedState = useMemo(() => readPlaygroundOnboardingState(), []);
+          const onboardingIncludesPlan = platformHasCapability("subscriptions");
+          const stepLabels = onboardingIncludesPlan
+            ? ["Welcome", "Computer", "Agents", "Connectors", "Plan"]
+            : ["Welcome", "Computer", "Agents", "Connectors"];
+          const totalSteps = stepLabels.length;
           const rawUrlStepIndex = readCurrentSearchParam(PLAYGROUND_ONBOARDING_STEP_QUERY_PARAM);
           const urlStepIndex = rawUrlStepIndex !== "" ? Number(rawUrlStepIndex) : NaN;
-          const initialStepIndex = Number.isFinite(urlStepIndex)
+          const requestedInitialStepIndex = Number.isFinite(urlStepIndex)
             ? normalizePlaygroundOnboardingStepIndex(urlStepIndex)
             : Number.isFinite(savedState?.stepIndex)
             ? normalizePlaygroundOnboardingStepIndex(savedState.stepIndex)
             : 0;
+          const initialStepIndex = Math.min(totalSteps - 1, requestedInitialStepIndex);
           const [stepIndex, setStepIndex] = useState(initialStepIndex);
-          const totalSteps = ONBOARDING_STEP_IDS.length;
-          const stepLabels = ["Welcome", "Computer", "Agents", "Connectors", "Plan"];
           const normalizedPlanId = normalizeSettingsTierId(currentPlanId) || "sandbox";
           const isOnPaidPlan = normalizedPlanId !== "sandbox";
           const individualPlan = SETTINGS_PLAN_CATALOG.find((plan) => plan.id === "builder") || SETTINGS_PLAN_CATALOG[0];
@@ -309,6 +313,7 @@ export const ONBOARDING_EXPERIENCE_SCRIPT = String.raw`        function Playgrou
           }
   
           const currentComputerName = defaultEnvironmentName || "Default Computer";
+          const visibleOnboardingAgentCount = platformDeploymentProfile.product?.agents?.visibleBuiltIns?.length || 1;
           const splitPages = [
             {
               key: "welcome",
@@ -334,7 +339,9 @@ export const ONBOARDING_EXPERIENCE_SCRIPT = String.raw`        function Playgrou
               key: "agents",
               label: "Agents",
               icon: Bot,
-              configTitle: "Three agents are ready",
+              configTitle: visibleOnboardingAgentCount === 1
+                ? "One agent is ready"
+                : visibleOnboardingAgentCount + " agents are ready",
               configCopy: "",
               kicker: "Step 2",
               explainImage: "",
@@ -344,7 +351,13 @@ export const ONBOARDING_EXPERIENCE_SCRIPT = String.raw`        function Playgrou
                 { icon: MessageSquare, title: "Assistant", copy: "Handles general coordination, explanations, and lightweight follow-up work." },
                 { icon: Code2, title: "Developer", copy: "Works on implementation tasks inside the computer workspace." },
                 { icon: Shield, title: "Reviewer", copy: "Reviews completed work and helps turn feedback into the next action." },
-              ],
+              ].filter((item) => (
+                item.title === "Assistant"
+                  ? platformHasBuiltInAgent("spark")
+                  : item.title === "Developer"
+                    ? platformHasBuiltInAgent("forge")
+                    : platformHasBuiltInAgent("foundry")
+              )),
             },
             {
               key: "connectors",
@@ -379,7 +392,7 @@ export const ONBOARDING_EXPERIENCE_SCRIPT = String.raw`        function Playgrou
   	              { icon: Sparkles, title: "Usage controls", copy: "Set organization budgets and add credits when your included balance runs out." },
               ],
             },
-          ];
+          ].filter((page) => onboardingIncludesPlan || page.key !== "plan");
           const activeOnboardingPage = splitPages[stepIndex] || splitPages[0];
   
           function renderSplitHeading(page) {
@@ -966,16 +979,21 @@ export const ONBOARDING_EXPERIENCE_SCRIPT = String.raw`        function Playgrou
           }
   
           function renderAgentsConfig() {
+            const fixedDeploymentModelId = String(
+              platformDeploymentProfile.product?.inference?.fixedModelId || "",
+            ).trim();
             return React.createElement("section", { className: "playground-onboarding-section" },
               renderSplitRows([
                 {
+                  id: "spark",
                   icon: MessageSquare,
                   title: "Spark",
                   copy: "Fast everyday execution for digital work.",
                   profileUrl: PLAYGROUND_SPARK_AGENT_PROFILE_URL,
-                  modelId: "deepseek-v4-flash",
+                  modelId: fixedDeploymentModelId || "deepseek-v4-flash",
                 },
                 {
+                  id: "forge",
                   icon: Code2,
                   title: "Forge",
                   copy: "Implementation-heavy execution and technical work.",
@@ -983,13 +1001,14 @@ export const ONBOARDING_EXPERIENCE_SCRIPT = String.raw`        function Playgrou
                   modelId: "minimax-m3",
                 },
                 {
+                  id: "foundry",
                   icon: Shield,
                   title: "Foundry",
                   copy: "High-rigor synthesis, reasoning, and review.",
                   profileUrl: PLAYGROUND_FOUNDRY_AGENT_PROFILE_URL,
                   modelId: "claude-opus-4-8",
                 },
-              ])
+              ].filter((agent) => platformHasBuiltInAgent(agent.id)))
             );
           }
   
@@ -1142,6 +1161,14 @@ export const ONBOARDING_EXPERIENCE_SCRIPT = String.raw`        function Playgrou
           function renderSplitFooter() {
             const isFinalStep = stepIndex === totalSteps - 1;
             const handleFooterContinue = () => {
+              if (isFinalStep) {
+                if (!onboardingIncludesPlan || isOnPaidPlan) {
+                  handleComplete();
+                  return;
+                }
+                beginOnboardingFreeExit();
+                return;
+              }
               if (stepIndex === 0) {
                 beginOnboardingCreationTransition({
                   fromStep: 0,
@@ -1170,14 +1197,6 @@ export const ONBOARDING_EXPERIENCE_SCRIPT = String.raw`        function Playgrou
                   fromStep: 3,
                   toStep: 4,
                 });
-                return;
-              }
-              if (isFinalStep) {
-                if (isOnPaidPlan) {
-                  handleComplete();
-                  return;
-                }
-                beginOnboardingFreeExit();
                 return;
               }
               setStepIndex((current) => Math.min(totalSteps - 1, current + 1));

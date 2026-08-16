@@ -428,6 +428,7 @@ async function readJsonResponse(response, fallbackMessage) {
 function readRecordText(value) {
   if (typeof value === "string") return value.trim();
   if (Array.isArray(value)) return value.map(readRecordText).filter(Boolean).join("\n");
+  if (!value || typeof value !== "object") return "";
   const source = asRecord(value);
   const metadata = asRecord(source.metadata);
   for (const candidate of [
@@ -576,11 +577,14 @@ function reconcileExpectedResults(definitionValue, resultsValue) {
     const caseId = text(result?.caseId || result?.case_id, 300);
     if (caseId) latestByCaseId.set(caseId, result);
   });
-  const reconciled = Array.from(latestByCaseId.values());
-  expectedCases.forEach((testCase) => {
+  const reconciled = expectedCases.map((testCase, index) => {
     const caseId = text(testCase.id, 300);
-    if (latestByCaseId.has(caseId)) return;
-    reconciled.push(normalizeResult({
+    if (latestByCaseId.has(caseId)) {
+      const result = latestByCaseId.get(caseId);
+      latestByCaseId.delete(caseId);
+      return result;
+    }
+    return normalizeResult({
       caseId,
       name: text(testCase.name || caseId, 500),
       kind: text(testCase.kind || "custom", 100),
@@ -592,16 +596,18 @@ function reconcileExpectedResults(definitionValue, resultsValue) {
       evidence: {
         redacted: true,
       },
-    }, reconciled.length));
+    }, index);
   });
-  return reconciled;
+  return [...reconciled, ...latestByCaseId.values()];
 }
 
-function buildExecutionPrompt({ plan, run }) {
-  const definition = asRecord(
-    asRecord(asRecord(run.metadata).testPlanSnapshot).definition
-    || plan.definition,
-  );
+function buildExecutionPrompt({ plan, run, definition: definitionValue }) {
+  const definition = definitionValue
+    ? asRecord(definitionValue)
+    : asRecord(
+        asRecord(asRecord(run.metadata).testPlanSnapshot).definition
+        || plan.definition,
+      );
   return [
     "You are the Computer Agents Test Service executor.",
     "Execute the supplied immutable test-plan snapshot in the selected Computer Agents environment.",
@@ -665,20 +671,41 @@ export function createTestsRuntime(deps = {}) {
     return await readJsonResponse(response, options.fallbackMessage || "Tests API request failed.");
   }
 
-  function deterministicContractCases(definition) {
-    const enabledCases = asArray(asRecord(definition).cases)
+  function enabledTestCases(definition) {
+    return asArray(asRecord(definition).cases)
       .map(asRecord)
       .filter((testCase) => testCase.enabled !== false);
-    if (
-      enabledCases.length === 0
-      || enabledCases.some((testCase) => (
-        text(testCase.kind, 100).toLowerCase() !== "contract"
-        || !normalizeDeterministicContractRequest(testCase.request)
-      ))
-    ) {
-      return null;
-    }
+  }
+
+  function isDeterministicContractCase(testCase) {
+    return text(testCase.kind, 100).toLowerCase() === "contract"
+      && Boolean(normalizeDeterministicContractRequest(testCase.request));
+  }
+
+  function deterministicContractCases(definition) {
+    const enabledCases = enabledTestCases(definition);
+    if (enabledCases.length === 0 || enabledCases.some((testCase) => (
+      !isDeterministicContractCase(testCase)
+    ))) return null;
     return enabledCases;
+  }
+
+  function partitionExecutionCases(definition) {
+    const enabledCases = enabledTestCases(definition);
+    const deterministicCases = [];
+    const delegatedCases = [];
+    enabledCases.forEach((testCase) => {
+      if (isDeterministicContractCase(testCase)) deterministicCases.push(testCase);
+      else delegatedCases.push(testCase);
+    });
+    return { enabledCases, deterministicCases, delegatedCases };
+  }
+
+  function definitionForCases(definition, cases) {
+    return {
+      ...asRecord(definition),
+      cases,
+    };
   }
 
   async function waitForMetronomeRun(record, workflowId, runId, timeoutMs) {
@@ -1272,31 +1299,63 @@ export function createTestsRuntime(deps = {}) {
         asRecord(asRecord(run.metadata).testPlanSnapshot).definition
         || plan.definition,
       );
-      let output = null;
-      if (deterministicContractCases(definition)) {
-        executionMode = "deterministic_contract_worker_v2";
-        await patchRun(record, runId, lease, {
-          status: "running",
-          startedAt,
-          metadata: {
-            ...asRecord(run.metadata),
-            executionMode,
-          },
-        });
-        output = await executeDeterministicContractPlan(
+      const {
+        deterministicCases,
+        delegatedCases,
+      } = partitionExecutionCases(definition);
+      const deterministicDefinition = definitionForCases(
+        definition,
+        deterministicCases,
+      );
+      const delegatedDefinition = definitionForCases(
+        definition,
+        delegatedCases,
+      );
+      const deterministicCaseIds = new Set(
+        deterministicCases.map((testCase) => text(testCase.id, 300)).filter(Boolean),
+      );
+      const hasDeterministicCases = deterministicCases.length > 0;
+      const hasDelegatedCases = delegatedCases.length > 0;
+      executionMode = hasDeterministicCases && hasDelegatedCases
+        ? "hybrid_test_worker_v1"
+        : hasDeterministicCases
+          ? "deterministic_contract_worker_v2"
+          : "computer_agents_thread_v1";
+      await patchRun(record, runId, lease, {
+        status: "running",
+        startedAt,
+        metadata: {
+          ...asRecord(run.metadata),
+          executionMode,
+          executionModes: hasDeterministicCases && hasDelegatedCases
+            ? ["deterministic_contract_worker_v2", "computer_agents_thread_v1"]
+            : [executionMode],
+        },
+      });
+
+      let deterministicOutput = null;
+      if (hasDeterministicCases) {
+        deterministicOutput = await executeDeterministicContractPlan(
           record,
-          definition,
+          deterministicDefinition,
           run,
         );
-      } else {
+      }
+
+      let delegatedOutput = null;
+      if (hasDelegatedCases) {
         if (!run.environmentId) {
           throw createRuntimeError(
-            "Select a Computer Agents environment before running this test plan.",
+            "Select a Computer Agents environment for the agent-executed cases in this test plan.",
             409,
           );
         }
         agentId = await resolveExecutorAgent(record, run);
-        const prompt = buildExecutionPrompt({ plan, run });
+        const prompt = buildExecutionPrompt({
+          plan,
+          run,
+          definition: delegatedDefinition,
+        });
         if (!threadId) {
           const thread = await createHiddenThread(record, { run, plan, agentId });
           threadId = thread.id;
@@ -1308,16 +1367,19 @@ export function createTestsRuntime(deps = {}) {
               executorThreadId: threadId,
               executorAgentId: agentId,
               executionMode,
+              executionModes: hasDeterministicCases
+                ? ["deterministic_contract_worker_v2", "computer_agents_thread_v1"]
+                : ["computer_agents_thread_v1"],
               evidenceProvenance: selfReportedExecutionProvenance(threadId),
             },
           });
           const fallback = await executeThreadMessage(record, threadId, prompt);
-          output = await waitForThread(record, threadId, fallback);
+          delegatedOutput = await waitForThread(record, threadId, fallback);
         } else {
           const inspection = await inspectThread(record, threadId);
           const parsed = parseTestRunOutput(inspection.records);
           if (parsed && TERMINAL_THREAD_STATUSES.has(inspection.status)) {
-            output = { ...parsed, records: inspection.records };
+            delegatedOutput = { ...parsed, records: inspection.records };
           } else if (["failed", "cancelled"].includes(inspection.status)) {
             throw createRuntimeError(
               `The existing test executor thread ended with status ${inspection.status}.`,
@@ -1335,10 +1397,24 @@ export function createTestsRuntime(deps = {}) {
             const fallback = promptWasSubmitted
               ? ""
               : await executeThreadMessage(record, threadId, prompt);
-            output = await waitForThread(record, threadId, fallback);
+            delegatedOutput = await waitForThread(record, threadId, fallback);
           }
         }
       }
+      const output = {
+        results: [
+          ...asArray(deterministicOutput?.results),
+          ...asArray(delegatedOutput?.results),
+        ],
+        artifacts: [
+          ...asArray(deterministicOutput?.artifacts),
+          ...asArray(delegatedOutput?.artifacts),
+        ],
+        summary: [
+          text(deterministicOutput?.summary, 10_000),
+          text(delegatedOutput?.summary, 10_000),
+        ].filter(Boolean).join(" "),
+      };
       const results = reconcileExpectedResults(definition, output.results);
       const failedCount = results.filter((result) => result.status === "failed").length;
       const errorCount = results.filter((result) => result.status === "error").length;
@@ -1359,25 +1435,34 @@ export function createTestsRuntime(deps = {}) {
         startedAt,
         completedAt,
         durationMs: Math.max(0, Date.parse(completedAt) - Date.parse(startedAt)),
-        results: results.map((result) => ({
-          ...result,
-          startedAt: result.startedAt || startedAt,
-          completedAt: result.completedAt || completedAt,
-          evidence: {
-            ...asRecord(result.evidence),
-            executionMode,
-            ...(threadId ? {
-              executorThreadId: threadId,
-              provenance: selfReportedExecutionProvenance(threadId),
-            } : {}),
-          },
-        })),
+        results: results.map((result) => {
+          const deterministicResult = deterministicCaseIds.has(text(result.caseId, 300));
+          const resultExecutionMode = deterministicResult
+            ? "deterministic_contract_worker_v2"
+            : "computer_agents_thread_v1";
+          return {
+            ...result,
+            startedAt: result.startedAt || startedAt,
+            completedAt: result.completedAt || completedAt,
+            evidence: {
+              ...asRecord(result.evidence),
+              executionMode: resultExecutionMode,
+              ...(!deterministicResult && threadId ? {
+                executorThreadId: threadId,
+                provenance: selfReportedExecutionProvenance(threadId),
+              } : {}),
+            },
+          };
+        }),
         artifacts: output.artifacts,
         metadata: {
           ...asRecord(run.metadata),
           executorThreadId: threadId,
           executorAgentId: agentId,
           executionMode,
+          executionModes: hasDeterministicCases && hasDelegatedCases
+            ? ["deterministic_contract_worker_v2", "computer_agents_thread_v1"]
+            : [executionMode],
           ...(threadId ? {
             evidenceProvenance: selfReportedExecutionProvenance(threadId),
           } : {}),
@@ -1411,9 +1496,11 @@ export function createTestsRuntime(deps = {}) {
                   : "executor_setup",
             },
             evidence: {
-              executorThreadId: threadId || null,
               redacted: true,
-              provenance: selfReportedExecutionProvenance(threadId),
+              ...(threadId ? {
+                executorThreadId: threadId,
+                provenance: selfReportedExecutionProvenance(threadId),
+              } : {}),
             },
             startedAt,
             completedAt,

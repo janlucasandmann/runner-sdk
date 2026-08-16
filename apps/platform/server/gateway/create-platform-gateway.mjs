@@ -4,6 +4,7 @@ import { createServerDetailBootstrapGateway } from "./server-detail-bootstrap.mj
 import { createThreadGateway } from "./thread/index.mjs";
 import { createAdminGateway } from "./admin-gateway.mjs";
 import { createAiosGateway } from "./aios-gateway.mjs";
+import { createPublicApiGateway } from "./public-api-gateway.mjs";
 export function createPlatformGateway(config) {
     const core = createCoreGateway(config);
     const resource = createResourceGateway({ ...config, ...core });
@@ -15,7 +16,8 @@ export function createPlatformGateway(config) {
     const thread = createThreadGateway({ ...config, ...core, ...resource });
     const admin = createAdminGateway({ ...config, ...core });
     const aios = createAiosGateway({ ...config, ...core });
-    const modules = { ...core, ...resource, ...thread, ...admin, ...aios };
+    const publicApi = createPublicApiGateway(config);
+    const modules = { ...core, ...resource, ...thread, ...admin, ...aios, ...publicApi };
     return Object.freeze({
         extractFeedbackSummaryIdToken: modules.extractFeedbackSummaryIdToken,
         fetchAiosApi: modules.fetchAiosApi,
@@ -41,6 +43,8 @@ export function createPlatformGateway(config) {
         proxyFeedbackSummaryGet: modules.proxyFeedbackSummaryGet,
         proxyPlaygroundCustomSkills: modules.proxyPlaygroundCustomSkills,
         proxyProductUsageSummaryGet: modules.proxyProductUsageSummaryGet,
+        publicApiEnabled: modules.publicApiEnabled,
+        proxyPublicApiRequest: modules.proxyPublicApiRequest,
         proxyThreadMessages: modules.proxyThreadMessages,
         proxyThreadMessagesGet: modules.proxyThreadMessagesGet,
         proxyThreadPermissionDecision: modules.proxyThreadPermissionDecision,

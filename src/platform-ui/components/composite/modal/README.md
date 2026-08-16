@@ -24,6 +24,14 @@ header rows with identical horizontal and vertical padding. Put the dialog
 title in the sidebar and the active workflow controls in the content header;
 the required `PlatformModal` title remains the accessible dialog name.
 
+Guided setup flows use `PlatformSetupModal` and `PlatformSetupModalStep`. This
+variant keeps the same modal lifecycle and accessibility contract while
+providing a large responsive two-pane composition: context, benefits, and
+supporting actions on the left; numbered configuration steps and final actions
+on the right. Keep domain-specific form controls in the step content instead of
+reimplementing the split shell, close control, focus handling, or responsive
+stacking in a feature stylesheet.
+
 The structured surface itself has no padding. The body owns 24px padding, while the header and footer each own 12px vertical and 24px horizontal padding. Empty body and footer slots collapse visually. Low-level `PlatformModalSurface` usage retains 24px compatibility padding unless it opts into the structured layout.
 
 Opening mounts synchronously with the render that sets `open=true`, then the shared modal lifecycle advances the backdrop and surface from their opening state on the next animation frame. Closing uses the inverse state and retains the dialog for the same canonical 60ms duration before unmounting. Consumers must not implement their own visibility frame or exit timer; every modal built with `PlatformModal` therefore receives the same appearance and disappearance transition. `@starting-style` remains as compatibility coverage for the low-level backdrop and surface escape hatches.

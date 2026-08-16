@@ -22,6 +22,7 @@ PLATFORM_CPU_ALWAYS_ALLOCATED="${PLATFORM_CPU_ALWAYS_ALLOCATED:-1}"
 APP_ORIGIN="${APP_ORIGIN:-https://computer-agents.com}"
 PLATFORM_ORIGIN="${PLATFORM_ORIGIN:-https://platform.computer-agents.com}"
 API_ORIGIN="${API_ORIGIN:-https://api.computer-agents.com}"
+STOCKIFI_ORIGIN="${STOCKIFI_ORIGIN:-}"
 LEMONSQUEEZY_MODE="${LEMONSQUEEZY_MODE:-$([[ "${DEPLOYMENT_STAGE}" == "prod" ]] && echo production || echo test)}"
 if [[ -n "${RUNTIME_ENV_SOURCE:-}" ]]; then
   STAGE_ENV_SOURCE="${RUNTIME_ENV_SOURCE}"
@@ -156,17 +157,18 @@ repos/runner-web-sdk/dist
 repos/runner-web-sdk/dist/**
 EOF
 
-python3 - <<'PY' "${STAGE_ENV_SOURCE}" "${TMP_ENV_FILE}" "${DEPLOYMENT_STAGE}" "${APP_ORIGIN}" "${PLATFORM_ORIGIN}" "${API_ORIGIN}" "${LEMONSQUEEZY_MODE}"
+python3 - <<'PY' "${STAGE_ENV_SOURCE}" "${TMP_ENV_FILE}" "${DEPLOYMENT_STAGE}" "${APP_ORIGIN}" "${PLATFORM_ORIGIN}" "${API_ORIGIN}" "${LEMONSQUEEZY_MODE}" "${STOCKIFI_ORIGIN}"
 from pathlib import Path
 import json
 import sys
 
 source_path = Path(sys.argv[1])
 output_path = Path(sys.argv[2])
-deployment_stage, app_origin, platform_origin, api_origin, lemonsqueezy_mode = sys.argv[3:]
+deployment_stage, app_origin, platform_origin, api_origin, lemonsqueezy_mode, stockifi_origin = sys.argv[3:]
 keys = [
     "AIOS_APP_ORIGIN",
     "PLATFORM_APP_ORIGIN",
+    "PLATFORM_STOCKIFI_ORIGIN",
     "RUNNER_UPSTREAM_ORIGIN",
     "NEXT_PUBLIC_FIREBASE_API_KEY",
     "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
@@ -244,6 +246,8 @@ keys = [
 values = {
     "NODE_ENV": "production",
     "DEPLOYMENT_STAGE": deployment_stage,
+    "DEPLOYMENT_PROFILE_ID": "cloud-saas-v1",
+    "DEPLOYMENT_TOPOLOGY": "gcp_saas",
     "LEMONSQUEEZY_MODE": lemonsqueezy_mode,
     "AIOS_APP_ORIGIN": app_origin,
     "PLATFORM_APP_ORIGIN": platform_origin,
@@ -260,6 +264,8 @@ values = {
     "OUTLOOK_CALENDAR_OAUTH_CALLBACK_URL": f"{platform_origin.rstrip('/')}/api/aios/connectors/outlook-calendar/callback",
     "SLACK_OAUTH_CALLBACK_URL": f"{platform_origin.rstrip('/')}/api/aios/connectors/slack/callback",
 }
+if stockifi_origin:
+    values["PLATFORM_STOCKIFI_ORIGIN"] = stockifi_origin
 
 if source_path.exists():
     for line in source_path.read_text().splitlines():

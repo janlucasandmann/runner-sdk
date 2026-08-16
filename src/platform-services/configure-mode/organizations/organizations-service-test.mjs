@@ -169,7 +169,9 @@ assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminPrimarySidebarEntries, /id:
 assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminSubscriptionSidebarEntries, /label: "Subscription"/);
 assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminSubscriptionSidebarEntries, /id: "admin-subscription"/);
 assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminSubscriptionSidebarEntries, /id: "admin-billing"/);
-assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminSubscriptionSidebarEntries, /id: "admin-usage"/);
+assert.doesNotMatch(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminSubscriptionSidebarEntries, /id: "admin-usage"/);
+assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminUsageSidebarEntry, /id: "admin-usage"/);
+assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminUsageSidebarEntry, /Icon: ChartColumnIncreasing/);
 assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminPermissionsSidebarEntries, /label: "Permissions"/);
 assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminPermissionsSidebarEntries, /id: "admin-roles"/);
 assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminPermissionsSidebarEntries, /id: "admin-identity-access"/);
@@ -199,6 +201,7 @@ assert.doesNotThrow(() => new Function(`
     const sidebarEntries = [
       ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminPrimarySidebarEntries}
       ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminSubscriptionSidebarEntries}
+      ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminUsageSidebarEntry}
       ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.adminPermissionsSidebarEntries}
     ];
     return { captureHistory, restoreHistory, getTitle, sidebarEntries };
@@ -352,7 +355,7 @@ assert.match(
 );
 assert.match(
   platformEntrySource,
-  /adminEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS\.adminSidebarEntry[\s\S]*ORGANIZATIONS_APP_SCRIPT_FRAGMENTS\.adminPrimarySidebarEntries[\s\S]*TEAMS_APP_SCRIPT_FRAGMENTS\.adminSidebarEntry[\s\S]*ORGANIZATIONS_APP_SCRIPT_FRAGMENTS\.adminSubscriptionSidebarEntries[\s\S]*ORGANIZATIONS_APP_SCRIPT_FRAGMENTS\.adminPermissionsSidebarEntries/,
+  /adminEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS\.adminSidebarEntry[\s\S]*ORGANIZATIONS_APP_SCRIPT_FRAGMENTS\.adminPrimarySidebarEntries[\s\S]*TEAMS_APP_SCRIPT_FRAGMENTS\.adminSidebarEntry[\s\S]*ORGANIZATIONS_APP_SCRIPT_FRAGMENTS\.adminSubscriptionSidebarEntries[\s\S]*ORGANIZATIONS_APP_SCRIPT_FRAGMENTS\.adminUsageSidebarEntry[\s\S]*ORGANIZATIONS_APP_SCRIPT_FRAGMENTS\.adminPermissionsSidebarEntries/,
 );
 assert.doesNotMatch(platformLifecycleSource, /ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS\.overview/);
 assert.doesNotMatch(platformLifecycleSource, /ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS\.resources/);

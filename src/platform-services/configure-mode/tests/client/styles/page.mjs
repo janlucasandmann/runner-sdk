@@ -393,6 +393,52 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     overflow: hidden;
   }
 
+  .tests-case-detail-page.is-settings-tab {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .tests-case-detail-page__content.is-settings-tab,
+  .tests-case-detail-page__settings {
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .tests-case-detail-general {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 42px 24px 56px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .tests-case-detail-general__content {
+    box-sizing: border-box;
+    width: min(100%, var(--playground-centered-page-max-width, var(--platform-page-content-max-width, 87.5rem)));
+    max-width: var(--playground-centered-page-max-width, var(--platform-page-content-max-width, 87.5rem));
+    min-width: 0;
+    margin: 0 auto;
+  }
+
+  .tests-case-detail-general__content > .tests-case-builder {
+    min-height: auto;
+    flex: none;
+    padding: 12px 0 24px;
+    overflow: visible;
+  }
+
+  .tests-case-detail-general__content > .tests-case-detail-settings-content {
+    padding: 0;
+  }
+
+  .tests-case-detail-general__content > .tests-case-detail-identity {
+    padding: 0 0 24px;
+  }
+
   .tests-case-detail-identity {
     box-sizing: border-box;
     min-width: 0;
@@ -443,9 +489,491 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     line-height: 1.45;
   }
 
-  .tests-case-detail-workspace {
+  .tests-case-detail-workspace,
+  .tests-case-detail-page__workspace,
+  .tests-case-code-workspace {
     min-height: 0;
     flex: 1 1 0;
+  }
+
+  .tests-case-detail-page__workspace,
+  .tests-case-code-workspace,
+  .tests-case-code-workspace .platform-code-editor-workspace__editor,
+  .tests-case-code-workspace .platform-code-editor-workspace__editor-body,
+  .tests-case-code-editor,
+  .tests-case-code-editor > section {
+    box-sizing: border-box;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0;
+  }
+
+  .tests-case-detail-page__workspace,
+  .tests-case-code-workspace {
+    display: flex;
+    align-self: stretch;
+    overflow: hidden;
+  }
+
+  .tests-case-code-editor {
+    height: 100%;
+    flex: 1 1 0;
+    align-self: stretch;
+    overflow: hidden;
+  }
+
+  .tests-case-code-workspace,
+  .tests-case-code-workspace .platform-code-editor-workspace__sidebar,
+  .tests-case-code-workspace .platform-code-editor-workspace__editor,
+  .tests-case-code-workspace .platform-code-editor-workspace__editor-header,
+  .tests-case-code-workspace .platform-code-editor-workspace__editor-body,
+  .tests-case-code-editor,
+  .tests-case-code-editor > section,
+  .tests-case-code-editor .monaco-editor,
+  .tests-case-code-editor .monaco-editor-background,
+  .tests-case-code-editor .margin,
+  .tests-case-code-editor .overflow-guard {
+    background: #000 !important;
+  }
+
+  .tests-case-builder {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 0;
+    padding: 12px 24px 48px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .tests-case-builder .platform-settings-section-list {
+    gap: 22px;
+  }
+
+  .tests-case-builder .platform-settings-section {
+    padding-bottom: 22px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  }
+
+  .tests-case-builder .platform-settings-section__header,
+  .tests-case-builder .platform-settings-section__body {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .tests-case-builder .platform-settings-section__header {
+    min-height: 48px;
+  }
+
+  .tests-case-builder__section-body {
+    padding-top: 14px;
+    padding-bottom: 0;
+  }
+
+  .tests-case-builder__target-layout {
+    display: grid;
+    grid-template-columns: minmax(220px, .78fr) minmax(300px, 1.22fr);
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  .tests-case-builder__execution-card {
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #f4c978;
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .tests-case-builder__execution-card.is-verified_worker {
+    color: #86e29d;
+    border-color: rgba(134, 226, 157, 0.2);
+    background: rgba(134, 226, 157, 0.045);
+  }
+
+  .tests-case-builder__execution-card.is-runner_captured {
+    color: #8cc7ff;
+    border-color: rgba(74, 167, 255, 0.2);
+    background: rgba(74, 167, 255, 0.045);
+  }
+
+  .tests-case-builder__execution-card > svg {
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+
+  .tests-case-builder__execution-card > span {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+  }
+
+  .tests-case-builder__execution-card strong {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .tests-case-builder__execution-card small {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .tests-case-builder__form-grid {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .tests-case-builder__field {
+    min-width: 0;
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.64);
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .tests-case-builder__field.is-span-2 {
+    grid-column: 1 / -1;
+  }
+
+  .tests-case-builder__field > small {
+    margin-top: -4px;
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .tests-case-builder__field > em {
+    color: #ff9b9b;
+    font-size: 11px;
+    font-style: normal;
+  }
+
+  .tests-case-builder__field > input,
+  .tests-case-builder__field > textarea,
+  .tests-case-settings-list__row > input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    outline: 0;
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.9);
+    font: inherit;
+    font-size: 12px;
+    transition: border-color 140ms ease, background 140ms ease;
+  }
+
+  .tests-case-builder__field > input,
+  .tests-case-settings-list__row > input {
+    height: 36px;
+    padding: 0 11px;
+  }
+
+  .tests-case-builder__field > textarea {
+    min-height: 112px;
+    padding: 11px 12px;
+    line-height: 1.55;
+    resize: vertical;
+  }
+
+  .tests-case-builder__field > textarea[spellcheck="false"] {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  .tests-case-builder__field > input:focus,
+  .tests-case-builder__field > textarea:focus,
+  .tests-case-settings-list__row > input:focus {
+    border-color: rgba(74, 167, 255, 0.58);
+    background: rgba(74, 167, 255, 0.045);
+  }
+
+  .tests-case-builder__field > textarea.is-invalid {
+    border-color: rgba(255, 91, 91, 0.5);
+  }
+
+  .tests-case-builder__checks {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .tests-case-builder__checks > div {
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .tests-case-builder__checks .platform-checkbox {
+    margin-top: 1px;
+  }
+
+  .tests-case-builder__checks > div > span {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+
+  .tests-case-builder__checks strong {
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .tests-case-builder__checks small {
+    color: rgba(255, 255, 255, 0.44);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .tests-case-builder__scenario {
+    display: grid;
+    gap: 12px;
+  }
+
+  .tests-case-builder__scenario-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .tests-case-builder__scenario-toolbar > div {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 11px;
+  }
+
+  .tests-case-builder__scenario-step {
+    min-width: 0;
+    display: grid;
+    gap: 16px;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .tests-case-builder__scenario-step > header {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tests-case-builder__scenario-step > header > span {
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.62);
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 10px;
+  }
+
+  .tests-case-builder__scenario-step > header > strong {
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tests-case-builder__scenario-assertions {
+    display: grid;
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.075);
+  }
+
+  .tests-case-builder__scenario-assertions > div:first-child {
+    display: grid;
+    gap: 3px;
+  }
+
+  .tests-case-builder__scenario-assertions strong {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .tests-case-builder__scenario-assertions small {
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 10px;
+  }
+
+  .tests-case-builder__empty {
+    padding: 22px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 11px;
+    text-align: center;
+  }
+
+  .tests-case-builder__bound-topology {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid rgba(74, 167, 255, 0.2);
+    border-radius: 8px;
+    color: #8cc7ff;
+    background: rgba(74, 167, 255, 0.045);
+  }
+
+  .tests-case-builder__bound-topology > span {
+    display: grid;
+    gap: 4px;
+  }
+
+  .tests-case-builder__bound-topology strong {
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .tests-case-builder__bound-topology small {
+    color: rgba(255, 255, 255, 0.48);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .tests-case-builder__evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid rgba(255, 255, 255, 0.075);
+    border-left: 1px solid rgba(255, 255, 255, 0.075);
+  }
+
+  .tests-case-builder__evidence-item {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 12px;
+    border-right: 1px solid rgba(255, 255, 255, 0.075);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  }
+
+  .tests-case-builder__evidence-item > span {
+    color: rgba(255, 255, 255, 0.58);
+  }
+
+  .tests-case-builder__evidence-item > strong {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 11px;
+    font-weight: 400;
+  }
+
+  .tests-case-builder__redaction-note {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 10px;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 10px;
+  }
+
+  .tests-case-builder__raw-definition {
+    color: rgba(255, 255, 255, 0.56);
+    font-size: 11px;
+  }
+
+  .tests-case-builder__raw-definition > summary {
+    width: fit-content;
+    cursor: pointer;
+  }
+
+  .tests-case-builder__raw-definition > pre {
+    box-sizing: border-box;
+    max-height: 320px;
+    margin: 12px 0 0;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.025);
+    color: rgba(255, 255, 255, 0.7);
+    font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    overflow: auto;
+  }
+
+  .tests-case-detail-settings-section {
+    display: grid;
+    gap: 12px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(255, 255, 255, 0.075);
+  }
+
+  .tests-case-detail-settings-section > header {
+    display: grid;
+    gap: 4px;
+  }
+
+  .tests-case-detail-settings-section h3,
+  .tests-case-detail-settings-section p {
+    margin: 0;
+  }
+
+  .tests-case-detail-settings-section h3 {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .tests-case-detail-settings-section p {
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .tests-case-settings-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .tests-case-settings-list__row {
+    display: grid;
+    grid-template-columns: minmax(140px, .7fr) minmax(180px, 1.3fr) 30px;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tests-case-settings-list__row.is-single {
+    grid-template-columns: minmax(0, 1fr) 30px;
+  }
+
+  .tests-case-settings-list__empty {
+    padding: 14px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 11px;
   }
 
   .tests-case-detail-editor {
@@ -539,13 +1067,13 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     background: rgba(74, 167, 255, 0.045);
   }
 
-  .tests-case-detail-sidebar-card.platform-ui-card {
-    min-width: 0;
+  .tests-case-detail-delete-button.platform-button {
+    width: fit-content;
+    margin-top: 0;
   }
 
-  .tests-case-detail-delete-button.platform-button {
-    width: 100%;
-    margin-top: 12px;
+  .tests-case-detail-danger-section {
+    padding-bottom: 0;
   }
 
   .tests-form-grid {
@@ -932,6 +1460,18 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     border-color: rgba(134, 226, 157, 0.22);
     color: #86e29d;
     background: rgba(134, 226, 157, 0.05);
+  }
+
+  .tests-run-trust-card.is-runner_captured {
+    border-color: rgba(74, 167, 255, 0.22);
+    color: #8cc7ff;
+    background: rgba(74, 167, 255, 0.05);
+  }
+
+  .tests-run-trust-card.is-mixed {
+    border-color: rgba(183, 154, 255, 0.22);
+    color: #b79aff;
+    background: rgba(183, 154, 255, 0.05);
   }
 
   .tests-run-trust-card > span {
@@ -1323,6 +1863,38 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
 
     .tests-form-field.is-span-2 {
       grid-column: auto;
+    }
+
+    .tests-case-builder {
+      padding: 12px 20px 36px;
+    }
+
+    .tests-case-builder__target-layout,
+    .tests-case-builder__form-grid,
+    .tests-case-builder__checks,
+    .tests-case-builder__evidence-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tests-case-builder__field.is-span-2 {
+      grid-column: auto;
+    }
+
+    .tests-case-builder__scenario-toolbar {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .tests-case-builder__scenario-step > header {
+      align-items: flex-start;
+    }
+
+    .tests-case-settings-list__row {
+      grid-template-columns: minmax(0, 1fr) 30px;
+    }
+
+    .tests-case-settings-list__row > :first-child {
+      grid-column: 1 / -1;
     }
 
   }

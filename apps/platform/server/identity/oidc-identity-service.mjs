@@ -1,12 +1,26 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { PLATFORM_SESSION_API_KEY_SENTINEL } from "../gateway/http-utils.mjs";
 import { createBrowserAuthModuleSource } from "./browser-auth-module.mjs";
-import { clearCookie, readCookie, serializeCookie } from "./cookies.mjs";
+import {
+  clearCookie,
+  readCookie,
+  readCookies,
+  serializeCookie,
+} from "./cookies.mjs";
+import { createDexLocalAccountService } from "./dex-local-account-service.mjs";
+import {
+  createSignUpRateLimiter,
+  readUrlEncodedForm,
+  renderSignUpPage,
+  validateSignUpFields,
+} from "./local-account-pages.mjs";
 import { createOidcClient } from "./oidc-client.mjs";
 import { createPrincipalAssertionSigner } from "./principal-assertion.mjs";
 import { createPlatformSessionCodec } from "./session-codec.mjs";
 
 const OIDC_TRANSACTION_TTL_SECONDS = 10 * 60;
+const SIGN_UP_CSRF_TTL_SECONDS = 15 * 60;
+const ACCOUNT_JSON_REQUEST_BODY_LIMIT_BYTES = 1024 * 1024;
 const ALLOWED_OIDC_PROMPTS = new Set([
   "consent",
   "login",
@@ -66,6 +80,45 @@ function sendJson(response, status, payload, headers = {}) {
   response.end(body);
 }
 
+function sendHtml(response, status, html) {
+  response.writeHead(status, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Content-Length": Buffer.byteLength(html),
+    "Cache-Control": "no-store",
+    "Content-Security-Policy": "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+    "Referrer-Policy": "no-referrer",
+    "X-Content-Type-Options": "nosniff",
+  });
+  response.end(html);
+}
+
+async function readBoundedRequestBody(request, limitBytes) {
+  const chunks = [];
+  let totalBytes = 0;
+  for await (const chunk of request) {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    totalBytes += buffer.length;
+    if (totalBytes > limitBytes) {
+      const error = new Error("Request body is too large.");
+      error.code = "REQUEST_BODY_TOO_LARGE";
+      throw error;
+    }
+    chunks.push(buffer);
+  }
+  return chunks.length ? Buffer.concat(chunks, totalBytes) : undefined;
+}
+
+async function relayJsonFetchResponse(upstream, response) {
+  const body = Buffer.from(await upstream.arrayBuffer());
+  response.writeHead(upstream.status, {
+    "Content-Type": upstream.headers.get("content-type")
+      || "application/json; charset=utf-8",
+    "Content-Length": body.length,
+    "Cache-Control": "no-store",
+  });
+  response.end(body);
+}
+
 function writeRedirect(response, location, setCookie = []) {
   response.writeHead(303, {
     Location: location,
@@ -79,6 +132,13 @@ function writeRedirect(response, location, setCookie = []) {
 function reportIdentityFailure(operation, error) {
   console.warn(`[platform-identity] ${operation} failed`, {
     message: error instanceof Error ? error.message : String(error),
+  });
+}
+
+function reportIdentityRejection(operation, reason, details = {}) {
+  console.warn(`[platform-identity] ${operation} rejected`, {
+    reason,
+    ...details,
   });
 }
 
@@ -128,8 +188,13 @@ export function createOidcIdentityService(config, dependencies = {}) {
       issuer: config.platformPrincipalAssertionIssuer,
       audience: config.platformPrincipalAssertionAudience,
     });
+  const localAccountService = dependencies.localAccountService
+    || createDexLocalAccountService(config.oidc.localAccounts);
+  const signUpRateLimiter = dependencies.signUpRateLimiter
+    || createSignUpRateLimiter();
   const controlApiRoot = deriveControlApiRoot(config.defaultUpstreamOrigin);
   const transactionCookieName = `${config.platformSessionCookieName}_oidc`;
+  const transactionCookiePrefix = `${transactionCookieName}_`;
   const cookieOptions = Object.freeze({
     httpOnly: true,
     secure: config.platformCookieSecure,
@@ -137,6 +202,156 @@ export function createOidcIdentityService(config, dependencies = {}) {
     path: "/",
   });
   const callbackUri = new URL(config.oidc.callbackPath, config.platformOrigin).toString();
+
+  function transactionCookieNameForState(state) {
+    const stateDigest = createHash("sha256")
+      .update(String(state || ""), "utf8")
+      .digest("hex")
+      .slice(0, 24);
+    return `${transactionCookiePrefix}${stateDigest}`;
+  }
+
+  function transactionCookieNamesInRequest(request) {
+    return [...readCookies(request).keys()].filter((name) =>
+      name === transactionCookieName || name.startsWith(transactionCookiePrefix));
+  }
+
+  function clearTransactionCookies(
+    request,
+    names = [],
+    { includeAll = false } = {},
+  ) {
+    const candidates = new Set(names.filter(Boolean));
+    if (includeAll) {
+      for (const name of transactionCookieNamesInRequest(request)) {
+        candidates.add(name);
+      }
+    }
+    if (candidates.size === 0) candidates.add(transactionCookieName);
+    return [...candidates].map((name) => clearCookie(name, cookieOptions));
+  }
+
+  function callbackTransactionContext(request, state) {
+    const stateCookieName = state
+      ? transactionCookieNameForState(state)
+      : "";
+    const stateToken = stateCookieName
+      ? readCookie(request, stateCookieName)
+      : "";
+    const legacyToken = stateToken
+      ? ""
+      : readCookie(request, transactionCookieName);
+    return Object.freeze({
+      cookieName: stateToken ? stateCookieName : transactionCookieName,
+      stateCookieName,
+      token: stateToken || legacyToken,
+      usedLegacyCookie: Boolean(!stateToken && legacyToken),
+    });
+  }
+
+  function requestClientAddress(request) {
+    const forwarded = String(request.headers["x-forwarded-for"] || "")
+      .split(",", 1)[0]
+      .trim();
+    return forwarded || request.socket?.remoteAddress || "unknown";
+  }
+
+  async function createSignUpCsrfToken() {
+    return sessionCodec.seal(
+      "signup_csrf",
+      { nonce: randomBase64Url() },
+      SIGN_UP_CSRF_TTL_SECONDS,
+    );
+  }
+
+  async function writeSignUpPage(response, { status = 200, values, error } = {}) {
+    const csrfToken = await createSignUpCsrfToken();
+    sendHtml(response, status, renderSignUpPage({ csrfToken, values, error }));
+  }
+
+  async function handleSignUpRequest(request, response) {
+    if (!localAccountService) {
+      sendJson(response, 404, {
+        error: "Not found",
+        message: "Local account registration is not enabled.",
+      });
+      return;
+    }
+    if (request.method === "GET") {
+      await writeSignUpPage(response);
+      return;
+    }
+    let fields;
+    try {
+      fields = await readUrlEncodedForm(request);
+    } catch (error) {
+      await writeSignUpPage(response, {
+        status: 400,
+        error: error instanceof Error ? error.message : "The form could not be read.",
+      });
+      return;
+    }
+    const csrf = await sessionCodec.open(fields.csrf, "signup_csrf");
+    if (!csrf?.nonce) {
+      await writeSignUpPage(response, {
+        status: 400,
+        values: fields,
+        error: "This sign-up form expired. Please try again.",
+      });
+      return;
+    }
+    if (!signUpRateLimiter.consume(requestClientAddress(request))) {
+      await writeSignUpPage(response, {
+        status: 429,
+        values: fields,
+        error: "Too many sign-up attempts. Please try again in a few minutes.",
+      });
+      return;
+    }
+    const validation = validateSignUpFields(fields);
+    if (!validation.ok) {
+      await writeSignUpPage(response, {
+        status: 400,
+        values: validation.values,
+        error: validation.error,
+      });
+      return;
+    }
+    const result = await localAccountService.createAccount({
+      email: validation.values.email,
+      displayName: validation.values.name,
+      password: validation.password,
+    });
+    if (result.alreadyExists) {
+      await writeSignUpPage(response, {
+        status: 409,
+        values: validation.values,
+        error: "An account with this email already exists. Sign in instead.",
+      });
+      return;
+    }
+    const principal = normalizePrincipal({
+      sub: result.subject,
+      email: validation.values.email,
+      email_verified: true,
+      name: validation.values.name,
+    }, config.oidc.issuerUrl);
+    let sessionToken;
+    try {
+      sessionToken = await createPlatformSessionToken(principal);
+    } catch (error) {
+      reportIdentityFailure("post-registration session provisioning", error);
+      writeRedirect(response, "/api/platform/auth/login?return_to=%2F");
+      return;
+    }
+    writeRedirect(response, new URL("/", config.platformOrigin).toString(), [
+      serializeCookie(config.platformSessionCookieName, sessionToken, {
+        ...cookieOptions,
+        maxAge: config.platformSessionTtlSeconds,
+      }),
+      ...clearTransactionCookies(request, [], { includeAll: true }),
+    ]);
+  }
 
   async function readSession(request) {
     const token = readCookie(request, config.platformSessionCookieName);
@@ -179,6 +394,20 @@ export function createOidcIdentityService(config, dependencies = {}) {
     return payload;
   }
 
+  async function createPlatformSessionToken(principal) {
+    const exchange = await exchangePrincipal(principal);
+    return sessionCodec.seal(
+      "platform_session",
+      {
+        principal,
+        profile: exchange.profile,
+        subscription: exchange.subscription || {},
+        credential: exchange.credential,
+      },
+      config.platformSessionTtlSeconds,
+    );
+  }
+
   async function revokeCredential(session) {
     if (!session?.credential?.id || !session?.principal) return;
     try {
@@ -211,7 +440,7 @@ export function createOidcIdentityService(config, dependencies = {}) {
       .update(codeVerifier, "ascii")
       .digest("base64url");
     const returnTo = normalizeReturnTo(
-      url.searchParams.get("return_to") || request.headers.referer || "/",
+      url.searchParams.get("return_to") || "/",
       config.platformOrigin,
     );
     const requestedPrompt = String(url.searchParams.get("prompt") || "").trim();
@@ -231,7 +460,7 @@ export function createOidcIdentityService(config, dependencies = {}) {
       prompt,
     });
     writeRedirect(response, authorizationUrl.toString(), [
-      serializeCookie(transactionCookieName, transaction, {
+      serializeCookie(transactionCookieNameForState(state), transaction, {
         ...cookieOptions,
         maxAge: OIDC_TRANSACTION_TTL_SECONDS,
       }),
@@ -239,35 +468,60 @@ export function createOidcIdentityService(config, dependencies = {}) {
   }
 
   async function handleCallbackRequest(request, response, url) {
-    const transactionToken = readCookie(request, transactionCookieName);
+    const state = String(url.searchParams.get("state") || "");
+    const transactionContext = callbackTransactionContext(request, state);
     const transaction = await sessionCodec.open(
-      transactionToken,
+      transactionContext.token,
       "oidc_transaction",
     );
     if (!transaction) {
+      reportIdentityRejection("OIDC callback", "transaction_missing_or_expired", {
+        hasState: Boolean(state),
+        hasProviderError: Boolean(url.searchParams.get("error")),
+        usedLegacyCookie: transactionContext.usedLegacyCookie,
+      });
       sendJson(response, 400, {
         error: "OIDC transaction expired",
         message: "Start the sign-in flow again.",
+      }, {
+        "Set-Cookie": clearTransactionCookies(
+          request,
+          [transactionContext.stateCookieName],
+        ),
       });
       return;
     }
     if (url.searchParams.get("error")) {
+      reportIdentityRejection("OIDC callback", "provider_authorization_error", {
+        hasState: Boolean(state),
+        usedLegacyCookie: transactionContext.usedLegacyCookie,
+      });
       sendJson(response, 401, {
         error: "OIDC authorization failed",
         message: "The identity provider did not authorize this sign-in.",
       }, {
-        "Set-Cookie": clearCookie(transactionCookieName, cookieOptions),
+        "Set-Cookie": clearTransactionCookies(
+          request,
+          [transactionContext.cookieName],
+        ),
       });
       return;
     }
     const code = String(url.searchParams.get("code") || "");
-    const state = String(url.searchParams.get("state") || "");
     if (!code || !equalSecretValues(state, transaction.state)) {
+      reportIdentityRejection("OIDC callback", "state_or_code_mismatch", {
+        hasCode: Boolean(code),
+        hasState: Boolean(state),
+        usedLegacyCookie: transactionContext.usedLegacyCookie,
+      });
       sendJson(response, 400, {
         error: "OIDC callback rejected",
         message: "The authorization response did not match the login transaction.",
       }, {
-        "Set-Cookie": clearCookie(transactionCookieName, cookieOptions),
+        "Set-Cookie": clearTransactionCookies(
+          request,
+          [transactionContext.cookieName],
+        ),
       });
       return;
     }
@@ -281,18 +535,7 @@ export function createOidcIdentityService(config, dependencies = {}) {
       transaction.nonce,
     );
     const principal = normalizePrincipal(idToken, config.oidc.issuerUrl);
-    const exchange = await exchangePrincipal(principal);
-    const sessionPayload = {
-      principal,
-      profile: exchange.profile,
-      subscription: exchange.subscription || {},
-      credential: exchange.credential,
-    };
-    const sessionToken = await sessionCodec.seal(
-      "platform_session",
-      sessionPayload,
-      config.platformSessionTtlSeconds,
-    );
+    const sessionToken = await createPlatformSessionToken(principal);
     writeRedirect(
       response,
       new URL(
@@ -304,7 +547,10 @@ export function createOidcIdentityService(config, dependencies = {}) {
           ...cookieOptions,
           maxAge: config.platformSessionTtlSeconds,
         }),
-        clearCookie(transactionCookieName, cookieOptions),
+        clearCookie(transactionContext.cookieName, cookieOptions),
+        ...(transactionContext.usedLegacyCookie
+          ? []
+          : [clearCookie(transactionCookieName, cookieOptions)]),
       ],
     );
   }
@@ -321,7 +567,7 @@ export function createOidcIdentityService(config, dependencies = {}) {
       new URL(returnTo, config.platformOrigin).toString(),
       [
         clearCookie(config.platformSessionCookieName, cookieOptions),
-        clearCookie(transactionCookieName, cookieOptions),
+        ...clearTransactionCookies(request, [], { includeAll: true }),
       ],
     );
   }
@@ -392,6 +638,65 @@ export function createOidcIdentityService(config, dependencies = {}) {
       });
       return true;
     }
+    const apiKeysCollectionMatch = path === "/api/user/api-keys";
+    const apiKeyOperationMatch = path.match(
+      /^\/api\/user\/api-keys\/([^/]+)\/(revoke|reveal)$/,
+    );
+    const isSupportedApiKeyRequest = (
+      apiKeysCollectionMatch && (method === "GET" || method === "POST")
+    ) || (
+      apiKeyOperationMatch
+      && (
+        (apiKeyOperationMatch[2] === "revoke" && method === "POST")
+        || (apiKeyOperationMatch[2] === "reveal" && method === "GET")
+      )
+    );
+    if (isSupportedApiKeyRequest) {
+      try {
+        let controlPath = "/api-keys";
+        if (apiKeyOperationMatch) {
+          const keyId = encodeURIComponent(
+            decodeURIComponent(apiKeyOperationMatch[1]),
+          );
+          controlPath = `/api-keys/${keyId}/${apiKeyOperationMatch[2]}`;
+        } else {
+          const requestUrl = new URL(request.url || "/", config.platformOrigin);
+          controlPath += requestUrl.search;
+        }
+        const body = method === "GET" || method === "HEAD"
+          ? undefined
+          : await readBoundedRequestBody(
+              request,
+              ACCOUNT_JSON_REQUEST_BODY_LIMIT_BYTES,
+            );
+        const upstream = await fetchControlApi(request, controlPath, {
+          method,
+          headers: {
+            accept: "application/json",
+            ...(body ? { "content-type": "application/json" } : {}),
+          },
+          body,
+          signal: AbortSignal.timeout(15_000),
+        });
+        await relayJsonFetchResponse(upstream, response);
+      } catch (error) {
+        if (error?.code === "REQUEST_BODY_TOO_LARGE") {
+          sendJson(response, 413, {
+            error: "Request body too large",
+            code: "REQUEST_BODY_TOO_LARGE",
+            message: "The API key request body exceeds the allowed size.",
+          });
+          return true;
+        }
+        reportIdentityFailure("API key account proxy", error);
+        sendJson(response, 502, {
+          error: "API key service unavailable",
+          code: "API_KEY_SERVICE_UNAVAILABLE",
+          message: "The appliance control API could not complete the API key request.",
+        });
+      }
+      return true;
+    }
     sendJson(response, 501, {
       error: "Capability unavailable",
       code: "ON_PREM_ACCOUNT_CAPABILITY_UNAVAILABLE",
@@ -426,6 +731,25 @@ export function createOidcIdentityService(config, dependencies = {}) {
   }
 
   function handleRequest(request, response, url) {
+    if (
+      ["GET", "POST"].includes(request.method)
+      && url.pathname === "/signup"
+    ) {
+      void handleSignUpRequest(request, response).catch((error) => {
+        reportIdentityFailure("local account registration", error);
+        if (!response.headersSent) {
+          void writeSignUpPage(response, {
+            status: 503,
+            error: "Account creation is temporarily unavailable. Please try again.",
+          });
+        }
+      });
+      return true;
+    }
+    if (request.method === "GET" && url.pathname === "/signin") {
+      writeRedirect(response, "/api/platform/auth/login");
+      return true;
+    }
     if (
       request.method === "GET"
       && url.pathname === "/api/platform/auth/browser-module.js"
@@ -463,7 +787,14 @@ export function createOidcIdentityService(config, dependencies = {}) {
             error: "OIDC callback failed",
             message: "The sign-in response could not be verified.",
           }, {
-            "Set-Cookie": clearCookie(transactionCookieName, cookieOptions),
+            "Set-Cookie": clearTransactionCookies(
+              request,
+              [
+                url.searchParams.get("state")
+                  ? transactionCookieNameForState(url.searchParams.get("state"))
+                  : "",
+              ],
+            ),
           });
         }
       });

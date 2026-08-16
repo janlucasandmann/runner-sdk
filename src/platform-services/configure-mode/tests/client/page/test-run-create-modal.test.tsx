@@ -68,7 +68,7 @@ describe("TestRunCreateModal", () => {
     );
 
     expect(screen.getByText("v2 · Release candidate")).not.toBeNull();
-    expect(screen.getByText("Verified worker")).not.toBeNull();
+    expect(screen.getByText("Attestation-capable worker")).not.toBeNull();
     expect(screen.queryByLabelText("Test run environment")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Run Tests" }));
 

@@ -20,10 +20,29 @@ function createResponseRecorder() {
 const handler = createPageAndStaticRoutes({
   platformDocumentHtml: "<!doctype html><div id=\"app\"></div>",
   platformOrigin: "http://localhost:4177",
+  stockifiPlatformOrigin: "https://stockifi.example.test",
   isGenericConnectorApiRequestPath: () => false,
   isGithubApiRequestPath: () => false,
   isJiraApiRequestPath: () => false,
 });
+
+for (const [source, expected] of [
+  ["http://localhost:4177/stockifi", "https://stockifi.example.test/"],
+  ["http://localhost:4177/stockifi/", "https://stockifi.example.test/"],
+  [
+    "http://localhost:4177/stockifi/thread_1?source=hosted",
+    "https://stockifi.example.test/thread_1?source=hosted",
+  ],
+]) {
+  const response = createResponseRecorder();
+  assert.equal(
+    handler({ method: "GET", headers: {} }, response, new URL(source)),
+    true,
+  );
+  assert.equal(response.statusCode, 307);
+  assert.equal(response.headers.Location, expected);
+  assert.equal(response.headers["Cache-Control"], "no-store");
+}
 
 for (const pathname of ["/", "/login", "/signup", "/logout"]) {
   const response = createResponseRecorder();

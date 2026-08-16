@@ -36,6 +36,7 @@ export function createLegacyPlatformShellScript(bindings) {
   const {
     aiosOrigin,
     defaultUpstreamOrigin,
+    deploymentProfileEnvelope,
     platformOrigin,
   } = bindings;
   let source = shellTemplate;
@@ -59,7 +60,66 @@ export function createLegacyPlatformShellScript(bindings) {
       `${aiosOrigin}${suffix}`,
     );
   }
-  return renderLegacySourceTemplate(
+  const serializedDeploymentProfileEnvelope = JSON.stringify(
+    deploymentProfileEnvelope || {
+      profile: {
+        schemaVersion: 2,
+        profileId: "cloud-saas-v1",
+        edition: "cloud",
+        stage: "prod",
+        topology: "gcp_saas",
+        readiness: "available",
+        capabilities: {
+          platform: true,
+          agentExecution: true,
+          schedules: true,
+          metronomes: true,
+          localInference: false,
+          deployableResources: true,
+          modelManagement: true,
+          modelSelection: true,
+          subscriptions: true,
+          billing: true,
+          pricing: true,
+          commercialUsageLimits: true,
+        },
+        product: {
+          inference: { mode: "managed_catalog", fixedModelId: null },
+          agents: {
+            visibleBuiltIns: ["spark", "forge", "foundry"],
+            defaultBuiltIn: "spark",
+            defaultTeam: {
+              enabled: true,
+              builtIns: ["spark", "forge", "foundry"],
+            },
+            customAgents: true,
+          },
+          commerce: {
+            mode: "subscription",
+            entitlementSource: "subscription_catalog",
+            commercialLimits: true,
+          },
+          usage: { mode: "billable" },
+        },
+      },
+      hash: "compatibility-default",
+      source: "legacy_source_default",
+    },
+  )
+    .replace(/</g, "\\u003C")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+  const deploymentProfileRuntime = `
+        const platformDeploymentProfileEnvelope = Object.freeze(${serializedDeploymentProfileEnvelope});
+        const platformDeploymentProfile = platformDeploymentProfileEnvelope.profile;
+        function platformHasCapability(capability) {
+          return platformDeploymentProfile.capabilities?.[capability] === true;
+        }
+        function platformHasBuiltInAgent(agentId) {
+          return platformDeploymentProfile.product?.agents?.visibleBuiltIns?.includes(agentId) === true;
+        }
+`;
+  return deploymentProfileRuntime + renderLegacySourceTemplate(
     source,
     flattenLegacySourceBindings(bindings),
   );
