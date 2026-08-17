@@ -1244,7 +1244,7 @@
               };
             }
   
-  ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyCapture}${MODELS_APP_SCRIPT_FRAGMENTS.historyCapture}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyCapture}${TESTS_APP_SCRIPT_FRAGMENTS.historyCapture}${ASSURANCE_APP_SCRIPT_FRAGMENTS.historyCapture}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyCapture}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyCapture}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyCapture}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyCapture}
+  ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyCapture}${MODELS_APP_SCRIPT_FRAGMENTS.historyCapture}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyCapture}${TESTS_APP_SCRIPT_FRAGMENTS.historyCapture}${KNOWLEDGE_APP_SCRIPT_FRAGMENTS.historyCapture}${ASSURANCE_APP_SCRIPT_FRAGMENTS.historyCapture}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyCapture}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyCapture}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyCapture}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyCapture}
   ${INFERENCE_APP_SCRIPT_FRAGMENTS.historyCapture}
             return {
               page: activePage || "thread",
@@ -1261,6 +1261,7 @@
             evaluationsPageMode,
             fineTuningPageMode,
             testsPageMode,
+            knowledgePageMode,
             filesPageTopNav?.contentMode,
             filesPageTopNav?.environmentId,
             filesPageTopNav?.path,
@@ -1299,6 +1300,10 @@
             selectedTestCaseName,
             selectedTestRunId,
             selectedTestRunName,
+            selectedKnowledgeLibraryId,
+            selectedKnowledgeLibraryName,
+            selectedKnowledgeDocumentId,
+            selectedKnowledgeDocumentName,
             settingsSelectedTriggerId,
             settingsSection,
             tasksHeaderState.detailMode,
@@ -1509,7 +1514,7 @@
               return;
             }
   
-  ${MODELS_APP_SCRIPT_FRAGMENTS.historyRestore}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyRestore}${TESTS_APP_SCRIPT_FRAGMENTS.historyRestore}${ASSURANCE_APP_SCRIPT_FRAGMENTS.historyRestore}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyRestore}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyRestore}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyRestore}${API_KEYS_APP_SCRIPT_FRAGMENTS.historyRestore}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyRestore}
+  ${MODELS_APP_SCRIPT_FRAGMENTS.historyRestore}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyRestore}${TESTS_APP_SCRIPT_FRAGMENTS.historyRestore}${KNOWLEDGE_APP_SCRIPT_FRAGMENTS.historyRestore}${ASSURANCE_APP_SCRIPT_FRAGMENTS.historyRestore}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyRestore}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyRestore}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyRestore}${API_KEYS_APP_SCRIPT_FRAGMENTS.historyRestore}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyRestore}
   ${SECURITY_APP_SCRIPT_FRAGMENTS.historyRestore}
   ${EVIDENCE_AGENTS_APP_SCRIPT_FRAGMENTS.historyRestore}
   ${INFERENCE_APP_SCRIPT_FRAGMENTS.historyRestore}

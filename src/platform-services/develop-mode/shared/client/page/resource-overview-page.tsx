@@ -26,6 +26,7 @@ export function DevelopResourceOverviewSurface({
   analyticsLoading = false,
   analyticsError = "",
   controlsPortalId,
+  periodPortalId,
   loading = false,
   error,
   mutating = false,
@@ -136,6 +137,7 @@ export function DevelopResourceOverviewSurface({
       onPeriodChange={onPeriodChange}
       analytics={analytics}
       controlsPortalId={controlsPortalId}
+      periodPortalId={periodPortalId}
       headerActions={headerActions}
       className={`is-develop-resource is-${definition.kind.replaceAll("_", "-")}`}
       table={{

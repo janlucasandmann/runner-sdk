@@ -58,6 +58,10 @@ const platformTemplateCssSource = await fs.readFile(
   path.resolve(domainRoot, "../../templates/platform.template.css"),
   "utf8",
 );
+const shellCompositionSource = await fs.readFile(
+  path.resolve(domainRoot, "../shell/controller/composition-and-modals.template.js"),
+  "utf8",
+);
 
 assert.equal(COMPUTE_RESOURCES_CONTROLLER_FRAGMENT_PATHS.length, 12);
 assert.match(COMPUTE_RESOURCES_PAGE_SCRIPT, /function PlaygroundEnvironmentsPage/);
@@ -75,9 +79,42 @@ assert.match(
   "The Computers overview must route its timeframe to the dedicated centered app-header portal.",
 );
 assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /React\.createElement\(DevelopResourceOverviewRoute, \{[\s\S]{0,420}controlsPortalId: "playground-resource-overview-controls",[\s\S]{0,260}periodPortalId: isDevelopResourceCreationModalKind\(normalizedEmbeddedServerKind\)[\s\S]{0,120}"playground-develop-resource-overview-period-controls"/,
+  "Develop resource overviews must route their timeframe to the dedicated centered app-header portal.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /normalizedEmbeddedServerKind === "voice_agent"[\s\S]{0,220}shouldShowEnvironmentHome && isDevelopResourceCreationModalKind\(normalizedEmbeddedServerKind\)/,
+  "Develop resource overviews must not publish the legacy ellipsis menu into the right app-header actions.",
+);
+assert.match(
+  shellCompositionSource,
+  /key: "resources:"[\s\S]{0,180}activeResourcesView === "servers"[\s\S]{0,120}activeResourcesServerKind \|\| "all"/,
+  "Each development server kind must own an isolated React lifecycle during rapid overview navigation.",
+);
+assert.match(
   bootstrapAndEffectsSource,
   /selectedResourcesDetailType === "computer"[\s\S]{0,180}activeSection: normalizedEnvironmentDetailTab,[\s\S]{0,120}onSectionChange: handleEnvironmentDetailTabChange/,
   "Computer Details must publish its supported section state to the app header.",
+);
+assert.match(
+  bootstrapAndEffectsSource,
+  /const onWorkspaceTeamsRequestRef = useRef\(onWorkspaceTeamsRequest\);[\s\S]{0,300}onWorkspaceTeamsRequestRef\.current = onWorkspaceTeamsRequest;/,
+  "Compute Resources must isolate parent-owned workspace callbacks behind a stable latest-value ref.",
+);
+const environmentHeaderSectionHandler = bootstrapAndEffectsSource.match(
+  /const handleEnvironmentDetailTabChange = useCallback\([\s\S]*?\n\s*\]\);/,
+)?.[0] || "";
+assert.match(
+  environmentHeaderSectionHandler,
+  /onWorkspaceTeamsRequestRef\.current/,
+  "The Computer header section handler must invoke the latest workspace callback without depending on its render identity.",
+);
+assert.doesNotMatch(
+  environmentHeaderSectionHandler,
+  /\n\s*onWorkspaceTeamsRequest,\s*\n/,
+  "The Computer header section handler must not create a parent/child render feedback loop from an unstable callback prop.",
 );
 const computerDetailPageComposition = computerDetailViewSource.match(
   /const environmentDetailWorkspaceSection = React\.createElement\(ComputerDetailPage, \{[\s\S]*?environmentDetailActiveSection\s*\n\s*\);/,
@@ -294,6 +331,26 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /const functionCodeIdentitySection = isFunctionServer[\s\S]{0,600}className: "playground-function-code-identity-icon"[\s\S]{0,900}className: "playground-function-code-name-input"[\s\S]{0,900}className: "file-resource-detail-page__description-input playground-function-code-description-input"/,
+  "Function Code must place its icon, editable name, and editable description above the source workspace.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /serverDeploymentMapSection,\s*isFunctionServer \? null : descriptionSection,\s*isFunctionServer \? functionInvokeSection : null/,
+  "Function Settings must not repeat the description shown on Code.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /className: "playground-function-code-tab"[\s\S]{0,180}functionCodeIdentitySection[\s\S]{0,180}className: "playground-function-code-workspace"[\s\S]{0,120}sourceFilesSection/,
+  "Function Code must compose the identity header and editor as one full-height surface.",
+);
+assert.match(
+  developServerDetailPageCss,
+  /\.playground-function-code-identity \{[\s\S]{0,240}padding: 24px;[\s\S]{0,120}border-bottom: 1px solid rgba\(255, 255, 255, 0\.1\);/,
+  "Function Code identity styling must match the Skill Code header treatment.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
   /const isEmbeddedServerCodeTab = Boolean\([\s\S]{0,260}\["function", "web_app"\]\.includes\(embeddedActiveServerKind\)[\s\S]{0,100}serverDetailTab === "code"/,
   "Source-deployable Code must derive one shared outer route scope.",
 );
@@ -495,8 +552,23 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const sourceServerDetailTabs = \[[\s\S]{0,200}\{ id: "usage", label: "Usage"[\s\S]{0,200}\{ id: "code", label: "Code"[\s\S]{0,200}\{ id: "settings", label: "Settings"/,
-  "Function and Web App details must share Usage, Code, and Settings navigation.",
+  /const sourceServerDetailTabs = \[[\s\S]{0,200}\{ id: "code", label: "Code"[\s\S]{0,200}\{ id: "usage", label: "Usage"[\s\S]{0,200}\{ id: "settings", label: "Settings"/,
+  "Source-deployable details must keep Code before Usage and Settings.",
+);
+assert.match(
+  shellCompositionSource,
+  /className: "playground-source-server-detail-header-switch"[\s\S]{0,360}activeResourcesServerKind === "function" \? "code" : "usage"[\s\S]{0,240}\{ value: "code", label: "Code" \},\s*\{ value: "usage", label: "Usage" \}/,
+  "Function details must default to Code and show it as the leftmost app-header section.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /const selectedServerKind = canonicalizePlaygroundServerKind\([\s\S]{0,420}setServerDetailTab\(selectedServerKind === "function" \? "code" : "usage"\)/,
+  "Opening a Function must select Code without changing the default for other server resources.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /if \(seedServerKind === "function"\) \{\s*setServerDetailTab\("code"\);\s*void loadServerFiles\(selectedServerId\);\s*\}/,
+  "Deep-linked Functions must open Code and load their source immediately.",
 );
 assert.doesNotMatch(
   COMPUTE_RESOURCES_PAGE_SCRIPT.match(/const serverDetailKpis = isSourceDeployableServer[\s\S]{0,1100}/)?.[0] || "",
@@ -515,7 +587,7 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /\.\.\.\(isSourceDeployableResourcesDetail\s*\?\s*\{[\s\S]{0,180}activeSection: \["usage", "code", "settings"\]\.includes\(serverDetailTab\)[\s\S]{0,700}handleSourceServerDetailTabChange\(normalizedNextSection\)/,
+  /\.\.\.\(isSourceDeployableResourcesDetail\s*\?\s*\{[\s\S]{0,180}activeSection: \["usage", "code", "settings"\]\.includes\(serverDetailTab\)[\s\S]{0,1200}handleSourceServerDetailTabChange\(normalizedNextSection\)/,
   "Function and Web App details must publish controlled section navigation to the app header.",
 );
 assert.match(
@@ -575,8 +647,8 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /serverDeploymentMapSection,\s*descriptionSection,\s*isFunctionServer \? functionInvokeSection : null,\s*serverSettingsResourcesTable,\s*connectionsSection/,
-  "Source settings must share deployment, description, resources, and connections while retaining Function invocation.",
+  /serverDeploymentMapSection,\s*isFunctionServer \? null : descriptionSection,\s*isFunctionServer \? functionInvokeSection : null,\s*serverSettingsResourcesTable,\s*connectionsSection/,
+  "Source settings must retain deployment, resources, and connections while Function description lives exclusively on Code.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -650,8 +722,8 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /className: "playground-server-settings-tab"[\s\S]{0,900}serverDeploymentMapSection,\s*descriptionSection,/,
-  "Managed server Settings must render Deployment region before Description.",
+  /className: "playground-server-settings-tab"[\s\S]{0,900}serverDeploymentMapSection,\s*isFunctionServer \? null : descriptionSection,/,
+  "Managed server Settings must render Deployment region before the optional non-Function description.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,

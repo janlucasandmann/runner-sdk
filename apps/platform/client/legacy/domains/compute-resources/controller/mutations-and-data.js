@@ -3848,6 +3848,7 @@
                 ...current,
                 [savedServer.id]: savedServer,
               }));
+              setIsHomeViewActive(false);
               setSelectedServerId(savedServer.id);
               setDraftServer(savedServer);
               if (composerKind === "function") {

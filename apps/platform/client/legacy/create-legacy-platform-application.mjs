@@ -150,6 +150,10 @@ import {
   TESTS_APP_SCRIPT_FRAGMENTS,
 } from "../../../../src/platform-services/configure-mode/tests/index.mjs";
 import {
+  KNOWLEDGE_APP_SCRIPT_FRAGMENTS,
+  PLAYGROUND_KNOWLEDGE_CSS,
+} from "../../../../src/platform-services/configure-mode/knowledge/index.mjs";
+import {
   ASSURANCE_APP_SCRIPT_FRAGMENTS,
   PLAYGROUND_ASSURANCE_CSS,
 } from "../../../../src/platform-services/configure-mode/assurance/index.mjs";
@@ -219,6 +223,7 @@ export function createLegacyPlatformApplicationBindings({
     metronomeSidebarEntryScript: METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     metronomeRunActionMenuScript: METRONOME_APP_SCRIPT_FRAGMENTS.runActionMenu,
     configurePrimaryEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+    configureContextEntries: KNOWLEDGE_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     configureGovernanceEntries: TESTS_APP_SCRIPT_FRAGMENTS.sidebarEntry + EVALUATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry + FINE_TUNING_APP_SCRIPT_FRAGMENTS.sidebarEntry + ASSURANCE_APP_SCRIPT_FRAGMENTS.sidebarEntry + GUARDRAILS_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     configureInfrastructureEntries:
       (deploymentProfileEnvelope?.profile?.capabilities?.modelManagement === false
@@ -294,6 +299,7 @@ export function createLegacyPlatformApplicationBindings({
     EVALUATIONS_APP_SCRIPT_FRAGMENTS,
     ASSURANCE_APP_SCRIPT_FRAGMENTS,
     TESTS_APP_SCRIPT_FRAGMENTS,
+    KNOWLEDGE_APP_SCRIPT_FRAGMENTS,
     FILES_DOMAIN_FRAGMENTS,
     FILES_PAGE_RUNTIME_SCRIPT,
     FILES_PREVIEW_COMPONENTS_SCRIPT,
@@ -342,6 +348,7 @@ export function createLegacyPlatformApplicationBindings({
     PLAYGROUND_EVALUATIONS_CSS,
     PLAYGROUND_ASSURANCE_CSS,
     PLAYGROUND_TESTS_CSS,
+    PLAYGROUND_KNOWLEDGE_CSS,
     PLAYGROUND_EVALUATIONS_SCRIPT,
     PLAYGROUND_FINE_TUNING_CSS,
     PLAYGROUND_FINE_TUNING_SCRIPT,

@@ -89,10 +89,13 @@ describe("TestCaseDetailPage", () => {
     expect(
       (screen.getByLabelText("Case name") as HTMLInputElement).value,
     ).toBe("Readiness contract");
-    expect(screen.getByText("What are you testing?")).not.toBeNull();
+    expect(screen.queryByText("What are you testing?")).toBeNull();
+    expect(screen.getByRole("button", { name: "Test type" })).not.toBeNull();
+    expect(screen.getByText("Platform readiness")).not.toBeNull();
     expect(screen.getByText("Readiness requirements")).not.toBeNull();
     expect(screen.getByLabelText("Require database readiness")).not.toBeNull();
     expect(screen.getByRole("heading", { name: "Evidence" })).not.toBeNull();
+    expect(container.querySelector(".platform-settings-section__icon")).toBeNull();
     expect(screen.getByText("Case Settings")).not.toBeNull();
     expect(screen.getByText("Environment variables")).not.toBeNull();
     expect(screen.getByText("Secret references")).not.toBeNull();

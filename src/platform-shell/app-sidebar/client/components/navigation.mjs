@@ -1,5 +1,6 @@
 export function createAppSidebarNavigationScript(options = {}) {
   const configurePrimaryEntries = String(options.configurePrimaryEntries || "");
+  const configureContextEntries = String(options.configureContextEntries || "");
   const configureGovernanceEntries = String(options.configureGovernanceEntries || "");
   const configureInfrastructureEntries = String(options.configureInfrastructureEntries || "");
   const developPrimaryEntries = String(options.developPrimaryEntries || "");
@@ -37,14 +38,6 @@ ${configurePrimaryEntries}
                 onClick: handleOpenEnvironmentsShortcut,
               },
               {
-                id: "tags",
-                label: "Connectors",
-                searchAliases: ["Tags", "Plugins", "Tags and Plugins"],
-                Icon: Plug,
-                active: activePage === "tools" && (toolsView === "tags" || toolsView === "plugins"),
-                onClick: handleOpenTagsShortcut,
-              },
-              {
                 id: "skills",
                 label: "Skills",
                 Icon: SquareMousePointer,
@@ -52,11 +45,24 @@ ${configurePrimaryEntries}
                 onClick: handleOpenSkillsShortcut,
               },
               {
+                id: "configure-context-label",
+                type: "subtitle",
+                label: "Context",
+              },
+${configureContextEntries}              {
                 id: "prompts",
                 label: "Prompts",
                 Icon: MessageSquareText,
                 active: activePage === "tools" && toolsView === "prompts",
                 onClick: handleOpenPromptsShortcut,
+              },
+              {
+                id: "tags",
+                label: "Connectors",
+                searchAliases: ["Tags", "Plugins", "Tags and Plugins"],
+                Icon: Plug,
+                active: activePage === "tools" && (toolsView === "tags" || toolsView === "plugins"),
+                onClick: handleOpenTagsShortcut,
               },
               {
                 id: "configure-governance-label",

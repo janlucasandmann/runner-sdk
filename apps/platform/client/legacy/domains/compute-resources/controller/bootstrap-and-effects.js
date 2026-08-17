@@ -75,6 +75,17 @@
           onCreationRequestClose,
         }) {
           backendUrl = normalizePlaygroundRealApiBackendUrl(backendUrl);
+          const developResourceCreationModalKinds = [
+            "web_app",
+            "function",
+            "database",
+            "auth",
+            "secrets",
+            "payments",
+          ];
+          const isDevelopResourceCreationModalKind = (kind) => developResourceCreationModalKinds.includes(
+            canonicalizePlaygroundServerKind(kind)
+          );
           const databaseListScopeKey = buildPlaygroundDatabaseListScopeKey(backendUrl, requestHeaders, databaseListIdentity);
           const initialDatabaseListCacheRecord = readPlaygroundDatabaseListCache(databaseListScopeKey);
           const searchPopupInputRef = useRef(null);
@@ -102,6 +113,7 @@
           const serverVersionsLoadedRef = useRef(new Set());
           const serverDetailsCollapsedBeforeVersionsRef = useRef(null);
           const serverComposerDescriptionTextareaRef = useRef(null);
+          const serverCreationNameInputRef = useRef(null);
           const environmentGuiImageRef = useRef(null);
           const environmentGuiClickTimerRef = useRef(null);
           const environmentGuiScrollTimerRef = useRef(null);
@@ -169,8 +181,10 @@
           const databaseListScopeKeyRef = useRef(databaseListScopeKey);
           const databaseListInitialLoadScopeRef = useRef("");
           const databaseRequestHeadersRef = useRef(requestHeaders);
+          const onWorkspaceTeamsRequestRef = useRef(onWorkspaceTeamsRequest);
           databaseListScopeKeyRef.current = databaseListScopeKey;
           databaseRequestHeadersRef.current = requestHeaders;
+          onWorkspaceTeamsRequestRef.current = onWorkspaceTeamsRequest;
           const environmentAutosaveTimerRef = useRef(null);
           const environmentAutosaveQueuedRef = useRef(null);
           const environmentAutosaveInFlightRef = useRef(false);
@@ -404,13 +418,12 @@
             setEnvironmentDetailTab(normalizedNextTab);
             if (normalizedNextTab === "settings") {
               setEnvironmentPermissionChartAnimationKey((current) => current + 1);
-              if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
-                onWorkspaceTeamsRequest({});
+              if (typeof onWorkspaceTeamsRequestRef.current === "function" && !workspaceTeamsLoading) {
+                onWorkspaceTeamsRequestRef.current({});
               }
             }
           }, [
             environmentPermissionPrincipalId,
-            onWorkspaceTeamsRequest,
             workspaceTeamsLoading,
           ]);
           const [serverDetailChartTimescale, setServerDetailChartTimescale] = useState("day");
@@ -1611,7 +1624,12 @@
               && !isSourceDeployableResourcesDetail
               && Boolean(serverFileEditorState.path)
               && serverDetailTab !== "code";
-            const isResourceCreateViewOpen = Boolean(serverComposerOpen && isServersMode && normalizedEmbeddedServerKind);
+            const isResourceCreateViewOpen = Boolean(
+              serverComposerOpen
+              && isServersMode
+              && normalizedEmbeddedServerKind
+              && !isDevelopResourceCreationModalKind(normalizedEmbeddedServerKind)
+            );
             const shouldUseDetailHeader = !isHomeViewActive || isResourceCreateViewOpen;
             const environmentDetailVersions = resourceMode === "computers"
               ? readDraftEnvironmentVersions()
@@ -1703,11 +1721,15 @@
                       ? {
                           activeSection: ["usage", "code", "settings"].includes(serverDetailTab)
                             ? serverDetailTab
-                            : "usage",
+                            : canonicalizePlaygroundServerKind(draftServer?.kind || normalizedEmbeddedServerKind) === "function"
+                              ? "code"
+                              : "usage",
                           onSectionChange: (nextSection) => {
                             const normalizedNextSection = ["usage", "code", "settings"].includes(nextSection)
                               ? nextSection
-                              : "usage";
+                              : canonicalizePlaygroundServerKind(draftServer?.kind || normalizedEmbeddedServerKind) === "function"
+                                ? "code"
+                                : "usage";
                             handleSourceServerDetailTabChange(normalizedNextSection);
                           },
                         }
@@ -1728,8 +1750,8 @@
                             }
                             if (normalizedNextSection === "settings") {
                               if (draftServer?.id) void loadServerContext(draftServer.id);
-                              if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
-                                onWorkspaceTeamsRequest({});
+                              if (typeof onWorkspaceTeamsRequestRef.current === "function" && !workspaceTeamsLoading) {
+                                onWorkspaceTeamsRequestRef.current({});
                               }
                             }
                           },
@@ -1754,8 +1776,8 @@
                             }
                             if (normalizedNextSection === "settings") {
                               if (draftServer?.id) void loadServerContext(draftServer.id);
-                              if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
-                                onWorkspaceTeamsRequest({});
+                              if (typeof onWorkspaceTeamsRequestRef.current === "function" && !workspaceTeamsLoading) {
+                                onWorkspaceTeamsRequestRef.current({});
                               }
                             }
                           },
@@ -1777,8 +1799,8 @@
                             }
                             if (normalizedNextSection === "settings") {
                               if (draftServer?.id) void loadServerContext(draftServer.id);
-                              if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
-                                onWorkspaceTeamsRequest({});
+                              if (typeof onWorkspaceTeamsRequestRef.current === "function" && !workspaceTeamsLoading) {
+                                onWorkspaceTeamsRequestRef.current({});
                               }
                             }
                           },
@@ -1800,8 +1822,8 @@
                             }
                             if (normalizedNextSection === "settings") {
                               if (draftServer?.id) void loadServerContext(draftServer.id);
-                              if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
-                                onWorkspaceTeamsRequest({});
+                              if (typeof onWorkspaceTeamsRequestRef.current === "function" && !workspaceTeamsLoading) {
+                                onWorkspaceTeamsRequestRef.current({});
                               }
                             }
                           },

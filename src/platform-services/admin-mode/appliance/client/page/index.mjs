@@ -94,22 +94,6 @@ export const APPLIANCE_ADMIN_PAGE_SCRIPT = `          const formatApplianceInteg
             ];
 
             return React.createElement("section", { className: "platform-appliance-overview" },
-              React.createElement("header", { className: "platform-appliance-overview__toolbar" },
-                React.createElement("div", null,
-                  React.createElement("h2", { className: "platform-appliance-overview__title" }, "Appliance Overview"),
-                  React.createElement("p", { className: "platform-appliance-overview__description" }, "Capacity, runtime health, and cumulative local usage for this deployment.")
-                ),
-                React.createElement(PlatformSecondaryButton, {
-                  type: "button",
-                  disabled: applianceOverviewLoading,
-                  onClick: () => void loadApplianceOverview({ refresh: true }),
-                }, React.createElement(RefreshCw, {
-                  width: 14,
-                  height: 14,
-                  className: applianceOverviewLoading ? "is-spinning" : "",
-                  "aria-hidden": "true",
-                }), applianceOverviewLoading ? "Refreshing..." : "Refresh")
-              ),
               applianceOverviewError
                 ? React.createElement("div", { className: "platform-appliance-overview__warning" }, applianceOverviewError)
                 : null,

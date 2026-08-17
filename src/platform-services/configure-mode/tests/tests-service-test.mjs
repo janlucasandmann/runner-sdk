@@ -242,6 +242,10 @@ assert.match(
   PLAYGROUND_TESTS_CSS,
   /\.tests-evidence-settings-section \.platform-service-detail-page__property\s*\{\s*background:\s*transparent;/,
 );
+assert.match(
+  PLAYGROUND_TESTS_CSS,
+  /\.tests-case-detail-general__content > \.tests-case-builder\s*\{[\s\S]*?padding:\s*20px;[\s\S]*?border:\s*1px solid rgba\(255, 255, 255, 0\.075\);[\s\S]*?border-radius:\s*15px;[\s\S]*?background:\s*rgba\(255, 255, 255, 0\.075\);/,
+);
 
 const runTechnicalDetailsSource = await fs.readFile(
   new URL("./client/page/test-run-technical-details-page.tsx", import.meta.url),
@@ -265,6 +269,10 @@ assert.match(caseDetailSource, /FileResourceDetailPage/);
 assert.match(caseDetailSource, /TestCaseDefinitionBuilder/);
 assert.match(caseDetailSource, /TestCaseCodeEditor/);
 assert.match(caseDetailSource, /PlatformSwitch/);
+assert.match(
+  caseDetailSource,
+  /tests-case-detail-title-row[\s\S]*?PlatformSelector[\s\S]*?ariaLabel="Test type"[\s\S]*?applyTestCaseTargetKind/,
+);
 assert.doesNotMatch(caseDetailSource, /PlatformServiceDetailPropertyList|PlatformUiCard/);
 assert.match(caseDetailSource, /Save Changes/);
 assert.match(caseDetailSource, /Delete Case/);
@@ -286,12 +294,17 @@ const caseDefinitionBuilderSource = await fs.readFile(
   "utf8",
 );
 assert.match(caseDefinitionBuilderSource, /TEST_CASE_TYPE_OPTIONS/);
-assert.match(caseDefinitionBuilderSource, /What are you testing\?/);
+assert.doesNotMatch(caseDefinitionBuilderSource, /What are you testing\?/);
 assert.match(caseDefinitionBuilderSource, /Readiness requirements/);
 assert.match(caseDefinitionBuilderSource, /FunctionRequestFields/);
 assert.match(caseDefinitionBuilderSource, /WorkflowRequestFields/);
 assert.match(caseDefinitionBuilderSource, /ScenarioStepEditor/);
 assert.match(caseDefinitionBuilderSource, /TestAssertionBuilder/);
+assert.match(caseDefinitionBuilderSource, /PlatformInstructionsEditor/);
+assert.match(caseDefinitionBuilderSource, /editorMode="code"/);
+assert.match(caseDefinitionBuilderSource, /codeLanguage="json"/);
+assert.match(caseDefinitionBuilderSource, /codeLanguage="shell"/);
+assert.doesNotMatch(caseDefinitionBuilderSource, /<textarea/);
 assert.doesNotMatch(caseDefinitionBuilderSource, /PlatformMonacoCodeEditor/);
 
 const overviewSource = await fs.readFile(

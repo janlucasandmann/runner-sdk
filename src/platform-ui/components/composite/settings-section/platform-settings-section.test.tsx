@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import {
@@ -11,6 +13,26 @@ import {
 afterEach(cleanup);
 
 describe("PlatformSettingsSection", () => {
+  it("uses the shared 14px section title and transparent surfaces", () => {
+    const css = readFileSync(
+      path.join(
+        process.cwd(),
+        "src/platform-ui/components/composite/settings-section/settings-section.css",
+      ),
+      "utf8",
+    );
+
+    expect(css).toMatch(
+      /\.platform-settings-section__title\s*\{[\s\S]*?font-size:\s*14px;/,
+    );
+    expect(css).not.toMatch(
+      /\.platform-settings-section__header\s*\{[^}]*background:/,
+    );
+    expect(css).not.toMatch(
+      /\.platform-settings-section__body\s*\{[^}]*background:/,
+    );
+  });
+
   it("owns the shared settings section structure", () => {
     const { container } = render(
       <PlatformSettingsSectionList aria-label="Runtime settings">

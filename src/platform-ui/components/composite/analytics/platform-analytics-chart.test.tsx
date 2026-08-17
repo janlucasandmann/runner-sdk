@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlatformAnalyticsChart } from "./platform-analytics-chart.js";
 
@@ -45,6 +45,23 @@ afterEach(() => {
 });
 
 describe("PlatformAnalyticsChart", () => {
+  it("uses the centralized loading state while analytics are loading", () => {
+    const { container } = render(
+      <PlatformAnalyticsChart
+        analytics={{
+          metrics: [],
+          labels: [],
+          series: [],
+          loading: true,
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("status", { name: "Loading analytics" })).not.toBeNull();
+    expect(container.querySelector(".platform-loading-state")).not.toBeNull();
+    expect(container.querySelector(".platform-loading-state__loader")).not.toBeNull();
+  });
+
   it("uses the canonical layered area treatment for shared line charts", () => {
     render(
       <PlatformAnalyticsChart

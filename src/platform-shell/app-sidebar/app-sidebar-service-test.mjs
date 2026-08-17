@@ -11,6 +11,7 @@ const fragments = createAppSidebarScriptFragments({
   metronomeSidebarEntryScript: "        function renderSidebarMetronomeRunEntry() {}\n",
   metronomeRunActionMenuScript: "        function renderMetronomeRunActionMenu() {}\n",
   configurePrimaryEntries: "              { id: \"configure-test\", label: \"Configure Test\" },\n",
+  configureContextEntries: "              { id: \"context-test\", label: \"Context Test\" },\n",
   configureGovernanceEntries: "              { id: \"governance-test\", label: \"Governance Test\" },\n",
   configureInfrastructureEntries: "              { id: \"infrastructure-test\", label: \"Infrastructure Test\" },\n",
   developPrimaryEntries: "              { id: \"develop-test\", label: \"Develop Test\" },\n",
@@ -53,6 +54,10 @@ assert.match(
 assert.match(
   fragments.navigationItems,
   /id: "tags"[\s\S]*label: "Connectors"[\s\S]*searchAliases: \["Tags", "Plugins", "Tags and Plugins"\][\s\S]*Icon: Plug[\s\S]*toolsView === "tags" \|\| toolsView === "plugins"/,
+);
+assert.match(
+  fragments.navigationItems,
+  /id: "skills"[\s\S]*id: "configure-context-label"[\s\S]*label: "Context"[\s\S]*id: "context-test"[\s\S]*id: "prompts"[\s\S]*id: "tags"[\s\S]*label: "Connectors"[\s\S]*id: "configure-governance-label"/,
 );
 assert.doesNotMatch(fragments.navigationItems, /id: "plugins"/);
 assert.match(

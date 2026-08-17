@@ -1,6 +1,6 @@
 import Chart from "chart.js/auto";
 import { useEffect, useMemo, useRef } from "react";
-import { DotLoader } from "../../ui/dot-loader/index.js";
+import { PlatformLoadingState } from "../loading-state/index.js";
 import { resolvePlatformAnalyticsHasData } from "./platform-analytics-data.js";
 import { PlatformAnalyticsEmptyState } from "./platform-analytics-empty-state.js";
 import type {
@@ -317,15 +317,11 @@ export function PlatformAnalyticsChart({
 
   if (analytics.loading) {
     return (
-      <div className="platform-analytics-chart__state" role="status" aria-label="Loading analytics">
-        <DotLoader
-          className="platform-analytics-chart__loader"
-          dotCount={9}
-          dotSize={3}
-          gap={2}
-          speed={800}
-        />
-      </div>
+      <PlatformLoadingState
+        className="platform-analytics-chart__state"
+        message="Loading analytics"
+        centered
+      />
     );
   }
   if (analytics.error)

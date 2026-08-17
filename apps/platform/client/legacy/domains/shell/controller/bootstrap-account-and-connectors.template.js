@@ -153,6 +153,7 @@
           const [pendingThreadRunRequest, setPendingThreadRunRequest] = useState(null);
           const [pendingThreadDocumentPreviewRequest, setPendingThreadDocumentPreviewRequest] = useState(null);
           const [pendingThreadPromptAttachmentRequest, setPendingThreadPromptAttachmentRequest] = useState(null);
+          const [pendingThreadKnowledgeContext, setPendingThreadKnowledgeContext] = useState(null);
           const [threadTaskPreviewOverrides, setThreadTaskPreviewOverrides] = useState({});
           const [threadProjectRecordsById, setThreadProjectRecordsById] = useState({});
           const [threadProjectContextById, setThreadProjectContextById] = useState({});
@@ -409,7 +410,7 @@
           const resourcesViewRef = useRef(resourcesView);
           resourcesViewRef.current = resourcesView;
           const [resourcesServerKind, setResourcesServerKind] = useState("");
-  ${MODELS_APP_SCRIPT_FRAGMENTS.state}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.state}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.state}${TESTS_APP_SCRIPT_FRAGMENTS.state}${ASSURANCE_APP_SCRIPT_FRAGMENTS.state}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.state}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.state}        const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
+  ${MODELS_APP_SCRIPT_FRAGMENTS.state}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.state}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.state}${TESTS_APP_SCRIPT_FRAGMENTS.state}${KNOWLEDGE_APP_SCRIPT_FRAGMENTS.state}${ASSURANCE_APP_SCRIPT_FRAGMENTS.state}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.state}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.state}        const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
           const [projectOverviewResourceSearchQuery, setProjectOverviewResourceSearchQuery] = useState("");
           const [projectOverviewResourceViewMode, setProjectOverviewResourceViewMode] = useState("list");
           const [projectOverviewResourceToolbarPopover, setProjectOverviewResourceToolbarPopover] = useState("");

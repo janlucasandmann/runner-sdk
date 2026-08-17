@@ -1,17 +1,12 @@
 import {
   Activity,
-  Bot,
-  Braces,
   Camera,
   Check,
   FileArchive,
-  ListChecks,
   Network,
   Plus,
-  ShieldCheck,
   TerminalSquare,
   Trash2,
-  Workflow,
 } from "lucide-react";
 import {
   useCallback,
@@ -21,6 +16,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  PlatformInstructionsEditor,
+} from "../../../../../platform-ui/components/composite/instructions-editor/index.js";
 import {
   PlatformSettingsSection,
   PlatformSettingsSectionList,
@@ -33,9 +31,7 @@ import { PlatformIconButton } from "../../../../../platform-ui/components/ui/ico
 import { PlatformLabel } from "../../../../../platform-ui/components/ui/label/index.js";
 import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
 import {
-  applyTestCaseTargetKind,
   getDefaultTestCaseRequest,
-  getTestCaseExecutionProfile,
   getTestCaseTargetKind,
   TEST_CASE_TYPE_OPTIONS,
   type TestCaseDefinition,
@@ -63,7 +59,6 @@ interface JsonValueFieldProps {
   label: string;
   description?: string;
   value: unknown;
-  rows?: number;
   onChange: (value: unknown) => void;
   onValidationError: (id: string, error: string) => void;
 }
@@ -186,7 +181,6 @@ function JsonValueField({
   label,
   description,
   value,
-  rows = 7,
   onChange,
   onValidationError,
 }: JsonValueFieldProps) {
@@ -224,19 +218,24 @@ function JsonValueField({
   }
 
   return (
-    <label className="tests-case-builder__field is-span-2">
-      <span>{label}</span>
+    <div className="tests-case-builder__field tests-case-builder__editor-field is-span-2">
       {description ? <small>{description}</small> : null}
-      <textarea
+      <PlatformInstructionsEditor
+        title={label}
         value={source}
-        rows={rows}
-        spellCheck={false}
-        aria-label={label}
-        className={error ? "is-invalid" : ""}
-        onChange={(event) => update(event.currentTarget.value)}
+        onChange={update}
+        placeholder="Enter JSON."
+        ariaLabel={label}
+        historyKey={id}
+        variant="minimalistic-ui"
+        stickyHeader={false}
+        editorMode="code"
+        codeLanguage="json"
+        codePath={`${id}.json`}
+        className={`tests-case-builder__instructions-editor tests-case-builder__json-editor${error ? " is-invalid" : ""}`}
       />
       {error ? <em role="alert">{error}</em> : null}
-    </label>
+    </div>
   );
 }
 
@@ -548,7 +547,6 @@ export function TestCaseDefinitionBuilder({
 }: TestCaseDefinitionBuilderProps) {
   const target = getTestCaseTargetKind(testCase);
   const request = asRecord(testCase.request);
-  const executionProfile = getTestCaseExecutionProfile(testCase);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const structuredTopology = asRecord(request.target);
   const isBoundTopology = target === "service_topology"
@@ -595,37 +593,6 @@ export function TestCaseDefinitionBuilder({
     <div className="tests-case-builder">
       <PlatformSettingsSectionList>
         <PlatformSettingsSection
-          title="What are you testing?"
-          description="Choose the subject first. The request and evidence controls adapt to that target."
-          icon={<Braces aria-hidden="true" />}
-          bodyClassName="tests-case-builder__section-body"
-        >
-          <div className="tests-case-builder__target-layout">
-            <div className="tests-case-builder__field">
-              <span>Test type</span>
-              <PlatformSelector
-                value={target}
-                options={TEST_CASE_TYPE_OPTIONS}
-                fullWidth
-                ariaLabel="Test type"
-                onValueChange={(value) => onChange(applyTestCaseTargetKind(testCase, value))}
-              />
-            </div>
-            <div className={`tests-case-builder__execution-card is-${executionProfile.trust}`}>
-              {executionProfile.executor === "platform_worker" ? (
-                <ShieldCheck width={17} height={17} aria-hidden="true" />
-              ) : (
-                <Bot width={17} height={17} aria-hidden="true" />
-              )}
-              <span>
-                <strong>{executionProfile.label}</strong>
-                <small>{executionProfile.description}</small>
-              </span>
-            </div>
-          </div>
-        </PlatformSettingsSection>
-
-        <PlatformSettingsSection
           title={target === "command"
             ? "Command"
             : target === "agent"
@@ -642,50 +609,39 @@ export function TestCaseDefinitionBuilder({
               : target === "service_topology"
                 ? "Build an ordered set of deterministic platform operations."
                 : "Configure the exact input sent to the selected target."}
-          icon={target === "command"
-            ? <TerminalSquare aria-hidden="true" />
-            : target === "metronome_workflow"
-              ? <Workflow aria-hidden="true" />
-              : target === "agent"
-                ? <Bot aria-hidden="true" />
-                : target === "service_topology"
-                  ? <Network aria-hidden="true" />
-                  : <Activity aria-hidden="true" />}
           bodyClassName="tests-case-builder__section-body"
         >
           {target === "command" ? (
-            <label className="tests-case-builder__field">
-              <span>Command</span>
-              <textarea
-                value={testCase.command}
-                rows={10}
-                spellCheck={false}
-                aria-label="Test command"
-                placeholder="npm test"
-                onChange={(event) => onChange({
-                  ...testCase,
-                  command: event.currentTarget.value,
-                })}
-              />
-            </label>
+            <PlatformInstructionsEditor
+              title="Command"
+              value={testCase.command}
+              onChange={(command) => onChange({ ...testCase, command })}
+              placeholder="npm test"
+              ariaLabel="Test command"
+              historyKey={`${testCase.id}:command`}
+              variant="minimalistic-ui"
+              stickyHeader={false}
+              editorMode="code"
+              codeLanguage="shell"
+              codePath={`tests/cases/${testCase.id}/command.sh`}
+              className="tests-case-builder__instructions-editor tests-case-builder__command-editor"
+            />
           ) : target === "agent" ? (
-            <label className="tests-case-builder__field">
-              <span>Instructions</span>
-              <textarea
-                value={testCase.command}
-                rows={12}
-                aria-label="Agent verification instructions"
-                placeholder="Describe the exact workflow, success criteria, and evidence to retain."
-                onChange={(event) => {
-                  const instructions = event.currentTarget.value;
-                  onChange({
-                    ...testCase,
-                    command: instructions,
-                    request: instructions ? { ...request, instructions } : {},
-                  });
-                }}
-              />
-            </label>
+            <PlatformInstructionsEditor
+              title="Instructions"
+              value={testCase.command}
+              onChange={(instructions) => onChange({
+                ...testCase,
+                command: instructions,
+                request: instructions ? { ...request, instructions } : {},
+              })}
+              placeholder="Describe the exact workflow, success criteria, and evidence to retain."
+              ariaLabel="Agent verification instructions"
+              historyKey={`${testCase.id}:agent-instructions`}
+              variant="minimalistic-ui"
+              stickyHeader={false}
+              className="tests-case-builder__instructions-editor tests-case-builder__agent-editor"
+            />
           ) : target === "control_plane_readiness" ? (
             <ReadinessFields request={request} onChange={updateRequest} />
           ) : target === "computer_agents_function" ? (
@@ -789,7 +745,6 @@ export function TestCaseDefinitionBuilder({
           <PlatformSettingsSection
             title="Expected outcome"
             description="Assertions are evaluated directly against the deterministic target response."
-            icon={<ListChecks aria-hidden="true" />}
             bodyClassName="tests-case-builder__section-body"
           >
             <TestAssertionBuilder
@@ -802,7 +757,6 @@ export function TestCaseDefinitionBuilder({
         <PlatformSettingsSection
           title="Evidence"
           description="This case inherits the immutable evidence policy from its Test Plan."
-          icon={<Camera aria-hidden="true" />}
           bodyClassName="tests-case-builder__section-body"
         >
           <div className="tests-case-builder__evidence-grid">

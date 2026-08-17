@@ -6,6 +6,7 @@ export type {
   PlatformInstructionsEditorContentVariant,
   PlatformInstructionsEditorChangeContext,
   PlatformInstructionsEditorImageUpload,
+  PlatformInstructionsEditorMode,
   PlatformInstructionsEditorProps,
   PlatformInstructionsEditorUploadedImage,
   PlatformInstructionsEditorVariant,

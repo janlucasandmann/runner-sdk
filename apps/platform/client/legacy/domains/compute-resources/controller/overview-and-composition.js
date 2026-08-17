@@ -463,7 +463,7 @@
               isServersMode
               && (
                 normalizedEmbeddedServerKind === "voice_agent"
-                || (shouldShowEnvironmentHome && normalizedEmbeddedServerKind === "database")
+                || (shouldShowEnvironmentHome && isDevelopResourceCreationModalKind(normalizedEmbeddedServerKind))
               )
             ) {
               return null;
@@ -1481,7 +1481,11 @@
             }
 
   	        if (embeddedInResources) {
-  	          const shouldShowServerCreationSetup = isServersMode && serverComposerOpen && normalizedEmbeddedServerKind && normalizedEmbeddedServerKind !== "voice_agent";
+	          const shouldShowServerCreationSetup = isServersMode
+	            && serverComposerOpen
+	            && normalizedEmbeddedServerKind
+	            && normalizedEmbeddedServerKind !== "voice_agent"
+	            && !isDevelopResourceCreationModalKind(normalizedEmbeddedServerKind);
   	          const normalizedEmbeddedDatabaseDetailTab = ["data", "usage", "settings"].includes(databaseDetailTab) ? databaseDetailTab : "data";
   	          const isEmbeddedDatabaseDataTab = Boolean(isServersMode && selectedDatabaseId && !selectedServerId && normalizedEmbeddedDatabaseDetailTab === "data");
   	          const embeddedActiveServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
@@ -1598,6 +1602,7 @@
               shouldShowEnvironmentHome ? renderDatabaseRenameModal() : null,
               renderServerAuthUserComposerModal(),
               renderEnvironmentCreationSetupModal(),
+              renderDevelopResourceCreationSetupModal(),
               renderServerComposerDialog()
             );
           }
@@ -1937,6 +1942,7 @@
             shouldShowEnvironmentHome ? renderDatabaseRenameModal() : null,
             renderServerAuthUserComposerModal(),
             renderEnvironmentCreationSetupModal(),
+            renderDevelopResourceCreationSetupModal(),
             renderServerComposerDialog()
           );
         }

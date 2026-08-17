@@ -281,12 +281,6 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
               renderGuardrailDetailSidebarRow("status", "Status",
                 React.createElement(PlatformLabel, { variant: "green" }, "Active")
               ),
-              renderGuardrailDetailSidebarRow(
-                "type",
-                "Type",
-                selectedGuardrailSetReadonly ? "Default set" : "Custom set"
-              ),
-              renderGuardrailDetailSidebarRow("region", "Region", guardrailDeploymentRegion),
               renderGuardrailDetailSidebarRow("prompts", "Prompts", String(selectedGuardrailPrompts.length)),
               renderGuardrailDetailSidebarRow("creator", "Creator", guardrailCreatorValue, {
                 title: guardrailCreatorLabel,

@@ -1223,6 +1223,57 @@
                   },
                 })
               : legacyDescriptionSection;
+            const functionCodeIdentitySection = isFunctionServer
+              ? React.createElement("section", {
+                  className: "playground-function-code-identity",
+                  "aria-label": "Function identity",
+                },
+                React.createElement("span", {
+                    className: "playground-function-code-identity-icon",
+                    "aria-hidden": "true",
+                  },
+                  React.createElement(FunctionSquare, {
+                    width: 24,
+                    height: 24,
+                    strokeWidth: 1.8,
+                  })
+                ),
+                React.createElement("div", {
+                    className: "playground-function-code-identity-copy",
+                  },
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-function-code-name-input",
+                    value: draftServer.name || "",
+                    placeholder: "Untitled function",
+                    readOnly: isServerTemplatePreview,
+                    "aria-readonly": isServerTemplatePreview ? "true" : "false",
+                    "aria-label": "Function name",
+                    onChange: (event) => updateServerField("name", event.target.value),
+                    onBlur: () => {
+                      if (!isServerTemplatePreview) {
+                        void commitDraftServerIfDirty();
+                      }
+                    },
+                  }),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "file-resource-detail-page__description-input playground-function-code-description-input",
+                    value: draftServer.description || "",
+                    placeholder: "Describe what this function does.",
+                    readOnly: isServerTemplatePreview,
+                    "aria-readonly": isServerTemplatePreview ? "true" : "false",
+                    "aria-label": "Function description",
+                    onChange: (event) => updateServerField("description", event.target.value),
+                    onBlur: () => {
+                      if (!isServerTemplatePreview) {
+                        void commitDraftServerIfDirty();
+                      }
+                    },
+                  })
+                )
+              )
+              : null;
             const serverDeploymentMapSection = isSourceDeployableServer || isAuthServer || isAgentRuntimeServer || isSecretsServer || isPaymentsServer
               ? React.createElement(PlatformDeploymentMap, {
                   key: "managed-server-deployment-map",
@@ -3117,13 +3168,13 @@
             }
   
             const sourceServerDetailTabs = [
-              { id: "usage", label: "Usage", icon: ChartColumnIncreasing },
               { id: "code", label: "Code", icon: Code2 },
+              { id: "usage", label: "Usage", icon: ChartColumnIncreasing },
               { id: "settings", label: "Settings", icon: Settings },
             ];
             const normalizedServerDetailTab = isSourceDeployableServer && sourceServerDetailTabs.some((tab) => tab.id === serverDetailTab)
               ? serverDetailTab
-              : "usage";
+              : isFunctionServer ? "code" : "usage";
             const serverSharedTeamIds = getServerSharedTeamIds(draftServer);
             const serverSharedTeamIdSet = new Set(serverSharedTeamIds);
             const serverWorkspaceTeamById = new Map(normalizedEnvironmentWorkspaceTeams.map((team) => [String(team.id), team]));
@@ -3506,7 +3557,7 @@
                   + (isAgentRuntimeServer ? " is-agent-runtime-settings-tab" : ""),
               },
               serverDeploymentMapSection,
-              descriptionSection,
+              isFunctionServer ? null : descriptionSection,
               isFunctionServer ? functionInvokeSection : null,
               serverSettingsResourcesTable,
               connectionsSection,
@@ -4158,7 +4209,21 @@
                 ),
                 "is-source-server-usage-tab"
               ),
-              code: renderSourceServerDetailContent(sourceFilesSection, "is-code-tab is-source-server-code-tab"),
+              code: renderSourceServerDetailContent(
+                isFunctionServer
+                  ? React.createElement("div", {
+                      className: "playground-function-code-tab",
+                    },
+                    functionCodeIdentitySection,
+                    React.createElement("div", {
+                        className: "playground-function-code-workspace",
+                      },
+                      sourceFilesSection
+                    )
+                  )
+                  : sourceFilesSection,
+                "is-code-tab is-source-server-code-tab"
+              ),
               settings: renderSourceServerDetailContent(serverSettingsTabContent),
             };
             const sourceServerDetailWorkspace = isSourceDeployableServer

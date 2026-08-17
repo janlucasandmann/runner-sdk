@@ -129,7 +129,19 @@ assert.match(
 );
 assert.match(
   GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation,
-  /\.filter\(\(row\) => row\.runs\.length > 0\)/,
+  /\/evaluations\/runs\/guardrail-overview\?guardrailId=/,
+);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation,
+  /const loadGuardrailEvaluationCatalog = async/,
+);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation,
+  /\/evaluations\?view=summary&limit=500/,
+);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation,
+  /accessor: \(row\) => row\.runCount/,
 );
 assert.match(
   GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation,
@@ -178,6 +190,8 @@ assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /playground-g
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /ariaLabel: "Choose guardrail owner"/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /renderGuardrailShareTeamModal\(\)/);
 assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /renderGuardrailDetailSidebarRow\(\s*"id"/);
+assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /renderGuardrailDetailSidebarRow\(\s*"type"/);
+assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /renderGuardrailDetailSidebarRow\(\s*"region"/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.editor, /React\.createElement\(PlatformVersionSaveDialog/);
 assert.match(
   GUARDRAILS_PAGE_CSS,

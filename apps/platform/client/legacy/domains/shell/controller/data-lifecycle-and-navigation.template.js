@@ -2429,6 +2429,11 @@
   ${DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics}
           function handleNewThread(options = {}) {
             const nextInitialPrompt = normalizePlaygroundInitialPrompt(options?.initialPrompt);
+            const knowledgeLibraryIds = Array.from(new Set(
+              (Array.isArray(options?.knowledgeLibraryIds) ? options.knowledgeLibraryIds : [])
+                .map((libraryId) => String(libraryId || "").trim())
+                .filter(Boolean)
+            ));
             const promptAttachment = options?.promptAttachment && typeof options.promptAttachment === "object"
               ? options.promptAttachment
               : null;
@@ -2446,6 +2451,12 @@
             setMetronomeRunTraceSelection(null);
             setThreadAgentSelectionOverride(null);
             setPendingThreadRunRequest(null);
+            setPendingThreadKnowledgeContext(knowledgeLibraryIds.length > 0
+              ? {
+                  enabled: true,
+                  libraryIds: knowledgeLibraryIds,
+                }
+              : null);
             setPendingThreadPromptAttachmentRequest(normalizedPromptAttachmentId
               ? {
                   token: Date.now().toString(36) + Math.random().toString(36).slice(2),
@@ -2495,6 +2506,7 @@
             setPendingThreadRunRequest(null);
             setPendingThreadDocumentPreviewRequest(null);
             setPendingThreadPromptAttachmentRequest(null);
+            setPendingThreadKnowledgeContext(null);
             setThreadTaskOpenRequest(null);
             setThreadSubagentDetailOpen(false);
             setThreadDeepResearchDetailOpen(false);
@@ -3241,7 +3253,7 @@
           }
   
   ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.navigation}
-  ${MODELS_APP_SCRIPT_FRAGMENTS.navigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.navigation}${TESTS_APP_SCRIPT_FRAGMENTS.navigation}${ASSURANCE_APP_SCRIPT_FRAGMENTS.navigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.navigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.navigation}${API_KEYS_APP_SCRIPT_FRAGMENTS.navigation}
+  ${MODELS_APP_SCRIPT_FRAGMENTS.navigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.navigation}${TESTS_APP_SCRIPT_FRAGMENTS.navigation}${KNOWLEDGE_APP_SCRIPT_FRAGMENTS.navigation}${ASSURANCE_APP_SCRIPT_FRAGMENTS.navigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.navigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.navigation}${API_KEYS_APP_SCRIPT_FRAGMENTS.navigation}
   ${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.navigation}
   ${SECURITY_APP_SCRIPT_FRAGMENTS.navigation}
   ${EVIDENCE_AGENTS_APP_SCRIPT_FRAGMENTS.navigation}
@@ -3264,6 +3276,7 @@
             if (mode === "configure") {
               return (activePage === "configure" && configureHomeTab !== "notifications")
                 || activePage === "tests"
+                || activePage === "knowledge"
                 || activePage === "assurance"
                 || activePage === "models"
                 || activePage === "resource-templates"

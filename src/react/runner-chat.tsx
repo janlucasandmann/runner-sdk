@@ -2146,7 +2146,11 @@ export function RunnerChat({
   const isPassiveWarmEnvironmentReady = !useComputerAgentsMode || Boolean(effectiveEnvironmentId);
   const isPassiveWarmAgentReady = !useComputerAgentsMode || Boolean(effectiveAgentId);
   const textareaAllowsPromptAfterStagedCommand = threadContextActionAllowsPrompt(stagedThreadContextCommand);
-  const hasCustomEmptyStateActive = turns.length === 0 && emptyState !== undefined && emptyState !== null;
+  const hasCustomEmptyStateActive =
+    !isPreparingRun &&
+    turns.length === 0 &&
+    emptyState !== undefined &&
+    emptyState !== null;
 
   function focusComposerSoon(options?: { preventScroll?: boolean }) {
     if (typeof window === "undefined") {
@@ -4971,6 +4975,7 @@ export function RunnerChat({
         return;
       }
 
+      setIsPreparingRun(true);
       const implicitAttachmentEntries =
         await createRunnerImplicitAttachments(implicitAttachments);
       attachmentEntries = implicitAttachmentEntries.length > 0
@@ -4978,7 +4983,6 @@ export function RunnerChat({
         : composerAttachmentEntries;
 
       if (selectedComposerProjectTask && onComposerProjectTaskSubmit && taskText) {
-        setIsPreparingRun(true);
         const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
         const githubRepo = buildSelectedGithubRepoReference(attachmentEntries, {
           repositories: githubRepositories,
@@ -5011,7 +5015,6 @@ export function RunnerChat({
           await stopSpeechToText();
           return;
         }
-        setIsPreparingRun(false);
       }
       if (stagedBacklogMissionControlCommand && onBacklogMissionControlSubmit) {
         const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
@@ -5196,23 +5199,22 @@ export function RunnerChat({
         return;
       }
 
-      setIsPreparingRun(true);
-        const execution = await executeThreadRun(executionTaskText, executionAttachmentEntries, {
-          turnId: participantNeutralTurnId || undefined,
-          quotedSelection,
-          backlogCommand,
-          resourceCreationCommand,
-          agentCreationCommand,
-          skillCreationCommand,
-          slideCreationCommand,
-          researchCreationCommand,
-          scrapeCreationCommand,
-          parseCreationCommand,
-          adCreationCommand,
-          connectorsOverride: runConnectorPayload,
-          extraResolvedAttachments: previewImageRunAttachments,
-          displayPromptOverride: executionTaskText === taskText ? undefined : taskText,
-        });
+      const execution = await executeThreadRun(executionTaskText, executionAttachmentEntries, {
+        turnId: participantNeutralTurnId || undefined,
+        quotedSelection,
+        backlogCommand,
+        resourceCreationCommand,
+        agentCreationCommand,
+        skillCreationCommand,
+        slideCreationCommand,
+        researchCreationCommand,
+        scrapeCreationCommand,
+        parseCreationCommand,
+        adCreationCommand,
+        connectorsOverride: runConnectorPayload,
+        extraResolvedAttachments: previewImageRunAttachments,
+        displayPromptOverride: executionTaskText === taskText ? undefined : taskText,
+      });
       ensuredThreadId = execution.threadId;
     } catch (error) {
       const normalizedError = error instanceof Error ? error : new Error(String(error));
@@ -6596,7 +6598,11 @@ export function RunnerChat({
     useComputerAgentsMode,
   ]);
 
-  const hasCustomEmptyState = turns.length === 0 && emptyState !== undefined && emptyState !== null;
+  const hasCustomEmptyState =
+    !isPreparingRun &&
+    turns.length === 0 &&
+    emptyState !== undefined &&
+    emptyState !== null;
   const shouldRenderInlineComposerWithEmptyState =
     hasCustomEmptyState && emptyStateAfterComposer !== undefined && emptyStateAfterComposer !== null;
   const documentPreviewWidthStyleValue = previewedDocumentAttachment
@@ -6618,7 +6624,7 @@ export function RunnerChat({
   return (
     <div
       ref={rootRef}
-      className={`tb-runner-chat ${shouldReserveDocumentPreviewWidth ? "tb-runner-chat-document-preview-open" : ""} ${isPreviewedDocumentImage ? "tb-runner-chat-image-preview-open" : ""} ${isPreviewedDocumentImage && hasPortalDocumentPreview ? "tb-runner-chat-image-preview-portal-open" : ""} ${isPreviewedDocumentImage && !hasPortalDocumentPreview ? "tb-runner-chat-image-preview-local-open" : ""} ${previewedDocumentAttachment && isDocumentPreviewMaximized ? "tb-runner-chat-document-preview-maximized" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${detachedExecutionWorkbenchOpen ? "tb-runner-chat-execution-workbench-open" : ""} ${className || ""}`.trim()}
+      className={`tb-runner-chat ${isPreparingRun ? "is-run-preparing" : ""} ${shouldReserveDocumentPreviewWidth ? "tb-runner-chat-document-preview-open" : ""} ${isPreviewedDocumentImage ? "tb-runner-chat-image-preview-open" : ""} ${isPreviewedDocumentImage && hasPortalDocumentPreview ? "tb-runner-chat-image-preview-portal-open" : ""} ${isPreviewedDocumentImage && !hasPortalDocumentPreview ? "tb-runner-chat-image-preview-local-open" : ""} ${previewedDocumentAttachment && isDocumentPreviewMaximized ? "tb-runner-chat-document-preview-maximized" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${detachedExecutionWorkbenchOpen ? "tb-runner-chat-execution-workbench-open" : ""} ${className || ""}`.trim()}
       onDragEnterCapture={handleRootFileDragEnter}
       onDragOverCapture={handleRootFileDragOver}
       onDragLeaveCapture={handleRootFileDragLeave}

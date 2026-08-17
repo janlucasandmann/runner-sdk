@@ -77,6 +77,77 @@ assert.doesNotMatch(
   computerCreationControllerSource,
   /function renderEnvironmentComposerDialog/,
 );
+assert.match(
+  computerCreationControllerSource,
+  /function renderDevelopResourceCreationSetupModal/,
+);
+const developResourceCreationModalSource = computerCreationControllerSource.match(
+  /function renderDevelopResourceCreationSetupModal[\s\S]*?\n\s*function renderServerComposerDialog/,
+)?.[0] || "";
+assert.match(
+  developResourceCreationModalSource,
+  /React\.createElement\(PlatformModal/,
+);
+assert.match(
+  developResourceCreationModalSource,
+  /headerVariant: "search"/,
+);
+assert.match(
+  developResourceCreationModalSource,
+  /inputRef: serverCreationNameInputRef/,
+);
+assert.match(
+  developResourceCreationModalSource,
+  /creationIconByKind = \{[\s\S]*web_app: Globe,[\s\S]*function: FunctionSquare,[\s\S]*database: Database,[\s\S]*auth: Shield,[\s\S]*secrets: Key,[\s\S]*payments: ReceiptText/,
+);
+assert.match(
+  developResourceCreationModalSource,
+  /React\.createElement\(PlatformInstructionsEditor[\s\S]*variant: "minimalistic-ui"/,
+);
+assert.match(
+  developResourceCreationModalSource,
+  /React\.createElement\(PlatformSelector[\s\S]*isWebAppComposer[\s\S]*"Template"[\s\S]*"Auth"/,
+);
+assert.doesNotMatch(
+  developResourceCreationModalSource,
+  /renderServerCreationSettings|"Settings"|"Type"|"Region"|databaseLocation/,
+);
+assert.doesNotMatch(
+  developResourceCreationModalSource,
+  /PlatformModalBackdrop|PlatformModalSurface/,
+);
+
+const resourceCreationCompositionSource = await fs.readFile(
+  new URL(
+    "../../../apps/platform/client/legacy/domains/compute-resources/controller/overview-and-composition.js",
+    import.meta.url,
+  ),
+  "utf8",
+);
+assert.match(
+  resourceCreationCompositionSource,
+  /!isDevelopResourceCreationModalKind\(normalizedEmbeddedServerKind\)/,
+);
+assert.match(
+  resourceCreationCompositionSource,
+  /renderDevelopResourceCreationSetupModal\(\)/,
+);
+
+const resourceCreationHeaderSource = await fs.readFile(
+  new URL(
+    "../../../apps/platform/client/legacy/domains/compute-resources/controller/bootstrap-and-effects.js",
+    import.meta.url,
+  ),
+  "utf8",
+);
+assert.match(
+  resourceCreationHeaderSource,
+  /const developResourceCreationModalKinds = \[[\s\S]*"web_app"[\s\S]*"function"[\s\S]*"database"[\s\S]*"auth"[\s\S]*"secrets"[\s\S]*"payments"[\s\S]*\]/,
+);
+assert.match(
+  resourceCreationHeaderSource,
+  /const isResourceCreateViewOpen = Boolean\([\s\S]*serverComposerOpen[\s\S]*!isDevelopResourceCreationModalKind\(normalizedEmbeddedServerKind\)[\s\S]*\);[\s\S]*const shouldUseDetailHeader = !isHomeViewActive \|\| isResourceCreateViewOpen/,
+);
 
 const computerCreationLifecycleSource = await fs.readFile(
   new URL(
@@ -117,6 +188,26 @@ assert.match(
   computerCreationRoutingSource,
   /function openEnvironmentComposer\(\)[\s\S]*setEnvironmentComposerDraft\(\{[\s\S]*name: "",/,
 );
+assert.match(
+  computerCreationRoutingSource,
+  /function openServerComposer\(serverKind = ""\)[\s\S]*shouldKeepEmbeddedResourceOverviewVisible[\s\S]*isDevelopResourceCreationModalKind\(normalizedServerKind\)[\s\S]*setIsHomeViewActive\(shouldKeepEmbeddedResourceOverviewVisible\)/,
+);
+assert.match(
+  computerCreationRoutingSource,
+  /function openServerComposer\(serverKind = ""\)[\s\S]*isDevelopResourceCreationModalKind\(normalizedServerKind\) \? \{ name: "" \} : \{\}/,
+);
+
+const serverCreationMutationSource = await fs.readFile(
+  new URL(
+    "../../../apps/platform/client/legacy/domains/compute-resources/controller/mutations-and-data.js",
+    import.meta.url,
+  ),
+  "utf8",
+);
+assert.match(
+  serverCreationMutationSource,
+  /const savedServer = await persistServerRecord[\s\S]*setIsHomeViewActive\(false\);[\s\S]*setSelectedServerId\(savedServer\.id\)/,
+);
 
 const platformStylesSource = await fs.readFile(
   new URL(
@@ -132,6 +223,14 @@ assert.match(
 assert.match(
   platformStylesSource,
   /\.playground-computer-creation-modal \.playground-environment-profile-card\s*\{[\s\S]*border-radius:\s*10px;/,
+);
+assert.match(
+  platformStylesSource,
+  /\.playground-develop-resource-creation-modal\.platform-modal-surface\s*\{[\s\S]*height:\s*auto;/,
+);
+assert.match(
+  platformStylesSource,
+  /\.playground-develop-resource-creation-modal \.playground-develop-resource-creation-description-editor\.platform-instructions-editor\s*\{[\s\S]*margin:\s*24px 0 0;/,
 );
 
 console.log("Platform resource creation host contracts passed.");

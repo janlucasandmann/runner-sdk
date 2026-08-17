@@ -69,6 +69,22 @@
 
             function normalizePromptRecord(value) {
               const source = value && typeof value === "object" ? value : {};
+              const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+                ? source.metadata
+                : {};
+              const creator = metadata.creator && typeof metadata.creator === "object" && !Array.isArray(metadata.creator)
+                ? metadata.creator
+                : {};
+              const owner = metadata.owner && typeof metadata.owner === "object" && !Array.isArray(metadata.owner)
+                ? metadata.owner
+                : {};
+              const identityName = (primary, fallback = "") => {
+                const normalizedPrimary = String(primary || "").trim();
+                return ["", "unknown", "unknown user", "you", "me", "current user"]
+                  .includes(normalizedPrimary.toLowerCase())
+                  ? String(fallback || normalizedPrimary).trim()
+                  : normalizedPrimary;
+              };
               const versions = Array.isArray(source.versions)
                 ? source.versions.map((version, index) => {
                     const rawNumber = Number(
@@ -98,23 +114,21 @@
                 // string is a valid saved prompt and must never fall through
                 // to stale top-level content from an earlier version.
                 markdown: String(currentVersion?.markdown ?? source.markdown ?? ""),
-                creatorId: String(source.creatorId || source.creatorUserId || "").trim(),
-                creatorEmail: String(source.creatorEmail || "").trim(),
-                creatorName: String(source.creatorName || "").trim(),
-                creatorAvatarUrl: String(source.creatorAvatarUrl || "").trim(),
-                ownerId: String(source.ownerId || source.ownerUserId || "").trim(),
-                ownerEmail: String(source.ownerEmail || "").trim(),
-                ownerName: String(source.ownerName || "").trim(),
-                ownerAvatarUrl: String(source.ownerAvatarUrl || "").trim(),
+                creatorId: String(source.creatorId || source.creatorUserId || creator.id || creator.userId || "").trim(),
+                creatorEmail: String(source.creatorEmail || creator.email || "").trim(),
+                creatorName: identityName(source.creatorName, creator.name),
+                creatorAvatarUrl: String(source.creatorAvatarUrl || creator.avatarUrl || "").trim(),
+                ownerId: String(source.ownerId || source.ownerUserId || owner.id || owner.userId || "").trim(),
+                ownerEmail: String(source.ownerEmail || owner.email || "").trim(),
+                ownerName: identityName(source.ownerName, owner.name),
+                ownerAvatarUrl: String(source.ownerAvatarUrl || owner.avatarUrl || "").trim(),
                 currentVersion: currentVersion
                   ? { ...currentVersion, markdown: String(currentVersion.markdown ?? "") }
                   : null,
                 currentVersionId: String(source.currentVersionId || currentVersion?.id || "").trim(),
                 currentVersionNumber: Number(currentVersion?.number ?? source.currentVersionNumber ?? 1),
                 publishedVersionId: String(source.publishedVersionId || "").trim(),
-                metadata: source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
-                  ? source.metadata
-                  : {},
+                metadata,
                 permissionSet: source.permissionSet && typeof source.permissionSet === "object" && !Array.isArray(source.permissionSet)
                   ? source.permissionSet
                   : null,
@@ -1427,6 +1441,14 @@
 
             function isPromptCreatedByCurrentUser(prompt) {
               const normalizeIdentityKey = (value) => String(value || "").trim().toLowerCase();
+              const placeholderIdentityNames = new Set([
+                "",
+                "unknown",
+                "unknown user",
+                "you",
+                "me",
+                "current user",
+              ]);
               const currentIdentityKeys = new Set([
                 normalizeIdentityKey(currentUserId),
                 normalizeIdentityKey(currentUserEmail),
@@ -1440,13 +1462,20 @@
 
               const creatorName = normalizeIdentityKey(prompt?.creatorName);
               const currentName = normalizeIdentityKey(currentUserName);
-              if (!creatorName || ["you", "me", "current user"].includes(creatorName)) return true;
+              if (placeholderIdentityNames.has(creatorName)) return true;
               return Boolean(currentName && creatorName === currentName);
             }
 
             function resolvePromptCreatorName(prompt, isCreatedByCurrentUser) {
               const creatorName = String(prompt?.creatorName || "").trim();
-              const isPlaceholder = ["you", "me", "current user"].includes(creatorName.toLowerCase());
+              const isPlaceholder = [
+                "",
+                "unknown",
+                "unknown user",
+                "you",
+                "me",
+                "current user",
+              ].includes(creatorName.toLowerCase());
               if (creatorName && !isPlaceholder) return creatorName;
               if (isCreatedByCurrentUser) {
                 return String(

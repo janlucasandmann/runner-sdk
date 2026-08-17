@@ -2811,7 +2811,7 @@
   	          );
   	        }
   
-  	        function renderServerCreationSetupPage() {
+	        function renderServerCreationSetupPage() {
   	          const composerDraft = serverComposerDraft || buildPlaygroundDefaultServerDraft();
   	          const composerKind = canonicalizePlaygroundServerKind(composerDraft.kind);
   	          const isSaving = serverComposerSaveState.isSaving;
@@ -2874,13 +2874,212 @@
   	                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverComposerSaveState.error)
   	                : null
   	            )
-  	          );
-  	        }
-  
-  	        function renderServerComposerDialog() {
-  	          if (!serverComposerOpen || (embeddedInResources && isServersMode && normalizedEmbeddedServerKind)) {
-  	            return null;
-  	          }
+	          );
+	        }
+
+	        function renderDevelopResourceCreationSetupModal() {
+	          if (!serverComposerOpen) {
+	            return null;
+	          }
+
+	          const composerDraft = serverComposerDraft || buildPlaygroundDefaultServerDraft();
+	          const composerKind = canonicalizePlaygroundServerKind(composerDraft.kind);
+	          if (!isDevelopResourceCreationModalKind(composerKind)) {
+	            return null;
+	          }
+
+	          const isSaving = Boolean(serverComposerSaveState.isSaving);
+	          const creationCopy = getServerCreationCopy(composerKind);
+	          const isWebAppComposer = composerKind === "web_app";
+	          const isFunctionComposer = composerKind === "function";
+	          const isAiChatAppTemplate = isWebAppComposer && composerDraft.template === "ai_chat_app";
+	          const authMode = composerDraft.authMode === "private" ? "private" : "public";
+	          const creationIconByKind = {
+	            web_app: Globe,
+	            function: FunctionSquare,
+	            database: Database,
+	            auth: Shield,
+	            secrets: Key,
+	            payments: ReceiptText,
+	          };
+	          const CreationIcon = creationIconByKind[composerKind] || Server;
+	          const creationKindClass = String(composerKind || "resource").replace(/_/g, "-");
+	          const orderedComposerAgentOptions = [...serverAgentOptions]
+	            .sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
+	          const renderCreationSelectorRow = (key, label, selectorProps) => React.createElement("div", {
+	              className: "playground-tasks-detail-fact playground-develop-resource-creation-setting-row",
+	              key,
+	            },
+	            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
+	            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+	              React.createElement(PlatformSelector, {
+	                alignment: "end",
+	                popupAlignment: "right",
+	                fullWidth: true,
+	                disabled: isSaving,
+	                className: "playground-develop-resource-creation-selector",
+	                triggerClassName: "playground-develop-resource-creation-selector-trigger",
+	                popupClassName: "playground-develop-resource-creation-selector-popup",
+	                ...selectorProps,
+	              })
+	            )
+	          );
+	          const settingRows = [];
+
+	          if (isWebAppComposer) {
+	            settingRows.push(renderCreationSelectorRow("template", "Template", {
+	              value: composerDraft.template === "ai_chat_app" ? "ai_chat_app" : "blank",
+	              options: [
+	                { value: "blank", label: "Blank Web App" },
+	                { value: "ai_chat_app", label: "AI Chat App" },
+	              ],
+	              onValueChange: (value) => {
+	                updateServerComposerField("template", value);
+	                if (value === "ai_chat_app" && !serverAgentOptionsLoading && serverAgentOptions.length === 0) {
+	                  void loadServerAgentOptions();
+	                }
+	              },
+	              ariaLabel: "Select web app template",
+	            }));
+	          }
+
+	          if (isAiChatAppTemplate) {
+	            settingRows.push(renderCreationSelectorRow("agent", "Agent", {
+	              value: composerDraft.templateAgentId || "",
+	              options: [
+	                {
+	                  value: "",
+	                  label: serverAgentOptionsLoading ? "Loading agents..." : "Choose agent",
+	                  disabled: true,
+	                },
+	                ...orderedComposerAgentOptions.map((agent) => ({
+	                  value: agent.id,
+	                  label: agent.name || agent.id,
+	                })),
+	              ],
+	              onValueChange: (value) => updateServerComposerField("templateAgentId", value),
+	              ariaLabel: "Select web app agent",
+	              disabled: isSaving || serverAgentOptionsLoading,
+	            }));
+	            settingRows.push(renderCreationSelectorRow("computer", "Computer", {
+	              value: composerDraft.templateEnvironmentId || "",
+	              options: [
+	                {
+	                  value: "",
+	                  label: orderedEnvironments.length === 0 ? "No computers available" : "Choose computer",
+	                  disabled: true,
+	                },
+	                ...orderedEnvironments.map((environment) => ({
+	                  value: environment.id,
+	                  label: environment.name || environment.id,
+	                })),
+	              ],
+	              onValueChange: (value) => updateServerComposerField("templateEnvironmentId", value),
+	              ariaLabel: "Select web app computer",
+	              disabled: isSaving || orderedEnvironments.length === 0,
+	            }));
+	          }
+
+	          if (isWebAppComposer || isFunctionComposer) {
+	            settingRows.push(renderCreationSelectorRow("auth", "Auth", {
+	              value: authMode,
+	              options: [
+	                { value: "public", label: "Public" },
+	                { value: "private", label: "Private" },
+	              ],
+	              onValueChange: (value) => updateServerComposerField("authMode", value),
+	              ariaLabel: "Select " + formatPlaygroundServerKindLabel(composerKind).toLowerCase() + " authentication",
+	            }));
+	          }
+
+	          return React.createElement(PlatformModal, {
+	            open: serverComposerOpen,
+	            title: creationCopy.submitLabel,
+	            description: creationCopy.subtitle,
+	            headerVariant: "search",
+	            headerSearchProps: {
+	              icon: CreationIcon,
+	              inputRef: serverCreationNameInputRef,
+	              value: composerDraft.name || "",
+	              placeholder: creationCopy.namePlaceholder,
+	              "aria-label": creationCopy.namePlaceholder,
+	              title: composerDraft.name || creationCopy.namePlaceholder,
+	              disabled: isSaving,
+	              onKeyDown: (event) => event.stopPropagation(),
+	              onChange: (event) => updateServerComposerField("name", event.target.value),
+	            },
+	            size: "medium",
+	            width: "min(720px, calc(100vw - 48px))",
+	            maxHeight: "min(720px, calc(100dvh - 48px))",
+	            as: "form",
+	            className: "playground-agents-creation-modal playground-server-creation-form playground-develop-resource-creation-modal is-" + creationKindClass,
+	            bodyClassName: "playground-agents-creation-modal-body playground-develop-resource-creation-modal-body",
+	            footerClassName: "playground-agents-creation-modal-footer playground-develop-resource-creation-modal-footer",
+	            initialFocusRef: serverCreationNameInputRef,
+	            closeButtonLabel: "Close " + formatPlaygroundServerKindLabel(composerKind).toLowerCase() + " creation",
+	            closeButtonDisabled: isSaving,
+	            closeOnBackdrop: !isSaving,
+	            closeOnEscape: !isSaving,
+	            onClose: closeServerComposer,
+	            surfaceProps: {
+	              onKeyDown: handleComposerSubmitShortcut,
+	              onSubmit: (event) => void handleServerComposerSubmit(event),
+	            },
+	            footer: React.createElement(React.Fragment, null,
+	              React.createElement(PlatformSecondaryButton, {
+	                size: "medium",
+	                type: "button",
+	                onClick: closeServerComposer,
+	                disabled: isSaving,
+	              }, "Cancel"),
+	              React.createElement(PlatformPrimaryButton, {
+	                size: "medium",
+	                type: "submit",
+	                disabled: isSaving
+	                  || !String(composerDraft.name || "").trim()
+	                  || (isAiChatAppTemplate && (
+	                    !String(composerDraft.templateAgentId || "").trim()
+	                    || !String(composerDraft.templateEnvironmentId || "").trim()
+	                  )),
+	              }, isSaving ? "Creating..." : creationCopy.submitLabel)
+	            ),
+	          },
+	            React.createElement("div", { className: "playground-agents-creation-config-box playground-develop-resource-creation-modal-config" },
+	              React.createElement(PlatformInstructionsEditor, {
+	                value: composerDraft.description || "",
+	                onChange: (value) => updateServerComposerField("description", value),
+	                title: "Description",
+	                placeholder: creationCopy.descriptionPlaceholder,
+	                ariaLabel: formatPlaygroundServerKindLabel(composerKind) + " description",
+	                readOnly: isSaving,
+	                stickyHeader: false,
+	                historyKey: "new-" + composerKind + "-description",
+	                variant: "minimalistic-ui",
+	                className: "playground-develop-resource-creation-description-editor",
+	              }),
+	              settingRows.length > 0
+	                ? React.createElement("div", { className: "playground-tasks-detail-facts playground-develop-resource-creation-settings" },
+	                    React.createElement("div", { className: "playground-tasks-detail-facts-body" }, settingRows)
+	                  )
+	                : null
+	            ),
+	            serverComposerSaveState.error
+	              ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverComposerSaveState.error)
+	              : null
+	          );
+	        }
+
+	        function renderServerComposerDialog() {
+	          const activeComposerKind = canonicalizePlaygroundServerKind(
+	            (serverComposerDraft || buildPlaygroundDefaultServerDraft()).kind
+	          );
+	          if (
+	            !serverComposerOpen
+	            || isDevelopResourceCreationModalKind(activeComposerKind)
+	            || (embeddedInResources && isServersMode && normalizedEmbeddedServerKind)
+	          ) {
+	            return null;
+	          }
   
             const composerDraft = serverComposerDraft || buildPlaygroundDefaultServerDraft();
             const composerKind = canonicalizePlaygroundServerKind(composerDraft.kind);

@@ -1,9 +1,17 @@
-import { ChevronRight, Play, Plus, SquarePen, Trash2 } from "lucide-react";
+import {
+  ChartColumnIncreasing,
+  ChevronRight,
+  Play,
+  Plus,
+  SquarePen,
+  Trash2,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
 } from "../../../../../../platform-ui/components/composite/data-table/index.js";
+import { PlatformEmptyState } from "../../../../../../platform-ui/components/composite/empty-state/index.js";
 import {
   ResourceOverviewIdentityCell,
   ResourceOverviewPage,
@@ -229,7 +237,14 @@ export function EvaluationsOverviewPage({
         getRowAriaLabel: (row) => row.name,
         loading,
         error: error || undefined,
-        emptyState: "No evaluations yet.",
+        emptyState: (
+          <PlatformEmptyState
+            icon={ChartColumnIncreasing}
+            title="No evaluations yet"
+            description="Create an evaluation to measure agent quality against repeatable cases and criteria."
+            primaryAction={{ label: "Create Evaluation", onClick: onCreate }}
+          />
+        ),
         noResultsState: "No evaluations match this view.",
       }}
     />

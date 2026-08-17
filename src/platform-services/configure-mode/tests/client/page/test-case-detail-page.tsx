@@ -17,11 +17,13 @@ import { PlatformSwitch } from "../../../../../platform-ui/components/ui/switch/
 import { FileResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
 import type { TestsApi } from "../api/index.js";
 import {
+  applyTestCaseTargetKind,
   applyTestCasePresentation,
   getTestCaseCategory,
   getTestCaseExecutionProfile,
   getTestCaseTargetKind,
   TEST_CASE_CATEGORY_OPTIONS,
+  TEST_CASE_TYPE_OPTIONS,
   validateTestCaseConfiguration,
   type TestCaseCategory,
   type TestCaseDefinition,
@@ -516,17 +518,31 @@ export function TestCaseDetailPage({
 
   const metadata = (
     <div className="tests-case-detail-identity">
-      <input
-        type="text"
-        className="tests-case-detail-title-input"
-        value={draft.name}
-        placeholder="Case name"
-        aria-label="Case name"
-        onChange={(event) => setDraft((current) => ({
-          ...current,
-          name: event.currentTarget.value,
-        }))}
-      />
+      <div className="tests-case-detail-title-row">
+        <input
+          type="text"
+          className="tests-case-detail-title-input"
+          value={draft.name}
+          placeholder="Case name"
+          aria-label="Case name"
+          onChange={(event) => setDraft((current) => ({
+            ...current,
+            name: event.currentTarget.value,
+          }))}
+        />
+        <PlatformSelector
+          value={targetKind}
+          options={TEST_CASE_TYPE_OPTIONS}
+          ariaLabel="Test type"
+          alignment="end"
+          popupAlignment="right"
+          popupWidth="min(330px, calc(100vw - 48px))"
+          className="tests-case-detail-type-selector"
+          onValueChange={(value) => setDraft((current) => (
+            applyTestCaseTargetKind(current, value)
+          ))}
+        />
+      </div>
       <input
         type="text"
         className="file-resource-detail-page__description-input tests-case-detail-description-input"

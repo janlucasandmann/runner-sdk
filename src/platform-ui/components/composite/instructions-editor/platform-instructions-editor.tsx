@@ -52,6 +52,7 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { visit } from "unist-util-visit";
 import { PlatformSecondaryButton } from "../../ui/button/index.js";
+import { PlatformMonacoCodeEditor } from "../code-editor-workspace/platform-monaco-code-editor.js";
 import { resolvePlatformFileExplorerFileKind } from "../file-explorer/index.js";
 import { ParagraphQuote, remarkParagraphQuotes } from "./paragraph-quote.js";
 import {
@@ -97,6 +98,7 @@ export interface PlatformMarkdownRendererProps {
 }
 
 export type PlatformInstructionsEditorVariant = "default" | "minimalistic-ui";
+export type PlatformInstructionsEditorMode = "rich-text" | "code";
 export type PlatformInstructionsEditorContentVariant =
   | "text"
   | "file-enabled"
@@ -127,6 +129,9 @@ export interface PlatformInstructionsEditorProps {
   stickyHeader?: boolean;
   historyKey?: string | number;
   variant?: PlatformInstructionsEditorVariant;
+  editorMode?: PlatformInstructionsEditorMode;
+  codeLanguage?: string;
+  codePath?: string;
   contentVariant?: PlatformInstructionsEditorContentVariant;
   fileUpload?: PlatformInstructionsEditorFileUpload;
   /** @deprecated Use fileUpload. */
@@ -715,6 +720,9 @@ export function PlatformInstructionsEditor({
   stickyHeader = true,
   historyKey = "default",
   variant = "default",
+  editorMode = "rich-text",
+  codeLanguage = "plaintext",
+  codePath,
   contentVariant = "text",
   fileUpload,
   imageUpload,
@@ -1748,9 +1756,10 @@ export function PlatformInstructionsEditor({
   return (
     <section
       ref={shellRef}
-      className={`platform-instructions-editor playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section${stickyHeader && !readOnly ? " is-sticky" : " is-static"}${readOnly ? " is-readonly" : ""}${editing && !readOnly ? " is-editing" : ""}${variant === "minimalistic-ui" ? " is-minimalistic-ui" : ""}${fileUploadEnabled ? " is-file-enabled" : ""}${fileDragging ? " is-file-dragging" : ""}${fileUploading ? " is-file-uploading" : ""}${collapseEnabled ? " is-content-collapsible" : ""}${collapseEnabled && contentExceedsCollapsedHeight && !contentExpanded && !editing ? " is-content-collapsed" : ""}${collapseEnabled && (contentExpanded || editing) ? " is-content-expanded" : ""}${className ? ` ${className}` : ""}`}
+      className={`platform-instructions-editor playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section${stickyHeader && !readOnly ? " is-sticky" : " is-static"}${readOnly ? " is-readonly" : ""}${editing && !readOnly ? " is-editing" : ""}${variant === "minimalistic-ui" ? " is-minimalistic-ui" : ""}${editorMode === "code" ? " is-code-editor" : ""}${fileUploadEnabled ? " is-file-enabled" : ""}${fileDragging ? " is-file-dragging" : ""}${fileUploading ? " is-file-uploading" : ""}${collapseEnabled ? " is-content-collapsible" : ""}${collapseEnabled && contentExceedsCollapsedHeight && !contentExpanded && !editing ? " is-content-collapsed" : ""}${collapseEnabled && (contentExpanded || editing) ? " is-content-expanded" : ""}${className ? ` ${className}` : ""}`}
       data-platform-instructions-editor="true"
       data-platform-instructions-editor-variant={variant}
+      data-platform-instructions-editor-mode={editorMode}
       data-platform-instructions-editor-content-variant={contentVariant}
       data-platform-instructions-editor-collapsed-lines={
         collapseEnabled ? normalizedCollapsedLines : undefined
@@ -1783,7 +1792,7 @@ export function PlatformInstructionsEditor({
             {title}
           </div>
         )}
-        {!readOnly ? (
+        {!readOnly && editorMode === "rich-text" ? (
           <div
             className="platform-instructions-editor__toolbar playground-tasks-detail-format-actions"
             role="toolbar"
@@ -1922,7 +1931,20 @@ export function PlatformInstructionsEditor({
               : undefined
           }
         >
-          {readOnly ? (
+          {editorMode === "code" ? (
+            <PlatformMonacoCodeEditor
+              value={value}
+              onChange={(nextValue) => {
+                if (nextValue === value) return;
+                onChangeRef.current(nextValue, { source: "edit" });
+              }}
+              language={codeLanguage}
+              path={codePath}
+              ariaLabel={ariaLabel}
+              readOnly={readOnly}
+              className="platform-instructions-editor__code-editor"
+            />
+          ) : readOnly ? (
             String(value || "").trim() ? (
               <PlatformMarkdownRenderer
                 content={value}
@@ -1967,7 +1989,7 @@ export function PlatformInstructionsEditor({
           </PlatformSecondaryButton>
         </div>
       ) : null}
-      {!readOnly ? (
+      {!readOnly && editorMode === "rich-text" ? (
         <PlatformInstructionsEditorTextSelectionMenu
           open={Boolean(textSelectionMenuState)}
           anchorPoint={textSelectionMenuState?.anchorPoint || null}
@@ -1984,7 +2006,7 @@ export function PlatformInstructionsEditor({
           onAlign={applyTextSelectionCommand}
         />
       ) : null}
-      {!readOnly ? (
+      {!readOnly && editorMode === "rich-text" ? (
         <PlatformInstructionsEditorSlashMenu
           open={Boolean(slashMenuState)}
           anchor={slashMenuState?.anchor || null}

@@ -54,8 +54,18 @@ assert.match(
 );
 assert.match(
   promptPageSource,
-  /function resolvePromptCreatorName[\s\S]{0,700}currentUserName[\s\S]{0,500}Unknown user/,
-  "Prompt Overview must resolve placeholder creators to stable user identities.",
+  /function resolvePromptCreatorName[\s\S]{0,500}"unknown"[\s\S]{0,120}"unknown user"[\s\S]{0,700}currentUserName[\s\S]{0,500}Unknown user/,
+  "Prompt Overview must resolve sparse backend creator labels to stable user identities.",
+);
+assert.match(
+  promptPageSource,
+  /const creator = metadata\.creator[\s\S]{0,260}\? metadata\.creator/,
+  "Prompt records must read persisted creator identity metadata.",
+);
+assert.match(
+  promptPageSource,
+  /creatorName: identityName\(source\.creatorName, creator\.name\)/,
+  "Prompt records must prefer persisted creator metadata over placeholder API names.",
 );
 assert.match(
   promptPageSource,

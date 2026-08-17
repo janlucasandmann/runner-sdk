@@ -1274,7 +1274,7 @@
           backdrop-filter: blur(5px);
         }
   
-        .playground-thread-runner.is-initial-welcome-runner {
+        .playground-thread-runner.is-initial-welcome-runner:not(.is-run-preparing) {
           display: flex;
           flex-direction: column;
           align-items: stretch;
@@ -1300,7 +1300,7 @@
           z-index: 80;
         }
   
-        .playground-thread-runner.is-initial-welcome-runner .workinglogsbox {
+        .playground-thread-runner.is-initial-welcome-runner:not(.is-run-preparing) .workinglogsbox {
           width: 100%;
           flex: 0 0 auto;
           height: auto;
@@ -1309,7 +1309,7 @@
           overflow: visible;
         }
   
-        .playground-thread-runner.is-initial-welcome-runner .tb-log-scroll.is-custom-empty-state {
+        .playground-thread-runner.is-initial-welcome-runner:not(.is-run-preparing) .tb-log-scroll.is-custom-empty-state {
           flex: 0 0 auto;
           height: auto;
           max-height: none;
@@ -1319,12 +1319,12 @@
           padding: 0 20px 0;
         }
   
-        .playground-thread-runner.is-initial-welcome-runner .tb-content-width.is-custom-empty-state {
+        .playground-thread-runner.is-initial-welcome-runner:not(.is-run-preparing) .tb-content-width.is-custom-empty-state {
           justify-content: flex-start;
           align-items: stretch;
         }
   
-        .playground-thread-runner.is-initial-welcome-runner .tb-input-shell {
+        .playground-thread-runner.is-initial-welcome-runner:not(.is-run-preparing) .tb-input-shell {
           position: static;
           width: 100%;
           flex: 0 0 auto;
@@ -1336,7 +1336,7 @@
           margin: 24px 0;
         }
   
-        .playground-thread-runner.is-initial-welcome-runner .tb-input-width {
+        .playground-thread-runner.is-initial-welcome-runner:not(.is-run-preparing) .tb-input-width {
           width: min(100%, var(--playground-thread-content-max-width));
           max-width: var(--playground-thread-content-max-width);
         }
@@ -17783,8 +17783,8 @@
         .playground-agents-creation-modal {
           display: flex;
           flex-direction: column;
-          height: min(75vh, calc(100dvh - 48px));
-          max-height: min(75vh, calc(100dvh - 48px));
+          height: min(70vh, calc(100dvh - 48px));
+          max-height: min(70vh, calc(100dvh - 48px));
         }
 
         .playground-agents-creation-modal .platform-modal-header.is-media {
@@ -18009,6 +18009,58 @@
 
         .playground-computer-creation-modal .playground-environments-editor-notice {
           margin: 0;
+        }
+
+        .playground-develop-resource-creation-modal.platform-modal-surface {
+          height: auto;
+        }
+
+        .playground-develop-resource-creation-modal-body.platform-modal-body {
+          min-height: 0;
+          flex: 0 1 auto;
+        }
+
+        .playground-develop-resource-creation-modal-config {
+          gap: 0;
+        }
+
+        .playground-develop-resource-creation-modal .playground-develop-resource-creation-description-editor.platform-instructions-editor {
+          min-height: 96px;
+          margin: 24px 0 0;
+        }
+
+        .playground-develop-resource-creation-modal .playground-develop-resource-creation-description-editor .platform-instructions-editor__prosemirror {
+          min-height: 56px;
+        }
+
+        .playground-develop-resource-creation-settings {
+          margin-top: 20px;
+          padding: 0;
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+        }
+
+        .playground-develop-resource-creation-settings::before {
+          content: none;
+          display: none;
+        }
+
+        .playground-develop-resource-creation-setting-row.playground-tasks-detail-fact {
+          min-height: 42px;
+          padding: 0;
+          border: 0;
+        }
+
+        .playground-develop-resource-creation-selector,
+        .playground-develop-resource-creation-selector-trigger {
+          width: 100%;
+          justify-content: flex-end;
+          text-align: right;
+        }
+
+        .playground-develop-resource-creation-modal .playground-environments-editor-notice {
+          margin: 16px 0 0;
         }
 
         @media (max-width: 640px) {

@@ -44,6 +44,9 @@ export function createThreadMessageGateway(bindings) {
                     projectId: body.projectId,
                     agentId: body.agentId,
                     metadata: body.metadata,
+                    ...(body.knowledgeContext && typeof body.knowledgeContext === "object"
+                        ? { knowledgeContext: body.knowledgeContext }
+                        : {}),
                 };
             const enrichedPayload = await threadPayloadEnricher(req, upstreamUrl, apiKey, payload);
             let upstream;
@@ -116,6 +119,9 @@ export function createThreadMessageGateway(bindings) {
                 ...(typeof body.editMessageId === "string" && body.editMessageId.trim() ? { editMessageId: body.editMessageId.trim() } : {}),
                 ...(typeof body.persistFileChanges === "boolean" ? { persistFileChanges: body.persistFileChanges } : {}),
                 ...(body.enabledSkills && typeof body.enabledSkills === "object" ? { enabledSkills: body.enabledSkills } : {}),
+                ...(body.knowledgeContext && typeof body.knowledgeContext === "object" && !Array.isArray(body.knowledgeContext)
+                    ? { knowledgeContext: body.knowledgeContext }
+                    : {}),
                 ...(body.backlogTaskCommand && typeof body.backlogTaskCommand === "object" && !Array.isArray(body.backlogTaskCommand)
                     ? { backlogTaskCommand: body.backlogTaskCommand }
                     : {}),

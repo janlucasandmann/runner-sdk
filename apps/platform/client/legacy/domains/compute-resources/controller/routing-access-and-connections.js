@@ -216,11 +216,15 @@
   
           function handleServerSelect(serverId) {
             void commitDraftServerIfDirty();
+            const selectedServerKind = canonicalizePlaygroundServerKind(
+              orderedServers.find((server) => server.id === serverId)?.kind
+              || normalizedEmbeddedServerKind
+            );
             setToolbarPopover("");
             setSearchPopupQuery("");
             setServerActionsPopoverOpen(false);
             setServerResourceActionMenuState(null);
-            setServerDetailTab("usage");
+            setServerDetailTab(selectedServerKind === "function" ? "code" : "usage");
             setServerUsageActivityTab("logs");
             setSourceServerSettingsTableTab("access");
             setAuthDetailTab("users");
@@ -1468,15 +1472,22 @@
             resetServerEditorAuxiliaryState();
             setToolbarPopover("");
             setSearchPopupQuery("");
-            setIsHomeViewActive(false);
+            const normalizedServerKind = normalizePlaygroundServerOverviewKind(serverKind);
+            const shouldKeepEmbeddedResourceOverviewVisible = Boolean(
+              embeddedInResources
+              && isServersMode
+              && normalizedEmbeddedServerKind === normalizedServerKind
+              && isDevelopResourceCreationModalKind(normalizedServerKind)
+            );
+            setIsHomeViewActive(shouldKeepEmbeddedResourceOverviewVisible);
             setServerComposerSaveState({
               isSaving: false,
               error: "",
             });
-            const normalizedServerKind = normalizePlaygroundServerOverviewKind(serverKind);
             setServerComposerDraft({
               ...buildPlaygroundDefaultServerDraft(),
               ...(normalizedServerKind ? { kind: normalizedServerKind } : {}),
+              ...(isDevelopResourceCreationModalKind(normalizedServerKind) ? { name: "" } : {}),
               ...(normalizedServerKind === "agent_runtime" && defaultAgentRuntimeEnvironmentId
                 ? { sourceEnvironmentId: defaultAgentRuntimeEnvironmentId, authMode: "private" }
                 : {}),

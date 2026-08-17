@@ -86,10 +86,21 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
               headers,
             });
             if (typeof readPlaygroundEvaluationBackendJson === "function") {
-              return await readPlaygroundEvaluationBackendJson(response, fallbackMessage);
+              try {
+                return await readPlaygroundEvaluationBackendJson(response, fallbackMessage);
+              } catch (error) {
+                if (error && typeof error === "object" && !Number(error.status || 0)) {
+                  error.status = response.status;
+                }
+                throw error;
+              }
             }
             const data = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(data?.message || data?.error || fallbackMessage);
+            if (!response.ok) {
+              const error = new Error(data?.message || data?.error || fallbackMessage);
+              error.status = response.status;
+              throw error;
+            }
             return data;
           };
           const readGuardrailEvaluationList = (payload, keys) => (
@@ -97,40 +108,84 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
               ? readPlaygroundEvaluationListFromPayload(payload || {}, keys)
               : (Array.isArray(payload) ? payload : keys.reduce((items, key) => items.length ? items : (Array.isArray(payload?.[key]) ? payload[key] : []), []))
           );
+          const normalizeGuardrailEvaluationOverviewRow = (row, index = 0) => {
+            const source = row && typeof row === "object" && !Array.isArray(row) ? row : {};
+            const set = normalizeGuardrailEvaluationSet(
+              source.evaluation || source.set || source.evaluationSet || source.evaluation_set || {},
+              index
+            );
+            const latestRunSource = source.latestRun || source.latest_run || null;
+            const latestRun = latestRunSource
+              ? normalizeGuardrailEvaluationRun(latestRunSource, index)
+              : null;
+            return {
+              set,
+              latestRun,
+              runCount: Math.max(0, Number(source.runCount ?? source.run_count ?? 0) || 0),
+            };
+          };
+          const buildLegacyGuardrailEvaluationOverview = (setsPayload, runsPayload, targetGuardrailSetId) => {
+            const sets = readGuardrailEvaluationList(setsPayload, ["evaluations", "evaluationSets", "evaluation_sets"])
+              .map((set, index) => normalizeGuardrailEvaluationSet(set, index))
+              .filter((set) => String(set?.id || "").trim());
+            const runs = readGuardrailEvaluationList(runsPayload, ["runs", "evaluationRuns", "evaluation_runs"])
+              .map((run, index) => normalizeGuardrailEvaluationRun(run, index))
+              .filter((run) => String(run?.id || "").trim())
+              .filter((run) => getGuardrailEvaluationRunTargetGuardrailId(run) === targetGuardrailSetId);
+            return sets.map((set) => {
+              const matchingRuns = runs
+                .filter((run) => String(run?.evaluationSetId || run?.evaluationId || "") === String(set.id))
+                .sort((left, right) => getGuardrailEvaluationRunTimestamp(right) - getGuardrailEvaluationRunTimestamp(left));
+              return {
+                set,
+                latestRun: matchingRuns[0] || null,
+                runCount: matchingRuns.length,
+              };
+            }).filter((row) => row.runCount > 0);
+          };
+          const requestGuardrailEvaluationOverview = async (targetGuardrailSetId) => {
+            try {
+              const payload = await requestGuardrailEvaluationJson(
+                "/evaluations/runs/guardrail-overview?guardrailId=" + encodeURIComponent(targetGuardrailSetId) + "&limit=500",
+                { method: "GET" },
+                "Failed to load guardrail evaluations."
+              );
+              return readGuardrailEvaluationList(payload, ["rows", "data", "guardrailEvaluationRows", "guardrail_evaluation_rows"])
+                .map((row, index) => normalizeGuardrailEvaluationOverviewRow(row, index))
+                .filter((row) => String(row?.set?.id || "").trim())
+                .filter((row) => !row.latestRun || getGuardrailEvaluationRunTargetGuardrailId(row.latestRun) === targetGuardrailSetId);
+            } catch (error) {
+              if (![404, 405, 501].includes(Number(error?.status || 0))) throw error;
+              const [setsPayload, runsPayload] = await Promise.all([
+                requestGuardrailEvaluationJson("/evaluations?view=summary&limit=500", { method: "GET" }, "Failed to load evaluations."),
+                requestGuardrailEvaluationJson("/evaluations/runs?limit=500", { method: "GET" }, "Failed to load evaluation runs.").catch(() => ({ runs: [] })),
+              ]);
+              return buildLegacyGuardrailEvaluationOverview(setsPayload, runsPayload, targetGuardrailSetId);
+            }
+          };
           const loadGuardrailEvaluationData = async (options = {}) => {
             const targetGuardrailSetId = String(selectedGuardrailSet?.id || "").trim();
             const loadStateMatchesTarget = String(guardrailEvaluationLoadState.guardrailSetId || "") === targetGuardrailSetId;
             if (!options.force && loadStateMatchesTarget && guardrailEvaluationLoadState.status === "loading") {
-              return { sets: guardrailEvaluationSets, runs: guardrailEvaluationRuns };
+              return { rows: guardrailEvaluationOverviewRows };
             }
             if (!options.force && loadStateMatchesTarget && guardrailEvaluationLoadState.status === "loaded") {
-              return { sets: guardrailEvaluationSets, runs: guardrailEvaluationRuns };
+              return { rows: guardrailEvaluationOverviewRows };
             }
             const requestToken = Number(guardrailEvaluationRequestRef.current?.token || 0) + 1;
             guardrailEvaluationRequestRef.current = { token: requestToken, guardrailSetId: targetGuardrailSetId };
             setGuardrailEvaluationLoadState({ status: "loading", error: "", guardrailSetId: targetGuardrailSetId });
             try {
-              const [setsPayload, runsPayload] = await Promise.all([
-                requestGuardrailEvaluationJson("/evaluations?limit=500", { method: "GET" }, "Failed to load evaluations."),
-                requestGuardrailEvaluationJson("/evaluations/runs?limit=1000", { method: "GET" }, "Failed to load evaluation runs.").catch(() => ({ runs: [] })),
-              ]);
-              const sets = readGuardrailEvaluationList(setsPayload, ["evaluations", "evaluationSets", "evaluation_sets"])
-                .map((set, index) => normalizeGuardrailEvaluationSet(set, index))
-                .filter((set) => String(set?.id || "").trim());
-              const runs = readGuardrailEvaluationList(runsPayload, ["runs", "evaluationRuns", "evaluation_runs"])
-                .map((run, index) => normalizeGuardrailEvaluationRun(run, index))
-                .filter((run) => String(run?.id || "").trim())
-                .filter((run) => (
-                  Boolean(targetGuardrailSetId)
-                  && getGuardrailEvaluationRunTargetGuardrailId(run) === targetGuardrailSetId
-                ));
+              const rows = targetGuardrailSetId
+                ? await requestGuardrailEvaluationOverview(targetGuardrailSetId)
+                : [];
               const requestIsCurrent = Number(guardrailEvaluationRequestRef.current?.token || 0) === requestToken
                 && String(guardrailEvaluationRequestRef.current?.guardrailSetId || "") === targetGuardrailSetId;
-              if (!requestIsCurrent) return { sets, runs };
-              setGuardrailEvaluationSets(sets);
-              setGuardrailEvaluationRuns(runs);
+              if (!requestIsCurrent) return { rows };
+              setGuardrailEvaluationOverviewRows(rows);
+              setGuardrailEvaluationRuns([]);
               setGuardrailEvaluationLoadState({ status: "loaded", error: "", guardrailSetId: targetGuardrailSetId });
-              return { sets, runs };
+              return { rows };
             } catch (error) {
               const requestIsCurrent = Number(guardrailEvaluationRequestRef.current?.token || 0) === requestToken
                 && String(guardrailEvaluationRequestRef.current?.guardrailSetId || "") === targetGuardrailSetId;
@@ -141,7 +196,42 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
                   guardrailSetId: targetGuardrailSetId,
                 });
               }
-              return { sets: [], runs: [] };
+              return { rows: [] };
+            }
+          };
+          const loadGuardrailEvaluationCatalog = async (options = {}) => {
+            if (!options.force && guardrailEvaluationCatalogLoadState.status === "loaded") {
+              return guardrailEvaluationSets;
+            }
+            if (!options.force && guardrailEvaluationCatalogRequestRef.current) {
+              return await guardrailEvaluationCatalogRequestRef.current;
+            }
+            setGuardrailEvaluationCatalogLoadState({ status: "loading", error: "" });
+            const request = (async () => {
+              try {
+                const payload = await requestGuardrailEvaluationJson(
+                  "/evaluations?view=summary&limit=500",
+                  { method: "GET" },
+                  "Failed to load evaluations."
+                );
+                const sets = readGuardrailEvaluationList(payload, ["evaluations", "evaluationSets", "evaluation_sets"])
+                  .map((set, index) => normalizeGuardrailEvaluationSet(set, index))
+                  .filter((set) => String(set?.id || "").trim());
+                setGuardrailEvaluationSets(sets);
+                setGuardrailEvaluationCatalogLoadState({ status: "loaded", error: "" });
+                return sets;
+              } catch (error) {
+                setGuardrailEvaluationCatalogLoadState({ status: "error", error: error?.message || String(error) });
+                return [];
+              }
+            })();
+            guardrailEvaluationCatalogRequestRef.current = request;
+            try {
+              return await request;
+            } finally {
+              if (guardrailEvaluationCatalogRequestRef.current === request) {
+                guardrailEvaluationCatalogRequestRef.current = null;
+              }
             }
           };
           const getGuardrailEvaluationDefaultAgentId = () => {
@@ -156,8 +246,7 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
               || null;
           };
           const openGuardrailEvaluationRunModal = async (setId = "") => {
-            const loaded = await loadGuardrailEvaluationData();
-            const sets = loaded.sets.length ? loaded.sets : guardrailEvaluationSets;
+            const sets = await loadGuardrailEvaluationCatalog();
             const targetSet = sets.find((set) => set.id === String(setId || "").trim()) || sets[0] || null;
             const environment = getGuardrailEvaluationDefaultEnvironment();
             const activeVersion = getSelectedGuardrailVersion() || getSelectedGuardrailActiveVersion() || readSelectedGuardrailVersions()[0] || null;
@@ -167,7 +256,10 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
               environmentKey: environment?.key || "",
               name: targetSet ? targetSet.name + " · " + String(activeVersion?.label || "Guardrail Run") : "",
             });
-            setGuardrailEvaluationRunState({ status: "idle", error: "" });
+            setGuardrailEvaluationRunState({
+              status: "idle",
+              error: targetSet ? "" : (guardrailEvaluationCatalogLoadState.error || "No evaluations are available yet."),
+            });
             setGuardrailEvaluationRunModalOpen(true);
           };
           const upsertGuardrailEvaluationRun = (run) => {
@@ -196,7 +288,10 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
                 const run = normalizeGuardrailEvaluationRun(payload?.run || payload?.data || payload);
                 consecutiveFailures = 0;
                 upsertGuardrailEvaluationRun(run);
-                if (!isGuardrailEvaluationRunActive(run)) return;
+                if (!isGuardrailEvaluationRunActive(run)) {
+                  void loadGuardrailEvaluationData({ force: true });
+                  return;
+                }
               } catch {
                 consecutiveFailures += 1;
                 if (consecutiveFailures >= 8) return;
@@ -261,15 +356,49 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
               setGuardrailEvaluationRunState({ status: "error", error: error?.message || String(error) });
             }
           };
-          const guardrailEvaluationRows = (Array.isArray(guardrailEvaluationSets) ? guardrailEvaluationSets : [])
-            .map((set) => {
-              const runs = (Array.isArray(guardrailEvaluationRuns) ? guardrailEvaluationRuns : [])
-                .filter((run) => String(run?.evaluationSetId || run?.evaluationId || "") === String(set.id))
-                .filter((run) => getGuardrailEvaluationRunTargetGuardrailId(run) === String(selectedGuardrailSet?.id || ""))
-                .sort((left, right) => getGuardrailEvaluationRunTimestamp(right) - getGuardrailEvaluationRunTimestamp(left));
-              return { set, runs, latestRun: runs[0] || null };
-            })
-            .filter((row) => row.runs.length > 0);
+          const guardrailEvaluationTargetId = String(selectedGuardrailSet?.id || "");
+          const guardrailEvaluationOverlayRuns = (Array.isArray(guardrailEvaluationRuns) ? guardrailEvaluationRuns : [])
+            .filter((run) => getGuardrailEvaluationRunTargetGuardrailId(run) === guardrailEvaluationTargetId);
+          const guardrailEvaluationRowsBySetId = new Map();
+          (Array.isArray(guardrailEvaluationOverviewRows) ? guardrailEvaluationOverviewRows : []).forEach((row) => {
+            const setId = String(row?.set?.id || "");
+            if (!setId) return;
+            const overlayRuns = guardrailEvaluationOverlayRuns
+              .filter((run) => String(run?.evaluationSetId || run?.evaluationId || "") === setId);
+            const latestRun = [row.latestRun, ...overlayRuns]
+              .filter(Boolean)
+              .sort((left, right) => getGuardrailEvaluationRunTimestamp(right) - getGuardrailEvaluationRunTimestamp(left))[0] || null;
+            const addedRunIds = new Set(
+              overlayRuns
+                .map((run) => String(run?.id || ""))
+                .filter((id) => id && id !== String(row?.latestRun?.id || ""))
+            );
+            guardrailEvaluationRowsBySetId.set(setId, {
+              set: row.set,
+              runs: [row.latestRun, ...overlayRuns].filter(Boolean),
+              latestRun,
+              runCount: Math.max(0, Number(row.runCount || 0)) + addedRunIds.size,
+            });
+          });
+          guardrailEvaluationOverlayRuns.forEach((run) => {
+            const setId = String(run?.evaluationSetId || run?.evaluationId || "");
+            if (!setId || guardrailEvaluationRowsBySetId.has(setId)) return;
+            const set = (Array.isArray(guardrailEvaluationSets) ? guardrailEvaluationSets : [])
+              .find((candidate) => String(candidate?.id || "") === setId);
+            if (!set) return;
+            const runs = guardrailEvaluationOverlayRuns
+              .filter((candidate) => String(candidate?.evaluationSetId || candidate?.evaluationId || "") === setId)
+              .sort((left, right) => getGuardrailEvaluationRunTimestamp(right) - getGuardrailEvaluationRunTimestamp(left));
+            guardrailEvaluationRowsBySetId.set(setId, {
+              set,
+              runs,
+              latestRun: runs[0] || null,
+              runCount: new Set(runs.map((candidate) => String(candidate?.id || "")).filter(Boolean)).size,
+            });
+          });
+          const guardrailEvaluationRows = Array.from(guardrailEvaluationRowsBySetId.values())
+            .filter((row) => row.runCount > 0)
+            .sort((left, right) => getGuardrailEvaluationRunTimestamp(right.latestRun) - getGuardrailEvaluationRunTimestamp(left.latestRun));
           const guardrailEvaluationFilteredRows = guardrailEvaluationRows.filter((row) => {
             const query = String(guardrailEvaluationSearchQuery || "").trim().toLowerCase();
             return !query || [row.set?.name, row.set?.description, row.latestRun?.label].join(" ").toLowerCase().includes(query);
@@ -386,7 +515,7 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
                   {
                     id: "runs",
                     header: "Runs",
-                    accessor: (row) => row.runs.length,
+                    accessor: (row) => row.runCount,
                     sortable: true,
                     width: "minmax(80px, 0.5fr)",
                   },
@@ -415,7 +544,7 @@ export const GUARDRAILS_PAGE_EVALUATION_SCRIPT = `          const guardrailEvalu
                     type: "button",
                     size: "small",
                     onClick: () => openGuardrailEvaluationRunModal(guardrailEvaluationFilteredRows[0]?.set?.id || guardrailEvaluationSets[0]?.id || ""),
-                    disabled: isLoading || !guardrailEvaluationSets.length,
+                    disabled: isLoading,
                   },
                     React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
                     React.createElement("span", null, "Run Evaluation")

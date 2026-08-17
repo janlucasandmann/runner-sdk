@@ -248,6 +248,20 @@
   padding: 12px 0 0;
 }
 
+.platform-instructions-editor.is-code-editor .platform-instructions-editor__body {
+  padding: 0;
+  overflow: hidden;
+}
+
+.platform-instructions-editor.is-code-editor .platform-instructions-editor__content-viewport {
+  height: 220px;
+  overflow: hidden;
+}
+
+.platform-instructions-editor.is-code-editor .platform-instructions-editor__code-editor {
+  height: 100%;
+}
+
 .platform-markdown { color: rgba(255, 255, 255, 0.7); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
 .platform-markdown > :first-child { margin-top: 0; }
 .platform-markdown > :last-child { margin-bottom: 0; }

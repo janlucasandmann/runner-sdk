@@ -2714,6 +2714,10 @@
             const seedServerKind = canonicalizePlaygroundServerKind(
               seedServer?.kind || normalizedEmbeddedServerKind
             );
+            if (seedServerKind === "function") {
+              setServerDetailTab("code");
+              void loadServerFiles(selectedServerId);
+            }
             if (["api", "auth", "agent_runtime", "function", "payments", "secrets", "web_app"].includes(seedServerKind)) {
               void loadServerDetailBootstrap(selectedServerId, seedServerKind);
             } else {

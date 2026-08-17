@@ -161,6 +161,13 @@ export const TestsWorkspacePage = lazyNamed(
     ),
   "TestsWorkspacePage",
 );
+export const KnowledgeWorkspacePage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/configure-mode/knowledge/client/page/knowledge-workspace-page.js"
+    ),
+  "KnowledgeWorkspacePage",
+);
 export const AssuranceWorkspacePage = lazyNamed(
   () =>
     import(

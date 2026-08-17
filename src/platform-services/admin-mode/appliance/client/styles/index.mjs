@@ -4,30 +4,11 @@ export const APPLIANCE_ADMIN_CSS = `      .platform-appliance-overview {
         gap: 24px;
       }
 
-      .platform-appliance-overview__toolbar {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 24px;
-      }
-
-      .platform-appliance-overview__title,
       .platform-appliance-overview__card-title {
         margin: 0;
         color: #fff;
         letter-spacing: 0;
         font-weight: 400;
-      }
-
-      .platform-appliance-overview__title {
-        font-size: 16px;
-      }
-
-      .platform-appliance-overview__description {
-        margin: 6px 0 0;
-        color: rgba(255, 255, 255, 0.62);
-        font-size: 12px;
-        line-height: 1.5;
       }
 
       .platform-appliance-overview__warning {
@@ -150,11 +131,6 @@ export const APPLIANCE_ADMIN_CSS = `      .platform-appliance-overview {
       }
 
       @media (max-width: 620px) {
-        .platform-appliance-overview__toolbar {
-          align-items: stretch;
-          flex-direction: column;
-        }
-
         .platform-appliance-overview__metrics {
           grid-template-columns: 1fr;
         }

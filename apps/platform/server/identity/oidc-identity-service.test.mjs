@@ -108,6 +108,28 @@ test("OIDC login creates an opaque HttpOnly BFF session and keeps workload crede
         headers: { "content-type": "application/json" },
       });
     }
+    if (url.pathname === "/v1/account/profile") {
+      const profileUpdate = JSON.parse(String(init.body || "{}"));
+      return new Response(JSON.stringify({
+        userId: "user_stable_1",
+        email: "operator@example.test",
+        displayName: profileUpdate.displayName || "Operator",
+        photoURL: "/api/platform/account/avatar/user_stable_1?v=0123456789abcdef",
+      }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    if (url.pathname === "/v1/account/avatar/user_stable_1") {
+      return new Response(Buffer.from("local-webp-profile"), {
+        status: 200,
+        headers: {
+          "content-type": "image/webp",
+          etag: '"0123456789abcdef"',
+          "cache-control": "private, max-age=31536000, immutable",
+        },
+      });
+    }
     return new Response(JSON.stringify({ data: [{ id: "thread_1" }] }), {
       status: 200,
       headers: { "content-type": "application/json" },
@@ -272,6 +294,61 @@ test("OIDC login creates an opaque HttpOnly BFF session and keeps workload crede
     name: "SDK key",
     scopes: ["*"],
   });
+
+  const profileResponse = await fetch(
+    `${platformOrigin}/api/user/profile`,
+    {
+      method: "PATCH",
+      headers: {
+        cookie: sessionCookie,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        displayName: "Local Operator",
+        photoURL: "data:image/png;base64,cHJvZmlsZQ==",
+      }),
+    },
+  );
+  assert.equal(profileResponse.status, 200);
+  const updatedProfile = await profileResponse.json();
+  assert.equal(updatedProfile.profile.displayName, "Local Operator");
+  assert.equal(
+    updatedProfile.profile.photoURL,
+    "/api/platform/account/avatar/user_stable_1?v=0123456789abcdef",
+  );
+  const refreshedSessionCookie = cookiePair(
+    getSetCookies(profileResponse).find((value) =>
+      value.startsWith("computer_agents_session=")),
+  );
+  assert.ok(refreshedSessionCookie);
+  const profileControlCall = upstreamCalls.at(-1);
+  assert.equal(new URL(profileControlCall.url).pathname, "/v1/account/profile");
+  assert.equal(profileControlCall.apiKey, workloadKey);
+  assert.equal(profileControlCall.cookie, "");
+
+  const refreshedSessionResponse = await fetch(`${platformOrigin}/__session`, {
+    headers: { cookie: refreshedSessionCookie },
+  });
+  const refreshedSession = await refreshedSessionResponse.json();
+  assert.equal(refreshedSession.profile.profile.displayName, "Local Operator");
+  assert.equal(
+    refreshedSession.profile.profile.photoURL,
+    "/api/platform/account/avatar/user_stable_1?v=0123456789abcdef",
+  );
+
+  const avatarResponse = await fetch(
+    `${platformOrigin}/api/platform/account/avatar/user_stable_1?v=0123456789abcdef`,
+    { headers: { cookie: refreshedSessionCookie } },
+  );
+  assert.equal(avatarResponse.status, 200);
+  assert.equal(avatarResponse.headers.get("content-type"), "image/webp");
+  assert.equal(await avatarResponse.text(), "local-webp-profile");
+  const avatarControlCall = upstreamCalls.at(-1);
+  assert.equal(
+    new URL(avatarControlCall.url).pathname,
+    "/v1/account/avatar/user_stable_1",
+  );
+  assert.equal(avatarControlCall.apiKey, workloadKey);
 
   const refererLoginResponse = await fetch(
     `${platformOrigin}/api/platform/auth/login`,

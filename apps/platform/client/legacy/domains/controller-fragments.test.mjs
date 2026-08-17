@@ -748,6 +748,11 @@ assert.match(
   "The Computers overview must expose a dedicated centered app-header portal for its timeframe selector.",
 );
 assert.match(
+  agentHeaderCenterSource,
+  /!isResourcesDetailView[\s\S]{0,120}activeResourcesView === "servers"[\s\S]{0,220}\["web_app", "function", "database", "auth", "secrets", "payments"\]\.includes\(activeResourcesServerKind\)[\s\S]{0,180}id: "playground-develop-resource-overview-period-controls"/,
+  "Develop resource overviews must expose a dedicated centered app-header portal for their timeframe selector.",
+);
+assert.match(
   shellCompositionSource,
   /isComputerResourcesDetailView[\s\S]{0,300}React\.createElement\(PlatformSwitch,[\s\S]{0,500}\{ value: "general", label: "General" \},[\s\S]{0,180}\{ value: "runtime", label: "Runtime" \},[\s\S]{0,180}\{ value: "settings", label: "Settings" \}/,
   "Computer Details must use the centralized General, Runtime, and Settings app-header switch.",
@@ -1482,8 +1487,8 @@ assert.match(
 );
 assert.match(
   agentBootstrapSource,
-  /maxHeight: "75vh"/,
-  "The standard agent creation modal must remain viewport constrained.",
+  /width: "min\(720px, calc\(100vw - 48px\)\)"[\s\S]{0,80}maxHeight: "70vh"/,
+  "The standard agent creation modal must use its wider, compact viewport constraint.",
 );
 assert.match(
   agentBootstrapSource,

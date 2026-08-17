@@ -21,6 +21,7 @@ import { createPlatformSessionCodec } from "./session-codec.mjs";
 const OIDC_TRANSACTION_TTL_SECONDS = 10 * 60;
 const SIGN_UP_CSRF_TTL_SECONDS = 15 * 60;
 const ACCOUNT_JSON_REQUEST_BODY_LIMIT_BYTES = 1024 * 1024;
+const PROFILE_IMAGE_RESPONSE_LIMIT_BYTES = 2 * 1024 * 1024;
 const ALLOWED_OIDC_PROMPTS = new Set([
   "consent",
   "login",
@@ -115,6 +116,53 @@ async function relayJsonFetchResponse(upstream, response) {
       || "application/json; charset=utf-8",
     "Content-Length": body.length,
     "Cache-Control": "no-store",
+  });
+  response.end(body);
+}
+
+async function relayProfileImageFetchResponse(upstream, response) {
+  if (upstream.status === 304) {
+    response.writeHead(304, {
+      "Cache-Control": upstream.headers.get("cache-control")
+        || "private, max-age=31536000, immutable",
+      ...(upstream.headers.get("etag")
+        ? { ETag: upstream.headers.get("etag") }
+        : {}),
+    });
+    response.end();
+    return;
+  }
+  if (!upstream.ok) {
+    await relayJsonFetchResponse(upstream, response);
+    return;
+  }
+  const contentType = String(upstream.headers.get("content-type") || "")
+    .split(";", 1)[0]
+    .trim()
+    .toLowerCase();
+  if (!["image/jpeg", "image/png", "image/webp"].includes(contentType)) {
+    throw new Error("The control API returned an unsupported profile image type.");
+  }
+  const declaredLength = Number(upstream.headers.get("content-length"));
+  if (
+    Number.isFinite(declaredLength)
+    && declaredLength > PROFILE_IMAGE_RESPONSE_LIMIT_BYTES
+  ) {
+    throw new Error("The control API returned an oversized profile image.");
+  }
+  const body = Buffer.from(await upstream.arrayBuffer());
+  if (body.length > PROFILE_IMAGE_RESPONSE_LIMIT_BYTES) {
+    throw new Error("The control API returned an oversized profile image.");
+  }
+  response.writeHead(200, {
+    "Content-Type": contentType,
+    "Content-Length": body.length,
+    "Cache-Control": upstream.headers.get("cache-control")
+      || "private, max-age=31536000, immutable",
+    "X-Content-Type-Options": "nosniff",
+    ...(upstream.headers.get("etag")
+      ? { ETag: upstream.headers.get("etag") }
+      : {}),
   });
   response.end(body);
 }
@@ -573,6 +621,9 @@ export function createOidcIdentityService(config, dependencies = {}) {
   }
 
   function sessionProfilePayload(session) {
+    const sessionPhotoURL = typeof session.profile.photoURL === "string"
+      ? session.profile.photoURL
+      : session.principal.pictureUrl || "";
     return {
       userId: session.profile.userId,
       email: session.profile.email || session.principal.email || "",
@@ -584,7 +635,7 @@ export function createOidcIdentityService(config, dependencies = {}) {
         projectId: "",
         displayName:
           session.profile.displayName || session.principal.displayName || "",
-        photoURL: session.profile.photoURL || session.principal.pictureUrl || "",
+        photoURL: sessionPhotoURL,
       },
       subscription: {
         tier: session.subscription?.tier || "sandbox",
@@ -629,6 +680,118 @@ export function createOidcIdentityService(config, dependencies = {}) {
     }
     if (method === "GET" && path === "/api/user/profile") {
       sendJson(response, 200, sessionProfilePayload(session));
+      return true;
+    }
+    if (method === "PATCH" && path === "/api/user/profile") {
+      try {
+        const body = await readBoundedRequestBody(
+          request,
+          ACCOUNT_JSON_REQUEST_BODY_LIMIT_BYTES,
+        );
+        let profileUpdate;
+        try {
+          profileUpdate = JSON.parse(String(body || "{}"));
+        } catch {
+          sendJson(response, 400, {
+            error: "Invalid profile request",
+            code: "PROFILE_REQUEST_INVALID",
+            message: "The profile request must contain valid JSON.",
+          });
+          return true;
+        }
+        if (
+          !profileUpdate
+          || typeof profileUpdate !== "object"
+          || Array.isArray(profileUpdate)
+        ) {
+          sendJson(response, 400, {
+            error: "Invalid profile request",
+            code: "PROFILE_REQUEST_INVALID",
+            message: "The profile request must be a JSON object.",
+          });
+          return true;
+        }
+
+        const normalizedUpdate = { ...profileUpdate };
+        const currentPhotoURL = typeof session.profile.photoURL === "string"
+          ? session.profile.photoURL
+          : "";
+        if (
+          typeof normalizedUpdate.photoURL === "string"
+          && normalizedUpdate.photoURL === currentPhotoURL
+          && !normalizedUpdate.photoURL.startsWith("data:image/")
+        ) {
+          delete normalizedUpdate.photoURL;
+        }
+
+        const upstream = await fetchControlApi(request, "/account/profile", {
+          method: "PATCH",
+          headers: {
+            accept: "application/json",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(normalizedUpdate),
+          signal: AbortSignal.timeout(20_000),
+        });
+        const upstreamPayload = await upstream.json().catch(() => ({}));
+        if (!upstream.ok) {
+          sendJson(response, upstream.status, upstreamPayload);
+          return true;
+        }
+
+        const nextSession = {
+          ...session,
+          profile: {
+            ...session.profile,
+            displayName: typeof upstreamPayload.displayName === "string"
+              ? upstreamPayload.displayName
+              : session.profile.displayName || "",
+            photoURL: typeof upstreamPayload.photoURL === "string"
+              ? upstreamPayload.photoURL
+              : currentPhotoURL,
+          },
+        };
+        const credentialExpiry = Date.parse(
+          nextSession.credential?.expiresAt || "",
+        );
+        const credentialTtlSeconds = Number.isFinite(credentialExpiry)
+          ? Math.floor((credentialExpiry - Date.now()) / 1000)
+          : config.platformSessionTtlSeconds;
+        const sessionTtlSeconds = Math.max(
+          1,
+          Math.min(config.platformSessionTtlSeconds, credentialTtlSeconds),
+        );
+        const sessionToken = await sessionCodec.seal(
+          "platform_session",
+          nextSession,
+          sessionTtlSeconds,
+        );
+        sendJson(response, 200, sessionProfilePayload(nextSession), {
+          "Set-Cookie": serializeCookie(
+            config.platformSessionCookieName,
+            sessionToken,
+            {
+              ...cookieOptions,
+              maxAge: sessionTtlSeconds,
+            },
+          ),
+        });
+      } catch (error) {
+        if (error?.code === "REQUEST_BODY_TOO_LARGE") {
+          sendJson(response, 413, {
+            error: "Request body too large",
+            code: "REQUEST_BODY_TOO_LARGE",
+            message: "The profile image exceeds the allowed upload size.",
+          });
+          return true;
+        }
+        reportIdentityFailure("appliance profile update", error);
+        sendJson(response, 502, {
+          error: "Profile service unavailable",
+          code: "PROFILE_SERVICE_UNAVAILABLE",
+          message: "The appliance control API could not update the profile.",
+        });
+      }
       return true;
     }
     if (method === "GET" && path === "/api/user/streaming-key") {
@@ -731,6 +894,39 @@ export function createOidcIdentityService(config, dependencies = {}) {
   }
 
   function handleRequest(request, response, url) {
+    const avatarMatch = url.pathname.match(
+      /^\/api\/platform\/account\/avatar\/([^/]+)$/,
+    );
+    if (request.method === "GET" && avatarMatch) {
+      void (async () => {
+        try {
+          const upstream = await fetchControlApi(
+            request,
+            `/account/avatar/${avatarMatch[1]}${url.search}`,
+            {
+              method: "GET",
+              headers: {
+                accept: "image/webp,image/png,image/jpeg",
+                ...(request.headers["if-none-match"]
+                  ? { "if-none-match": request.headers["if-none-match"] }
+                  : {}),
+              },
+              signal: AbortSignal.timeout(10_000),
+            },
+          );
+          await relayProfileImageFetchResponse(upstream, response);
+        } catch (error) {
+          reportIdentityFailure("appliance profile image", error);
+          if (!response.headersSent) {
+            sendJson(response, 502, {
+              error: "Profile image unavailable",
+              code: "PROFILE_IMAGE_UNAVAILABLE",
+            });
+          }
+        }
+      })();
+      return true;
+    }
     if (
       ["GET", "POST"].includes(request.method)
       && url.pathname === "/signup"

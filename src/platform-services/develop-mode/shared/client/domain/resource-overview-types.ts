@@ -108,6 +108,7 @@ export interface DevelopResourceOverviewServicePageProps {
   analyticsLoading?: boolean;
   analyticsError?: string;
   controlsPortalId?: string;
+  periodPortalId?: string;
   loading?: boolean;
   error?: ReactNode;
   mutating?: boolean;

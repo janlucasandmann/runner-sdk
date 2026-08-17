@@ -533,6 +533,7 @@
     "projects-service-test": "node ./src/platform-services/create-mode/projects/projects-service-test.mjs",
     "projects-delivery-control-test": "node ./src/platform-services/create-mode/projects/server/delivery-control-routes.test.mjs && vitest run src/platform-services/create-mode/projects/client/delivery/project-delivery-workspace.test.tsx",
     "prompts-service-test": "node ./src/platform-services/configure-mode/prompts/prompts-service-test.mjs",
+    "knowledge-service-test": "node ./src/platform-services/configure-mode/knowledge/knowledge-service-test.mjs && vitest run ./src/platform-services/configure-mode/knowledge/client/page/knowledge-overview-page.test.tsx",
     "teams-service-test": "node ./src/platform-services/configure-mode/teams/teams-service-test.mjs",
     "tests-service-test": "node ./src/platform-services/configure-mode/tests/tests-service-test.mjs && node --test ./src/platform-services/configure-mode/tests/server/runtime.test.mjs",
     "thread-domain-test": "npm run build && node ./tests/thread-domain.test.mjs",

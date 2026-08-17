@@ -24,3 +24,13 @@ test("appliance page exposes aggregate capacity and usage without host identitie
   assert.doesNotMatch(APPLIANCE_ADMIN_PAGE_SCRIPT, /hostname|networkAddresses|mounts/i);
   assert.match(APPLIANCE_ADMIN_CSS, /platform-appliance-overview__metrics/);
 });
+
+test("appliance page starts directly with deployment metrics", () => {
+  assert.doesNotMatch(APPLIANCE_ADMIN_PAGE_SCRIPT, /Appliance Overview/);
+  assert.doesNotMatch(
+    APPLIANCE_ADMIN_PAGE_SCRIPT,
+    /Capacity, runtime health, and cumulative local usage for this deployment\./,
+  );
+  assert.doesNotMatch(APPLIANCE_ADMIN_PAGE_SCRIPT, /platform-appliance-overview__toolbar/);
+  assert.doesNotMatch(APPLIANCE_ADMIN_PAGE_SCRIPT, /PlatformSecondaryButton/);
+});

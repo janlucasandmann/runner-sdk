@@ -18,6 +18,28 @@ import {
   parsePlatformInstructionsEditorImageMarkdown,
 } from "./platform-instructions-editor-image-node.js";
 
+vi.mock("@monaco-editor/react", () => ({
+  default: ({
+    value,
+    onChange,
+    language,
+    options,
+  }: {
+    value?: string;
+    onChange?: (value: string) => void;
+    language?: string;
+    options?: { ariaLabel?: string };
+  }) => (
+    <textarea
+      aria-label={options?.ariaLabel || "Code editor"}
+      data-testid="instructions-monaco-editor"
+      data-language={language}
+      value={value || ""}
+      onChange={(event) => onChange?.(event.currentTarget.value)}
+    />
+  ),
+}));
+
 beforeEach(() => {
   vi.stubGlobal("scrollBy", vi.fn());
   Object.defineProperty(document, "elementFromPoint", {
@@ -52,6 +74,41 @@ afterEach(() => {
 });
 
 describe("PlatformInstructionsEditor", () => {
+  it("provides a centralized Monaco-backed code mode", async () => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <PlatformInstructionsEditor
+        title="Request body"
+        value={'{"ready":true}'}
+        onChange={onChange}
+        ariaLabel="Request body"
+        historyKey="request-body"
+        editorMode="code"
+        codeLanguage="json"
+        codePath="request.json"
+      />,
+    );
+
+    const shell = container.querySelector(
+      '[data-platform-instructions-editor-mode="code"]',
+    );
+    expect(shell).not.toBeNull();
+    expect(
+      container.querySelector(
+        '[data-platform-monaco-code-editor="true"][data-language="json"]',
+      ),
+    ).not.toBeNull();
+    expect(screen.queryByRole("toolbar", { name: "Markdown formatting" }))
+      .toBeNull();
+
+    const editor = await screen.findByTestId("instructions-monaco-editor");
+    fireEvent.change(editor, { target: { value: '{"ready":false}' } });
+    expect(onChange).toHaveBeenLastCalledWith(
+      '{"ready":false}',
+      { source: "edit" },
+    );
+  });
+
   it("does not report controlled content as an edit during initial hydration", async () => {
     const onChange = vi.fn();
 

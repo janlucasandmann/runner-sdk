@@ -728,7 +728,7 @@
   ${TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation}
   ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.topNavigation}
   ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation}
-  ${MODELS_APP_SCRIPT_FRAGMENTS.topNavigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.topNavigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation}${TESTS_APP_SCRIPT_FRAGMENTS.topNavigation}${ASSURANCE_APP_SCRIPT_FRAGMENTS.topNavigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation}${INFERENCE_APP_SCRIPT_FRAGMENTS.topNavigation}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.topNavigation}
+  ${MODELS_APP_SCRIPT_FRAGMENTS.topNavigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.topNavigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation}${TESTS_APP_SCRIPT_FRAGMENTS.topNavigation}${KNOWLEDGE_APP_SCRIPT_FRAGMENTS.topNavigation}${ASSURANCE_APP_SCRIPT_FRAGMENTS.topNavigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation}${INFERENCE_APP_SCRIPT_FRAGMENTS.topNavigation}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.topNavigation}
   ${API_KEYS_APP_SCRIPT_FRAGMENTS.topNavigation}
   ${SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation}
   ${EVIDENCE_AGENTS_APP_SCRIPT_FRAGMENTS.topNavigation}
@@ -925,6 +925,13 @@
                         id: "playground-computers-overview-period-controls",
                         className: "playground-computer-overview-period-controls-slot",
                       })
+                  : !isResourcesDetailView
+                    && activeResourcesView === "servers"
+                    && ["web_app", "function", "database", "auth", "secrets", "payments"].includes(activeResourcesServerKind)
+                    ? React.createElement("div", {
+                        id: "playground-develop-resource-overview-period-controls",
+                        className: "playground-develop-resource-overview-period-controls-slot",
+                      })
                   : isDatabaseResourcesDetailView
                     ? React.createElement(PlatformSwitch, {
                       className: "playground-database-detail-header-switch",
@@ -948,12 +955,18 @@
                         className: "playground-source-server-detail-header-switch",
                         value: ["usage", "code", "settings"].includes(resourcesHeaderState.activeSection)
                           ? resourcesHeaderState.activeSection
-                          : "usage",
-                        options: [
-                          { value: "usage", label: "Usage" },
-                          { value: "code", label: "Code" },
-                          { value: "settings", label: "Settings" },
-                        ],
+                          : activeResourcesServerKind === "function" ? "code" : "usage",
+                        options: activeResourcesServerKind === "function"
+                          ? [
+                              { value: "code", label: "Code" },
+                              { value: "usage", label: "Usage" },
+                              { value: "settings", label: "Settings" },
+                            ]
+                          : [
+                              { value: "usage", label: "Usage" },
+                              { value: "code", label: "Code" },
+                              { value: "settings", label: "Settings" },
+                            ],
                         onValueChange: (nextSection) => {
                           if (typeof resourcesHeaderState.onSectionChange === "function") {
                             resourcesHeaderState.onSectionChange(nextSection);
@@ -2832,7 +2845,11 @@
   
             return hasRealAccess
               ? React.createElement(PlaygroundEnvironmentsPage, {
-                  key: "resources:" + activeResourcesView,
+                  key: "resources:"
+                    + activeResourcesView
+                    + (activeResourcesView === "servers"
+                      ? ":" + (activeResourcesServerKind || "all")
+                      : ""),
                   backendUrl: proxyBackendBase,
                   requestHeaders,
                   environments: realEnvironments,
@@ -2986,7 +3003,7 @@
                 : renderAuthGate();
           }
   
-  ${MODELS_APP_SCRIPT_FRAGMENTS.pageView}${GUARDRAILS_PAGE_RUNTIME_SCRIPT}${TESTS_APP_SCRIPT_FRAGMENTS.pageView}${ASSURANCE_APP_SCRIPT_FRAGMENTS.pageView}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.pageView}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.home}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.notifications}
+  ${MODELS_APP_SCRIPT_FRAGMENTS.pageView}${GUARDRAILS_PAGE_RUNTIME_SCRIPT}${TESTS_APP_SCRIPT_FRAGMENTS.pageView}${KNOWLEDGE_APP_SCRIPT_FRAGMENTS.pageView}${ASSURANCE_APP_SCRIPT_FRAGMENTS.pageView}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.pageView}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.home}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.notifications}
   ${API_KEYS_PAGE_SCRIPT_FRAGMENTS.management}
   ${DEVELOP_HOME_PAGE_SCRIPT}
   ${SECURITY_APP_SCRIPT_FRAGMENTS.pageView}
@@ -3154,6 +3171,8 @@
   	                      ? renderGuardrailsPageNav()
                             : activePage === "tests"
                               ? renderTestsPageNav()
+                            : activePage === "knowledge"
+                              ? renderKnowledgePageNav()
                             : activePage === "assurance"
                               ? renderAssurancePageNav()
   	                    : activePage === "evaluations"
@@ -3293,7 +3312,7 @@
                                 )
                               : null,
   	                    }),
-                          React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isResourcesVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (isSourceDeployableCodeContentRoute ? " is-source-deployable-code-route" : "") + (activePage === "files" || activePage === "guardrails" || activePage === "tests" || activePage === "assurance" || activePage === "evaluations" || activePage === "fine-tuning" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "tests" ? " is-tests-page" : "") + (activePage === "assurance" ? " is-assurance-page" : "") + (activePage === "evaluations" ? " is-evaluations-page" : "") + (activePage === "fine-tuning" ? " is-fine-tuning-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
+                          React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isResourcesVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (isSourceDeployableCodeContentRoute ? " is-source-deployable-code-route" : "") + (activePage === "files" || activePage === "guardrails" || activePage === "tests" || activePage === "knowledge" || activePage === "assurance" || activePage === "evaluations" || activePage === "fine-tuning" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "tests" ? " is-tests-page" : "") + (activePage === "knowledge" ? " is-knowledge-page" : "") + (activePage === "assurance" ? " is-assurance-page" : "") + (activePage === "evaluations" ? " is-evaluations-page" : "") + (activePage === "fine-tuning" ? " is-fine-tuning-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
                               React.createElement(React.Suspense, {
                                 fallback: React.createElement(PlatformLoadingState, {
                                   className: "playground-content-route-loading",
@@ -3336,6 +3355,12 @@
                               : activePage === "tests"
                                 ? hasRealAccess
                                   ? renderTestsPage()
+                                  : hasDemoAccess
+                                    ? renderDemoFeaturePage("resources")
+                                    : renderAuthGate()
+                              : activePage === "knowledge"
+                                ? hasRealAccess
+                                  ? renderKnowledgePage()
                                   : hasDemoAccess
                                     ? renderDemoFeaturePage("resources")
                                     : renderAuthGate()
@@ -3914,6 +3939,9 @@
                                       resolveRequestHeaders: resolveRunnerRequestHeaders,
                                       appId: "runner-web-sdk-demo",
                                       threadId: activeRunnerThreadId || undefined,
+                                      threadMetadata: !activeRunnerThreadId && pendingThreadKnowledgeContext
+                                        ? { knowledgeContext: pendingThreadKnowledgeContext }
+                                        : null,
                                       threadViewMode: "legacy",
                                       inputMode: computerAgentsMode ? "computer-agents" : "minimal",
                                       computerAgents: computerAgentsMode ? {
@@ -4118,6 +4146,7 @@
                                         }
                                         setActivePage("thread");
                                         setCurrentThreadId(normalizedThreadId);
+                                        setPendingThreadKnowledgeContext(null);
                                         setPendingThreadRunRequest((current) => (
                                           current && current.threadId === normalizedThreadId ? current : null
                                         ));

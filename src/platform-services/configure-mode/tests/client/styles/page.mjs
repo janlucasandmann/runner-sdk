@@ -427,7 +427,11 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
   .tests-case-detail-general__content > .tests-case-builder {
     min-height: auto;
     flex: none;
-    padding: 12px 0 24px;
+    margin: 24px 0;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.075);
     overflow: visible;
   }
 
@@ -449,10 +453,20 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  .tests-case-detail-title-input {
+  .tests-case-detail-title-row {
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .tests-case-detail-title-input {
+    box-sizing: border-box;
+    width: auto;
+    min-width: 0;
+    flex: 1 1 auto;
     margin: 0;
     padding: 0;
     border: 0;
@@ -465,6 +479,11 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     line-height: 1.3;
     font-weight: 400;
     letter-spacing: 0;
+  }
+
+  .tests-case-detail-type-selector {
+    max-width: min(300px, 42%);
+    flex: 0 1 auto;
   }
 
   .tests-case-detail-description-input {
@@ -571,61 +590,6 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     padding-bottom: 0;
   }
 
-  .tests-case-builder__target-layout {
-    display: grid;
-    grid-template-columns: minmax(220px, .78fr) minmax(300px, 1.22fr);
-    gap: 18px;
-    align-items: stretch;
-  }
-
-  .tests-case-builder__execution-card {
-    box-sizing: border-box;
-    min-width: 0;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 12px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    color: #f4c978;
-    background: rgba(255, 255, 255, 0.035);
-  }
-
-  .tests-case-builder__execution-card.is-verified_worker {
-    color: #86e29d;
-    border-color: rgba(134, 226, 157, 0.2);
-    background: rgba(134, 226, 157, 0.045);
-  }
-
-  .tests-case-builder__execution-card.is-runner_captured {
-    color: #8cc7ff;
-    border-color: rgba(74, 167, 255, 0.2);
-    background: rgba(74, 167, 255, 0.045);
-  }
-
-  .tests-case-builder__execution-card > svg {
-    flex: 0 0 auto;
-    margin-top: 1px;
-  }
-
-  .tests-case-builder__execution-card > span {
-    min-width: 0;
-    display: grid;
-    gap: 4px;
-  }
-
-  .tests-case-builder__execution-card strong {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 12px;
-    font-weight: 500;
-  }
-
-  .tests-case-builder__execution-card small {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 11px;
-    line-height: 1.45;
-  }
-
   .tests-case-builder__form-grid {
     min-width: 0;
     display: grid;
@@ -645,6 +609,26 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
 
   .tests-case-builder__field.is-span-2 {
     grid-column: 1 / -1;
+  }
+
+  .tests-case-builder__editor-field {
+    gap: 8px;
+  }
+
+  .tests-case-builder__instructions-editor.platform-instructions-editor {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .tests-case-builder__instructions-editor:not(.is-code-editor)
+    .platform-instructions-editor__prosemirror {
+    min-height: 160px;
+  }
+
+  .tests-case-builder__instructions-editor.is-code-editor.is-invalid
+    .platform-instructions-editor__content-viewport {
+    box-shadow: inset 0 0 0 1px rgba(255, 91, 91, 0.5);
   }
 
   .tests-case-builder__field > small {
@@ -1809,6 +1793,18 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
       padding: 20px;
     }
 
+    .tests-case-detail-title-row {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .tests-case-detail-type-selector {
+      width: 100%;
+      max-width: none;
+      align-self: stretch;
+    }
+
     .tests-case-detail-configuration-row {
       align-items: stretch;
       flex-direction: column;
@@ -1869,7 +1865,6 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
       padding: 12px 20px 36px;
     }
 
-    .tests-case-builder__target-layout,
     .tests-case-builder__form-grid,
     .tests-case-builder__checks,
     .tests-case-builder__evidence-grid {

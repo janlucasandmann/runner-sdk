@@ -2797,6 +2797,9 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       void handleRecalculateRunCosts(req, res);
       return true;
     }
+    if (req.method === "GET" && url.pathname === "/api/real/evaluations/runs/guardrail-overview") {
+      return false;
+    }
     const runMatch = url.pathname.match(/^\/api\/real\/evaluations\/runs\/([^/]+)$/);
     if (req.method === "GET" && runMatch) {
       void handleGetRun(req, res, decodeURIComponent(runMatch[1]));

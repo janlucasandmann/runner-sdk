@@ -19,6 +19,7 @@ import { createPromptsService } from "../../../src/platform-services/configure-m
 import { createProjectsService } from "../../../src/platform-services/create-mode/projects/index.mjs";
 import { createTeamsService } from "../../../src/platform-services/configure-mode/teams/index.mjs";
 import { createTestsService } from "../../../src/platform-services/configure-mode/tests/index.mjs";
+import { createKnowledgeService } from "../../../src/platform-services/configure-mode/knowledge/index.mjs";
 
 import { createSystemSkillSourceService } from "./system-skill-sources.mjs";
 import {
@@ -274,6 +275,10 @@ export function createPlatformServices({
       proxyAiosJsonRequest,
     }),
     inferenceService: createInferenceService({
+      proxyUpstreamGet,
+      proxyUpstreamJsonRequest,
+    }),
+    knowledgeService: createKnowledgeService({
       proxyUpstreamGet,
       proxyUpstreamJsonRequest,
     }),

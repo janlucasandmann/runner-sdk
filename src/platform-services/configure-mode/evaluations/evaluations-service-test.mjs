@@ -1194,6 +1194,21 @@ assert.equal(proxyCalls.length, 1);
 assert.equal(proxyCalls[0]?.[2], "/evaluations/evaluation%201");
 assert.equal(proxyCalls[0]?.[3], "GET");
 
+proxyCalls.length = 0;
+handled = evaluationsService.handleRequest(
+  {
+    method: "GET",
+    headers: {},
+    url: "/api/real/evaluations/runs/guardrail-overview?guardrailId=guardrail_1",
+  },
+  {},
+  new URL("http://localhost/api/real/evaluations/runs/guardrail-overview?guardrailId=guardrail_1"),
+);
+assert.equal(handled, true);
+assert.equal(proxyCalls.length, 1);
+assert.equal(proxyCalls[0]?.[2], "/evaluations/runs/guardrail-overview");
+assert.equal(proxyCalls[0]?.[3], "GET");
+
 handled = evaluationsService.handleRequest(
   { method: "GET", headers: {} },
   {},

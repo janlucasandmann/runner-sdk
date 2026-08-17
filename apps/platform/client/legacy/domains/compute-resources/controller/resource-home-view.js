@@ -342,12 +342,12 @@
 	                voiceAgentSessionResultsById,
 	                getCurrentDevelopResourceIdentityInput()
 	              );
-  	              return React.createElement(DevelopVoiceAgentsOverviewPage, {
-  	                rows: voiceRows,
-  	                period: canonicalPeriod,
-  	                onPeriodChange: onDevelopServerOperationalMetricsPeriodChange || updateEnvironmentHomeChartTimescale,
-  	                controlsPortalId: "playground-resource-overview-controls",
-  	                operationalMetrics: metricsMatchCurrentResource ? developServerOperationalMetrics : null,
+	              return React.createElement(DevelopVoiceAgentsOverviewPage, {
+	                rows: voiceRows,
+	                period: canonicalPeriod,
+	                onPeriodChange: onDevelopServerOperationalMetricsPeriodChange || updateEnvironmentHomeChartTimescale,
+	                controlsPortalId: "playground-resource-overview-controls",
+	                operationalMetrics: metricsMatchCurrentResource ? developServerOperationalMetrics : null,
   	                analyticsLoading: Boolean(developServerOperationalMetricsLoading || !metricsMatchCurrentResource),
   	                analyticsError: metricsMatchCurrentResource ? developServerOperationalMetricsError : "",
   	                loading: Boolean(voiceAgentsLoading && voiceRows.length === 0),
@@ -416,10 +416,13 @@
   	            return React.createElement(DevelopResourceOverviewRoute, {
   	              kind: normalizedEmbeddedServerKind,
   	              rows: overviewRows,
-  	              period: canonicalPeriod,
-  	              onPeriodChange: onDevelopServerOperationalMetricsPeriodChange || updateEnvironmentHomeChartTimescale,
-  	              controlsPortalId: "playground-resource-overview-controls",
-  	              operationalMetrics: metricsMatchCurrentResource ? developServerOperationalMetrics : null,
+	              period: canonicalPeriod,
+	              onPeriodChange: onDevelopServerOperationalMetricsPeriodChange || updateEnvironmentHomeChartTimescale,
+	              controlsPortalId: "playground-resource-overview-controls",
+	              periodPortalId: isDevelopResourceCreationModalKind(normalizedEmbeddedServerKind)
+	                ? "playground-develop-resource-overview-period-controls"
+	                : undefined,
+	              operationalMetrics: metricsMatchCurrentResource ? developServerOperationalMetrics : null,
   	              analyticsLoading: Boolean(developServerOperationalMetricsLoading || !metricsMatchCurrentResource),
 	              analyticsError: metricsMatchCurrentResource ? developServerOperationalMetricsError : "",
 	              loading: overviewRows.length === 0 && isCatalogLoading,

@@ -80,6 +80,7 @@ describe("Develop-mode service overview registry", () => {
     render(
       <>
         <div id="develop-overview-controls" data-testid="develop-overview-controls" />
+        <div id="develop-overview-period-controls" data-testid="develop-overview-period-controls" />
         <DevelopResourceOverviewRoute
         kind="function"
         rows={[
@@ -117,6 +118,7 @@ describe("Develop-mode service overview registry", () => {
         period="month"
         onPeriodChange={vi.fn()}
         controlsPortalId="develop-overview-controls"
+        periodPortalId="develop-overview-period-controls"
         operationalMetrics={{ labels: [], series: {}, totals: {}, resourceCounts: { functions: 2 } }}
         onOpen={vi.fn()}
         onCreate={onCreate}
@@ -131,6 +133,8 @@ describe("Develop-mode service overview registry", () => {
     expect(document.querySelector(".resource-overview-page__header")).toBeNull();
     const createButton = screen.getByRole("button", { name: "Function" });
     expect(screen.getByTestId("develop-overview-controls").contains(createButton)).toBe(true);
+    const timeframe = screen.getByRole("radiogroup", { name: "Analytics time frame" });
+    expect(screen.getByTestId("develop-overview-period-controls").contains(timeframe)).toBe(true);
     await user.click(createButton);
     expect(onCreate).toHaveBeenCalledOnce();
 
@@ -139,5 +143,60 @@ describe("Develop-mode service overview registry", () => {
     const table = screen.getByRole("table", { name: "Functions" });
     expect(within(table).getByText("Published Function")).not.toBeNull();
     expect(within(table).queryByText("Draft Function")).toBeNull();
+  });
+
+  it("remains stable while navigating repeatedly between server resource overviews", () => {
+    const rows = [{
+      id: "server:resource-1",
+      sourceId: "resource-1",
+      resourceType: "server" as const,
+      kind: "function",
+      name: "Resource One",
+      description: "Overview navigation regression fixture",
+      typeLabel: "Resource",
+      published: true,
+      createdAt: 1,
+      createdLabel: "Today",
+      lastUsedAt: 1,
+      lastUsedLabel: "Today",
+      searchText: "Resource One",
+    }];
+    const overviewProps = {
+      rows,
+      period: "month" as const,
+      onPeriodChange: vi.fn(),
+      controlsPortalId: "develop-overview-navigation-controls",
+      periodPortalId: "develop-overview-navigation-period-controls",
+      operationalMetrics: { labels: [], series: {}, totals: {}, resourceCounts: {} },
+      onOpen: vi.fn(),
+      onCreate: vi.fn(),
+      onRename: vi.fn(),
+      onCopy: vi.fn(),
+      onDelete: vi.fn(),
+    };
+    const resourceKinds = [
+      "web_app",
+      "function",
+      "database",
+      "auth",
+      "secrets",
+      "payments",
+    ] as const;
+    const renderRoute = (kind: (typeof resourceKinds)[number]) => (
+      <>
+        <div id="develop-overview-navigation-controls" />
+        <div id="develop-overview-navigation-period-controls" />
+        <DevelopResourceOverviewRoute kind={kind} {...overviewProps} />
+      </>
+    );
+    const view = render(renderRoute(resourceKinds[0]));
+
+    for (let pass = 0; pass < 8; pass += 1) {
+      resourceKinds.forEach((kind) => view.rerender(renderRoute(kind)));
+    }
+
+    expect(document.querySelectorAll(".resource-overview-page")).toHaveLength(1);
+    expect(document.querySelectorAll('[data-resource-overview-controls="true"]')).toHaveLength(1);
+    expect(document.querySelectorAll('[data-resource-overview-period-controls="true"]')).toHaveLength(1);
   });
 });

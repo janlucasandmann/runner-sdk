@@ -47,6 +47,37 @@ afterEach(() => {
 });
 
 describe("EvaluationsOverviewPage", () => {
+  it("uses the centralized empty state when no evaluations exist", async () => {
+    const user = userEvent.setup();
+    const onCreate = vi.fn();
+    const { container } = render(
+      <EvaluationsOverviewPage
+        rows={[]}
+        onOpen={vi.fn()}
+        onCreate={onCreate}
+        onRename={vi.fn()}
+        onRun={vi.fn()}
+        onDelete={vi.fn()}
+        onDeleteMany={vi.fn()}
+      />,
+    );
+
+    expect(
+      container.querySelector(".platform-empty-state"),
+    ).not.toBeNull();
+    expect(screen.getByText("No evaluations yet")).not.toBeNull();
+    expect(
+      screen.getByText(
+        "Create an evaluation to measure agent quality against repeatable cases and criteria.",
+      ),
+    ).not.toBeNull();
+
+    await user.click(
+      screen.getByRole("button", { name: "Create Evaluation" }),
+    );
+    expect(onCreate).toHaveBeenCalledOnce();
+  });
+
   it("uses the Skills overview composition and shared catalog table", async () => {
     const user = userEvent.setup();
     const onOpen = vi.fn();
