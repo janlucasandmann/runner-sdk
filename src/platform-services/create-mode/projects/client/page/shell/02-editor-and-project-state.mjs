@@ -244,11 +244,12 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
 	          const normalizedSelectedProjectId = String(selectedProjectId || "").trim();
 	          const normalizedRecoveryThreadId = String(latestSelectedProjectMissionControlThreadId || "").trim();
 	          const recoveryKey = normalizedSelectedProjectId + ":" + normalizedRecoveryThreadId;
-	          const hasStrategyDocument = Boolean(String(selectedProjectMissionControl.document || "").trim());
+	          const hasSyncedLatestMissionControlRun = String(selectedProjectMissionControl.lastThreadId || "").trim()
+	            === normalizedRecoveryThreadId;
 	          if (
 	            !normalizedSelectedProjectId
 	            || !normalizedRecoveryThreadId
-	            || hasStrategyDocument
+	            || hasSyncedLatestMissionControlRun
 	            || isSelectedProjectMissionControlRunning
 	            || missionControlRecoveryThreadIdRef.current === recoveryKey
 	            || missionControlRecoveryAttemptedKeysRef.current.has(recoveryKey)

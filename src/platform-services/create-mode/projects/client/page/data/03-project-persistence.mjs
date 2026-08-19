@@ -473,6 +473,46 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
           }));
         }
 
+        function getProjectWorkspaceLoadErrorMessage(error, fallbackMessage) {
+          const message = error instanceof Error ? String(error.message || "").trim() : "";
+          if (!message || /^(failed to fetch|networkerror|load failed)$/i.test(message)) {
+            return fallbackMessage;
+          }
+          return message;
+        }
+
+        function hasCachedProjectWorkspace(projectId) {
+          const normalizedProjectId = String(projectId || "").trim();
+          if (!normalizedProjectId) return false;
+          return Boolean(
+            String(selectedProjectSnapshot?.id || "").trim() === normalizedProjectId
+            || String(selectedProjectDetail?.project?.id || "").trim() === normalizedProjectId
+            || projects.some((project) => String(project?.id || "").trim() === normalizedProjectId)
+          );
+        }
+
+        function settleProjectWorkspaceLoadFailure(projectId, error, fallbackMessage) {
+          const message = getProjectWorkspaceLoadErrorMessage(error, fallbackMessage);
+          const canUseCachedWorkspace = hasCachedProjectWorkspace(projectId);
+          if (canUseCachedWorkspace) {
+            console.warn("Project workspace refresh failed; keeping cached content.", {
+              projectId,
+              error: message,
+            });
+          }
+          setTaskLoadState({
+            status: canUseCachedWorkspace ? "ready" : "error",
+            error: canUseCachedWorkspace ? "" : message,
+          });
+          setProjectOverviewTaskActivityState((current) => ({
+            projectId,
+            status: canUseCachedWorkspace ? "ready" : "error",
+            error: canUseCachedWorkspace ? "" : message,
+            items: current.projectId === projectId ? current.items : [],
+          }));
+          return false;
+        }
+
         async function loadProjectHome(projectId) {
           if (!projectId) {
             projectWorkspaceLoadTokenRef.current = "";
@@ -574,7 +614,6 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             setTasks(nextTasks);
             setReleases(nextReleases);
             setSprints(nextSprints);
-            syncProjectSummary(projectId, nextTasks, nextSprints, nextReleases, nextSummary);
             setTaskLoadState({
               status: "ready",
               error: "",
@@ -590,57 +629,11 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             if (projectWorkspaceLoadTokenRef.current !== loadToken) {
               return false;
             }
-            setTaskLoadState({
-              status: "error",
-              error: error instanceof Error ? error.message : "Failed to load project home.",
-            });
-            setProjectOverviewTaskActivityState((current) => ({
+            return settleProjectWorkspaceLoadFailure(
               projectId,
-              status: "error",
-              error: error instanceof Error ? error.message : "Failed to load project activity.",
-              items: current.projectId === projectId ? current.items : [],
-            }));
-            return false;
-          }
-        }
-
-        async function loadProjectOverviewWorkGraph(projectId, loadKey) {
-          try {
-            const workGraphResult = await loadProjectWorkGraph(projectId);
-            if (projectWorkGraphAutoLoadKeyRef.current !== loadKey) {
-              return false;
-            }
-            if (!workGraphResult.response?.ok) {
-              throw new Error(
-                workGraphResult.data?.message
-                || workGraphResult.data?.error
-                || "Project work graph unavailable."
-              );
-            }
-            const graphData = workGraphResult.data || {};
-            const graphTasks = projectCanonicalWorkRelationsOntoTasks(
-              parsePlaygroundTaskListResponse(graphData),
-              graphData?.relations,
-              graphData?.canonicalWorkGraph === true
+              error,
+              "Project details are temporarily unavailable."
             );
-            setTasks(graphTasks);
-            setSelectedProjectDetail((current) => {
-              if (current?.project?.id !== projectId) {
-                return current;
-              }
-              return {
-                ...current,
-                workRelations: Array.isArray(graphData?.relations) ? graphData.relations : [],
-                agentSessions: Array.isArray(graphData?.agentSessions) ? graphData.agentSessions : [],
-              };
-            });
-            return true;
-          } catch (error) {
-            if (projectWorkGraphAutoLoadKeyRef.current === loadKey) {
-              projectWorkGraphAutoLoadKeyRef.current = "";
-            }
-            console.warn("Failed to load project work graph", error);
-            return false;
           }
         }
 
@@ -849,17 +842,11 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             if (projectWorkspaceLoadTokenRef.current !== loadToken) {
               return false;
             }
-            setTaskLoadState({
-              status: "error",
-              error: error instanceof Error ? error.message : "Failed to load project workspace.",
-            });
-            setProjectOverviewTaskActivityState((current) => ({
+            return settleProjectWorkspaceLoadFailure(
               projectId,
-              status: "error",
-              error: error instanceof Error ? error.message : "Failed to load project activity.",
-              items: current.projectId === projectId ? current.items : [],
-            }));
-            return false;
+              error,
+              "Project workspace is temporarily unavailable."
+            );
           }
         }
 
@@ -1117,23 +1104,6 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
         }, [projectSidebarPopover]);
 
         useEffect(() => {
-          if (!projectComposerEnvironmentPopoverOpen) {
-            return undefined;
-          }
-
-          function handleProjectComposerEnvironmentPopoverPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !projectComposerEnvironmentPopoverRef.current || projectComposerEnvironmentPopoverRef.current.contains(target)) {
-              return;
-            }
-            setProjectComposerEnvironmentPopoverOpen(false);
-          }
-
-          document.addEventListener("mousedown", handleProjectComposerEnvironmentPopoverPointerDown);
-          return () => document.removeEventListener("mousedown", handleProjectComposerEnvironmentPopoverPointerDown);
-        }, [projectComposerEnvironmentPopoverOpen]);
-
-        useEffect(() => {
           if (!projectBlueprintPickerOpen) {
             return undefined;
           }
@@ -1313,14 +1283,12 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 	        useEffect(() => {
 	          if (isStandaloneCalendarMode) {
 	            projectWorkspaceAutoLoadKeyRef.current = "";
-	            projectWorkGraphAutoLoadKeyRef.current = "";
 	            projectConfigLoadTokenRef.current = "";
 	            clearProjectWorkspace({ preserveSchedule: true });
 	            return;
 	          }
 	          if (!selectedProjectId) {
 	            projectWorkspaceAutoLoadKeyRef.current = "";
-	            projectWorkGraphAutoLoadKeyRef.current = "";
 	            projectConfigLoadTokenRef.current = "";
 	            clearProjectWorkspace();
 	            return;
@@ -1347,27 +1315,6 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 	            }
 	          });
 	        }, [backendUrl, isStandaloneCalendarMode, requestHeadersKey, selectedProjectId, taskView]);
-
-	        useEffect(() => {
-	          if (
-	            !selectedProjectId
-	            || taskView !== "overview"
-	            || taskLoadState?.status !== "ready"
-	          ) {
-	            return;
-	          }
-	          const loadKey = [
-	            backendUrl,
-	            requestHeadersKey,
-	            selectedProjectId,
-	            "work-graph",
-	          ].join("|");
-	          if (projectWorkGraphAutoLoadKeyRef.current === loadKey) {
-	            return;
-	          }
-	          projectWorkGraphAutoLoadKeyRef.current = loadKey;
-	          void loadProjectOverviewWorkGraph(selectedProjectId, loadKey);
-	        }, [backendUrl, requestHeadersKey, selectedProjectId, taskLoadState?.status, taskView]);
 
 	        useEffect(() => {
             if (!isCalendarContext) {

@@ -133,6 +133,7 @@
                   }
                 },
                 onOpenPromptSearch,
+                onOpenKnowledgeSearch,
                 onOpenThreadSearch,
                 externalRunRequest: assistantRunRequest && assistantThreadId
                   ? assistantRunRequest
@@ -385,6 +386,7 @@
                   : "",
                 composerBeforeAgentControl: previewRefineControl,
                 onOpenPromptSearch,
+                onOpenKnowledgeSearch,
                 onOpenThreadSearch,
                 emptyState: previewEmptyState,
                 onRunStart: (threadId) => {
@@ -1484,6 +1486,7 @@
                             agentCreationCommandHiddenPrompt: buildAgentsHomeCreationHiddenPrompt,
                             onExternalRunRequestCreate: handleAgentsHomeThreadStartRequest,
                             onOpenPromptSearch,
+                            onOpenKnowledgeSearch,
                             onOpenThreadSearch,
                             onAgentCreationCommandChange: (commandType) => {
                               setAgentsHomeActiveCreationCommand(commandType || "");

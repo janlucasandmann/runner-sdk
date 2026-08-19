@@ -1,5 +1,6 @@
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { PlatformInstructionsEditor } from "../../../../../platform-ui/components/composite/instructions-editor/index.js";
 import { PlatformModal } from "../../../../../platform-ui/components/composite/modal/index.js";
 import {
   PlatformPrimaryButton,
@@ -48,6 +49,7 @@ export function AssurancePolicyCreateModal({
   const [maximumCostUsd, setMaximumCostUsd] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const canCreate = !submitting && Boolean(name.trim()) && Boolean(testPlanId);
 
   useEffect(() => {
     if (!open) return;
@@ -131,9 +133,22 @@ export function AssurancePolicyCreateModal({
     <PlatformModal
       open={open}
       title="New Assurance Policy"
-      description="Start with a published Test Plan. Evaluation and Agent Optimization gates can be added from the versioned policy editor."
+      headerVariant="search"
+      headerSearchProps={{
+        inputRef: nameRef,
+        icon: ShieldCheck,
+        value: name,
+        maxLength: 500,
+        placeholder: "Assurance Policy name",
+        "aria-label": "Assurance Policy name",
+        autoComplete: "off",
+        disabled: submitting,
+        onChange: (event) => setName(event.currentTarget.value),
+      }}
       as="form"
       size="large"
+      maxHeight="min(720px, calc(100vh - 48px))"
+      scrollable
       initialFocusRef={nameRef}
       closeOnBackdrop={!submitting}
       closeOnEscape={!submitting}
@@ -141,7 +156,20 @@ export function AssurancePolicyCreateModal({
       onClose={close}
       className="assurance-create-modal"
       bodyClassName="assurance-create-modal__body"
-      surfaceProps={{ onSubmit: submit }}
+      footerClassName="assurance-create-modal__footer"
+      surfaceProps={{
+        onSubmit: submit,
+        onKeyDown: (event) => {
+          if (
+            (event.metaKey || event.ctrlKey)
+            && event.key === "Enter"
+            && canCreate
+          ) {
+            event.preventDefault();
+            (event.currentTarget as HTMLFormElement).requestSubmit();
+          }
+        },
+      }}
       footer={(
         <>
           <PlatformSecondaryButton size="medium" disabled={submitting} onClick={close}>
@@ -150,7 +178,7 @@ export function AssurancePolicyCreateModal({
           <PlatformPrimaryButton
             size="medium"
             type="submit"
-            disabled={submitting || !name.trim() || !testPlanId}
+            disabled={!canCreate}
           >
             {submitting ? (
               <>
@@ -168,17 +196,19 @@ export function AssurancePolicyCreateModal({
       )}
     >
       <div className="assurance-form-grid">
-        <label className="assurance-form-field">
-          <span>Name</span>
-          <input
-            ref={nameRef}
-            value={name}
-            maxLength={500}
-            placeholder="Production release assurance"
-            disabled={submitting}
-            onChange={(event) => setName(event.currentTarget.value)}
-          />
-        </label>
+        <PlatformInstructionsEditor
+          value={description}
+          onChange={(nextDescription) => setDescription(nextDescription.slice(0, 10_000))}
+          title="Description"
+          placeholder="What must be proven before this project or release can be completed."
+          ariaLabel="Assurance Policy description"
+          readOnly={submitting}
+          stickyHeader={false}
+          historyKey="assurance-policy-create-description"
+          variant="minimalistic-ui"
+          contentVariant="text"
+          className="assurance-create-modal__description-editor"
+        />
         <div className="assurance-form-field">
           <span>Project</span>
           <PlatformSelector
@@ -197,17 +227,6 @@ export function AssurancePolicyCreateModal({
             onValueChange={setProjectId}
           />
         </div>
-        <label className="assurance-form-field is-span-2">
-          <span>Description</span>
-          <textarea
-            value={description}
-            rows={3}
-            maxLength={10_000}
-            placeholder="What must be proven before this project or release can be completed."
-            disabled={submitting}
-            onChange={(event) => setDescription(event.currentTarget.value)}
-          />
-        </label>
         <div className="assurance-form-field">
           <span>Published Test Plan</span>
           <PlatformSelector
@@ -252,7 +271,7 @@ export function AssurancePolicyCreateModal({
           <span>Evidence freshness · hours</span>
           <input
             type="number"
-            min="0.01"
+            min="1"
             step="1"
             value={maxAgeHours}
             disabled={submitting}

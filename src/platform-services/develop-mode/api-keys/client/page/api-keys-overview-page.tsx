@@ -255,6 +255,11 @@ export function DevelopApiKeysOverviewPage({
         danger: true,
         disabled: Boolean(revokingKeyId) || deletableTargets.length === 0,
         onSelect: () => onDelete(deletableTargets),
+        selectedRows: {
+          label: "Delete selected",
+          danger: true,
+          onSelect: () => onDelete(deletableTargets),
+        },
       }];
     }
     const actions: PlatformDataTableAction<DevelopApiKeyOverviewRow>[] = [];

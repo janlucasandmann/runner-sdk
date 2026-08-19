@@ -78,6 +78,16 @@ export const METRONOME_EXECUTION_RUNTIME_SCRIPT = String.raw`
           return {
             id: String(raw.id || "").trim(),
             metronomeId: String(raw.metronomeId || raw.metronome_id || "").trim(),
+            snapshotId: String(raw.snapshotId || raw.snapshot_id || "").trim(),
+            versionId: String(raw.versionId || raw.version_id || "").trim(),
+            runKind: String(raw.runKind || raw.run_kind || "workflow").trim(),
+            invocationSource: String(raw.invocationSource || raw.invocation_source || "").trim(),
+            effectMode: String(raw.effectMode || raw.effect_mode || "execute").trim(),
+            executionSelection: raw.executionSelection && typeof raw.executionSelection === "object"
+              ? raw.executionSelection
+              : raw.execution_selection && typeof raw.execution_selection === "object"
+                ? raw.execution_selection
+                : null,
             triggerType: String(raw.triggerType || raw.trigger_type || "").trim(),
             status: String(raw.status || "completed").trim(),
             input,
@@ -164,19 +174,49 @@ export const METRONOME_EXECUTION_RUNTIME_SCRIPT = String.raw`
           return rawItems.map(normalizeMetronomeTriggerEvent).filter((event) => event.id);
         }
 
-        async function createMetronomeRunApi(workflowId, { definition, prompt, inputs } = {}) {
+        function createMetronomeExecutionRequestPayload(workflowId, {
+          definition,
+          versionId,
+          prompt,
+          inputs,
+          selection,
+          fixture,
+          idempotencyKey,
+        } = {}) {
+          const normalizedWorkflowId = String(workflowId || "").trim();
+          const runInputs = {
+            ...(inputs && typeof inputs === "object" ? inputs : {}),
+            ...(prompt !== undefined ? { prompt: String(prompt || "").trim() } : {}),
+          };
+          const basePayload = definition && typeof definition === "object"
+            ? createMetronomeExecutionPayload(
+                { id: normalizedWorkflowId, name: definition?.name || "Metronome" },
+                definition,
+                runInputs
+              )
+            : { inputs: runInputs };
+          return {
+            ...basePayload,
+            ...(String(versionId || "").trim() ? { versionId: String(versionId).trim() } : {}),
+            ...(selection && typeof selection === "object" ? { selection } : {}),
+            ...(fixture !== undefined ? { fixture } : {}),
+            ...(String(idempotencyKey || "").trim() ? { idempotencyKey: String(idempotencyKey).trim() } : {}),
+          };
+        }
+
+        async function createMetronomeRunApi(workflowId, { definition, versionId, prompt, inputs, idempotencyKey } = {}) {
           const normalizedWorkflowId = String(workflowId || "").trim();
           if (!normalizedWorkflowId) throw new Error("Save this Metronome before running it.");
-          const runInputs = {
-            source: "manual_chat",
-            ...(inputs && typeof inputs === "object" ? inputs : {}),
-            prompt: String(prompt || "").trim(),
-          };
-          const executionPayload = createMetronomeExecutionPayload(
-            { id: normalizedWorkflowId, name: definition?.name || "Metronome" },
+          const executionPayload = createMetronomeExecutionRequestPayload(normalizedWorkflowId, {
             definition,
-            runInputs
-          );
+            versionId,
+            prompt,
+            idempotencyKey,
+            inputs: {
+              source: "manual_chat",
+              ...(inputs && typeof inputs === "object" ? inputs : {}),
+            },
+          });
           const response = await fetch("/api/real/metronomes/" + encodeURIComponent(normalizedWorkflowId) + "/runs", {
             method: "POST",
             credentials: "same-origin",
@@ -185,6 +225,35 @@ export const METRONOME_EXECUTION_RUNTIME_SCRIPT = String.raw`
           });
           const data = await readMetronomeApiJson(response, "Failed to start Metronome run.");
           return normalizeMetronomeRun(data?.data || data);
+        }
+
+        async function previewMetronomeTestRunApi(workflowId, options = {}) {
+          const normalizedWorkflowId = String(workflowId || "").trim();
+          if (!normalizedWorkflowId) throw new Error("Save this Metronome before testing it.");
+          const response = await fetch("/api/real/metronomes/" + encodeURIComponent(normalizedWorkflowId) + "/test-runs/preview", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(createMetronomeExecutionRequestPayload(normalizedWorkflowId, options)),
+          });
+          const data = await readMetronomeApiJson(response, "Failed to preview this workflow test.");
+          return data?.data || data;
+        }
+
+        async function createMetronomeTestRunApi(workflowId, options = {}) {
+          const normalizedWorkflowId = String(workflowId || "").trim();
+          if (!normalizedWorkflowId) throw new Error("Save this Metronome before testing it.");
+          const response = await fetch("/api/real/metronomes/" + encodeURIComponent(normalizedWorkflowId) + "/test-runs", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(createMetronomeExecutionRequestPayload(normalizedWorkflowId, options)),
+          });
+          const data = await readMetronomeApiJson(response, "Failed to start this workflow test.");
+          return {
+            run: normalizeMetronomeRun(data?.data || data),
+            preview: data?.preview || null,
+          };
         }
 
         async function deleteMetronomeRunApi(workflowId, runId) {

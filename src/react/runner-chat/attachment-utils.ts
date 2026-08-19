@@ -18,6 +18,11 @@ export function mergeAttachmentReferenceMetadata(
     ...(typeof local.promptVersionNumber === "number"
       ? { promptVersionNumber: local.promptVersionNumber }
       : {}),
+    ...(local.knowledgeLibraryId ? { knowledgeLibraryId: local.knowledgeLibraryId } : {}),
+    ...(local.knowledgeVersionId ? { knowledgeVersionId: local.knowledgeVersionId } : {}),
+    ...(typeof local.knowledgeVersionNumber === "number"
+      ? { knowledgeVersionNumber: local.knowledgeVersionNumber }
+      : {}),
     ...(local.sourceAttachmentId
       ? { sourceAttachmentId: local.sourceAttachmentId }
       : {}),

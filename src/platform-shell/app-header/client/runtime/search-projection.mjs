@@ -18,6 +18,13 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           : resolveGlobalServiceSearchQuery(threadSearchQuery);
         const isGlobalServiceSearchQuery = globalServiceSearchQuery !== null;
 
+        function isThreadSearchImageFileEntry(entry) {
+          const mimeType = String(entry?.mimeType || entry?.contentType || "").trim().toLowerCase();
+          if (mimeType.startsWith("image/")) return true;
+          const path = normalizeHistoryPath(entry?.path || entry?.name || "").toLowerCase();
+          return /\\.(avif|bmp|gif|jpe?g|png|svg|webp)$/.test(path);
+        }
+
         useEffect(() => {
           if (threadSearchFileInventoryScopeKeyRef.current === threadSearchResourceScopeKey) {
             return;
@@ -40,6 +47,18 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
               total: 0,
             },
             prompts: {
+              scopeKey: threadSearchResourceScopeKey,
+              items: [],
+            },
+            knowledge: {
+              scopeKey: threadSearchResourceScopeKey,
+              items: [],
+            },
+            evaluations: {
+              scopeKey: threadSearchResourceScopeKey,
+              items: [],
+            },
+            "server-resources": {
               scopeKey: threadSearchResourceScopeKey,
               items: [],
             },
@@ -121,7 +140,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           const normalizedMode = String(targetMode || "").trim();
           if (
             !hasRealAccess
-            || !["agents", "tickets", "workflows", "prompts"].includes(normalizedMode)
+            || !["agents", "tickets", "workflows", "prompts", "knowledge", "evaluations"].includes(normalizedMode)
           ) {
             return [];
           }
@@ -200,6 +219,42 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
                 : Array.isArray(data?.data)
                   ? data.data
                   : [];
+            } else if (normalizedMode === "knowledge") {
+              const response = await fetch(proxyBackendBase + "/knowledge", {
+                method: "GET",
+                headers: authRequestHeaders,
+                credentials: "include",
+                cache: "no-store",
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load Knowledge libraries.");
+              }
+              items = Array.isArray(data?.libraries)
+                ? data.libraries
+                : Array.isArray(data?.data)
+                  ? data.data
+                  : [];
+            } else if (normalizedMode === "evaluations") {
+              const target = new URL(proxyBackendBase + "/evaluations", window.location.origin);
+              target.searchParams.set("limit", "200");
+              const response = await fetch(target.toString(), {
+                method: "GET",
+                headers: authRequestHeaders,
+                credentials: "include",
+                cache: "no-store",
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load evaluations.");
+              }
+              items = Array.isArray(data?.evaluations)
+                ? data.evaluations
+                : Array.isArray(data?.sets)
+                  ? data.sets
+                  : Array.isArray(data?.data)
+                    ? data.data
+                    : [];
             } else {
               const workflowResults = await Promise.allSettled([
                 fetchMetronomeWorkflowsFromApi("", {
@@ -286,7 +341,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           if (
             !threadSearchOpen
             || isGlobalServiceSearchQuery
-            || !["agents", "tickets", "workflows", "prompts"].includes(threadSearchMode)
+            || !["agents", "tickets", "workflows", "prompts", "knowledge", "evaluations"].includes(threadSearchMode)
           ) {
             return;
           }
@@ -528,8 +583,8 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           }
           return realEnvironments
             .filter((environment) => String(environment?.id || "").trim())
-            .slice(0, 24);
-        }, [hasRealAccess, realEnvironments]);
+            .slice(0, threadSearchModeLocked ? undefined : 24);
+        }, [hasRealAccess, realEnvironments, threadSearchModeLocked]);
 
         useEffect(() => {
           if (
@@ -537,7 +592,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
             || threadSearchMode !== "files"
             || !hasRealAccess
             || isGlobalServiceSearchQuery
-            || !normalizedThreadSearchQuery
+            || (!normalizedThreadSearchQuery && !threadSearchModeLocked)
           ) {
             return;
           }
@@ -549,20 +604,31 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           isGlobalServiceSearchQuery,
           loadThreadSearchFileInventory,
           normalizedThreadSearchQuery,
+          threadSearchModeLocked,
           threadSearchFileEnvironmentItems,
           threadSearchMode,
           threadSearchOpen,
         ]);
 
         const filteredThreadSearchFileItems = useMemo(() => {
-          if (threadSearchMode !== "files" || !normalizedThreadSearchQuery) {
+          if (threadSearchMode !== "files" || (!normalizedThreadSearchQuery && !threadSearchModeLocked)) {
             return [];
           }
           const results = [];
           threadSearchFileEnvironmentItems.forEach((environment) => {
             const inventory = threadSearchFileInventoryByEnvironmentId[environment.id] || [];
-            const rows = buildPlaygroundEnvironmentSearchRows(inventory, threadSearchQuery, { filesOnly: true });
-            rows.slice(0, 12).forEach((row) => {
+            const rows = normalizedThreadSearchQuery
+              ? buildPlaygroundEnvironmentSearchRows(inventory, threadSearchQuery, { filesOnly: true })
+              : inventory
+                  .filter((entry) => entry && !entry.isFolder)
+                  .map((entry) => ({ entry, level: 0, searchMatch: false }));
+            const visibleRows = rows
+              .filter((row) => (
+                threadSearchResourceTypeFilter !== "image"
+                || isThreadSearchImageFileEntry(row?.entry)
+              ));
+            (threadSearchModeLocked ? visibleRows : visibleRows.slice(0, 12))
+              .forEach((row) => {
               if (!row?.entry || row.entry.isFolder) {
                 return;
               }
@@ -572,20 +638,22 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
                 environmentName: environment.name || "Computer",
                 entry: row.entry,
               });
-            });
+              });
           });
-          return results.slice(0, 24);
+          return threadSearchModeLocked ? results : results.slice(0, 24);
         }, [
           normalizedThreadSearchQuery,
           threadSearchFileEnvironmentItems,
           threadSearchFileInventoryByEnvironmentId,
           threadSearchMode,
+          threadSearchModeLocked,
           threadSearchQuery,
+          threadSearchResourceTypeFilter,
         ]);
 
         const isThreadSearchFileLoading = Boolean(
           threadSearchMode === "files" &&
-          normalizedThreadSearchQuery &&
+          (normalizedThreadSearchQuery || threadSearchModeLocked) &&
           threadSearchFileEnvironmentItems.some((environment) => (
             threadSearchFileInventoryLoadingByEnvironmentId[environment.id] ||
             !Array.isArray(threadSearchFileInventoryByEnvironmentId[environment.id])
@@ -664,6 +732,24 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
             ? state.items
             : [];
         }, [threadSearchResourceDataByMode.prompts, threadSearchResourceScopeKey]);
+
+        const currentThreadSearchKnowledgeItems = useMemo(() => {
+          const state = threadSearchResourceDataByMode.knowledge;
+          return state?.scopeKey === threadSearchResourceScopeKey && Array.isArray(state.items)
+            ? state.items
+            : [];
+        }, [threadSearchResourceDataByMode.knowledge, threadSearchResourceScopeKey]);
+
+        const currentThreadSearchEvaluationItems = useMemo(() => {
+          const state = threadSearchResourceDataByMode.evaluations;
+          return state?.scopeKey === threadSearchResourceScopeKey && Array.isArray(state.items)
+            ? state.items
+            : [];
+        }, [threadSearchResourceDataByMode.evaluations, threadSearchResourceScopeKey]);
+
+        const currentThreadSearchServerResourceItems = useMemo(() => (
+          hasRealAccess && Array.isArray(realServers) ? realServers : []
+        ), [hasRealAccess, realServers]);
 
         const threadSearchProjectsById = useMemo(() => {
           return new Map((Array.isArray(realProjects) ? realProjects : [])
@@ -806,6 +892,127 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           threadSearchMode,
         ]);
 
+        const filteredThreadSearchKnowledgeItems = useMemo(() => {
+          if (threadSearchMode !== "knowledge") {
+            return [];
+          }
+          return currentThreadSearchKnowledgeItems
+            .filter((library) => {
+              if (!library?.id) return false;
+              if (!normalizedThreadSearchQuery) return true;
+              return [
+                library?.name,
+                library?.description,
+                library?.id,
+                library?.creatorName,
+                library?.ownerName,
+              ].map((value) => String(value || "")).join(" ").toLowerCase()
+                .includes(normalizedThreadSearchQuery);
+            })
+            .slice()
+            .sort((left, right) => {
+              const timestampDelta = (
+                Date.parse(String(right?.updatedAt || right?.createdAt || "")) || 0
+              ) - (
+                Date.parse(String(left?.updatedAt || left?.createdAt || "")) || 0
+              );
+              return timestampDelta || String(left?.name || "").localeCompare(
+                String(right?.name || ""),
+                undefined,
+                { sensitivity: "base" },
+              );
+            });
+        }, [
+          currentThreadSearchKnowledgeItems,
+          normalizedThreadSearchQuery,
+          threadSearchMode,
+        ]);
+
+        const filteredThreadSearchEvaluationItems = useMemo(() => {
+          if (threadSearchMode !== "evaluations") {
+            return [];
+          }
+          return currentThreadSearchEvaluationItems
+            .filter((evaluation) => {
+              if (!evaluation?.id) return false;
+              if (!normalizedThreadSearchQuery) return true;
+              const metadata = evaluation?.metadata && typeof evaluation.metadata === "object" && !Array.isArray(evaluation.metadata)
+                ? evaluation.metadata
+                : {};
+              return [
+                evaluation?.name,
+                evaluation?.title,
+                evaluation?.description,
+                evaluation?.id,
+                evaluation?.creatorName,
+                evaluation?.ownerName,
+                metadata?.creatorName,
+                metadata?.ownerName,
+              ].map((value) => String(value || "")).join(" ").toLowerCase()
+                .includes(normalizedThreadSearchQuery);
+            })
+            .slice()
+            .sort((left, right) => {
+              const timestampDelta = (
+                Date.parse(String(right?.updatedAt || right?.createdAt || "")) || 0
+              ) - (
+                Date.parse(String(left?.updatedAt || left?.createdAt || "")) || 0
+              );
+              return timestampDelta || String(left?.name || left?.title || "").localeCompare(
+                String(right?.name || right?.title || ""),
+                undefined,
+                { sensitivity: "base" },
+              );
+            });
+        }, [
+          currentThreadSearchEvaluationItems,
+          normalizedThreadSearchQuery,
+          threadSearchMode,
+        ]);
+
+        const filteredThreadSearchServerResourceItems = useMemo(() => {
+          if (threadSearchMode !== "server-resources") {
+            return [];
+          }
+          const expectedType = canonicalizePlaygroundServerKind(threadSearchResourceTypeFilter);
+          return currentThreadSearchServerResourceItems
+            .filter((resource) => (
+              resource?.id
+              && canonicalizePlaygroundServerKind(resource?.kind) === expectedType
+            ))
+            .filter((resource) => {
+              if (!normalizedThreadSearchQuery) return true;
+              return [
+                resource?.name,
+                resource?.title,
+                resource?.description,
+                resource?.id,
+                resource?.status,
+                resource?.endpoint,
+                resource?.url,
+              ].map((value) => String(value || "")).join(" ").toLowerCase()
+                .includes(normalizedThreadSearchQuery);
+            })
+            .slice()
+            .sort((left, right) => {
+              const timestampDelta = (
+                Date.parse(String(right?.updatedAt || right?.createdAt || "")) || 0
+              ) - (
+                Date.parse(String(left?.updatedAt || left?.createdAt || "")) || 0
+              );
+              return timestampDelta || String(left?.name || left?.title || "").localeCompare(
+                String(right?.name || right?.title || ""),
+                undefined,
+                { sensitivity: "base" },
+              );
+            });
+        }, [
+          currentThreadSearchServerResourceItems,
+          normalizedThreadSearchQuery,
+          threadSearchMode,
+          threadSearchResourceTypeFilter,
+        ]);
+
         const isThreadSearchSelectedModeLoading = isGlobalServiceSearchQuery
           ? false
           : threadSearchMode === "threads"
@@ -836,5 +1043,11 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
                 ? filteredThreadSearchAgentItems.length
                 : threadSearchMode === "workflows"
                   ? filteredThreadSearchWorkflowItems.length
-                  : filteredThreadSearchPromptItems.length;
+                  : threadSearchMode === "prompts"
+                    ? filteredThreadSearchPromptItems.length
+                    : threadSearchMode === "knowledge"
+                      ? filteredThreadSearchKnowledgeItems.length
+                      : threadSearchMode === "evaluations"
+                        ? filteredThreadSearchEvaluationItems.length
+                        : filteredThreadSearchServerResourceItems.length;
 `;

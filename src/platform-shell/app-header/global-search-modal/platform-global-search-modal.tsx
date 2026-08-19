@@ -2,10 +2,13 @@ import {
   Bot,
   Check,
   FileText,
+  FlaskConical,
+  LibraryBig,
   ListTodo,
   MessageSquareText,
   MessageSquare,
   Pencil,
+  Server,
   SlidersHorizontal,
   SquareArrowOutUpRight,
   SquarePen,
@@ -38,7 +41,10 @@ export type PlatformGlobalSearchMode =
   | "tickets"
   | "agents"
   | "workflows"
-  | "prompts";
+  | "prompts"
+  | "knowledge"
+  | "evaluations"
+  | "server-resources";
 
 export interface PlatformGlobalSearchModeOption {
   id: PlatformGlobalSearchMode;
@@ -76,6 +82,16 @@ export const PLATFORM_GLOBAL_SEARCH_MODE_OPTIONS: readonly PlatformGlobalSearchM
     id: "prompts",
     label: "Prompts",
     description: "Reusable prompts in your workspace",
+  },
+  {
+    id: "knowledge",
+    label: "Knowledge",
+    description: "Knowledge libraries in your workspace",
+  },
+  {
+    id: "evaluations",
+    label: "Evaluations",
+    description: "Evaluations in this organization",
   },
 ] as const;
 
@@ -158,6 +174,9 @@ function getModeIcon(mode: PlatformGlobalSearchMode) {
   if (mode === "agents") return Bot;
   if (mode === "workflows") return Workflow;
   if (mode === "prompts") return MessageSquareText;
+  if (mode === "knowledge") return LibraryBig;
+  if (mode === "evaluations") return FlaskConical;
+  if (mode === "server-resources") return Server;
   return MessageSquare;
 }
 
@@ -178,6 +197,9 @@ function getModeItemLabel(mode: PlatformGlobalSearchMode) {
   if (mode === "agents") return "agent";
   if (mode === "workflows") return "workflow";
   if (mode === "prompts") return "prompt";
+  if (mode === "knowledge") return "knowledge library";
+  if (mode === "evaluations") return "evaluation";
+  if (mode === "server-resources") return "resource";
   return "thread";
 }
 

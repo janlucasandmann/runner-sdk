@@ -4,6 +4,7 @@ export const EVALUATIONS_APP_STATE_SCRIPT = `        const [evaluationSets, setE
         const [selectedEvaluationCaseId, setSelectedEvaluationCaseId] = useState("");
         const [evaluationRunReturnTarget, setEvaluationRunReturnTarget] = useState(null);
         const [evaluationsPageMode, setEvaluationsPageMode] = useState("overview");
+        const [evaluationsOverviewScope, setEvaluationsOverviewScope] = useState("all");
         const [evaluationDetailTab, setEvaluationDetailTab] = useState("general");
         const [evaluationCaseDetailTab, setEvaluationCaseDetailTab] = useState("code");
         const [evaluationRunsSearchQuery, setEvaluationRunsSearchQuery] = useState("");

@@ -10,11 +10,13 @@ export const TEAMS_PAGE_RESOURCES_FOUNDATION_SCRIPT = `          const getTeamRe
               file: { label: "File", Icon: FileText },
               metronome: { label: "Metronome Workflow", Icon: Metronome },
               metronome_workflow: { label: "Metronome Workflow", Icon: Metronome },
+              batch_job: { label: "Batch", Icon: Truck },
               web_app: { label: "Web App", Icon: Monitor },
               function: { label: "Function", Icon: FunctionSquare },
               database: { label: "Database", Icon: Database },
               imagine: { label: "Imagine", Icon: Clapperboard },
               imagine_template: { label: "Imagine template", Icon: Clapperboard },
+              inference_endpoint: { label: "Inference Endpoint", Icon: Cpu },
             };
             return metaByType[normalizedType] || { label: "Resource", Icon: Layers };
           };
@@ -645,12 +647,14 @@ export const TEAMS_PAGE_RESOURCES_FOUNDATION_SCRIPT = `          const getTeamRe
             { id: "guardrail", label: "Guardrails" },
             { id: "evaluation", label: "Evaluations" },
             { id: "file", label: "Files" },
-            { id: "metronome", label: "Metronomes" },
+	            { id: "metronome", label: "Metronomes" },
+            { id: "batch_job", label: "Batches" },
             { id: "web_app", label: "Web Apps" },
             { id: "function", label: "Functions" },
             { id: "database", label: "Databases" },
             { id: "imagine", label: "Imagine" },
             { id: "imagine_template", label: "Imagine templates" },
+            { id: "inference_endpoint", label: "Inference Endpoints" },
 	          ].filter((filterOption) => (
 	            filterOption.id === "all" || teamResourceRowsAll.some((row) => row.type === filterOption.id)
 	          ));

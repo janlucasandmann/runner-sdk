@@ -51,4 +51,30 @@ describe("PlatformVersionPublishControl", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Create new version" }));
     expect(onCreateVersion).toHaveBeenCalledTimes(1);
   });
+
+  it.each([
+    { disabled: true, menuDisabled: false },
+    { disabled: false, menuDisabled: true },
+  ])(
+    "disables both halves when either half is disabled",
+    ({ disabled, menuDisabled }) => {
+      render(
+        <PlatformVersionPublishControl
+          open={false}
+          actions={[]}
+          disabled={disabled}
+          menuDisabled={menuDisabled}
+          onOpenChange={vi.fn()}
+          onPublish={vi.fn()}
+        />,
+      );
+
+      expect((screen.getByRole("button", {
+        name: "Save and publish changes",
+      }) as HTMLButtonElement).disabled).toBe(true);
+      expect((screen.getByRole("button", {
+        name: "Version save options",
+      }) as HTMLButtonElement).disabled).toBe(true);
+    },
+  );
 });

@@ -2,6 +2,10 @@ import {
   buildRunnerHeaders,
   sanitizeBackendUrl,
 } from "./api-utils.js";
+import {
+  normalizeRunnerKnowledgeContext,
+  type RunnerKnowledgeContext,
+} from "./knowledge-context.js";
 
 export type RunnerForkFileCopyMode = "all" | "thread_only" | "none";
 export type RunnerForkTarget =
@@ -22,6 +26,7 @@ export async function createThread(params: {
   agentId?: string;
   reasoningEffort?: string | null;
   metadata?: Record<string, unknown> | null;
+  knowledgeContext?: RunnerKnowledgeContext | null;
   privateMode?: boolean;
 }): Promise<{
   threadId: string;
@@ -43,10 +48,14 @@ export async function createThread(params: {
     !Array.isArray(baseMetadata.runnerPlayground)
       ? baseMetadata.runnerPlayground
       : {};
+  const knowledgeContext = normalizeRunnerKnowledgeContext(
+    params.knowledgeContext || baseMetadata?.knowledgeContext,
+  );
   const metadata =
-    baseMetadata || params.privateMode
+    baseMetadata || params.privateMode || knowledgeContext
       ? {
           ...(baseMetadata || {}),
+          ...(knowledgeContext ? { knowledgeContext } : {}),
           runnerPlayground: {
             ...runnerPlaygroundMetadata,
             ...(params.privateMode
@@ -70,6 +79,7 @@ export async function createThread(params: {
       agentId: params.agentId,
       reasoningEffort: params.reasoningEffort || undefined,
       metadata,
+      ...(knowledgeContext ? { knowledgeContext } : {}),
     }),
   });
 
@@ -196,7 +206,14 @@ export async function cancelThreadExecution(params: {
   );
   const response = await fetch(
     `${backendUrl}/threads/${encodeURIComponent(params.threadId)}/cancel`,
-    { method: "POST", headers }
+    {
+      method: "POST",
+      headers,
+      // The platform uses the signed-in session when no API key is supplied.
+      // Explicitly include cookies so cancellation also works when the API
+      // URL is resolved through a session-authenticated gateway.
+      credentials: "include",
+    }
   );
 
   const bodyText = await response.text().catch(() => "");

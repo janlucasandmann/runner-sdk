@@ -914,33 +914,64 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
           }
         }
 
-        async function handleDeleteProject(projectId) {
-          const resolvedProjectId = String(projectId || "").trim();
-          if (!resolvedProjectId || !window.confirm("Delete this project?")) {
+        async function handleDeleteProjects(projectIds) {
+          const resolvedProjectIds = Array.from(new Set(
+            (Array.isArray(projectIds) ? projectIds : [projectIds])
+              .map((projectId) => String(projectId || "").trim())
+              .filter(Boolean)
+          ));
+          if (!resolvedProjectIds.length) return;
+          const confirmed = window.confirm(
+            resolvedProjectIds.length === 1
+              ? "Delete this project?"
+              : "Delete " + resolvedProjectIds.length + " selected projects?"
+          );
+          if (!confirmed) {
             return;
           }
 
           setProjectSidebarPopover("");
 
-          try {
-            const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(resolvedProjectId), {
-              method: "DELETE",
-              headers: requestHeaders,
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to delete project.");
+          const results = await Promise.all(resolvedProjectIds.map(async (resolvedProjectId) => {
+            try {
+              const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(resolvedProjectId), {
+                method: "DELETE",
+                headers: requestHeaders,
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to delete project.");
+              }
+              return { id: resolvedProjectId, deleted: true, error: "" };
+            } catch (error) {
+              return {
+                id: resolvedProjectId,
+                deleted: false,
+                error: error instanceof Error ? error.message : "Failed to delete project.",
+              };
             }
-
-            setProjects((current) => current.filter((project) => project.id !== resolvedProjectId));
-            if (selectedProjectId === resolvedProjectId) {
+          }));
+          const deletedIds = new Set(results.filter((result) => result.deleted).map((result) => result.id));
+          const failures = results.filter((result) => !result.deleted);
+          if (deletedIds.size) {
+            setProjects((current) => current.filter((project) => !deletedIds.has(project.id)));
+            if (deletedIds.has(selectedProjectId)) {
               handleSelectProject("");
             } else {
               void loadProjects();
             }
-          } catch (error) {
-            window.alert(error instanceof Error ? error.message : "Failed to delete project.");
           }
+          if (failures.length) {
+            window.alert(
+              failures.length === 1
+                ? failures[0].error
+                : failures.length + " projects could not be deleted."
+            );
+          }
+        }
+
+        async function handleDeleteProject(projectId) {
+          return await handleDeleteProjects([projectId]);
         }
 
         function showReleaseComposer() {
@@ -1230,11 +1261,11 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
             return null;
           }
 
-          const hasStrategyDocument = Boolean(String(selectedProjectMissionControl.document || "").trim());
+          const hasProjectKnowledge = Boolean(getPlaygroundProjectKnowledgeLibraryId(selectedProject));
           const summaryText = isSelectedProjectMissionControlRunning
-            ? "Mission Control is analyzing the project context, updating the backlog, and preparing the latest strategy statement."
+            ? "Mission Control is analyzing the project context, updating the backlog, and maintaining the project Knowledge library."
             : String(selectedProjectMissionControl.summary || "").trim()
-              || "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.";
+              || "Run Mission Control to create or update the project Knowledge library, documentation, and backlog.";
 
           return React.createElement("div", { className: "playground-tasks-mission-control-card" },
             React.createElement("div", {
@@ -1244,14 +1275,6 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
               React.createElement("div", { className: "playground-tasks-mission-control-header" },
                 React.createElement("div", { className: "playground-tasks-mission-control-title" }, (selectedProject.name || "Project") + " Mission Control"),
                 React.createElement("div", { className: "playground-tasks-mission-control-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-tasks-mission-control-button",
-                    disabled: !hasStrategyDocument,
-	                    onClick: () => {
-	                      openMissionControlStrategySidebar();
-	                    },
-                  }, "Strategy"),
                   React.createElement(PlatformPrimaryButton, {
                     type: "button",
                     className: "playground-tasks-mission-control-button is-primary",
@@ -1268,7 +1291,7 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
                 )
               ),
               React.createElement("div", {
-                className: "playground-tasks-mission-control-summary" + (hasStrategyDocument || isSelectedProjectMissionControlRunning ? "" : " is-empty"),
+                className: "playground-tasks-mission-control-summary" + (hasProjectKnowledge || isSelectedProjectMissionControlRunning ? "" : " is-empty"),
               }, summaryText),
               missionControlRunState.projectId === selectedProjectId && missionControlRunState.status === "failed" && missionControlRunState.error
                 ? React.createElement("div", { className: "playground-tasks-mission-control-error" }, missionControlRunState.error)
@@ -1369,14 +1392,6 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
 	          const normalizedProjectMissionControl = normalizePlaygroundProjectMissionControlRecord(
 	            rawProjectMissionControlForPayload
 	          );
-	          if (
-	            rawProjectMissionControlForPayload
-	            && typeof rawProjectMissionControlForPayload === "object"
-	            && !Array.isArray(rawProjectMissionControlForPayload)
-	            && rawProjectMissionControlForPayload.strategyBriefReplace === true
-	          ) {
-	            normalizedProjectMissionControl.strategyBriefReplace = true;
-	          }
 	          const projectIndex = Math.max(0, projects.findIndex((project) => project.id === normalizedProject.id));
           const metadataPayload = {
             ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" ? normalizedProject.metadata : {}),

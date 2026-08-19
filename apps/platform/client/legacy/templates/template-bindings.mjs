@@ -2,7 +2,7 @@ import {
   createLegacyPlatformShellScript,
 } from "../domains/shell/source.mjs";
 
-export const PLATFORM_COMPATIBILITY_BINDING_COUNT = 136;
+export const PLATFORM_COMPATIBILITY_BINDING_COUNT = 137;
 
 export function createPlatformCompatibilityTemplateBindings(bindings) {
   const PLATFORM_SHELL_SCRIPT = createLegacyPlatformShellScript(bindings);
@@ -17,6 +17,7 @@ export function createPlatformCompatibilityTemplateBindings(bindings) {
     APP_HEADER_STYLE_FRAGMENTS,
     APP_SIDEBAR_APP_SCRIPT_FRAGMENTS,
     APP_SIDEBAR_STYLE_FRAGMENTS,
+    BATCHES_PAGE_CSS,
     CALENDAR_BROWSER_FOUNDATION_FRAGMENTS,
     CALENDAR_SHELL_SCRIPT_FRAGMENTS,
     CALENDAR_STYLE_FRAGMENTS,
@@ -250,5 +251,6 @@ export function createPlatformCompatibilityTemplateBindings(bindings) {
     JSON.stringify(identityProvider),
     ONBOARDING_CSS,
     PROMPTS_PAGE_SCRIPT,
+    BATCHES_PAGE_CSS,
   ]);
 }

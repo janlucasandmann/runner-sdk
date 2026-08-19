@@ -1,6 +1,7 @@
 export const FINE_TUNING_APP_STATE_SCRIPT = String.raw`        const [fineTuningJobs, setFineTuningJobs] = useState([]);
         const [selectedFineTuningJobId, setSelectedFineTuningJobId] = useState("");
         const [fineTuningPageMode, setFineTuningPageMode] = useState("overview");
+        const [fineTuningOverviewScope, setFineTuningOverviewScope] = useState("all");
         const [fineTuningDetailTab, setFineTuningDetailTab] = useState("general");
         const [fineTuningCreateModalOpen, setFineTuningCreateModalOpen] = useState(false);
         const [fineTuningCreateForm, setFineTuningCreateForm] = useState({

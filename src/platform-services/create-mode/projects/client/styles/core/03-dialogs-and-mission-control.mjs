@@ -21,6 +21,46 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 		        overflow-y: auto;
 		      }
 
+		      .playground-project-create-modal__description-editor.platform-instructions-editor {
+		        margin: 0;
+		      }
+
+		      .playground-project-create-modal__description-editor .platform-instructions-editor__prosemirror {
+		        min-height: 96px;
+		      }
+
+		      .playground-project-create-modal .playground-tasks-project-initial-setup-field.is-inline {
+		        display: flex;
+		        justify-content: space-between;
+		        align-items: center;
+		        gap: 16px;
+		      }
+
+		      .playground-project-create-modal .playground-tasks-project-initial-setup-field.is-inline .playground-tasks-project-initial-setup-label {
+		        white-space: nowrap;
+		      }
+
+		      .playground-project-create-modal .playground-tasks-project-initial-setup-field .playground-tasks-project-modal-environment-picker {
+		        width: auto;
+		        min-width: 0;
+		        margin-left: auto;
+		        display: flex;
+		        align-items: center;
+		        justify-content: flex-end;
+		      }
+
+		      .playground-project-create-modal .playground-tasks-project-modal-computer-selector {
+		        margin-left: auto;
+		      }
+
+		      .playground-project-create-modal .playground-tasks-project-modal-computer-selector-value {
+		        min-width: 0;
+		        display: inline-flex;
+		        align-items: center;
+		        justify-content: flex-end;
+		        gap: 8px;
+		      }
+
 		      .playground-project-create-modal__identity {
 		        min-width: 0;
 		        display: flex;

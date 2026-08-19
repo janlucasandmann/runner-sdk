@@ -23,6 +23,7 @@ export const KNOWLEDGE_APP_PAGE_VIEW_SCRIPT = String.raw`        function render
             versionsDrawerPortalId: knowledgePageMode === "library"
               ? "playground-agent-versions-drawer-root"
               : undefined,
+            onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
             workspaceTeams: teamPageTeams,
             workspaceTeamsLoading: teamPageLoading,
             activeOrganizationId,
@@ -57,7 +58,23 @@ export const KNOWLEDGE_APP_PAGE_VIEW_SCRIPT = String.raw`        function render
             onStartThread: (library) => {
               handleNewThread({
                 initialPrompt: "Use the Knowledge library “" + String(library?.name || "Knowledge") + "” as context for this thread.",
-                knowledgeLibraryIds: library?.id ? [String(library.id)] : []
+                knowledgeLibraryIds: library?.id ? [String(library.id)] : [],
+                knowledgeContext: library?.id
+                  ? {
+                      schemaVersion: "computer_agents_knowledge_context_v1",
+                      enabled: true,
+                      libraryIds: [String(library.id)],
+                      bindings: [{
+                        libraryId: String(library.id),
+                        ...(library?.currentVersionId ? { versionId: String(library.currentVersionId) } : {}),
+                        ...(Number.isFinite(Number(library?.currentVersionNumber))
+                          ? { versionNumber: Number(library.currentVersionNumber) }
+                          : {}),
+                      }],
+                      mode: "read",
+                      source: "knowledge-detail",
+                    }
+                  : null,
               });
             },
           });

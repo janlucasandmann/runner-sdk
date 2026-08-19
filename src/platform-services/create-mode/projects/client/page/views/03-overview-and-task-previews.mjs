@@ -821,7 +821,12 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
 \${PROJECT_ACTIVITY_RANGE_SCRIPT}
 
         function renderProjectActivityOverviewView() {
-          const activityTasks = selectedRelease ? projectReleaseTasks : tasks;
+          const activityTaskRecordsById = new Map([
+            ...tasks,
+            ...(projectOverviewTaskActivityState?.items || []).map((event) => event?.task),
+          ].filter((task) => task?.id).map((task) => [String(task.id), task]));
+          const activityTasks = [...activityTaskRecordsById.values()]
+            .filter((task) => !selectedReleaseId || String(task?.releaseId || "") === selectedReleaseId);
           const visibleTaskIds = new Set(
             (Array.isArray(activityTasks) ? activityTasks : [])
               .filter((task) => task?.id && matchesTaskSearch(task))
@@ -1045,7 +1050,8 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             const normalizedSectionReleaseId = typeof section.releaseId === "string" && section.releaseId.trim()
               ? section.releaseId.trim()
               : "";
-            const laneTasks = section.tasks.filter((task) => lane.statuses.includes(getTaskBoardStatus(task)));
+            const allLaneTasks = section.tasks.filter((task) => lane.statuses.includes(getTaskBoardStatus(task)));
+            const laneTasks = allLaneTasks.filter((task) => boardRenderedTaskIds.has(task.id));
             const laneDropTargetKey = section.key + ":" + lane.id;
             const isLaneDropTarget = boardDropLaneId === laneDropTargetKey
               && draggingBoardTask
@@ -1057,7 +1063,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
               },
               React.createElement("div", { className: "playground-tasks-board-release-box-header" },
                 React.createElement("div", { className: "playground-tasks-board-release-box-title" }, lane.label),
-                React.createElement("span", { className: "playground-tasks-board-release-box-count" }, String(laneTasks.length))
+                React.createElement("span", { className: "playground-tasks-board-release-box-count" }, String(allLaneTasks.length))
               ),
               React.createElement("div", {
                   className: "playground-tasks-lane playground-tasks-board-release-lane-body",
@@ -1137,7 +1143,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
           const emptyCopy = selectedRelease
             ? "Assign tasks to this milestone or adjust the filter and they will appear in the appropriate lane."
             : shouldShowMissionControlEmptyAction
-              ? "Run Mission Control to generate the first strategy and create the initial structured backlog for this project."
+              ? "Run Mission Control to establish the project Knowledge library and create the initial structured backlog."
               : "Adjust the filter or add tasks to the project and they will appear in the appropriate board lane.";
 
           return React.createElement("div", { className: "playground-tasks-view-section" },
@@ -1145,7 +1151,11 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             shouldRenderBoardSections
               ? React.createElement(React.Fragment, null,
                   React.createElement("div", { className: "playground-tasks-board-sections" },
-                    boardReleaseSections.map((section) => renderBoardSection(section))
+                    boardReleaseSections.map((section) => renderBoardSection(section)),
+                    boardHasMoreTasks
+                      ? React.createElement("div", { ref: boardLoadMoreRef, className: "playground-tasks-progressive-list-loading" },
+                          React.createElement(PlatformLoadingState, { as: "span", message: "Loading more tickets..." }))
+                      : null
                   )
                 )
               : React.createElement("div", { className: "playground-tasks-empty" },
@@ -1157,7 +1167,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                           size: "medium",
                           type: "button",
                           className: "playground-tasks-empty-primary-button playground-tasks-empty-mission-control-button",
-                          onClick: () => openMissionControlComposer({ keepStrategyOpen: true }),
+                          onClick: () => openMissionControlComposer(),
                         },
                           React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 2 }),
                           React.createElement("span", null, "Run Mission Control")
@@ -1204,8 +1214,8 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
         function renderMissionControlSetupEmptyState() {
           const capabilities = [
             {
-              title: "Generate Strategy",
-              copy: "Turn the project goal into a clear execution plan and working context.",
+              title: "Maintain Knowledge",
+              copy: "Create or update durable strategy, decisions, and project documentation in Knowledge.",
               Icon: SquarePen,
             },
             {
@@ -1307,7 +1317,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
               keepFocusOnSubmit: true,
               showUsageInStatus: false,
               disabled: !isMissionControlReady,
-              placeholder: "Develop your Project strategy and tasks by prompting Mission Control",
+              placeholder: "Plan work and maintain project Knowledge with Mission Control",
               emptyState: renderMissionControlSetupEmptyState(),
               onExternalRunRequestCreate: handleMissionControlSetupRunRequest,
             })
@@ -1587,16 +1597,6 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                     + (taskView === "backlog" ? " is-backlog-work-view" : "")
                     + (taskView === "board" ? " is-board-work-view" : ""),
                 },
-                  taskLoadState.status === "error" && tasks.length > 0
-                    ? React.createElement("div", { className: "playground-environments-error" },
-                        React.createElement("span", null, taskLoadState.error || "Failed to refresh project tasks."),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button",
-                          onClick: () => void loadProjectWorkspace(selectedProjectId),
-                        }, "Retry")
-                      )
-                    : null,
                   taskLoadState.status === "loading" && tasks.length === 0
                     ? React.createElement(PlatformLoadingState, {
                         message: "Loading project...",

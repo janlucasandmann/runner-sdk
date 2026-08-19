@@ -71,6 +71,15 @@ assert.match(
   GUARDRAILS_APP_RUNTIME_SCRIPT,
   /hasPlaygroundGuardrailIncompletePrompts\(normalizedSet\)[\s\S]*setGuardrailsBackendSyncState\(\{ status: "idle", error: "" \}\)[\s\S]*return normalizedSet/,
 );
+assert.match(GUARDRAILS_APP_STATE_SCRIPT, /guardrailLocalPromptDraftsRef = useRef\(new Map\(\)\)/);
+assert.match(
+  GUARDRAILS_APP_RUNTIME_SCRIPT,
+  /function mergeGuardrailSetWithLocalPromptDrafts\(nextSet\)[\s\S]*guardrailLocalPromptDraftsRef\.current\.get\(normalizedSet\.id\)/,
+);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.controller,
+  /guardrailLocalPromptDraftsRef\.current\.set\(createdSet\.id, localDraftPrompts\)[\s\S]*fetchBackendGuardrailSetDetails\(createdSet\)/,
+);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.controller, /function renderGuardrailsPage/);
 assert.match(
   GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.controller,
@@ -227,6 +236,9 @@ assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderGuar
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-guardrails-overview-controls/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-guardrails-detail-publish-controls/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformSwitch/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "all", label: "All Guardrails" \}/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "created", label: "Created by me" \}/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "shared", label: "Shared with me" \}/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "general", label: "General" \}/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "evaluation", label: "Evaluation" \}/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "settings", label: "Settings" \}/);

@@ -22,11 +22,6 @@ export const KNOWLEDGE_APP_TOP_NAVIGATION_SCRIPT = `        function renderKnowl
           }
           if (knowledgePageMode === "document") {
             pathItems.push({ label: selectedKnowledgeDocumentName || "Document" });
-          } else if (isLibrary) {
-            pathItems.push({
-              label: "v" + String(selectedKnowledgeVersionNumber || 1),
-              onClick: () => window.dispatchEvent(new CustomEvent("knowledge:open-versions")),
-            });
           }
           return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar playground-knowledge-navbar",

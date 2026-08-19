@@ -126,7 +126,25 @@ export const EVALUATIONS_APP_TOP_NAVIGATION_SCRIPT = `        function renderEva
 	          return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems: evaluationsPathItems,
-	            center: isEvaluationDatasetCase
+	            center: isEvaluationsOverview
+	              ? React.createElement(PlatformSwitch, {
+	                  className: "playground-evaluations-overview-scope-switch",
+	                  value: evaluationsOverviewScope === "created"
+	                    ? "created"
+	                    : evaluationsOverviewScope === "shared"
+	                      ? "shared"
+	                      : "all",
+	                  options: [
+	                    { value: "all", label: "All Evaluations" },
+	                    { value: "created", label: "Created by me" },
+	                    { value: "shared", label: "Shared with me" },
+	                  ],
+	                  onValueChange: (nextScope) => setEvaluationsOverviewScope(
+	                    nextScope === "created" || nextScope === "shared" ? nextScope : "all"
+	                  ),
+	                  ariaLabel: "Evaluation scope",
+	                })
+	              : isEvaluationDatasetCase
 	              ? React.createElement(PlatformSwitch, {
 	                  className: "playground-evaluations-case-detail-header-switch",
 	                  value: evaluationCaseDetailTab === "settings" ? "settings" : "code",

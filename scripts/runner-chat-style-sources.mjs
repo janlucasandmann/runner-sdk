@@ -22,6 +22,7 @@ export const RUNNER_CHAT_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/composite/attachments/attachments.css",
   "src/platform-ui/components/composite/file-explorer/file-explorer.css",
   "src/platform-ui/components/composite/loading-state/loading-state.css",
+  "src/platform-ui/components/composite/status-indicator/status-indicator.css",
   "src/react/runner-chat.css",
   "src/platform-ui/components/thread-components/log-boxes/activity-core.css",
   "src/platform-ui/components/thread-components/log-boxes/activity-resources.css",

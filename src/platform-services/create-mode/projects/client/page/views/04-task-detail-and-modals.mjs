@@ -679,7 +679,24 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                       void handleStartTaskThread(draftTask);
                     }
                   },
-                }, popupActionLabel)
+                }, popupActionLabel),
+                React.createElement("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "tb-popup-row",
+                  disabled: threadActionDisabled,
+                  onClick: () => {
+                    if (!threadActionDisabled) {
+                      void handleStartTaskThread(draftTask, {
+                        addToBatch: true,
+                        successMessage: "Ticket added to Batches",
+                      });
+                    }
+                  },
+                },
+                  React.createElement(Truck, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  React.createElement("span", null, "Add to Batches")
+                )
               )
             );
           }
@@ -1112,44 +1129,105 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
 	            && typeof document !== "undefined"
 	            ? document.getElementById("playground-ticket-breadcrumb-actions-root")
 	            : null;
+	          const taskDetailBreadcrumbCanRunHumanTask = isHumanAssignedTask(draftTask);
+	          const taskDetailBreadcrumbStartedThreadId = getTaskStartedThreadId(draftTask);
+	          const closeTaskDetailBreadcrumbActions = () => setTaskDetailPopover("");
 	          const taskDetailBreadcrumbActionsPortal = taskDetailBreadcrumbActionsPortalTarget
 	            ? createPortal(
-	                React.createElement(PlatformPopup, {
-	                    open: taskDetailPopover === "menu",
-	                    rootClassName: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-ticket-breadcrumb-actions",
-	                    surfaceClassName: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide",
-	                    surfaceProps: {
-	                      role: "menu",
-	                      "aria-label": "Task actions",
-	                    },
-	                    animation: "down-in",
-	                    variant: "minimal",
-	                    placement: "bottom-end",
-	                    trigger: React.createElement("button", {
-	                      type: "button",
-	                      className: "playground-files-header-icon-button is-plain" + (taskDetailPopover === "menu" ? " is-active" : ""),
-	                      onClick: () => setTaskDetailPopover((current) => current === "menu" ? "" : "menu"),
-	                      title: "Task actions",
-	                      "aria-label": "Task actions",
-	                      "aria-haspopup": "menu",
-	                      "aria-expanded": taskDetailPopover === "menu" ? "true" : "false",
-	                    }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
+	                React.createElement(PlatformResourceHeaderActions, {
+	                    className: "playground-tasks-ticket-breadcrumb-actions",
 	                  },
-	                  React.createElement("button", {
-	                    type: "button",
-	                    role: "menuitem",
-	                    className: "tb-popup-row playground-tasks-detail-menu-item-danger",
-	                    disabled: saveState.isSaving,
-	                    onClick: () => {
-	                      setTaskDetailPopover("");
-	                      void handleDeleteTask(draftTask.id);
+	                  React.createElement(PlatformResourceActionsMenu, {
+	                      open: taskDetailPopover === "menu",
+	                      onOpenChange: (nextOpen) => setTaskDetailPopover(nextOpen ? "menu" : ""),
+	                      resourceLabel: "Ticket",
+	                      disabled: saveState.isSaving,
+	                      shortcutActions: {
+	                        delete: {
+	                          onInvoke: () => {
+	                            closeTaskDetailBreadcrumbActions();
+	                            void handleDeleteTask(draftTask.id);
+	                          },
+	                          disabled: saveState.isSaving,
+	                        },
+	                      },
 	                    },
-	                  },
-	                    React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                      React.createElement("span", null, "Delete"),
-	                      React.createElement("span", null, "Remove this ticket from the project.")
-	                    )
+	                    React.createElement(PlatformResourceActionsInformation, {
+	                      resourceLabel: "Ticket",
+	                      items: [
+	                        {
+	                          id: "id",
+	                          label: "ID",
+	                          value: draftTask.id,
+	                          title: draftTask.id,
+	                          monospace: true,
+	                          copyValue: draftTask.id,
+	                          copyAriaLabel: "Copy Ticket ID",
+	                        },
+	                        {
+	                          id: "created",
+	                          label: "Created",
+	                          value: formatPlaygroundFileDate(draftTask.createdAt) || "—",
+	                        },
+	                        {
+	                          id: "updated",
+	                          label: "Updated",
+	                          value: formatPlaygroundFileDate(draftTask.updatedAt) || "—",
+	                        },
+	                      ],
+	                    }),
+	                    React.createElement(PlatformResourceActionsDivider, null),
+	                    React.createElement(PlatformResourceActionMenuItem, {
+	                      icon: taskDetailBreadcrumbCanRunHumanTask
+	                        ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" })
+	                        : React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+	                      label: taskDetailBreadcrumbCanRunHumanTask
+	                        ? (draftTask.status === "done" ? "Reopen task" : "Mark complete")
+	                        : "Run thread",
+	                      disabled: taskDetailBreadcrumbCanRunHumanTask
+	                        ? saveState.isSaving
+	                        : saveState.isSaving || isTaskThreadLaunchLocked(draftTask),
+	                      onClick: () => {
+	                        closeTaskDetailBreadcrumbActions();
+	                        if (taskDetailBreadcrumbCanRunHumanTask) {
+	                          void handleToggleTaskDone(draftTask);
+	                          return;
+	                        }
+	                        void handleStartTaskThread(draftTask);
+	                      },
+	                    }),
+	                    taskDetailBreadcrumbStartedThreadId
+	                      ? React.createElement(PlatformResourceActionMenuItem, {
+	                          icon: React.createElement(RotateCcw, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+	                          label: "Revert Changes",
+	                          disabled: saveState.isSaving,
+	                          onClick: () => {
+	                            closeTaskDetailBreadcrumbActions();
+	                            handleOpenTaskThreadChanges(draftTask);
+	                          },
+	                        })
+	                      : null,
+	                    React.createElement(PlatformResourceActionMenuItem, {
+	                      icon: React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+	                      label: "Copy Ticket ID",
+	                      onClick: () => {
+	                        closeTaskDetailBreadcrumbActions();
+	                        const copyPromise = navigator.clipboard?.writeText(draftTask.id);
+	                        if (copyPromise) void copyPromise.catch(() => undefined);
+	                      },
+	                    }),
+	                    React.createElement(PlatformResourceActionsDivider, null),
+	                    React.createElement(PlatformResourceActionMenuItem, {
+	                      icon: React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+	                      label: "Delete",
+	                      shortcut: "delete",
+	                      danger: true,
+	                      disabled: saveState.isSaving,
+	                      onClick: () => {
+	                        closeTaskDetailBreadcrumbActions();
+	                        void handleDeleteTask(draftTask.id);
+	                      },
+	                    })
 	                  )
 	                ),
 	                taskDetailBreadcrumbActionsPortalTarget
@@ -1525,7 +1603,9 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
           React.createElement("div", { className: "playground-tasks-shell" + (isDetailOpen ? " is-detail-open" : "") + (isTaskAttachmentPreviewOpen ? " is-preview-open" : "") },
             React.createElement("section", { className: "playground-tasks-main" },
               React.createElement("div", {
-                  className: "playground-tasks-main-scroll" + (selectedProject || (projectComposerOpen && !isProjectInitialSetupModalOpen) || isStandaloneCalendarMode ? " is-project-workspace" : " is-projects-home"),
+                  className: "playground-tasks-main-scroll" + (selectedProject || (projectComposerOpen && !isProjectInitialSetupModalOpen) || isStandaloneCalendarMode
+                    ? " is-project-workspace"
+                    : " is-projects-home" + (projects.length > 0 ? " has-resource-overview" : "")),
                   onClick: handleTaskSurfaceClick,
                 },
                 !selectedProject && (!projectComposerOpen || isProjectInitialSetupModalOpen) && !isStandaloneCalendarMode && !useUnifiedProjectNav

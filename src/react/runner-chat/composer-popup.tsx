@@ -37,6 +37,7 @@ export type SidePopupExitDirection = "left" | "down";
 export type ComposerPopupPlacement =
   | "above-start"
   | "above-end"
+  | "below-start"
   | "side-end";
 export type ComposerPopupAnchorRef<T extends HTMLElement = HTMLElement> = {
   current: T | null;
@@ -52,6 +53,7 @@ export interface ComposerAnchoredPopupOptions {
   viewportPadding?: number;
   offsetX?: number;
   offsetY?: number;
+  matchAnchorWidth?: boolean;
 }
 
 export function emitRunnerComposerPopupOpen(sourceId: string): void {
@@ -78,6 +80,7 @@ export function useComposerAnchoredPopupStyle({
   viewportPadding = 8,
   offsetX = 0,
   offsetY = 0,
+  matchAnchorWidth = false,
 }: ComposerAnchoredPopupOptions): CSSProperties | null {
   const [style, setStyle] = useState<CSSProperties | null>(null);
 
@@ -133,7 +136,9 @@ export function useComposerAnchoredPopupStyle({
       const verticalAnchor = verticalAnchorRef?.current || anchor;
       const anchorRect = anchor.getBoundingClientRect();
       const verticalAnchorRect = verticalAnchor.getBoundingClientRect();
-      const popupWidth = popup?.offsetWidth || 240;
+      const popupWidth = matchAnchorWidth
+        ? anchorRect.width
+        : popup?.offsetWidth || 240;
       const popupHeight = popup?.offsetHeight || 0;
       const visualViewport = window.visualViewport;
       const viewportWidth = visualViewport?.width || window.innerWidth;
@@ -167,6 +172,29 @@ export function useComposerAnchoredPopupStyle({
       left += offsetX;
       bottomEdge += offsetY;
 
+      const clampedLeft = Math.min(
+        Math.max(left, viewportLeft + viewportPadding),
+        Math.max(viewportLeft + viewportPadding, maxLeft),
+      );
+
+      if (placement === "below-start") {
+        const unclampedTop = verticalAnchorRect.bottom + gap + offsetY;
+        const maxTop = viewportBottom - popupHeight - viewportPadding;
+        const clampedTop = Math.max(
+          viewportTop + viewportPadding,
+          Math.min(unclampedTop, maxTop),
+        );
+        observeCurrentElements(anchor, verticalAnchor, popup || null);
+        setStyle({
+          left: `${Math.round(clampedLeft)}px`,
+          top: `${Math.round(clampedTop)}px`,
+          bottom: "auto",
+          ...(matchAnchorWidth ? { width: `${Math.round(anchorRect.width)}px` } : {}),
+          visibility: "visible",
+        });
+        return;
+      }
+
       let bottom = layoutViewportHeight - bottomEdge;
       const unclampedTop = bottomEdge - popupHeight;
       if (unclampedTop < viewportTop + viewportPadding) {
@@ -177,16 +205,13 @@ export function useComposerAnchoredPopupStyle({
         );
       }
 
-      const clampedLeft = Math.min(
-        Math.max(left, viewportLeft + viewportPadding),
-        Math.max(viewportLeft + viewportPadding, maxLeft),
-      );
       const clampedBottom = Math.max(maxBottom, Math.round(bottom));
       observeCurrentElements(anchor, verticalAnchor, popup || null);
       setStyle({
         left: `${Math.round(clampedLeft)}px`,
         top: "auto",
         bottom: `${clampedBottom}px`,
+        ...(matchAnchorWidth ? { width: `${Math.round(anchorRect.width)}px` } : {}),
         visibility: "visible",
       });
     };
@@ -232,6 +257,7 @@ export function useComposerAnchoredPopupStyle({
   }, [
     anchorRef,
     gap,
+    matchAnchorWidth,
     offsetX,
     offsetY,
     open,

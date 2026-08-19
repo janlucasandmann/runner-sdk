@@ -11,7 +11,7 @@
         import { visit as unistVisit } from "unist-util-visit";
         import Chart from "chart.js/auto";
         import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
-        import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, GitPullRequestArrow, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, MessageSquareText, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plug, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquareMousePointer, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
+        import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, GitPullRequestArrow, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, MessageSquareText, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plug, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquareMousePointer, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Truck, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
         import { RunnerClient, buildRunnerThreadActivityTree, collectRunnerConnectorIdsFromStructuredEvidence, describeRunnerThreadActivityGroup, extractRunnerThreadPlanSteps, flattenRunnerThreadActivityTree, presentRunnerThreadAction } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
 	      import { PlatformAnalyticsChart, PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
@@ -34,6 +34,7 @@
         import { PlatformInstructionsEditor, normalizePlatformInstructionsEditorImageSource, replacePlatformInstructionsEditorImageMarkdown, serializePlatformInstructionsEditorFileMarkdown, serializePlatformInstructionsEditorImageMarkdown } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
   	      import { PlatformLoadingState } from "/dist/platform-ui/components/composite/loading-state/index.js";
         import { PlatformSettingsSection, PlatformSettingsSectionList } from "/dist/platform-ui/components/composite/settings-section/index.js";
+        import { PlatformStatusIndicatorStack } from "/dist/platform-ui/components/composite/status-indicator/index.js";
         import { PlatformResourceShareModal } from "/dist/platform-ui/components/composite/resource-action-modals/index.js";
         import { PlatformUiCard } from "/dist/platform-ui/components/composite/ui-card/index.js";
   	      import { PlatformButton, PlatformPrimaryButton, PlatformSecondaryButton } from "/dist/platform-ui/components/ui/button/index.js";
@@ -85,7 +86,8 @@
   	      import { PlatformApplicationBoundary } from "/dist/platform-runtime/platform-application-boundary.js";
         import { AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, arePlatformAgentListRecordsEquivalent as arePlaygroundAgentListsEquivalent, buildPlatformAgentListScopeKey as buildPlaygroundAgentListScopeKey, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, isThreadFunctionalAgentRole, normalizeComputerOverviewRows, normalizePlatformAgentListRecords, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, readCachedPlatformAgentList as readCachedPlaygroundAgentList, saveComputerResource, writeCachedPlatformAgentList as writeCachedPlaygroundAgentList } from "/dist/platform-shell/presentation/platform-resource-api.js";
 	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, getDevelopResourceCreatorIdentity, getDevelopResourceOwnerIdentity, initializeDevelopResourceIdentityMetadata, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-shell/presentation/platform-develop-api.js";
-        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, AssuranceWorkspacePage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopEvidenceAgentsWorkspacePage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopSecurityWorkspacePage, DevelopServerDetailPage, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationCaseDetailPage, EvaluationDetailPage, EvaluationsOverviewPage, ExternalAgentTriggersPage, FineTuningDetailPage, FineTuningOverviewPage, GuardrailDetailPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, KnowledgeWorkspacePage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationAccessControlPage, OrganizationsOverviewPage, ProjectDeliveryWorkspace, ProjectDetailPage, ProjectIconPicker, ProjectMilestonesOverviewPage, ProjectSummary, ProjectSummaryDetails, PromptDetailPage, PromptsOverviewPage, SkillDetailPage, SkillsOverviewPage, SourceDeployableServerDetailPage, TagDetailPage, TagsOverviewPage, TeamDetailPage, TeamsOverviewPage, TestsWorkspacePage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
+        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, AssuranceWorkspacePage, BatchesWorkspacePage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopEvidenceAgentsWorkspacePage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopSecurityWorkspacePage, DevelopServerDetailPage, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationCaseDetailPage, EvaluationDetailPage, EvaluationsOverviewPage, ExternalAgentTriggersPage, FineTuningDetailPage, FineTuningOverviewPage, GuardrailDetailPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, KnowledgeWorkspacePage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationAccessControlPage, OrganizationsOverviewPage, ProjectDeliveryWorkspace, ProjectDetailPage, ProjectIconPicker, ProjectMilestonesOverviewPage, ProjectsOverviewPage, ProjectSummary, ProjectSummaryDetails, PromptDetailPage, PromptsOverviewPage, SkillDetailPage, SkillsOverviewPage, SourceDeployableServerDetailPage, TagDetailPage, TagsOverviewPage, TeamDetailPage, TeamsOverviewPage, TestsWorkspacePage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
+        import { buildQuickBatchThreadJobDraft, createBatchJob } from "/dist/platform-services/create-mode/batches/client/index.js";
 	      import { beginPlatformPluginConnection, buildPlatformPluginConnectionReturnUrl, clearPlatformPluginConnectionRedirectState, clearPlatformPluginConnectionReturnUrlState, createPlatformPluginConnectionReturnUrlState, disconnectPlatformPluginConnection, fetchPlatformPluginConnectionStatus, fetchPlatformPluginFileSourceStatuses, fetchPlatformPluginFiles, getPlatformPluginConnectionDefinition, getPlatformPluginConnectionIdentity, normalizePlatformPluginConnectionReturnTarget, readCachedPlatformPluginConnectionStatus, readPlatformPluginConnectionRedirectState, readPlatformPluginConnectionReturnUrlState, savePlatformPluginCredentials, writeCachedPlatformPluginConnectionStatus, writePlatformPluginConnectionRedirectState } from "/dist/platform-resources/plugins/connections/index.js";
         import { createPlatformGitHubRepositoryFolderId, fetchPlatformGitHubRepositoryBranches } from "/dist/platform-resources/plugins/connections/index.js";
         import {
@@ -167,6 +169,7 @@
           emptyLabel = "No resources yet.",
           noMatchesLabel = "No resources match this view yet.",
           toolbarTitle = "",
+          tableVariant = "default",
           showNewButton = true,
           showFilterButton = true,
           showViewToggle = true,
@@ -483,6 +486,7 @@
               ariaLabel: searchAriaLabel,
               className: "playground-shared-resources-platform-data-table",
               surface: "plain",
+              variant: tableVariant,
               sticky: false,
               sorting: activeSortKey ? {
                 value: { id: activeSortKey, direction: activeSortDirection },
@@ -2864,115 +2868,6 @@
           );
   
           return canvas.toDataURL("image/jpeg", 0.84);
-        }
-  
-        function StatusIndicatorCloseIcon() {
-          return React.createElement("svg", {
-            className: "status-indicator-close-icon",
-            viewBox: "0 0 24 24",
-            fill: "none",
-            stroke: "currentColor",
-            strokeWidth: "2",
-            strokeLinecap: "round",
-            strokeLinejoin: "round",
-            "aria-hidden": "true"
-          },
-            React.createElement("path", { d: "M18 6 6 18" }),
-            React.createElement("path", { d: "m6 6 12 12" })
-          );
-        }
-  
-        function StatusIndicatorGithubLogo() {
-          return React.createElement("svg", {
-            className: "status-indicator-logo",
-            viewBox: "0 0 24 24",
-            fill: "currentColor",
-            "aria-hidden": "true"
-          },
-            React.createElement("path", {
-              d: "M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.79-.26.79-.58v-2.23c-3.34.72-4.03-1.42-4.03-1.42-.55-1.38-1.33-1.75-1.33-1.75-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.49 1 .11-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.17 0 0 1.01-.32 3.3 1.23A11.5 11.5 0 0 1 12 6.8c1.02 0 2.05.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.24 2.87.12 3.17.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.19.69.8.58A12 12 0 0 0 24 12c0-6.63-5.37-12-12-12Z"
-            })
-          );
-        }
-  
-        function StatusIndicator({ title, copy, logoUrl, brand, progress, indeterminate, onDismiss }) {
-          const [isVisible, setIsVisible] = useState(false);
-          const [isExiting, setIsExiting] = useState(false);
-          const hasProgress = Number.isFinite(progress) || indeterminate;
-          const normalizedProgress = Number.isFinite(progress) ? Math.max(0, Math.min(100, Number(progress))) : 0;
-  
-          useEffect(() => {
-            const frameId = window.requestAnimationFrame(() => setIsVisible(true));
-            return () => window.cancelAnimationFrame(frameId);
-          }, []);
-  
-          function handleDismiss() {
-            setIsExiting(true);
-            window.setTimeout(() => {
-              onDismiss?.();
-            }, 180);
-          }
-  
-          return React.createElement("div", {
-            className: "status-indicator" + (isVisible && !isExiting ? " is-visible" : "") + (isExiting ? " is-exiting" : "")
-          },
-            (logoUrl || brand)
-              ? React.createElement("div", { className: "status-indicator-media" },
-                  brand === "github"
-                    ? React.createElement(StatusIndicatorGithubLogo)
-                    :
-                  React.createElement("img", {
-                    className: "status-indicator-logo",
-                    src: logoUrl,
-                    alt: "",
-                    "aria-hidden": "true",
-                    draggable: false
-                  })
-                )
-              : null,
-            React.createElement("div", { className: "status-indicator-body" },
-              React.createElement("div", { className: "status-indicator-title" }, title),
-              React.createElement("div", { className: "status-indicator-copy" }, copy),
-              hasProgress
-                ? React.createElement("div", { className: "status-indicator-progress" },
-                    React.createElement("div", {
-                      className: "status-indicator-progress-fill" + (indeterminate ? " is-indeterminate" : ""),
-                      style: indeterminate ? undefined : { width: normalizedProgress + "%" },
-                    })
-                  )
-                : null
-            ),
-            React.createElement("button", {
-              type: "button",
-              className: "status-indicator-close",
-              onClick: handleDismiss,
-              "aria-label": "Dismiss " + title
-            }, React.createElement(StatusIndicatorCloseIcon))
-          );
-        }
-  
-        function StatusIndicatorStack({ items, emptyText, dismissedIds, onDismiss }) {
-          const visibleItems = items.filter((item) => !dismissedIds.includes(item.id));
-          if (visibleItems.length === 0) {
-            return null;
-          }
-  
-          return React.createElement("div", { className: "status-indicator-stack" },
-            React.createElement("div", { className: "status-indicator-list" },
-              visibleItems.map((item) =>
-                React.createElement(StatusIndicator, {
-                  key: item.id,
-                  title: item.title,
-                  copy: item.copy,
-                  logoUrl: item.logoUrl,
-                  brand: item.brand,
-                  progress: item.progress,
-                  indeterminate: item.indeterminate,
-                  onDismiss: () => onDismiss(item.id)
-                })
-              )
-            )
-          );
         }
   
         const DEMO_PINNED_THREADS = [

@@ -1,5 +1,6 @@
 import { LibraryBig, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { PlatformInstructionsEditor } from "../../../../../platform-ui/components/composite/instructions-editor/index.js";
 import { PlatformModal } from "../../../../../platform-ui/components/composite/modal/index.js";
 import {
   PlatformPrimaryButton,
@@ -23,6 +24,7 @@ export function KnowledgeLibraryCreateModal({
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const canCreate = !submitting && Boolean(name.trim());
 
   useEffect(() => {
     if (!open) return;
@@ -61,9 +63,22 @@ export function KnowledgeLibraryCreateModal({
     <PlatformModal
       open={open}
       title="New Knowledge Library"
-      description="Create a shared, versioned source of truth for people and agents."
+      headerVariant="search"
+      headerSearchProps={{
+        inputRef: nameRef,
+        icon: LibraryBig,
+        value: name,
+        maxLength: 500,
+        placeholder: "Knowledge library name",
+        "aria-label": "Knowledge library name",
+        autoComplete: "off",
+        disabled: submitting,
+        onChange: (event) => setName(event.currentTarget.value),
+      }}
       as="form"
       size="medium"
+      maxHeight="min(720px, calc(100vh - 48px))"
+      scrollable
       initialFocusRef={nameRef}
       closeOnBackdrop={!submitting}
       closeOnEscape={!submitting}
@@ -72,7 +87,21 @@ export function KnowledgeLibraryCreateModal({
         if (!submitting) onClose();
       }}
       className="knowledge-create-modal"
-      surfaceProps={{ onSubmit: submit }}
+      bodyClassName="knowledge-create-modal__body"
+      footerClassName="knowledge-create-modal__footer"
+      surfaceProps={{
+        onSubmit: submit,
+        onKeyDown: (event) => {
+          if (
+            (event.metaKey || event.ctrlKey)
+            && event.key === "Enter"
+            && canCreate
+          ) {
+            event.preventDefault();
+            (event.currentTarget as HTMLFormElement).requestSubmit();
+          }
+        },
+      }}
       footer={(
         <>
           <PlatformSecondaryButton size="medium" disabled={submitting} onClick={onClose}>
@@ -81,7 +110,7 @@ export function KnowledgeLibraryCreateModal({
           <PlatformPrimaryButton
             size="medium"
             type="submit"
-            disabled={submitting || !name.trim()}
+            disabled={!canCreate}
           >
             {submitting ? <Loader2 className="knowledge-spin" width={14} height={14} /> : <LibraryBig width={14} height={14} />}
             {submitting ? "Creating…" : "Create Library"}
@@ -89,32 +118,20 @@ export function KnowledgeLibraryCreateModal({
         </>
       )}
     >
-      <div className="knowledge-form-grid">
-        <label className="knowledge-form-field">
-          <span>Name</span>
-          <input
-            ref={nameRef}
-            value={name}
-            maxLength={500}
-            placeholder="Engineering handbook"
-            disabled={submitting}
-            onChange={(event) => setName(event.currentTarget.value)}
-          />
-        </label>
-        <label className="knowledge-form-field">
-          <span>Description</span>
-          <textarea
-            value={description}
-            rows={3}
-            maxLength={10_000}
-            placeholder="Conventions, operating procedures, and accumulated project knowledge."
-            disabled={submitting}
-            onChange={(event) => setDescription(event.currentTarget.value)}
-          />
-        </label>
-      </div>
+      <PlatformInstructionsEditor
+        value={description}
+        onChange={(nextDescription) => setDescription(nextDescription.slice(0, 10_000))}
+        title="Description"
+        placeholder="Conventions, operating procedures, and accumulated project knowledge."
+        ariaLabel="Knowledge library description"
+        readOnly={submitting}
+        stickyHeader={false}
+        historyKey="knowledge-library-create-description"
+        variant="minimalistic-ui"
+        contentVariant="text"
+        className="knowledge-create-modal__description-editor"
+      />
       {error ? <p className="knowledge-form-error" role="alert">{error}</p> : null}
     </PlatformModal>
   );
 }
-

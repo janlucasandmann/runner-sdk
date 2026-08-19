@@ -818,67 +818,63 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
             ? (selectedProjectEnvironmentOption.name + (selectedProjectEnvironmentOption.isDefault ? " (Default)" : ""))
             : (projectComposerAvailableEnvironments.length > 0 ? "Select environment" : "No environments");
 
-          function renderProjectComposerEnvironmentOptionRow(environment) {
-            return React.createElement("button", {
-                key: environment.id,
-                type: "button",
-                className: "tb-popup-row tb-popup-row-select" + (selectedProjectEnvironmentId === environment.id ? " selected" : ""),
-                onClick: () => {
+          function renderProjectComposerEnvironmentPicker() {
+            return React.createElement("div", { className: "playground-tasks-project-modal-environment-picker" },
+              React.createElement(PlatformSelector, {
+                value: selectedProjectEnvironmentId,
+                options: projectComposerAvailableEnvironments.map((environment) => ({
+                  value: environment.id,
+                  label: environment.name + (environment.isDefault ? " (Default)" : ""),
+                  description: "Use this computer for project-wide files.",
+                  leading: React.createElement(Monitor, {
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                    "aria-hidden": "true",
+                  }),
+                })),
+                onValueChange: (nextEnvironmentId) => {
                   setProjectDraft((current) => ({
                     ...current,
-                    defaultEnvironmentId: environment.id,
+                    defaultEnvironmentId: nextEnvironmentId,
                   }));
-                  setProjectComposerEnvironmentPopoverOpen(false);
                   setProjectAttachmentTransferState((current) => ({
                     ...current,
                     error: "",
                   }));
                 },
-              },
-              React.createElement("span", { className: "tb-popup-check-slot" },
-                selectedProjectEnvironmentId === environment.id
-                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                  : null
-              ),
-              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                React.createElement("span", null, environment.name + (environment.isDefault ? " (Default)" : "")),
-                React.createElement("span", null, "Use this computer for project-wide files.")
-              )
-            );
-          }
-
-          function renderProjectComposerEnvironmentPicker() {
-            return React.createElement("div", { className: "playground-tasks-project-modal-environment-picker" },
-              React.createElement("div", {
-                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (projectComposerEnvironmentPopoverOpen ? " is-open" : ""),
-                ref: projectComposerEnvironmentPopoverRef,
-              },
-                React.createElement("button", {
-                  type: "button",
-	                  className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger playground-tasks-project-modal-environment-button" + (selectedProjectEnvironmentOption ? "" : " is-empty") + (projectComposerEnvironmentPopoverOpen ? " is-active" : ""),
-	                  onClick: () => {
-	                    setProjectIconPickerOpen(false);
-	                    setProjectBlueprintPickerOpen(false);
-	                    setProjectComposerEnvironmentPopoverOpen((current) => !current);
-	                  },
-                  title: projectDefaultEnvironmentLabel,
-                  "aria-expanded": projectComposerEnvironmentPopoverOpen ? "true" : "false",
-                  disabled: projectComposerAvailableEnvironments.length === 0,
-                },
-                  React.createElement(Monitor, { className: "playground-tasks-project-modal-environment-icon", strokeWidth: 1.8 }),
-                  React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, projectDefaultEnvironmentLabel),
-                  React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
+                ariaLabel: "Project computer",
+                label: React.createElement("span", {
+                    className: "playground-tasks-project-modal-computer-selector-value",
+                  },
+                  React.createElement(Monitor, {
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                    "aria-hidden": "true",
+                  }),
+                  React.createElement("span", null, projectDefaultEnvironmentLabel)
                 ),
-                projectComposerEnvironmentPopoverOpen
-                  ? React.createElement(PlatformPopupSurface, {
-                      className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-toolbar-popup-menu-environment",
-                    },
-                      projectComposerAvailableEnvironments.length > 0
-                        ? projectComposerAvailableEnvironments.map((environment) => renderProjectComposerEnvironmentOptionRow(environment))
-                        : React.createElement("div", { className: "tb-popup-empty-state" }, "No environments available.")
-                    )
-                  : null
-              )
+                placeholder: projectDefaultEnvironmentLabel,
+                disabled: projectComposerAvailableEnvironments.length === 0,
+                open: projectComposerEnvironmentPopoverOpen,
+                onOpenChange: (nextOpen) => {
+                  if (nextOpen) {
+                    setProjectIconPickerOpen(false);
+                    setProjectBlueprintPickerOpen(false);
+                  }
+                  setProjectComposerEnvironmentPopoverOpen(nextOpen);
+                },
+                alignment: "end",
+                popupAlignment: "right",
+                emptyContent: "No computers available.",
+                popupWidth: "min(320px, calc(100vw - 48px))",
+                popupMaxWidth: "calc(100vw - 48px)",
+                popupMaxHeight: "min(320px, calc(100vh - 120px))",
+                className: "playground-tasks-project-modal-computer-selector",
+                triggerClassName: "playground-tasks-project-modal-computer-selector-trigger",
+                popupClassName: "playground-tasks-project-modal-computer-selector-popup",
+              })
             );
           }
 
@@ -1090,58 +1086,22 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
           }
 
           function renderProjectInitialGoalField() {
-            return React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor" },
-              React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Project goal"),
-                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                  [
-                    { id: "bold", label: "Bold", icon: Bold },
-                    { id: "italic", label: "Italic", icon: Italic },
-                    { id: "underline", label: "Underline", icon: Underline },
-                    { id: "list", label: "List", icon: List },
-                  ].map((action) =>
-                    React.createElement("button", {
-                      key: action.id,
-                      type: "button",
-                      className: "playground-tasks-detail-format-button",
-                      title: action.label,
-                      "aria-label": action.label,
-                      onMouseDown: (event) => event.preventDefault(),
-                      onClick: () => handleProjectDescriptionFormat(action.id),
-                    }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                  )
-                )
-              ),
-              React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isProjectDescriptionEditing ? " is-editing" : " is-preview") },
-                !isProjectDescriptionEditing
-                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                      String(projectDraft.description || "").trim()
-                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                            content: projectDraft.description,
-                            className: "playground-tasks-detail-description-preview tb-message-markdown",
-                          })
-                        : React.createElement("div", {
-                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                          }, "Define the project goal, scope, working style, and constraints.")
-                    )
-                  : null,
-                React.createElement("textarea", {
-                  ref: projectDescriptionTextareaRef,
-                  className: "playground-tasks-detail-description-input " + (isProjectDescriptionEditing ? "is-editing" : "is-preview"),
-                  rows: 1,
-                  placeholder: isProjectDescriptionEditing ? "Define the project goal, scope, working style, and constraints." : "",
-                  value: projectDraft.description,
-                  onFocus: () => setProjectDescriptionEditing(true),
-                  onChange: (event) => {
-                    setProjectDraft((current) => ({ ...current, description: event.target.value }));
-                    resizeTaskDescriptionTextarea(event.currentTarget);
-                  },
-                  onBlur: () => {
-                    setProjectDescriptionEditing(false);
-                  },
-                })
-              )
-            );
+            return React.createElement(PlatformInstructionsEditor, {
+              value: String(projectDraft.description || ""),
+              onChange: (value) => setProjectDraft((current) => ({
+                ...current,
+                description: String(value || "").slice(0, 10000),
+              })),
+              title: "Project goal",
+              placeholder: "Define the project goal, scope, working style, and constraints.",
+              ariaLabel: "Project goal",
+              readOnly: projectSaveState.isSaving,
+              stickyHeader: false,
+              historyKey: "project-create-goal",
+              variant: "minimalistic-ui",
+              contentVariant: "text",
+              className: "playground-project-create-modal__description-editor",
+            });
           }
 
           function renderProjectComposerNameControl() {
@@ -1190,8 +1150,12 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
 
           function renderProjectInitialSetupBody() {
             return React.createElement("div", { className: "playground-tasks-project-initial-setup-body" },
+              renderProjectInitialSetupField(
+                "Computer",
+                renderProjectComposerEnvironmentPicker(),
+                "is-inline"
+              ),
               renderProjectLeadSelector({ label: "Project lead" }),
-              renderProjectBlueprintSelector(),
               renderProjectInitialGoalField()
             );
           }
@@ -1437,38 +1401,58 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
 	          }
 
 	          if (isInitialProjectSetupModal) {
+	            const canCreateProject = !projectSaveState.isSaving
+	              && Boolean(String(projectDraft.name || "").trim());
 	            return React.createElement(PlatformModal, {
 	                open: projectComposerOpen && !projectInitialSetupModalClosing,
 	                visible: projectInitialSetupModalVisible,
 	                closing: projectInitialSetupModalClosing,
 	                title: "New Project",
+	                headerVariant: "search",
+	                headerSearchProps: {
+	                  icon: SelectedProjectIcon,
+	                  value: String(projectDraft.name || ""),
+	                  maxLength: 500,
+	                  placeholder: "Project name",
+	                  "aria-label": "Project name",
+	                  autoComplete: "off",
+	                  disabled: projectSaveState.isSaving,
+	                  onChange: (event) => updateProjectDraftName(event.target.value),
+	                },
 	                as: "form",
 	                size: "medium",
+	                maxHeight: "min(720px, calc(100vh - 48px))",
+	                scrollable: true,
 	                className: "playground-project-create-modal playground-tasks-project-initial-setup-modal",
 	                bodyClassName: "playground-project-create-modal__body",
+	                footerClassName: "playground-project-create-modal__footer",
 	                footer: React.createElement(React.Fragment, null,
 	                  React.createElement(PlatformSecondaryButton, {
 	                    type: "button",
 	                    size: "medium",
 	                    onClick: () => closeProjectComposer(),
+	                    disabled: projectSaveState.isSaving,
 	                  }, "Cancel"),
 	                  React.createElement(PlatformPrimaryButton, {
 	                    type: "submit",
 	                    size: "medium",
-	                    disabled: projectSaveState.isSaving || !String(projectDraft.name || "").trim(),
+	                    disabled: !canCreateProject,
 	                  }, projectSaveState.isSaving ? "Creating..." : "Create Project")
 	                ),
 	                animationDurationMs: projectInitialSetupModalAnimationMs,
-	                onClose: () => closeProjectComposer(),
+	                closeOnBackdrop: !projectSaveState.isSaving,
+	                closeOnEscape: !projectSaveState.isSaving,
+	                closeButtonDisabled: projectSaveState.isSaving,
+	                onClose: () => {
+	                  if (!projectSaveState.isSaving) closeProjectComposer();
+	                },
 	                surfaceProps: {
-	                  onKeyDown: handleComposerSubmitShortcut,
+	                  onKeyDown: (event) => {
+	                    if (canCreateProject) handleComposerSubmitShortcut(event);
+	                  },
 	                  onSubmit: (event) => void handleCreateProject(event),
 	                },
 	              },
-	              React.createElement("div", { className: "playground-project-create-modal__identity" },
-	                renderProjectComposerNameControl(),
-	                renderProjectComposerEnvironmentPicker()
-	              ),
 	              renderProjectInitialSetupBody(),
 	              projectSaveState.error
 	                ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, projectSaveState.error)

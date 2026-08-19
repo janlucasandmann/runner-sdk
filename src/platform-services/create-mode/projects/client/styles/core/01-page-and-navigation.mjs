@@ -204,6 +204,17 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         height: 100%;
       }
 
+      .playground-tasks-unified-navbar.is-ticket-detail {
+        grid-template-columns: minmax(0, 1fr) 0 auto;
+      }
+
+      .playground-tasks-unified-navbar.is-ticket-detail
+        .playground-top-nav-path-item.is-current,
+      .playground-tasks-unified-navbar.is-ticket-detail
+        .playground-top-nav-path-item-group.is-current {
+        max-width: min(720px, 60vw);
+      }
+
       .playground-tasks-ticket-screen-detail,
       .playground-tasks-ticket-screen-inner,
       .playground-tasks-ticket-screen-panel {
@@ -410,7 +421,7 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         z-index: 30;
       }
 
-      .playground-ticket-detail-sidebar-section {
+      .playground-ticket-detail-sidebar-section.platform-ui-card.is-sidebar {
         overflow: visible;
         box-shadow: none;
       }
@@ -651,6 +662,11 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
 
       .playground-tasks-main-scroll.is-projects-home {
         padding: 0 5px 5px 0;
+      }
+
+      .playground-tasks-main-scroll.is-projects-home.has-resource-overview {
+        padding: 0;
+        overflow: hidden;
       }
 
       .playground-content-body.is-tasks-page .playground-tasks-main-scroll.is-projects-home > .playground-tasks-view-section,
@@ -1599,6 +1615,15 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
       .playground-projects-overview-surface.is-card-grid .playground-projects-overview-title-block {
         padding-bottom: 0;
         border-bottom: 0;
+      }
+
+      .playground-tasks-progressive-list-loading {
+        min-height: 48px;
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        grid-column: 1 / -1;
       }
 
       @media (max-width: 760px) {

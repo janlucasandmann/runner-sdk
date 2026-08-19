@@ -48,7 +48,7 @@ export const INFERENCE_STYLE_CREATE_MODAL = `      .inference-create-endpoint-mo
         min-width: 0;
         min-height: 36px;
         padding: 0 11px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: none;
         border-radius: 8px;
         outline: none;
         background: rgba(255, 255, 255, 0.075);
@@ -64,41 +64,14 @@ export const INFERENCE_STYLE_CREATE_MODAL = `      .inference-create-endpoint-mo
 
       .inference-create-endpoint-modal__field input:focus,
       .inference-create-endpoint-modal__selector-trigger:focus-visible {
-        border-color: #4da3ff;
+        border: none;
         box-shadow: 0 0 0 1px #4da3ff;
       }
 
       .inference-create-endpoint-modal__default {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 10px;
-        cursor: pointer;
-      }
-
-      .inference-create-endpoint-modal__default input {
-        appearance: none;
-        box-sizing: border-box;
-        width: 15px;
-        height: 15px;
-        margin: 2px 0 0;
-        flex: 0 0 auto;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 5px;
-        background: transparent;
-        cursor: pointer;
-      }
-
-      .inference-create-endpoint-modal__default input:checked {
-        border-color: #4da3ff;
-        background:
-          linear-gradient(135deg, transparent 45%, #fff 45% 55%, transparent 55%) 2px 5px / 5px 5px no-repeat,
-          linear-gradient(45deg, transparent 44%, #fff 44% 56%, transparent 56%) 5px 3px / 8px 8px no-repeat,
-          #2563eb;
-      }
-
-      .inference-create-endpoint-modal__default input:disabled {
-        cursor: default;
-        opacity: 0.62;
       }
 
       .inference-create-endpoint-modal__default > span {

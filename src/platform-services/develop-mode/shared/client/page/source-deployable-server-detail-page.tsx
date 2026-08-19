@@ -26,10 +26,10 @@ export function SourceDeployableServerDetailPage({
   sidebarAriaLabel = "Source-deployable resource properties",
 }: SourceDeployableServerDetailPageProps) {
   const normalizedTab: SourceDeployableServerDetailTab = (
-    activeTab === "code" || activeTab === "settings"
+    activeTab === "usage" || activeTab === "settings"
   )
     ? activeTab
-    : "usage";
+    : "code";
   const isUsageTab = normalizedTab === "usage";
   const isCodeTab = normalizedTab === "code";
   const resourceClassName = resourceKind === "function" ? "function" : "web-app";

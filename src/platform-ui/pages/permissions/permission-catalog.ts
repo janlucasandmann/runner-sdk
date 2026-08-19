@@ -416,11 +416,64 @@ const PLATFORM_PROMPT_RESOURCE_PERMISSION_ACTIONS: readonly PlatformPermissionAc
   },
 ];
 
+const PLATFORM_INFERENCE_ENDPOINT_PERMISSION_ACTIONS: readonly PlatformPermissionActionDefinition[] = [
+  {
+    id: "inference_endpoint_view",
+    ringId: "ring_1",
+    label: "View endpoint",
+    description: "View this endpoint's status, models, activity, and configuration metadata.",
+    subjectTypes: ["inference_endpoint", "inference_endpoint_team_role"],
+  },
+  {
+    id: "inference_endpoint_use",
+    ringId: "ring_1",
+    label: "Use endpoint",
+    description: "Route compatible agent and workflow inference through this endpoint.",
+    subjectTypes: ["inference_endpoint", "inference_endpoint_team_role"],
+  },
+  {
+    id: "inference_endpoint_activity_view",
+    ringId: "ring_1",
+    label: "View endpoint activity",
+    description: "Inspect token activity and workloads routed through this endpoint.",
+    subjectTypes: ["inference_endpoint", "inference_endpoint_team_role"],
+  },
+  {
+    id: "inference_endpoint_configure",
+    ringId: "ring_2",
+    label: "Configure endpoint",
+    description: "Change connection settings, credentials, providers, and available models.",
+    subjectTypes: ["inference_endpoint", "inference_endpoint_team_role"],
+  },
+  {
+    id: "inference_endpoint_test",
+    ringId: "ring_2",
+    label: "Test connection",
+    description: "Run connection tests and discover models exposed by this endpoint.",
+    subjectTypes: ["inference_endpoint", "inference_endpoint_team_role"],
+  },
+  {
+    id: "inference_endpoint_access_manage",
+    ringId: "ring_3",
+    label: "Manage endpoint access",
+    description: "Share this endpoint with teams and change organization role permission policies.",
+    subjectTypes: ["inference_endpoint", "inference_endpoint_team_role"],
+  },
+  {
+    id: "inference_endpoint_delete",
+    ringId: "ring_3",
+    label: "Delete endpoint",
+    description: "Permanently delete this endpoint, its credential, models, and team shares.",
+    subjectTypes: ["inference_endpoint", "inference_endpoint_team_role"],
+  },
+];
+
 const PLATFORM_MANAGED_RESOURCE_PERMISSION_ACTIONS: readonly PlatformPermissionActionDefinition[] = [
   ...PLATFORM_AGENT_RESOURCE_PERMISSION_ACTIONS,
   ...PLATFORM_COMPUTER_RESOURCE_PERMISSION_ACTIONS,
   ...PLATFORM_SKILL_RESOURCE_PERMISSION_ACTIONS,
   ...PLATFORM_PROMPT_RESOURCE_PERMISSION_ACTIONS,
+  ...PLATFORM_INFERENCE_ENDPOINT_PERMISSION_ACTIONS,
   ...createManagedResourcePermissionActions({
     subjectType: "web_app",
     noun: "web app",
@@ -1696,6 +1749,8 @@ export const PLATFORM_PERMISSION_SUBJECT_TYPES = [
   "skill_team_role",
   "prompt",
   "prompt_team_role",
+  "inference_endpoint",
+  "inference_endpoint_team_role",
   "server",
   "web_app",
   "function",
@@ -1742,6 +1797,8 @@ export const PLATFORM_SCOPED_PERMISSION_SUBJECT_TYPES = [
   "skill_team_role",
   "prompt",
   "prompt_team_role",
+  "inference_endpoint",
+  "inference_endpoint_team_role",
   "server",
   "web_app",
   "function",

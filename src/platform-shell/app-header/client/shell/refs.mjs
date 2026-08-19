@@ -9,5 +9,10 @@ export const APP_HEADER_REFS_SCRIPT = `        const accountMenuAnimationTimerRe
         const threadSearchThreadAbortControllerRef = useRef(null);
         const threadSearchThreadResultsCacheRef = useRef(new Map());
         const threadSearchPromptSelectHandlerRef = useRef(null);
+        const threadSearchKnowledgeSelectHandlerRef = useRef(null);
+        const threadSearchEvaluationSelectHandlerRef = useRef(null);
         const threadSearchThreadSelectHandlerRef = useRef(null);
+        const threadSearchFileSelectHandlerRef = useRef(null);
+        const threadSearchWorkflowSelectHandlerRef = useRef(null);
+        const threadSearchServerResourceSelectHandlerRef = useRef(null);
 `;

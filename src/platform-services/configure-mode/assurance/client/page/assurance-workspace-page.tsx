@@ -1,17 +1,28 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
-import { PlatformServiceDetailFrame } from "../../../../../platform-ui/pages/details/index.js";
 import type { PlatformVersionNavigationGuardRegistrar } from "../../../../../platform-ui/components/composite/versioning/index.js";
+import { PlatformServiceDetailFrame } from "../../../../../platform-ui/pages/details/index.js";
+import {
+  filterPlatformResourcesByOverviewScope,
+  normalizePlatformResourceOverviewScope,
+  type PlatformResourceOverviewScope,
+} from "../../../../../platform-ui/pages/overview/index.js";
 import { AssuranceApi } from "../api/index.js";
 import {
-  normalizeAssuranceWorkspaceOption,
+  type AssurancePersonIdentityInput,
   type AssurancePolicy,
   type AssurancePolicyCreateInput,
   type AssuranceRun,
   type AssuranceRunCreateInput,
   type AssuranceWorkspaceOption,
+  getAssurancePolicyCreatorIdentity,
+  initializeAssurancePolicyIdentityMetadata,
+  normalizeAssuranceWorkspaceOption,
 } from "../domain/index.js";
-import { AssuranceOverviewPage, type AssurancePolicyOverviewRow } from "./assurance-overview-page.js";
+import {
+  AssuranceOverviewPage,
+  type AssurancePolicyOverviewRow,
+} from "./assurance-overview-page.js";
 import { AssurancePolicyCreateModal } from "./assurance-policy-create-modal.js";
 import { AssurancePolicyDetailPage } from "./assurance-policy-detail-page.js";
 import { AssuranceRunCreateModal } from "./assurance-run-create-modal.js";
@@ -24,6 +35,7 @@ export interface AssuranceWorkspacePageProps {
   backendUrl: string;
   requestHeaders?: Readonly<Record<string, string>>;
   mode?: AssuranceWorkspaceMode;
+  overviewScope?: PlatformResourceOverviewScope;
   selectedPolicyId?: string;
   selectedRunId?: string;
   controlsPortalId?: string;
@@ -31,6 +43,7 @@ export interface AssuranceWorkspacePageProps {
   defaultProjectId?: string;
   projects?: readonly unknown[];
   workspaceTeams?: readonly unknown[];
+  currentUser?: AssurancePersonIdentityInput;
   onOpenPolicy: (policyId: string, policyName?: string) => void;
   onOpenRun: (policyId: string, runId: string, policyName?: string) => void;
   onIdentityChange?: (identity: {
@@ -67,6 +80,7 @@ export function AssuranceWorkspacePage({
   backendUrl,
   requestHeaders = {},
   mode = "overview",
+  overviewScope = "all",
   selectedPolicyId = "",
   selectedRunId = "",
   controlsPortalId,
@@ -74,6 +88,7 @@ export function AssuranceWorkspacePage({
   defaultProjectId = "",
   projects = [],
   workspaceTeams = [],
+  currentUser = {},
   onOpenPolicy,
   onOpenRun,
   onIdentityChange,
@@ -227,7 +242,13 @@ export function AssuranceWorkspacePage({
       policyRuns.push(run);
       runsByPolicy.set(run.assurancePolicyId, policyRuns);
     });
-    return policies.map((policy) => {
+    const scopedPolicies = filterPlatformResourcesByOverviewScope(
+      policies,
+      normalizePlatformResourceOverviewScope(overviewScope),
+      currentUser,
+      getAssurancePolicyCreatorIdentity,
+    );
+    return scopedPolicies.map((policy) => {
       const policyRuns = (runsByPolicy.get(policy.id) || []).sort(
         (left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt),
       );
@@ -251,7 +272,7 @@ export function AssuranceWorkspacePage({
         searchText: `${policy.name} ${policy.description} ${policy.status} ${policy.projectId || ""}`,
       };
     });
-  }, [normalizedProjects, policies, runs]);
+  }, [currentUser, normalizedProjects, overviewScope, policies, runs]);
 
   const requestWorkspaceNavigation = useCallback((continuation: () => void) => {
     if (typeof onNavigationRequest === "function") {
@@ -262,7 +283,10 @@ export function AssuranceWorkspacePage({
   }, [onNavigationRequest]);
 
   async function createPolicy(input: AssurancePolicyCreateInput): Promise<AssurancePolicy> {
-    const created = await api.createPolicy(input);
+    const created = await api.createPolicy({
+      ...input,
+      metadata: initializeAssurancePolicyIdentityMetadata(input.metadata, currentUser),
+    });
     setPolicies((current) => [created, ...current]);
     onOpenPolicy(created.id, created.name);
     return created;

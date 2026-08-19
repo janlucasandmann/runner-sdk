@@ -46,4 +46,19 @@ describe("ProjectDetailPage", () => {
       container.querySelector(".resource-detail-page__content")?.classList.contains("is-permissions-tab"),
     ).toBe(true);
   });
+
+  it("removes the details sidebar from the resources tab", () => {
+    const { container } = render(
+      <ProjectDetailPage
+        sidebar={<div>Project properties</div>}
+        activeTab="resources"
+      >
+        <div>Project resources</div>
+      </ProjectDetailPage>,
+    );
+
+    expect(container.querySelector("[data-platform-detail-sidebar='true']")).toBeNull();
+    expect(container.querySelector(".resource-detail-page")?.classList.contains("is-sidebar-empty")).toBe(true);
+    expect(screen.getByText("Project resources")).not.toBeNull();
+  });
 });

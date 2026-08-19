@@ -96,92 +96,91 @@
               || !normalizedDatabaseId
               || normalizedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID
             );
-            return React.createElement(PlatformPopup, {
-                open: databaseActionsPopoverOpen && !actionsDisabled,
-                rootRef: databaseActionsPopoverRef,
-                surfaceRef: databaseActionsPopoverSurfaceRef,
-                rootClassName: "playground-database-title-actions-shell",
-                surfaceClassName: "playground-database-title-actions-popup",
-                surfaceProps: {
-                  role: "menu",
-                  "aria-label": "Database actions",
-                  width: 280,
-                  maxWidth: "calc(100vw - 16px)",
-                  onClick: (event) => event.stopPropagation(),
-                },
-                animation: "down-in",
-                variant: "minimal",
-                portal: true,
-                placement: "bottom-start",
-                trigger: React.createElement(PlatformIconButton, {
-                  type: "button",
-                  size: "compact",
-                  active: databaseActionsPopoverOpen,
-                  title: "Database actions",
-                  "aria-label": "Database actions",
-                  "aria-haspopup": "menu",
-                  "aria-expanded": databaseActionsPopoverOpen ? "true" : "false",
-                  disabled: actionsDisabled,
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setDatabaseExportMenuOpen(false);
-                    setDatabaseActionsPopoverOpen((current) => !current);
+            const closeDatabaseActions = () => setDatabaseActionsPopoverOpen(false);
+            const openDatabaseRename = () => {
+              closeDatabaseActions();
+              openDatabaseRenameDialog(activeDatabase);
+            };
+            const deleteDatabase = () => {
+              closeDatabaseActions();
+              void handleDeleteDatabase(normalizedDatabaseId);
+            };
+            return React.createElement(PlatformResourceHeaderActions, null,
+              React.createElement(PlatformResourceActionsMenu, {
+                  open: databaseActionsPopoverOpen && !actionsDisabled,
+                  onOpenChange: (nextOpen) => {
+                    if (nextOpen) {
+                      setDatabaseExportMenuOpen(false);
+                    }
+                    setDatabaseActionsPopoverOpen(nextOpen);
                   },
-                }, React.createElement(Ellipsis, { width: 14, height: 14, strokeWidth: 1.8 }))
-              },
-              React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
-                React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Database ID"),
-                  React.createElement("span", {
-                    className: "playground-thread-nav-popup-thread-id",
-                    title: normalizedDatabaseId,
-                  }, normalizedDatabaseId)
-                )
-              ),
-              React.createElement("div", { className: "playground-thread-nav-popup-divider", "aria-hidden": "true" }),
-              React.createElement("button", {
-                type: "button",
-                role: "menuitem",
-                className: "tb-popup-row",
-                onClick: () => {
-                  setDatabaseActionsPopoverOpen(false);
-                  window.open("http://localhost:3001/developers/libraries/databases", "_blank", "noopener,noreferrer");
+                  resourceLabel: "Database",
+                  disabled: actionsDisabled,
+                  shortcutActions: {
+                    rename: {
+                      onInvoke: openDatabaseRename,
+                      disabled: actionsDisabled,
+                    },
+                    delete: {
+                      onInvoke: deleteDatabase,
+                      disabled: actionsDisabled,
+                    },
+                  },
                 },
-              },
-                React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Documentation")
-                )
-              ),
-              React.createElement("button", {
-                type: "button",
-                role: "menuitem",
-                className: "tb-popup-row",
-                onClick: () => {
-                  setDatabaseActionsPopoverOpen(false);
-                  openDatabaseRenameDialog(activeDatabase);
-                },
-              },
-                React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Rename")
-                )
-              ),
-              React.createElement("button", {
-                type: "button",
-                role: "menuitem",
-                className: "tb-popup-row",
-                onClick: () => {
-                  setDatabaseActionsPopoverOpen(false);
-                  void handleDeleteDatabase(normalizedDatabaseId);
-                },
-              },
-                React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Delete")
-                )
+                React.createElement(PlatformResourceActionsInformation, {
+                  resourceLabel: "Database",
+                  items: [
+                    {
+                      id: "id",
+                      label: "ID",
+                      value: normalizedDatabaseId,
+                      title: normalizedDatabaseId,
+                      monospace: true,
+                      copyValue: normalizedDatabaseId,
+                      copyAriaLabel: "Copy Database ID",
+                    },
+                    {
+                      id: "created",
+                      label: "Created",
+                      value: activeDatabase?.createdAt ? formatPlaygroundFileDate(activeDatabase.createdAt) : "—",
+                    },
+                    {
+                      id: "updated",
+                      label: "Updated",
+                      value: activeDatabase?.updatedAt ? formatPlaygroundFileDate(activeDatabase.updatedAt) : "—",
+                    },
+                  ],
+                }),
+                React.createElement(PlatformResourceActionsDivider),
+                React.createElement(PlatformResourceActionMenuItem, {
+                  icon: React.createElement(BookOpen, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  label: "Documentation",
+                  onClick: () => {
+                    closeDatabaseActions();
+                    window.open("http://localhost:3001/developers/libraries/databases", "_blank", "noopener,noreferrer");
+                  },
+                }),
+                React.createElement(PlatformResourceActionMenuItem, {
+                  icon: React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  label: "Copy Database ID",
+                  onClick: () => {
+                    closeDatabaseActions();
+                    void copyTextToClipboard(normalizedDatabaseId);
+                  },
+                }),
+                React.createElement(PlatformResourceActionsDivider),
+                React.createElement(PlatformResourceActionMenuItem, {
+                  icon: React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  label: "Rename",
+                  shortcut: "rename",
+                  onClick: openDatabaseRename,
+                }),
+                React.createElement(PlatformResourceActionMenuItem, {
+                  icon: React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  label: "Delete",
+                  shortcut: "delete",
+                  onClick: deleteDatabase,
+                })
               )
             );
           };
@@ -211,108 +210,105 @@
               || !normalizedServerId
               || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID
             );
-            return React.createElement(PlatformPopup, {
-                open: serverActionsPopoverOpen && !actionsDisabled,
-                rootRef: serverActionsPopoverRef,
-                surfaceRef: serverActionsPopoverSurfaceRef,
-                rootClassName: "playground-server-title-actions-shell",
-                surfaceClassName: "playground-server-title-actions-popup",
-                surfaceProps: {
-                  role: "menu",
-                  "aria-label": serverResourceLabel + " actions",
-                  width: 280,
-                  maxWidth: "calc(100vw - 16px)",
-                  onClick: (event) => event.stopPropagation(),
-                },
-                animation: "down-in",
-                variant: "minimal",
-                portal: true,
-                placement: "bottom-start",
-                trigger: React.createElement(PlatformIconButton, {
-                  type: "button",
-                  size: "compact",
-                  active: serverActionsPopoverOpen,
-                  title: serverResourceLabel + " actions",
-                  "aria-label": serverResourceLabel + " actions",
-                  "aria-haspopup": "menu",
-                  "aria-expanded": serverActionsPopoverOpen ? "true" : "false",
+            const closeServerActions = () => setServerActionsPopoverOpen(false);
+            const openServerRename = () => {
+              closeServerActions();
+              openServerRenameDialog(activeServer);
+            };
+            const deleteServer = () => {
+              closeServerActions();
+              void handleDeleteServer(normalizedServerId);
+            };
+            return React.createElement(PlatformResourceHeaderActions, null,
+              React.createElement(PlatformResourceActionsMenu, {
+                  open: serverActionsPopoverOpen && !actionsDisabled,
+                  onOpenChange: setServerActionsPopoverOpen,
+                  resourceLabel: serverResourceLabel,
                   disabled: actionsDisabled,
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setServerActionsPopoverOpen((current) => !current);
-                  },
-                }, React.createElement(Ellipsis, { width: 14, height: 14, strokeWidth: 1.8 }))
-              },
-              React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
-                React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, serverResourceLabel + " ID"),
-                  React.createElement("span", {
-                    className: "playground-thread-nav-popup-thread-id",
-                    title: normalizedServerId,
-                  }, normalizedServerId)
-                )
-              ),
-              React.createElement("div", { className: "playground-thread-nav-popup-divider", "aria-hidden": "true" }),
-              React.createElement("button", {
-                type: "button",
-                role: "menuitem",
-                className: "tb-popup-row",
-                onClick: () => {
-                  setServerActionsPopoverOpen(false);
-                  window.open("http://localhost:3001" + serverDocumentationPath, "_blank", "noopener,noreferrer");
-                },
-              },
-                React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Documentation")
-                )
-              ),
-              React.createElement("button", {
-                type: "button",
-                role: "menuitem",
-                className: "tb-popup-row",
-                onClick: () => {
-                  setServerActionsPopoverOpen(false);
-                  openServerRenameDialog(activeServer);
-                },
-              },
-                React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Rename")
-                )
-              ),
-              isSourceDeployableResource
-                ? React.createElement("button", {
-                    type: "button",
-                    role: "menuitem",
-                    className: "tb-popup-row",
-                    onClick: () => {
-                      setServerActionsPopoverOpen(false);
-                      void handleDeployServer();
+                  shortcutActions: {
+                    rename: {
+                      onInvoke: openServerRename,
+                      disabled: actionsDisabled,
                     },
-                    disabled: serverDeploymentState.isDeploying,
+                    delete: {
+                      onInvoke: deleteServer,
+                      disabled: actionsDisabled,
+                    },
                   },
-                    React.createElement(Rocket, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                      React.createElement("span", null, serverDeploymentState.isDeploying ? "Deploying..." : "Deploy")
-                    )
-                  )
-                : null,
-              React.createElement("button", {
-                type: "button",
-                role: "menuitem",
-                className: "tb-popup-row",
-                onClick: () => {
-                  setServerActionsPopoverOpen(false);
-                  void handleDeleteServer(normalizedServerId);
                 },
-              },
-                React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Delete")
-                )
+                React.createElement(PlatformResourceActionsInformation, {
+                  resourceLabel: serverResourceLabel,
+                  items: [
+                    {
+                      id: "id",
+                      label: "ID",
+                      value: normalizedServerId,
+                      title: normalizedServerId,
+                      monospace: true,
+                      copyValue: normalizedServerId,
+                      copyAriaLabel: "Copy " + serverResourceLabel + " ID",
+                    },
+                    {
+                      id: "created",
+                      label: "Created",
+                      value: activeServer?.createdAt ? formatPlaygroundFileDate(activeServer.createdAt) : "—",
+                    },
+                    {
+                      id: "updated",
+                      label: "Updated",
+                      value: activeServer?.updatedAt ? formatPlaygroundFileDate(activeServer.updatedAt) : "—",
+                    },
+                  ],
+                }),
+                isSourceDeployableResource
+                  ? React.createElement(PlatformResourceVersionHistoryMenuItem, {
+                      onClick: () => {
+                        closeServerActions();
+                        openAuthoritativeServerVersionsSidebar();
+                      },
+                    })
+                  : null,
+                React.createElement(PlatformResourceActionsDivider),
+                React.createElement(PlatformResourceActionMenuItem, {
+                  icon: React.createElement(BookOpen, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  label: "Documentation",
+                  onClick: () => {
+                    closeServerActions();
+                    window.open("http://localhost:3001" + serverDocumentationPath, "_blank", "noopener,noreferrer");
+                  },
+                }),
+                isSourceDeployableResource
+                  ? React.createElement(PlatformResourceActionMenuItem, {
+                      icon: React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                      label: serverDeploymentState.isDeploying ? "Deploying..." : "Deploy",
+                      disabled: serverDeploymentState.isDeploying,
+                      onClick: () => {
+                        closeServerActions();
+                        void handleDeployServer();
+                      },
+                    })
+                  : null,
+                React.createElement(PlatformResourceActionMenuItem, {
+                  icon: React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  label: "Copy " + serverResourceLabel + " ID",
+                  onClick: () => {
+                    closeServerActions();
+                    void copyTextToClipboard(normalizedServerId);
+                  },
+                }),
+                React.createElement(PlatformResourceActionsDivider),
+                React.createElement(PlatformResourceActionMenuItem, {
+                  icon: React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  label: "Rename",
+                  shortcut: "rename",
+                  onClick: openServerRename,
+                }),
+                React.createElement(PlatformResourceActionMenuItem, {
+                  icon: React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  label: "Delete",
+                  shortcut: "delete",
+                  onClick: deleteServer,
+                })
               )
             );
           };

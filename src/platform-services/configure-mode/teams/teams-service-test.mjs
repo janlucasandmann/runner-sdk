@@ -60,6 +60,9 @@ assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.roleLifecycle, /setTeamPermissionChartAn
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.tableLifecycle, /teamPageMemberToolbarPopover/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.dialogLifecycle, /closeTeamPageShareModal/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.resourceLifecycle, /setTeamPageProjectResourceIndexes/);
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.resourceLifecycle, /\/batch-jobs\?/);
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.resourceLifecycle, /nextCursor/);
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.statePrimary, /teamPageBatchJobs/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.navigation, /function openTeamPage/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.loadLifecycle, /activePage !== "team"/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.historyCapture, /page: "team"/);
@@ -101,6 +104,9 @@ assert.deepEqual(Object.keys(pageFragments), [
 ]);
 assert.match(pageFragments.setup, /function renderTeamPage/);
 assert.match(pageFragments.setup, /const teamOverviewRows =/);
+assert.match(pageFragments.setup, /value: "batch_job", label: "Batches"/);
+assert.match(pageFragments.resourcesFoundation, /batch_job: \{ label: "Batch", Icon: Truck \}/);
+assert.match(pageFragments.resourcesFoundation, /inference_endpoint: \{ label: "Inference Endpoint", Icon: Cpu \}/);
 assert.match(pageFragments.setup, /React\.createElement\(PlatformProfileImagePicker/);
 assert.match(pageFragments.overview, /React\.createElement\(TeamsOverviewPage/);
 assert.match(pageFragments.members, /const renderMembersTab/);

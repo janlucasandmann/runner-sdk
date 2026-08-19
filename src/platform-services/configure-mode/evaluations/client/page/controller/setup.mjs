@@ -14,6 +14,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setSelectedEvaluationCaseId,
           evaluationsPageMode,
           setEvaluationsPageMode,
+          evaluationsOverviewScope = "all",
 	          evaluationDetailTab,
 	          setEvaluationDetailTab,
 	          evaluationCaseDetailTab,

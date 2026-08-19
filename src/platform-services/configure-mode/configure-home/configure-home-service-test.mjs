@@ -170,8 +170,10 @@ assert.doesNotMatch(platformEntrySource, /function renderConfigureHomeNav\(/);
 assert.doesNotMatch(platformEntrySource, /url\.pathname === "\/api\/real\/notifications\/in-app"/);
 
 const proxyCalls = [];
+const proxyJsonCalls = [];
 const configureHomeService = createConfigureHomeService({
   proxyUpstreamGet: (...args) => proxyCalls.push(args),
+  proxyUpstreamJsonRequest: (...args) => proxyJsonCalls.push(args),
 });
 let handled = configureHomeService.handleRequest(
   { method: "GET", headers: {} },
@@ -181,6 +183,23 @@ let handled = configureHomeService.handleRequest(
 assert.equal(handled, true);
 assert.equal(proxyCalls[0]?.[2], "/notifications/in-app");
 assert.deepEqual(proxyCalls[0]?.[3], { emptyOn404: true });
+
+handled = configureHomeService.handleRequest(
+  { method: "GET", headers: {} },
+  {},
+  new URL("http://localhost/api/real/notifications/preferences"),
+);
+assert.equal(handled, true);
+assert.equal(proxyCalls[1]?.[2], "/notifications/preferences");
+
+handled = configureHomeService.handleRequest(
+  { method: "PUT", headers: {} },
+  {},
+  new URL("http://localhost/api/real/notifications/preferences"),
+);
+assert.equal(handled, true);
+assert.equal(proxyJsonCalls[0]?.[2], "/notifications/preferences");
+assert.equal(proxyJsonCalls[0]?.[3], "PUT");
 
 handled = configureHomeService.handleRequest(
   { method: "POST", headers: {} },
@@ -197,6 +216,10 @@ assert.equal(handled, false);
 assert.throws(
   () => createConfigureHomeService({}),
   /Configure Home service requires the proxyUpstreamGet adapter/,
+);
+assert.throws(
+  () => createConfigureHomeService({ proxyUpstreamGet() {} }),
+  /Configure Home service requires the proxyUpstreamJsonRequest adapter/,
 );
 
 console.log("Configure Home client ownership, browser syntax, notification projection, and route contracts passed.");

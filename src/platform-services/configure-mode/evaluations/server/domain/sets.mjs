@@ -13,6 +13,7 @@ import {
   readComputeTokenValue,
   readUsdCostValue,
 } from "./primitives.mjs";
+import { normalizeKnowledgeContext } from "../../../knowledge/server/knowledge-context.mjs";
 
 const SYSTEM_SNAPSHOT_SECRET_KEYS = new Set([
   "auth",
@@ -849,12 +850,17 @@ export function createEvaluationRun(evaluationSet, options = {}) {
     schemaVersion: "evaluation_system_v1",
     ...targetSnapshot,
   });
+  const knowledgeContext = normalizeKnowledgeContext(
+    options.knowledgeContext || options.metadata?.knowledgeContext,
+    { source: "evaluation" },
+  );
   const runFingerprint = createEvaluationFingerprint("evaluation_run", {
     schemaVersion: "evaluation_run_v2",
     datasetFingerprint,
     caseSelectionFingerprint,
     evaluatorFingerprint,
     systemFingerprint,
+    knowledgeContext,
   });
   const datasetVersion = normalizeString(options.datasetVersion || options.dataset_version) || datasetFingerprint;
   const evaluatorVersion = normalizeString(options.evaluatorVersion || options.evaluator_version) || evaluatorFingerprint;
@@ -919,6 +925,7 @@ export function createEvaluationRun(evaluationSet, options = {}) {
     evaluatorFingerprint,
     systemFingerprint,
     runFingerprint,
+    knowledgeContext,
     metadata: {
       ...(options.metadata && typeof options.metadata === "object" && !Array.isArray(options.metadata) ? options.metadata : {}),
       fineTuningJobId: normalizeString(options.fineTuningJobId || options.fine_tuning_job_id),
@@ -931,6 +938,7 @@ export function createEvaluationRun(evaluationSet, options = {}) {
       evaluatorFingerprint,
       systemFingerprint,
       runFingerprint,
+      ...(knowledgeContext ? { knowledgeContext } : {}),
     },
     cases: evaluationRows
       .flatMap((row) => {

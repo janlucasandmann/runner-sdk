@@ -1,5 +1,6 @@
 import {
   LoaderCircle as LucideLoaderCircle,
+  LibraryBig as LucideLibraryBig,
   MessageSquare as LucideMessageSquare,
   MessageSquareText as LucideMessageSquareText,
 } from "lucide-react";
@@ -69,6 +70,7 @@ export function RunnerAttachmentPreviewChip({
   const referenceType = attachment.referenceType;
   const isPromptReference = referenceType === "prompt";
   const isThreadReference = referenceType === "thread";
+  const isKnowledgeReference = referenceType === "knowledge";
   const isEmailContextAttachment = isRunnerEmailContextAttachment(attachment);
   const isUploading = attachment.uploadStatus === "uploading";
   const isAttachmentPreviewable =
@@ -100,6 +102,9 @@ export function RunnerAttachmentPreviewChip({
     if (isThreadReference) {
       return <LucideMessageSquare strokeWidth={1.8} />;
     }
+    if (isKnowledgeReference) {
+      return <LucideLibraryBig strokeWidth={1.8} />;
+    }
     if (isUploading) {
       return (
         <LucideLoaderCircle className="tb-context-action-notice-icon-spinner" strokeWidth={1.9} />
@@ -125,6 +130,8 @@ export function RunnerAttachmentPreviewChip({
     ? "Prompt"
     : isThreadReference
       ? "Thread"
+      : isKnowledgeReference
+        ? "Knowledge"
       : isEmailContextAttachment
         ? "Email"
         : isGithubAttachment && attachment.githubSelectionType === "repo"

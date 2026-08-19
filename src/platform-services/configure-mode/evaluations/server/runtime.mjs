@@ -62,6 +62,10 @@ import {
   normalizeProxyGuardrailSets,
 } from "../../guardrails/server/enrichment.mjs";
 import { createEvaluationRunPersistenceCoordinator } from "./run-persistence.mjs";
+import {
+  knowledgeContextFromMetadata,
+  normalizeKnowledgeContext,
+} from "../../knowledge/server/knowledge-context.mjs";
 
 const EVALUATION_RUN_LEASE_TTL_MS = 90_000;
 const EVALUATION_RUN_HEARTBEAT_MS = 25_000;
@@ -417,6 +421,11 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
 
   function buildEvaluationRunCreatePayload(run) {
     const normalizedRun = recomputeRun(run);
+    const knowledgeContext = normalizeKnowledgeContext(
+      normalizedRun.knowledgeContext
+        || knowledgeContextFromMetadata(normalizedRun.metadata),
+      { source: "evaluation" },
+    );
     const metadata = {
       ...(normalizedRun.metadata
         && typeof normalizedRun.metadata === "object"
@@ -429,6 +438,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       targetAgentVersionNumber: normalizedRun.targetAgentVersionNumber,
       targetGuardrailId: normalizedRun.targetGuardrailId,
       targetGuardrailVersionId: normalizedRun.targetGuardrailVersionId,
+      ...(knowledgeContext ? { knowledgeContext } : {}),
     };
     const target = evaluationTargetCreateRequest(normalizedRun);
     return {
@@ -440,6 +450,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       purpose: normalizedRun.purpose,
       label: normalizedRun.label,
       metadata,
+      ...(knowledgeContext ? { knowledgeContext } : {}),
       run: normalizedRun,
     };
   }
@@ -758,6 +769,10 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     guardrail = null,
   }) {
     const { requestContext, upstreamUrl, apiKey, body } = record;
+    const knowledgeContext = normalizeKnowledgeContext(
+      knowledgeContextFromMetadata(metadata),
+      { source: "evaluation" },
+    );
     const explicitGuardrails = guardrail ? [guardrail] : [];
     const explicitPromptAdaptations = buildProxyPromptAdaptationsFromGuardrails(explicitGuardrails);
     const guardrailMetadata = guardrail ? {
@@ -789,8 +804,10 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         invisiblePromptAdaptations: explicitPromptAdaptations,
         invisible_prompt_adaptations: explicitPromptAdaptations,
       } : {}),
+      ...(knowledgeContext ? { knowledgeContext } : {}),
       metadata: {
         ...(metadata || {}),
+        ...(knowledgeContext ? { knowledgeContext } : {}),
         ...(guardrail ? {
           guardrailSetIds: [guardrail.id],
           guardrail_set_ids: [guardrail.id],
@@ -1261,6 +1278,10 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
 
   function buildCaseMetadata({ evaluationSet, run, caseRun, row, kind, sourceThreadId = "" }) {
     const evaluator = normalizeEvaluator(run.evaluator || evaluationSet.evaluator);
+    const knowledgeContext = normalizeKnowledgeContext(
+      run.knowledgeContext || run.metadata?.knowledgeContext,
+      { source: "evaluation" },
+    );
     const evaluatorMetadata = kind === "evaluator"
       ? {
           evaluatorAgentId: evaluator.agentId,
@@ -1292,6 +1313,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         targetGuardrailVersionId: run.targetGuardrailVersionId || "",
         targetGuardrailVersionNumber: run.targetGuardrailVersionNumber || 0,
         targetGuardrailVersionLabel: run.targetGuardrailVersionLabel || "",
+        ...(knowledgeContext ? { knowledgeContext } : {}),
         ...evaluatorMetadata,
       },
       runnerPlayground: {
@@ -1316,6 +1338,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         targetGuardrailVersionId: run.targetGuardrailVersionId || "",
         targetGuardrailVersionNumber: run.targetGuardrailVersionNumber || 0,
         targetGuardrailVersionLabel: run.targetGuardrailVersionLabel || "",
+        ...(knowledgeContext ? { knowledgeContext } : {}),
         ...evaluatorMetadata,
       },
     };
@@ -2492,7 +2515,14 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     if (!apiKey && !hasAiosSession(requestContext)) {
       throw createRuntimeError("Sign in to Computer Agents or provide an API key.", 401);
     }
-    const runOptions = body.runOptions && typeof body.runOptions === "object" ? body.runOptions : {};
+    const runOptions = {
+      ...(body.runOptions && typeof body.runOptions === "object" ? body.runOptions : {}),
+      ...(body.knowledgeContext || body.knowledge_context
+        ? {
+            knowledgeContext: body.knowledgeContext || body.knowledge_context,
+          }
+        : {}),
+    };
     let run = createEvaluationRun(evaluationSet, runOptions);
     const existingRecord = runsById.get(run.id);
     if (existingRecord) {

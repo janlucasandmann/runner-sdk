@@ -1,5 +1,6 @@
-import { Loader2, Plus } from "lucide-react";
+import { FlaskConical, Loader2, Plus } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { PlatformInstructionsEditor } from "../../../../../platform-ui/components/composite/instructions-editor/index.js";
 import { PlatformModal } from "../../../../../platform-ui/components/composite/modal/index.js";
 import {
   PlatformPrimaryButton,
@@ -39,6 +40,7 @@ export function TestPlanCreateModal({
   const [environmentId, setEnvironmentId] = useState(defaultEnvironmentId);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const canCreate = !submitting && Boolean(name.trim());
 
   useEffect(() => {
     if (!open) return;
@@ -87,9 +89,22 @@ export function TestPlanCreateModal({
     <PlatformModal
       open={open}
       title="New Test Plan"
-      description="Create a draft plan first. You can add cases, review the execution boundary, and publish an immutable version when it is ready."
+      headerVariant="search"
+      headerSearchProps={{
+        inputRef: nameRef,
+        icon: FlaskConical,
+        value: name,
+        maxLength: 500,
+        placeholder: "Test plan name",
+        "aria-label": "Test plan name",
+        autoComplete: "off",
+        disabled: submitting,
+        onChange: (event) => setName(event.currentTarget.value),
+      }}
       as="form"
       size="large"
+      maxHeight="min(720px, calc(100vh - 48px))"
+      scrollable
       initialFocusRef={nameRef}
       closeOnBackdrop={!submitting}
       closeOnEscape={!submitting}
@@ -97,7 +112,20 @@ export function TestPlanCreateModal({
       onClose={close}
       className="tests-create-modal"
       bodyClassName="tests-create-modal__body"
-      surfaceProps={{ onSubmit: submit }}
+      footerClassName="tests-create-modal__footer"
+      surfaceProps={{
+        onSubmit: submit,
+        onKeyDown: (event) => {
+          if (
+            (event.metaKey || event.ctrlKey)
+            && event.key === "Enter"
+            && canCreate
+          ) {
+            event.preventDefault();
+            (event.currentTarget as HTMLFormElement).requestSubmit();
+          }
+        },
+      }}
       footer={(
         <>
           <PlatformSecondaryButton size="medium" disabled={submitting} onClick={close}>
@@ -106,7 +134,7 @@ export function TestPlanCreateModal({
           <PlatformPrimaryButton
             size="medium"
             type="submit"
-            disabled={submitting || !name.trim()}
+            disabled={!canCreate}
           >
             {submitting ? (
               <>
@@ -124,28 +152,19 @@ export function TestPlanCreateModal({
       )}
     >
       <div className="tests-form-grid">
-        <label className="tests-form-field">
-          <span>Name</span>
-          <input
-            ref={nameRef}
-            value={name}
-            maxLength={500}
-            placeholder="Release verification"
-            disabled={submitting}
-            onChange={(event) => setName(event.currentTarget.value)}
-          />
-        </label>
-        <label className="tests-form-field is-span-2">
-          <span>Description</span>
-          <textarea
-            value={description}
-            rows={3}
-            maxLength={10_000}
-            placeholder="What this plan proves before Mission Control advances delivery."
-            disabled={submitting}
-            onChange={(event) => setDescription(event.currentTarget.value)}
-          />
-        </label>
+        <PlatformInstructionsEditor
+          value={description}
+          onChange={(nextDescription) => setDescription(nextDescription.slice(0, 10_000))}
+          title="Description"
+          placeholder="What this plan proves before Mission Control advances delivery."
+          ariaLabel="Test plan description"
+          readOnly={submitting}
+          stickyHeader={false}
+          historyKey="test-plan-create-description"
+          variant="minimalistic-ui"
+          contentVariant="text"
+          className="tests-create-modal__description-editor"
+        />
         <div className="tests-form-field">
           <span>Project</span>
           <PlatformSelector

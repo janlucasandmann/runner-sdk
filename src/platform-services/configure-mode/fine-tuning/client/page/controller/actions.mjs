@@ -158,23 +158,33 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        asy
           if (typeof setFineTuningPageMode === "function") setFineTuningPageMode("detail");
         }
 
-        function deleteJob(jobId) {
+        function deleteJobs(jobIds) {
           if (typeof setFineTuningJobs !== "function") return;
-          const normalizedJobId = normalizePlaygroundFineTuningString(jobId);
-          setFineTuningJobs((current) => (Array.isArray(current) ? current : []).filter((job) => normalizePlaygroundFineTuningJob(job).id !== normalizedJobId));
-          if (selectedFineTuningJobId === normalizedJobId) {
+          const normalizedJobIds = Array.from(new Set(
+            (Array.isArray(jobIds) ? jobIds : [jobIds])
+              .map((jobId) => normalizePlaygroundFineTuningString(jobId))
+              .filter(Boolean)
+          ));
+          if (!normalizedJobIds.length) return;
+          const deletedIds = new Set(normalizedJobIds);
+          setFineTuningJobs((current) => (Array.isArray(current) ? current : []).filter((job) => !deletedIds.has(normalizePlaygroundFineTuningJob(job).id)));
+          if (deletedIds.has(selectedFineTuningJobId)) {
             if (typeof setSelectedFineTuningJobId === "function") setSelectedFineTuningJobId("");
             if (typeof setFineTuningPageMode === "function") setFineTuningPageMode("overview");
           }
           const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
-          if (normalizedBackendUrl && normalizedJobId) {
-            void fetch(normalizedBackendUrl + "/fine-tuning/jobs/" + encodeURIComponent(normalizedJobId), {
+          if (normalizedBackendUrl) {
+            normalizedJobIds.forEach((normalizedJobId) => void fetch(normalizedBackendUrl + "/fine-tuning/jobs/" + encodeURIComponent(normalizedJobId), {
               method: "DELETE",
               credentials: "include",
               cache: "no-store",
               headers: requestHeaders || {},
-            }).catch(() => {});
+            }).catch(() => {}));
           }
+        }
+
+        function deleteJob(jobId) {
+          deleteJobs([jobId]);
         }
 
 `;

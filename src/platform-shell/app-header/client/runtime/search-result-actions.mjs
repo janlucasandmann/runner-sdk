@@ -19,6 +19,12 @@ export const APP_HEADER_SEARCH_RESULT_ACTIONS_SCRIPT = `        const THREAD_SEA
           if (normalizedMode === "prompts") {
             return filteredThreadSearchPromptItems.find((item) => String(item?.id || "").trim() === normalizedResultId) || null;
           }
+          if (normalizedMode === "knowledge") {
+            return filteredThreadSearchKnowledgeItems.find((item) => String(item?.id || "").trim() === normalizedResultId) || null;
+          }
+          if (normalizedMode === "evaluations") {
+            return filteredThreadSearchEvaluationItems.find((item) => String(item?.id || "").trim() === normalizedResultId) || null;
+          }
           return filteredThreadSearchWorkflowItems.find((item) => String(item?.id || "").trim() === normalizedResultId) || null;
         }
 
@@ -41,7 +47,7 @@ export const APP_HEADER_SEARCH_RESULT_ACTIONS_SCRIPT = `        const THREAD_SEA
               canDelete: !builtIn && !teamShared,
             };
           }
-          if (normalizedMode === "prompts") {
+          if (normalizedMode === "prompts" || normalizedMode === "knowledge" || normalizedMode === "evaluations") {
             return { canRename: false, canDelete: false };
           }
           return { canRename: true, canDelete: true };
@@ -88,6 +94,21 @@ export const APP_HEADER_SEARCH_RESULT_ACTIONS_SCRIPT = `        const THREAD_SEA
               page: "tools",
               toolsView: "prompts",
               promptId: String(record.id || "").trim(),
+            };
+          }
+          if (normalizedMode === "knowledge") {
+            return {
+              page: "knowledge",
+              mode: "library",
+              libraryId: String(record.id || "").trim(),
+              libraryName: String(record.name || "").trim(),
+            };
+          }
+          if (normalizedMode === "evaluations") {
+            return {
+              page: "evaluations",
+              mode: "detail",
+              evaluationId: String(record.id || "").trim(),
             };
           }
           return {

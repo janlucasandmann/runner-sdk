@@ -76,7 +76,7 @@ describe("useRunnerRunStopController", () => {
     );
   });
 
-  it("reports cancellation failures without cancelling local execution", async () => {
+  it("finalizes local execution when remote cancellation fails", async () => {
     const failure = new Error("Cancellation unavailable");
     const cancelThreadExecution = vi.fn().mockRejectedValue(failure);
     const cancelLocalExecution = vi.fn();
@@ -105,7 +105,33 @@ describe("useRunnerRunStopController", () => {
 
     expect(setError).toHaveBeenCalledWith("Cancellation unavailable");
     expect(onRunError).toHaveBeenCalledWith(failure, "thread-1");
-    expect(cancelLocalExecution).not.toHaveBeenCalled();
+    expect(cancelLocalExecution).toHaveBeenCalledOnce();
     expect(result.current.isStoppingRun).toBe(false);
+  });
+
+  it("uses the session-authenticated gateway when no API key is present", async () => {
+    const cancelThreadExecution = vi.fn().mockResolvedValue(undefined);
+    const { result } = renderHook(() => useRunnerRunStopController({
+      apiKey: "",
+      backendUrl: "/api/real",
+      cancelLocalExecution: vi.fn(),
+      clearQueuedMessages: vi.fn(),
+      localExecutionRunning: false,
+      services: { cancelThreadExecution },
+      setError: vi.fn(),
+      setPreparingRun: vi.fn(),
+      setTurns: vi.fn(),
+      threadId: "thread-session-auth",
+    }));
+
+    await act(async () => {
+      await result.current.handleStopActiveRun();
+    });
+
+    expect(cancelThreadExecution).toHaveBeenCalledWith(expect.objectContaining({
+      apiKey: "",
+      backendUrl: "/api/real",
+      threadId: "thread-session-auth",
+    }));
   });
 });

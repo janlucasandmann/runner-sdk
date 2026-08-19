@@ -11,6 +11,7 @@ import { readPlatformCompositionSource } from "../../../../apps/platform/testing
 assert.match(PLAYGROUND_TESTS_CSS, /\.resource-overview-page\.is-tests/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.state, /selectedTestPlanId/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.state, /selectedTestCaseId/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.state, /testsOverviewScope/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestsPage/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestCaseDetailPage/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestRawConfigurationPage/);
@@ -24,6 +25,10 @@ assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onOpenCase/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onOpenRawConfiguration/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /onOpenRunTechnicalDetails/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-tests-section-controls/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "all", label: "All Tests" \}/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "created", label: "Created by me" \}/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "shared", label: "Shared with me" \}/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /overviewScope: testsOverviewScope/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /selectedTestCaseName/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /Raw Configuration/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Details"/);

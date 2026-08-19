@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
 import { PlatformConfirmationModal } from "../../../../../platform-ui/components/composite/modal/index.js";
-import { PlatformServiceDetailFrame } from "../../../../../platform-ui/pages/details/index.js";
 import type { PlatformVersionNavigationGuardRegistrar } from "../../../../../platform-ui/components/composite/versioning/index.js";
+import { PlatformServiceDetailFrame } from "../../../../../platform-ui/pages/details/index.js";
+import {
+  filterPlatformResourcesByOverviewScope,
+  normalizePlatformResourceOverviewScope,
+  type PlatformResourceOverviewScope,
+} from "../../../../../platform-ui/pages/overview/index.js";
 import { TestsApi } from "../api/index.js";
 import {
+  getTestPlanCreatorIdentity,
   initializeTestPlanIdentityMetadata,
   normalizeTestWorkspaceOption,
   type TestCaseDefinition,
@@ -16,17 +22,14 @@ import {
   type TestRunCreateInput,
   type TestWorkspaceResourceOption,
 } from "../domain/index.js";
+import { TestCaseDetailPage } from "./test-case-detail-page.js";
 import { TestPlanCreateModal } from "./test-plan-create-modal.js";
 import { TestPlanDetailPage } from "./test-plan-detail-page.js";
 import { TestPlanRawConfigurationPage } from "./test-plan-raw-configuration-page.js";
-import { TestCaseDetailPage } from "./test-case-detail-page.js";
 import { TestRunCreateModal } from "./test-run-create-modal.js";
 import { TestRunDetailPage } from "./test-run-detail-page.js";
 import { TestRunTechnicalDetailsPage } from "./test-run-technical-details-page.js";
-import {
-  TestsOverviewPage,
-  type TestPlanOverviewRow,
-} from "./tests-overview-page.js";
+import { TestsOverviewPage, type TestPlanOverviewRow } from "./tests-overview-page.js";
 
 export type TestsWorkspaceMode =
   | "overview"
@@ -41,6 +44,7 @@ export interface TestsWorkspacePageProps {
   backendUrl: string;
   requestHeaders?: Readonly<Record<string, string>>;
   mode?: TestsWorkspaceMode;
+  overviewScope?: PlatformResourceOverviewScope;
   selectedTestPlanId?: string;
   selectedTestCaseId?: string;
   selectedTestRunId?: string;
@@ -118,6 +122,7 @@ export function TestsWorkspacePage({
   backendUrl,
   requestHeaders = {},
   mode = "overview",
+  overviewScope = "all",
   selectedTestPlanId = "",
   selectedTestCaseId = "",
   selectedTestRunId = "",
@@ -180,7 +185,7 @@ export function TestsWorkspacePage({
   const [error, setError] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [runPlan, setRunPlan] = useState<TestPlan | null>(null);
-  const [deletePlan, setDeletePlan] = useState<TestPlan | null>(null);
+  const [deletePlans, setDeletePlans] = useState<readonly TestPlan[]>([]);
 
   const loadOverview = useCallback(async () => {
     setLoading(true);
@@ -300,7 +305,13 @@ export function TestsWorkspacePage({
       planRuns.push(run);
       runsByPlan.set(run.testPlanId, planRuns);
     });
-    return plans.map((plan) => {
+    const scopedPlans = filterPlatformResourcesByOverviewScope(
+      plans,
+      normalizePlatformResourceOverviewScope(overviewScope),
+      currentUser,
+      (plan) => getTestPlanCreatorIdentity(plan),
+    );
+    return scopedPlans.map((plan) => {
       const planRuns = (runsByPlan.get(plan.id) || []).sort(
         (left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt),
       );
@@ -320,7 +331,7 @@ export function TestsWorkspacePage({
         searchText: `${plan.name} ${plan.description} ${plan.projectId || ""}`,
       };
     });
-  }, [normalizedProjects, plans, runs]);
+  }, [currentUser, normalizedProjects, overviewScope, plans, runs]);
 
   const requestWorkspaceNavigation = useCallback((continuation: () => void) => {
     if (typeof onNavigationRequest === "function") {
@@ -623,9 +634,9 @@ export function TestsWorkspacePage({
           const plan = plans.find((candidate) => candidate.id === row.id);
           if (plan) setRunPlan(plan);
         }}
-        onDelete={(row) => {
-          const plan = plans.find((candidate) => candidate.id === row.id);
-          if (plan) setDeletePlan(plan);
+        onDelete={(rows) => {
+          const selectedIds = new Set(rows.map((row) => row.id));
+          setDeletePlans(plans.filter((candidate) => selectedIds.has(candidate.id)));
         }}
       />
       <TestPlanCreateModal
@@ -648,21 +659,41 @@ export function TestsWorkspacePage({
         onRun={startRun}
       />
       <PlatformConfirmationModal
-        open={Boolean(deletePlan)}
-        title="Delete Test Plan?"
-        description={deletePlan
-          ? `This permanently deletes ${deletePlan.name}, its versions, runs, results, and retained artifacts.`
-          : ""}
-        confirmLabel="Delete Test Plan"
+        open={deletePlans.length > 0}
+        title={deletePlans.length === 1 ? "Delete Test Plan?" : `Delete ${deletePlans.length} Test Plans?`}
+        description={deletePlans.length === 1
+          ? `This permanently deletes ${deletePlans[0]?.name}, its versions, runs, results, and retained artifacts.`
+          : "This permanently deletes the selected test plans, their versions, runs, results, and retained artifacts."}
+        confirmLabel={deletePlans.length === 1 ? "Delete Test Plan" : "Delete Test Plans"}
         confirmingLabel="Deleting…"
         tone="destructive"
-        onCancel={() => setDeletePlan(null)}
+        onCancel={() => setDeletePlans([])}
         onConfirm={async () => {
-          if (!deletePlan) return;
-          await api.deletePlan(deletePlan.id);
-          setPlans((current) => current.filter((plan) => plan.id !== deletePlan.id));
-          setRuns((current) => current.filter((run) => run.testPlanId !== deletePlan.id));
-          setDeletePlan(null);
+          if (!deletePlans.length) return;
+          const results = await Promise.allSettled(
+            deletePlans.map((plan) => api.deletePlan(plan.id)),
+          );
+          const deletedIds = new Set(
+            deletePlans
+              .filter((_, index) => results[index]?.status === "fulfilled")
+              .map((plan) => plan.id),
+          );
+          const failedPlans = deletePlans.filter(
+            (_, index) => results[index]?.status === "rejected",
+          );
+          if (deletedIds.size) {
+            setPlans((current) => current.filter((plan) => !deletedIds.has(plan.id)));
+            setRuns((current) => current.filter((run) => !deletedIds.has(run.testPlanId)));
+            deletedIds.forEach((id) => onPlanDeleted?.(id));
+          }
+          setDeletePlans(failedPlans);
+          if (failedPlans.length) {
+            throw new Error(
+              failedPlans.length === 1
+                ? `Failed to delete ${failedPlans[0]?.name || "the test plan"}.`
+                : `Failed to delete ${failedPlans.length} test plans.`,
+            );
+          }
         }}
       />
     </>

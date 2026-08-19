@@ -444,6 +444,8 @@ describe("PlatformGlobalSearchModal", () => {
     expect(screen.getByRole("menuitemradio", { name: /Tickets/i })).toBeTruthy();
     expect(screen.getByRole("menuitemradio", { name: /Agents/i })).toBeTruthy();
     expect(screen.getByRole("menuitemradio", { name: /Workflows/i })).toBeTruthy();
+    expect(screen.getByRole("menuitemradio", { name: /Prompts/i })).toBeTruthy();
+    expect(screen.getByRole("menuitemradio", { name: /Knowledge/i })).toBeTruthy();
 
     fireEvent.click(screen.getByRole("menuitemradio", { name: /Files/i }));
 

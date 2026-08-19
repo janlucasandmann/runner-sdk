@@ -44,6 +44,40 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
                       : metadata.created_by && typeof metadata.created_by === "object" && !Array.isArray(metadata.created_by)
                         ? metadata.created_by
                         : {};
+            const hasExplicitCreatorIdentity = Object.keys(nested).length > 0 || [
+              record.creatorId,
+              record.creator_id,
+              record.createdById,
+              record.created_by_id,
+              record.creatorUserId,
+              record.creator_user_id,
+              record.createdByUserId,
+              record.created_by_user_id,
+              record.creatorEmail,
+              record.creator_email,
+              record.createdByEmail,
+              record.created_by_email,
+              record.creatorName,
+              record.creator_name,
+              record.createdByName,
+              record.created_by_name,
+              metadata.creatorId,
+              metadata.creator_id,
+              metadata.createdById,
+              metadata.created_by_id,
+              metadata.creatorUserId,
+              metadata.creator_user_id,
+              metadata.createdByUserId,
+              metadata.created_by_user_id,
+              metadata.creatorEmail,
+              metadata.creator_email,
+              metadata.createdByEmail,
+              metadata.created_by_email,
+              metadata.creatorName,
+              metadata.creator_name,
+              metadata.createdByName,
+              metadata.created_by_name,
+            ].some((value) => String(value || "").trim());
             const creatorName = String(
               nested.name
               || nested.displayName
@@ -56,8 +90,8 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
               || metadata.creator_name
               || metadata.createdByName
               || metadata.created_by_name
-              || accountName
-              || accountEmail
+              || (!hasExplicitCreatorIdentity ? accountName : "")
+              || (!hasExplicitCreatorIdentity ? accountEmail : "")
               || ""
             ).trim();
             const creatorAvatarUrl = String(
@@ -75,14 +109,14 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
               || metadata.creator_avatar_url
               || metadata.createdByAvatarUrl
               || metadata.created_by_avatar_url
-              || accountAvatarUrl
+              || (!hasExplicitCreatorIdentity ? accountAvatarUrl : "")
               || ""
             ).trim();
             return {
-              id: String(nested.id || record.creatorId || record.creator_id || record.createdById || record.created_by_id || metadata.creatorId || metadata.creator_id || metadata.createdById || metadata.created_by_id || accountEmail || "").trim(),
-              userId: String(nested.userId || nested.user_id || record.creatorUserId || record.creator_user_id || metadata.creatorUserId || metadata.creator_user_id || sessionState.userId || "").trim(),
+              id: String(nested.id || record.creatorId || record.creator_id || record.createdById || record.created_by_id || metadata.creatorId || metadata.creator_id || metadata.createdById || metadata.created_by_id || (!hasExplicitCreatorIdentity ? accountEmail : "") || "").trim(),
+              userId: String(nested.userId || nested.user_id || record.creatorUserId || record.creator_user_id || record.createdByUserId || record.created_by_user_id || metadata.creatorUserId || metadata.creator_user_id || metadata.createdByUserId || metadata.created_by_user_id || (!hasExplicitCreatorIdentity ? sessionState.userId : "") || "").trim(),
               name: creatorName,
-              email: String(nested.email || nested.mail || record.creatorEmail || record.creator_email || record.createdByEmail || record.created_by_email || metadata.creatorEmail || metadata.creator_email || metadata.createdByEmail || metadata.created_by_email || accountEmail || "").trim(),
+              email: String(nested.email || nested.mail || record.creatorEmail || record.creator_email || record.createdByEmail || record.created_by_email || metadata.creatorEmail || metadata.creator_email || metadata.createdByEmail || metadata.created_by_email || (!hasExplicitCreatorIdentity ? accountEmail : "") || "").trim(),
               avatarUrl: creatorAvatarUrl,
               isSystem: false,
             };
@@ -137,18 +171,13 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
                 "Failed to create guardrail set."
               );
               const createdSet = normalizePlaygroundGuardrailSet(createdPayload?.guardrail || createdPayload?.data || createdPayload);
-              const detailedSet = await fetchBackendGuardrailSetDetails(createdSet);
               const localDraftPrompts = (Array.isArray(nextSet.prompts) ? nextSet.prompts : [])
                 .filter((prompt) => !isPlaygroundGuardrailPromptPersistable(prompt));
-              const detailedSetWithDrafts = localDraftPrompts.length
-                ? normalizePlaygroundGuardrailSet({
-                    ...detailedSet,
-                    prompts: [
-                      ...(Array.isArray(detailedSet?.prompts) ? detailedSet.prompts : []),
-                      ...localDraftPrompts,
-                    ],
-                  })
-                : detailedSet;
+              if (createdSet.id && localDraftPrompts.length) {
+                guardrailLocalPromptDraftsRef.current.set(createdSet.id, localDraftPrompts);
+              }
+              const detailedSet = await fetchBackendGuardrailSetDetails(createdSet);
+              const detailedSetWithDrafts = mergeGuardrailSetWithLocalPromptDrafts(detailedSet);
               replaceGuardrailSetFromBackend(detailedSetWithDrafts, { select: true, rememberBaseline: true });
               setGuardrailsBackendSyncState({ status: "idle", error: "" });
               setGuardrailsPageMode("detail");
@@ -236,6 +265,13 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
                 prompts: Array.isArray(updatedSet?.prompts) ? updatedSet.prompts : (Array.isArray(set.prompts) ? set.prompts : []),
                 updatedAt: new Date().toISOString(),
               }));
+              const incompletePrompts = (Array.isArray(nextSetForPersistence.prompts) ? nextSetForPersistence.prompts : [])
+                .filter((prompt) => !isPlaygroundGuardrailPromptPersistable(prompt));
+              if (incompletePrompts.length) {
+                guardrailLocalPromptDraftsRef.current.set(normalizedSetId, incompletePrompts);
+              } else {
+                guardrailLocalPromptDraftsRef.current.delete(normalizedSetId);
+              }
               return nextSetForPersistence;
             }));
             if (nextSetForPersistence) {

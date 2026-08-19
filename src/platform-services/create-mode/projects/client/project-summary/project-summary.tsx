@@ -89,20 +89,22 @@ export function ProjectSummary({
         onChange={onIdentityChange}
         className="platform-project-summary__icon-picker"
       />
-      <h1 className="platform-project-summary__title">{projectName}</h1>
-      <textarea
-        ref={textareaRef}
-        className="platform-project-summary__input"
-        value={summary}
-        rows={1}
-        maxLength={320}
-        placeholder="Add a short summary..."
-        aria-label="Project summary"
-        disabled={summaryDisabled}
-        onFocus={() => onSummaryEditingChange?.(true)}
-        onChange={handleChange}
-        onBlur={handleBlur}
-      />
+      <div className="platform-project-summary__copy">
+        <h1 className="platform-project-summary__title">{projectName}</h1>
+        <textarea
+          ref={textareaRef}
+          className="platform-project-summary__input"
+          value={summary}
+          rows={1}
+          maxLength={320}
+          placeholder="Add a short summary..."
+          aria-label="Project summary"
+          disabled={summaryDisabled}
+          onFocus={() => onSummaryEditingChange?.(true)}
+          onChange={handleChange}
+          onBlur={handleBlur}
+        />
+      </div>
     </section>
   );
 }

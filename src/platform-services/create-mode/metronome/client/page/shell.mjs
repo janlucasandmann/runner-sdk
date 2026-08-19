@@ -15,6 +15,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           backendUrl = "/api/real",
           apiKey = "",
           requestHeaders = {},
+          threadComposerProps = {},
           onThreadOpen,
           onNavigationGuardChange,
           onNavigationRequest,
@@ -245,6 +246,8 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const pendingMetronomeOpenRunRef = useRef({ workflowId: "", runId: "", mode: "" });
           const [metronomeEditorHighlightRunId, setMetronomeEditorHighlightRunId] = useState("");
           const [metronomeRunState, setMetronomeRunState] = useState({ status: "idle", message: "" });
+          const [metronomeManualRunDialog, setMetronomeManualRunDialog] = useState(null);
+          const [metronomeExecutionDialog, setMetronomeExecutionDialog] = useState(null);
           const [metronomeRunTraceWorkExpanded, setMetronomeRunTraceWorkExpanded] = useState(true);
           const [isMetronomeVersionHistorySidebarOpen, setIsMetronomeVersionHistorySidebarOpen] = useState(false);
           const [metronomePublishState, setMetronomePublishState] = useState({ status: "idle", message: "" });

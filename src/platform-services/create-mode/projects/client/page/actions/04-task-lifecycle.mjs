@@ -170,10 +170,12 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
           }
         }
 
-        function buildMissionControlThreadMetadata(projectRecord, userPrompt = "") {
+        function buildMissionControlThreadMetadata(projectRecord, userPrompt = "", knowledgeContext = null) {
           const normalizedProject = normalizePlaygroundProjectRecord(projectRecord || selectedProject);
           return {
+            ...(knowledgeContext ? { knowledgeContext } : {}),
             runnerPlayground: {
+              ...(knowledgeContext ? { knowledgeContext } : {}),
               missionControl: {
                 projectId: normalizedProject.id || selectedProjectId || "",
                 projectName: normalizedProject.name || "Project",
@@ -185,7 +187,7 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
           };
         }
 
-        function buildMissionControlThreadRecord(threadId, projectRecord, userPrompt, agentId, environmentId) {
+        function buildMissionControlThreadRecord(threadId, projectRecord, userPrompt, agentId, environmentId, knowledgeContext = null) {
           const normalizedProject = normalizePlaygroundProjectRecord(projectRecord || selectedProject);
           const normalizedThreadId = String(threadId || "").trim();
           return {
@@ -195,7 +197,7 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
             environmentId: String(environmentId || "").trim() || null,
             agentId: String(agentId || "").trim() || null,
             status: "running",
-            metadata: buildMissionControlThreadMetadata(normalizedProject, userPrompt),
+            metadata: buildMissionControlThreadMetadata(normalizedProject, userPrompt, knowledgeContext),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           };
@@ -307,6 +309,11 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
           }
 
           const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+          const projectKnowledgeLibrary = await ensurePlaygroundProjectKnowledgeLibrary(normalizedProject);
+          const projectKnowledgeContext = buildPlaygroundProjectKnowledgeContext(
+            projectKnowledgeLibrary,
+            "project-mission-control"
+          );
           const normalizedOperatorPrompt = typeof payload?.prompt === "string" ? payload.prompt.trim() : "";
           const launchEnvironmentId = String(
             payload?.environmentId
@@ -322,9 +329,11 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
             || ""
           ).trim();
           const missionControlPrompt = buildPlaygroundMissionControlPrompt({
+            projectRecord: normalizedProject,
             userPrompt: normalizedOperatorPrompt,
             attachments: payload?.attachments,
             launchAgentId: launchAgentId,
+            knowledgeLibrary: projectKnowledgeLibrary,
           });
           const runAttachments = mergePlaygroundAttachmentLists(
             normalizedProject.attachments,
@@ -346,8 +355,11 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
                 projectId: selectedProjectId,
                 environmentId: launchEnvironmentId || undefined,
                 agentId: launchAgentId || undefined,
+                ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
                 metadata: {
+                  ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
                   runnerPlayground: {
+                    ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
                     missionControl: {
                       projectId: selectedProjectId,
                       projectName: normalizedProject.name || "Project",
@@ -383,6 +395,7 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
                 : {}),
               runnerPlayground: {
                 ...runnerPlaygroundMetadata,
+                ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
                 missionControl: {
                   ...(runnerPlaygroundMetadata?.missionControl && typeof runnerPlaygroundMetadata.missionControl === "object" && !Array.isArray(runnerPlaygroundMetadata.missionControl)
                     ? runnerPlaygroundMetadata.missionControl
@@ -426,6 +439,7 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
                 attachments: runAttachments,
                 githubRepo: projectGithubRepo || null,
                 enabledSkills: enabledSkillsPayload,
+                knowledgeContext: projectKnowledgeContext,
                 environmentId: launchEnvironmentId,
               },
             });
@@ -463,28 +477,14 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
                   })
                 : normalizedInitialProject;
               let normalizedProject = normalizePlaygroundProjectRecord(savedProject || normalizedInitialProject);
-              const setupStrategyBrief = buildMissionControlSetupStrategyBriefFromDraft();
               const runProjectId = String(normalizedProject.id || selectedProjectId || "").trim();
               if (!runProjectId) {
                 throw new Error("Project is unavailable.");
               }
-              const updatedProjectWithMissionContext = await persistProjectMissionControlRecord(runProjectId, buildMissionControlRecordForSave({
-                strategyBrief: setupStrategyBrief,
-                updatedAt: new Date().toISOString(),
-              }), {
-                quiet: true,
-                refreshBaseProject: false,
-              }).catch(() => null);
-              normalizedProject = normalizePlaygroundProjectRecord(
-                updatedProjectWithMissionContext
-                || {
-                  ...normalizedProject,
-                  missionControl: {
-                    ...getPlaygroundProjectMissionControlRecord(normalizedProject),
-                    strategyBrief: setupStrategyBrief,
-                    updatedAt: new Date().toISOString(),
-                  },
-                }
+              const projectKnowledgeLibrary = await ensurePlaygroundProjectKnowledgeLibrary(normalizedProject);
+              const projectKnowledgeContext = buildPlaygroundProjectKnowledgeContext(
+                projectKnowledgeLibrary,
+                "project-mission-control"
               );
               const launchEnvironmentId = String(
                 runRequest?.environmentId
@@ -509,9 +509,14 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
                 userPrompt: normalizedOperatorPrompt,
                 attachments: runRequest?.attachments,
                 launchAgentId,
+                knowledgeLibrary: projectKnowledgeLibrary,
               });
               const enabledSkillsPayload = buildPlaygroundMissionControlEnabledSkillsPayload(runRequest?.enabledSkills);
-              const missionControlMetadata = buildMissionControlThreadMetadata(normalizedProject, normalizedOperatorPrompt);
+              const missionControlMetadata = buildMissionControlThreadMetadata(
+                normalizedProject,
+                normalizedOperatorPrompt,
+                projectKnowledgeContext
+              );
               const patchThreadResponse = await fetch(backendUrl + "/threads/" + encodeURIComponent(normalizedThreadId), {
                 method: "PATCH",
                 headers: {
@@ -523,6 +528,7 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
                   projectId: runProjectId,
                   agentId: launchAgentId,
                   environmentId: launchEnvironmentId || undefined,
+                  ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
                   metadata: missionControlMetadata,
                 }),
               });
@@ -535,7 +541,8 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
                 normalizedProject,
                 normalizedOperatorPrompt,
                 launchAgentId,
-                launchEnvironmentId
+                launchEnvironmentId,
+                projectKnowledgeContext
               );
 
               setSelectedTaskId("");
@@ -571,6 +578,7 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
                     attachments: runAttachments,
                     githubRepo: projectGithubRepo || null,
                     enabledSkills: enabledSkillsPayload,
+                    knowledgeContext: projectKnowledgeContext,
                     environmentId: launchEnvironmentId,
                     quotedSelection: runRequest?.quotedSelection || null,
                   },
@@ -603,20 +611,21 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
           }
 
 	          missionControlSyncThreadIdRef.current = normalizedThreadId;
-		          try {
-		            const threadMessages = await fetchPlaygroundThreadMessages(normalizedThreadId);
-		            const parsedMissionControl = await resolvePlaygroundMissionControlRecordFromMessages(threadMessages);
-		            if (!String(parsedMissionControl.document || "").trim()) {
-              setMissionControlRunState((current) => current.threadId === normalizedThreadId
-                ? {
-                    ...current,
-                    status: "failed",
-                    error: "Mission Control finished without a strategy document.",
-                  }
-                : current
-		              );
-		              return;
-		            }
+	          try {
+	            const threadMessages = await fetchPlaygroundThreadMessages(normalizedThreadId);
+	            const parsedMissionControl = await resolvePlaygroundMissionControlRecordFromMessages(threadMessages);
+	            const projectRecord = normalizePlaygroundProjectRecord(
+	              (selectedProject?.id === normalizedProjectId ? selectedProject : null)
+	              || projectsById[normalizedProjectId]
+	              || { id: normalizedProjectId, name: "Project" }
+	            );
+	            const projectKnowledgeLibrary = await ensurePlaygroundProjectKnowledgeLibrary(projectRecord);
+	            await applyPlaygroundMissionControlKnowledgeDocuments({
+	              projectRecord,
+	              library: projectKnowledgeLibrary,
+	              documents: parsedMissionControl.knowledgeDocuments,
+	              threadId: normalizedThreadId,
+	            });
 		            const hasParsedProjectRules = parsedMissionControl
 		              && typeof parsedMissionControl === "object"
 		              && !Array.isArray(parsedMissionControl)
@@ -631,9 +640,12 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
 		                  projectRules: parsedProjectRules,
 		                }
 		              : null;
-		            await persistProjectMissionControlRecord(normalizedProjectId, {
-	              ...selectedProjectMissionControl,
-	              ...parsedMissionControl,
+	            const { knowledgeDocuments: _knowledgeDocuments, ...operationalMissionControl } = parsedMissionControl;
+	            await persistProjectMissionControlRecord(normalizedProjectId, {
+	              ...getPlaygroundProjectMissionControlRecord(projectRecord),
+	              ...operationalMissionControl,
+	              knowledgeLibraryId: String(projectKnowledgeLibrary.id || ""),
+	              knowledgeLibraryName: String(projectKnowledgeLibrary.name || "Project Knowledge"),
 	              lastThreadId: normalizedThreadId,
 	              updatedAt: new Date().toISOString(),
 	            }, {

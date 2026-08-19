@@ -75,7 +75,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             if (inlineText) {
               const inlineRecord = parsePlaygroundMissionControlResponseContent(inlineText);
               const inlineScore = getPlaygroundMissionControlContentScore(inlineText);
-              if (String(inlineRecord.document || "").trim() && (inlineScore > bestScore || !String(bestRecord.document || "").trim())) {
+              if (inlineRecord.knowledgeDocuments?.length && (inlineScore > bestScore || !bestRecord.knowledgeDocuments?.length)) {
                 bestRecord = inlineRecord;
                 bestScore = inlineScore;
                 if (inlineScore >= 240) {
@@ -96,7 +96,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
               }
               const parsedAttachmentRecord = parsePlaygroundMissionControlResponseContent(attachmentContent);
               const attachmentScore = getPlaygroundMissionControlAttachmentScore(attachment) + getPlaygroundMissionControlContentScore(attachmentContent);
-              if (String(parsedAttachmentRecord.document || "").trim() && (attachmentScore > bestScore || !String(bestRecord.document || "").trim())) {
+              if (parsedAttachmentRecord.knowledgeDocuments?.length && (attachmentScore > bestScore || !bestRecord.knowledgeDocuments?.length)) {
                 bestRecord = parsedAttachmentRecord;
                 bestScore = attachmentScore;
                 if (attachmentScore >= 240) {
@@ -212,9 +212,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
 	          const operatorPrompt = String(options?.userPrompt || "").trim();
 	          const projectContextDescription = getPlaygroundProjectMissionInstructions(normalizedProject);
 	          const projectOperatingProfileSection = buildPlaygroundMissionControlOperatingProfilePromptSection(normalizedProject);
-	          const currentProjectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(normalizedProject, {
-	            releaseRecords: releases,
-	          });
+	          const projectKnowledgeSection = buildPlaygroundProjectKnowledgePromptSection(options?.knowledgeLibrary);
 	          const currentProjectRulesSection = buildPlaygroundProjectRulesPromptSection(normalizedProject);
 	          const currentMissionControlRecord = getPlaygroundProjectMissionControlRecord(normalizedProject);
 	          const currentDeliveryAssurance = normalizePlaygroundDeliveryAssurance(
@@ -284,7 +282,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
 	          const deliveryIdempotencyKey = "mission-control-" + normalizedProject.id + "-delivery-v1";
 	          return [
 	            "You are running Mission Control for this project.",
-		            "Your job is to analyze the available project context, reconcile the current project state, define the right strategy, and update the project structure using the Task Management and Computer Agents skills where appropriate.",
+	            "Your job is to analyze the available project context, reconcile the current project state, maintain its durable strategy and documentation in Project Knowledge, and update the project structure using the Task Management and Computer Agents skills where appropriate.",
 	            "Always use the Task Management skill for milestones, tasks, subtasks, blockers, comments, and other planning mutations instead of only describing them in prose.",
             "Always use the Computer Agents skill for live discovery of agents, environments, and skills instead of inventing IDs or writing raw curl requests.",
             "When invoking built-in skills, use the exact invocation names from the available skills list, for example task-management and computer-agents. Do not invoke skills using attachment IDs like task_management or computer_agents.",
@@ -295,11 +293,9 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
 		            projectOperatingProfileSection,
 		            projectAttachmentsSection,
 		            runAttachmentsSection,
-		            projectConnectorsSection,
-		            projectResourcesSection,
-		            currentProjectStrategySection
-	              ? ("Current structured project strategy:" + newline + currentProjectStrategySection)
-	              : "Current structured project strategy: None yet.",
+	            projectConnectorsSection,
+	            projectResourcesSection,
+	            projectKnowledgeSection,
 	            currentProjectRulesSection
 	              ? ("Current project rules:" + newline + currentProjectRulesSection)
 	              : "Current project rules: None yet.",
@@ -326,10 +322,13 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             "2. Use the Computer Agents skill to inspect the live agent roster, environments, available skills, and the existing canonical project delivery plan before assigning work.",
               "   - Inspect the plan with: python3 /workspace/.claude/skills/computer-agents/scripts/computer-agents.py projects delivery get " + normalizedProject.id,
               "   - A not-found response means no canonical plan exists yet. A ready plan and all IDs in its bindings are authoritative and must be reused.",
-	              "3. Form a strategy for the project and explain the direction clearly.",
-	              "   - Also create compact structured strategy context agents can use inside every task prompt.",
-	              "   - The structured strategy context must express the project goal, in-scope boundaries, out-of-scope boundaries, project-level success criteria, risks/assumptions, and key decisions. Operational targets belong on milestones.",
-	              "   - Do not create or update separate outcome objects. Treat legacy outcome metadata only as migration input and preserve its useful content by merging it into milestone descriptions and milestone successCriteria.",
+	              "3. Form or refine the project strategy and maintain it in the attached Project Knowledge library.",
+	              "   - Read the current Knowledge documents before planning. Update the existing Project Strategy document instead of creating a duplicate.",
+	              "   - The strategy document must capture the goal, scope boundaries, project-level success criteria, risks and assumptions, and key decisions. Operational targets still belong on milestones.",
+	              "   - Never write a strategy document, strategy brief, or outcome object into the project record or project metadata.",
+	              "   - Maintain additional Knowledge documents for architecture, decisions, interfaces, runbooks, research, troubleshooting, and handoffs whenever the project context supports them.",
+	              "   - Documentation is part of the work, not an optional epilogue. Prefer updating an existing relevant document; create a new focused document only when it has a distinct durable purpose.",
+	              "   - Treat legacy project-local strategy metadata only as migration input and preserve useful content in Project Knowledge and milestone successCriteria.",
 	              "   - Update project rules when the project needs durable execution behavior that every future task agent should follow. Do not duplicate generic platform behavior as a rule.",
 	              "4. Inspect the available agents and assign the backlog work intentionally.",
 	              defaultExecutionAgent
@@ -346,7 +345,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
               "   - Pass assigneeAgentId whenever you create or update execution tasks, including parent tasks. Use the human assignment option only for resource/input requests or explicit manual reviews.",
               "   - Use in_review and reviewer metadata for work that needs human or agent acceptance before it is done.",
               "   - Set releaseId on planned work whenever the task belongs to a specific milestone.",
-              "   - Define measurable successCriteria directly on every milestone. Do not create a separate outcome object or duplicate milestone goals in project strategy metadata.",
+	              "   - Define measurable successCriteria directly on every milestone. Do not create a separate outcome object or duplicate milestone goals in project metadata.",
               "   - Attach enabled skill IDs to tasks after you inspect the live skill list.",
               "   - Use the project's default environment for execution work unless a different environment is clearly more appropriate.",
               "   - Add task comments whenever they preserve important rationale, sequencing, architectural decisions, or handoff context.",
@@ -387,21 +386,15 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
               "   - If a reusable project-specific workflow gap is obvious and worth reusing, create a custom skill before attaching it to tasks.",
               "   - Aim for task records that are execution-ready: milestone, assignee, environment, skills, hierarchy/dependencies, and useful comments should all be populated when the context supports it.",
               "   - When you create parent tasks, also create the subtasks and dependency chain needed to express the real order of work.",
-              "7. In your human-readable response, output only the strategy document markdown itself.",
-              "   - Do not add any conversational intro, acknowledgement, explanation, or outro before or after the document.",
-              "   - Start directly with the first strategy heading.",
-              "   - Use these sections in order:",
-              "     - Strategy Summary",
-              "     - Strategic Breakdown",
-              "     - Risks & Opportunities",
-              "     - Recommended Next Moves",
-              "8. End your final response with a fenced code block labeled mission_control_json.",
-              "   - The markdown before that code block must exactly match the strategy document text stored in the JSON document field.",
-	              "9. That JSON must contain these keys:",
+	              "7. Before finishing, verify that the attached Project Knowledge library contains a current Project Strategy document and the durable documentation produced or changed by this run.",
+	              "8. Keep the human-readable response concise: summarize the project changes, Knowledge documents maintained, and any blocked decisions.",
+	              "9. End your final response with a fenced code block labeled mission_control_json.",
+	              "10. That JSON must contain these keys:",
 	              '   - "summary": a 1-2 sentence summary for the Mission Control card',
-	              '   - "document": the full strategy document in markdown only, with no conversational preface or trailing commentary',
-	              '   - "strategyBrief": an object with keys "goal", "inScope", "outOfScope", "successCriteria", "risks", and "decisions"',
-	              '     - Milestone-specific success criteria belong on the milestone successCriteria field through the Task Management skill, not in strategyBrief.',
+	              '   - "knowledgeDocuments": an array of complete durable documents to create or update in the attached library',
+	              '     - Each item is {"kind":"strategy|architecture|decision_log|runbook|research|handoff|documentation","title":string,"summary":string,"markdown":string,"documentId"?:string}.',
+	              '     - Always include the complete current Project Strategy document, even if the runtime already submitted a Knowledge proposal. Include every other durable document created or materially updated by this run.',
+	              '     - Use documentId when updating a known current document. Never put strategy or documentation into project metadata.',
 	              '   - "deliveryAssurance": an object with schemaVersion "mission_control_delivery_assurance_v1" and the keys "testPlan", "evaluationPlan", "optimizationPolicy", "canonicalAssurance", "completionPolicy", and "gates"',
 	              '     - When a canonical delivery plan exists, derive every ID and gate dependency exclusively from its returned bindings and graph. This object is only the UI projection; it must not create or authorize resources.',
 	              '     - "testPlan": {"required":boolean,"title":string,"testPlanId":string,"caseKinds":string[],"acceptanceCriteria":string[],"linkedTaskIds":string[],"releaseIds":string[]}',
@@ -861,7 +854,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
         }
 
         const filteredProjects = useMemo(() => {
-          const scopedProjects = projects.filter((project) => {
+          return projects.filter((project) => {
             if (projectsHomeScope === "created") {
               return isProjectCreatedByCurrentViewer(project);
             }
@@ -870,38 +863,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             }
             return true;
           });
-          const typedProjects = scopedProjects.filter((project) => {
-            if (projectsHomeFilterMode === "all") {
-              return true;
-            }
-            const summary = getProjectListSummary(project);
-            if (projectsHomeFilterMode === "active") {
-              return Number(summary.openTasksCount || 0) > 0 || Number(summary.activeThreadsCount || 0) > 0;
-            }
-            if (projectsHomeFilterMode === "completed") {
-              return Number(summary.tasksCount || 0) > 0 && Number(summary.openTasksCount || 0) <= 0;
-            }
-            if (projectsHomeFilterMode.startsWith("type:")) {
-              return getProjectListBlueprint(project).id === projectsHomeFilterMode.slice(5);
-            }
-            return true;
-          });
-          const matchedProjects = typedProjects.filter((project) => {
-            if (!normalizedSearchQuery) return true;
-            const haystack = [
-              project.name || "",
-              project.description || "",
-              String(project.summary?.tasksCount || ""),
-              String(project.summary?.threadsCount || ""),
-              String(project.summary?.environmentsCount || ""),
-            ]
-              .join(" ")
-              .toLowerCase();
-            return haystack.includes(normalizedSearchQuery);
-          });
-
-          return matchedProjects;
-        }, [currentProjectViewerTokens, normalizedSearchQuery, projects, projectsHomeFilterMode, projectsHomeScope]);
+        }, [currentProjectViewerTokens, projects, projectsHomeScope]);
 
         const sortedTasks = useMemo(() => {
           return [...tasks]
@@ -910,6 +872,9 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
         }, [agentsById, environmentsById, normalizedSearchQuery, sprintsById, taskTicketNumbersById, tasks]);
 
         const overviewVisibleTasks = useMemo(() => {
+          if (taskView !== "overview") {
+            return [];
+          }
           const normalizedOverviewTaskQuery = String(projectOverviewTaskSearchQuery || "").trim().toLowerCase();
           const priorityOrder = {
             urgent: 0,
@@ -994,9 +959,13 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
           sortedTasks,
           sprintsById,
           taskTicketNumbersById,
+          taskView,
         ]);
 
         const overviewAssignedActors = useMemo(() => {
+          if (taskView !== "overview") {
+            return [];
+          }
           const nextById = new Map();
           sortedTasks.forEach((task) => {
             const normalizedAssigneeId = String(task?.assigneeAgentId || "").trim();
@@ -1046,9 +1015,12 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
               }
               return String(left.name || "").localeCompare(String(right.name || ""));
             });
-        }, [agentsById, currentUserAvatarUrl, normalizedSearchQuery, sortedTasks]);
+        }, [agentsById, currentUserAvatarUrl, normalizedSearchQuery, sortedTasks, taskView]);
 
         const taskChildrenByParentId = useMemo(() => {
+          if (taskView !== "backlog") {
+            return {};
+          }
           const next = {};
           tasks.forEach((task) => {
             const parentTaskId = getPlaygroundTaskParentTaskId(task);
@@ -1062,10 +1034,13 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
           });
           Object.values(next).forEach((items) => items.sort(compareBacklogTaskOrder));
           return next;
-        }, [backlogFilterMode, backlogSortMode, taskTicketNumbersById, tasks]);
+        }, [backlogFilterMode, backlogSortMode, taskTicketNumbersById, taskView, tasks]);
 
         const backlogVisibleTaskIds = useMemo(() => {
           const next = new Set();
+          if (taskView !== "backlog") {
+            return next;
+          }
           tasks.forEach((task) => {
             if (!matchesTaskSearch(task) || !matchesBacklogFilter(task, backlogFilterMode, {
               keepVisibleCompletedTaskIds: backlogSessionCompletedTaskIds,
@@ -1082,9 +1057,12 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             }
           });
           return next;
-        }, [agentsById, backlogFilterMode, backlogSessionCompletedTaskIds, environmentsById, normalizedSearchQuery, sprintsById, taskTicketNumbersById, tasks, tasksById]);
+        }, [agentsById, backlogFilterMode, backlogSessionCompletedTaskIds, environmentsById, normalizedSearchQuery, sprintsById, taskTicketNumbersById, taskView, tasks, tasksById]);
 
         const backlogTaskRoots = useMemo(() => {
+          if (taskView !== "backlog") {
+            return [];
+          }
           return [...tasks]
             .filter((task) => backlogVisibleTaskIds.has(task.id))
             .filter((task) => {
@@ -1092,7 +1070,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
               return !parentTaskId || !backlogVisibleTaskIds.has(parentTaskId) || !tasksById[parentTaskId];
             })
             .sort(compareBacklogTaskOrder);
-        }, [backlogVisibleTaskIds, backlogFilterMode, backlogSortMode, taskTicketNumbersById, tasks, tasksById]);
+        }, [backlogVisibleTaskIds, backlogFilterMode, backlogSortMode, taskTicketNumbersById, taskView, tasks, tasksById]);
 
         const selectedRelease = useMemo(() => {
           if (!selectedReleaseId) return null;
@@ -1112,6 +1090,9 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
 
         const releaseVisibleTaskIds = useMemo(() => {
           const next = new Set();
+          if (taskView !== "backlog") {
+            return next;
+          }
           projectReleaseTasks.forEach((task) => {
             if (!matchesTaskSearch(task) || !matchesBacklogFilter(task, releaseBacklogFilterMode, {
               keepVisibleCompletedTaskIds: backlogSessionCompletedTaskIds,
@@ -1121,9 +1102,12 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             next.add(task.id);
           });
           return next;
-        }, [agentsById, backlogSessionCompletedTaskIds, environmentsById, normalizedSearchQuery, projectReleaseTasks, releaseBacklogFilterMode, releasesById, sprintsById, taskTicketNumbersById]);
+        }, [agentsById, backlogSessionCompletedTaskIds, environmentsById, normalizedSearchQuery, projectReleaseTasks, releaseBacklogFilterMode, releasesById, sprintsById, taskTicketNumbersById, taskView]);
 
         const releaseTaskChildrenByParentId = useMemo(() => {
+          if (taskView !== "backlog") {
+            return {};
+          }
           const next = {};
           projectReleaseTasks.forEach((task) => {
             const parentTaskId = getPlaygroundTaskParentTaskId(task);
@@ -1139,9 +1123,12 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             compareBacklogTaskOrderWithModes(left, right, releaseBacklogSortMode, releaseBacklogFilterMode)
           ));
           return next;
-        }, [projectReleaseTaskIds, projectReleaseTasks, releaseBacklogFilterMode, releaseBacklogSortMode, taskTicketNumbersById]);
+        }, [projectReleaseTaskIds, projectReleaseTasks, releaseBacklogFilterMode, releaseBacklogSortMode, taskTicketNumbersById, taskView]);
 
         const releaseTaskRoots = useMemo(() => {
+          if (taskView !== "backlog") {
+            return [];
+          }
           return projectReleaseTasks
             .filter((task) => releaseVisibleTaskIds.has(task.id))
             .filter((task) => {
@@ -1150,15 +1137,21 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             })
             .slice()
             .sort((left, right) => compareBacklogTaskOrderWithModes(left, right, releaseBacklogSortMode, releaseBacklogFilterMode));
-        }, [projectReleaseTaskIds, projectReleaseTasks, releaseBacklogFilterMode, releaseBacklogSortMode, releaseVisibleTaskIds, taskTicketNumbersById]);
+        }, [projectReleaseTaskIds, projectReleaseTasks, releaseBacklogFilterMode, releaseBacklogSortMode, releaseVisibleTaskIds, taskTicketNumbersById, taskView]);
 
         const boardVisibleTasks = useMemo(() => {
+          if (taskView !== "board") {
+            return [];
+          }
           return sortedTasks
             .filter((task) => !isPlaygroundSubtaskRecord(task) && matchesBoardFilter(task, boardFilterMode))
             .filter((task) => !selectedReleaseId || task.releaseId === selectedReleaseId);
-        }, [boardFilterMode, selectedReleaseId, sortedTasks]);
+        }, [boardFilterMode, selectedReleaseId, sortedTasks, taskView]);
 
         const boardReleaseSections = useMemo(() => {
+          if (taskView !== "board") {
+            return [];
+          }
           if (selectedReleaseId && selectedRelease) {
             return [{
               key: selectedRelease.id,
@@ -1207,10 +1200,13 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
               const rightRelease = releasesById[right.releaseId] || { id: right.releaseId, name: right.title };
               return compareTaskReleaseOrder(leftRelease, rightRelease);
             });
-        }, [boardVisibleTasks, releasesById, selectedRelease, selectedReleaseId]);
+        }, [boardVisibleTasks, releasesById, selectedRelease, selectedReleaseId, taskView]);
 
         const boardNavigationTaskIds = useMemo(() => {
           const next = [];
+          if (taskView !== "board") {
+            return next;
+          }
           const seenTaskIds = new Set();
           boardReleaseSections.forEach((section) => {
             PLAYGROUND_TASK_BOARD_LANES.forEach((lane) => {
@@ -1227,7 +1223,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             });
           });
           return next;
-        }, [boardReleaseSections, taskRunPendingIds, taskRunStates]);
+        }, [boardReleaseSections, taskRunPendingIds, taskRunStates, taskView]);
 
         function flattenVisibleBacklogTaskIds(taskItems, {
           childrenByParentId: visibleChildrenByParentId = {},
@@ -1312,6 +1308,9 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
         }
 
         const backlogNavigationTaskIds = useMemo(() => {
+          if (taskView !== "backlog") {
+            return [];
+          }
           if (selectedReleaseId) {
             return flattenVisibleBacklogTaskIds(releaseTaskRoots, {
               childrenByParentId: releaseTaskChildrenByParentId,
@@ -1332,7 +1331,53 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
           releaseVisibleTaskIds,
           selectedReleaseId,
           taskChildrenByParentId,
+          taskView,
         ]);
+
+        const backlogRenderedTaskIds = useMemo(() => (
+          new Set(backlogNavigationTaskIds.slice(0, backlogRenderLimit))
+        ), [backlogNavigationTaskIds, backlogRenderLimit]);
+        const backlogHasMoreTasks = backlogNavigationTaskIds.length > backlogRenderLimit;
+        const boardRenderedTaskIds = useMemo(() => (
+          new Set(boardNavigationTaskIds.slice(0, boardRenderLimit))
+        ), [boardNavigationTaskIds, boardRenderLimit]);
+        const boardHasMoreTasks = boardNavigationTaskIds.length > boardRenderLimit;
+
+        useEffect(() => {
+          setBacklogRenderLimit(50);
+        }, [backlogFilterMode, normalizedSearchQuery, releaseBacklogFilterMode, selectedProjectId, selectedReleaseId]);
+
+        useEffect(() => {
+          setBoardRenderLimit(120);
+        }, [boardFilterMode, normalizedSearchQuery, selectedProjectId, selectedReleaseId]);
+
+        useEffect(() => {
+          const target = backlogLoadMoreRef.current;
+          if (taskView !== "backlog" || !backlogHasMoreTasks || !target || typeof IntersectionObserver !== "function") {
+            return undefined;
+          }
+          const observer = new IntersectionObserver((entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+              setBacklogRenderLimit((current) => Math.min(current + 20, backlogNavigationTaskIds.length));
+            }
+          }, { rootMargin: "240px 0px" });
+          observer.observe(target);
+          return () => observer.disconnect();
+        }, [backlogHasMoreTasks, backlogNavigationTaskIds.length, taskView]);
+
+        useEffect(() => {
+          const target = boardLoadMoreRef.current;
+          if (taskView !== "board" || !boardHasMoreTasks || !target || typeof IntersectionObserver !== "function") {
+            return undefined;
+          }
+          const observer = new IntersectionObserver((entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+              setBoardRenderLimit((current) => Math.min(current + 40, boardNavigationTaskIds.length));
+            }
+          }, { rootMargin: "320px 0px" });
+          observer.observe(target);
+          return () => observer.disconnect();
+        }, [boardHasMoreTasks, boardNavigationTaskIds.length, taskView]);
 
         const filteredReleases = useMemo(() => {
           return [...releases]
@@ -1341,6 +1386,9 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
         }, [normalizedSearchQuery, releaseFilterMode, releaseSortMode, releases]);
 
         const allTaskChildrenByParentId = useMemo(() => {
+          if (!selectedTaskId) {
+            return {};
+          }
           const next = {};
           tasks.forEach((task) => {
             const parentTaskId = getPlaygroundTaskParentTaskId(task);
@@ -1363,7 +1411,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             });
           });
           return next;
-        }, [taskTicketNumbersById, tasks]);
+        }, [selectedTaskId, taskTicketNumbersById, tasks]);
 
         const selectedTaskSnapshot = useMemo(() => {
           if (!selectedTaskId) return null;

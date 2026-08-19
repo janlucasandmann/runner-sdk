@@ -114,6 +114,45 @@ describe("createRunnerThreadRunExecutor", () => {
     expect(execute).not.toHaveBeenCalled();
   });
 
+  it("preserves Knowledge scope when an external host hands a run back", async () => {
+    const execute = vi.fn(async () => ({
+      cancelled: false,
+      durationSeconds: 1,
+    }));
+    const ensureThread = vi.fn(async () => ({
+      threadId: "thread_knowledge",
+      didCreateThread: false,
+      initialTitle: "Knowledge thread",
+      environmentId: null,
+    }));
+    const knowledgeContext = {
+      schemaVersion: "computer_agents_knowledge_context_v1" as const,
+      enabled: true as const,
+      libraryIds: ["library_1"],
+      bindings: [{ libraryId: "library_1", versionId: "version_4", versionNumber: 4 }],
+      mode: "read" as const,
+      source: "composer",
+    };
+    const run = createRunnerThreadRunExecutor(
+      dependencies({ ensureThread, execute }),
+    );
+
+    const result = await run("Use the runbook", [], {
+      knowledgeContextOverride: knowledgeContext,
+    });
+
+    expect(result.threadId).toBe("thread_knowledge");
+    expect(ensureThread).toHaveBeenCalledWith("Use the runbook", expect.objectContaining({
+      knowledgeContext,
+    }));
+    expect(execute.mock.calls[0]?.[0]?.run?.body).toMatchObject({
+      knowledgeContext: {
+      libraryIds: ["library_1"],
+      bindings: [{ libraryId: "library_1", versionId: "version_4", versionNumber: 4 }],
+      },
+    });
+  });
+
   it("keeps ordinary environment warm-up off the message execution critical path", async () => {
     let finishWarmup: (() => void) | null = null;
     startEnvironmentMock.mockReturnValue(new Promise<void>((resolve) => {
@@ -189,6 +228,9 @@ describe("createRunnerThreadRunExecutor", () => {
       "Bearer refreshed-firebase-token",
     );
     expect(headers.get("X-Request-Scope")).toBe("current");
+    expect(headers.get("Idempotency-Key")).toMatch(
+      /^thread-turn:thread_1:turn[-_]/,
+    );
     expect(executeOptions?.run.credentials).toBe("include");
   });
 });

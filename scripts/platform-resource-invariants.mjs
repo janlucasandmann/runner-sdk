@@ -648,8 +648,19 @@ const projectThreadsControllerSource = await fs.readFile(
 if (!projectOverviewControllerSource.includes("React.createElement(ProjectDetailPage")) {
   failures.push("the project overview controller must consume the modular ProjectDetailPage");
 }
-if (!projectOverviewControllerSource.includes("React.createElement(PlatformInstructionsEditor")) {
-  failures.push("project strategy notes must use PlatformInstructionsEditor");
+if (projectOverviewControllerSource.includes("renderProjectOverviewDescriptionEditor")) {
+  failures.push("project details must not retain the retired project-local strategy editor");
+}
+const projectKnowledgeControllerSource = await fs.readFile(
+  path.join(packageRoot, "src", "platform-services", "create-mode", "projects", "client", "page", "shell", "05-project-knowledge.mjs"),
+  "utf8",
+);
+if (
+  !projectKnowledgeControllerSource.includes("computer_agents_knowledge_context_v1")
+  || !projectKnowledgeControllerSource.includes('mode: "propose"')
+  || !projectKnowledgeControllerSource.includes('"/knowledge/" + encodeURIComponent(library.id) + "/proposals"')
+) {
+  failures.push("project strategy and documentation must use reviewable Knowledge-library proposals");
 }
 if (!projectAnalyticsControllerSource.includes("React.createElement(PlatformAnalyticsSection")) {
   failures.push("project detail analytics must use PlatformAnalyticsSection");

@@ -34,6 +34,8 @@ assert.deepEqual(Object.keys(fragments), [
   "navigationItems",
   "sidebar",
 ]);
+assert.match(fragments.statusIndicators, /PlatformStatusIndicatorStack/);
+assert.doesNotMatch(fragments.statusIndicators, /React\.createElement\(StatusIndicator/);
 assert.ok(fragments.modeSelector.includes("function renderAppSidebarModeSelector"));
 assert.ok(fragments.modeSelector.includes("React.createElement(PlatformPopup,"));
 assert.ok(fragments.modeSelector.includes('variant: "minimal"'));
@@ -50,6 +52,10 @@ assert.match(fragments.navigationItems, /id: "new-thread"[\s\S]*active: showInit
 assert.match(
   fragments.navigationItems,
   /id: "new-thread"[\s\S]*id: "projects"[\s\S]*id: "files"[\s\S]*id: "create-services-label"[\s\S]*label: "Services"[\s\S]*id: "create-test"/,
+);
+assert.match(
+  fragments.navigationItems,
+  /id: "metronome"[\s\S]*label: "Workflows"[\s\S]*openMetronomeOverviewPage/,
 );
 assert.match(
   fragments.navigationItems,
@@ -284,6 +290,7 @@ const globalServiceRuntime = new Function(
   Rocket: StubIcon,
   FolderOpen: StubIcon,
   Metronome: StubIcon,
+  Truck: StubIcon,
   CalendarIcon: StubIcon,
   Circle: StubIcon,
   handleOpenAgentsShortcut: () => runtimeEvents.push("agents"),
@@ -296,6 +303,7 @@ const globalServiceRuntime = new Function(
   handleOpenTasksShortcut: () => runtimeEvents.push("projects"),
   handleOpenFilesShortcut: () => runtimeEvents.push("files"),
   openMetronomeOverviewPage: () => runtimeEvents.push("metronome"),
+  openBatchesOverviewPage: () => runtimeEvents.push("batches"),
   openCalendarOverviewPage: () => runtimeEvents.push("calendar"),
   getDevelopServerPageItems: () => [
     { id: "functions", kind: "function", label: "Functions", Icon: StubIcon },
@@ -308,6 +316,7 @@ const globalServiceRuntime = new Function(
   setSidebarWorkspaceMenuOpen: () => undefined,
 });
 assert.equal(globalServiceRuntime.getGlobalServiceNavigationItems("agents")[0]?.label, "Agents");
+assert.equal(globalServiceRuntime.getGlobalServiceNavigationItems("batches")[0]?.label, "Batches");
 assert.equal(
   globalServiceRuntime.getGlobalServiceNavigationItems("agents")[0]?.workspaceMode,
   "configure",

@@ -215,6 +215,163 @@ export const METRONOME_MODALS_CSS = String.raw`
         display: none;
       }
 
+      .playground-metronome-execution-test-modal {
+        width: min(720px, calc(100vw - 32px));
+      }
+
+      .playground-metronome-execution-test-body {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-width: 0;
+      }
+
+      .playground-metronome-execution-test-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-width: 0;
+      }
+
+      .playground-metronome-execution-test-field {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        min-width: 0;
+      }
+
+      .playground-metronome-execution-test-field.is-task-input {
+        gap: 5px;
+      }
+
+      .playground-metronome-execution-test-composer.tb-runner-chat {
+        position: relative;
+        display: block;
+        width: 100%;
+        max-width: none;
+        height: auto;
+        min-height: 0;
+        margin: 0;
+        overflow: visible;
+        background: transparent;
+        grid-template-rows: none;
+      }
+
+      .playground-metronome-execution-test-composer > :not(.tb-input-shell) {
+        display: none !important;
+      }
+
+      .playground-metronome-execution-test-composer.tb-runner-chat .tb-input-shell {
+        position: static;
+        inset: auto;
+        display: block;
+        width: 100%;
+        min-height: 0;
+        margin: 0;
+        padding: 0;
+      }
+
+      .playground-metronome-execution-test-composer .tb-input-width {
+        width: 100%;
+        max-width: none;
+      }
+
+      .playground-metronome-execution-test-composer .task-input-box {
+        --tb-task-input-base-bg: rgba(255, 255, 255, 0.025);
+        --tb-task-input-overlay: transparent;
+        height: auto;
+      }
+
+      .playground-metronome-execution-test-composer .sidebar-textarea {
+        min-height: 72px;
+        padding-top: 14px;
+      }
+
+      .playground-metronome-execution-test-field.is-toggle {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 36px;
+      }
+
+      .playground-metronome-execution-test-field-copy {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+      }
+
+      .playground-metronome-execution-test-field-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.3;
+      }
+
+      .playground-metronome-execution-test-field-required {
+        color: #7bb7ff;
+      }
+
+      .playground-metronome-execution-test-field-description {
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 11px;
+        line-height: 1.4;
+      }
+
+      .playground-metronome-execution-test-input {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        outline: none;
+        padding: 9px 11px;
+        background: rgba(255, 255, 255, 0.075);
+        color: rgba(255, 255, 255, 0.9);
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      textarea.playground-metronome-execution-test-input {
+        min-height: 108px;
+        resize: vertical;
+      }
+
+      .playground-metronome-execution-test-input::placeholder {
+        color: rgba(255, 255, 255, 0.36);
+      }
+
+      .playground-metronome-execution-test-input:focus {
+        border-color: rgba(102, 166, 255, 0.5);
+      }
+
+      .playground-metronome-execution-test-input:disabled {
+        opacity: 0.55;
+      }
+
+      .playground-metronome-execution-test-empty-input {
+        padding: 12px 13px;
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .playground-metronome-execution-test-error {
+        padding: 10px 12px;
+        border: 1px solid rgba(255, 118, 118, 0.2);
+        border-radius: 10px;
+        background: rgba(255, 118, 118, 0.08);
+        color: rgba(255, 170, 170, 0.96);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
       .playground-metronome-environment-file-picker-portal.tb-runner-chat {
         position: fixed;
         inset: 0;

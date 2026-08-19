@@ -230,45 +230,6 @@ export const PROJECT_ICON_PICKER_CSS_FRAGMENT = String.raw`
         margin-left: 2px;
       }
 
-      .playground-project-breadcrumb-menu-trigger {
-        width: 24px;
-        min-width: 24px;
-        height: 24px;
-        min-height: 24px;
-        padding: 0;
-        color: rgba(255, 255, 255, 0.7);
-      }
-
-      .playground-project-breadcrumb-menu {
-        width: 232px;
-      }
-
-      .playground-project-breadcrumb-menu-id {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        min-width: 0;
-        padding: 9px 12px;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 10px;
-        line-height: 1.35;
-      }
-
-      .playground-project-breadcrumb-menu-id > code {
-        overflow: hidden;
-        color: rgba(255, 255, 255, 0.82);
-        font: inherit;
-        font-size: 11px;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .playground-project-breadcrumb-menu-divider {
-        height: 1px;
-        margin: 4px 0;
-        background: rgba(255, 255, 255, 0.075);
-      }
-
       @media (max-width: 640px) {
         .platform-project-icon-picker__popup {
           width: calc(100vw - 24px) !important;

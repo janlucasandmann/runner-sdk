@@ -1,6 +1,17 @@
 export const INFERENCE_APP_STATE_SCRIPT = `        const [settingsInferenceEndpoints, setSettingsInferenceEndpoints] = useState(() => readDemoSettingsPlatformConfig().inferenceEndpoints);
         const [settingsInferenceSettings, setSettingsInferenceSettings] = useState(() => getDefaultDemoInferenceEndpoint(readDemoSettingsPlatformConfig().inferenceEndpoints));
         const [settingsInferenceSelectedEndpointId, setSettingsInferenceSelectedEndpointId] = useState("");
+        const [settingsInferenceDetailTab, setSettingsInferenceDetailTab] = useState("general");
+        const [settingsInferenceAnalyticsTimeframe, setSettingsInferenceAnalyticsTimeframe] = useState("month");
+        const [settingsInferenceSelectedVersionId, setSettingsInferenceSelectedVersionId] = useState("");
+        const [settingsInferenceVersionsOpen, setSettingsInferenceVersionsOpen] = useState(false);
+        const [settingsInferencePublishMenuOpen, setSettingsInferencePublishMenuOpen] = useState(false);
+        const [settingsInferenceVersionSaveDialog, setSettingsInferenceVersionSaveDialog] = useState({
+          open: false,
+          initialMode: "new",
+          instanceKey: 0,
+          error: "",
+        });
         const [settingsInferenceModelInput, setSettingsInferenceModelInput] = useState("");
         const [settingsInferenceApiKeyInput, setSettingsInferenceApiKeyInput] = useState("");
         const [settingsClearInferenceApiKey, setSettingsClearInferenceApiKey] = useState(false);

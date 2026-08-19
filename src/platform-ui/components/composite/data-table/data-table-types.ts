@@ -163,6 +163,31 @@ export interface PlatformDataTableRowGroupingConfig<TData> {
   onExpandedChange?: (expandedIds: ReadonlySet<string>) => void;
 }
 
+export type PlatformDataTableRowReorderPlacement = "before" | "after";
+
+export interface PlatformDataTableRowReorderChange<TData> {
+  row: TData;
+  rowId: string;
+  targetRow: TData;
+  targetRowId: string;
+  placement: PlatformDataTableRowReorderPlacement;
+}
+
+/**
+ * Adds a dedicated drag handle without making the complete row draggable.
+ * Consumers should keep a keyboard-accessible reorder action available when
+ * ordering is part of the product workflow.
+ */
+export interface PlatformDataTableRowReorderingConfig<TData> {
+  enabled?: boolean;
+  isRowReorderable?: (row: TData) => boolean;
+  canDrop?: (row: TData, targetRow: TData) => boolean;
+  onReorder: (
+    change: PlatformDataTableRowReorderChange<TData>,
+  ) => void | Promise<void>;
+  ariaLabel?: (row: TData) => string;
+}
+
 export interface PlatformDataTableActionContext<TData> {
   row: TData;
   rowId: string;
@@ -171,6 +196,23 @@ export interface PlatformDataTableActionContext<TData> {
   selectedRows: readonly TData[];
   selectedIds: ReadonlySet<string>;
   closeMenu: () => void;
+}
+
+/**
+ * Overrides a row action when its context row belongs to a multi-row
+ * selection. Actions without this contract are intentionally omitted from a
+ * multi-selection menu so a row-scoped destructive callback can never delete
+ * only the row that happened to open the menu.
+ */
+export interface PlatformDataTableSelectedRowsAction<TData> {
+  label?: ReactNode;
+  icon?: PlatformDataTableIcon;
+  onSelect: (context: PlatformDataTableActionContext<TData>) => void | Promise<void>;
+  disabled?: boolean;
+  hidden?: boolean;
+  danger?: boolean;
+  separatorBefore?: boolean;
+  keepOpen?: boolean;
 }
 
 export interface PlatformDataTableAction<TData> {
@@ -183,6 +225,7 @@ export interface PlatformDataTableAction<TData> {
   danger?: boolean;
   separatorBefore?: boolean;
   keepOpen?: boolean;
+  selectedRows?: PlatformDataTableSelectedRowsAction<TData>;
 }
 
 export interface PlatformDataTableRowActionState<TData> {
@@ -208,6 +251,7 @@ export interface PlatformDataTableProps<TData> {
   incrementalLoading?: PlatformDataTableIncrementalLoadingConfig;
   toolbar?: PlatformDataTableToolbarConfig<TData>;
   rowGrouping?: PlatformDataTableRowGroupingConfig<TData>;
+  rowReordering?: PlatformDataTableRowReorderingConfig<TData>;
   getRowActions?: (row: TData, state: PlatformDataTableRowActionState<TData>) => readonly PlatformDataTableAction<TData>[];
   renderRowMenu?: (context: PlatformDataTableRowMenuContext<TData>) => ReactNode;
   onRowActionTrigger?: (event: MouseEvent, row: TData) => void;

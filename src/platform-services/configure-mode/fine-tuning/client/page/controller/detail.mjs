@@ -818,7 +818,39 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
           );
           const showStopButton = canStopPlaygroundFineTuningJob(job);
           const isStopping = fineTuningStopJobId === job.id;
-          const sidebarActions = threadId && typeof onOpenThread === "function" || showStopButton
+          const batchEvaluationSetIds = (Array.isArray(job.evaluationSets) ? job.evaluationSets : [])
+            .map((set) => normalizePlaygroundFineTuningString(set?.id))
+            .filter(Boolean);
+          const batchAgentId = normalizePlaygroundFineTuningString(job.targetAgentId || job.agentId);
+          const canAddOptimizationToBatches = Boolean(job?.id) && (
+            phase === "planned"
+            || (
+              isPlaygroundFineTuningTerminalStatus(phase || job.status)
+              && Boolean(batchAgentId)
+              && batchEvaluationSetIds.length > 0
+            )
+          );
+          const batchDefinition = phase === "planned"
+            ? { jobId: job.id }
+            : {
+                agentId: batchAgentId,
+                environmentId: normalizePlaygroundFineTuningString(job.environmentId) || null,
+                evaluationSetIds: batchEvaluationSetIds,
+                fineTunerAgentId: normalizePlaygroundFineTuningString(
+                  job.fineTunerAgentId || job?.conductedBy?.id
+                ) || null,
+                instructions: String(job.instructions || ""),
+                name: "Optimize " + agentName,
+                metadata: {
+                  fineTuningOrchestrationState: {
+                    schemaVersion: Math.max(2, Number(job.schemaVersion || 2) || 2),
+                    kind: "agent_optimization",
+                    phase: "queued",
+                    configuration: readPlaygroundFineTuningPlainObject(job.configuration),
+                  },
+                },
+              };
+          const sidebarActions = threadId && typeof onOpenThread === "function" || showStopButton || canAddOptimizationToBatches
             ? React.createElement("div", {
                 className: "platform-service-detail-page__sidebar-actions playground-fine-tuning-detail-sidebar-actions",
               },
@@ -847,6 +879,27 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
                     ? React.createElement(Loader2, { className: "is-spinning", width: 14, height: 14, strokeWidth: 1.85, "aria-hidden": "true" })
                     : React.createElement(Square, { width: 13, height: 13, strokeWidth: 1.85, "aria-hidden": "true" }),
                   React.createElement("span", null, isStopping ? "Stopping" : "Stop Job")
+                )
+                : null,
+              canAddOptimizationToBatches
+                ? React.createElement(PlatformSecondaryButton, {
+                    type: "button",
+                    size: "small",
+                    fullWidth: true,
+                    className: "playground-fine-tuning-detail-sidebar-action",
+                    onClick: () => openBatchComposer({
+                      name: (phase === "planned" ? "Optimize " : "Optimize again: ") + agentName,
+                      description: phase === "planned"
+                        ? "Agent Optimization queued from its details page."
+                        : "A new Agent Optimization run based on this completed definition.",
+                      targetKind: "agent_optimization",
+                      targetResourceId: phase === "planned" ? job.id : null,
+                      definition: batchDefinition,
+                      startPolicy: "manual",
+                    }),
+                  },
+                  React.createElement(Truck, { width: 14, height: 14, strokeWidth: 1.85, "aria-hidden": "true" }),
+                  React.createElement("span", null, "Add to Batches")
                 )
                 : null
             )

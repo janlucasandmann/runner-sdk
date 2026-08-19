@@ -1,20 +1,35 @@
-export const INFERENCE_PAGE_VIEW_SCRIPT = `                const inferenceRuntimeContent = React.createElement(
-                  React.Fragment,
-                  null,
-                  settingsRuntimeSection,
-                  settingsLocalRunnersSection
-                );
-                const updateInferenceEndpointSettings = (patch) => {
+export const INFERENCE_PAGE_VIEW_SCRIPT = `                const updateInferenceEndpointSettings = (patch) => {
                   const nextInferenceSettings = normalizeDemoInferenceEndpoint({
                     ...settingsInferenceSettings,
                     ...(patch && typeof patch === "object" ? patch : {}),
                   });
                   setSettingsInferenceSettings(nextInferenceSettings);
-                  setSettingsInferenceEndpoints((current) =>
-                    upsertDemoInferenceEndpoint(current, nextInferenceSettings)
-                  );
-                  queueSettingsInferenceAutosave(nextInferenceSettings);
                 };
+                const selectedInferenceEndpoint = getDemoInferenceEndpoint(
+                  settingsInferenceEndpoints,
+                  settingsInferenceSelectedEndpointId
+                );
+                const selectedInferenceVersionId = String(
+                  settingsInferenceSelectedVersionId
+                  || selectedInferenceEndpoint?.currentVersionId
+                  || ""
+                ).trim();
+                const selectedInferenceVersion = getDemoInferenceEndpointVersion(
+                  selectedInferenceEndpoint,
+                  selectedInferenceVersionId
+                );
+                const inferenceVersionDirty = Boolean(
+                  selectedInferenceEndpoint
+                  && selectedInferenceVersion
+                  && (
+                    !areDemoInferenceVersionSnapshotsEqual(
+                      settingsInferenceSettings,
+                      selectedInferenceVersion.snapshot
+                    )
+                    || settingsInferenceApiKeyInput.trim()
+                    || settingsClearInferenceApiKey
+                  )
+                );
 
                 return settingsInferenceSelectedEndpointId
                   ? React.createElement(InferenceEndpointDetailPage, {
@@ -22,6 +37,20 @@ export const INFERENCE_PAGE_VIEW_SCRIPT = `                const inferenceRuntim
                       endpoints: settingsInferenceEndpoints,
                       settings: settingsInferenceSettings,
                       localRunners: settingsLocalRunnersState,
+                      deploymentProfile: platformDeploymentProfile,
+                      activeTab: settingsInferenceDetailTab,
+                      usageThreads: realThreads,
+                      usageAgents: runtimeAgents,
+                      analyticsLoading: isThreadsLoading,
+                      analyticsTimeframe: settingsInferenceAnalyticsTimeframe,
+                      onAnalyticsTimeframeChange: setSettingsInferenceAnalyticsTimeframe,
+                      currentUser: {
+                        id: hasSessionAuth ? (sessionState.userId || accountEmail || "") : "demo-user",
+                        userId: hasSessionAuth ? (sessionState.userId || "") : "demo-user",
+                        name: hasSessionAuth ? accountName : "Demo User",
+                        email: hasSessionAuth ? accountEmail : "",
+                        avatarUrl: hasSessionAuth ? accountAvatarUrl : "",
+                      },
                       canConfigure: settingsCanConfigureBusinessFeatures,
                       saving: settingsPlatformConfigSaving,
                       testing: settingsPlatformConfigTesting,
@@ -29,7 +58,22 @@ export const INFERENCE_PAGE_VIEW_SCRIPT = `                const inferenceRuntim
                       success: settingsPlatformConfigSuccess,
                       apiKeyValue: inferenceApiKeyDisplayValue,
                       apiKeyConfigured: settingsInferenceSettings.apiKeyConfigured && !settingsClearInferenceApiKey,
-                      runtimeContent: inferenceRuntimeContent,
+                      selectedVersionId: selectedInferenceVersionId,
+                      versionsOpen: settingsInferenceVersionsOpen,
+                      versionSaveDialog: settingsInferenceVersionSaveDialog,
+                      dirty: inferenceVersionDirty,
+                      onNavigationGuardChange: registerPlatformNavigationGuard,
+                      onVersionHistoryOpenChange: setSettingsInferenceVersionsOpen,
+                      onVersionSelect: handleSettingsInferenceSelectVersion,
+                      onVersionPublish: handleSettingsInferencePublishVersion,
+                      onOpenSaveDialog: openSettingsInferenceSaveDialog,
+                      onCloseSaveDialog: () => setSettingsInferenceVersionSaveDialog((current) => ({
+                        ...current,
+                        open: false,
+                        error: "",
+                      })),
+                      onSaveVersion: handleSettingsInferenceSave,
+                      onRevertChanges: handleSettingsInferenceRevertChanges,
                       onBack: () => openInferencePage(),
                       onSettingsChange: updateInferenceEndpointSettings,
                       onApiKeyFocus: () => {
@@ -41,44 +85,43 @@ export const INFERENCE_PAGE_VIEW_SCRIPT = `                const inferenceRuntim
                       onApiKeyBlur: () => {
                         if (!settingsInferenceApiKeyInput.trim()) {
                           setSettingsInferenceApiKeyEditing(false);
-                          return;
                         }
-                        queueSettingsInferenceAutosave(settingsInferenceSettings, {
-                          immediate: true,
-                          apiKeyInputOverride: settingsInferenceApiKeyInput,
-                          clearApiKeyOverride: false,
-                        });
                       },
                       onApiKeyChange: (value) => {
                         setSettingsInferenceApiKeyEditing(true);
                         setSettingsInferenceApiKeyInput(value);
                         setSettingsClearInferenceApiKey(false);
-                        queueSettingsInferenceAutosave(settingsInferenceSettings, {
-                          apiKeyInputOverride: value,
-                          clearApiKeyOverride: false,
-                        });
                       },
                       onRemoveSavedApiKey: () => {
                         setSettingsInferenceApiKeyEditing(false);
                         setSettingsInferenceApiKeyInput("");
                         setSettingsClearInferenceApiKey(true);
-                        queueSettingsInferenceAutosave(settingsInferenceSettings, {
-                          immediate: true,
-                          apiKeyInputOverride: "",
-                          clearApiKeyOverride: true,
-                        });
                       },
                       onAddModels: handleSettingsInferenceAddModels,
                       onRemoveModel: handleSettingsInferenceRemoveModel,
                       onTestConnection: handleSettingsInferenceConnectionTest,
                       onRemoveEndpoint: handleSettingsInferenceRemoveEndpoint,
-                      onRefreshLocalRunners: () => {
-                        setSettingsLocalRunnersReloadToken((current) => current + 1);
+                      onOwnerCandidatesRequest: handleSettingsInferenceOwnerCandidatesRequest,
+                      onOwnerTransfer: handleSettingsInferenceOwnerTransfer,
+                      workspaceTeams: teamPageTeams,
+                      workspaceTeamsLoading: teamPageLoading,
+                      onWorkspaceTeamsRequest: () => {
+                        if (
+                          !teamPageLoading
+                          && !teamPageRequiresPlan
+                          && (!Array.isArray(teamPageTeams) || teamPageTeams.length === 0)
+                        ) {
+                          void loadTeamPageData({ selectedTeamId: "" });
+                        }
                       },
+                      onAccessMetadataChange: handleSettingsInferenceAccessMetadataChange,
+                      onAddTeamShare: handleSettingsInferenceTeamShareCreate,
+                      onRemoveTeamShare: handleSettingsInferenceTeamShareRemove,
                     })
                   : React.createElement(InferenceOverviewPage, {
                       endpoints: settingsInferenceEndpoints,
                       localRunners: settingsLocalRunnersState,
+                      deploymentProfile: platformDeploymentProfile,
                       controlsPortalId: "playground-inference-overview-controls",
                       canConfigure: settingsCanConfigureBusinessFeatures,
                       onPlanRequired: requestInferencePlanGate,

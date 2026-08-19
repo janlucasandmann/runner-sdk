@@ -7,6 +7,7 @@ export const APP_HEADER_STATE_SCRIPT = `        const [accountMenuOpen, setAccou
         const [threadSearchQuery, setThreadSearchQuery] = useState("");
         const [threadSearchMode, setThreadSearchMode] = useState("threads");
         const [threadSearchModeLocked, setThreadSearchModeLocked] = useState(false);
+        const [threadSearchResourceTypeFilter, setThreadSearchResourceTypeFilter] = useState("");
         const [threadSearchAllActionsVisible, setThreadSearchAllActionsVisible] = useState(false);
         const [threadSearchFileInventoryByEnvironmentId, setThreadSearchFileInventoryByEnvironmentId] = useState({});
         const [threadSearchFileInventoryLoadingByEnvironmentId, setThreadSearchFileInventoryLoadingByEnvironmentId] = useState({});
@@ -16,6 +17,9 @@ export const APP_HEADER_STATE_SCRIPT = `        const [accountMenuOpen, setAccou
           tickets: { scopeKey: "", items: [] },
           workflows: { scopeKey: "", items: [] },
           prompts: { scopeKey: "", items: [] },
+          knowledge: { scopeKey: "", items: [] },
+          evaluations: { scopeKey: "", items: [] },
+          "server-resources": { scopeKey: "", items: [] },
         });
         const [threadSearchResourceLoadingByMode, setThreadSearchResourceLoadingByMode] = useState({});
         const [threadSearchResourceErrorByMode, setThreadSearchResourceErrorByMode] = useState({});

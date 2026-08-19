@@ -27,6 +27,7 @@ export * from "./resource-action-modals/index.js";
 export * from "./resource-detail-sidebar/index.js";
 export * from "./resource-header-actions/index.js";
 export * from "./settings-section/index.js";
+export * from "./status-indicator/index.js";
 export * from "./subtasks/index.js";
 export * from "./ui-card/index.js";
 export * from "./version-history-sidebar/index.js";

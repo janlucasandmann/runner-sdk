@@ -416,6 +416,9 @@ export function normalizeTurnAttachment(
     promptId?: unknown;
     promptVersionId?: unknown;
     promptVersionNumber?: unknown;
+    knowledgeLibraryId?: unknown;
+    knowledgeVersionId?: unknown;
+    knowledgeVersionNumber?: unknown;
     threadId?: unknown;
     hiddenFromTurnDisplay?: unknown;
     runnerAttachmentRole?: unknown;
@@ -612,7 +615,9 @@ export function normalizeTurnAttachment(
         ? candidate.githubSelectionType
         : undefined,
     referenceType:
-      candidate.referenceType === "prompt" || candidate.referenceType === "thread"
+      candidate.referenceType === "prompt" ||
+      candidate.referenceType === "thread" ||
+      candidate.referenceType === "knowledge"
         ? candidate.referenceType
         : undefined,
     displayName:
@@ -630,6 +635,18 @@ export function normalizeTurnAttachment(
     promptVersionNumber:
       Number.isFinite(Number(candidate.promptVersionNumber))
         ? Number(candidate.promptVersionNumber)
+        : undefined,
+    knowledgeLibraryId:
+      typeof candidate.knowledgeLibraryId === "string" && candidate.knowledgeLibraryId.trim()
+        ? candidate.knowledgeLibraryId.trim()
+        : undefined,
+    knowledgeVersionId:
+      typeof candidate.knowledgeVersionId === "string" && candidate.knowledgeVersionId.trim()
+        ? candidate.knowledgeVersionId.trim()
+        : undefined,
+    knowledgeVersionNumber:
+      Number.isFinite(Number(candidate.knowledgeVersionNumber))
+        ? Number(candidate.knowledgeVersionNumber)
         : undefined,
     threadId:
       typeof candidate.threadId === "string" && candidate.threadId.trim()
@@ -707,6 +724,9 @@ export function buildTurnAttachmentsFromLocalAttachments(
     promptId: attachment.promptId,
     promptVersionId: attachment.promptVersionId,
     promptVersionNumber: attachment.promptVersionNumber,
+    knowledgeLibraryId: attachment.knowledgeLibraryId,
+    knowledgeVersionId: attachment.knowledgeVersionId,
+    knowledgeVersionNumber: attachment.knowledgeVersionNumber,
     threadId: attachment.threadId,
     uploadStatus: attachment.uploadStatus,
     runnerAttachmentRole: attachment.runnerAttachmentRole,

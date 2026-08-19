@@ -1,33 +1,33 @@
 import {
-  Activity,
   ArrowLeft,
-  Boxes,
-  CloudCog,
-  HardDrive,
-  LayoutGrid,
-  PanelRightClose,
-  PanelRightOpen,
+  Cpu,
   Plus,
-  RefreshCw,
-  ServerCog,
   Trash2,
 } from "lucide-react";
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
-  type ReactNode,
 } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
 } from "../../../../../../platform-ui/components/composite/data-table/index.js";
 import {
-  PlatformDetailSidebarSection,
-} from "../../../../../../platform-ui/components/composite/detail-sidebar/index.js";
+  PlatformAnalyticsSection,
+} from "../../../../../../platform-ui/components/composite/analytics/index.js";
 import {
   PlatformConfirmationModal,
+  PlatformModal,
 } from "../../../../../../platform-ui/components/composite/modal/index.js";
+import { PlatformEmptyState } from "../../../../../../platform-ui/components/composite/empty-state/index.js";
+import { PlatformDiffViewer } from "../../../../../../platform-ui/components/composite/diff-viewer/index.js";
+import type {
+  PlatformOwnerOption,
+} from "../../../../../../platform-ui/components/composite/owner-selector/index.js";
+import { PlatformDeploymentMap } from "../../../../../../platform-ui/components/composite/deployment-map/index.js";
+import { PlatformResourceDetailSidebar } from "../../../../../../platform-ui/components/composite/resource-detail-sidebar/index.js";
 import {
   PlatformSettingsDataTable,
   PlatformSettingsSection,
@@ -37,36 +37,65 @@ import {
   PlatformPrimaryButton,
   PlatformSecondaryButton,
 } from "../../../../../../platform-ui/components/ui/button/index.js";
-import { PlatformIconButton } from "../../../../../../platform-ui/components/ui/icon-button/index.js";
 import { PlatformLabel } from "../../../../../../platform-ui/components/ui/label/index.js";
 import {
+  PlatformButtonSelector,
   PlatformSelector,
 } from "../../../../../../platform-ui/components/ui/selector/index.js";
-import { ResourceDetailPage } from "../../../../../../platform-ui/pages/details/index.js";
+import {
+  PlatformServiceDetailPage,
+  PlatformServiceDetailProperty,
+  PlatformServiceDetailPropertyList,
+} from "../../../../../../platform-ui/pages/details/index.js";
+import {
+  PlatformVersionChangesPage,
+  PlatformVersionHistorySidebar,
+  PlatformVersionSaveDialog,
+  usePlatformVersionNavigationGuard,
+  type PlatformVersionNavigationGuardRegistrar,
+  type PlatformVersionSaveDetails,
+} from "../../../../../../platform-ui/components/composite/versioning/index.js";
+import { PlatformSwitch } from "../../../../../../platform-ui/components/ui/switch/index.js";
+import {
+  buildInferenceEndpointAnalytics,
+  type InferenceEndpointAnalyticsTimeframe,
+  type InferenceEndpointUsageAgent,
+  type InferenceEndpointUsageThread,
+} from "./inference-endpoint-analytics.js";
+import {
+  getInferenceEndpointCreatorIdentity,
+  getInferenceEndpointIdentityKeys,
+  getInferenceEndpointOwnerIdentity,
+  getInferenceEndpointOwnerKey,
+  mergeInferenceEndpointOwnerCandidates,
+  normalizeInferenceEndpointIdentity,
+  type InferenceEndpointIdentity,
+  type InferenceEndpointIdentityInput,
+} from "./inference-endpoint-owner.js";
 import {
   buildInferenceEndpointDraft,
   buildInferenceEndpointRows,
   ORGANIZATION_INFERENCE_ENDPOINT_ID,
+  type InferenceDeploymentProfileSnapshot,
   type InferenceEndpointRow,
   type InferenceEndpointCollectionSnapshot,
   type InferenceLocalRunnersSnapshot,
   type InferenceSettingsSnapshot,
+  type InferenceEndpointVersion,
+  type InferenceEndpointVersionSnapshot,
 } from "../inference-endpoint-model.js";
 import { INFERENCE_PROVIDER_OPTIONS } from "../inference-provider-options.js";
+import {
+  InferenceEndpointAccessSettings,
+  type InferenceEndpointAccessTeam,
+  type InferenceEndpointTeamShareResult,
+} from "./inference-endpoint-access-settings.js";
 
-type InferenceEndpointDetailTab = "general" | "models" | "runtime";
+export type InferenceEndpointDetailTab = "general" | "settings";
 
 interface InferenceModelRow {
   id: string;
   source: string;
-}
-
-interface InferenceBindingRow {
-  id: string;
-  name: string;
-  environment: string;
-  project: string;
-  path: string;
 }
 
 export interface InferenceEndpointDetailPageProps {
@@ -74,6 +103,15 @@ export interface InferenceEndpointDetailPageProps {
   endpoints: InferenceEndpointCollectionSnapshot;
   settings: InferenceSettingsSnapshot;
   localRunners: InferenceLocalRunnersSnapshot;
+  deploymentProfile?: InferenceDeploymentProfileSnapshot | null;
+  activeTab?: InferenceEndpointDetailTab;
+  usageThreads?: readonly InferenceEndpointUsageThread[];
+  usageAgents?: readonly InferenceEndpointUsageAgent[];
+  analyticsLoading?: boolean;
+  analyticsError?: string;
+  analyticsTimeframe?: InferenceEndpointAnalyticsTimeframe;
+  onAnalyticsTimeframeChange?: (value: InferenceEndpointAnalyticsTimeframe) => void;
+  currentUser?: InferenceEndpointIdentityInput;
   canConfigure?: boolean;
   saving?: boolean;
   testing?: boolean;
@@ -81,42 +119,103 @@ export interface InferenceEndpointDetailPageProps {
   success?: string;
   apiKeyValue?: string;
   apiKeyConfigured?: boolean;
-  runtimeContent?: ReactNode;
+  selectedVersionId?: string;
+  versionsOpen?: boolean;
+  versionSaveDialog?: {
+    open?: boolean;
+    initialMode?: "current" | "new";
+    instanceKey?: number;
+    error?: string;
+  };
+  dirty?: boolean;
+  onNavigationGuardChange?: PlatformVersionNavigationGuardRegistrar;
+  onVersionHistoryOpenChange?: (open: boolean) => void;
+  onVersionSelect?: (versionId: string) => void | Promise<void>;
+  onVersionPublish?: (versionId: string) => void | Promise<void>;
+  onOpenSaveDialog?: (mode?: "current" | "new") => void;
+  onCloseSaveDialog?: () => void;
+  onSaveVersion?: (details: PlatformVersionSaveDetails) => void | Promise<void>;
+  onRevertChanges?: () => void;
   onBack: () => void;
   onSettingsChange: (patch: Partial<InferenceSettingsSnapshot>) => void;
   onApiKeyFocus?: () => void;
   onApiKeyBlur?: () => void;
   onApiKeyChange?: (value: string) => void;
   onRemoveSavedApiKey?: () => void;
-  onAddModels: (value: string) => boolean | void;
+  onAddModels: (value: string) => boolean | undefined;
   onRemoveModel: (modelId: string) => void;
   onTestConnection: () => void | Promise<void>;
   onRemoveEndpoint: () => void | Promise<void>;
-  onRefreshLocalRunners?: () => void;
+  onOwnerCandidatesRequest?: () => Promise<readonly unknown[]>;
+  onOwnerTransfer?: (owner: InferenceEndpointIdentity) => void | Promise<void>;
+  workspaceTeams?: readonly unknown[];
+  workspaceTeamsLoading?: boolean;
+  onWorkspaceTeamsRequest?: () => void;
+  onAccessMetadataChange?: (
+    metadata: Record<string, unknown>,
+    permissionSet?: Record<string, unknown> | null,
+  ) => void | Promise<void>;
+  onAddTeamShare?: (
+    team: InferenceEndpointAccessTeam,
+    metadata: Record<string, unknown>,
+  ) => Promise<InferenceEndpointTeamShareResult>;
+  onRemoveTeamShare?: (teamId: string, shareId: string) => Promise<void>;
 }
 
-const DETAIL_TABS = [
-  { id: "general", label: "General", icon: LayoutGrid },
-  { id: "models", label: "Models", icon: Boxes },
-  { id: "runtime", label: "Runtime", icon: ServerCog },
-] as const;
-
-function SidebarProperty({ label, value }: { label: ReactNode; value: ReactNode }) {
-  return (
-    <div className="inference-endpoint-detail__property">
-      <span className="inference-endpoint-detail__property-label">{label}</span>
-      <span className="inference-endpoint-detail__property-value">{value}</span>
-    </div>
-  );
+function formatTimestamp(value: string | undefined): string {
+  const timestamp = value ? Date.parse(value) : Number.NaN;
+  if (!Number.isFinite(timestamp)) return "Never";
+  return new Date(timestamp).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
-function ReadOnlyFact({ label, value }: { label: ReactNode; value: ReactNode }) {
-  return (
-    <div className="inference-endpoint-detail__fact">
-      <span className="inference-endpoint-detail__fact-label">{label}</span>
-      <span className="inference-endpoint-detail__fact-value">{value}</span>
-    </div>
-  );
+function buildVersionSnapshot(settings: InferenceSettingsSnapshot): InferenceEndpointVersionSnapshot {
+  return {
+    name: String(settings.name || "Inference Endpoint").trim() || "Inference Endpoint",
+    description: String(settings.description || "").trim(),
+    enabled: Boolean(settings.enabled),
+    providerType: String(settings.providerType || "openai-compatible").trim(),
+    baseUrl: String(settings.baseUrl || "").trim(),
+    defaultModel: String(settings.defaultModel || "").trim(),
+    availableModels: Array.from(new Set(
+      (Array.isArray(settings.availableModels) ? settings.availableModels : [])
+        .map((model) => String(model || "").trim())
+        .filter(Boolean),
+    )),
+  };
+}
+
+function serializeVersionSnapshot(snapshot: InferenceEndpointVersionSnapshot): string {
+  return `${JSON.stringify(snapshot, null, 2)}\n`;
+}
+
+function buildWholeFileDiff(
+  previous: InferenceEndpointVersionSnapshot,
+  next: InferenceEndpointVersionSnapshot,
+): { diffContent: string; fileContent: string; additions: number; deletions: number } {
+  const previousLines = serializeVersionSnapshot(previous).trimEnd().split("\n");
+  const nextContent = serializeVersionSnapshot(next);
+  const nextLines = nextContent.trimEnd().split("\n");
+  if (previousLines.join("\n") === nextLines.join("\n")) {
+    return { diffContent: "", fileContent: nextContent, additions: 0, deletions: 0 };
+  }
+  return {
+    diffContent: [
+      "--- a/inference-endpoint.json",
+      "+++ b/inference-endpoint.json",
+      `@@ -1,${previousLines.length} +1,${nextLines.length} @@`,
+      ...previousLines.map((line) => `-${line}`),
+      ...nextLines.map((line) => `+${line}`),
+    ].join("\n"),
+    fileContent: nextContent,
+    additions: nextLines.length,
+    deletions: previousLines.length,
+  };
 }
 
 function buildModelRows(endpoint: InferenceEndpointRow): InferenceModelRow[] {
@@ -126,21 +225,20 @@ function buildModelRows(endpoint: InferenceEndpointRow): InferenceModelRow[] {
   }));
 }
 
-function buildBindingRows(endpoint: InferenceEndpointRow): InferenceBindingRow[] {
-  return endpoint.bindings.map((binding, index) => ({
-    id: String(binding.id || `${endpoint.id}-binding-${index}`),
-    name: String(binding.name || "Workspace binding"),
-    environment: String(binding.environmentId || "Default"),
-    project: String(binding.projectId || "No project"),
-    path: String(binding.localPath || binding.syncRoot || "Not reported"),
-  }));
-}
-
 export function InferenceEndpointDetailPage({
   endpointId,
   endpoints: endpointCollection,
   settings,
   localRunners,
+  deploymentProfile,
+  activeTab: controlledActiveTab,
+  usageThreads = [],
+  usageAgents = [],
+  analyticsLoading = false,
+  analyticsError = "",
+  analyticsTimeframe = "month",
+  onAnalyticsTimeframeChange,
+  currentUser = {},
   canConfigure = true,
   saving = false,
   testing = false,
@@ -148,7 +246,18 @@ export function InferenceEndpointDetailPage({
   success = "",
   apiKeyValue = "",
   apiKeyConfigured = false,
-  runtimeContent,
+  selectedVersionId: controlledSelectedVersionId = "",
+  versionsOpen = false,
+  versionSaveDialog = {},
+  dirty = false,
+  onNavigationGuardChange,
+  onVersionHistoryOpenChange,
+  onVersionSelect,
+  onVersionPublish,
+  onOpenSaveDialog,
+  onCloseSaveDialog,
+  onSaveVersion,
+  onRevertChanges,
   onBack,
   onSettingsChange,
   onApiKeyFocus,
@@ -159,15 +268,34 @@ export function InferenceEndpointDetailPage({
   onRemoveModel,
   onTestConnection,
   onRemoveEndpoint,
-  onRefreshLocalRunners,
+  onOwnerCandidatesRequest,
+  onOwnerTransfer,
+  workspaceTeams = [],
+  workspaceTeamsLoading = false,
+  onWorkspaceTeamsRequest,
+  onAccessMetadataChange,
+  onAddTeamShare,
+  onRemoveTeamShare,
 }: InferenceEndpointDetailPageProps) {
-  const [activeTab, setActiveTab] = useState<InferenceEndpointDetailTab>("general");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [modelInput, setModelInput] = useState("");
+  const [modelModalOpen, setModelModalOpen] = useState(false);
   const [removeModalOpen, setRemoveModalOpen] = useState(false);
+  const [ownerSelectorOpen, setOwnerSelectorOpen] = useState(false);
+  const [accessDetailOpen, setAccessDetailOpen] = useState(false);
+  const [versionChanges, setVersionChanges] = useState<{
+    leftVersionId: string;
+    rightVersionId: string;
+  } | null>(null);
+  const [ownerCandidateState, setOwnerCandidateState] = useState<{
+    endpointId: string;
+    status: "idle" | "loading" | "ready";
+    candidates: InferenceEndpointIdentity[];
+  }>({ endpointId, status: "idle", candidates: [] });
+  const modelInputRef = useRef<HTMLInputElement>(null);
+  const activeTab = controlledActiveTab || "general";
   const endpoints = useMemo(
-    () => buildInferenceEndpointRows(endpointCollection, localRunners),
-    [endpointCollection, localRunners],
+    () => buildInferenceEndpointRows(endpointCollection, localRunners, deploymentProfile),
+    [deploymentProfile, endpointCollection, localRunners],
   );
   const endpoint = endpoints.find((entry) => entry.id === endpointId)
     || (endpointId === ORGANIZATION_INFERENCE_ENDPOINT_ID
@@ -175,10 +303,57 @@ export function InferenceEndpointDetailPage({
       : null);
 
   useEffect(() => {
-    setActiveTab("general");
     setModelInput("");
+    setModelModalOpen(false);
     setRemoveModalOpen(false);
+    setOwnerSelectorOpen(false);
+    setAccessDetailOpen(false);
+    setVersionChanges(null);
+    setOwnerCandidateState({ endpointId, status: "idle", candidates: [] });
   }, [endpointId]);
+
+  const versions: InferenceEndpointVersion[] = endpoint?.kind === "external"
+    && Array.isArray(endpoint.versions)
+    ? [...endpoint.versions]
+    : [];
+  const selectedVersionId = controlledSelectedVersionId
+    || endpoint?.currentVersionId
+    || versions[versions.length - 1]?.id
+    || "";
+  const selectedVersion = versions.find((version) => version.id === selectedVersionId)
+    || versions.find((version) => version.id === endpoint?.currentVersionId)
+    || versions[versions.length - 1]
+    || null;
+  const isHistorical = Boolean(
+    endpoint?.kind === "external"
+    && selectedVersionId
+    && endpoint.currentVersionId
+    && selectedVersionId !== endpoint.currentVersionId,
+  );
+
+  usePlatformVersionNavigationGuard({
+    dirty,
+    enabled: endpoint?.kind === "external" && !isHistorical,
+    guardId: "inference-endpoint-unsaved-changes",
+    resourceId: endpointId,
+    resourceName: endpoint?.name || "this inference endpoint",
+    resourceType: "inference endpoint",
+    onDiscard: onRevertChanges,
+    onNavigationGuardChange,
+  });
+
+  useEffect(() => {
+    if (!endpoint || endpoint.kind !== "external" || !onOpenSaveDialog) return undefined;
+    const handleSaveShortcut = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== "s" || (!event.metaKey && !event.ctrlKey)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (!dirty || isHistorical || saving || !canConfigure || versionSaveDialog.open) return;
+      onOpenSaveDialog("new");
+    };
+    window.addEventListener("keydown", handleSaveShortcut, true);
+    return () => window.removeEventListener("keydown", handleSaveShortcut, true);
+  }, [canConfigure, dirty, endpoint, isHistorical, onOpenSaveDialog, saving, versionSaveDialog.open]);
 
   if (!endpoint) {
     return (
@@ -193,14 +368,93 @@ export function InferenceEndpointDetailPage({
   }
 
   const isExternal = endpoint.kind === "external";
-  const configured = Boolean(String(settings.baseUrl || "").trim());
+  const isDeploymentManaged = Boolean(endpoint.deploymentManaged);
+  const canManageAccess = isExternal || isDeploymentManaged;
   const modelRows = buildModelRows(endpoint);
-  const bindingRows = buildBindingRows(endpoint);
   const providerValue = String(settings.providerType || endpoint.providerType || "openai-compatible");
   const providerOptions = INFERENCE_PROVIDER_OPTIONS.some((option) => option.value === providerValue)
     ? INFERENCE_PROVIDER_OPTIONS
     : [...INFERENCE_PROVIDER_OPTIONS, { value: providerValue, label: endpoint.providerLabel }];
-  const disabled = !canConfigure || endpoint.readOnly || saving;
+  const disabled = !canConfigure || endpoint.readOnly || saving || isHistorical;
+  const viewerIdentity = normalizeInferenceEndpointIdentity(currentUser);
+  const creatorIdentity = getInferenceEndpointCreatorIdentity(endpoint, viewerIdentity);
+  const ownerIdentity = getInferenceEndpointOwnerIdentity(endpoint, creatorIdentity);
+  const currentOwnerCandidateState = ownerCandidateState.endpointId === endpoint.id
+    ? ownerCandidateState
+    : { endpointId: endpoint.id, status: "idle" as const, candidates: [] };
+  const ownerCandidates = mergeInferenceEndpointOwnerCandidates([
+    ownerIdentity,
+    creatorIdentity,
+    viewerIdentity,
+    ...currentOwnerCandidateState.candidates,
+  ]);
+  const ownerCandidateByValue = new Map(ownerCandidates.map((candidate) => [
+    getInferenceEndpointOwnerKey(candidate),
+    candidate,
+  ]));
+  const ownerKeys = new Set(getInferenceEndpointIdentityKeys(ownerIdentity));
+  const selectedOwnerCandidate = ownerCandidates.find((candidate) => (
+    getInferenceEndpointIdentityKeys(candidate).some((key) => ownerKeys.has(key))
+  ));
+  const selectedOwnerValue = selectedOwnerCandidate
+    ? getInferenceEndpointOwnerKey(selectedOwnerCandidate)
+    : getInferenceEndpointOwnerKey(ownerIdentity);
+  const canManageOwner = isExternal
+    && Boolean(onOwnerTransfer)
+    && getInferenceEndpointIdentityKeys(viewerIdentity).some((key) => ownerKeys.has(key));
+  const ownerOptions: PlatformOwnerOption<string, { identity: InferenceEndpointIdentity }>[] = (
+    ownerCandidates.map((candidate) => ({
+      value: getInferenceEndpointOwnerKey(candidate),
+      name: candidate.name,
+      email: candidate.email,
+      avatarUrl: candidate.avatarUrl,
+      description: candidate.email
+        && candidate.name.toLowerCase() !== candidate.email.toLowerCase()
+        ? candidate.email
+        : undefined,
+      data: { identity: candidate },
+    }))
+  );
+  const analytics = buildInferenceEndpointAnalytics({
+    endpoint,
+    threads: usageThreads,
+    agents: usageAgents,
+    timeframe: analyticsTimeframe,
+    loading: analyticsLoading,
+    error: analyticsError,
+  });
+
+  const loadOwnerCandidates = async () => {
+    if (!onOwnerCandidatesRequest || currentOwnerCandidateState.status !== "idle") return;
+    setOwnerCandidateState({
+      endpointId: endpoint.id,
+      status: "loading",
+      candidates: currentOwnerCandidateState.candidates,
+    });
+    try {
+      const candidates = await onOwnerCandidatesRequest();
+      setOwnerCandidateState({
+        endpointId: endpoint.id,
+        status: "ready",
+        candidates: candidates.map((candidate) => normalizeInferenceEndpointIdentity(candidate)),
+      });
+    } catch {
+      setOwnerCandidateState({ endpointId: endpoint.id, status: "ready", candidates: [] });
+    }
+  };
+
+  const handleOwnerSelectorOpenChange = (open: boolean) => {
+    if (open && (!canManageOwner || saving)) return;
+    setOwnerSelectorOpen(open);
+    if (open) void loadOwnerCandidates();
+  };
+
+  const transferOwner = async (value: string) => {
+    const nextOwner = ownerCandidateByValue.get(value);
+    if (!nextOwner || !canManageOwner || saving || !onOwnerTransfer) return;
+    setOwnerSelectorOpen(false);
+    await onOwnerTransfer(nextOwner);
+  };
 
   const modelColumns: PlatformDataTableColumn<InferenceModelRow>[] = [
     {
@@ -218,36 +472,6 @@ export function InferenceEndpointDetailPage({
       width: "minmax(140px, 0.45fr)",
     },
   ];
-  const bindingColumns: PlatformDataTableColumn<InferenceBindingRow>[] = [
-    {
-      id: "name",
-      header: "Binding",
-      accessor: "name",
-      sortable: true,
-      width: "minmax(170px, 0.8fr)",
-    },
-    {
-      id: "environment",
-      header: "Environment",
-      accessor: "environment",
-      sortable: true,
-      width: "minmax(140px, 0.65fr)",
-    },
-    {
-      id: "project",
-      header: "Project",
-      accessor: "project",
-      sortable: true,
-      width: "minmax(130px, 0.58fr)",
-    },
-    {
-      id: "path",
-      header: "Local Path",
-      accessor: "path",
-      width: "minmax(210px, 1fr)",
-    },
-  ];
-
   const modelActions = (
     row: InferenceModelRow,
   ): readonly PlatformDataTableAction<InferenceModelRow>[] => (
@@ -265,35 +489,90 @@ export function InferenceEndpointDetailPage({
     const normalized = modelInput.trim();
     if (!normalized) return;
     const added = onAddModels(normalized);
-    if (added !== false) setModelInput("");
+    if (added !== false) {
+      setModelInput("");
+      setModelModalOpen(false);
+    }
+  };
+
+  const closeModelModal = () => {
+    if (saving) return;
+    setModelModalOpen(false);
+    setModelInput("");
   };
 
   const renderGeneral = () => (
-    <PlatformSettingsSectionList>
+    <>
+      <section
+        className="platform-service-detail-identity inference-endpoint-detail__identity"
+        aria-label="Inference endpoint identity"
+      >
+        <span
+          className="platform-service-detail-identity__avatar inference-endpoint-detail__identity-icon"
+          aria-hidden="true"
+        >
+          <Cpu width={22} height={22} strokeWidth={1.7} />
+        </span>
+        <div className="platform-service-detail-identity__copy">
+          <input
+            type="text"
+            className="platform-service-detail-identity__title-input inference-endpoint-detail__identity-name"
+            value={isExternal ? String(settings.name ?? endpoint.name) : endpoint.name}
+            placeholder="Inference endpoint"
+            aria-label="Inference endpoint name"
+            title={isExternal ? String(settings.name ?? endpoint.name) : endpoint.name}
+            maxLength={120}
+            readOnly={disabled}
+            onChange={(event) => onSettingsChange({ name: event.currentTarget.value })}
+          />
+          <input
+            type="text"
+            className="platform-service-detail-identity__description-input inference-endpoint-detail__identity-description"
+            value={isExternal
+              ? String(settings.description ?? endpoint.description)
+              : endpoint.description}
+            placeholder="Describe how this inference endpoint should be used"
+            aria-label="Inference endpoint description"
+            title={isExternal
+              ? String(settings.description ?? endpoint.description)
+              : endpoint.description}
+            maxLength={280}
+            readOnly={disabled}
+            onChange={(event) => onSettingsChange({ description: event.currentTarget.value })}
+          />
+        </div>
+        <PlatformSwitch
+          className="inference-endpoint-detail__identity-timeframe"
+          value={analyticsTimeframe === "day" || analyticsTimeframe === "week"
+            ? analyticsTimeframe
+            : "month"}
+          options={[
+            { value: "day", label: "24H" },
+            { value: "week", label: "7D" },
+            { value: "month", label: "30D" },
+          ]}
+          onValueChange={(value) => onAnalyticsTimeframeChange?.(
+            value === "day" || value === "week" ? value : "month",
+          )}
+          ariaLabel="Inference activity time frame"
+        />
+      </section>
+      <PlatformAnalyticsSection
+        variant="default"
+        title="Activity"
+        analytics={analytics}
+        className="playground-evaluations-analytics-card inference-endpoint-detail__analytics"
+      />
+      {renderModelsSection()}
+      <PlatformSettingsSectionList>
       {isExternal ? (
         <PlatformSettingsSection
           title="Endpoint Configuration"
-          description="Connection settings are encrypted and shared at organization scope."
-          icon={<CloudCog />}
+          className="inference-endpoint-detail__settings-detail-section inference-endpoint-detail__configuration-section"
+          bodyPresentation="flush"
         >
-          <div className="inference-endpoint-detail__form-grid">
-            <div className="inference-endpoint-detail__field">
-              <label htmlFor="inference-endpoint-name" className="inference-endpoint-detail__field-label">
-                Name
-              </label>
-              <input
-                id="inference-endpoint-name"
-                type="text"
-                className="inference-endpoint-detail__input"
-                value={String(settings.name || "")}
-                placeholder="Production Inference"
-                disabled={disabled}
-                onChange={(event) => onSettingsChange({ name: event.target.value })}
-              />
-            </div>
-
-            <div className="inference-endpoint-detail__field">
-              <label className="inference-endpoint-detail__field-label">Provider</label>
+          <PlatformServiceDetailPropertyList className="inference-endpoint-detail__settings-detail-list inference-endpoint-detail__configuration-list">
+            <PlatformServiceDetailProperty label="Provider">
               <PlatformSelector
                 value={providerValue}
                 options={providerOptions}
@@ -304,22 +583,19 @@ export function InferenceEndpointDetailPage({
                   lastError: "",
                 })}
                 ariaLabel="Inference provider"
-                fullWidth
+                alignment="end"
+                popupAlignment="right"
                 disabled={disabled}
-                triggerClassName="inference-endpoint-detail__selector-trigger"
               />
-            </div>
-
-            <div className="inference-endpoint-detail__field">
-              <label htmlFor="inference-endpoint-url" className="inference-endpoint-detail__field-label">
-                Endpoint URL
-              </label>
+            </PlatformServiceDetailProperty>
+            <PlatformServiceDetailProperty label="Endpoint URL">
               <input
                 id="inference-endpoint-url"
                 type="url"
-                className="inference-endpoint-detail__input"
+                className="inference-endpoint-detail__input inference-endpoint-detail__settings-control"
                 value={String(settings.baseUrl || "")}
                 placeholder="https://models.example.com/v1"
+                aria-label="Endpoint URL"
                 disabled={disabled}
                 onChange={(event) => onSettingsChange({
                   baseUrl: event.target.value,
@@ -328,19 +604,16 @@ export function InferenceEndpointDetailPage({
                   lastError: "",
                 })}
               />
-            </div>
-
-            <div className="inference-endpoint-detail__field is-span-2">
-              <label htmlFor="inference-endpoint-api-key" className="inference-endpoint-detail__field-label">
-                API Key
-              </label>
-              <div className="inference-endpoint-detail__input-row">
+            </PlatformServiceDetailProperty>
+            <PlatformServiceDetailProperty label="API Key">
+              <div className="inference-endpoint-detail__input-shell inference-endpoint-detail__settings-control">
                 <input
                   id="inference-endpoint-api-key"
                   type="password"
                   className="inference-endpoint-detail__input"
                   value={apiKeyValue}
                   placeholder="sk-..."
+                  aria-label="API Key"
                   disabled={disabled}
                   onFocus={onApiKeyFocus}
                   onBlur={onApiKeyBlur}
@@ -348,287 +621,439 @@ export function InferenceEndpointDetailPage({
                 />
                 {apiKeyConfigured && onRemoveSavedApiKey ? (
                   <PlatformSecondaryButton
-                    size="medium"
+                    size="compact"
+                    className="inference-endpoint-detail__input-action"
                     disabled={disabled}
                     onClick={onRemoveSavedApiKey}
                   >
-                    Remove Saved Key
+                    Remove
                   </PlatformSecondaryButton>
                 ) : null}
               </div>
-            </div>
-          </div>
+            </PlatformServiceDetailProperty>
+          </PlatformServiceDetailPropertyList>
         </PlatformSettingsSection>
       ) : (
         <PlatformSettingsSection
-          title="Endpoint Configuration"
-          description="Local endpoint configuration is reported by the paired runner."
-          icon={<HardDrive />}
+          title={endpoint.deploymentManaged ? "Deployment Configuration" : "Endpoint Configuration"}
+          className="inference-endpoint-detail__settings-detail-section inference-endpoint-detail__configuration-section"
+          bodyPresentation="flush"
         >
-          <div className="inference-endpoint-detail__facts">
-            <ReadOnlyFact label="Runner" value={endpoint.device?.name || "Local Runner"} />
-            <ReadOnlyFact label="Host" value={endpoint.hostLabel} />
-            <ReadOnlyFact label="Provider" value={endpoint.providerLabel} />
-            <ReadOnlyFact label="Platform" value={endpoint.device?.platform || "Unknown"} />
-            <ReadOnlyFact label="Daemon" value={endpoint.device?.daemonVersion || "Unknown"} />
-            <ReadOnlyFact label="App Version" value={endpoint.device?.appVersion || "Unknown"} />
-          </div>
+          <PlatformServiceDetailPropertyList className="inference-endpoint-detail__settings-detail-list inference-endpoint-detail__configuration-list">
+            <PlatformServiceDetailProperty label={endpoint.deploymentManaged ? "Deployment" : "Runner"}>
+              {endpoint.deploymentManaged ? "Local Appliance" : endpoint.device?.name || "Local Runner"}
+            </PlatformServiceDetailProperty>
+            <PlatformServiceDetailProperty label="Host">{endpoint.hostLabel}</PlatformServiceDetailProperty>
+            <PlatformServiceDetailProperty label="Provider">{endpoint.providerLabel}</PlatformServiceDetailProperty>
+            {endpoint.deploymentManaged ? (
+              <PlatformServiceDetailProperty label="Mode">Fixed deployment model</PlatformServiceDetailProperty>
+            ) : (
+              <>
+                <PlatformServiceDetailProperty label="Platform">
+                  {endpoint.device?.platform || "Unknown"}
+                </PlatformServiceDetailProperty>
+                <PlatformServiceDetailProperty label="Daemon">
+                  {endpoint.device?.daemonVersion || "Unknown"}
+                </PlatformServiceDetailProperty>
+                <PlatformServiceDetailProperty label="App Version">
+                  {endpoint.device?.appVersion || "Unknown"}
+                </PlatformServiceDetailProperty>
+              </>
+            )}
+          </PlatformServiceDetailPropertyList>
         </PlatformSettingsSection>
       )}
-
-      <PlatformSettingsSection
-        title="Health"
-        description="Latest endpoint availability and validation state."
-        icon={<Activity />}
-      >
-        <div className="inference-endpoint-detail__facts">
-          <ReadOnlyFact
-            label="Connection Status"
-            value={<PlatformLabel variant={endpoint.statusVariant}>{endpoint.statusLabel}</PlatformLabel>}
-          />
-          <ReadOnlyFact label="Last Checked" value={endpoint.lastCheckedLabel} />
-          <ReadOnlyFact label="Host" value={endpoint.hostLabel} />
-          <ReadOnlyFact label="Configured Models" value={endpoint.modelCount} />
-          <ReadOnlyFact
-            label="API Key"
-            value={endpoint.apiKeyConfigured || apiKeyConfigured ? "Configured" : "Not configured"}
-          />
-          <ReadOnlyFact label="Runtime" value={endpoint.runtimeLabel} />
-        </div>
-        {endpoint.lastError ? (
-          <p className="inference-endpoint-detail__inline-error" role="alert">
-            {endpoint.lastError}
-          </p>
-        ) : null}
-      </PlatformSettingsSection>
-    </PlatformSettingsSectionList>
+      </PlatformSettingsSectionList>
+    </>
   );
 
-  const renderModels = () => (
-    <PlatformSettingsSectionList>
-      <PlatformSettingsSection
-        title="Available Models"
-        description={isExternal
-          ? "Models discovered from or explicitly assigned to this endpoint."
-          : "Models reported by the local inference runtime."}
-        icon={<Boxes />}
-        bodyPresentation="flush"
-      >
-        {isExternal && canConfigure ? (
-          <div className="inference-endpoint-detail__model-entry">
-            <input
-              type="text"
-              className="inference-endpoint-detail__input"
-              value={modelInput}
-              placeholder="gpt-oss-120b, qwen2.5-coder-32b"
-              disabled={saving}
-              onChange={(event) => setModelInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === ",") {
-                  event.preventDefault();
-                  submitModel();
-                }
-              }}
-            />
-            <PlatformSecondaryButton
-              size="medium"
-              disabled={saving || !modelInput.trim()}
-              onClick={submitModel}
-            >
-              <Plus width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
-              <span>Add Model</span>
-            </PlatformSecondaryButton>
-          </div>
-        ) : null}
-        <PlatformSettingsDataTable<InferenceModelRow>
-          rows={modelRows}
-          columns={modelColumns}
-          getRowId={(row) => row.id}
-          ariaLabel="Inference endpoint models"
-          sorting={{ defaultValue: { id: "model", direction: "asc" } }}
-          toolbar={{
-            search: {
-              placeholder: "Search models",
-              getSearchText: (row) => `${row.id} ${row.source}`,
-            },
-          }}
-          getRowActions={modelActions}
-          emptyState="No models are configured for this endpoint."
-          noResultsState="No models match this search."
+  const renderModelsSection = () => (
+    <PlatformSettingsDataTable<InferenceModelRow>
+      className="platform-resource-access-table inference-endpoint-detail__models-table"
+      rows={modelRows}
+      columns={modelColumns}
+      getRowId={(row) => row.id}
+      ariaLabel="Inference endpoint models"
+      layout="fill"
+      sorting={{ defaultValue: { id: "model", direction: "asc" } }}
+      toolbar={{
+        title: "Available Models",
+        controlsLeading: isExternal && canConfigure ? (
+          <PlatformSecondaryButton
+            size="small"
+            disabled={disabled}
+            onClick={() => setModelModalOpen(true)}
+          >
+            <Plus width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
+            <span>Add Model</span>
+          </PlatformSecondaryButton>
+        ) : undefined,
+        search: {
+          placeholder: "Search models",
+          getSearchText: (row) => `${row.id} ${row.source}`,
+        },
+      }}
+      getRowActions={modelActions}
+      emptyState={(
+        <PlatformEmptyState
+          title="No models are configured for this endpoint."
+          className="inference-endpoint-detail__models-empty-state"
         />
-      </PlatformSettingsSection>
-    </PlatformSettingsSectionList>
-  );
-
-  const renderRuntime = () => (
-    <PlatformSettingsSectionList>
-      {isExternal && runtimeContent ? (
-        <div className="inference-endpoint-detail__runtime-content">{runtimeContent}</div>
-      ) : (
-        <>
-          <PlatformSettingsSection
-            title="Local Runtime"
-            description="Runtime identity and workspace placement for this endpoint."
-            icon={<HardDrive />}
-          >
-            <div className="inference-endpoint-detail__facts">
-              <ReadOnlyFact label="Runner Status" value={endpoint.device?.status || "Unknown"} />
-              <ReadOnlyFact label="Hostname" value={endpoint.device?.hostname || "Unknown"} />
-              <ReadOnlyFact label="Platform" value={endpoint.device?.platform || "Unknown"} />
-              <ReadOnlyFact label="Bindings" value={bindingRows.length} />
-            </div>
-          </PlatformSettingsSection>
-          <PlatformSettingsSection
-            title="Workspace Bindings"
-            description="Environments and projects connected to this local runner."
-            icon={<ServerCog />}
-            bodyPresentation="flush"
-          >
-            <PlatformSettingsDataTable<InferenceBindingRow>
-              rows={bindingRows}
-              columns={bindingColumns}
-              getRowId={(row) => row.id}
-              ariaLabel="Local inference workspace bindings"
-              sorting={{ defaultValue: { id: "name", direction: "asc" } }}
-              emptyState="No workspace bindings are attached to this runner."
-            />
-          </PlatformSettingsSection>
-        </>
       )}
-    </PlatformSettingsSectionList>
+      noResultsState="No models match this search."
+    />
   );
 
-  const sidebar = (
-    <>
-      <PlatformDetailSidebarSection title="Properties">
-        <div className="inference-endpoint-detail__properties">
-          <SidebarProperty label="Type" value={endpoint.kindLabel} />
-          <SidebarProperty label="Provider" value={endpoint.providerLabel} />
-          <SidebarProperty label="Runtime" value={endpoint.runtimeLabel} />
-          {isExternal ? (
-            <SidebarProperty label="Default" value={endpoint.isDefault ? "Yes" : "No"} />
-          ) : null}
-          <SidebarProperty
-            label="Status"
-            value={<PlatformLabel variant={endpoint.statusVariant}>{endpoint.statusLabel}</PlatformLabel>}
+  const endpointMetadata = endpoint.metadata || {};
+  const storageRegion = String(
+    endpointMetadata.storageRegion
+    || endpointMetadata.deploymentRegion
+    || endpointMetadata.region
+    || endpointMetadata.location
+    || "europe-west1",
+  ).trim() || "europe-west1";
+  const deploymentRegionLatitude = Number(endpointMetadata.deploymentRegionLatitude);
+  const deploymentRegionLongitude = Number(endpointMetadata.deploymentRegionLongitude);
+  const deploymentRegionLocation = Number.isFinite(deploymentRegionLatitude)
+    && Number.isFinite(deploymentRegionLongitude)
+    ? {
+        code: storageRegion,
+        label: String(endpointMetadata.deploymentRegionLabel || storageRegion).trim() || storageRegion,
+        latitude: deploymentRegionLatitude,
+        longitude: deploymentRegionLongitude,
+      }
+    : undefined;
+  const renderSettings = () => (
+    <div className="playground-server-detail-content inference-endpoint-detail__settings-content">
+      <div className="playground-server-settings-tab is-function-settings-tab inference-endpoint-detail__settings-layout">
+        <PlatformDeploymentMap
+          regionCode={storageRegion}
+          title="Deployment region"
+          location={deploymentRegionLocation}
+          className="playground-managed-server-deployment-map playground-source-server-deployment-map playground-function-deployment-map inference-endpoint-detail__storage-map"
+        />
+        {canManageAccess && onAccessMetadataChange && onAddTeamShare && onRemoveTeamShare ? (
+          <InferenceEndpointAccessSettings
+            key={endpoint.id}
+            endpoint={endpoint}
+            workspaceTeams={workspaceTeams}
+            workspaceTeamsLoading={workspaceTeamsLoading}
+            onWorkspaceTeamsRequest={onWorkspaceTeamsRequest}
+            onMetadataChange={onAccessMetadataChange}
+            onAddTeamShare={onAddTeamShare}
+            onRemoveTeamShare={onRemoveTeamShare}
+            onPermissionDetailOpenChange={setAccessDetailOpen}
           />
-          <SidebarProperty label="Models" value={endpoint.modelCount} />
-          <SidebarProperty label="Last Checked" value={endpoint.lastCheckedLabel} />
-        </div>
-      </PlatformDetailSidebarSection>
+        ) : (
+          <div className="inference-endpoint-detail__access-unavailable">
+            Access management is unavailable for this endpoint.
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
-      <PlatformDetailSidebarSection title="Actions">
-        <div className="inference-endpoint-detail__actions">
-          {isExternal ? (
-            <PlatformPrimaryButton
-              size="medium"
-              fullWidth
-              disabled={testing || !String(settings.baseUrl || "").trim()}
-              onClick={() => void onTestConnection()}
-            >
-              {testing
-                ? <RefreshCw className="playground-spin" width={14} height={14} strokeWidth={1.8} />
-                : <Activity width={14} height={14} strokeWidth={1.8} />}
-              <span>{testing ? "Testing..." : "Test Connection"}</span>
-            </PlatformPrimaryButton>
-          ) : onRefreshLocalRunners ? (
-            <PlatformSecondaryButton
-              size="medium"
-              fullWidth
-              onClick={onRefreshLocalRunners}
-            >
-              <RefreshCw width={14} height={14} strokeWidth={1.8} />
-              <span>Refresh Runner</span>
-            </PlatformSecondaryButton>
-          ) : null}
-          {isExternal && !endpoint.isDefault && canConfigure ? (
-            <PlatformSecondaryButton
-              size="medium"
-              fullWidth
-              disabled={saving}
-              onClick={() => onSettingsChange({ isDefault: true })}
-            >
-              <CloudCog width={14} height={14} strokeWidth={1.8} />
-              <span>Make Default</span>
-            </PlatformSecondaryButton>
-          ) : null}
-          {isExternal && configured && canConfigure ? (
-            <PlatformSecondaryButton
-              size="medium"
-              fullWidth
+  const primaryAction = isExternal ? (
+    <PlatformButtonSelector
+            mode="split-action"
+            buttonVariant="primary"
+            buttonSize="small"
+            label={testing ? "Testing..." : "Test Connection"}
+            actionAriaLabel="Test Connection"
+            popupAriaLabel="Inference endpoint actions"
+            popupAlignment="right"
+            popupRole="menu"
+            popupVariant="minimal"
+            popupWidth={210}
+            closeOnSelect
+            fullWidth
+            className="inference-endpoint-detail__primary-action"
+            actionDisabled={testing || !canConfigure || !String(settings.baseUrl || "").trim()}
+            popupDisabled={saving || !canConfigure}
+            onAction={() => onTestConnection()}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              className="platform-data-table__menu-item"
               disabled={saving}
               onClick={() => setRemoveModalOpen(true)}
             >
-              <Trash2 width={14} height={14} strokeWidth={1.8} />
-              <span>Remove Endpoint</span>
-            </PlatformSecondaryButton>
-          ) : null}
-        </div>
-      </PlatformDetailSidebarSection>
-    </>
+              <Trash2
+                className="platform-data-table__menu-icon"
+                width={14}
+                height={14}
+                strokeWidth={1.8}
+                aria-hidden="true"
+              />
+              <span className="platform-data-table__menu-copy">Delete</span>
+            </button>
+    </PlatformButtonSelector>
+  ) : null;
+  const sidebarContent = (
+    <PlatformResourceDetailSidebar<string, { identity: InferenceEndpointIdentity }>
+      attributes={[
+        {
+          id: "status",
+          label: "Status",
+          value: <PlatformLabel variant={endpoint.statusVariant}>{endpoint.statusLabel}</PlatformLabel>,
+        },
+        { id: "models", label: "Models", value: endpoint.modelCount },
+        { id: "last-checked", label: "Last Checked", value: endpoint.lastCheckedLabel },
+        {
+          id: "updated",
+          label: "Updated",
+          value: formatTimestamp(endpoint.updatedAt),
+          hidden: !isExternal,
+        },
+      ]}
+      creator={canManageAccess ? {
+        value: getInferenceEndpointOwnerKey(creatorIdentity),
+        name: creatorIdentity.name,
+        email: creatorIdentity.email,
+        avatarUrl: creatorIdentity.avatarUrl,
+      } : undefined}
+      owner={canManageAccess ? {
+        value: selectedOwnerValue,
+        name: ownerIdentity.name,
+        email: ownerIdentity.email,
+        avatarUrl: ownerIdentity.avatarUrl,
+      } : undefined}
+      ownerOptions={ownerOptions}
+      onOwnerTransfer={isExternal ? (value) => transferOwner(value) : undefined}
+      ownerSelectorProps={{
+        open: ownerSelectorOpen,
+        onOpenChange: handleOwnerSelectorOpenChange,
+        ariaLabel: "Choose inference endpoint owner",
+        resourceLabel: "inference endpoint",
+        alignment: "end",
+        popupAlignment: "right",
+        fullWidth: true,
+        disabled: saving || !canManageOwner,
+        loading: currentOwnerCandidateState.status === "loading",
+        loadingContent: "Loading organization members...",
+        emptyContent: "No organization members are available.",
+        popupWidth: 260,
+        popupMaxHeight: "min(320px, calc(100vh - 180px))",
+        triggerClassName: "inference-endpoint-detail__owner-trigger",
+        popupClassName: "inference-endpoint-detail__owner-menu",
+        optionClassName: "inference-endpoint-detail__owner-option",
+      }}
+      primaryAction={primaryAction}
+      className="platform-service-detail-page__sidebar-card playground-evaluations-detail-sidebar-card inference-endpoint-detail__properties"
+      propertiesClassName="inference-endpoint-detail__properties-list"
+    />
   );
+  const draftSnapshot = buildVersionSnapshot(settings);
+  const baselineSnapshot = selectedVersion?.snapshot
+    ? buildVersionSnapshot(selectedVersion.snapshot)
+    : draftSnapshot;
+  const saveDiff = buildWholeFileDiff(baselineSnapshot, draftSnapshot);
+  const latestVersionNumber = versions.reduce(
+    (latest, version) => Math.max(latest, Number(version.number || version.versionNumber || 0)),
+    0,
+  );
+  const sortedVersions = [...versions].sort((left, right) => left.number - right.number);
+  const versionSelectorOptions = sortedVersions.map((version) => ({
+    value: version.id,
+    label: `v${version.number}`,
+  }));
+  const leftComparisonVersion = versionChanges
+    ? versions.find((version) => version.id === versionChanges.leftVersionId) || null
+    : null;
+  const rightComparisonVersion = versionChanges
+    ? versions.find((version) => version.id === versionChanges.rightVersionId) || null
+    : null;
+  const comparisonDiff = leftComparisonVersion && rightComparisonVersion
+    ? buildWholeFileDiff(
+        buildVersionSnapshot(leftComparisonVersion.snapshot),
+        buildVersionSnapshot(rightComparisonVersion.snapshot),
+      )
+    : null;
+  const versionDrawerTarget = typeof document !== "undefined"
+    ? document.getElementById("playground-agent-versions-drawer-root")
+    : null;
+  const openVersionChanges = () => {
+    const rightVersion = versions.find((version) => version.id === selectedVersionId)
+      || sortedVersions[sortedVersions.length - 1];
+    if (!rightVersion) return;
+    const rightIndex = sortedVersions.findIndex((version) => version.id === rightVersion.id);
+    const leftVersion = sortedVersions[Math.max(0, rightIndex - 1)] || rightVersion;
+    setVersionChanges({
+      leftVersionId: leftVersion.id,
+      rightVersionId: rightVersion.id,
+    });
+    onVersionHistoryOpenChange?.(false);
+  };
+  const versionChangesSurface = versionChanges ? (
+    <PlatformVersionChangesPage
+      title="Changes"
+      subtitle="Compare saved inference endpoint configurations. Credentials are never included in version history."
+      files={comparisonDiff?.diffContent ? [{
+        id: "inference-endpoint.json",
+        filePath: "inference-endpoint.json",
+        label: "inference-endpoint.json",
+        ...comparisonDiff,
+      }] : []}
+      leftSelector={{
+        value: versionChanges.leftVersionId,
+        options: versionSelectorOptions,
+        onValueChange: (value) => setVersionChanges((current) => current
+          ? { ...current, leftVersionId: value }
+          : current),
+        ariaLabel: "Select base inference endpoint version",
+      }}
+      rightSelector={{
+        value: versionChanges.rightVersionId,
+        options: versionSelectorOptions,
+        onValueChange: (value) => setVersionChanges((current) => current
+          ? { ...current, rightVersionId: value }
+          : current),
+        ariaLabel: "Select target inference endpoint version",
+      }}
+      onBack={() => setVersionChanges(null)}
+      backLabel="Back to inference endpoint"
+      emptyMessage="No configuration differences between these versions."
+      className="inference-endpoint-detail__version-changes"
+    />
+  ) : null;
 
   return (
     <>
       {error ? <div className="inference-endpoint-detail__banner is-error" role="alert">{error}</div> : null}
       {success ? <div className="inference-endpoint-detail__banner is-success" role="status">{success}</div> : null}
-      <ResourceDetailPage<InferenceEndpointDetailTab>
-        header={
-          <div className="inference-endpoint-detail__header">
-            <PlatformIconButton
-              size="small"
-              aria-label="Back to inference endpoints"
-              onClick={onBack}
-            >
-              <ArrowLeft width={15} height={15} strokeWidth={1.8} />
-            </PlatformIconButton>
-            <div className="inference-endpoint-detail__header-copy">
-              <h1 className="inference-endpoint-detail__title">{endpoint.name}</h1>
-              <PlatformLabel variant={endpoint.kind === "local" ? "blue" : "gray"}>
-                {endpoint.kindLabel}
-              </PlatformLabel>
-            </div>
-          </div>
-        }
-        tabs={DETAIL_TABS}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        sidebar={sidebar}
-        sidebarCollapsed={sidebarCollapsed}
-        sidebarToggle={
-          <PlatformIconButton
-            size="small"
-            aria-label={sidebarCollapsed ? "Open endpoint sidebar" : "Close endpoint sidebar"}
-            active={!sidebarCollapsed}
-            onClick={() => setSidebarCollapsed((current) => !current)}
-          >
-            {sidebarCollapsed
-              ? <PanelRightOpen width={15} height={15} strokeWidth={1.8} />
-              : <PanelRightClose width={15} height={15} strokeWidth={1.8} />}
-          </PlatformIconButton>
-        }
+      <PlatformServiceDetailPage
+        sidebarContent={sidebarContent}
+        sidebarCollapsed={versionsOpen || Boolean(versionChanges) || (activeTab === "settings" && accessDetailOpen)}
         ariaLabel="Inference endpoint details"
-        tabAriaLabel="Inference endpoint sections"
         sidebarAriaLabel="Inference endpoint settings"
-        className="playground-project-overview-layout playground-agents-detail-overview-layout inference-endpoint-detail"
-        tabBarClassName="playground-agents-overview-tabs playground-agents-detail-tabs inference-endpoint-detail__tabs"
-        tabBarActionsClassName="playground-agents-detail-tab-actions inference-endpoint-detail__tab-actions"
-        contentClassName="playground-project-overview-main playground-agents-detail-overview-main inference-endpoint-detail__main"
-        sidebarClassName="playground-project-overview-sidebar playground-agents-detail-sidebar inference-endpoint-detail__sidebar"
+        className={`playground-evaluations-detail-overview-layout inference-endpoint-detail is-${activeTab}-tab`}
+        contentClassName="playground-evaluations-detail-overview-main inference-endpoint-detail__main"
+        sidebarClassName="playground-evaluations-detail-sidebar inference-endpoint-detail__sidebar"
       >
-        {activeTab === "general"
-          ? renderGeneral()
-          : activeTab === "models"
-            ? renderModels()
-            : renderRuntime()}
-      </ResourceDetailPage>
+        {versionChangesSurface || (
+          activeTab === "settings"
+            ? renderSettings()
+            : renderGeneral()
+        )}
+      </PlatformServiceDetailPage>
+
+      <PlatformModal
+        open={modelModalOpen}
+        title="Add Model"
+        onClose={closeModelModal}
+        closeOnBackdrop={!saving}
+        closeOnEscape={!saving}
+        closeButtonDisabled={saving}
+        initialFocusRef={modelInputRef}
+        as="form"
+        size="small"
+        className="inference-endpoint-model-modal"
+        surfaceProps={{
+          onSubmit: (event) => {
+            event.preventDefault();
+            submitModel();
+          },
+        }}
+        footer={(
+          <>
+            <PlatformSecondaryButton
+              size="medium"
+              type="button"
+              disabled={saving}
+              onClick={closeModelModal}
+            >
+              Cancel
+            </PlatformSecondaryButton>
+            <PlatformPrimaryButton
+              size="medium"
+              type="submit"
+              disabled={saving || !modelInput.trim()}
+            >
+              <Plus width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
+              <span>Add Model</span>
+            </PlatformPrimaryButton>
+          </>
+        )}
+      >
+        <label className="inference-endpoint-model-modal__field">
+          <span>Model name</span>
+          <input
+            ref={modelInputRef}
+            type="text"
+            className="inference-endpoint-detail__input"
+            value={modelInput}
+            placeholder="gpt-oss-120b"
+            autoComplete="off"
+            disabled={saving}
+            onChange={(event) => setModelInput(event.target.value)}
+          />
+        </label>
+      </PlatformModal>
+
+      <PlatformVersionSaveDialog
+        open={Boolean(versionSaveDialog.open)}
+        title="Review changes"
+        currentVersion={endpoint.currentVersionNumber || selectedVersion?.number || 1}
+        nextVersion={latestVersionNumber + 1}
+        currentDescription={versions.find((version) => version.id === endpoint.currentVersionId)?.description || ""}
+        initialMode={versionSaveDialog.initialMode === "current" ? "current" : "new"}
+        canSaveCurrent={Boolean(endpoint.currentVersionId)}
+        instanceKey={versionSaveDialog.instanceKey}
+        pending={saving}
+        error={versionSaveDialog.error || null}
+        changes={saveDiff.diffContent ? [{
+          id: "inference-endpoint.json",
+          label: "inference-endpoint.json",
+          content: (
+            <PlatformDiffViewer
+              filePath="inference-endpoint.json"
+              {...saveDiff}
+              hideTopbar
+              embedded
+              defaultExpanded
+              maxHeight={330}
+            />
+          ),
+        }] : []}
+        emptyChanges="Only the encrypted credential changed; secrets are intentionally omitted from version history."
+        onClose={() => onCloseSaveDialog?.()}
+        onSubmit={(details) => onSaveVersion?.(details)}
+      />
+
+      <PlatformVersionHistorySidebar<InferenceEndpointVersion>
+        open={versionsOpen}
+        title="Version history"
+        sectionTitle="All Versions"
+        versions={versions}
+        activeVersionId={endpoint.publishedVersionId}
+        selectedVersionId={selectedVersionId}
+        busy={saving || dirty}
+        portal={Boolean(versionDrawerTarget)}
+        portalTarget={versionDrawerTarget}
+        width="var(--playground-thread-task-detail-width)"
+        onClose={() => {
+          setVersionChanges(null);
+          onVersionHistoryOpenChange?.(false);
+        }}
+        onCreateVersion={() => onOpenSaveDialog?.("new")}
+        onSelectVersion={(versionId) => {
+          setVersionChanges(null);
+          return onVersionSelect?.(versionId);
+        }}
+        onPublishVersion={(versionId) => onVersionPublish?.(versionId)}
+        onViewChanges={openVersionChanges}
+        canPublishVersion={(version) => version.id !== endpoint.publishedVersionId}
+        getVersionCreatedAt={(version) => formatTimestamp(version.createdAt || version.updatedAt)}
+        emptyDescription="Save a version to retain a stable inference endpoint configuration."
+      />
 
       <PlatformConfirmationModal
         open={removeModalOpen}
-        title="Remove inference endpoint?"
-        description="Agents will stop routing compatible workloads through this endpoint. The saved API key and configured model list will also be removed."
-        confirmLabel="Remove Endpoint"
-        confirmingLabel="Removing..."
+        title="Delete inference endpoint?"
+        description="Agents will stop routing compatible workloads through this endpoint. Its saved API key and configured model list will be permanently deleted."
+        confirmLabel="Delete Endpoint"
+        confirmingLabel="Deleting..."
         tone="destructive"
         onCancel={() => setRemoveModalOpen(false)}
         onConfirm={async () => {

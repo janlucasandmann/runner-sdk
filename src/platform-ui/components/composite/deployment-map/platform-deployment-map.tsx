@@ -53,6 +53,11 @@ const PLATFORM_DEPLOYMENT_REGION_LOCATIONS = Object.freeze<
     latitude: 60.1699,
     longitude: 24.9384,
   },
+  "hr-zad-1": {
+    label: "Zadar, Croatia",
+    latitude: 44.1194,
+    longitude: 15.2314,
+  },
   "us-central1": {
     label: "Iowa",
     latitude: 41.878,

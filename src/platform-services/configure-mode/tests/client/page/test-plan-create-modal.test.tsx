@@ -25,10 +25,26 @@ describe("TestPlanCreateModal", () => {
       />,
     );
 
-    fireEvent.change(screen.getByPlaceholderText("Release verification"), {
+    const nameInput = screen.getByLabelText("Test plan name");
+    expect(nameInput.closest(".platform-modal-header.is-search")).not.toBeNull();
+    expect(
+      document.body.querySelector(
+        ".platform-modal-header__search .lucide-flask-conical",
+      ),
+    ).not.toBeNull();
+    expect(
+      document.body
+        .querySelector(".tests-create-modal__description-editor")
+        ?.classList.contains("is-minimalistic-ui"),
+    ).toBe(true);
+
+    fireEvent.keyDown(nameInput, { key: "Enter", metaKey: true });
+    expect(onCreate).not.toHaveBeenCalled();
+
+    fireEvent.change(nameInput, {
       target: { value: "Release readiness" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Create Test Plan" }));
+    fireEvent.keyDown(nameInput, { key: "Enter", metaKey: true });
 
     await waitFor(() => expect(onCreate).toHaveBeenCalledTimes(1));
     expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({

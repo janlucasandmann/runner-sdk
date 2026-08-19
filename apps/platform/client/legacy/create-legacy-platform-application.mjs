@@ -150,6 +150,10 @@ import {
   TESTS_APP_SCRIPT_FRAGMENTS,
 } from "../../../../src/platform-services/configure-mode/tests/index.mjs";
 import {
+  BATCHES_APP_SCRIPT_FRAGMENTS,
+  BATCHES_PAGE_CSS,
+} from "../../../../src/platform-services/create-mode/batches/index.mjs";
+import {
   KNOWLEDGE_APP_SCRIPT_FRAGMENTS,
   PLAYGROUND_KNOWLEDGE_CSS,
 } from "../../../../src/platform-services/configure-mode/knowledge/index.mjs";
@@ -345,6 +349,8 @@ export function createLegacyPlatformApplicationBindings({
     PLATFORM_UI_PRIMITIVES_CSS,
     PLATFORM_UI_PRIMITIVES_SCRIPT,
     PLAYGROUND_BILLING_CATALOG_SCRIPT,
+    BATCHES_APP_SCRIPT_FRAGMENTS,
+    BATCHES_PAGE_CSS,
     PLAYGROUND_EVALUATIONS_CSS,
     PLAYGROUND_ASSURANCE_CSS,
     PLAYGROUND_TESTS_CSS,

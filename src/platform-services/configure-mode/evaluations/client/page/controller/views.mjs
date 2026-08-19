@@ -1,5 +1,29 @@
 export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        function renderOverview() {
-          const evaluationOverviewRows = normalizedSets
+          const normalizedEvaluationsOverviewScope = evaluationsOverviewScope === "created"
+            ? "created"
+            : evaluationsOverviewScope === "shared"
+              ? "shared"
+              : "all";
+          const currentEvaluationUserKeys = new Set(getEvaluationPersonIdentityKeys(currentEvaluationCreator));
+          const currentEvaluationUserName = String(currentEvaluationCreator?.name || "").trim().toLowerCase();
+          const isEvaluationCreatedByCurrentUser = (set) => {
+            const creator = getPlaygroundEvaluationCreatorIdentity(set);
+            const creatorKeys = getEvaluationPersonIdentityKeys(creator);
+            if (creatorKeys.some((key) => currentEvaluationUserKeys.has(key))) return true;
+            if (creatorKeys.length) return false;
+            const creatorName = String(creator?.name || "").trim().toLowerCase();
+            if (!creatorName || ["unknown", "you", "me", "current user"].includes(creatorName)) return true;
+            return Boolean(currentEvaluationUserName && creatorName === currentEvaluationUserName);
+          };
+          const scopedEvaluationSets = normalizedEvaluationsOverviewScope === "all"
+            ? normalizedSets
+            : normalizedSets.filter((set) => {
+                const createdByCurrentUser = isEvaluationCreatedByCurrentUser(set);
+                return normalizedEvaluationsOverviewScope === "created"
+                  ? createdByCurrentUser
+                  : !createdByCurrentUser;
+              });
+          const evaluationOverviewRows = scopedEvaluationSets
             .map((set) => {
               const id = String(set?.id || "").trim();
               const name = String(set?.name || "Untitled Evaluation").trim();
@@ -199,15 +223,45 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               className: "is-owner",
               control: true,
             }),
-            React.createElement(PlatformPrimaryButton, {
-                type: "button",
-                size: "small",
+            React.createElement(PlatformButtonSelector, {
+                mode: "split-action",
+                buttonVariant: "primary",
+                buttonSize: "small",
                 fullWidth: true,
+                matchTriggerWidth: true,
+                popupRole: "menu",
+                popupVariant: "minimal",
+                popupAlignment: "left",
+                label: "Run Evaluation",
+                actionAriaLabel: "Run Evaluation",
+                popupAriaLabel: "Evaluation run options",
+                actionDisabled: getEvaluationRunnableCaseCount(activeSet) === 0,
+                popupDisabled: getEvaluationRunnableCaseCount(activeSet) === 0,
                 className: "playground-evaluations-detail-run-button",
-                onClick: () => openRunEvaluationModal(activeSet.id),
-                disabled: getEvaluationRunnableCaseCount(activeSet) === 0,
+                onAction: () => openRunEvaluationModal(activeSet.id),
               },
-              React.createElement("span", null, "Run Evaluation")
+              React.createElement("button", {
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row",
+                onClick: () => openBatchComposer({
+                  name: "Run " + String(activeSet.name || "Evaluation"),
+                  description: "Evaluation queued from its details page.",
+                  targetKind: "evaluation_run",
+                  targetResourceId: activeSet.id,
+                  targetVersionId: String(activeSet.publishedVersionId || activeSet.currentVersionId || "").trim() || null,
+                  definition: {
+                    evaluationId: activeSet.id,
+                    versionId: String(activeSet.publishedVersionId || activeSet.currentVersionId || "").trim() || null,
+                    agentId: String(activeSet.targetAgentId || defaultAgentId || "").trim() || null,
+                    environmentId: String(activeSet.environmentId || defaultEnvironmentId || "").trim() || null,
+                  },
+                  startPolicy: "manual",
+                }),
+              },
+                React.createElement(Truck, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                React.createElement("span", null, "Add to Batches")
+              )
             )
           );
           const detailContent = activeDetailTab === "settings"
@@ -380,15 +434,45 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
             renderEvaluationDetailSidebarRow("agent", "Agent", runAgentValue, {
               className: "is-agent-version playground-evaluations-run-agent-property",
             }),
-            React.createElement(PlatformPrimaryButton, {
-                type: "button",
-                size: "small",
+            React.createElement(PlatformButtonSelector, {
+                mode: "split-action",
+                buttonVariant: "primary",
+                buttonSize: "small",
                 fullWidth: true,
+                matchTriggerWidth: true,
+                popupRole: "menu",
+                popupVariant: "minimal",
+                popupAlignment: "left",
+                label: "Run Again",
+                actionAriaLabel: "Run Evaluation again",
+                popupAriaLabel: "Evaluation rerun options",
+                actionDisabled: getEvaluationRunnableCaseCount(activeSet) === 0,
+                popupDisabled: getEvaluationRunnableCaseCount(activeSet) === 0,
                 className: "playground-evaluations-run-again-button",
-                onClick: () => openRunEvaluationModal(activeSet.id),
-                disabled: getEvaluationRunnableCaseCount(activeSet) === 0,
+                onAction: () => openRunEvaluationModal(activeSet.id),
               },
-              React.createElement("span", null, "Run Again")
+              React.createElement("button", {
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row",
+                onClick: () => openBatchComposer({
+                  name: "Rerun " + String(activeSet.name || "Evaluation"),
+                  description: "Evaluation rerun queued from run details.",
+                  targetKind: "evaluation_run",
+                  targetResourceId: activeSet.id,
+                  targetVersionId: String(activeRun?.evaluationVersionId || activeSet.publishedVersionId || activeSet.currentVersionId || "").trim() || null,
+                  definition: {
+                    evaluationId: activeSet.id,
+                    versionId: String(activeRun?.evaluationVersionId || activeSet.publishedVersionId || activeSet.currentVersionId || "").trim() || null,
+                    agentId: String(activeRun?.targetAgentId || activeSet.targetAgentId || defaultAgentId || "").trim() || null,
+                    environmentId: String(activeRun?.environmentId || activeSet.environmentId || defaultEnvironmentId || "").trim() || null,
+                  },
+                  startPolicy: "manual",
+                }),
+              },
+                React.createElement(Truck, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                React.createElement("span", null, "Add to Batches")
+              )
             )
           );
           return React.createElement(EvaluationDetailPage, {

@@ -1073,7 +1073,7 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     min-width: 0;
     color: rgba(255, 255, 255, 0.58);
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 400;
   }
 
   .tests-form-field > small {
@@ -1085,6 +1085,16 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
 
   .tests-form-field.is-span-2 {
     grid-column: 1 / -1;
+  }
+
+  .tests-create-modal__description-editor.platform-instructions-editor {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  .tests-create-modal__description-editor
+    .platform-instructions-editor__prosemirror {
+    min-height: 84px;
   }
 
   .tests-form-field input,

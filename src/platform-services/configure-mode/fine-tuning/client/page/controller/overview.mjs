@@ -1,5 +1,29 @@
 export const FINE_TUNING_PAGE_CONTROLLER_OVERVIEW_SCRIPT = String.raw`        function renderOverview() {
-          const fineTuningOverviewRows = scoredJobs
+          const normalizedFineTuningOverviewScope = fineTuningOverviewScope === "created"
+            ? "created"
+            : fineTuningOverviewScope === "shared"
+              ? "shared"
+              : "all";
+          const currentFineTuningUserKeys = new Set(getFineTuningIdentityKeys(currentFineTuningUser));
+          const currentFineTuningUserName = normalizePlaygroundFineTuningString(currentFineTuningUser?.name).toLowerCase();
+          const isFineTuningJobCreatedByCurrentUser = (job) => {
+            const creator = getPlaygroundFineTuningConductorIdentity(job);
+            const creatorKeys = getFineTuningIdentityKeys(creator);
+            if (creatorKeys.some((key) => currentFineTuningUserKeys.has(key))) return true;
+            if (creatorKeys.length) return false;
+            const creatorName = normalizePlaygroundFineTuningString(creator?.name).toLowerCase();
+            if (!creatorName || ["unknown", "you", "me", "current user"].includes(creatorName)) return true;
+            return Boolean(currentFineTuningUserName && creatorName === currentFineTuningUserName);
+          };
+          const scopedFineTuningJobs = normalizedFineTuningOverviewScope === "all"
+            ? scoredJobs
+            : scoredJobs.filter((job) => {
+                const createdByCurrentUser = isFineTuningJobCreatedByCurrentUser(job);
+                return normalizedFineTuningOverviewScope === "created"
+                  ? createdByCurrentUser
+                  : !createdByCurrentUser;
+              });
+          const fineTuningOverviewRows = scopedFineTuningJobs
             .map((job) => {
               const normalizedJob = normalizePlaygroundFineTuningJob(job);
               const id = normalizePlaygroundFineTuningString(normalizedJob.id);
@@ -88,7 +112,9 @@ export const FINE_TUNING_PAGE_CONTROLLER_OVERVIEW_SCRIPT = String.raw`        fu
             controlsPortalId: "playground-fine-tuning-overview-controls",
             onOpen: (job) => openJob(job.id),
             onCreate: openCreateModal,
-            onDelete: (job) => deleteJob(job.id),
+            onDelete: (jobs) => deleteJobs(
+              (Array.isArray(jobs) ? jobs : []).map((job) => job?.id)
+            ),
           });
         }
 

@@ -125,6 +125,9 @@ assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(Re
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /typeof createPortal === "function"/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /playground-fine-tuning-detail-topnav-actions/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /platform-service-detail-page__sidebar-actions/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /canAddOptimizationToBatches/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /fineTuningOrchestrationState/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /"Add to Batches"/);
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /sidebarToggle/);
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /activeTab:/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /waiting for its delivery gate/);
@@ -147,6 +150,7 @@ assert.equal(isFineTuningPhaseActive("planned"), false);
 
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.state, /fineTuningJobs/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.state, /fineTuningDetailTab/);
+assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.state, /fineTuningOverviewScope/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.navigation, /function openFineTuningPage/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyCapture, /fineTuneJobId/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.page === "fine-tuning"/);
@@ -154,6 +158,10 @@ assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.lifecycle, /selectedFineTuningJobI
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderFineTuningPageNav/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-fine-tuning-overview-controls/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformSwitch/);
+assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "all", label: "All Optimizations" \}/);
+assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "created", label: "Created by me" \}/);
+assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "shared", label: "Shared with me" \}/);
+assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView, /fineTuningOverviewScope/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-fine-tuning-nav-actions/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView, /function renderFineTuningPage/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView, /topNavActionsPortalId/);

@@ -20,6 +20,7 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                 className: "platform-global-search-modal__file-preview",
               }),
               iconClassName: "is-file-preview",
+              actionsHidden: threadSearchModeLocked,
             };
           });
           const threadGroups = groupedThreadSearchItems.map((group) => ({
@@ -109,6 +110,7 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                 : String(workflow.status || "draft").replace(/_/g, " "),
               renameDisabled: !actionAvailability.canRename,
               deleteDisabled: !actionAvailability.canDelete,
+              actionsHidden: threadSearchModeLocked,
             };
           });
           const promptItems = filteredThreadSearchPromptItems.map((prompt) => {
@@ -127,6 +129,75 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
               }),
               iconClassName: "is-prompt",
               actionsHidden: true,
+            };
+          });
+          const knowledgeItems = filteredThreadSearchKnowledgeItems.map((library) => {
+            const actionAvailability = getThreadSearchResultActionAvailability("knowledge", library);
+            const versionNumber = Number(library?.currentVersionNumber || 0);
+            return {
+              id: library.id,
+              title: library.name || "Untitled library",
+              meta: versionNumber > 0 ? "Version " + String(versionNumber) : "Knowledge library",
+              renameDisabled: !actionAvailability.canRename,
+              deleteDisabled: !actionAvailability.canDelete,
+              icon: React.createElement(LibraryBig, {
+                width: 16,
+                height: 16,
+                strokeWidth: 1.8,
+              }),
+              iconClassName: "is-knowledge",
+              actionsHidden: true,
+            };
+          });
+          const evaluationItems = filteredThreadSearchEvaluationItems.map((evaluation) => {
+            const versionNumber = Number(evaluation?.currentVersionNumber || evaluation?.version || 0);
+            const caseCount = Array.isArray(evaluation?.cases)
+              ? evaluation.cases.length
+              : Number(evaluation?.caseCount || evaluation?.casesCount || 0);
+            return {
+              id: evaluation.id,
+              title: evaluation.name || evaluation.title || "Untitled evaluation",
+              meta: versionNumber > 0
+                ? "Version " + String(versionNumber)
+                : caseCount > 0
+                  ? String(caseCount) + (caseCount === 1 ? " case" : " cases")
+                  : "Evaluation",
+              renameDisabled: true,
+              deleteDisabled: true,
+              icon: React.createElement(FlaskConical, {
+                width: 16,
+                height: 16,
+                strokeWidth: 1.8,
+              }),
+              iconClassName: "is-evaluation",
+              actionsHidden: true,
+            };
+          });
+          const selectedServerResourceMeta = ({
+            web_app: { label: "Web Apps", itemLabel: "Web App", Icon: Monitor },
+            function: { label: "Functions", itemLabel: "Function", Icon: FunctionSquare },
+            database: { label: "Databases", itemLabel: "Database", Icon: Database },
+          })[canonicalizePlaygroundServerKind(threadSearchResourceTypeFilter)] || {
+            label: "Resources",
+            itemLabel: "Resource",
+            Icon: Server,
+          };
+          const serverResourceItems = filteredThreadSearchServerResourceItems.map((resource) => {
+            const ResourceIcon = selectedServerResourceMeta.Icon || Server;
+            return {
+              id: resource.id,
+              title: resource.name || resource.title || "Untitled " + selectedServerResourceMeta.itemLabel.toLowerCase(),
+              meta: String(resource.status || resource.state || selectedServerResourceMeta.itemLabel).replace(/_/g, " "),
+              renameDisabled: true,
+              deleteDisabled: true,
+              openInNewTabDisabled: true,
+              actionsHidden: true,
+              icon: React.createElement(ResourceIcon, {
+                width: 16,
+                height: 16,
+                strokeWidth: 1.8,
+              }),
+              iconClassName: "is-server-resource",
             };
           });
 
@@ -160,7 +231,13 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                   ? (agentItems.length > 0 ? [{ id: "agents", label: "Agents", items: agentItems }] : [])
                   : threadSearchMode === "workflows"
                     ? (workflowItems.length > 0 ? [{ id: "workflows", label: "Workflows", items: workflowItems }] : [])
-                    : (promptItems.length > 0 ? [{ id: "prompts", label: "Prompts", items: promptItems }] : []);
+                    : threadSearchMode === "prompts"
+                      ? (promptItems.length > 0 ? [{ id: "prompts", label: "Prompts", items: promptItems }] : [])
+                      : threadSearchMode === "knowledge"
+                        ? (knowledgeItems.length > 0 ? [{ id: "knowledge", label: "Knowledge", items: knowledgeItems }] : [])
+                        : threadSearchMode === "evaluations"
+                          ? (evaluationItems.length > 0 ? [{ id: "evaluations", label: "Evaluations", items: evaluationItems }] : [])
+                          : (serverResourceItems.length > 0 ? [{ id: "server-resources", label: selectedServerResourceMeta.label, items: serverResourceItems }] : []);
           const resultGroups = isGlobalServiceSearchQuery
             ? (
                 globalServiceItems.length > 0
@@ -175,7 +252,13 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
             agents: "Agents",
             workflows: "Workflows",
             prompts: "Prompts",
+            knowledge: "Knowledge",
+            evaluations: "Evaluations",
+            "server-resources": selectedServerResourceMeta.label,
           })[threadSearchMode] || "Results";
+          const resolvedSelectedModeLabel = threadSearchMode === "files" && threadSearchResourceTypeFilter === "image"
+            ? "Images"
+            : selectedModeLabel;
           const emptyStateCopy = isGlobalServiceSearchQuery
             ? {
                 title: "No services found",
@@ -183,7 +266,7 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
               }
             : threadSearchSelectedModeError
             ? {
-                title: "Unable to load " + selectedModeLabel.toLowerCase(),
+                title: "Unable to load " + resolvedSelectedModeLabel.toLowerCase(),
                 description: threadSearchSelectedModeError,
               }
             : exactThreadSearchId && threadSearchMode === "threads"
@@ -193,7 +276,7 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                 }
             : normalizedThreadSearchQuery
               ? {
-                  title: "No " + selectedModeLabel.toLowerCase() + " found",
+                  title: "No " + resolvedSelectedModeLabel.toLowerCase() + " found",
                   description: "Try a different search term.",
                 }
               : ({
@@ -220,6 +303,18 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                   prompts: {
                     title: "No prompts yet",
                     description: "Reusable prompts will appear here.",
+                  },
+                  knowledge: {
+                    title: "No Knowledge libraries yet",
+                    description: "Knowledge libraries in your workspace will appear here.",
+                  },
+                  evaluations: {
+                    title: "No evaluations yet",
+                    description: "Evaluations in your organization will appear here.",
+                  },
+                  "server-resources": {
+                    title: "No " + selectedServerResourceMeta.label.toLowerCase() + " yet",
+                    description: selectedServerResourceMeta.label + " in your organization will appear here.",
                   },
                 })[threadSearchMode];
           const actions = isGlobalServiceSearchQuery
@@ -301,7 +396,7 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
                     ? [{
                       id: "create-workflow",
                       label: "Create new workflow",
-                      icon: React.createElement(Workflow, {
+                      icon: React.createElement(Metronome, {
                         width: 16,
                         height: 16,
                         strokeWidth: 1.9,
@@ -328,9 +423,23 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
             mode: threadSearchMode,
             modeLocked: threadSearchModeLocked,
             modeOptions: threadSearchModeLocked
-              ? [threadSearchMode === "threads"
-                ? { id: "threads", label: "Threads", description: "Conversations in your workspace" }
-                : { id: "prompts", label: "Prompts", description: "Reusable prompts in your workspace" }]
+              ? [({
+                  threads: { id: "threads", label: "Threads", description: "Conversations in your workspace" },
+                  knowledge: { id: "knowledge", label: "Knowledge", description: "Knowledge libraries in your workspace" },
+                  prompts: { id: "prompts", label: "Prompts", description: "Reusable prompts in your workspace" },
+                  evaluations: { id: "evaluations", label: "Evaluations", description: "Evaluations in your organization" },
+                  files: {
+                    id: "files",
+                    label: threadSearchResourceTypeFilter === "image" ? "Images" : "Files",
+                    description: threadSearchResourceTypeFilter === "image" ? "Images across your computers" : "Files across your computers",
+                  },
+                  workflows: { id: "workflows", label: "Workflows", description: "Workflows in your organization" },
+                  "server-resources": {
+                    id: "server-resources",
+                    label: selectedServerResourceMeta.label,
+                    description: selectedServerResourceMeta.label + " in your organization",
+                  },
+                })[threadSearchMode] || { id: threadSearchMode, label: resolvedSelectedModeLabel, description: "Resources in your organization" }]
               : undefined,
             onModeChange: (nextMode) => {
               if (threadSearchModeLocked) return;
@@ -388,7 +497,7 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
               if (threadSearchMode === "files") {
                 const fileResult = filteredThreadSearchFileItems.find((item) => item.key === resultId);
                 if (fileResult) {
-                  handleThreadSearchFileSelect(fileResult);
+                  void handleThreadSearchFileSelect(fileResult);
                 }
                 return;
               }
@@ -409,7 +518,28 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
               if (threadSearchMode === "workflows") {
                 const workflow = filteredThreadSearchWorkflowItems.find((item) => item.id === resultId);
                 if (workflow) {
-                  handleThreadSearchWorkflowSelect(workflow);
+                  void handleThreadSearchWorkflowSelect(workflow);
+                }
+                return;
+              }
+              if (threadSearchMode === "server-resources") {
+                const resource = filteredThreadSearchServerResourceItems.find((item) => item.id === resultId);
+                if (resource) {
+                  void handleThreadSearchServerResourceSelect(resource);
+                }
+                return;
+              }
+              if (threadSearchMode === "knowledge") {
+                const library = filteredThreadSearchKnowledgeItems.find((item) => item.id === resultId);
+                if (library) {
+                  void handleThreadSearchKnowledgeSelect(library);
+                }
+                return;
+              }
+              if (threadSearchMode === "evaluations") {
+                const evaluation = filteredThreadSearchEvaluationItems.find((item) => item.id === resultId);
+                if (evaluation) {
+                  void handleThreadSearchEvaluationSelect(evaluation);
                 }
                 return;
               }
@@ -423,7 +553,7 @@ export const APP_HEADER_SEARCH_MODAL_SCRIPT = `        function renderAppHeaderS
               : threadSearchTotalResultCount,
             loadingLabel: isGlobalServiceSearchQuery
               ? "Loading services..."
-              : "Loading " + selectedModeLabel.toLowerCase() + "...",
+              : "Loading " + resolvedSelectedModeLabel.toLowerCase() + "...",
             emptyTitle: emptyStateCopy.title,
             emptyDescription: emptyStateCopy.description,
           });

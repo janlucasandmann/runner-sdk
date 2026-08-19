@@ -5,4 +5,5 @@ export const TESTS_APP_STATE_SCRIPT = `        const [selectedTestPlanId, setSel
         const [selectedTestRunId, setSelectedTestRunId] = useState("");
         const [selectedTestRunName, setSelectedTestRunName] = useState("");
         const [testsPageMode, setTestsPageMode] = useState("overview");
+        const [testsOverviewScope, setTestsOverviewScope] = useState("all");
 `;

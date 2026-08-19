@@ -21,6 +21,16 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function getThreadSearchMod
           return "threads";
         }
 
+        function resetThreadSearchSelectionHandlers() {
+          threadSearchPromptSelectHandlerRef.current = null;
+          threadSearchKnowledgeSelectHandlerRef.current = null;
+          threadSearchEvaluationSelectHandlerRef.current = null;
+          threadSearchThreadSelectHandlerRef.current = null;
+          threadSearchFileSelectHandlerRef.current = null;
+          threadSearchWorkflowSelectHandlerRef.current = null;
+          threadSearchServerResourceSelectHandlerRef.current = null;
+        }
+
         function openPromptSearch(onSelect) {
           setAccountMenuOpen(false);
           setNotificationsOpen(false);
@@ -28,10 +38,106 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function getThreadSearchMod
           setThreadSearchQuery("");
           setThreadSearchMode("prompts");
           setThreadSearchModeLocked(typeof onSelect === "function");
+          setThreadSearchResourceTypeFilter("");
           setThreadSearchAllActionsVisible(false);
+          resetThreadSearchSelectionHandlers();
           threadSearchPromptSelectHandlerRef.current = typeof onSelect === "function" ? onSelect : null;
+          threadSearchKnowledgeSelectHandlerRef.current = null;
+          threadSearchEvaluationSelectHandlerRef.current = null;
           threadSearchThreadSelectHandlerRef.current = null;
           setThreadSearchOpen(true);
+        }
+
+        function openKnowledgeSearch(onSelect) {
+          setAccountMenuOpen(false);
+          setNotificationsOpen(false);
+          setProfileEditorOpen(false);
+          setThreadSearchQuery("");
+          setThreadSearchMode("knowledge");
+          setThreadSearchModeLocked(typeof onSelect === "function");
+          setThreadSearchResourceTypeFilter("");
+          setThreadSearchAllActionsVisible(false);
+          resetThreadSearchSelectionHandlers();
+          threadSearchPromptSelectHandlerRef.current = null;
+          threadSearchKnowledgeSelectHandlerRef.current = typeof onSelect === "function" ? onSelect : null;
+          threadSearchEvaluationSelectHandlerRef.current = null;
+          threadSearchThreadSelectHandlerRef.current = null;
+          setThreadSearchOpen(true);
+        }
+
+        function openEvaluationSearch(onSelect) {
+          setAccountMenuOpen(false);
+          setNotificationsOpen(false);
+          setProfileEditorOpen(false);
+          setThreadSearchQuery("");
+          setThreadSearchMode("evaluations");
+          setThreadSearchModeLocked(typeof onSelect === "function");
+          setThreadSearchResourceTypeFilter("");
+          setThreadSearchAllActionsVisible(false);
+          resetThreadSearchSelectionHandlers();
+          threadSearchPromptSelectHandlerRef.current = null;
+          threadSearchKnowledgeSelectHandlerRef.current = null;
+          threadSearchEvaluationSelectHandlerRef.current = typeof onSelect === "function" ? onSelect : null;
+          threadSearchThreadSelectHandlerRef.current = null;
+          setThreadSearchOpen(true);
+        }
+
+        function openFileSearch(onSelect, options = {}) {
+          const kind = String(options?.kind || "file").trim().toLowerCase();
+          setAccountMenuOpen(false);
+          setNotificationsOpen(false);
+          setProfileEditorOpen(false);
+          setThreadSearchQuery("");
+          setThreadSearchMode("files");
+          setThreadSearchModeLocked(typeof onSelect === "function");
+          setThreadSearchResourceTypeFilter(kind === "image" ? "image" : "file");
+          setThreadSearchAllActionsVisible(false);
+          resetThreadSearchSelectionHandlers();
+          threadSearchFileSelectHandlerRef.current = typeof onSelect === "function" ? onSelect : null;
+          setThreadSearchOpen(true);
+        }
+
+        function openWorkflowSearch(onSelect) {
+          setAccountMenuOpen(false);
+          setNotificationsOpen(false);
+          setProfileEditorOpen(false);
+          setThreadSearchQuery("");
+          setThreadSearchMode("workflows");
+          setThreadSearchModeLocked(typeof onSelect === "function");
+          setThreadSearchResourceTypeFilter("metronome");
+          setThreadSearchAllActionsVisible(false);
+          resetThreadSearchSelectionHandlers();
+          threadSearchWorkflowSelectHandlerRef.current = typeof onSelect === "function" ? onSelect : null;
+          setThreadSearchOpen(true);
+        }
+
+        function openServerResourceSearch(resourceType, onSelect) {
+          const normalizedResourceType = canonicalizePlaygroundServerKind(resourceType);
+          setAccountMenuOpen(false);
+          setNotificationsOpen(false);
+          setProfileEditorOpen(false);
+          setThreadSearchQuery("");
+          setThreadSearchMode("server-resources");
+          setThreadSearchModeLocked(typeof onSelect === "function");
+          setThreadSearchResourceTypeFilter(normalizedResourceType);
+          setThreadSearchAllActionsVisible(false);
+          resetThreadSearchSelectionHandlers();
+          threadSearchServerResourceSelectHandlerRef.current = typeof onSelect === "function" ? onSelect : null;
+          setThreadSearchOpen(true);
+          setThreadSearchResourceLoadingByMode((current) => ({
+            ...current,
+            "server-resources": true,
+          }));
+          setThreadSearchResourceErrorByMode((current) => ({
+            ...current,
+            "server-resources": "",
+          }));
+          void Promise.resolve(refreshServers()).finally(() => {
+            setThreadSearchResourceLoadingByMode((current) => ({
+              ...current,
+              "server-resources": false,
+            }));
+          });
         }
 
         function openThreadReferenceSearch(onSelect) {
@@ -41,8 +147,12 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function getThreadSearchMod
           setThreadSearchQuery("");
           setThreadSearchMode("threads");
           setThreadSearchModeLocked(typeof onSelect === "function");
+          setThreadSearchResourceTypeFilter("");
           setThreadSearchAllActionsVisible(false);
+          resetThreadSearchSelectionHandlers();
           threadSearchPromptSelectHandlerRef.current = null;
+          threadSearchKnowledgeSelectHandlerRef.current = null;
+          threadSearchEvaluationSelectHandlerRef.current = null;
           threadSearchThreadSelectHandlerRef.current = typeof onSelect === "function" ? onSelect : null;
           setThreadSearchOpen(true);
         }
@@ -54,8 +164,12 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function getThreadSearchMod
           setThreadSearchQuery("");
           setThreadSearchMode(getThreadSearchModeForCurrentPage());
           setThreadSearchModeLocked(false);
+          setThreadSearchResourceTypeFilter("");
           setThreadSearchAllActionsVisible(false);
+          resetThreadSearchSelectionHandlers();
           threadSearchPromptSelectHandlerRef.current = null;
+          threadSearchKnowledgeSelectHandlerRef.current = null;
+          threadSearchEvaluationSelectHandlerRef.current = null;
           threadSearchThreadSelectHandlerRef.current = null;
           setThreadSearchOpen(true);
         }
@@ -64,8 +178,12 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function getThreadSearchMod
           setThreadSearchOpen(false);
           setThreadSearchQuery("");
           setThreadSearchModeLocked(false);
+          setThreadSearchResourceTypeFilter("");
           setThreadSearchAllActionsVisible(false);
+          resetThreadSearchSelectionHandlers();
           threadSearchPromptSelectHandlerRef.current = null;
+          threadSearchKnowledgeSelectHandlerRef.current = null;
+          threadSearchEvaluationSelectHandlerRef.current = null;
           threadSearchThreadSelectHandlerRef.current = null;
         }
 
@@ -239,11 +357,22 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function getThreadSearchMod
           handleThreadSearchSelect(normalizedThreadId);
         }
 
-        function handleThreadSearchFileSelect(fileResult) {
+        async function handleThreadSearchFileSelect(fileResult) {
           const normalizedEnvironmentId = String(fileResult?.environmentId || "").trim();
           const entry = fileResult?.entry || null;
           const normalizedPath = normalizeHistoryPath(entry?.path || "");
           if (!normalizedEnvironmentId || !normalizedPath) {
+            return;
+          }
+
+          const selectionHandler = threadSearchFileSelectHandlerRef.current;
+          if (selectionHandler) {
+            closeThreadSearch();
+            try {
+              await selectionHandler(fileResult);
+            } catch (error) {
+              window.alert(error instanceof Error ? error.message : "Failed to attach the file.");
+            }
             return;
           }
 
@@ -297,9 +426,20 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function getThreadSearchMod
           });
         }
 
-        function handleThreadSearchWorkflowSelect(workflow) {
+        async function handleThreadSearchWorkflowSelect(workflow) {
           const normalizedWorkflowId = String(workflow?.id || "").trim();
           if (!normalizedWorkflowId) {
+            return;
+          }
+
+          const selectionHandler = threadSearchWorkflowSelectHandlerRef.current;
+          if (selectionHandler) {
+            closeThreadSearch();
+            try {
+              await selectionHandler(workflow);
+            } catch (error) {
+              window.alert(error instanceof Error ? error.message : "Failed to attach the workflow.");
+            }
             return;
           }
 
@@ -308,6 +448,32 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function getThreadSearchMod
             openMetronomePage({
               workflowId: normalizedWorkflowId,
               projectId: String(workflow?.projectId || workflow?.project_id || "").trim(),
+            });
+          });
+        }
+
+        async function handleThreadSearchServerResourceSelect(resource) {
+          const resourceId = String(resource?.id || "").trim();
+          if (!resourceId) {
+            return;
+          }
+          const selectionHandler = threadSearchServerResourceSelectHandlerRef.current;
+          if (selectionHandler) {
+            closeThreadSearch();
+            try {
+              await selectionHandler(resource);
+            } catch (error) {
+              window.alert(error instanceof Error ? error.message : "Failed to attach the resource.");
+            }
+            return;
+          }
+          requestPlatformNavigation(() => {
+            closeThreadSearch();
+            const resourceType = canonicalizePlaygroundServerKind(resource?.kind);
+            openResourcesView("servers", {
+              serverKind: resourceType,
+              resourceId,
+              resourceType: resourceType === "database" ? "database" : "server",
             });
           });
         }
@@ -355,6 +521,101 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function getThreadSearchMod
 
           requestPlatformNavigation(() => {
             openToolsView("prompts", { promptId: normalizedPromptId });
+          });
+        }
+
+        async function handleThreadSearchKnowledgeSelect(library) {
+          const normalizedLibraryId = String(library?.id || "").trim();
+          if (!normalizedLibraryId) {
+            return;
+          }
+
+          const selectionHandler = threadSearchKnowledgeSelectHandlerRef.current;
+          let resolvedLibrary = library;
+          if (selectionHandler) {
+            try {
+              const response = await fetch(
+                proxyBackendBase + "/knowledge/" + encodeURIComponent(normalizedLibraryId),
+                {
+                  method: "GET",
+                  headers: authRequestHeaders,
+                  credentials: "include",
+                  cache: "no-store",
+                },
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load the Knowledge library.");
+              }
+              resolvedLibrary = data?.library || data?.data?.library || data?.data || data;
+            } catch (error) {
+              closeThreadSearch();
+              window.alert(error instanceof Error ? error.message : "Failed to load the Knowledge library.");
+              return;
+            }
+          }
+
+          closeThreadSearch();
+          if (selectionHandler) {
+            try {
+              await selectionHandler(resolvedLibrary);
+            } catch (error) {
+              window.alert(error instanceof Error ? error.message : "Failed to attach the Knowledge library.");
+            }
+            return;
+          }
+
+          requestPlatformNavigation(() => {
+            openKnowledgeLibraryPage(
+              normalizedLibraryId,
+              String(library?.name || "").trim(),
+            );
+          });
+        }
+
+        async function handleThreadSearchEvaluationSelect(evaluation) {
+          const normalizedEvaluationId = String(evaluation?.id || evaluation?.evaluationId || "").trim();
+          if (!normalizedEvaluationId) {
+            return;
+          }
+
+          const selectionHandler = threadSearchEvaluationSelectHandlerRef.current;
+          let resolvedEvaluation = evaluation;
+          if (selectionHandler) {
+            try {
+              const response = await fetch(
+                proxyBackendBase + "/evaluations/" + encodeURIComponent(normalizedEvaluationId),
+                {
+                  method: "GET",
+                  headers: authRequestHeaders,
+                  credentials: "include",
+                  cache: "no-store",
+                },
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load the evaluation.");
+              }
+              resolvedEvaluation = data?.evaluation || data?.set || data?.data?.evaluation || data?.data || data;
+            } catch (error) {
+              closeThreadSearch();
+              window.alert(error instanceof Error ? error.message : "Failed to load the evaluation.");
+              return;
+            }
+          }
+
+          closeThreadSearch();
+          if (selectionHandler) {
+            try {
+              await selectionHandler(resolvedEvaluation);
+            } catch (error) {
+              window.alert(error instanceof Error ? error.message : "Failed to attach the evaluation.");
+            }
+            return;
+          }
+
+          requestPlatformNavigation(() => {
+            openEvaluationDetailPage(normalizedEvaluationId);
           });
         }
 

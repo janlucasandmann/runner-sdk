@@ -11,6 +11,7 @@ import {
   PlatformSecondaryButton,
 } from "../../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformSelector } from "../../../../../../platform-ui/components/ui/selector/index.js";
+import { PlatformToggle } from "../../../../../../platform-ui/components/ui/toggle/index.js";
 import { INFERENCE_PROVIDER_OPTIONS } from "../inference-provider-options.js";
 
 export interface CreateInferenceEndpointInput {
@@ -105,7 +106,6 @@ export function CreateInferenceEndpointModal({
     <PlatformModal
       open={open}
       title="New Inference Endpoint"
-      description="Connect an OpenAI-compatible or self-hosted model endpoint to this organization."
       onClose={closeModal}
       closeOnBackdrop={!submitting}
       closeOnEscape={!submitting}
@@ -211,18 +211,18 @@ export function CreateInferenceEndpointModal({
         </label>
       </div>
 
-      <label className="inference-create-endpoint-modal__default">
-        <input
-          type="checkbox"
+      <div className="inference-create-endpoint-modal__default">
+        <PlatformToggle
+          aria-label="Use as default endpoint"
           checked={isDefault}
           disabled={submitting || existingEndpointCount === 0}
-          onChange={(event) => setIsDefault(event.target.checked)}
+          onCheckedChange={setIsDefault}
         />
         <span>
           <strong>Use as default endpoint</strong>
           <small>New external model selections will use this endpoint by default.</small>
         </span>
-      </label>
+      </div>
 
       {validationError || (submitted && error) ? (
         <p className="inference-create-endpoint-modal__error" role="alert">

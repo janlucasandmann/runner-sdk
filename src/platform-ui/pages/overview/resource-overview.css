@@ -20,6 +20,7 @@
 .resource-overview-page.is-tests,
 .resource-overview-page.is-teams,
 .resource-overview-page.is-metronomes,
+.resource-overview-page.is-projects,
 .resource-overview-page.is-assurance,
 .resource-overview-page.is-guardrails,
 .resource-overview-page.is-fine-tuning {
@@ -238,7 +239,9 @@
 }
 
 .resource-overview-table.is-skills.is-catalog-ui
-  .resource-overview-identity__visual.is-skill {
+  .resource-overview-identity__visual.is-skill,
+.resource-overview-table.is-projects.is-catalog-ui
+  .resource-overview-identity__visual.is-project {
   border: 0;
   background: rgba(255, 255, 255, 0.1);
 }
@@ -250,6 +253,8 @@
 }
 
 .resource-overview-table.is-skills.is-catalog-ui
+  .resource-overview-identity__visual.is-creator,
+.resource-overview-table.is-projects.is-catalog-ui
   .resource-overview-identity__visual.is-creator {
   width: 26px;
   height: 26px;

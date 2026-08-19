@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
 import { PlatformConfirmationModal } from "../../../../../platform-ui/components/composite/modal/index.js";
-import { PlatformServiceDetailFrame } from "../../../../../platform-ui/pages/details/index.js";
 import { KnowledgeApi } from "../api/index.js";
 import {
   withKnowledgeLibraryCreatorIdentity,
@@ -41,6 +40,7 @@ export interface KnowledgeWorkspacePageProps {
   workspaceTeamsLoading?: boolean;
   activeOrganizationId?: string;
   onWorkspaceTeamsRequest?: () => void;
+  onVersionsSidebarOpenChange?: (open: boolean) => void;
   onOpenLibrary: (libraryId: string, libraryName?: string) => void;
   onOpenDocument: (
     libraryId: string,
@@ -79,6 +79,7 @@ export function KnowledgeWorkspacePage({
   workspaceTeamsLoading = false,
   activeOrganizationId = "",
   onWorkspaceTeamsRequest,
+  onVersionsSidebarOpenChange,
   onOpenLibrary,
   onOpenDocument,
   onLibraryDeleted,
@@ -103,8 +104,7 @@ export function KnowledgeWorkspacePage({
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [deleteLibrary, setDeleteLibrary] = useState<KnowledgeLibrary | null>(null);
-  const [archiveDocument, setArchiveDocument] = useState<KnowledgeDocument | null>(null);
+  const [deleteLibraries, setDeleteLibraries] = useState<readonly KnowledgeLibrary[]>([]);
   const scopedLibraries = useMemo(() => filterKnowledgeLibrariesByScope(
     libraries,
     overviewScope,
@@ -137,9 +137,9 @@ export function KnowledgeWorkspacePage({
     }
   }, [api, personalizeLibrary]);
 
-  const loadLibrary = useCallback(async (libraryId: string) => {
+  const loadLibrary = useCallback(async (libraryId: string, options: { silent?: boolean } = {}) => {
     if (!libraryId) return;
-    setDetailLoading(true);
+    if (!options.silent) setDetailLoading(true);
     setError("");
     try {
       const library = personalizeLibrary(await api.getLibrary(libraryId));
@@ -154,10 +154,10 @@ export function KnowledgeWorkspacePage({
         versionNumber: library.currentVersionNumber,
       });
     } catch (nextError) {
-      setActiveLibrary(null);
+      if (!options.silent) setActiveLibrary(null);
       setError(nextError instanceof Error ? nextError.message : "Failed to load the Knowledge library.");
     } finally {
-      setDetailLoading(false);
+      if (!options.silent) setDetailLoading(false);
     }
   }, [api, personalizeLibrary, selectedDocumentId]);
 
@@ -234,45 +234,23 @@ export function KnowledgeWorkspacePage({
     }
 
     return (
-      <>
-        <PlatformServiceDetailFrame className="knowledge-detail-frame">
-          <KnowledgeLibraryDetailPage
-            library={activeLibrary}
-            api={api}
-            sectionControlsPortalId={sectionControlsPortalId}
-            titleActionsPortalId={titleActionsPortalId}
-            versionsDrawerPortalId={versionsDrawerPortalId}
-            workspaceTeams={workspaceTeams}
-            workspaceTeamsLoading={workspaceTeamsLoading}
-            activeOrganizationId={activeOrganizationId}
-            onWorkspaceTeamsRequest={onWorkspaceTeamsRequest}
-            onLibraryChange={replaceLibrary}
-            onReload={() => loadLibrary(activeLibrary.id)}
-            onOpenDocument={(document) => onOpenDocument(
-              activeLibrary.id,
-              document.id,
-              activeLibrary.name,
-              document.title,
-            )}
-            onRequestArchiveDocument={setArchiveDocument}
-            onStartThread={onStartThread}
-          />
-        </PlatformServiceDetailFrame>
-        <PlatformConfirmationModal
-          open={Boolean(archiveDocument)}
-          title="Archive document?"
-          description={archiveDocument ? `“${archiveDocument.title}” will be removed from the current draft. Published versions remain immutable.` : ""}
-          confirmLabel="Archive"
-          tone="destructive"
-          onCancel={() => setArchiveDocument(null)}
-          onConfirm={async () => {
-            if (!archiveDocument) return;
-            await api.archiveDocument(activeLibrary.id, archiveDocument.id);
-            setArchiveDocument(null);
-            await loadLibrary(activeLibrary.id);
-          }}
-        />
-      </>
+      <KnowledgeLibraryDetailPage
+        library={activeLibrary}
+        api={api}
+        controlsPortalId={controlsPortalId}
+        sectionControlsPortalId={sectionControlsPortalId}
+        titleActionsPortalId={titleActionsPortalId}
+        versionsDrawerPortalId={versionsDrawerPortalId}
+        workspaceTeams={workspaceTeams}
+        workspaceTeamsLoading={workspaceTeamsLoading}
+        activeOrganizationId={activeOrganizationId}
+        onWorkspaceTeamsRequest={onWorkspaceTeamsRequest}
+        onVersionsSidebarOpenChange={onVersionsSidebarOpenChange}
+        onLibraryChange={replaceLibrary}
+        onReload={() => loadLibrary(activeLibrary.id, { silent: true })}
+        onLibraryDeleted={onLibraryDeleted}
+        onStartThread={onStartThread}
+      />
     );
   }
 
@@ -285,22 +263,43 @@ export function KnowledgeWorkspacePage({
         controlsPortalId={controlsPortalId}
         onOpen={(library) => onOpenLibrary(library.id, library.name)}
         onCreate={() => setCreateOpen(true)}
-        onDelete={setDeleteLibrary}
+        onDelete={setDeleteLibraries}
       />
       <KnowledgeLibraryCreateModal open={createOpen} onClose={() => setCreateOpen(false)} onCreate={createLibrary} />
       <PlatformConfirmationModal
-        open={Boolean(deleteLibrary)}
-        title="Delete Knowledge library?"
-        description={deleteLibrary ? `“${deleteLibrary.name}” and all of its documents and versions will be permanently deleted.` : ""}
-        confirmLabel="Delete Library"
+        open={deleteLibraries.length > 0}
+        title={deleteLibraries.length === 1 ? "Delete Knowledge library?" : `Delete ${deleteLibraries.length} Knowledge libraries?`}
+        description={deleteLibraries.length === 1
+          ? `“${deleteLibraries[0]?.name}” and all of its documents and versions will be permanently deleted.`
+          : "The selected libraries and all of their documents and versions will be permanently deleted."}
+        confirmLabel={deleteLibraries.length === 1 ? "Delete Library" : "Delete Libraries"}
         tone="destructive"
-        onCancel={() => setDeleteLibrary(null)}
+        onCancel={() => setDeleteLibraries([])}
         onConfirm={async () => {
-          if (!deleteLibrary) return;
-          await api.deleteLibrary(deleteLibrary.id);
-          setLibraries((current) => current.filter((library) => library.id !== deleteLibrary.id));
-          onLibraryDeleted?.(deleteLibrary.id);
-          setDeleteLibrary(null);
+          if (!deleteLibraries.length) return;
+          const results = await Promise.allSettled(
+            deleteLibraries.map((library) => api.deleteLibrary(library.id)),
+          );
+          const deletedIds = new Set(
+            deleteLibraries
+              .filter((_, index) => results[index]?.status === "fulfilled")
+              .map((library) => library.id),
+          );
+          const failedLibraries = deleteLibraries.filter(
+            (_, index) => results[index]?.status === "rejected",
+          );
+          if (deletedIds.size) {
+            setLibraries((current) => current.filter((library) => !deletedIds.has(library.id)));
+            deletedIds.forEach((id) => onLibraryDeleted?.(id));
+          }
+          setDeleteLibraries(failedLibraries);
+          if (failedLibraries.length) {
+            throw new Error(
+              failedLibraries.length === 1
+                ? `Failed to delete ${failedLibraries[0]?.name || "the Knowledge library"}.`
+                : `Failed to delete ${failedLibraries.length} Knowledge libraries.`,
+            );
+          }
         }}
       />
     </>

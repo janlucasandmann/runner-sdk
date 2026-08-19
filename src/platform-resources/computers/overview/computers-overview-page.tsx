@@ -156,8 +156,8 @@ export function ComputersOverviewPage({
     const mutable = targets.filter((target) => !target.isSystem);
     if (targets.length > 1) {
       return [
-        { id: "share", label: "Share selected with Team", icon: UsersRound, disabled: mutating || !mutable.length, onSelect: () => onShare(mutable) },
-        { id: "delete", label: "Delete selected", icon: Trash2, danger: true, separatorBefore: true, disabled: mutating || !mutable.length, onSelect: () => onDelete(mutable) },
+        { id: "share", label: "Share selected with Team", icon: UsersRound, disabled: mutating || !mutable.length, onSelect: () => onShare(mutable), selectedRows: { label: "Share selected with Team", onSelect: () => onShare(mutable) } },
+        { id: "delete", label: "Delete selected", icon: Trash2, danger: true, separatorBefore: true, disabled: mutating || !mutable.length, onSelect: () => onDelete(mutable), selectedRows: { label: "Delete selected", danger: true, onSelect: () => onDelete(mutable) } },
       ];
     }
     return [

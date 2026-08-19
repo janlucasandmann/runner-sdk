@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { RunnerTurn } from "../turn-types.js";
 import {
   applyHydratedRunningThreadState,
+  getTurnBatchQueueReceipt,
   getTurnAssistantMessageText,
   getTurnLatestProgressTimestampMs,
   isActiveTurnStatus,
@@ -68,5 +69,48 @@ describe("runner hydrated turn state", () => {
         { threadStatus: "permission asked", completedAtMs: null },
       )[0],
     ).toMatchObject({ status: "permission_asked", completedAtMs: undefined });
+  });
+
+  it("keeps a durable Batch receipt queued until native execution produces progress", () => {
+    const queued = turn({
+      logs: [{
+        time: "00:00",
+        type: "info",
+        eventType: "batch_queued",
+        message: "Queued in Batches.",
+        metadata: {
+          batchJobId: "batch_1",
+          batchStatus: "queued",
+          admissionReason: "runtime_execution_capacity_exhausted",
+        },
+      }],
+    });
+    expect(getTurnBatchQueueReceipt(queued)).toEqual({
+      batchJobId: "batch_1",
+      admissionReason: "runtime_execution_capacity_exhausted",
+    });
+    expect(applyHydratedRunningThreadState([queued], {
+      threadStatus: "active",
+      completedAtMs: null,
+    })[0]).toMatchObject({ status: "queued", completedAtMs: undefined });
+
+    const started = {
+      ...queued,
+      status: "queued" as const,
+      logs: queued.logs.concat({
+        time: "00:01",
+        type: "info",
+        eventType: "command_execution",
+        message: "Starting work",
+        metadata: {
+          batchJobId: "batch_1",
+        },
+      }),
+    };
+    expect(getTurnBatchQueueReceipt(started)).toBeNull();
+    expect(applyHydratedRunningThreadState([started], {
+      threadStatus: "running",
+      completedAtMs: null,
+    })[0]).toMatchObject({ status: "running", completedAtMs: undefined });
   });
 });

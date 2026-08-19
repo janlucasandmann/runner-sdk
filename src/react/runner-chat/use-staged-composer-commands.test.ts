@@ -132,4 +132,33 @@ describe("useRunnerStagedComposerCommands", () => {
       action: "app",
     });
   });
+
+  it("stages Batch creation only when the host exposes the capability", () => {
+    const onDraftChange = vi.fn();
+    const { result } = renderHook(() =>
+      useRunnerStagedComposerCommands({
+        adCreationSettings: RUNNER_AD_CREATION_DEFAULT_SETTINGS,
+        getCurrentDraft: () => "",
+        onDraftChange,
+      }),
+    );
+
+    let handled = true;
+    act(() => {
+      handled = result.current.tryAutoStageInput("/Batch audit dependencies");
+    });
+    expect(handled).toBe(false);
+
+    act(() => {
+      handled = result.current.tryAutoStageInput("/Batch audit dependencies", {
+        batchCreation: true,
+      });
+    });
+    expect(handled).toBe(true);
+    expect(result.current.stagedBatchCreationCommand).toEqual({
+      action: "batch",
+      label: "/Batch",
+    });
+    expect(onDraftChange).toHaveBeenLastCalledWith("audit dependencies");
+  });
 });

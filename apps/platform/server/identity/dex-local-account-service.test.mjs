@@ -40,6 +40,7 @@ test("creates a Dex password record with a bcrypt hash and stable profile fields
     created: true,
     alreadyExists: false,
     subject: createDexLocalSubject("user-local-1"),
+    passwordFingerprint: "73b0438ceb221dbb25c14ee5aa91f185d5b361b3573c5c3776c70d6bda5ab06f",
   });
   assert.equal(request.password.email, "operator@example.test");
   assert.equal(request.password.username, "Local Operator");
@@ -133,5 +134,118 @@ test("does not expose a subject when Dex rejects a duplicate account", async () 
     created: false,
     alreadyExists: true,
     subject: "",
+    passwordFingerprint: "",
   });
+});
+
+test("looks up and atomically replaces a Dex password credential", async () => {
+  let storedHash = Buffer.from("$2b$12$existing-password-hash", "utf8");
+  const updates = [];
+  const service = createDexLocalAccountService({
+    enabled: true,
+    grpcAddress: "127.0.0.1:5557",
+  }, {
+    client: {
+      listPasswords(_request, _options, callback) {
+        callback(null, {
+          passwords: [{
+            email: "Operator@Example.test",
+            hash: storedHash,
+            username: "Local Operator",
+            user_id: "local-user-1",
+          }],
+        });
+      },
+      updatePassword(request, _options, callback) {
+        updates.push(request);
+        storedHash = request.new_hash;
+        callback(null, { not_found: false });
+      },
+    },
+    hashPassword: async () => "$2b$12$replacement-password-hash",
+  });
+
+  const account = await service.findAccount(" operator@example.test ");
+  assert.equal(account.email, "operator@example.test");
+  assert.equal(account.displayName, "Local Operator");
+  assert.equal(account.userId, "local-user-1");
+
+  const rejected = await service.resetPassword({
+    email: account.email,
+    password: "Replacement-Horse-42!",
+    expectedFingerprint: "incorrect",
+    expectedUserId: account.userId,
+  });
+  assert.deepEqual(rejected, { updated: false, invalidated: true });
+  assert.equal(updates.length, 0);
+
+  const updated = await service.resetPassword({
+    email: account.email,
+    password: "Replacement-Horse-42!",
+    expectedFingerprint: account.passwordFingerprint,
+    expectedUserId: account.userId,
+  });
+  assert.equal(updated.updated, true);
+  assert.equal(updated.invalidated, false);
+  assert.equal(updates.length, 1);
+  assert.equal(updates[0].email, "operator@example.test");
+  assert.equal(updates[0].new_username, "Local Operator");
+  assert.equal(
+    updates[0].new_hash.toString("utf8"),
+    "$2b$12$replacement-password-hash",
+  );
+
+  const replay = await service.resetPassword({
+    email: account.email,
+    password: "Another-Replacement-42!",
+    expectedFingerprint: account.passwordFingerprint,
+    expectedUserId: account.userId,
+  });
+  assert.deepEqual(replay, { updated: false, invalidated: true });
+  assert.equal(updates.length, 1);
+});
+
+test("supports Dex password listings that intentionally omit credential hashes", async () => {
+  const updates = [];
+  const service = createDexLocalAccountService({
+    enabled: true,
+    grpcAddress: "127.0.0.1:5557",
+  }, {
+    client: {
+      listPasswords(_request, _options, callback) {
+        callback(null, {
+          passwords: [{
+            email: "operator@example.test",
+            hash: Buffer.alloc(0),
+            username: "Local Operator",
+            user_id: "local-user-1",
+          }],
+        });
+      },
+      updatePassword(request, _options, callback) {
+        updates.push(request);
+        callback(null, { not_found: false });
+      },
+    },
+    hashPassword: async () => "$2b$12$replacement-password-hash",
+  });
+
+  const account = await service.findAccount("operator@example.test");
+  assert.deepEqual(account, {
+    email: "operator@example.test",
+    displayName: "Local Operator",
+    userId: "local-user-1",
+    passwordFingerprint: "",
+  });
+
+  assert.deepEqual(await service.resetPassword({
+    email: account.email,
+    password: "Replacement-Horse-42!",
+    expectedUserId: account.userId,
+  }), {
+    updated: true,
+    invalidated: false,
+    passwordFingerprint: "35866a17b82f51aac4aad542ceb5bc9e9c634e2837262ed433e5953d46204364",
+  });
+  assert.equal(updates.length, 1);
 });

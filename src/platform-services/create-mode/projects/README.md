@@ -16,9 +16,9 @@ Projects experience.
 - `client/domain-runtime.mjs` owns project, task, milestone/release, sprint, and
   Mission Control normalization and presentation helpers. Milestones are the
   canonical project delivery target and own their measurable success criteria;
-  legacy strategy outcomes are read only as migration fallbacks. An authoritative
-  Mission Control result replaces that legacy strategy branch after migrating its
-  useful content into milestones. Calendar-owned fragments are composed through
+  legacy strategy outcomes are read only as migration fallbacks. Project strategy
+  and durable documentation belong to the Knowledge service, never the Project
+  record. Calendar-owned fragments are composed through
   `src/platform-services/create-mode/calendar`.
 - `client/integrations/` owns the small project contracts consumed by other
   platform surfaces: task markdown, connector restore state, status items,
@@ -35,6 +35,36 @@ Projects experience.
 - `server/task-upstream.mjs` owns task API routing and cloud fallback behavior.
 - `server/task-backlog.mjs` owns task-start execution and stateful ephemeral
   backlog composer sessions.
+
+## Project Knowledge
+
+A Project owns its goal, backlog, milestones, measurable success criteria,
+rules, links, resources, and operational Mission Control state. It does not own
+a strategy document or a documentation store.
+
+Each Project is linked to a configure-mode Knowledge library through
+`metadata.knowledge.libraryId` (with compatibility projections on
+`knowledgeLibraryId` and Mission Control metadata). Mission Control prepares
+that library on first use and seeds its `Project Strategy` home document from
+the Project goal. Old project-local strategy text may be read once as migration
+input, but subsequent Project saves omit the legacy document and structured
+strategy fields.
+
+Mission Control and Project task workers receive the library through the typed
+`computer_agents_knowledge_context_v1` execution contract in `propose` mode.
+They must read current Knowledge before planning and submit reviewable updates
+whenever work establishes or changes durable strategy, architecture, decisions,
+interfaces, runbooks, research, troubleshooting guidance, or handoff material.
+Existing relevant documents are updated by exact ID or title; general documents
+are never matched merely because they share a broad kind. Tickets, chat, and
+working logs remain operational context and are not substitutes for durable
+documentation.
+
+Mission Control's structured response returns complete `knowledgeDocuments`.
+The client converts each document into a Knowledge proposal with project and
+thread provenance, and keeps only the linked library identity plus operational
+delivery state on the Project record. This preserves Knowledge versioning,
+review, permissions, and audit as the single authoritative documentation path.
 
 ## Canonical project delivery
 

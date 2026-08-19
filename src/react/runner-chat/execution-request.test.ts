@@ -82,4 +82,28 @@ describe("runner execution request", () => {
       },
     });
   });
+
+  it("sends a version-pinned Knowledge context at the top level", () => {
+    const body = buildRunnerThreadMessageRequestBody({
+      taskText: "Find the project convention",
+      visibleTaskText: "Find the project convention",
+      executionTaskText: "Find the project convention",
+      reasoningEffort: "medium",
+      knowledgeContext: {
+        schemaVersion: "computer_agents_knowledge_context_v1",
+        enabled: true,
+        libraryIds: ["library-a"],
+        bindings: [{ libraryId: "library-a", versionId: "version-4", versionNumber: 4 }],
+        mode: "read",
+      },
+    });
+
+    expect(body.knowledgeContext).toEqual({
+      schemaVersion: "computer_agents_knowledge_context_v1",
+      enabled: true,
+      libraryIds: ["library-a"],
+      bindings: [{ libraryId: "library-a", versionId: "version-4", versionNumber: 4 }],
+      mode: "read",
+    });
+  });
 });

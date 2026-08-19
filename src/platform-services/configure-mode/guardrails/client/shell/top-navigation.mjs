@@ -207,8 +207,26 @@ export const GUARDRAILS_APP_TOP_NAVIGATION_SCRIPT = `        function renderGuar
           return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems: guardrailsPathItems,
-            center: guardrailsPageMode === "detail" && activeGuardrailSet
+            center: isGuardrailsOverview
               ? React.createElement(PlatformSwitch, {
+                  className: "playground-guardrails-overview-scope-switch",
+                  value: guardrailsOverviewScope === "created"
+                    ? "created"
+                    : guardrailsOverviewScope === "shared"
+                      ? "shared"
+                      : "all",
+                  options: [
+                    { value: "all", label: "All Guardrails" },
+                    { value: "created", label: "Created by me" },
+                    { value: "shared", label: "Shared with me" },
+                  ],
+                  onValueChange: (nextScope) => setGuardrailsOverviewScope(
+                    nextScope === "created" || nextScope === "shared" ? nextScope : "all"
+                  ),
+                  ariaLabel: "Guardrail scope",
+                })
+              : guardrailsPageMode === "detail" && activeGuardrailSet
+                ? React.createElement(PlatformSwitch, {
                   className: "playground-guardrails-detail-header-switch",
                   value: ["general", "evaluation", "settings"].includes(guardrailDetailTab)
                     ? guardrailDetailTab
@@ -229,8 +247,8 @@ export const GUARDRAILS_APP_TOP_NAVIGATION_SCRIPT = `        function renderGuar
                     }
                   },
                   ariaLabel: "Guardrail section",
-                })
-              : null,
+                  })
+                : null,
             extraActions: isGuardrailsOverview
               ? React.createElement("div", {
                   id: "playground-guardrails-overview-controls",

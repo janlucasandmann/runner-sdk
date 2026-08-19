@@ -18,6 +18,10 @@ assert.match(FILES_DOMAIN_FRAGMENTS.inventory, /function buildPlaygroundEnvironm
 assert.match(FILES_DOMAIN_FRAGMENTS.transfer, /function createPlaygroundZipBlob/);
 assert.match(FILES_DOMAIN_FRAGMENTS.filename, /function buildPlaygroundProtectedFilename/);
 assert.match(FILES_PREVIEW_COMPONENTS_SCRIPT, /function PlaygroundFileIcon/);
+assert.match(FILES_PREVIEW_COMPONENTS_SCRIPT, /src: PLAYGROUND_FOLDER_ICON_URL/);
+assert.match(FILES_PREVIEW_COMPONENTS_SCRIPT, /src: PLAYGROUND_TEXT_FILE_ICON_URL/);
+assert.doesNotMatch(FILES_PREVIEW_COMPONENTS_SCRIPT, /React\.createElement\(Folder,/);
+assert.doesNotMatch(FILES_PREVIEW_COMPONENTS_SCRIPT, /const FileIcon = kind === "code"/);
 assert.match(FILES_PREVIEW_COMPONENTS_SCRIPT, /function PlaygroundCodeEditorPreview/);
 assert.match(FILES_PREVIEW_COMPONENTS_SCRIPT, /React\.createElement\(PlatformLoadingState/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function PlaygroundImageSelectionMaskOverlay/);

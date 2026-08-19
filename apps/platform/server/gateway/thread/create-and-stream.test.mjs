@@ -78,6 +78,42 @@ test("session-backed thread creation uses the topology-aware control seam", asyn
   assert.equal(JSON.parse(calls[0].init.body).title, "Portable thread");
 });
 
+test("thread creation preserves a canonical Knowledge context and pins versions", async () => {
+  const calls = [];
+  const gateway = createGateway(async (_request, controlPath, hostedPath, init) => {
+    calls.push({ controlPath, hostedPath, init });
+    return new Response(JSON.stringify({ id: "thread_knowledge" }), {
+      status: 201,
+      headers: { "content-type": "application/json" },
+    });
+  });
+  const response = responseRecorder();
+
+  await gateway.proxyCreateThread(requestWithJson({
+    title: "Knowledge-aware thread",
+    metadata: {
+      knowledgeContext: {
+        enabled: true,
+        libraryIds: ["library-a"],
+      },
+    },
+    knowledgeContext: {
+      enabled: true,
+      bindings: [{ libraryId: "library-a", versionId: "version-4", versionNumber: 4 }],
+      mode: "read",
+    },
+  }), response);
+
+  const body = JSON.parse(calls[0].init.body);
+  assert.deepEqual(body.knowledgeContext, {
+    schemaVersion: "computer_agents_knowledge_context_v1",
+    enabled: true,
+    libraryIds: ["library-a"],
+    bindings: [{ libraryId: "library-a", versionId: "version-4", versionNumber: 4 }],
+    mode: "read",
+  });
+});
+
 test("session-backed message streams use the authenticated runner seam", async () => {
   const calls = [];
   const gateway = createGateway(async (_request, controlPath, hostedPath, init) => {
@@ -104,6 +140,69 @@ test("session-backed message streams use the authenticated runner seam", async (
   assert.equal(upstreamBody.content, "Continue the task");
   assert.deepEqual(upstreamBody.messageMetadata, {
     runnerConnectorIds: ["atlassian"],
+  });
+});
+
+test("capacity-queued thread receipts remain valid SSE through the platform gateway", async () => {
+  const calls = [];
+  const gateway = createGateway(async (_request, controlPath, hostedPath, init) => {
+    calls.push({ controlPath, hostedPath, init });
+    return new Response([
+      'data: {"type":"log","log":{"eventType":"batch_queued","metadata":{"batchJobId":"batch_1","batchStatus":"queued"}}}\n\n',
+      'data: {"type":"stream.completed","queued":true,"batchJobId":"batch_1","admissionReason":"runtime_execution_capacity_exhausted"}\n\n',
+    ].join(""), {
+      status: 202,
+      headers: { "content-type": "text/event-stream" },
+    });
+  });
+  const response = responseRecorder();
+  const request = requestWithJson({ content: "Run when capacity is available" });
+  request.url = "/api/real/threads/thread_queued/messages";
+  request.headers["idempotency-key"] = "thread-turn:thread_queued:turn_1";
+
+  await gateway.proxyThreadMessages(request, response, "thread_queued");
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers["Content-Type"], "text/event-stream; charset=utf-8");
+  assert.match(response.body, /"eventType":"batch_queued"/);
+  assert.match(response.body, /"queued":true/);
+  assert.match(response.body, /"batchJobId":"batch_1"/);
+  assert.match(response.body, /runtime_execution_capacity_exhausted/);
+  assert.equal(
+    calls[0].init.headers["idempotency-key"],
+    "thread-turn:thread_queued:turn_1",
+  );
+});
+
+test("message streams forward Knowledge context even when it arrives in message metadata", async () => {
+  const calls = [];
+  const gateway = createGateway(async (_request, controlPath, hostedPath, init) => {
+    calls.push({ controlPath, hostedPath, init });
+    return new Response("data: {\"type\":\"thread.completed\"}\n\n", {
+      status: 200,
+      headers: { "content-type": "text/event-stream" },
+    });
+  });
+  const response = responseRecorder();
+  const request = requestWithJson({
+    content: "Use the selected library.",
+    messageMetadata: {
+      knowledgeContext: {
+        enabled: true,
+        bindings: [{ libraryId: "library-a", versionNumber: 2 }],
+      },
+    },
+  });
+  request.url = "/api/real/threads/thread_knowledge/messages";
+
+  await gateway.proxyThreadMessages(request, response, "thread_knowledge");
+
+  assert.deepEqual(JSON.parse(calls[0].init.body).knowledgeContext, {
+    schemaVersion: "computer_agents_knowledge_context_v1",
+    enabled: true,
+    libraryIds: ["library-a"],
+    bindings: [{ libraryId: "library-a", versionNumber: 2 }],
+    mode: "read",
   });
 });
 

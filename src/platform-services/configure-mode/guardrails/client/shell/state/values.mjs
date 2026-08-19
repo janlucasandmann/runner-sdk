@@ -2,6 +2,7 @@ export const GUARDRAILS_APP_VALUES_SCRIPT = `        const [guardrailSets, setGu
         const [selectedGuardrailSetId, setSelectedGuardrailSetId] = useState("");
         const [guardrailsBackendSyncState, setGuardrailsBackendSyncState] = useState({ status: "idle", error: "" });
         const [guardrailsPageMode, setGuardrailsPageMode] = useState("overview");
+        const [guardrailsOverviewScope, setGuardrailsOverviewScope] = useState("all");
         const [guardrailDetailTab, setGuardrailDetailTab] = useState("general");
         const [guardrailActivePromptId, setGuardrailActivePromptId] = useState("");
         const [guardrailDetailSidebarCollapsed, setGuardrailDetailSidebarCollapsed] = useState(false);

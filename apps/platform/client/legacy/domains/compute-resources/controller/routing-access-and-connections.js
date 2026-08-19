@@ -224,7 +224,7 @@
             setSearchPopupQuery("");
             setServerActionsPopoverOpen(false);
             setServerResourceActionMenuState(null);
-            setServerDetailTab(selectedServerKind === "function" ? "code" : "usage");
+            setServerDetailTab(["function", "web_app"].includes(selectedServerKind) ? "code" : "usage");
             setServerUsageActivityTab("logs");
             setSourceServerSettingsTableTab("access");
             setAuthDetailTab("users");

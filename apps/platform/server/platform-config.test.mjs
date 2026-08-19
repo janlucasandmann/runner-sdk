@@ -147,6 +147,36 @@ test("enables local account registration only through a loopback Dex API", () =>
   );
 });
 
+test("configures password reset email only for local Dex accounts", () => {
+  const config = createPlatformConfig(validOidcEnvironment({
+    OIDC_LOCAL_ACCOUNTS_ENABLED: "true",
+    OIDC_LOCAL_ACCOUNTS_GRPC_ADDRESS: "127.0.0.1:5557",
+    PASSWORD_RESET_EMAIL_PROVIDER: "sendgrid",
+    PASSWORD_RESET_SENDGRID_API_KEY: "sendgrid-secret-with-at-least-32-bytes",
+    PASSWORD_RESET_FROM_ADDRESS: "accounts@example.test",
+    PASSWORD_RESET_FROM_NAME: "Example Appliance",
+    PASSWORD_RESET_TOKEN_TTL_SECONDS: "1200",
+    PLATFORM_DATA_ROOT: "/var/lib/computer-agents/platform",
+  }));
+  assert.deepEqual(config.passwordReset, {
+    enabled: true,
+    provider: "sendgrid",
+    apiKey: "sendgrid-secret-with-at-least-32-bytes",
+    fromAddress: "accounts@example.test",
+    fromName: "Example Appliance",
+    tokenTtlSeconds: 1200,
+    statePath: "/var/lib/computer-agents/platform/identity/password-reset-tokens.json",
+  });
+
+  assert.throws(
+    () => createPlatformConfig(validOidcEnvironment({
+      PASSWORD_RESET_EMAIL_PROVIDER: "sendgrid",
+      PASSWORD_RESET_SENDGRID_API_KEY: "sendgrid-secret-with-at-least-32-bytes",
+    })),
+    /requires OIDC local accounts/,
+  );
+});
+
 test("enables execution dispatch only when explicitly requested", () => {
   const config = createPlatformConfig(validOidcEnvironment({
     ENABLE_EXECUTION_DISPATCHER: "true",

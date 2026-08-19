@@ -21,6 +21,9 @@ import {
 import { MetronomesOverviewGuide } from "./metronomes-overview-guide.js";
 
 type MetronomeOverviewAction = (row: MetronomeOverviewRow) => void | Promise<void>;
+type MetronomeOverviewBulkAction = (
+  rows: readonly MetronomeOverviewRow[],
+) => void | Promise<void>;
 
 export interface MetronomesOverviewPageProps {
   rows: readonly MetronomeOverviewRow[];
@@ -33,7 +36,7 @@ export interface MetronomesOverviewPageProps {
   onEdit: MetronomeOverviewAction;
   onDuplicate: MetronomeOverviewAction;
   onShare: MetronomeOverviewAction;
-  onDelete: MetronomeOverviewAction;
+  onDelete: MetronomeOverviewBulkAction;
   onRemoveShared: MetronomeOverviewAction;
   onRestoreShared: MetronomeOverviewAction;
   hasMore?: boolean;
@@ -177,7 +180,28 @@ export function MetronomesOverviewPage({
 
   const getRowActions = (
     row: MetronomeOverviewRow,
+    state: { targetRows: readonly MetronomeOverviewRow[] },
   ): readonly PlatformDataTableAction<MetronomeOverviewRow>[] => {
+    if (state.targetRows.length > 1) {
+      const deletableRows = state.targetRows.filter(
+        (target) => !target.isBuiltIn && !target.isTeamShared,
+      );
+      if (!deletableRows.length) return [];
+      return [{
+        id: "delete",
+        label: "Delete selected",
+        icon: Trash2,
+        danger: true,
+        disabled: mutating,
+        onSelect: () => onDelete(deletableRows),
+        selectedRows: {
+          label: "Delete selected",
+          danger: true,
+          disabled: mutating,
+          onSelect: () => onDelete(deletableRows),
+        },
+      }];
+    }
     if (row.isBuiltIn) {
       return [
         {
@@ -267,7 +291,7 @@ export function MetronomesOverviewPage({
         danger: true,
         separatorBefore: true,
         disabled: mutating,
-        onSelect: () => onDelete(row),
+        onSelect: () => onDelete([row]),
       },
     ];
   };

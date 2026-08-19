@@ -114,6 +114,10 @@ export interface StagedParseCreationCommand extends BaseStagedBacklogCommand {
   action: "parse";
 }
 
+export interface StagedBatchCreationCommand extends BaseStagedBacklogCommand {
+  action: "batch";
+}
+
 export interface StagedAdCreationCommand extends BaseStagedBacklogCommand {
   action: "ad";
   style?: RunnerAdCreationStyleId;
@@ -492,6 +496,10 @@ export function buildRunnerParseCreationLabel(): string {
   return "/parse";
 }
 
+export function buildRunnerBatchCreationLabel(): string {
+  return "/Batch";
+}
+
 export function buildRunnerParseCreationHiddenPrompt(): string {
   return [
     "The user selected /parse. Treat the visible user request as a request to parse documents with the Document Parsing skill.",
@@ -614,6 +622,13 @@ export function parseAutoStageParseCreationCommand(
   input: string
 ): { prompt: string } | null {
   const match = input.match(/^\/parse(?:\s+([\s\S]*))?$/i);
+  return match ? { prompt: match[1] || "" } : null;
+}
+
+export function parseAutoStageBatchCreationCommand(
+  input: string
+): { prompt: string } | null {
+  const match = input.match(/^\/batch(?:\s+([\s\S]*))?$/i);
   return match ? { prompt: match[1] || "" } : null;
 }
 

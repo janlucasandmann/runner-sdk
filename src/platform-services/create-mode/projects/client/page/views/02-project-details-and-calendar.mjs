@@ -281,7 +281,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
           const planningRows = [
             {
               title: "Mission Control",
-              subtitle: "Turn a short goal into strategy, milestones, tickets, and the next steps agents should follow.",
+              subtitle: "Turn a short goal into durable Project Knowledge, milestones, tickets, and clear next steps.",
               Icon: Rocket,
             },
             {
@@ -346,7 +346,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
                   React.createElement("span", { className: "playground-projects-working-agent-title-emphasis" }, "A working agent.")
                 ),
                 React.createElement("p", { className: "playground-projects-working-agent-copy" },
-                  "A project gives every agent the surrounding plan: strategy, tickets, milestones, files, comments, reviewers, resources, and run history. Agents can return to the same workspace and continue the work instead of restarting from a prompt."
+                  "A project gives every agent the surrounding context: Knowledge, tickets, milestones, files, comments, reviewers, resources, and run history. Agents can return to the same workspace and continue the work instead of restarting from a prompt."
                 ),
                 renderProjectWorkingAgentLogoCarousel()
               )
@@ -479,6 +479,168 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
           );
         }
 
+        function buildProjectOverviewTableRow(project, index) {
+          const source = project && typeof project === "object" && !Array.isArray(project)
+            ? project
+            : {};
+          const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+            ? source.metadata
+            : {};
+          const metadataOwner = metadata.owner && typeof metadata.owner === "object" && !Array.isArray(metadata.owner)
+            ? metadata.owner
+            : {};
+          const sourceOwner = source.owner && typeof source.owner === "object" && !Array.isArray(source.owner)
+            ? source.owner
+            : {};
+          const sourceCreator = source.createdBy && typeof source.createdBy === "object" && !Array.isArray(source.createdBy)
+            ? source.createdBy
+            : source.creator && typeof source.creator === "object" && !Array.isArray(source.creator)
+              ? source.creator
+              : {};
+          const metadataCreator = metadata.createdBy && typeof metadata.createdBy === "object" && !Array.isArray(metadata.createdBy)
+            ? metadata.createdBy
+            : metadata.creator && typeof metadata.creator === "object" && !Array.isArray(metadata.creator)
+              ? metadata.creator
+              : {};
+          const firstIdentityValue = (values) => values
+            .map((value) => String(value || "").trim())
+            .find(Boolean) || "";
+          const status = normalizePlaygroundProjectStatus(source.status || metadata.status || source.state || "backlog");
+          const statusIndex = PLAYGROUND_PROJECT_STATUS_OPTIONS.findIndex((option) => option.id === status);
+          const statusOption = PLAYGROUND_PROJECT_STATUS_OPTIONS[statusIndex] || PLAYGROUND_PROJECT_STATUS_OPTIONS[0];
+          const blueprint = getProjectListBlueprint(source);
+          const projectIconConfig = getPlaygroundProjectIconConfig(
+            source.icon || metadata.icon || blueprint?.iconId
+          );
+          const ProjectIcon = projectIconConfig.icon;
+          const ownerUserId = firstIdentityValue([
+            source.ownerUserId,
+            source.userId,
+            sourceOwner.userId,
+            sourceOwner.id,
+            metadata.ownerUserId,
+            metadataOwner.userId,
+            metadataOwner.id,
+            source.createdByUserId,
+            source.creatorUserId,
+            sourceCreator.userId,
+            sourceCreator.id,
+            metadata.createdByUserId,
+            metadata.creatorUserId,
+            metadataCreator.userId,
+            metadataCreator.id,
+          ]);
+          const ownerEmail = firstIdentityValue([
+            source.ownerEmail,
+            sourceOwner.email,
+            metadata.ownerEmail,
+            metadataOwner.email,
+            source.createdByEmail,
+            source.creatorEmail,
+            sourceCreator.email,
+            metadata.createdByEmail,
+            metadata.creatorEmail,
+            metadataCreator.email,
+          ]);
+          const rawOwnerName = firstIdentityValue([
+            source.ownerName,
+            sourceOwner.name,
+            sourceOwner.displayName,
+            metadata.ownerName,
+            metadataOwner.name,
+            metadataOwner.displayName,
+            source.createdByName,
+            source.creatorName,
+            sourceCreator.name,
+            sourceCreator.displayName,
+            metadata.createdByName,
+            metadata.creatorName,
+            metadataCreator.name,
+            metadataCreator.displayName,
+            source.leadName,
+            metadata.leadName,
+          ]);
+          const currentIdentityTokens = [currentUserId, currentUserEmail, currentUserName]
+            .map((value) => String(value || "").trim().toLowerCase())
+            .filter(Boolean);
+          const normalizedOwnerName = ["unknown", "unknown user", "you", "me", "current user"]
+            .includes(rawOwnerName.toLowerCase())
+              ? ""
+              : rawOwnerName;
+          const ownerIdentityTokens = [ownerUserId, ownerEmail, normalizedOwnerName]
+            .map((value) => String(value || "").trim().toLowerCase())
+            .filter(Boolean);
+          const isCurrentOwner = ownerIdentityTokens.length === 0
+            || ownerIdentityTokens.some((value) => currentIdentityTokens.includes(value));
+          const ownerName = isCurrentOwner
+            ? formatAccountDisplayName(currentUserName, currentUserEmail, "You")
+            : (normalizedOwnerName
+                ? formatAccountDisplayName(normalizedOwnerName, ownerEmail, normalizedOwnerName)
+                : getProjectCardCreatorName(source) || "User");
+          const ownerAvatarUrl = firstIdentityValue([
+            source.ownerAvatarUrl,
+            source.owner_avatar_url,
+            sourceOwner.avatarUrl,
+            sourceOwner.avatar_url,
+            sourceOwner.photoUrl,
+            sourceOwner.photoURL,
+            metadata.ownerAvatarUrl,
+            metadata.owner_avatar_url,
+            metadataOwner.avatarUrl,
+            metadataOwner.avatar_url,
+            metadataOwner.photoUrl,
+            metadataOwner.photoURL,
+            source.createdByAvatarUrl,
+            source.creatorAvatarUrl,
+            sourceCreator.avatarUrl,
+            sourceCreator.avatar_url,
+            sourceCreator.photoUrl,
+            sourceCreator.photoURL,
+            metadata.createdByAvatarUrl,
+            metadata.creatorAvatarUrl,
+            metadataCreator.avatarUrl,
+            metadataCreator.avatar_url,
+            metadataCreator.photoUrl,
+            metadataCreator.photoURL,
+            source.leadAvatarUrl,
+            metadata.leadAvatarUrl,
+            isCurrentOwner ? currentUserAvatarUrl : "",
+          ]);
+          const updatedValue = String(source.updatedAt || source.createdAt || "").trim();
+          const updatedTimestamp = Date.parse(updatedValue);
+          const updatedLabel = updatedValue
+            ? (formatRelativeThreadTime(updatedValue) || formatPlaygroundFileDate(updatedValue) || updatedValue)
+            : "Never";
+          const updatedTitle = Number.isFinite(updatedTimestamp)
+            ? new Date(updatedTimestamp).toLocaleString()
+            : updatedValue;
+          const name = String(source.name || "Untitled Project").trim() || "Untitled Project";
+          const projectTypeLabel = String(blueprint?.title || blueprint?.shortTitle || "Project").trim() || "Project";
+          return {
+            id: String(source.id || "project-" + index),
+            name,
+            description: String(source.description || "").trim(),
+            projectTypeLabel,
+            icon: React.createElement(ProjectIcon, { width: 16, height: 16, strokeWidth: 1.8 }),
+            status,
+            statusLabel: statusOption?.label || "Backlog",
+            statusRank: statusIndex >= 0 ? statusIndex : 0,
+            ownerName,
+            ownerAvatarUrl: ownerAvatarUrl || undefined,
+            updatedAt: Number.isFinite(updatedTimestamp) ? updatedTimestamp : 0,
+            updatedLabel,
+            updatedTitle: updatedTitle || undefined,
+            searchText: [
+              name,
+              source.description,
+              projectTypeLabel,
+              statusOption?.label,
+              ownerName,
+            ].filter(Boolean).join(" "),
+            source,
+          };
+        }
+
 
         function renderProjectsListEmptyState() {
           return React.createElement("div", { className: "playground-projects-list-empty" },
@@ -590,34 +752,46 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
           }
 
           const hasProjects = projects.length > 0;
+          const overviewRows = filteredProjects.map((project, index) =>
+            buildProjectOverviewTableRow(project, index)
+          );
 
-          return React.createElement("div", { className: "playground-tasks-view-section playground-projects-overview-surface" + (hasProjects ? " is-card-grid" : " is-empty-hero") },
+          if (hasProjects) {
+            return React.createElement(ProjectsOverviewPage, {
+              rows: overviewRows,
+              loading: projectLoadState.status === "loading",
+              error: projectLoadState.status === "error"
+                ? (projectLoadState.error || "The projects API could not be reached.")
+                : null,
+              onOpen: (row) => handleSelectProject(row.id),
+              onEdit: (row) => {
+                const project = row?.source || projects.find((candidate) => candidate.id === row?.id);
+                if (project) openProjectComposerForEdit(project);
+              },
+              onDelete: (rows) => void handleDeleteProjects(
+                (Array.isArray(rows) ? rows : []).map((row) => row?.id)
+              ),
+            });
+          }
+
+          return React.createElement("div", { className: "playground-tasks-view-section playground-projects-overview-surface is-empty-hero" },
             React.createElement("div", { className: "playground-projects-overview-inner" },
-              hasProjects
-                ? React.createElement(React.Fragment, null,
-                    renderProjectsHomeHeader(),
-                    filteredProjects.length > 0
-                      ? React.createElement("div", { className: "playground-tasks-project-grid" },
-                          filteredProjects.map((project, index) => renderProjectCard(project, index))
-                        )
-                      : renderNoMatchingProjectsState()
+              React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-projects-overview-title-block" },
+                  React.createElement("div", { className: "playground-projects-overview-title-copy" },
+                    React.createElement("h1", { className: "playground-project-overview-summary-title" }, "Organize your work in projects")
+                  ),
+                  React.createElement(PlatformSecondaryButton, {
+                    type: "button",
+                    className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-projects-overview-add-button",
+                    onClick: () => openProjectComposer(),
+                  },
+                    React.createElement(Plus, { strokeWidth: 1.8, "aria-hidden": "true" }),
+                    React.createElement("span", null, "Add Project")
                   )
-                : React.createElement(React.Fragment, null,
-                    React.createElement("div", { className: "playground-projects-overview-title-block" },
-                      React.createElement("div", { className: "playground-projects-overview-title-copy" },
-                        React.createElement("h1", { className: "playground-project-overview-summary-title" }, "Organize your work in projects")
-                      ),
-                      React.createElement(PlatformSecondaryButton, {
-                        type: "button",
-                        className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-projects-overview-add-button",
-                        onClick: () => openProjectComposer(),
-                      },
-                        React.createElement(Plus, { strokeWidth: 1.8, "aria-hidden": "true" }),
-                        React.createElement("span", null, "Add Project")
-                      )
-                    ),
-                    renderProjectWorkingAgentEmptyState()
-                  )
+                ),
+                renderProjectWorkingAgentEmptyState()
+              )
             )
           );
         }
@@ -824,14 +998,17 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
           const draggingBacklogTask = backlogDraggingTaskId ? tasksById[backlogDraggingTaskId] || null : null;
 
           function renderBacklogTaskTree(taskItems, parentTaskId = null, depth = 0) {
-            if (!Array.isArray(taskItems) || taskItems.length === 0) {
+            const renderedTaskItems = Array.isArray(taskItems)
+              ? taskItems.filter((task) => backlogRenderedTaskIds.has(task?.id))
+              : [];
+            if (renderedTaskItems.length === 0) {
               return null;
             }
 
             if (!parentTaskId && depth === 0 && groupRootTasksByRelease) {
               const releaseSections = [];
               const sectionIndexByKey = new Map();
-              taskItems.forEach((task) => {
+              renderedTaskItems.forEach((task) => {
                 const normalizedReleaseId = typeof task?.releaseId === "string" ? task.releaseId.trim() : "";
                 const sectionKey = normalizedReleaseId || "__no_release__";
                 const releaseRecord = normalizedReleaseId ? (releasesById[normalizedReleaseId] || null) : null;
@@ -946,9 +1123,9 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
             }
 
             return React.createElement(React.Fragment, null,
-              taskItems.map((task, siblingIndex) =>
+              renderedTaskItems.map((task, siblingIndex) =>
                 React.createElement(React.Fragment, { key: task.id },
-                  renderBacklogTaskRow(task, depth, parentTaskId, taskItems, siblingIndex)
+                  renderBacklogTaskRow(task, depth, parentTaskId, renderedTaskItems, siblingIndex)
                 )
               )
             );
@@ -958,7 +1135,9 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
             const isHumanTask = isHumanAssignedTask(task);
             const isCanceledTask = task.status === "canceled";
             const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "001";
-            const visibleChildTasks = (childrenByParentId[task.id] || []).filter((childTask) => visibleTaskIds.has(childTask.id));
+            const visibleChildTasks = (childrenByParentId[task.id] || []).filter((childTask) =>
+              visibleTaskIds.has(childTask.id) && backlogRenderedTaskIds.has(childTask.id)
+            );
             const isSubtask = isPlaygroundSubtaskRecord(task);
             const isTitleEditable = selectedTaskId === task.id || backlogEditingTaskId === task.id;
             const TaskTypeIcon = isSubtask ? Check : Bookmark;
@@ -1271,7 +1450,16 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
                       React.createElement("div", { className: "playground-tasks-empty-copy" }, emptyCopy),
                       emptyAction
                     ),
-                listFooter
+                listFooter,
+                backlogHasMoreTasks
+                  ? React.createElement("div", {
+                      ref: backlogLoadMoreRef,
+                      className: "playground-tasks-progressive-list-loading",
+                    }, React.createElement(PlatformLoadingState, {
+                      as: "span",
+                      message: "Loading more tickets...",
+                    }))
+                  : null
               ),
               showComposer ? composer : null
             ),
@@ -1322,9 +1510,9 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
                         ? "Completed work for this milestone will appear here."
                         : "Completed work from this project will appear here.")
                     : isReleaseBacklogView
-                      ? "Run Mission Control to generate the first strategy and create the initial structured backlog for this project."
+                      ? "Run Mission Control to establish the project Knowledge library and create the initial structured backlog."
                       : shouldShowMissionControlEmptyAction
-                        ? "Run Mission Control to generate the first strategy and create the initial structured backlog for this project."
+                        ? "Run Mission Control to establish the project Knowledge library and create the initial structured backlog."
                         : "Add a new task below to start building this project's backlog.";
           const backlogComposerBackendUrl = window.location.origin
             + "/api/task-backlog/" + encodeURIComponent(selectedProjectId)
@@ -1364,7 +1552,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
                     size: "medium",
                     type: "button",
                     className: "playground-tasks-empty-primary-button playground-tasks-empty-mission-control-button",
-                    onClick: () => openMissionControlComposer({ keepStrategyOpen: true }),
+                    onClick: () => openMissionControlComposer(),
                   },
                     React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 2 }),
                     React.createElement("span", null, "Run Mission Control")

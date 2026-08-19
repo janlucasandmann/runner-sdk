@@ -35,6 +35,10 @@ import {
   getRunnerConnectorIdsFromPayload,
   RUNNER_CONNECTOR_IDS_METADATA_KEY,
 } from "./composer-connectors.js";
+import {
+  normalizeRunnerKnowledgeContext,
+  type RunnerKnowledgeContext,
+} from "./knowledge-context.js";
 
 export interface RunnerExecutionCreationCommands {
   backlogCommand?: StagedBacklogCommand | null;
@@ -217,6 +221,7 @@ export interface RunnerThreadMessageRequestOptions
   quotedSelection?: RunnerQuotedSelection | null;
   enabledSkills?: Record<string, unknown> | null;
   connectors?: Record<string, unknown> | null;
+  knowledgeContext?: RunnerKnowledgeContext | null;
 }
 
 export function buildRunnerThreadMessageRequestBody(
@@ -228,6 +233,7 @@ export function buildRunnerThreadMessageRequestBody(
     options.backlogCommand?.action === "subtask"
       ? options.backlogCommand
       : null;
+  const knowledgeContext = normalizeRunnerKnowledgeContext(options.knowledgeContext);
 
   return {
     content,
@@ -254,6 +260,7 @@ export function buildRunnerThreadMessageRequestBody(
       ? { enabledSkills: options.enabledSkills }
       : {}),
     ...(options.connectors ? { connectors: options.connectors } : {}),
+    ...(knowledgeContext ? { knowledgeContext } : {}),
     ...(subtaskBacklogCommand
       ? {
           backlogTaskCommand: {

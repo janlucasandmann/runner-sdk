@@ -67,12 +67,30 @@ export const TESTS_APP_TOP_NAVIGATION_SCRIPT = `        function renderTestsPage
           return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems,
-            center: testsPageMode === "detail" || testsPageMode === "case"
-              ? React.createElement("div", {
-                  id: "playground-tests-section-controls",
-                  className: "playground-tests-section-controls",
+            center: isOverview
+              ? React.createElement(PlatformSwitch, {
+                  className: "playground-tests-overview-scope-switch",
+                  value: testsOverviewScope === "created"
+                    ? "created"
+                    : testsOverviewScope === "shared"
+                      ? "shared"
+                      : "all",
+                  options: [
+                    { value: "all", label: "All Tests" },
+                    { value: "created", label: "Created by me" },
+                    { value: "shared", label: "Shared with me" },
+                  ],
+                  onValueChange: (nextScope) => setTestsOverviewScope(
+                    nextScope === "created" || nextScope === "shared" ? nextScope : "all"
+                  ),
+                  ariaLabel: "Test scope",
                 })
-              : null,
+              : testsPageMode === "detail" || testsPageMode === "case"
+                ? React.createElement("div", {
+                    id: "playground-tests-section-controls",
+                    className: "playground-tests-section-controls",
+                  })
+                : null,
             includeSearchDivider: true,
             extraActions: React.createElement("div", {
               id: isOverview

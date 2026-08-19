@@ -638,7 +638,11 @@
             error: "",
             rollingBackDeploymentId: "",
           });
-          const [serverDetailTab, setServerDetailTab] = useState("usage");
+          const [serverDetailTab, setServerDetailTab] = useState(() =>
+            ["function", "web_app"].includes(canonicalizePlaygroundServerKind(embeddedServerKind))
+              ? "code"
+              : "usage"
+          );
           const [serverUsageActivityTab, setServerUsageActivityTab] = useState("logs");
           const [sourceServerSettingsTableTab, setSourceServerSettingsTableTab] = useState("access");
           const [serverInvokeSnippetTab, setServerInvokeSnippetTab] = useState("curl");
@@ -1719,17 +1723,13 @@
                       : {}),
                     ...(isSourceDeployableResourcesDetail
                       ? {
-                          activeSection: ["usage", "code", "settings"].includes(serverDetailTab)
+                          activeSection: ["code", "usage", "settings"].includes(serverDetailTab)
                             ? serverDetailTab
-                            : canonicalizePlaygroundServerKind(draftServer?.kind || normalizedEmbeddedServerKind) === "function"
-                              ? "code"
-                              : "usage",
+                            : "code",
                           onSectionChange: (nextSection) => {
-                            const normalizedNextSection = ["usage", "code", "settings"].includes(nextSection)
+                            const normalizedNextSection = ["code", "usage", "settings"].includes(nextSection)
                               ? nextSection
-                              : canonicalizePlaygroundServerKind(draftServer?.kind || normalizedEmbeddedServerKind) === "function"
-                                ? "code"
-                                : "usage";
+                              : "code";
                             handleSourceServerDetailTabChange(normalizedNextSection);
                           },
                         }

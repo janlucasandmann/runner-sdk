@@ -44,6 +44,8 @@ export function PlatformVersionPublishControl({
   className = "",
   popupClassName = "",
 }: PlatformVersionPublishControlProps) {
+  const controlDisabled = disabled || menuDisabled;
+
   return (
     <PlatformButtonSelector
       mode="split-action"
@@ -57,8 +59,8 @@ export function PlatformVersionPublishControl({
       leading={leading}
       actionAriaLabel={publishAriaLabel}
       popupAriaLabel={menuAriaLabel}
-      actionDisabled={disabled}
-      popupDisabled={menuDisabled}
+      actionDisabled={controlDisabled}
+      popupDisabled={controlDisabled}
       active={active}
       popupAlignment="right"
       popupRole="menu"
@@ -70,7 +72,7 @@ export function PlatformVersionPublishControl({
     >
       {actions.map((action) => {
         const ActionIcon = action.icon || Circle;
-        const actionDisabled = menuDisabled || Boolean(action.disabled);
+        const actionDisabled = controlDisabled || Boolean(action.disabled);
         return (
           <button
             key={action.id}

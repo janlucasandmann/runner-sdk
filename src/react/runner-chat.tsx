@@ -22,6 +22,7 @@ import {
   Globe as LucideGlobe,
   Images as LucideImages,
   Layers as LucideLayers,
+  LibraryBig as LucideLibraryBig,
   ListTodo as LucideListTodo,
   Mail as LucideMail,
   MessageSquare as LucideMessageSquare,
@@ -41,6 +42,7 @@ import {
   TextQuote as LucideTextQuote,
   ThumbsDown as LucideThumbsDown,
   ThumbsUp as LucideThumbsUp,
+  Truck as LucideTruck,
   Upload as LucideUpload,
   UsersRound as LucideUsersRound,
   Video as LucideVideo,
@@ -57,6 +59,7 @@ import {
   PlatformPrimaryButton,
   PlatformSecondaryButton,
 } from "../platform-ui/components/ui/button/index.js";
+import { PlatformStatusIndicator } from "../platform-ui/components/composite/status-indicator/index.js";
 import { PlatformIconButton } from "../platform-ui/components/ui/icon-button/index.js";
 import {
   PlatformResourceActionMenuItem,
@@ -246,7 +249,6 @@ import {
   isComputeTokenBudgetErrorLog,
   isComputeTokenBudgetErrorMessage,
   isRunnerModelProviderUnavailableMessage,
-  sanitizeRunnerBudgetMessage,
   sanitizeRunnerMessage,
   type RunnerConversationMessage,
 } from "./runner-chat/conversation-messages.js";
@@ -328,6 +330,7 @@ import {
 } from "./runner-chat/hydration/api.js";
 import {
   applyHydratedRunningThreadState,
+  getTurnBatchQueueReceipt,
   getTurnAssistantMessageText,
   isActiveTurnStatus,
   isRunningTurnStatus,
@@ -451,14 +454,21 @@ import {
 } from "./runner-chat/composer-connectors.js";
 import { RunnerUserMessageContent } from "./runner-chat/message-connectors.js";
 import {
+  buildRunnerKnowledgeContextFromAttachments,
+  mergeRunnerKnowledgeContexts,
+  type RunnerKnowledgeContext,
+} from "./runner-chat/knowledge-context.js";
+import {
   buildRunnerTurnMessageMetadataIndex,
   buildRunnerTurnWorkingLabelIndex,
 } from "./runner-chat/canonical-message-metadata.js";
 import type {
   RunnerChatConnectorOption,
+  RunnerChatBatchJobSubmitPayload,
   RunnerChatDriveConfig,
   RunnerChatFollowUpAction,
   RunnerChatGithubConfig,
+  RunnerChatKnowledgeAttachment,
   RunnerChatNotionConfig,
   RunnerChatPromptAttachment,
   RunnerChatThreadAttachment,
@@ -479,7 +489,10 @@ export type {
   RunnerChatGithubConfig,
   RunnerChatInputMode,
   RunnerChatNotionConfig,
+  RunnerChatKnowledgeAttachment,
   RunnerChatProjectTaskSubmitPayload,
+  RunnerChatComposerSubmitPayload,
+  RunnerChatBatchJobSubmitPayload,
   RunnerChatProjectsConfig,
   RunnerChatProps,
   RunnerChatPromptAttachment,
@@ -492,6 +505,11 @@ export type {
 export type {
   RunnerFileBrowserSource,
 } from "./runner-chat/file-browser-source.js";
+export type {
+  RunnerKnowledgeContext,
+  RunnerKnowledgeContextBinding,
+  RunnerKnowledgeContextMode,
+} from "./runner-chat/knowledge-context.js";
 import { useRunnerExternalRunRequest } from "./runner-chat/execution/external-run-request.js";
 import { useRunnerWorkLogPagination } from "./runner-chat/use-work-log-pagination.js";
 import {
@@ -715,7 +733,7 @@ function buildRunnerFileBrowserAccountOptions(
   }];
 }
 
-const RUNNER_SLASH_CORE_ACTION_COUNT = 7;
+const RUNNER_SLASH_CORE_ACTION_COUNT = 8;
 
 export function RunnerChat({
   backendUrl,
@@ -731,6 +749,7 @@ export function RunnerChat({
   threadId,
   title,
   threadMetadata = null,
+  knowledgeContext = null,
   threadViewMode = "auto",
   placeholder = "What would you like me to do?",
   privateMode = false,
@@ -749,12 +768,14 @@ export function RunnerChat({
   inputMode = "minimal",
   agents = [],
   hideAgentSelector = false,
+  lockAgentSelector = false,
   isAgentSelectionBlocked,
   onBlockedAgentSelect,
   reasoningEffort: controlledReasoningEffort,
   onReasoningEffortChange,
   environments = [],
   hideEnvironmentSelector = false,
+  lockEnvironmentSelector = false,
   skills = [],
   enabledSkillIds: controlledEnabledSkillIds,
   skillDefaults,
@@ -789,6 +810,11 @@ export function RunnerChat({
   composerOrganizationId = null,
   onComposerOrganizationChange,
   onComposerProjectTaskSubmit,
+  onComposerSubmit,
+  onBatchJobCreate,
+  onComposerDraftChange,
+  composerSubmitRequest = null,
+  portalComposerSuggestions = false,
   activeTaskPreviewId = null,
   onTaskPreviewClick,
   onOpenTaskList,
@@ -830,6 +856,7 @@ export function RunnerChat({
   onSkillCreationCommandChange,
   onOpenPluginsOverview,
   onOpenPromptSearch,
+  onOpenKnowledgeSearch,
   onOpenThreadSearch,
   onOpenPlansBudget,
   onBacklogMissionControlSubmit,
@@ -861,6 +888,8 @@ export function RunnerChat({
   const [selectedComputerUseDetail, setSelectedComputerUseDetail] = useState<RunnerSelectedComputerUseDetail | null>(null);
   const [isThreadHistoryLoading, setIsThreadHistoryLoading] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
+  const [batchSavedReceiptId, setBatchSavedReceiptId] = useState(0);
+  const [isSavingBatchJob, setIsSavingBatchJob] = useState(false);
   const [isPreparingRun, setIsPreparingRun] = useState(false);
   const [turns, setTurns] = useState<RunnerTurn[]>([]);
   const [hydratedThreadStatus, setHydratedThreadStatus] = useState<string | null>(null);
@@ -1027,6 +1056,7 @@ export function RunnerChat({
   const logsRef = useRef<HTMLDivElement | null>(null);
   const contentWidthRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const composerBoxRef = useRef<HTMLDivElement | null>(null);
   const selectedConnectorsInlineRef = useRef<HTMLDivElement | null>(null);
   const editingTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const popupAreaRef = useRef<HTMLDivElement | null>(null);
@@ -1055,10 +1085,20 @@ export function RunnerChat({
   const quotedSelectionPopupRef = useRef<HTMLDivElement | null>(null);
   const handledExternalRunRequestTokenRef = useRef<string | number | null>(null);
   const handledExternalPromptAttachmentRequestTokenRef = useRef<string | number | null>(null);
+  const handledComposerSubmitRequestTokenRef = useRef<string | number | null>(null);
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
   const normalizedBackendUrl = useMemo(() => sanitizeBackendUrl(backendUrl), [backendUrl]);
+  const normalizedThreadKnowledgeContext = useMemo(
+    () => mergeRunnerKnowledgeContexts(
+      knowledgeContext,
+      threadMetadata && typeof threadMetadata === "object"
+        ? (threadMetadata as Record<string, unknown>).knowledgeContext
+        : null,
+    ),
+    [knowledgeContext, threadMetadata],
+  );
   const {
     attachment: previewedDocumentAttachment,
     imageSelectionState: previewImageSelectionState,
@@ -1125,6 +1165,7 @@ export function RunnerChat({
     stagedAdCreationCommand,
     stagedBacklogSubtaskCommand,
     stagedBacklogMissionControlCommand,
+    stagedBatchCreationCommand,
     clearAllStagedCommands,
     clearStagedCommand,
     dismissActiveCommand: dismissActiveStagedCommand,
@@ -1134,6 +1175,7 @@ export function RunnerChat({
     stageThreadContextCommand,
     stageBacklogSubtaskCommand,
     stageBacklogMissionControlCommand,
+    stageBatchCreationCommand,
     stageResourceCreationCommand,
     stageAgentCreationCommand,
     stageSkillCreationCommand,
@@ -1483,9 +1525,11 @@ export function RunnerChat({
   const stagedScrapeCreationCommandLabel = stagedScrapeCreationCommand?.label || "";
   const stagedParseCreationCommandLabel = stagedParseCreationCommand?.label || "";
   const stagedAdCreationCommandLabel = stagedAdCreationCommand?.label || "";
+  const stagedBatchCreationCommandLabel = stagedBatchCreationCommand?.label || "";
   const stagedBacklogCommand = stagedBacklogMissionControlCommand || stagedBacklogSubtaskCommand;
   const stagedComposerLabel =
     stagedBacklogCommand?.label
+    || stagedBatchCreationCommandLabel
     || stagedSlideCreationCommandLabel
     || stagedAdCreationCommandLabel
     || stagedResearchCreationCommandLabel
@@ -1495,8 +1539,8 @@ export function RunnerChat({
     || stagedAgentCreationCommandLabel
     || stagedResourceCreationCommandLabel
     || stagedThreadContextCommandLabel;
-  const stagedComposerToneValue = stagedBacklogCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand ? "compact" : stagedThreadContextCommandToneValue;
-  const stagedComposerOffsetValue = stagedBacklogCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand
+  const stagedComposerToneValue = stagedBacklogCommand || stagedBatchCreationCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand ? "compact" : stagedThreadContextCommandToneValue;
+  const stagedComposerOffsetValue = stagedBacklogCommand || stagedBatchCreationCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand
     ? `${Math.max(
         16,
         Math.round(
@@ -1506,7 +1550,7 @@ export function RunnerChat({
         )
       )}px`
     : stagedThreadContextCommandOffset(stagedThreadContextCommand);
-  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand || stagedBacklogCommand);
+  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedBatchCreationCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand || stagedBacklogCommand);
   const slashCommandInputState = useMemo(() => {
     if (hasStagedComposerCommand) {
       return null;
@@ -1618,6 +1662,15 @@ export function RunnerChat({
       icon: ReactNode;
       stage: () => void;
     }> = [];
+    if (onBatchJobCreate) {
+      items.push({
+        id: "batch",
+        command: "/Batch",
+        description: "Save work to Batches",
+        icon: <LucideTruck className="tb-popup-icon" strokeWidth={1.75} />,
+        stage: () => stageBatchCreationCommand(slashCommandInputState?.prompt || ""),
+      });
+    }
     items.push({
       id: "slides",
       command: "/slides",
@@ -1702,7 +1755,7 @@ export function RunnerChat({
       });
     }
     return items;
-  }, [enableAgentCreationCommand, enableResourceCreationCommand, enableSkillCreationCommand, slashCommandInputState?.prompt]);
+  }, [enableAgentCreationCommand, enableResourceCreationCommand, enableSkillCreationCommand, onBatchJobCreate, slashCommandInputState?.prompt, stageAdCreationCommand, stageAgentCreationCommand, stageBatchCreationCommand, stageParseCreationCommand, stageResearchCreationCommand, stageResourceCreationCommand, stageScrapeCreationCommand, stageSkillCreationCommand, stageSlideCreationCommand]);
   const filteredSlashCommandItems = useMemo(() => {
     if (!slashCommandInputState) {
       return [];
@@ -1728,6 +1781,7 @@ export function RunnerChat({
   const canRunStagedMissionControlCommand = Boolean(stagedBacklogMissionControlCommand && onBacklogMissionControlSubmit);
   const canRun =
     !disabled &&
+    !isSavingBatchJob &&
     !isPreparingRun &&
     (!hasRunningTurn || hasRunningTurnLogs) &&
     (trimmedInput.length > 0 || canRunStagedThreadContextCommand || canRunStagedMissionControlCommand);
@@ -2943,25 +2997,23 @@ export function RunnerChat({
     }
   }
 
-  function renderComputeTokenUpgradeLogBox(message: string) {
-    const normalizedMessage = sanitizeRunnerBudgetMessage(stripSystemTags(message)).trim()
-      || "Add credits or upgrade your plan to continue.";
+  function renderComputeTokenUpgradeLogBox() {
     return (
       <div className="tb-compute-token-log-box" role="status">
         <div className="tb-compute-token-log-copy">
           <div className="tb-compute-token-log-heading">
             <LucideZap className="tb-compute-token-log-icon" strokeWidth={1.8} />
-            <span>No credits left</span>
+            <span>Usage limit reached</span>
           </div>
-          <div className="tb-compute-token-log-message">{normalizedMessage}</div>
         </div>
-        <button
+        <PlatformPrimaryButton
           type="button"
-          className="tb-compute-token-log-button"
+          size="small"
+          className="tb-compute-token-log-action"
           onClick={openPlansBudgetFromComputeTokenLog}
         >
           Open Plans &amp; Budget
-        </button>
+        </PlatformPrimaryButton>
       </div>
     );
   }
@@ -2976,7 +3028,7 @@ export function RunnerChat({
     }
   ) {
     if (isComputeTokenBudgetErrorLog(agentMessage)) {
-      return renderComputeTokenUpgradeLogBox(agentMessage.message);
+      return renderComputeTokenUpgradeLogBox();
     }
     const summaryContent = stripSystemTags(agentMessage.message);
     const summarySegments = splitRunnerRunSummaryContent(summaryContent);
@@ -3663,6 +3715,7 @@ export function RunnerChat({
     githubContexts,
     githubRepositories,
     hiddenSystemPrompt,
+    knowledgeContext: normalizedThreadKnowledgeContext,
     initializedThreadHistoryIdRef,
     locallyOwnedExecutionThreadIdRef,
     normalizedBackendUrl,
@@ -3716,6 +3769,9 @@ export function RunnerChat({
         connectorsOverride: request.connectors === undefined
           ? undefined
           : request.connectors,
+        knowledgeContextOverride: request.knowledgeContext === undefined
+          ? undefined
+          : request.knowledgeContext,
         displayPromptOverride: typeof request.displayPrompt === "string"
           ? request.displayPrompt
           : undefined,
@@ -4035,7 +4091,8 @@ export function RunnerChat({
 
   useEffect(() => {
     currentInputRef.current = input;
-  }, [input]);
+    onComposerDraftChange?.(input);
+  }, [input, onComposerDraftChange]);
 
   useEffect(() => {
     if (!autoFocusComposer) {
@@ -4056,7 +4113,10 @@ export function RunnerChat({
     void stopSpeechToText();
   }, [isRunning, stopSpeechToText]);
 
-  async function ensureThread(taskText: string, options?: { reserveLocalExecution?: boolean }): Promise<{
+  async function ensureThread(taskText: string, options?: {
+    reserveLocalExecution?: boolean;
+    knowledgeContext?: RunnerKnowledgeContext | null;
+  }): Promise<{
     threadId: string;
     didCreateThread: boolean;
     initialTitle: string | null;
@@ -4086,6 +4146,10 @@ export function RunnerChat({
       reasoningEffort: effectiveReasoningEffort,
       title: title || DEFAULT_NEW_THREAD_TITLE,
       metadata: threadMetadata,
+      knowledgeContext: mergeRunnerKnowledgeContexts(
+        normalizedThreadKnowledgeContext,
+        options?.knowledgeContext,
+      ),
       privateMode,
     });
 
@@ -4238,6 +4302,33 @@ export function RunnerChat({
     window.requestAnimationFrame(() => textareaRef.current?.focus());
   }
 
+  function handleKnowledgeAttachmentSelect(library: RunnerChatKnowledgeAttachment) {
+    const libraryName = String(library?.name || "Untitled library").trim() || "Untitled library";
+    const safeFilename = libraryName
+      .replace(/[\\/:*?"<>|]+/g, "-")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 120) || "knowledge-library";
+    const filename = /\.md$/i.test(safeFilename) ? safeFilename : `${safeFilename}.md`;
+    // Keep the composer attachment lightweight. The selected library and
+    // immutable version are sent as Knowledge context and retrieved by the
+    // authenticated execution gateway; uploading a generated copy would be
+    // both redundant and potentially enormous.
+    const file = new File([], filename, { type: "text/markdown" });
+    addReferenceAttachment({
+      file,
+      displayName: libraryName,
+      referenceType: "knowledge",
+      knowledgeLibraryId: String(library?.id || "").trim() || undefined,
+      knowledgeVersionId: String(library?.currentVersionId || "").trim() || undefined,
+      knowledgeVersionNumber: Number.isFinite(Number(library?.currentVersionNumber))
+        ? Number(library.currentVersionNumber)
+        : undefined,
+    });
+    closeAllInputPopups();
+    window.requestAnimationFrame(() => textareaRef.current?.focus());
+  }
+
   function addReferenceAttachment({
     file,
     displayName,
@@ -4246,19 +4337,26 @@ export function RunnerChat({
     promptVersionId,
     promptVersionNumber,
     threadId,
+    knowledgeLibraryId,
+    knowledgeVersionId,
+    knowledgeVersionNumber,
   }: {
     file: File;
     displayName: string;
-    referenceType: "prompt" | "thread";
+    referenceType: "prompt" | "thread" | "knowledge";
     promptId?: string;
     promptVersionId?: string;
     promptVersionNumber?: number;
     threadId?: string;
+    knowledgeLibraryId?: string;
+    knowledgeVersionId?: string;
+    knowledgeVersionNumber?: number;
   }) {
     if (attachments.length >= maxAttachments) {
       return;
     }
-    const shouldUpload = Boolean(
+    const isKnowledgeReference = referenceType === "knowledge";
+    const shouldUpload = !isKnowledgeReference && Boolean(
       uploadFiles || mapFileToAttachment || (normalizedBackendUrl && apiKey.trim()),
     );
     const attachment: LocalAttachment = {
@@ -4272,6 +4370,9 @@ export function RunnerChat({
       promptVersionId,
       promptVersionNumber,
       threadId,
+      knowledgeLibraryId,
+      knowledgeVersionId,
+      knowledgeVersionNumber,
       runnerAttachmentRole: `${referenceType}_reference`,
       uploadStatus: shouldUpload ? "uploading" : "idle",
       uploadError: null,
@@ -4288,6 +4389,11 @@ export function RunnerChat({
   function handlePromptsMenuClick() {
     closeAllInputPopups();
     onOpenPromptSearch?.(handlePromptAttachmentSelect);
+  }
+
+  function handleKnowledgeMenuClick() {
+    closeAllInputPopups();
+    onOpenKnowledgeSearch?.(handleKnowledgeAttachmentSelect);
   }
 
   useEffect(() => {
@@ -4602,6 +4708,14 @@ export function RunnerChat({
     handlePromptsMenuClick();
   }
 
+  function handleSlashKnowledgeAttachmentClick() {
+    if (!onOpenKnowledgeSearch) {
+      return;
+    }
+    resetSlashPopupComposer();
+    handleKnowledgeMenuClick();
+  }
+
   function handleSlashThreadAttachmentClick() {
     if (!onOpenThreadSearch) {
       return;
@@ -4665,6 +4779,10 @@ export function RunnerChat({
         return;
       }
       if (index === 6) {
+        handleSlashKnowledgeAttachmentClick();
+        return;
+      }
+      if (index === 7) {
         handleSlashThreadAttachmentClick();
         return;
       }
@@ -4931,6 +5049,7 @@ export function RunnerChat({
       const previewImageRunAttachments = previewImageRunAttachment ? [previewImageRunAttachment] : null;
       const quotedSelection = composerQuotedSelection;
       const backlogCommand = stagedBacklogCommand;
+      const batchCreationCommand = stagedBatchCreationCommand;
       const resourceCreationCommand = stagedResourceCreationCommand;
       const agentCreationCommand = stagedAgentCreationCommand;
       const skillCreationCommand = stagedSkillCreationCommand;
@@ -4975,12 +5094,102 @@ export function RunnerChat({
         return;
       }
 
+      if (batchCreationCommand && onBatchJobCreate && taskText) {
+        setIsSavingBatchJob(true);
+        try {
+          const implicitAttachmentEntries =
+            await createRunnerImplicitAttachments(implicitAttachments);
+          attachmentEntries = implicitAttachmentEntries.length > 0
+            ? [...implicitAttachmentEntries, ...composerAttachmentEntries]
+            : composerAttachmentEntries;
+          const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
+          const githubRepo = buildSelectedGithubRepoReference(attachmentEntries, {
+            repositories: githubRepositories,
+            contexts: githubContexts,
+            selectedRepositoryId: selectedGithubRepositoryId,
+            selectedContextId: selectedGithubContextId,
+          });
+          const batchPayload: RunnerChatBatchJobSubmitPayload = {
+            prompt: taskText,
+            attachments: resolvedAttachments || [],
+            environmentId: effectiveEnvironmentId ?? null,
+            projectId: effectiveProjectId ?? null,
+            agentId: effectiveAgentId ?? null,
+            agentName: selectedAgent?.name || displayedAgentLabel || null,
+            reasoningEffort: effectiveReasoningEffort,
+            githubRepo: githubRepo || null,
+            enabledSkills: enabledSkillsPayload || null,
+            connectors: runConnectorPayload,
+            knowledgeContext: mergeRunnerKnowledgeContexts(
+              normalizedThreadKnowledgeContext,
+              buildRunnerKnowledgeContextFromAttachments(attachmentEntries),
+            ),
+            quotedSelection,
+            targetKind: "thread_run",
+            startPolicy: "manual",
+          };
+          const didSaveBatch = await onBatchJobCreate(batchPayload);
+          if (didSaveBatch !== false) {
+            clearComposerDraft();
+            clearComposerAttachments(composerAttachmentEntries, {
+              revokePreviews: false,
+            });
+            setBatchSavedReceiptId((current) => current + 1);
+            if (keepFocusOnSubmit) {
+              focusComposerSoon();
+            }
+            await stopSpeechToText();
+          }
+        } finally {
+          setIsSavingBatchJob(false);
+        }
+        return;
+      }
+
       setIsPreparingRun(true);
       const implicitAttachmentEntries =
         await createRunnerImplicitAttachments(implicitAttachments);
       attachmentEntries = implicitAttachmentEntries.length > 0
         ? [...implicitAttachmentEntries, ...composerAttachmentEntries]
         : composerAttachmentEntries;
+
+      if (onComposerSubmit && taskText) {
+        const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
+        const githubRepo = buildSelectedGithubRepoReference(attachmentEntries, {
+          repositories: githubRepositories,
+          contexts: githubContexts,
+          selectedRepositoryId: selectedGithubRepositoryId,
+          selectedContextId: selectedGithubContextId,
+        });
+        const didHandleComposer = await onComposerSubmit({
+          prompt: taskText,
+          attachments: resolvedAttachments || [],
+          environmentId: effectiveEnvironmentId ?? null,
+          projectId: effectiveProjectId ?? null,
+          agentId: effectiveAgentId ?? null,
+          agentName: selectedAgent?.name || displayedAgentLabel || null,
+          reasoningEffort: effectiveReasoningEffort,
+          githubRepo: githubRepo || null,
+          enabledSkills: enabledSkillsPayload || null,
+          connectors: runConnectorPayload,
+          knowledgeContext: mergeRunnerKnowledgeContexts(
+            normalizedThreadKnowledgeContext,
+            buildRunnerKnowledgeContextFromAttachments(attachmentEntries),
+          ),
+          quotedSelection,
+        });
+        if (didHandleComposer !== false) {
+          clearComposerDraft();
+          clearComposerAttachments(composerAttachmentEntries, {
+            revokePreviews: false,
+          });
+          if (keepFocusOnSubmit) {
+            focusComposerSoon();
+          }
+          await stopSpeechToText();
+        }
+        return;
+      }
 
       if (selectedComposerProjectTask && onComposerProjectTaskSubmit && taskText) {
         const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
@@ -5232,6 +5441,17 @@ export function RunnerChat({
     }
   }
 
+  useEffect(() => {
+    if (composerSubmitRequest === null || composerSubmitRequest === undefined) {
+      return;
+    }
+    if (handledComposerSubmitRequestTokenRef.current === composerSubmitRequest) {
+      return;
+    }
+    handledComposerSubmitRequestTokenRef.current = composerSubmitRequest;
+    void runTask();
+  }, [composerSubmitRequest]);
+
   useRunnerQueuedExecution({
     currentThreadId,
     execute: async (nextQueuedMessage) => {
@@ -5282,6 +5502,7 @@ export function RunnerChat({
     setDismissedConnectorMentionKey("");
     if (tryAutoStageInput(nextValue, {
       agentCreation: enableAgentCreationCommand,
+      batchCreation: Boolean(onBatchJobCreate),
       backlogMissionControl: enableBacklogMissionControlCommand,
       backlogSubtask: enableBacklogSubtaskCommand,
       resourceCreation: enableResourceCreationCommand,
@@ -6758,6 +6979,7 @@ export function RunnerChat({
               const isTurnRunning = isRunningTurnStatus(turn.status);
               const isTurnPermissionAsked = turn.status === "permission_asked";
               const isQueuedTurn = turn.status === "queued";
+              const durableBatchQueueReceipt = getTurnBatchQueueReceipt(turn);
               const isLatestTurn = turnIndex === turns.length - 1;
               const { agentMessage, displayedTimelineItems: rawDisplayedTimelineItems } = getTurnTimelineState(turn);
               const hasRunSummary = Boolean(agentMessage?.message?.trim());
@@ -7287,7 +7509,14 @@ export function RunnerChat({
                     </div>
                   )}
 
-                  {isQueuedTurn ? <RunnerPageQueueReceipt /> : null}
+                  {isQueuedTurn ? (
+                    <RunnerPageQueueReceipt
+                      durable={Boolean(durableBatchQueueReceipt)}
+                      label={durableBatchQueueReceipt
+                        ? "Moved to Batches because runtime capacity is full · starts automatically when capacity is available"
+                        : undefined}
+                    />
+                  ) : null}
 
                   {turnIdentity}
                   {workLogSection}
@@ -7449,16 +7678,34 @@ export function RunnerChat({
         </aside>
       ) : null}
 
+      {batchSavedReceiptId > 0 && typeof document !== "undefined"
+        ? createPortal(
+            <div className="tb-runner-page-status-indicator">
+              <PlatformStatusIndicator
+                key={batchSavedReceiptId}
+                title="Batch job saved"
+                copy="Kept on shelf in Batches."
+                icon={<LucideTruck strokeWidth={1.75} />}
+                onDismiss={() => setBatchSavedReceiptId(0)}
+              />
+            </div>,
+            document.body,
+          )
+        : null}
+
       <div className="tb-input-shell">
         <div className="tb-input-width">
           <div className="embedded-runner-input">
             <div
+              ref={composerBoxRef}
               className={`task-input-box ${privateMode ? "task-input-box-private" : ""} ${stagedComposerToneValue ? `task-input-box-thread-context task-input-box-thread-context-${stagedComposerToneValue}` : ""}`.trim()}
             >
               {showConnectorMentionPopup && connectorMentionInputState ? (
                 <RunnerComposerSuggestionPopup
                   className="tb-popup-menu-connector-mention"
                   placement={hasCurrentThread ? "top" : "bottom"}
+                  portal={portalComposerSuggestions}
+                  anchorRef={composerBoxRef}
                   ariaLabel="Connectors"
                   footer={onOpenPluginsOverview ? (
                     <button
@@ -7556,6 +7803,8 @@ export function RunnerChat({
                 <RunnerComposerSuggestionPopup
                   className="tb-popup-menu-slash"
                   placement={hasCurrentThread ? "top" : "bottom"}
+                  portal={portalComposerSuggestions}
+                  anchorRef={composerBoxRef}
                   ariaLabel="Slash commands"
                   activeIndex={activeSlashPopupIndex}
                   keyboardNavigation
@@ -7655,6 +7904,18 @@ export function RunnerChat({
                           className={`tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action ${activeSlashPopupIndex === 6 ? "is-active" : ""}`.trim()}
                           onMouseDown={(event) => event.preventDefault()}
                           onMouseEnter={() => setActiveSlashPopupIndex(6)}
+                          onClick={handleSlashKnowledgeAttachmentClick}
+                        >
+                          <LucideLibraryBig className="tb-popup-icon" strokeWidth={1.75} />
+                          <span className="tb-popup-label">Attach Knowledge</span>
+                        </button>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={activeSlashPopupIndex === 7}
+                          className={`tb-popup-row tb-popup-row-core-action tb-popup-row-composer-action ${activeSlashPopupIndex === 7 ? "is-active" : ""}`.trim()}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onMouseEnter={() => setActiveSlashPopupIndex(7)}
                           onClick={handleSlashThreadAttachmentClick}
                         >
                           <LucideMessageSquare className="tb-popup-icon" strokeWidth={1.75} />
@@ -7970,7 +8231,9 @@ export function RunnerChat({
                       : placeholder
                   }
                   onKeyDown={handleKeyDown}
-                  readOnly={Boolean(stagedThreadContextCommand && !textareaAllowsPromptAfterStagedCommand)}
+                  readOnly={disabled || Boolean(
+                    stagedThreadContextCommand && !textareaAllowsPromptAfterStagedCommand
+                  )}
                 />
               </div>
 
@@ -8017,6 +8280,16 @@ export function RunnerChat({
                               <span className="tb-popup-shortcut-key">⌘</span>
                               <span className="tb-popup-shortcut-key tb-popup-shortcut-key-letter">{PROMPTS_SHORTCUT_KEY.toUpperCase()}</span>
                             </span>
+                          </button>
+                          <button
+                            type="button"
+                            className="tb-popup-row tb-popup-row-knowledge"
+                            onClick={handleKnowledgeMenuClick}
+                            disabled={!onOpenKnowledgeSearch}
+                            aria-disabled={!onOpenKnowledgeSearch}
+                          >
+                            <LucideLibraryBig className="tb-popup-icon" strokeWidth={1.75} />
+                            <span className="tb-popup-label">Knowledge</span>
                           </button>
                           <button
                             type="button"
@@ -8496,6 +8769,7 @@ export function RunnerChat({
                       displayedAgentLabel={displayedAgentLabel}
                       hasApiKey={hasApiKey}
                       hidden={hideAgentSelector}
+                      locked={lockAgentSelector}
                       mode={agentPopupMode}
                       onCloseReasoning={closeAgentReasoningPopup}
                       onDoneReasoning={() => closeAllInputPopups()}
@@ -8537,6 +8811,7 @@ export function RunnerChat({
                       environments={orderedEnvironments}
                       hasApiKey={hasApiKey}
                       hidden={hideEnvironmentSelector}
+                      locked={lockEnvironmentSelector}
                       mode={workspaceSelectorMode}
                       onModeChange={setWorkspaceSelectorMode}
                       onSelectEnvironment={selectEnvironment}

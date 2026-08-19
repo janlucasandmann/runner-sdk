@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { type GuardrailOverviewRow, GuardrailsOverviewPage } from "./guardrails-overview-page.js";
@@ -27,6 +27,16 @@ const rows: readonly GuardrailOverviewRow[] = [
     creatorFallback: "J",
     updatedAt: 1_710_000_000_000,
     updatedLabel: "Mar 9, 2024",
+  },
+  {
+    id: "guardrail-custom-2",
+    name: "Release Policy",
+    type: "custom",
+    typeLabel: "Custom",
+    creatorLabel: "Jan",
+    creatorFallback: "J",
+    updatedAt: 1_700_000_000_000,
+    updatedLabel: "Nov 14, 2023",
   },
 ];
 
@@ -81,5 +91,36 @@ describe("GuardrailsOverviewPage", () => {
 
     await user.click(screen.getByText("Publishing Policy"));
     expect(onOpen).toHaveBeenCalledWith(rows[1]);
+  });
+
+  it("deletes all selected custom sets from a selected row menu", async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+    render(
+      <GuardrailsOverviewPage
+        rows={rows}
+        onOpen={vi.fn()}
+        onCreate={vi.fn()}
+        onRename={vi.fn()}
+        onDelete={onDelete}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("checkbox", { name: "Select Publishing Policy" }),
+    );
+    await user.click(
+      screen.getByRole("checkbox", { name: "Select Release Policy" }),
+    );
+    fireEvent.contextMenu(
+      screen.getByRole("row", { name: "Publishing Policy" }),
+      { clientX: 120, clientY: 80 },
+    );
+    await user.click(
+      screen.getByRole("menuitem", { name: "Delete selected" }),
+    );
+
+    expect(onDelete).toHaveBeenCalledOnce();
+    expect(onDelete).toHaveBeenCalledWith([rows[1], rows[2]]);
   });
 });

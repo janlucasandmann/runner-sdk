@@ -110,7 +110,7 @@ assert.match(platformEntrySource, /\$\{MARKETPLACE_PAGE_CSS\}/);
 assert.match(platformEntrySource, /\$\{MARKETPLACE_PAGE_SCRIPT\}/);
 assert.match(platformEntrySource, /\$\{MARKETPLACE_DOMAIN_SCRIPT_FRAGMENTS\.catalog\}/);
 assert.match(platformEntrySource, /\$\{MARKETPLACE_APP_SCRIPT_FRAGMENTS\.pageView\}/);
-assert.match(platformEntrySource, /configureInfrastructureEntries:[^\n]*MARKETPLACE_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
+assert.match(platformEntrySource, /configureInfrastructureEntries:[\s\S]*?MARKETPLACE_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
 assert.match(platformEntrySource, /MarketplaceOverviewPage/);
 assert.doesNotMatch(platformEntrySource, /demo-resource-templates(?:-page)?\.mjs/);
 assert.doesNotMatch(platformEntrySource, /function openResourceTemplatesPage\(/);

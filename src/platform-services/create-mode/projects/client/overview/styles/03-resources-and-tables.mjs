@@ -1394,6 +1394,141 @@ export const PROJECT_OVERVIEW_CSS_03_FRAGMENT = String.raw`        position: rel
         width: 100%;
       }
 
+      .playground-project-featured-resources {
+        width: 100%;
+        margin: 0 0 28px;
+      }
+
+      .playground-project-featured-resources-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .playground-project-featured-resource-card {
+        --playground-model-featured-accent: 126, 200, 255;
+        width: 100%;
+        min-width: 0;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .playground-project-featured-resource-card.is-strategy {
+        --playground-model-featured-accent: 245, 184, 108;
+      }
+
+      .playground-project-featured-resource-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+        min-width: 0;
+      }
+
+      .playground-project-featured-resource-type {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-width: 0;
+        overflow: hidden;
+        color: #fff;
+        font-size: 11px;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-project-featured-resource-icon {
+        width: 15px;
+        height: 15px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+
+      .playground-project-featured-resource-icon svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      .playground-project-featured-resource-badge {
+        flex: 0 0 auto;
+      }
+
+      .playground-project-featured-resource-name {
+        margin-top: 16px;
+      }
+
+      .playground-project-featured-resource-description {
+        max-width: none;
+      }
+
+      .playground-project-featured-resource-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: auto;
+        padding-top: 11px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-project-featured-resource-metric {
+        min-width: 0;
+      }
+
+      .playground-project-featured-resource-metric-label,
+      .playground-project-featured-resource-metric-value {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-project-featured-resource-metric-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      .playground-project-featured-resource-metric-value {
+        margin-top: 4px;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.2;
+      }
+
+      @media (max-width: 980px) {
+        .playground-project-featured-resources-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 720px) {
+        .playground-project-featured-resources-grid {
+          grid-template-columns: none;
+          grid-auto-flow: column;
+          grid-auto-columns: minmax(280px, 86vw);
+          overflow-x: auto;
+          overscroll-behavior-x: contain;
+          scrollbar-width: none;
+          scroll-snap-type: x proximity;
+        }
+
+        .playground-project-featured-resources-grid::-webkit-scrollbar {
+          display: none;
+        }
+
+        .playground-project-featured-resource-card {
+          scroll-snap-align: start;
+        }
+      }
+
       .playground-project-resource-template-section {
         display: flex;
         flex-direction: column;

@@ -410,7 +410,7 @@
           const resourcesViewRef = useRef(resourcesView);
           resourcesViewRef.current = resourcesView;
           const [resourcesServerKind, setResourcesServerKind] = useState("");
-  ${MODELS_APP_SCRIPT_FRAGMENTS.state}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.state}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.state}${TESTS_APP_SCRIPT_FRAGMENTS.state}${KNOWLEDGE_APP_SCRIPT_FRAGMENTS.state}${ASSURANCE_APP_SCRIPT_FRAGMENTS.state}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.state}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.state}        const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
+  ${MODELS_APP_SCRIPT_FRAGMENTS.state}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.state}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.state}${TESTS_APP_SCRIPT_FRAGMENTS.state}${KNOWLEDGE_APP_SCRIPT_FRAGMENTS.state}${ASSURANCE_APP_SCRIPT_FRAGMENTS.state}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.state}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.state}${BATCHES_APP_SCRIPT_FRAGMENTS.state}        const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
           const [projectOverviewResourceSearchQuery, setProjectOverviewResourceSearchQuery] = useState("");
           const [projectOverviewResourceViewMode, setProjectOverviewResourceViewMode] = useState("list");
           const [projectOverviewResourceToolbarPopover, setProjectOverviewResourceToolbarPopover] = useState("");
@@ -454,6 +454,8 @@
             title: "Projects",
             view: "overview",
           });
+          const [projectResourceNavigationOrigin, setProjectResourceNavigationOrigin] = useState(null);
+          const projectResourceNavigationOriginRef = useRef(null);
           const [tasksProjectBackRequestToken, setTasksProjectBackRequestToken] = useState(0);
           const [tasksProjectViewRequest, setTasksProjectViewRequest] = useState(null);
           const [tasksProjectTaskRequest, setTasksProjectTaskRequest] = useState(null);
@@ -462,8 +464,6 @@
           const [tasksProjectIssueRequest, setTasksProjectIssueRequest] = useState(null);
           const [tasksProjectDeleteRequest, setTasksProjectDeleteRequest] = useState(null);
           const [projectBreadcrumbMenuOpen, setProjectBreadcrumbMenuOpen] = useState(false);
-          const projectBreadcrumbMenuRef = useRef(null);
-          const projectBreadcrumbMenuSurfaceRef = useRef(null);
           const [topNavIssueComposerOpen, setTopNavIssueComposerOpen] = useState(false);
           const [topNavIssueComposerVisible, setTopNavIssueComposerVisible] = useState(false);
           const [topNavIssueComposerClosing, setTopNavIssueComposerClosing] = useState(false);
@@ -633,6 +633,21 @@
             () => buildRunnerAuthenticatedRequestHeaders(authRequestHeaders),
             [authRequestHeaders],
           );
+          const handleQuickBatchJobCreate = useCallback(async (payload) => {
+            if (payload?.targetKind !== "thread_run" || payload?.startPolicy !== "manual") {
+              throw new Error("Quick Batches must be thread jobs kept on shelf.");
+            }
+            const randomId = globalThis.crypto?.randomUUID?.()
+              || (Date.now().toString(36) + "-" + Math.random().toString(36).slice(2));
+            await createBatchJob({
+              ...buildQuickBatchThreadJobDraft(payload),
+              idempotencyKey: "task-input:" + randomId,
+            }, {
+              basePath: proxyBackendBase + "/batch-jobs",
+              requestHeaders: authRequestHeaders,
+            });
+            return true;
+          }, [authRequestHeaders, proxyBackendBase]);
           const requestHeadersSignature = useMemo(() => (
             Object.keys(requestHeaders || {})
               .sort()
@@ -1931,9 +1946,7 @@
   		          const projectRecord = options?.projectRecord && typeof options.projectRecord === "object"
   		            ? options.projectRecord
   		            : welcomeWidgetProject;
-  			          const projectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(projectRecord, {
-  			            taskRecord: normalizedTask,
-  			          });
+			          const projectKnowledgeSection = buildPlaygroundProjectKnowledgeAgentPromptSection(projectRecord);
   			          const projectRulesSection = buildPlaygroundProjectRulesPromptSection(projectRecord);
   			          const projectResourcesSection = buildPlaygroundProjectResourcePromptSection(projectRecord, {
   			            projectId,
@@ -1970,7 +1983,7 @@
   	            "Assignee: " + getWelcomeWidgetTaskAssigneeName(normalizedTask),
   			            "Review: " + reviewerName,
   			            "Environment: " + getWelcomeWidgetTaskEnvironmentName(normalizedTask),
-  				            projectStrategySection,
+			            projectKnowledgeSection,
   				            projectRulesSection,
   				            projectResourcesSection,
   				            [
@@ -2053,6 +2066,10 @@
                 connectors: launchConnectors,
               });
               const projectLaunchAttachments = normalizePlaygroundTaskAttachmentList(welcomeWidgetProject?.attachments);
+              const projectKnowledgeContext = buildPlaygroundProjectKnowledgeRunContext(
+                welcomeWidgetProject,
+                "project_task"
+              );
               const launchPrompt = buildWelcomeWidgetTaskRunPrompt(normalizedTask, {
                 projectAttachments: projectLaunchAttachments,
               });
@@ -2075,14 +2092,17 @@
                   githubRepo: githubRepo || undefined,
                   connectors: launchConnectors,
                   launchPrompt,
+                  ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
                   runKind: "implementation",
                   allowAdditionalThread: true,
                   taskPreview,
                   metadata: {
+                    ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
                     triggerKind: "manual",
                     source: "project_task",
                     runKind: "implementation",
                     runnerPlayground: {
+                      ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
                       enabledSkills: enabledSkillsPayload,
                       githubRepo: githubRepo || undefined,
                       connectors: launchConnectors,
@@ -2123,6 +2143,7 @@
                     githubRepo: githubRepo || null,
                     enabledSkills: enabledSkillsPayload || null,
                     environmentId: launchEnvironmentId || "",
+                    knowledgeContext: projectKnowledgeContext,
                   });
               setActivePage("thread");
               setCurrentThreadId(threadRecord.id);
@@ -2222,6 +2243,10 @@
                 connectors: launchConnectors,
               }) || payload?.githubRepo || null;
               const projectLaunchAttachments = normalizePlaygroundTaskAttachmentList(welcomeWidgetProject?.attachments);
+              const projectKnowledgeContext = buildPlaygroundProjectKnowledgeRunContext(
+                welcomeWidgetProject,
+                "project_task"
+              );
               const taskRunPrompt = buildWelcomeWidgetTaskRunPrompt(normalizedTask, {
                 projectAttachments: projectLaunchAttachments,
               });
@@ -2251,14 +2276,17 @@
                   connectors: launchConnectors,
                   attachments: Array.isArray(payload?.attachments) ? payload.attachments : [],
                   launchPrompt,
+                  ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
                   runKind: "implementation",
                   allowAdditionalThread: true,
                   taskPreview,
                   metadata: {
+                    ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
                     triggerKind: "manual",
                     source: "project_task",
                     runKind: "implementation",
                     runnerPlayground: {
+                      ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
                       enabledSkills: enabledSkillsPayload,
                       githubRepo: githubRepo || undefined,
                       connectors: launchConnectors,
@@ -2310,6 +2338,7 @@
                     enabledSkills: enabledSkillsPayload || null,
                     environmentId: launchEnvironmentId || "",
                     quotedSelection: payload?.quotedSelection || null,
+                    knowledgeContext: projectKnowledgeContext,
                   });
               setActivePage("thread");
               setCurrentThreadId(threadRecord.id);
@@ -4781,7 +4810,7 @@
   
   ${API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.loading}
           const loadSettingsMarketingConsent = useCallback(async function loadSettingsMarketingConsent() {
-            if (!hasSessionAuth) {
+            if (!settingsMarketingEmailsAvailable || !hasSessionAuth) {
               setSettingsMarketingConsentStatus(null);
               setSettingsMarketingConsentError("");
               setSettingsMarketingConsentSuccess("");
@@ -4808,7 +4837,7 @@
             } finally {
               setSettingsMarketingConsentLoading(false);
             }
-          }, [hasSessionAuth]);
+          }, [hasSessionAuth, settingsMarketingEmailsAvailable]);
   
           const loadSettingsTriggers = useCallback(async function loadSettingsTriggers() {
             if (!hasSessionAuth) {
@@ -5122,6 +5151,9 @@
   
   ${API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.create}
           async function updateSettingsMarketingConsent(status) {
+            if (!settingsMarketingEmailsAvailable) {
+              return;
+            }
             if (!hasSessionAuth) {
               handleSignInWithComputerAgents();
               return;

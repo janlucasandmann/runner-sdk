@@ -12,6 +12,7 @@ import {
 } from "../../../../../../platform-ui/pages/overview/index.js";
 import {
   buildInferenceEndpointRows,
+  type InferenceDeploymentProfileSnapshot,
   type InferenceEndpointCollectionSnapshot,
   type InferenceEndpointRow,
   type InferenceLocalRunnersSnapshot,
@@ -25,6 +26,7 @@ import { InferenceOverviewGuide } from "./inference-overview-guide.js";
 export interface InferenceOverviewPageProps {
   endpoints: InferenceEndpointCollectionSnapshot;
   localRunners: InferenceLocalRunnersSnapshot;
+  deploymentProfile?: InferenceDeploymentProfileSnapshot | null;
   controlsPortalId?: string;
   canConfigure?: boolean;
   creatingEndpoint?: boolean;
@@ -39,6 +41,7 @@ export interface InferenceOverviewPageProps {
 export function InferenceOverviewPage({
   endpoints,
   localRunners,
+  deploymentProfile,
   controlsPortalId,
   canConfigure = true,
   creatingEndpoint = false,
@@ -50,8 +53,8 @@ export function InferenceOverviewPage({
   const [kindFilter, setKindFilter] = useState("all");
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const rows = useMemo(
-    () => buildInferenceEndpointRows(endpoints, localRunners),
-    [endpoints, localRunners],
+    () => buildInferenceEndpointRows(endpoints, localRunners, deploymentProfile),
+    [deploymentProfile, endpoints, localRunners],
   );
   const filteredRows = useMemo(
     () => rows.filter((row) => kindFilter === "all" || row.kind === kindFilter),

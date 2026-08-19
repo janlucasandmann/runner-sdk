@@ -1032,6 +1032,7 @@ export const METRONOME_INSPECTOR_04_FRAGMENT = String.raw`                      
             const inspectorNodeDescription = getMetronomeNodeTypeDescription(selectedNode);
             const triggerNodeCount = nodes.filter((node) => String(node?.data?.kind || node?.kind || "").trim() === "trigger").length;
             const canDeleteSelectedNode = !isActiveWorkflowBuiltIn && (kind !== "trigger" || triggerNodeCount > 1);
+            const selectedTestNodeCount = Math.max(1, nodes.filter((node) => node?.selected === true).length);
             return React.createElement("aside", {
               className: "playground-metronome-node-inspector" + (isActiveWorkflowBuiltIn ? " is-readonly" : ""),
             },
@@ -1045,6 +1046,16 @@ export const METRONOME_INSPECTOR_04_FRAGMENT = String.raw`                      
 			                    )
 			                  ),
 		                  React.createElement("div", { className: "playground-metronome-inspector-actions" },
+		                    React.createElement("button", {
+		                      type: "button",
+		                      className: "playground-files-header-icon-button is-plain playground-metronome-inspector-test",
+		                      onClick: openMetronomeExecutionTestDialog,
+		                      disabled: isActiveWorkflowBuiltIn,
+		                      title: selectedTestNodeCount > 1 ? "Test selected workflow slice" : "Test node",
+		                      "aria-label": selectedTestNodeCount > 1 ? "Test selected workflow slice" : "Test node",
+		                    },
+		                      React.createElement(Play, { width: 15, height: 15, strokeWidth: 1.9 })
+		                    ),
 		                    React.createElement("button", {
 		                      type: "button",
 		                      className: "playground-files-header-icon-button is-plain playground-metronome-inspector-docs",

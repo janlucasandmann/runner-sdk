@@ -6,6 +6,7 @@ import {
   normalizeAdCreationCommandFromMetadata,
   normalizeRunnerAdCreationSettings,
   parseAutoStageBacklogSubtaskCommand,
+  parseAutoStageBatchCreationCommand,
   parseAutoStageResourceCreationCommand,
   resolveRunnerSlashCommandInputState,
 } from "./composer-commands.js";
@@ -45,7 +46,7 @@ describe("runner composer commands", () => {
           aspect_ratio: "9:16",
           variant_count: 2,
         },
-      })
+      }),
     ).toMatchObject({
       action: "ad",
       label: "/ad",
@@ -66,6 +67,9 @@ describe("runner composer commands", () => {
     expect(parseAutoStageResourceCreationCommand("/computer persistent build host")).toEqual({
       action: "computer",
       prompt: "persistent build host",
+    });
+    expect(parseAutoStageBatchCreationCommand("/Batch review this repository")).toEqual({
+      prompt: "review this repository",
     });
   });
 

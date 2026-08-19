@@ -59,6 +59,65 @@ function assertBoolean(value, path) {
   return value;
 }
 
+function assertString(value, path, pattern, maximumLength = 120) {
+  if (
+    typeof value !== "string"
+    || !value.trim()
+    || value.trim().length > maximumLength
+    || !pattern.test(value.trim())
+  ) {
+    throw new DeploymentProfileIntegrityError(`${path} is invalid.`);
+  }
+  return value.trim();
+}
+
+function assertCoordinate(value, path, minimum, maximum) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < minimum || value > maximum) {
+    throw new DeploymentProfileIntegrityError(
+      `${path} must be a finite number between ${minimum} and ${maximum}.`,
+    );
+  }
+  return value;
+}
+
+function validateDeploymentEndpoint(value, path) {
+  if (value === null) return null;
+  const endpoint = assertRecord(value, path);
+  const principal = assertRecord(endpoint.principal, `${path}.principal`);
+  const region = assertRecord(endpoint.region, `${path}.region`);
+  if (endpoint.id !== "deployment-inference-endpoint") {
+    throw new DeploymentProfileIntegrityError(`${path}.id is unsupported.`);
+  }
+  if (principal.type !== "appliance") {
+    throw new DeploymentProfileIntegrityError(`${path}.principal.type is unsupported.`);
+  }
+  return {
+    id: "deployment-inference-endpoint",
+    name: assertString(endpoint.name, `${path}.name`, /^[^\r\n\0]+$/),
+    principal: {
+      type: "appliance",
+      id: assertString(
+        principal.id,
+        `${path}.principal.id`,
+        /^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/,
+        160,
+      ),
+      name: assertString(principal.name, `${path}.principal.name`, /^[^\r\n\0]+$/),
+    },
+    region: {
+      code: assertString(
+        region.code,
+        `${path}.region.code`,
+        /^[a-z0-9][a-z0-9._-]{0,63}$/,
+        64,
+      ),
+      label: assertString(region.label, `${path}.region.label`, /^[^\r\n\0]+$/),
+      latitude: assertCoordinate(region.latitude, `${path}.region.latitude`, -90, 90),
+      longitude: assertCoordinate(region.longitude, `${path}.region.longitude`, -180, 180),
+    },
+  };
+}
+
 function assertAgentList(value, path) {
   if (
     !Array.isArray(value)
@@ -123,6 +182,15 @@ export function validatePublicDeploymentProfileEnvelope(
     ]),
   );
   const fixedModelId = rawInference.fixedModelId;
+  const inferenceMode = assertEnum(
+    rawInference.mode,
+    INFERENCE_MODES,
+    "deployment inference profile.mode",
+  );
+  const hasDeploymentEndpoint = Object.prototype.hasOwnProperty.call(
+    rawInference,
+    "deploymentEndpoint",
+  );
   if (fixedModelId !== null && (typeof fixedModelId !== "string" || !fixedModelId.trim())) {
     throw new DeploymentProfileIntegrityError(
       "deployment inference profile.fixedModelId must be null or a non-empty string.",
@@ -139,8 +207,14 @@ export function validatePublicDeploymentProfileEnvelope(
     capabilities,
     product: {
       inference: {
-        mode: assertEnum(rawInference.mode, INFERENCE_MODES, "deployment inference profile.mode"),
+        mode: inferenceMode,
         fixedModelId: fixedModelId === null ? null : fixedModelId.trim(),
+        deploymentEndpoint: !hasDeploymentEndpoint && inferenceMode === "managed_catalog"
+          ? null
+          : validateDeploymentEndpoint(
+            rawInference.deploymentEndpoint,
+            "deployment inference profile.deploymentEndpoint",
+          ),
       },
       agents: {
         visibleBuiltIns: assertAgentList(
@@ -202,10 +276,28 @@ export function validatePublicDeploymentProfileEnvelope(
   }
 
   const profileHash = hashPublicDeploymentProfile(profile);
+  const acceptedProfileHashes = new Set([profileHash]);
+  if (
+    !hasDeploymentEndpoint
+    && profile.profileId === "cloud-saas-v1"
+    && profile.product.inference.mode === "managed_catalog"
+  ) {
+    const legacyCloudProfile = {
+      ...profile,
+      product: {
+        ...profile.product,
+        inference: {
+          mode: profile.product.inference.mode,
+          fixedModelId: profile.product.inference.fixedModelId,
+        },
+      },
+    };
+    acceptedProfileHashes.add(hashPublicDeploymentProfile(legacyCloudProfile));
+  }
   if (
     typeof envelopeRecord.hash !== "string"
     || !/^[a-f0-9]{64}$/.test(envelopeRecord.hash)
-    || envelopeRecord.hash !== profileHash
+    || !acceptedProfileHashes.has(envelopeRecord.hash)
   ) {
     throw new DeploymentProfileIntegrityError("Deployment profile integrity hash mismatch.");
   }
@@ -218,6 +310,7 @@ export function validatePublicDeploymentProfileEnvelope(
       || profile.topology !== "on_prem"
       || profile.product.inference.mode !== "deployment_fixed"
       || !profile.product.inference.fixedModelId
+      || !profile.product.inference.deploymentEndpoint
       || profile.product.commerce.mode !== "none"
       || profile.product.commerce.entitlementSource !== "deployment_license"
       || profile.product.usage.mode !== "observability_only"
@@ -238,7 +331,7 @@ export function validatePublicDeploymentProfileEnvelope(
 
   return Object.freeze({
     profile: freezeRecursively(profile),
-    hash: profileHash,
+    hash: envelopeRecord.hash,
   });
 }
 
@@ -265,7 +358,11 @@ export function createCloudCompatibilityDeploymentProfile(stage = "prod") {
       commercialUsageLimits: true,
     },
     product: {
-      inference: { mode: "managed_catalog", fixedModelId: null },
+      inference: {
+        mode: "managed_catalog",
+        fixedModelId: null,
+        deploymentEndpoint: null,
+      },
       agents: {
         visibleBuiltIns: ["spark", "forge", "foundry"],
         defaultBuiltIn: "spark",

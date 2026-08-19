@@ -15,6 +15,7 @@ export const GUARDRAILS_APP_REFS_SCRIPT = `        const guardrailsToolbarRef = 
         const guardrailsBackendMigratedLocalRef = useRef(false);
         const guardrailPersistTimersRef = useRef(new Map());
         const guardrailPersistSignaturesRef = useRef(new Map());
+        const guardrailLocalPromptDraftsRef = useRef(new Map());
         const guardrailEvaluationRequestRef = useRef({ token: 0, guardrailSetId: "" });
         const guardrailEvaluationCatalogRequestRef = useRef(null);
 `;

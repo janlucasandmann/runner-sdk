@@ -58,36 +58,70 @@ export const GUARDRAILS_APP_ACTIONS_SCRIPT = `        function clearGuardrailVer
           setActivePage("guardrails");
           focusGuardrailTitleInput();
         }
-        async function handleDeleteGuardrailSet(setId) {
-          const normalizedSetId = String(setId || "").trim();
-          if (!normalizedSetId) return;
-          const targetSet = allGuardrailSets.find((set) => set?.id === normalizedSetId);
-          if (!targetSet || isPlaygroundDefaultGuardrailSet(targetSet)) return;
-          const confirmed = typeof window === "undefined" || window.confirm("Delete " + (targetSet?.name || "this guardrail set") + "?");
+        async function handleDeleteGuardrailSets(setIds) {
+          const normalizedSetIds = Array.from(new Set(
+            (Array.isArray(setIds) ? setIds : [setIds])
+              .map((setId) => String(setId || "").trim())
+              .filter(Boolean)
+          ));
+          const targetSets = normalizedSetIds
+            .map((setId) => allGuardrailSets.find((set) => set?.id === setId) || null)
+            .filter((set) => set && !isPlaygroundDefaultGuardrailSet(set));
+          if (!targetSets.length) return;
+          const targetIds = new Set(targetSets.map((set) => set.id));
+          const confirmationMessage = targetSets.length === 1
+            ? "Delete " + (targetSets[0]?.name || "this guardrail set") + "?"
+            : "Delete " + targetSets.length + " selected guardrail sets?";
+          const confirmed = typeof window === "undefined" || window.confirm(confirmationMessage);
           if (!confirmed) return;
           setGuardrailSetActionMenuId("");
           setGuardrailDetailActionsMenuOpen(false);
           const previousSets = Array.isArray(guardrailSets) ? guardrailSets : [];
-          setGuardrailSets((current) => (Array.isArray(current) ? current : []).filter((set) => set?.id !== normalizedSetId));
-          if (selectedGuardrailSetId === normalizedSetId) {
-            const fallbackSet = allGuardrailSets.find((set) => set?.id !== normalizedSetId);
+          setGuardrailSets((current) => (Array.isArray(current) ? current : []).filter((set) => !targetIds.has(set?.id)));
+          if (targetIds.has(selectedGuardrailSetId)) {
+            const fallbackSet = allGuardrailSets.find((set) => !targetIds.has(set?.id));
             setSelectedGuardrailSetId(fallbackSet?.id || "");
             resetGuardrailVersionTransientState();
             if (guardrailsPageMode === "detail") {
               setGuardrailsPageMode("overview");
             }
           }
-          try {
-            await requestGuardrailBackendJson(
-              "/guardrails/" + encodeURIComponent(normalizedSetId),
+          const results = await Promise.allSettled(targetSets.map((targetSet) =>
+            requestGuardrailBackendJson(
+              "/guardrails/" + encodeURIComponent(targetSet.id),
               { method: "DELETE" },
               "Failed to delete guardrail set."
-            );
-            guardrailPersistSignaturesRef.current.delete(normalizedSetId);
-          } catch (error) {
-            setGuardrailSets(previousSets);
-            setGuardrailsBackendSyncState({ status: "error", error: error?.message || String(error) });
+            )
+          ));
+          const failedIds = new Set();
+          results.forEach((result, index) => {
+            const targetId = targetSets[index]?.id;
+            if (!targetId) return;
+            if (result.status === "fulfilled") {
+              guardrailPersistSignaturesRef.current.delete(targetId);
+              guardrailLocalPromptDraftsRef.current.delete(targetId);
+            } else {
+              failedIds.add(targetId);
+            }
+          });
+          if (failedIds.size) {
+            setGuardrailSets((current) => {
+              const currentSets = Array.isArray(current) ? current : [];
+              const restored = previousSets.filter((set) => failedIds.has(set?.id));
+              const currentIds = new Set(currentSets.map((set) => set?.id));
+              return [...currentSets, ...restored.filter((set) => !currentIds.has(set?.id))]
+                .sort((left, right) => (Date.parse(right?.updatedAt || 0) || 0) - (Date.parse(left?.updatedAt || 0) || 0));
+            });
+            setGuardrailsBackendSyncState({
+              status: "error",
+              error: failedIds.size === 1
+                ? "One guardrail set could not be deleted."
+                : failedIds.size + " guardrail sets could not be deleted.",
+            });
           }
+        }
+        async function handleDeleteGuardrailSet(setId) {
+          return await handleDeleteGuardrailSets([setId]);
         }
         function renderGuardrailActionMenuItems(setId, options = {}) {
           const targetSet = allGuardrailSets.find((set) => String(set?.id || "") === String(setId || "")) || null;

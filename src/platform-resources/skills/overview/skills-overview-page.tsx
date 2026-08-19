@@ -1,7 +1,14 @@
 import { ChevronRight, Sparkles, SquarePen, Trash2 } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
-import type { PlatformDataTableAction, PlatformDataTableColumn } from "../../../platform-ui/components/composite/data-table/index.js";
+import type {
+  PlatformDataTableAction,
+  PlatformDataTableColumn,
+  PlatformDataTableRowGroupingConfig,
+  PlatformDataTableRowReorderingConfig,
+  PlatformDataTableSortingConfig,
+} from "../../../platform-ui/components/composite/data-table/index.js";
 import {
+  ResourceOverviewCatalogIdentityCell,
   ResourceOverviewIdentityCell,
   ResourceOverviewPage,
   ResourceOverviewValue,
@@ -55,6 +62,15 @@ export interface SkillsOverviewPageProps {
   heroContent?: ReactNode;
   pageClassName?: string;
   grouping?: "skills" | "flat";
+  rowGrouping?: PlatformDataTableRowGroupingConfig<SkillOverviewRow>;
+  rowReordering?: PlatformDataTableRowReorderingConfig<SkillOverviewRow>;
+  sorting?: PlatformDataTableSortingConfig;
+  sortableColumns?: boolean;
+  /** Optional service-owned actions when this catalog shell is reused. */
+  rowActions?: (
+    row: SkillOverviewRow,
+    state: { targetRows: readonly SkillOverviewRow[] },
+  ) => readonly PlatformDataTableAction<SkillOverviewRow>[];
 }
 
 function getCreatorName(row: SkillOverviewRow): string {
@@ -93,36 +109,31 @@ export function SkillsOverviewPage({
   heroContent = <SkillsOverviewGuide />,
   pageClassName = "is-skills",
   grouping = "skills",
+  rowGrouping,
+  rowReordering,
+  sorting,
+  sortableColumns = true,
+  rowActions,
 }: SkillsOverviewPageProps) {
   const columns = useMemo<PlatformDataTableColumn<SkillOverviewRow>[]>(() => [
     {
       id: "name",
       header: "Name",
       accessor: "name",
-      sortable: true,
+      sortable: sortableColumns,
       width: "minmax(320px, 1.8fr)",
       cell: ({ row }) => (
-        <div className="resource-overview-identity is-catalog">
-          <span
-            className={`resource-overview-identity__visual is-skill${
+        <ResourceOverviewCatalogIdentityCell
+          title={row.name}
+          description={row.description}
+          icon={row.icon || <Sparkles width={16} height={16} strokeWidth={1.8} />}
+          iconClassName={`is-skill${
               row.isComputerAgents
                 || row.id.trim().toLowerCase() === "computer_agents"
                 ? " is-computer-agents"
                 : ""
             }`}
-            aria-hidden="true"
-          >
-            {row.icon || <Sparkles width={16} height={16} strokeWidth={1.8} />}
-          </span>
-          <span className="resource-overview-identity__copy">
-            <span className="resource-overview-identity__title">{row.name}</span>
-            {row.description ? (
-              <span className="resource-overview-identity__description">
-                {row.description}
-              </span>
-            ) : null}
-          </span>
-        </div>
+        />
       ),
     },
     {
@@ -151,15 +162,16 @@ export function SkillsOverviewPage({
       id: "updated",
       header: "Updated",
       accessor: (row) => row.updatedAt || 0,
-      sortable: true,
+      sortable: sortableColumns,
       sortDescFirst: true,
       width: "minmax(120px, 0.48fr)",
       hideBelow: 900,
       cell: ({ row }) => <ResourceOverviewValue title={row.updatedTitle}>{row.updatedLabel}</ResourceOverviewValue>,
     },
-  ], []);
+  ], [sortableColumns]);
 
   const getRowActions = (row: SkillOverviewRow, state: { targetRows: readonly SkillOverviewRow[] }): readonly PlatformDataTableAction<SkillOverviewRow>[] => {
+    if (rowActions) return rowActions(row, state);
     const targets = state.targetRows.length ? state.targetRows : [row];
     const customTargets = targets.filter((target) => target.isCustom);
     if (targets.length > 1) {
@@ -197,8 +209,8 @@ export function SkillsOverviewPage({
         ariaLabel: resourceName,
         className: `resource-overview-table ${pageClassName}`,
         variant: "catalog-ui",
-        sorting: { defaultValue: { id: "updated", direction: "desc" } },
-        rowGrouping: grouping === "flat" ? undefined : {
+        sorting: sorting ?? { defaultValue: { id: "updated", direction: "desc" } },
+        rowGrouping: rowGrouping ?? (grouping === "flat" ? undefined : {
           groups: [
             {
               id: "system",
@@ -212,7 +224,8 @@ export function SkillsOverviewPage({
             },
           ],
           getGroupId: (row) => row.isCustom ? "custom" : "system",
-        },
+        }),
+        rowReordering,
         pagination: false,
         toolbar: {
           search: {

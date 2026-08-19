@@ -639,25 +639,45 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
             await duplicateWorkflow(activeWorkflow);
           }, [activeWorkflow, duplicateWorkflow]);
 
-          const deleteWorkflow = useCallback((workflow) => {
-            if (!workflow || isMetronomeWorkflowBuiltIn(workflow)) return;
-            const workflowId = String(workflow.id || "").trim();
-            if (!workflowId) return;
-            const confirmed = window.confirm("Delete \"" + (workflow.name || "Untitled Metronome") + "\"? This cannot be undone.");
+          const deleteWorkflows = useCallback(async (workflowRecords) => {
+            const targetWorkflows = Array.from(new Map(
+              (Array.isArray(workflowRecords) ? workflowRecords : [workflowRecords])
+                .filter((workflow) => workflow && !isMetronomeWorkflowBuiltIn(workflow) && !isMetronomeWorkflowTeamShared(workflow))
+                .map((workflow) => [String(workflow.id || "").trim(), workflow])
+                .filter(([workflowId]) => Boolean(workflowId))
+            ).values());
+            if (!targetWorkflows.length) return;
+            const confirmed = window.confirm(
+              targetWorkflows.length === 1
+                ? "Delete \"" + (targetWorkflows[0]?.name || "Untitled Metronome") + "\"? This cannot be undone."
+                : "Delete " + targetWorkflows.length + " selected Metronomes? This cannot be undone."
+            );
             if (!confirmed) return;
-            setWorkflows((current) => current.filter((workflow) => workflow.id !== workflowId));
-            if (workflowId === activeWorkflowId) {
+            const targetIds = new Set(targetWorkflows.map((workflow) => String(workflow.id || "").trim()));
+            setWorkflows((current) => current.filter((workflow) => !targetIds.has(String(workflow?.id || "").trim())));
+            if (targetIds.has(activeWorkflowId)) {
               setActiveWorkflowId("");
               setSelectedNodeId("");
             }
             if (isMetronomeApiAvailable) {
-              void deleteMetronomeWorkflowApi(workflowId)
-                .catch((error) => {
-                  console.warn("[Metronome] Failed to delete persisted workflow", error);
-                  setIsMetronomeApiAvailable(false);
+              const results = await Promise.allSettled(
+                targetWorkflows.map((workflow) => deleteMetronomeWorkflowApi(String(workflow.id || "").trim()))
+              );
+              const failedWorkflows = targetWorkflows.filter((_, index) => results[index]?.status === "rejected");
+              if (failedWorkflows.length) {
+                console.warn("[Metronome] Failed to delete persisted workflows", results.filter((result) => result.status === "rejected"));
+                setWorkflows((current) => {
+                  const currentIds = new Set(current.map((workflow) => String(workflow?.id || "").trim()));
+                  return [...current, ...failedWorkflows.filter((workflow) => !currentIds.has(String(workflow.id || "").trim()))];
                 });
+                setIsMetronomeApiAvailable(false);
+              }
             }
           }, [activeWorkflowId, isMetronomeApiAvailable]);
+
+          const deleteWorkflow = useCallback((workflow) => {
+            void deleteWorkflows([workflow]);
+          }, [deleteWorkflows]);
 
           const hideTeamSharedMetronomeWorkflowFromList = useCallback((workflow) => {
             if (!workflow || !isMetronomeWorkflowTeamShared(workflow)) return;

@@ -32,7 +32,9 @@ function pageStyles() {
     button { min-height: 46px; border: 0; border-radius: 12px; background: #fff; color: #090909; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity 140ms ease, transform 140ms ease; }
     button:hover { opacity: .9; }
     button:active { transform: scale(.99); }
+    .primary-link { display: block; min-height: 46px; border-radius: 12px; background: #fff; color: #090909; padding: 13px 16px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 500; }
     .error { margin: 0 0 14px; border: 1px solid rgba(245,59,58,.3); border-radius: 12px; background: rgba(245,59,58,.1); color: #ff8f8e; padding: 12px 14px; font-size: 12px; line-height: 1.5; }
+    .success { margin: 0 0 20px; border: 1px solid rgba(133,223,123,.28); border-radius: 12px; background: rgba(133,223,123,.1); color: #b6efaf; padding: 12px 14px; font-size: 12px; line-height: 1.5; }
     .requirements { margin: 0 2px 2px; color: rgba(255,255,255,.48); font-size: 11px; line-height: 1.5; }
     .legal { margin: 18px 0 0; color: rgba(255,255,255,.45); font-size: 11px; line-height: 1.55; }
     .legal a, .switch-copy a { color: rgba(255,255,255,.85); }
@@ -76,13 +78,121 @@ export function renderSignUpPage({ csrfToken, values = {}, error = "" }) {
 </html>`;
 }
 
+export function renderForgotPasswordPage({
+  csrfToken = "",
+  values = {},
+  error = "",
+  sent = false,
+} = {}) {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Reset your Computer Agents password</title>
+    <style>${pageStyles()}</style>
+  </head>
+  <body>
+    <header class="auth-header"><a class="wordmark" href="/"><span>computer</span><em>agents</em></a></header>
+    <main class="auth-main">
+      <section class="auth-shell" aria-labelledby="forgot-password-title">
+        <img class="auth-logo" src="/img/logos/runnertransparent.webp" alt="">
+        <h1 id="forgot-password-title">Forgot your password?</h1>
+        <p class="subtitle">Enter your email and we will send you a secure reset link.</p>
+        ${error ? `<div class="error" role="alert">${escapeHtml(error)}</div>` : ""}
+        ${sent ? `<div class="success" role="status">If an account exists for that email, a password reset link has been sent.</div>` : `
+        <form method="post" action="/forgot-password" autocomplete="on">
+          <input type="hidden" name="csrf" value="${escapeHtml(csrfToken)}">
+          <input required maxlength="320" name="email" type="email" autocomplete="email" inputmode="email" placeholder="Email address" value="${escapeHtml(values.email)}">
+          <button type="submit">Send reset link</button>
+        </form>`}
+        <p class="switch-copy"><a href="/api/platform/auth/login">Back to sign in</a></p>
+      </section>
+    </main>
+  </body>
+</html>`;
+}
+
+export function renderResetPasswordPage({
+  csrfToken = "",
+  token = "",
+  error = "",
+  complete = false,
+  invalid = false,
+} = {}) {
+  const content = complete
+    ? `<div class="success" role="status">Your password has been updated. You can now sign in with your new password.</div>
+       <a class="primary-link" href="/api/platform/auth/login">Continue to sign in</a>`
+    : invalid
+      ? `<div class="error" role="alert">This password reset link is invalid, expired, or has already been used.</div>
+         <a class="primary-link" href="/forgot-password">Request a new link</a>`
+      : `${error ? `<div class="error" role="alert">${escapeHtml(error)}</div>` : ""}
+         <form method="post" action="/reset-password" autocomplete="on">
+           <input type="hidden" name="csrf" value="${escapeHtml(csrfToken)}">
+           <input type="hidden" name="token" value="${escapeHtml(token)}">
+           <input required minlength="12" maxlength="128" name="password" type="password" autocomplete="new-password" placeholder="New password" autofocus>
+           <input required minlength="12" maxlength="128" name="confirmPassword" type="password" autocomplete="new-password" placeholder="Confirm new password">
+           <p class="requirements">Use at least 12 characters with uppercase, lowercase, a number, and a symbol.</p>
+           <button type="submit">Update password</button>
+         </form>`;
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Choose a new Computer Agents password</title>
+    <style>${pageStyles()}</style>
+  </head>
+  <body>
+    <header class="auth-header"><a class="wordmark" href="/"><span>computer</span><em>agents</em></a></header>
+    <main class="auth-main">
+      <section class="auth-shell" aria-labelledby="reset-password-title">
+        <img class="auth-logo" src="/img/logos/runnertransparent.webp" alt="">
+        <h1 id="reset-password-title">Choose a new password</h1>
+        <p class="subtitle">Set a new password for your Computer Agents account.</p>
+        ${content}
+      </section>
+    </main>
+  </body>
+</html>`;
+}
+
+export function validatePasswordFields(fields) {
+  const password = String(fields.password || "");
+  const confirmPassword = String(fields.confirmPassword || "");
+  const passwordIsStrong = password.length >= 12
+    && password.length <= 128
+    && /[a-z]/.test(password)
+    && /[A-Z]/.test(password)
+    && /\d/.test(password)
+    && /[^A-Za-z0-9]/.test(password);
+  if (!passwordIsStrong) {
+    return {
+      ok: false,
+      error: "Use at least 12 characters with uppercase, lowercase, a number, and a symbol.",
+    };
+  }
+  if (password !== confirmPassword) {
+    return { ok: false, error: "Passwords do not match." };
+  }
+  return { ok: true, password };
+}
+
+export function validateResetEmail(value) {
+  const email = String(value || "").trim().toLowerCase();
+  if (!EMAIL_PATTERN.test(email) || email.length > 320 || /[\r\n\0]/.test(email)) {
+    return { ok: false, email, error: "Enter a valid email address." };
+  }
+  return { ok: true, email };
+}
+
 export function validateSignUpFields(fields) {
   const values = {
     name: String(fields.name || "").trim().replace(/\s+/g, " "),
     email: String(fields.email || "").trim().toLowerCase(),
   };
-  const password = String(fields.password || "");
-  const confirmPassword = String(fields.confirmPassword || "");
   if (!values.name || values.name.length > 100) {
     return { ok: false, values, error: "Enter your full name." };
   }
@@ -93,23 +203,11 @@ export function validateSignUpFields(fields) {
   ) {
     return { ok: false, values, error: "Enter a valid email address." };
   }
-  const passwordIsStrong = password.length >= 12
-    && password.length <= 128
-    && /[a-z]/.test(password)
-    && /[A-Z]/.test(password)
-    && /\d/.test(password)
-    && /[^A-Za-z0-9]/.test(password);
-  if (!passwordIsStrong) {
-    return {
-      ok: false,
-      values,
-      error: "Use at least 12 characters with uppercase, lowercase, a number, and a symbol.",
-    };
+  const passwordValidation = validatePasswordFields(fields);
+  if (!passwordValidation.ok) {
+    return { ...passwordValidation, values };
   }
-  if (password !== confirmPassword) {
-    return { ok: false, values, error: "Passwords do not match." };
-  }
-  return { ok: true, values, password };
+  return { ok: true, values, password: passwordValidation.password };
 }
 
 export async function readUrlEncodedForm(request) {

@@ -4,6 +4,7 @@ export const TESTS_APP_PAGE_VIEW_SCRIPT = String.raw`        function renderTest
             backendUrl: proxyBackendBase,
             requestHeaders,
             mode: testsPageMode,
+            overviewScope: testsOverviewScope,
             selectedTestPlanId,
             selectedTestCaseId,
             selectedTestRunId,

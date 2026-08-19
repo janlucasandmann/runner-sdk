@@ -3,7 +3,11 @@ import test from "node:test";
 
 import {
   createSignUpRateLimiter,
+  renderForgotPasswordPage,
+  renderResetPasswordPage,
   renderSignUpPage,
+  validatePasswordFields,
+  validateResetEmail,
   validateSignUpFields,
 } from "./local-account-pages.mjs";
 
@@ -38,6 +42,42 @@ test("renders a first-party account form without social providers", () => {
   assert.match(html, /Create your account/);
   assert.match(html, /name="csrf" value="signed-token"/);
   assert.doesNotMatch(html, /Google|Apple|Microsoft/);
+});
+
+test("renders first-party request and password update forms", () => {
+  const html = renderForgotPasswordPage({ csrfToken: "request-csrf" });
+  assert.match(html, /Forgot your password\?/);
+  assert.match(html, /name="email"/);
+  assert.match(html, /name="csrf" value="request-csrf"/);
+  assert.match(html, /href="\/api\/platform\/auth\/login"/);
+
+  const reset = renderResetPasswordPage({
+    csrfToken: "reset-csrf",
+    token: "encrypted-reset-token",
+  });
+  assert.match(reset, /Choose a new password/);
+  assert.match(reset, /name="token" value="encrypted-reset-token"/);
+  assert.match(reset, /name="csrf" value="reset-csrf"/);
+  assert.doesNotMatch(reset, /onclick=/);
+});
+
+test("validates reset emails and strong matching passwords", () => {
+  assert.deepEqual(validateResetEmail(" Operator@Example.test "), {
+    ok: true,
+    email: "operator@example.test",
+  });
+  assert.equal(validateResetEmail("invalid").ok, false);
+  assert.deepEqual(validatePasswordFields({
+    password: "Replacement-Horse-42!",
+    confirmPassword: "Replacement-Horse-42!",
+  }), {
+    ok: true,
+    password: "Replacement-Horse-42!",
+  });
+  assert.equal(validatePasswordFields({
+    password: "Replacement-Horse-42!",
+    confirmPassword: "different",
+  }).ok, false);
 });
 
 test("limits repeated signup attempts per client address", () => {

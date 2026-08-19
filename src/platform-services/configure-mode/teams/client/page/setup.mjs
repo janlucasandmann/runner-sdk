@@ -7,6 +7,7 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
           const resourceTypeOptions = [
             { value: "project", label: "Projects", createLabel: "Create new project" },
             { value: "metronome", label: "Metronome Workflow", createLabel: "Create new workflow" },
+            { value: "batch_job", label: "Batches", createLabel: "Create new Batch" },
             { value: "environment", label: "Computers", createLabel: "Create new computer" },
             { value: "agent", label: "Agents", createLabel: "Create new agent" },
             { value: "imagine_template", label: "Imagine templates", createLabel: "Create new template" },
@@ -228,6 +229,15 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
               meta: agent.description || agent.model || "Agent",
             })).filter((item) => item.id),
             metronome: teamPageMetronomeWorkflowOptions,
+            batch_job: (Array.isArray(teamPageBatchJobs) ? teamPageBatchJobs : []).map((job) => ({
+              id: String(job?.id || "").trim(),
+              label: String(job?.name || "Untitled Batch").trim() || "Untitled Batch",
+              meta: [
+                String(job?.targetKind || "").replace(/_/g, " "),
+                String(job?.status || ""),
+              ].filter(Boolean).join(" · ") || "Batch",
+              record: job,
+            })).filter((item) => item.id),
             imagine_template: teamPageImagineTemplateOptions,
           };
           const directlySharedResourceKeys = new Set((Array.isArray(teamPageShares) ? teamPageShares : [])
@@ -620,6 +630,10 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
               });
               return;
             }
+            if (normalizedType === "batch_job") {
+              openBatchesOverviewPage();
+              return;
+            }
             if (normalizedType === "imagine_template") {
               setImagineActiveView("create-template");
               openImaginePage();
@@ -644,6 +658,7 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
               environment: "#ffffff",
               agent: "#ffffff",
               metronome: "#ffffff",
+              batch_job: "#ffffff",
               imagine_template: "#ffffff",
             };
             const selectedResourceTriggerTitle = selectedResourceOption?.label || "Select " + resourceSingularLabel.toLowerCase();

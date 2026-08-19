@@ -17,6 +17,7 @@ describe("composer selector controls", () => {
         displayedAgentLabel="Forge"
         hasApiKey
         hidden={false}
+        locked
         mode="agents"
         onCloseReasoning={vi.fn()}
         onDoneReasoning={vi.fn()}
@@ -45,6 +46,8 @@ describe("composer selector controls", () => {
     expect(html).toContain('class="tb-inline-selector-label"');
     expect(html).toContain('title="Forge"');
     expect(html).toContain('data-platform-hover-label="Agent"');
+    expect(html).toContain("is-locked");
+    expect(html).toContain("disabled");
   });
 
   it("marks the selected workspace label as a truncation target", () => {
@@ -58,6 +61,7 @@ describe("composer selector controls", () => {
         environments={[{ id: "environment_1", name: workspaceName }]}
         hasApiKey
         hidden={false}
+        locked
         mode="computers"
         onModeChange={vi.fn()}
         onSelectEnvironment={vi.fn()}
@@ -76,6 +80,8 @@ describe("composer selector controls", () => {
     expect(html).toContain('class="tb-inline-selector-label"');
     expect(html).toContain(`title="${workspaceName}"`);
     expect(html).toContain('data-platform-hover-label="Environment"');
+    expect(html).toContain("is-locked");
+    expect(html).toContain("disabled");
   });
 
   it("resolves the default organization label", () => {

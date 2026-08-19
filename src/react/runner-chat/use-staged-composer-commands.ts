@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import {
   buildRunnerAgentCreationLabel,
   buildRunnerBacklogSubtaskLabel,
+  buildRunnerBatchCreationLabel,
   buildRunnerMissionControlLabel,
   buildRunnerParseCreationLabel,
   buildRunnerResearchCreationLabel,
@@ -16,6 +17,7 @@ import {
   parseAutoStageAgentCreationCommand,
   parseAutoStageBacklogMissionControlCommand,
   parseAutoStageBacklogSubtaskCommand,
+  parseAutoStageBatchCreationCommand,
   parseAutoStageParseCreationCommand,
   parseAutoStageResearchCreationCommand,
   parseAutoStageResourceCreationCommand,
@@ -30,6 +32,7 @@ import {
   type StagedAgentCreationCommand,
   type StagedBacklogMissionControlCommand,
   type StagedBacklogSubtaskCommand,
+  type StagedBatchCreationCommand,
   type StagedParseCreationCommand,
   type StagedResearchCreationCommand,
   type StagedResourceCreationCommand,
@@ -54,6 +57,7 @@ interface RunnerStagedComposerCommands {
   adCreation: StagedAdCreationCommand | null;
   backlogSubtask: StagedBacklogSubtaskCommand | null;
   backlogMissionControl: StagedBacklogMissionControlCommand | null;
+  batchCreation: StagedBatchCreationCommand | null;
 }
 
 type RunnerStagedComposerCommandKey = keyof RunnerStagedComposerCommands;
@@ -70,6 +74,7 @@ const EMPTY_STAGED_COMPOSER_COMMANDS: RunnerStagedComposerCommands = {
   adCreation: null,
   backlogSubtask: null,
   backlogMissionControl: null,
+  batchCreation: null,
 };
 
 const BACKSPACE_DISMISS_ORDER: readonly RunnerStagedComposerCommandKey[] = [
@@ -84,6 +89,7 @@ const BACKSPACE_DISMISS_ORDER: readonly RunnerStagedComposerCommandKey[] = [
   "adCreation",
   "backlogSubtask",
   "backlogMissionControl",
+  "batchCreation",
 ];
 
 export interface UseRunnerStagedComposerCommandsOptions {
@@ -93,6 +99,7 @@ export interface UseRunnerStagedComposerCommandsOptions {
 }
 
 export interface RunnerComposerAutoStageCapabilities {
+  batchCreation?: boolean;
   backlogMissionControl?: boolean;
   backlogSubtask?: boolean;
   agentCreation?: boolean;
@@ -174,6 +181,16 @@ export function useRunnerStagedComposerCommands({
           action: "mission_control",
           label: buildRunnerMissionControlLabel(),
         },
+        prompt,
+      );
+    },
+    [stageCommand],
+  );
+  const stageBatchCreationCommand = useCallback(
+    (prompt = "") => {
+      stageCommand(
+        "batchCreation",
+        { action: "batch", label: buildRunnerBatchCreationLabel() },
         prompt,
       );
     },
@@ -303,6 +320,13 @@ export function useRunnerStagedComposerCommands({
         stageParseCreationCommand(parse.prompt);
         return true;
       }
+      if (capabilities.batchCreation) {
+        const batch = parseAutoStageBatchCreationCommand(input);
+        if (batch) {
+          stageBatchCreationCommand(batch.prompt);
+          return true;
+        }
+      }
       if (capabilities.resourceCreation) {
         const resource = parseAutoStageResourceCreationCommand(input);
         if (resource) {
@@ -346,6 +370,7 @@ export function useRunnerStagedComposerCommands({
       stageAgentCreationCommand,
       stageBacklogMissionControlCommand,
       stageBacklogSubtaskCommand,
+      stageBatchCreationCommand,
       stageParseCreationCommand,
       stageResearchCreationCommand,
       stageResourceCreationCommand,
@@ -375,6 +400,7 @@ export function useRunnerStagedComposerCommands({
     stagedAdCreationCommand: commands.adCreation,
     stagedBacklogSubtaskCommand: commands.backlogSubtask,
     stagedBacklogMissionControlCommand: commands.backlogMissionControl,
+    stagedBatchCreationCommand: commands.batchCreation,
     clearAllStagedCommands: clearAll,
     clearStagedCommand: clearCommand,
     dismissActiveCommand,
@@ -384,6 +410,7 @@ export function useRunnerStagedComposerCommands({
     stageThreadContextCommand,
     stageBacklogSubtaskCommand,
     stageBacklogMissionControlCommand,
+    stageBatchCreationCommand,
     stageResourceCreationCommand,
     stageAgentCreationCommand,
     stageSkillCreationCommand,

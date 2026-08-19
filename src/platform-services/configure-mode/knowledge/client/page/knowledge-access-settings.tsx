@@ -20,7 +20,7 @@ import type { PlatformPermissionSet } from "../../../../../platform-ui/pages/per
 import type { KnowledgeApi } from "../api/index.js";
 import type { KnowledgeLibrary } from "../domain/index.js";
 
-interface KnowledgeAccessTeam extends PlatformAccessPrincipal {
+export interface KnowledgeAccessTeam extends PlatformAccessPrincipal {
   roleId: string;
 }
 
@@ -38,7 +38,7 @@ function asRecord(value: unknown): Record<string, unknown> {
     : {};
 }
 
-function normalizeTeam(value: unknown): KnowledgeAccessTeam | null {
+export function normalizeKnowledgeAccessTeam(value: unknown): KnowledgeAccessTeam | null {
   const source = asRecord(value);
   const metadata = asRecord(source.metadata);
   const profile = asRecord(metadata.profile);
@@ -76,7 +76,9 @@ export function KnowledgeAccessSettings({
   const metadata = asRecord(library.metadata);
   const sharedTeamIds = useMemo(() => new Set(getPlatformSharedTeamIds(metadata)), [metadata]);
   const allTeams = useMemo(
-    () => workspaceTeams.map(normalizeTeam).filter((team): team is KnowledgeAccessTeam => Boolean(team)),
+    () => workspaceTeams
+      .map(normalizeKnowledgeAccessTeam)
+      .filter((team): team is KnowledgeAccessTeam => Boolean(team)),
     [workspaceTeams],
   );
   const sharedTeams = useMemo(
@@ -265,4 +267,3 @@ export function KnowledgeAccessSettings({
     />
   );
 }
-

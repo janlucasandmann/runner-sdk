@@ -591,19 +591,16 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
             const activityEvents = getProjectOverviewTaskActivityEvents();
             const activityTimelineItems = buildProjectOverviewTaskActivityTimelineItems(activityEvents);
             const activeProjectOverviewSectionTab = projectOverviewActivityTab === "activity"
-              || projectOverviewActivityTab === "strategy"
-                ? projectOverviewActivityTab
-                : "threads";
+              ? "activity"
+              : "threads";
             const isThreadsTab = activeProjectOverviewSectionTab === "threads";
             const isActivityTab = activeProjectOverviewSectionTab === "activity";
-            const isStrategyTab = activeProjectOverviewSectionTab === "strategy";
             const projectOverviewSectionTabs = React.createElement(PlatformDetailTabBar, {
               ariaLabel: "Project activity",
               value: activeProjectOverviewSectionTab,
               tabs: [
                 { id: "threads", label: "Threads" },
                 { id: "activity", label: "Activity" },
-                { id: "strategy", label: "Strategy" },
               ],
               onValueChange: setProjectOverviewActivityTab,
               variant: "minimal",
@@ -645,49 +642,7 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
                             : "Ticket actions will appear here as work progresses.",
                         })
                   )
-                : isStrategyTab
-                  ? renderProjectOverviewDescriptionEditor(projectOverviewSectionTabs)
-                  : null
-            );
-          }
-
-          function renderProjectOverviewWorkGraphPanel() {
-            const relations = (Array.isArray(selectedProjectDetail?.workRelations)
-              ? selectedProjectDetail.workRelations
-              : [])
-              .filter((relation) => (
-                String(relation?.sourceTaskId || relation?.source_task_id || "").trim()
-                && String(relation?.targetTaskId || relation?.target_task_id || "").trim()
-              ));
-            const agentSessions = (Array.isArray(selectedProjectDetail?.agentSessions)
-              ? selectedProjectDetail.agentSessions
-              : []);
-            const activeSessionStates = new Set(["queued", "active", "awaiting_input"]);
-            const activeSessionCount = agentSessions.filter((session) => (
-              activeSessionStates.has(String(session?.state || "").trim().toLowerCase())
-            )).length;
-            const resourceCount = Array.isArray(projectOverviewAllResourceRows)
-              ? projectOverviewAllResourceRows.length
-              : 0;
-            const metrics = [
-              { id: "tasks", label: "Tasks", value: normalizedOverviewTasks.length },
-              { id: "relations", label: "Relations", value: relations.length },
-              { id: "active-runs", label: "Active runs", value: activeSessionCount },
-              { id: "resources", label: "Resources", value: resourceCount },
-            ];
-
-            return React.createElement("div", { className: "playground-project-overview-work-graph" },
-              React.createElement("div", { className: "playground-project-overview-work-graph-metrics" },
-                metrics.map((metric) =>
-                  React.createElement("div", {
-                      key: metric.id,
-                      className: "playground-project-overview-work-graph-metric",
-                    },
-                    React.createElement("span", { className: "playground-project-overview-work-graph-metric-label" }, metric.label),
-                    React.createElement("span", { className: "playground-project-overview-work-graph-metric-value" }, String(metric.value))
-                  )
-                )
-              )
+                : null
             );
           }
 
@@ -940,16 +895,29 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
 
           function buildProjectOverviewSidebarProgressAnalytics() {
             const progressStats = getProjectOverviewProgressStats();
+            const resourceCount = Array.isArray(projectOverviewAllResourceRows)
+              ? projectOverviewAllResourceRows.length
+              : 0;
             const dailyCtBuckets = buildProjectOverviewDailyCtBuckets(getProjectOverviewProgressBucketCount());
             const progressSeries = buildProjectOverviewProgressSeriesForBuckets(dailyCtBuckets);
             const metricColors = {
-              scope: "rgba(255, 255, 255, 0.42)",
-              started: "#ffd000",
-              completed: "#636bdc",
+              scope: "#8fc4ff",
+              started: "#7657ff",
+              completed: "#7effff",
+              resources: "#9ff6ce",
+            };
+            const seriesColors = {
+              scope: "#8fc4ff",
+              started: "#4da3ff",
+              completed: "#7657ff",
             };
             return {
               ariaLabel: "Project progress",
-              metrics: progressStats.rows.map((row) => ({
+              metrics: progressStats.rows.concat({
+                id: "resources",
+                label: "Resources",
+                value: resourceCount,
+              }).map((row) => ({
                 id: row.id,
                 label: row.label,
                 value: formatProjectOverviewInteger(row.value),
@@ -960,205 +928,25 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
                 id: entry.id,
                 label: entry.id === "scope" ? "Scope" : entry.id === "started" ? "Started" : "Completed",
                 values: entry.values,
-                color: metricColors[entry.id] || "rgba(255, 255, 255, 0.72)",
+                color: seriesColors[entry.id] || "rgba(255, 255, 255, 0.72)",
                 type: "line",
                 axis: "primary",
                 valueKind: "count",
                 fill: entry.id === "completed",
-                fillColor: entry.id === "completed" ? "rgba(99, 107, 220, 0.28)" : undefined,
+                fillColor: entry.id === "completed" ? "rgba(118, 87, 255, 0.22)" : undefined,
               })),
-              hasData: progressStats.scopeCount > 0,
-              loading: taskLoadState?.status === "loading" && progressStats.scopeCount === 0,
+              hasData: progressStats.scopeCount > 0 || resourceCount > 0,
+              loading: taskLoadState?.status === "loading" && progressStats.scopeCount === 0 && resourceCount === 0,
             };
           }
 
-          function getProjectOverviewSidebarTaskLabels(task) {
-            const metadata = task?.metadata && typeof task.metadata === "object" && !Array.isArray(task.metadata)
-              ? task.metadata
-              : {};
-            const values = [
-              task?.labels,
-              task?.tags,
-              task?.labelIds,
-              task?.tagIds,
-              metadata.labels,
-              metadata.tags,
-              metadata.labelIds,
-              metadata.tagIds,
-            ];
-            const labelsById = new Map();
-            values.forEach((value) => {
-              const entries = Array.isArray(value) ? value : value ? [value] : [];
-              entries.forEach((entry) => {
-                const source = entry && typeof entry === "object" && !Array.isArray(entry)
-                  ? entry
-                  : {};
-                const label = String(
-                  source.label
-                    || source.name
-                    || source.title
-                    || (typeof entry === "string" ? entry : "")
-                ).replace(/\s+/g, " ").trim();
-                if (!label) {
-                  return;
-                }
-                const id = String(source.id || source.value || label).trim().toLowerCase();
-                if (!labelsById.has(id)) {
-                  labelsById.set(id, {
-                    id,
-                    label,
-                    color: String(source.color || source.hex || "").trim(),
-                  });
-                }
-              });
+          function renderProjectOverviewProgressAnalyticsSection() {
+            return React.createElement(PlatformAnalyticsSection, {
+              variant: "default",
+              title: "Activity",
+              analytics: buildProjectOverviewSidebarProgressAnalytics(),
+              className: "playground-evaluations-analytics-card playground-project-overview-progress-analytics",
             });
-            return Array.from(labelsById.values());
-          }
-
-          function buildProjectOverviewSidebarProgressGroups(view) {
-            const groupsById = new Map();
-            const tasksForGroups = Array.isArray(normalizedOverviewTasks) ? normalizedOverviewTasks : [];
-            tasksForGroups.forEach((task) => {
-              const isComplete = isProjectOverviewTaskCompletedStatus(getProjectOverviewTaskStatusId(task));
-              const assigneeId = String(task?.assigneeAgentId || "").trim();
-              const groupEntries = view === "labels"
-                ? getProjectOverviewSidebarTaskLabels(task)
-                : [{
-                    id: assigneeId || "__unassigned__",
-                    label: assigneeId
-                      ? (
-                          typeof isPlaygroundHumanAssigneeId === "function" && isPlaygroundHumanAssigneeId(assigneeId)
-                            ? String(currentUserName || getTaskAssigneeName(assigneeId, "Me") || "Me").trim()
-                            : getTaskAssigneeName(assigneeId, "Assignee")
-                        )
-                      : "No assignee",
-                    actorId: assigneeId,
-                  }];
-              const resolvedEntries = groupEntries.length > 0
-                ? groupEntries
-                : [{ id: "__unlabeled__", label: "No label", color: "" }];
-              resolvedEntries.forEach((entry) => {
-                const groupId = String(entry?.id || entry?.label || "").trim() || "__other__";
-                const current = groupsById.get(groupId) || {
-                  id: groupId,
-                  label: String(entry?.label || "Other").trim() || "Other",
-                  actorId: String(entry?.actorId || "").trim(),
-                  color: String(entry?.color || "").trim(),
-                  total: 0,
-                  completed: 0,
-                };
-                current.total += 1;
-                current.completed += isComplete ? 1 : 0;
-                groupsById.set(groupId, current);
-              });
-            });
-            return Array.from(groupsById.values())
-              .map((group) => ({
-                ...group,
-                percent: group.total > 0 ? Math.round((group.completed / group.total) * 100) : 0,
-              }))
-              .sort((left, right) => {
-                const leftEmpty = left.id === "__unassigned__" || left.id === "__unlabeled__";
-                const rightEmpty = right.id === "__unassigned__" || right.id === "__unlabeled__";
-                if (leftEmpty !== rightEmpty) {
-                  return leftEmpty ? 1 : -1;
-                }
-                return right.total - left.total || left.label.localeCompare(right.label);
-              })
-              .slice(0, 3);
-          }
-
-          function renderProjectOverviewSidebarProgressGroupLeading(group, view) {
-            if (view === "assignees" && group.actorId && typeof renderTaskActorAvatar === "function") {
-              const avatar = renderTaskActorAvatar(
-                group.actorId,
-                "playground-project-overview-sidebar-progress-avatar"
-              );
-              if (avatar) {
-                return avatar;
-              }
-            }
-            if (view === "labels") {
-              return React.createElement("span", {
-                  className: "playground-project-overview-sidebar-progress-label-icon",
-                  style: group.color ? { "--project-progress-group-color": group.color } : undefined,
-                  "aria-hidden": "true",
-                },
-                React.createElement(Tag, { width: 13, height: 13, strokeWidth: 1.8 })
-              );
-            }
-            return React.createElement("span", {
-                className: "playground-project-overview-sidebar-progress-unassigned",
-                "aria-hidden": "true",
-              },
-              React.createElement(UsersRound, { width: 15, height: 15, strokeWidth: 1.8 })
-            );
-          }
-
-          function renderProjectOverviewSidebarProgressSection() {
-            const activeView = projectOverviewSidebarProgressView === "labels" ? "labels" : "assignees";
-            const groups = buildProjectOverviewSidebarProgressGroups(activeView);
-            const analytics = buildProjectOverviewSidebarProgressAnalytics();
-            return React.createElement(PlatformUiCard, {
-                as: "section",
-                variant: "sidebar",
-                className: "playground-project-overview-sidebar-progress-card",
-              },
-              React.createElement(PlatformAnalyticsSection, {
-                variant: "compact",
-                className: "playground-project-overview-sidebar-progress-analytics",
-                analytics,
-              }),
-              React.createElement("div", { className: "playground-project-overview-sidebar-progress-breakdown" },
-                React.createElement(PlatformSwitch, {
-                  ariaLabel: "Project progress grouping",
-                  value: activeView,
-                  options: [
-                    { value: "assignees", label: "Assignees" },
-                    { value: "labels", label: "Labels" },
-                  ],
-                  onValueChange: setProjectOverviewSidebarProgressView,
-                  fullWidth: true,
-                }),
-                groups.length > 0
-                  ? React.createElement("div", {
-                      className: "playground-project-overview-sidebar-progress-list",
-                    },
-                    groups.map((group) =>
-                      React.createElement("div", {
-                          key: group.id,
-                          className: "playground-project-overview-sidebar-progress-list-row",
-                        },
-                        React.createElement("div", {
-                            className: "playground-project-overview-sidebar-progress-list-person",
-                          },
-                          renderProjectOverviewSidebarProgressGroupLeading(group, activeView),
-                          React.createElement("span", {
-                            className: "playground-project-overview-sidebar-progress-list-name",
-                            title: group.label,
-                          }, group.label)
-                        ),
-                        React.createElement("div", {
-                            className: "playground-project-overview-sidebar-progress-list-value",
-                          },
-                          React.createElement("span", {
-                            className: "playground-project-overview-sidebar-progress-ring",
-                            style: {
-                              "--project-progress-percent": group.percent + "%",
-                              "--project-progress-group-color": group.color || "#636bdc",
-                            },
-                            "aria-hidden": "true",
-                          }),
-                          React.createElement("span", null, group.percent + "% of " + group.total)
-                        )
-                      )
-                    )
-                  )
-                  : React.createElement("div", {
-                    className: "playground-project-overview-sidebar-progress-empty",
-                  }, activeView === "labels" ? "No labels yet." : "No assignees yet.")
-              )
-            );
           }
 
           function renderProjectOverviewWidgetHeader(title, Icon, action) {

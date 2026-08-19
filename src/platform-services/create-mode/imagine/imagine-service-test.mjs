@@ -20,10 +20,12 @@ assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.foundation, /function normalizePlaygr
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.templateMedia, /function PlaygroundImagineTemplatePreviewMedia/);
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.controller, /function PlaygroundImaginePage/);
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.controller, /onOpenPromptSearch/);
+assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.controller, /onOpenKnowledgeSearch/);
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.controller, /onOpenThreadSearch/);
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.templateEditor, /handleCreateTemplateSubmit/);
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.generation, /imagineThreadMetadata/);
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.generation, /onOpenPromptSearch/);
+assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.generation, /onOpenKnowledgeSearch/);
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.generation, /onOpenThreadSearch/);
 assert.doesNotMatch(IMAGINE_PAGE_SCRIPT_FRAGMENTS.view, /openPromptSearch\(/);
 assert.doesNotMatch(IMAGINE_PAGE_SCRIPT_FRAGMENTS.generation, /openPromptSearch\(/);
@@ -36,6 +38,7 @@ assert.match(IMAGINE_PAGE_CSS, /\.playground-imagine-composer-wrap/);
 assert.match(IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS.foundation, /function normalizePlaygroundImagineTemplatePageAssets/);
 assert.match(IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS.controller, /function PlaygroundImagineTemplatePage/);
 assert.match(IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS.controller, /onOpenPromptSearch/);
+assert.match(IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS.controller, /onOpenKnowledgeSearch/);
 assert.match(IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS.controller, /onOpenThreadSearch/);
 assert.match(IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS.sharing, /handleShareTemplateWithTeam/);
 assert.doesNotMatch(IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS.view, /openPromptSearch\(/);
@@ -105,6 +108,10 @@ assert.equal(result.call[3], "GET");
 result = dispatch("PATCH", "/api/aios/user/imagine-preferences");
 assert.equal(result.handled, true);
 assert.equal(result.call[3], "PATCH");
+
+result = dispatch("DELETE", "/api/aios/user/imagine-preferences");
+assert.equal(result.handled, true);
+assert.equal(result.call[3], "DELETE");
 
 result = dispatch("POST", "/api/aios/user/imagine-preferences");
 assert.equal(result.handled, false);

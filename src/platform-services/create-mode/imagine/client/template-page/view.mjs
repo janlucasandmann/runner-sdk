@@ -266,6 +266,7 @@ export const IMAGINE_TEMPLATE_PAGE_VIEW_SCRIPT = String.raw`          const acti
                       composerLeadingControl: renderImagineTemplateMediaModeSwitch(),
                       composerBeforeAgentControl: renderImagineTemplateModelSelector(),
                       onOpenPromptSearch,
+                      onOpenKnowledgeSearch,
                       onOpenThreadSearch,
                       hiddenSystemPrompt,
                       threadMetadata: imagineTemplateThreadMetadata,

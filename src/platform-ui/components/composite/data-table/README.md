@@ -20,6 +20,7 @@
 - Controlled or uncontrolled client and server pagination
 - Optional bottom-scroll incremental loading with the shared loading indicator
 - Ordered, controlled or uncontrolled expandable row groups with labels, indicators, and counts
+- Optional handle-based row reordering with consumer-defined eligibility and drop boundaries
 - Expandable detail rows
 
 ## Usage
@@ -57,9 +58,21 @@ leaving it undefined retains the default plus icon.
 
 Use `rowGrouping` when one table needs ordered, collapsible sections without changing its columns or toolbar. Configure the section order in `groups`, return a group ID from `getGroupId`, and use `expandedIds` with `onExpandedChange` when expansion state must be controlled. Groups are expanded by default unless `defaultExpanded` is `false`.
 
+Use `rowReordering` for queues whose order is persisted by the owning service.
+The table supplies a dedicated drag handle and before/after drop feedback;
+`isRowReorderable` and `canDrop` keep domain partitions intact, while
+`onReorder` performs the mutation. Retain row-menu Move up/Move down actions as
+the keyboard-accessible equivalent.
+
 Passing `pagination={{}}` enables client pagination with 20 rows per page and 10, 20, and 50-row options. Use `value` and `onChange` for controlled state. For server pagination, set `manual: true` and provide `totalCount`. Resource overview pages enable pagination by default; pass `pagination={false}` through their table configuration to opt out.
 
 Use `incrementalLoading` for cursor or offset-based lists that append rows when the table body reaches its bottom. Keep the data request in the page module; the table owns scroll detection, duplicate request suppression, and the shared loading presentation.
+
+When selection is enabled, define `action.selectedRows` for every command that
+is valid across a multi-row selection. The table replaces the row-scoped label,
+state, and callback with this explicit bulk contract and omits actions that do
+not provide one. This keeps destructive row callbacks from accidentally acting
+only on the row that opened a selected-row context menu.
 
 For embedded section tables, omit `toolbar`, set `pagination={false}`, and leave `footer` undefined. This keeps the persistent column-title row and data rows while removing the overview control strip and bottom chrome:
 

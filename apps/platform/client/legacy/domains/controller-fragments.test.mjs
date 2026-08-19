@@ -544,6 +544,16 @@ assert.match(
   /hasSkillsVersionsDrawerSlot = activePage === "tools" && toolsView === "skills"[\s\S]{0,1800}hasSkillsVersionsDrawerSlot[\s\S]{0,120}isAgentVersionsDetailOpen/,
   "The shell must reserve content width while the Skill versions drawer is open.",
 );
+assert.match(
+  shellApplicationLifecycleSource,
+  /hasKnowledgeVersionsDrawerSlot = activePage === "knowledge"[\s\S]{0,1800}hasKnowledgeVersionsDrawerSlot[\s\S]{0,120}isAgentVersionsDetailOpen/,
+  "The shell must reserve content width while the Knowledge versions drawer is open.",
+);
+assert.match(
+  shellApplicationLifecycleSource,
+  /hasInferenceVersionsDrawerSlot = activePage === "inference"[\s\S]{0,1800}hasInferenceVersionsDrawerSlot[\s\S]{0,1600}settingsInferenceVersionsOpen/,
+  "The shell must reserve content width while the Inference versions drawer is open.",
+);
 for (const expectedSkillTitleAction of [
   '"aria-label": "Skill actions"',
   '["ID"',
@@ -1202,7 +1212,7 @@ assert.match(
 );
 assert.match(
   shellCompositionSource,
-  /className: "playground-source-server-detail-header-switch"[\s\S]{0,500}\{ value: "usage", label: "Usage" \}[\s\S]{0,120}\{ value: "code", label: "Code" \}[\s\S]{0,120}\{ value: "settings", label: "Settings" \}/,
+  /className: "playground-source-server-detail-header-switch"[\s\S]{0,500}\{ value: "code", label: "Code" \}[\s\S]{0,120}\{ value: "usage", label: "Usage" \}[\s\S]{0,120}\{ value: "settings", label: "Settings" \}/,
   "Function and Web App detail navigation must use the centralized app-header switch.",
 );
 assert.match(

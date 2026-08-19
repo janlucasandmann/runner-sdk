@@ -993,32 +993,8 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                     )
                   )
                 )
-              ),
-              renderProjectOverviewSidebarProgressSection()
+              )
             );
-          }
-
-          function renderProjectOverviewDescriptionEditor(headerContent = null) {
-            return React.createElement(PlatformInstructionsEditor, {
-              value: missionControlDocumentDraft,
-              onChange: (nextValue) => updateMissionControlDocumentDraftValue(nextValue, {
-                previousValue: missionControlDocumentDraft,
-              }),
-              title: headerContent,
-              placeholder: "Add project strategy",
-              ariaLabel: "Project strategy",
-              historyKey: "project-strategy:" + selectedProject.id,
-              variant: "minimalistic-ui",
-              stickyHeader: true,
-              collapsedLines: 10,
-              className: "playground-project-overview-description-editor",
-              onEditingChange: (editing) => {
-                setIsMissionControlDocumentEditing(editing);
-                if (!editing) {
-                  commitMissionControlDocumentIfDirty();
-                }
-              },
-            });
           }
 
 	          function renderProjectOverviewRulesPanel(options = {}) {

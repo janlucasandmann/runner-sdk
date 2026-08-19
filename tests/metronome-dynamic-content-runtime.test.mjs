@@ -12,6 +12,7 @@ assert.ok(endIndex > startIndex, "dynamic content helper block end marker should
 const helperSource = METRONOME_PAGE_SCRIPT.slice(startIndex, endIndex);
 const nodeKindMeta = {
   action: { label: "Thread" },
+  imagine: { label: "Imagine" },
   trigger: { label: "Trigger" },
   firecrawl: { label: "Firecrawl" },
   table: { label: "Table" },
@@ -21,6 +22,10 @@ const nodeKindMeta = {
   loop: { label: "Loop" },
   ticket: { label: "Ticket" },
   approval: { label: "User Approval" },
+  condition: { label: "Condition" },
+  end: { label: "End" },
+  note: { label: "Note" },
+  wait: { label: "Wait" },
 };
 const getMetronomeNodeDisplayLabel = (node) => {
   const data = node?.data && typeof node.data === "object" ? node.data : node || {};
@@ -37,6 +42,7 @@ const helperFactory = new Function(
     + "  createMetronomeExecutionPayload,\n"
     + "  enrichMetronomeWorkflowDefinitionWithDynamicContent,\n"
     + "  getMetronomeNodeIOContract,\n"
+    + "  getMetronomeNodeTestInputFields,\n"
     + "};"
 );
 
@@ -124,6 +130,65 @@ assert.ok(
 assert.ok(
   payload.definition.nodes[0].ioContract.outputs.some((field) => field.path === "thread.json.summary"),
   "structured contract fields should keep raw JSON access"
+);
+
+assert.deepEqual(
+  helpers.getMetronomeNodeTestInputFields({ id: "agent-1", data: { kind: "action", label: "Draft response" } }),
+  [{
+    id: "prompt",
+    path: "prompt",
+    label: "Prompt",
+    control: "task-input",
+    valueType: "string",
+    placeholder: "Describe the input for this test run.",
+    description: "",
+    required: false,
+    defaultValue: "",
+    options: [],
+  }],
+  "agent node tests should ask for a prompt instead of a raw JSON fixture"
+);
+
+const functionTestFields = helpers.getMetronomeNodeTestInputFields({
+  id: "function-1",
+  data: {
+    kind: "function",
+    label: "Search customers",
+    config: {
+      inputSchemaJson: JSON.stringify({
+        type: "object",
+        required: ["query"],
+        properties: {
+          query: { type: "string", title: "Search query" },
+          limit: { type: "integer", default: 10 },
+          includeArchived: { type: "boolean", default: false },
+          mode: { type: "string", enum: ["fast", "thorough"], default: "fast" },
+        },
+      }),
+    },
+  },
+});
+assert.deepEqual(
+  functionTestFields.map(({ path, control, valueType, required, defaultValue }) => ({
+    path,
+    control,
+    valueType,
+    required,
+    defaultValue,
+  })),
+  [
+    { path: "query", control: "text", valueType: "string", required: true, defaultValue: "" },
+    { path: "limit", control: "number", valueType: "number", required: false, defaultValue: 10 },
+    { path: "includeArchived", control: "toggle", valueType: "boolean", required: false, defaultValue: false },
+    { path: "mode", control: "selector", valueType: "string", required: false, defaultValue: "fast" },
+  ],
+  "function test inputs should be generated as explicit controls from the node schema"
+);
+
+assert.deepEqual(
+  helpers.getMetronomeNodeTestInputFields({ id: "end-1", data: { kind: "end" } }),
+  [],
+  "nodes without runtime input should not render placeholder fixture controls"
 );
 
 console.log("metronome dynamic content runtime tests passed");

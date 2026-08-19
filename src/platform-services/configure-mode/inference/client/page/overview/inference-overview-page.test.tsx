@@ -95,4 +95,37 @@ describe("InferenceOverviewPage", () => {
     await user.click(screen.getByText("Primary Inference"));
     expect(onOpenEndpoint).toHaveBeenCalledWith("organization-inference-endpoint");
   });
+
+  it("shows the fixed appliance model as a local read-only endpoint", async () => {
+    const user = userEvent.setup();
+    const onOpenEndpoint = vi.fn();
+
+    render(
+      <InferenceOverviewPage
+        endpoints={{ endpoints: [] }}
+        localRunners={{ status: "ready", devices: [] }}
+        deploymentProfile={{
+          profileId: "dgx-spark-appliance-v1",
+          topology: "on_prem",
+          capabilities: { localInference: true },
+          product: {
+            inference: {
+              mode: "deployment_fixed",
+              fixedModelId: "deepseek-v4-flash",
+            },
+          },
+        }}
+        onOpenEndpoint={onOpenEndpoint}
+        onConfigureEndpoint={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Local Appliance Inference")).not.toBeNull();
+    expect(screen.getByText("OpenAI-Compatible")).not.toBeNull();
+    expect(screen.getByText("Active")).not.toBeNull();
+    expect(screen.getByText("Appliance · Default")).not.toBeNull();
+
+    await user.click(screen.getByText("Local Appliance Inference"));
+    expect(onOpenEndpoint).toHaveBeenCalledWith("deployment-inference-endpoint");
+  });
 });

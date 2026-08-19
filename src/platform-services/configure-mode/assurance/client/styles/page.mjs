@@ -119,6 +119,16 @@ export const PLAYGROUND_ASSURANCE_CSS = String.raw`
     grid-column: 1 / -1;
   }
 
+  .assurance-create-modal__description-editor.platform-instructions-editor {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  .assurance-create-modal__description-editor
+    .platform-instructions-editor__prosemirror {
+    min-height: 84px;
+  }
+
   .assurance-form-field input,
   .assurance-form-field textarea,
   .assurance-definition-editor {

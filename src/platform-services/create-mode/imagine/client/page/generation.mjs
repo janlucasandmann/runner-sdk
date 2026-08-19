@@ -182,6 +182,7 @@ export const IMAGINE_PAGE_GENERATION_SCRIPT = String.raw`          const hiddenS
                         externalFileBrowserRequest: createReferenceFileBrowserRequest,
                         onThreadIdChange: () => {},
                         onOpenPromptSearch,
+                        onOpenKnowledgeSearch,
                         onOpenThreadSearch,
                         onEnvironmentChange: handleCreateReferenceEnvironmentChange,
                         onAgentChange,

@@ -1113,6 +1113,7 @@ export class RunnerEventNormalizer {
       value === "planning" ||
       value === "llm_response" ||
       value === "deep_research" ||
+      value === "batch_queued" ||
       value === "permission_request"
     ) {
       return value;

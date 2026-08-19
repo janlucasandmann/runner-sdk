@@ -869,6 +869,428 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             );
           };
 
+          const getActiveMetronomeExecutionBinding = () => {
+            const workflow = activeMetronomeEditorWorkflow || activeWorkflow;
+            if (!workflow?.id) {
+              throw new Error("Save this workflow before running it.");
+            }
+            const selectedVersionId = String(
+              activeWorkflow?.metadata?.restoredFromDeploymentId
+              || activeWorkflow?.metadata?.restored_from_deployment_id
+              || activeWorkflowDeployment?.id
+              || activeWorkflow?.activeDeploymentId
+              || ""
+            ).trim();
+            const canUseImmutableVersion = selectedVersionId
+              && !hasActiveMetronomeVersionChanges();
+            return {
+              workflow,
+              ...(canUseImmutableVersion
+                ? { versionId: selectedVersionId }
+                : { definition: createMetronomeWorkflowDefinition(workflow, nodes, edges) }),
+            };
+          };
+
+          const upsertAdmittedMetronomeRun = (run, { openDetail = false } = {}) => {
+            if (!run?.id) throw new Error("Metronome run did not return an id.");
+            setMetronomeRuns((current) => [
+              run,
+              ...current.filter((item) => String(item?.id || "") !== String(run.id)),
+            ]);
+            setSelectedMetronomeRunId(run.id);
+            if (openDetail) {
+              setSelectedNodeId("");
+              setMetronomeRunInlineDetailId(run.id);
+            }
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("playground:metronome-run-upserted", {
+                detail: { workflow: activeWorkflow, run },
+              }));
+            }
+            return run;
+          };
+
+          const getMetronomeManualRunContractOptions = () => ({
+            agentOptions: metronomeAgentOptions,
+            environmentOptions: metronomeComputerOptions,
+            projectOptions: metronomeProjectOptions,
+            functionOptions: metronomeFunctionOptions,
+            webAppOptions: metronomeWebAppOptions,
+            databaseOptions: metronomeDatabaseOptions,
+            authOptions: metronomeAuthOptions,
+          });
+
+          const createMetronomeManualRunDialogState = (contracts, requestedContractId = "") => {
+            const safeContracts = Array.isArray(contracts) ? contracts.filter(Boolean) : [];
+            const contract = safeContracts.find((candidate) => candidate.id === requestedContractId)
+              || safeContracts[0]
+              || null;
+            if (!contract) {
+              throw new Error("This workflow does not expose a manual run contract.");
+            }
+            if (contract.mode === "composer") {
+              if (!String(contract.composerBinding?.agentId || "").trim()) {
+                throw new Error("Select an agent on the workflow thread node before running this workflow.");
+              }
+              if (!String(contract.composerBinding?.environmentId || "").trim()) {
+                throw new Error("Select a computer on the workflow thread node before running this workflow.");
+              }
+            }
+            const inputFields = Array.isArray(contract.inputFields) ? contract.inputFields : [];
+            return {
+              requestKey: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              contracts: safeContracts,
+              contractId: contract.id,
+              contract,
+              status: "idle",
+              error: "",
+              inputFields,
+              composerPayload: null,
+              composerSubmitRequest: null,
+              inputValues: Object.fromEntries(inputFields.map((field) => [
+                field.id,
+                serializeMetronomeExecutionInputValue(field),
+              ])),
+            };
+          };
+
+          const openManualMetronomeRunDialog = () => {
+            if (!activeWorkflow?.id || isMetronomeWorkflowBuiltIn(activeWorkflow) || metronomeRunState.status === "loading") {
+              return;
+            }
+            try {
+              const workflow = activeMetronomeEditorWorkflow || activeWorkflow;
+              const contracts = createMetronomeManualRunContracts(
+                workflow,
+                nodes,
+                edges,
+                getMetronomeManualRunContractOptions()
+              );
+              setMetronomeManualRunDialog(createMetronomeManualRunDialogState(contracts));
+              setMetronomeRunState({ status: "idle", message: "" });
+            } catch (error) {
+              setMetronomeRunState({
+                status: "error",
+                message: error instanceof Error ? error.message : "This workflow cannot be run manually.",
+              });
+            }
+          };
+
+          const selectMetronomeManualRunContract = (contractId) => {
+            setMetronomeManualRunDialog((current) => {
+              if (!current || current.status === "starting") return current;
+              try {
+                return createMetronomeManualRunDialogState(current.contracts, contractId);
+              } catch (error) {
+                return {
+                  ...current,
+                  status: "error",
+                  error: error instanceof Error ? error.message : "This trigger cannot be simulated.",
+                };
+              }
+            });
+          };
+
+          const startManualMetronomeRun = async (dialogOverride = null) => {
+            const dialog = dialogOverride || metronomeManualRunDialog;
+            if (
+              !dialog
+              || dialog.status === "starting"
+              || !activeWorkflow?.id
+              || isMetronomeWorkflowBuiltIn(activeWorkflow)
+              || metronomeRunState.status === "loading"
+            ) {
+              return null;
+            }
+            setMetronomeManualRunDialog((current) => current
+              ? { ...current, status: "starting", error: "" }
+              : current);
+            setMetronomeRunState({ status: "loading", message: "Starting run..." });
+            setMetronomeRunsError("");
+            try {
+              const binding = getActiveMetronomeExecutionBinding();
+              const fixture = buildMetronomeExecutionFixture(dialog);
+              const inputs = buildMetronomeManualRunInput(dialog.contract, fixture, dialog.composerPayload);
+              const run = await createMetronomeRunApi(activeWorkflow.id, {
+                ...binding,
+                prompt: inputs.prompt,
+                inputs,
+              });
+              upsertAdmittedMetronomeRun(run);
+              setMetronomeManualRunDialog(null);
+              setMetronomeRunState({ status: "idle", message: "" });
+              return run;
+            } catch (error) {
+              const message = error instanceof Error ? error.message : "Failed to start Metronome run.";
+              setMetronomeManualRunDialog((current) => current
+                ? { ...current, status: "error", error: message }
+                : current);
+              setMetronomeRunState({ status: "error", message });
+              return null;
+            }
+          };
+
+          const submitMetronomeManualRunComposer = async (fieldId, payload) => {
+            const dialog = metronomeManualRunDialog;
+            if (!dialog || dialog.status === "starting") return false;
+            const nextDialog = {
+              ...dialog,
+              inputValues: {
+                ...(dialog.inputValues || {}),
+                [fieldId]: String(payload?.prompt || ""),
+              },
+              composerPayload: payload && typeof payload === "object" ? payload : null,
+            };
+            setMetronomeManualRunDialog(nextDialog);
+            return Boolean(await startManualMetronomeRun(nextDialog));
+          };
+
+          const requestManualMetronomeRun = () => {
+            const dialog = metronomeManualRunDialog;
+            if (!dialog || dialog.status === "starting") return;
+            const composerField = (Array.isArray(dialog.inputFields) ? dialog.inputFields : [])
+              .find((field) => field?.control === "task-input");
+            if (!composerField || !String(dialog.inputValues?.[composerField.id] || "").trim()) {
+              void startManualMetronomeRun();
+              return;
+            }
+            setMetronomeManualRunDialog((current) => current
+              ? {
+                  ...current,
+                  composerSubmitRequest: Number(current.composerSubmitRequest || 0) + 1,
+                }
+              : current);
+          };
+
+          const getMetronomeCanvasTestSelection = () => {
+            const selectedIds = nodes
+              .filter((node) => node?.selected === true)
+              .map((node) => String(node?.id || "").trim())
+              .filter(Boolean);
+            const focusedId = String(selectedNodeId || "").trim();
+            const nodeIds = [...new Set(selectedIds.length > 1
+              ? selectedIds
+              : [focusedId || selectedIds[0]].filter(Boolean))];
+            if (!nodeIds.length) {
+              throw new Error("Select a node or connected group of nodes to test.");
+            }
+            return nodeIds.length === 1
+              ? { type: "node", nodeId: nodeIds[0] }
+              : { type: "slice", nodeIds };
+          };
+
+          const getMetronomeExecutionTestNodes = (selection) => {
+            const selectedIds = selection?.type === "slice"
+              ? selection.nodeIds
+              : [selection?.nodeId].filter(Boolean);
+            return (Array.isArray(selectedIds) ? selectedIds : [])
+              .map((nodeId) => nodes.find((candidate) => String(candidate?.id || "") === String(nodeId || "")))
+              .filter(Boolean);
+          };
+
+          const serializeMetronomeExecutionInputValue = (field) => {
+            const value = field?.defaultValue;
+            if (field?.valueType === "boolean") return value === true || String(value || "").toLowerCase() === "true";
+            if (field?.valueType === "array") {
+              return Array.isArray(value) ? value.map((entry) => String(entry ?? "")).join("\n") : String(value || "");
+            }
+            return value === null || value === undefined ? "" : String(value);
+          };
+
+          const getMetronomeExecutionInputFields = (selection) => {
+            const fieldsByPath = new Map();
+            getMetronomeExecutionTestNodes(selection).forEach((node) => {
+              getMetronomeNodeTestInputFields(node).forEach((field) => {
+                const path = String(field?.path || field?.id || "").trim();
+                if (!path) return;
+                const current = fieldsByPath.get(path);
+                fieldsByPath.set(path, current
+                  ? { ...current, required: current.required || field.required }
+                  : field);
+              });
+            });
+            return [...fieldsByPath.values()];
+          };
+
+          const setMetronomeExecutionFixturePath = (target, path, value) => {
+            const parts = splitMetronomeDynamicContentPath(path);
+            if (!parts.length) return;
+            let cursor = target;
+            parts.forEach((part, index) => {
+              if (index === parts.length - 1) {
+                cursor[part] = value;
+                return;
+              }
+              if (!cursor[part] || typeof cursor[part] !== "object" || Array.isArray(cursor[part])) {
+                cursor[part] = {};
+              }
+              cursor = cursor[part];
+            });
+          };
+
+          const parseMetronomeExecutionInputValue = (field, rawValue) => {
+            if (field.valueType === "boolean") return rawValue === true;
+            if (field.valueType === "number") {
+              const normalizedValue = String(rawValue ?? "").trim();
+              if (!normalizedValue) return undefined;
+              const numberValue = Number(normalizedValue);
+              if (!Number.isFinite(numberValue)) {
+                throw new Error(field.label + " must be a valid number.");
+              }
+              return numberValue;
+            }
+            if (field.valueType === "array") {
+              return String(rawValue || "")
+                .split(/[\n,]+/g)
+                .map((entry) => entry.trim())
+                .filter(Boolean);
+            }
+            return String(rawValue ?? "").trim();
+          };
+
+          const buildMetronomeExecutionFixture = (dialog) => {
+            const fixture = {};
+            (Array.isArray(dialog?.inputFields) ? dialog.inputFields : []).forEach((field) => {
+              const rawValue = dialog?.inputValues?.[field.id];
+              const value = parseMetronomeExecutionInputValue(field, rawValue);
+              const empty = value === undefined
+                || value === ""
+                || (Array.isArray(value) && value.length === 0);
+              if (field.required && empty) {
+                throw new Error(field.label + " is required.");
+              }
+              if (!empty || field.valueType === "boolean") {
+                setMetronomeExecutionFixturePath(fixture, field.path, value);
+              }
+            });
+            if (typeof fixture.prompt === "string" && fixture.prompt) {
+              fixture.text = fixture.prompt;
+              fixture.message = fixture.prompt;
+            }
+            const composerAttachments = Array.isArray(dialog?.composerPayload?.attachments)
+              ? dialog.composerPayload.attachments.filter(Boolean)
+              : [];
+            if (composerAttachments.length) {
+              if (!Array.isArray(fixture.attachments)) fixture.attachments = composerAttachments;
+              if (!Array.isArray(fixture.files)) fixture.files = composerAttachments;
+            }
+            return fixture;
+          };
+
+          const buildMetronomeExecutionRequest = (dialog) => {
+            const fixture = buildMetronomeExecutionFixture(dialog);
+            const workflowInput = { ...fixture, input: fixture };
+            return {
+              fixture,
+              selection: {
+                ...dialog.selection,
+                boundaryContext: {
+                  workflowInput,
+                  nodeOutputs: {},
+                  records: [],
+                },
+              },
+              inputs: { source: "manual_ui_test", ...fixture, fixture },
+            };
+          };
+
+          const openMetronomeExecutionTestDialog = () => {
+            if (!activeWorkflow?.id) {
+              setMetronomeRunState({ status: "error", message: "Save this workflow before testing it." });
+              return;
+            }
+            try {
+              const selection = getMetronomeCanvasTestSelection();
+              const inputFields = getMetronomeExecutionInputFields(selection);
+              const dialog = {
+                requestKey: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                selection,
+                status: "idle",
+                preview: null,
+                error: "",
+                inputFields,
+                composerPayload: null,
+                composerSubmitRequest: null,
+                inputValues: Object.fromEntries(inputFields.map((field) => [
+                  field.id,
+                  serializeMetronomeExecutionInputValue(field),
+                ])),
+              };
+              setMetronomeExecutionDialog(dialog);
+            } catch (error) {
+              setMetronomeRunState({
+                status: "error",
+                message: error instanceof Error ? error.message : "Select a workflow node to test.",
+              });
+            }
+          };
+
+          const startMetronomeExecutionTest = async (dialogOverride = null) => {
+            const dialog = dialogOverride || metronomeExecutionDialog;
+            if (!dialog || dialog.status === "starting") return null;
+            setMetronomeExecutionDialog((current) => current ? { ...current, status: "starting", error: "" } : current);
+            try {
+              const executionRequest = buildMetronomeExecutionRequest(dialog);
+              const binding = getActiveMetronomeExecutionBinding();
+              const preview = await previewMetronomeTestRunApi(activeWorkflow.id, {
+                ...binding,
+                selection: executionRequest.selection,
+                inputs: executionRequest.inputs,
+              });
+              if (!preview?.plan?.executable) {
+                throw new Error("This workflow selection cannot be executed.");
+              }
+              const result = await createMetronomeTestRunApi(activeWorkflow.id, {
+                ...binding,
+                selection: executionRequest.selection,
+                fixture: executionRequest.fixture,
+                inputs: executionRequest.inputs,
+              });
+              upsertAdmittedMetronomeRun(result.run, { openDetail: true });
+              setMetronomeExecutionDialog(null);
+              setMetronomeRunState({ status: "idle", message: "" });
+              return result.run;
+            } catch (error) {
+              const message = error instanceof Error ? error.message : "Failed to start workflow test.";
+              setMetronomeExecutionDialog((current) => current
+                ? { ...current, status: "error", error: message }
+                : current);
+              return null;
+            }
+          };
+
+          const submitMetronomeExecutionTestComposer = async (fieldId, payload) => {
+            const dialog = metronomeExecutionDialog;
+            if (!dialog || dialog.status === "starting") return false;
+            const nextDialog = {
+              ...dialog,
+              inputValues: {
+                ...(dialog.inputValues || {}),
+                [fieldId]: String(payload?.prompt || ""),
+              },
+              composerPayload: payload && typeof payload === "object" ? payload : null,
+            };
+            setMetronomeExecutionDialog(nextDialog);
+            return Boolean(await startMetronomeExecutionTest(nextDialog));
+          };
+
+          const requestMetronomeExecutionTest = () => {
+            const dialog = metronomeExecutionDialog;
+            if (!dialog || dialog.status === "starting") return;
+            const composerField = (Array.isArray(dialog.inputFields) ? dialog.inputFields : [])
+              .find((field) => field?.control === "task-input");
+            if (!composerField) {
+              void startMetronomeExecutionTest();
+              return;
+            }
+            setMetronomeExecutionDialog((current) => current
+              ? {
+                  ...current,
+                  composerSubmitRequest: Number(current.composerSubmitRequest || 0) + 1,
+                }
+              : current);
+          };
+
           const renderMetronomeSettingsMode = () => {
             const workflow = activeMetronomeEditorWorkflow || activeWorkflow;
             if (!workflow?.id) return null;
@@ -892,35 +1314,6 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               isBuiltIn: isMetronomeWorkflowBuiltIn(activeWorkflow),
               isTeamShared: isActiveWorkflowTeamShared,
             });
-            const triggerMetronomeRun = async () => {
-              if (isRunTriggerDisabled || isTriggeringMetronomeRun) return;
-              setMetronomeRunState({ status: "loading", message: "" });
-              setMetronomeRunsError("");
-              try {
-                const run = await createMetronomeRunApi(activeWorkflow.id, {
-                  definition: createMetronomeWorkflowDefinition(workflow, nodes, edges),
-                  inputs: { source: "manual_ui" },
-                });
-                if (!run?.id) throw new Error("Metronome run did not return an id.");
-                setMetronomeRuns((current) => [
-                  run,
-                  ...current.filter((item) => String(item?.id || "") !== String(run.id)),
-                ]);
-                setSelectedMetronomeRunId(run.id);
-                setMetronomeRunState({ status: "idle", message: "" });
-                if (typeof window !== "undefined") {
-                  window.dispatchEvent(new CustomEvent("playground:metronome-run-upserted", {
-                    detail: { workflow: activeWorkflow, run },
-                  }));
-                }
-              } catch (error) {
-                const message = error instanceof Error
-                  ? error.message
-                  : "Failed to start Metronome run.";
-                setMetronomeRunState({ status: "error", message });
-                setMetronomeRunsError(message);
-              }
-            };
             const settingsSidebar = React.createElement(PlatformResourceDetailSidebar, {
               className: "playground-metronome-settings-sidebar-card",
               propertiesClassName: "playground-metronome-settings-property-list",
@@ -954,9 +1347,9 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                   fullWidth: true,
                   className: "playground-metronome-settings-trigger-button",
                   disabled: isRunTriggerDisabled || isTriggeringMetronomeRun,
-                  onClick: () => void triggerMetronomeRun(),
+                  onClick: openManualMetronomeRunDialog,
                 },
-                "Trigger Run"
+                isTriggeringMetronomeRun ? "Starting..." : "Run"
               ),
             });
             return React.createElement(PlatformServiceDetailFrame, {
@@ -1014,6 +1407,12 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             };
             const getRunStepsCount = (run) => (run?.output?.steps || []).length || 0;
             const getRunThreadsCount = (run) => (run?.output?.threads || []).length || 0;
+            const getMetronomeRunKindLabel = (run) => {
+              const kind = String(run?.runKind || "workflow").trim().toLowerCase();
+              if (kind === "node_test") return "Node test";
+              if (kind === "slice_test") return "Slice test";
+              return "Workflow run";
+            };
             const isTriggeringMetronomeRun = metronomeRunState.status === "loading";
             const isRunTriggerDisabled = !activeWorkflow?.id || isMetronomeWorkflowBuiltIn(activeWorkflow);
             const creatorIdentity = resolveMetronomeWorkflowCreatorPresentation(activeWorkflow, {
@@ -1023,38 +1422,6 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               isBuiltIn: isMetronomeWorkflowBuiltIn(activeWorkflow),
               isTeamShared: isActiveWorkflowTeamShared,
             });
-            const triggerMetronomeRun = async () => {
-              if (isRunTriggerDisabled || isTriggeringMetronomeRun) return;
-              const workflowDraft = activeMetronomeEditorWorkflow || activeWorkflow;
-              setMetronomeRunState({ status: "loading", message: "" });
-              setMetronomeRunsError("");
-              try {
-                const run = await createMetronomeRunApi(activeWorkflow.id, {
-                  definition: createMetronomeWorkflowDefinition(workflowDraft, nodes, edges),
-                  inputs: { source: "manual_ui" },
-                });
-                if (!run?.id) {
-                  throw new Error("Metronome run did not return an id.");
-                }
-                setMetronomeRuns((current) => [
-                  run,
-                  ...current.filter((item) => String(item?.id || "") !== String(run.id)),
-                ]);
-                setSelectedMetronomeRunId(run.id);
-                setMetronomeRunState({ status: "idle", message: "" });
-                if (typeof window !== "undefined") {
-                  window.dispatchEvent(new CustomEvent("playground:metronome-run-upserted", {
-                    detail: { workflow: activeWorkflow, run },
-                  }));
-                }
-              } catch (error) {
-                const message = error instanceof Error
-                  ? error.message
-                  : "Failed to start Metronome run.";
-                setMetronomeRunState({ status: "error", message });
-                setMetronomeRunsError(message);
-              }
-            };
             const activeRunFilter = METRONOME_RUN_FILTER_OPTIONS.find((option) => option.id === metronomeRunFilter) || METRONOME_RUN_FILTER_OPTIONS[0];
             const visibleMetronomeRunRows = metronomeRuns
               .filter((run) => {
@@ -1064,6 +1431,8 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                 const haystack = [
                   getMetronomeRunPrompt(run),
                   run?.id,
+                  getMetronomeRunKindLabel(run),
+                  run?.invocationSource,
                   statusId,
                   formatMetronomeRunTimestamp(run?.createdAt),
                 ].map((value) => String(value || "").toLowerCase()).join(" ");
@@ -1171,9 +1540,13 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                 sortable: true,
                 width: "minmax(260px, 1.6fr)",
                 cell: ({ row: run }) => React.createElement(
-                  "span",
-                  { className: "playground-metronome-table-title" },
-                  run.id || "Draft run",
+                  "div",
+                  { className: "playground-metronome-table-main" },
+                  React.createElement("span", { className: "playground-metronome-table-title" }, run.id || "Draft run"),
+                  React.createElement("span", { className: "playground-metronome-table-subtitle" },
+                    getMetronomeRunKindLabel(run)
+                    + (run?.invocationSource ? " · " + String(run.invocationSource).replaceAll("_", " ") : "")
+                  ),
                 ),
               },
               {
@@ -1267,6 +1640,11 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                 icon: Trash2,
                 danger: true,
                 onSelect: ({ rows }) => deleteMetronomeRunsByIds(rows.map((run) => run.id)),
+                selectedRows: {
+                  label: "Delete selected",
+                  danger: true,
+                  onSelect: ({ rows }) => deleteMetronomeRunsByIds(rows.map((run) => run.id)),
+                },
               }],
               loading: isLoadingMetronomeRuns,
               error: metronomeRunsError
@@ -1296,9 +1674,9 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                     fullWidth: true,
                     className: "playground-metronome-runs-trigger-button",
                     disabled: isRunTriggerDisabled || isTriggeringMetronomeRun,
-                    onClick: () => void triggerMetronomeRun(),
+                    onClick: openManualMetronomeRunDialog,
                   },
-                  "Trigger Run"
+                  isTriggeringMetronomeRun ? "Starting..." : "Run"
                 ),
               });
             return React.createElement("div", { className: "playground-metronome-runs-view" },

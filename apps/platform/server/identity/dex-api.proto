@@ -20,6 +20,24 @@ message CreatePasswordResp {
   bool already_exists = 1;
 }
 
+message UpdatePasswordReq {
+  string email = 1;
+  bytes new_hash = 2;
+  string new_username = 3;
+}
+
+message UpdatePasswordResp {
+  bool not_found = 1;
+}
+
+message ListPasswordReq {}
+
+message ListPasswordResp {
+  repeated Password passwords = 1;
+}
+
 service Dex {
   rpc CreatePassword(CreatePasswordReq) returns (CreatePasswordResp) {};
+  rpc UpdatePassword(UpdatePasswordReq) returns (UpdatePasswordResp) {};
+  rpc ListPasswords(ListPasswordReq) returns (ListPasswordResp) {};
 }

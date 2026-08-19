@@ -195,10 +195,6 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
           }
 
           function openProjectOverviewResourceRow(row) {
-            if (row?.kind === "template") {
-              openProjectOverviewTemplate(row.template || row.record || {});
-              return;
-            }
             const type = String(row?.type || "").trim();
             if (type === "file" || type === "imagine") {
               const record = row?.record || {};
@@ -213,6 +209,81 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
                 });
                 return;
               }
+            }
+            if (row?.kind === "linked") {
+              if (typeof onOpenProjectLinkedResource === "function") {
+                const selectedProjectRecord = selectedProject
+                  && typeof selectedProject === "object"
+                  && !Array.isArray(selectedProject)
+                    ? selectedProject
+                    : null;
+                const draftProjectRecord = projectOverviewDraft
+                  && typeof projectOverviewDraft === "object"
+                  && !Array.isArray(projectOverviewDraft)
+                    ? projectOverviewDraft
+                    : null;
+                const sourceProjectRecord = draftProjectRecord || selectedProjectRecord;
+                const selectedProjectMetadata = selectedProjectRecord?.metadata
+                  && typeof selectedProjectRecord.metadata === "object"
+                  && !Array.isArray(selectedProjectRecord.metadata)
+                    ? selectedProjectRecord.metadata
+                    : {};
+                const draftProjectMetadata = draftProjectRecord?.metadata
+                  && typeof draftProjectRecord.metadata === "object"
+                  && !Array.isArray(draftProjectRecord.metadata)
+                    ? draftProjectRecord.metadata
+                    : {};
+                const projectRecordForNavigation = sourceProjectRecord
+                  ? normalizePlaygroundProjectRecord({
+                      ...(selectedProjectRecord || {}),
+                      ...(draftProjectRecord || {}),
+                      attachments: Array.isArray(overviewProjectAttachments)
+                        ? overviewProjectAttachments.slice()
+                        : [],
+                      metadata: {
+                        ...selectedProjectMetadata,
+                        ...draftProjectMetadata,
+                        linkedResources: Array.isArray(projectOverviewLinkedResources)
+                          ? projectOverviewLinkedResources.slice()
+                          : [],
+                        resourceTemplates: Array.isArray(projectOverviewPublishedTemplates)
+                          ? projectOverviewPublishedTemplates.slice()
+                          : [],
+                      },
+                    })
+                  : null;
+                onOpenProjectLinkedResource(
+                  String(row?.type || "").trim(),
+                  row?.record || row || {},
+                  {
+                    projectId: normalizedSelectedProjectId,
+                    projectName: String(
+                      selectedProjectWorkspaceTitle
+                      || selectedProject?.name
+                      || selectedProject?.title
+                      || "Project"
+                    ).trim() || "Project",
+                    projectRecord: projectRecordForNavigation,
+                    projectResourceSnapshot: {
+                      projectId: normalizedSelectedProjectId,
+                      serverResources: String(projectOverviewServerResourcesState?.projectId || "").trim() === normalizedSelectedProjectId
+                        && Array.isArray(projectOverviewServerResourcesState?.items)
+                          ? projectOverviewServerResourcesState.items.slice()
+                          : [],
+                      fileActivity: String(projectOverviewFileActivityState?.projectId || "").trim() === normalizedSelectedProjectId
+                        && Array.isArray(projectOverviewFileActivityState?.items)
+                          ? projectOverviewFileActivityState.items.slice()
+                          : [],
+                    },
+                    sectionId: "resources",
+                  }
+                );
+              }
+              return;
+            }
+            if (row?.kind === "template") {
+              openProjectOverviewTemplate(row.template || row.record || {});
+              return;
             }
             if (typeof setProjectOverviewHomeTab === "function") {
               setProjectOverviewHomeTab("resources");
@@ -248,6 +319,76 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             );
           }
 
+          function buildProjectOverviewLinkedResource(type, resource) {
+            const normalizedType = String(type || "").trim().toLowerCase();
+            const source = resource && typeof resource === "object" && !Array.isArray(resource) ? resource : {};
+            const resourceId = String(source.id || source.resourceId || source.evaluationId || source.key || "").trim();
+            const supportedTypes = ["file", "imagine", "metronome", "web_app", "function", "database", "knowledge", "prompt", "evaluation"];
+            if (!resourceId || !supportedTypes.includes(normalizedType)) {
+              return null;
+            }
+            const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+              ? source.metadata
+              : {};
+            const meta = getProjectOverviewResourceTypeMeta(normalizedType);
+            const creator = getProjectOverviewResourceCreator({ record: source, type: normalizedType });
+            const existing = projectOverviewLinkedResources.find((candidate) => (
+              String(candidate?.type || candidate?.resourceType || "").trim().toLowerCase().replace(/s$/, "") === normalizedType
+              && String(candidate?.id || candidate?.resourceId || candidate?.evaluationId || "").trim() === resourceId
+            ));
+            const projectKnowledgeLibraryId = String(getPlaygroundProjectKnowledgeLibraryId(selectedProject) || "").trim();
+            const title = String(source.name || source.title || source.label || resourceId).trim() || meta.label;
+            return {
+              ...(existing && typeof existing === "object" ? existing : {}),
+              id: resourceId,
+              resourceId,
+              type: normalizedType,
+              name: title,
+              title,
+              description: String(source.description || source.summary || source.subtitle || "").trim(),
+              sourcePath: normalizeHistoryPath(source.sourcePath || source.workspacePath || source.path || ""),
+              environmentId: String(source.environmentId || "").trim(),
+              mimeType: String(source.mimeType || source.contentType || "").trim(),
+              creator: {
+                type: creator.type || "user",
+                id: creator.id || creator.userId || creator.agentId || "",
+                userId: creator.userId || "",
+                agentId: creator.agentId || "",
+                name: creator.name || "",
+                email: creator.email || "",
+                avatarUrl: creator.avatarUrl || "",
+              },
+              creatorName: creator.name || "",
+              creatorEmail: creator.email || "",
+              creatorAvatarUrl: creator.avatarUrl || "",
+              currentVersionNumber: Number(source.currentVersionNumber || source.version || metadata.currentVersionNumber || 0),
+              usageCount: Number(existing?.usageCount || source.usageCount || source.useCount || source.referenceCount || source.runCount || 0),
+              createdAt: String(source.createdAt || existing?.createdAt || "").trim(),
+              updatedAt: String(source.updatedAt || existing?.updatedAt || source.createdAt || "").trim(),
+              linkedAt: String(existing?.linkedAt || new Date().toISOString()),
+              isStrategyKnowledge: normalizedType === "knowledge" && resourceId === projectKnowledgeLibraryId,
+            };
+          }
+
+          async function attachProjectOverviewLinkedResource(type, resource) {
+            const linkedResource = buildProjectOverviewLinkedResource(type, resource);
+            if (!linkedResource) {
+              throw new Error("This resource could not be linked to the project.");
+            }
+            const nextLinkedResources = projectOverviewLinkedResources
+              .filter((candidate) => !(
+                String(candidate?.type || candidate?.resourceType || "").trim().toLowerCase().replace(/s$/, "") === linkedResource.type
+                && String(candidate?.id || candidate?.resourceId || candidate?.evaluationId || "").trim() === linkedResource.id
+              ))
+              .concat([linkedResource]);
+            const updatedProject = await persistProjectOverviewSidebarProjectUpdate({}, {
+              linkedResources: nextLinkedResources,
+            });
+            if (!updatedProject?.id) {
+              throw new Error("Failed to add the resource to this project.");
+            }
+          }
+
           function openProjectOverviewNewResource(type) {
             const normalizedType = String(type || "").trim();
             if (!normalizedType) {
@@ -256,20 +397,43 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             if (typeof setProjectOverviewResourceToolbarPopover === "function") {
               setProjectOverviewResourceToolbarPopover("");
             }
-            if (normalizedType === "file") {
-              const normalizedProjectId = String(selectedProjectId || "").trim();
-              const normalizedEnvironmentId = String(
-                selectedProject?.defaultEnvironmentId
-                || activeProjectAttachmentEnvironmentId
-                || ""
-              ).trim();
-              if (typeof onOpenFilesPage === "function") {
-                onOpenFilesPage({
-                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                  projectId: normalizedProjectId,
-                  environmentId: normalizedEnvironmentId,
+            if (normalizedType === "prompt" && typeof onOpenPromptSearch === "function") {
+              onOpenPromptSearch((prompt) => attachProjectOverviewLinkedResource("prompt", prompt));
+              return;
+            }
+            if (normalizedType === "knowledge" && typeof onOpenKnowledgeSearch === "function") {
+              onOpenKnowledgeSearch((library) => attachProjectOverviewLinkedResource("knowledge", library));
+              return;
+            }
+            if (normalizedType === "evaluation" && typeof onOpenEvaluationSearch === "function") {
+              onOpenEvaluationSearch((evaluation) => attachProjectOverviewLinkedResource("evaluation", evaluation));
+              return;
+            }
+            if ((normalizedType === "file" || normalizedType === "imagine") && typeof onOpenFileSearch === "function") {
+              onOpenFileSearch((fileResult) => {
+                const entry = fileResult?.entry && typeof fileResult.entry === "object" ? fileResult.entry : {};
+                const path = normalizeHistoryPath(entry.path || "");
+                return attachProjectOverviewLinkedResource(normalizedType, {
+                  ...entry,
+                  id: String(fileResult?.key || (fileResult?.environmentId || "") + ":" + path).trim(),
+                  name: entry.name || getHistoryPathName(path) || (normalizedType === "imagine" ? "Untitled image" : "Untitled file"),
+                  title: entry.name || getHistoryPathName(path) || (normalizedType === "imagine" ? "Untitled image" : "Untitled file"),
+                  description: path,
+                  sourcePath: path,
+                  environmentId: String(fileResult?.environmentId || "").trim(),
                 });
-              }
+              }, { kind: normalizedType === "imagine" ? "image" : "file" });
+              return;
+            }
+            if (normalizedType === "metronome" && typeof onOpenWorkflowSearch === "function") {
+              onOpenWorkflowSearch((workflow) => attachProjectOverviewLinkedResource("metronome", workflow));
+              return;
+            }
+            if (["web_app", "function", "database"].includes(normalizedType) && typeof onOpenServerResourceSearch === "function") {
+              onOpenServerResourceSearch(
+                normalizedType,
+                (resource) => attachProjectOverviewLinkedResource(normalizedType, resource),
+              );
               return;
             }
             if (typeof setProjectOverviewHomeTab === "function") {
@@ -491,6 +655,29 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             }));
           }
 
+          async function removeProjectOverviewLinkedResource(row) {
+            const resourceType = String(row?.type || "").trim().toLowerCase();
+            const resourceId = String(row?.resourceId || row?.record?.id || row?.record?.resourceId || "").trim();
+            const isManagedStrategyLibrary = Boolean(
+              row?.isStrategyKnowledge
+              && resourceId
+              && resourceId === String(getPlaygroundProjectKnowledgeLibraryId(selectedProject) || "").trim()
+            );
+            if (isManagedStrategyLibrary) {
+              throw new Error("The project Strategy Knowledge library is managed by Mission Control and cannot be removed here.");
+            }
+            const nextLinkedResources = projectOverviewLinkedResources.filter((candidate) => !(
+              String(candidate?.type || candidate?.resourceType || "").trim().toLowerCase().replace(/s$/, "") === resourceType
+              && String(candidate?.id || candidate?.resourceId || candidate?.evaluationId || "").trim() === resourceId
+            ));
+            const updatedProject = await persistProjectOverviewSidebarProjectUpdate({}, {
+              linkedResources: nextLinkedResources,
+            });
+            if (!updatedProject?.id) {
+              throw new Error("Failed to remove the resource from this project.");
+            }
+          }
+
           async function handleRemoveProjectOverviewResourceFromProject(row) {
             const kind = String(row?.kind || "").trim();
             closeProjectOverviewResourceMenu();
@@ -503,6 +690,8 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
                 await removeProjectOverviewFileActivityResource(row);
               } else if (kind === "runtime") {
                 await removeProjectOverviewRuntimeResource(row);
+              } else if (kind === "linked") {
+                await removeProjectOverviewLinkedResource(row);
               }
             } catch (error) {
               if (typeof window !== "undefined") {
@@ -641,10 +830,58 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             ].map((value) => String(value || "").trim().toLowerCase()).filter(Boolean);
             if (!values.length) return false;
             const currentValues = [
+              currentUserId,
               currentUserEmail,
               currentUserName,
             ].map((value) => String(value || "").trim().toLowerCase()).filter(Boolean);
-            return currentValues.some((value) => values.includes(value));
+            return values.some((value) => ["me", "you", "current user"].includes(value))
+              || currentValues.some((value) => values.includes(value));
+          }
+
+          function findProjectOverviewResourceCreatorMember(creator) {
+            const members = Array.isArray(workspaceTeamMembers) ? workspaceTeamMembers : [];
+            const identityValues = [creator?.id, creator?.userId, creator?.email]
+              .map((value) => String(value || "").trim().toLowerCase())
+              .filter(Boolean);
+            if (!identityValues.length) return null;
+            return members.find((member) => {
+              const metadata = member?.metadata && typeof member.metadata === "object" && !Array.isArray(member.metadata)
+                ? member.metadata
+                : {};
+              const user = member?.user && typeof member.user === "object" && !Array.isArray(member.user)
+                ? member.user
+                : {};
+              const profile = member?.profile && typeof member.profile === "object" && !Array.isArray(member.profile)
+                ? member.profile
+                : {};
+              const values = [
+                member?.id,
+                member?.userId,
+                member?.user_id,
+                member?.email,
+                metadata?.userId,
+                metadata?.email,
+                user?.id,
+                user?.userId,
+                user?.email,
+                profile?.id,
+                profile?.userId,
+                profile?.email,
+              ].map((value) => String(value || "").trim().toLowerCase()).filter(Boolean);
+              return identityValues.some((value) => values.includes(value));
+            }) || null;
+          }
+
+          function getProjectOverviewResourceCreatorMemberIdentity(member) {
+            if (!member || typeof member !== "object") return null;
+            const metadata = member.metadata && typeof member.metadata === "object" && !Array.isArray(member.metadata) ? member.metadata : {};
+            const user = member.user && typeof member.user === "object" && !Array.isArray(member.user) ? member.user : {};
+            const profile = member.profile && typeof member.profile === "object" && !Array.isArray(member.profile) ? member.profile : {};
+            const sources = [member, user, profile, metadata];
+            const name = sources.map((source) => readProjectOverviewResourceCreatorString(source, ["displayName", "display_name", "name", "fullName", "full_name", "username", "label"])).find(Boolean) || "";
+            const email = sources.map((source) => readProjectOverviewResourceCreatorString(source, ["email", "emailAddress", "email_address", "mail"])).find(Boolean) || "";
+            const avatarUrl = sources.map((source) => readProjectOverviewResourceCreatorString(source, ["photoURL", "photoUrl", "photo_url", "avatarUrl", "avatarURL", "avatar", "picture", "imageUrl", "profileImageUrl"])).find(Boolean) || "";
+            return { name: name || email, email, avatarUrl };
           }
 
           function getProjectOverviewResourceCreator(row) {
@@ -711,22 +948,33 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
               agentId,
               userId,
               email,
-              name: rawName || email || "Me",
+              name: rawName || email || "",
               avatarUrl: rawAvatarUrl,
             };
             if (isProjectOverviewCurrentUserCreator(normalizedCreator) || (!rawName && !email && !userId && !agentId && !id)) {
               return {
                 ...normalizedCreator,
                 type: "user",
-                name: "Me",
+                id: normalizedCreator.id || String(currentUserId || "").trim(),
+                userId: normalizedCreator.userId || String(currentUserId || "").trim(),
+                email: normalizedCreator.email || String(currentUserEmail || "").trim(),
+                name: String(currentUserName || currentUserEmail || "Unknown user").trim() || "Unknown user",
                 avatarUrl: currentUserAvatarUrl || normalizedCreator.avatarUrl || "",
               };
             }
-            return normalizedCreator;
+            const memberIdentity = getProjectOverviewResourceCreatorMemberIdentity(
+              findProjectOverviewResourceCreatorMember(normalizedCreator)
+            );
+            return {
+              ...normalizedCreator,
+              email: memberIdentity?.email || normalizedCreator.email || "",
+              name: memberIdentity?.name || normalizedCreator.name || normalizedCreator.email || "Unknown user",
+              avatarUrl: memberIdentity?.avatarUrl || normalizedCreator.avatarUrl || "",
+            };
           }
 
           function renderProjectOverviewResourceCreatorAvatar(creator) {
-            const name = String(creator?.name || "Me").trim();
+            const name = String(creator?.name || "Unknown user").trim();
             const avatarUrl = String(creator?.avatarUrl || "").trim();
             if (avatarUrl && (typeof canRenderAvatarImage !== "function" || canRenderAvatarImage(avatarUrl))) {
               return React.createElement("img", {
@@ -738,14 +986,14 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             }
             return React.createElement("span", { className: "playground-project-resources-creator-avatar" },
               React.createElement("span", { className: "playground-project-resources-creator-avatar-fallback" },
-                getProjectOverviewSidebarInitials(name || "Me")
+                getProjectOverviewSidebarInitials(name || "Unknown user")
               )
             );
           }
 
           function renderProjectOverviewResourceCreator(row) {
             const creator = getProjectOverviewResourceCreator(row);
-            const name = String(creator?.name || "Me").trim() || "Me";
+            const name = String(creator?.name || "Unknown user").trim() || "Unknown user";
             return React.createElement("div", {
                 className: "playground-project-resources-creator",
                 title: creator?.email ? name + " · " + creator.email : name,
@@ -755,9 +1003,121 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             );
           }
 
+          function getProjectOverviewResourceUsageCount(row) {
+            const record = row?.record && typeof row.record === "object" && !Array.isArray(row.record) ? row.record : {};
+            const metadata = record.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata) ? record.metadata : {};
+            const analytics = record.analytics && typeof record.analytics === "object" && !Array.isArray(record.analytics) ? record.analytics : {};
+            const candidates = [
+              row?.usageCount,
+              record.usageCount,
+              record.useCount,
+              record.referenceCount,
+              record.invocationCount,
+              record.executionCount,
+              record.runCount,
+              analytics.usageCount,
+              analytics.invocationCount,
+              analytics.executionCount,
+              analytics.runCount,
+              metadata.usageCount,
+              metadata.referenceCount,
+            ];
+            for (const candidate of candidates) {
+              const count = Number(candidate);
+              if (Number.isFinite(count) && count > 0) return count;
+            }
+            return 0;
+          }
+
+          function getProjectOverviewFeaturedResourceRows() {
+            const strategyRows = projectOverviewAllResourceRows.filter((row) => row?.isStrategyKnowledge === true);
+            const strategyKeys = new Set(strategyRows.map((row) => String(row?.key || "").trim()).filter(Boolean));
+            const remainingRows = projectOverviewAllResourceRows
+              .filter((row) => !strategyKeys.has(String(row?.key || "").trim()))
+              .slice()
+              .sort((left, right) => {
+                const usageDelta = getProjectOverviewResourceUsageCount(right) - getProjectOverviewResourceUsageCount(left);
+                if (usageDelta) return usageDelta;
+                const updatedDelta = (
+                  Date.parse(String(right?.record?.updatedAt || right?.record?.createdAt || "")) || 0
+                ) - (
+                  Date.parse(String(left?.record?.updatedAt || left?.record?.createdAt || "")) || 0
+                );
+                return updatedDelta || String(left?.title || "").localeCompare(String(right?.title || ""));
+              });
+            return [...strategyRows, ...remainingRows]
+              .filter((row, index, rows) => rows.findIndex((candidate) => candidate.key === row.key) === index)
+              .slice(0, 3);
+          }
+
+          function renderProjectOverviewFeaturedResources() {
+            const featuredRows = getProjectOverviewFeaturedResourceRows();
+            if (!featuredRows.length) return null;
+            return React.createElement("section", {
+                className: "playground-project-featured-resources",
+                "aria-label": "Featured resources",
+              },
+              React.createElement("div", { className: "playground-project-featured-resources-grid" },
+                featuredRows.map((row) => {
+                  const meta = getProjectOverviewResourceTypeMeta(row.type);
+                  const Icon = meta.Icon || Layers;
+                  const usageCount = getProjectOverviewResourceUsageCount(row);
+                  const description = String(row.subtitle || row?.record?.description || "").trim()
+                    || "Open this " + String(meta.label || "resource").toLowerCase() + " to view its details.";
+                  return React.createElement(PlatformUiCard, {
+                      key: row.key,
+                      as: "button",
+                      type: "button",
+                      variant: "feature",
+                      className: "playground-project-featured-resource-card" + (row.isStrategyKnowledge ? " is-strategy" : ""),
+                      onClick: () => openProjectOverviewResourceRow(row),
+                    },
+                    React.createElement("div", { className: "playground-project-featured-resource-card-top" },
+                      React.createElement("div", { className: "playground-project-featured-resource-type" },
+                        React.createElement("span", { className: "playground-project-featured-resource-icon", "aria-hidden": "true" },
+                          React.createElement(Icon, { width: 17, height: 17, strokeWidth: 1.8 })
+                        ),
+                        React.createElement("span", null, meta.label || "Resource")
+                      ),
+                      React.createElement(PlatformLabel, {
+                        variant: row.isStrategyKnowledge ? "yellow" : "blue",
+                        className: "playground-project-featured-resource-badge",
+                      }, row.isStrategyKnowledge ? "Strategy" : "Most used")
+                    ),
+                    React.createElement("h3", {
+                      className: "platform-ui-card__feature-title playground-project-featured-resource-name",
+                    }, row.title || meta.label || "Untitled resource"),
+                    React.createElement("p", {
+                      className: "platform-ui-card__feature-description playground-project-featured-resource-description",
+                    }, description),
+                    React.createElement("div", { className: "playground-project-featured-resource-metrics" },
+                      React.createElement("div", { className: "playground-project-featured-resource-metric" },
+                        React.createElement("span", { className: "playground-project-featured-resource-metric-label" }, "Usage"),
+                        React.createElement("span", { className: "playground-project-featured-resource-metric-value" }, usageCount > 0 ? String(usageCount) : "—")
+                      ),
+                      React.createElement("div", { className: "playground-project-featured-resource-metric" },
+                        React.createElement("span", { className: "playground-project-featured-resource-metric-label" }, "Type"),
+                        React.createElement("span", { className: "playground-project-featured-resource-metric-value" }, meta.label || "Resource")
+                      ),
+                      React.createElement("div", { className: "playground-project-featured-resource-metric" },
+                        React.createElement("span", { className: "playground-project-featured-resource-metric-label" }, "Updated"),
+                        React.createElement("span", {
+                          className: "playground-project-featured-resource-metric-value",
+                          title: row.updatedLabel || "",
+                        }, row.updatedLabel || "—")
+                      )
+                    )
+                  );
+                })
+              )
+            );
+          }
+
 
           function renderProjectOverviewResourcesHome() {
-            return React.createElement(PlaygroundSharedResourcesTab, {
+            return React.createElement(React.Fragment, null,
+              renderProjectOverviewFeaturedResources(),
+              React.createElement(PlaygroundSharedResourcesTab, {
               rows: projectOverviewResourceRows,
               allRows: projectOverviewAllResourceRows,
               searchQuery: projectOverviewResourceSearchQuery,
@@ -774,14 +1134,15 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
               getRowMenuId: getProjectOverviewResourceRowMenuId,
               renderIcon: (row, meta) => renderProjectOverviewResourceIcon(row, meta?.Icon || Layers),
               renderCreator: renderProjectOverviewResourceCreator,
-              getRowActions: (row) => [{
-                id: "remove",
-                label: "Remove from project",
-                icon: Trash2,
-                danger: true,
-                onSelect: () => handleRemoveProjectOverviewResourceFromProject(row),
-              }],
+              getRowActions: (row) => row?.isStrategyKnowledge ? [] : [{
+                  id: "remove",
+                  label: "Remove from project",
+                  icon: Trash2,
+                  danger: true,
+                  onSelect: () => handleRemoveProjectOverviewResourceFromProject(row),
+                }],
               renderNewMenuItems: renderProjectOverviewResourceNewMenuItems,
+              newButtonLabel: "Add Resource",
               renderEmptyContent: renderProjectOverviewRecommendedTemplatesEmptyState,
               onRowOpen: openProjectOverviewResourceRow,
               searchAriaLabel: "Search project resources",
@@ -789,10 +1150,12 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
               useCentralNewSelector: true,
               useCentralFilterPopup: true,
               toolbarTitle: "All Resources",
+              tableVariant: "minimalistic-ui",
               showViewToggle: false,
               emptyLabel: "No resources yet.",
               noMatchesLabel: "No resources match this view yet.",
-            });
+              })
+            );
           }
 
           function shouldShowProjectOverviewGeneralEmptyState() {
@@ -806,16 +1169,13 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             const hasActivity = buildProjectOverviewActivityItems().length > 0;
             const hasMilestones = (Array.isArray(releases) && releases.length > 0)
               || Number(selectedProjectSummary?.releaseCount || 0) > 0;
-            const hasMissionControlDocument = Boolean(
-              String(missionControlDocumentDraft || selectedProjectMissionControl?.document || "").trim()
-              || String(selectedProjectMissionControl?.summary || "").trim()
-            );
+            const hasProjectKnowledge = Boolean(getPlaygroundProjectKnowledgeLibraryId(selectedProject));
             return !hasTasks
               && !hasThreads
               && !hasActivity
               && !hasMilestones
               && !projectHasCostData
-              && !hasMissionControlDocument;
+              && !hasProjectKnowledge;
           }
 
           function renderProjectOverviewGeneralEmptyState() {
@@ -835,7 +1195,7 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
                 }),
                 React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "Kick off this project"),
                 React.createElement("div", { className: "playground-auth-users-empty-state-copy" },
-                  "Run Mission Control to generate the first strategy, backlog, and next steps for this project."
+                  "Run Mission Control to establish Project Knowledge, documentation, a backlog, and the next steps."
                 ),
                 React.createElement("div", { className: "playground-project-overview-general-empty-action" },
                   React.createElement(PlatformPrimaryButton, {
@@ -845,7 +1205,7 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
                     disabled: !canOpenMissionControl || isMissionControlRunning,
                     onClick: () => {
                       if (canOpenMissionControl) {
-                        openMissionControlComposer({ keepStrategyOpen: true });
+                        openMissionControlComposer();
                       }
                     },
                   },

@@ -675,6 +675,14 @@
   color: rgba(255, 255, 255, 0.78);
 }
 
+.tb-runner-chat .tb-inline-selector.is-locked,
+.tb-runner-chat .tb-inline-selector.is-locked:hover,
+.tb-runner-chat .tb-inline-selector:disabled {
+  color: rgba(255, 255, 255, 0.78);
+  cursor: default;
+  opacity: 1;
+}
+
 .tb-runner-chat .tb-inline-selector-chevron,
 .tb-runner-chat .tb-popup-icon,
 .tb-runner-chat .tb-popup-chevron,
@@ -827,6 +835,17 @@
 
 .tb-composer-popup-portal-root .tb-composer-popup-portal-scope .tb-composer-popup-measure {
   pointer-events: auto;
+}
+
+.tb-composer-popup-portal-root
+  .tb-composer-popup-portal-scope
+  .tb-composer-suggestion-popup.is-placement-top,
+.tb-composer-popup-portal-root
+  .tb-composer-popup-portal-scope
+  .tb-composer-suggestion-popup.is-placement-bottom {
+  inset: auto;
+  width: 100%;
+  max-width: none;
 }
 
 .tb-runner-chat .tb-popup-menu-main,
@@ -1457,6 +1476,10 @@
 }
 
 .tb-runner-chat .tb-popup-row-prompts .tb-popup-icon {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.tb-runner-chat .tb-popup-row-knowledge .tb-popup-icon {
   color: rgba(255, 255, 255, 0.94);
 }
 

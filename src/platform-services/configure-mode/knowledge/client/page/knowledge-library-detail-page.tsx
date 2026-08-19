@@ -1,46 +1,72 @@
 import {
   Bookmark,
-  BookOpenText,
-  ChevronRight,
-  FilePlus2,
+  Copy,
   LibraryBig,
   Send,
+  SquarePen,
   Trash2,
+  UsersRound,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  PlatformDataTable,
-  type PlatformDataTableAction,
-  type PlatformDataTableColumn,
-} from "../../../../../platform-ui/components/composite/data-table/index.js";
-import { PlatformDeploymentMap } from "../../../../../platform-ui/components/composite/deployment-map/index.js";
-import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
-import { PlatformInstructionsEditor } from "../../../../../platform-ui/components/composite/instructions-editor/index.js";
-import { PlatformModal } from "../../../../../platform-ui/components/composite/modal/index.js";
-import type { PlatformOwnerOption } from "../../../../../platform-ui/components/composite/owner-selector/index.js";
-import { PlatformResourceDetailSidebar } from "../../../../../platform-ui/components/composite/resource-detail-sidebar/index.js";
-import { PlatformVersionHistorySidebar } from "../../../../../platform-ui/components/composite/versioning/index.js";
+  buildPlatformTeamAccessMetadata,
+  getPlatformSharedTeamIds,
+} from "../../../../../platform-resources/access-control/index.js";
 import {
-  PlatformPrimaryButton,
-  PlatformSecondaryButton,
-} from "../../../../../platform-ui/components/ui/button/index.js";
+  PlatformCodeEditorWorkspace,
+  type PlatformCodeEditorFile,
+} from "../../../../../platform-ui/components/composite/code-editor-workspace/index.js";
+import { PlatformDeploymentMap } from "../../../../../platform-ui/components/composite/deployment-map/index.js";
+import { PlatformDiffViewer } from "../../../../../platform-ui/components/composite/diff-viewer/index.js";
+import { PlatformConfirmationModal } from "../../../../../platform-ui/components/composite/modal/index.js";
+import type { PlatformOwnerOption } from "../../../../../platform-ui/components/composite/owner-selector/index.js";
+import {
+  PlatformResourceRenameModal,
+  PlatformResourceShareModal,
+  type PlatformResourceShareTeam,
+} from "../../../../../platform-ui/components/composite/resource-action-modals/index.js";
+import { PlatformResourceDetailSidebar } from "../../../../../platform-ui/components/composite/resource-detail-sidebar/index.js";
+import {
+  PlatformResourceActionMenuItem,
+  PlatformResourceActionsDivider,
+  PlatformResourceActionsInformation,
+  PlatformResourceActionsMenu,
+  PlatformResourceHeaderActions,
+  PlatformResourceVersionLabel,
+  PlatformResourceVersionHistoryMenuItem,
+} from "../../../../../platform-ui/components/composite/resource-header-actions/index.js";
+import {
+  PlatformVersionHistorySidebar,
+  PlatformVersionChangesPage,
+  PlatformVersionSaveDialog,
+  type PlatformVersionChangesFile,
+  type PlatformVersionSaveDetails,
+} from "../../../../../platform-ui/components/composite/versioning/index.js";
+import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
+import { PlatformPrimaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
+import { PlatformCheckbox } from "../../../../../platform-ui/components/ui/checkbox/index.js";
 import { PlatformLabel } from "../../../../../platform-ui/components/ui/label/index.js";
 import { PlatformSwitch } from "../../../../../platform-ui/components/ui/switch/index.js";
-import { PlatformServiceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
+import { MarkdownResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
 import type { KnowledgeApi } from "../api/index.js";
 import type {
   KnowledgeDocument,
   KnowledgeLibrary,
   KnowledgeLibraryVersion,
 } from "../domain/index.js";
-import { KnowledgeAccessSettings } from "./knowledge-access-settings.js";
+import {
+  KnowledgeAccessSettings,
+  normalizeKnowledgeAccessTeam,
+  type KnowledgeAccessTeam,
+} from "./knowledge-access-settings.js";
 
 type KnowledgeDetailTab = "general" | "settings";
 
 export interface KnowledgeLibraryDetailPageProps {
   library: KnowledgeLibrary;
   api: KnowledgeApi;
+  controlsPortalId?: string;
   sectionControlsPortalId?: string;
   titleActionsPortalId?: string;
   versionsDrawerPortalId?: string;
@@ -48,25 +74,124 @@ export interface KnowledgeLibraryDetailPageProps {
   workspaceTeamsLoading?: boolean;
   activeOrganizationId?: string;
   onWorkspaceTeamsRequest?: () => void;
+  onVersionsSidebarOpenChange?: (open: boolean) => void;
   onLibraryChange: (library: KnowledgeLibrary) => void;
   onReload: () => Promise<void>;
-  onOpenDocument: (document: KnowledgeDocument) => void;
-  onRequestArchiveDocument: (document: KnowledgeDocument) => void;
+  onLibraryDeleted?: (libraryId: string) => void;
   onStartThread?: (library: KnowledgeLibrary) => void;
+}
+
+interface KnowledgeDocumentDraft {
+  title: string;
+  markdown: string;
+  initialTitle: string;
+  initialMarkdown: string;
+  revisionId: string;
+}
+
+function createDocumentDrafts(documents: readonly KnowledgeDocument[]) {
+  return Object.fromEntries(documents.map((document) => [document.id, {
+    title: document.title,
+    markdown: document.markdown,
+    initialTitle: document.title,
+    initialMarkdown: document.markdown,
+    revisionId: document.revisionId,
+  } satisfies KnowledgeDocumentDraft]));
 }
 
 function usePortalTarget(id?: string) {
   const [target, setTarget] = useState<HTMLElement | null>(null);
   useEffect(() => {
-    setTarget(id && typeof document !== "undefined" ? document.getElementById(id) : null);
+    if (!id || typeof document === "undefined") {
+      setTarget(null);
+      return undefined;
+    }
+    const resolveTarget = () => setTarget(document.getElementById(id));
+    resolveTarget();
+    const observer = new MutationObserver(resolveTarget);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, [id]);
   return target;
+}
+
+interface KnowledgeVersionChangesState {
+  leftVersionId: string;
+  rightVersionId: string;
 }
 
 function formatTimestamp(value: string) {
   const timestamp = Date.parse(value);
   if (!Number.isFinite(timestamp)) return "—";
   return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(timestamp));
+}
+
+function buildWholeFileDiff(filePath: string, before: string, after: string) {
+  const beforeLines = String(before).replace(/\r\n?/g, "\n").split("\n");
+  const afterLines = String(after).replace(/\r\n?/g, "\n").split("\n");
+  const oldCount = beforeLines.length;
+  const newCount = afterLines.length;
+  return {
+    filePath,
+    diffContent: [
+      `--- a/${filePath}`,
+      `+++ b/${filePath}`,
+      `@@ -1,${oldCount} +1,${newCount} @@`,
+      ...beforeLines.map((line) => `-${line}`),
+      ...afterLines.map((line) => `+${line}`),
+    ].join("\n"),
+    fileContent: after,
+    additions: newCount,
+    deletions: oldCount,
+  };
+}
+
+function buildKnowledgeVersionDiffFiles(
+  leftVersion: KnowledgeLibraryVersion | null,
+  rightVersion: KnowledgeLibraryVersion | null,
+  leftDocuments: readonly KnowledgeDocument[],
+  rightDocuments: readonly KnowledgeDocument[],
+): PlatformVersionChangesFile[] {
+  if (!leftVersion || !rightVersion) return [];
+  const files: PlatformVersionChangesFile[] = [];
+  const leftMetadata = JSON.stringify({
+    name: leftVersion.name || "",
+    description: leftVersion.description || "",
+  }, null, 2);
+  const rightMetadata = JSON.stringify({
+    name: rightVersion.name || "",
+    description: rightVersion.description || "",
+  }, null, 2);
+  if (leftMetadata !== rightMetadata) {
+    files.push({
+      id: "knowledge-library-metadata",
+      label: "library.json",
+      ...buildWholeFileDiff("library.json", leftMetadata, rightMetadata),
+    });
+  }
+
+  const leftById = new Map(leftDocuments.map((document) => [document.id, document]));
+  const rightById = new Map(rightDocuments.map((document) => [document.id, document]));
+  const documentIds = new Set([...leftById.keys(), ...rightById.keys()]);
+  documentIds.forEach((documentId) => {
+    const leftDocument = leftById.get(documentId);
+    const rightDocument = rightById.get(documentId);
+    const before = leftDocument
+      ? `# ${leftDocument.title}\n\n${leftDocument.markdown}`
+      : "";
+    const after = rightDocument
+      ? `# ${rightDocument.title}\n\n${rightDocument.markdown}`
+      : "";
+    if (before === after) return;
+    const title = rightDocument?.title || leftDocument?.title || "document";
+    const filePath = `${title.replace(/[\\/:*?\"<>|]/g, "-") || "document"}.md`;
+    files.push({
+      id: documentId,
+      label: filePath,
+      ...buildWholeFileDiff(filePath, before, after),
+    });
+  });
+  return files;
 }
 
 interface KnowledgeOwnerIdentity {
@@ -110,6 +235,7 @@ function normalizeOwnerCandidate(value: unknown): KnowledgeOwnerIdentity | null 
 export function KnowledgeLibraryDetailPage({
   library,
   api,
+  controlsPortalId,
   sectionControlsPortalId,
   titleActionsPortalId,
   versionsDrawerPortalId,
@@ -117,53 +243,121 @@ export function KnowledgeLibraryDetailPage({
   workspaceTeamsLoading = false,
   activeOrganizationId = "",
   onWorkspaceTeamsRequest,
+  onVersionsSidebarOpenChange,
   onLibraryChange,
   onReload,
-  onOpenDocument,
-  onRequestArchiveDocument,
+  onLibraryDeleted,
   onStartThread,
 }: KnowledgeLibraryDetailPageProps) {
+  const controlsPortal = usePortalTarget(controlsPortalId);
   const sectionPortal = usePortalTarget(sectionControlsPortalId);
   const actionsPortal = usePortalTarget(titleActionsPortalId);
   const versionsPortal = usePortalTarget(versionsDrawerPortalId);
   const [activeTab, setActiveTab] = useState<KnowledgeDetailTab>("general");
   const [name, setName] = useState(library.name);
   const [description, setDescription] = useState(library.description);
-  const [homeMarkdown, setHomeMarkdown] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [createDocumentOpen, setCreateDocumentOpen] = useState(false);
-  const [documentTitle, setDocumentTitle] = useState("");
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saveDialogKey, setSaveDialogKey] = useState(0);
+  const [saveInitialMode, setSaveInitialMode] = useState<"current" | "new">("new");
+  const [saveError, setSaveError] = useState("");
   const [versionsOpen, setVersionsOpen] = useState(false);
+  const [versionChangesState, setVersionChangesState] = useState<KnowledgeVersionChangesState | null>(null);
+  const [versionChangesDocuments, setVersionChangesDocuments] = useState<{
+    left: KnowledgeDocument[];
+    right: KnowledgeDocument[];
+  }>({ left: [], right: [] });
+  const [versionChangesLoading, setVersionChangesLoading] = useState(false);
+  const [versionChangesError, setVersionChangesError] = useState("");
+  const [titleActionsOpen, setTitleActionsOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [selectedShareTeamIds, setSelectedShareTeamIds] = useState<string[]>([]);
+  const [shareError, setShareError] = useState("");
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [renameError, setRenameError] = useState("");
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [viewedVersionId, setViewedVersionId] = useState(library.currentVersionId);
   const [viewedDocuments, setViewedDocuments] = useState<KnowledgeDocument[] | null>(null);
+  const currentDocuments = useMemo(
+    () => (viewedDocuments || library.documents || [])
+      .filter((document) => !document.archived)
+      .sort((left, right) => (
+        Number(left.sortOrder || 0) - Number(right.sortOrder || 0)
+        || left.title.localeCompare(right.title)
+      )),
+    [library.documents, viewedDocuments],
+  );
+  const [activeDocumentId, setActiveDocumentId] = useState(
+    library.homeDocumentId || currentDocuments[0]?.id || "",
+  );
+  const [documentDrafts, setDocumentDrafts] = useState<Record<string, KnowledgeDocumentDraft>>(
+    () => createDocumentDrafts(currentDocuments),
+  );
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<Set<string>>(new Set());
+  const [archiveDocuments, setArchiveDocuments] = useState<KnowledgeDocument[]>([]);
   const [accessDetailOpen, setAccessDetailOpen] = useState(false);
   const [ownerSelectorOpen, setOwnerSelectorOpen] = useState(false);
   const [ownerCandidatesLoading, setOwnerCandidatesLoading] = useState(false);
   const [ownerCandidates, setOwnerCandidates] = useState<KnowledgeOwnerIdentity[]>([]);
   const teamsRequestedForOrganizationRef = useRef("");
-  const documents = (viewedDocuments || library.documents || []).filter((document) => !document.archived);
-  const homeDocument = documents.find((document) => document.id === library.homeDocumentId) || null;
+  const activeDocumentTitleInputRef = useRef<HTMLInputElement | null>(null);
   const isHistorical = viewedVersionId !== library.currentVersionId;
+  const documentRevisionSignature = currentDocuments
+    .map((document) => `${document.id}:${document.revisionId}`)
+    .join("|");
 
   useEffect(() => {
     setName(library.name);
     setDescription(library.description);
     setViewedVersionId(library.currentVersionId);
     setViewedDocuments(null);
+    setSaveDialogOpen(false);
+    setSaveError("");
+    setTitleActionsOpen(false);
+    setShareModalOpen(false);
+    setSelectedShareTeamIds([]);
+    setShareError("");
+    setRenameModalOpen(false);
+    setRenameError("");
+    setDeleteConfirmationOpen(false);
     setOwnerSelectorOpen(false);
     setOwnerCandidates([]);
+    setVersionsOpen(false);
+    setVersionChangesState(null);
+    setVersionChangesDocuments({ left: [], right: [] });
+    setVersionChangesError("");
   }, [library.id, library.name, library.description, library.currentVersionId]);
 
   useEffect(() => {
-    setHomeMarkdown(homeDocument?.markdown || "");
-  }, [homeDocument?.id, homeDocument?.revisionId]);
+    onVersionsSidebarOpenChange?.(versionsOpen);
+    return () => onVersionsSidebarOpenChange?.(false);
+  }, [onVersionsSidebarOpenChange, versionsOpen]);
 
   useEffect(() => {
-    const openVersions = () => setVersionsOpen(true);
-    window.addEventListener("knowledge:open-versions", openVersions);
-    return () => window.removeEventListener("knowledge:open-versions", openVersions);
-  }, []);
+    setDocumentDrafts((current) => {
+      const next = createDocumentDrafts(currentDocuments);
+      currentDocuments.forEach((document) => {
+        const existing = current[document.id];
+        if (existing?.revisionId === document.revisionId) {
+          next[document.id] = existing;
+        }
+      });
+      return next;
+    });
+    setActiveDocumentId((current) => {
+      if (currentDocuments.some((document) => document.id === current)) return current;
+      return currentDocuments.find((document) => document.id === library.homeDocumentId)?.id
+        || currentDocuments[0]?.id
+        || "";
+    });
+    setSelectedDocumentIds((current) => new Set(
+      [...current].filter((documentId) => (
+        documentId !== library.homeDocumentId
+        && currentDocuments.some((document) => document.id === documentId)
+      )),
+    ));
+  }, [documentRevisionSignature, library.homeDocumentId, viewedVersionId]);
 
   useEffect(() => {
     if (
@@ -177,14 +371,178 @@ export function KnowledgeLibraryDetailPage({
     }
   }, [activeTab, onWorkspaceTeamsRequest, workspaceTeams.length, workspaceTeamsLoading]);
 
-  const identityDirty = name.trim() !== library.name || description !== library.description;
-  const homeDirty = !isHistorical && homeDocument !== null && homeMarkdown !== homeDocument.markdown;
-  const dirty = identityDirty || homeDirty;
+  const identityDirty = !isHistorical
+    && (name.trim() !== library.name || description !== library.description);
+  const dirtyDocuments = useMemo(() => currentDocuments.filter((document) => {
+    const draft = documentDrafts[document.id];
+    return !isHistorical
+      && Boolean(draft)
+      && (draft.title.trim() !== draft.initialTitle || draft.markdown !== draft.initialMarkdown);
+  }), [currentDocuments, documentDrafts, isHistorical]);
+  const hasInvalidDocumentTitle = currentDocuments.some((document) => {
+    const draft = documentDrafts[document.id];
+    return Boolean(draft && !draft.title.trim());
+  });
+  const dirty = identityDirty || dirtyDocuments.length > 0;
 
-  const save = useCallback(async () => {
-    if (busy || !dirty || !name.trim() || isHistorical) return;
+  const versions = useMemo(
+    () => [...(library.versions || [])].sort((left, right) => (
+      Number(left.versionNumber || left.number || 0) - Number(right.versionNumber || right.number || 0)
+    )),
+    [library.versions],
+  );
+  const latestVersion = versions[versions.length - 1] || null;
+  const viewedVersion = versions.find((version) => version.id === viewedVersionId)
+    || versions.find((version) => version.id === library.currentVersionId)
+    || latestVersion;
+  const latestVersionNumber = Math.max(
+    Number(library.currentVersionNumber || 1),
+    ...versions.map((version) => Number(version.versionNumber || version.number || 0)),
+  );
+  const viewedVersionNumber = Number(
+    viewedVersion?.versionNumber || viewedVersion?.number || library.currentVersionNumber || 1,
+  );
+  const nextVersionNumber = latestVersionNumber + 1;
+  const versionSelectorOptions = useMemo(() => [...versions].reverse().map((version) => {
+    const number = Number(version.versionNumber || version.number || 1);
+    return {
+      value: version.id,
+      label: `v${number}${number === latestVersionNumber ? " · Latest" : ""}`,
+    };
+  }), [latestVersionNumber, versions]);
+
+  const openVersionChanges = useCallback(() => {
+    const target = versions.find((version) => version.id === viewedVersionId)
+      || versions[versions.length - 1]
+      || null;
+    if (!target) return;
+    const targetIndex = versions.findIndex((version) => version.id === target.id);
+    const base = targetIndex > 0
+      ? versions[targetIndex - 1]
+      : versions[targetIndex + 1] || target;
+    setVersionChangesState({
+      leftVersionId: base.id,
+      rightVersionId: target.id,
+    });
+    setVersionsOpen(true);
+  }, [versions, viewedVersionId]);
+
+  useEffect(() => {
+    if (!versionChangesState) return undefined;
+    let cancelled = false;
+    setVersionChangesLoading(true);
+    setVersionChangesError("");
+    const loadSnapshot = async (versionId: string) => {
+      try {
+        return (await api.getVersion(library.id, versionId)).documents || [];
+      } catch (nextError) {
+        if (versionId === library.currentVersionId && library.documents) {
+          return library.documents;
+        }
+        throw nextError;
+      }
+    };
+    void Promise.all([
+      loadSnapshot(versionChangesState.leftVersionId),
+      loadSnapshot(versionChangesState.rightVersionId),
+    ]).then(([left, right]) => {
+      if (!cancelled) setVersionChangesDocuments({ left, right });
+    }).catch((nextError) => {
+      if (!cancelled) {
+        setVersionChangesError(
+          nextError instanceof Error ? nextError.message : "Failed to compare Knowledge versions.",
+        );
+      }
+    }).finally(() => {
+      if (!cancelled) setVersionChangesLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [api, library.currentVersionId, library.documents, library.id, versionChangesState]);
+
+  const leftComparedVersion = versionChangesState
+    ? versions.find((version) => version.id === versionChangesState.leftVersionId) || null
+    : null;
+  const rightComparedVersion = versionChangesState
+    ? versions.find((version) => version.id === versionChangesState.rightVersionId) || null
+    : null;
+  const versionChangesFiles = useMemo(() => buildKnowledgeVersionDiffFiles(
+    leftComparedVersion,
+    rightComparedVersion,
+    versionChangesDocuments.left,
+    versionChangesDocuments.right,
+  ), [leftComparedVersion, rightComparedVersion, versionChangesDocuments.left, versionChangesDocuments.right]);
+  const sharedTeamIds = useMemo(
+    () => new Set(getPlatformSharedTeamIds(library.metadata)),
+    [library.metadata],
+  );
+  const shareTeams = useMemo<PlatformResourceShareTeam[]>(
+    () => workspaceTeams
+      .map(normalizeKnowledgeAccessTeam)
+      .filter((team): team is KnowledgeAccessTeam => Boolean(team))
+      .filter((team) => ["admin", "owner"].includes(team.roleId))
+      .map((team) => ({
+        id: team.id,
+        name: team.name,
+        description: team.description,
+        roleLabel: team.roleLabel,
+        profileImageUrl: team.profileImageUrl,
+        shared: sharedTeamIds.has(team.id),
+      })),
+    [sharedTeamIds, workspaceTeams],
+  );
+
+  const saveChanges = useMemo(() => {
+    const changes: Array<{
+      id: string;
+      label: string;
+      content: ReturnType<typeof buildWholeFileDiff>;
+    }> = [];
+    if (identityDirty) {
+      changes.push({
+        id: "library-details",
+        label: "Library details",
+        content: buildWholeFileDiff(
+          "library-details.txt",
+          `Name: ${library.name}\nDescription: ${library.description}`,
+          `Name: ${name.trim()}\nDescription: ${description}`,
+        ),
+      });
+    }
+    dirtyDocuments.forEach((document) => {
+      const draft = documentDrafts[document.id];
+      if (!draft) return;
+      const originalPath = `${draft.initialTitle || document.title}.md`;
+      const nextPath = `${draft.title.trim() || document.title}.md`;
+      changes.push({
+        id: document.id,
+        label: nextPath,
+        content: buildWholeFileDiff(
+          originalPath,
+          `# ${draft.initialTitle}\n\n${draft.initialMarkdown}`,
+          `# ${draft.title.trim()}\n\n${draft.markdown}`,
+        ),
+      });
+    });
+    return changes;
+  }, [description, dirtyDocuments, documentDrafts, identityDirty, library.description, library.name, name]);
+
+  const openSaveDialog = useCallback((initialMode: "current" | "new" = "new") => {
+    if (busy || !dirty || !name.trim() || hasInvalidDocumentTitle || isHistorical) return;
+    setSaveError("");
+    setSaveInitialMode(initialMode);
+    setSaveDialogKey((current) => current + 1);
+    setSaveDialogOpen(true);
+  }, [busy, dirty, hasInvalidDocumentTitle, isHistorical, name]);
+
+  const save = useCallback(async (details: PlatformVersionSaveDetails) => {
+    if (busy || !dirty || !name.trim() || hasInvalidDocumentTitle || isHistorical) {
+      throw new Error("There are no valid Knowledge changes to save.");
+    }
     setBusy(true);
     setError("");
+    setSaveError("");
     try {
       if (identityDirty) {
         onLibraryChange(await api.updateLibrary(library.id, {
@@ -192,83 +550,252 @@ export function KnowledgeLibraryDetailPage({
           description,
         }));
       }
-      if (homeDirty && homeDocument) {
-        const result = await api.updateDocument(library.id, homeDocument.id, {
-          markdown: homeMarkdown,
-          baseRevisionId: homeDocument.revisionId,
+      for (const document of dirtyDocuments) {
+        const draft = documentDrafts[document.id];
+        if (!draft?.title.trim()) continue;
+        const result = await api.updateDocument(library.id, document.id, {
+          title: draft.title.trim(),
+          markdown: draft.markdown,
+          baseRevisionId: draft.revisionId,
         });
         onLibraryChange(result.library);
       }
+      if (details.mode === "new") {
+        onLibraryChange(await api.createVersion(library.id, {
+          description: details.description,
+        }));
+      }
       await onReload();
+      setSaveDialogOpen(false);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "Failed to save Knowledge changes.");
+      const normalizedError = nextError instanceof Error
+        ? nextError
+        : new Error("Failed to save Knowledge changes.");
+      setError(normalizedError.message);
+      setSaveError(normalizedError.message);
+      throw normalizedError;
     } finally {
       setBusy(false);
     }
-  }, [api, busy, description, dirty, homeDirty, homeDocument, homeMarkdown, identityDirty, isHistorical, library.id, name, onLibraryChange, onReload]);
+  }, [api, busy, description, dirty, dirtyDocuments, documentDrafts, hasInvalidDocumentTitle, identityDirty, isHistorical, library.id, name, onLibraryChange, onReload]);
 
   useEffect(() => {
     const handleSave = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
-        void save();
+        event.stopPropagation();
+        openSaveDialog("new");
       }
     };
-    window.addEventListener("keydown", handleSave);
-    return () => window.removeEventListener("keydown", handleSave);
-  }, [save]);
+    window.addEventListener("keydown", handleSave, true);
+    return () => window.removeEventListener("keydown", handleSave, true);
+  }, [openSaveDialog]);
 
-  const documentColumns = useMemo<PlatformDataTableColumn<KnowledgeDocument>[]>(() => [
-    {
-      id: "title",
-      header: "Document",
-      accessor: "title",
-      sortable: true,
-      width: "minmax(320px, 1.5fr)",
-      cell: ({ row }) => (
-        <span className="knowledge-document-identity">
-          <BookOpenText width={16} height={16} strokeWidth={1.8} aria-hidden="true" />
-          <span>
-            <span className="knowledge-document-identity__title">{row.title}</span>
-            {row.summary ? <span className="knowledge-document-identity__summary">{row.summary}</span> : null}
-          </span>
-        </span>
+  function openShareModal() {
+    onWorkspaceTeamsRequest?.();
+    setTitleActionsOpen(false);
+    setSelectedShareTeamIds([]);
+    setShareError("");
+    setShareModalOpen(true);
+  }
+
+  async function shareWithTeams(teamIds: string[]) {
+    if (busy || dirty || isHistorical) return;
+    const requestedTeamIds = new Set(
+      teamIds.map((teamId) => String(teamId || "").trim()).filter(Boolean),
+    );
+    const teamsToShare = shareTeams.filter((team) => (
+      requestedTeamIds.has(team.id) && !team.shared && !team.disabled
+    ));
+    if (teamsToShare.length === 0) {
+      setShareError("Choose at least one team first.");
+      return;
+    }
+    setBusy(true);
+    setShareError("");
+    const createdShares: Array<{ teamId: string; shareId: string }> = [];
+    try {
+      const metadata = asRecord(library.metadata);
+      let nextMetadata = { ...metadata };
+      for (const team of teamsToShare) {
+        nextMetadata = buildPlatformTeamAccessMetadata(
+          nextMetadata,
+          team.id,
+          true,
+          "knowledge_library_team_role",
+        );
+      }
+      const teamRolePermissionSets = asRecord(nextMetadata.teamRolePermissionSets);
+      for (const team of teamsToShare) {
+        const share = await api.addTeamShare(team.id, library.id, {
+          permissionSets: asRecord(teamRolePermissionSets[team.id]),
+        });
+        const shareId = String(share.id || "").trim();
+        if (!shareId) throw new Error(`The team share for ${team.name} did not return an ID.`);
+        createdShares.push({ teamId: team.id, shareId });
+      }
+      const nextShareIds = { ...asRecord(metadata.teamAccessShareIds) };
+      createdShares.forEach(({ teamId, shareId }) => {
+        nextShareIds[teamId] = shareId;
+      });
+      onLibraryChange(await api.updateLibrary(library.id, {
+        metadata: {
+          ...nextMetadata,
+          teamAccessShareIds: nextShareIds,
+        },
+      }));
+      setSelectedShareTeamIds([]);
+      setShareModalOpen(false);
+    } catch (nextError) {
+      await Promise.all(createdShares.map(({ teamId, shareId }) => (
+        api.removeTeamShare(teamId, shareId).catch(() => undefined)
+      )));
+      setShareError(
+        nextError instanceof Error
+          ? nextError.message
+          : "Failed to share the Knowledge library with the selected teams.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function openRenameModal() {
+    setTitleActionsOpen(false);
+    setRenameError("");
+    setRenameModalOpen(true);
+  }
+
+  async function renameLibrary(nextName: string) {
+    const normalizedName = nextName.trim();
+    if (!normalizedName || normalizedName === library.name || busy || dirty || isHistorical) return;
+    setBusy(true);
+    setRenameError("");
+    try {
+      onLibraryChange(await api.updateLibrary(library.id, { name: normalizedName }));
+      setName(normalizedName);
+      setRenameModalOpen(false);
+    } catch (nextError) {
+      setRenameError(
+        nextError instanceof Error ? nextError.message : "Failed to rename the Knowledge library.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copyLibraryId() {
+    setTitleActionsOpen(false);
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard access is unavailable.");
+      await navigator.clipboard.writeText(library.id);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "Failed to copy the Knowledge ID.");
+    }
+  }
+
+  const workspaceFiles = useMemo<PlatformCodeEditorFile[]>(() => currentDocuments.map((document) => {
+    const draft = documentDrafts[document.id];
+    const title = draft?.title || document.title;
+    return {
+      id: document.id,
+      label: title,
+      tabLabel: title,
+      editorMode: "markdown",
+      dirty: Boolean(
+        draft
+        && (draft.title.trim() !== draft.initialTitle || draft.markdown !== draft.initialMarkdown)
       ),
-    },
-    {
-      id: "updated",
-      header: "Updated",
-      accessor: "updatedAt",
-      sortable: true,
-      sortDescFirst: true,
-      width: "minmax(160px, 0.55fr)",
-      cell: ({ row }) => <span className="knowledge-table-value">{formatTimestamp(row.updatedAt)}</span>,
-    },
-  ], []);
+      ariaLabel: title,
+      searchText: `${title} ${document.summary}`,
+      selectable: !isHistorical,
+      renameDisabled: isHistorical,
+      deleteDisabled: isHistorical || dirty || document.id === library.homeDocumentId,
+      moveDisabled: true,
+    };
+  }), [currentDocuments, dirty, documentDrafts, isHistorical, library.homeDocumentId]);
+  const activeDocument = currentDocuments.find((document) => document.id === activeDocumentId) || null;
+  const activeDocumentDraft = activeDocument ? documentDrafts[activeDocument.id] : null;
+  const selectableDocumentIds = currentDocuments
+    .filter((document) => document.id !== library.homeDocumentId)
+    .map((document) => document.id);
+  const allDocumentsSelected = selectableDocumentIds.length > 0
+    && selectableDocumentIds.every((documentId) => selectedDocumentIds.has(documentId));
+  const someDocumentsSelected = !allDocumentsSelected
+    && selectableDocumentIds.some((documentId) => selectedDocumentIds.has(documentId));
 
-  async function createDocument(event: FormEvent) {
-    event.preventDefault();
-    const title = documentTitle.trim();
-    if (!title || busy) return;
+  const updateActiveDocumentDraft = useCallback((update: Partial<Pick<KnowledgeDocumentDraft, "title" | "markdown">>) => {
+    if (!activeDocument || isHistorical) return;
+    setDocumentDrafts((current) => {
+      const draft = current[activeDocument.id];
+      if (!draft) return current;
+      return {
+        ...current,
+        [activeDocument.id]: { ...draft, ...update },
+      };
+    });
+  }, [activeDocument, isHistorical]);
+
+  const createDocument = useCallback(async () => {
+    if (busy || isHistorical) return;
+    const existingTitles = new Set(currentDocuments.map((document) => (
+      documentDrafts[document.id]?.title || document.title
+    ).trim().toLowerCase()));
+    let title = "Untitled document";
+    let suffix = 2;
+    while (existingTitles.has(title.toLowerCase())) {
+      title = `Untitled document ${suffix}`;
+      suffix += 1;
+    }
     setBusy(true);
     setError("");
     try {
       const result = await api.createDocument(library.id, {
         title,
-        markdown: `# ${title}\n\n`,
-        sortOrder: documents.length,
+        markdown: "",
+        sortOrder: currentDocuments.length,
       });
-      setCreateDocumentOpen(false);
-      setDocumentTitle("");
-      onLibraryChange(result.library);
-      await onReload();
-      onOpenDocument(result.document);
+      const documents = [
+        ...(result.library.documents || library.documents || [])
+          .filter((document) => document.id !== result.document.id),
+        result.document,
+      ];
+      onLibraryChange({
+        ...library,
+        ...result.library,
+        documents,
+        versions: result.library.versions || library.versions,
+      });
+      setActiveDocumentId(result.document.id);
+      globalThis.requestAnimationFrame?.(() => {
+        activeDocumentTitleInputRef.current?.focus();
+        activeDocumentTitleInputRef.current?.select();
+      });
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "Failed to create the document.");
     } finally {
       setBusy(false);
     }
-  }
+  }, [api, busy, currentDocuments, documentDrafts, isHistorical, library, onLibraryChange]);
+
+  const requestDocumentRename = useCallback((file: PlatformCodeEditorFile) => {
+    if (dirty || isHistorical) return;
+    setActiveDocumentId(file.id);
+    globalThis.requestAnimationFrame?.(() => {
+      activeDocumentTitleInputRef.current?.focus();
+      activeDocumentTitleInputRef.current?.select();
+    });
+  }, [isHistorical]);
+
+  const requestDocumentArchive = useCallback((files: readonly PlatformCodeEditorFile[]) => {
+    if (isHistorical) return;
+    const targets = files
+      .map((file) => currentDocuments.find((document) => document.id === file.id))
+      .filter((document): document is KnowledgeDocument => (
+        Boolean(document) && document?.id !== library.homeDocumentId
+      ));
+    if (targets.length > 0) setArchiveDocuments(targets);
+  }, [currentDocuments, dirty, isHistorical, library.homeDocumentId]);
 
   const sectionSwitch = (
     <PlatformSwitch
@@ -281,20 +808,112 @@ export function KnowledgeLibraryDetailPage({
       ariaLabel="Knowledge library section"
     />
   );
-  const headerActions = (
-    <div className="knowledge-header-actions">
-      <PlatformSecondaryButton size="small" onClick={() => setVersionsOpen(true)}>
-        v{library.currentVersionNumber}
-      </PlatformSecondaryButton>
-      <PlatformPrimaryButton
-        size="small"
-        disabled={busy || !dirty || !name.trim() || isHistorical}
-        onClick={() => void save()}
+  const titleActions = (
+    <PlatformResourceHeaderActions>
+      <PlatformResourceVersionLabel
+        resourceLabel="Knowledge library"
+        version={viewedVersionNumber}
+        latestVersion={latestVersionNumber}
+        disabled={busy}
+        onOpenVersionHistory={() => {
+          setTitleActionsOpen(false);
+          setVersionsOpen(true);
+        }}
+      />
+      <PlatformResourceActionsMenu
+        open={titleActionsOpen}
+        onOpenChange={setTitleActionsOpen}
+        resourceLabel="Knowledge Library"
+        disabled={busy}
+        shortcutActions={{
+          share: {
+            onInvoke: openShareModal,
+            disabled: dirty || isHistorical || shareModalOpen || renameModalOpen || deleteConfirmationOpen,
+          },
+          rename: {
+            onInvoke: openRenameModal,
+            disabled: dirty || isHistorical || shareModalOpen || renameModalOpen || deleteConfirmationOpen,
+          },
+          delete: {
+            onInvoke: () => setDeleteConfirmationOpen(true),
+            disabled: shareModalOpen || renameModalOpen || deleteConfirmationOpen,
+          },
+        }}
       >
-        <Bookmark width={14} height={14} aria-hidden="true" />
-        {busy ? "Saving…" : "Save Changes"}
-      </PlatformPrimaryButton>
-    </div>
+        <PlatformResourceActionsInformation
+          resourceLabel="Knowledge Library"
+          items={[
+            {
+              id: "id",
+              label: "ID",
+              value: library.id,
+              title: library.id,
+              monospace: true,
+              copyValue: library.id,
+              copyAriaLabel: "Copy Knowledge Library ID",
+            },
+            { id: "created", label: "Created", value: formatTimestamp(library.createdAt) },
+            { id: "updated", label: "Updated", value: formatTimestamp(library.updatedAt) },
+          ]}
+        />
+        <PlatformResourceVersionHistoryMenuItem
+          onClick={() => {
+            setTitleActionsOpen(false);
+            setVersionsOpen(true);
+          }}
+        />
+        <PlatformResourceActionsDivider />
+        <PlatformResourceActionMenuItem
+          icon={<UsersRound width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
+          label="Share"
+          shortcut="share"
+          disabled={dirty || isHistorical}
+          title={dirty
+            ? "Save Knowledge changes before sharing."
+            : isHistorical
+              ? "Return to the current version before sharing."
+              : undefined}
+          onClick={openShareModal}
+        />
+        <PlatformResourceActionMenuItem
+          icon={<Copy width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
+          label="Copy Knowledge Library ID"
+          onClick={() => void copyLibraryId()}
+        />
+        <PlatformResourceActionsDivider />
+        <PlatformResourceActionMenuItem
+          icon={<SquarePen width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
+          label="Rename"
+          shortcut="rename"
+          disabled={dirty || isHistorical}
+          title={dirty
+            ? "Save Knowledge changes before renaming."
+            : isHistorical
+              ? "Return to the current version before renaming."
+              : undefined}
+          onClick={openRenameModal}
+        />
+        <PlatformResourceActionMenuItem
+          icon={<Trash2 width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
+          label="Delete"
+          shortcut="delete"
+          onClick={() => {
+            setTitleActionsOpen(false);
+            setDeleteConfirmationOpen(true);
+          }}
+        />
+      </PlatformResourceActionsMenu>
+    </PlatformResourceHeaderActions>
+  );
+  const saveAction = (
+    <PlatformPrimaryButton
+      size="small"
+      disabled={busy || !dirty || !name.trim() || hasInvalidDocumentTitle || isHistorical}
+      onClick={() => openSaveDialog("new")}
+    >
+      <Bookmark width={14} height={14} aria-hidden="true" />
+      {busy ? "Saving…" : "Save Changes"}
+    </PlatformPrimaryButton>
   );
   const ownerIdentity: KnowledgeOwnerIdentity = {
     id: library.ownerId || library.ownerUserId,
@@ -379,9 +998,6 @@ export function KnowledgeLibraryDetailPage({
   const sidebar = (
     <PlatformResourceDetailSidebar
       attributes={[
-        { id: "status", label: "Status", value: <PlatformLabel variant={library.publishedVersionId ? "green" : "gray"}>{library.publishedVersionId ? "Published" : "Draft"}</PlatformLabel> },
-        { id: "region", label: "Region", value: String(library.metadata.region || library.metadata.location || "eur3") },
-        { id: "created", label: "Created", value: formatTimestamp(library.createdAt) },
         { id: "updated", label: "Updated", value: formatTimestamp(library.updatedAt) },
       ]}
       creator={{
@@ -411,163 +1027,315 @@ export function KnowledgeLibraryDetailPage({
         title: dirty ? "Save Knowledge changes before changing the owner." : undefined,
       }}
       primaryAction={onStartThread ? (
-        <PlatformPrimaryButton fullWidth size="medium" onClick={() => onStartThread(library)}>
+        <PlatformPrimaryButton
+          className="knowledge-detail-page__start-thread-button"
+          fullWidth
+          size="small"
+          onClick={() => onStartThread(library)}
+        >
           <Send width={14} height={14} aria-hidden="true" />
           Start Thread
         </PlatformPrimaryButton>
       ) : null}
+      className="knowledge-detail-page__settings-sidebar"
+      propertiesClassName="knowledge-detail-page__settings-sidebar-properties"
+    />
+  );
+
+  const identitySection = (
+    <section className="skill-detail-page__identity knowledge-library-identity" aria-label="Knowledge library identity">
+      <span className="knowledge-library-identity__icon" aria-hidden="true">
+        <LibraryBig width={24} height={24} strokeWidth={1.7} />
+      </span>
+      <div className="skill-detail-page__identity-copy">
+        <input
+          className="skill-detail-page__name-input"
+          value={name}
+          readOnly={isHistorical}
+          placeholder="Knowledge library"
+          aria-label="Knowledge library name"
+          onChange={(event) => setName(event.currentTarget.value)}
+        />
+        <input
+          className="file-resource-detail-page__description-input skill-detail-page__description-input"
+          value={description}
+          readOnly={isHistorical}
+          placeholder="Describe what people and agents can learn here"
+          aria-label="Knowledge library description"
+          onChange={(event) => setDescription(event.currentTarget.value)}
+        />
+      </div>
+      {isHistorical ? <PlatformLabel variant="gray">Version preview</PlatformLabel> : null}
+    </section>
+  );
+
+  const documentWorkspace = (
+    <PlatformCodeEditorWorkspace
+      className="knowledge-detail-page__document-workspace"
+      ariaLabel={`${library.name} document editor`}
+      variant="full-screen"
+      sidebarTitle={(
+        <span className="knowledge-document-workspace__sidebar-heading">
+          <PlatformCheckbox
+            className="knowledge-document-workspace__select-all"
+            checked={allDocumentsSelected}
+            indeterminate={someDocumentsSelected}
+            disabled={isHistorical || selectableDocumentIds.length === 0}
+            aria-label={allDocumentsSelected ? "Deselect all documents" : "Select all documents"}
+            onClick={() => setSelectedDocumentIds(
+              allDocumentsSelected ? new Set() : new Set(selectableDocumentIds),
+            )}
+          />
+          <span>Documents</span>
+        </span>
+      )}
+      files={workspaceFiles}
+      activeFileId={activeDocumentId}
+      onFileSelect={setActiveDocumentId}
+      selectedFileIds={selectedDocumentIds}
+      onFileSelectionChange={({ selectedIds }) => setSelectedDocumentIds(new Set(
+        [...selectedIds].filter((documentId) => documentId !== library.homeDocumentId),
+      ))}
+      onFileRename={isHistorical ? undefined : requestDocumentRename}
+      onFilesDelete={isHistorical ? undefined : requestDocumentArchive}
+      onCreateFile={isHistorical ? undefined : createDocument}
+      createFileLabel="Create Document"
+      createFileButtonLabel="Add document"
+      fileCreationDisabled={busy || isHistorical}
+      emptyFiles="No Knowledge documents yet."
+      emptyEditor="Select a document to start editing."
+      markdownEditor={activeDocument && activeDocumentDraft ? {
+        value: activeDocumentDraft.markdown,
+        onChange: (markdown) => updateActiveDocumentDraft({ markdown }),
+        title: (
+          <input
+            ref={activeDocumentTitleInputRef}
+            className="knowledge-document-workspace__title-input"
+            value={activeDocumentDraft.title}
+            readOnly={isHistorical}
+            aria-label="Knowledge document title"
+            placeholder="Untitled document"
+            onChange={(event) => updateActiveDocumentDraft({ title: event.currentTarget.value })}
+          />
+        ),
+        placeholder: "Write durable knowledge for people and agents.",
+        ariaLabel: `${activeDocumentDraft.title || "Knowledge document"} content`,
+        readOnly: isHistorical,
+        historyKey: `${activeDocument.id}:${activeDocumentDraft.revisionId}`,
+        contentVariant: "file-enabled",
+        fileUpload: {
+          upload: (files) => api.uploadEditorAttachments(files),
+          resolvePreviewSource: (file, signal) => api.resolveEditorAttachmentPreview(file, signal),
+          accept: "*/*",
+          disabled: busy || isHistorical,
+        },
+        className: "knowledge-document-workspace__editor",
+      } : undefined}
+    />
+  );
+
+  const settings = (
+    <div className="playground-server-detail-content knowledge-detail-page__settings-content">
+      <div className="playground-server-settings-tab is-function-settings-tab knowledge-settings-layout">
+        <PlatformDeploymentMap
+          className="knowledge-detail-page__storage-map"
+          regionCode={String(library.metadata.region || library.metadata.location || "eur3")}
+          title="Location"
+        />
+        <KnowledgeAccessSettings
+          library={library}
+          api={api}
+          workspaceTeams={workspaceTeams}
+          onLibraryChange={onLibraryChange}
+          onPermissionDetailOpenChange={setAccessDetailOpen}
+        />
+      </div>
+    </div>
+  );
+  const saveActionPortal = controlsPortal || (!titleActionsPortalId ? actionsPortal : null);
+  const detailSurface = versionChangesState ? (
+    <div className="knowledge-version-changes-surface">
+      {versionChangesLoading ? (
+        <PlatformLoadingState centered message="Loading version changes…" />
+      ) : versionChangesError ? (
+        <div className="knowledge-version-changes-surface__error" role="alert">
+          {versionChangesError}
+        </div>
+      ) : (
+        <PlatformVersionChangesPage
+          title="Changes"
+          subtitle="Compare saved Knowledge versions and review the exact document changes."
+          files={versionChangesFiles}
+          leftSelector={{
+            value: versionChangesState.leftVersionId,
+            options: versionSelectorOptions,
+            onValueChange: (value) => setVersionChangesState((current) => current ? {
+              ...current,
+              leftVersionId: value,
+            } : current),
+            ariaLabel: "Select base Knowledge version",
+          }}
+          rightSelector={{
+            value: versionChangesState.rightVersionId,
+            options: versionSelectorOptions,
+            onValueChange: (value) => setVersionChangesState((current) => current ? {
+              ...current,
+              rightVersionId: value,
+            } : current),
+            ariaLabel: "Select target Knowledge version",
+          }}
+          onBack={() => setVersionChangesState(null)}
+          backLabel="Back to Knowledge library"
+          emptyMessage="No differences between the selected versions."
+          className="knowledge-version-changes-page"
+        />
+      )}
+    </div>
+  ) : (
+    <MarkdownResourceDetailPage
+      activeTab={activeTab === "settings" ? "settings" : "code"}
+      metadata={identitySection}
+      notice={error ? <p className="knowledge-inline-error" role="alert">{error}</p> : null}
+      code={documentWorkspace}
+      settings={settings}
+      sidebar={sidebar}
+      sidebarCollapsed={activeTab !== "settings" || accessDetailOpen || versionsOpen}
+      ariaLabel={`${library.name} Knowledge library`}
+      sidebarAriaLabel="Knowledge library information"
+      className={`knowledge-detail-page playground-project-overview-layout playground-agents-detail-overview-layout is-${activeTab}-tab`}
+      contentClassName={`knowledge-detail-content playground-project-overview-main playground-agents-detail-overview-main is-${activeTab}-tab`}
+      codeClassName="knowledge-detail-page__general"
+      metadataClassName="knowledge-detail-page__identity"
+      noticeClassName="knowledge-detail-page__notice"
+      workspaceClassName="knowledge-detail-page__workspace"
+      settingsClassName="knowledge-detail-page__settings"
+      sidebarClassName="knowledge-detail-sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar"
     />
   );
 
   return (
     <>
       {sectionPortal ? createPortal(sectionSwitch, sectionPortal) : null}
-      {actionsPortal ? createPortal(headerActions, actionsPortal) : null}
-      <PlatformServiceDetailPage
-        sidebarContent={sidebar}
-        sidebarCollapsed={activeTab !== "settings" || accessDetailOpen || versionsOpen}
-        ariaLabel={`${library.name} Knowledge library`}
-        sidebarAriaLabel="Knowledge library information"
-        className={`knowledge-detail-page is-${activeTab}-tab`}
-        contentClassName="knowledge-detail-content"
-        sidebarClassName="knowledge-detail-sidebar"
-      >
-        {error ? <p className="knowledge-inline-error" role="alert">{error}</p> : null}
-        {activeTab === "general" ? (
-          <div className="knowledge-general-stack">
-            <section className="platform-service-detail-identity knowledge-library-identity">
-              <span className="platform-service-detail-identity__avatar knowledge-library-identity__icon" aria-hidden="true">
-                <LibraryBig width={24} height={24} strokeWidth={1.7} />
-              </span>
-              <div className="platform-service-detail-identity__copy">
-                <input
-                  className="platform-service-detail-identity__title-input"
-                  value={name}
-                  readOnly={isHistorical}
-                  placeholder="Knowledge library"
-                  aria-label="Knowledge library name"
-                  onChange={(event) => setName(event.currentTarget.value)}
-                />
-                <input
-                  className="platform-service-detail-identity__description-input"
-                  value={description}
-                  readOnly={isHistorical}
-                  placeholder="Describe what people and agents can learn here"
-                  aria-label="Knowledge library description"
-                  onChange={(event) => setDescription(event.currentTarget.value)}
-                />
-              </div>
-              {isHistorical ? <PlatformLabel variant="gray">Version preview</PlatformLabel> : null}
-            </section>
-            {homeDocument ? (
-              <PlatformInstructionsEditor
-                value={homeMarkdown}
-                onChange={setHomeMarkdown}
-                title={homeDocument.title}
-                placeholder="Introduce this library and link its most important documents."
-                ariaLabel={`${library.name} home document`}
-                readOnly={isHistorical}
-                variant="minimalistic-ui"
-                editorMode="rich-text"
-                historyKey={`${homeDocument.id}:${homeDocument.revisionId}`}
-                className="knowledge-home-editor"
-              />
-            ) : null}
-            <PlatformDataTable
-              rows={documents.filter((document) => document.id !== library.homeDocumentId)}
-              columns={documentColumns}
-              getRowId={(document) => document.id}
-              ariaLabel="Knowledge documents"
-              className="knowledge-documents-table"
-              variant="minimalistic-ui"
-              surface="plain"
-              sticky={false}
-              pagination={false}
-              toolbar={{
-                title: "Documents",
-                search: {
-                  placeholder: "Search documents",
-                  getSearchText: (document) => `${document.title} ${document.summary} ${document.markdown}`,
-                },
-                primaryAction: isHistorical ? undefined : {
-                  label: "Document",
-                  icon: FilePlus2,
-                  onClick: () => setCreateDocumentOpen(true),
-                },
-              }}
-              getRowActions={(document): readonly PlatformDataTableAction<KnowledgeDocument>[] => [
-                { id: "open", label: "Open", icon: ChevronRight, onSelect: () => onOpenDocument(document) },
-                ...(!isHistorical ? [{
-                  id: "archive",
-                  label: "Archive",
-                  icon: Trash2,
-                  danger: true,
-                  separatorBefore: true,
-                  onSelect: () => onRequestArchiveDocument(document),
-                } as PlatformDataTableAction<KnowledgeDocument>] : []),
-              ]}
-              onRowActivate={onOpenDocument}
-              getRowAriaLabel={(document) => `Open ${document.title}`}
-              emptyState={(
-                <PlatformEmptyState
-                  icon={BookOpenText}
-                  title="No supporting documents yet"
-                  description="Add conventions, decisions, procedures, and observations as focused pages."
-                  primaryAction={isHistorical ? undefined : {
-                    label: "Add Document",
-                    icon: FilePlus2,
-                    onClick: () => setCreateDocumentOpen(true),
-                  }}
-                />
-              )}
+      {actionsPortal ? createPortal(titleActions, actionsPortal) : null}
+      {saveActionPortal ? createPortal(saveAction, saveActionPortal) : null}
+      {detailSurface}
+      <PlatformVersionSaveDialog
+        open={saveDialogOpen}
+        title="Review changes"
+        currentVersion={library.currentVersionNumber || viewedVersionNumber}
+        nextVersion={nextVersionNumber}
+        currentDescription={viewedVersion?.description || ""}
+        initialMode={saveInitialMode}
+        canSaveCurrent={Boolean(library.currentVersionId)}
+        instanceKey={saveDialogKey}
+        pending={busy}
+        error={saveError || null}
+        changes={saveChanges.map((change) => ({
+          id: change.id,
+          label: change.label,
+          content: (
+            <PlatformDiffViewer
+              filePath={change.content.filePath}
+              diffContent={change.content.diffContent}
+              fileContent={change.content.fileContent}
+              additions={change.content.additions}
+              deletions={change.content.deletions}
+              hideTopbar
+              embedded
+              defaultExpanded
+              maxHeight={330}
             />
-          </div>
-        ) : (
-          <div className="knowledge-settings-layout">
-            <PlatformDeploymentMap
-              regionCode={String(library.metadata.region || library.metadata.location || "eur3")}
-              title="Location"
-            />
-            <KnowledgeAccessSettings
-              library={library}
-              api={api}
-              workspaceTeams={workspaceTeams}
-              onLibraryChange={onLibraryChange}
-              onPermissionDetailOpenChange={setAccessDetailOpen}
-            />
-          </div>
-        )}
-      </PlatformServiceDetailPage>
-      <PlatformModal
-        open={createDocumentOpen}
-        title="New Knowledge Document"
-        description="Add a focused page to this versioned library."
-        as="form"
-        size="small"
-        onClose={() => !busy && setCreateDocumentOpen(false)}
-        surfaceProps={{ onSubmit: createDocument }}
-        footer={(
-          <>
-            <PlatformSecondaryButton size="medium" disabled={busy} onClick={() => setCreateDocumentOpen(false)}>
-              Cancel
-            </PlatformSecondaryButton>
-            <PlatformPrimaryButton size="medium" type="submit" disabled={busy || !documentTitle.trim()}>
-              <FilePlus2 width={14} height={14} />
-              Create Document
-            </PlatformPrimaryButton>
-          </>
-        )}
-      >
-        <label className="knowledge-form-field">
-          <span>Title</span>
-          <input
-            value={documentTitle}
-            autoFocus
-            placeholder="Deployment conventions"
-            onChange={(event) => setDocumentTitle(event.currentTarget.value)}
-          />
-        </label>
-      </PlatformModal>
+          ),
+        }))}
+        emptyChanges="No Knowledge changes were found."
+        onClose={() => {
+          if (!busy) setSaveDialogOpen(false);
+        }}
+        onSubmit={save}
+      />
+      <PlatformResourceShareModal
+        open={shareModalOpen}
+        resourceLabel="Knowledge Library"
+        resourceName={library.name}
+        teams={shareTeams}
+        loading={workspaceTeamsLoading}
+        selectionMode="multiple"
+        selectedTeamIds={selectedShareTeamIds}
+        onSelectedTeamIdsChange={setSelectedShareTeamIds}
+        onClose={() => {
+          if (!busy) setShareModalOpen(false);
+        }}
+        onShareTeams={shareWithTeams}
+        busy={busy}
+        error={shareError}
+        emptyMessage="No teams you can manage are available."
+      />
+      <PlatformResourceRenameModal
+        open={renameModalOpen}
+        resourceLabel="Knowledge Library"
+        initialName={library.name}
+        onClose={() => {
+          if (!busy) setRenameModalOpen(false);
+        }}
+        onRename={renameLibrary}
+        busy={busy}
+        error={renameError}
+      />
+      <PlatformConfirmationModal
+        open={deleteConfirmationOpen}
+        title="Delete Knowledge Library?"
+        description={`This permanently deletes ${library.name}, its documents, versions, and access configuration.`}
+        confirmLabel="Delete Library"
+        confirmingLabel="Deleting…"
+        tone="destructive"
+        onCancel={() => {
+          if (!busy) setDeleteConfirmationOpen(false);
+        }}
+        onConfirm={async () => {
+          if (busy) return;
+          setBusy(true);
+          setError("");
+          try {
+            await api.deleteLibrary(library.id);
+            setDeleteConfirmationOpen(false);
+            onLibraryDeleted?.(library.id);
+          } catch (nextError) {
+            setError(nextError instanceof Error
+              ? nextError.message
+              : "Failed to delete the Knowledge library.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      />
+      <PlatformConfirmationModal
+        open={archiveDocuments.length > 0}
+        title={archiveDocuments.length > 1 ? "Archive documents?" : "Archive document?"}
+        description={archiveDocuments.length > 1
+          ? `${archiveDocuments.length} documents will be removed from the current draft. Published versions remain immutable.`
+          : archiveDocuments[0]
+            ? `“${archiveDocuments[0].title}” will be removed from the current draft. Published versions remain immutable.`
+            : ""}
+        confirmLabel={archiveDocuments.length > 1 ? "Archive Documents" : "Archive"}
+        tone="destructive"
+        onCancel={() => !busy && setArchiveDocuments([])}
+        onConfirm={async () => {
+          if (archiveDocuments.length === 0 || busy) return;
+          setBusy(true);
+          setError("");
+          try {
+            for (const document of archiveDocuments) {
+              await api.archiveDocument(library.id, document.id);
+            }
+            setArchiveDocuments([]);
+            await onReload();
+          } catch (nextError) {
+            setError(nextError instanceof Error ? nextError.message : "Failed to archive the Knowledge document.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      />
       {(!versionsDrawerPortalId || versionsPortal) ? (
         <PlatformVersionHistorySidebar<KnowledgeLibraryVersion>
           open={versionsOpen}
@@ -577,11 +1345,14 @@ export function KnowledgeLibraryDetailPage({
           width="var(--playground-thread-task-detail-width)"
           portal={Boolean(versionsPortal)}
           portalTarget={versionsPortal}
-          versions={library.versions || []}
+          versions={versions}
           activeVersionId={library.publishedVersionId}
           selectedVersionId={viewedVersionId}
           busy={busy || dirty}
-          onClose={() => setVersionsOpen(false)}
+          onClose={() => {
+            setVersionChangesState(null);
+            setVersionsOpen(false);
+          }}
           onCreateVersion={async () => {
             setBusy(true);
             try {
@@ -592,6 +1363,7 @@ export function KnowledgeLibraryDetailPage({
             }
           }}
           onSelectVersion={async (versionId) => {
+            setVersionChangesState(null);
             if (versionId === library.currentVersionId) {
               setViewedVersionId(versionId);
               setViewedDocuments(null);
@@ -602,6 +1374,7 @@ export function KnowledgeLibraryDetailPage({
             setViewedDocuments(snapshot.documents);
             setActiveTab("general");
           }}
+          onViewChanges={openVersionChanges}
           onPublishVersion={async (versionId) => {
             setBusy(true);
             try {

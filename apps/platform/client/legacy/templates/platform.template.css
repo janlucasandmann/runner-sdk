@@ -211,16 +211,6 @@
           word-break: break-all;
         }
   
-        .status-indicator-stack {
-          margin-top: 0;
-        }
-  
-        .status-indicator-list {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-  
         .playground-shell-status-indicators {
           position: absolute;
           left: 336px;
@@ -240,143 +230,6 @@
         .playground-shell.is-project-thread-page .playground-shell-status-indicators {
           left: 14px;
           width: min(320px, calc(100vw - 28px));
-        }
-  
-        .status-indicator {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          position: relative;
-          z-index: 0;
-          padding: 10px;
-          border-radius: 10px;
-          border: 1px solid transparent;
-          background: rgba(0, 0, 0, 0.75);
-          box-shadow: 0 5px 8px rgba(0, 0, 0, 0.1);
-          -webkit-backdrop-filter: blur(20px);
-          backdrop-filter: blur(20px);
-          pointer-events: auto;
-          opacity: 0;
-          transform: translateY(10px);
-          transition: opacity 180ms ease, transform 180ms ease;
-        }
-  
-        .status-indicator.is-visible {
-          opacity: 1;
-          transform: translateY(0);
-        }
-  
-        .status-indicator.is-exiting {
-          opacity: 0;
-          transform: translateY(-10px);
-        }
-  
-        .status-indicator::before {
-          content: "";
-          pointer-events: none;
-          position: absolute;
-          inset: 0;
-          border-radius: 10px;
-          padding: 1px;
-          background: linear-gradient(-10deg, rgba(200, 200, 200, 0.15), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.3));
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-          mask-clip: content-box, border-box;
-          mask-composite: exclude;
-          mask-origin: content-box, border-box;
-          mask-repeat: repeat, repeat;
-          mask-size: auto, auto;
-        }
-  
-        .status-indicator-media {
-          width: 24px;
-          min-width: 24px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-  
-        .status-indicator-logo {
-          max-width: 16px;
-          max-height: 16px;
-          object-fit: contain;
-          display: block;
-        }
-  
-        .status-indicator-body {
-          min-width: 0;
-          flex: 1;
-        }
-  
-        .status-indicator-title,
-        .status-indicator-copy {
-          font-size: 12px;
-          line-height: 1.25;
-        }
-  
-        .status-indicator-title {
-          color: #fff;
-          font-weight: 500;
-        }
-  
-        .status-indicator-copy {
-          color: rgba(255, 255, 255, 0.7);
-          font-weight: 400;
-          margin-top: 2px;
-        }
-  
-        .status-indicator-progress {
-          position: relative;
-          width: 100%;
-          height: 4px;
-          margin-top: 8px;
-          border-radius: 999px;
-          overflow: hidden;
-          background: rgba(255, 255, 255, 0.08);
-        }
-  
-        .status-indicator-progress-fill {
-          height: 100%;
-          border-radius: inherit;
-          background: linear-gradient(90deg, #7c6df5 0%, #b98cf4 100%);
-          transition: width 220ms ease;
-        }
-  
-        .status-indicator-progress-fill.is-indeterminate {
-          position: absolute;
-          inset: 0 auto 0 0;
-          width: 42%;
-          animation: playground-status-indicator-progress 1.15s ease-in-out infinite;
-        }
-  
-        .status-indicator-close {
-          width: 18px;
-          height: 18px;
-          padding: 0;
-          border: 0;
-          background: transparent;
-          color: rgba(255, 255, 255, 0.5);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          flex-shrink: 0;
-        }
-  
-        .status-indicator-close:hover {
-          color: rgba(255, 255, 255, 0.8);
-        }
-  
-        .status-indicator-close-icon {
-          width: 14px;
-          height: 14px;
-        }
-  
-        .status-indicator-empty {
-          font-size: 12px;
-          color: var(--text-dim);
         }
   
         .toggle-row {
@@ -7157,16 +7010,6 @@
   
           to {
             transform: rotate(360deg);
-          }
-        }
-  
-        @keyframes playground-status-indicator-progress {
-          0% {
-            transform: translateX(-105%);
-          }
-  
-          100% {
-            transform: translateX(260%);
           }
         }
   
@@ -28165,8 +28008,8 @@
         }
   
         .playground-ticket-detail-sidebar.playground-agents-detail-sidebar.playground-project-overview-sidebar {
-          position: sticky;
-          top: 24px;
+          position: relative;
+          top: auto;
           z-index: 10;
           align-self: start;
           height: fit-content;
@@ -29645,6 +29488,7 @@
   
         .playground-tasks-project-nav-switch {
           width: fit-content;
+          border: 0;
         }
   
         .playground-tasks-project-home-navbar {
@@ -33589,4 +33433,5 @@
             grid-template-columns: minmax(0, 1fr);
           }
         }
-      
+
+  __PLATFORM_COMPATIBILITY_BINDING_136__

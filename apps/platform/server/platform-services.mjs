@@ -4,6 +4,7 @@ import { createAssuranceService } from "../../../src/platform-services/configure
 import { createEvidenceAgentsService } from "../../../src/platform-services/develop-mode/evidence-agents/index.mjs";
 import { createSecurityService } from "../../../src/platform-services/develop-mode/security/index.mjs";
 import { createCalendarService } from "../../../src/platform-services/create-mode/calendar/index.mjs";
+import { createBatchesService } from "../../../src/platform-services/create-mode/batches/index.mjs";
 import { createConfigureHomeService } from "../../../src/platform-services/configure-mode/configure-home/index.mjs";
 import { createEvaluationsService } from "../../../src/platform-services/configure-mode/evaluations/index.mjs";
 import { createFilesService } from "../../../src/platform-services/create-mode/files/index.mjs";
@@ -235,12 +236,17 @@ export function createPlatformServices({
     assuranceService: createAssuranceService({
       proxyUpstreamJsonRequest,
     }),
+    batchesService: createBatchesService({
+      proxyUpstreamGet,
+      proxyUpstreamJsonRequest,
+    }),
     calendarService: createCalendarService({
       proxyUpstreamGet,
       proxyUpstreamJsonRequest,
     }),
     configureHomeService: createConfigureHomeService({
       proxyUpstreamGet,
+      proxyUpstreamJsonRequest,
     }),
     connectorCredentialCatalogService,
     connectorMcpService,

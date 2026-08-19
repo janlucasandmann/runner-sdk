@@ -11,6 +11,7 @@ import { readPlatformCompositionSource } from "../../../../apps/platform/testing
 assert.match(PLAYGROUND_ASSURANCE_CSS, /\.resource-overview-page\.is-assurance/);
 assert.match(PLAYGROUND_ASSURANCE_CSS, /\.assurance-detail-page/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.state, /selectedAssurancePolicyId/);
+assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.state, /assuranceOverviewScope/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.navigation, /openAssurancePage/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.pageView, /AssuranceWorkspacePage/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.pageView, /onNavigationGuardChange: registerPlatformNavigationGuard/);
@@ -20,6 +21,10 @@ assert.match(
   ASSURANCE_APP_SCRIPT_FRAGMENTS.topNavigation,
   /playground-assurance-section-controls/,
 );
+assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "all", label: "All Policies" \}/);
+assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "created", label: "Created by me" \}/);
+assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "shared", label: "Shared with me" \}/);
+assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.pageView, /overviewScope: assuranceOverviewScope/);
 
 const platformSource = await readPlatformCompositionSource();
 assert.match(

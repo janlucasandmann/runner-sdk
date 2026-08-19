@@ -4,6 +4,15 @@ const INFERENCE_TEST_PATHS = new Set([
 ]);
 const INFERENCE_ENDPOINTS_PREFIX = "/api/real/inference/endpoints";
 
+// The inference settings surface also exposes the execution runtime that hosts
+// local runners.  These requests intentionally use the platform's same-origin
+// `/api/real` gateway so session credentials and API-key based access are
+// handled consistently with the rest of the settings page.
+const RUNTIME_TARGETS_PATH = "/api/real/runtime-targets";
+const DEVICES_PATH = "/api/real/devices";
+const WORKSPACE_BINDINGS_PATH = "/api/real/workspace-bindings";
+const LOCAL_RUNNER_PAIRING_TOKENS_PATH = "/api/real/local-runner-pairing-tokens";
+
 /** Creates the Inference proxy service from host transport adapters. */
 export function createInferenceService(adapters = {}) {
   if (typeof adapters.proxyUpstreamGet !== "function") {
@@ -23,6 +32,53 @@ export function createInferenceService(adapters = {}) {
           "POST",
         );
         return true;
+      }
+
+      if (req.method === "GET" && url.pathname === RUNTIME_TARGETS_PATH) {
+        void adapters.proxyUpstreamGet(req, res, "/runtime-targets");
+        return true;
+      }
+
+      if (req.method === "GET" && url.pathname === DEVICES_PATH) {
+        void adapters.proxyUpstreamGet(req, res, "/devices");
+        return true;
+      }
+
+      if (url.pathname === WORKSPACE_BINDINGS_PATH) {
+        if (req.method === "GET") {
+          void adapters.proxyUpstreamGet(req, res, "/workspace-bindings");
+          return true;
+        }
+        if (req.method === "POST") {
+          void adapters.proxyUpstreamJsonRequest(
+            req,
+            res,
+            "/workspace-bindings",
+            "POST",
+          );
+          return true;
+        }
+      }
+
+      if (
+        url.pathname === LOCAL_RUNNER_PAIRING_TOKENS_PATH
+        || url.pathname.startsWith(LOCAL_RUNNER_PAIRING_TOKENS_PATH + "/")
+      ) {
+        const suffix = url.pathname.slice(LOCAL_RUNNER_PAIRING_TOKENS_PATH.length);
+        const upstreamPath = "/local-runner-pairing-tokens" + suffix;
+        if (req.method === "GET") {
+          void adapters.proxyUpstreamGet(req, res, upstreamPath);
+          return true;
+        }
+        if (["POST", "PATCH", "DELETE"].includes(req.method)) {
+          void adapters.proxyUpstreamJsonRequest(
+            req,
+            res,
+            upstreamPath,
+            req.method,
+          );
+          return true;
+        }
       }
 
       if (

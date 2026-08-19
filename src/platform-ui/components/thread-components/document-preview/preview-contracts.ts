@@ -95,12 +95,15 @@ export interface RunnerPreviewAttachment {
   githubRef?: string | null;
   githubItemPath?: string;
   githubSelectionType?: "repo" | "file";
-  /** Identifies attachments created from a saved prompt or thread reference. */
-  referenceType?: "prompt" | "thread";
+  /** Identifies attachments created from a saved resource reference. */
+  referenceType?: "prompt" | "thread" | "knowledge";
   displayName?: string;
   promptId?: string;
   promptVersionId?: string;
   promptVersionNumber?: number;
+  knowledgeLibraryId?: string;
+  knowledgeVersionId?: string;
+  knowledgeVersionNumber?: number;
   threadId?: string;
   htmlPreviewUrl?: string;
   htmlSandbox?: string | null;

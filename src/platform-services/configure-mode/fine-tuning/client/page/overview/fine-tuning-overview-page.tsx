@@ -35,7 +35,7 @@ export interface FineTuningOverviewPageProps {
   controlsPortalId?: string;
   onOpen: (row: FineTuningOverviewRow) => void;
   onCreate: () => void;
-  onDelete: (row: FineTuningOverviewRow) => void;
+  onDelete: (rows: readonly FineTuningOverviewRow[]) => void;
 }
 
 export function FineTuningOverviewPage({
@@ -129,7 +129,12 @@ export function FineTuningOverviewPage({
       icon: Trash2,
       danger: true,
       separatorBefore: true,
-      onSelect: () => onDelete(row),
+      onSelect: () => onDelete([row]),
+      selectedRows: {
+        label: "Delete selected",
+        danger: true,
+        onSelect: ({ rows: selectedRows }) => onDelete(selectedRows),
+      },
     },
   ];
 

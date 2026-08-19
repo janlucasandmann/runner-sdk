@@ -99,6 +99,45 @@ export interface KnowledgeDocumentUpdateInput
   baseRevisionId?: string;
 }
 
+export type KnowledgeProposalOperation =
+  | "create_document"
+  | "update_document"
+  | "archive_document";
+
+/** A reviewable write proposed by an agent or automation run. */
+export interface KnowledgeProposalInput {
+  operation: KnowledgeProposalOperation;
+  documentId?: string;
+  baseVersionId?: string;
+  baseRevisionId?: string;
+  title?: string;
+  summary?: string;
+  markdown?: string;
+  parentDocumentId?: string | null;
+  provenance?: Record<string, unknown>;
+  threadId?: string;
+}
+
+export interface KnowledgeProposal {
+  /** Stable proposal id when the upstream control plane exposes one. */
+  id?: string;
+  libraryId: string;
+  operation: KnowledgeProposalOperation;
+  status: "draft" | "pending" | "approved" | "rejected" | "applied" | "expired";
+  documentId?: string;
+  baseVersionId?: string;
+  baseRevisionId?: string;
+  requestedByUserId?: string;
+  requestedAt?: string;
+  appliedAt?: string;
+  payload?: Record<string, unknown>;
+  provenance?: Record<string, unknown>;
+  /** Current draft result returned by the appliance proposal contract. */
+  library?: KnowledgeLibrary;
+  version?: KnowledgeLibraryVersion;
+  document?: KnowledgeDocument;
+}
+
 export interface KnowledgeSearchResult {
   libraryId: string;
   libraryName: string;

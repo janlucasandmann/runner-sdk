@@ -31,9 +31,11 @@ export function ProjectDetailPage({
   sidebarAriaLabel = "Project settings",
   className = "",
 }: ProjectDetailPageProps) {
+  const effectiveSidebar = activeTab === "resources" ? null : sidebar;
+
   return (
     <ResourceDetailPage<ProjectDetailTab>
-      sidebar={sidebar}
+      sidebar={effectiveSidebar}
       sidebarCollapsed={sidebarCollapsed}
       ariaLabel={ariaLabel}
       sidebarAriaLabel={sidebarAriaLabel}

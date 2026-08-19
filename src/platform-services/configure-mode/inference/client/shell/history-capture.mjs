@@ -1,8 +1,10 @@
 export const INFERENCE_APP_HISTORY_CAPTURE_SCRIPT = `          if (activePage === "inference") {
             return {
               page: "inference",
-              sectionId: "inference",
-              endpointId: settingsInferenceSelectedEndpointId,
+	              sectionId: "inference",
+	              endpointId: settingsInferenceSelectedEndpointId,
+	              detailTab: settingsInferenceDetailTab,
+	              versionId: settingsInferenceSelectedVersionId,
             };
           }
 `;

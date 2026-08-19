@@ -15,6 +15,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setSelectedFineTuningJobId,
           fineTuningPageMode = "overview",
           setFineTuningPageMode,
+          fineTuningOverviewScope = "all",
           fineTuningDetailTab = "general",
           setFineTuningDetailTab,
           fineTuningCreateModalOpen = false,

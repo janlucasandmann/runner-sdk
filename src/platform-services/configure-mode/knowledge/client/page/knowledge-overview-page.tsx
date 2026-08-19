@@ -20,7 +20,7 @@ export interface KnowledgeOverviewPageProps {
   controlsPortalId?: string;
   onOpen: (library: KnowledgeLibrary) => void;
   onCreate: () => void;
-  onDelete: (library: KnowledgeLibrary) => void;
+  onDelete: (libraries: readonly KnowledgeLibrary[]) => void;
 }
 
 function formatTimestamp(value: string) {
@@ -150,7 +150,12 @@ export function KnowledgeOverviewPage({
             icon: Trash2,
             danger: true,
             separatorBefore: true,
-            onSelect: () => onDelete(library),
+            onSelect: () => onDelete([library]),
+            selectedRows: {
+              label: "Delete selected",
+              danger: true,
+              onSelect: ({ rows: selectedRows }) => onDelete(selectedRows),
+            },
           },
         ],
         onRowActivate: onOpen,

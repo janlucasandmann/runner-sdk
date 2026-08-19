@@ -797,9 +797,6 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
               sourceProject?.id
               && String(nextProjectGoal) !== String(sourceProject.description || "")
             );
-            const nextStrategyBrief = buildMissionControlSetupStrategyBriefFromDraft();
-            updateMissionControlStrategyDraft(nextStrategyBrief);
-
             if (shouldSaveProjectGoal && String(projectDraft?.name || sourceProject.name || "").trim()) {
               await persistProjectComposerDraft({
                 mode: projectDraft?.id ? "edit" : projectComposerMode,
@@ -808,7 +805,6 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
               });
             }
 
-            await saveMissionControlStrategyBrief(nextStrategyBrief, { throwOnError: true });
             setProjectSaveState((current) => current.error
               ? { isSaving: false, error: "" }
               : current
@@ -1014,6 +1010,8 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
                 ? renderProjectAppHeaderMilestoneSelector()
                 : null,
               projectId: selectedProject.id,
+              createdAt: selectedProject.createdAt || selectedProject.metadata?.createdAt || "",
+              updatedAt: selectedProject.updatedAt || selectedProject.metadata?.updatedAt || "",
               canViewProjectSettings: selectedProjectHeaderCanViewSettings,
               canDeleteProject: selectedProjectHeaderCanManage,
               taskId: selectedTaskId,
@@ -1058,8 +1056,12 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           selectedProject?.id,
           selectedProject?.icon,
           selectedProject?.color,
+          selectedProject?.createdAt,
           selectedProject?.metadata?.icon,
           selectedProject?.metadata?.color,
+          selectedProject?.metadata?.createdAt,
+          selectedProject?.metadata?.updatedAt,
+          selectedProject?.updatedAt,
           selectedProjectId,
           selectedProjectHeaderCanManage,
           selectedProjectHeaderCanViewSettings,
@@ -1229,29 +1231,6 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
               textarea.focus({ preventScroll: true });
             }
           });
-        }
-
-        async function handleGenerateStrategyFromProjectComposer() {
-          if (projectSaveState.isSaving) {
-            return;
-          }
-          const nextName = String(projectDraft?.name || "").trim().replace(/\\s+/g, " ");
-          if (!nextName) {
-            focusMissionControlSetupTaskInput();
-            return;
-          }
-
-          try {
-            const saveMode = projectComposerMode === "edit" && projectDraft?.id ? "edit" : "create";
-            await persistProjectComposerDraft({
-              mode: saveMode,
-              closeAfterSave: false,
-              selectAfterSave: true,
-            });
-          } catch {
-            return;
-          }
-          focusMissionControlSetupTaskInput();
         }
 
         async function handleSaveProjectFromStudio() {

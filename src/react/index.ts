@@ -29,7 +29,9 @@ export type { RunnerImagePreviewSurfaceProps } from "./runner-image-preview-surf
 export type {
   RunnerAttachment,
   RunnerChatActionSummaryClickPayload,
+  RunnerChatBatchJobSubmitPayload,
   RunnerChatComputerAgentsConfig,
+  RunnerChatComposerSubmitPayload,
   RunnerChatConnectorAccount,
   RunnerChatDriveConfig,
   RunnerChatConnectorFetchOptions,

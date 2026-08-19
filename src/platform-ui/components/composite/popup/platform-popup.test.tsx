@@ -221,6 +221,68 @@ describe("PlatformPopup", () => {
     expect(surface?.style.top).toBe("240px");
   });
 
+  it("can constrain a portaled popup to the exact anchor width", () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      if (this.classList.contains("platform-popup-anchor")) {
+        return {
+          x: 300,
+          y: 120,
+          width: 100,
+          height: 32,
+          top: 120,
+          right: 400,
+          bottom: 152,
+          left: 300,
+          toJSON: () => ({}),
+        } as DOMRect;
+      }
+      if (this.classList.contains("platform-popup-surface")) {
+        return {
+          x: 0,
+          y: 0,
+          width: 480,
+          height: 120,
+          top: 0,
+          right: 480,
+          bottom: 120,
+          left: 0,
+          toJSON: () => ({}),
+        } as DOMRect;
+      }
+      return {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        toJSON: () => ({}),
+      } as DOMRect;
+    });
+
+    render(
+      <PlatformPopup
+        open
+        portal
+        placement="bottom-start"
+        portalMatchAnchorWidth="exact"
+        trigger={<button type="button">Exact-width popup</button>}
+      >
+        A deliberately long popup row
+      </PlatformPopup>,
+    );
+
+    const surface = document.body.querySelector<HTMLElement>(
+      ".platform-popup-surface.is-portaled",
+    );
+    expect(surface?.style.left).toBe("300px");
+    expect(surface?.style.width).toBe("100px");
+  });
+
   it("positions nested popup surfaces beside their anchor", () => {
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
       function (this: HTMLElement) {

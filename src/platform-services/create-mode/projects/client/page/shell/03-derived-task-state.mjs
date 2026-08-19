@@ -1310,10 +1310,7 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 		              ? selectedProject.name || ""
 		              : selectedProject?.name || ""
 		          ).trim();
-			          const projectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(selectedProject, {
-			            taskRecord: normalizedTask,
-			            releaseRecords: releases,
-			          });
+	          const projectKnowledgeSection = buildPlaygroundProjectKnowledgePromptSection(options?.knowledgeLibrary);
 			          const projectRulesSection = buildPlaygroundProjectRulesPromptSection(selectedProject);
 			          const projectDeliveryAssurance = normalizePlaygroundDeliveryAssurance(
 			            getPlaygroundProjectMissionControlRecord(selectedProject).deliveryAssurance
@@ -1389,7 +1386,7 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 			              ? (directResponseTask ? "Skills: None needed for this response-only ticket." : "Skills: " + skillNames.join(", "))
 			              : "",
 			            connectorLines.length > 0 ? "Connectors:" + newline + connectorLines.join(newline) : "",
-				            projectStrategySection,
+	            projectKnowledgeSection,
 				            projectRulesSection,
 				            projectDeliveryAssuranceSection,
 				            projectResourcesSection,
@@ -1401,6 +1398,8 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 	                reviewRequestBody ? "- This run is a reviewer change request. Address the latest review request before treating the ticket as complete." : "",
 	              "- If the ticket creates or changes deployable web apps, functions, databases, or integrations, deploy and smoke-test the affected resource unless the ticket explicitly excludes deployment.",
 	              "- Obey the project delivery-assurance gates above. Tests prove engineering behavior, Evaluations prove agent/workflow quality, and Agent Optimization must be backed by baseline-versus-candidate Evaluation evidence.",
+	              "- Read the attached Project Knowledge library before making decisions. Propose updates whenever this work creates or changes durable strategy, architecture, decisions, interfaces, runbooks, research, troubleshooting guidance, or handoff documentation.",
+	              "- Keep documentation current as part of completing the ticket. Update a relevant existing Knowledge document instead of duplicating it, and never store strategy or documentation in project metadata.",
 	              "- Do not claim a verification gate passed from a plan or narrative. Create or run the referenced platform resource and retain its real run/result ID before unblocking downstream work.",
 	              "- If you need user-owned inputs such as API keys, credentials, billing decisions, repository access, or product decisions, create a focused human-assigned resource request ticket instead of guessing.",
 	              "- Do not update this ticket's own status directly. The platform will move it to In Review or Done after the run. Only update subtasks, add comments, or create resource-request tickets when that is genuinely part of the work.",
@@ -1796,29 +1795,27 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
             } catch {}
           }
 
-          const document = sanitizePlaygroundMissionControlDocument(parsedBlock?.document || "")
-            || sanitizePlaygroundMissionControlDocument(rawContent)
-            || rawContent;
-          const summary = String(parsedBlock?.summary || "").trim() || extractPlaygroundMissionControlSummary(document);
-	          const hasParsedStrategyBrief = Boolean(
-	            parsedBlock
-	            && typeof parsedBlock === "object"
-	            && !Array.isArray(parsedBlock)
-	            && (
-	              Object.prototype.hasOwnProperty.call(parsedBlock, "strategyBrief")
-	              || Object.prototype.hasOwnProperty.call(parsedBlock, "structuredStrategy")
-	              || Object.prototype.hasOwnProperty.call(parsedBlock, "strategy")
-	            )
+	          let knowledgeDocuments = normalizePlaygroundMissionControlKnowledgeDocuments(
+	            parsedBlock?.knowledgeDocuments
+	            || parsedBlock?.knowledge_documents
+	            || parsedBlock?.knowledge?.documents
 	          );
-	          const strategyBrief = normalizePlaygroundCanonicalProjectStrategyBrief(
-	            parsedBlock?.strategyBrief
-	            || parsedBlock?.structuredStrategy
-	            || parsedBlock?.strategy
-	          );
+	          const legacyDocument = sanitizePlaygroundMissionControlDocument(parsedBlock?.document || "");
+	          if (!knowledgeDocuments.length && legacyDocument) {
+	            knowledgeDocuments = normalizePlaygroundMissionControlKnowledgeDocuments([{
+	              kind: "strategy",
+	              title: "Project Strategy",
+	              summary: String(parsedBlock?.summary || "").trim(),
+	              markdown: legacyDocument,
+	            }]);
+	          }
+	          const summarySource = knowledgeDocuments[0]?.markdown
+	            || sanitizePlaygroundMissionControlDocument(rawContent)
+	            || rawContent;
+	          const summary = String(parsedBlock?.summary || "").trim()
+	            || extractPlaygroundMissionControlSummary(summarySource);
 	          const normalizedRecord = normalizePlaygroundProjectMissionControlRecord({
 	            summary,
-	            document,
-	            strategyBrief,
 	            deliveryAssurance: normalizePlaygroundDeliveryAssurance(
 	              parsedBlock?.deliveryAssurance
 	              || parsedBlock?.delivery_assurance
@@ -1826,9 +1823,7 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 	            lastThreadId: "",
 	            updatedAt: new Date().toISOString(),
 	          });
-	          if (hasParsedStrategyBrief) {
-	            normalizedRecord.strategyBriefReplace = true;
-	          }
+	          normalizedRecord.knowledgeDocuments = knowledgeDocuments;
 	          if (
 	            parsedBlock
 	            && typeof parsedBlock === "object"

@@ -37,6 +37,7 @@ import type {
   RunnerTaskPreview,
 } from "./task-preview.js";
 import type { RunnerChatThreadContext } from "./thread-context-utils.js";
+import type { RunnerKnowledgeContext } from "./knowledge-context.js";
 import type {
   RunnerQuotedSelection,
   RunnerTurnStatus,
@@ -106,6 +107,7 @@ export interface RunnerChatExternalRunRequest {
   } | null;
   enabledSkills?: Record<string, unknown> | null;
   connectors?: Record<string, unknown> | null;
+  knowledgeContext?: RunnerKnowledgeContext | null;
   environmentId?: string | null;
   projectId?: string | null;
   quotedSelection?: RunnerQuotedSelection | null;
@@ -127,9 +129,8 @@ export interface RunnerChatExternalPromptAttachmentRequest {
   prompt: RunnerChatPromptAttachment;
 }
 
-export interface RunnerChatProjectTaskSubmitPayload {
+export interface RunnerChatComposerSubmitPayload {
   prompt: string;
-  taskPreview: RunnerTaskPreview;
   attachments: RunnerAttachment[];
   environmentId: string | null;
   projectId?: string | null;
@@ -143,7 +144,19 @@ export interface RunnerChatProjectTaskSubmitPayload {
   } | null;
   enabledSkills?: Record<string, unknown> | null;
   connectors?: Record<string, unknown> | null;
+  knowledgeContext?: RunnerKnowledgeContext | null;
   quotedSelection?: RunnerQuotedSelection | null;
+}
+
+export interface RunnerChatProjectTaskSubmitPayload
+  extends RunnerChatComposerSubmitPayload {
+  taskPreview: RunnerTaskPreview;
+}
+
+export interface RunnerChatBatchJobSubmitPayload
+  extends RunnerChatComposerSubmitPayload {
+  targetKind: "thread_run";
+  startPolicy: "manual";
 }
 
 export interface RunnerChatSchedulePreset {
@@ -160,6 +173,27 @@ export interface RunnerChatPromptAttachment {
   markdown: string;
   currentVersionId?: string;
   currentVersionNumber?: number;
+}
+
+/** A document contained by a Knowledge library selected for the composer. */
+export interface RunnerChatKnowledgeDocumentAttachment {
+  id: string;
+  title: string;
+  summary?: string;
+  markdown?: string;
+  content?: string;
+  archived?: boolean;
+  sortOrder?: number;
+}
+
+/** A Knowledge library selected from global search for the composer. */
+export interface RunnerChatKnowledgeAttachment {
+  id: string;
+  name: string;
+  description?: string;
+  currentVersionId?: string;
+  currentVersionNumber?: number;
+  documents?: RunnerChatKnowledgeDocumentAttachment[];
 }
 
 /** A saved conversation selected from the global search modal for the composer. */
@@ -310,6 +344,8 @@ export interface RunnerChatProps {
   threadId?: string;
   title?: string;
   threadMetadata?: Record<string, unknown> | null;
+  /** Version-pinned Knowledge libraries available to the thread runtime. */
+  knowledgeContext?: RunnerKnowledgeContext | null;
   /**
    * Selects the thread renderer. `auto` promotes a thread to the canonical
    * event timeline only when Thread v2 data exists and no rich legacy-only
@@ -334,12 +370,16 @@ export interface RunnerChatProps {
   inputMode?: RunnerChatInputMode;
   agents?: RunnerChatOption[];
   hideAgentSelector?: boolean;
+  /** Keeps the resolved agent visible in the composer while preventing changes. */
+  lockAgentSelector?: boolean;
   isAgentSelectionBlocked?: (agent: RunnerChatOption) => boolean;
   onBlockedAgentSelect?: (agent: RunnerChatOption) => void;
   reasoningEffort?: string | null;
   onReasoningEffortChange?: (reasoningEffort: string) => void;
   environments?: RunnerChatOption[];
   hideEnvironmentSelector?: boolean;
+  /** Keeps the resolved computer visible in the composer while preventing changes. */
+  lockEnvironmentSelector?: boolean;
   skills?: RunnerChatSkill[];
   enabledSkillIds?: string[];
   skillDefaults?: RunnerChatSkillDefaults;
@@ -387,6 +427,28 @@ export interface RunnerChatProps {
     payload: RunnerChatProjectTaskSubmitPayload,
     // biome-ignore lint/suspicious/noConfusingVoidType: Preserves the compatibility callback API.
   ) => Promise<boolean | void> | boolean | void;
+  /**
+   * Lets a host reuse the complete composer while owning submission. Returning
+   * `false` keeps the draft intact; the native thread path is never invoked.
+   */
+  onComposerSubmit?: (
+    payload: RunnerChatComposerSubmitPayload,
+    // biome-ignore lint/suspicious/noConfusingVoidType: Preserves the compatibility callback API.
+  ) => Promise<boolean | void> | boolean | void;
+  /**
+   * Saves the staged `/Batch` composer payload without starting a thread.
+   * `manual` is the durable API policy represented as “Keep on shelf” in the UI.
+   */
+  onBatchJobCreate?: (
+    payload: RunnerChatBatchJobSubmitPayload,
+    // biome-ignore lint/suspicious/noConfusingVoidType: Preserves the compatibility callback API.
+  ) => Promise<boolean | void> | boolean | void;
+  /** Reports the live composer draft without replacing the composer's state. */
+  onComposerDraftChange?: (draft: string) => void;
+  /** A changing token requests submission through the same path as the send control. */
+  composerSubmitRequest?: string | number | null;
+  /** Renders slash-command and connector-mention menus above clipping hosts. */
+  portalComposerSuggestions?: boolean;
   activeTaskPreviewId?: string | null;
   onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
   onOpenTaskList?: () => void;
@@ -469,6 +531,10 @@ export interface RunnerChatProps {
   /** Opens the host shell's prompt search. The callback receives the selected prompt. */
   onOpenPromptSearch?: (
     onSelect: (prompt: RunnerChatPromptAttachment) => void | Promise<void>,
+  ) => void;
+  /** Opens the host shell's Knowledge search. The callback receives the selected library. */
+  onOpenKnowledgeSearch?: (
+    onSelect: (library: RunnerChatKnowledgeAttachment) => void | Promise<void>,
   ) => void;
   /** Opens the host shell's thread search. The callback receives the selected thread. */
   onOpenThreadSearch?: (

@@ -1,6 +1,6 @@
 /** Ordered service compatibility routes. */
 export function createServiceRoutes(bindings) {
-    const { agentRuntimeService, apiKeysService, calendarService, configureHomeService, connectorCredentialCatalogService, connectorMcpService, evidenceAgentsService, externalAgentService, filesService, guardrailsService, imagineService, inferenceService, knowledgeService, marketplaceService, metronomeService, organizationsService, platformDocumentAssets, projectsService, promptsService, securityService, systemSkillSourceService, teamsService, } = bindings;
+    const { agentRuntimeService, apiKeysService, batchesService, calendarService, configureHomeService, connectorCredentialCatalogService, connectorMcpService, evidenceAgentsService, externalAgentService, filesService, guardrailsService, imagineService, inferenceService, knowledgeService, marketplaceService, metronomeService, organizationsService, platformDocumentAssets, projectsService, promptsService, securityService, systemSkillSourceService, teamsService, } = bindings;
     return function handleServiceRoutes(req, res, url) {
         if (externalAgentService?.handleRequest?.(req, res, url)) {
             return true;
@@ -60,6 +60,9 @@ export function createServiceRoutes(bindings) {
             return true;
         }
         if (metronomeService.handleRequest(req, res, url)) {
+            return true;
+        }
+        if (batchesService?.handleRequest?.(req, res, url)) {
             return true;
         }
         if (securityService.handleRequest(req, res, url)) {

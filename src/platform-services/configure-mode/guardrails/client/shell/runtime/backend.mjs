@@ -47,8 +47,27 @@ export const GUARDRAILS_APP_BACKEND_SCRIPT = `        async function readGuardra
           return mergePlaygroundGuardrailSetWithBackendDetails(normalizedSet, versions);
         }
 
+        function mergeGuardrailSetWithLocalPromptDrafts(nextSet) {
+          const normalizedSet = normalizePlaygroundGuardrailSet(nextSet);
+          const localDrafts = Array.isArray(guardrailLocalPromptDraftsRef.current.get(normalizedSet.id))
+            ? guardrailLocalPromptDraftsRef.current.get(normalizedSet.id)
+            : [];
+          if (!localDrafts.length) return normalizedSet;
+          const backendPrompts = Array.isArray(normalizedSet.prompts) ? normalizedSet.prompts : [];
+          const backendPromptIds = new Set(backendPrompts.map((prompt) => String(prompt?.id || "").trim()).filter(Boolean));
+          return normalizePlaygroundGuardrailSet({
+            ...normalizedSet,
+            prompts: [
+              ...backendPrompts,
+              ...localDrafts.filter((prompt) => !backendPromptIds.has(String(prompt?.id || "").trim())),
+            ],
+          });
+        }
+
         function replaceGuardrailSetFromBackend(nextSet, options = {}) {
-          const normalizedSet = ensurePlaygroundGuardrailInitialVersion(normalizePlaygroundGuardrailSet(nextSet));
+          const normalizedSet = ensurePlaygroundGuardrailInitialVersion(
+            mergeGuardrailSetWithLocalPromptDrafts(nextSet)
+          );
           if (!normalizedSet.id || isPlaygroundDefaultGuardrailSet(normalizedSet)) return normalizedSet;
           setGuardrailSets((current) => {
             const currentSets = Array.isArray(current) ? current : [];
@@ -177,7 +196,7 @@ export const GUARDRAILS_APP_BACKEND_SCRIPT = `        async function readGuardra
               }
             }
             detailedSets = detailedSets
-              .map((set) => ensurePlaygroundGuardrailInitialVersion(normalizePlaygroundGuardrailSet(set)))
+              .map((set) => ensurePlaygroundGuardrailInitialVersion(mergeGuardrailSetWithLocalPromptDrafts(set)))
               .filter((set) => set.id && !isPlaygroundDefaultGuardrailSet(set))
               .sort((left, right) => (Date.parse(right.updatedAt || 0) || 0) - (Date.parse(left.updatedAt || 0) || 0));
             setGuardrailSets(detailedSets);

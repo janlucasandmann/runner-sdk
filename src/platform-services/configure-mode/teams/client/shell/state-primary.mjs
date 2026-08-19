@@ -66,6 +66,7 @@ export const TEAMS_STATE_PRIMARY_SCRIPT = `        const TEAM_SCOPED_ORGANIZATIO
         const [teamPageShares, setTeamPageShares] = useState([]);
         const [teamPageProjectResourceIndexes, setTeamPageProjectResourceIndexes] = useState({});
         const [teamPageMetronomeWorkflows, setTeamPageMetronomeWorkflows] = useState([]);
+        const [teamPageBatchJobs, setTeamPageBatchJobs] = useState([]);
 
         useEffect(() => {
           writeTeamPageOrganizationId(teamPageOrganizationId);

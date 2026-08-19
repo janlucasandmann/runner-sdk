@@ -50,7 +50,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects domain runtime",
     source: PROJECTS_DOMAIN_RUNTIME_SCRIPT,
-    expectedSha256: "cb530bc8693df3d431c5727a48fd4575ae8bc08417f05931a705015116257ba0",
+    expectedSha256: "89fc6a3ddeffe54685e59a105a09c8626e8d176f15370bb45d63adb266393069",
     fragmentGroups: [
       {
         baseUrl: projectsClientUrl,
@@ -62,7 +62,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "8f7d78169846f999220c5ae6f1d15dcc0ecc7c61228d67aa05d2a83f71cdf10a",
+    expectedSha256: "4d68a3860926506d9d4ad4f38d03d0587eeb4caedff56cba22151f3660eb04fc",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -74,7 +74,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview styles",
     source: PROJECT_OVERVIEW_CSS,
-    expectedSha256: "5b826ae869422d8f4665ee6ac60dbc9d4106172a386e01c547eddd01690f23de",
+    expectedSha256: "2a8b8a07342fe74c8c76b6b28cdfcea409b1b758b670fe34a10ad2687ccbf042",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -86,7 +86,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects actions runtime",
     source: PROJECTS_PAGE_ACTIONS_SCRIPT,
-    expectedSha256: "3969b15cb0f1c24274b5f795ae69d3aea568b9284b69d066b36faef4f279d994",
+    expectedSha256: "0645e7d7146633a03c1f64164104dea2862c1b652a695c771fd2c7c93ccd6e14",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -98,7 +98,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects data runtime",
     source: PROJECTS_PAGE_DATA_SCRIPT,
-    expectedSha256: "ed14c80a45026808536e56422116f1e25e35659c472c4fdfebae72b3907b0d6d",
+    expectedSha256: "f9c794131621cda5197f140462e243500307d0b2f49cb0619c6ec2f764664502",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -110,7 +110,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects shell runtime",
     source: PROJECTS_PAGE_SHELL_SCRIPT,
-    expectedSha256: "b9fadb5e3b20752508d96058a215d5d3e2570436add252eaa1c41f910a58db72",
+    expectedSha256: "919161895809c50eacc4c4fb1f405f5539cd13c8ebec538f187510a74b4f6ad7",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -122,7 +122,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "fd0b2b0869882dbb210112c1108573164dac74ba590ea69e66e2e1e5abed0f9b",
+    expectedSha256: "ea6941f92e714b686a6b1000033183e9c681c58477c26d308e4e9b1c99a2dfab",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -134,7 +134,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects core styles",
     source: PROJECTS_CORE_CSS,
-    expectedSha256: "574ada97aa3912581e7f286156a241a7e1796efd83494b317861d9fb3d82bf99",
+    expectedSha256: "17dab1a4b64a4469553e256437b304c2920a96e60025e9e8fec994e4d41998a2",
     fragmentGroups: [
       {
         baseUrl: projectsStylesUrl,
@@ -146,6 +146,12 @@ await Promise.all([
 ]);
 
 assert.match(PROJECTS_DOMAIN_FOUNDATION_SCRIPT, /PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /"Add to Batches"/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /addToBatch: true/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /moveToInProgress: options\?\.addToBatch === true \? false : true/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /targetKind: "project_ticket_action"/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /options\?\.addToBatch !== true && typeof onTaskRunStateChange/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /preparedThreadId: threadRecord\.id/);
 assert.match(
   PROJECTS_DOMAIN_FOUNDATION_SCRIPT,
   /\{ id: "overview", label: "General", icon: LayoutDashboard \}/,
@@ -253,9 +259,9 @@ assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
   /async function loadProjectWorkGraph\(projectId\)[\s\S]*?\/work-graph[\s\S]*?agentSessions: \[\]/,
 );
-assert.match(
+assert.doesNotMatch(
   PROJECTS_PAGE_DATA_SCRIPT,
-  /taskView !== "overview"[\s\S]*?taskLoadState\?\.status !== "ready"[\s\S]*?loadProjectOverviewWorkGraph\(selectedProjectId, loadKey\)/,
+  /loadProjectOverviewWorkGraph|projectWorkGraphAutoLoadKeyRef/,
 );
 assert.doesNotMatch(
   PROJECTS_PAGE_DATA_SCRIPT,
@@ -333,16 +339,28 @@ assert.match(
   /\.playground-projects-feature-copy\s*\{[\s\S]*?flex-direction: column;[\s\S]*?gap: 4px;/,
 );
 assert.match(
-  PROJECTS_PAGE_SHELL_SCRIPT,
-  /Do not create or update separate outcome objects[\s\S]*?Define measurable successCriteria directly on every milestone/,
+  PROJECT_OVERVIEW_SCRIPT,
+  /toolbarTitle: "All Resources",[\s\S]*?tableVariant: "minimalistic-ui"/,
 );
 assert.match(
   PROJECTS_PAGE_SHELL_SCRIPT,
-  /const hasParsedStrategyBrief = Boolean\([\s\S]*?normalizePlaygroundCanonicalProjectStrategyBrief\([\s\S]*?normalizedRecord\.strategyBriefReplace = true/,
+  /Read the current Knowledge documents before planning[\s\S]*?Define measurable successCriteria directly on every milestone/,
+);
+assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /"knowledgeDocuments": an array of complete durable documents[\s\S]*?Always include the complete current Project Strategy document/,
 );
 assert.match(
   PROJECTS_DOMAIN_RUNTIME_SCRIPT,
-  /function normalizePlaygroundCanonicalProjectStrategyBrief\(value\)[\s\S]*?mission: strategy\.mission,[\s\S]*?successCriteria: strategy\.successCriteria,[\s\S]*?decisions: strategy\.decisions/,
+  /function buildPlaygroundProjectMissionControlStorageRecord\(value\)[\s\S]*?knowledgeLibraryId: normalized\.knowledgeLibraryId,[\s\S]*?deliveryPlan:[\s\S]*?lastThreadId: normalized\.lastThreadId/,
+);
+const missionControlStorageSource = PROJECTS_DOMAIN_RUNTIME_SCRIPT.match(
+  /function buildPlaygroundProjectMissionControlStorageRecord\(value\) \{([\s\S]*?)\n\s*function resolvePlaygroundProjectKnowledgeLibraryId/,
+)?.[1] || "";
+assert.doesNotMatch(missionControlStorageSource, /\bdocument\s*:|\bstrategyBrief\s*:/);
+assert.match(
+  PROJECTS_DOMAIN_RUNTIME_SCRIPT,
+  /function buildPlaygroundProjectKnowledgeRunContext\(projectRecord, source = "project_task"\)[\s\S]*?mode: "propose"/,
 );
 assert.doesNotMatch(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -455,7 +473,31 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
+  /const requestedProjectOverviewHomeTab = requestedView === "overview"[\s\S]*?navigationRequest\?\.sectionId === "resources"[\s\S]*?projectOverviewNavigationHomeTabRef\.current = requestedProjectOverviewHomeTab[\s\S]*?setProjectOverviewHomeTab\(requestedProjectOverviewHomeTab\)/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /const requestedProjectResourceSnapshot = navigationRequest\?\.projectResourceSnapshot[\s\S]*?projectOverviewServerResourcesLoadKeyRef\.current = "";[\s\S]*?setProjectOverviewServerResourcesState\(\{[\s\S]*?requestedProjectResourceSnapshot\.serverResources\.slice\(\)[\s\S]*?setProjectOverviewFileActivityState\(\{[\s\S]*?requestedProjectResourceSnapshot\.fileActivity\.slice\(\)/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /function settleProjectWorkspaceLoadFailure\(projectId, error, fallbackMessage\)[\s\S]*?const canUseCachedWorkspace = hasCachedProjectWorkspace\(projectId\)[\s\S]*?status: canUseCachedWorkspace \? "ready" : "error"[\s\S]*?error: canUseCachedWorkspace \? "" : message/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /return settleProjectWorkspaceLoadFailure\([\s\S]*?"Project details are temporarily unavailable\."[\s\S]*?return settleProjectWorkspaceLoadFailure\([\s\S]*?"Project workspace is temporarily unavailable\."/,
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /taskLoadState\.status === "error" && tasks\.length > 0[\s\S]*?Failed to refresh project tasks/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
   /sectionId: taskView === "overview" \? projectOverviewHomeTab : ""/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /const projectRecordForNavigation = sourceProjectRecord[\s\S]*?attachments: Array\.isArray\(overviewProjectAttachments\)[\s\S]*?linkedResources: Array\.isArray\(projectOverviewLinkedResources\)[\s\S]*?resourceTemplates: Array\.isArray\(projectOverviewPublishedTemplates\)[\s\S]*?onOpenProjectLinkedResource\([\s\S]*?projectRecord: projectRecordForNavigation,[\s\S]*?projectResourceSnapshot: \{[\s\S]*?serverResources:[\s\S]*?projectOverviewServerResourcesState\.items\.slice\(\)[\s\S]*?fileActivity:[\s\S]*?projectOverviewFileActivityState\.items\.slice\(\)[\s\S]*?sectionId: "resources"/,
 );
 assert.doesNotMatch(
   PROJECTS_PAGE_DATA_SCRIPT,
@@ -597,8 +639,9 @@ assert.doesNotMatch(
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /tabs: \[\s*\{ id: "threads", label: "Threads" \},\s*\{ id: "activity", label: "Activity" \},\s*\{ id: "strategy", label: "Strategy" \},\s*\]/,
+  /tabs: \[\s*\{ id: "threads", label: "Threads" \},\s*\{ id: "activity", label: "Activity" \},\s*\]/,
 );
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /\{ id: "strategy", label: "Strategy" \}/);
 assert.doesNotMatch(
   PROJECT_OVERVIEW_SCRIPT,
   /\{ id: "graph", label: "Work Graph" \}/,
@@ -705,6 +748,7 @@ assert.equal(
   (PROJECT_OVERVIEW_SCRIPT.match(/React\.createElement\(PlatformUiCard, \{/g) || []).length,
   2,
 );
+assert.match(PROJECT_OVERVIEW_SCRIPT, /className: "playground-project-featured-resource-card"/);
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
   /variant: "sidebar",\s*className: "playground-project-overview-sidebar-card"/,
@@ -739,19 +783,23 @@ assert.match(
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /React\.createElement\(PlatformAnalyticsSection, \{\s*variant: "compact",\s*className: "playground-project-overview-sidebar-progress-analytics"/,
+  /function renderProjectOverviewProgressAnalyticsSection\(\)[\s\S]*?React\.createElement\(PlatformAnalyticsSection, \{\s*variant: "default",\s*title: "Activity",\s*analytics: buildProjectOverviewSidebarProgressAnalytics\(\),\s*className: "playground-evaluations-analytics-card playground-project-overview-progress-analytics"/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /renderProjectOverviewSidebarProgressSection\(\)[\s\S]*?className: "playground-project-overview-sidebar-progress-card"/,
+  /const resourceCount = Array\.isArray\(projectOverviewAllResourceRows\)[\s\S]*?resources: "#9ff6ce"[\s\S]*?scope: "#8fc4ff",\s*started: "#4da3ff",\s*completed: "#7657ff"[\s\S]*?id: "resources",\s*label: "Resources",\s*value: resourceCount/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /ariaLabel: "Project progress grouping"[\s\S]*?\{ value: "assignees", label: "Assignees" \}[\s\S]*?\{ value: "labels", label: "Labels" \}[\s\S]*?fullWidth: true/,
+  /React\.createElement\(ProjectSummary, \{[\s\S]*?renderProjectOverviewProgressAnalyticsSection\(\),\s*renderProjectOverviewLatestUpdateSection\(\)/,
+);
+assert.doesNotMatch(
+  PROJECT_OVERVIEW_SCRIPT,
+  /renderProjectOverviewSidebarProgressSection|playground-project-overview-sidebar-progress-card|Project progress grouping/,
 );
 assert.doesNotMatch(
   PROJECT_OVERVIEW_CSS,
-  /playground-project-overview-sidebar-progress-switch/,
+  /playground-project-overview-sidebar-progress/,
 );
 assert.doesNotMatch(
   PROJECT_OVERVIEW_SCRIPT,
@@ -761,10 +809,7 @@ assert.doesNotMatch(
   PROJECT_OVERVIEW_SCRIPT,
   /function buildProjectOverviewSidebarProgressAnalytics\(\)[\s\S]*?return \{\s*title: "Progress"/,
 );
-assert.match(
-  PROJECT_OVERVIEW_SCRIPT,
-  /function buildProjectOverviewSidebarProgressGroups\(view\)[\s\S]*?\.sort\([\s\S]*?\)\s*\.slice\(0, 3\);/,
-);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /buildProjectOverviewSidebarProgressGroups/);
 assert.doesNotMatch(
   PROJECT_OVERVIEW_SCRIPT,
   /renderProjectOverviewGeneralPanel\(\)[\s\S]*?renderProjectOverviewProgressUsageChartSection\(\)/,
@@ -828,7 +873,10 @@ assert.match(
   /useCentralSearch: true,\s*useCentralNewSelector: true,\s*useCentralFilterPopup: true/,
 );
 assert.match(PROJECT_OVERVIEW_SCRIPT, /viewMode: "list"/);
-assert.match(PROJECT_OVERVIEW_SCRIPT, /toolbarTitle: "All Resources",\s*showViewToggle: false/);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /toolbarTitle: "All Resources",\s*tableVariant: "minimalistic-ui",\s*showViewToggle: false/,
+);
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
   /renderNewMenuItems: renderProjectOverviewResourceNewMenuItems/,
@@ -872,8 +920,9 @@ assert.match(
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /React\.createElement\(ProjectSummaryDetails, \{[\s\S]*?renderProjectOverviewLatestUpdateSection\(\)/,
+  /function renderProjectOverviewSummaryHeader\(\)[\s\S]*?React\.createElement\(ProjectSummary, \{[\s\S]*?\}\),\s*renderProjectOverviewProgressAnalyticsSection\(\),\s*renderProjectOverviewLatestUpdateSection\(\)/,
 );
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\(ProjectSummaryDetails/);
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
   /function getProjectOverviewCreationUpdate\(projectRecord = projectOverviewDraft \|\| selectedProject\)[\s\S]*?resolveProjectOverviewUpdateAuthorIdentity\(\{[\s\S]*?body: authorIdentity\.name \+ " created this project\."[\s\S]*?authorAvatarUrl: authorIdentity\.avatarUrl[\s\S]*?kind: "project_created"[\s\S]*?isSynthetic: false/,
@@ -911,7 +960,7 @@ assert.match(
   PROJECTS_PAGE_ACTIONS_SCRIPT,
   /const projectCreatorEmailName = projectCreatorEmail[\s\S]*?formatAccountDisplayName\([\s\S]*?const projectCreationUpdate = isEditMode[\s\S]*?kind: "project_created"[\s\S]*?projectUpdates: \[projectCreationUpdate\],[\s\S]*?latestUpdate: projectCreationUpdate/,
 );
-assert.match(
+assert.doesNotMatch(
   PROJECT_OVERVIEW_SCRIPT,
   /onResourcesSelect: \(\) => setProjectOverviewHomeTab\("resources"\),\s*onMilestonesSelect: \(\) => setProjectOverviewHomeTab\("milestones"\)/,
 );
@@ -940,10 +989,7 @@ assert.match(
   PROJECT_OVERVIEW_SCRIPT,
   /function buildProjectOverviewUpdateActivityEvents\(\)[\s\S]*?eventType: "project_update_posted"/,
 );
-assert.match(
-  PROJECT_OVERVIEW_SCRIPT,
-  /isStrategyTab[\s\S]*?renderProjectOverviewDescriptionEditor\(projectOverviewSectionTabs\)/,
-);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /isStrategyTab|renderProjectOverviewDescriptionEditor/);
 assert.ok(
   PROJECT_OVERVIEW_SCRIPT.indexOf("const projectOverviewDraft =")
     < PROJECT_OVERVIEW_SCRIPT.indexOf("function renderProjectOverviewSummaryHeader()"),
@@ -1049,7 +1095,7 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /document\.getElementById\("playground-ticket-breadcrumb-actions-root"\)[\s\S]*?createPortal\([\s\S]*?React\.createElement\(PlatformPopup, \{[\s\S]*?variant: "minimal",[\s\S]*?React\.createElement\(Ellipsis, \{ width: 16,/,
+  /document\.getElementById\("playground-ticket-breadcrumb-actions-root"\)[\s\S]*?createPortal\([\s\S]*?React\.createElement\(PlatformResourceHeaderActions, \{[\s\S]*?React\.createElement\(PlatformResourceActionsMenu, \{[\s\S]*?resourceLabel: "Ticket"[\s\S]*?React\.createElement\(PlatformResourceActionsInformation, \{[\s\S]*?copyAriaLabel: "Copy Ticket ID"[\s\S]*?React\.createElement\(PlatformResourceActionMenuItem, \{[\s\S]*?label: "Delete",[\s\S]*?danger: true/,
 );
 assert.match(
   PROJECTS_VIEWS_04_FRAGMENT,
@@ -1064,6 +1110,11 @@ assert.doesNotMatch(PROJECTS_VIEWS_04_FRAGMENT, /popoverId: "environment"/);
 assert.match(
   PROJECTS_CORE_CSS,
   /\.playground-ticket-detail-sidebar \.playground-tasks-detail-fact\.is-assignee\s*\{\s*margin-top: 12px;\s*padding-top: 12px;\s*border-top: 1px solid rgba\(255, 255, 255, 0\.1\);/,
+);
+assert.doesNotMatch(
+  PROJECTS_CORE_CSS,
+  /\.playground-ticket-detail-sidebar-section\.platform-ui-card\.is-sidebar\s*\{[^}]*padding-top:\s*0;/,
+  "Ticket details must preserve the shared sidebar card's internal top padding.",
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -1883,18 +1934,8 @@ assert.doesNotMatch(
   PROJECTS_PAGE_VIEWS_SCRIPT,
   /onClick: \(\) => handleTaskDescriptionFormat\(action\.id\)/,
 );
-assert.match(
-  PROJECT_OVERVIEW_SCRIPT,
-  /function renderProjectOverviewDescriptionEditor\(headerContent = null\)[\s\S]*?title: headerContent[\s\S]*?placeholder: "Add project strategy"[\s\S]*?ariaLabel: "Project strategy"[\s\S]*?historyKey: "project-strategy:" \+ selectedProject\.id[\s\S]*?variant: "minimalistic-ui"[\s\S]*?stickyHeader: true[\s\S]*?className: "playground-project-overview-description-editor"/,
-);
-assert.match(
-  PROJECT_OVERVIEW_SCRIPT,
-  /isActivityTab\s*\?\s*React\.createElement\([\s\S]*?"playground-project-overview-activity-header"[\s\S]*?projectOverviewSectionTabs[\s\S]*?: isStrategyTab\s*\?\s*renderProjectOverviewDescriptionEditor\(projectOverviewSectionTabs\)/,
-);
-assert.match(
-  PROJECT_OVERVIEW_SCRIPT,
-  /function renderProjectOverviewWorkGraphPanel\(\)[\s\S]*?label: "Tasks"[\s\S]*?label: "Relations"[\s\S]*?label: "Active runs"[\s\S]*?label: "Resources"/,
-);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /project-strategy:|isStrategyTab/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /Project strategy and durable documentation/);
 assert.doesNotMatch(
   PROJECT_OVERVIEW_SCRIPT,
   /Project execution graph|Track structural dependencies and every durable agent attempt|Relationships|Agent execution/,
@@ -1904,17 +1945,13 @@ assert.doesNotMatch(
   /No task relationships yet|No agent runs yet/,
 );
 assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /relationRows|sessionRows|missionControlDeliveryStageId/);
-assert.match(
+assert.doesNotMatch(
   PROJECT_OVERVIEW_SCRIPT,
-  /const activeSessionStates = new Set\(\["queued", "active", "awaiting_input"\]\)[\s\S]*?const resourceCount = Array\.isArray\(projectOverviewAllResourceRows\)[\s\S]*?label: "Active runs"[\s\S]*?label: "Resources"/,
+  /renderProjectOverviewWorkGraphPanel|getProjectSummaryResources|getProjectSummaryResourceTimestamp/,
 );
-assert.match(
-  PROJECT_OVERVIEW_SCRIPT,
-  /function renderProjectOverviewSummaryHeader\(\)[\s\S]*?React\.createElement\(ProjectSummary, \{[\s\S]*?renderProjectOverviewWorkGraphPanel\(\),\s*React\.createElement\(ProjectSummaryDetails, \{/,
-);
-assert.match(
+assert.doesNotMatch(
   PROJECT_OVERVIEW_CSS,
-  /\.playground-project-overview-work-graph\s*\{[\s\S]*?\.playground-project-overview-work-graph-metrics\s*\{[\s\S]*?@media \(max-width: 760px\)[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/,
+  /playground-project-overview-work-graph/,
 );
 assert.doesNotMatch(
   PROJECT_OVERVIEW_CSS,
@@ -1946,7 +1983,7 @@ assert.match(
   PROJECT_OVERVIEW_SCRIPT,
   /function renderProjectOverviewMilestonesPanel\(\)[\s\S]*?React\.createElement\(ProjectMilestonesOverviewPage, \{[\s\S]*?openReleaseComposer\(\)[\s\S]*?openReleaseComposerForEdit\(row\.source\)/,
 );
-assert.match(
+assert.doesNotMatch(
   PROJECT_OVERVIEW_SCRIPT,
   /milestones: summaryMilestones,[\s\S]*?onMilestonesSelect: \(\) => setProjectOverviewHomeTab\("milestones"\)/,
 );
@@ -1980,8 +2017,9 @@ assert.match(
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /projectOverviewHomeTab === "rules" \|\| projectOverviewHomeTab === "strategy"[\s\S]*?\? "general"/,
+  /projectOverviewHomeTab === "rules"[\s\S]*?\? "general"/,
 );
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /projectOverviewHomeTab === "strategy"/);
 assert.doesNotMatch(
   PROJECT_OVERVIEW_SCRIPT,
   /activeProjectOverviewHomeTab === "strategy"/,
@@ -1993,7 +2031,7 @@ assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /"Strategy Notes"/);
 assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /historyKey: "full-strategy:" \+ selectedProject\.id/);
 assert.match(
   PROJECT_OVERVIEW_CSS,
-  /\.platform-project-summary__input\s*\{[\s\S]*?overflow: hidden;[\s\S]*?background: transparent;[\s\S]*?font-size: 14px;/,
+  /\.platform-project-summary__input\s*\{[\s\S]*?overflow: hidden;[\s\S]*?background: transparent;[\s\S]*?font-size: 12px;/,
 );
 assert.doesNotMatch(
   PROJECT_OVERVIEW_CSS,
@@ -2001,7 +2039,19 @@ assert.doesNotMatch(
 );
 assert.match(
   PROJECT_OVERVIEW_CSS,
-  /\.platform-project-summary__title\s*\{[\s\S]*?margin: 12px 0 0;/,
+  /\.platform-project-summary\s*\{[\s\S]*?flex-direction: row;[\s\S]*?gap: 12px;[\s\S]*?padding-bottom: 24px;[\s\S]*?border-bottom: 1px solid rgba\(255, 255, 255, 0\.1\);/,
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /--project-summary-icon-size: 52px;/,
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.platform-project-summary__copy\s*\{[\s\S]*?flex-direction: column;[\s\S]*?gap: 6px;/,
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.platform-project-summary__title\s*\{[\s\S]*?margin: 0;[\s\S]*?font-size: 20px;[\s\S]*?font-weight: 400;/,
 );
 assert.match(
   PROJECT_OVERVIEW_CSS,
@@ -2207,6 +2257,36 @@ assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformModal, \
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /title: "New Project"/);
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
+  /title: "New Project",[\s\S]*?headerVariant: "search",[\s\S]*?headerSearchProps: \{[\s\S]*?icon: SelectedProjectIcon,[\s\S]*?placeholder: "Project name"/,
+  "New Project must use the shared resource-name modal header with its project icon.",
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function renderProjectInitialGoalField\(\) \{[\s\S]*?React\.createElement\(PlatformInstructionsEditor, \{[\s\S]*?title: "Project goal",[\s\S]*?variant: "minimalistic-ui"/,
+  "New Project must use the centralized minimal instructions editor for its goal.",
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /renderProjectInitialSetupField\(\s*"Computer",\s*renderProjectComposerEnvironmentPicker\(\),\s*"is-inline"\s*\)/,
+  "New Project must present its Computer selector and label on one line.",
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function renderProjectComposerEnvironmentPicker\(\) \{[\s\S]*?React\.createElement\(PlatformSelector, \{[\s\S]*?ariaLabel: "Project computer",[\s\S]*?alignment: "end",[\s\S]*?popupAlignment: "right"/,
+  "New Project must use the centralized minimal selector and right-aligned popup for Computer.",
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function renderProjectInitialSetupBody\(\) \{[\s\S]*?renderProjectBlueprintSelector\(\)[\s\S]*?const projectComposerForm/,
+  "New Project must not display the Project Type selector.",
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const canCreateProject = !projectSaveState\.isSaving[\s\S]*?disabled: !canCreateProject,[\s\S]*?onKeyDown: \(event\) => \{[\s\S]*?if \(canCreateProject\) handleComposerSubmitShortcut\(event\)/,
+  "New Project shortcut submission must share the primary button's enabled state.",
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
   /if \(isInitialProjectSetupModal\) \{[\s\S]*?React\.createElement\(PlatformModal, \{[\s\S]*?className: "playground-project-create-modal playground-tasks-project-initial-setup-modal",[\s\S]*?footer: React\.createElement\(React\.Fragment,[\s\S]*?PlatformSecondaryButton[\s\S]*?PlatformPrimaryButton/,
 );
 assert.doesNotMatch(
@@ -2217,72 +2297,41 @@ assert.match(
   PROJECTS_CORE_CSS,
   /\.playground-project-create-modal\.platform-modal-surface\s*\{[\s\S]*?\.playground-project-create-modal__body\.platform-modal-body\s*\{[\s\S]*?overflow-y: auto;/,
 );
-assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /"All Projects"/);
 assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /title: "Sort projects"/);
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /function getProjectCardCreatorName\(project\)[\s\S]*?className: "playground-tasks-project-card-creator"/,
-  "Project overview cards must resolve and render their creator.",
+  /function buildProjectOverviewTableRow\(project, index\)[\s\S]*?statusLabel: statusOption\?\.label[\s\S]*?ownerName,[\s\S]*?updatedLabel,[\s\S]*?searchText:/,
+  "Project overview rows must normalize status, owner, update time, and searchable text.",
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function buildProjectOverviewTableRow\(project, index\)[\s\S]*?const projectIconConfig = getPlaygroundProjectIconConfig\([\s\S]*?icon: React\.createElement\(ProjectIcon, \{ width: 16, height: 16, strokeWidth: 1\.8 \}\)/,
+  "Project overview rows must carry the saved project icon into the shared catalog identity cell.",
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const ownerAvatarUrl = firstIdentityValue\(\[[\s\S]*?source\.ownerAvatarUrl,[\s\S]*?source\.createdByAvatarUrl,[\s\S]*?metadata\.createdByAvatarUrl,[\s\S]*?isCurrentOwner \? currentUserAvatarUrl : ""/,
+  "Project owners must resolve profile images from owner, creator, metadata, or the current account.",
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
   /function getProjectCardCreatorName\(project\)[\s\S]*?const normalizedCreatorEmail = creatorEmail \|\| \(creatorName\.includes\("@"\)[\s\S]*?formatAccountDisplayName\(/,
-  "Project overview cards must normalize creator identities into display names instead of emails.",
+  "Project overview owners must normalize creator identities into display names instead of emails.",
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /className: "playground-tasks-project-card-hero",\s*style: \{ "--project-icon-color": projectAccent \}/,
-  "Project overview cards must use the saved project accent for their icon treatment.",
+  /function renderProjectLanding\(\)[\s\S]*?if \(hasProjects\) \{\s*return React\.createElement\(ProjectsOverviewPage, \{[\s\S]*?rows: overviewRows,[\s\S]*?onOpen: \(row\) => handleSelectProject\(row\.id\),[\s\S]*?onEdit:[\s\S]*?onDelete:/,
+  "Non-empty Projects must render through the shared resource overview page.",
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /React\.createElement\(PlatformPopup, \{[\s\S]{0,500}?variant: "minimal",[\s\S]{0,160}?portal: true,[\s\S]{0,160}?placement: "bottom-end"/,
-  "Project card action menus must use the portaled centralized minimal popup.",
-);
-assert.match(
-  PROJECTS_PAGE_DATA_SCRIPT,
-  /closest\("\.playground-tasks-project-card-actions, \.playground-tasks-project-card-menu"\)/,
-  "Project card outside-click handling must preserve interactions inside the portaled action menu.",
-);
-assert.doesNotMatch(
-  PROJECTS_PAGE_VIEWS_SCRIPT,
-  /className: "playground-tasks-project-card-menu"[\s\S]{0,1800}?(?:Change icon, title, and description\.|Remove this project and its planning scope\.|playground-tasks-detail-menu-item-danger)/,
-  "Project card action menus must use concise single-line items with standard white styling.",
-);
-assert.doesNotMatch(
-  PROJECTS_PAGE_VIEWS_SCRIPT,
-  /className: "playground-tasks-project-card-(?:kicker|metrics)"/,
-  "Project overview cards must not render the legacy kicker or metrics.",
+  /className: "playground-tasks-view-section playground-projects-overview-surface is-empty-hero"[\s\S]*?"Organize your work in projects"[\s\S]*?renderProjectWorkingAgentEmptyState\(\)/,
+  "The established Projects empty state must remain intact.",
 );
 assert.match(
   PROJECTS_CORE_CSS,
-  /\.playground-projects-overview-surface\.is-card-grid \.playground-tasks-project-grid\s*\{[\s\S]*?grid-template-columns: repeat\(4, minmax\(0, 1fr\)\);/,
-  "Project overview cards must use the four-column wide layout.",
-);
-assert.match(
-  PROJECTS_CORE_CSS,
-  /\.playground-projects-overview-surface\.is-card-grid \.playground-tasks-project-card-body\s*\{[\s\S]*?background: #242426;/,
-  "Project overview cards must separate their visual and content surfaces.",
-);
-assert.match(
-  PROJECTS_CORE_CSS,
-  /\.playground-projects-overview-surface\.is-card-grid \.playground-tasks-project-card-hero\s*\{[\s\S]*?background: color-mix\(in srgb, var\(--project-icon-color\) 18%, transparent\);/,
-  "Project overview cards must render the saved project accent across the upper surface.",
-);
-assert.match(
-  PROJECTS_CORE_CSS,
-  /\.playground-projects-overview-surface\.is-card-grid \.playground-tasks-project-card\s*\{[\s\S]*?border-radius: 10px;/,
-  "Project overview cards must use the compact ten-pixel corner radius.",
-);
-assert.match(
-  PROJECTS_CORE_CSS,
-  /\.playground-projects-overview-surface\.is-card-grid \.playground-tasks-project-card::before\s*\{[\s\S]*?content: none;[\s\S]*?display: none;/,
-  "Project overview cards must not render a decorative outline.",
-);
-assert.doesNotMatch(
-  PROJECTS_CORE_CSS,
-  /\.playground-projects-overview-surface\.is-card-grid \.playground-tasks-project-card:(?:hover|focus-visible|focus-within)[\s\S]{0,260}?transform:\s*translateY/,
-  "Project overview cards must remain stationary on hover and focus.",
+  /\.playground-tasks-main-scroll\.is-projects-home\.has-resource-overview\s*\{\s*padding: 0;\s*overflow: hidden;/,
+  "The shared Projects overview must fill its host without legacy card-grid insets.",
 );
 assert.match(PROJECTS_STYLES, /playground-project-overview/);
 assert.match(PROJECTS_STYLE_FRAGMENTS.core, /playground-tasks-page/);
@@ -2323,6 +2372,16 @@ assert.match(
 assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-frame\s*\{/);
 assert.doesNotMatch(PROJECTS_CORE_CSS, /\.playground-ticket-detail-frame\.has-preview\s*\{/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-page\s*\{/);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-tasks-unified-navbar\.is-ticket-detail\s*\{\s*grid-template-columns: minmax\(0, 1fr\) 0 auto;/,
+  "Ticket details must let their breadcrumb use the header width left by the action area.",
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-tasks-unified-navbar\.is-ticket-detail[\s\S]*?\.playground-top-nav-path-item-group\.is-current\s*\{\s*max-width: min\(720px, 60vw\);/,
+  "Ticket breadcrumbs must retain a useful title width before truncating.",
+);
 assert.match(
   PROJECTS_CORE_CSS,
   /\.playground-ticket-detail-page\s*\{[\s\S]*?grid-template-rows: minmax\(0, 1fr\);[\s\S]*?row-gap: 0;/,
@@ -2390,7 +2449,7 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /React\.createElement\(PlatformPopup, \{\s*open: taskDetailPopover === "menu",[\s\S]*?variant: "minimal",[\s\S]*?placement: "bottom-end"/,
+  /React\.createElement\(PlatformResourceActionsMenu, \{\s*open: taskDetailPopover === "menu",[\s\S]*?onOpenChange: \(nextOpen\) => setTaskDetailPopover\(nextOpen \? "menu" : ""\),[\s\S]*?resourceLabel: "Ticket"/,
 );
 assert.match(
   PROJECTS_CORE_CSS,
@@ -2490,6 +2549,22 @@ assert.match(
   platformEntrySource,
   /view: nextView === "resources" \? "overview" : nextView,\s*sectionId: nextView === "resources" \? "resources" : "general"/,
 );
+assert.match(
+  platformEntrySource,
+  /const projectResourceNavigationOriginRef = useRef\(null\)[\s\S]*?function normalizeProjectResourceNavigationOrigin\(resourceType, resource, projectOrigin = \{\}\)[\s\S]*?const projectRecord = projectOrigin\?\.projectRecord[\s\S]*?const resourceSnapshot = projectOrigin\?\.projectResourceSnapshot[\s\S]*?projectResourceSnapshot: resourceSnapshot,[\s\S]*?function openProjectLinkedResourceFromProject\(resourceType, resource, projectOrigin = \{\}\)[\s\S]*?projectResourceNavigationOriginRef\.current = origin[\s\S]*?setProjectResourceNavigationOrigin\(origin\)[\s\S]*?function returnToProjectResourceOrigin\(origin = projectResourceNavigationOrigin\)[\s\S]*?projectResourceNavigationOriginRef\.current = null[\s\S]*?setTasksPageNavigationRequest\(\{[\s\S]*?projectRecord,[\s\S]*?projectResourceSnapshot,[\s\S]*?function resolveProjectResourceBreadcrumbItems\(pathItems\)[\s\S]*?label: origin\.projectName[\s\S]*?returnToProjectResourceOrigin\(origin\)/,
+);
+assert.match(
+  platformEntrySource,
+  /if \(entry\.page === "tasks" \|\| entry\.page === "calendar"\)[\s\S]*?const resourceOrigin = projectResourceNavigationOriginRef\.current[\s\S]*?const resourceOriginProjectRecord = resourceOrigin\?\.projectRecord[\s\S]*?const resourceOriginProjectSnapshot = resourceOrigin\?\.projectResourceSnapshot[\s\S]*?projectResourceNavigationOriginRef\.current = null[\s\S]*?setTasksPageNavigationRequest\(\{[\s\S]*?projectRecord: resourceOriginProjectRecord,[\s\S]*?projectResourceSnapshot: resourceOriginProjectSnapshot/,
+);
+assert.match(
+  platformEntrySource,
+  /onOpenProjectLinkedResource: openProjectLinkedResourceFromProject/g,
+);
+assert.match(
+  platformEntrySource,
+  /projectId: tasksHeaderState\.projectId,\s*sectionId: tasksHeaderState\.sectionId,[\s\S]*?sectionId: entry\.sectionId \|\| ""/,
+);
 assert.doesNotMatch(
   platformEntrySource,
   /\{ value: "activity", label: "Activity" \}/,
@@ -2538,7 +2613,7 @@ assert.match(
 );
 assert.match(
   platformEntrySource,
-  /import \{ PlatformFileExplorerBrowserModal, PlatformFileExplorerModal \} from "\/dist\/platform-ui\/components\/composite\/file-explorer\/index\.js";/,
+  /import \{[^}]*PlatformFileExplorerBrowserModal[^}]*PlatformFileExplorerModal[^}]*\} from "\/dist\/platform-ui\/components\/composite\/file-explorer\/index\.js";/,
 );
 assert.match(
   platformEntrySource,
@@ -2580,11 +2655,30 @@ assert.match(
 );
 assert.match(
   platformEntrySource,
-  /const projectBreadcrumbTrailing = isProjectDetailView[\s\S]*?React\.createElement\(PlatformPopup, \{[\s\S]*?variant: "minimal",\s*portal: true,\s*placement: "bottom-start"[\s\S]*?"Project ID"[\s\S]*?\{ id: "general", label: "Home", Icon: House \}[\s\S]*?\{ id: "resources", label: "Resources", Icon: FolderOpen \}[\s\S]*?\{ id: "permissions", label: "Settings", Icon: Settings2 \}[\s\S]*?"Delete Project"/,
+  /const projectBreadcrumbTrailing = isProjectDetailView[\s\S]*?React\.createElement\(PlatformResourceHeaderActions, \{[\s\S]*?React\.createElement\(PlatformResourceActionsMenu, \{[\s\S]*?resourceLabel: "Project"[\s\S]*?React\.createElement\(PlatformResourceActionsInformation, \{[\s\S]*?copyAriaLabel: "Copy Project ID"[\s\S]*?\{ id: "general", label: "Home", Icon: House \}[\s\S]*?\{ id: "resources", label: "Resources", Icon: FolderOpen \}[\s\S]*?\{ id: "permissions", label: "Settings", Icon: Settings2 \}[\s\S]*?label: "Copy Project ID"[\s\S]*?label: "Delete Project",\s*shortcut: "delete",\s*danger: true/,
+);
+assert.doesNotMatch(
+  platformEntrySource,
+  /projectBreadcrumbMenuRef|projectBreadcrumbMenuSurfaceRef|playground-project-breadcrumb-menu-id|playground-project-breadcrumb-menu-divider/,
 );
 assert.match(
   platformEntrySource,
   /label: activeTicketNumber,[\s\S]*?trailing: React\.createElement\("span", \{\s*id: "playground-ticket-breadcrumb-actions-root"/,
+);
+assert.match(
+  platformEntrySource,
+  /isProjectTaskDetailView\s*\? \[[\s\S]*?label: projectTitle,\s*leading: projectBreadcrumbLeading,\s*onClick: \(\) => setTasksProjectViewRequest/,
+  "Ticket details must not render the Project actions menu beside the Project breadcrumb.",
+);
+assert.match(
+  platformEntrySource,
+  /className: "playground-tasks-unified-navbar"\s*\+ \(isProjectTaskDetailView \? " is-ticket-detail" : ""\)/,
+  "Ticket details must opt into the wider ticket breadcrumb layout.",
+);
+assert.match(
+  platformEntrySource,
+  /\.\.\.\(isProjectTaskDetailView\s*\? \[\]\s*: \[\{\s*label: "Projects",/,
+  "Ticket details must omit the redundant Projects root breadcrumb.",
 );
 assert.match(
   platformEntrySource,
@@ -2608,7 +2702,7 @@ assert.match(
 );
 assert.match(
   platformEntrySource,
-  /label: projectTitle,\s*leading: projectBreadcrumbLeading,\s*trailing: projectBreadcrumbTrailing,\s*onClick: \(\) => setTasksProjectViewRequest/,
+  /label: projectTitle,\s*leading: projectBreadcrumbLeading,\s*onClick: \(\) => setTasksProjectViewRequest/,
 );
 assert.match(
   platformEntrySource,

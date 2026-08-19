@@ -33,7 +33,7 @@ export interface GuardrailsOverviewPageProps {
   onOpen: (row: GuardrailOverviewRow) => void;
   onCreate: () => void;
   onRename: (row: GuardrailOverviewRow) => void;
-  onDelete: (row: GuardrailOverviewRow) => void;
+  onDelete: (rows: readonly GuardrailOverviewRow[]) => void;
 }
 
 export function GuardrailsOverviewPage({
@@ -101,6 +101,7 @@ export function GuardrailsOverviewPage({
 
   const getRowActions = (
     row: GuardrailOverviewRow,
+    state: { targetRows: readonly GuardrailOverviewRow[] },
   ): readonly PlatformDataTableAction<GuardrailOverviewRow>[] => [
     { id: "open", label: "Open", icon: ChevronRight, onSelect: () => onOpen(row) },
     {
@@ -117,7 +118,14 @@ export function GuardrailsOverviewPage({
       hidden: row.type === "default",
       danger: true,
       separatorBefore: true,
-      onSelect: () => onDelete(row),
+      onSelect: () => onDelete([row]),
+      selectedRows: {
+        label: "Delete selected",
+        danger: true,
+        hidden: !state.targetRows.some((target) => target.type !== "default"),
+        onSelect: ({ rows: selectedRows }) =>
+          onDelete(selectedRows.filter((target) => target.type !== "default")),
+      },
     },
   ];
 

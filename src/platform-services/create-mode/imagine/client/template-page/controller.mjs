@@ -20,6 +20,7 @@ export const IMAGINE_TEMPLATE_PAGE_CONTROLLER_SCRIPT = String.raw`        functi
           onEnvironmentChange,
           onOpenPlansBudget,
           onOpenPromptSearch,
+          onOpenKnowledgeSearch,
           onOpenThreadSearch,
           onEditTemplate,
           onDeleteTemplate,

@@ -48,6 +48,11 @@ import {
   buildRunnerThreadMessageRequestBody,
 } from "../execution-request.js";
 import { getRunnerConnectorIdsFromPayload } from "../composer-connectors.js";
+import {
+  buildRunnerKnowledgeContextFromAttachments,
+  mergeRunnerKnowledgeContexts,
+  type RunnerKnowledgeContext,
+} from "../knowledge-context.js";
 import { normalizeHydratedLog } from "../hydration/log-normalization.js";
 import { generateRunnerClientId } from "../id-utils.js";
 import {
@@ -104,6 +109,7 @@ export interface RunnerThreadRunOptions {
   enabledSkillsOverride?: Record<string, unknown> | null;
   displayPromptOverride?: string | null;
   connectorsOverride?: Record<string, unknown> | null;
+  knowledgeContextOverride?: RunnerKnowledgeContext | null;
 }
 
 export interface RunnerEnsuredThread {
@@ -125,6 +131,7 @@ export interface RunnerExternalRunHandoff {
   githubRepo?: RunnerGithubRunReference | null;
   enabledSkills?: Record<string, unknown> | null;
   connectors?: Record<string, unknown> | null;
+  knowledgeContext?: RunnerKnowledgeContext | null;
   environmentId?: string | null;
   projectId?: string | null;
   quotedSelection?: RunnerQuotedSelection | null;
@@ -157,9 +164,13 @@ export interface RunnerThreadRunExecutorDependencies {
   effectiveProjectId: string | null | undefined;
   effectiveReasoningEffort: string | null | undefined;
   enabledSkillsPayload: Record<string, unknown> | null;
+  knowledgeContext?: RunnerKnowledgeContext | null;
   ensureThread: (
     taskText: string,
-    options?: { reserveLocalExecution?: boolean },
+    options?: {
+      reserveLocalExecution?: boolean;
+      knowledgeContext?: RunnerKnowledgeContext | null;
+    },
   ) => Promise<RunnerEnsuredThread>;
   environmentId: string | null | undefined;
   execute: (options: RunnerExecuteOptions) => Promise<RunnerExecuteResult>;
@@ -268,6 +279,12 @@ export function createRunnerThreadRunExecutor(
     const visibleTaskText = options.displayPromptOverride !== undefined
       ? String(options.displayPromptOverride || "")
       : taskText;
+    const knowledgeContext = mergeRunnerKnowledgeContexts(
+      options.knowledgeContextOverride !== undefined
+        ? options.knowledgeContextOverride
+        : dependencies.knowledgeContext,
+      buildRunnerKnowledgeContextFromAttachments(attachmentEntries),
+    );
     const hasResolvedThread = Boolean(
       options.threadIdOverride || dependencies.currentThreadId,
     );
@@ -292,6 +309,7 @@ export function createRunnerThreadRunExecutor(
         }
       : await dependencies.ensureThread(taskText, {
           reserveLocalExecution: true,
+          knowledgeContext,
         });
     const threadId = ensuredThread.threadId;
     if (!runEnvironmentId && ensuredThread.environmentId) {
@@ -373,6 +391,7 @@ export function createRunnerThreadRunExecutor(
         githubRepo: githubRepo || null,
         enabledSkills: executionEnabledSkillsPayload || null,
         connectors: runConnectors,
+        knowledgeContext,
         environmentId:
           typeof runEnvironmentId === "string" ? runEnvironmentId : "",
         projectId: dependencies.effectiveProjectId || null,
@@ -627,6 +646,13 @@ export function createRunnerThreadRunExecutor(
             );
             headers.set("Content-Type", "application/json");
             headers.set("X-API-Key", dependencies.apiKey);
+            if (!headers.has("Idempotency-Key")) {
+              // One UI turn owns one durable admission identity. If the
+              // transport retries while capacity is unavailable, the backend
+              // must return the same Batch instead of scheduling the prompt
+              // twice. A deliberate user retry receives a new turn ID.
+              headers.set("Idempotency-Key", `thread-turn:${threadId}:${turnId}`);
+            }
             return headers;
           })(),
           credentials: "include",
@@ -643,6 +669,7 @@ export function createRunnerThreadRunExecutor(
             quotedSelection: options.quotedSelection,
             enabledSkills: executionEnabledSkillsPayload,
             connectors: runConnectors,
+            knowledgeContext,
             backlogCommand: options.backlogCommand,
             slideCreationCommand: options.slideCreationCommand,
             researchCreationCommand: options.researchCreationCommand,
@@ -702,12 +729,30 @@ export function createRunnerThreadRunExecutor(
       });
 
       releasePreparationState();
+      const nextTurnStatus: RunnerTurnStatus = executionResult.queued
+        ? "queued"
+        : executionResult.cancelled
+          ? "cancelled"
+          : "completed";
       dependencies.updateTurn(turnId, (turn) => ({
         ...turn,
-        status: executionResult.cancelled ? "cancelled" : "completed",
-        completedAtMs: Date.now(),
+        status: nextTurnStatus,
+        completedAtMs: executionResult.queued ? undefined : Date.now(),
         durationSeconds: executionResult.durationSeconds,
+        messageMetadata: executionResult.queued
+          ? {
+              ...(turn.messageMetadata || {}),
+              batchJobId: executionResult.batchJobId || null,
+              batchStatus: "queued",
+              admissionReason: executionResult.admissionReason || null,
+            }
+          : turn.messageMetadata,
       }));
+      try {
+        dependencies.onThreadStatusChange?.(threadId, nextTurnStatus);
+      } catch (error) {
+        reportRunnerLifecycleCallbackError("onThreadStatusChange", error);
+      }
       dependencies.refreshThreadContextDetails(threadId);
 
       if (

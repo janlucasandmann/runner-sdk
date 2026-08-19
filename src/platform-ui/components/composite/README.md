@@ -23,6 +23,7 @@ Components that assemble multiple controls, behaviors, or presentation regions i
 - `page-hero`: the shared page title, description, and optional action row.
 - `popup`: popup surfaces, dismissal layers, positioning, and transitions.
 - `settings-section`: reusable settings section lists, headers, content surfaces, and table defaults.
+- `status-indicator`: compact, dismissible action receipts with optional provider identity and progress.
 - `ui-card`: the shared neutral card surface for composed platform content.
 - `version-history-sidebar`: reusable version lists, publishing/restoring actions, row menus, and explicit comparison entry points.
 - `versioning`: the stable versioning import surface and reusable save-review dialog for current/new version publishing.

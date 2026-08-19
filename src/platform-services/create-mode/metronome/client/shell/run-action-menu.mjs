@@ -76,6 +76,29 @@ export const METRONOME_APP_RUN_ACTION_MENU_SCRIPT = `
                     )
                   )
                 ),
+                metronomeId
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "tb-popup-row",
+                      onClick: () => {
+                        setMetronomeRunActionMenuState(null);
+                        openBatchComposer({
+                          name: "Run Metronome again",
+                          description: "Workflow run queued from an existing Metronome run.",
+                          targetKind: "metronome_run",
+                          targetResourceId: metronomeId,
+                          definition: { metronomeId, input: {} },
+                          startPolicy: "manual",
+                        });
+                      },
+                      disabled: isDeletingRun,
+                    },
+                      React.createElement(Truck, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "Add to Batches")
+                      )
+                    )
+                  : null,
                 React.createElement("button", {
                   type: "button",
                   className: "tb-popup-row",

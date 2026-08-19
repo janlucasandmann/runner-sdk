@@ -51,6 +51,7 @@ export const EVALUATIONS_APP_PAGE_VIEW_SCRIPT = `        function renderEvaluati
             setSelectedEvaluationCaseId,
             evaluationsPageMode,
             setEvaluationsPageMode,
+            evaluationsOverviewScope,
             evaluationRunReturnTarget,
             onEvaluationRunBack: (target) => {
               const fineTuneJobId = String(target?.fineTuneJobId || target?.jobId || "").trim();

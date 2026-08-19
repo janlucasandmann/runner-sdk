@@ -116,6 +116,11 @@ export function DevelopResourceOverviewSurface({
         danger: true,
         disabled: mutating || mutableTargets.length === 0,
         onSelect: () => onDelete(mutableTargets),
+        selectedRows: {
+          label: "Delete selected",
+          danger: true,
+          onSelect: () => onDelete(mutableTargets),
+        },
       }] : [];
     }
     const actions: PlatformDataTableAction<DevelopResourceOverviewRow>[] = [];

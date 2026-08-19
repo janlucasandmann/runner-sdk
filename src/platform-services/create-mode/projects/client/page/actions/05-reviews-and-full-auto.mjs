@@ -754,7 +754,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
             };
             taskRunPendingIdsRef.current.add(normalizedTaskId);
             setTaskRunPendingIds((current) => current.includes(normalizedTaskId) ? current : current.concat(normalizedTaskId));
-            if (typeof onTaskRunStateChange === "function") {
+            if (options?.addToBatch !== true && typeof onTaskRunStateChange === "function") {
               onTaskRunStateChange({
                 taskId: normalizedTaskId,
                 projectId: taskPreview.projectId || selectedProjectId || "",
@@ -785,9 +785,15 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
             const launchEnvironmentId = taskToLaunch.environmentId || backlogComposerEnvironmentId || initialEnvironmentId || "";
             const launchAgentId = taskToLaunch.assigneeAgentId || backlogComposerAgentId || initialAgentId || "";
             const projectLaunchAttachments = normalizePlaygroundTaskAttachmentList(selectedProject?.attachments);
+            const projectKnowledgeLibrary = await ensurePlaygroundProjectKnowledgeLibrary(selectedProject);
+            const projectKnowledgeContext = buildPlaygroundProjectKnowledgeContext(
+              projectKnowledgeLibrary,
+              "project-task"
+            );
             const launchPrompt = buildPlaygroundTaskRunPrompt(taskToLaunch, {
               projectAttachments: projectLaunchAttachments,
               reviewRequestBody,
+              knowledgeLibrary: projectKnowledgeLibrary,
             });
             const threadTitle = typeof options?.title === "string" && options.title.trim()
               ? options.title.trim()
@@ -811,9 +817,10 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
                 idempotencyKey: taskRunIdempotencyKey,
                 environmentId: launchEnvironmentId || undefined,
                 agentId: launchAgentId || undefined,
-                moveToInProgress: true,
+                ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
+                moveToInProgress: options?.addToBatch === true ? false : true,
                 metadata: {
-                  triggerKind: "manual",
+                  triggerKind: options?.addToBatch === true ? "batch" : "manual",
                   source: normalizedRunKind === "review"
                     ? "project_task_review"
                     : "project_task",
@@ -823,6 +830,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
                     githubRepo: githubRepo || undefined,
                     connectors: launchConnectors,
                     taskPreview,
+                    ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
                   },
                 },
               }),
@@ -859,7 +867,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
 
             taskRunPendingIdsRef.current.delete(normalizedTaskId);
             setTaskRunPendingIds((current) => current.filter((taskId) => taskId !== normalizedTaskId));
-            if (typeof onTaskRunStateChange === "function") {
+            if (options?.addToBatch !== true && typeof onTaskRunStateChange === "function") {
               onTaskRunStateChange({
                 taskId: updatedTask.id,
                 projectId: taskPreview.projectId || selectedProjectId || "",
@@ -896,7 +904,32 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
               });
             }
             resetSaveState(typeof options?.successMessage === "string" && options.successMessage ? options.successMessage : "Thread started");
-            if (onThreadStarted) {
+            if (options?.addToBatch === true) {
+              openBatchComposer({
+                name: taskPreview.ticketNumber + " " + taskPreview.title,
+                description: "Project ticket work prepared from the ticket details page.",
+                targetKind: "project_ticket_action",
+                targetResourceId: threadRecord.id,
+                definition: {
+                  threadId: threadRecord.id,
+                  preparedThreadId: threadRecord.id,
+                  message: launchPrompt,
+                  environmentId: launchEnvironmentId || null,
+                  agentId: launchAgentId || null,
+                  enabledSkills: enabledSkillsPayload || [],
+                  connectors: launchConnectors || [],
+                  githubRepo: githubRepo || null,
+                  knowledgeContext: projectKnowledgeContext,
+                },
+                sourceProjectId: taskPreview.projectId || selectedProjectId || null,
+                sourceTicketId: updatedTask.id,
+                startPolicy: "manual",
+                metadata: {
+                  ticketNumber: taskPreview.ticketNumber || null,
+                  runKind: normalizedRunKind,
+                },
+              });
+            } else if (onThreadStarted) {
               onThreadStarted(threadRecord.id, {
                 threadRecord,
                 taskPreview: {
@@ -919,6 +952,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
                         attachments: [],
                         githubRepo: githubRepo || null,
                         enabledSkills: enabledSkillsPayload || null,
+                        knowledgeContext: projectKnowledgeContext,
                         environmentId: launchEnvironmentId || "",
                         executionStarted,
                       },
@@ -930,7 +964,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
             const errorMessage = error instanceof Error ? error.message : "Failed to start task thread.";
             taskRunPendingIdsRef.current.delete(normalizedTaskId);
             setTaskRunPendingIds((current) => current.filter((taskId) => taskId !== normalizedTaskId));
-            if (typeof onTaskRunStateChange === "function") {
+            if (options?.addToBatch !== true && typeof onTaskRunStateChange === "function") {
               const failedPreview = buildPlaygroundTaskThreadPreview(task);
               onTaskRunStateChange({
                 taskId: normalizedTaskId,

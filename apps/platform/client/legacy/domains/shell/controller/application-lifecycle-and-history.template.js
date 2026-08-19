@@ -1099,13 +1099,17 @@
           const hasSkillsVersionsDrawerSlot = activePage === "tools" && toolsView === "skills";
           const hasPromptsVersionsDrawerSlot = activePage === "tools" && toolsView === "prompts";
           const hasTestsVersionsDrawerSlot = activePage === "tests";
+          const hasKnowledgeVersionsDrawerSlot = activePage === "knowledge";
+          const hasInferenceVersionsDrawerSlot = activePage === "inference";
           const hasResourcesVersionsDrawerSlot = (
             isResourcesPage
             && (activeResourcesView === "agents" || activeResourcesView === "computers" || activeResourcesView === "servers")
           ) || hasGuardrailsVersionsDrawerSlot || hasEvaluationsVersionsDrawerSlot
             || hasSecurityVersionsDrawerSlot || hasSkillsVersionsDrawerSlot
             || hasPromptsVersionsDrawerSlot
-            || hasTestsVersionsDrawerSlot;
+            || hasTestsVersionsDrawerSlot
+            || hasKnowledgeVersionsDrawerSlot
+            || hasInferenceVersionsDrawerSlot;
           const selectedGlobalGuardrailSet = allGuardrailSets.find((set) => set?.id === selectedGuardrailSetId) || null;
           const isGuardrailsVersionsDrawerOpen = Boolean(
             hasGuardrailsVersionsDrawerSlot
@@ -1133,6 +1137,12 @@
           ) || (
             hasTestsVersionsDrawerSlot
             && isAgentVersionsDetailOpen
+          ) || (
+            hasKnowledgeVersionsDrawerSlot
+            && isAgentVersionsDetailOpen
+          ) || (
+            hasInferenceVersionsDrawerSlot
+            && settingsInferenceVersionsOpen
           );
   
           useEffect(() => {
@@ -1176,6 +1186,7 @@
                     : "overview",
                 view: requestedView,
                 projectId: tasksHeaderState.projectId,
+                sectionId: tasksHeaderState.sectionId,
                 detailMode: tasksHeaderState.detailMode,
                 taskId: tasksHeaderState.taskId,
                 scheduleId: tasksHeaderState.scheduleId,
@@ -1309,6 +1320,7 @@
             tasksHeaderState.detailMode,
             tasksHeaderState.mode,
             tasksHeaderState.projectId,
+            tasksHeaderState.sectionId,
             tasksHeaderState.scheduleId,
             tasksHeaderState.taskId,
             tasksHeaderState.view,
@@ -1366,15 +1378,34 @@
                   : entry.view === "overview"
                     ? "overview"
                     : "backlog";
+              const resourceOrigin = projectResourceNavigationOriginRef.current;
+              const resourceOriginProjectRecord = resourceOrigin?.projectRecord
+                && typeof resourceOrigin.projectRecord === "object"
+                && !Array.isArray(resourceOrigin.projectRecord)
+                && String(resourceOrigin.projectId || "").trim() === String(entry.projectId || "").trim()
+                && String(resourceOrigin.projectRecord.id || "").trim() === String(entry.projectId || "").trim()
+                  ? resourceOrigin.projectRecord
+                  : null;
+              const resourceOriginProjectSnapshot = resourceOrigin?.projectResourceSnapshot
+                && typeof resourceOrigin.projectResourceSnapshot === "object"
+                && !Array.isArray(resourceOrigin.projectResourceSnapshot)
+                && String(resourceOrigin.projectResourceSnapshot.projectId || "").trim() === String(entry.projectId || "").trim()
+                  ? resourceOrigin.projectResourceSnapshot
+                  : null;
               setSidebarWorkspaceMode("work");
+              projectResourceNavigationOriginRef.current = null;
+              setProjectResourceNavigationOrigin(null);
               setTasksPageNavigationRequest({
                 token: createPlaygroundPlatformNavigationToken(),
                 projectId: entry.projectId || "",
                 view: requestedView,
+                sectionId: entry.sectionId || "",
                 taskId: entry.taskId || "",
                 taskDetailMode: entry.detailMode === "task" ? "screen" : "",
                 missionControlAction: entry.detailMode === "mission-control" ? "open" : "",
                 projectComposerAction: "",
+                projectRecord: resourceOriginProjectRecord,
+                projectResourceSnapshot: resourceOriginProjectSnapshot,
               });
               setActivePage(entry.page === "calendar" ? "calendar" : "tasks");
               return;
@@ -2067,11 +2098,9 @@
   	            status: selectedThreadTaskPreview?.status || "todo",
   	            metadata: selectedThreadTaskPreview?.metadata,
   	          });
-  		          return [
-  		            buildPlaygroundProjectStrategyBriefPromptSection(selectedThreadProjectRecord, {
-  		              taskRecord: previewTaskRecord,
-  		            }),
-  		            buildPlaygroundProjectRulesPromptSection(selectedThreadProjectRecord),
+		          return [
+		            buildPlaygroundProjectKnowledgeAgentPromptSection(selectedThreadProjectRecord),
+		            buildPlaygroundProjectRulesPromptSection(selectedThreadProjectRecord),
   		            buildPlaygroundProjectResourcePromptSection(selectedThreadProjectRecord, {
   		              projectId: selectedThreadProjectId,
   		              projectName: selectedThreadProjectName,

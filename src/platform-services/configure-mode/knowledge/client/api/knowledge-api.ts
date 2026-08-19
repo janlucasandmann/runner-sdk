@@ -5,6 +5,8 @@ import type {
   KnowledgeLibrary,
   KnowledgeLibraryCreateInput,
   KnowledgeLibraryVersion,
+  KnowledgeProposal,
+  KnowledgeProposalInput,
   KnowledgeSearchResult,
 } from "../domain/index.js";
 
@@ -28,6 +30,33 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? value as Record<string, unknown>
     : {};
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        reject(new Error("Failed to encode the Knowledge attachment."));
+        return;
+      }
+      const separatorIndex = reader.result.indexOf(",");
+      resolve(separatorIndex >= 0 ? reader.result.slice(separatorIndex + 1) : reader.result);
+    };
+    reader.onerror = () => reject(
+      reader.error || new Error("Failed to encode the Knowledge attachment."),
+    );
+    reader.readAsDataURL(blob);
+  });
+}
+
+export interface KnowledgeEditorAttachment {
+  src: string;
+  name: string;
+  size: number;
+  mimeType: string;
+  attachmentId: string;
+  metadata: Record<string, unknown>;
 }
 
 async function readResponse<T>(response: Response, fallback: string): Promise<T> {
@@ -159,13 +188,32 @@ export class KnowledgeApi {
     );
   }
 
-  async createVersion(libraryId: string): Promise<KnowledgeLibrary> {
-    const payload = await this.request<{ library: KnowledgeLibrary }>(
-      `/knowledge/${encodeURIComponent(libraryId)}/versions`,
-      { method: "POST", body: JSON.stringify({}) },
+  async createVersion(
+    libraryId: string,
+    input: { description?: string } = {},
+  ): Promise<KnowledgeLibrary> {
+    const path = `/knowledge/${encodeURIComponent(libraryId)}/versions`;
+    const description = String(input.description || "").trim().slice(0, 240);
+    const create = (body: Record<string, unknown>) => this.request<{ library: KnowledgeLibrary }>(
+      path,
+      { method: "POST", body: JSON.stringify(body) },
       "Failed to create the Knowledge version.",
     );
-    return payload.library;
+    try {
+      return (await create(description ? { description } : {})).library;
+    } catch (error) {
+      // Older appliance APIs created Knowledge versions before descriptions were added to the
+      // contract. Preserve forward-compatible saving without hiding unrelated validation errors.
+      if (
+        description
+        && error instanceof KnowledgeApiError
+        && error.status === 400
+        && /unsupported fields?.*description|description.*unsupported/i.test(error.message)
+      ) {
+        return (await create({})).library;
+      }
+      throw error;
+    }
   }
 
   async getVersion(
@@ -195,6 +243,135 @@ export class KnowledgeApi {
       "Failed to search Knowledge.",
     );
     return Array.isArray(payload.data) ? payload.data : [];
+  }
+
+  async createProposal(
+    libraryId: string,
+    input: KnowledgeProposalInput,
+  ): Promise<KnowledgeProposal> {
+    const operation = input.operation || "create_document";
+    // Create is kept backwards compatible with older appliances that predate
+    // operation-aware proposals. Newer control planes accept update/archive
+    // proposals and require the explicit operation/document revision fields.
+    const body = {
+      ...(operation !== "create_document" ? { operation } : {}),
+      ...(input.documentId !== undefined ? { documentId: input.documentId } : {}),
+      ...(input.baseVersionId !== undefined ? { baseVersionId: input.baseVersionId } : {}),
+      ...(input.baseRevisionId !== undefined ? { baseRevisionId: input.baseRevisionId } : {}),
+      ...(input.title !== undefined ? { title: input.title } : {}),
+      ...(input.summary !== undefined ? { summary: input.summary } : {}),
+      ...(input.markdown !== undefined ? { markdown: input.markdown } : {}),
+      ...(input.parentDocumentId !== undefined ? { parentDocumentId: input.parentDocumentId } : {}),
+      ...(input.provenance !== undefined ? { provenance: input.provenance } : {}),
+      ...(input.threadId !== undefined ? { threadId: input.threadId } : {}),
+    };
+    const payload = await this.request<{
+      proposal?: KnowledgeProposal;
+      data?: KnowledgeProposal;
+      status?: string;
+      operation?: string;
+      documentId?: string;
+      library?: KnowledgeLibrary;
+      version?: KnowledgeLibraryVersion;
+      document?: KnowledgeDocument;
+    }>(
+      `/knowledge/${encodeURIComponent(libraryId)}/proposals`,
+      { method: "POST", body: JSON.stringify(body) },
+      "Failed to create the Knowledge proposal.",
+    );
+    const proposal = payload.proposal || payload.data;
+    if (proposal && typeof proposal === "object") {
+      return proposal;
+    }
+    if (
+      String(payload.status || "").trim().toLowerCase() === "draft"
+      && payload.library
+      && payload.version
+    ) {
+      const responseOperation = payload.operation === "update_document"
+        || payload.operation === "archive_document"
+        ? payload.operation
+        : operation;
+      return {
+        ...(payload.document?.id ? { id: payload.document.id } : {}),
+        libraryId,
+        operation: responseOperation,
+        status: "draft",
+        ...(payload.document?.id || payload.documentId
+          ? { documentId: payload.document?.id || payload.documentId } : {}),
+        library: payload.library,
+        version: payload.version,
+        ...(payload.document ? { document: payload.document } : {}),
+        ...(payload.document?.provenance ? { provenance: payload.document.provenance } : {}),
+      };
+    }
+    throw new KnowledgeApiError(
+      "Knowledge proposal creation succeeded but no proposal was returned.",
+      502,
+      "knowledge_proposal_missing",
+    );
+  }
+
+  async uploadEditorAttachments(files: File[]): Promise<KnowledgeEditorAttachment[]> {
+    return Promise.all(files.map(async (file) => {
+      const payload = await this.request<{ attachment?: Record<string, unknown> }>(
+        "/attachments/upload",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            filename: file.name || "attachment",
+            mimeType: file.type || "application/octet-stream",
+            data: await blobToBase64(file),
+          }),
+        },
+        "Failed to upload the Knowledge attachment.",
+      );
+      const attachment = asRecord(payload.attachment);
+      const attachmentId = String(attachment.id || attachment.attachmentId || "").trim();
+      if (!attachmentId) {
+        throw new KnowledgeApiError(
+          "Attachment upload succeeded but the attachment data is missing.",
+          502,
+          "knowledge_attachment_missing",
+        );
+      }
+      return {
+        src: `${this.baseUrl}/attachments/${encodeURIComponent(attachmentId)}`,
+        name: String(attachment.filename || attachment.name || file.name || "Attachment").trim()
+          || "Attachment",
+        size: Number(attachment.size || attachment.byteSize || file.size || 0),
+        mimeType: String(
+          attachment.mimeType
+          || attachment.contentType
+          || file.type
+          || "application/octet-stream",
+        ).trim() || "application/octet-stream",
+        attachmentId,
+        metadata: attachment,
+      };
+    }));
+  }
+
+  async resolveEditorAttachmentPreview(
+    file: Pick<KnowledgeEditorAttachment, "src">,
+    signal: AbortSignal,
+  ): Promise<Blob | null> {
+    const source = String(file.src || "").trim();
+    if (!source) return null;
+    const response = await fetch(source, {
+      credentials: "include",
+      cache: "no-store",
+      headers: { ...this.headers },
+      signal,
+    });
+    if (!response.ok) {
+      throw new KnowledgeApiError(
+        "Failed to load the Knowledge attachment preview.",
+        response.status,
+        "knowledge_attachment_preview_failed",
+      );
+    }
+    return response.blob();
   }
 
   async listOrganizationMembers(organizationId: string): Promise<unknown[]> {

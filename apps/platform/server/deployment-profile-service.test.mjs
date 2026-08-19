@@ -35,6 +35,21 @@ function dgxEnvelope() {
       inference: {
         mode: "deployment_fixed",
         fixedModelId: "deepseek-v4-flash",
+        deploymentEndpoint: {
+          id: "deployment-inference-endpoint",
+          name: "Stockifi Appliance Inference",
+          principal: {
+            type: "appliance",
+            id: "appliance:stockifi",
+            name: "Stockifi Appliance",
+          },
+          region: {
+            code: "hr-zad-1",
+            label: "Zadar, Croatia",
+            latitude: 44.1194,
+            longitude: 15.2314,
+          },
+        },
       },
       agents: {
         visibleBuiltIns: ["spark"],
@@ -60,8 +75,35 @@ test("validates and freezes the sanitized DGX Spark profile", () => {
     expectedStage: "prod",
   });
   assert.equal(validated.profile.product.inference.fixedModelId, "deepseek-v4-flash");
+  assert.deepEqual(validated.profile.product.inference.deploymentEndpoint, {
+    id: "deployment-inference-endpoint",
+    name: "Stockifi Appliance Inference",
+    principal: {
+      type: "appliance",
+      id: "appliance:stockifi",
+      name: "Stockifi Appliance",
+    },
+    region: {
+      code: "hr-zad-1",
+      label: "Zadar, Croatia",
+      latitude: 44.1194,
+      longitude: 15.2314,
+    },
+  });
   assert.deepEqual(validated.profile.product.agents.visibleBuiltIns, ["spark"]);
+  assert.equal(Object.isFrozen(validated.profile.product.inference.deploymentEndpoint), true);
+  assert.equal(Object.isFrozen(validated.profile.product.inference.deploymentEndpoint.region), true);
   assert.equal(Object.isFrozen(validated.profile.product.agents), true);
+});
+
+test("rejects a malformed deployment inference descriptor", () => {
+  const envelope = dgxEnvelope();
+  envelope.profile.product.inference.deploymentEndpoint.region.latitude = 144.1194;
+  envelope.hash = hashPublicDeploymentProfile(envelope.profile);
+  assert.throws(
+    () => validatePublicDeploymentProfileEnvelope(envelope),
+    DeploymentProfileIntegrityError,
+  );
 });
 
 test("rejects a profile whose payload does not match its integrity hash", () => {
@@ -71,6 +113,21 @@ test("rejects a profile whose payload does not match its integrity hash", () => 
     () => validatePublicDeploymentProfileEnvelope(envelope),
     DeploymentProfileIntegrityError,
   );
+});
+
+test("normalizes the legacy managed cloud profile without a deployment endpoint", () => {
+  const envelope = JSON.parse(JSON.stringify(createCloudCompatibilityDeploymentProfile("prod")));
+  delete envelope.profile.product.inference.deploymentEndpoint;
+  envelope.hash = hashPublicDeploymentProfile(envelope.profile);
+
+  const validated = validatePublicDeploymentProfileEnvelope(envelope, {
+    expectedProfileId: "cloud-saas-v1",
+    expectedTopology: "gcp_saas",
+    expectedStage: "prod",
+  });
+
+  assert.equal(validated.profile.product.inference.deploymentEndpoint, null);
+  assert.equal(validated.hash, envelope.hash);
 });
 
 test("loads the versioned profile endpoint and rejects profile drift", async () => {

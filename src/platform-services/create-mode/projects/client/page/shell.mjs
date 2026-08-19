@@ -9,12 +9,14 @@ import { PROJECTS_CONNECTOR_CREDENTIAL_STATE_FRAGMENT } from "./shell/connector-
 import { PROJECTS_SHELL_02_FRAGMENT } from "./shell/02-editor-and-project-state.mjs";
 import { PROJECTS_SHELL_03_FRAGMENT } from "./shell/03-derived-task-state.mjs";
 import { PROJECTS_SHELL_04_FRAGMENT } from "./shell/04-release-state-and-navigation.mjs";
+import { PROJECTS_SHELL_05_FRAGMENT } from "./shell/05-project-knowledge.mjs";
 
 export const PROJECTS_PAGE_SHELL_FRAGMENT_PATHS = Object.freeze([
   "shell/01-state-and-loading.mjs",
   "shell/02-editor-and-project-state.mjs",
   "shell/03-derived-task-state.mjs",
   "shell/04-release-state-and-navigation.mjs",
+  "shell/05-project-knowledge.mjs",
   "shell/connector-credential-state.mjs",
 ]);
 
@@ -23,6 +25,7 @@ const projectsPageShellTemplate = joinLegacyBrowserSourceFragments([
   PROJECTS_SHELL_02_FRAGMENT,
   PROJECTS_SHELL_03_FRAGMENT,
   PROJECTS_SHELL_04_FRAGMENT,
+  PROJECTS_SHELL_05_FRAGMENT,
   PROJECTS_CONNECTOR_CREDENTIAL_STATE_FRAGMENT,
 ]);
 

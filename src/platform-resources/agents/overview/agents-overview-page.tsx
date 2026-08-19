@@ -205,6 +205,7 @@ export function AgentsOverviewPage({
           icon: UsersRound,
           disabled: mutating,
           onSelect: () => onShare(targets),
+          selectedRows: { label: "Share selected with Team", onSelect: () => onShare(targets) },
         },
         {
           id: "squad",
@@ -212,6 +213,7 @@ export function AgentsOverviewPage({
           icon: Layers,
           disabled: mutating || !squadEligible.length,
           onSelect: () => onAddToSquad(squadEligible),
+          selectedRows: { label: "Add selected to Agent Squad", onSelect: () => onAddToSquad(squadEligible) },
         },
         {
           id: "delete",
@@ -221,6 +223,7 @@ export function AgentsOverviewPage({
           separatorBefore: true,
           disabled: mutating || !deletable.length,
           onSelect: () => onDelete(deletable),
+          selectedRows: { label: "Delete selected", danger: true, onSelect: () => onDelete(deletable) },
         },
       ];
     }

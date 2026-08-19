@@ -63,6 +63,10 @@ import {
 } from "./domain/responses.mjs";
 import { createFineTuningJobPersistenceCoordinator } from "./job-persistence.mjs";
 import { createFineTuningJobOrchestrator } from "./application/job-orchestrator.mjs";
+import {
+  knowledgeContextFromMetadata,
+  normalizeKnowledgeContext,
+} from "../../knowledge/server/knowledge-context.mjs";
 
 const FINE_TUNING_JOB_LEASE_TTL_MS = 90_000;
 const FINE_TUNING_JOB_HEARTBEAT_MS = 25_000;
@@ -948,6 +952,10 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
 
   async function createHiddenThread(record, { title, agentId, environmentId, projectId = "", metadata }) {
     const { requestContext, upstreamUrl, apiKey, body } = record;
+    const knowledgeContext = normalizeKnowledgeContext(
+      knowledgeContextFromMetadata(metadata),
+      { source: "optimization" },
+    );
     const payload = {
       title,
       appId: "runner-web-sdk-demo",
@@ -959,7 +967,11 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
       enabledSkills: {
         computerAgents: true,
       },
-      metadata,
+      ...(knowledgeContext ? { knowledgeContext } : {}),
+      metadata: {
+        ...(metadata || {}),
+        ...(knowledgeContext ? { knowledgeContext } : {}),
+      },
     };
     const enrichedPayload = typeof enrichThreadPayloadWithAgentGuardrails === "function"
       ? await enrichThreadPayloadWithAgentGuardrails(requestContext, upstreamUrl, apiKey, payload)
@@ -1746,6 +1758,9 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
               fineTunerAgentId: configuration.fineTunerAgent.id,
               environmentId: configuration.environment.id,
               evaluationSetIds: configuration.evaluationTargets.map((target) => target.evaluationSetId),
+              ...(configuration.knowledgeContext
+                ? { knowledgeContext: configuration.knowledgeContext }
+                : {}),
               hidden: true,
               sidebarHidden: true,
             },
@@ -1753,6 +1768,9 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
               type: "fine_tuning_optimizer",
               fineTuningJobId: job.id,
               fineTuningIteration: iterationNumber,
+              ...(configuration.knowledgeContext
+                ? { knowledgeContext: configuration.knowledgeContext }
+                : {}),
               hidden: true,
               sidebarHidden: true,
             },
@@ -2094,6 +2112,13 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
             evaluationSetSnapshot: set,
           };
         }),
+        knowledgeContext: normalizeKnowledgeContext(
+          body.knowledgeContext
+            || body.knowledge_context
+            || body.metadata?.knowledgeContext
+            || body.metadata?.knowledge_context,
+          { source: "optimization" },
+        ),
         objective: body.objective,
         limits: body.limits,
         publicationPolicy: body.publicationPolicy || body.publication_policy,
@@ -2228,7 +2253,15 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
       const nowIso = new Date().toISOString();
       const jobId = normalizeString(body.id || body.jobId || body.job_id) || createFineTuningId();
       const conductedBy = normalizePersonIdentity(body.conductedBy || body.conducted_by || body.createdBy || body.created_by || {});
+      const knowledgeContext = normalizeKnowledgeContext(
+        body.knowledgeContext
+          || body.knowledge_context
+          || body.metadata?.knowledgeContext
+          || body.metadata?.knowledge_context,
+        { source: "optimization" },
+      );
       const metadata = {
+        ...(knowledgeContext ? { knowledgeContext } : {}),
         fineTuning: {
           jobId,
           jobName: normalizeString(body.name || "Optimize " + targetAgent.name),
@@ -2240,12 +2273,14 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
           environmentId: environment.id,
           environmentName: environment.name,
           evaluationSetIds: evaluationSets.map((set) => set.id),
+          ...(knowledgeContext ? { knowledgeContext } : {}),
           hidden: true,
           sidebarHidden: true,
         },
         runnerPlayground: {
           type: "fine_tuning_job",
           fineTuningJobId: jobId,
+          ...(knowledgeContext ? { knowledgeContext } : {}),
           hidden: true,
           sidebarHidden: true,
         },

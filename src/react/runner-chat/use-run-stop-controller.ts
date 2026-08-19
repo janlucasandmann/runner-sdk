@@ -146,8 +146,12 @@ export function useRunnerRunStopController({
       stopRequestedThreadIdRef.current = threadIdToCancel;
     }
 
+    let cancellationError: Error | null = null;
     try {
-      if (threadIdToCancel && backendUrl && apiKey.trim()) {
+      // Session-authenticated requests commonly have no API key. The gateway
+      // authenticates these calls with the request cookies, so an empty key
+      // must not prevent the persisted execution from being cancelled.
+      if (threadIdToCancel && backendUrl) {
         await serviceRef.current.cancelThreadExecution({
           backendUrl,
           apiKey: apiKey.trim(),
@@ -155,7 +159,15 @@ export function useRunnerRunStopController({
           requestHeaders,
         });
       }
+    } catch (error) {
+      cancellationError = error instanceof Error ? error : new Error(String(error));
+    }
 
+    try {
+      // Always finalize the local run, even when the remote cancellation
+      // request fails. Otherwise a transient gateway error leaves the
+      // composer and the active turn stuck in a running state indefinitely.
+      // The remote error is still surfaced below so it can be retried/diagnosed.
       markRunningTurnsCancelled();
       cancelLocalExecution();
       if (!hasLocalExecution) {
@@ -163,21 +175,26 @@ export function useRunnerRunStopController({
       }
 
       if (threadIdToCancel) {
-        onContextRefresh?.(threadIdToCancel);
+        try {
+          onContextRefresh?.(threadIdToCancel);
+        } catch (error) {
+          reportRunnerLifecycleCallbackError("onContextRefresh", error);
+        }
         try {
           onRunCancel?.(threadIdToCancel);
         } catch (error) {
           reportRunnerLifecycleCallbackError("onRunCancel", error);
         }
       }
-    } catch (error) {
-      stopRequestedThreadIdRef.current = null;
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
-      setError(normalizedError.message || "Failed to stop agent.");
-      try {
-        onRunError?.(normalizedError, threadIdToCancel || undefined);
-      } catch (callbackError) {
-        reportRunnerLifecycleCallbackError("onRunError", callbackError);
+
+      if (cancellationError) {
+        stopRequestedThreadIdRef.current = null;
+        setError(cancellationError.message || "Failed to stop agent.");
+        try {
+          onRunError?.(cancellationError, threadIdToCancel || undefined);
+        } catch (callbackError) {
+          reportRunnerLifecycleCallbackError("onRunError", callbackError);
+        }
       }
     } finally {
       setIsStoppingRun(false);

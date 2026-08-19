@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildInferenceEndpointDraft,
   buildInferenceEndpointRows,
+  DEPLOYMENT_INFERENCE_ENDPOINT_ID,
   ORGANIZATION_INFERENCE_ENDPOINT_ID,
 } from "./inference-endpoint-model.js";
 
@@ -13,6 +14,7 @@ describe("inference endpoint model", () => {
         endpoints: [{
           id: "inference-primary",
           name: "Primary Models",
+          description: "Production inference capacity.",
           enabled: true,
           providerType: "vllm",
           baseUrl: "https://models.example.com/v1",
@@ -52,6 +54,7 @@ describe("inference endpoint model", () => {
     expect(rows[0]).toMatchObject({
       id: "inference-primary",
       name: "Primary Models",
+      description: "Production inference capacity.",
       isDefault: true,
       providerLabel: "vLLM",
       status: "healthy",
@@ -72,6 +75,7 @@ describe("inference endpoint model", () => {
     expect(buildInferenceEndpointDraft({ providerType: "custom" })).toMatchObject({
       id: ORGANIZATION_INFERENCE_ENDPOINT_ID,
       name: "New Inference Endpoint",
+      description: "",
       providerLabel: "Custom",
       readOnly: false,
     });
@@ -97,5 +101,133 @@ describe("inference endpoint model", () => {
     expect(rows.map((row) => row.id)).toEqual(["endpoint-a", "endpoint-b"]);
     expect(rows.map((row) => row.name)).toEqual(["Production", "Research"]);
     expect(rows.map((row) => row.isDefault)).toEqual([true, false]);
+  });
+
+  it("projects the appliance fixed model as a private read-only local endpoint", () => {
+    const rows = buildInferenceEndpointRows({ endpoints: [] }, {}, {
+      profileId: "dgx-spark-appliance-v1",
+      topology: "on_prem",
+      capabilities: { localInference: true },
+      product: {
+        inference: {
+          mode: "deployment_fixed",
+          fixedModelId: "deepseek-v4-flash",
+          deploymentEndpoint: {
+            id: DEPLOYMENT_INFERENCE_ENDPOINT_ID,
+            name: "Stockifi Appliance Inference",
+            principal: {
+              type: "appliance",
+              id: "appliance:stockifi",
+              name: "Stockifi Appliance",
+            },
+            region: {
+              code: "hr-zad-1",
+              label: "Zadar, Croatia",
+              latitude: 44.1194,
+              longitude: 15.2314,
+            },
+          },
+        },
+      },
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      id: DEPLOYMENT_INFERENCE_ENDPOINT_ID,
+      name: "Stockifi Appliance Inference",
+      kind: "local",
+      runtimeLabel: "Appliance",
+      statusLabel: "Active",
+      models: ["deepseek-v4-flash"],
+      hostLabel: "Private appliance endpoint",
+      readOnly: true,
+      isDefault: true,
+      deploymentManaged: true,
+      creatorId: "appliance:stockifi",
+      creatorName: "Stockifi Appliance",
+      ownerId: "appliance:stockifi",
+      ownerName: "Stockifi Appliance",
+      metadata: {
+        deploymentRegion: "hr-zad-1",
+        deploymentRegionLabel: "Zadar, Croatia",
+        deploymentRegionLatitude: 44.1194,
+        deploymentRegionLongitude: 15.2314,
+      },
+    });
+    expect(rows[0]?.baseUrl).toBe("");
+  });
+
+  it("keeps signed appliance identity, region, and model authoritative while merging access state", () => {
+    const rows = buildInferenceEndpointRows({
+      defaultEndpointId: DEPLOYMENT_INFERENCE_ENDPOINT_ID,
+      endpoints: [{
+        id: DEPLOYMENT_INFERENCE_ENDPOINT_ID,
+        name: "Untrusted override",
+        creatorId: "user-1",
+        creatorName: "User One",
+        ownerId: "user-2",
+        ownerName: "User Two",
+        availableModels: ["untrusted-model"],
+        metadata: {
+          deploymentRegion: "untrusted-region",
+          teamAccess: [{ teamId: "team-1", permissionSetId: "use" }],
+        },
+        permissionSet: { use: true },
+      }],
+    }, {}, {
+      profileId: "dgx-spark-appliance-v1",
+      topology: "on_prem",
+      capabilities: { localInference: true },
+      product: {
+        inference: {
+          mode: "deployment_fixed",
+          fixedModelId: "deepseek-v4-flash",
+          deploymentEndpoint: {
+            id: DEPLOYMENT_INFERENCE_ENDPOINT_ID,
+            name: "Stockifi Appliance Inference",
+            principal: {
+              type: "appliance",
+              id: "appliance:stockifi",
+              name: "Stockifi Appliance",
+            },
+            region: {
+              code: "hr-zad-1",
+              label: "Zadar, Croatia",
+              latitude: 44.1194,
+              longitude: 15.2314,
+            },
+          },
+        },
+      },
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      name: "Stockifi Appliance Inference",
+      models: ["deepseek-v4-flash"],
+      creatorId: "appliance:stockifi",
+      creatorName: "Stockifi Appliance",
+      ownerId: "appliance:stockifi",
+      ownerName: "Stockifi Appliance",
+      permissionSet: { use: true },
+      metadata: {
+        deploymentRegion: "hr-zad-1",
+        teamAccess: [{ teamId: "team-1", permissionSetId: "use" }],
+      },
+    });
+  });
+
+  it("does not project a deployment endpoint for the cloud catalog profile", () => {
+    expect(buildInferenceEndpointRows({ endpoints: [] }, {}, {
+      profileId: "cloud-saas-v1",
+      topology: "cloud",
+      capabilities: { localInference: false },
+      product: {
+        inference: {
+          mode: "managed_catalog",
+          fixedModelId: null,
+        },
+      },
+    })).toEqual([]);
   });
 });

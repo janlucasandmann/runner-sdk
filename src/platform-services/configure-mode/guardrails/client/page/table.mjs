@@ -1,5 +1,32 @@
 export const GUARDRAILS_PAGE_TABLE_SCRIPT = `          function renderGuardrailsTable() {
-            const guardrailOverviewRows = safeGuardrailSets
+            const normalizedGuardrailsOverviewScope = guardrailsOverviewScope === "created"
+              ? "created"
+              : guardrailsOverviewScope === "shared"
+                ? "shared"
+                : "all";
+            const currentGuardrailUser = getCurrentGuardrailUserIdentity();
+            const currentGuardrailUserKeys = new Set(getGuardrailPersonIdentityKeys(currentGuardrailUser));
+            const currentGuardrailUserName = String(currentGuardrailUser?.name || "").trim().toLowerCase();
+            const isGuardrailCreatedByCurrentUser = (set) => {
+              if (isGuardrailSetReadonly(set)) return false;
+              const creator = getGuardrailCreatorIdentity(set);
+              const creatorKeys = getGuardrailPersonIdentityKeys(creator);
+              if (creatorKeys.some((key) => currentGuardrailUserKeys.has(key))) return true;
+              if (creatorKeys.length) return false;
+              const creatorName = String(creator?.name || "").trim().toLowerCase();
+              if (!creatorName || ["unknown", "you", "me", "current user"].includes(creatorName)) return true;
+              return Boolean(currentGuardrailUserName && creatorName === currentGuardrailUserName);
+            };
+            const scopedGuardrailSets = normalizedGuardrailsOverviewScope === "all"
+              ? safeGuardrailSets
+              : safeGuardrailSets.filter((set) => {
+                  if (isGuardrailSetReadonly(set)) return false;
+                  const createdByCurrentUser = isGuardrailCreatedByCurrentUser(set);
+                  return normalizedGuardrailsOverviewScope === "created"
+                    ? createdByCurrentUser
+                    : !createdByCurrentUser;
+                });
+            const guardrailOverviewRows = scopedGuardrailSets
               .map((set) => {
                 const id = String(set?.id || "").trim();
                 const name = String(set?.name || "Untitled Guardrail Set").trim();
@@ -37,7 +64,9 @@ export const GUARDRAILS_PAGE_TABLE_SCRIPT = `          function renderGuardrails
               onOpen: (set) => selectGuardrailSet(set.id),
               onCreate: createGuardrailSet,
               onRename: (set) => handleRenameGuardrailSet(set.id),
-              onDelete: (set) => handleDeleteGuardrailSet(set.id),
+              onDelete: (sets) => handleDeleteGuardrailSets(
+                (Array.isArray(sets) ? sets : []).map((set) => set?.id)
+              ),
             });
           }
 

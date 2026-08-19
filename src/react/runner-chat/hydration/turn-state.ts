@@ -27,6 +27,50 @@ export function isTurnResponseLog(log: RunnerLog): boolean {
   return log.eventType === "agent_message" || log.eventType === "llm_response";
 }
 
+export interface RunnerBatchQueueReceipt {
+  batchJobId: string | null;
+  admissionReason: string | null;
+}
+
+export function getTurnBatchQueueReceipt(
+  turn: RunnerTurn,
+): RunnerBatchQueueReceipt | null {
+  if (turn.logs.some(isTurnResponseLog)) return null;
+  let queueIndex = -1;
+  for (let index = turn.logs.length - 1; index >= 0; index -= 1) {
+    const log = turn.logs[index];
+    if (
+      log?.eventType === "batch_queued"
+      || log?.metadata?.batchStatus === "queued"
+    ) {
+      queueIndex = index;
+      break;
+    }
+  }
+  const metadataBatchJobId = typeof turn.messageMetadata?.batchJobId === "string"
+    ? turn.messageMetadata.batchJobId
+    : null;
+  const metadataQueued = turn.messageMetadata?.batchStatus === "queued";
+  if (queueIndex === -1 && !metadataQueued && !metadataBatchJobId) return null;
+  if (
+    queueIndex >= 0
+    && turn.logs.slice(queueIndex + 1).some((log) => log.eventType !== "batch_queued")
+  ) {
+    return null;
+  }
+  const queueLog = queueIndex >= 0 ? turn.logs[queueIndex] : null;
+  return {
+    batchJobId: typeof queueLog?.metadata?.batchJobId === "string"
+      ? queueLog.metadata.batchJobId
+      : metadataBatchJobId,
+    admissionReason: typeof queueLog?.metadata?.admissionReason === "string"
+      ? queueLog.metadata.admissionReason
+      : typeof turn.messageMetadata?.admissionReason === "string"
+        ? turn.messageMetadata.admissionReason
+        : null,
+  };
+}
+
 export function getTurnAssistantMessageText(turn: RunnerTurn): string {
   return turn.logs
     .filter(isTurnResponseLog)
@@ -188,6 +232,14 @@ export function applyHydratedRunningThreadState(
   if (turns.length === 0) {
     return turns;
   }
+
+  let batchQueueChanged = false;
+  const batchQueuedTurns = turns.map((turn) => {
+    if (!getTurnBatchQueueReceipt(turn) || turn.status === "queued") return turn;
+    batchQueueChanged = true;
+    return { ...turn, status: "queued" as const, completedAtMs: undefined };
+  });
+  if (batchQueueChanged) return batchQueuedTurns;
 
   const staleRunningIndex = findStaleCompletedAtRunningTurnIndex(turns, meta);
   const terminalSettledTurns =

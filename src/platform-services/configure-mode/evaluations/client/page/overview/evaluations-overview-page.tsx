@@ -160,6 +160,14 @@ export function EvaluationsOverviewPage({
             onDeleteMany(targets);
             setSelectedRowIds(new Set());
           },
+          selectedRows: {
+            label: "Delete selected",
+            danger: true,
+            onSelect: () => {
+              onDeleteMany(targets);
+              setSelectedRowIds(new Set());
+            },
+          },
         },
       ];
     }

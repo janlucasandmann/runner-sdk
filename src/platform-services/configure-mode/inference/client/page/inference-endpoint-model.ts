@@ -1,13 +1,38 @@
 import type { PlatformLabelVariant } from "../../../../../platform-ui/components/ui/label/index.js";
 
 export const ORGANIZATION_INFERENCE_ENDPOINT_ID = "organization-inference-endpoint";
+export const DEPLOYMENT_INFERENCE_ENDPOINT_ID = "deployment-inference-endpoint";
 
 export type InferenceEndpointKind = "external" | "local";
 export type InferenceEndpointStatus = "healthy" | "error" | "idle" | "offline" | "disabled";
 
+export interface InferenceEndpointVersionSnapshot {
+  name: string;
+  description: string;
+  enabled: boolean;
+  providerType: string;
+  baseUrl: string;
+  defaultModel: string;
+  availableModels: readonly string[];
+}
+
+export interface InferenceEndpointVersion {
+  id: string;
+  number: number;
+  versionNumber: number;
+  label: string;
+  description: string;
+  status: "saved" | "published";
+  snapshot: InferenceEndpointVersionSnapshot;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+}
+
 export interface InferenceSettingsSnapshot {
   id?: string;
   name?: string;
+  description?: string;
   isDefault?: boolean;
   enabled?: boolean;
   providerType?: string;
@@ -21,6 +46,23 @@ export interface InferenceSettingsSnapshot {
   lastError?: string;
   createdAt?: string;
   updatedAt?: string;
+  creatorId?: string;
+  creatorUserId?: string;
+  creatorName?: string;
+  creatorEmail?: string;
+  creatorAvatarUrl?: string;
+  ownerId?: string;
+  ownerUserId?: string;
+  ownerName?: string;
+  ownerEmail?: string;
+  ownerAvatarUrl?: string;
+  metadata?: Record<string, unknown>;
+  permissionSet?: Record<string, unknown> | null;
+  currentVersionId?: string;
+  currentVersionNumber?: number;
+  publishedVersionId?: string;
+  versions?: readonly InferenceEndpointVersion[];
+  deploymentManaged?: boolean;
 }
 
 export interface InferenceEndpointCollectionSnapshot {
@@ -62,9 +104,40 @@ export interface InferenceLocalRunnersSnapshot {
   loadedAt?: string;
 }
 
+export interface InferenceDeploymentProfileSnapshot {
+  profileId?: string;
+  topology?: string;
+  readiness?: string;
+  capabilities?: {
+    localInference?: boolean;
+  };
+  product?: {
+    inference?: {
+      mode?: string;
+      fixedModelId?: string | null;
+      deploymentEndpoint?: {
+        id?: string;
+        name?: string;
+        principal?: {
+          type?: string;
+          id?: string;
+          name?: string;
+        };
+        region?: {
+          code?: string;
+          label?: string;
+          latitude?: number;
+          longitude?: number;
+        };
+      } | null;
+    };
+  };
+}
+
 export interface InferenceEndpointRow {
   id: string;
   name: string;
+  description: string;
   kind: InferenceEndpointKind;
   kindLabel: string;
   providerType: string;
@@ -83,6 +156,25 @@ export interface InferenceEndpointRow {
   lastError: string;
   readOnly: boolean;
   isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+  deploymentManaged?: boolean;
+  creatorId: string;
+  creatorUserId: string;
+  creatorName: string;
+  creatorEmail: string;
+  creatorAvatarUrl: string;
+  ownerId: string;
+  ownerUserId: string;
+  ownerName: string;
+  ownerEmail: string;
+  ownerAvatarUrl: string;
+  metadata?: Record<string, unknown>;
+  permissionSet?: Record<string, unknown> | null;
+  currentVersionId: string;
+  currentVersionNumber: number;
+  publishedVersionId: string;
+  versions: readonly InferenceEndpointVersion[];
   device?: InferenceLocalRunnerDevice;
   bindings: readonly InferenceWorkspaceBinding[];
   searchText: string;
@@ -199,6 +291,7 @@ function buildExternalEndpoint(
       index === 0 ? ORGANIZATION_INFERENCE_ENDPOINT_ID : `inference-endpoint-${index + 1}`,
     ),
     name: readText(settings.name, hostLabel || `${providerLabel} Endpoint`),
+    description: typeof settings.description === "string" ? settings.description : "",
     kind: "external",
     kindLabel: "External Endpoint",
     providerType,
@@ -217,6 +310,26 @@ function buildExternalEndpoint(
     lastError: readText(settings.lastError),
     readOnly: false,
     isDefault: Boolean(settings.isDefault),
+    createdAt: readText(settings.createdAt),
+    updatedAt: readText(settings.updatedAt, readText(settings.createdAt)),
+    creatorId: readText(settings.creatorId, readText(settings.creatorUserId)),
+    creatorUserId: readText(settings.creatorUserId, readText(settings.creatorId)),
+    creatorName: readText(settings.creatorName),
+    creatorEmail: readText(settings.creatorEmail),
+    creatorAvatarUrl: readText(settings.creatorAvatarUrl),
+    ownerId: readText(settings.ownerId, readText(settings.ownerUserId)),
+    ownerUserId: readText(settings.ownerUserId, readText(settings.ownerId)),
+    ownerName: readText(settings.ownerName),
+    ownerEmail: readText(settings.ownerEmail),
+    ownerAvatarUrl: readText(settings.ownerAvatarUrl),
+    metadata: readRecord(settings.metadata),
+    permissionSet: Object.keys(readRecord(settings.permissionSet)).length > 0
+      ? readRecord(settings.permissionSet)
+      : null,
+    currentVersionId: readText(settings.currentVersionId),
+    currentVersionNumber: Number(settings.currentVersionNumber) || 1,
+    publishedVersionId: readText(settings.publishedVersionId),
+    versions: Array.isArray(settings.versions) ? settings.versions : [],
     bindings: [],
     searchText: [
       providerLabel,
@@ -226,6 +339,7 @@ function buildExternalEndpoint(
       statusPresentation.label,
       "external organization",
       settings.name,
+      settings.description,
     ].join(" "),
   };
 }
@@ -280,6 +394,7 @@ function buildLocalEndpoint(
   return {
     id: `local-inference:${id}`,
     name,
+    description: "Inference runtime reported by the connected local runner.",
     kind: "local",
     kindLabel: "Local Endpoint",
     providerType,
@@ -298,6 +413,24 @@ function buildLocalEndpoint(
     lastError: readText(inference.lastError),
     readOnly: true,
     isDefault: false,
+    createdAt: readText(device.lastSeenAt),
+    updatedAt: readText(device.lastSeenAt),
+    creatorId: "",
+    creatorUserId: "",
+    creatorName: "",
+    creatorEmail: "",
+    creatorAvatarUrl: "",
+    ownerId: "",
+    ownerUserId: "",
+    ownerName: "",
+    ownerEmail: "",
+    ownerAvatarUrl: "",
+    metadata: {},
+    permissionSet: null,
+    currentVersionId: "",
+    currentVersionNumber: 0,
+    publishedVersionId: "",
+    versions: [],
     device,
     bindings,
     searchText: [
@@ -313,9 +446,144 @@ function buildLocalEndpoint(
   };
 }
 
+function buildDeploymentEndpoint(
+  profile: InferenceDeploymentProfileSnapshot | null | undefined,
+): InferenceEndpointRow | null {
+  const inference = profile?.product?.inference;
+  const deploymentDescriptor = inference?.deploymentEndpoint;
+  const principal = deploymentDescriptor?.principal;
+  const region = deploymentDescriptor?.region;
+  const modelId = readText(inference?.fixedModelId);
+  const isDeploymentManaged = readText(profile?.topology) === "on_prem"
+    && profile?.capabilities?.localInference === true
+    && readText(inference?.mode) === "deployment_fixed"
+    && Boolean(modelId);
+  if (!isDeploymentManaged) return null;
+
+  return {
+    id: DEPLOYMENT_INFERENCE_ENDPOINT_ID,
+    name: readText(deploymentDescriptor?.name, "Local Appliance Inference"),
+    description: "Fixed inference runtime managed by the local appliance deployment.",
+    kind: "local",
+    kindLabel: "Local Endpoint",
+    providerType: "openai-compatible",
+    providerLabel: "OpenAI-Compatible",
+    runtimeLabel: "Appliance",
+    status: "healthy",
+    statusLabel: "Active",
+    statusVariant: "green",
+    models: [modelId],
+    modelCount: 1,
+    baseUrl: "",
+    hostLabel: "Private appliance endpoint",
+    lastCheckedAt: 0,
+    lastCheckedLabel: "Deployment managed",
+    apiKeyConfigured: false,
+    lastError: "",
+    readOnly: true,
+    isDefault: true,
+    createdAt: "",
+    updatedAt: "",
+    deploymentManaged: true,
+    creatorId: readText(principal?.id),
+    creatorUserId: readText(principal?.id),
+    creatorName: readText(principal?.name, "Local Appliance"),
+    creatorEmail: "",
+    creatorAvatarUrl: "",
+    ownerId: readText(principal?.id),
+    ownerUserId: readText(principal?.id),
+    ownerName: readText(principal?.name, "Local Appliance"),
+    ownerEmail: "",
+    ownerAvatarUrl: "",
+    metadata: {
+      deploymentManaged: true,
+      deploymentPrincipalType: readText(principal?.type, "appliance"),
+      deploymentPrincipalId: readText(principal?.id),
+      deploymentPrincipalName: readText(principal?.name, "Local Appliance"),
+      deploymentRegion: readText(region?.code, "local"),
+      deploymentRegionLabel: readText(region?.label, "Local deployment"),
+      deploymentRegionLatitude: Number(region?.latitude) || 0,
+      deploymentRegionLongitude: Number(region?.longitude) || 0,
+    },
+    permissionSet: null,
+    currentVersionId: "",
+    currentVersionNumber: 0,
+    publishedVersionId: "",
+    versions: [],
+    bindings: [],
+    searchText: [
+      "local appliance inference",
+      "deployment managed",
+      "openai compatible",
+      modelId,
+      profile?.profileId,
+    ].join(" "),
+  };
+}
+
+function mergeDeploymentEndpoint(
+  profileEndpoint: InferenceEndpointRow | null,
+  storedEndpoint: InferenceEndpointRow | null,
+): InferenceEndpointRow | null {
+  if (!profileEndpoint && !storedEndpoint) return null;
+  if (!profileEndpoint) {
+    return storedEndpoint
+      ? {
+          ...storedEndpoint,
+          kind: "local",
+          kindLabel: "Local Endpoint",
+          runtimeLabel: "Appliance",
+          readOnly: true,
+          isDefault: true,
+          deploymentManaged: true,
+        }
+      : null;
+  }
+  if (!storedEndpoint) return profileEndpoint;
+  const models = [...profileEndpoint.models];
+  const merged = {
+    ...profileEndpoint,
+    id: DEPLOYMENT_INFERENCE_ENDPOINT_ID,
+    name: profileEndpoint.name,
+    kind: "local" as const,
+    kindLabel: "Local Endpoint",
+    runtimeLabel: "Appliance",
+    status: "healthy" as const,
+    statusLabel: "Active",
+    statusVariant: "green" as const,
+    models,
+    modelCount: models.length,
+    baseUrl: "",
+    hostLabel: "Private appliance endpoint",
+    readOnly: true,
+    isDefault: true,
+    deploymentManaged: true,
+    createdAt: storedEndpoint.createdAt,
+    updatedAt: storedEndpoint.updatedAt,
+    creatorId: profileEndpoint.creatorId,
+    creatorUserId: profileEndpoint.creatorUserId,
+    creatorName: profileEndpoint.creatorName,
+    creatorEmail: profileEndpoint.creatorEmail,
+    creatorAvatarUrl: profileEndpoint.creatorAvatarUrl,
+    ownerId: profileEndpoint.ownerId,
+    ownerUserId: profileEndpoint.ownerUserId,
+    ownerName: profileEndpoint.ownerName,
+    ownerEmail: profileEndpoint.ownerEmail,
+    ownerAvatarUrl: profileEndpoint.ownerAvatarUrl,
+    metadata: {
+      ...storedEndpoint.metadata,
+      ...profileEndpoint.metadata,
+    },
+    permissionSet: storedEndpoint.permissionSet,
+    searchText: [profileEndpoint.searchText, storedEndpoint.searchText].join(" "),
+  };
+  return merged;
+}
+
 export function buildInferenceEndpointRows(
   collection: InferenceEndpointCollectionSnapshot | InferenceSettingsSnapshot,
   localRunners: InferenceLocalRunnersSnapshot,
+  deploymentProfile?: InferenceDeploymentProfileSnapshot | null,
 ): InferenceEndpointRow[] {
   const bindings = Array.isArray(localRunners.bindings) ? localRunners.bindings : [];
   const collectionRecord = readRecord(collection);
@@ -333,8 +601,16 @@ export function buildInferenceEndpointRows(
   const localEndpoints = (Array.isArray(localRunners.devices) ? localRunners.devices : [])
     .map((device) => buildLocalEndpoint(device, bindings))
     .filter((endpoint): endpoint is InferenceEndpointRow => Boolean(endpoint));
+  const storedDeploymentEndpoint = externalEndpoints.find(
+    (endpoint) => endpoint.id === DEPLOYMENT_INFERENCE_ENDPOINT_ID,
+  ) || null;
+  const deploymentEndpoint = mergeDeploymentEndpoint(
+    buildDeploymentEndpoint(deploymentProfile),
+    storedDeploymentEndpoint,
+  );
   return [
-    ...externalEndpoints,
+    ...(deploymentEndpoint ? [deploymentEndpoint] : []),
+    ...externalEndpoints.filter((endpoint) => endpoint.id !== DEPLOYMENT_INFERENCE_ENDPOINT_ID),
     ...localEndpoints,
   ];
 }
@@ -347,6 +623,7 @@ export function buildInferenceEndpointDraft(
   return {
     id: readText(settings.id, ORGANIZATION_INFERENCE_ENDPOINT_ID),
     name: readText(settings.name, "New Inference Endpoint"),
+    description: typeof settings.description === "string" ? settings.description : "",
     kind: "external",
     kindLabel: "External Endpoint",
     providerType,
@@ -365,6 +642,26 @@ export function buildInferenceEndpointDraft(
     lastError: readText(settings.lastError),
     readOnly: false,
     isDefault: true,
+    createdAt: readText(settings.createdAt),
+    updatedAt: readText(settings.updatedAt, readText(settings.createdAt)),
+    creatorId: readText(settings.creatorId, readText(settings.creatorUserId)),
+    creatorUserId: readText(settings.creatorUserId, readText(settings.creatorId)),
+    creatorName: readText(settings.creatorName),
+    creatorEmail: readText(settings.creatorEmail),
+    creatorAvatarUrl: readText(settings.creatorAvatarUrl),
+    ownerId: readText(settings.ownerId, readText(settings.ownerUserId)),
+    ownerUserId: readText(settings.ownerUserId, readText(settings.ownerId)),
+    ownerName: readText(settings.ownerName),
+    ownerEmail: readText(settings.ownerEmail),
+    ownerAvatarUrl: readText(settings.ownerAvatarUrl),
+    metadata: readRecord(settings.metadata),
+    permissionSet: Object.keys(readRecord(settings.permissionSet)).length > 0
+      ? readRecord(settings.permissionSet)
+      : null,
+    currentVersionId: readText(settings.currentVersionId),
+    currentVersionNumber: Number(settings.currentVersionNumber) || 1,
+    publishedVersionId: readText(settings.publishedVersionId),
+    versions: Array.isArray(settings.versions) ? settings.versions : [],
     bindings: [],
     searchText: "new external organization inference endpoint",
   };

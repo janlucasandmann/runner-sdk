@@ -62,6 +62,10 @@ export const TEAMS_PAGE_RESOURCES_VIEW_SCRIPT = `          const openTeamResourc
               openTeamResourceProjectFallback(row);
               return;
             }
+            if (normalizedType === "batch_job") {
+              openBatchesOverviewPage({ jobId: resourceId });
+              return;
+            }
             if (normalizedType === "imagine" || normalizedType === "imagine_template") {
               openTeamResourceImagineTemplateRow(row);
               return;

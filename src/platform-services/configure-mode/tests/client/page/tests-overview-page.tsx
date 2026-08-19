@@ -36,7 +36,7 @@ export interface TestsOverviewPageProps {
   onOpen: (row: TestPlanOverviewRow) => void;
   onCreate: () => void;
   onRun: (row: TestPlanOverviewRow) => void;
-  onDelete: (row: TestPlanOverviewRow) => void;
+  onDelete: (rows: readonly TestPlanOverviewRow[]) => void;
 }
 
 function statusLabel(value: string) {
@@ -135,7 +135,12 @@ export function TestsOverviewPage({
       icon: Trash2,
       danger: true,
       separatorBefore: true,
-      onSelect: () => onDelete(row),
+      onSelect: () => onDelete([row]),
+      selectedRows: {
+        label: "Delete selected",
+        danger: true,
+        onSelect: ({ rows: selectedRows }) => onDelete(selectedRows),
+      },
     },
   ];
   return (

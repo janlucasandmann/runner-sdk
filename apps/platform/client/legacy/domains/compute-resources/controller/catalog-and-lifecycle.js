@@ -2714,7 +2714,7 @@
             const seedServerKind = canonicalizePlaygroundServerKind(
               seedServer?.kind || normalizedEmbeddedServerKind
             );
-            if (seedServerKind === "function") {
+            if (["function", "web_app"].includes(seedServerKind)) {
               setServerDetailTab("code");
               void loadServerFiles(selectedServerId);
             }
@@ -3778,8 +3778,14 @@
 
             function handleServerActionsPopoverPointerDown(event) {
               const target = event?.target instanceof Node ? event.target : null;
+              const targetElement = target instanceof Element ? target : target?.parentElement;
+              const isCentralizedResourceActionsTarget = Boolean(
+                targetElement?.closest(".platform-resource-actions-menu")
+                || targetElement?.closest("[data-platform-resource-actions-owner]")
+              );
               if (
                 !target
+                || isCentralizedResourceActionsTarget
                 || serverActionsPopoverRef.current?.contains(target)
                 || serverActionsPopoverSurfaceRef.current?.contains(target)
               ) {
@@ -3878,8 +3884,14 @@
 
             function handleDatabaseActionsPopoverPointerDown(event) {
               const target = event?.target instanceof Node ? event.target : null;
+              const targetElement = target instanceof Element ? target : target?.parentElement;
+              const isCentralizedResourceActionsTarget = Boolean(
+                targetElement?.closest(".platform-resource-actions-menu")
+                || targetElement?.closest("[data-platform-resource-actions-owner]")
+              );
               if (
                 !target
+                || isCentralizedResourceActionsTarget
                 || databaseActionsPopoverRef.current?.contains(target)
                 || databaseActionsPopoverSurfaceRef.current?.contains(target)
               ) {

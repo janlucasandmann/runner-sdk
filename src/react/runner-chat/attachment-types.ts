@@ -15,12 +15,15 @@ export interface RunnerAttachment {
   githubRef?: string | null;
   githubItemPath?: string;
   githubSelectionType?: "repo" | "file";
-  /** Identifies attachments created from a saved prompt or thread reference. */
-  referenceType?: "prompt" | "thread";
+  /** Identifies attachments created from a saved resource reference. */
+  referenceType?: "prompt" | "thread" | "knowledge";
   displayName?: string;
   promptId?: string;
   promptVersionId?: string;
   promptVersionNumber?: number;
+  knowledgeLibraryId?: string;
+  knowledgeVersionId?: string;
+  knowledgeVersionNumber?: number;
   /** Durable source attachment copied into this run attachment. */
   sourceAttachmentId?: string;
   threadId?: string;
@@ -52,12 +55,15 @@ export interface LocalAttachment {
   githubRef?: string | null;
   githubItemPath?: string;
   githubSelectionType?: "repo" | "file";
-  /** Identifies attachments created from a saved prompt or thread reference. */
-  referenceType?: "prompt" | "thread";
+  /** Identifies attachments created from a saved resource reference. */
+  referenceType?: "prompt" | "thread" | "knowledge";
   displayName?: string;
   promptId?: string;
   promptVersionId?: string;
   promptVersionNumber?: number;
+  knowledgeLibraryId?: string;
+  knowledgeVersionId?: string;
+  knowledgeVersionNumber?: number;
   /** Authenticated attachment endpoint used to materialize saved prompt assets. */
   sourceAttachmentUrl?: string;
   /** Original durable attachment identifier retained for provenance and deduplication. */

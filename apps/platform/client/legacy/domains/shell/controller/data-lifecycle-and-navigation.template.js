@@ -1759,9 +1759,7 @@
   		            : projectId
   		              ? realProjects.find((project) => project?.id === projectId) || null
   		              : null;
-  		          const projectStrategySection = buildPlaygroundProjectStrategyBriefPromptSection(projectRecord, {
-  		            taskRecord: normalizedTask,
-  		          });
+		          const projectKnowledgeSection = buildPlaygroundProjectKnowledgeAgentPromptSection(projectRecord);
   		          const projectRulesSection = buildPlaygroundProjectRulesPromptSection(projectRecord);
   		          const reviewerName = getRuntimeTaskActorName(normalizedTask.reviewerAgentId, "Reviewer");
   	          const assigneeName = getRuntimeTaskActorName(normalizedTask.assigneeAgentId, "Assignee");
@@ -1800,7 +1798,7 @@
   	            "Reviewer: " + reviewerName,
   		            implementationThreadId ? "Implementation thread ID to review: " + implementationThreadId : "",
   		            "Environment: " + environmentName,
-  		            projectStrategySection,
+		            projectKnowledgeSection,
   		            projectRulesSection,
   		            [
                 "Review expectations:",
@@ -1831,11 +1829,15 @@
   		            : reviewProjectId
   		              ? realProjects.find((project) => project?.id === reviewProjectId) || null
   		              : null;
-  		          const reviewProjectName = String(
+		          const reviewProjectName = String(
   		            taskRunState?.projectName
   		            || reviewProjectRecord?.name
   		            || ""
-  		          ).trim();
+		          ).trim();
+		          const reviewProjectKnowledgeContext = buildPlaygroundProjectKnowledgeRunContext(
+		            reviewProjectRecord,
+		            "project_task_review"
+		          );
   	          if (!hasRealAccess) {
   	            throw new Error("Sign in before starting an agent review.");
   	          }
@@ -1894,14 +1896,17 @@
                   connectors: normalizedTask.connectors,
                   attachments: normalizePlaygroundTaskAttachmentList(normalizedTask.attachments),
                   launchPrompt: reviewPrompt,
+		          ...(reviewProjectKnowledgeContext ? { knowledgeContext: reviewProjectKnowledgeContext } : {}),
                   runKind: "review",
                   allowAdditionalThread: true,
                   taskPreview,
                   metadata: {
+		            ...(reviewProjectKnowledgeContext ? { knowledgeContext: reviewProjectKnowledgeContext } : {}),
                     triggerKind: "manual",
                     source: "project_task_review",
                     runKind: "review",
                     runnerPlayground: {
+		              ...(reviewProjectKnowledgeContext ? { knowledgeContext: reviewProjectKnowledgeContext } : {}),
                       enabledSkills: {
                         taskManagement: true,
                         computerAgents: true,
@@ -1949,6 +1954,7 @@
                       computerAgents: true,
                     },
                     environmentId: normalizedTask.environmentId || "",
+		            knowledgeContext: reviewProjectKnowledgeContext,
                   });
   	            setActivePage("thread");
   	            setCurrentThreadId(threadRecord.id);
@@ -2429,8 +2435,19 @@
   ${DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics}
           function handleNewThread(options = {}) {
             const nextInitialPrompt = normalizePlaygroundInitialPrompt(options?.initialPrompt);
+            const requestedKnowledgeContext = options?.knowledgeContext
+              && typeof options.knowledgeContext === "object"
+              && !Array.isArray(options.knowledgeContext)
+              ? options.knowledgeContext
+              : null;
             const knowledgeLibraryIds = Array.from(new Set(
-              (Array.isArray(options?.knowledgeLibraryIds) ? options.knowledgeLibraryIds : [])
+              [
+                ...(Array.isArray(options?.knowledgeLibraryIds) ? options.knowledgeLibraryIds : []),
+                ...(Array.isArray(requestedKnowledgeContext?.libraryIds) ? requestedKnowledgeContext.libraryIds : []),
+                ...(Array.isArray(requestedKnowledgeContext?.bindings)
+                  ? requestedKnowledgeContext.bindings.map((binding) => binding?.libraryId || binding?.id)
+                  : []),
+              ]
                 .map((libraryId) => String(libraryId || "").trim())
                 .filter(Boolean)
             ));
@@ -2453,6 +2470,7 @@
             setPendingThreadRunRequest(null);
             setPendingThreadKnowledgeContext(knowledgeLibraryIds.length > 0
               ? {
+                  ...(requestedKnowledgeContext || {}),
                   enabled: true,
                   libraryIds: knowledgeLibraryIds,
                 }
@@ -3251,13 +3269,243 @@
             }
             setActivePage("tools");
           }
-  
+
+          function normalizeProjectResourceNavigationOrigin(resourceType, resource, projectOrigin = {}) {
+            const normalizedResourceType = String(resourceType || "").trim();
+            if (!["prompt", "knowledge", "evaluation", "metronome", "web_app", "function", "database"].includes(normalizedResourceType)) {
+              return null;
+            }
+            const resourceId = String(
+              resource?.id
+              || resource?.resourceId
+              || resource?.promptId
+              || resource?.libraryId
+              || resource?.evaluationId
+              || resource?.workflowId
+              || ""
+            ).trim();
+            const projectId = String(projectOrigin?.projectId || "").trim();
+            if (!resourceId || !projectId) return null;
+            const projectRecord = projectOrigin?.projectRecord
+              && typeof projectOrigin.projectRecord === "object"
+              && !Array.isArray(projectOrigin.projectRecord)
+              && String(projectOrigin.projectRecord.id || "").trim() === projectId
+                ? projectOrigin.projectRecord
+                : null;
+            const resourceSnapshot = projectOrigin?.projectResourceSnapshot
+              && typeof projectOrigin.projectResourceSnapshot === "object"
+              && !Array.isArray(projectOrigin.projectResourceSnapshot)
+              && String(projectOrigin.projectResourceSnapshot.projectId || "").trim() === projectId
+                ? {
+                    projectId,
+                    serverResources: Array.isArray(projectOrigin.projectResourceSnapshot.serverResources)
+                      ? projectOrigin.projectResourceSnapshot.serverResources.slice()
+                      : [],
+                    fileActivity: Array.isArray(projectOrigin.projectResourceSnapshot.fileActivity)
+                      ? projectOrigin.projectResourceSnapshot.fileActivity.slice()
+                      : [],
+                  }
+                : null;
+            return {
+              projectId,
+              projectName: String(
+                projectOrigin?.projectName
+                || projectOrigin?.name
+                || projectRecord?.name
+                || "Project"
+              ).trim() || "Project",
+              projectRecord,
+              projectResourceSnapshot: resourceSnapshot,
+              resourceType: normalizedResourceType,
+              resourceId,
+              sectionId: "resources",
+            };
+          }
+
+          function openProjectLinkedResourceFromProject(resourceType, resource, projectOrigin = {}) {
+            const origin = normalizeProjectResourceNavigationOrigin(resourceType, resource, projectOrigin);
+            if (!origin) return;
+            projectResourceNavigationOriginRef.current = origin;
+            setProjectResourceNavigationOrigin(origin);
+
+            if (origin.resourceType === "prompt") {
+              openToolsView("prompts", { promptId: origin.resourceId });
+              return;
+            }
+            if (origin.resourceType === "knowledge") {
+              openKnowledgeLibraryPage(
+                origin.resourceId,
+                String(resource?.name || resource?.title || "").trim()
+              );
+              return;
+            }
+            if (origin.resourceType === "evaluation") {
+              openEvaluationDetailPage(origin.resourceId);
+              return;
+            }
+            if (origin.resourceType === "metronome") {
+              openMetronomePage({ workflowId: origin.resourceId });
+              return;
+            }
+            openResourcesView("servers", {
+              serverKind: origin.resourceType,
+              resourceId: origin.resourceId,
+              resourceType: origin.resourceType === "database" ? "database" : "server",
+            });
+          }
+
+          function isProjectResourceNavigationOriginActive(origin = projectResourceNavigationOrigin) {
+            if (!origin?.resourceId) return false;
+            if (origin.resourceType === "prompt") {
+              return activePage === "tools"
+                && toolsView === "prompts"
+                && toolsPromptsHeaderState.mode === "detail"
+                && String(toolsPromptsHeaderState.promptId || "").trim() === origin.resourceId;
+            }
+            if (origin.resourceType === "knowledge") {
+              return activePage === "knowledge"
+                && knowledgePageMode === "library"
+                && String(selectedKnowledgeLibraryId || "").trim() === origin.resourceId;
+            }
+            if (origin.resourceType === "evaluation") {
+              return activePage === "evaluations"
+                && evaluationsPageMode === "detail"
+                && String(selectedEvaluationSetId || "").trim() === origin.resourceId;
+            }
+            if (origin.resourceType === "metronome") {
+              return activePage === "metronome"
+                && metronomeTopNavState?.mode === "editor"
+                && String(metronomeTopNavState?.workflowId || "").trim() === origin.resourceId;
+            }
+            return activePage === "resources"
+              && activeResourcesView === "servers"
+              && resourcesHeaderState.mode === "detail"
+              && activeResourcesServerKind === origin.resourceType
+              && String(resourcesHeaderState.resourceId || "").trim() === origin.resourceId;
+          }
+
+          function returnToProjectResourceOrigin(origin = projectResourceNavigationOrigin) {
+            const projectId = String(origin?.projectId || "").trim();
+            if (!projectId) return;
+            const projectName = String(origin?.projectName || "Project").trim() || "Project";
+            const projectRecord = origin?.projectRecord
+              && typeof origin.projectRecord === "object"
+              && !Array.isArray(origin.projectRecord)
+              && String(origin.projectRecord.id || "").trim() === projectId
+                ? origin.projectRecord
+                : null;
+            const projectResourceSnapshot = origin?.projectResourceSnapshot
+              && typeof origin.projectResourceSnapshot === "object"
+              && !Array.isArray(origin.projectResourceSnapshot)
+              && String(origin.projectResourceSnapshot.projectId || "").trim() === projectId
+                ? origin.projectResourceSnapshot
+                : null;
+            projectResourceNavigationOriginRef.current = null;
+            setProjectResourceNavigationOrigin(null);
+            setLatestInteractedProjectId(projectId);
+            setTasksHeaderState({
+              mode: "project",
+              title: projectName,
+              view: "overview",
+              sectionId: "resources",
+              projectId,
+              detailMode: "",
+              taskId: "",
+              scheduleId: "",
+            });
+            setTasksPageNavigationRequest({
+              token: createPlaygroundPlatformNavigationToken(),
+              projectId,
+              view: "overview",
+              sectionId: "resources",
+              taskId: "",
+              taskDetailMode: "",
+              missionControlAction: "",
+              projectComposerAction: "",
+              projectRecord,
+              projectResourceSnapshot,
+            });
+            setSidebarWorkspaceMode("work");
+            setActivePage("tasks");
+          }
+
+          function resolveProjectResourceBreadcrumbItems(pathItems) {
+            if (!Array.isArray(pathItems) || !pathItems.length) return pathItems;
+            const origin = projectResourceNavigationOrigin;
+            if (!isProjectResourceNavigationOriginActive(origin)) return pathItems;
+            const resourceItem = pathItems[pathItems.length - 1];
+            if (!resourceItem) return pathItems;
+            return [
+              {
+                label: origin.projectName,
+                onClick: () => requestPlatformNavigation(() => returnToProjectResourceOrigin(origin)),
+              },
+              resourceItem,
+            ];
+          }
+
   ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.navigation}
   ${MODELS_APP_SCRIPT_FRAGMENTS.navigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.navigation}${TESTS_APP_SCRIPT_FRAGMENTS.navigation}${KNOWLEDGE_APP_SCRIPT_FRAGMENTS.navigation}${ASSURANCE_APP_SCRIPT_FRAGMENTS.navigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.navigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.navigation}${API_KEYS_APP_SCRIPT_FRAGMENTS.navigation}
   ${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.navigation}
   ${SECURITY_APP_SCRIPT_FRAGMENTS.navigation}
   ${EVIDENCE_AGENTS_APP_SCRIPT_FRAGMENTS.navigation}
   ${SECURITY_APP_SCRIPT_FRAGMENTS.setupReturnLifecycle}
+          function openBatchesOverviewPage(options = {}) {
+            setAccountMenuOpen(false);
+            setProfileEditorOpen(false);
+            setSidebarWorkspaceMode("work");
+            setResourcesHeaderState({ mode: "overview", title: "" });
+            const draft = options && options.draft && typeof options.draft === "object"
+              ? options.draft
+              : null;
+            const jobId = String(options?.jobId || "").trim();
+            if (draft) {
+              try {
+                globalThis.sessionStorage?.setItem(
+                  "computer_agents_batch_draft_v1",
+                  JSON.stringify(draft)
+                );
+              } catch (_error) {
+                // The workspace also accepts a same-window custom event below.
+              }
+            }
+            if (jobId) {
+              try {
+                globalThis.sessionStorage?.setItem("computer_agents_batch_open_v1", jobId);
+              } catch (_error) {
+                // Same-window navigation also dispatches the event below.
+              }
+            }
+            setActivePage("batches");
+            if (draft) {
+              globalThis.setTimeout(() => {
+                globalThis.dispatchEvent?.(new CustomEvent(
+                  "computer-agents:open-batch-composer",
+                  { detail: draft }
+                ));
+              }, 0);
+            }
+            if (jobId) {
+              globalThis.setTimeout(() => {
+                globalThis.dispatchEvent?.(new CustomEvent(
+                  "computer-agents:open-batch",
+                  { detail: jobId }
+                ));
+              }, 0);
+            }
+          }
+
+          function openBatchComposer(draft = {}) {
+            openBatchesOverviewPage({ draft });
+          }
+
+          if (typeof globalThis.window !== "undefined") {
+            globalThis.window.computerAgentsOpenBatchComposer = openBatchComposer;
+            globalThis.window.computerAgentsOpenBatch = (jobId) => {
+              openBatchesOverviewPage({ jobId });
+            };
+          }
+
           function isSidebarPageAvailableForMode(mode) {
             if (activePage === "thread") {
               return true;
@@ -3266,6 +3514,7 @@
               return activePage === "tasks"
                 || activePage === "files"
                 || activePage === "metronome"
+                || activePage === "batches"
                 || activePage === "calendar";
             }
             if (mode === "admin") {

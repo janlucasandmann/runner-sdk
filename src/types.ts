@@ -18,6 +18,7 @@ export type RunnerEventType =
   | "llm_response"
   | "deep_research"
   | "metronome_workflow"
+  | "batch_queued"
   | "permission_request";
 
 export interface RunnerUsage {
@@ -130,6 +131,9 @@ export interface RunnerLog {
     provider?: string;
     providerName?: string;
     runId?: string;
+    batchJobId?: string;
+    batchStatus?: string;
+    admissionReason?: string;
     actionsCount?: number;
     deepResearch?: {
       sessionId?: string;
@@ -240,6 +244,9 @@ export interface RunnerExecuteResult {
   durationSeconds: number;
   usage?: RunnerUsage;
   cancelled: boolean;
+  queued?: boolean;
+  batchJobId?: string | null;
+  admissionReason?: string | null;
 }
 
 export interface RunnerEventHandleResult {

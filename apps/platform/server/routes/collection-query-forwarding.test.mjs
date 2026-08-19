@@ -66,3 +66,26 @@ test("collection gateways preserve paging and projection query parameters", () =
     "/v1/skills?limit=100",
   );
 });
+
+test("account data-control deletes are forwarded to the authenticated control API", () => {
+  const calls = [];
+  const handler = createPlatformResourceRoutes({
+    matchPlaygroundBillingProxyRoute: () => null,
+    proxyUpstreamGet() {},
+    proxyUpstreamJsonRequest(_req, _res, upstreamPath, method) {
+      calls.push({ upstreamPath, method });
+    },
+  });
+
+  const handled = handler(
+    { method: "DELETE" },
+    {},
+    new URL("http://platform.test/api/real/account/data-controls/knowledge-libraries"),
+  );
+
+  assert.equal(handled, true);
+  assert.deepEqual(calls, [{
+    upstreamPath: "/account/data-controls/knowledge-libraries",
+    method: "DELETE",
+  }]);
+});

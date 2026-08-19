@@ -168,9 +168,11 @@ export const METRONOME_PAGE_OVERVIEW_SCRIPT = String.raw`
                 const workflow = resolveWorkflow(row);
                 if (workflow) openMetronomeShareWorkflowModal(workflow);
               },
-              onDelete: (row) => {
-                const workflow = resolveWorkflow(row);
-                if (workflow) deleteWorkflow(workflow);
+              onDelete: (selectedRows) => {
+                const selectedWorkflows = (Array.isArray(selectedRows) ? selectedRows : [])
+                  .map((row) => resolveWorkflow(row))
+                  .filter(Boolean);
+                if (selectedWorkflows.length) void deleteWorkflows(selectedWorkflows);
               },
               onRemoveShared: (row) => {
                 const workflow = resolveWorkflow(row);

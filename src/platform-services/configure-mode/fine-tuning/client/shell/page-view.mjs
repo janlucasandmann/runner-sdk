@@ -19,6 +19,7 @@ export const FINE_TUNING_APP_PAGE_VIEW_SCRIPT = String.raw`        function rend
             setSelectedFineTuningJobId,
             fineTuningPageMode,
             setFineTuningPageMode,
+            fineTuningOverviewScope,
             fineTuningDetailTab,
             setFineTuningDetailTab,
             fineTuningCreateModalOpen,

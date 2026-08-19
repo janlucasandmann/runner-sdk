@@ -1,4 +1,51 @@
 export const TEAMS_RESOURCE_LIFECYCLE_SCRIPT = `	        useEffect(() => {
+          const canLoadTeamBatchJobs = !isDemoMode && hasSessionAuth;
+          if (!canLoadTeamBatchJobs || teamPageActiveTab !== "resources") {
+            setTeamPageBatchJobs([]);
+            return undefined;
+          }
+          let cancelled = false;
+          void (async () => {
+            const jobsById = new Map();
+            let cursor = "";
+            for (let page = 0; page < 20 && !cancelled; page += 1) {
+              const query = new URLSearchParams({ limit: "250" });
+              if (cursor) query.set("cursor", cursor);
+              const { response, data } = await fetchJsonWithTimeout(
+                proxyBackendBase + "/batch-jobs?" + query.toString(),
+                {
+                  method: "GET",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: requestHeaders,
+                },
+                8000,
+              );
+              if (!response.ok) throw new Error("Unable to load Batches");
+              const jobs = Array.isArray(data?.jobs)
+                ? data.jobs
+                : Array.isArray(data?.data)
+                  ? data.data
+                  : [];
+              jobs.forEach((job) => {
+                const id = String(job?.id || "").trim();
+                if (id) jobsById.set(id, job);
+              });
+              const nextCursor = String(data?.nextCursor || "").trim();
+              if (!data?.hasMore || !nextCursor || nextCursor === cursor) break;
+              cursor = nextCursor;
+            }
+            if (!cancelled) setTeamPageBatchJobs(Array.from(jobsById.values()));
+          })().catch(() => {
+            if (!cancelled) {
+              setTeamPageBatchJobs([]);
+            }
+          });
+          return () => {
+            cancelled = true;
+          };
+        }, [hasSessionAuth, isDemoMode, proxyBackendBase, requestHeaders, teamPageActiveTab]);
+        useEffect(() => {
           const canLoadTeamMetronomeWorkflows = !isDemoMode && hasSessionAuth;
           if (!canLoadTeamMetronomeWorkflows || teamPageActiveTab !== "resources") {
             setTeamPageMetronomeWorkflows([]);
@@ -169,4 +216,3 @@ export const TEAMS_RESOURCE_LIFECYCLE_SCRIPT = `	        useEffect(() => {
           };
         }, [hasSessionAuth, isDemoMode, proxyBackendBase, realProjects, requestHeaders, teamPageActiveTab, teamPageSelectedTeamId, teamPageShares, teamPageTeams]);
 `;
-

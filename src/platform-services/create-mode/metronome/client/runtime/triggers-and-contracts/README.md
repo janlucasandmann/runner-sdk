@@ -10,6 +10,7 @@ This directory contains triggers and contracts behavior for the owning feature f
 
 - [`01-trigger-contracts.mjs`](01-trigger-contracts.mjs) — Focused implementation of 01 Trigger Contracts.
 - [`02-dynamic-content-and-resources.mjs`](02-dynamic-content-and-resources.mjs) — Focused implementation of 02 Dynamic Content And Resources.
+- [`03-manual-run-contracts.mjs`](03-manual-run-contracts.mjs) — Contract-driven manual workflow inputs, fixed composer bindings, and canonical trigger simulation envelopes.
 
 ## Working in this directory
 

@@ -33,7 +33,9 @@ export const FILES_PREVIEW_COMPONENTS_SCRIPT = `
           return React.createElement("img", {
             className: baseClassName + " is-asset is-folder",
             src: PLAYGROUND_FOLDER_ICON_URL,
-            alt: "Folder",
+            alt: "",
+            "aria-hidden": "true",
+            draggable: false,
           });
         }
         if (kind === "image") {
@@ -61,7 +63,9 @@ export const FILES_PREVIEW_COMPONENTS_SCRIPT = `
         return React.createElement("img", {
           className: baseClassName + " is-asset",
           src: PLAYGROUND_TEXT_FILE_ICON_URL,
-          alt: entry?.name || "File",
+          alt: "",
+          "aria-hidden": "true",
+          draggable: false,
         });
       }
 

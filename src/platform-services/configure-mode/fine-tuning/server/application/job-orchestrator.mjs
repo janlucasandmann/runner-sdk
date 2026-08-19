@@ -338,6 +338,9 @@ function buildEvaluationRunOptions(job, target, {
     evaluationVersionId: target.evaluationVersionId,
     evaluationVersionNumber: target.evaluationVersionNumber,
     evaluationVersionLabel: target.evaluationVersionLabel,
+    ...(configuration.knowledgeContext
+      ? { knowledgeContext: configuration.knowledgeContext }
+      : {}),
     targetAgentId: targetAgent.id,
     targetAgentName: targetAgent.name,
     targetAgentPhotoUrl: targetAgent.photoUrl,
@@ -409,6 +412,9 @@ function buildEvaluationRunOptions(job, target, {
       fine_tuning_phase: phase,
       fineTuningFingerprint: stableId("fine_tune_fingerprint", fingerprint),
       fine_tuning_fingerprint: stableId("fine_tune_fingerprint", fingerprint),
+      ...(configuration.knowledgeContext
+        ? { knowledgeContext: configuration.knowledgeContext }
+        : {}),
     },
   };
 }

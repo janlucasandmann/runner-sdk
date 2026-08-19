@@ -120,6 +120,28 @@ export const METRONOME_APP_TOP_NAV_ACTIONS_SCRIPT = `
 	                label: "Duplicate",
 	                onClick: () => invokeMetronomeHeaderAction("duplicate"),
 	              }),
+	              workflowId
+	                ? React.createElement(PlatformResourceActionMenuItem, {
+	                    icon: React.createElement(Truck, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+	                    label: "Add to Batches",
+	                    onClick: () => {
+	                      setMetronomeTopNavMenuOpen(false);
+	                      openBatchComposer({
+	                        name: "Run " + title,
+	                        description: "Metronome workflow queued from its definition page.",
+	                        targetKind: "metronome_run",
+	                        targetResourceId: workflowId,
+	                        targetVersionId: String(state.versionId || state.publishedVersionId || "").trim() || null,
+	                        definition: {
+	                          metronomeId: workflowId,
+	                          versionId: String(state.versionId || state.publishedVersionId || "").trim() || null,
+	                          input: {},
+	                        },
+	                        startPolicy: "manual",
+	                      });
+	                    },
+	                  })
+	                : null,
 	              !isReadOnly ? React.createElement(PlatformResourceActionsDivider, null) : null,
 	              !isReadOnly
 	                ? React.createElement(PlatformResourceActionMenuItem, {

@@ -466,6 +466,314 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
             );
           };
 
+          const renderMetronomeExecutionInputFields = ({
+            requestKey,
+            inputFields,
+            inputValues,
+            isBusy,
+            composerSubmitRequest,
+            composerBinding = null,
+            onInputValueChange,
+            onComposerSubmit,
+            emptyContent = "This run does not require input.",
+            keyPrefix = "metronome-execution-composer",
+          }) => {
+            const fields = Array.isArray(inputFields) ? inputFields : [];
+            const values = inputValues && typeof inputValues === "object" ? inputValues : {};
+            if (!fields.length) {
+              return React.createElement("div", {
+                className: "playground-metronome-execution-test-empty-input",
+              }, emptyContent);
+            }
+            const boundAgentId = String(composerBinding?.agentId || "").trim();
+            const boundEnvironmentId = String(composerBinding?.environmentId || "").trim();
+            const composerAgents = boundAgentId && !metronomeAgentOptions.some((option) => option.id === boundAgentId)
+              ? [{ id: boundAgentId, name: composerBinding?.agentName || boundAgentId }, ...metronomeAgentOptions]
+              : metronomeAgentOptions;
+            const composerEnvironments = boundEnvironmentId && !metronomeComputerOptions.some((option) => option.id === boundEnvironmentId)
+              ? [{ id: boundEnvironmentId, name: composerBinding?.environmentName || boundEnvironmentId }, ...metronomeComputerOptions]
+              : metronomeComputerOptions;
+            return React.createElement("div", { className: "playground-metronome-execution-test-fields" },
+              fields.map((field, index) => {
+                const label = React.createElement("span", {
+                  className: "playground-metronome-execution-test-field-label",
+                }, field.label,
+                  field.required
+                    ? React.createElement("span", {
+                        className: "playground-metronome-execution-test-field-required",
+                        "aria-hidden": "true",
+                      }, " *")
+                    : null
+                );
+                const description = field.description
+                  ? React.createElement("span", {
+                      className: "playground-metronome-execution-test-field-description",
+                    }, field.description)
+                  : null;
+                if (field.control === "task-input") {
+                  return React.createElement("div", {
+                    key: field.id,
+                    className: "playground-metronome-execution-test-field is-task-input",
+                  },
+                    React.createElement(RunnerChat, {
+                      ...threadComposerProps,
+                      key: keyPrefix + ":" + requestKey + ":" + field.id,
+                      backendUrl: threadComposerProps?.backendUrl || backendUrl,
+                      apiKey: threadComposerProps?.apiKey || apiKey,
+                      requestHeaders: threadComposerProps?.requestHeaders || requestHeaders,
+                      className: "playground-metronome-execution-test-composer",
+                      initialTask: String(values[field.id] ?? ""),
+                      inputMode: "computer-agents",
+                      placeholder: field.placeholder || "Describe the input for this run",
+                      disabled: isBusy || field.readOnly === true,
+                      autoCreateThread: false,
+                      autoFocusComposer: index === 0,
+                      keepFocusOnSubmit: false,
+                      showUsageInStatus: false,
+                      portalComposerSuggestions: true,
+                      ...(composerBinding ? {
+                        agentId: boundAgentId,
+                        environmentId: boundEnvironmentId,
+                        projectId: null,
+                        agents: composerAgents,
+                        environments: composerEnvironments,
+                        hideAgentSelector: false,
+                        hideEnvironmentSelector: false,
+                        lockAgentSelector: true,
+                        lockEnvironmentSelector: true,
+                      } : {}),
+                      onComposerDraftChange: (value) => onInputValueChange(field.id, value),
+                      composerSubmitRequest: composerSubmitRequest ?? null,
+                      onComposerSubmit: (payload) => onComposerSubmit(field.id, payload),
+                    }),
+                    description
+                  );
+                }
+                if (field.control === "selector") {
+                  return React.createElement("div", {
+                    key: field.id,
+                    className: "playground-metronome-execution-test-field",
+                  },
+                    label,
+                    React.createElement(PlatformSelector, {
+                      value: String(values[field.id] ?? ""),
+                      options: Array.isArray(field.options) ? field.options : [],
+                      placeholder: field.placeholder || "Select an option",
+                      disabled: isBusy || field.readOnly === true,
+                      fullWidth: true,
+                      ariaLabel: field.label,
+                      className: "playground-metronome-execution-test-selector",
+                      onValueChange: (value) => onInputValueChange(field.id, value),
+                    }),
+                    description
+                  );
+                }
+                if (field.control === "toggle") {
+                  return React.createElement("div", {
+                    key: field.id,
+                    className: "playground-metronome-execution-test-field is-toggle",
+                  },
+                    React.createElement("div", { className: "playground-metronome-execution-test-field-copy" }, label, description),
+                    React.createElement(PlatformToggle, {
+                      checked: values[field.id] === true,
+                      disabled: isBusy || field.readOnly === true,
+                      "aria-label": field.label,
+                      onCheckedChange: (checked) => onInputValueChange(field.id, checked),
+                    })
+                  );
+                }
+                const sharedInputProps = {
+                  value: values[field.id] ?? "",
+                  placeholder: field.placeholder || undefined,
+                  disabled: isBusy || field.readOnly === true,
+                  readOnly: field.readOnly === true,
+                  autoFocus: index === 0,
+                  className: "playground-metronome-execution-test-input",
+                  onChange: (event) => onInputValueChange(field.id, event.target.value),
+                };
+                return React.createElement("label", {
+                  key: field.id,
+                  className: "playground-metronome-execution-test-field",
+                },
+                  label,
+                  field.control === "textarea" || field.control === "list"
+                    ? React.createElement("textarea", {
+                        ...sharedInputProps,
+                        rows: field.control === "list" ? 4 : 5,
+                        spellCheck: field.control !== "list",
+                      })
+                    : React.createElement("input", {
+                        ...sharedInputProps,
+                        type: field.control === "number"
+                          ? "number"
+                          : field.control === "url"
+                            ? "url"
+                            : field.control === "date"
+                              ? "date"
+                              : field.control === "datetime-local"
+                                ? "datetime-local"
+                                : "text",
+                      }),
+                  description
+                );
+              })
+            );
+          };
+
+          const renderMetronomeManualRunDialog = () => {
+            const dialog = metronomeManualRunDialog;
+            if (!dialog) return null;
+            const inputFields = Array.isArray(dialog.inputFields) ? dialog.inputFields : [];
+            const inputValues = dialog.inputValues && typeof dialog.inputValues === "object"
+              ? dialog.inputValues
+              : {};
+            const isBusy = dialog.status === "starting";
+            const hasMissingRequiredInput = inputFields.some((field) => {
+              if (!field.required || field.valueType === "boolean") return false;
+              return !String(inputValues[field.id] ?? "").trim();
+            });
+            const updateInputValue = (fieldId, value) => setMetronomeManualRunDialog((current) => current
+              ? {
+                  ...current,
+                  inputValues: { ...(current.inputValues || {}), [fieldId]: value },
+                  status: "idle",
+                  error: "",
+                }
+              : current);
+            const contracts = Array.isArray(dialog.contracts) ? dialog.contracts : [];
+            return React.createElement(PlatformModal, {
+              open: true,
+              size: "medium",
+              className: "playground-metronome-execution-test-modal playground-metronome-manual-run-modal",
+              title: "Run " + (activeWorkflow?.name || "workflow"),
+              closeButtonLabel: "Close manual workflow run",
+              onClose: () => {
+                if (!isBusy) setMetronomeManualRunDialog(null);
+              },
+              footer: React.createElement(React.Fragment, null,
+                React.createElement(PlatformSecondaryButton, {
+                  type: "button",
+                  size: "medium",
+                  disabled: isBusy,
+                  onClick: () => setMetronomeManualRunDialog(null),
+                }, "Cancel"),
+                React.createElement(PlatformPrimaryButton, {
+                  type: "button",
+                  size: "medium",
+                  disabled: isBusy || hasMissingRequiredInput,
+                  onClick: requestManualMetronomeRun,
+                }, isBusy ? "Starting..." : "Run workflow")
+              ),
+            },
+              React.createElement("div", { className: "playground-metronome-execution-test-body playground-metronome-manual-run-body" },
+                contracts.length > 1
+                  ? React.createElement("div", { className: "playground-metronome-execution-test-field playground-metronome-manual-run-trigger-field" },
+                      React.createElement("span", {
+                        className: "playground-metronome-execution-test-field-label",
+                      }, "Trigger simulation"),
+                      React.createElement(PlatformSelector, {
+                        value: dialog.contractId,
+                        options: contracts.map((contract) => ({ value: contract.id, label: contract.label })),
+                        disabled: isBusy,
+                        fullWidth: true,
+                        ariaLabel: "Trigger simulation",
+                        className: "playground-metronome-execution-test-selector",
+                        onValueChange: selectMetronomeManualRunContract,
+                      })
+                    )
+                  : null,
+                renderMetronomeExecutionInputFields({
+                  requestKey: dialog.requestKey,
+                  inputFields,
+                  inputValues,
+                  isBusy,
+                  composerSubmitRequest: dialog.composerSubmitRequest,
+                  composerBinding: dialog.contract?.composerBinding || null,
+                  onInputValueChange: updateInputValue,
+                  onComposerSubmit: submitMetronomeManualRunComposer,
+                  emptyContent: "This trigger does not require additional input.",
+                  keyPrefix: "metronome-manual-run-composer",
+                }),
+                dialog.error
+                  ? React.createElement("div", { className: "playground-metronome-execution-test-error", role: "alert" }, dialog.error)
+                  : null
+              )
+            );
+          };
+
+          const renderMetronomeExecutionTestDialog = () => {
+            const dialog = metronomeExecutionDialog;
+            if (!dialog) return null;
+            const isSlice = dialog.selection?.type === "slice";
+            const selectedIds = dialog.selection?.nodeIds
+              || [dialog.selection?.nodeId].filter(Boolean);
+            const selectedLabels = selectedIds.map((nodeId) => {
+              const node = nodes.find((candidate) => String(candidate?.id || "") === String(nodeId));
+              return node ? getMetronomeNodeDisplayLabel(node) : String(nodeId || "Node");
+            });
+            const inputFields = Array.isArray(dialog.inputFields) ? dialog.inputFields : [];
+            const inputValues = dialog.inputValues && typeof dialog.inputValues === "object"
+              ? dialog.inputValues
+              : {};
+            const isBusy = dialog.status === "starting";
+            const hasMissingRequiredInput = inputFields.some((field) => {
+              if (!field.required || field.valueType === "boolean") return false;
+              return !String(inputValues[field.id] ?? "").trim();
+            });
+            const updateInputValue = (fieldId, value) => setMetronomeExecutionDialog((current) => current
+              ? {
+                  ...current,
+                  inputValues: { ...(current.inputValues || {}), [fieldId]: value },
+                  status: "idle",
+                  error: "",
+                }
+              : current);
+            const dialogTitle = isSlice
+              ? "Test " + selectedLabels.length + " nodes"
+              : "Test " + (selectedLabels[0] || "node");
+            return React.createElement(PlatformModal, {
+              open: true,
+              size: "medium",
+              className: "playground-metronome-execution-test-modal",
+              title: dialogTitle,
+              closeButtonLabel: "Close workflow test",
+              onClose: () => {
+                if (!isBusy) setMetronomeExecutionDialog(null);
+              },
+              footer: React.createElement(React.Fragment, null,
+                React.createElement(PlatformSecondaryButton, {
+                  type: "button",
+                  size: "medium",
+                  disabled: isBusy,
+                  onClick: () => setMetronomeExecutionDialog(null),
+                }, "Cancel"),
+                React.createElement(PlatformPrimaryButton, {
+                  type: "button",
+                  size: "medium",
+                  disabled: isBusy || hasMissingRequiredInput,
+                  onClick: requestMetronomeExecutionTest,
+                }, isBusy ? "Starting..." : isSlice ? "Run slice" : "Run node")
+              ),
+            },
+              React.createElement("div", { className: "playground-metronome-execution-test-body" },
+                renderMetronomeExecutionInputFields({
+                  requestKey: dialog.requestKey,
+                  inputFields,
+                  inputValues,
+                  isBusy,
+                  composerSubmitRequest: dialog.composerSubmitRequest,
+                  onInputValueChange: updateInputValue,
+                  onComposerSubmit: submitMetronomeExecutionTestComposer,
+                  emptyContent: "This node does not require test input.",
+                  keyPrefix: "metronome-test-composer",
+                }),
+                dialog.error
+                  ? React.createElement("div", { className: "playground-metronome-execution-test-error", role: "alert" }, dialog.error)
+                  : null
+              )
+            );
+          };
+
           const renderMetronomeDeploymentHistoryModal = () => {
             if (!isMetronomeDeploymentHistoryModalOpen) return null;
             return React.createElement(PlatformModalBackdrop, {
@@ -507,6 +815,8 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
             renderWorkflowVersionModal(),
             renderWorkflowVersionSaveDialog(),
             renderMetronomeShareWorkflowModal(),
+            renderMetronomeManualRunDialog(),
+            renderMetronomeExecutionTestDialog(),
             renderMetronomeDeploymentHistoryModal()
           );
         }

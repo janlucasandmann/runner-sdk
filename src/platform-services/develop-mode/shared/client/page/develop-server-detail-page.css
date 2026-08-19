@@ -306,7 +306,7 @@
   max-height: none;
 }
 
-.playground-source-server-detail-main .playground-function-code-tab {
+.playground-source-server-detail-main .playground-source-server-code-tab {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
@@ -318,7 +318,7 @@
   overflow: hidden;
 }
 
-.playground-source-server-detail-main .playground-function-code-identity {
+.playground-source-server-detail-main .playground-source-server-code-identity {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
@@ -330,7 +330,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.playground-source-server-detail-main .playground-function-code-identity-icon {
+.playground-source-server-detail-main .playground-source-server-code-identity-icon {
   width: 52px;
   height: 52px;
   flex: 0 0 52px;
@@ -342,7 +342,7 @@
   color: rgba(255, 255, 255, 0.96);
 }
 
-.playground-source-server-detail-main .playground-function-code-identity-copy {
+.playground-source-server-detail-main .playground-source-server-code-identity-copy {
   min-width: 0;
   flex: 1 1 0;
   display: flex;
@@ -350,8 +350,8 @@
   gap: 6px;
 }
 
-.playground-source-server-detail-main .playground-function-code-name-input,
-.playground-source-server-detail-main .playground-function-code-description-input {
+.playground-source-server-detail-main .playground-source-server-code-name-input,
+.playground-source-server-detail-main .playground-source-server-code-description-input {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
@@ -365,26 +365,26 @@
   letter-spacing: 0;
 }
 
-.playground-source-server-detail-main .playground-function-code-name-input {
+.playground-source-server-detail-main .playground-source-server-code-name-input {
   color: rgba(255, 255, 255, 0.96);
   font-size: 20px;
   line-height: 1.3;
   font-weight: 400;
 }
 
-.playground-source-server-detail-main .playground-function-code-description-input {
+.playground-source-server-detail-main .playground-source-server-code-description-input {
   color: rgba(255, 255, 255, 0.62);
   font-size: 12px;
   line-height: 1.5;
   font-weight: 400;
 }
 
-.playground-source-server-detail-main .playground-function-code-name-input::placeholder,
-.playground-source-server-detail-main .playground-function-code-description-input::placeholder {
+.playground-source-server-detail-main .playground-source-server-code-name-input::placeholder,
+.playground-source-server-detail-main .playground-source-server-code-description-input::placeholder {
   color: rgba(255, 255, 255, 0.35);
 }
 
-.playground-source-server-detail-main .playground-function-code-workspace {
+.playground-source-server-detail-main .playground-source-server-code-workspace {
   min-width: 0;
   min-height: 0;
   flex: 1 1 0;
@@ -394,7 +394,7 @@
 }
 
 .playground-source-server-detail-main
-.playground-function-code-workspace
+.playground-source-server-code-workspace
 > .platform-code-editor-workspace {
   width: 100%;
   min-height: 0;

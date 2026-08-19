@@ -546,6 +546,200 @@ export const METRONOME_TRIGGERS_02_FRAGMENT = String.raw`        function normal
           };
         }
 
+        function createMetronomeNodeTestInputField(path, label, options = {}) {
+          const normalizedPath = splitMetronomeDynamicContentPath(path).join(".");
+          return {
+            id: normalizedPath || String(options.id || "input"),
+            path: normalizedPath || String(options.id || "input"),
+            label: String(label || titleCaseMetronomeDynamicContentPathPart(normalizedPath)).trim(),
+            control: String(options.control || "text").trim(),
+            valueType: String(options.valueType || "string").trim(),
+            placeholder: String(options.placeholder || "").trim(),
+            description: String(options.description || "").trim(),
+            required: options.required === true,
+            defaultValue: options.defaultValue ?? "",
+            options: Array.isArray(options.options)
+              ? options.options.map((option) => ({
+                  value: String(option?.value ?? option?.id ?? option ?? ""),
+                  label: String(option?.label ?? option ?? ""),
+                }))
+              : [],
+          };
+        }
+
+        function getMetronomeNodeTestInputControl(type, value, schema = {}) {
+          const declaredType = Array.isArray(type) ? type.find((entry) => entry !== "null") : type;
+          const normalizedType = String(declaredType || inferMetronomeDynamicContentValueType(value) || "string").toLowerCase();
+          const enumValues = Array.isArray(schema?.enum) ? schema.enum : [];
+          if (enumValues.length) {
+            return {
+              control: "selector",
+              valueType: normalizedType === "number" || normalizedType === "integer" ? "number" : "string",
+              options: enumValues.map((entry) => ({ value: entry, label: entry })),
+            };
+          }
+          if (normalizedType === "boolean") return { control: "toggle", valueType: "boolean" };
+          if (normalizedType === "number" || normalizedType === "integer") return { control: "number", valueType: "number" };
+          if (normalizedType === "array") return { control: "list", valueType: "array" };
+          const format = String(schema?.format || "").toLowerCase();
+          if (format === "date") return { control: "date", valueType: "string" };
+          if (format === "date-time" || format === "datetime") return { control: "datetime-local", valueType: "string" };
+          if (format === "uri" || format === "url") {
+            return { control: "url", valueType: "string" };
+          }
+          return {
+            control: typeof value === "string" && value.length > 80 ? "textarea" : "text",
+            valueType: "string",
+          };
+        }
+
+        function collectMetronomeNodeTestInputFields(value, options = {}, output = [], prefix = "", depth = 0) {
+          if (!value || typeof value !== "object" || Array.isArray(value) || output.length >= 64 || depth > 4) {
+            return output;
+          }
+          const properties = value.properties && typeof value.properties === "object" && !Array.isArray(value.properties)
+            ? value.properties
+            : null;
+          const source = properties || value;
+          const requiredFields = new Set(Array.isArray(value.required) ? value.required.map((entry) => String(entry || "")) : []);
+          Object.entries(source).forEach(([key, rawValue]) => {
+            if (output.length >= 64) return;
+            const propertySchema = properties && rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)
+              ? rawValue
+              : {};
+            const propertyValue = properties
+              ? propertySchema.default ?? propertySchema.example ?? ""
+              : rawValue;
+            const path = prefix ? prefix + "." + key : key;
+            const nestedProperties = propertySchema.properties && typeof propertySchema.properties === "object"
+              ? propertySchema
+              : propertyValue && typeof propertyValue === "object" && !Array.isArray(propertyValue)
+                ? propertyValue
+                : null;
+            if (nestedProperties) {
+              collectMetronomeNodeTestInputFields(nestedProperties, options, output, path, depth + 1);
+              return;
+            }
+            const type = propertySchema.type || inferMetronomeDynamicContentValueType(propertyValue) || "string";
+            const control = getMetronomeNodeTestInputControl(type, propertyValue, propertySchema);
+            const configuredDefault = typeof propertyValue === "string" && propertyValue.includes("{{")
+              ? ""
+              : propertyValue;
+            output.push(createMetronomeNodeTestInputField(path, propertySchema.title || titleCaseMetronomeDynamicContentPathPart(key), {
+              ...control,
+              placeholder: propertySchema.placeholder || propertySchema.description || "",
+              description: propertySchema.description || "",
+              required: requiredFields.has(key),
+              defaultValue: configuredDefault ?? "",
+            }));
+          });
+          return output;
+        }
+
+        function getMetronomeNodeTestInputObject(config, keys) {
+          for (const key of keys) {
+            const snakeKey = key.replace(/[A-Z]/g, (letter) => "_" + letter.toLowerCase());
+            const parsed = parseMetronomeDynamicContentJsonObject(config[key] ?? config[snakeKey]);
+            if (parsed && Object.keys(parsed).length) return parsed;
+          }
+          return null;
+        }
+
+        function getMetronomeNodeTestInputFields(node) {
+          const kind = getMetronomeNodeKindValue(node);
+          const subtype = getMetronomeNodeSubtypeValue(node).toLowerCase();
+          const config = getMetronomeNodeConfigRecord(node);
+          const field = (path, label, options) => createMetronomeNodeTestInputField(path, label, options);
+          const promptField = (label = "Prompt") => field("prompt", label, {
+            control: "task-input",
+            placeholder: "Describe the input for this test run.",
+          });
+
+          if (kind === "action" || kind === "imagine") {
+            return [promptField()];
+          }
+          if (kind === "trigger") {
+            if (subtype.includes("email")) {
+              return [
+                field("from", "Sender", { placeholder: "sender@example.com" }),
+                field("subject", "Subject"),
+                field("body", "Message", { control: "textarea" }),
+              ];
+            }
+            return [promptField("Trigger input")];
+          }
+          if (kind === "function") {
+            const shape = getMetronomeNodeTestInputObject(config, [
+              "inputSchema", "inputSchemaJson", "parameters", "inputJson", "payloadJson", "bodyJson",
+            ]);
+            const fields = collectMetronomeNodeTestInputFields(shape);
+            return fields.length ? fields : [field("input", "Input", {
+              control: "textarea",
+              placeholder: "Enter the value passed to this function.",
+            })];
+          }
+          if (kind === "database") {
+            const operation = String(config.operation || config.action || subtype || "").toLowerCase();
+            const fields = [];
+            if (/get|read|update|delete|archive/.test(operation) && !(config.documentId || config.document_id)) {
+              fields.push(field("documentId", "Document ID"));
+            }
+            const shape = getMetronomeNodeTestInputObject(config, [
+              "documentSchema", "documentJson", "documentTemplateJson", "recordSchema", "fieldsJson",
+            ]);
+            collectMetronomeNodeTestInputFields(shape, {}, fields);
+            if (!fields.length && /list|query|search/.test(operation)) {
+              fields.push(field("query", "Query", { placeholder: "Enter the records to find." }));
+            }
+            return fields.length ? fields : [field("record", "Record", {
+              control: "textarea",
+              placeholder: "Enter the record content for this test.",
+            })];
+          }
+          if (kind === "firecrawl") {
+            const operation = String(config.operation || config.action || subtype || "scrape").toLowerCase();
+            const fields = operation === "search"
+              ? [field("query", "Search query", { required: true })]
+              : [field("url", "URL", { control: "url", required: true, placeholder: "https://example.com" })];
+            if (operation === "extract") fields.push(promptField("Extraction prompt"));
+            return fields;
+          }
+          if (kind === "table") {
+            return [field("content", "Table content", {
+              control: "textarea",
+              placeholder: "Paste CSV or tab-separated rows.",
+            })];
+          }
+          if (kind === "metronome") {
+            const shape = getMetronomeNodeTestInputObject(config, ["inputSchema", "inputSchemaJson", "inputJson"]);
+            const fields = collectMetronomeNodeTestInputFields(shape);
+            return fields.length ? fields : [promptField("Workflow input")];
+          }
+          if (kind === "ticket") {
+            return [
+              field("title", "Title"),
+              field("description", "Description", { control: "textarea" }),
+            ];
+          }
+          if (kind === "condition") {
+            return [field("value", "Value to evaluate", { placeholder: "Enter the value used by this condition." })];
+          }
+          if (kind === "loop") {
+            return [field("items", "Items", {
+              control: "list",
+              valueType: "array",
+              placeholder: "Enter one item per line.",
+            })];
+          }
+          if (kind === "approval") {
+            return [field("message", "Approval message", { control: "textarea" })];
+          }
+          if (kind === "end" || kind === "note" || kind === "wait") {
+            return [];
+          }
+          return [field("input", "Input", { control: "textarea" })];
+        }
+
         function parseMetronomeDynamicContentPathExpression(expression) {
           const text = String(expression || "").trim();
           const parts = [];

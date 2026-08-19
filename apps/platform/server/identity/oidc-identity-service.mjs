@@ -11,15 +11,22 @@ import { createDexLocalAccountService } from "./dex-local-account-service.mjs";
 import {
   createSignUpRateLimiter,
   readUrlEncodedForm,
+  renderForgotPasswordPage,
+  renderResetPasswordPage,
   renderSignUpPage,
+  validatePasswordFields,
+  validateResetEmail,
   validateSignUpFields,
 } from "./local-account-pages.mjs";
 import { createOidcClient } from "./oidc-client.mjs";
+import { createPasswordResetMailer } from "./password-reset-mailer.mjs";
+import { createPasswordResetService } from "./password-reset-service.mjs";
 import { createPrincipalAssertionSigner } from "./principal-assertion.mjs";
 import { createPlatformSessionCodec } from "./session-codec.mjs";
 
 const OIDC_TRANSACTION_TTL_SECONDS = 10 * 60;
 const SIGN_UP_CSRF_TTL_SECONDS = 15 * 60;
+const PASSWORD_RESET_CSRF_TTL_SECONDS = 15 * 60;
 const ACCOUNT_JSON_REQUEST_BODY_LIMIT_BYTES = 1024 * 1024;
 const PROFILE_IMAGE_RESPONSE_LIMIT_BYTES = 2 * 1024 * 1024;
 const ALLOWED_OIDC_PROMPTS = new Set([
@@ -81,7 +88,7 @@ function sendJson(response, status, payload, headers = {}) {
   response.end(body);
 }
 
-function sendHtml(response, status, html) {
+function sendHtml(response, status, html, headers = {}) {
   response.writeHead(status, {
     "Content-Type": "text/html; charset=utf-8",
     "Content-Length": Buffer.byteLength(html),
@@ -89,6 +96,7 @@ function sendHtml(response, status, html) {
     "Content-Security-Policy": "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
     "Referrer-Policy": "no-referrer",
     "X-Content-Type-Options": "nosniff",
+    ...headers,
   });
   response.end(html);
 }
@@ -240,6 +248,27 @@ export function createOidcIdentityService(config, dependencies = {}) {
     || createDexLocalAccountService(config.oidc.localAccounts);
   const signUpRateLimiter = dependencies.signUpRateLimiter
     || createSignUpRateLimiter();
+  const passwordResetRequestIpRateLimiter = dependencies.passwordResetRequestIpRateLimiter
+    || createSignUpRateLimiter({ limit: 10, windowMs: 15 * 60_000 });
+  const passwordResetRequestEmailRateLimiter = dependencies.passwordResetRequestEmailRateLimiter
+    || createSignUpRateLimiter({ limit: 3, windowMs: 15 * 60_000 });
+  const passwordResetAttemptRateLimiter = dependencies.passwordResetAttemptRateLimiter
+    || createSignUpRateLimiter({ limit: 10, windowMs: 15 * 60_000 });
+  const passwordResetMailer = dependencies.passwordResetMailer !== undefined
+    ? dependencies.passwordResetMailer
+    : dependencies.passwordResetService !== undefined
+      ? null
+      : createPasswordResetMailer(config.passwordReset, { fetchImpl });
+  const passwordResetService = dependencies.passwordResetService !== undefined
+    ? dependencies.passwordResetService
+    : createPasswordResetService({
+      accountService: localAccountService,
+      mailer: passwordResetMailer,
+      platformOrigin: config.platformOrigin,
+      sessionCodec,
+      statePath: config.passwordReset?.statePath,
+      tokenTtlSeconds: config.passwordReset?.tokenTtlSeconds,
+    });
   const controlApiRoot = deriveControlApiRoot(config.defaultUpstreamOrigin);
   const transactionCookieName = `${config.platformSessionCookieName}_oidc`;
   const transactionCookiePrefix = `${transactionCookieName}_`;
@@ -310,6 +339,177 @@ export function createOidcIdentityService(config, dependencies = {}) {
       { nonce: randomBase64Url() },
       SIGN_UP_CSRF_TTL_SECONDS,
     );
+  }
+
+  async function createPasswordResetRequestCsrfToken() {
+    return sessionCodec.seal(
+      "password_reset_request_csrf",
+      { nonce: randomBase64Url() },
+      PASSWORD_RESET_CSRF_TTL_SECONDS,
+    );
+  }
+
+  async function createPasswordResetCsrfToken(token) {
+    return sessionCodec.seal(
+      "password_reset_csrf",
+      {
+        nonce: randomBase64Url(),
+        tokenDigest: createHash("sha256").update(token).digest("hex"),
+      },
+      PASSWORD_RESET_CSRF_TTL_SECONDS,
+    );
+  }
+
+  async function writeForgotPasswordPage(
+    response,
+    { status = 200, values, error, sent = false } = {},
+  ) {
+    const csrfToken = sent ? "" : await createPasswordResetRequestCsrfToken();
+    sendHtml(response, status, renderForgotPasswordPage({
+      csrfToken,
+      values,
+      error,
+      sent,
+    }));
+  }
+
+  async function handleForgotPasswordRequest(request, response) {
+    if (!passwordResetService) {
+      await writeForgotPasswordPage(response, {
+        status: 503,
+        error: "Password reset is temporarily unavailable. Please try again later.",
+      });
+      return;
+    }
+    if (request.method === "GET") {
+      await writeForgotPasswordPage(response);
+      return;
+    }
+    let fields;
+    try {
+      fields = await readUrlEncodedForm(request);
+    } catch (error) {
+      await writeForgotPasswordPage(response, {
+        status: 400,
+        error: error instanceof Error ? error.message : "The form could not be read.",
+      });
+      return;
+    }
+    const csrf = await sessionCodec.open(
+      fields.csrf,
+      "password_reset_request_csrf",
+    );
+    if (!csrf?.nonce) {
+      await writeForgotPasswordPage(response, {
+        status: 400,
+        values: fields,
+        error: "This password reset form expired. Please try again.",
+      });
+      return;
+    }
+    const validation = validateResetEmail(fields.email);
+    if (!validation.ok) {
+      await writeForgotPasswordPage(response, {
+        status: 400,
+        values: { email: validation.email },
+        error: validation.error,
+      });
+      return;
+    }
+    const emailRateKey = createHash("sha256")
+      .update(validation.email)
+      .digest("hex");
+    if (
+      !passwordResetRequestIpRateLimiter.consume(requestClientAddress(request))
+      || !passwordResetRequestEmailRateLimiter.consume(emailRateKey)
+    ) {
+      await writeForgotPasswordPage(response, {
+        status: 429,
+        values: { email: validation.email },
+        error: "Too many password reset requests. Please try again later.",
+      });
+      return;
+    }
+    try {
+      await passwordResetService.request(validation.email);
+    } catch (error) {
+      reportIdentityFailure("password reset email delivery", error);
+    }
+    await writeForgotPasswordPage(response, { sent: true });
+  }
+
+  async function writeResetPasswordPage(
+    response,
+    { status = 200, token = "", error, complete = false, invalid = false } = {},
+  ) {
+    const csrfToken = token && !complete && !invalid
+      ? await createPasswordResetCsrfToken(token)
+      : "";
+    sendHtml(response, status, renderResetPasswordPage({
+      csrfToken,
+      token,
+      error,
+      complete,
+      invalid,
+    }), complete ? {
+      "Set-Cookie": clearCookie(
+        config.platformSessionCookieName,
+        cookieOptions,
+      ),
+    } : {});
+  }
+
+  async function handleResetPasswordRequest(request, response, url) {
+    if (!passwordResetService) {
+      await writeResetPasswordPage(response, { status: 503, invalid: true });
+      return;
+    }
+    if (request.method === "GET") {
+      const token = String(url.searchParams.get("token") || "");
+      if (!token || !(await passwordResetService.inspect(token))) {
+        await writeResetPasswordPage(response, { status: 400, invalid: true });
+        return;
+      }
+      await writeResetPasswordPage(response, { token });
+      return;
+    }
+    let fields;
+    try {
+      fields = await readUrlEncodedForm(request);
+    } catch {
+      await writeResetPasswordPage(response, { status: 400, invalid: true });
+      return;
+    }
+    const token = String(fields.token || "");
+    const csrf = await sessionCodec.open(fields.csrf, "password_reset_csrf");
+    const tokenDigest = createHash("sha256").update(token).digest("hex");
+    if (
+      !csrf?.nonce
+      || !equalSecretValues(csrf.tokenDigest, tokenDigest)
+      || !passwordResetAttemptRateLimiter.consume(requestClientAddress(request))
+    ) {
+      await writeResetPasswordPage(response, { status: 400, invalid: true });
+      return;
+    }
+    const validation = validatePasswordFields(fields);
+    if (!validation.ok) {
+      if (!(await passwordResetService.inspect(token))) {
+        await writeResetPasswordPage(response, { status: 400, invalid: true });
+        return;
+      }
+      await writeResetPasswordPage(response, {
+        status: 400,
+        token,
+        error: validation.error,
+      });
+      return;
+    }
+    const result = await passwordResetService.reset(token, validation.password);
+    if (!result.updated) {
+      await writeResetPasswordPage(response, { status: 400, invalid: true });
+      return;
+    }
+    await writeResetPasswordPage(response, { complete: true });
   }
 
   async function writeSignUpPage(response, { status = 200, values, error } = {}) {
@@ -413,6 +613,29 @@ export function createOidcIdentityService(config, dependencies = {}) {
     ) {
       return null;
     }
+    if (
+      typeof localAccountService?.findAccount === "function"
+      && session.principal.email
+    ) {
+      const account = await localAccountService.findAccount(
+        session.principal.email,
+      );
+      const sessionPasswordFingerprint = String(
+        session.localPasswordFingerprint || "",
+      );
+      const accountPasswordFingerprint = String(
+        account?.passwordFingerprint || "",
+      );
+      if (
+        account
+        && sessionPasswordFingerprint
+        && accountPasswordFingerprint
+        && sessionPasswordFingerprint !== accountPasswordFingerprint
+      ) {
+        return null;
+      }
+      if (!account && sessionPasswordFingerprint) return null;
+    }
     return session;
   }
 
@@ -444,6 +667,10 @@ export function createOidcIdentityService(config, dependencies = {}) {
 
   async function createPlatformSessionToken(principal) {
     const exchange = await exchangePrincipal(principal);
+    const localAccount = typeof localAccountService?.findAccount === "function"
+      && principal.email
+      ? await localAccountService.findAccount(principal.email)
+      : null;
     return sessionCodec.seal(
       "platform_session",
       {
@@ -451,6 +678,9 @@ export function createOidcIdentityService(config, dependencies = {}) {
         profile: exchange.profile,
         subscription: exchange.subscription || {},
         credential: exchange.credential,
+        ...(localAccount?.passwordFingerprint
+          ? { localPasswordFingerprint: localAccount.passwordFingerprint }
+          : {}),
       },
       config.platformSessionTtlSeconds,
     );
@@ -944,6 +1174,36 @@ export function createOidcIdentityService(config, dependencies = {}) {
     }
     if (request.method === "GET" && url.pathname === "/signin") {
       writeRedirect(response, "/api/platform/auth/login");
+      return true;
+    }
+    if (
+      ["GET", "POST"].includes(request.method)
+      && url.pathname === "/forgot-password"
+    ) {
+      void handleForgotPasswordRequest(request, response).catch((error) => {
+        reportIdentityFailure("password reset request", error);
+        if (!response.headersSent) {
+          void writeForgotPasswordPage(response, {
+            status: 503,
+            error: "Password reset is temporarily unavailable. Please try again later.",
+          });
+        }
+      });
+      return true;
+    }
+    if (
+      ["GET", "POST"].includes(request.method)
+      && url.pathname === "/reset-password"
+    ) {
+      void handleResetPasswordRequest(request, response, url).catch((error) => {
+        reportIdentityFailure("password update", error);
+        if (!response.headersSent) {
+          void writeResetPasswordPage(response, {
+            status: 503,
+            invalid: true,
+          });
+        }
+      });
       return true;
     }
     if (

@@ -133,6 +133,24 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
               };
 	            });
 	        }, [welcomeWidgetsState.tasks]);
+	        const enabledPermissionNotificationItems = useMemo(() => (
+	          settingsNotificationPreferences.permissionRequests ? permissionNotificationItems : []
+	        ), [permissionNotificationItems, settingsNotificationPreferences.permissionRequests]);
+	        const enabledHumanTaskNotificationItems = useMemo(() => (
+	          settingsNotificationPreferences.assignedWork ? humanTaskNotificationItems : []
+	        ), [humanTaskNotificationItems, settingsNotificationPreferences.assignedWork]);
+	        const enabledTaskActivityNotifications = useMemo(() => (
+	          settingsNotificationPreferences.taskActivity ? taskActivityNotifications : []
+	        ), [settingsNotificationPreferences.taskActivity, taskActivityNotifications]);
+	        const enabledTeamInvitationNotifications = useMemo(() => (
+	          settingsNotificationPreferences.invitations ? teamInvitationNotifications : []
+	        ), [settingsNotificationPreferences.invitations, teamInvitationNotifications]);
+	        const enabledOrganizationInvitationNotifications = useMemo(() => (
+	          settingsNotificationPreferences.invitations ? organizationInvitationNotifications : []
+	        ), [organizationInvitationNotifications, settingsNotificationPreferences.invitations]);
+	        const enabledProductNotifications = useMemo(() => (
+	          settingsNotificationPreferences.productUpdates ? productNotifications : []
+	        ), [productNotifications, settingsNotificationPreferences.productUpdates]);
 	        const notificationItems = useMemo(() => {
 	          const readProducts = new Set(readProductNotificationIds);
 	          const readPermissions = new Set(readPermissionNotificationIds);
@@ -142,7 +160,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
 	          const readOrganizationInvitations = new Set(readOrganizationInvitationNotificationIds);
 	          const items = [];
 
-          permissionNotificationItems.forEach((notification) => {
+          enabledPermissionNotificationItems.forEach((notification) => {
             const readIds = getPermissionNotificationReadIds(notification);
             if (!notification?.id || readIds.some((id) => readPermissions.has(id))) {
               return;
@@ -163,14 +181,14 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
 	            });
 	          }
 
-	          humanTaskNotificationItems.forEach((notification) => {
+	          enabledHumanTaskNotificationItems.forEach((notification) => {
 	            if (!notification?.id || readHumanTasks.has(notification.id)) {
               return;
 	            }
 	            items.push(notification);
 	          });
 
-	          taskActivityNotifications.forEach((notification) => {
+	          enabledTaskActivityNotifications.forEach((notification) => {
 	            if (!notification?.id || readTaskActivities.has(notification.id)) {
               return;
 	            }
@@ -180,7 +198,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
 	            });
 	          });
 
-	          teamInvitationNotifications.forEach((invitation) => {
+	          enabledTeamInvitationNotifications.forEach((invitation) => {
             const id = String(invitation?.id || "").trim();
             if (!id || readTeamInvitations.has(id)) {
               return;
@@ -192,7 +210,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
             });
           });
 
-	          organizationInvitationNotifications.forEach((invitation) => {
+	          enabledOrganizationInvitationNotifications.forEach((invitation) => {
             const id = String(invitation?.id || "").trim();
             if (!id || readOrganizationInvitations.has(id)) {
               return;
@@ -204,7 +222,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
             });
           });
 
-	          productNotifications.forEach((notification) => {
+	          enabledProductNotifications.forEach((notification) => {
             const id = typeof notification?.id === "string" ? notification.id.trim() : "";
             if (!id || readProducts.has(id)) {
               return;
@@ -221,10 +239,12 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
           accountEmail,
           emailVerificationNotificationDismissed,
 	          hasSessionAuth,
-	          humanTaskNotificationItems,
-	          permissionNotificationItems,
-	          organizationInvitationNotifications,
-	          productNotifications,
+	          enabledHumanTaskNotificationItems,
+	          enabledOrganizationInvitationNotifications,
+	          enabledPermissionNotificationItems,
+	          enabledProductNotifications,
+	          enabledTaskActivityNotifications,
+	          enabledTeamInvitationNotifications,
 	          readHumanTaskNotificationIds,
 	          readTaskActivityNotificationIds,
 	          readOrganizationInvitationNotificationIds,
@@ -232,8 +252,6 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
           readProductNotificationIds,
           readTeamInvitationNotificationIds,
           sessionState.emailVerified,
-          taskActivityNotifications,
-          teamInvitationNotifications,
         ]);
         const hasVisibleNotifications = notificationItems.length > 0;
         function getNotificationPlainText(notification) {
@@ -294,7 +312,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
           const readOrganizationInvitations = new Set(readOrganizationInvitationNotificationIds);
           const items = [];
 
-          permissionNotificationItems.forEach((notification) => {
+          enabledPermissionNotificationItems.forEach((notification) => {
             const readIds = getPermissionNotificationReadIds(notification);
             const isRead = Boolean(readIds.length > 0 && readIds.every((id) => readPermissions.has(id)));
             const metaText = [
@@ -329,7 +347,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
             });
           }
 
-          humanTaskNotificationItems.forEach((notification) => {
+          enabledHumanTaskNotificationItems.forEach((notification) => {
             items.push({
               ...notification,
               kindLabel: "Task",
@@ -342,7 +360,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
             });
           });
 
-          taskActivityNotifications.forEach((notification) => {
+          enabledTaskActivityNotifications.forEach((notification) => {
             const id = String(notification?.id || "").trim();
             if (!id) {
               return;
@@ -365,7 +383,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
             });
           });
 
-          teamInvitationNotifications.forEach((invitation) => {
+          enabledTeamInvitationNotifications.forEach((invitation) => {
             const id = String(invitation?.id || "").trim();
             if (!id) {
               return;
@@ -388,7 +406,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
             });
           });
 
-          organizationInvitationNotifications.forEach((invitation) => {
+          enabledOrganizationInvitationNotifications.forEach((invitation) => {
             const id = String(invitation?.id || "").trim();
             if (!id) {
               return;
@@ -411,7 +429,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
             });
           });
 
-          productNotifications.forEach((notification) => {
+          enabledProductNotifications.forEach((notification) => {
             const id = typeof notification?.id === "string" ? notification.id.trim() : "";
             if (!id) {
               return;
@@ -440,10 +458,12 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
           accountEmail,
           emailVerificationNotificationDismissed,
           hasSessionAuth,
-          humanTaskNotificationItems,
-          organizationInvitationNotifications,
-          permissionNotificationItems,
-          productNotifications,
+          enabledHumanTaskNotificationItems,
+          enabledOrganizationInvitationNotifications,
+          enabledPermissionNotificationItems,
+          enabledProductNotifications,
+          enabledTaskActivityNotifications,
+          enabledTeamInvitationNotifications,
           readHumanTaskNotificationIds,
           readTaskActivityNotificationIds,
           readOrganizationInvitationNotificationIds,
@@ -451,8 +471,6 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
           readProductNotificationIds,
           readTeamInvitationNotificationIds,
           sessionState.emailVerified,
-          taskActivityNotifications,
-          teamInvitationNotifications,
         ]);
 
         const visibleNotificationPageItems = useMemo(() => {

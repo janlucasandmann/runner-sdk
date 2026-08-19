@@ -13,7 +13,7 @@ export function createImagineRequestHandler(adapters) {
     const method = String(req.method || "GET").toUpperCase();
     if (
       url.pathname === "/api/aios/user/imagine-preferences"
-      && (method === "GET" || method === "PATCH")
+      && (method === "GET" || method === "PATCH" || method === "DELETE")
     ) {
       void proxyAiosJsonRequest(req, res, "/api/user/imagine-preferences", method);
       return true;

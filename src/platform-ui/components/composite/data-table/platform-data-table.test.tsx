@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, createEvent, fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { Copy } from "lucide-react";
 import type { ComponentProps } from "react";
@@ -434,6 +434,56 @@ describe("PlatformDataTable", () => {
     );
   });
 
+  it("reorders rows from a dedicated drag handle", () => {
+    const onReorder = vi.fn();
+    renderTable({
+      rowReordering: {
+        ariaLabel: (row) => `Reorder ${row.name}`,
+        onReorder,
+      },
+    });
+    const dataTransfer = {
+      effectAllowed: "none",
+      dropEffect: "none",
+      setData: vi.fn(),
+      getData: vi.fn(),
+    };
+    const targetRow = screen.getByRole("row", { name: "Beta" });
+    Object.defineProperty(targetRow, "getBoundingClientRect", {
+      configurable: true,
+      value: () => ({
+        top: 0,
+        bottom: 40,
+        left: 0,
+        right: 400,
+        width: 400,
+        height: 40,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }),
+    });
+
+    fireEvent.dragStart(screen.getByRole("button", { name: "Reorder Alpha" }), {
+      dataTransfer,
+    });
+    const dragOverEvent = createEvent.dragOver(targetRow, { dataTransfer });
+    Object.defineProperty(dragOverEvent, "clientY", { value: 5 });
+    fireEvent(targetRow, dragOverEvent);
+    expect(targetRow.classList.contains("is-drop-before")).toBe(true);
+    const dropEvent = createEvent.drop(targetRow, { dataTransfer });
+    Object.defineProperty(dropEvent, "clientY", { value: 5 });
+    fireEvent(targetRow, dropEvent);
+
+    expect(onReorder).toHaveBeenCalledWith({
+      row: rows[1],
+      rowId: "row-a",
+      targetRow: rows[0],
+      targetRowId: "row-b",
+      placement: "before",
+    });
+  });
+
   it("supports embedded minimal tables without toolbar, footer, or pagination chrome", () => {
     const { container } = renderTable({
       variant: "minimalistic-ui",
@@ -597,7 +647,11 @@ describe("PlatformDataTable", () => {
           id: "duplicate",
           label: "Duplicate",
           icon: Copy,
-          onSelect: duplicate,
+          onSelect: vi.fn(),
+          selectedRows: {
+            label: "Duplicate selected",
+            onSelect: duplicate,
+          },
         },
       ],
     });
@@ -605,10 +659,49 @@ describe("PlatformDataTable", () => {
     await user.click(
       screen.getByRole("button", { name: "Open actions for Alpha" }),
     );
-    await user.click(screen.getByRole("menuitem", { name: "Duplicate" }));
+    await user.click(
+      screen.getByRole("menuitem", { name: "Duplicate selected" }),
+    );
 
     expect(duplicate).toHaveBeenCalledTimes(1);
     expect(duplicate.mock.calls[0]?.[0].rows).toHaveLength(2);
+  });
+
+  it("omits row-only actions from a multi-row selection menu", async () => {
+    const user = userEvent.setup();
+    renderTable({
+      selection: {
+        enabled: true,
+        defaultValue: new Set(["row-a", "row-b"]),
+        ariaLabel: (row) => `Select ${row.name}`,
+      },
+      getRowActions: () => [
+        {
+          id: "rename",
+          label: "Rename",
+          onSelect: vi.fn(),
+        },
+        {
+          id: "delete",
+          label: "Delete",
+          onSelect: vi.fn(),
+          selectedRows: {
+            label: "Delete selected",
+            onSelect: vi.fn(),
+          },
+        },
+      ],
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: "Open actions for Alpha" }),
+    );
+
+    expect(screen.queryByRole("menuitem", { name: "Rename" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Delete" })).toBeNull();
+    expect(
+      screen.getByRole("menuitem", { name: "Delete selected" }),
+    ).not.toBeNull();
   });
 
   it("uses the minimal popup variant for row actions", async () => {

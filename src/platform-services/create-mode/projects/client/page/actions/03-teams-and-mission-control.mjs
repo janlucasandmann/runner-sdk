@@ -11,7 +11,7 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	            permissionSet: normalizedProjectPermissionSet,
 	          };
           if (hasKnownMissionControlMetadata || hasMeaningfulPlaygroundProjectMissionControlRecord(normalizedProjectMissionControl)) {
-            metadataPayload.missionControl = normalizedProjectMissionControl;
+            metadataPayload.missionControl = buildPlaygroundProjectMissionControlStorageRecord(normalizedProjectMissionControl);
           }
 	          return {
 	            name: normalizedProject.name || "Project",
@@ -1119,23 +1119,14 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
           const baseMissionControl = normalizePlaygroundProjectMissionControlRecord(
             selectedProjectMissionControlRef.current || selectedProjectMissionControl
           );
-          const hasStrategyOverride = overrides
-            && typeof overrides === "object"
-            && Object.prototype.hasOwnProperty.call(overrides, "strategyBrief");
-          const strategyBrief = normalizePlaygroundProjectStrategyBrief(
-            hasStrategyOverride
-              ? overrides.strategyBrief
-              : baseMissionControl.strategyBrief
-          );
-          const record = normalizePlaygroundProjectMissionControlRecord({
+          return normalizePlaygroundProjectMissionControlRecord({
             ...baseMissionControl,
             ...(overrides && typeof overrides === "object" ? overrides : {}),
-            strategyBrief,
+            // Strategy and documentation are Knowledge resources. Never emit
+            // the retired project-local fields on an active save path.
+            document: "",
+            strategyBrief: buildEmptyPlaygroundProjectStrategyBrief(),
           });
-          if (hasStrategyOverride) {
-            record.strategyBriefReplace = true;
-          }
-          return record;
         }
 
         async function persistProjectMissionControlRecord(projectId, missionControlRecord, options = {}) {

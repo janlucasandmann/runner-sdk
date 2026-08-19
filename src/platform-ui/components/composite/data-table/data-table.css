@@ -334,11 +334,42 @@
 }
 
 .platform-data-table__header-cell.is-selection,
-.platform-data-table__cell.is-selection {
+.platform-data-table__cell.is-selection,
+.platform-data-table__header-cell.is-reordering,
+.platform-data-table__cell.is-reordering {
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: visible;
+}
+
+.platform-data-table__reorder-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.38);
+  cursor: grab;
+  touch-action: none;
+}
+
+.platform-data-table__reorder-handle:hover {
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.platform-data-table__reorder-handle:active {
+  cursor: grabbing;
+}
+
+.platform-data-table__reorder-handle.is-disabled {
+  opacity: 0.16;
+  cursor: default;
 }
 
 .platform-data-table__header-cell.is-actions,
@@ -383,6 +414,7 @@
 .platform-data-table__column-sort-button:focus-visible,
 .platform-data-table__action-button:focus-visible,
 .platform-data-table__group-toggle:focus-visible,
+.platform-data-table__reorder-handle:focus-visible,
 .platform-data-table__checkbox:focus-visible,
 .platform-data-table__toolbar-button:focus-visible,
 .platform-data-table__primary-action:focus-visible,
@@ -559,6 +591,18 @@
 .platform-data-table__row.is-disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.platform-data-table__row.is-dragging {
+  opacity: 0.46;
+}
+
+.platform-data-table__row.is-drop-before {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.platform-data-table__row.is-drop-after {
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.92);
 }
 
 .platform-data-table__action-button {

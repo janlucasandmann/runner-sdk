@@ -329,6 +329,13 @@ export function useRunnerAttachmentController({
       attachment: LocalAttachment,
       options?: { environmentIdOverride?: string | null },
     ): Promise<RunnerAttachment> | undefined => {
+      // Knowledge references are durable library/version bindings, not files.
+      // The execution gateway resolves them server-side through the Knowledge
+      // retrieval context, so never upload a synthetic markdown copy here.
+      if (attachment.referenceType === "knowledge") {
+        return undefined;
+      }
+
       if (attachment.resolvedAttachment && attachment.integrationSource !== "github") {
         return Promise.resolve(attachment.resolvedAttachment);
       }
@@ -484,10 +491,13 @@ export function useRunnerAttachmentController({
       files: LocalAttachment[],
       environmentIdOverride?: string | null,
     ): Promise<RunnerAttachment[] | undefined> => {
-      if (!files.length) return undefined;
+      const materializedFiles = files.filter(
+        (entry) => entry.referenceType !== "knowledge",
+      );
+      if (!materializedFiles.length) return undefined;
 
       await Promise.all(
-        files
+        materializedFiles
           .map((entry) => attachmentUploadPromisesRef.current[entry.id])
           .filter((uploadPromise): uploadPromise is Promise<RunnerAttachment> =>
             Boolean(uploadPromise),
@@ -495,14 +505,14 @@ export function useRunnerAttachmentController({
           .map((uploadPromise) => uploadPromise.catch(() => undefined)),
       );
 
-      const resolvedAttachments = files
+      const resolvedAttachments = materializedFiles
         .map((entry) => (
           entry.resolvedAttachment
             ? mergeAttachmentReferenceMetadata(entry, entry.resolvedAttachment)
             : null
         ))
         .filter((attachment): attachment is RunnerAttachment => Boolean(attachment));
-      const unresolvedFiles = files.filter((entry) => !entry.resolvedAttachment);
+      const unresolvedFiles = materializedFiles.filter((entry) => !entry.resolvedAttachment);
       if (!unresolvedFiles.length) {
         return resolvedAttachments.length ? resolvedAttachments : undefined;
       }

@@ -331,23 +331,23 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const functionCodeIdentitySection = isFunctionServer[\s\S]{0,600}className: "playground-function-code-identity-icon"[\s\S]{0,900}className: "playground-function-code-name-input"[\s\S]{0,900}className: "file-resource-detail-page__description-input playground-function-code-description-input"/,
-  "Function Code must place its icon, editable name, and editable description above the source workspace.",
+  /const sourceServerCodeIdentitySection = isSourceDeployableServer[\s\S]{0,600}className: "playground-source-server-code-identity-icon"[\s\S]{0,300}isFunctionServer \? FunctionSquare : Globe[\s\S]{0,900}className: "playground-source-server-code-name-input"[\s\S]{0,900}className: "file-resource-detail-page__description-input playground-source-server-code-description-input"/,
+  "Function and Web App Code must place their icon, editable name, and editable description above the source workspace.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /serverDeploymentMapSection,\s*isFunctionServer \? null : descriptionSection,\s*isFunctionServer \? functionInvokeSection : null/,
-  "Function Settings must not repeat the description shown on Code.",
+  /serverDeploymentMapSection,\s*isSourceDeployableServer \? null : descriptionSection,\s*isFunctionServer \? functionInvokeSection : null/,
+  "Function and Web App Settings must not repeat the description shown on Code.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /className: "playground-function-code-tab"[\s\S]{0,180}functionCodeIdentitySection[\s\S]{0,180}className: "playground-function-code-workspace"[\s\S]{0,120}sourceFilesSection/,
-  "Function Code must compose the identity header and editor as one full-height surface.",
+  /className: "playground-source-server-code-tab"[\s\S]{0,180}sourceServerCodeIdentitySection[\s\S]{0,180}className: "playground-source-server-code-workspace"[\s\S]{0,120}sourceFilesSection/,
+  "Function and Web App Code must compose the identity header and editor as one full-height surface.",
 );
 assert.match(
   developServerDetailPageCss,
-  /\.playground-function-code-identity \{[\s\S]{0,240}padding: 24px;[\s\S]{0,120}border-bottom: 1px solid rgba\(255, 255, 255, 0\.1\);/,
-  "Function Code identity styling must match the Skill Code header treatment.",
+  /\.playground-source-server-code-identity \{[\s\S]{0,240}padding: 24px;[\s\S]{0,120}border-bottom: 1px solid rgba\(255, 255, 255, 0\.1\);/,
+  "Source-deployable Code identity styling must match the Skill Code header treatment.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -557,18 +557,18 @@ assert.match(
 );
 assert.match(
   shellCompositionSource,
-  /className: "playground-source-server-detail-header-switch"[\s\S]{0,360}activeResourcesServerKind === "function" \? "code" : "usage"[\s\S]{0,240}\{ value: "code", label: "Code" \},\s*\{ value: "usage", label: "Usage" \}/,
-  "Function details must default to Code and show it as the leftmost app-header section.",
+  /className: "playground-source-server-detail-header-switch"[\s\S]{0,360}: "code",[\s\S]{0,240}\{ value: "code", label: "Code" \},\s*\{ value: "usage", label: "Usage" \}/,
+  "Function and Web App details must default to Code and show it as the leftmost app-header section.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const selectedServerKind = canonicalizePlaygroundServerKind\([\s\S]{0,420}setServerDetailTab\(selectedServerKind === "function" \? "code" : "usage"\)/,
-  "Opening a Function must select Code without changing the default for other server resources.",
+  /const selectedServerKind = canonicalizePlaygroundServerKind\([\s\S]{0,420}setServerDetailTab\(\["function", "web_app"\]\.includes\(selectedServerKind\) \? "code" : "usage"\)/,
+  "Opening a Function or Web App must select Code without changing the default for other server resources.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /if \(seedServerKind === "function"\) \{\s*setServerDetailTab\("code"\);\s*void loadServerFiles\(selectedServerId\);\s*\}/,
-  "Deep-linked Functions must open Code and load their source immediately.",
+  /if \(\["function", "web_app"\]\.includes\(seedServerKind\)\) \{\s*setServerDetailTab\("code"\);\s*void loadServerFiles\(selectedServerId\);\s*\}/,
+  "Deep-linked Functions and Web Apps must open Code and load their source immediately.",
 );
 assert.doesNotMatch(
   COMPUTE_RESOURCES_PAGE_SCRIPT.match(/const serverDetailKpis = isSourceDeployableServer[\s\S]{0,1100}/)?.[0] || "",
@@ -587,7 +587,7 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /\.\.\.\(isSourceDeployableResourcesDetail\s*\?\s*\{[\s\S]{0,180}activeSection: \["usage", "code", "settings"\]\.includes\(serverDetailTab\)[\s\S]{0,1200}handleSourceServerDetailTabChange\(normalizedNextSection\)/,
+  /\.\.\.\(isSourceDeployableResourcesDetail\s*\?\s*\{[\s\S]{0,180}activeSection: \["code", "usage", "settings"\]\.includes\(serverDetailTab\)[\s\S]{0,1200}handleSourceServerDetailTabChange\(normalizedNextSection\)/,
   "Function and Web App details must publish controlled section navigation to the app header.",
 );
 assert.match(
@@ -647,8 +647,8 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /serverDeploymentMapSection,\s*isFunctionServer \? null : descriptionSection,\s*isFunctionServer \? functionInvokeSection : null,\s*serverSettingsResourcesTable,\s*connectionsSection/,
-  "Source settings must retain deployment, resources, and connections while Function description lives exclusively on Code.",
+  /serverDeploymentMapSection,\s*isSourceDeployableServer \? null : descriptionSection,\s*isFunctionServer \? functionInvokeSection : null,\s*serverSettingsResourcesTable,\s*connectionsSection/,
+  "Source settings must retain deployment, resources, and connections while descriptions live exclusively on Code.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -722,8 +722,8 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /className: "playground-server-settings-tab"[\s\S]{0,900}serverDeploymentMapSection,\s*isFunctionServer \? null : descriptionSection,/,
-  "Managed server Settings must render Deployment region before the optional non-Function description.",
+  /className: "playground-server-settings-tab"[\s\S]{0,900}serverDeploymentMapSection,\s*isSourceDeployableServer \? null : descriptionSection,/,
+  "Managed server Settings must render Deployment region before the optional non-source description.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -1470,8 +1470,8 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const renderDatabaseTitleActionsControl = \(\) => \{[\s\S]{0,1800}React\.createElement\(PlatformPopup, \{[\s\S]{0,900}variant: "minimal",[\s\S]{0,120}portal: true,[\s\S]{0,120}placement: "bottom-start"/,
-  "Database actions must use the centralized minimal popup beside the title.",
+  /const renderDatabaseTitleActionsControl = \(\) => \{[\s\S]{0,1800}React\.createElement\(PlatformResourceHeaderActions[\s\S]{0,500}React\.createElement\(PlatformResourceActionsMenu[\s\S]{0,700}resourceLabel: "Database"[\s\S]{0,2200}React\.createElement\(PlatformResourceActionsInformation[\s\S]{0,3000}label: "Copy Database ID"[\s\S]{0,1800}shortcut: "rename"[\s\S]{0,1000}shortcut: "delete"/,
+  "Database title actions must reuse the shared resource-actions composite.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -1480,8 +1480,8 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const renderServerTitleActionsControl = \(\) => \{[\s\S]{0,2200}React\.createElement\(PlatformPopup, \{[\s\S]{0,900}variant: "minimal",[\s\S]{0,120}portal: true,[\s\S]{0,120}placement: "bottom-start"/,
-  "Managed server actions must use the centralized minimal popup beside the title.",
+  /const renderServerTitleActionsControl = \(\) => \{[\s\S]{0,3000}React\.createElement\(PlatformResourceHeaderActions[\s\S]{0,500}React\.createElement\(PlatformResourceActionsMenu[\s\S]{0,700}resourceLabel: serverResourceLabel[\s\S]{0,2200}React\.createElement\(PlatformResourceActionsInformation[\s\S]{0,2600}isSourceDeployableResource[\s\S]{0,500}React\.createElement\(PlatformResourceVersionHistoryMenuItem[\s\S]{0,5000}label: "Copy " \+ serverResourceLabel \+ " ID"[\s\S]{0,1800}shortcut: "rename"[\s\S]{0,1000}shortcut: "delete"/,
+  "Every managed server detail type must reuse the same centralized resource-actions composite as Test details.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -1517,6 +1517,15 @@ assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /serverActionsPopoverRef\.current\?\.contains\(target\)[\s\S]{0,120}serverActionsPopoverSurfaceRef\.current\?\.contains\(target\)/,
   "The portaled Function action popup must participate in outside-click containment.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /targetElement\?\.closest\("\.platform-resource-actions-menu"\)[\s\S]{0,160}targetElement\?\.closest\("\[data-platform-resource-actions-owner\]"\)/,
+  "Centralized resource-action menus and their information popups must stay interactive inside the legacy outside-click boundary.",
+);
+assert.ok(
+  (COMPUTE_RESOURCES_PAGE_SCRIPT.match(/targetElement\?\.closest\("\.platform-resource-actions-menu"\)/g) || []).length >= 2,
+  "Both managed server and Database outside-click boundaries must recognize the centralized resource-actions menu.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,

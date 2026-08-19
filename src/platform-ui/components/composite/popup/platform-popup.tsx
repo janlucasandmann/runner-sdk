@@ -65,7 +65,7 @@ export interface PlatformPopupProps {
   placement?: PlatformPopupPlacement;
   portalOffset?: number;
   portalCollisionPadding?: number;
-  portalMatchAnchorWidth?: boolean;
+  portalMatchAnchorWidth?: boolean | "exact";
   portalAnchorPoint?: PlatformPopupAnchorPoint | null;
 }
 
@@ -137,7 +137,7 @@ function getPlatformPopupPortalPosition({
   placement: PlatformPopupPlacement;
   offset: number;
   collisionPadding: number;
-  matchAnchorWidth: boolean;
+  matchAnchorWidth: boolean | "exact";
 }): PlatformPopupPortalPosition {
   const viewportWidth = Math.max(
     0,
@@ -149,7 +149,9 @@ function getPlatformPopupPortalPosition({
     typeof window === "undefined" ? 0 : window.innerHeight,
     typeof document === "undefined" ? 0 : document.documentElement.clientHeight,
   );
-  const surfaceWidth = Math.max(surfaceRect.width, matchAnchorWidth ? anchorRect.width : 0);
+  const surfaceWidth = matchAnchorWidth === "exact"
+    ? anchorRect.width
+    : Math.max(surfaceRect.width, matchAnchorWidth ? anchorRect.width : 0);
   const surfaceHeight = surfaceRect.height;
   const requestedSide = placement.split("-")[0] as "bottom" | "top" | "right" | "left";
   const alignment = placement.endsWith("end") ? "end" : "start";

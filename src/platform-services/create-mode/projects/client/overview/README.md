@@ -10,6 +10,9 @@ This directory contains overview models, analytics, tables, and page composition
 
 - [`runtime/`](runtime/) — This directory contains stateful runtime orchestration for the Projects service in Create Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
 - [`styles/`](styles/) — This directory contains ordered, owner-scoped style modules for the Projects service in Create Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
+- [`projects-overview-page.tsx`](projects-overview-page.tsx) — Shared catalog-table composition for the non-empty Projects overview.
+- [`projects-overview-guide.tsx`](projects-overview-guide.tsx) — Projects-specific page hero rendered through the shared overview shell.
+- [`projects-overview-model.ts`](projects-overview-model.ts) — Stable presentation contract between the legacy Projects runtime and the shared React overview.
 - [`index.mjs`](index.mjs) — Public barrel or composition entry point.
 - [`runtime.mjs`](runtime.mjs) — Runtime composition for this layer.
 - [`styles.mjs`](styles.mjs) — Style composition for Styles.

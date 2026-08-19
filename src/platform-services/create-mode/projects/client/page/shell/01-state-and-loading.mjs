@@ -34,6 +34,13 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         onOpenFilesPage,
         onOpenProjectMetronomes,
         onOpenResourceTemplatesPage,
+        onOpenPromptSearch,
+        onOpenKnowledgeSearch,
+        onOpenEvaluationSearch,
+        onOpenFileSearch,
+        onOpenWorkflowSearch,
+        onOpenServerResourceSearch,
+        onOpenProjectLinkedResource,
         projectOverviewResourceFilter = "all",
         setProjectOverviewResourceFilter = () => {},
         projectOverviewResourceSearchQuery = "",
@@ -241,7 +248,6 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const projectDescriptionDirtyProjectIdRef = useRef("");
         const projectDescriptionRevisionRef = useRef(0);
         const [projectComposerEnvironmentPopoverOpen, setProjectComposerEnvironmentPopoverOpen] = useState(false);
-        const projectComposerEnvironmentPopoverRef = useRef(null);
         const projectBlueprintPickerRef = useRef(null);
         const [projectPreviewedAttachmentId, setProjectPreviewedAttachmentId] = useState("");
         const [projectAttachmentTransferState, setProjectAttachmentTransferState] = useState({
@@ -264,7 +270,14 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         ));
         const [projectOverviewChartTimescale, setProjectOverviewChartTimescale] = useState("day");
         const [projectOverviewPerformanceRange, setProjectOverviewPerformanceRange] = useState("1m");
-        const [projectOverviewHomeTab, setProjectOverviewHomeTab] = useState("general");
+        const projectOverviewNavigationHomeTabRef = useRef(
+          navigationRequest?.view === "overview" && navigationRequest?.sectionId === "resources"
+            ? "resources"
+            : ""
+        );
+        const [projectOverviewHomeTab, setProjectOverviewHomeTab] = useState(
+          () => projectOverviewNavigationHomeTabRef.current || "general"
+        );
         const [projectOverviewActivityTab, setProjectOverviewActivityTab] = useState("threads");
         const [projectOverviewUpdateComposerState, setProjectOverviewUpdateComposerState] = useState({
           open: false,
@@ -307,7 +320,6 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           });
         }, [selectedProjectId]);
         const [projectOverviewSidebarCollapsed, setProjectOverviewSidebarCollapsed] = useState(false);
-        const [projectOverviewSidebarProgressView, setProjectOverviewSidebarProgressView] = useState("assignees");
         const projectOverviewSidebarAutoCollapsedForTaskRef = useRef(false);
         const projectOverviewSidebarAutoCollapsedForPermissionRef = useRef(false);
         const [projectOverviewPermissionTeamId, setProjectOverviewPermissionTeamId] = useState("");
@@ -480,7 +492,6 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        const projectOverviewServerResourcesLoadKeyRef = useRef("");
 	        const projectListAutoLoadKeyRef = useRef("");
 	        const projectWorkspaceAutoLoadKeyRef = useRef("");
-	        const projectWorkGraphAutoLoadKeyRef = useRef("");
 	        const projectConfigLoadTokenRef = useRef("");
 \${CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.loadRefs}
 	        const projectCustomSkillsLoadKeyRef = useRef("");
@@ -522,8 +533,12 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [backlogToolbarPopover, setBacklogToolbarPopover] = useState("");
         const [backlogFilterMode, setBacklogFilterMode] = useState("open");
         const [backlogSortMode, setBacklogSortMode] = useState("default");
+        const [backlogRenderLimit, setBacklogRenderLimit] = useState(50);
+        const backlogLoadMoreRef = useRef(null);
         const [backlogSessionCompletedTaskIds, setBacklogSessionCompletedTaskIds] = useState(() => new Set());
         const [boardToolbarPopover, setBoardToolbarPopover] = useState("");
+        const [boardRenderLimit, setBoardRenderLimit] = useState(120);
+        const boardLoadMoreRef = useRef(null);
         const [releaseToolbarPopover, setReleaseToolbarPopover] = useState("");
         const [releaseBacklogToolbarPopover, setReleaseBacklogToolbarPopover] = useState("");
         const [backlogTaskContextMenu, setBacklogTaskContextMenu] = useState(null);
@@ -634,6 +649,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        const [missionControlStrategyDraft, setMissionControlStrategyDraft] = useState(buildEmptyPlaygroundProjectStrategyBrief());
 	        const missionControlStrategyDraftRef = useRef(buildEmptyPlaygroundProjectStrategyBrief());
 	        const missionControlStrategyDraftProjectIdRef = useRef("");
+	        const projectKnowledgeLibraryEnsurePromisesRef = useRef(new Map());
 	        const selectedProjectMissionControlRef = useRef(buildEmptyPlaygroundProjectMissionControl());
 	        const [projectRulesDraft, setProjectRulesDraft] = useState("");
 	        const [projectRuleInputValue, setProjectRuleInputValue] = useState("");

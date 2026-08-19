@@ -2163,7 +2163,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-compute-token-log-box {
-  width: min(100%, 560px);
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2196,32 +2196,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   color: rgba(255, 255, 255, 0.7);
 }
 
-.tb-runner-chat .tb-compute-token-log-message {
-  margin-top: 4px;
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 12px;
-  line-height: 1.35;
-  font-weight: 400;
-}
-
-.tb-runner-chat .tb-compute-token-log-button {
+.tb-runner-chat .tb-compute-token-log-action {
   flex: 0 0 auto;
-  min-height: 30px;
-  padding: 0 12px;
-  appearance: none;
-  border: 0;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #000000;
-  font-size: 12px;
-  line-height: 1;
-  font-weight: 400;
-  cursor: pointer;
-  transition: opacity 140ms ease;
-}
-
-.tb-runner-chat .tb-compute-token-log-button:hover {
-  opacity: 0.7;
 }
 
 .tb-runner-chat .tb-turn-summary {

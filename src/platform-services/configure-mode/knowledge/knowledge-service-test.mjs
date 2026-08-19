@@ -46,12 +46,16 @@ test("Knowledge shell owns the complete Configure navigation lifecycle", () => {
   assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.pageView, /currentUserId: hasSessionAuth/);
   assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.pageView, /currentUserAvatarUrl: hasSessionAuth \? accountAvatarUrl/);
   assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.pageView, /onWorkspaceTeamsRequest/);
-  assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.topNavigation, /knowledge:open-versions/);
+  assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.pageView, /onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen/);
+  assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-knowledge-title-actions/);
   assert.match(
     KNOWLEDGE_APP_SCRIPT_FRAGMENTS.topNavigation,
     /className: "playground-knowledge-overview-scope-switch"[\s\S]*\{ value: "all", label: "All Libraries" \}[\s\S]*\{ value: "created", label: "Created by me" \}[\s\S]*\{ value: "shared", label: "Shared with me" \}/,
   );
-  assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-home-editor/);
+  assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-detail-page__document-workspace/);
+  assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-document-workspace__title-input/);
+  assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-detail-page\.file-resource-detail-page\.is-settings-tab/);
+  assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-detail-page__settings-sidebar/);
 });
 
 test("Knowledge service declines unrelated and unsupported requests", () => {

@@ -4,6 +4,7 @@ export const ASSURANCE_APP_PAGE_VIEW_SCRIPT = String.raw`        function render
             backendUrl: proxyBackendBase,
             requestHeaders,
             mode: assurancePageMode,
+            overviewScope: assuranceOverviewScope,
             selectedPolicyId: selectedAssurancePolicyId,
             selectedRunId: selectedAssuranceRunId,
             controlsPortalId: assurancePageMode === "overview"
@@ -15,6 +16,13 @@ export const ASSURANCE_APP_PAGE_VIEW_SCRIPT = String.raw`        function render
             defaultProjectId: latestInteractedProjectId || "",
             projects: runnerWorkspaceProjects,
             workspaceTeams: teamPageTeams,
+            currentUser: {
+              id: hasSessionAuth ? (sessionState.userId || accountEmail || "") : "",
+              userId: hasSessionAuth ? (sessionState.userId || "") : "",
+              name: hasSessionAuth ? accountName : "Me",
+              email: hasSessionAuth ? accountEmail : "",
+              avatarUrl: hasSessionAuth ? accountAvatarUrl : "",
+            },
             onNavigationGuardChange: registerPlatformNavigationGuard,
             onNavigationRequest: requestPlatformNavigation,
             onOpenPolicy: (policyId, policyName = "") => {

@@ -57,6 +57,9 @@ export const APP_HEADER_COMPONENT_SCRIPT = `        function toggleAccountMenuFr
             : options.extraActions
               ? [options.extraActions]
               : [];
+          const resolvedPathItems = typeof resolveProjectResourceBreadcrumbItems === "function"
+            ? resolveProjectResourceBreadcrumbItems(options.pathItems)
+            : options.pathItems;
           const hidePath = options.hidePath === true;
           const hideCommonActions = options.hideCommonActions === true;
           return React.createElement("div", {
@@ -69,7 +72,7 @@ export const APP_HEADER_COMPONENT_SCRIPT = `        function toggleAccountMenuFr
             },
             React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tools-navbar-title" },
               React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-                hidePath ? null : renderAppHeaderBreadcrumbs(options.pathItems),
+                hidePath ? null : renderAppHeaderBreadcrumbs(resolvedPathItems),
                 !hidePath && options.leftExtra
                   ? React.createElement(React.Fragment, null,
                       React.createElement(ChevronRight, {

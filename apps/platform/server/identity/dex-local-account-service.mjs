@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import grpc from "@grpc/grpc-js";
@@ -26,6 +26,60 @@ function createPassword(client, request, deadlineMs) {
         else resolve(response);
       },
     );
+  });
+}
+
+function listPasswords(client, deadlineMs) {
+  return new Promise((resolve, reject) => {
+    client.listPasswords(
+      {},
+      { deadline: Date.now() + deadlineMs },
+      (error, response) => {
+        if (error) reject(error);
+        else resolve(response);
+      },
+    );
+  });
+}
+
+function updatePassword(client, request, deadlineMs) {
+  return new Promise((resolve, reject) => {
+    client.updatePassword(
+      request,
+      { deadline: Date.now() + deadlineMs },
+      (error, response) => {
+        if (error) reject(error);
+        else resolve(response);
+      },
+    );
+  });
+}
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function passwordFingerprint(hash) {
+  return createHash("sha256").update(hash).digest("hex");
+}
+
+function normalizeDexPassword(password) {
+  if (!password) return null;
+  const email = normalizeEmail(password.email);
+  const hash = Buffer.isBuffer(password.hash)
+    ? password.hash
+    : Buffer.from(password.hash || "");
+  const userId = String(password.user_id || "").trim();
+  if (!email || !userId) return null;
+  return Object.freeze({
+    email,
+    displayName: String(password.username || "").trim(),
+    userId,
+    hash,
+    // Dex deliberately omits credential hashes from ListPasswords responses.
+    // Hashes remain available for records created in this process, but account
+    // discovery and password reset must also work with the public metadata.
+    fingerprint: hash.length > 0 ? passwordFingerprint(hash) : "",
   });
 }
 
@@ -104,6 +158,48 @@ export function createDexLocalAccountService(config, dependencies = {}) {
   const hashPassword = dependencies.hashPassword
     || ((password) => bcrypt.hash(password, 12));
   const createUserId = dependencies.createUserId || randomUUID;
+  const clock = dependencies.clock || Date.now;
+  const accountCacheTtlMs = dependencies.accountCacheTtlMs ?? 30_000;
+  const accountLocks = new Map();
+  const accountCache = new Map();
+
+  async function withAccountLock(email, operation) {
+    const key = normalizeEmail(email);
+    const previous = accountLocks.get(key) || Promise.resolve();
+    let release;
+    const current = new Promise((resolve) => { release = resolve; });
+    accountLocks.set(key, current);
+    await previous;
+    try {
+      return await operation();
+    } finally {
+      release();
+      if (accountLocks.get(key) === current) accountLocks.delete(key);
+    }
+  }
+
+  async function findAccount(email, { fresh = false } = {}) {
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail) return null;
+    const cached = accountCache.get(normalizedEmail);
+    if (!fresh && cached?.expiresAt > clock()) return cached.account;
+    const response = await listPasswords(client, 7_500);
+    for (const password of response?.passwords || []) {
+      const normalized = normalizeDexPassword(password);
+      if (normalized?.email === normalizedEmail) {
+        accountCache.set(normalizedEmail, {
+          account: normalized,
+          expiresAt: clock() + accountCacheTtlMs,
+        });
+        return normalized;
+      }
+    }
+    accountCache.set(normalizedEmail, {
+      account: null,
+      expiresAt: clock() + accountCacheTtlMs,
+    });
+    return null;
+  }
 
   async function provisionAccount(account) {
     const normalized = normalizeProvisionedAccount(account);
@@ -135,10 +231,86 @@ export function createDexLocalAccountService(config, dependencies = {}) {
         },
       }, 7_500);
       const created = !response?.already_exists;
+      if (created) {
+        accountCache.set(normalizeEmail(email), {
+          account: normalizeDexPassword({
+            email,
+            hash: Buffer.from(passwordHash, "utf8"),
+            username: displayName,
+            user_id: userId,
+          }),
+          expiresAt: clock() + accountCacheTtlMs,
+        });
+      } else {
+        accountCache.delete(normalizeEmail(email));
+      }
       return Object.freeze({
         created,
         alreadyExists: Boolean(response?.already_exists),
         subject: created ? createDexLocalSubject(userId) : "",
+        passwordFingerprint: created
+          ? passwordFingerprint(Buffer.from(passwordHash, "utf8"))
+          : "",
+      });
+    },
+    async findAccount(email) {
+      const account = await findAccount(email);
+      if (!account) return null;
+      return Object.freeze({
+        email: account.email,
+        displayName: account.displayName,
+        userId: account.userId,
+        passwordFingerprint: account.fingerprint,
+      });
+    },
+    async resetPassword({
+      email,
+      password,
+      expectedFingerprint = "",
+      expectedUserId,
+    }) {
+      return withAccountLock(email, async () => {
+        const account = await findAccount(email, { fresh: true });
+        const normalizedExpectedUserId = String(expectedUserId || "").trim();
+        if (
+          !account
+          || !normalizedExpectedUserId
+          || account.userId !== normalizedExpectedUserId
+          || (
+            expectedFingerprint
+            && account.fingerprint
+            && account.fingerprint !== expectedFingerprint
+          )
+        ) {
+          return Object.freeze({ updated: false, invalidated: true });
+        }
+        const nextHash = await hashPassword(password);
+        const response = await updatePassword(client, {
+          email: account.email,
+          new_hash: Buffer.from(nextHash, "utf8"),
+          new_username: account.displayName,
+        }, 7_500);
+        if (response?.not_found) {
+          accountCache.delete(account.email);
+          return Object.freeze({ updated: false, invalidated: true });
+        }
+        const normalizedUpdatedAccount = normalizeDexPassword({
+          email: account.email,
+          hash: Buffer.from(nextHash, "utf8"),
+          username: account.displayName,
+          user_id: account.userId,
+        });
+        accountCache.set(account.email, {
+          account: normalizedUpdatedAccount,
+          expiresAt: clock() + accountCacheTtlMs,
+        });
+        return Object.freeze({
+          updated: true,
+          invalidated: false,
+          passwordFingerprint: passwordFingerprint(
+            Buffer.from(nextHash, "utf8"),
+          ),
+        });
       });
     },
     provisionAccount,

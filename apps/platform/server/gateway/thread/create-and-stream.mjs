@@ -1,9 +1,23 @@
 import { isAgentAssistantPresetExecutionContent } from "./message-sanitization.mjs";
+import { normalizeKnowledgeContext } from "../../../../../src/platform-services/configure-mode/knowledge/server/knowledge-context.mjs";
 
 const RUNNER_CONNECTOR_IDS_METADATA_KEY = "runnerConnectorIds";
 
+function readForwardedIdempotencyKey(request) {
+    const raw = request?.headers?.["idempotency-key"];
+    const value = Array.isArray(raw) ? raw[0] : raw;
+    return typeof value === "string" ? value.trim().slice(0, 500) : "";
+}
+
 function isRecord(value) {
     return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function readKnowledgeContext(value, metadata) {
+    return normalizeKnowledgeContext(
+        value
+        || (isRecord(metadata) ? metadata.knowledgeContext || metadata.knowledge_context : null),
+    );
 }
 
 function attachAuthorizedConnectorMessageMetadata(payload) {
@@ -34,8 +48,9 @@ export function createThreadMessageGateway(bindings) {
             const body = await readRequestBody(req);
             const upstreamUrl = parseUpstreamUrl(req, body);
             const apiKey = readOptionalApiKey(req, body);
+            const idempotencyKey = readForwardedIdempotencyKey(req);
             // Backward compatibility: allow legacy wrapper body shape
-            const payload = body.payload && typeof body.payload === "object"
+            const payloadSource = body.payload && typeof body.payload === "object"
                 ? body.payload
                 : {
                     title: body.title,
@@ -48,6 +63,14 @@ export function createThreadMessageGateway(bindings) {
                         ? { knowledgeContext: body.knowledgeContext }
                         : {}),
                 };
+            const knowledgeContext = readKnowledgeContext(
+                body.knowledgeContext || payloadSource.knowledgeContext,
+                payloadSource.metadata,
+            );
+            const payload = {
+                ...payloadSource,
+                ...(knowledgeContext ? { knowledgeContext } : {}),
+            };
             const enrichedPayload = await threadPayloadEnricher(req, upstreamUrl, apiKey, payload);
             let upstream;
             if (apiKey) {
@@ -56,6 +79,7 @@ export function createThreadMessageGateway(bindings) {
                     headers: withProxyOrganizationHeader(req, body, {
                         "Content-Type": "application/json",
                         "X-API-Key": apiKey,
+                        ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
                     }),
                     body: JSON.stringify(enrichedPayload),
                 });
@@ -65,6 +89,7 @@ export function createThreadMessageGateway(bindings) {
                     method: "POST",
                     headers: {
                         "content-type": "application/json",
+                        ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {}),
                     },
                     body: JSON.stringify(enrichedPayload),
                 });
@@ -99,9 +124,14 @@ export function createThreadMessageGateway(bindings) {
             const body = await readRequestBody(req);
             const upstreamUrl = parseUpstreamUrl(req, body);
             const apiKey = readOptionalApiKey(req, body);
+            const idempotencyKey = readForwardedIdempotencyKey(req);
             const visibleContent = body.content || body.task;
             const executionContent = typeof body.executionContent === "string" ? body.executionContent : "";
             const shouldUseExecutionContentForUpstream = body.useExecutionContentForUpstream === true || isAgentAssistantPresetExecutionContent(executionContent);
+            const knowledgeContext = readKnowledgeContext(
+                body.knowledgeContext || body.messageMetadata?.knowledgeContext,
+                body.metadata,
+            );
             const payload = {
                 content: visibleContent,
                 ...(typeof body.reasoningEffort === "string" && body.reasoningEffort.trim()
@@ -119,9 +149,7 @@ export function createThreadMessageGateway(bindings) {
                 ...(typeof body.editMessageId === "string" && body.editMessageId.trim() ? { editMessageId: body.editMessageId.trim() } : {}),
                 ...(typeof body.persistFileChanges === "boolean" ? { persistFileChanges: body.persistFileChanges } : {}),
                 ...(body.enabledSkills && typeof body.enabledSkills === "object" ? { enabledSkills: body.enabledSkills } : {}),
-                ...(body.knowledgeContext && typeof body.knowledgeContext === "object" && !Array.isArray(body.knowledgeContext)
-                    ? { knowledgeContext: body.knowledgeContext }
-                    : {}),
+                ...(knowledgeContext ? { knowledgeContext } : {}),
                 ...(body.backlogTaskCommand && typeof body.backlogTaskCommand === "object" && !Array.isArray(body.backlogTaskCommand)
                     ? { backlogTaskCommand: body.backlogTaskCommand }
                     : {}),
@@ -151,6 +179,7 @@ export function createThreadMessageGateway(bindings) {
                     headers: withProxyOrganizationHeader(req, body, {
                         "Content-Type": "application/json",
                         "X-API-Key": apiKey,
+                        ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
                     }),
                     body: JSON.stringify(enrichedPayload),
                 });
@@ -167,6 +196,7 @@ export function createThreadMessageGateway(bindings) {
                         method: "POST",
                         headers: {
                             "content-type": "application/json",
+                            ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {}),
                         },
                         body: JSON.stringify(enrichedPayload),
                     },

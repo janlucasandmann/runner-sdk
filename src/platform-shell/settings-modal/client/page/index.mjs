@@ -9,7 +9,31 @@ export function createSettingsModalPageScript(options = {}) {
     ? options.webhooksDocumentationUrl
     : "";
 
-  return String.raw`        function renderSettingsSurface(options = {}) {
+  return String.raw`        const SETTINGS_DATA_CONTROL_ROWS = Object.freeze([
+          { id: "threads", title: "Threads", description: "All threads, messages, run history, and thread feedback you own." },
+          { id: "imagine", title: "Imagine resources", description: "Imagine threads and your personal templates and favourites." },
+          { id: "projects", title: "Projects", description: "Projects, tickets, milestones, comments, and project activity you own." },
+          { id: "development-resources", title: "Development resources", description: "Web apps, APIs, functions, databases, auth, secrets, payments, and agent runtimes you own." },
+          { id: "knowledge-libraries", title: "Knowledge libraries", description: "Knowledge libraries, documents, revisions, and version history you own." },
+          { id: "custom-skills", title: "Custom skills", description: "Every custom skill you created. Built-in skills remain available." },
+          { id: "test-plans", title: "Tests", description: "Test plans, cases, runs, results, artifacts, and version history you own." },
+          { id: "agents", title: "Custom agents", description: "Agents and agent versions you created. Platform-managed agents are preserved." },
+          { id: "computers", title: "Computers", description: "Your custom computers and active runtime containers. Platform-managed computers are preserved." },
+          { id: "prompts", title: "Prompts", description: "Saved prompts and their complete version history." },
+          { id: "metronomes", title: "Metronome workflows", description: "Workflows, deployments, runs, approvals, and audit history you own." },
+          { id: "batch-jobs", title: "Batch jobs", description: "Batch jobs, attempts, and execution events you own." },
+          { id: "schedules", title: "Schedules", description: "One-time and recurring schedules you created." },
+          { id: "triggers", title: "Triggers and legacy automations", description: "Webhook triggers, legacy orchestrations, and their execution history." },
+          { id: "evaluations", title: "Evaluations", description: "Evaluation sets, datasets, runs, evidence, and version history you own." },
+          { id: "guardrails", title: "Guardrails", description: "Guardrail sets, prompts, policies, and version history you own." },
+          { id: "assurance", title: "Assurance policies", description: "Assurance policies, runs, decisions, and evidence you own." },
+          { id: "fine-tuning", title: "Fine-tuning jobs", description: "Fine-tuning and agent optimization jobs you started." },
+          { id: "optimization", title: "Optimization and releases", description: "Optimization campaigns, candidates, attempts, and release-control records." },
+          { id: "security-resources", title: "Security resources", description: "Security repositories, policies, threat models, findings, and remediation history." },
+          { id: "files", title: "Computer files", description: "All files stored in your personal computer workspaces." },
+        ]);
+
+        function renderSettingsSurface(options = {}) {
           const isEmbeddedSettingsPage = options.embedded === true;
           const hideSettingsHeader = options.hideHeader === true;
           const isOrganizationBillingSurface = options.organizationBilling === true;
@@ -26,8 +50,42 @@ export function createSettingsModalPageScript(options = {}) {
 	            : setSettingsSection;
 	          const settingsTabs = [
 	            { id: "profile", label: "Account", title: "Account" },
+	            { id: "notifications", label: "Notifications", title: "Notifications" },
 	            { id: "password", label: "Password", title: "Password" },
+	            { id: "data-controls", label: "Data Controls", title: "Data Controls" },
 	            { id: "delete", label: "Delete Account", title: "Delete Account" },
+	          ];
+	          const settingsNotificationPreferenceRows = [
+	            {
+	              id: "agentRuns",
+	              title: "Agent runs",
+	              description: "Run completions and failures for threads, schedules, and triggers.",
+	            },
+	            {
+	              id: "permissionRequests",
+	              title: "Permission requests",
+	              description: "When an agent needs approval or additional tool access.",
+	            },
+	            {
+	              id: "assignedWork",
+	              title: "Assigned work and reviews",
+	              description: "Tasks assigned to you and review requests that need attention.",
+	            },
+	            {
+	              id: "taskActivity",
+	              title: "Ticket activity",
+	              description: "Comments and changes on tickets you follow.",
+	            },
+	            {
+	              id: "invitations",
+	              title: "Invitations",
+	              description: "Team and organization invitations.",
+	            },
+	            {
+	              id: "productUpdates",
+	              title: "Product updates",
+	              description: "Important product announcements and release information.",
+	            },
 	          ];
 
 	          const selectedSection = effectiveSettingsSection === "inference"
@@ -2529,43 +2587,49 @@ ${apiKeysLegacySettingsCase}            case "design":
 	            case "profile":
 	              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
 	                React.createElement("div", { className: "playground-settings-account-shell is-wide" },
-	                  React.createElement("div", { className: "playground-settings-account-block" },
-	                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "42rem" } },
-	                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-profile-email-address" }, "Email address"),
-	                      React.createElement("input", {
-                        id: "settings-profile-email-address",
+		                  React.createElement("h2", { className: "playground-shell-settings-modal-page-title" }, "Account"),
+		                  React.createElement("div", { className: "playground-settings-account-block" },
+		                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "42rem" } },
+		                      React.createElement("div", { className: "playground-settings-email-field-header" },
+		                        React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-profile-email-address" }, "Email address"),
+		                        accountEmail
+		                          ? React.createElement("div", { className: "playground-settings-account-inline" },
+		                              sessionState.emailVerified
+		                                ? React.createElement(React.Fragment, null,
+		                                    React.createElement(Check, { width: 12, height: 12, strokeWidth: 1.9 }),
+		                                    React.createElement("span", null, "Email verified")
+		                                  )
+		                                : React.createElement(React.Fragment, null,
+		                                    React.createElement(AlertCircle, { width: 12, height: 12, strokeWidth: 1.9 }),
+		                                    React.createElement("span", null, "Email not verified"),
+		                                    React.createElement("span", { className: "playground-settings-account-bullet" }, "•"),
+		                                    React.createElement("button", {
+		                                      type: "button",
+		                                      className: "playground-settings-account-link",
+		                                      onClick: () => {
+		                                        void handleSettingsResendVerificationEmail();
+		                                      },
+		                                      disabled: settingsVerificationResending || settingsVerificationResent,
+		                                    }, settingsVerificationResending
+		                                      ? "Sending..."
+		                                      : (settingsVerificationResent ? "Sent!" : "Resend verification email"))
+		                                  )
+		                            )
+		                          : null
+		                      ),
+		                      React.createElement("input", {
+	                        id: "settings-profile-email-address",
                         type: "email",
                         className: "playground-settings-input",
                         value: accountEmail || "",
                         placeholder: "No email address available",
-                        disabled: true,
-                        style: { color: "rgba(255, 255, 255, 0.56)", cursor: "not-allowed" },
-                      }),
-                      accountEmail
-                        ? React.createElement("div", { className: "playground-settings-account-inline" },
-                            sessionState.emailVerified
-                              ? React.createElement(React.Fragment, null,
-                                  React.createElement(Check, { width: 12, height: 12, strokeWidth: 1.9 }),
-                                  React.createElement("span", null, "Email verified")
-                                )
-                              : React.createElement(React.Fragment, null,
-                                  React.createElement(AlertCircle, { width: 12, height: 12, strokeWidth: 1.9 }),
-                                  React.createElement("span", null, "Email not verified"),
-                                  React.createElement("span", { className: "playground-settings-account-bullet" }, "•"),
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-settings-account-link",
-                                    onClick: () => {
-                                      void handleSettingsResendVerificationEmail();
-                                    },
-                                    disabled: settingsVerificationResending || settingsVerificationResent,
-                                  }, settingsVerificationResending
-                                    ? "Sending..."
-                                    : (settingsVerificationResent ? "Sent!" : "Resend verification email"))
-                                )
-                          )
-                        : React.createElement("div", { className: "playground-settings-muted-copy" }, "No email address is linked to this session.")
-                    ),
+	                        disabled: true,
+	                        style: { color: "rgba(255, 255, 255, 0.56)", cursor: "not-allowed" },
+	                      }),
+	                      accountEmail
+	                        ? null
+	                        : React.createElement("div", { className: "playground-settings-muted-copy" }, "No email address is linked to this session.")
+	                    ),
                     accountEmail && !sessionState.emailVerified
                       ? React.createElement("div", {
                           className: "playground-settings-integration-notice is-warning",
@@ -2584,52 +2648,77 @@ ${apiKeysLegacySettingsCase}            case "design":
                             : null
                         )
                       : null,
-                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "42rem" } },
-                      React.createElement("label", { className: "playground-settings-label" }, "Marketing Emails"),
-                      React.createElement("div", { className: "playground-settings-muted-copy" }, "Get occasional product updates, launch announcements, and offer emails. You can unsubscribe anytime."),
-                      React.createElement("div", { className: "playground-settings-choice-row" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-choice-button" + (settingsMarketingConsentStatus === "opted_in" ? " is-active" : ""),
-                          disabled: settingsMarketingConsentSaving || settingsMarketingConsentLoading,
-                          onClick: () => {
-                            void updateSettingsMarketingConsent("opted_in");
-                          },
-                        }, "Subscribed"),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-choice-button" + (settingsMarketingConsentStatus === "opted_out" ? " is-active" : ""),
-                          disabled: settingsMarketingConsentSaving || settingsMarketingConsentLoading,
-                          onClick: () => {
-                            void updateSettingsMarketingConsent("opted_out");
-                          },
-                        }, "Not subscribed"),
-                        settingsMarketingConsentLoading || settingsMarketingConsentSaving
-                          ? React.createElement("span", { className: "playground-settings-choice-loading" },
-                              React.createElement(Loader2, { width: 12, height: 12, strokeWidth: 1.8, className: "playground-settings-records-spinner" }),
-                              React.createElement("span", null, "Saving...")
-                            )
-                          : null
-                      )
-                    ),
-	                    !accountEmail && settingsVerificationError
-	                      ? renderSettingsInlineStatus("error", settingsVerificationError)
+		                    settingsMarketingEmailsAvailable
+		                      ? React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "42rem" } },
+		                      React.createElement("div", { className: "playground-settings-marketing-toggle-row" },
+		                        React.createElement("div", { className: "playground-settings-marketing-toggle-copy" },
+		                          React.createElement("label", { className: "playground-settings-label" }, "Marketing Emails"),
+		                          React.createElement("div", { className: "playground-settings-muted-copy" }, "Get occasional product updates, launch announcements, and offer emails. You can unsubscribe anytime.")
+		                        ),
+		                        React.createElement(PlatformToggle, {
+		                          checked: settingsMarketingConsentStatus === "opted_in",
+		                          disabled: settingsMarketingConsentSaving || settingsMarketingConsentLoading,
+		                          "aria-label": "Marketing emails",
+		                          "aria-busy": settingsMarketingConsentSaving || settingsMarketingConsentLoading,
+		                          onCheckedChange: (checked) => {
+		                            void updateSettingsMarketingConsent(checked ? "opted_in" : "opted_out");
+		                          },
+		                        })
+		                      )
+		                    )
 	                      : null,
-	                    renderSettingsInlineStatus("error", settingsMarketingConsentError),
-	                    renderSettingsInlineStatus("success", settingsMarketingConsentSuccess)
+		                    !accountEmail && settingsVerificationError
+		                      ? renderSettingsInlineStatus("error", settingsVerificationError)
+		                      : null,
+		                    settingsMarketingEmailsAvailable
+		                      ? renderSettingsInlineStatus("error", settingsMarketingConsentError)
+		                      : null,
+		                    settingsMarketingEmailsAvailable
+		                      ? renderSettingsInlineStatus("success", settingsMarketingConsentSuccess)
+		                      : null
 		                  )
 		                )
 	              );
               break;
+            case "notifications":
+              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+                React.createElement("div", { className: "playground-settings-account-shell is-wide" },
+                  React.createElement("h2", { className: "playground-shell-settings-modal-page-title" }, "Notifications"),
+                  React.createElement("div", { className: "playground-shell-settings-modal-notification-list" },
+                    settingsNotificationPreferenceRows.map((preference) =>
+                      React.createElement("div", {
+                          key: preference.id,
+                          className: "playground-shell-settings-modal-notification-row",
+                        },
+                        React.createElement("div", { className: "playground-shell-settings-modal-notification-copy" },
+                          React.createElement("div", { className: "playground-shell-settings-modal-notification-title" }, preference.title),
+                          React.createElement("div", { className: "playground-shell-settings-modal-notification-description" }, preference.description)
+                        ),
+                        React.createElement(PlatformToggle, {
+                          checked: settingsNotificationPreferences[preference.id] !== false,
+                          disabled: settingsNotificationPreferencesLoading
+                            || settingsNotificationPreferenceSavingKey === preference.id,
+                          "aria-label": preference.title,
+                          onCheckedChange: (checked) => {
+                            void updateSettingsNotificationPreference(preference.id, checked);
+                          },
+                        })
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-shell-settings-modal-notification-note" },
+                    "Account security and service-critical notifications always remain enabled."
+                  ),
+                  renderSettingsInlineStatus("error", settingsNotificationPreferencesError)
+                )
+              );
+              break;
             case "password":
               detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                React.createElement("div", { className: "playground-settings-account-shell" },
-                  React.createElement("div", null,
-                    React.createElement("h3", { className: "playground-settings-records-title" }, "Change Password"),
-                    React.createElement("p", { className: "playground-settings-records-subtitle" }, "Update your account password")
-                  ),
+                React.createElement("div", { className: "playground-settings-account-shell is-wide" },
+                  React.createElement("h2", { className: "playground-shell-settings-modal-page-title" }, "Password"),
                   React.createElement("div", { className: "playground-settings-account-block" },
-                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
+                    React.createElement("div", { className: "playground-settings-field" },
                       React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-current" }, "Current Password"),
                       React.createElement("input", {
                         id: "settings-password-current",
@@ -2640,7 +2729,7 @@ ${apiKeysLegacySettingsCase}            case "design":
                         placeholder: "••••••••",
                       })
                     ),
-                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
+                    React.createElement("div", { className: "playground-settings-field" },
                       React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-new" }, "New Password"),
                       React.createElement("input", {
                         id: "settings-password-new",
@@ -2651,7 +2740,7 @@ ${apiKeysLegacySettingsCase}            case "design":
                         placeholder: "••••••••",
                       })
                     ),
-                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
+                    React.createElement("div", { className: "playground-settings-field" },
                       React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-confirm" }, "Confirm New Password"),
                       React.createElement("input", {
                         id: "settings-password-confirm",
@@ -2667,7 +2756,6 @@ ${apiKeysLegacySettingsCase}            case "design":
                     React.createElement(PlatformPrimaryButton, {
                       size: "large",
                       type: "button",
-                      className: "playground-settings-app-primary-button",
                       disabled: settingsPasswordLoading || !settingsPasswordForm.currentPassword || !settingsPasswordForm.newPassword || !settingsPasswordForm.confirmPassword,
                       onClick: () => {
                         void handleSettingsPasswordChange();
@@ -2675,6 +2763,39 @@ ${apiKeysLegacySettingsCase}            case "design":
                     }, settingsPasswordLoading
                       ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-settings-records-spinner" })
                       : "Update Password")
+                  )
+                )
+              );
+              break;
+            case "data-controls":
+              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
+                React.createElement("div", { className: "playground-settings-account-shell is-wide" },
+                  React.createElement("h2", { className: "playground-shell-settings-modal-page-title" }, "Data Controls"),
+                  React.createElement("p", { className: "playground-shell-settings-modal-data-controls-intro" },
+                    "Permanently delete one family of resources you own. Shared resources owned by other people, account access, teams, billing, API keys, and connector credentials are preserved."
+                  ),
+                  renderSettingsInlineStatus("success", settingsDataControlSuccess),
+                  React.createElement("div", { className: "playground-shell-settings-modal-data-control-list" },
+                    SETTINGS_DATA_CONTROL_ROWS.map((resource) =>
+                      React.createElement("div", {
+                          key: resource.id,
+                          className: "playground-shell-settings-modal-data-control-row",
+                        },
+                        React.createElement("div", { className: "playground-shell-settings-modal-data-control-copy" },
+                          React.createElement("div", { className: "playground-shell-settings-modal-data-control-title" }, resource.title),
+                          React.createElement("div", { className: "playground-shell-settings-modal-data-control-description" }, resource.description)
+                        ),
+                        React.createElement(PlatformSecondaryButton, {
+                          size: "small",
+                          type: "button",
+                          className: "playground-shell-settings-modal-data-control-delete",
+                          onClick: () => {
+                            setSettingsDataControlSuccess("");
+                            setSettingsDataControlCategory(resource.id);
+                          },
+                        }, "Delete")
+                      )
+                    )
                   )
                 )
               );
@@ -2788,8 +2909,14 @@ ${apiKeysLegacySettingsCase}            case "design":
 	          };
 	          const settingsScrollClassName = "playground-environments-detail-scroll playground-settings-detail-scroll"
 	            + (effectiveSettingsSection === "costs-overview" ? " is-usage" : "");
+	          const isInferenceDetailSurface = effectiveSettingsSection === "inference"
+	            && Boolean(settingsInferenceSelectedEndpointId);
 
-	          return React.createElement("div", { className: "playground-settings-page" + (isEmbeddedSettingsPage ? " is-embedded" : "") },
+	          return React.createElement("div", {
+	              className: "playground-settings-page"
+	                + (isEmbeddedSettingsPage ? " is-embedded" : "")
+	                + (isInferenceDetailSurface ? " is-inference-detail" : ""),
+	            },
 	            React.createElement("div", { className: settingsScrollClassName },
 	              isEmbeddedSettingsPage || hideSettingsHeader ? null : settingsHeader,
 	              normalizeSettingsDetailNodes(detailContent)
@@ -2801,19 +2928,25 @@ ${apiKeysLegacySettingsCase}            case "design":
         function renderSettingsModal() {
           const modalSections = [
             { id: "profile", label: "Account", Icon: UserRound },
+            { id: "notifications", label: "Notifications", Icon: Bell },
             { id: "password", label: "Password", Icon: KeyRound },
+            { id: "data-controls", label: "Data Controls", Icon: Database },
             { id: "delete", label: "Delete Account", Icon: Trash2, isDanger: true },
           ];
+          const selectedDataControl = SETTINGS_DATA_CONTROL_ROWS.find(
+            (resource) => resource.id === settingsDataControlCategory
+          ) || null;
 
-          return React.createElement(PlatformModal, {
+          const settingsModal = React.createElement(PlatformModal, {
               open: settingsModalOpen,
               onClose: closeSettingsModal,
               size: "large",
-              maxWidth: "900px",
+              maxWidth: "950px",
               maxHeight: "calc(100dvh - 48px)",
               className: "playground-shell-settings-modal",
               title: "Settings",
-              closeButtonLabel: "Close settings",
+              ariaLabel: "Settings",
+              showHeader: false,
             },
             React.createElement(PlatformModalBody, { className: "playground-shell-settings-modal-body" },
               React.createElement("div", {
@@ -2826,6 +2959,25 @@ ${apiKeysLegacySettingsCase}            case "design":
                   React.createElement("div", {
                       className: "platform-modal-sidebar__body playground-shell-settings-modal-sidebar-body",
                     },
+                    React.createElement("div", {
+                        className: "playground-shell-settings-modal-account",
+                        "aria-label": "Current account",
+                      },
+                      renderAccountAvatar(
+                        "playground-shell-settings-modal-account-avatar",
+                        "playground-shell-settings-modal-account-avatar-image",
+                        accountInitials,
+                        accountAvatarUrl
+                      ),
+                      React.createElement("div", { className: "playground-shell-settings-modal-account-copy" },
+                        React.createElement("div", { className: "playground-shell-settings-modal-account-name" },
+                          accountName || "Account"
+                        ),
+                        React.createElement("div", { className: "playground-shell-settings-modal-account-email" },
+                          accountEmail || "No email address"
+                        )
+                      )
+                    ),
                     React.createElement("nav", { className: "playground-shell-settings-modal-navigation" },
                       modalSections.map((section) =>
                         React.createElement("button", {
@@ -2864,6 +3016,26 @@ ${apiKeysLegacySettingsCase}            case "design":
                 )
               )
             )
+          );
+
+          return React.createElement(React.Fragment, null,
+            settingsModal,
+            React.createElement(PlatformConfirmationModal, {
+              open: Boolean(selectedDataControl),
+              title: selectedDataControl ? "Delete all " + selectedDataControl.title.toLowerCase() + "?" : "Delete resources?",
+              description: selectedDataControl
+                ? selectedDataControl.description + " This action is permanent and cannot be undone."
+                : "This action is permanent and cannot be undone.",
+              confirmLabel: "Delete all",
+              confirmingLabel: "Deleting...",
+              tone: "destructive",
+              errorFallback: "The selected resources could not be deleted.",
+              onCancel: () => setSettingsDataControlCategory(""),
+              onConfirm: async () => {
+                if (!selectedDataControl) return;
+                await deleteSettingsDataControlCategory(selectedDataControl.id);
+              },
+            })
           );
         }
 `;

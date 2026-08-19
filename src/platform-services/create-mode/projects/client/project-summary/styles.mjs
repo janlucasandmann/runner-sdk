@@ -4,30 +4,85 @@ export const PROJECT_SUMMARY_CSS_FRAGMENT = `
         min-width: 0;
       }
 
-      .platform-project-summary-shell > .playground-project-overview-work-graph {
-        margin-top: 24px;
+      .playground-project-overview-progress-analytics {
+        width: 100%;
+        min-width: 0;
+        margin-top: 28px;
       }
 
       .platform-project-summary {
+        box-sizing: border-box;
         width: 100%;
         min-width: 0;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: flex-start;
+        gap: 12px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .platform-project-summary__icon-picker {
+        --project-summary-icon-size: 52px;
+
         flex: 0 0 auto;
+      }
+
+      .platform-project-summary__icon-picker .platform-project-icon-picker__trigger,
+      .platform-project-summary__icon-picker .platform-project-icon-picker__trigger-icon {
+        width: var(--project-summary-icon-size);
+        height: var(--project-summary-icon-size);
+        flex-basis: var(--project-summary-icon-size);
+      }
+
+      .platform-project-summary__icon-picker .platform-project-icon-picker__trigger-icon {
+        border-radius: 12px;
+        background: color-mix(
+          in srgb,
+          var(--project-icon-color, #fff) 10%,
+          transparent
+        );
+      }
+
+      .platform-project-summary__icon-picker
+        .platform-project-icon-picker__trigger:not(:disabled):hover
+        .platform-project-icon-picker__trigger-icon,
+      .platform-project-summary__icon-picker
+        .platform-project-icon-picker__trigger.is-open
+        .platform-project-icon-picker__trigger-icon {
+        background: color-mix(
+          in srgb,
+          var(--project-icon-color, #fff) 16%,
+          transparent
+        );
+      }
+
+      .platform-project-summary__icon-picker
+        .platform-project-icon-picker__trigger-icon > svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .platform-project-summary__icon-picker .platform-project-icon-picker__emoji {
+        font-size: 24px !important;
+      }
+
+      .platform-project-summary__copy {
+        min-width: 0;
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
       }
 
       .platform-project-summary__title {
         max-width: 100%;
-        margin: 12px 0 0;
+        margin: 0;
         overflow: hidden;
-        color: #fff;
-        font-size: 18px;
-        line-height: 1.25;
-        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 20px;
+        line-height: 1.3;
+        font-weight: 400;
         letter-spacing: 0;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -35,9 +90,10 @@ export const PROJECT_SUMMARY_CSS_FRAGMENT = `
 
       .platform-project-summary__input {
         box-sizing: border-box;
-        width: min(100%, 560px);
-        min-height: 22px;
-        margin: 8px 0 0;
+        width: 100%;
+        min-width: 0;
+        min-height: 18px;
+        margin: 0;
         padding: 0;
         overflow: hidden;
         border: 0;
@@ -45,10 +101,10 @@ export const PROJECT_SUMMARY_CSS_FRAGMENT = `
         outline: 0;
         resize: none;
         background: transparent;
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(255, 255, 255, 0.62);
         font: inherit;
-        font-size: 14px;
-        line-height: 1.55;
+        font-size: 12px;
+        line-height: 1.5;
         font-weight: 400;
         letter-spacing: 0;
         scrollbar-width: none;
@@ -59,7 +115,7 @@ export const PROJECT_SUMMARY_CSS_FRAGMENT = `
       }
 
       .platform-project-summary__input::placeholder {
-        color: rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.35);
         opacity: 1;
       }
 

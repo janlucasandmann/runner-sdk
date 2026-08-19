@@ -543,11 +543,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
             }
             return acc;
           }, Object.create(null));
-          const missionControlSummaryText = String(selectedProjectMissionControl.summary || "").trim()
-            || (String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim()
-              ? "Mission Control has generated a strategy snapshot for the current project state."
-              : "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.");
-          const normalizedProjectOverviewHomeTab = projectOverviewHomeTab === "rules" || projectOverviewHomeTab === "strategy"
+          const normalizedProjectOverviewHomeTab = projectOverviewHomeTab === "rules"
             ? "general"
             : projectOverviewHomeTab;
           const projectOverviewSettingsMetadata = projectOverviewDraft?.metadata && typeof projectOverviewDraft.metadata === "object" && !Array.isArray(projectOverviewDraft.metadata)
@@ -953,6 +949,10 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
           const projectOverviewPublishedTemplates = Array.isArray(projectOverviewMetadata.resourceTemplates)
             ? projectOverviewMetadata.resourceTemplates
             : [];
+          const projectOverviewLinkedResources = Array.isArray(projectOverviewMetadata.linkedResources)
+            ? projectOverviewMetadata.linkedResources
+                .filter((resource) => resource && typeof resource === "object" && !Array.isArray(resource))
+            : [];
 
           function getProjectOverviewCurrentProjectTypeId() {
             const metadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
@@ -1001,16 +1001,19 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
             const fallbackTypes = [
               { id: "all", label: "All" },
               { id: "file", label: "Files" },
-              { id: "metronome", label: "Metronomes" },
+              { id: "metronome", label: "Workflows" },
               { id: "web_app", label: "Web Apps" },
               { id: "function", label: "Functions" },
               { id: "database", label: "Databases" },
               { id: "imagine", label: "Imagine" },
+              { id: "knowledge", label: "Knowledge" },
+              { id: "prompt", label: "Prompts" },
+              { id: "evaluation", label: "Evaluations" },
             ];
             const base = projectOverviewResourceTemplateTypes.length ? projectOverviewResourceTemplateTypes : fallbackTypes;
-            const wanted = new Set(["all", "file", "metronome", "web_app", "function", "database", "imagine"]);
+            const wanted = new Set(["all", "file", "metronome", "web_app", "function", "database", "imagine", "knowledge", "prompt", "evaluation"]);
             const seen = new Set();
-            return base
+            return [...base, ...fallbackTypes]
               .filter((type) => wanted.has(String(type?.id || "").trim()))
               .filter((type) => {
                 const id = String(type?.id || "").trim();
@@ -1039,11 +1042,14 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
             const normalized = String(type || "").trim();
             const metaByType = {
               file: { label: "File", Icon: FileText, subview: "overview" },
-              metronome: { label: "Metronome", Icon: Metronome, subview: "resources" },
+              metronome: { label: "Workflow", Icon: Metronome, subview: "resources" },
               web_app: { label: "Web App", Icon: Monitor, subview: "web-apps" },
               function: { label: "Function", Icon: FunctionSquare, subview: "functions" },
               database: { label: "Database", Icon: Database, subview: "databases" },
               imagine: { label: "Imagine", Icon: Clapperboard, subview: "imagine" },
+              knowledge: { label: "Knowledge", Icon: LibraryBig, subview: "resources" },
+              prompt: { label: "Prompt", Icon: MessageSquareText, subview: "resources" },
+              evaluation: { label: "Evaluation", Icon: FlaskConical, subview: "resources" },
             };
             return metaByType[normalized] || { label: "Resource", Icon: Layers, subview: "resources" };
           }
@@ -1086,6 +1092,70 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
               seen.add(key);
               rows.push(row);
             }
+            const projectKnowledgeLibraryId = String(getPlaygroundProjectKnowledgeLibraryId(selectedProject) || "").trim();
+            const projectKnowledgeMetadata = projectOverviewMetadata.knowledge && typeof projectOverviewMetadata.knowledge === "object" && !Array.isArray(projectOverviewMetadata.knowledge)
+              ? projectOverviewMetadata.knowledge
+              : {};
+            if (projectKnowledgeLibraryId) {
+              const projectKnowledgeName = String(
+                projectKnowledgeMetadata.libraryName
+                || projectOverviewMetadata.knowledgeLibraryName
+                || selectedProject?.knowledgeLibraryName
+                || "Project Strategy"
+              ).trim() || "Project Strategy";
+              pushResourceRow({
+                key: "linked:knowledge:" + projectKnowledgeLibraryId,
+                kind: "linked",
+                type: "knowledge",
+                title: projectKnowledgeName,
+                subtitle: "Project strategy and durable documentation",
+                status: "Strategy",
+                updatedLabel: getProjectOverviewSidebarDateLabel(projectKnowledgeMetadata.updatedAt || selectedProject?.updatedAt || ""),
+                record: {
+                  id: projectKnowledgeLibraryId,
+                  name: projectKnowledgeName,
+                  description: "Project strategy and durable documentation",
+                  metadata: projectKnowledgeMetadata,
+                },
+                resourceId: projectKnowledgeLibraryId,
+                isStrategyKnowledge: true,
+                usageCount: Number(projectKnowledgeMetadata.usageCount || projectKnowledgeMetadata.referenceCount || 0),
+                path: "",
+              });
+            }
+            projectOverviewLinkedResources.forEach((resource, index) => {
+              const rawType = String(resource.type || resource.resourceType || "").trim().toLowerCase();
+              const type = rawType === "prompts"
+                ? "prompt"
+                : rawType === "evaluations"
+                  ? "evaluation"
+                  : rawType === "libraries"
+                    ? "knowledge"
+                    : rawType;
+              if (!["file", "imagine", "metronome", "web_app", "function", "database", "knowledge", "prompt", "evaluation"].includes(type)) {
+                return;
+              }
+              const resourceId = String(resource.id || resource.resourceId || resource.evaluationId || resource.key || "").trim();
+              if (!resourceId) {
+                return;
+              }
+              const meta = getProjectOverviewResourceTypeMeta(type);
+              const title = String(resource.name || resource.title || resource.label || resourceId || meta.label).trim();
+              pushResourceRow({
+                key: "linked:" + type + ":" + resourceId,
+                kind: "linked",
+                type,
+                title: title || meta.label,
+                subtitle: String(resource.description || resource.summary || resource.subtitle || "Linked " + meta.label.toLowerCase()).trim(),
+                status: resource.isStrategyKnowledge ? "Strategy" : "Linked",
+                updatedLabel: getProjectOverviewSidebarDateLabel(resource.updatedAt || resource.linkedAt || resource.createdAt || ""),
+                record: resource,
+                resourceId,
+                isStrategyKnowledge: resource.isStrategyKnowledge === true,
+                usageCount: Number(resource.usageCount || resource.useCount || resource.referenceCount || resource.runCount || 0),
+                path: normalizeHistoryPath(resource.sourcePath || resource.workspacePath || resource.path || ""),
+              });
+            });
             projectOverviewPublishedTemplates.forEach((item, index) => {
               const normalizedTemplateId = String(item?.templateId || item?.id || "").trim();
               const catalogTemplate = projectOverviewResourceTemplates.find((template) => (

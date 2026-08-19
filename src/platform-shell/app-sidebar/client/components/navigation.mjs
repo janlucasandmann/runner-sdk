@@ -135,10 +135,17 @@ ${developAgentServiceEntries}            ];
 ${createPrimaryEntries}
             {
               id: "metronome",
-              label: "Metronome",
+              label: "Workflows",
               Icon: Metronome,
               active: activePage === "metronome",
               onClick: openMetronomeOverviewPage,
+            },
+            {
+              id: "batches",
+              label: "Batches",
+              Icon: Truck,
+              active: activePage === "batches",
+              onClick: openBatchesOverviewPage,
             },
             {
               id: "calendar",

@@ -568,11 +568,11 @@ assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /className: "playgr
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationDetailSidebarRow\("pass-threshold"/);
 assert.match(
   EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views,
-  /React\.createElement\(PlatformPrimaryButton, \{[\s\S]*?className: "playground-evaluations-detail-run-button"[\s\S]*?openRunEvaluationModal\(activeSet\.id\)[\s\S]*?"Run Evaluation"/,
+  /React\.createElement\(PlatformButtonSelector, \{[\s\S]*?className: "playground-evaluations-detail-run-button"[\s\S]*?openRunEvaluationModal\(activeSet\.id\)[\s\S]*?"Add to Batches"/,
 );
 assert.match(
   EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views,
-  /className: "playground-evaluations-detail-run-button"[\s\S]*?disabled: getEvaluationRunnableCaseCount\(activeSet\) === 0/,
+  /actionDisabled: getEvaluationRunnableCaseCount\(activeSet\) === 0[\s\S]*?popupDisabled: getEvaluationRunnableCaseCount\(activeSet\) === 0[\s\S]*?className: "playground-evaluations-detail-run-button"/,
 );
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /variant: "run"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /ariaLabel: "Evaluation run details"/);
@@ -599,7 +599,7 @@ assert.match(
 );
 assert.match(
   evaluationRunViewScript,
-  /React\.createElement\(PlatformPrimaryButton, \{[\s\S]*?className: "playground-evaluations-run-again-button"[\s\S]*?openRunEvaluationModal\(activeSet\.id\)[\s\S]*?"Run Again"/,
+  /React\.createElement\(PlatformButtonSelector, \{[\s\S]*?label: "Run Again"[\s\S]*?className: "playground-evaluations-run-again-button"[\s\S]*?openRunEvaluationModal\(activeSet\.id\)[\s\S]*?"Add to Batches"/,
 );
 assert.doesNotMatch(
   evaluationRunViewScript,
@@ -686,6 +686,7 @@ assert.match(
 );
 
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.state, /evaluationSets/);
+assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.state, /evaluationsOverviewScope/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation, /function openEvaluationsPage/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation, /function openEvaluationDetailPage/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation, /setSelectedEvaluationRunId\(""\)/);
@@ -711,12 +712,13 @@ assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /id: "playground-ev
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /id: "playground-evaluation-run-breadcrumb-actions"/);
 assert.match(
   EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation,
-  /center: isEvaluationDatasetCase[\s\S]*?\{ value: "code", label: "Code" \},[\s\S]*?\{ value: "settings", label: "Settings" \},[\s\S]*?showEvaluationSetActions[\s\S]*?\{ value: "general", label: "General" \},[\s\S]*?\{ value: "cases", label: "Cases" \},[\s\S]*?\{ value: "settings", label: "Settings" \},[\s\S]*?ariaLabel: "Evaluation section"/,
+  /center: isEvaluationsOverview[\s\S]*?\{ value: "all", label: "All Evaluations" \},[\s\S]*?\{ value: "created", label: "Created by me" \},[\s\S]*?\{ value: "shared", label: "Shared with me" \},[\s\S]*?: isEvaluationDatasetCase[\s\S]*?\{ value: "code", label: "Code" \},[\s\S]*?\{ value: "settings", label: "Settings" \},[\s\S]*?showEvaluationSetActions[\s\S]*?\{ value: "general", label: "General" \},[\s\S]*?\{ value: "cases", label: "Cases" \},[\s\S]*?\{ value: "settings", label: "Settings" \},[\s\S]*?ariaLabel: "Evaluation section"/,
 );
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /setEvaluationDetailTab\("cases"\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /function handleDeleteEvaluations\(setIds\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /Promise\.allSettled\(normalizedSetIds\.map/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /function renderEvaluationsPage/);
+assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /evaluationsOverviewScope/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /versionsSidebarRequestToken: evaluationVersionsSidebarRequestToken/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /breadcrumbActionsPortalId: evaluationsPageMode === "detail"/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /evaluationsPageMode === "run"[\s\S]*?"playground-evaluation-run-breadcrumb-actions"/);
@@ -800,7 +802,7 @@ assert.match(platformEntrySource, /const evaluationsService = createEvaluationsS
 assert.match(platformEntrySource, /evaluationsService\.handleRequest\(req, res, url\)/);
 assert.match(
   platformEntrySource,
-  /\$\{PLAYGROUND_EVALUATIONS_CSS \+ PLAYGROUND_TESTS_CSS \+ PLAYGROUND_ASSURANCE_CSS\}/,
+  /\$\{PLAYGROUND_EVALUATIONS_CSS \+ PLAYGROUND_TESTS_CSS \+ PLAYGROUND_KNOWLEDGE_CSS \+ PLAYGROUND_ASSURANCE_CSS\}/,
 );
 assert.match(platformEntrySource, /\$\{PLAYGROUND_EVALUATIONS_SCRIPT\}/);
 assert.match(platformEntrySource, /\$\{EVALUATIONS_APP_SCRIPT_FRAGMENTS\.pageView\}/);

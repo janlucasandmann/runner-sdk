@@ -19,8 +19,26 @@ export const FINE_TUNING_APP_TOP_NAVIGATION_SCRIPT = String.raw`        function
           return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems: fineTuningPathItems,
-            center: isFineTuningDetail
+            center: isFineTuningOverview
               ? React.createElement(PlatformSwitch, {
+                  className: "playground-fine-tuning-overview-scope-switch",
+                  value: fineTuningOverviewScope === "created"
+                    ? "created"
+                    : fineTuningOverviewScope === "shared"
+                      ? "shared"
+                      : "all",
+                  options: [
+                    { value: "all", label: "All Optimizations" },
+                    { value: "created", label: "Created by me" },
+                    { value: "shared", label: "Shared with me" },
+                  ],
+                  onValueChange: (nextScope) => setFineTuningOverviewScope(
+                    nextScope === "created" || nextScope === "shared" ? nextScope : "all"
+                  ),
+                  ariaLabel: "Agent optimization scope",
+                })
+              : isFineTuningDetail
+                ? React.createElement(PlatformSwitch, {
                   className: "playground-fine-tuning-detail-header-switch",
                   value: ["analysis", "changes", "settings"].includes(fineTuningDetailTab)
                     ? fineTuningDetailTab
@@ -37,8 +55,8 @@ export const FINE_TUNING_APP_TOP_NAVIGATION_SCRIPT = String.raw`        function
                       : "general"
                   ),
                   ariaLabel: "Agent optimization section",
-                })
-              : null,
+                  })
+                : null,
             includeSearchDivider: isFineTuningOverview || isFineTuningDetail,
             extraActions: isFineTuningOverview
               ? React.createElement("div", {

@@ -289,6 +289,39 @@ export function createPlatformConfig(env = process.env) {
   const oidcLocalAccountsGrpcAddress = normalizeLoopbackGrpcAddress(
     env.OIDC_LOCAL_ACCOUNTS_GRPC_ADDRESS,
   );
+  const passwordResetEmailProvider = String(
+    env.PASSWORD_RESET_EMAIL_PROVIDER || "disabled",
+  ).trim().toLowerCase();
+  const passwordResetApiKey = String(
+    env.PASSWORD_RESET_SENDGRID_API_KEY || env.SENDGRID_API_KEY || "",
+  ).trim();
+  const passwordResetFromAddress = String(
+    env.PASSWORD_RESET_FROM_ADDRESS
+    || env.EMAIL_FROM_ADDRESS
+    || "noreply@computer-agents.com",
+  ).trim().toLowerCase();
+  const passwordResetFromName = String(
+    env.PASSWORD_RESET_FROM_NAME
+    || env.EMAIL_FROM_NAME
+    || "Computer Agents",
+  ).trim();
+  const passwordResetTokenTtlSeconds = readPositiveInteger(
+    env.PASSWORD_RESET_TOKEN_TTL_SECONDS,
+    30 * 60,
+    { minimum: 5 * 60, maximum: 2 * 60 * 60 },
+  );
+  const platformDataRoot = String(env.PLATFORM_DATA_ROOT || "").trim();
+  const passwordResetStatePath = String(
+    env.PASSWORD_RESET_STATE_PATH
+    || (platformDataRoot
+      ? path.join(platformDataRoot, "identity", "password-reset-tokens.json")
+      : ""),
+  ).trim();
+  if (!["disabled", "sendgrid"].includes(passwordResetEmailProvider)) {
+    throw new Error(
+      "PASSWORD_RESET_EMAIL_PROVIDER must be disabled or sendgrid.",
+    );
+  }
   if (!["client_secret_basic", "client_secret_post", "none"].includes(oidcTokenEndpointAuthMethod)) {
     throw new Error(
       `Invalid OIDC_TOKEN_ENDPOINT_AUTH_METHOD "${oidcTokenEndpointAuthMethod}".`,
@@ -323,6 +356,28 @@ export function createPlatformConfig(env = process.env) {
       throw new Error(
         "OIDC_LOCAL_ACCOUNTS_GRPC_ADDRESS is required when local account registration is enabled.",
       );
+    }
+    if (passwordResetEmailProvider !== "disabled" && !oidcLocalAccountsEnabled) {
+      throw new Error(
+        "Password reset email requires OIDC local accounts to be enabled.",
+      );
+    }
+    if (passwordResetEmailProvider === "sendgrid") {
+      validateSecret("PASSWORD_RESET_SENDGRID_API_KEY", passwordResetApiKey);
+      if (
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(passwordResetFromAddress)
+        || /[\r\n\0]/.test(passwordResetFromAddress)
+      ) {
+        throw new Error("PASSWORD_RESET_FROM_ADDRESS must be a valid email address.");
+      }
+      if (!passwordResetFromName || passwordResetFromName.length > 100) {
+        throw new Error("PASSWORD_RESET_FROM_NAME must contain between 1 and 100 characters.");
+      }
+      if (!passwordResetStatePath || !path.isAbsolute(passwordResetStatePath)) {
+        throw new Error(
+          "PASSWORD_RESET_STATE_PATH or PLATFORM_DATA_ROOT must provide an absolute durable password reset state path.",
+        );
+      }
     }
     if (
       oidcAllowedAlgorithms.length === 0
@@ -476,6 +531,15 @@ export function createPlatformConfig(env = process.env) {
         enabled: oidcLocalAccountsEnabled,
         grpcAddress: oidcLocalAccountsGrpcAddress,
       }),
+    }),
+    passwordReset: Object.freeze({
+      enabled: passwordResetEmailProvider !== "disabled",
+      provider: passwordResetEmailProvider,
+      apiKey: passwordResetApiKey,
+      fromAddress: passwordResetFromAddress,
+      fromName: passwordResetFromName,
+      tokenTtlSeconds: passwordResetTokenTtlSeconds,
+      statePath: passwordResetStatePath,
     }),
     platformControlPlaneSecret,
     platformPrincipalAssertionAudience: String(

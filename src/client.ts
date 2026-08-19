@@ -138,6 +138,9 @@ export class RunnerClient {
     const startedAt = Date.now();
     let usage: RunnerExecuteResult["usage"];
     let cancelled = false;
+    let queued = false;
+    let batchJobId: string | null = null;
+    let admissionReason: string | null = null;
     let streamError: Error | undefined;
 
     for await (const data of iterateSseData(response.body)) {
@@ -176,6 +179,13 @@ export class RunnerClient {
       }
 
       if (event.type === "stream.completed") {
+        queued = event.queued === true;
+        batchJobId = typeof event.batchJobId === "string"
+          ? event.batchJobId
+          : null;
+        admissionReason = typeof event.admissionReason === "string"
+          ? event.admissionReason
+          : null;
         break;
       }
     }
@@ -184,6 +194,9 @@ export class RunnerClient {
       durationSeconds: Math.floor((Date.now() - startedAt) / 1000),
       usage,
       cancelled,
+      queued,
+      batchJobId,
+      admissionReason,
     };
 
     if (streamError && (options.throwOnError ?? true)) {

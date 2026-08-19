@@ -604,6 +604,10 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
       function buildEmptyPlaygroundProjectMissionControl() {
         return {
           summary: "",
+          knowledgeLibraryId: "",
+          knowledgeLibraryName: "",
+          // Read-only compatibility for projects created before strategy and
+          // documentation moved into the Knowledge service.
           document: "",
           instructions: "",
           strategyBrief: buildEmptyPlaygroundProjectStrategyBrief(),
@@ -993,6 +997,16 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
         return {
           ...buildEmptyPlaygroundProjectMissionControl(),
           summary: typeof missionControl.summary === "string" ? missionControl.summary : "",
+          knowledgeLibraryId: typeof missionControl.knowledgeLibraryId === "string"
+            ? missionControl.knowledgeLibraryId
+            : typeof missionControl.knowledge_library_id === "string"
+              ? missionControl.knowledge_library_id
+              : "",
+          knowledgeLibraryName: typeof missionControl.knowledgeLibraryName === "string"
+            ? missionControl.knowledgeLibraryName
+            : typeof missionControl.knowledge_library_name === "string"
+              ? missionControl.knowledge_library_name
+              : "",
           document: typeof missionControl.document === "string" ? missionControl.document : "",
           instructions: typeof missionControl.instructions === "string" ? missionControl.instructions : "",
           strategyBrief: normalizePlaygroundProjectStrategyBrief(rawStrategyBrief),
@@ -1059,6 +1073,7 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
         const strategyBrief = normalizePlaygroundProjectStrategyBrief(missionControl.strategyBrief);
         return Boolean(
           String(missionControl.summary || "").trim()
+          || String(missionControl.knowledgeLibraryId || "").trim()
           || String(missionControl.document || "").trim()
           || String(missionControl.instructions || "").trim()
           || String(missionControl.lastThreadId || "").trim()
@@ -1082,6 +1097,72 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           || hasMeaningfulPlaygroundProjectStrategyBrief(strategyBrief)
           || hasMeaningfulPlaygroundDeliveryAssurance(missionControl.deliveryAssurance)
         );
+      }
+
+      function buildPlaygroundProjectMissionControlStorageRecord(value) {
+        const normalized = normalizePlaygroundProjectMissionControlRecord(value);
+        return {
+          summary: normalized.summary,
+          knowledgeLibraryId: normalized.knowledgeLibraryId,
+          knowledgeLibraryName: normalized.knowledgeLibraryName,
+          instructions: normalized.instructions,
+          deliveryContract: clonePlaygroundProjectBlueprintValue(normalized.deliveryContract, null),
+          deliveryPlan: clonePlaygroundProjectBlueprintValue(normalized.deliveryPlan, null),
+          deliveryExecution: clonePlaygroundProjectBlueprintValue(normalized.deliveryExecution, null),
+          deliveryAssurance: normalizePlaygroundDeliveryAssurance(normalized.deliveryAssurance),
+          comments: normalizePlaygroundTaskCommentList(normalized.comments),
+          lastThreadId: normalized.lastThreadId,
+          updatedAt: normalized.updatedAt,
+        };
+      }
+
+      function resolvePlaygroundProjectKnowledgeLibraryId(projectRecord) {
+        const metadata = projectRecord?.metadata && typeof projectRecord.metadata === "object" && !Array.isArray(projectRecord.metadata)
+          ? projectRecord.metadata
+          : {};
+        const knowledge = metadata.knowledge && typeof metadata.knowledge === "object" && !Array.isArray(metadata.knowledge)
+          ? metadata.knowledge
+          : {};
+        const missionControl = selectPlaygroundProjectMissionControlRecord(projectRecord);
+        return String(
+          projectRecord?.knowledgeLibraryId
+          || metadata.knowledgeLibraryId
+          || knowledge.libraryId
+          || missionControl.knowledgeLibraryId
+          || ""
+        ).trim();
+      }
+
+      function buildPlaygroundProjectKnowledgeRunContext(projectRecord, source = "project_task") {
+        const libraryId = resolvePlaygroundProjectKnowledgeLibraryId(projectRecord);
+        if (!libraryId) {
+          return null;
+        }
+        return {
+          schemaVersion: "computer_agents_knowledge_context_v1",
+          enabled: true,
+          libraryIds: [libraryId],
+          bindings: [{ libraryId }],
+          mode: "propose",
+          source: String(source || "project_task").slice(0, 80),
+        };
+      }
+
+      function buildPlaygroundProjectKnowledgeAgentPromptSection(projectRecord) {
+        const libraryId = resolvePlaygroundProjectKnowledgeLibraryId(projectRecord);
+        if (!libraryId) {
+          return [
+            "Project Knowledge is not linked yet.",
+            "- Do not put strategy or documentation into project metadata.",
+            "- Ask Mission Control to prepare the project's Knowledge library before relying on durable project context.",
+          ].join(String.fromCharCode(10));
+        }
+        return [
+          "Project Knowledge (durable source of truth): " + libraryId,
+          "- Read the attached library before making project decisions.",
+          "- Propose updates when work creates or changes strategy, architecture, decisions, interfaces, runbooks, research, troubleshooting guidance, or handoff documentation.",
+          "- Update an existing relevant document instead of creating duplicates. Never store strategy or documentation in project metadata, tickets, or transient working logs.",
+        ].join(String.fromCharCode(10));
       }
 
       function buildPlaygroundProjectMissionControlMetadataFragment(project, fallbackProject = null) {

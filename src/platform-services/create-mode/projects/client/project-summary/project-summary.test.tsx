@@ -11,7 +11,7 @@ describe("ProjectSummary", () => {
   it("renders project identity separately from its editable summary", () => {
     const onSummaryChange = vi.fn();
     const onSummaryCommit = vi.fn();
-    render(
+    const { container } = render(
       <ProjectSummary
         projectName="Computer Agents"
         summary="Initial summary"
@@ -27,6 +27,11 @@ describe("ProjectSummary", () => {
 
     expect(screen.getByRole("heading", { name: "Computer Agents" })).not.toBeNull();
     expect(screen.queryByText("Computer Agents", { selector: "span" })).toBeNull();
+    const header = container.querySelector(".platform-project-summary");
+    expect(header?.firstElementChild?.classList.contains("platform-project-summary__icon-picker"))
+      .toBe(true);
+    expect(header?.lastElementChild?.classList.contains("platform-project-summary__copy"))
+      .toBe(true);
 
     const summary = screen.getByRole("textbox", { name: "Project summary" });
     fireEvent.change(summary, { target: { value: "A concise project summary" } });

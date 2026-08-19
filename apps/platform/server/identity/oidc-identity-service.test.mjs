@@ -412,6 +412,7 @@ test("local signup validates a CSRF-bound form and creates a durable Dex account
   const createdAccounts = [];
   const principalExchanges = [];
   const workloadKey = "tb_signup_workload-secret-never-sent-to-browser";
+  let localPasswordFingerprint = "initial-local-password-fingerprint";
   const server = http.createServer((request, response) => {
     const url = new URL(request.url || "/", platformOrigin);
     if (url.pathname === "/__session") {
@@ -475,6 +476,14 @@ test("local signup validates a CSRF-bound form and creates a durable Dex account
           subject: "CgNmb28SBWxvY2Fs",
         };
       },
+      async findAccount(email) {
+        assert.equal(email, "operator@example.test");
+        return {
+          email,
+          displayName: "Local Operator",
+          passwordFingerprint: localPasswordFingerprint,
+        };
+      },
     },
   });
 
@@ -535,4 +544,136 @@ test("local signup validates a CSRF-bound form and creates a durable Dex account
   const session = JSON.parse(await sessionResponse.text());
   assert.equal(session.profile.userId, "user_local_platform_1");
   assert.equal(session.profile.email, "operator@example.test");
+
+  localPasswordFingerprint = "";
+  const hashlessDexSession = await fetch(`${platformOrigin}/__session`, {
+    headers: { cookie: cookiePair(sessionSetCookie) },
+  });
+  assert.equal(hashlessDexSession.status, 200);
+
+  localPasswordFingerprint = "replacement-local-password-fingerprint";
+  const invalidatedSession = await fetch(`${platformOrigin}/__session`, {
+    headers: { cookie: cookiePair(sessionSetCookie) },
+  });
+  assert.equal(invalidatedSession.status, 401);
+});
+
+test("password reset routes are CSRF-bound, enumeration-safe, and clear sessions", async (t) => {
+  let platformOrigin = "";
+  let identityService;
+  const requestedEmails = [];
+  const resetPasswords = [];
+  const passwordResetService = {
+    async request(email) {
+      requestedEmails.push(email);
+      return { accepted: true, delivered: true };
+    },
+    async inspect(token) {
+      return token === "valid-reset-token";
+    },
+    async reset(token, password) {
+      resetPasswords.push({ token, password });
+      return token === "valid-reset-token"
+        ? { updated: true, invalidated: false }
+        : { updated: false, invalidated: true };
+    },
+  };
+  const server = http.createServer((request, response) => {
+    const url = new URL(request.url || "/", platformOrigin);
+    if (!identityService.handleRequest(request, response, url)) {
+      response.statusCode = 404;
+      response.end();
+    }
+  });
+  platformOrigin = await listen(server);
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+
+  identityService = createOidcIdentityService({
+    identityProvider: "oidc",
+    defaultUpstreamOrigin: "http://127.0.0.1:8080/v1",
+    oidc: {
+      issuerUrl: "https://identity.example.test/realm",
+      callbackPath: "/api/platform/auth/callback",
+      localAccounts: { enabled: true, grpcAddress: "127.0.0.1:5557" },
+    },
+    passwordReset: { enabled: true, tokenTtlSeconds: 1800 },
+    platformOrigin,
+    platformSessionCookieName: "computer_agents_session",
+    platformSessionSecret: "platform-session-secret-with-at-least-32-bytes",
+    platformSessionTtlSeconds: 60 * 60,
+    platformControlPlaneSecret: "control-plane-secret-with-at-least-32-bytes",
+    platformPrincipalAssertionIssuer: "computer-agents-platform",
+    platformPrincipalAssertionAudience: "computer-agents-control-api",
+    platformCookieSecure: false,
+  }, {
+    oidcClient: {},
+    localAccountService: {},
+    passwordResetService,
+  });
+
+  const forgotPage = await fetch(`${platformOrigin}/forgot-password`);
+  assert.equal(forgotPage.status, 200);
+  const forgotHtml = await forgotPage.text();
+  const forgotCsrf = forgotHtml.match(/name="csrf" value="([^"]+)"/)?.[1];
+  assert.ok(forgotCsrf);
+
+  const forgotResponse = await fetch(`${platformOrigin}/forgot-password`, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      csrf: forgotCsrf,
+      email: " Operator@Example.test ",
+    }),
+  });
+  assert.equal(forgotResponse.status, 200);
+  assert.match(await forgotResponse.text(), /If an account exists/);
+  assert.deepEqual(requestedEmails, ["operator@example.test"]);
+
+  const resetPage = await fetch(
+    `${platformOrigin}/reset-password?token=valid-reset-token`,
+  );
+  assert.equal(resetPage.status, 200);
+  const resetHtml = await resetPage.text();
+  const resetCsrf = resetHtml.match(/name="csrf" value="([^"]+)"/)?.[1];
+  assert.ok(resetCsrf);
+
+  const mismatch = await fetch(`${platformOrigin}/reset-password`, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      csrf: resetCsrf,
+      token: "valid-reset-token",
+      password: "Replacement-Horse-42!",
+      confirmPassword: "Different-Horse-42!",
+    }),
+  });
+  assert.equal(mismatch.status, 400);
+  assert.match(await mismatch.text(), /Passwords do not match/);
+  assert.equal(resetPasswords.length, 0);
+
+  const refreshedPage = await fetch(
+    `${platformOrigin}/reset-password?token=valid-reset-token`,
+  );
+  const refreshedHtml = await refreshedPage.text();
+  const refreshedCsrf = refreshedHtml.match(/name="csrf" value="([^"]+)"/)?.[1];
+  const complete = await fetch(`${platformOrigin}/reset-password`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      cookie: "computer_agents_session=old-session",
+    },
+    body: new URLSearchParams({
+      csrf: refreshedCsrf,
+      token: "valid-reset-token",
+      password: "Replacement-Horse-42!",
+      confirmPassword: "Replacement-Horse-42!",
+    }),
+  });
+  assert.equal(complete.status, 200);
+  assert.match(await complete.text(), /password has been updated/i);
+  assert.match(complete.headers.get("set-cookie") || "", /Max-Age=0/);
+  assert.deepEqual(resetPasswords, [{
+    token: "valid-reset-token",
+    password: "Replacement-Horse-42!",
+  }]);
 });

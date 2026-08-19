@@ -953,20 +953,14 @@
                   : isSourceDeployableResourcesDetailView
                     ? React.createElement(PlatformSwitch, {
                         className: "playground-source-server-detail-header-switch",
-                        value: ["usage", "code", "settings"].includes(resourcesHeaderState.activeSection)
+                        value: ["code", "usage", "settings"].includes(resourcesHeaderState.activeSection)
                           ? resourcesHeaderState.activeSection
-                          : activeResourcesServerKind === "function" ? "code" : "usage",
-                        options: activeResourcesServerKind === "function"
-                          ? [
-                              { value: "code", label: "Code" },
-                              { value: "usage", label: "Usage" },
-                              { value: "settings", label: "Settings" },
-                            ]
-                          : [
-                              { value: "usage", label: "Usage" },
-                              { value: "code", label: "Code" },
-                              { value: "settings", label: "Settings" },
-                            ],
+                          : "code",
+                        options: [
+                          { value: "code", label: "Code" },
+                          { value: "usage", label: "Usage" },
+                          { value: "settings", label: "Settings" },
+                        ],
                         onValueChange: (nextSection) => {
                           if (typeof resourcesHeaderState.onSectionChange === "function") {
                             resourcesHeaderState.onSectionChange(nextSection);
@@ -1279,37 +1273,6 @@
             document.addEventListener("mousedown", handleTopNavIssueDetailSelectPopoverPointerDown);
             return () => document.removeEventListener("mousedown", handleTopNavIssueDetailSelectPopoverPointerDown);
           }, [topNavIssueDetailSelectPopover]);
-
-          useEffect(() => {
-            if (!projectBreadcrumbMenuOpen) {
-              return undefined;
-            }
-
-            function handleProjectBreadcrumbMenuPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (
-                !target
-                || projectBreadcrumbMenuRef.current?.contains(target)
-                || projectBreadcrumbMenuSurfaceRef.current?.contains(target)
-              ) {
-                return;
-              }
-              setProjectBreadcrumbMenuOpen(false);
-            }
-
-            function handleProjectBreadcrumbMenuKeyDown(event) {
-              if (event.key === "Escape") {
-                setProjectBreadcrumbMenuOpen(false);
-              }
-            }
-
-            document.addEventListener("mousedown", handleProjectBreadcrumbMenuPointerDown);
-            document.addEventListener("keydown", handleProjectBreadcrumbMenuKeyDown);
-            return () => {
-              document.removeEventListener("mousedown", handleProjectBreadcrumbMenuPointerDown);
-              document.removeEventListener("keydown", handleProjectBreadcrumbMenuKeyDown);
-            };
-          }, [projectBreadcrumbMenuOpen]);
 
           useEffect(() => {
             setProjectBreadcrumbMenuOpen(false);
@@ -2171,6 +2134,28 @@
                 : null,
               threadCanMutate
                 ? React.createElement(PlatformResourceActionMenuItem, {
+                    icon: React.createElement(Truck, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    label: "Add to Batches",
+                    onClick: () => {
+                      closeThreadActions();
+                      openBatchComposer({
+                        name: "Continue " + String(selectedKnownThread.title || selectedKnownThread.task || "thread").slice(0, 180),
+                        description: "Thread work queued from the thread details page.",
+                        targetKind: "thread_run",
+                        targetResourceId: selectedKnownThread.id,
+                        definition: {
+                          threadId: selectedKnownThread.id,
+                          message: String(selectedKnownThread.task || "Continue the work in this thread.").trim(),
+                        },
+                        sourceProjectId: selectedThreadProjectId || null,
+                        sourceTicketId: String(selectedKnownThread.taskId || selectedKnownThread.ticketId || "").trim() || null,
+                        startPolicy: "manual",
+                      });
+                    },
+                  })
+                : null,
+              threadCanMutate
+                ? React.createElement(PlatformResourceActionMenuItem, {
                     icon: React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
                     label: threadMutationIs("delete") ? "Deleting thread..." : "Delete Thread",
                     shortcut: "delete",
@@ -2345,6 +2330,18 @@
             const projectId = String(tasksHeaderState.projectId || "").trim();
             const canViewProjectSettings = tasksHeaderState.canViewProjectSettings !== false;
             const canDeleteProject = tasksHeaderState.canDeleteProject !== false;
+            const formatProjectHeaderTimestamp = (value) => {
+              const timestamp = Date.parse(String(value || ""));
+              return Number.isFinite(timestamp)
+                ? new Date(timestamp).toLocaleString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })
+                : "—";
+            };
             const navigateToProjectSection = (sectionId) => {
               setProjectBreadcrumbMenuOpen(false);
               setTasksProjectViewRequest({
@@ -2353,43 +2350,57 @@
                 token: Date.now().toString(36) + Math.random().toString(36).slice(2),
               });
             };
+            const requestProjectDelete = () => {
+              if (!canDeleteProject || !projectId) return;
+              setProjectBreadcrumbMenuOpen(false);
+              setTasksProjectDeleteRequest({
+                projectId,
+                token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              });
+            };
             const projectBreadcrumbTrailing = isProjectDetailView
-              ? React.createElement(PlatformPopup, {
-                  open: projectBreadcrumbMenuOpen,
-                  rootRef: projectBreadcrumbMenuRef,
-                  surfaceRef: projectBreadcrumbMenuSurfaceRef,
-                  rootClassName: "playground-project-breadcrumb-actions",
-                  surfaceClassName: "playground-tasks-toolbar-popup-menu playground-project-breadcrumb-menu",
-                  surfaceProps: {
-                    role: "menu",
-                    "aria-label": "Project actions",
-                  },
-                  trigger: React.createElement(PlatformIconButton, {
-                    size: "compact",
-                    className: "playground-project-breadcrumb-menu-trigger",
-                    onClick: (event) => {
-                      event.stopPropagation();
-                      setProjectBreadcrumbMenuOpen((current) => !current);
-                    },
-                    title: "Project actions",
-                    "aria-label": "Project actions",
-                    "aria-expanded": projectBreadcrumbMenuOpen ? "true" : "false",
-                  }, React.createElement(Ellipsis, { width: 14, height: 14, strokeWidth: 1.8 })),
-                  variant: "minimal",
-                  portal: true,
-                  placement: "bottom-start",
-                  animation: "down-in",
+              ? React.createElement(PlatformResourceHeaderActions, {
+                  className: "playground-project-breadcrumb-actions",
                 },
-                  React.createElement("div", {
-                    className: "playground-project-breadcrumb-menu-id",
-                  },
-                    React.createElement("span", null, "Project ID"),
-                    React.createElement("code", { title: projectId }, projectId)
-                  ),
-                  React.createElement("div", {
-                    className: "playground-project-breadcrumb-menu-divider",
-                    role: "separator",
+                React.createElement(PlatformResourceActionsMenu, {
+                  open: projectBreadcrumbMenuOpen,
+                  onOpenChange: setProjectBreadcrumbMenuOpen,
+                  resourceLabel: "Project",
+                  disabled: !projectId,
+                  shortcutActions: canDeleteProject
+                    ? {
+                        delete: {
+                          onInvoke: requestProjectDelete,
+                          disabled: !projectId,
+                        },
+                      }
+                    : {},
+                },
+                  React.createElement(PlatformResourceActionsInformation, {
+                    resourceLabel: "Project",
+                    items: [
+                      {
+                        id: "id",
+                        label: "ID",
+                        value: projectId,
+                        title: projectId,
+                        monospace: true,
+                        copyValue: projectId,
+                        copyAriaLabel: "Copy Project ID",
+                      },
+                      {
+                        id: "created",
+                        label: "Created",
+                        value: formatProjectHeaderTimestamp(tasksHeaderState.createdAt),
+                      },
+                      {
+                        id: "updated",
+                        label: "Updated",
+                        value: formatProjectHeaderTimestamp(tasksHeaderState.updatedAt),
+                      },
+                    ],
                   }),
+                  React.createElement(PlatformResourceActionsDivider, null),
                   [
                     { id: "general", label: "Home", Icon: House },
                     { id: "resources", label: "Resources", Icon: FolderOpen },
@@ -2397,68 +2408,59 @@
                     ...(canViewProjectSettings
                       ? [{ id: "permissions", label: "Settings", Icon: Settings2 }]
                       : []),
-                  ].map((item) => React.createElement("button", {
+                  ].map((item) => React.createElement(PlatformResourceActionMenuItem, {
                       key: item.id,
-                      type: "button",
-                      className: "tb-popup-row",
-                      role: "menuitem",
+                      icon: React.createElement(item.Icon, {
+                        width: 14,
+                        height: 14,
+                        strokeWidth: 1.8,
+                        "aria-hidden": "true",
+                      }),
+                      label: item.label,
+                      active: activeProjectView === item.id,
                       onClick: () => navigateToProjectSection(item.id),
+                    })),
+                  React.createElement(PlatformResourceActionsDivider, null),
+                  React.createElement(PlatformResourceActionMenuItem, {
+                    icon: React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    label: "Copy Project ID",
+                    onClick: () => {
+                      setProjectBreadcrumbMenuOpen(false);
+                      const copyPromise = navigator.clipboard?.writeText(projectId);
+                      if (copyPromise) void copyPromise.catch(() => undefined);
                     },
-                    React.createElement(item.Icon, {
-                      className: "tb-popup-icon",
-                      width: 14,
-                      height: 14,
-                      strokeWidth: 1.8,
-                    }),
-                    React.createElement("span", null, item.label)
-                  )),
+                  }),
                   canDeleteProject
-                    ? React.createElement(React.Fragment, null,
-                        React.createElement("div", {
-                          className: "playground-project-breadcrumb-menu-divider",
-                          role: "separator",
-                        }),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row is-danger",
-                          role: "menuitem",
-                          onClick: () => {
-                            setProjectBreadcrumbMenuOpen(false);
-                            setTasksProjectDeleteRequest({
-                              projectId,
-                              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                            });
-                          },
-                        },
-                          React.createElement(Trash2, {
-                            className: "tb-popup-icon",
-                            width: 14,
-                            height: 14,
-                            strokeWidth: 1.8,
-                          }),
-                          React.createElement("span", null, "Delete Project")
-                        )
-                      )
+                    ? React.createElement(PlatformResourceActionMenuItem, {
+                        icon: React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                        label: "Delete Project",
+                        shortcut: "delete",
+                        danger: true,
+                        onClick: requestProjectDelete,
+                      })
                     : null
                 )
+              )
               : null;
   
             return renderAppHeader({
-              className: "playground-tasks-unified-navbar",
+              className: "playground-tasks-unified-navbar"
+                + (isProjectTaskDetailView ? " is-ticket-detail" : ""),
               includeSearchDivider: true,
               pathItems: isProjectDetailView
                 ? [
                     { label: "Create" },
-                    {
-                      label: "Projects",
-                      onClick: () => setTasksProjectBackRequestToken((current) => current + 1),
-                    },
+                    ...(isProjectTaskDetailView
+                      ? []
+                      : [{
+                          label: "Projects",
+                          onClick: () => setTasksProjectBackRequestToken((current) => current + 1),
+                        }]),
                     ...(isProjectTaskDetailView
                       ? [
                           {
                             label: projectTitle,
                             leading: projectBreadcrumbLeading,
-                            trailing: projectBreadcrumbTrailing,
                             onClick: () => setTasksProjectViewRequest({
                               view: activeProjectWorkspaceView === "resources" ? "overview" : activeProjectWorkspaceView,
                               sectionId: activeProjectWorkspaceView === "resources" ? "resources" : "general",
@@ -2615,6 +2617,7 @@
   
   ${IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation}
   ${METRONOME_APP_SCRIPT_FRAGMENTS.modeSwitch}
+  ${BATCHES_APP_SCRIPT_FRAGMENTS.topNavigation}
           function renderInitialThreadWelcomeNav() {
             return renderAppHeader({
               className: "playground-thread-welcome-navbar",
@@ -2633,16 +2636,18 @@
             const metronomePathItems = isMetronomeEditor
               ? [
 	                  { label: "Create" },
-	                  { label: "Metronome", onClick: () => metronomeTopNavActionsRef.current?.goOverview?.() },
+	                  { label: "Workflows", onClick: () => metronomeTopNavActionsRef.current?.goOverview?.() },
 	                  {
-	                    label: metronomeTopNavState?.title || "Untitled Metronome",
+	                    label: metronomeTopNavState?.title || "Untitled Workflow",
 		                    trailing: renderMetronomeBreadcrumbActions(),
 	                  },
 	                ]
-              : [{ label: "Create" }, { label: "Metronome" }];
+              : [{ label: "Create" }, { label: "Workflows" }];
             return renderAppHeader({
               pathItems: activePage === "calendar"
                 ? [{ label: "Create" }, { label: calendarTopNavState?.label || "Calendar" }]
+                : activePage === "batches"
+                  ? [{ label: "Create" }, { label: "Batches" }]
                 : activePage === "imagine"
                   ? [{ label: "Create" }, { label: "Imagine" }]
                 : activePage === "metronome"
@@ -2651,6 +2656,11 @@
               leftExtra: null,
               center: activePage === "imagine"
                 ? renderImagineModeSwitch()
+                : activePage === "batches"
+                  ? React.createElement("div", {
+                      id: "playground-batches-overview-scope",
+                      className: "playground-resource-overview-scope-slot",
+                    })
                 : isMetronomeEditor
                   ? renderMetronomeModeSwitch()
                   : isMetronomeOverview
@@ -2666,11 +2676,16 @@
                         ariaLabel: "Workflow scope",
                       })
                     : null,
-              includeSearchDivider: activePage === "calendar" || isMetronomeEditor || isMetronomeOverview,
+              includeSearchDivider: activePage === "calendar" || activePage === "batches" || isMetronomeEditor || isMetronomeOverview,
               extraActions: activePage === "imagine"
                 ? renderImagineTopNavControls()
                 : activePage === "calendar"
                   ? renderCalendarTopNavActions()
+                : activePage === "batches"
+                  ? React.createElement("div", {
+                      id: "playground-batches-overview-controls",
+                      className: "playground-resource-overview-controls-slot",
+                    })
                 : isMetronomeEditor
                   ? renderMetronomeTopNavActions()
                   : isMetronomeOverview
@@ -2724,6 +2739,9 @@
                     subscriptionTierId: accountTierId || "",
                     onOpenPromptSearch: (onSelect) => {
                       openPromptSearch(onSelect);
+                    },
+                    onOpenKnowledgeSearch: (onSelect) => {
+                      openKnowledgeSearch(onSelect);
                     },
                     onOpenThreadSearch: (onSelect) => {
                       openThreadReferenceSearch(onSelect);
@@ -2793,6 +2811,7 @@
                             githubRepo: options.taskRunRequest.githubRepo || null,
                             enabledSkills: options.taskRunRequest.enabledSkills || null,
                             connectors: options.taskRunRequest.connectors || null,
+                            knowledgeContext: options.taskRunRequest.knowledgeContext || null,
                             environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                             quotedSelection: options.taskRunRequest.quotedSelection || null,
                           });
@@ -2921,6 +2940,7 @@
                         githubRepo: options.taskRunRequest.githubRepo || null,
                         enabledSkills: options.taskRunRequest.enabledSkills || null,
                         connectors: options.taskRunRequest.connectors || null,
+                        knowledgeContext: options.taskRunRequest.knowledgeContext || null,
                         environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                         quotedSelection: options.taskRunRequest.quotedSelection || null,
                       });
@@ -3207,9 +3227,11 @@
   	                      ? renderFilesPageNav()
   	                    : activePage === "imagine"
   	                      ? renderGenericPageNav()
-  	                    : activePage === "metronome"
-  	                      ? renderGenericPageNav()
-  	                    : activePage === "calendar"
+                    : activePage === "metronome"
+                      ? renderGenericPageNav()
+                    : activePage === "batches"
+                      ? renderBatchesPageNav()
+                    : activePage === "calendar"
   	                      ? renderGenericPageNav()
   	                    : renderAppHeader({
   	                        className: "playground-thread-navbar",
@@ -3312,7 +3334,7 @@
                                 )
                               : null,
   	                    }),
-                          React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isResourcesVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (isSourceDeployableCodeContentRoute ? " is-source-deployable-code-route" : "") + (activePage === "files" || activePage === "guardrails" || activePage === "tests" || activePage === "knowledge" || activePage === "assurance" || activePage === "evaluations" || activePage === "fine-tuning" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "tests" ? " is-tests-page" : "") + (activePage === "knowledge" ? " is-knowledge-page" : "") + (activePage === "assurance" ? " is-assurance-page" : "") + (activePage === "evaluations" ? " is-evaluations-page" : "") + (activePage === "fine-tuning" ? " is-fine-tuning-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
+                          React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isResourcesVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (isSourceDeployableCodeContentRoute ? " is-source-deployable-code-route" : "") + (activePage === "files" || activePage === "batches" || activePage === "guardrails" || activePage === "tests" || activePage === "knowledge" || activePage === "assurance" || activePage === "evaluations" || activePage === "fine-tuning" ? " is-files-page" : "") + (activePage === "batches" ? " is-batches-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "tests" ? " is-tests-page" : "") + (activePage === "knowledge" ? " is-knowledge-page" : "") + (activePage === "assurance" ? " is-assurance-page" : "") + (activePage === "evaluations" ? " is-evaluations-page" : "") + (activePage === "fine-tuning" ? " is-fine-tuning-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
                               React.createElement(React.Suspense, {
                                 fallback: React.createElement(PlatformLoadingState, {
                                   className: "playground-content-route-loading",
@@ -3501,6 +3523,7 @@
                                       githubRepo: options.taskRunRequest.githubRepo || null,
                                       enabledSkills: options.taskRunRequest.enabledSkills || null,
                                       connectors: options.taskRunRequest.connectors || null,
+                                      knowledgeContext: options.taskRunRequest.knowledgeContext || null,
                                       environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                                       quotedSelection: options.taskRunRequest.quotedSelection || null,
                                     });
@@ -3591,6 +3614,9 @@
                                 onOpenPromptSearch: (onSelect) => {
                                   openPromptSearch(onSelect);
                                 },
+                                onOpenKnowledgeSearch: (onSelect) => {
+                                  openKnowledgeSearch(onSelect);
+                                },
                                 onOpenThreadSearch: (onSelect) => {
                                   openThreadReferenceSearch(onSelect);
                                 },
@@ -3644,6 +3670,7 @@
                                       githubRepo: options.taskRunRequest.githubRepo || null,
                                       enabledSkills: options.taskRunRequest.enabledSkills || null,
                                       connectors: options.taskRunRequest.connectors || null,
+                                      knowledgeContext: options.taskRunRequest.knowledgeContext || null,
                                       environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                                       quotedSelection: options.taskRunRequest.quotedSelection || null,
                                       slideCreationCommand: options.taskRunRequest.slideCreationCommand || null,
@@ -3695,6 +3722,53 @@
                                 backendUrl: proxyBackendBase,
                                 apiKey: effectiveApiKey,
                                 requestHeaders,
+                                threadComposerProps: {
+                                  backendUrl: proxyBackendBase,
+                                  apiKey: effectiveApiKey,
+                                  speechToTextUrl: speechToTextUrl || undefined,
+                                  fetchCustomSkills: computerAgentsMode ? handleFetchCustomSkills : undefined,
+                                  requestHeaders,
+                                  resolveRequestHeaders: resolveRunnerRequestHeaders,
+                                  computerAgents: computerAgentsMode ? {
+                                    ...demoComputerAgents,
+                                    projects: {
+                                      items: runnerWorkspaceProjects,
+                                      selectedProjectId: latestInteractedProjectId || "",
+                                      onProjectChange: (nextProjectId) => {
+                                        setLatestInteractedProjectId(String(nextProjectId || "").trim());
+                                      },
+                                    },
+                                  } : undefined,
+                                  environments: computerAgentsMode ? runtimeEnvironments.map((environment) => ({
+                                    ...environment,
+                                    ...(resolvedEnvironmentId && environment.id === resolvedEnvironmentId ? { isDefault: true } : {}),
+                                  })) : [],
+                                  agents: computerAgentsMode ? runtimeAgentsForComposer.map((agent) => (
+                                    buildPlaygroundRunnerAgentOption(agent, resolvedComposerAgentId && agent.id === resolvedComposerAgentId ? { isDefault: true } : {})
+                                  )) : [],
+                                  isAgentSelectionBlocked: computerAgentsMode ? isComposerAgentSelectionBlocked : undefined,
+                                  onBlockedAgentSelect: computerAgentsMode ? handleBlockedComposerAgentSelect : undefined,
+                                  skills: computerAgentsMode ? demoSkills : [],
+                                  enabledSkillIds: computerAgentsMode ? runnerEnabledSkillIds : undefined,
+                                  onSkillsChange: computerAgentsMode ? setRunnerEnabledSkillIds : undefined,
+                                  skillDefaults: getDemoImageGenerationSkillDefaults(),
+                                  environmentId: resolvedEnvironmentId || undefined,
+                                  agentId: resolvedComposerAgentId || undefined,
+                                  onAgentChange: (nextAgentId) => {
+                                    setThreadAgentSelectionOverride(String(nextAgentId || "").trim() || null);
+                                  },
+                                  onEnvironmentChange: (nextEnvironmentId) => {
+                                    const normalizedEnvironmentId = String(nextEnvironmentId || "").trim();
+                                    if (normalizedEnvironmentId) setEnvironmentId(normalizedEnvironmentId);
+                                  },
+                                  onOpenPluginsOverview: () => {
+                                    setSelectedPluginId("");
+                                    openToolsView("plugins");
+                                  },
+                                  onOpenPromptSearch: (onSelect) => openPromptSearch(onSelect),
+                                  onOpenKnowledgeSearch: (onSelect) => openKnowledgeSearch(onSelect),
+                                  onOpenThreadSearch: (onSelect) => openThreadReferenceSearch(onSelect),
+                                },
                                 currentUserId: hasSessionAuth ? (sessionState.userId || "") : "",
                                 currentUserName: hasSessionAuth ? accountName : "User",
                                 currentUserEmail: hasSessionAuth ? accountEmail : "",
@@ -3720,6 +3794,72 @@
                                   setChangesNavigationTarget(null);
                                   setRunnerRenderKey((current) => current + 1);
                                   void refreshThreads(undefined, normalizedThreadId);
+                                },
+                              })
+                            : hasDemoAccess
+                              ? renderDemoFeaturePage("resources")
+                              : renderAuthGate()
+                        : activePage === "batches"
+                          ? hasRealAccess
+                            ? React.createElement(BatchesWorkspacePage, {
+                                shouldLoadData: activePage === "batches",
+                                backendUrl: proxyBackendBase + "/batch-jobs",
+                                resourceBackendUrl: proxyBackendBase,
+                                requestHeaders: authRequestHeaders,
+                                controlsPortalId: "playground-batches-overview-controls",
+                                scopePortalId: "playground-batches-overview-scope",
+                                currentUser: {
+                                  id: hasSessionAuth ? String(sessionState.userId || "").trim() : "",
+                                  name: hasSessionAuth ? accountName : "",
+                                  email: hasSessionAuth ? accountEmail : "",
+                                  avatarUrl: hasSessionAuth ? accountAvatarUrl : "",
+                                },
+                                threadComposerProps: {
+                                  backendUrl: proxyBackendBase,
+                                  apiKey: effectiveApiKey,
+                                  speechToTextUrl: speechToTextUrl || undefined,
+                                  fetchCustomSkills: computerAgentsMode ? handleFetchCustomSkills : undefined,
+                                  requestHeaders,
+                                  resolveRequestHeaders: resolveRunnerRequestHeaders,
+                                  computerAgents: computerAgentsMode ? {
+                                    ...demoComputerAgents,
+                                    projects: {
+                                      items: runnerWorkspaceProjects,
+                                      selectedProjectId: latestInteractedProjectId || "",
+                                      onProjectChange: (nextProjectId) => {
+                                        setLatestInteractedProjectId(String(nextProjectId || "").trim());
+                                      },
+                                    },
+                                  } : undefined,
+                                  environments: computerAgentsMode ? runtimeEnvironments.map((environment) => ({
+                                    ...environment,
+                                    ...(resolvedEnvironmentId && environment.id === resolvedEnvironmentId ? { isDefault: true } : {}),
+                                  })) : [],
+                                  agents: computerAgentsMode ? runtimeAgentsForComposer.map((agent) => (
+                                    buildPlaygroundRunnerAgentOption(agent, resolvedComposerAgentId && agent.id === resolvedComposerAgentId ? { isDefault: true } : {})
+                                  )) : [],
+                                  isAgentSelectionBlocked: computerAgentsMode ? isComposerAgentSelectionBlocked : undefined,
+                                  onBlockedAgentSelect: computerAgentsMode ? handleBlockedComposerAgentSelect : undefined,
+                                  skills: computerAgentsMode ? demoSkills : [],
+                                  enabledSkillIds: computerAgentsMode ? runnerEnabledSkillIds : undefined,
+                                  onSkillsChange: computerAgentsMode ? setRunnerEnabledSkillIds : undefined,
+                                  skillDefaults: getDemoImageGenerationSkillDefaults(),
+                                  environmentId: resolvedEnvironmentId || undefined,
+                                  agentId: resolvedComposerAgentId || undefined,
+                                  onAgentChange: (nextAgentId) => {
+                                    setThreadAgentSelectionOverride(String(nextAgentId || "").trim() || null);
+                                  },
+                                  onEnvironmentChange: (nextEnvironmentId) => {
+                                    const normalizedEnvironmentId = String(nextEnvironmentId || "").trim();
+                                    if (normalizedEnvironmentId) setEnvironmentId(normalizedEnvironmentId);
+                                  },
+                                  onOpenPluginsOverview: () => {
+                                    setSelectedPluginId("");
+                                    openToolsView("plugins");
+                                  },
+                                  onOpenPromptSearch: (onSelect) => openPromptSearch(onSelect),
+                                  onOpenKnowledgeSearch: (onSelect) => openKnowledgeSearch(onSelect),
+                                  onOpenThreadSearch: (onSelect) => openThreadReferenceSearch(onSelect),
                                 },
                               })
                             : hasDemoAccess
@@ -3783,6 +3923,13 @@
                                   : { projectId: normalizedProjectId });
                               },
                               onOpenResourceTemplatesPage: openResourceTemplatesPage,
+                              onOpenPromptSearch: (onSelect) => openPromptSearch(onSelect),
+                              onOpenKnowledgeSearch: (onSelect) => openKnowledgeSearch(onSelect),
+                              onOpenEvaluationSearch: (onSelect) => openEvaluationSearch(onSelect),
+                              onOpenFileSearch: (onSelect, options) => openFileSearch(onSelect, options),
+                              onOpenWorkflowSearch: (onSelect) => openWorkflowSearch(onSelect),
+                              onOpenServerResourceSearch: (resourceType, onSelect) => openServerResourceSearch(resourceType, onSelect),
+                              onOpenProjectLinkedResource: openProjectLinkedResourceFromProject,
                               attachmentPreviewPortalId: "playground-task-attachment-preview-root",
                               projectOverviewResourceFilter,
                               setProjectOverviewResourceFilter,
@@ -3884,6 +4031,7 @@
                                       githubRepo: options.taskRunRequest.githubRepo || null,
                                       enabledSkills: options.taskRunRequest.enabledSkills || null,
                                       connectors: options.taskRunRequest.connectors || null,
+                                      knowledgeContext: options.taskRunRequest.knowledgeContext || null,
                                       environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                                     });
                                   }
@@ -3933,6 +4081,7 @@
                                         + (showInitialThreadWelcome ? " is-initial-welcome-runner" : ""),
                                       backendUrl: proxyBackendBase,
                                       apiKey: effectiveApiKey,
+                                      onBatchJobCreate: handleQuickBatchJobCreate,
                                       fetchCustomSkills: computerAgentsMode ? handleFetchCustomSkills : undefined,
                                       speechToTextUrl: speechToTextUrl || undefined,
                                       requestHeaders,
@@ -4007,6 +4156,9 @@
                                       },
                                       onOpenPromptSearch: (onSelect) => {
                                         openPromptSearch(onSelect);
+                                      },
+                                      onOpenKnowledgeSearch: (onSelect) => {
+                                        openKnowledgeSearch(onSelect);
                                       },
                                       onOpenThreadSearch: (onSelect) => {
                                         openThreadReferenceSearch(onSelect);
@@ -4451,6 +4603,13 @@
                                     : { projectId: normalizedProjectId });
                                 },
                                 onOpenResourceTemplatesPage: openResourceTemplatesPage,
+                                onOpenPromptSearch: (onSelect) => openPromptSearch(onSelect),
+                                onOpenKnowledgeSearch: (onSelect) => openKnowledgeSearch(onSelect),
+                                onOpenEvaluationSearch: (onSelect) => openEvaluationSearch(onSelect),
+                                onOpenFileSearch: (onSelect, options) => openFileSearch(onSelect, options),
+                                onOpenWorkflowSearch: (onSelect) => openWorkflowSearch(onSelect),
+                                onOpenServerResourceSearch: (resourceType, onSelect) => openServerResourceSearch(resourceType, onSelect),
+                                onOpenProjectLinkedResource: openProjectLinkedResourceFromProject,
                                 projectOverviewResourceFilter,
                                 setProjectOverviewResourceFilter,
                                 projectOverviewResourceSearchQuery,
@@ -4550,6 +4709,7 @@
                                           githubRepo: options.taskRunRequest.githubRepo || null,
                                           enabledSkills: options.taskRunRequest.enabledSkills || null,
                                           connectors: options.taskRunRequest.connectors || null,
+                                          knowledgeContext: options.taskRunRequest.knowledgeContext || null,
                                           environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                                         });
                                     }

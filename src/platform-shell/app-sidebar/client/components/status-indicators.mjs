@@ -16,9 +16,8 @@ export const APP_SIDEBAR_STATUS_INDICATORS_SCRIPT = `        function handleStat
         }
 
         function renderStatusIndicators() {
-          return React.createElement(StatusIndicatorStack, {
+          return React.createElement(PlatformStatusIndicatorStack, {
             items: statusIndicatorItems,
-            emptyText: "No cloud integrations connected",
             dismissedIds: dismissedStatusIndicatorIds,
             onDismiss: handleStatusIndicatorDismiss,
           });

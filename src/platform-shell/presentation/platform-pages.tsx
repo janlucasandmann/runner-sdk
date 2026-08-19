@@ -45,6 +45,13 @@ export const ProjectDeliveryWorkspace = lazyNamed(
   () => import("../../platform-services/create-mode/projects/client/delivery/index.js"),
   "ProjectDeliveryWorkspace",
 );
+export const ProjectsOverviewPage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/create-mode/projects/client/overview/projects-overview-page.js"
+    ),
+  "ProjectsOverviewPage",
+);
 export { ProjectIconPicker } from "../../platform-services/create-mode/projects/client/project-icon-picker/index.js";
 export {
   ProjectSummary,
@@ -63,6 +70,13 @@ export const MetronomesOverviewPage = lazyNamed(
       "../../platform-services/create-mode/metronome/client/overview/metronomes-overview-page.js"
     ),
   "MetronomesOverviewPage",
+);
+export const BatchesWorkspacePage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/create-mode/batches/client/page/batches-workspace-page.js"
+    ),
+  "BatchesWorkspacePage",
 );
 export const SkillsOverviewPage = lazyNamed(
   () => import("../../platform-resources/skills/overview/skills-overview-page.js"),

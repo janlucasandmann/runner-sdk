@@ -55,6 +55,7 @@ export interface PlatformSelectorProps<TValue extends string = string>
   popupWidth?: CSSProperties["width"];
   popupMaxWidth?: CSSProperties["maxWidth"];
   popupMaxHeight?: CSSProperties["maxHeight"];
+  popupMatchTriggerWidth?: "minimum" | "exact";
   triggerClassName?: string;
   popupClassName?: string;
   optionClassName?: string;
@@ -102,6 +103,7 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
   popupWidth,
   popupMaxWidth,
   popupMaxHeight = "min(320px, calc(100vh - 32px))",
+  popupMatchTriggerWidth = "minimum",
   triggerClassName = "",
   popupClassName = "",
   optionClassName = "",
@@ -260,7 +262,11 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
       variant="minimal"
       portal
       placement={popupAlignment === "right" ? "bottom-end" : "bottom-start"}
-      portalMatchAnchorWidth={popupWidth == null}
+      portalMatchAnchorWidth={
+        popupWidth == null
+          ? popupMatchTriggerWidth === "exact" ? "exact" : true
+          : false
+      }
       trigger={
         <button
           type="button"

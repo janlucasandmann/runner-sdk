@@ -325,6 +325,10 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
             : navigationRequest?.view === "overview"
               ? "overview"
               : "backlog";
+          const requestedProjectOverviewHomeTab = requestedView === "overview"
+            && navigationRequest?.sectionId === "resources"
+              ? "resources"
+              : "general";
           const nextView = isStandaloneCalendarMode
             ? "calendar"
             : (requestedView === "calendar" ? "backlog" : requestedView);
@@ -346,6 +350,12 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
           const matchingRequestedProjectRecord = requestedProjectRecord?.id && requestedProjectRecord.id === requestedProjectId
             ? requestedProjectRecord
             : null;
+          const requestedProjectResourceSnapshot = navigationRequest?.projectResourceSnapshot
+            && typeof navigationRequest.projectResourceSnapshot === "object"
+            && !Array.isArray(navigationRequest.projectResourceSnapshot)
+            && String(navigationRequest.projectResourceSnapshot.projectId || "").trim() === requestedProjectId
+              ? navigationRequest.projectResourceSnapshot
+              : null;
           const requestedTaskRecord = navigationRequest?.taskRecord && typeof navigationRequest.taskRecord === "object" && !Array.isArray(navigationRequest.taskRecord)
             ? normalizePlaygroundTaskRecord({
                 ...navigationRequest.taskRecord,
@@ -379,6 +389,27 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
           });
 
           if (requestedProjectId) {
+            projectOverviewNavigationHomeTabRef.current = requestedProjectOverviewHomeTab;
+            if (requestedProjectResourceSnapshot) {
+              projectOverviewServerResourcesLoadKeyRef.current = "";
+              projectOverviewFileActivityLoadKeyRef.current = "";
+              setProjectOverviewServerResourcesState({
+                projectId: requestedProjectId,
+                status: "ready",
+                error: "",
+                items: Array.isArray(requestedProjectResourceSnapshot.serverResources)
+                  ? requestedProjectResourceSnapshot.serverResources.slice()
+                  : [],
+              });
+              setProjectOverviewFileActivityState({
+                projectId: requestedProjectId,
+                status: "ready",
+                error: "",
+                items: Array.isArray(requestedProjectResourceSnapshot.fileActivity)
+                  ? requestedProjectResourceSnapshot.fileActivity.slice()
+                  : [],
+              });
+            }
             if (matchingRequestedProjectRecord) {
               commitLocalProjectRecord(matchingRequestedProjectRecord, {
                 summary: matchingRequestedProjectRecord.summary,
@@ -395,6 +426,9 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
           }
 
           setTaskView(nextView);
+          if (nextView === "overview") {
+            setProjectOverviewHomeTab(requestedProjectOverviewHomeTab);
+          }
           setPendingExternalTaskOpenRequest(
             requestedProjectId && requestedTaskId && !matchingRequestedTaskRecord
               ? {
@@ -460,7 +494,9 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
         }, [selectedProjectId, taskView]);
 
         useEffect(() => {
-          setProjectOverviewHomeTab("general");
+          const requestedHomeTab = projectOverviewNavigationHomeTabRef.current;
+          projectOverviewNavigationHomeTabRef.current = "";
+          setProjectOverviewHomeTab(requestedHomeTab || "general");
           setProjectOverviewPermissionTeamId("");
           setProjectOverviewPermissionRoleId("member");
           projectOverviewSidebarAutoCollapsedForPermissionRef.current = false;
@@ -495,12 +531,11 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
             });
           }
           if (pendingNavigationMissionControlRequest?.action === "open") {
-            openMissionControlStrategySidebar();
+            openMissionControlComposer({ projectRecord: resolvedPendingProject });
             setPendingNavigationMissionControlRequest(null);
             return;
           }
           const didOpen = openMissionControlComposer({
-            keepStrategyOpen: true,
             projectRecord: resolvedPendingProject,
           });
           if (didOpen === false) {

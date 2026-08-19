@@ -175,6 +175,7 @@ export interface RunnerAgentSelectorControlProps
   displayedAgentLabel: string;
   hasApiKey: boolean;
   hidden: boolean;
+  locked?: boolean;
   mode: RunnerAgentSelectorMode;
   onCloseReasoning: () => void;
   onDoneReasoning: () => void;
@@ -202,6 +203,7 @@ export function RunnerAgentSelectorControl({
   displayedAgentLabel,
   hasApiKey,
   hidden,
+  locked = false,
   mode,
   onCloseReasoning,
   onDoneReasoning,
@@ -245,8 +247,10 @@ export function RunnerAgentSelectorControl({
         <button
           ref={buttonRef}
           type="button"
-          className={`tb-inline-selector tb-inline-selector-agent ${open ? "active" : ""}`.trim()}
-          onClick={onToggle}
+          className={`tb-inline-selector tb-inline-selector-agent ${open ? "active" : ""} ${locked ? "is-locked" : ""}`.trim()}
+          onClick={locked ? undefined : onToggle}
+          disabled={locked}
+          aria-disabled={locked}
         >
           <span className="tb-inline-selector-label" title={displayedAgentLabel}>
             {displayedAgentLabel}
@@ -417,6 +421,7 @@ export interface RunnerWorkspaceSelectorControlProps
   environments: RunnerChatOption[];
   hasApiKey: boolean;
   hidden: boolean;
+  locked?: boolean;
   mode: RunnerWorkspaceSelectorMode;
   onModeChange: (mode: RunnerWorkspaceSelectorMode) => void;
   onSelectEnvironment: (environmentId: string) => void;
@@ -437,6 +442,7 @@ export function RunnerWorkspaceSelectorControl({
   environments,
   hasApiKey,
   hidden,
+  locked = false,
   mode,
   onModeChange,
   onSelectEnvironment,
@@ -468,8 +474,10 @@ export function RunnerWorkspaceSelectorControl({
         <button
           ref={buttonRef}
           type="button"
-          className={`tb-inline-selector ${open ? "active" : ""}`.trim()}
-          onClick={onToggle}
+          className={`tb-inline-selector ${open ? "active" : ""} ${locked ? "is-locked" : ""}`.trim()}
+          onClick={locked ? undefined : onToggle}
+          disabled={locked}
+          aria-disabled={locked}
         >
           <span className="tb-inline-selector-label" title={displayedWorkspaceLabel}>
             {displayedWorkspaceLabel}

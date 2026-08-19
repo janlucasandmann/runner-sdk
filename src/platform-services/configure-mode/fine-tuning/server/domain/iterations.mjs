@@ -7,6 +7,7 @@ import {
   readPlainObject,
   sanitizeReferenceText,
 } from "./primitives.mjs";
+import { normalizeKnowledgeContext } from "../../../knowledge/server/knowledge-context.mjs";
 import {
   normalizeFineTuningLimits,
   normalizeFineTuningMetrics,
@@ -331,6 +332,13 @@ export function normalizeFineTuningConfiguration(rawConfiguration = {}, legacyJo
       ),
     },
     evaluationTargets,
+    knowledgeContext: normalizeKnowledgeContext(
+      source.knowledgeContext
+        || source.knowledge_context
+        || legacyJob.knowledgeContext
+        || legacyJob.knowledge_context,
+      { source: "optimization" },
+    ),
     objective: normalizeFineTuningObjective(
       source.objective || legacyJob.objective,
       evaluationTargets,

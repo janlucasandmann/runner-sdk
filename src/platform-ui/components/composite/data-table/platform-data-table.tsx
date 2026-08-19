@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type DragEvent as ReactDragEvent,
   type ElementType,
   type KeyboardEvent,
   type MouseEvent as ReactMouseEvent,
@@ -34,6 +35,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   EllipsisVertical,
+  GripVertical,
   LayoutGrid,
   List,
   ListFilter,
@@ -212,6 +214,7 @@ export function PlatformDataTable<TData>({
   incrementalLoading,
   toolbar,
   rowGrouping,
+  rowReordering,
   getRowActions,
   renderRowMenu,
   onRowActionTrigger,
@@ -289,6 +292,12 @@ export function PlatformDataTable<TData>({
     left: VIEWPORT_GUTTER,
     top: VIEWPORT_GUTTER,
   });
+  const draggedRowIdRef = useRef<string | null>(null);
+  const [draggedRowId, setDraggedRowId] = useState<string | null>(null);
+  const [rowDropTarget, setRowDropTarget] = useState<{
+    rowId: string;
+    placement: "before" | "after";
+  } | null>(null);
 
   const requestMoreRows = useCallback(() => {
     if (
@@ -359,6 +368,9 @@ export function PlatformDataTable<TData>({
   const hasSelection = Boolean(selection?.enabled);
   const hasActions = Boolean(
     getRowActions || renderRowMenu || onRowActionTrigger,
+  );
+  const hasReordering = Boolean(
+    rowReordering && rowReordering.enabled !== false,
   );
   const rowGroupExpansionControlled = rowGrouping?.expandedIds !== undefined;
   const expandedRowGroupIds = useMemo(
@@ -566,7 +578,7 @@ export function PlatformDataTable<TData>({
       const isSelected = selectedIds.has(rowId);
       const targetRows =
         isSelected && selectedRows.length > 1 ? selectedRows : [row];
-      return (
+      const actions = (
         getRowActions?.(row, {
           rowId,
           isSelected,
@@ -575,6 +587,18 @@ export function PlatformDataTable<TData>({
           targetRows,
         }) || []
       );
+      if (targetRows.length <= 1) return actions;
+
+      return actions.flatMap((action) => {
+        const selectedRowsAction = action.selectedRows;
+        if (!selectedRowsAction) return [];
+        return [{
+          ...action,
+          ...selectedRowsAction,
+          onSelect: selectedRowsAction.onSelect,
+          selectedRows: undefined,
+        }];
+      });
     },
     [getRowActions, selectedIds, selectedRows],
   );
@@ -915,16 +939,59 @@ export function PlatformDataTable<TData>({
     );
   }, []);
 
+  const isReorderableRow = useCallback(
+    (row: TData) =>
+      hasReordering &&
+      !isRowDisabled?.(row) &&
+      (rowReordering?.isRowReorderable?.(row) ?? true),
+    [hasReordering, isRowDisabled, rowReordering],
+  );
+
+  const canDropRow = useCallback(
+    (row: TData, targetRow: TData) =>
+      getRowId(row) !== getRowId(targetRow) &&
+      isReorderableRow(row) &&
+      isReorderableRow(targetRow) &&
+      (rowReordering?.canDrop?.(row, targetRow) ?? true),
+    [getRowId, isReorderableRow, rowReordering],
+  );
+
+  const resetRowDrag = useCallback(() => {
+    draggedRowIdRef.current = null;
+    setDraggedRowId(null);
+    setRowDropTarget(null);
+  }, []);
+
+  const resolveDropPlacement = (
+    event: ReactDragEvent<HTMLDivElement>,
+  ): "before" | "after" => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    return event.clientY < bounds.top + bounds.height / 2
+      ? "before"
+      : "after";
+  };
+
+  const findDraggedRow = useCallback(() => {
+    const sourceId = draggedRowIdRef.current;
+    if (!sourceId) return null;
+    return data.find((candidate) => getRowId(candidate) === sourceId) || null;
+  }, [data, getRowId]);
+
+  const reportRowReorderError = (reorderError: unknown) => {
+    console.error("[PlatformDataTable] Row reorder failed", reorderError);
+  };
+
   const gridTemplateColumns = useMemo(
     () =>
       [
+        hasReordering ? "24px" : "",
         hasSelection ? "21px" : "",
         ...visibleColumns.map((column) => column.width || "minmax(120px, 1fr)"),
         hasActions ? "28px" : "",
       ]
         .filter(Boolean)
         .join(" "),
-    [hasActions, hasSelection, visibleColumns],
+    [hasActions, hasReordering, hasSelection, visibleColumns],
   );
 
   const rootStyle = {
@@ -969,6 +1036,54 @@ export function PlatformDataTable<TData>({
         onClick();
       },
     });
+
+  const renderReorderControl = (row: TData, rowId: string) => {
+    const reorderable = isReorderableRow(row);
+    if (!reorderable) {
+      return createElement(
+        "span",
+        {
+          className: "platform-data-table__reorder-handle is-disabled",
+          "aria-hidden": "true",
+        },
+        createElement(GripVertical, {
+          width: 15,
+          height: 15,
+          strokeWidth: 1.8,
+        }),
+      );
+    }
+    return createElement(
+      "button",
+      {
+        type: "button",
+        className: "platform-data-table__reorder-handle",
+        draggable: true,
+        title: "Drag to reorder",
+        "aria-label":
+          rowReordering?.ariaLabel?.(row) || "Drag row to reorder",
+        onClick: (event: ReactMouseEvent<HTMLButtonElement>) => {
+          event.preventDefault();
+          event.stopPropagation();
+        },
+        onDragStart: (event: ReactDragEvent<HTMLButtonElement>) => {
+          event.stopPropagation();
+          draggedRowIdRef.current = rowId;
+          setDraggedRowId(rowId);
+          setRowDropTarget(null);
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", rowId);
+        },
+        onDragEnd: resetRowDrag,
+      },
+      createElement(GripVertical, {
+        width: 15,
+        height: 15,
+        strokeWidth: 1.8,
+        "aria-hidden": true,
+      }),
+    );
+  };
 
   const renderToolbar = () => {
     if (!toolbar) return null;
@@ -1250,6 +1365,13 @@ export function PlatformDataTable<TData>({
           "aria-rowindex": 1,
           style: { gridTemplateColumns },
         },
+        hasReordering
+          ? createElement("div", {
+              className: "platform-data-table__header-cell is-reordering",
+              role: "columnheader",
+              "aria-label": "Queue order",
+            })
+          : null,
         hasSelection
           ? createElement(
               "div",
@@ -1358,7 +1480,10 @@ export function PlatformDataTable<TData>({
 
     if (showEmptyStateRow) {
       const columnCount =
-        visibleColumns.length + (hasSelection ? 1 : 0) + (hasActions ? 1 : 0);
+        visibleColumns.length +
+        (hasReordering ? 1 : 0) +
+        (hasSelection ? 1 : 0) +
+        (hasActions ? 1 : 0);
       return createElement(
         "div",
         { className: "platform-data-table__body has-state", role: "rowgroup" },
@@ -1455,7 +1580,10 @@ export function PlatformDataTable<TData>({
     }
 
     const columnCount =
-      visibleColumns.length + (hasSelection ? 1 : 0) + (hasActions ? 1 : 0);
+      visibleColumns.length +
+      (hasReordering ? 1 : 0) +
+      (hasSelection ? 1 : 0) +
+      (hasActions ? 1 : 0);
 
     return createElement(
       "div",
@@ -1532,6 +1660,8 @@ export function PlatformDataTable<TData>({
         const { tableRow, renderedIndex } = entry;
         const row = tableRow.original;
         const rowId = tableRow.id;
+        const dropPlacement =
+          rowDropTarget?.rowId === rowId ? rowDropTarget.placement : null;
         const isSectionEnd =
           Boolean(rowGrouping?.groups.length) &&
           (bodyEntryIndex === bodyEntries.length - 1 ||
@@ -1574,6 +1704,9 @@ export function PlatformDataTable<TData>({
               "platform-data-table__row",
               selected && "is-selected",
               disabled && "is-disabled",
+              draggedRowId === rowId && "is-dragging",
+              dropPlacement === "before" && "is-drop-before",
+              dropPlacement === "after" && "is-drop-after",
               isRowExpanded?.(row) && "is-expanded",
               (rowMenu?.rowId === rowId || externalActionOpen) &&
                 "is-menu-open",
@@ -1600,12 +1733,63 @@ export function PlatformDataTable<TData>({
               ? () => onRowPointerEnter(row)
               : undefined,
             onFocus: onRowFocus ? () => onRowFocus(row) : undefined,
+            onDragOver: hasReordering
+              ? (event: ReactDragEvent<HTMLDivElement>) => {
+                  const sourceRow = findDraggedRow();
+                  if (!sourceRow || !canDropRow(sourceRow, row)) return;
+                  event.preventDefault();
+                  event.stopPropagation();
+                  event.dataTransfer.dropEffect = "move";
+                  const placement = resolveDropPlacement(event);
+                  setRowDropTarget((current) =>
+                    current?.rowId === rowId &&
+                    current.placement === placement
+                      ? current
+                      : { rowId, placement },
+                  );
+                }
+              : undefined,
+            onDrop: hasReordering
+              ? (event: ReactDragEvent<HTMLDivElement>) => {
+                  const sourceRow = findDraggedRow();
+                  if (!sourceRow || !canDropRow(sourceRow, row)) return;
+                  event.preventDefault();
+                  event.stopPropagation();
+                  const sourceRowId = getRowId(sourceRow);
+                  const placement = resolveDropPlacement(event);
+                  resetRowDrag();
+                  try {
+                    const result = rowReordering?.onReorder({
+                      row: sourceRow,
+                      rowId: sourceRowId,
+                      targetRow: row,
+                      targetRowId: rowId,
+                      placement,
+                    });
+                    if (result && typeof result.catch === "function") {
+                      result.catch(reportRowReorderError);
+                    }
+                  } catch (reorderError) {
+                    reportRowReorderError(reorderError);
+                  }
+                }
+              : undefined,
             onContextMenu: (event) => {
               onRowContextMenu?.(event, row);
               if (!event.defaultPrevented && menuAvailable)
                 openRowMenu(event, rowId, true);
             },
           },
+          hasReordering
+            ? createElement(
+                "div",
+                {
+                  className: "platform-data-table__cell is-reordering",
+                  role: "cell",
+                },
+                renderReorderControl(row, rowId),
+              )
+            : null,
           hasSelection
             ? createElement(
                 "div",
@@ -1742,6 +1926,7 @@ export function PlatformDataTable<TData>({
                 role: "cell",
                 "aria-colspan":
                   visibleColumns.length +
+                  (hasReordering ? 1 : 0) +
                   (hasSelection ? 1 : 0) +
                   (hasActions ? 1 : 0),
               },
@@ -1960,6 +2145,7 @@ export function PlatformDataTable<TData>({
             1,
           "aria-colcount":
             visibleColumns.length +
+            (hasReordering ? 1 : 0) +
             (hasSelection ? 1 : 0) +
             (hasActions ? 1 : 0),
         },
