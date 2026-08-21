@@ -192,6 +192,16 @@ assert.match(
   /title: React\.createElement\("input", \{[\s\S]*className: "guardrail-detail-page__prompt-title-input"[\s\S]*"aria-label": "Prompt title"/,
 );
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /onCreateFile:[\s\S]*addGuardrailPrompt/);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,
+  /renameGuardrailPromptFile = \(file, nextTitle\)[\s\S]*?title: normalizedTitle/,
+  "Guardrail prompt renames must persist the shared editor's inline label.",
+);
+assert.doesNotMatch(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,
+  /window\.prompt\("Prompt name"/,
+  "Guardrail prompt labels must be edited inline rather than through a browser prompt.",
+);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /className: "guardrail-detail-page__identity"/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /React\.createElement\(Shield/);
 assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /playground-guardrails-prompt-card-header/);

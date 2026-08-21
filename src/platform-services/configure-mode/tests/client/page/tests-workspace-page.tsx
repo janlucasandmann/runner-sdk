@@ -16,6 +16,7 @@ import {
   type TestCaseDefinition,
   type TestPersonIdentityInput,
   type TestPlan,
+  type TestPlanCatalogEntry,
   type TestPlanCreateInput,
   type TestPlanDefinition,
   type TestRun,
@@ -98,6 +99,15 @@ interface ActiveTestCaseContext {
   testCase: TestCaseDefinition;
 }
 
+const TEST_OVERVIEW_INITIAL_PAGE_SIZE = 20;
+const TEST_OVERVIEW_PAGE_INCREMENT = 10;
+
+interface TestOverviewPaginationState {
+  hasMore: boolean;
+  loadingMore: boolean;
+  nextOffset: number;
+}
+
 function formatRelativeTimestamp(value: string): string {
   const timestamp = Date.parse(value);
   if (!Number.isFinite(timestamp)) return "Unknown";
@@ -173,7 +183,7 @@ export function TestsWorkspacePage({
     () => normalizeOptions(agents, "Agent"),
     [agents],
   );
-  const [plans, setPlans] = useState<TestPlan[]>([]);
+  const [plans, setPlans] = useState<TestPlanCatalogEntry[]>([]);
   const [runs, setRuns] = useState<TestRun[]>([]);
   const [activePlan, setActivePlan] = useState<TestPlan | null>(null);
   const [activeRun, setActiveRun] = useState<TestRun | null>(null);
@@ -185,24 +195,62 @@ export function TestsWorkspacePage({
   const [error, setError] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [runPlan, setRunPlan] = useState<TestPlan | null>(null);
-  const [deletePlans, setDeletePlans] = useState<readonly TestPlan[]>([]);
+  const [deletePlans, setDeletePlans] = useState<readonly TestPlanCatalogEntry[]>([]);
+  const [overviewPagination, setOverviewPagination] = useState<TestOverviewPaginationState>({
+    hasMore: false,
+    loadingMore: false,
+    nextOffset: 0,
+  });
+  const overviewLoadMoreRef = useRef(false);
 
   const loadOverview = useCallback(async () => {
     setLoading(true);
     setError("");
+    overviewLoadMoreRef.current = false;
+    setOverviewPagination({ hasMore: false, loadingMore: false, nextOffset: 0 });
     try {
-      const [nextPlans, nextRuns] = await Promise.all([
-        api.listPlans(),
-        api.listRuns(),
-      ]);
-      setPlans(nextPlans);
-      setRuns(nextRuns);
+      const page = await api.listPlanPage(0, TEST_OVERVIEW_INITIAL_PAGE_SIZE);
+      setPlans(page.plans);
+      setRuns([]);
+      setOverviewPagination({
+        hasMore: page.hasMore,
+        loadingMore: false,
+        nextOffset: page.nextOffset,
+      });
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "Failed to load Tests.");
     } finally {
       setLoading(false);
     }
   }, [api]);
+
+  const loadMoreOverview = useCallback(async () => {
+    if (overviewLoadMoreRef.current || !overviewPagination.hasMore) return;
+    overviewLoadMoreRef.current = true;
+    setOverviewPagination((current) => ({ ...current, loadingMore: true }));
+    try {
+      const page = await api.listPlanPage(
+        overviewPagination.nextOffset,
+        TEST_OVERVIEW_PAGE_INCREMENT,
+      );
+      setPlans((current) => {
+        const byId = new Map(current.map((plan) => [plan.id, plan]));
+        page.plans.forEach((plan) => byId.set(plan.id, plan));
+        return [...byId.values()];
+      });
+      setOverviewPagination({
+        hasMore: page.hasMore,
+        loadingMore: false,
+        nextOffset: page.nextOffset,
+      });
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "Failed to load more Tests.");
+      setOverviewPagination((current) => ({ ...current, loadingMore: false }));
+      throw nextError;
+    } finally {
+      overviewLoadMoreRef.current = false;
+    }
+  }, [api, overviewPagination.hasMore, overviewPagination.nextOffset]);
 
   const loadPlan = useCallback(async (planId: string) => {
     if (!planId) return;
@@ -219,6 +267,13 @@ export function TestsWorkspacePage({
         nextPlan,
         ...current.filter((plan) => plan.id !== nextPlan.id),
       ]);
+      if (Array.isArray(nextPlan.runs)) {
+        setRuns((current) => {
+          const byId = new Map(current.map((run) => [run.id, run]));
+          nextPlan.runs?.forEach((run) => byId.set(run.id, run));
+          return [...byId.values()];
+        });
+      }
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "Failed to load the test plan.");
       setActivePlan(null);
@@ -312,10 +367,25 @@ export function TestsWorkspacePage({
       (plan) => getTestPlanCreatorIdentity(plan),
     );
     return scopedPlans.map((plan) => {
-      const planRuns = (runsByPlan.get(plan.id) || []).sort(
+      const loadedPlanRuns = "runs" in plan && Array.isArray(plan.runs)
+        ? plan.runs
+        : [];
+      const planRuns = [
+        ...(runsByPlan.get(plan.id) || []),
+        ...loadedPlanRuns,
+      ].filter((run, index, entries) => (
+        entries.findIndex((candidate) => candidate.id === run.id) === index
+      )).sort(
         (left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt),
       );
       const lastRun = planRuns[0];
+      const summaryRunCount = "runCount" in plan ? plan.runCount : null;
+      const summaryPassedRunCount = "passedRunCount" in plan
+        ? plan.passedRunCount
+        : null;
+      const summaryLastRunStatus = "lastRunStatus" in plan
+        ? plan.lastRunStatus
+        : null;
       return {
         id: plan.id,
         name: plan.name,
@@ -323,9 +393,13 @@ export function TestsWorkspacePage({
           normalizedProjects.find((project) => project.id === plan.projectId)?.name
           || "Unassigned",
         caseCount: plan.caseCount,
-        runCount: planRuns.length,
-        passedRunCount: planRuns.filter((run) => run.status === "passed").length,
-        lastRunStatus: lastRun?.status || "",
+        runCount: summaryRunCount ?? planRuns.length,
+        passedRunCount: summaryPassedRunCount
+          ?? planRuns.filter((run) => run.status === "passed").length,
+        lastRunStatus:
+          summaryLastRunStatus
+          || lastRun?.status
+          || (summaryRunCount === null ? "unknown" : ""),
         updatedAt: Date.parse(plan.updatedAt) || 0,
         updatedLabel: formatRelativeTimestamp(plan.updatedAt),
         searchText: `${plan.name} ${plan.description} ${plan.projectId || ""}`,
@@ -347,8 +421,33 @@ export function TestsWorkspacePage({
       metadata: initializeTestPlanIdentityMetadata(input.metadata, currentUser),
     });
     setPlans((current) => [created, ...current]);
+    setOverviewPagination((current) => ({
+      ...current,
+      nextOffset: current.nextOffset + 1,
+    }));
     onOpenPlan(created.id, created.name);
     return created;
+  }
+
+  async function openRunModal(planId: string): Promise<void> {
+    setError("");
+    try {
+      const plan = await api.getPlan(planId);
+      setPlans((current) => [
+        plan,
+        ...current.filter((candidate) => candidate.id !== plan.id),
+      ]);
+      if (Array.isArray(plan.runs)) {
+        setRuns((current) => {
+          const byId = new Map(current.map((run) => [run.id, run]));
+          plan.runs?.forEach((run) => byId.set(run.id, run));
+          return [...byId.values()];
+        });
+      }
+      setRunPlan(plan);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "Failed to load the test plan.");
+    }
   }
 
   async function startRun(
@@ -627,13 +726,16 @@ export function TestsWorkspacePage({
         rows={overviewRows}
         loading={loading}
         error={error}
+        incrementalLoading={{
+          hasMore: overviewPagination.hasMore,
+          loading: overviewPagination.loadingMore,
+          loadingMessage: "Loading more tests...",
+          onLoadMore: loadMoreOverview,
+        }}
         controlsPortalId={controlsPortalId}
         onOpen={(row) => onOpenPlan(row.id, row.name)}
         onCreate={() => setCreateOpen(true)}
-        onRun={(row) => {
-          const plan = plans.find((candidate) => candidate.id === row.id);
-          if (plan) setRunPlan(plan);
-        }}
+        onRun={(row) => void openRunModal(row.id)}
         onDelete={(rows) => {
           const selectedIds = new Set(rows.map((row) => row.id));
           setDeletePlans(plans.filter((candidate) => selectedIds.has(candidate.id)));
@@ -684,6 +786,10 @@ export function TestsWorkspacePage({
           if (deletedIds.size) {
             setPlans((current) => current.filter((plan) => !deletedIds.has(plan.id)));
             setRuns((current) => current.filter((run) => !deletedIds.has(run.testPlanId)));
+            setOverviewPagination((current) => ({
+              ...current,
+              nextOffset: Math.max(0, current.nextOffset - deletedIds.size),
+            }));
             deletedIds.forEach((id) => onPlanDeleted?.(id));
           }
           setDeletePlans(failedPlans);

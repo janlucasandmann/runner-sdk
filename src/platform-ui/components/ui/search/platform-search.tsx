@@ -4,7 +4,7 @@ import { forwardRef, type InputHTMLAttributes } from "react";
 export interface PlatformSearchProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "className" | "type"> {
   className?: string;
-  icon?: LucideIcon;
+  icon?: LucideIcon | null;
   inputClassName?: string;
 }
 
@@ -43,13 +43,15 @@ export const PlatformSearch = forwardRef<HTMLInputElement, PlatformSearchProps>(
         )}
         data-platform-search="true"
       >
-        <Icon
-          className="platform-search__icon"
-          width={14}
-          height={14}
-          strokeWidth={1.8}
-          aria-hidden="true"
-        />
+        {Icon ? (
+          <Icon
+            className="platform-search__icon"
+            width={14}
+            height={14}
+            strokeWidth={1.8}
+            aria-hidden="true"
+          />
+        ) : null}
         <input
           {...props}
           ref={ref}

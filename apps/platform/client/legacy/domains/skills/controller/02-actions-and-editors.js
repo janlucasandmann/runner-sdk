@@ -60,6 +60,7 @@
               ...current.filter((skill) => skill.id !== PLAYGROUND_CUSTOM_SKILL_DRAFT_ID),
             ]);
             setSkillListMode("custom");
+            setSkillOverviewScope("created");
             setSelectedSkillId(PLAYGROUND_CUSTOM_SKILL_DRAFT_ID);
             setSkillTitleDraft("");
             setSkillDetailTab("code");
@@ -390,6 +391,12 @@
           }
 
           function getSelectedSkillVersion(targetSkill = selectedSkill) {
+            if (
+              !targetSkill?.id
+              || String(skillVersionState.skillId || "").trim() !== String(targetSkill.id || "").trim()
+            ) {
+              return null;
+            }
             const selectedVersionId = String(
               skillVersionState.currentVersionId
               || targetSkill?.currentVersionId
@@ -478,7 +485,18 @@
             ) {
               return false;
             }
-            return selectedSkill.isDraft || buildSkillVersionSaveDialogData().diffFiles.length > 0;
+            if (selectedSkill.isDraft) {
+              return true;
+            }
+            const selectedSkillVersionBaselineReady = Boolean(
+              skillVersionState.status === "ready"
+              && String(skillVersionState.skillId || "").trim() === String(selectedSkill.id || "").trim()
+              && getSelectedSkillVersion()
+            );
+            if (!selectedSkillVersionBaselineReady) {
+              return false;
+            }
+            return buildSkillVersionSaveDialogData().diffFiles.length > 0;
           }
 
           function discardUnsavedSkillVersionChanges() {

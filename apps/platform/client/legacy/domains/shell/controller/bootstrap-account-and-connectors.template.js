@@ -427,6 +427,8 @@
             isSystem: false,
             versionNumber: 0,
             versionQualifier: "",
+            overviewScope: "all",
+            onOverviewScopeChange: null,
             onTabChange: null,
             onOpenVersions: null,
           });
@@ -974,33 +976,8 @@
   
             void (async () => {
               try {
-                const projectsResponse = await fetch(proxyBackendBase + "/projects", {
-                  method: "GET",
-                  headers: welcomeRequestHeaders,
-                  signal: controller.signal,
-                });
-                const projectsData = await projectsResponse.json().catch(() => ({}));
-                if (!projectsResponse.ok) {
-                  throw new Error(projectsData?.message || projectsData?.error || "Failed to load projects.");
-                }
-  
-                const availableProjects = parsePlaygroundProjectListResponse(projectsData);
-                const resolvedProject = choosePlaygroundWelcomeProject(availableProjects, latestInteractedProjectId);
-                if (!resolvedProject?.id) {
-                  setWelcomeWidgetsState({
-                    status: "ready",
-                    error: "",
-                    projectId: "",
-                    project: null,
-                    tasks: [],
-                    schedules: [],
-                  });
-                  return;
-                }
-  
-                const resolvedProjectId = resolvedProject.id;
                 const schedulesRequestTarget = new URL(
-                  proxyBackendBase + "/projects/" + encodeURIComponent(resolvedProjectId) + "/schedules",
+                  proxyBackendBase + "/schedules",
                   window.location.origin
                 );
                 const welcomeScheduleRangeStart = startOfPlaygroundDay(addPlaygroundDays(new Date(), -45));
@@ -1011,13 +988,8 @@
                 if (welcomeScheduleRangeEnd) {
                   schedulesRequestTarget.searchParams.set("rangeEnd", welcomeScheduleRangeEnd.toISOString());
                 }
-                const [projectResponse, tasksResponse, schedulesResponse] = await Promise.all([
-                  fetch(proxyBackendBase + "/projects/" + encodeURIComponent(resolvedProjectId), {
-                    method: "GET",
-                    headers: welcomeRequestHeaders,
-                    signal: controller.signal,
-                  }),
-                  fetch(proxyBackendBase + "/tasks?projectId=" + encodeURIComponent(resolvedProjectId), {
+                const [projectsResponse, schedulesResponse] = await Promise.all([
+                  fetch(proxyBackendBase + "/projects", {
                     method: "GET",
                     headers: welcomeRequestHeaders,
                     signal: controller.signal,
@@ -1028,16 +1000,51 @@
                     signal: controller.signal,
                   }),
                 ]);
+                const projectsData = await projectsResponse.json().catch(() => ({}));
+                const schedulesData = await schedulesResponse.json().catch(() => ({}));
+                if (!projectsResponse.ok || !schedulesResponse.ok) {
+                  throw new Error(
+                    projectsData?.message || projectsData?.error
+                    || schedulesData?.message || schedulesData?.error
+                    || "Failed to load welcome widgets."
+                  );
+                }
+                const welcomeSchedules = parsePlaygroundScheduleListResponse(schedulesData);
+                const availableProjects = parsePlaygroundProjectListResponse(projectsData);
+                const resolvedProject = choosePlaygroundWelcomeProject(availableProjects, latestInteractedProjectId);
+                if (!resolvedProject?.id) {
+                  setWelcomeWidgetsState({
+                    status: "ready",
+                    error: "",
+                    projectId: "",
+                    project: null,
+                    tasks: [],
+                    schedules: welcomeSchedules,
+                  });
+                  return;
+                }
+
+                const resolvedProjectId = resolvedProject.id;
+                const [projectResponse, tasksResponse] = await Promise.all([
+                  fetch(proxyBackendBase + "/projects/" + encodeURIComponent(resolvedProjectId), {
+                    method: "GET",
+                    headers: welcomeRequestHeaders,
+                    signal: controller.signal,
+                  }),
+                  fetch(proxyBackendBase + "/tasks?projectId=" + encodeURIComponent(resolvedProjectId), {
+                    method: "GET",
+                    headers: welcomeRequestHeaders,
+                    signal: controller.signal,
+                  }),
+                ]);
   
                 const projectData = await projectResponse.json().catch(() => ({}));
                 const tasksData = await tasksResponse.json().catch(() => ({}));
-                const schedulesData = await schedulesResponse.json().catch(() => ({}));
   
-                if (!projectResponse.ok || !tasksResponse.ok || !schedulesResponse.ok) {
+                if (!projectResponse.ok || !tasksResponse.ok) {
                   throw new Error(
                     projectData?.message || projectData?.error
                     || tasksData?.message || tasksData?.error
-                    || schedulesData?.message || schedulesData?.error
                     || "Failed to load welcome widgets."
                   );
                 }
@@ -1059,7 +1066,7 @@
                     },
                   },
                   tasks: parsePlaygroundTaskListResponse(tasksData),
-                  schedules: parsePlaygroundScheduleListResponse(schedulesData),
+                  schedules: welcomeSchedules,
                 });
               } catch (error) {
                 if (controller.signal.aborted) {

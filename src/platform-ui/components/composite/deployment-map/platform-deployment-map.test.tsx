@@ -1,13 +1,18 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   PlatformDeploymentMap,
+  configurePlatformDeploymentMapRuntime,
   resolvePlatformDeploymentMapLocation,
 } from "./platform-deployment-map.js";
 
-afterEach(cleanup);
+beforeEach(() => configurePlatformDeploymentMapRuntime(null));
+afterEach(() => {
+  cleanup();
+  configurePlatformDeploymentMapRuntime(null);
+});
 
 describe("PlatformDeploymentMap", () => {
   it("renders the resolved deployment region and cacheable map asset", () => {
@@ -58,5 +63,63 @@ describe("PlatformDeploymentMap", () => {
         .querySelector(".platform-deployment-map__marker")
         ?.getAttribute("style"),
     ).toContain("--platform-deployment-map-marker-left");
+  });
+
+  it("uses the appliance site for every map on an on-prem deployment", () => {
+    configurePlatformDeploymentMapRuntime({
+      topology: "on_prem",
+      product: {
+        inference: {
+          deploymentEndpoint: {
+            region: {
+              code: "hr-zad-1",
+              label: "Zadar, Croatia",
+              latitude: 44.1194,
+              longitude: 15.2314,
+            },
+          },
+        },
+      },
+    });
+
+    const { container } = render(
+      <PlatformDeploymentMap
+        regionCode="us-central1"
+        location={{
+          code: "custom",
+          label: "Custom resource region",
+          latitude: 40,
+          longitude: -74,
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Zadar, Croatia · hr-zad-1")).not.toBeNull();
+    expect(
+      container.querySelector(".platform-deployment-map__marker-label")
+        ?.textContent,
+    ).toBe("hr-zad-1");
+  });
+
+  it("keeps resource-specific regions on hosted deployments", () => {
+    configurePlatformDeploymentMapRuntime({
+      topology: "gcp_saas",
+      product: {
+        inference: {
+          deploymentEndpoint: {
+            region: {
+              code: "hr-zad-1",
+              label: "Zadar, Croatia",
+              latitude: 44.1194,
+              longitude: 15.2314,
+            },
+          },
+        },
+      },
+    });
+
+    render(<PlatformDeploymentMap regionCode="us-central1" />);
+
+    expect(screen.getByText("Iowa · us-central1")).not.toBeNull();
   });
 });

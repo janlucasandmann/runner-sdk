@@ -12,7 +12,7 @@ The canonical dialog variants are `small` (400px), `medium` (640px), and `large`
 
 Every `PlatformModal` requires exactly one `title`, accepts an optional `description`, and renders its own plain Lucide X close control. The default header displays that title; specialized headers retain it as the accessible dialog name. Consumers provide body and footer content only; they must not render a second modal heading.
 
-Set `headerVariant="search"` and provide `headerSearchProps` for search-first selection dialogs. This variant keeps `title` as the dialog's visually hidden accessible name, renders the shared search input as the header content, and focuses that input whenever the modal opens. Optional `headerActions` appear after the search field for filters or other tightly related controls.
+Set `headerVariant="search"` and provide `headerSearchProps` for search-first selection dialogs. This variant keeps `title` as the dialog's visually hidden accessible name, renders the shared search input as the header content, and focuses that input whenever the modal opens. Optional `headerLeading` content appears before the field for compact interactive identity or type controls, while `headerActions` appear after it for filters or other tightly related controls.
 
 Set `headerVariant="media"` and provide `headerMedia` when a workflow needs a visual identity or preview area in place of the standard title row. The slot accepts arbitrary React content, including a background-image container and editable identity controls, and imposes no minimum height of its own. The required `title` and optional `description` remain visually hidden as the accessible dialog name and description, while the modal retains its canonical close behavior.
 

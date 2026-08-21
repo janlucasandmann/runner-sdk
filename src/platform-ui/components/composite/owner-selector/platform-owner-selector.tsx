@@ -1,10 +1,11 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   PlatformSelector,
   type PlatformSelectorAlignment,
   type PlatformSelectorPopupAlignment,
 } from "../../ui/selector/index.js";
 import { PlatformConfirmationModal } from "../modal/index.js";
+import { usePlatformOrganizationMemberDirectory } from "./platform-organization-member-directory.js";
 
 export interface PlatformOwnerIdentity<TValue extends string = string> {
   value: TValue;
@@ -56,6 +57,12 @@ export interface PlatformOwnerSelectorProps<
   confirmationDescription?: ReactNode | ((option: PlatformOwnerOption<TValue, TData>) => ReactNode);
   confirmLabel?: ReactNode;
   confirmingLabel?: ReactNode;
+  /**
+   * Includes every active member from the organization directory in addition
+   * to resource-specific candidates. Team ownership is the exceptional case
+   * and should disable this because a team owner must already belong to it.
+   */
+  includeOrganizationMembers?: boolean;
 }
 
 function joinClassNames(...classNames: Array<string | false | null | undefined>) {
@@ -63,6 +70,103 @@ function joinClassNames(...classNames: Array<string | false | null | undefined>)
     .filter((className): className is string => typeof className === "string" && Boolean(className.trim()))
     .map((className) => className.trim())
     .join(" ");
+}
+
+function hasTrustedOwnerName(identity: PlatformOwnerIdentity): boolean {
+  const name = String(identity.name || "").replace(/\s+/g, " ").trim();
+  const email = String(identity.email || "").trim().toLowerCase();
+  if (!name || ["you", "me", "current user", "unknown", "unknown user"].includes(name.toLowerCase())) {
+    return false;
+  }
+  const emailLocalPart = email.includes("@") ? email.split("@")[0] || "" : "";
+  const normalizedName = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const normalizedEmailLocalPart = emailLocalPart.replace(/[^a-z0-9]/g, "");
+  return !name.includes("@")
+    && (!email || name.toLowerCase() !== email)
+    && (!normalizedEmailLocalPart || normalizedName !== normalizedEmailLocalPart);
+}
+
+export function getPlatformOwnerDisplayName(identity: PlatformOwnerIdentity): string {
+  const name = String(identity.name || "").replace(/\s+/g, " ").trim();
+  if (hasTrustedOwnerName(identity)) return name;
+  const email = String(identity.email || (name.includes("@") ? name : "")).trim();
+  const prefix = email.includes("@") ? email.split("@")[0] : "";
+  const derivedName = prefix
+    .split(/[^a-zA-Z0-9]+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+  return derivedName || name || "Unknown user";
+}
+
+function resolveOwnerIdentity<TValue extends string, TData>(
+  owner: PlatformOwnerIdentity<TValue>,
+  options: readonly PlatformOwnerOption<TValue, TData>[],
+): PlatformOwnerIdentity<TValue> {
+  const matchingOption = options.find((option) => option.value === owner.value);
+  if (!matchingOption) return owner;
+  const optionHasAvatar = Object.hasOwn(matchingOption, "avatarUrl");
+  return {
+    ...owner,
+    name: hasTrustedOwnerName(owner) || !hasTrustedOwnerName(matchingOption)
+      ? owner.name
+      : matchingOption.name,
+    email: matchingOption.email || owner.email,
+    // The organization directory is authoritative even when it explicitly
+    // reports that a member has no image. This prevents a stale/current-user
+    // avatar from leaking into another member's identity.
+    avatarUrl: optionHasAvatar ? matchingOption.avatarUrl : owner.avatarUrl,
+  };
+}
+
+function getOwnerOptionKeys(option: PlatformOwnerOption<string, unknown>): string[] {
+  return Array.from(new Set([
+    option.value,
+    option.email,
+  ].map((entry) => String(entry || "").trim().toLowerCase()).filter(Boolean)));
+}
+
+function mergeOwnerOptions<TValue extends string, TData>(
+  options: readonly PlatformOwnerOption<TValue, TData>[],
+  organizationOptions: readonly PlatformOwnerOption<TValue, TData>[],
+): PlatformOwnerOption<TValue, TData>[] {
+  const merged = [...options];
+  const indexByKey = new Map<string, number>();
+  merged.forEach((option, index) => {
+    getOwnerOptionKeys(option as PlatformOwnerOption<string, unknown>)
+      .forEach((key) => {
+        indexByKey.set(key, index);
+      });
+  });
+  organizationOptions.forEach((organizationOption) => {
+    const keys = getOwnerOptionKeys(organizationOption as PlatformOwnerOption<string, unknown>);
+    const existingIndex = keys.map((key) => indexByKey.get(key)).find((index) => index !== undefined);
+    if (existingIndex === undefined) {
+      const nextIndex = merged.length;
+      merged.push(organizationOption);
+      keys.forEach((key) => {
+        indexByKey.set(key, nextIndex);
+      });
+      return;
+    }
+    const existing = merged[existingIndex];
+    merged[existingIndex] = {
+      ...organizationOption,
+      ...existing,
+      name: organizationOption.name || existing.name,
+      email: organizationOption.email || existing.email,
+      // The organization profile directory is authoritative. An empty value
+      // deliberately keeps the initials fallback instead of borrowing another
+      // user's locally supplied avatar.
+      avatarUrl: organizationOption.avatarUrl || "",
+      data: existing.data ?? organizationOption.data,
+    };
+    keys.forEach((key) => {
+      indexByKey.set(key, existingIndex);
+    });
+  });
+  return merged;
 }
 
 function getInitials(value: string) {
@@ -75,10 +179,11 @@ function getInitials(value: string) {
 }
 
 function PlatformOwnerAvatar({ identity }: { identity: PlatformOwnerIdentity }) {
+  const displayName = getPlatformOwnerDisplayName(identity);
   return (
     <span className="platform-owner-selector__avatar" aria-hidden="true">
       <span className="platform-owner-selector__avatar-fallback">
-        {getInitials(identity.name || identity.email || "Owner")}
+        {getInitials(displayName)}
       </span>
       {identity.avatarUrl ? (
         <img
@@ -127,39 +232,103 @@ export function PlatformOwnerSelector<
   confirmationDescription,
   confirmLabel = "Transfer Ownership",
   confirmingLabel = "Transferring...",
+  includeOrganizationMembers = true,
 }: PlatformOwnerSelectorProps<TValue, TData>) {
   const [pendingOption, setPendingOption] = useState<PlatformOwnerOption<TValue, TData> | null>(null);
-  const normalizedOptions = useMemo(() => options.map((option) => ({
-    value: option.value,
-    label: option.name,
-    description: option.description ?? (
-      option.email && option.email.toLowerCase() !== option.name.toLowerCase()
-        ? option.email
-        : undefined
-    ),
-    ariaLabel: option.ariaLabel || (
-      option.email && option.email.toLowerCase() !== option.name.toLowerCase()
-        ? `${option.name}, ${option.email}`
-        : option.name
-    ),
-    disabled: option.disabled || option.value === owner.value,
-    leading: <PlatformOwnerAvatar identity={option} />,
-  })), [options, owner.value]);
-  const ownerOptionByValue = useMemo(
-    () => new Map(options.map((option) => [option.value, option])),
-    [options],
+  const organizationDirectory = usePlatformOrganizationMemberDirectory();
+  const organizationOptions = useMemo<PlatformOwnerOption<TValue, TData>[]>(() => (
+    includeOrganizationMembers
+      ? organizationDirectory.candidates.map((candidate) => {
+          const identity = {
+            value: candidate.value,
+            id: candidate.id,
+            userId: candidate.userId,
+            name: candidate.name,
+            email: candidate.email || "",
+            avatarUrl: candidate.avatarUrl || "",
+          };
+          return {
+            value: candidate.value as TValue,
+            name: candidate.name,
+            email: candidate.email || "",
+            avatarUrl: candidate.avatarUrl || "",
+            data: {
+              identity,
+              candidate: identity,
+              owner: identity,
+              source: candidate.source,
+            } as TData,
+          };
+        })
+      : []
+  ), [includeOrganizationMembers, organizationDirectory.candidates]);
+  const mergedOptions = useMemo(
+    () => mergeOwnerOptions(options, organizationOptions),
+    [options, organizationOptions],
   );
+  const resolvedOwner = useMemo(
+    () => resolveOwnerIdentity(owner, mergedOptions),
+    [mergedOptions, owner],
+  );
+  const normalizedOptions = useMemo(() => mergedOptions.map((option) => {
+    const displayName = getPlatformOwnerDisplayName(option);
+    const hasDistinctEmail = Boolean(
+      option.email && option.email.toLowerCase() !== displayName.toLowerCase(),
+    );
+    return {
+      value: option.value,
+      label: displayName,
+      description: option.description ?? (hasDistinctEmail ? option.email : undefined),
+      ariaLabel: option.ariaLabel || (
+        hasDistinctEmail ? `${displayName}, ${option.email}` : displayName
+      ),
+      disabled: option.disabled || option.value === owner.value,
+      leading: <PlatformOwnerAvatar identity={option} />,
+    };
+  }), [mergedOptions, owner.value]);
+  const ownerOptionByValue = useMemo(
+    () => new Map(mergedOptions.map((option) => [option.value, option])),
+    [mergedOptions],
+  );
+  const shouldResolvePersistedIdentity = !hasTrustedOwnerName(owner);
+
+  useEffect(() => {
+    if (
+      !includeOrganizationMembers
+      || !organizationDirectory.organizationId
+      || (!open && !shouldResolvePersistedIdentity)
+    ) return undefined;
+
+    // Child effects run before the provider's cache-key synchronization effect.
+    // Defer the first request by one microtask so its generation cannot be
+    // invalidated while the organization context finishes initializing.
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) void organizationDirectory.ensureLoaded();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    includeOrganizationMembers,
+    open,
+    organizationDirectory.ensureLoaded,
+    organizationDirectory.organizationId,
+    shouldResolvePersistedIdentity,
+  ]);
 
   const selectedOption = normalizedOptions.find((option) => option.value === owner.value);
   const selectorOptions = selectedOption
     ? normalizedOptions
     : [{
         value: owner.value,
-        label: owner.name,
-        description: owner.email || undefined,
-        ariaLabel: owner.email ? `${owner.name}, ${owner.email}` : owner.name,
+        label: getPlatformOwnerDisplayName(resolvedOwner),
+        description: resolvedOwner.email || undefined,
+        ariaLabel: resolvedOwner.email
+          ? `${getPlatformOwnerDisplayName(resolvedOwner)}, ${resolvedOwner.email}`
+          : getPlatformOwnerDisplayName(resolvedOwner),
         disabled: true,
-        leading: <PlatformOwnerAvatar identity={owner} />,
+        leading: <PlatformOwnerAvatar identity={resolvedOwner} />,
       }, ...normalizedOptions];
 
   const resolvedConfirmationTitle = pendingOption
@@ -184,21 +353,30 @@ export function PlatformOwnerSelector<
         title={title}
         label={(
           <span className="platform-owner-selector__identity">
-            <PlatformOwnerAvatar identity={owner} />
+            <PlatformOwnerAvatar identity={resolvedOwner} />
             <span
               className="platform-owner-selector__name"
-              title={owner.email ? `${owner.name} · ${owner.email}` : owner.name}
+              title={resolvedOwner.email
+                ? `${getPlatformOwnerDisplayName(resolvedOwner)} · ${resolvedOwner.email}`
+                : getPlatformOwnerDisplayName(resolvedOwner)}
             >
-              {owner.name}
+              {getPlatformOwnerDisplayName(resolvedOwner)}
             </span>
           </span>
         )}
         disabled={disabled}
-        loading={loading}
+        loading={loading || Boolean(
+          includeOrganizationMembers
+          && organizationDirectory.organizationId
+          && organizationDirectory.status === "loading"
+        )}
         loadingContent={loadingContent}
         emptyContent={emptyContent}
         open={open}
-        onOpenChange={onOpenChange}
+        onOpenChange={(nextOpen) => {
+          if (nextOpen && includeOrganizationMembers) void organizationDirectory.ensureLoaded();
+          onOpenChange?.(nextOpen);
+        }}
         alignment={alignment}
         popupAlignment={popupAlignment}
         fullWidth={fullWidth}

@@ -25,6 +25,7 @@ import {
   List,
   ListOrdered,
   ListTodo,
+  MessageSquareText,
   Minus,
   Pilcrow,
   Plus,
@@ -112,8 +113,27 @@ export type PlatformInstructionsEditorImageUpload =
   PlatformInstructionsEditorFileUpload;
 
 export interface PlatformInstructionsEditorChangeContext {
-  source: "edit" | "file-upload" | "image-upload";
+  source: "edit" | "file-upload" | "image-upload" | "prompt-insert";
   uploadedFiles?: readonly PlatformInstructionsEditorUploadedFile[];
+  prompt?: PlatformInstructionsEditorPrompt;
+}
+
+export interface PlatformInstructionsEditorPrompt {
+  id?: string;
+  name?: string;
+  markdown?: string | null;
+  currentVersion?: {
+    markdown?: string | null;
+  } | null;
+}
+
+export interface PlatformInstructionsEditorPromptInsertion {
+  openSearch: (
+    onSelect: (
+      prompt: PlatformInstructionsEditorPrompt,
+    ) => void | Promise<void>,
+  ) => void;
+  disabled?: boolean;
 }
 
 export interface PlatformInstructionsEditorProps {
@@ -134,6 +154,8 @@ export interface PlatformInstructionsEditorProps {
   codePath?: string;
   contentVariant?: PlatformInstructionsEditorContentVariant;
   fileUpload?: PlatformInstructionsEditorFileUpload;
+  /** Enables insertion from the centralized prompt search in the Insert menu. */
+  promptInsertion?: PlatformInstructionsEditorPromptInsertion;
   /** @deprecated Use fileUpload. */
   imageUpload?: PlatformInstructionsEditorImageUpload;
   className?: string;
@@ -145,7 +167,7 @@ export interface PlatformInstructionsEditorProps {
   onEditingChange?: (editing: boolean) => void;
 }
 
-interface FileInsertionTarget {
+interface InstructionsEditorInsertionTarget {
   from: number;
   to: number;
   append: boolean;
@@ -710,6 +732,12 @@ function normalizeInstructionsEditorLinkHref(value: string) {
   return `https://${href}`;
 }
 
+function resolveInstructionsEditorPromptMarkdown(
+  prompt: PlatformInstructionsEditorPrompt,
+) {
+  return String(prompt?.currentVersion?.markdown ?? prompt?.markdown ?? "");
+}
+
 export function PlatformInstructionsEditor({
   value,
   onChange,
@@ -725,6 +753,7 @@ export function PlatformInstructionsEditor({
   codePath,
   contentVariant = "text",
   fileUpload,
+  promptInsertion,
   imageUpload,
   className = "",
   editorRef: forwardedEditorRef,
@@ -757,7 +786,10 @@ export function PlatformInstructionsEditor({
   const headerRef = useRef<HTMLElement>(null);
   const contentViewportRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const insertionTargetRef = useRef<FileInsertionTarget | null>(null);
+  const insertionTargetRef =
+    useRef<InstructionsEditorInsertionTarget | null>(null);
+  const promptInsertionTargetRef =
+    useRef<InstructionsEditorInsertionTarget | null>(null);
   const changeContextRef = useRef<PlatformInstructionsEditorChangeContext>({
     source: "edit",
   });
@@ -1061,7 +1093,7 @@ export function PlatformInstructionsEditor({
   }, [readOnly, stickyHeader]);
 
   const getInsertionTarget = useCallback(
-    (appendWhenBlurred = true): FileInsertionTarget => {
+    (appendWhenBlurred = true): InstructionsEditorInsertionTarget => {
       if (!richTextEditor.isFocused && appendWhenBlurred) {
         return {
           from: richTextEditor.state.doc.content.size,
@@ -1082,7 +1114,7 @@ export function PlatformInstructionsEditor({
     (
       uploadedFiles: PlatformInstructionsEditorUploadedFile[],
       sourceFiles: File[],
-      target: FileInsertionTarget,
+      target: InstructionsEditorInsertionTarget,
     ) => {
       const normalizedFiles = normalizeUploadedFiles(uploadedFiles, sourceFiles);
       if (!normalizedFiles.length) {
@@ -1151,7 +1183,7 @@ export function PlatformInstructionsEditor({
   );
 
   const uploadFiles = useCallback(
-    async (files: File[], target: FileInsertionTarget) => {
+    async (files: File[], target: InstructionsEditorInsertionTarget) => {
       const uploadConfig = fileUploadRef.current;
       const normalizedFiles = getUploadFiles(files).filter((candidate) =>
         fileUpload || !imageUpload
@@ -1188,6 +1220,53 @@ export function PlatformInstructionsEditor({
     if (fileUploading || fileUploadRef.current?.disabled) return;
     insertionTargetRef.current = getInsertionTarget();
     fileInputRef.current?.click();
+  };
+
+  const insertPrompt = useCallback(
+    (
+      prompt: PlatformInstructionsEditorPrompt,
+      target: InstructionsEditorInsertionTarget,
+    ) => {
+      const markdown = resolveInstructionsEditorPromptMarkdown(prompt);
+      if (!markdown.trim()) {
+        throw new Error("The selected prompt does not contain any text.");
+      }
+      const documentEnd = richTextEditor.state.doc.content.size;
+      const from = target.append
+        ? documentEnd
+        : Math.max(0, Math.min(target.from, documentEnd));
+      const to = target.append
+        ? from
+        : Math.max(from, Math.min(target.to, documentEnd));
+      changeContextRef.current = {
+        source: "prompt-insert",
+        prompt,
+      };
+      try {
+        richTextEditor
+          .chain()
+          .focus()
+          .insertContentAt({ from, to }, markdown, {
+            contentType: "markdown",
+            updateSelection: true,
+          })
+          .run();
+      } finally {
+        changeContextRef.current = { source: "edit" };
+      }
+    },
+    [richTextEditor],
+  );
+
+  const openPromptPicker = () => {
+    if (!promptInsertion || promptInsertion.disabled) return;
+    promptInsertionTargetRef.current = getInsertionTarget();
+    promptInsertion.openSearch((prompt) => {
+      const target =
+        promptInsertionTargetRef.current || getInsertionTarget();
+      promptInsertionTargetRef.current = null;
+      insertPrompt(prompt, target);
+    });
   };
 
   const handleFileDrop = (event: DragEvent<HTMLElement>) => {
@@ -1605,6 +1684,32 @@ export function PlatformInstructionsEditor({
       onSelect: () => richTextEditor.chain().focus().setHorizontalRule().run(),
     },
   ];
+  const promptInsertMenuOption: InstructionsEditorSlashCommandOption | null =
+    promptInsertion
+      ? {
+          id: "prompt",
+          label: "Prompt",
+          group: "Insert",
+          keywords: ["saved prompt", "centralized prompt", "instructions"],
+          icon: (
+            <MessageSquareText
+              width={14}
+              height={14}
+              strokeWidth={1.8}
+            />
+          ),
+          disabled: promptInsertion.disabled,
+          title: "Insert a saved prompt",
+          onSelect: openPromptPicker,
+        }
+      : null;
+  const toolbarInsertMenuOptions = promptInsertMenuOption
+    ? [
+        ...insertMenuOptions.slice(0, 3),
+        promptInsertMenuOption,
+        ...insertMenuOptions.slice(3),
+      ]
+    : insertMenuOptions;
   const slashCommandOptions = [
     ...styleMenuOptions,
     ...formattingMenuOptions,
@@ -1893,7 +1998,7 @@ export function PlatformInstructionsEditor({
                   />
                 </>
               }
-              options={insertMenuOptions}
+              options={toolbarInsertMenuOptions}
             />
             {fileUploadEnabled ? (
               <input

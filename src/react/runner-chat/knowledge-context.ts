@@ -151,6 +151,11 @@ export function buildRunnerKnowledgeContextFromAttachments(
   return normalizeRunnerKnowledgeContext({
     enabled: true,
     bindings,
+    // Attached Knowledge is an active working context, not a passive file
+    // preview. Allow the runtime to propose versioned changes when the user
+    // and resource policy permit it; the Knowledge API remains the
+    // authoritative per-operation permission boundary.
+    mode: "propose",
     source: "composer",
   });
 }

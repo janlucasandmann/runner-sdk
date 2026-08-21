@@ -1,11 +1,18 @@
 import type {
   TestPlan,
+  TestPlanOverviewSummary,
   TestPlanCreateInput,
   TestPlanVersion,
   TestRun,
   TestRunCreateInput,
   TestWorkspaceResourceOption,
 } from "../domain/index.js";
+
+export interface TestPlanListPage {
+  plans: TestPlanOverviewSummary[];
+  hasMore: boolean;
+  nextOffset: number;
+}
 
 export class TestsApiError extends Error {
   readonly status: number;
@@ -34,6 +41,77 @@ function resourceArray(payload: unknown, keys: readonly string[]): unknown[] {
     if (Array.isArray(source[key])) return source[key] as unknown[];
   }
   return [];
+}
+
+function finiteCount(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const count = Number(value);
+  return Number.isFinite(count) ? Math.max(0, Math.trunc(count)) : null;
+}
+
+function normalizePlanOverviewSummary(value: unknown): TestPlanOverviewSummary | null {
+  const source = asRecord(value);
+  const metadata = asRecord(source.metadata);
+  const definition = asRecord(source.definition);
+  const cases = Array.isArray(definition.cases) ? definition.cases : [];
+  const id = String(source.id || "").trim();
+  if (!id) return null;
+  const caseCount = finiteCount(
+    source.caseCount
+    ?? source.case_count
+    ?? metadata.overviewCaseCount
+    ?? metadata.overview_case_count,
+  );
+  const runCount = finiteCount(
+    source.runCount
+    ?? source.run_count
+    ?? metadata.overviewRunCount
+    ?? metadata.overview_run_count,
+  );
+  const passedRunCount = finiteCount(
+    source.passedRunCount
+    ?? source.passed_run_count
+    ?? metadata.overviewPassedRunCount
+    ?? metadata.overview_passed_run_count,
+  );
+  const lastRunStatus = String(
+    source.lastRunStatus
+    ?? source.last_run_status
+    ?? metadata.overviewLastRunStatus
+    ?? metadata.overview_last_run_status
+    ?? "",
+  ).trim();
+  return {
+    id,
+    projectId: String(source.projectId ?? source.project_id ?? "").trim() || null,
+    name: String(source.name || "Untitled Test").trim(),
+    description: String(source.description || "").trim(),
+    targetType: String(source.targetType ?? source.target_type ?? "project").trim(),
+    targetId: String(source.targetId ?? source.target_id ?? "").trim() || null,
+    defaultEnvironmentId: String(
+      source.defaultEnvironmentId ?? source.default_environment_id ?? "",
+    ).trim() || null,
+    caseCount: caseCount ?? cases.filter((testCase) => (
+      asRecord(testCase).enabled !== false
+    )).length,
+    publishedVersionId: String(
+      source.publishedVersionId ?? source.published_version_id ?? "",
+    ).trim() || null,
+    metadata: Object.keys(metadata).length ? metadata : null,
+    createdAt: String(source.createdAt ?? source.created_at ?? ""),
+    updatedAt: String(source.updatedAt ?? source.updated_at ?? ""),
+    overviewSummaryVersion: finiteCount(
+      source.overviewSummaryVersion
+      ?? source.overview_summary_version
+      ?? metadata.overviewSummaryVersion
+      ?? metadata.overview_summary_version,
+    ) ?? 0,
+    runCount,
+    passedRunCount,
+    lastRunStatus: lastRunStatus
+      ? lastRunStatus as TestPlanOverviewSummary["lastRunStatus"]
+      : null,
+  };
 }
 
 function normalizeResourceOptions(
@@ -119,16 +197,45 @@ export class TestsApi {
     return readResponse<T>(response, fallback);
   }
 
-  async listPlans(): Promise<TestPlan[]> {
+  async listPlanPage(offset = 0, limit = 20): Promise<TestPlanListPage> {
+    const normalizedOffset = Math.max(0, Math.trunc(Number(offset) || 0));
+    const normalizedLimit = Math.max(1, Math.trunc(Number(limit) || 20));
+    const query = new URLSearchParams({
+      view: "summary",
+      offset: String(normalizedOffset),
+      limit: String(normalizedLimit),
+    });
     const payload = await this.request<{
-      testPlans?: TestPlan[];
-      data?: TestPlan[];
-    }>("/test-plans?limit=500", {}, "Failed to load test plans.");
-    return Array.isArray(payload.testPlans)
+      testPlans?: unknown[];
+      data?: unknown[];
+      hasMore?: boolean;
+      has_more?: boolean;
+      nextOffset?: number;
+      next_offset?: number;
+    }>(`/test-plans?${query.toString()}`, {}, "Failed to load test plans.");
+    const rawPlans = Array.isArray(payload.testPlans)
       ? payload.testPlans
       : Array.isArray(payload.data)
         ? payload.data
         : [];
+    const plans = rawPlans
+      .map(normalizePlanOverviewSummary)
+      .filter((plan): plan is TestPlanOverviewSummary => Boolean(plan));
+    const rawHasMore = payload.hasMore ?? payload.has_more;
+    const rawNextOffset = Number(payload.nextOffset ?? payload.next_offset);
+    return {
+      plans,
+      hasMore: typeof rawHasMore === "boolean"
+        ? rawHasMore
+        : rawPlans.length >= normalizedLimit,
+      nextOffset: Number.isFinite(rawNextOffset) && rawNextOffset > normalizedOffset
+        ? rawNextOffset
+        : normalizedOffset + rawPlans.length,
+    };
+  }
+
+  async listPlans(): Promise<TestPlanOverviewSummary[]> {
+    return (await this.listPlanPage()).plans;
   }
 
   async listRuns(): Promise<TestRun[]> {
@@ -235,6 +342,10 @@ export class TestsApi {
     if (Array.isArray(payload)) return payload;
     const source = asRecord(payload);
     if (Array.isArray(source.data)) return source.data;
+    const nestedData = asRecord(source.data);
+    if (Array.isArray(nestedData.members)) return nestedData.members;
+    if (Array.isArray(nestedData.organizationMembers)) return nestedData.organizationMembers;
+    if (Array.isArray(nestedData.organization_members)) return nestedData.organization_members;
     if (Array.isArray(source.members)) return source.members;
     if (Array.isArray(source.organizationMembers)) return source.organizationMembers;
     if (Array.isArray(source.organization_members)) return source.organization_members;

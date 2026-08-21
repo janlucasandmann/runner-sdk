@@ -25,6 +25,70 @@ export const METRONOME_RUNS_CSS = String.raw`
         margin-top: 8px;
       }
 
+      .playground-metronome-settings-budget-section {
+        box-sizing: border-box;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.075);
+      }
+
+      .playground-metronome-settings-budget-section .platform-settings-section__header {
+        min-height: 0;
+        padding-right: 0;
+        padding-bottom: 12px;
+        padding-left: 0;
+      }
+
+      .playground-metronome-settings-budget-list {
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.075);
+      }
+
+      .playground-metronome-settings-budget-list .platform-service-detail-page__property {
+        grid-template-columns: max-content minmax(0, 1fr);
+      }
+
+      .playground-metronome-settings-budget-list .platform-service-detail-page__property-label {
+        white-space: nowrap;
+      }
+
+      .playground-metronome-settings-budget-input-shell {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+      }
+
+      .playground-metronome-settings-budget-control {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+      }
+
+      .playground-metronome-settings-budget-input {
+        box-sizing: border-box;
+        width: 84px;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.92);
+        font: inherit;
+        font-size: 12px;
+        text-align: right;
+      }
+
+      .playground-metronome-settings-budget-input:disabled {
+        color: rgba(255, 255, 255, 0.38);
+      }
+
+      .playground-metronome-settings-budget-unit-switch {
+        flex: 0 0 auto;
+      }
+
       .metronome-access-add-label {
         display: inline-flex;
         align-items: center;

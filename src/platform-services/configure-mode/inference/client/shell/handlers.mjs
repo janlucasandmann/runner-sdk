@@ -658,8 +658,14 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
                 ? data.organizationMembers
                 : Array.isArray(data?.organization_members)
                   ? data.organization_members
-                  : Array.isArray(data?.data)
-                    ? data.data
+                : Array.isArray(data?.data)
+                  ? data.data
+                  : Array.isArray(data?.data?.members)
+                    ? data.data.members
+                    : Array.isArray(data?.data?.organizationMembers)
+                      ? data.data.organizationMembers
+                      : Array.isArray(data?.data?.organization_members)
+                        ? data.data.organization_members
                     : [currentIdentity];
           return members.filter((member) => {
             const status = String(member?.status || "active").trim().toLowerCase();

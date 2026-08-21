@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
+  PlatformDataTableIncrementalLoadingConfig,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
 import {
@@ -32,6 +33,7 @@ export interface TestsOverviewPageProps {
   rows: readonly TestPlanOverviewRow[];
   loading?: boolean;
   error?: string;
+  incrementalLoading?: PlatformDataTableIncrementalLoadingConfig;
   controlsPortalId?: string;
   onOpen: (row: TestPlanOverviewRow) => void;
   onCreate: () => void;
@@ -58,6 +60,7 @@ export function TestsOverviewPage({
   rows,
   loading = false,
   error = "",
+  incrementalLoading,
   controlsPortalId,
   onOpen,
   onCreate,
@@ -173,6 +176,7 @@ export function TestsOverviewPage({
         getRowAriaLabel: (row) => row.name,
         loading,
         error: error || undefined,
+        incrementalLoading,
         emptyState: (
           <PlatformEmptyState
             icon={FlaskConical}

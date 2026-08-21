@@ -18,6 +18,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   type SkillOverviewRow,
+  type SkillsOverviewIdentityColumn,
   SkillsOverviewPage,
 } from "../../../../../platform-resources/skills/overview/skills-overview-page.js";
 import type { PlatformDataTableAction } from "../../../../../platform-ui/components/composite/data-table/index.js";
@@ -25,7 +26,7 @@ import { PlatformEmptyState } from "../../../../../platform-ui/components/compos
 import { PlatformPageHero } from "../../../../../platform-ui/components/composite/page-hero/index.js";
 import { PlatformButtonSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
 import { PlatformSwitch } from "../../../../../platform-ui/components/ui/switch/index.js";
-import { getBatchCreatorIdentity } from "../batch-identities.js";
+import { getBatchOwnerIdentity } from "../batch-identities.js";
 import type { BatchCreatorIdentity, BatchJob, BatchTargetKind } from "../batches-types.js";
 
 export type BatchesOverviewScope = "all" | "created";
@@ -40,7 +41,7 @@ export interface BatchesOverviewPageProps {
   onHold: (job: BatchJob) => void;
   onCancel: (job: BatchJob) => void;
   onDelete: (jobs: readonly BatchJob[]) => void;
-  onReorder: (job: BatchJob, index: number) => void;
+  onReorder: (job: BatchJob, index: number) => void | Promise<void>;
   controlsPortalId?: string;
   scopePortalId?: string;
   scope?: BatchesOverviewScope;
@@ -49,18 +50,33 @@ export interface BatchesOverviewPageProps {
 }
 
 interface BatchOverviewRow extends SkillOverviewRow {
+  ownerName: string;
+  ownerAvatarUrl?: string;
+  ownerFallback: string;
   job: BatchJob;
 }
 
-const STATUS_LABELS: Record<BatchJob["status"], string> = {
-  held: "On shelf",
-  queued: "Queued",
-  dispatching: "Starting",
-  running: "Running",
-  succeeded: "Completed",
-  failed: "Failed",
-  cancelled: "Cancelled",
-};
+function getIdentityFallback(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
+}
+
+const BATCH_OWNER_IDENTITY_COLUMN = {
+  id: "owner",
+  header: "Owner",
+  getIdentity: (row) => {
+    const batchRow = row as BatchOverviewRow;
+    return {
+      name: batchRow.ownerName,
+      imageUrl: batchRow.ownerAvatarUrl,
+      fallback: batchRow.ownerFallback,
+    };
+  },
+} satisfies SkillsOverviewIdentityColumn;
 
 const REORDERABLE_STATUSES = new Set<BatchJob["status"]>(["held", "queued"]);
 
@@ -148,8 +164,40 @@ export function getBatchDropIndex(
   return targetIndex + (placement === "after" ? 1 : 0);
 }
 
-function label(value: string) {
-  return value.replace(/_/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
+export function reorderBatchJobsForDisplay(
+  jobs: readonly BatchJob[],
+  job: BatchJob,
+  requestedIndex: number,
+) {
+  const currentJob = jobs.find((candidate) => candidate.id === job.id);
+  if (!currentJob) return [...jobs];
+  const siblings = getQueueSiblings(jobs, currentJob);
+  const withoutSource = siblings.filter(
+    (candidate) => candidate.id !== currentJob.id,
+  );
+  const nextIndex = Math.min(
+    withoutSource.length,
+    Math.max(0, Math.floor(requestedIndex)),
+  );
+  const reorderedSiblings = [...withoutSource];
+  reorderedSiblings.splice(nextIndex, 0, currentJob);
+  const finitePositions = siblings
+    .map((candidate) => Number(candidate.position))
+    .filter(Number.isFinite);
+  const firstPosition = finitePositions.length
+    ? Math.min(...finitePositions)
+    : 0;
+  const nextPositionById = new Map(
+    reorderedSiblings.map((candidate, index) => [
+      candidate.id,
+      firstPosition + index,
+    ]),
+  );
+
+  return jobs.map((candidate) => {
+    const position = nextPositionById.get(candidate.id);
+    return position == null ? candidate : { ...candidate, position };
+  });
 }
 
 function relativeTime(value: string) {
@@ -209,12 +257,12 @@ export function BatchesOverviewPage({
   const rows = useMemo<BatchOverviewRow[]>(
     () =>
       orderedJobs.map((job) => {
-        const creator = getBatchCreatorIdentity(job, currentUser);
+        const owner = getBatchOwnerIdentity(job, currentUser);
         const JobIcon = JOB_TYPE_ICONS[job.targetKind];
         return {
           id: job.id,
           name: job.name,
-          description: job.description || `${label(job.targetKind)} · ${STATUS_LABELS[job.status]}`,
+          description: job.description?.trim() || "No description",
           searchText: [
             job.name,
             job.description,
@@ -223,17 +271,18 @@ export function BatchesOverviewPage({
             job.targetResourceId,
             job.sourceProjectId,
             job.sourceTicketId,
-            creator.name,
+            owner.name,
           ]
             .filter(Boolean)
             .join(" "),
           icon: <JobIcon width={16} height={16} strokeWidth={1.8} />,
           isActive: !["succeeded", "failed", "cancelled"].includes(job.status),
           isCustom: true,
-          creatorName: creator.name,
-          creatorAvatarUrl: creator.avatarUrl,
+          ownerName: owner.name,
+          ownerAvatarUrl: owner.avatarUrl,
+          ownerFallback: getIdentityFallback(owner.name),
           updatedAt: Date.parse(job.updatedAt) || 0,
-          updatedLabel: `${STATUS_LABELS[job.status]} · ${relativeTime(job.updatedAt)}`,
+          updatedLabel: relativeTime(job.updatedAt),
           updatedTitle: new Date(job.updatedAt).toLocaleString(),
           job,
         };
@@ -377,6 +426,7 @@ export function BatchesOverviewPage({
           getGroupId: (row) => (row as BatchOverviewRow).job.startPolicy,
         }}
         rowReordering={{
+          activation: "row",
           isRowReorderable: (row) => !mutating && isQueueReorderable((row as BatchOverviewRow).job),
           canDrop: (row, targetRow) => {
             const job = (row as BatchOverviewRow).job;
@@ -388,9 +438,14 @@ export function BatchesOverviewPage({
             const job = (row as BatchOverviewRow).job;
             const target = (targetRow as BatchOverviewRow).job;
             const index = getBatchDropIndex(jobs, job, target, placement);
-            if (index >= 0) onReorder(job, index);
+            if (index >= 0) return onReorder(job, index);
           },
         }}
+        selection={{
+          enabled: true,
+          ariaLabel: (row) => `Select ${row.name}`,
+        }}
+        identityColumn={BATCH_OWNER_IDENTITY_COLUMN}
         sorting={{ value: null, onChange: () => undefined }}
         sortableColumns={false}
         controlsPortalId={controlsPortalId}

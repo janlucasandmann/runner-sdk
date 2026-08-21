@@ -92,6 +92,7 @@
               ...current.filter((skill) => skill.id !== PLAYGROUND_CUSTOM_SKILL_DRAFT_ID),
             ]);
             setSkillListMode("custom");
+            setSkillOverviewScope("created");
             setSelectedSkillId(PLAYGROUND_CUSTOM_SKILL_DRAFT_ID);
             setSkillTitleDraft(copiedSkill.name);
             setSkillDetailTab("code");
@@ -229,114 +230,107 @@
               skillSaveState.isSaving
               || selectedSkill.isSystem
             );
+            const shareDisabled = Boolean(
+              skillSaveState.isSaving
+              || selectedSkill.isSystem
+              || selectedSkill.isDraft
+            );
+            const openSkillVersionHistory = () => {
+              setSkillActionsPopoverOpen(false);
+              setSkillVersionsOpen(true);
+            };
+            const deleteSelectedSkill = () => {
+              setSkillActionsPopoverOpen(false);
+              if (selectedSkill.isDraft) {
+                handleBackToSkillsOverview();
+                return;
+              }
+              void handleDeleteSelectedSkill(selectedSkill);
+            };
             return createPortal(
-              React.createElement(PlatformPopup, {
+              React.createElement(PlatformResourceHeaderActions, null,
+                React.createElement(PlatformResourceActionsMenu, {
                   open: skillActionsPopoverOpen,
-                  rootRef: skillActionsPopoverRef,
-                  surfaceRef: skillActionsPopoverSurfaceRef,
-                  rootClassName: "playground-agent-title-actions-shell playground-skill-title-actions-shell",
-                  surfaceClassName: "playground-agent-title-actions-popup playground-skill-title-actions-popup",
-                  surfaceProps: {
-                    role: "menu",
-                    "aria-label": "Skill actions",
-                    width: 360,
-                    maxWidth: "calc(100vw - 16px)",
+                  onOpenChange: setSkillActionsPopoverOpen,
+                  resourceLabel: "Skill",
+                  disabled: skillSaveState.isSaving,
+                  shortcutActions: {
+                    share: {
+                      onInvoke: openSkillSendToTeamModal,
+                      disabled: shareDisabled,
+                    },
+                    delete: {
+                      onInvoke: deleteSelectedSkill,
+                      disabled: deleteDisabled,
+                    },
                   },
-                  animation: "down-in",
-                  variant: "minimal",
-                  portal: true,
-                  placement: "bottom-start",
-                  trigger: React.createElement(PlatformIconButton, {
-                    type: "button",
-                    size: "compact",
-                    active: skillActionsPopoverOpen,
-                    title: "Skill actions",
-                    "aria-label": "Skill actions",
-                    "aria-haspopup": "menu",
-                    "aria-expanded": skillActionsPopoverOpen ? "true" : "false",
-                    disabled: skillSaveState.isSaving,
-                    onClick: (event) => {
-                      event.stopPropagation();
-                      setSkillActionsPopoverOpen((current) => !current);
-                    },
-                  }, React.createElement(Ellipsis, { width: 14, height: 14, strokeWidth: 1.8 }))
                 },
-                React.createElement("div", { className: "playground-agents-detail-action-menu-meta" },
-                  [
-                    ["ID", selectedSkill.isDraft ? "Unsaved skill" : selectedSkill.id],
-                    ["Created", formatPlaygroundFileDate(selectedSkill.createdAt)],
-                    ["Updated", formatPlaygroundFileDate(selectedSkill.updatedAt)],
-                  ].map(([label, value]) =>
-                    React.createElement("div", {
-                      key: label,
-                      className: "playground-agents-detail-action-menu-meta-row",
+                React.createElement(PlatformResourceActionsInformation, {
+                  resourceLabel: "Skill",
+                  items: [
+                    {
+                      id: "id",
+                      label: "ID",
+                      value: selectedSkill.isDraft ? "Unsaved skill" : selectedSkill.id,
+                      title: selectedSkill.isDraft ? "Unsaved skill" : selectedSkill.id,
+                      monospace: true,
+                      copyValue: selectedSkill.isDraft ? undefined : selectedSkill.id,
+                      copyAriaLabel: selectedSkill.isDraft ? undefined : "Copy Skill ID",
                     },
-                      React.createElement("span", {
-                        className: "playground-agents-detail-action-menu-meta-label",
-                      }, label),
-                      React.createElement("span", {
-                        className: "playground-agents-detail-action-menu-meta-value"
-                          + (label === "ID" ? " is-id" : ""),
-                        title: value,
-                      }, value)
-                    )
-                  )
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  role: "menuitem",
-                  className: "tb-popup-row",
-                  onClick: openSkillSendToTeamModal,
-                  disabled: skillSaveState.isSaving || selectedSkill.isSystem || selectedSkill.isDraft,
-                },
-                  React.createElement(UsersRound, {
-                    className: "tb-popup-icon",
+                    {
+                      id: "created",
+                      label: "Created",
+                      value: formatPlaygroundFileDate(selectedSkill.createdAt),
+                    },
+                    {
+                      id: "updated",
+                      label: "Updated",
+                      value: formatPlaygroundFileDate(selectedSkill.updatedAt),
+                    },
+                  ],
+                }),
+                selectedSkill.isCustom && !selectedSkill.isDraft
+                  ? React.createElement(PlatformResourceVersionHistoryMenuItem, {
+                      onClick: openSkillVersionHistory,
+                    })
+                  : null,
+                React.createElement(PlatformResourceActionsDivider),
+                React.createElement(PlatformResourceActionMenuItem, {
+                  icon: React.createElement(UsersRound, {
                     width: 14,
                     height: 14,
                     strokeWidth: 1.8,
+                    "aria-hidden": "true",
                   }),
-                  React.createElement("span", { className: "tb-popup-label" }, "Send to Team")
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  role: "menuitem",
-                  className: "tb-popup-row",
+                  label: "Send to Team",
+                  shortcut: "share",
+                  onClick: openSkillSendToTeamModal,
+                  disabled: shareDisabled,
+                }),
+                React.createElement(PlatformResourceActionMenuItem, {
+                  icon: React.createElement(Split, {
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                    "aria-hidden": "true",
+                  }),
+                  label: "Copy Skill",
                   onClick: () => openSelectedSkillCopy(selectedSkill),
                   disabled: skillSaveState.isSaving,
-                },
-                  React.createElement(Split, {
-                    className: "tb-popup-icon",
-                    width: 14,
-                    height: 14,
-                    strokeWidth: 1.8,
-                  }),
-                  React.createElement("span", { className: "tb-popup-label" }, "Copy Skill")
-                ),
-                React.createElement("div", {
-                  className: "playground-agent-title-actions-divider",
-                  "aria-hidden": "true",
                 }),
-                React.createElement("button", {
-                  type: "button",
-                  role: "menuitem",
-                  className: "tb-popup-row",
-                  onClick: () => {
-                    setSkillActionsPopoverOpen(false);
-                    if (selectedSkill.isDraft) {
-                      handleBackToSkillsOverview();
-                      return;
-                    }
-                    void handleDeleteSelectedSkill(selectedSkill);
-                  },
-                  disabled: deleteDisabled,
-                },
-                  React.createElement(Trash2, {
-                    className: "tb-popup-icon",
+                React.createElement(PlatformResourceActionsDivider),
+                React.createElement(PlatformResourceActionMenuItem, {
+                  icon: React.createElement(Trash2, {
                     width: 14,
                     height: 14,
                     strokeWidth: 1.8,
+                    "aria-hidden": "true",
                   }),
-                  React.createElement("span", { className: "tb-popup-label" }, "Delete")
+                  label: "Delete",
+                  shortcut: "delete",
+                  onClick: deleteSelectedSkill,
+                  disabled: deleteDisabled,
+                })
                 )
               ),
               titleActionsContainer

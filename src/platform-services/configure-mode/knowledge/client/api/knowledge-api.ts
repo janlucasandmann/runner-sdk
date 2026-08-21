@@ -32,6 +32,115 @@ function asRecord(value: unknown): Record<string, unknown> {
     : {};
 }
 
+function readCollection(value: unknown, keys: readonly string[]): unknown[] {
+  if (Array.isArray(value)) return value;
+  const source = asRecord(value);
+  const containers = [
+    source,
+    asRecord(source.data),
+    asRecord(source.result),
+    asRecord(source.payload),
+  ];
+  for (const container of containers) {
+    for (const key of keys) {
+      if (Array.isArray(container[key])) return container[key] as unknown[];
+    }
+    if (Array.isArray(container.data)) return container.data as unknown[];
+  }
+  return [];
+}
+
+const MEMBER_IDENTITY_NESTED_KEYS = [
+  "user",
+  "profile",
+  "account",
+  "member",
+  "identity",
+  "metadata",
+] as const;
+
+function collectIdentitySources(
+  value: unknown,
+  depth = 0,
+  seen = new Set<unknown>(),
+): Record<string, unknown>[] {
+  const source = asRecord(value);
+  if (!Object.keys(source).length || seen.has(source) || depth > 3) return [];
+  seen.add(source);
+  return [
+    source,
+    ...MEMBER_IDENTITY_NESTED_KEYS.flatMap((key) => (
+      collectIdentitySources(source[key], depth + 1, seen)
+    )),
+  ];
+}
+
+function readIdentityString(value: unknown, keys: readonly string[]): string {
+  const sources = collectIdentitySources(value);
+  for (const key of keys) {
+    for (const source of sources) {
+      const candidate = source[key];
+      if (typeof candidate !== "string" && typeof candidate !== "number") continue;
+      const normalized = String(candidate).trim();
+      if (normalized) return normalized;
+    }
+  }
+  return "";
+}
+
+function getIdentityKeys(value: unknown): string[] {
+  return [...new Set([
+    readIdentityString(value, ["userId", "user_id", "uid", "accountId", "account_id"]),
+    readIdentityString(value, ["email", "emailAddress", "email_address", "mail"]),
+    readIdentityString(value, ["id", "memberId", "member_id"]),
+  ].map((candidate) => candidate.toLowerCase()).filter(Boolean))];
+}
+
+function readProfileRecords(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) return value.map(asRecord).filter((record) => Object.keys(record).length > 0);
+  const source = asRecord(value);
+  return Object.entries(source).flatMap(([key, record]) => {
+    const normalized = asRecord(record);
+    if (!Object.keys(normalized).length) return [];
+    return [{ id: key, ...normalized }];
+  });
+}
+
+function mergeMemberProfiles(members: readonly unknown[], ...payloads: readonly unknown[]): unknown[] {
+  const profileByKey = new Map<string, Record<string, unknown>>();
+  payloads.forEach((payload) => {
+    const source = asRecord(payload);
+    const data = asRecord(source.data);
+    [
+      source.profiles,
+      source.memberProfiles,
+      source.member_profiles,
+      source.users,
+      source.accounts,
+      Array.isArray(source.data) ? source.data : undefined,
+      data.profiles,
+      data.memberProfiles,
+      data.member_profiles,
+      data.users,
+      data.accounts,
+    ].flatMap(readProfileRecords).forEach((profile) => {
+      getIdentityKeys(profile).forEach((key) => profileByKey.set(key, profile));
+    });
+  });
+  return members.map((member) => {
+    const profile = getIdentityKeys(member)
+      .map((key) => profileByKey.get(key))
+      .find(Boolean);
+    if (!profile) return member;
+    const source = asRecord(member);
+    return {
+      ...source,
+      profile: { ...asRecord(source.profile), ...profile },
+      user: { ...asRecord(source.user), ...profile },
+    };
+  });
+}
+
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -380,12 +489,24 @@ export class KnowledgeApi {
       {},
       "Failed to load organization members.",
     );
-    if (Array.isArray(payload)) return payload;
-    const source = asRecord(payload);
-    for (const key of ["data", "members", "organizationMembers", "organization_members"]) {
-      if (Array.isArray(source[key])) return source[key] as unknown[];
+    const members = readCollection(payload, [
+      "members",
+      "organizationMembers",
+      "organization_members",
+    ]);
+    if (!members.length) return [];
+    let profilePayload: unknown = null;
+    try {
+      profilePayload = await this.request<unknown>(
+        `/organizations/${encodeURIComponent(organizationId)}/member-profiles/lookup`,
+        { method: "POST", body: JSON.stringify({ members }) },
+        "Failed to load organization member profiles.",
+      );
+    } catch {
+      // The membership response remains usable when an older backend does not
+      // expose the optional profile-directory lookup yet.
     }
-    return [];
+    return mergeMemberProfiles(members, payload, profilePayload);
   }
 
   async addTeamShare(

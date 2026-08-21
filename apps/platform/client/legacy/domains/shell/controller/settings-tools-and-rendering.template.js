@@ -4756,7 +4756,7 @@
                       {
                         label: toolsOverviewTitle,
                         trailing: isSkillsView
-                          ? skillsOverviewMenu
+                          ? null
                           : isPromptsView
                             ? null
                           : tagsAndPluginsOverviewMenu,
@@ -4809,6 +4809,24 @@
                         }
                       },
                       ariaLabel: "Skill section",
+                    })
+                : isSkillsView
+                  ? React.createElement(PlatformSwitch, {
+                      className: "playground-skills-overview-scope-switch",
+                      value: toolsSkillsHeaderState.overviewScope === "created"
+                        ? "created"
+                        : toolsSkillsHeaderState.overviewScope === "shared"
+                          ? "shared"
+                          : "all",
+                      options: [
+                        { value: "all", label: "All Skills" },
+                        { value: "created", label: "Created by me" },
+                        { value: "shared", label: "Shared with me" },
+                      ],
+                      onValueChange: (nextScope) => {
+                        toolsSkillsHeaderState.onOverviewScopeChange?.(nextScope);
+                      },
+                      ariaLabel: "Skill scope",
                     })
                 : null,
               rightRef: isActionsView ? pluginsNavActionsRef : null,
@@ -4936,16 +4954,59 @@
                 enabledSkillIds: runnerEnabledSkillIds,
                 onSkillsChange: setRunnerEnabledSkillIds,
                 workspaceTeams: teamPageTeams,
+                workspaceTeamsLoading: teamPageLoading,
+                workspaceTeamsRequiresPlan: teamPageRequiresPlan,
+                workspaceTeamMembers: teamPageMembers,
+                workspaceTeamMembersTeamId: teamPageSelectedTeamId,
+                onWorkspaceTeamsRequest: (options = {}) => {
+                  const requestedTeamId = String(
+                    options?.selectedTeamId || options?.teamId || ""
+                  ).trim();
+                  if (requestedTeamId) {
+                    return loadTeamPageData({ selectedTeamId: requestedTeamId });
+                  }
+                  if (
+                    !teamPageLoading
+                    && !teamPageRequiresPlan
+                    && (!Array.isArray(teamPageTeams) || teamPageTeams.length === 0)
+                  ) {
+                    return loadTeamPageData({ selectedTeamId: "" });
+                  }
+                  return Promise.resolve();
+                },
+                onViewTeam: (teamId) => {
+                  const normalizedTeamId = String(teamId || "").trim();
+                  if (!normalizedTeamId) return;
+                  openTeamPage();
+                  void loadTeamPageData({ selectedTeamId: normalizedTeamId });
+                },
+                activeOrganizationId,
+                onTestSkill: (skill) => {
+                  const skillId = String(skill?.id || "").trim();
+                  if (!skillId) return;
+                  handleNewThread({
+                    privateMode: true,
+                    enabledSkillIds: [skillId],
+                  });
+                },
                 onNavigationGuardChange: registerPlatformNavigationGuard,
                 onNavigationRequest: requestPlatformNavigation,
               });
             }
 
             if (toolsView === "prompts") {
+              const promptsOrganization = (Array.isArray(organizationPageOrganizations)
+                ? organizationPageOrganizations
+                : []
+              ).find((organization) => isOrganizationPageActiveOrganization(organization))
+                || getOrganizationPagePersonalOrganization(organizationPageOrganizations);
+              const promptsOrganizationId = String(
+                promptsOrganization?.id || activeOrganizationId || ""
+              ).trim();
               return React.createElement(PlaygroundPromptsPage, {
                 requestHeaders,
                 backendUrl: proxyBackendBase,
-                activeOrganizationId,
+                activeOrganizationId: promptsOrganizationId,
                 currentUserId: hasSessionAuth ? (sessionState.userId || "") : "",
                 currentUserName: hasSessionAuth ? accountName : "Me",
                 currentUserEmail: hasSessionAuth ? accountEmail : "",

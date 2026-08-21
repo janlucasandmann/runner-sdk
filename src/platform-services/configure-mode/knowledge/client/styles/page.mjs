@@ -75,6 +75,12 @@ export const PLAYGROUND_KNOWLEDGE_CSS = String.raw`
     margin-inline: auto;
   }
 
+  .knowledge-detail-page.file-resource-detail-page.is-settings-tab.is-access-detail-view {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+  }
+
   .knowledge-detail-content { min-width: 0; }
   .knowledge-detail-page__settings,
   .knowledge-detail-page__settings-content,
@@ -85,6 +91,7 @@ export const PLAYGROUND_KNOWLEDGE_CSS = String.raw`
   }
 
   .knowledge-detail-page .knowledge-detail-page__settings-content {
+    width: 100%;
     max-width: none;
     margin-inline: 0;
   }

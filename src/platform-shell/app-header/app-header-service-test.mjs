@@ -24,6 +24,7 @@ assert.deepEqual(Object.keys(fragments), [
 ]);
 assert.match(fragments.state, /accountMenuOpen/);
 assert.match(fragments.state, /notificationsOpen/);
+assert.match(fragments.state, /resourceAccessNavigationState/);
 assert.match(fragments.state, /threadSearchOpen/);
 assert.match(fragments.state, /threadSearchMode/);
 assert.match(fragments.state, /threadSearchResourceTypeFilter/);
@@ -125,6 +126,9 @@ assert.match(fragments.navigation, /THREAD_SEARCH_RESULT_TARGET_QUERY_PARAM/);
 assert.doesNotMatch(fragments.navigation, /window\.confirm/);
 assert.match(fragments.lifecycle, /consumeThreadSearchResultNavigationTarget/);
 assert.match(fragments.lifecycle, /applyPlatformNavigationEntry\(navigationTarget\)/);
+assert.match(fragments.lifecycle, /platform:resource-access-navigation-change/);
+assert.match(fragments.lifecycle, /const principalKind = detail\.principalKind === "system" \? "system" : "team"/);
+assert.match(fragments.lifecycle, /principalProfileImageUrl/);
 assert.match(fragments.breadcrumbBar, /function renderAppHeaderBreadcrumbs/);
 assert.doesNotMatch(fragments.breadcrumbBar, /getAppHeaderBreadcrumbIcon/);
 assert.doesNotMatch(fragments.breadcrumbBar, /item\.Icon/);
@@ -135,11 +139,25 @@ assert.match(fragments.breadcrumbBar, /item\.node != null\s*\? item\.node/);
 assert.match(fragments.breadcrumbBar, /item\.leading != null/);
 assert.match(fragments.breadcrumbBar, /playground-top-nav-path-leading/);
 assert.match(fragments.breadcrumbBar, /item\.trailing/);
+assert.match(fragments.breadcrumbBar, /String\(item\.className \|\| ""\)/);
 assert.match(fragments.breadcrumbBar, /playground-top-nav-path-item-group/);
 assert.match(fragments.appHeader, /function renderAppHeader\(/);
 assert.match(
   fragments.appHeader,
-  /const resolvedPathItems = typeof resolveProjectResourceBreadcrumbItems === "function"[\s\S]*?renderAppHeaderBreadcrumbs\(resolvedPathItems\)/,
+  /const basePathItems = typeof resolveProjectResourceBreadcrumbItems === "function"[\s\S]*?const resolvedPathItems = resourceAccessNavigationState[\s\S]*?nextPathItems\.push\([\s\S]*?principalBreadcrumbLabel[\s\S]*?renderAppHeaderBreadcrumbs\(resolvedPathItems\)/,
+);
+assert.match(
+  fragments.appHeader,
+  /onClick: \(\) => resourceAccessNavigationState\.onClose\?\.\(\)/,
+);
+assert.match(fragments.appHeader, /platform-resource-access-breadcrumb-avatar/);
+assert.match(fragments.appHeader, /principalProfileImageUrl/);
+assert.match(fragments.appHeader, /principalName \+ " Access"/);
+assert.match(fragments.appHeader, /label: principalBreadcrumbLabel/);
+assert.match(fragments.appHeader, /leading: principalLeading/);
+assert.match(
+  fragments.appHeader,
+  /resourceAccessNavigationState[\s\S]*?\? null[\s\S]*?: options\.center \|\| null/,
 );
 assert.match(fragments.appHeader, /React\.createElement\(PlatformSecondaryButton,/);
 assert.match(fragments.appHeader, /className: "playground-top-nav-private-chat-control"/);
@@ -217,6 +235,8 @@ assert.doesNotMatch(fragments.searchModal, /subtitle:/);
 assert.doesNotMatch(fragments.searchModal, /PlatformModalBackdrop/);
 assert.doesNotMatch(fragments.searchModal, /PlatformModalSurface/);
 assert.doesNotMatch(fragments.lifecycle, /threadSearchInputRef/);
+assert.match(APP_HEADER_STYLES, /\.platform-resource-access-breadcrumb-avatar/);
+assert.match(APP_HEADER_STYLES, /\.platform-resource-access-breadcrumb-avatar__image/);
 assert.doesNotThrow(() => new Function(`
   function appHeaderHost() {
     ${Object.values(fragments).join("\n")}
@@ -333,6 +353,10 @@ assert.equal(
 assert.match(
   platformEntrySource,
   /label: selectedThreadTitle \|\| "Current thread",[\s\S]*?trailing: threadTitleActionMenu/,
+);
+assert.match(
+  platformEntrySource,
+  /const activeMetronomeLoopPresentation = metronomeRunTraceSelection\?\.key[\s\S]*?getMetronomeTaskLoopPresentation\(metronomeRunTraceSelection,[\s\S]*?label: activeMetronomeLoopPresentation\.label,[\s\S]*?className: "playground-tasks-backlog-project-icon is-loop"[\s\S]*?React\.createElement\(RefreshCw/,
 );
 assert.match(
   platformEntrySource,

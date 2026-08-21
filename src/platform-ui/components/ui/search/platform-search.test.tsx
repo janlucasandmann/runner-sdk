@@ -46,6 +46,13 @@ describe("PlatformSearch", () => {
     expect(search.closest(".platform-search")?.querySelector(".lucide-search")).toBeNull();
   });
 
+  it("can omit its icon when another leading control owns that space", () => {
+    render(<PlatformSearch icon={null} placeholder="Issue title" />);
+
+    const search = screen.getByRole("searchbox", { name: "Issue title" });
+    expect(search.closest(".platform-search")?.querySelector("svg")).toBeNull();
+  });
+
   it("forwards its input ref and disabled state", () => {
     const ref = createRef<HTMLInputElement>();
     render(<PlatformSearch ref={ref} aria-label="Search" disabled />);

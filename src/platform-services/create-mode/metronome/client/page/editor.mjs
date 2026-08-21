@@ -20,7 +20,7 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
           };
 
           const renderMetronomeVersionHistorySidebarPortal = () => {
-            if (!activeWorkflow) return null;
+            if (!activeWorkflow || isActiveWorkflowBuiltIn) return null;
             let portalTarget = null;
             if (inspectorPortalId) {
               if (typeof document === "undefined") return null;
@@ -80,7 +80,7 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
           };
 
           const renderMetronomeVersionHistorySidebar = (options = {}) => {
-            if (!activeWorkflow) return null;
+            if (!activeWorkflow || isActiveWorkflowBuiltIn) return null;
             const isBusy = metronomePublishState.status === "loading";
             const isValidating = metronomePublishState.status === "validating";
             const publishIssues = Array.isArray(metronomePublishState.issues) ? metronomePublishState.issues : [];
@@ -1307,6 +1307,90 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             ).trim() || "europe-west1";
             const isTriggeringMetronomeRun = metronomeRunState.status === "loading";
             const isRunTriggerDisabled = isMetronomeWorkflowBuiltIn(workflow);
+            const inferenceBudgetPolicy = readMetronomeWorkflowInferenceBudgetPolicy(workflow);
+            const isInferenceBudgetEnabled = Boolean(inferenceBudgetPolicy);
+            const displayedInferenceBudgetPolicy = inferenceBudgetPolicy || {
+              schemaVersion: METRONOME_INFERENCE_BUDGET_POLICY_SCHEMA_VERSION,
+              unit: "usd",
+              maximumAmountPerRun: 1,
+            };
+            const commitMetronomeInferenceBudgetPolicy = (patch) => {
+              setMetronomeInferenceBudgetPolicyDraft(normalizeMetronomeInferenceBudgetPolicy({
+                ...displayedInferenceBudgetPolicy,
+                ...(patch && typeof patch === "object" ? patch : {}),
+              }));
+            };
+            const budgetSettings = React.createElement(PlatformSettingsSectionList, null,
+              React.createElement(PlatformSettingsSection, {
+                title: "Budget per run",
+                className: "playground-metronome-settings-budget-section",
+                bodyPresentation: "flush",
+              },
+                React.createElement(PlatformServiceDetailPropertyList, {
+                  className: "playground-metronome-settings-budget-list",
+                },
+                  React.createElement(PlatformServiceDetailProperty, { label: "Enforce budget per run" },
+                    React.createElement(PlatformToggle, {
+                      checked: isInferenceBudgetEnabled,
+                      disabled: isActiveWorkflowBuiltIn,
+                      "aria-label": "Enforce a budget for every workflow run",
+                      onCheckedChange: (checked) => {
+                        if (!checked) {
+                          setMetronomeInferenceBudgetPolicyDraft(null);
+                          return;
+                        }
+                        commitMetronomeInferenceBudgetPolicy({});
+                      },
+                    })
+                  ),
+                  React.createElement(PlatformServiceDetailProperty, { label: "Budget amount" },
+                    React.createElement("div", { className: "playground-metronome-settings-budget-control" },
+                      React.createElement("label", { className: "playground-metronome-settings-budget-input-shell" },
+                        React.createElement("input", {
+                          type: "number",
+                          min: displayedInferenceBudgetPolicy.unit === "tokens" ? 1 : 0.01,
+                          max: displayedInferenceBudgetPolicy.unit === "tokens" ? 1000000 : 10000,
+                          step: displayedInferenceBudgetPolicy.unit === "tokens" ? 1 : 0.01,
+                          value: displayedInferenceBudgetPolicy.maximumAmountPerRun,
+                          className: "playground-metronome-settings-budget-input",
+                          disabled: isActiveWorkflowBuiltIn || !isInferenceBudgetEnabled,
+                          "aria-label": "Maximum workflow budget amount",
+                          onChange: (event) => commitMetronomeInferenceBudgetPolicy({
+                            maximumAmountPerRun: displayedInferenceBudgetPolicy.unit === "tokens"
+                              ? Math.min(1000000, Math.max(1, Math.round(Number(event.target.value) || 1)))
+                              : Math.min(10000, Math.max(0.01, Number(event.target.value) || 0.01)),
+                          }),
+                        }),
+                      ),
+                      React.createElement(PlatformSwitch, {
+                        value: displayedInferenceBudgetPolicy.unit,
+                        options: [
+                          { value: "usd", label: "USD" },
+                          { value: "tokens", label: "Tokens" },
+                        ],
+                        disabled: isActiveWorkflowBuiltIn || !isInferenceBudgetEnabled,
+                        ariaLabel: "Workflow budget unit",
+                        className: "playground-metronome-settings-budget-unit-switch",
+                        onValueChange: (unit) => commitMetronomeInferenceBudgetPolicy({
+                          unit,
+                          maximumAmountPerRun: unit === displayedInferenceBudgetPolicy.unit
+                            ? displayedInferenceBudgetPolicy.maximumAmountPerRun
+                            : unit === "tokens"
+                              ? Math.max(1, Math.round(
+                                  displayedInferenceBudgetPolicy.maximumAmountPerRun
+                                  * METRONOME_INFERENCE_BUDGET_TOKENS_PER_USD
+                                ))
+                              : Math.max(0.01,
+                                  displayedInferenceBudgetPolicy.maximumAmountPerRun
+                                  / METRONOME_INFERENCE_BUDGET_TOKENS_PER_USD
+                                ),
+                        }),
+                      })
+                    )
+                  )
+                )
+              )
+            );
             const creatorIdentity = resolveMetronomeWorkflowCreatorPresentation(activeWorkflow, {
               isBuiltIn: isMetronomeWorkflowBuiltIn(activeWorkflow),
             });
@@ -1370,6 +1454,7 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                     title: "Deployment region",
                     className: "playground-managed-server-deployment-map playground-source-server-deployment-map playground-function-deployment-map playground-metronome-deployment-map",
                   }),
+                  budgetSettings,
                   React.createElement(MetronomeWorkflowAccessSettings, {
                     workflow,
                     workspaceTeams: metronomeShareTeams,

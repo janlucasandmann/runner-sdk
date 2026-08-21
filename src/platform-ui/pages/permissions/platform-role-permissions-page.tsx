@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PlatformPopup } from "../../components/composite/popup/index.js";
+import { PlatformDetailSidebar } from "../../components/composite/detail-sidebar/index.js";
+import { PlatformUiCard } from "../../components/composite/ui-card/index.js";
 import type {
   PlatformPermissionRoleMember,
   PlatformRolePermissionsPageProps,
@@ -33,7 +35,7 @@ function PlatformRoleAssignedMembers({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const surfaceRef = useRef<HTMLDivElement | null>(null);
   const label = getRoleLabelText(roleLabel);
-  const visibleMembers = members.slice(0, 5);
+  const visibleMembers = members;
 
   useEffect(() => {
     if (!open || typeof document === "undefined") return undefined;
@@ -147,6 +149,9 @@ export function PlatformRolePermissionsPage<TId extends string = string>({
   readOnly = false,
   className = "",
   roleListClassName = "",
+  roleListPlacement = "leading",
+  roleListTitle,
+  roleListFooter,
   permissionPageClassName = "",
   permissionHeaderClassName = "",
   ...permissionProps
@@ -154,64 +159,98 @@ export function PlatformRolePermissionsPage<TId extends string = string>({
   const selectedRole = roles.find((role) => role.id === value) || roles[0];
   if (!selectedRole) return null;
 
+  const roleList = (
+    <div
+      className={`platform-role-permissions-page__roles playground-team-role-list${roleListClassName ? ` ${roleListClassName}` : ""}`}
+      role="tablist"
+      aria-label={roleAriaLabel}
+      data-platform-role-sidebar="true"
+    >
+      {roles.map((role) => (
+        <button
+          key={role.id}
+          type="button"
+          role="tab"
+          className={`platform-role-permissions-page__role playground-team-role-card${selectedRole.id === role.id ? " is-active" : ""}`}
+          aria-selected={selectedRole.id === role.id}
+          disabled={role.disabled}
+          onClick={() => onValueChange(role.id)}
+        >
+          <span className="platform-role-permissions-page__role-heading playground-team-role-card-heading">
+            <span className="platform-role-permissions-page__role-title playground-team-role-card-title">
+              {role.label}
+            </span>
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+
+  const permissionPage = (
+    <div
+      className={`platform-role-permissions-page__content playground-team-role-permission-page${readOnly ? " is-read-only" : ""}${permissionPageClassName ? ` ${permissionPageClassName}` : ""}`}
+    >
+      <div
+        className={`platform-role-permissions-page__header playground-team-role-permission-header${permissionHeaderClassName ? ` ${permissionHeaderClassName}` : ""}`}
+      >
+        <div>
+          <h2 className="platform-role-permissions-page__title playground-team-role-permission-title">
+            {roleTitle ?? selectedRole.label}
+          </h2>
+        </div>
+        {selectedRole.id === ownerRoleId && ownerRoleHeaderAction !== undefined ? (
+          ownerRoleHeaderAction
+        ) : selectedRole.assignedMembers !== undefined ? (
+          <PlatformRoleAssignedMembers
+            roleLabel={selectedRole.label}
+            members={selectedRole.assignedMembers}
+          />
+        ) : (
+          roleHeaderAction
+        )}
+      </div>
+
+      <PlatformPermissionsPage
+        {...permissionProps}
+        disabled={readOnly || permissionProps.disabled}
+      />
+    </div>
+  );
+
   return (
     <div
       className={`platform-role-permissions-page playground-team-role-pages${className ? ` ${className}` : ""}`}
       data-platform-role-permissions-page="true"
+      data-platform-role-list-placement={roleListPlacement}
     >
-      <div
-        className={`platform-role-permissions-page__roles playground-team-role-list${roleListClassName ? ` ${roleListClassName}` : ""}`}
-        role="tablist"
-        aria-label={roleAriaLabel}
-        data-platform-role-sidebar="true"
-      >
-        {roles.map((role) => (
-          <button
-            key={role.id}
-            type="button"
-            role="tab"
-            className={`platform-role-permissions-page__role playground-team-role-card${selectedRole.id === role.id ? " is-active" : ""}`}
-            aria-selected={selectedRole.id === role.id}
-            disabled={role.disabled}
-            onClick={() => onValueChange(role.id)}
+      {roleListPlacement === "details-sidebar" ? (
+        <>
+          {permissionPage}
+          <PlatformDetailSidebar
+            ariaLabel={roleAriaLabel}
+            className="platform-role-permissions-page__details-sidebar"
           >
-            <span className="platform-role-permissions-page__role-heading playground-team-role-card-heading">
-              <span className="platform-role-permissions-page__role-title playground-team-role-card-title">
-                {role.label}
-              </span>
-            </span>
-          </button>
-        ))}
-      </div>
-
-      <div
-        className={`platform-role-permissions-page__content playground-team-role-permission-page${readOnly ? " is-read-only" : ""}${permissionPageClassName ? ` ${permissionPageClassName}` : ""}`}
-      >
-        <div
-          className={`platform-role-permissions-page__header playground-team-role-permission-header${permissionHeaderClassName ? ` ${permissionHeaderClassName}` : ""}`}
-        >
-          <div>
-            <h2 className="platform-role-permissions-page__title playground-team-role-permission-title">
-              {roleTitle ?? selectedRole.label}
-            </h2>
-          </div>
-          {selectedRole.id === ownerRoleId && ownerRoleHeaderAction !== undefined ? (
-            ownerRoleHeaderAction
-          ) : selectedRole.assignedMembers !== undefined ? (
-            <PlatformRoleAssignedMembers
-              roleLabel={selectedRole.label}
-              members={selectedRole.assignedMembers}
-            />
-          ) : (
-            roleHeaderAction
-          )}
-        </div>
-
-        <PlatformPermissionsPage
-          {...permissionProps}
-          disabled={readOnly || permissionProps.disabled}
-        />
-      </div>
+            <PlatformUiCard
+              as="section"
+              variant="sidebar"
+              cardTitle={roleListTitle}
+              className="platform-role-permissions-page__details-card"
+            >
+              {roleList}
+              {roleListFooter ? (
+                <div className="platform-role-permissions-page__details-footer">
+                  {roleListFooter}
+                </div>
+              ) : null}
+            </PlatformUiCard>
+          </PlatformDetailSidebar>
+        </>
+      ) : (
+        <>
+          {roleList}
+          {permissionPage}
+        </>
+      )}
     </div>
   );
 }

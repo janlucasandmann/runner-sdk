@@ -64,6 +64,56 @@ const plan: TestPlan = {
 };
 
 describe("TestCaseDetailPage", () => {
+  it("keeps Function, Method, and Path in one request row", () => {
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      '<div id="test-case-actions"></div><div id="test-case-sections"></div>',
+    );
+    const functionCase: TestCaseDefinition = {
+      ...testCase,
+      id: "case-function",
+      name: "Function contract",
+      request: {
+        target: "computer_agents_function",
+        functionId: "function-1",
+        method: "POST",
+        path: "/health",
+        body: null,
+      },
+    };
+
+    const { container } = render(
+      <TestCaseDetailPage
+        plan={plan}
+        testCase={functionCase}
+        api={{ updatePlan: vi.fn() } as unknown as TestsApi}
+        controlsPortalId="test-case-actions"
+        sectionControlsPortalId="test-case-sections"
+        onPlanChange={vi.fn()}
+        onDeleted={vi.fn()}
+      />,
+    );
+
+    const requestRow = container.querySelector(
+      ".tests-case-builder__form-grid.is-function-request",
+    );
+    expect(requestRow).not.toBeNull();
+    expect(requestRow?.children[0]?.textContent).toContain("Function");
+    expect(requestRow?.children[1]?.textContent).toContain("Method");
+    expect(requestRow?.children[2]?.textContent).toContain("Path");
+    expect(
+      screen.queryByText("JSON passed to the selected Function. Use null when no body is required."),
+    ).toBeNull();
+    expect(
+      container.querySelector(".tests-case-builder__request-body-field"),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(
+        ".tests-case-builder__request-body-field .platform-instructions-editor__header",
+      )?.textContent,
+    ).toBe("JSON");
+  });
+
   it("keeps the structured General view and the multi-file Code view synchronized", () => {
     document.body.insertAdjacentHTML(
       "beforeend",
@@ -95,6 +145,17 @@ describe("TestCaseDetailPage", () => {
     expect(screen.getByText("Readiness requirements")).not.toBeNull();
     expect(screen.getByLabelText("Require database readiness")).not.toBeNull();
     expect(screen.getByRole("heading", { name: "Evidence" })).not.toBeNull();
+    for (const label of ["Logs", "Screenshots", "Traces", "Artifacts"]) {
+      const evidenceToggle = screen.getByRole("switch", {
+        name: `${label} evidence retention`,
+      }) as HTMLButtonElement;
+      expect(evidenceToggle.disabled).toBe(true);
+      expect(evidenceToggle.getAttribute("aria-checked")).toBe("true");
+    }
+    expect(screen.queryByText("Retained")).toBeNull();
+    expect(screen.queryByText("Not retained")).toBeNull();
+    expect(screen.queryByText("Advanced definition")).toBeNull();
+    expect(screen.queryByText(/Secret redaction is/)).toBeNull();
     expect(container.querySelector(".platform-settings-section__icon")).toBeNull();
     expect(screen.getByText("Case Settings")).not.toBeNull();
     expect(screen.getByText("Environment variables")).not.toBeNull();
@@ -108,6 +169,9 @@ describe("TestCaseDetailPage", () => {
     expect(
       (screen.getByRole("button", { name: "Save Changes" }) as HTMLButtonElement).disabled,
     ).toBe(true);
+    expect(
+      screen.getByRole("button", { name: "Save Changes" }).querySelector(".lucide-bookmark"),
+    ).not.toBeNull();
 
     fireEvent.click(screen.getByLabelText("Require database readiness"));
     expect(

@@ -983,10 +983,29 @@ export const METRONOME_INSPECTOR_02_FRAGMENT = String.raw`                    Re
                   onChange: (event) => updateSelectedNodeConfig("maxIterations", Math.max(1, Number(event.target.value) || 1)),
                 })
               );
+              const renderOptionalBudgetField = (fieldKey, label, description, options = {}) => React.createElement(MetronomeInspectorField, null,
+                renderMetronomeFieldTitle(label, description),
+                React.createElement(MetronomeInspectorInput, {
+                  type: "number",
+                  min: options.min ?? 0,
+                  step: options.step ?? 1,
+                  className: "playground-metronome-input",
+                  value: loopConfig[fieldKey] ?? "",
+                  placeholder: "No limit",
+                  onKeyDown: stopMetronomeInputKeyPropagation,
+                  onKeyUp: stopMetronomeInputKeyPropagation,
+                  onChange: (event) => updateSelectedNodeConfig(
+                    fieldKey,
+                    event.target.value === "" ? "" : Math.max(options.min ?? 0, Number(event.target.value) || 0)
+                  ),
+                })
+              );
               return React.createElement(React.Fragment, null,
                 React.createElement(MetronomeInspectorFieldHint, { className: "playground-metronome-type-description playground-metronome-loop-type-description" },
                   selectedLoopType === "fixed_count"
                     ? "Runs the enclosed steps a fixed number of times."
+                    : selectedLoopType === "repeat_until"
+                      ? "Repeats worker and verifier steps until a typed verdict passes or a hard safety budget stops the run."
                     : selectedLoopType === "workflow_context_contains"
                       ? "Runs enclosed steps until the accumulated workflow summaries contain the target text."
                       : selectedLoopType === "input_items"
@@ -997,6 +1016,103 @@ export const METRONOME_INSPECTOR_02_FRAGMENT = String.raw`                    Re
                             ? "Prepares matching documents from a database collection for downstream steps."
                             : "Runs enclosed steps while matching database documents still exist."
                 ),
+                selectedLoopType === "repeat_until"
+                  ? React.createElement(React.Fragment, null,
+                      React.createElement(MetronomeInspectorField, null,
+                        renderMetronomeFieldTitle(
+                          "Verdict binding",
+                          "Binding to the verifier verdict. The value must be pass, continue, blocked, or unsafe."
+                        ),
+                        React.createElement(MetronomeInspectorInput, {
+                          type: "text",
+                          className: "playground-metronome-input",
+                          value: loopConfig.verdictBinding,
+                          placeholder: "previous.data.verdict",
+                          onKeyDown: stopMetronomeInputKeyPropagation,
+                          onKeyUp: stopMetronomeInputKeyPropagation,
+                          onChange: (event) => updateSelectedNodeConfig("verdictBinding", event.target.value),
+                        })
+                      ),
+                      React.createElement(MetronomeInspectorField, null,
+                        renderMetronomeFieldTitle(
+                          "Score binding",
+                          "Optional binding to a verifier score between 0 and 1. It drives progress and regression checks."
+                        ),
+                        React.createElement(MetronomeInspectorInput, {
+                          type: "text",
+                          className: "playground-metronome-input",
+                          value: loopConfig.scoreBinding,
+                          placeholder: "previous.data.score",
+                          onKeyDown: stopMetronomeInputKeyPropagation,
+                          onKeyUp: stopMetronomeInputKeyPropagation,
+                          onChange: (event) => updateSelectedNodeConfig("scoreBinding", event.target.value),
+                        })
+                      ),
+                      React.createElement("div", { className: "playground-metronome-condition-compact-grid" },
+                        React.createElement(MetronomeInspectorField, null,
+                          renderMetronomeFieldTitle("Passing score (%)", "Minimum verifier score required when the verdict is pass."),
+                          React.createElement(MetronomeInspectorInput, {
+                            type: "number",
+                            min: 0,
+                            max: 100,
+                            step: 1,
+                            className: "playground-metronome-input",
+                            value: Math.round(Number(loopConfig.minimumScore || 0) * 100),
+                            onKeyDown: stopMetronomeInputKeyPropagation,
+                            onKeyUp: stopMetronomeInputKeyPropagation,
+                            onChange: (event) => updateSelectedNodeConfig(
+                              "minimumScore",
+                              Math.min(100, Math.max(0, Number(event.target.value) || 0)) / 100
+                            ),
+                          })
+                        ),
+                        renderMaxIterationsField("Iteration budget", "Maximum worker and verifier cycles before the run stops.")
+                      ),
+                      React.createElement("div", { className: "playground-metronome-condition-compact-grid" },
+                        React.createElement(MetronomeInspectorField, null,
+                          renderMetronomeFieldTitle("Stagnation limit", "Stop after this many consecutive iterations without a better verifier score."),
+                          React.createElement(MetronomeInspectorInput, {
+                            type: "number",
+                            min: 1,
+                            max: 100,
+                            className: "playground-metronome-input",
+                            value: loopConfig.noProgressLimit,
+                            onKeyDown: stopMetronomeInputKeyPropagation,
+                            onKeyUp: stopMetronomeInputKeyPropagation,
+                            onChange: (event) => updateSelectedNodeConfig("noProgressLimit", Math.max(1, Number(event.target.value) || 1)),
+                          })
+                        ),
+                        React.createElement(MetronomeInspectorField, null,
+                          renderMetronomeFieldTitle("Time budget (min)", "Maximum wall-clock duration for the repeat-until controller."),
+                          React.createElement(MetronomeInspectorInput, {
+                            type: "number",
+                            min: 1,
+                            max: 10080,
+                            className: "playground-metronome-input",
+                            value: loopConfig.maxDurationMinutes,
+                            onKeyDown: stopMetronomeInputKeyPropagation,
+                            onKeyUp: stopMetronomeInputKeyPropagation,
+                            onChange: (event) => updateSelectedNodeConfig("maxDurationMinutes", Math.max(1, Number(event.target.value) || 1)),
+                          })
+                        )
+                      ),
+                      React.createElement("div", { className: "playground-metronome-condition-compact-grid" },
+                        renderOptionalBudgetField("maxCostUsd", "Cost budget (USD)", "Optional accumulated cost ceiling.", { min: 0, step: 0.01 }),
+                        renderOptionalBudgetField("maxActions", "Action budget", "Optional maximum number of tool actions.", { min: 1, step: 1 })
+                      ),
+                      React.createElement(MetronomeInspectorField, null,
+                        renderMetronomeFieldTitle("On regression", "Choose whether a lower verifier score stops the loop or allows another iteration."),
+                        React.createElement(MetronomeInspectorNativeSelect, {
+                          className: "playground-metronome-select",
+                          value: loopConfig.regressionPolicy,
+                          onChange: (event) => updateSelectedNodeConfig("regressionPolicy", event.target.value),
+                        },
+                          React.createElement("option", { value: "stop" }, "Stop the loop"),
+                          React.createElement("option", { value: "continue" }, "Continue within budgets")
+                        )
+                      )
+                    )
+                  : null,
                 selectedLoopType === "fixed_count"
                   ? React.createElement(MetronomeInspectorField, null,
                       renderMetronomeFieldTitle("Iterations"),

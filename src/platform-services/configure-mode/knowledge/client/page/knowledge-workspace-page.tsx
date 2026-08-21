@@ -38,8 +38,11 @@ export interface KnowledgeWorkspacePageProps {
   versionsDrawerPortalId?: string;
   workspaceTeams?: readonly unknown[];
   workspaceTeamsLoading?: boolean;
+  workspaceTeamMembers?: readonly unknown[];
+  workspaceTeamMembersTeamId?: string;
   activeOrganizationId?: string;
   onWorkspaceTeamsRequest?: () => void;
+  onWorkspaceTeamMembersRequest?: (teamId: string) => void | Promise<void>;
   onVersionsSidebarOpenChange?: (open: boolean) => void;
   onOpenLibrary: (libraryId: string, libraryName?: string) => void;
   onOpenDocument: (
@@ -77,8 +80,11 @@ export function KnowledgeWorkspacePage({
   versionsDrawerPortalId,
   workspaceTeams = [],
   workspaceTeamsLoading = false,
+  workspaceTeamMembers = [],
+  workspaceTeamMembersTeamId = "",
   activeOrganizationId = "",
   onWorkspaceTeamsRequest,
+  onWorkspaceTeamMembersRequest,
   onVersionsSidebarOpenChange,
   onOpenLibrary,
   onOpenDocument,
@@ -243,8 +249,11 @@ export function KnowledgeWorkspacePage({
         versionsDrawerPortalId={versionsDrawerPortalId}
         workspaceTeams={workspaceTeams}
         workspaceTeamsLoading={workspaceTeamsLoading}
+        workspaceTeamMembers={workspaceTeamMembers}
+        workspaceTeamMembersTeamId={workspaceTeamMembersTeamId}
         activeOrganizationId={activeOrganizationId}
         onWorkspaceTeamsRequest={onWorkspaceTeamsRequest}
+        onWorkspaceTeamMembersRequest={onWorkspaceTeamMembersRequest}
         onVersionsSidebarOpenChange={onVersionsSidebarOpenChange}
         onLibraryChange={replaceLibrary}
         onReload={() => loadLibrary(activeLibrary.id, { silent: true })}

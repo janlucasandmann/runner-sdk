@@ -1,5 +1,5 @@
 import { Copy, Metronome, Plus, RotateCcw, SquarePen, Trash2, UsersRound } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
@@ -44,9 +44,6 @@ export interface MetronomesOverviewPageProps {
   onLoadMore?: () => void | Promise<void>;
 }
 
-const INITIAL_WORKFLOW_LIMIT = 20;
-const WORKFLOW_LOAD_MORE_COUNT = 10;
-
 function getOwnerIdentity(row: MetronomeOverviewRow) {
   const candidateName = String(row.ownerName || row.creatorName || "").trim();
   const name = candidateName && candidateName.toLowerCase() !== "me"
@@ -88,41 +85,6 @@ export function MetronomesOverviewPage({
     () => rows.filter((row) => !row.isHiddenTeamShared),
     [rows],
   );
-  const [visibleRowCount, setVisibleRowCount] = useState(INITIAL_WORKFLOW_LIMIT);
-  const [isRevealingMore, setIsRevealingMore] = useState(false);
-  const visibleRows = useMemo(
-    () => availableRows.slice(0, visibleRowCount),
-    [availableRows, visibleRowCount],
-  );
-
-  useEffect(() => {
-    setVisibleRowCount((current) =>
-      Math.min(current, Math.max(INITIAL_WORKFLOW_LIMIT, availableRows.length)),
-    );
-  }, [availableRows.length]);
-
-  const canLoadMore =
-    visibleRowCount < availableRows.length || Boolean(hasMore && onLoadMore);
-  const handleLoadMore = useCallback(async () => {
-    if (isRevealingMore || loadingMore || !canLoadMore) return;
-    setIsRevealingMore(true);
-    try {
-      const needsRemoteRows =
-        visibleRowCount + WORKFLOW_LOAD_MORE_COUNT > availableRows.length;
-      if (needsRemoteRows && hasMore && onLoadMore) await onLoadMore();
-      setVisibleRowCount((current) => current + WORKFLOW_LOAD_MORE_COUNT);
-    } finally {
-      setIsRevealingMore(false);
-    }
-  }, [
-    availableRows.length,
-    canLoadMore,
-    hasMore,
-    isRevealingMore,
-    loadingMore,
-    onLoadMore,
-    visibleRowCount,
-  ]);
 
   const columns = useMemo<PlatformDataTableColumn<MetronomeOverviewRow>[]>(
     () => [
@@ -303,7 +265,7 @@ export function MetronomesOverviewPage({
       controlsPortalId={controlsPortalId}
       className="is-metronomes"
       table={{
-        rows: visibleRows,
+        rows: availableRows,
         columns,
         getRowId: (row) => row.id,
         ariaLabel: "Metronomes",
@@ -316,12 +278,14 @@ export function MetronomesOverviewPage({
           ariaLabel: (row) => `Select ${row.name}`,
         },
         pagination: false,
-        incrementalLoading: {
-          hasMore: canLoadMore,
-          loading: isRevealingMore || loadingMore,
-          onLoadMore: handleLoadMore,
-          loadingMessage: "Loading more workflows...",
-        },
+        incrementalLoading: hasMore && onLoadMore
+          ? {
+              hasMore,
+              loading: loadingMore,
+              onLoadMore,
+              loadingMessage: "Loading more workflows...",
+            }
+          : undefined,
         toolbar: {
           search: {
             placeholder: "Search metronomes",

@@ -89,7 +89,7 @@ export const CALENDAR_PROJECTS_PAGE_SHELL_TOP_NAVIGATION_SCRIPT = `
           calendarTopNavActionsRef.current = {
             navigate: handleScheduleCalendarNavigate,
             setView: handleScheduleCalendarViewChange,
-            create: () => openScheduleComposer(),
+            create: (targetType = "task") => openScheduleComposer(targetType),
           };
         });
 

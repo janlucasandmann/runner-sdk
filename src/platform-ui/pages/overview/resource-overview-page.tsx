@@ -178,7 +178,9 @@ export function ResourceOverviewPage<TData>({
             variant={resolvedTable.variant || "minimalistic-ui"}
             pagination={
               resolvedTable.pagination === undefined
-                ? {}
+                ? resolvedTable.variant === "catalog-ui"
+                  ? false
+                  : {}
                 : resolvedTable.pagination
             }
           />

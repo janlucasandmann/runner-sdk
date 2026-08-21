@@ -864,6 +864,13 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
               throw new Error("Task update failed after thread start.");
             }
             const executionStarted = Boolean(data?.executionStarted);
+            const queuedInBatch = data?.queuedInBatch === true;
+            const executionRecord = data?.execution && typeof data.execution === "object"
+              ? data.execution
+              : null;
+            const serverOwnsExecution = executionStarted
+              || queuedInBatch
+              || executionRecord?.owner === "server";
 
             taskRunPendingIdsRef.current.delete(normalizedTaskId);
             setTaskRunPendingIds((current) => current.filter((taskId) => taskId !== normalizedTaskId));
@@ -942,7 +949,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
                       }
                     : {}),
                 },
-                ...(executionStarted
+                ...(serverOwnsExecution
                   ? {}
                   : {
                       taskRunRequest: {

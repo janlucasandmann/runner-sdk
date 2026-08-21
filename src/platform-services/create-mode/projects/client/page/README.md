@@ -13,7 +13,8 @@ This directory contains page composition and page-local interaction behavior for
 - [`shell/`](shell/) — This directory contains application-shell state, lifecycle, and navigation integration for the Projects service in Create Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
 - [`views/`](views/) — This directory contains focused view renderers for the Projects service in Create Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
 - [`actions.mjs`](actions.mjs) — Focused implementation of Actions.
-- [`connectors.mjs`](connectors.mjs) — Focused implementation of Connectors.
+- [`connectors.mjs`](connectors.mjs) — Connector authorization, browsing, and
+  attachment adapters rendered through the centralized platform file explorer.
 - [`data.mjs`](data.mjs) — Focused implementation of Data.
 - [`shell.mjs`](shell.mjs) — Focused implementation of Shell.
 - [`views.mjs`](views.mjs) — Focused implementation of Views.

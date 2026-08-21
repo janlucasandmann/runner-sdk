@@ -39,8 +39,29 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               const creatorLabel = getPlaygroundEvaluationCreatorLabel(creator) || "Unknown";
               const updatedValue = set?.updatedAt || set?.createdAt || "";
               const updatedDate = new Date(updatedValue || "");
-              const caseCount = Array.isArray(set?.dataRows) ? set.dataRows.length : 0;
-              const runCount = Array.isArray(set?.runs) ? set.runs.length : 0;
+              const overviewMetadata = set?.metadata && typeof set.metadata === "object" && !Array.isArray(set.metadata)
+                ? set.metadata
+                : {};
+              const overviewSummaryVersion = Number(
+                overviewMetadata.overviewSummaryVersion
+                ?? overviewMetadata.overview_summary_version
+                ?? 0
+              ) || 0;
+              const rawOverviewCaseCount = overviewMetadata.overviewCaseCount
+                ?? overviewMetadata.overview_case_count;
+              const rawOverviewRunCount = overviewMetadata.overviewRunCount
+                ?? overviewMetadata.overview_run_count;
+              const hasLoadedEvaluationDetails = evaluationDetailsLoadedRef.current.has(id);
+              const caseCount = overviewSummaryVersion >= 1 && Number.isFinite(Number(rawOverviewCaseCount))
+                ? Math.max(0, Number(rawOverviewCaseCount))
+                : hasLoadedEvaluationDetails && Array.isArray(set?.dataRows)
+                  ? set.dataRows.length
+                  : null;
+              const runCount = overviewSummaryVersion >= 1 && Number.isFinite(Number(rawOverviewRunCount))
+                ? Math.max(0, Number(rawOverviewRunCount))
+                : hasLoadedEvaluationDetails && Array.isArray(set?.runs)
+                  ? set.runs.length
+                  : null;
               return {
                 id,
                 name,
@@ -56,14 +77,14 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
                 updatedAt: Number.isFinite(updatedDate.getTime()) ? updatedDate.getTime() : 0,
                 updatedLabel: formatPlaygroundEvaluationDate(updatedValue),
                 updatedTitle: Number.isFinite(updatedDate.getTime()) ? updatedDate.toLocaleString() : "",
-                canRun: getEvaluationRunnableCaseCount(set) > 0,
+                canRun: caseCount === null || caseCount > 0,
                 searchText: [
                   name,
                   set?.description,
                   evaluatorLabel,
                   creatorLabel,
-                  String(caseCount),
-                  String(runCount),
+                  caseCount === null ? "" : String(caseCount),
+                  runCount === null ? "" : String(runCount),
                   id,
                 ].filter(Boolean).join(" "),
               };
@@ -74,6 +95,12 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
             rows: evaluationOverviewRows,
             loading: evaluationBackendSyncState.status === "loading" && evaluationOverviewRows.length === 0,
             error: evaluationBackendSyncState.error || "",
+            incrementalLoading: {
+              hasMore: evaluationOverviewPaginationState.hasMore,
+              loading: evaluationOverviewPaginationState.loadingMore,
+              loadingMessage: "Loading more evaluations...",
+              onLoadMore: loadMoreBackendEvaluationSets,
+            },
             controlsPortalId: "playground-evaluations-overview-controls",
             onOpen: (set) => openSetDetail(set.id),
             onCreate: openEvaluationCreateModal,
@@ -112,15 +139,15 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
           const creator = normalizePlaygroundEvaluationPersonIdentity(activeSet.creator || activeSet.createdBy || activeSet.created_by || {});
           const creatorLabel = getPlaygroundEvaluationCreatorLabel(creator) || "Unknown";
           const creatorValue = React.createElement("span", {
-              className: "playground-evaluations-detail-person",
+              className: "platform-resource-detail-sidebar__identity playground-evaluations-detail-person",
               title: creatorLabel,
             },
-            React.createElement("span", { className: "playground-evaluations-run-agent-avatar", "aria-hidden": "true" },
+            React.createElement("span", { className: "platform-resource-detail-sidebar__avatar", "aria-hidden": "true" },
               creator.avatarUrl
                 ? React.createElement("img", { src: creator.avatarUrl, alt: "" })
                 : getPlaygroundEvaluationInitials(creatorLabel)
             ),
-            React.createElement("span", null, creatorLabel)
+            React.createElement("span", { className: "platform-resource-detail-sidebar__identity-name" }, creatorLabel)
           );
           const evaluator = normalizePlaygroundEvaluationEvaluator(activeSet.evaluator);
           const evaluatorAgent = evaluator.type === "agent"
@@ -204,25 +231,34 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               )
             )
           );
-          const properties = React.createElement("div", {
-              className: "playground-evaluations-detail-sidebar-list playground-tasks-detail-facts-body",
+          const properties = React.createElement(PlatformServiceDetailPropertyList, {
+              className: "playground-evaluations-detail-property-list",
             },
-            renderEvaluationDetailSidebarRow("evaluator", "Evaluator", evaluatorValue, {
-              className: evaluator.type === "agent" ? "is-evaluator-selector" : "",
-              control: evaluator.type === "agent",
-            }),
-            renderEvaluationDetailSidebarRow("pass-threshold", passThresholdLabel, renderEvaluationPassThresholdInline(activeSet, { showLabel: false }), {
-              className: "is-pass-threshold",
-            }),
-            renderEvaluationDetailSidebarRow("creator", "Creator", creatorValue),
-            renderEvaluationDetailSidebarRow("cases", "Cases", String(Array.isArray(activeSet.dataRows) ? activeSet.dataRows.length : 0)),
-            renderEvaluationDetailSidebarRow("runs", "Runs", String(Array.isArray(activeSet.runs) ? activeSet.runs.length : 0)),
-            renderEvaluationDetailSidebarRow("created", "Created", formatPlaygroundEvaluationDate(activeSet.createdAt)),
-            renderEvaluationDetailSidebarRow("updated", "Updated", formatPlaygroundEvaluationDate(activeSet.updatedAt || activeSet.createdAt)),
-            renderEvaluationDetailSidebarRow("owner", "Owner", renderEvaluationOwnerSelector(activeSet), {
-              className: "is-owner",
-              control: true,
-            }),
+            React.createElement(PlatformServiceDetailProperty, {
+              label: "Evaluator",
+              className: evaluator.type === "agent"
+                ? "playground-evaluations-detail-evaluator-row is-evaluator-selector"
+                : "playground-evaluations-detail-evaluator-row",
+            }, evaluatorValue),
+            React.createElement(PlatformServiceDetailProperty, {
+              label: passThresholdLabel,
+              className: "playground-evaluations-detail-pass-threshold-row",
+            }, renderEvaluationPassThresholdInline(activeSet, { showLabel: false })),
+            React.createElement(PlatformServiceDetailProperty, {
+              label: "Creator",
+              className: "platform-resource-detail-sidebar__creator-row playground-evaluations-detail-identity-row",
+              title: creator.email || creatorLabel,
+            }, creatorValue),
+            React.createElement(PlatformServiceDetailProperty, {
+              label: "Created",
+            }, formatPlaygroundEvaluationDate(activeSet.createdAt)),
+            React.createElement(PlatformServiceDetailProperty, {
+              label: "Updated",
+            }, formatPlaygroundEvaluationDate(activeSet.updatedAt || activeSet.createdAt)),
+            React.createElement(PlatformServiceDetailProperty, {
+              label: "Owner",
+              className: "platform-resource-detail-sidebar__owner-row playground-evaluations-detail-owner-row",
+            }, renderEvaluationOwnerSelector(activeSet)),
             React.createElement(PlatformButtonSelector, {
                 mode: "split-action",
                 buttonVariant: "primary",
@@ -231,7 +267,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
                 matchTriggerWidth: true,
                 popupRole: "menu",
                 popupVariant: "minimal",
-                popupAlignment: "left",
+                popupAlignment: "right",
                 label: "Run Evaluation",
                 actionAriaLabel: "Run Evaluation",
                 popupAriaLabel: "Evaluation run options",

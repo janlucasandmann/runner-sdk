@@ -26,6 +26,7 @@ describe("runner execution request", () => {
   it("builds creation metadata once from normalized command settings", () => {
     expect(buildRunnerExecutionMessageMetadata({
       slideCreationCommand: { action: "slides", label: "Slides" },
+      loopCommand: { action: "loop", label: "/loop" },
       adCreationCommand: {
         action: "ad",
         label: "Ad",
@@ -38,6 +39,10 @@ describe("runner execution request", () => {
       slideCreationCommand: {
         action: "slides",
       },
+      loopCommand: {
+        action: "loop",
+        label: "/loop",
+      },
       adCreationCommand: {
         action: "ad",
         style: "clean",
@@ -45,6 +50,19 @@ describe("runner execution request", () => {
         aspectRatio: "16:9",
         variants: 2,
       },
+    });
+  });
+
+  it("carries /loop as first-class thread message metadata", () => {
+    const body = buildRunnerThreadMessageRequestBody({
+      taskText: "Improve the result until it passes",
+      visibleTaskText: "Improve the result until it passes",
+      executionTaskText: "Improve the result until it passes",
+      loopCommand: { action: "loop", label: "/loop" },
+    });
+
+    expect(body.messageMetadata).toMatchObject({
+      loopCommand: { action: "loop", label: "/loop" },
     });
   });
 

@@ -118,6 +118,10 @@ export interface StagedBatchCreationCommand extends BaseStagedBacklogCommand {
   action: "batch";
 }
 
+export interface StagedLoopCommand extends BaseStagedBacklogCommand {
+  action: "loop";
+}
+
 export interface StagedAdCreationCommand extends BaseStagedBacklogCommand {
   action: "ad";
   style?: RunnerAdCreationStyleId;
@@ -412,6 +416,34 @@ export function normalizeAdCreationCommandFromMetadata(
   return null;
 }
 
+export function normalizeLoopCommandFromMetadata(
+  logMetadata: unknown
+): StagedLoopCommand | null {
+  const metadata = normalizeRecordObject(logMetadata);
+  if (!metadata) {
+    return null;
+  }
+
+  const commandRecord = normalizeRecordObject(metadata.loopCommand);
+  if (commandRecord) {
+    const action = getRecordString(commandRecord, ["action", "type"]).trim().toLowerCase();
+    const label = getRecordString(commandRecord, ["label", "command"]).trim().toLowerCase();
+    if (action === "loop" || label === "/loop") {
+      return { action: "loop", label: buildRunnerLoopLabel() };
+    }
+  }
+
+  const mode = getRecordString(
+    metadata,
+    ["composerMode", "mode", "slashCommand", "command"]
+  ).trim().toLowerCase();
+  if (mode === "loop" || mode === "/loop") {
+    return { action: "loop", label: buildRunnerLoopLabel() };
+  }
+
+  return null;
+}
+
 export function normalizeRunnerBacklogTicketNumber(value: string): string {
   const digits = String(value || "").replace(/\D+/g, "");
   if (!digits) {
@@ -498,6 +530,10 @@ export function buildRunnerParseCreationLabel(): string {
 
 export function buildRunnerBatchCreationLabel(): string {
   return "/Batch";
+}
+
+export function buildRunnerLoopLabel(): string {
+  return "/loop";
 }
 
 export function buildRunnerParseCreationHiddenPrompt(): string {
@@ -629,6 +665,13 @@ export function parseAutoStageBatchCreationCommand(
   input: string
 ): { prompt: string } | null {
   const match = input.match(/^\/batch(?:\s+([\s\S]*))?$/i);
+  return match ? { prompt: match[1] || "" } : null;
+}
+
+export function parseAutoStageLoopCommand(
+  input: string
+): { prompt: string } | null {
+  const match = input.match(/^\/loop(?:\s+([\s\S]*))?$/i);
   return match ? { prompt: match[1] || "" } : null;
 }
 

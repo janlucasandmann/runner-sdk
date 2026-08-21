@@ -33,6 +33,7 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
           const metadata = buildPlaygroundTaskMetadata(mergedTask, {
             ticketNumber: mergedTask.ticketNumber,
 	            taskType: mergedTask.taskType,
+	            loop: mergedTask.loop,
 	            parentTaskId: mergedTask.parentTaskId,
 	            assigneeAgentId: mergedTask.assigneeAgentId,
 	            reviewRequired: mergedTask.reviewRequired,
@@ -62,6 +63,7 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
             releaseId: mergedTask.releaseId,
             ticketNumber: mergedTask.ticketNumber,
             type: mergedTask.taskType,
+            loop: mergedTask.taskType === "loop" ? mergedTask.loop : null,
             parentTaskId: mergedTask.taskType === "subtask" ? mergedTask.parentTaskId : null,
             title: mergedTask.title,
             description: mergedTask.description,
@@ -118,6 +120,36 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
             });
             return;
           }
+          let nextLoop = null;
+          if (nextTaskType === "loop") {
+            const loopGoalMarkdown = String(issueComposerDraft?.description || "");
+            const parsedLoopGoal = parsePlaygroundTaskLoopGoalMarkdown(loopGoalMarkdown);
+            nextLoop = normalizePlaygroundTaskLoopConfig(
+              {
+                ...normalizePlaygroundTaskLoopConfig(issueComposerDraft?.loop, issueComposerDraft),
+                ...parsedLoopGoal,
+              },
+              { ...issueComposerDraft, title: nextTitle },
+            );
+            if (
+              isPlaygroundTaskLoopGoalTemplatePristine(loopGoalMarkdown)
+              || hasPlaygroundTaskLoopGoalTemplateExamples(loopGoalMarkdown)
+              || !parsedLoopGoal.goal
+              || !parsedLoopGoal.successCriteria
+              || !parsedLoopGoal.progressSignal
+              || !parsedLoopGoal.verificationCriteria
+              || !nextLoop.goal
+              || !nextLoop.successCriteria
+              || !nextLoop.progressSignal
+              || !nextLoop.verificationCriteria
+            ) {
+              setIssueComposerSaveState({
+                isSaving: false,
+                error: "Replace each Loop Goal example with the goal, success criteria, progress signal, and verification method.",
+              });
+              return;
+            }
+          }
 
           const nextDependencyIds = normalizePlaygroundIdList(issueComposerDraft?.dependencyIds).slice(0, 1);
           const nextStatus = nextDependencyIds.length > 0 && issueComposerDraft?.status !== "done"
@@ -135,6 +167,7 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
             projectId: targetProjectId,
             title: nextTitle,
             taskType: nextTaskType,
+            loop: nextTaskType === "loop" ? nextLoop : null,
             parentTaskId: nextParentTaskId,
             status: nextStatus,
             priority: PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === issueComposerDraft?.priority) ? issueComposerDraft.priority : "medium",

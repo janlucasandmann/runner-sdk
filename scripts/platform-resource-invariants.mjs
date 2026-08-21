@@ -197,6 +197,17 @@ const platformResourceAccessSettingsSource = await fs.readFile(
   ),
   "utf8",
 );
+const platformRolePermissionsPageSource = await fs.readFile(
+  path.join(
+    packageRoot,
+    "src",
+    "platform-ui",
+    "pages",
+    "permissions",
+    "platform-role-permissions-page.tsx",
+  ),
+  "utf8",
+);
 for (const retiredIdentifier of [
   "setAgentInstructionsHistory",
   "setIsAgentInstructionsEditing",
@@ -302,6 +313,7 @@ if (
   !platformEntrySource.includes("React.createElement(PlatformPermissionsPage")
   && !tagDetailPageSource.includes("<PlatformPermissionsPage")
   && !platformResourceAccessSettingsSource.includes("<PlatformPermissionsPage")
+  && !platformRolePermissionsPageSource.includes("<PlatformPermissionsPage")
 ) {
   failures.push("the platform application must consume the modular PlatformPermissionsPage");
 }
@@ -685,13 +697,13 @@ const projectNavSource = projectNavStart >= 0
 if (!projectNavSource.includes("React.createElement(PlatformSwitch")) {
   failures.push("the project app header must use PlatformSwitch for overview, backlog, and board");
 }
-if (!projectAppHeaderSource.includes("function openProjectIssueComposerFromHeader()")) {
+if (!projectAppHeaderSource.includes('function openProjectIssueComposerFromHeader(taskType = "task")')) {
   failures.push("the project app header must delegate issue creation to the projects page composer");
 }
 if (!projectAppHeaderSource.includes("const registeredHandler = tasksProjectIssueCreateHandlerRef.current;")) {
   failures.push("the project app header must invoke the registered projects page issue composer");
 }
-if (!projectNavSource.includes("openProjectIssueComposerFromHeader();")) {
+if (!projectNavSource.includes('openProjectIssueComposerFromHeader("task")')) {
   failures.push("the project app header New Issue button must use the canonical issue composer bridge");
 }
 if (projectNavSource.includes("openTopNavIssueComposer();")) {

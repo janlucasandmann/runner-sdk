@@ -9,6 +9,8 @@ This directory owns the Popup composite component, including its public API, pre
 ## Contents
 
 - [`index.ts`](index.ts) — Public barrel or composition entry point.
+- [`platform-info-tooltip.tsx`](platform-info-tooltip.tsx) — Portaled hover/focus information affordance with optional runtime guidance.
+- [`platform-info-tooltip.test.tsx`](platform-info-tooltip.test.tsx) — Interaction and accessibility coverage for information tooltips.
 - [`platform-popup.test.tsx`](platform-popup.test.tsx) — Regression coverage for Platform Popup.
 - [`platform-popup-search-header.tsx`](platform-popup-search-header.tsx) — Reusable popup search row with optional icon and shortcut hint.
 - [`platform-popup.tsx`](platform-popup.tsx) — Focused implementation of Platform Popup.
@@ -56,6 +58,11 @@ backdrop geometry but deliberately does not decide how state closes.
 `PlatformPopupSearchHeader` provides the standard searchable popup header. Put
 it in a selector's `popupHeader` slot and use the selector's
 `popupHeaderClassName="is-search-header"` to remove the host padding.
+
+`PlatformInfoTooltip` is the centralized compact information sign for form and
+settings labels. It opens on hover or keyboard focus, uses a portaled minimal
+surface to avoid clipping, and can separate a plain-language description from
+an optional “At runtime” enforcement note.
 
 ## Variants and animation
 

@@ -11,6 +11,7 @@ import type {
   StagedResearchCreationCommand,
   StagedScrapeCreationCommand,
   StagedSlideCreationCommand,
+  StagedLoopCommand,
 } from "./composer-commands.js";
 import type {
   RunnerChatOption,
@@ -116,6 +117,7 @@ export interface RunnerChatExternalRunRequest {
   scrapeCreationCommand?: StagedScrapeCreationCommand | null;
   parseCreationCommand?: StagedParseCreationCommand | null;
   adCreationCommand?: StagedAdCreationCommand | null;
+  loopCommand?: StagedLoopCommand | null;
 }
 
 export interface RunnerChatExternalFileBrowserRequest {

@@ -55,6 +55,8 @@ describe("RunnerChat initial thread layout", () => {
 
     const root = container.querySelector(".tb-runner-chat");
     expect(root?.classList.contains("is-run-preparing")).toBe(false);
+    expect(root?.classList.contains("is-home-composer-surface")).toBe(true);
+    expect(root?.classList.contains("is-thread-composer-surface")).toBe(false);
     expect(screen.getByText("Initial home content")).not.toBeNull();
 
     fireEvent.change(screen.getByRole("textbox"), {
@@ -65,6 +67,8 @@ describe("RunnerChat initial thread layout", () => {
     await waitFor(() => {
       expect(root?.classList.contains("is-run-preparing")).toBe(true);
     });
+    expect(root?.classList.contains("is-home-composer-surface")).toBe(false);
+    expect(root?.classList.contains("is-thread-composer-surface")).toBe(true);
     expect(screen.queryByText("Initial home content")).toBeNull();
     expect(screen.queryByText("Initial home footer")).toBeNull();
     expect(fetchMock).not.toHaveBeenCalledWith(
@@ -101,5 +105,7 @@ describe("RunnerChat initial thread layout", () => {
     await waitFor(() => {
       expect(root?.classList.contains("is-run-preparing")).toBe(false);
     });
+    expect(root?.classList.contains("is-home-composer-surface")).toBe(true);
+    expect(root?.classList.contains("is-thread-composer-surface")).toBe(false);
   });
 });

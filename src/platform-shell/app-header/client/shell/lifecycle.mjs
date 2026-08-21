@@ -1,4 +1,46 @@
 export const APP_HEADER_LIFECYCLE_SCRIPT = `        useEffect(() => {
+          function handleResourceAccessNavigationChange(event) {
+            const detail = event?.detail && typeof event.detail === "object"
+              ? event.detail
+              : {};
+            const sourceId = String(detail.sourceId || "").trim();
+            if (!sourceId) return;
+
+            if (detail.open !== true) {
+              setResourceAccessNavigationState((current) => (
+                current?.sourceId === sourceId ? null : current
+              ));
+              return;
+            }
+
+            const principalKind = detail.principalKind === "system" ? "system" : "team";
+            const principalName = String(
+              detail.principalName || (principalKind === "system" ? "Access" : "Team")
+            ).trim() || (principalKind === "system" ? "Access" : "Team");
+            setResourceAccessNavigationState({
+              sourceId,
+              principalId: String(detail.principalId || "").trim(),
+              principalName,
+              principalKind,
+              principalProfileImageUrl: String(
+                detail.principalProfileImageUrl || ""
+              ).trim(),
+              resourceLabel: String(detail.resourceLabel || "Resource").trim() || "Resource",
+              onClose: typeof detail.onClose === "function" ? detail.onClose : null,
+            });
+          }
+
+          window.addEventListener(
+            "platform:resource-access-navigation-change",
+            handleResourceAccessNavigationChange
+          );
+          return () => window.removeEventListener(
+            "platform:resource-access-navigation-change",
+            handleResourceAccessNavigationChange
+          );
+        }, []);
+
+        useEffect(() => {
           if (accountMenuAnimationTimerRef.current !== null) {
             window.clearTimeout(accountMenuAnimationTimerRef.current);
             accountMenuAnimationTimerRef.current = null;

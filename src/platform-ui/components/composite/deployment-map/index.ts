@@ -4,5 +4,6 @@ export type {
 } from "./platform-deployment-map.js";
 export {
   PlatformDeploymentMap,
+  configurePlatformDeploymentMapRuntime,
   resolvePlatformDeploymentMapLocation,
 } from "./platform-deployment-map.js";

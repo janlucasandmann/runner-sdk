@@ -449,8 +449,13 @@ export function InferenceEndpointDetailPage({
     if (open) void loadOwnerCandidates();
   };
 
-  const transferOwner = async (value: string) => {
-    const nextOwner = ownerCandidateByValue.get(value);
+  const transferOwner = async (
+    value: string,
+    option?: PlatformOwnerOption<string, { identity: InferenceEndpointIdentity }>,
+  ) => {
+    const nextOwner = option?.data?.identity
+      ? normalizeInferenceEndpointIdentity(option.data.identity)
+      : ownerCandidateByValue.get(value);
     if (!nextOwner || !canManageOwner || saving || !onOwnerTransfer) return;
     setOwnerSelectorOpen(false);
     await onOwnerTransfer(nextOwner);
@@ -820,7 +825,7 @@ export function InferenceEndpointDetailPage({
         avatarUrl: ownerIdentity.avatarUrl,
       } : undefined}
       ownerOptions={ownerOptions}
-      onOwnerTransfer={isExternal ? (value) => transferOwner(value) : undefined}
+      onOwnerTransfer={isExternal ? (value, option) => transferOwner(value, option) : undefined}
       ownerSelectorProps={{
         open: ownerSelectorOpen,
         onOpenChange: handleOwnerSelectorOpenChange,

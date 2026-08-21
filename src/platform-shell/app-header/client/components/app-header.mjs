@@ -57,9 +57,63 @@ export const APP_HEADER_COMPONENT_SCRIPT = `        function toggleAccountMenuFr
             : options.extraActions
               ? [options.extraActions]
               : [];
-          const resolvedPathItems = typeof resolveProjectResourceBreadcrumbItems === "function"
+          const basePathItems = typeof resolveProjectResourceBreadcrumbItems === "function"
             ? resolveProjectResourceBreadcrumbItems(options.pathItems)
             : options.pathItems;
+          const resolvedPathItems = resourceAccessNavigationState
+            && Array.isArray(basePathItems)
+            && basePathItems.length > 0
+              ? (() => {
+                  const nextPathItems = basePathItems.slice();
+                  const resourceItemIndex = nextPathItems.length - 1;
+                  const resourceItem = nextPathItems[resourceItemIndex];
+                  const principalName = resourceAccessNavigationState.principalName || "Access";
+                  const principalBreadcrumbLabel = resourceAccessNavigationState.principalKind === "team"
+                    ? principalName + " Access"
+                    : principalName;
+                  const principalInitials = String(principalName)
+                    .trim()
+                    .split(" ")
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((part) => part.charAt(0).toUpperCase())
+                    .join("") || "T";
+                  const principalProfileImageUrl = String(
+                    resourceAccessNavigationState.principalProfileImageUrl || ""
+                  ).trim();
+                  const principalLeading = resourceAccessNavigationState.principalKind === "team"
+                    ? React.createElement("span", {
+                        className: "platform-resource-access-breadcrumb-avatar",
+                      },
+                        React.createElement("span", {
+                          className: "platform-resource-access-breadcrumb-avatar__fallback",
+                        }, principalInitials),
+                        principalProfileImageUrl
+                          ? React.createElement("img", {
+                              key: principalProfileImageUrl,
+                              className: "platform-resource-access-breadcrumb-avatar__image",
+                              src: principalProfileImageUrl,
+                              alt: "",
+                              onError: (event) => {
+                                event.currentTarget.style.display = "none";
+                              },
+                            })
+                          : null
+                      )
+                    : null;
+                  nextPathItems[resourceItemIndex] = {
+                    ...(resourceItem && typeof resourceItem === "object"
+                      ? resourceItem
+                      : { label: String(resourceItem || resourceAccessNavigationState.resourceLabel) }),
+                    onClick: () => resourceAccessNavigationState.onClose?.(),
+                  };
+                  nextPathItems.push({
+                    label: principalBreadcrumbLabel,
+                    leading: principalLeading,
+                  });
+                  return nextPathItems;
+                })()
+              : basePathItems;
           const hidePath = options.hidePath === true;
           const hideCommonActions = options.hideCommonActions === true;
           return React.createElement("div", {
@@ -87,7 +141,11 @@ export const APP_HEADER_COMPONENT_SCRIPT = `        function toggleAccountMenuFr
                   : null
               )
             ),
-            React.createElement("div", { className: "playground-content-nav-center" }, options.center || null),
+            React.createElement("div", { className: "playground-content-nav-center" },
+              resourceAccessNavigationState
+                ? null
+                : options.center || null
+            ),
             React.createElement("div", {
                 className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tools-navbar-actions" + (options.rightClassName ? " " + options.rightClassName : ""),
                 ref: options.rightRef || null,

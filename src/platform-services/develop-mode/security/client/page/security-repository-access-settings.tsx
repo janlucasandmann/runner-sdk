@@ -1,7 +1,8 @@
-import { ArrowLeft, Plus, Users } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   PlatformResourceAccessTable,
+  PlatformResourceAccessAddTeams,
   getPlatformSystemAccessPrincipal,
   getPlatformSystemPrincipalPermissionSet,
   isPlatformSystemAccessPrincipalId,
@@ -9,7 +10,6 @@ import {
   type PlatformSystemAccessPrincipalId,
 } from "../../../../../platform-resources/access-control/index.js";
 import { PlatformSecondaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
-import { PlatformButtonSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
 import {
   PlatformPermissionsPage,
   PlatformRolePermissionsPage,
@@ -76,7 +76,6 @@ export function SecurityRepositoryAccessSettings({
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedRoleId, setSelectedRoleId] = useState<SecurityTeamRoleId>("member");
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(() => new Set());
-  const [addTeamsOpen, setAddTeamsOpen] = useState(false);
   const teamsRequestedForRepositoryRef = useRef("");
 
   const normalizedWorkspaceTeams = useMemo(
@@ -106,11 +105,13 @@ export function SecurityRepositoryAccessSettings({
       })),
     [sharedTeamIds, workspaceTeamById],
   );
-  const availableTeams = useMemo(
+  const availableTeams = useMemo<SecurityAccessTeamRow[]>(
     () =>
-      normalizedWorkspaceTeams.filter(
-        (team) => ["admin", "owner"].includes(team.roleId) && !sharedTeamIdSet.has(team.id),
-      ),
+      normalizedWorkspaceTeams
+        .filter(
+          (team) => ["admin", "owner"].includes(team.roleId) && !sharedTeamIdSet.has(team.id),
+        )
+        .map((team) => ({ ...team, kind: "team" })),
     [normalizedWorkspaceTeams, sharedTeamIdSet],
   );
   useEffect(() => {
@@ -282,55 +283,19 @@ export function SecurityRepositoryAccessSettings({
   }
 
   const addTeamsControl = (
-    <PlatformButtonSelector
-      mode="popup"
-      buttonVariant="secondary"
-      buttonSize="small"
-      label="Add Teams"
-      leading={<Plus width={14} height={14} strokeWidth={1.8} />}
-      open={addTeamsOpen}
-      onOpenChange={(open) => {
-        setAddTeamsOpen(open);
-        if (open) onWorkspaceTeamsRequest?.();
-      }}
-      closeOnSelect
+    <PlatformResourceAccessAddTeams
+      teams={availableTeams}
+      totalTeamCount={normalizedWorkspaceTeams.length}
+      loading={workspaceTeamsLoading}
+      requiresPlan={workspaceTeamsRequiresPlan}
+      disabled={busy}
       popupAriaLabel="Add teams with Security Agents access"
-      popupAlignment="right"
-      popupRole="menu"
-      popupVariant="minimal"
-      popupWidth={240}
-      disabled={busy || workspaceTeamsRequiresPlan}
-      className="develop-security-access-add-teams"
-    >
-      {availableTeams.length ? (
-        availableTeams.map((team) => (
-          <PlatformSecondaryButton
-            key={team.id}
-            size="small"
-            role="menuitem"
-            className="tb-popup-row develop-security-access-team-option"
-            onClick={() => {
-              onAddTeamAccess(
-                team,
-                getSecurityRepositoryTeamRolePermissionSets(repository, team.id),
-              );
-              setAddTeamsOpen(false);
-            }}
-          >
-            <Users width={14} height={14} strokeWidth={1.8} />
-            <span>{team.name}</span>
-          </PlatformSecondaryButton>
-        ))
-      ) : (
-        <div className="develop-security-access-menu-empty">
-          {workspaceTeamsLoading
-            ? "Loading teams…"
-            : workspaceTeamsRequiresPlan
-              ? "Team access requires a Team workspace plan."
-              : "All available teams have access."}
-        </div>
+      onRequestTeams={onWorkspaceTeamsRequest}
+      onAddTeam={(team) => onAddTeamAccess(
+        team,
+        getSecurityRepositoryTeamRolePermissionSets(repository, team.id),
       )}
-    </PlatformButtonSelector>
+    />
   );
 
   return (

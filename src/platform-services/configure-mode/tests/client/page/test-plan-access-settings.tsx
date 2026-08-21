@@ -1,4 +1,3 @@
-import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   PLATFORM_ALL_AGENTS_PRINCIPAL_ID,
@@ -15,7 +14,6 @@ import {
   isPlatformSystemAccessPrincipalId,
   type PlatformAccessPrincipal,
 } from "../../../../../platform-resources/access-control/index.js";
-import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
 import type { PlatformPermissionSet } from "../../../../../platform-ui/pages/permissions/index.js";
 import type { TestsApi } from "../api/index.js";
 import type { TestPlan } from "../domain/index.js";
@@ -256,29 +254,6 @@ export function TestPlanAccessSettings({
       )
     : null;
 
-  const addTeamSelector = (
-    <PlatformSelector
-      value=""
-      options={availableTeams.map((team) => ({
-        value: team.id,
-        label: team.name,
-        description: team.description || team.roleLabel,
-      }))}
-      label={(
-        <span className="tests-access-add-label">
-          <Plus width={14} height={14} aria-hidden="true" />
-          Add Team
-        </span>
-      )}
-      placeholder="Add Team"
-      ariaLabel="Add a team to this test plan"
-      disabled={busy || availableTeams.length === 0}
-      onValueChange={(teamId) => void addTeam(teamId)}
-      popupAlignment="right"
-      popupWidth={280}
-    />
-  );
-
   return (
     <PlatformResourceAccessSettings<TestAccessTeam>
       teams={sharedTeams}
@@ -325,9 +300,15 @@ export function TestPlanAccessSettings({
         ));
       }}
       disabled={busy}
+      addTeams={{
+        teams: availableTeams,
+        totalTeamCount: allTeams.length,
+        disabled: busy,
+        popupAriaLabel: "Add teams with Test Plan access",
+        onAddTeam: (team) => addTeam(team.id),
+      }}
       tableProps={{
         busy,
-        trailing: addTeamSelector,
         error,
         onRemoveTeams: removeTeams,
         formatCreatedAt: (createdAt) => createdAt

@@ -272,6 +272,7 @@ export const METRONOME_EXECUTION_RUNTIME_SCRIPT = String.raw`
 
         function createMetronomeWorkflowDefinition(workflow, nodes, edges) {
           const metadata = stripMetronomeDeploymentMetadata(buildMetronomeWorkflowProjectMetadata(workflow));
+          const inferenceBudgetPolicy = readMetronomeWorkflowInferenceBudgetPolicy(workflow);
           const definitionNodes = (Array.isArray(nodes) ? nodes : []).map((node) => {
             const data = node?.data && typeof node.data === "object" ? node.data : {};
             const kind = String(data.kind || node?.kind || "action");
@@ -306,6 +307,7 @@ export const METRONOME_EXECUTION_RUNTIME_SCRIPT = String.raw`
             ...(metadata.projectId ? { projectId: metadata.projectId, project_id: metadata.projectId } : {}),
             ...(metadata.projectName ? { projectName: metadata.projectName, project_name: metadata.projectName } : {}),
             ...(metadata.wallpaperId ? { wallpaperId: metadata.wallpaperId, workflowWallpaperId: metadata.workflowWallpaperId || metadata.wallpaperId } : {}),
+            ...(inferenceBudgetPolicy ? { inferenceBudgetPolicy } : {}),
             metadata,
             nodes: definitionNodes,
             edges: normalizeMetronomeEdges(edges).map((edge) => ({

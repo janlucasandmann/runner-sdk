@@ -57,6 +57,19 @@ export const METRONOME_SIDEBAR_CSS = `
         height: 12px;
       }
 
+      .sidebar-metronome-run-icon.is-loop {
+        width: 20px;
+        height: 20px;
+        flex-basis: 20px;
+        border-radius: 5px;
+        background: linear-gradient(180deg, #9a72df 0%, #6542a8 100%);
+        color: #fff;
+      }
+
+      .sidebar-metronome-run-icon.is-loop svg {
+        filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.28));
+      }
+
       .sidebar-metronome-run-copy {
         min-width: 0;
         display: flex;

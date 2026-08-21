@@ -21,6 +21,10 @@ describe("skills overview model", () => {
           name: "Jane Doe",
           avatarUrl: "/img/people/jane.jpg",
         },
+        owner: {
+          name: "Grace Hopper",
+          avatarUrl: "/img/people/grace.jpg",
+        },
       },
       {},
     ]);
@@ -32,6 +36,8 @@ describe("skills overview model", () => {
       isActive: true,
       creatorName: "Computer Agents",
       creatorAvatarUrl: "/img/agent-profile-pics/ca-profilepic.jpg",
+      ownerName: "Computer Agents",
+      ownerAvatarUrl: "/img/agent-profile-pics/ca-profilepic.jpg",
       updatedLabel: "System",
     });
     expect(rows[1]).toMatchObject({
@@ -40,6 +46,8 @@ describe("skills overview model", () => {
       isActive: false,
       creatorName: "Jane Doe",
       creatorAvatarUrl: "/img/people/jane.jpg",
+      ownerName: "Grace Hopper",
+      ownerAvatarUrl: "/img/people/grace.jpg",
       updatedAt: Date.parse("2026-07-16T10:00:00.000Z"),
     });
   });

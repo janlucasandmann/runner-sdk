@@ -50,6 +50,147 @@ export const METRONOME_SHELL_RUNTIME_SCRIPT = `
         };
       }
 
+      function getMetronomeTaskLoopPresentation(value, options = {}) {
+        const entry = value && typeof value === "object" && !Array.isArray(value)
+          ? value
+          : {};
+        const run = entry.run && typeof entry.run === "object" && !Array.isArray(entry.run)
+          ? entry.run
+          : {};
+        const input = entry.input && typeof entry.input === "object" && !Array.isArray(entry.input)
+          ? entry.input
+          : run.input && typeof run.input === "object" && !Array.isArray(run.input)
+            ? run.input
+            : {};
+        const systemWorkflow = input.systemWorkflow
+          && typeof input.systemWorkflow === "object"
+          && !Array.isArray(input.systemWorkflow)
+            ? input.systemWorkflow
+            : {};
+        const workflowName = String(
+          entry.workflowName
+          || entry.metronomeName
+          || run.workflowName
+          || run.metronomeName
+          || ""
+        ).trim();
+        const source = String(input.source || entry.source || "").trim().toLowerCase();
+        const systemWorkflowKey = String(
+          systemWorkflow.key
+          || input.systemWorkflowKey
+          || input.system_workflow_key
+          || ""
+        ).trim().toLowerCase();
+        const originThreadId = String(input.originThreadId || input.threadId || "").trim();
+        const entryThreads = [
+          entry.latestThread,
+          ...(Array.isArray(entry.threads) ? entry.threads : []),
+        ].filter(Boolean);
+        const availableThreads = Array.isArray(options.threads) ? options.threads : [];
+        if (originThreadId) {
+          const originThread = availableThreads.find((thread) => (
+            String(thread?.id || "").trim() === originThreadId
+          ));
+          if (originThread) entryThreads.unshift(originThread);
+        }
+        const hasLoopThreadContext = entryThreads.some((thread) => {
+          const metadata = thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
+            ? thread.metadata
+            : {};
+          const taskContext = metadata.taskContext && typeof metadata.taskContext === "object" && !Array.isArray(metadata.taskContext)
+            ? metadata.taskContext
+            : {};
+          const taskPreview = typeof getThreadTaskPreview === "function"
+            ? getThreadTaskPreview(thread)
+            : null;
+          return String(taskContext.taskType || taskPreview?.taskType || taskPreview?.type || "").trim().toLowerCase() === "loop"
+            || Boolean(String(taskContext.loopRole || "").trim());
+        });
+        const triggerCommand = String(input.triggerCommand || input.command || "").trim().toLowerCase();
+        const isTaskLoop = systemWorkflowKey === "system.task-loop"
+          || source === "project_ticket_loop"
+          || source === "thread_command_loop"
+          || triggerCommand === "/loop"
+          || hasLoopThreadContext
+          || (workflowName.toLowerCase() === "loop" && Boolean(input.ticketId || originThreadId));
+        if (!isTaskLoop) {
+          return {
+            isTaskLoop: false,
+            ticketId: "",
+            projectId: "",
+            ticketNumber: "",
+            label: workflowName || "Metronome",
+          };
+        }
+
+        const ticketId = String(
+          input.ticketId
+          || input.taskId
+          || entry.attachedTicketId
+          || run.attachedTicketId
+          || ""
+        ).trim();
+        let projectId = String(
+          input.projectId
+          || entry.attachedProjectId
+          || run.attachedProjectId
+          || ""
+        ).trim();
+        let taskPreview = null;
+        let ticketNumber = String(
+          input.ticketNumber
+          || input.taskTicketNumber
+          || input.task_ticket_number
+          || entry.ticketNumber
+          || run.ticketNumber
+          || ""
+        ).trim();
+        for (const thread of entryThreads) {
+          const candidatePreview = typeof getThreadTaskPreview === "function"
+            ? getThreadTaskPreview(thread)
+            : null;
+          if (!taskPreview && candidatePreview) taskPreview = candidatePreview;
+          if (!ticketNumber) {
+            const titleTicketMatch = String(thread?.title || "").trim().match(/^([A-Za-z]{1,10}-\\d{1,6})\\s+/);
+            ticketNumber = String(titleTicketMatch?.[1] || "").trim();
+          }
+          if (!ticketNumber && typeof getSidebarThreadTitleParts === "function") {
+            ticketNumber = String(getSidebarThreadTitleParts(thread)?.taskTicketNumber || "").trim();
+          }
+          if (ticketNumber) break;
+        }
+        if (!ticketNumber) {
+          ticketNumber = String(taskPreview?.ticketNumber || taskPreview?.metadata?.ticketNumber || "").trim();
+        }
+        if (!projectId) {
+          projectId = String(taskPreview?.projectId || "").trim();
+        }
+
+        const projects = Array.isArray(options.projects) ? options.projects : [];
+        const projectRecord = projects.find((project) => (
+          String(project?.id || "").trim() === projectId
+        )) || (input.projectName || taskPreview?.projectName
+          ? { id: projectId, name: String(input.projectName || taskPreview?.projectName || "").trim() }
+          : null);
+        const alreadyFormattedTicketNumber = /^[A-Za-z]{1,10}-\\d{1,6}$/.test(ticketNumber);
+        if (
+          ticketNumber
+          && !alreadyFormattedTicketNumber
+          && projectRecord
+          && typeof formatPlaygroundProjectTicketNumber === "function"
+        ) {
+          ticketNumber = formatPlaygroundProjectTicketNumber(projectRecord, ticketNumber) || ticketNumber;
+        }
+
+        return {
+          isTaskLoop: true,
+          ticketId,
+          projectId,
+          ticketNumber,
+          label: ticketNumber || "Loop",
+        };
+      }
+
       function getSidebarMetronomeRunGroupKey(meta) {
         if (!meta?.metronomeId || !meta?.runId) {
           return "";

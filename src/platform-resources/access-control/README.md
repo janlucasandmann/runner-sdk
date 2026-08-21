@@ -15,9 +15,14 @@ table. Permission-ring policy editing remains in `platform-ui/pages/permissions`
 shared Owner, Admin, Contributor, and Member sidebar. Organization-member
 policies are persisted per organization role in
 `accessControl.systemPrincipalRolePermissionSets`. The canonical role list and
-two-column role layout are owned by this component, so resource adapters cannot
-accidentally omit the sidebar. Resource adapters provide separate system and
-role-scoped subject types when their policy namespaces differ.
+resource-settings layout are owned by this component: permissions render in
+the primary content column while role navigation lives in a standard `Details`
+sidebar card. Resource adapters therefore cannot accidentally omit or relocate
+the sidebar. The selected role title, ring overview, full-width permission
+search, and one ring-grouped minimal table share a single access surface; the
+generic permission page keeps its separate-ring presentation for other
+contexts. Resource adapters provide separate system and role-scoped subject
+types when their policy namespaces differ.
 
 The canonical system principals are:
 
@@ -38,6 +43,24 @@ The canonical table also owns team identity rendering. Resource adapters pass
 their team records through the shared profile-image normalizer; the table
 renders saved team images at `20x20px` and uses aligned initials for principals
 without an image.
+
+`PlatformResourceAccessSettings` also owns the Add Teams selector. Resource
+adapters provide the currently available teams and their add mutation through
+the `addTeams` contract; the shared control eagerly hydrates the authoritative
+organization-team directory so persisted team IDs resolve to their durable
+names and profile images after a reload. It also owns plan and empty states,
+circular team avatars, fallback initials, the current user's team-role
+subtitle, popup behavior, and toolbar placement.
+
+Selecting a physical team, `All Agents`, or `All Organization Members`
+promotes its permission editor into the shared resource-access detail route.
+The component publishes the active principal through the centralized
+app-header navigation contract, which turns the resource breadcrumb into the
+back target, appends the principal breadcrumb (including the saved circular
+team image or initials fallback), hides the parent tab switch and unrelated
+settings sections, and applies the normal resource-detail content width while
+the access page is open. Resource adapters therefore do not build access
+breadcrumbs or detail-sidebar behavior independently.
 
 ## Compatibility
 

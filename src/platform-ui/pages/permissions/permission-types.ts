@@ -104,6 +104,8 @@ export interface PlatformPermissionsPageProps {
   disabled?: boolean;
   showOverview?: boolean;
   showEffectiveAccess?: boolean;
+  actionTablePresentation?: "separate-rings" | "grouped-rings";
+  actionSearchPlaceholder?: string;
   ariaLabel?: string;
   className?: string;
   onRingAccessChange?: (ringId: string, access: PlatformPermissionAccess) => void;
@@ -143,6 +145,9 @@ export interface PlatformRolePermissionsPageProps<TId extends string = string>
   readOnly?: boolean;
   className?: string;
   roleListClassName?: string;
+  roleListPlacement?: "leading" | "details-sidebar";
+  roleListTitle?: ReactNode;
+  roleListFooter?: ReactNode;
   permissionPageClassName?: string;
   permissionHeaderClassName?: string;
 }

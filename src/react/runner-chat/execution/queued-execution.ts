@@ -15,6 +15,7 @@ import type {
   StagedScrapeCreationCommand,
   StagedSkillCreationCommand,
   StagedSlideCreationCommand,
+  StagedLoopCommand,
 } from "../composer-commands.js";
 import type {
   LocalAttachment,
@@ -40,6 +41,7 @@ export interface RunnerPendingMessage {
   scrapeCreationCommand?: StagedScrapeCreationCommand | null;
   parseCreationCommand?: StagedParseCreationCommand | null;
   adCreationCommand?: StagedAdCreationCommand | null;
+  loopCommand?: StagedLoopCommand | null;
   connectors?: Record<string, unknown> | null;
 }
 

@@ -219,6 +219,139 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           : null;
       }
 
+      const PLAYGROUND_TASK_LOOP_GOAL_SECTIONS = Object.freeze([
+        Object.freeze({
+          key: "goal",
+          label: "Goal",
+          example: "Example: Raise the project's automated test pass rate without introducing regressions.",
+        }),
+        Object.freeze({
+          key: "successCriteria",
+          label: "Success criteria",
+          example: "Example: All target tests pass and the existing regression suite remains green.",
+        }),
+        Object.freeze({
+          key: "progressSignal",
+          label: "Progress signal",
+          example: "Example: Each iteration increases the number of passing tests on the same test set.",
+        }),
+        Object.freeze({
+          key: "verificationCriteria",
+          label: "Verification method",
+          example: "Example: Run the target tests and regression suite, then compare the result with the previous best iteration.",
+        }),
+      ]);
+
+      function buildPlaygroundTaskLoopGoalTemplate(value = null) {
+        const source = value && typeof value === "object" && !Array.isArray(value)
+          ? value
+          : {};
+        const newline = String.fromCharCode(10);
+        return PLAYGROUND_TASK_LOOP_GOAL_SECTIONS.map((section) => {
+          const sectionValue = String(source[section.key] || "").trim() || section.example;
+          return "**" + section.label + "**" + newline + "- " + sectionValue;
+        }).join(newline + newline);
+      }
+
+      function parsePlaygroundTaskLoopGoalMarkdown(value) {
+        const newline = String.fromCharCode(10);
+        const source = String(value || "").replaceAll(String.fromCharCode(13), "");
+        const normalizedSource = source.toLowerCase();
+        const parsed = {};
+        PLAYGROUND_TASK_LOOP_GOAL_SECTIONS.forEach((section) => {
+          const heading = ("**" + section.label + "**").toLowerCase();
+          const headingIndex = normalizedSource.indexOf(heading);
+          if (headingIndex === -1) return;
+          const sectionStart = headingIndex + heading.length;
+          let sectionEnd = source.length;
+          PLAYGROUND_TASK_LOOP_GOAL_SECTIONS.forEach((candidate) => {
+            if (candidate.key === section.key) return;
+            const candidateHeading = ("**" + candidate.label + "**").toLowerCase();
+            const candidateIndex = normalizedSource.indexOf(candidateHeading, sectionStart);
+            if (candidateIndex !== -1 && candidateIndex < sectionEnd) {
+              sectionEnd = candidateIndex;
+            }
+          });
+          const sectionLines = source.slice(sectionStart, sectionEnd).split(newline);
+          const isBullet = (line) => {
+            const trimmed = String(line || "").trimStart();
+            return (trimmed.startsWith("- ") || trimmed.startsWith("* ")) && trimmed.length > 2;
+          };
+          const bulletIndex = sectionLines.findIndex(isBullet);
+          if (bulletIndex === -1) return;
+          const firstLine = sectionLines[bulletIndex].trimStart().slice(2).trim();
+          const continuation = [];
+          for (let lineIndex = bulletIndex + 1; lineIndex < sectionLines.length; lineIndex += 1) {
+            const line = sectionLines[lineIndex];
+            if (!line.trim() || isBullet(line)) break;
+            continuation.push(line.trim());
+          }
+          parsed[section.key] = [firstLine, ...continuation].filter(Boolean).join(" ").trim();
+        });
+        return parsed;
+      }
+
+      function isPlaygroundTaskLoopGoalTemplatePristine(value) {
+        const normalize = (candidate) => String(candidate || "").replaceAll(String.fromCharCode(13), "").trim();
+        return normalize(value) === normalize(buildPlaygroundTaskLoopGoalTemplate());
+      }
+
+      function hasPlaygroundTaskLoopGoalTemplateExamples(value) {
+        const parsed = parsePlaygroundTaskLoopGoalMarkdown(value);
+        return PLAYGROUND_TASK_LOOP_GOAL_SECTIONS.some((section) => (
+          String(parsed[section.key] || "").trim() === section.example
+        ));
+      }
+
+      function normalizePlaygroundTaskLoopConfig(value, task = null) {
+        const source = value && typeof value === "object" && !Array.isArray(value)
+          ? value
+          : {};
+        const boundedInteger = (candidate, fallback, maximum) => {
+          const parsed = Number(candidate);
+          return Number.isFinite(parsed) && parsed > 0
+            ? Math.max(1, Math.min(maximum, Math.floor(parsed)))
+            : fallback;
+        };
+        const boundedScore = (candidate, fallback = 0.85) => {
+          const parsed = Number(candidate);
+          if (!Number.isFinite(parsed)) return fallback;
+          const normalized = parsed > 1 && parsed <= 100 ? parsed / 100 : parsed;
+          return Math.max(0, Math.min(1, normalized));
+        };
+        const maxIterations = boundedInteger(source.maxIterations ?? source.max_iterations, 6, 50);
+        const maxDurationMinutes = source.maxDurationMinutes
+          ?? source.max_duration_minutes
+          ?? (Number(source.maxDurationMs ?? source.max_duration_ms) / 60_000);
+        return {
+          enabled: source.enabled !== false,
+          goal: String(source.goal || source.endGoal || task?.title || "").trim(),
+          progressSignal: String(source.progressSignal || source.progress_signal || "").trim(),
+          verificationCriteria: String(source.verificationCriteria || source.verification_criteria || "").trim(),
+          successCriteria: String(source.successCriteria || source.success_criteria || task?.description || "").trim(),
+          maxIterations,
+          noProgressLimit: boundedInteger(source.noProgressLimit ?? source.no_progress_limit, 2, Math.min(maxIterations, 20)),
+          minimumScore: boundedScore(source.minimumScore ?? source.minimum_score),
+          maxDurationMinutes: boundedInteger(maxDurationMinutes, 60, 1440),
+          regressionPolicy: source.regressionPolicy === "continue" || source.regression_policy === "continue"
+            ? "continue"
+            : "stop",
+          workerAgentId: String(source.workerAgentId || source.worker_agent_id || "").trim() || null,
+          verifierAgentId: String(source.verifierAgentId || source.verifier_agent_id || "").trim() || null,
+        };
+      }
+
+      function getPlaygroundTaskLoopConfig(task) {
+        if (normalizePlaygroundTaskType(task?.taskType || task?.type) !== "loop") {
+          return null;
+        }
+        const runnerPlayground = getPlaygroundTaskRunnerMetadata(task);
+        return normalizePlaygroundTaskLoopConfig(
+          task?.loop || runnerPlayground?.loop,
+          task,
+        );
+      }
+
       function buildPlaygroundTaskMetadata(task, overrides = {}) {
         const currentMetadata = task?.metadata && typeof task.metadata === "object" && !Array.isArray(task.metadata)
           ? { ...task.metadata }
@@ -241,10 +374,23 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
 
         if (Object.prototype.hasOwnProperty.call(overrides, "taskType")) {
           const nextTaskType = normalizePlaygroundTaskType(overrides.taskType);
-          if (nextTaskType === "subtask") {
-            nextRunnerPlayground.taskType = "subtask";
+          if (nextTaskType === "subtask" || nextTaskType === "loop") {
+            nextRunnerPlayground.taskType = nextTaskType;
           } else {
             delete nextRunnerPlayground.taskType;
+          }
+        }
+
+        if (Object.prototype.hasOwnProperty.call(overrides, "loop")) {
+          const nextTaskType = normalizePlaygroundTaskType(
+            Object.prototype.hasOwnProperty.call(overrides, "taskType")
+              ? overrides.taskType
+              : task?.taskType,
+          );
+          if (nextTaskType === "loop") {
+            nextRunnerPlayground.loop = normalizePlaygroundTaskLoopConfig(overrides.loop, task);
+          } else {
+            delete nextRunnerPlayground.loop;
           }
         }
 
@@ -470,6 +616,10 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           delete nextRunnerPlayground.parentTaskId;
         }
 
+        if (nextRunnerPlayground.taskType !== "loop") {
+          delete nextRunnerPlayground.loop;
+        }
+
         return Object.keys(currentMetadata).length > 0 ? currentMetadata : null;
       }
 
@@ -483,6 +633,7 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           metadata: buildPlaygroundTaskMetadata(task, {
             ticketNumber: task.ticketNumber,
 	            taskType: task.taskType,
+	            loop: task.loop,
 	            parentTaskId: task.parentTaskId,
 	            assigneeAgentId: task.assigneeAgentId,
 	            reviewRequired: task.reviewRequired,
@@ -677,6 +828,9 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
         const parentTaskId = taskType === "subtask" && normalizedParentTaskId
           ? normalizedParentTaskId
           : null;
+        const loop = taskType === "loop"
+          ? normalizePlaygroundTaskLoopConfig(task.loop || runnerPlaygroundMetadata?.loop, task)
+          : null;
         const environmentId = typeof task.environmentId === "string" && task.environmentId.trim()
           ? task.environmentId.trim()
           : typeof runnerPlaygroundMetadata?.environmentId === "string" && runnerPlaygroundMetadata.environmentId.trim()
@@ -745,7 +899,8 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           projectId: typeof task.projectId === "string" && task.projectId.trim() ? task.projectId.trim() : null,
           releaseId: typeof task.releaseId === "string" && task.releaseId.trim() ? task.releaseId.trim() : null,
           ticketNumber,
-          taskType: parentTaskId ? taskType : "task",
+          taskType,
+          loop,
           parentTaskId,
           title: typeof task.title === "string" && task.title.trim() ? task.title.trim() : draft.title,
           description: typeof task.description === "string" ? task.description : draft.description,

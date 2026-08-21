@@ -475,9 +475,22 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
           const teams = (Array.isArray(workspaceTeams) ? workspaceTeams : []).filter((team) => String(team?.id || "").trim());
           const sharedTeams = teamIds.map((teamId) => {
             const team = teams.find((candidate) => String(candidate.id) === teamId);
+            const roleId = String(
+              team?.roleId
+                || team?.role
+                || team?.membershipRole
+                || team?.membership_role
+                || team?.currentUserRole
+                || team?.current_user_role
+                || "member"
+            ).trim().toLowerCase();
             return {
+              ...(team && typeof team === "object" ? team : {}),
               id: teamId,
               name: team?.name || "Shared team",
+              kind: "team",
+              roleId,
+              roleLabel: String(team?.roleLabel || team?.role_label || (roleId.charAt(0).toUpperCase() + roleId.slice(1))),
               profileImageUrl: getPlatformAccessPrincipalProfileImageUrl(team),
               createdAt: team?.createdAt || job.updatedAt || "",
               description: "Team role permissions",
@@ -590,45 +603,15 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
             );
           }
           const availableTeams = teams.filter((team) => !teamIds.includes(String(team.id)));
-          const addTeamsControl = React.createElement(PlatformPopup, {
-            open: fineTuningAccessMenuOpen,
-            variant: "minimal",
-            portal: true,
-            placement: "bottom-end",
-            portalOffset: 6,
-            animation: "down-in",
-            surfaceProps: { role: "menu", "aria-label": "Add teams to optimization job" },
-            trigger: React.createElement(PlatformSecondaryButton, {
-              type: "button",
-              size: "small",
-              disabled: Boolean(fineTuningAccessActionId),
-              onClick: () => {
-                if (!teams.length && typeof onWorkspaceTeamsRequest === "function") {
-                  onWorkspaceTeamsRequest({ selectedTeamId: "" });
-                }
-                setFineTuningAccessMenuOpen((current) => !current);
-              },
-            },
-              React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-              React.createElement("span", null, "Add Teams")
-            ),
-          },
-            availableTeams.length
-              ? availableTeams.map((team) => React.createElement("button", {
-                  key: team.id,
-                  type: "button",
-                  role: "menuitem",
-                  className: "tb-popup-row",
-                  disabled: Boolean(fineTuningAccessActionId),
-                  onClick: () => void addFineTuningTeamAccess(job, team),
-                },
-                  React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, team.name || "Untitled team")
-                ))
-              : React.createElement("button", { type: "button", role: "menuitem", className: "tb-popup-row", disabled: true },
-                  workspaceTeamsLoading ? "Loading teams..." : "All teams already have access"
-                )
-          );
+          const addTeamsControl = React.createElement(PlatformResourceAccessAddTeams, {
+            teams: availableTeams,
+            totalTeamCount: teams.length,
+            loading: workspaceTeamsLoading,
+            disabled: Boolean(fineTuningAccessActionId),
+            popupAriaLabel: "Add teams with Agent Optimization access",
+            onRequestTeams: () => onWorkspaceTeamsRequest?.({ selectedTeamId: "" }),
+            onAddTeam: (team) => addFineTuningTeamAccess(job, team),
+          });
           return React.createElement("section", { className: "playground-fine-tuning-access-settings" },
             React.createElement(PlatformResourceAccessTable, {
               teams: sharedTeams,

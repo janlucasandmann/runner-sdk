@@ -42,4 +42,19 @@ describe("PlatformResourceDetailSidebar", () => {
     await user.click(screen.getByRole("button", { name: "Transfer Ownership" }));
     expect(onTransfer).toHaveBeenCalledWith("owner-2", expect.objectContaining({ name: "Next Owner" }));
   });
+
+  it("does not render an email address as the primary creator identity", () => {
+    render(
+      <PlatformResourceDetailSidebar
+        creator={{
+          value: "creator-1",
+          name: "jane.doe@example.com",
+          email: "jane.doe@example.com",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Jane Doe")).toBeTruthy();
+    expect(screen.queryByText("jane.doe@example.com")).toBeNull();
+  });
 });

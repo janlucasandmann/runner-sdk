@@ -21,6 +21,7 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
                 avatarUrl: selectedTeamOwnerAvatarUrl,
               },
               options: teamOwnerOptions,
+              includeOrganizationMembers: false,
               onTransfer: async (_nextValue, selectedOption) => {
                 const selectedRow = selectedOption?.data?.memberRow || null;
                 const memberId = getTeamMemberActionId(selectedRow);

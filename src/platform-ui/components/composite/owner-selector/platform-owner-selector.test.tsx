@@ -4,10 +4,12 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlatformOwnerSelector } from "./platform-owner-selector.js";
+import { PlatformOrganizationMemberDirectoryProvider } from "./platform-organization-member-directory.js";
 
 afterEach(() => {
   cleanup();
   document.body.innerHTML = "";
+  vi.restoreAllMocks();
 });
 
 describe("PlatformOwnerSelector", () => {
@@ -56,6 +58,8 @@ describe("PlatformOwnerSelector", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Choose owner" }));
+    expect(screen.getByText("Next Owner")).toBeTruthy();
+    expect(screen.getByText("next@example.com")).toBeTruthy();
     await user.click(await screen.findByRole("option", { name: "Next Owner, next@example.com" }));
 
     expect(onTransfer).not.toHaveBeenCalled();
@@ -88,5 +92,121 @@ describe("PlatformOwnerSelector", () => {
 
     expect((await screen.findByRole("alert")).textContent).toContain("Transfer rejected.");
     expect(screen.getByRole("alertdialog")).toBeTruthy();
+  });
+
+  it("prefers a matching profile name over an email-shaped persisted owner label", () => {
+    render(
+      <PlatformOwnerSelector
+        owner={{
+          value: "member-1",
+          name: "jan@example.com",
+          email: "jan@example.com",
+        }}
+        options={[{
+          value: "member-1",
+          name: "Jan Sandmann",
+          email: "jan@example.com",
+        }]}
+        onTransfer={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Jan Sandmann")).toBeTruthy();
+    expect(screen.queryByText("jan@example.com")).toBeNull();
+  });
+
+  it("resolves an email-local-part owner label before the selector is opened", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            members: [{
+              userId: "member-jan",
+              displayName: "Jan Luca Sandmann",
+              email: "janls2601@icloud.com",
+            }],
+          },
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ profiles: [] }),
+      } as Response);
+
+    render(
+      <PlatformOrganizationMemberDirectoryProvider organizationId="organization-closed-owner-test">
+        <PlatformOwnerSelector
+          owner={{
+            value: "member-jan",
+            name: "Janls2601",
+            email: "janls2601@icloud.com",
+          }}
+          options={[]}
+          onTransfer={vi.fn()}
+        />
+      </PlatformOrganizationMemberDirectoryProvider>,
+    );
+
+    expect(await screen.findByText("Jan Luca Sandmann")).toBeTruthy();
+    expect(screen.queryByText("Janls2601")).toBeNull();
+  });
+
+  it("clears a stale avatar when the organization profile has no image", () => {
+    const { container } = render(
+      <PlatformOwnerSelector
+        owner={{
+          value: "member-simone",
+          name: "Simone",
+          email: "simone@example.com",
+          avatarUrl: "/avatars/current-user.png",
+        }}
+        options={[{
+          value: "member-simone",
+          name: "Simone",
+          email: "simone@example.com",
+          avatarUrl: "",
+        }]}
+        onTransfer={vi.fn()}
+      />,
+    );
+
+    expect(container.querySelector(".platform-owner-selector__avatar-image")).toBeNull();
+    expect(container.querySelector(".platform-owner-selector__avatar-fallback")?.textContent).toBe("S");
+  });
+
+  it("adds all organization members to resource-specific owner choices", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            members: [{
+              userId: "member-2",
+              displayName: "Simone",
+              email: "simone@example.com",
+            }],
+          },
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ profiles: [] }),
+      } as Response);
+
+    render(
+      <PlatformOrganizationMemberDirectoryProvider organizationId="organization-selector-test">
+        <PlatformOwnerSelector
+          owner={{ value: "member-1", name: "Current Owner" }}
+          options={[{ value: "member-1", name: "Current Owner" }]}
+          onTransfer={vi.fn()}
+        />
+      </PlatformOrganizationMemberDirectoryProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Choose owner" }));
+
+    expect(await screen.findByRole("option", { name: "Simone, simone@example.com" })).toBeTruthy();
   });
 });

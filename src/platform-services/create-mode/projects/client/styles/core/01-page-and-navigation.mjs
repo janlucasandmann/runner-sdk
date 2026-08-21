@@ -367,6 +367,11 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         font-size: 18px;
       }
 
+      .playground-ticket-detail-content .playground-new-issue-modal__loop-fields {
+        padding-left: 0;
+        padding-right: 0;
+      }
+
       .playground-tasks-ticket-editor-title-input {
         box-sizing: border-box;
         display: block;

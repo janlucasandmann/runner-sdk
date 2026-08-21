@@ -970,57 +970,6 @@
             const availableEnvironmentAccessTeams = availableEnvironmentShareTeams.filter(
               (team) => !environmentSharedTeamIdSet.has(String(team.id))
             );
-            const environmentAccessAddTeamsControl = canMutateEnvironmentRecord
-              ? React.createElement(PlatformButtonSelector, {
-                  mode: "popup",
-                  buttonVariant: "secondary",
-                  buttonSize: "small",
-                  label: "Add Teams",
-                  leading: React.createElement(Plus, {
-                    width: 14,
-                    height: 14,
-                    strokeWidth: 1.8,
-                    "aria-hidden": "true",
-                  }),
-                  open: environmentAccessTeamMenuOpen,
-                  onOpenChange: (nextOpen) => {
-                    if (
-                      nextOpen
-                      && typeof onWorkspaceTeamsRequest === "function"
-                      && !workspaceTeamsLoading
-                    ) {
-                      onWorkspaceTeamsRequest({});
-                    }
-                    setEnvironmentAccessTeamMenuOpen(nextOpen);
-                  },
-                  closeOnSelect: true,
-                  popupAriaLabel: "Add teams with computer access",
-                  popupAlignment: "right",
-                  popupRole: "menu",
-                  popupVariant: "minimal",
-                  popupWidth: 240,
-                  disabled: Boolean(environmentTeamAccessState.action),
-                  className: "playground-project-teams-add-shell playground-computer-access-team-menu",
-                  popupClassName: "playground-project-teams-menu",
-                },
-                availableEnvironmentAccessTeams.length
-                  ? availableEnvironmentAccessTeams.map((team) => React.createElement("button", {
-                      key: team.id,
-                      type: "button",
-                      role: "menuitem",
-                      className: "platform-data-table__menu-item playground-project-teams-menu-row",
-                      onClick: () => void handleAddEnvironmentTeamAccess(team),
-                    },
-                    React.createElement("span", { className: "platform-data-table__menu-icon" },
-                      React.createElement(Users, { width: 14, height: 14, strokeWidth: 1.8 })
-                    ),
-                    React.createElement("span", { className: "platform-data-table__menu-copy" }, team.name)
-                  ))
-                  : React.createElement("div", {
-                      className: "playground-project-teams-menu-empty",
-                    }, workspaceTeamsLoading ? "Loading teams..." : "All available teams have access.")
-              )
-              : null;
             const selectedEnvironmentSystemAccessPrincipal = getPlatformSystemAccessPrincipal(environmentPermissionPrincipalId);
             const selectedEnvironmentAccessTeam = environmentPermissionPrincipalId && !selectedEnvironmentSystemAccessPrincipal
               ? environmentAccessTeams.find((team) => String(team.id) === String(environmentPermissionPrincipalId)) || null
@@ -1107,9 +1056,20 @@
               disabled: !canMutateEnvironmentRecord,
               backLabel: "Settings",
               className: "playground-computer-access-settings",
+              addTeams: canMutateEnvironmentRecord
+                ? {
+                    teams: availableEnvironmentAccessTeams,
+                    totalTeamCount: normalizedEnvironmentWorkspaceTeams.length,
+                    loading: workspaceTeamsLoading,
+                    requiresPlan: workspaceTeamsRequiresPlan,
+                    disabled: Boolean(environmentTeamAccessState.action),
+                    popupAriaLabel: "Add teams with computer access",
+                    onRequestTeams: () => onWorkspaceTeamsRequest?.({}),
+                    onAddTeam: handleAddEnvironmentTeamAccess,
+                  }
+                : undefined,
               tableProps: {
                 className: "playground-computer-access-platform-data-table",
-                trailing: environmentAccessAddTeamsControl,
                 selectedIds: selectedEnvironmentAccessTeamIds,
                 onSelectedIdsChange: setSelectedEnvironmentAccessTeamIds,
                 busy: Boolean(environmentTeamAccessState.action),

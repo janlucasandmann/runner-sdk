@@ -472,7 +472,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
             emptyContent: "No human team members are available.",
             popupWidth: 260,
             popupMaxHeight: "min(320px, calc(100vh - 180px))",
-            className: "playground-evaluations-detail-owner-selector",
+            fullWidth: true,
+            className: "platform-resource-detail-sidebar__owner-selector playground-evaluations-detail-owner-selector",
             triggerClassName: "playground-evaluations-detail-owner-trigger",
             popupClassName: "playground-agents-detail-owner-menu playground-evaluations-detail-owner-menu",
             optionClassName: "playground-agents-detail-owner-option",
@@ -528,9 +529,22 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
         const evaluationAccessShareIds = getEvaluationAccessShareIds();
         const evaluationSharedTeams = evaluationAccessTeamIds.map((teamId) => {
           const team = evaluationWorkspaceTeams.find((candidate) => String(candidate.id) === teamId);
+          const roleId = String(
+            team?.roleId
+              || team?.role
+              || team?.membershipRole
+              || team?.membership_role
+              || team?.currentUserRole
+              || team?.current_user_role
+              || "member"
+          ).trim().toLowerCase();
           return {
+            ...(team && typeof team === "object" ? team : {}),
             id: teamId,
             name: team?.name || "Shared team",
+            kind: "team",
+            roleId,
+            roleLabel: String(team?.roleLabel || team?.role_label || (roleId.charAt(0).toUpperCase() + roleId.slice(1))),
             profileImageUrl: getPlatformAccessPrincipalProfileImageUrl(team),
             createdAt: team?.createdAt || activeSet?.updatedAt || "",
             meta: "Team role permissions",
@@ -669,45 +683,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
         };
         const renderEvaluationAccessSettings = () => {
           const selectedSystemPrincipal = getPlatformSystemAccessPrincipal(evaluationAccessTeamId);
-          const addTeamsControl = React.createElement(PlatformPopup, {
-            open: evaluationAccessMenuOpen,
-            variant: "minimal",
-            portal: true,
-            placement: "bottom-end",
-            portalOffset: 6,
-            animation: "down-in",
-            surfaceProps: { role: "menu", "aria-label": "Add teams to evaluation" },
-            trigger: React.createElement(PlatformSecondaryButton, {
-              type: "button",
-              size: "small",
-              disabled: Boolean(evaluationAccessActionId),
-              onClick: () => {
-                if (!evaluationWorkspaceTeams.length && typeof onWorkspaceTeamsRequest === "function") {
-                  onWorkspaceTeamsRequest({ selectedTeamId: "" });
-                }
-                setEvaluationAccessMenuOpen((current) => !current);
-              },
-            },
-              React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-              React.createElement("span", null, "Add Teams")
-            ),
-          },
-            availableEvaluationTeams.length
-              ? availableEvaluationTeams.map((team) => React.createElement("button", {
-                  key: team.id,
-                  type: "button",
-                  role: "menuitem",
-                  className: "tb-popup-row",
-                  disabled: Boolean(evaluationAccessActionId),
-                  onClick: () => void addEvaluationTeamAccess(team),
-                },
-                  React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, team.name || "Untitled team")
-                ))
-              : React.createElement("button", { type: "button", role: "menuitem", className: "tb-popup-row", disabled: true },
-                  workspaceTeamsLoading ? "Loading teams..." : "All teams already have access"
-                )
-          );
           return React.createElement("section", { className: "playground-evaluations-access-settings" },
             React.createElement(PlatformResourceAccessSettings, {
               teams: evaluationSharedTeams,
@@ -759,8 +734,16 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
                 : undefined,
               actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
               backLabel: "Settings",
+              addTeams: {
+                teams: availableEvaluationTeams,
+                totalTeamCount: evaluationWorkspaceTeams.length,
+                loading: workspaceTeamsLoading,
+                disabled: Boolean(evaluationAccessActionId),
+                popupAriaLabel: "Add teams with Evaluation access",
+                onRequestTeams: () => onWorkspaceTeamsRequest?.({ selectedTeamId: "" }),
+                onAddTeam: addEvaluationTeamAccess,
+              },
               tableProps: {
-                trailing: addTeamsControl,
                 busy: Boolean(evaluationAccessActionId),
                 onRemoveTeams: (teams) => teams.forEach((team) => void removeEvaluationTeamAccess(team.id)),
                 formatCreatedAt: formatPlaygroundEvaluationDate,

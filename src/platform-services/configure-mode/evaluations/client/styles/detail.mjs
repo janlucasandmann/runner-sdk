@@ -245,6 +245,16 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
 
       .playground-evaluations-detail-overview-layout {
         --platform-page-content-max-width: 87.5rem;
+        width: 100%;
+        min-height: 0;
+      }
+
+      .playground-evaluations-detail-content {
+        min-width: 0;
+      }
+
+      .playground-evaluations-detail-sidebar {
+        padding-top: 0;
       }
 
       .playground-evaluations-detail-page-header {
@@ -336,6 +346,7 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
 
       .playground-evaluations-detail-person {
         min-width: 0;
+        width: 100%;
         display: inline-flex;
         align-items: center;
         justify-content: flex-end;
@@ -376,6 +387,13 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         overflow: visible;
       }
 
+      .playground-evaluations-detail-identity-row .platform-service-detail-page__property-value,
+      .playground-evaluations-detail-owner-row .platform-service-detail-page__property-value,
+      .playground-evaluations-detail-evaluator-row .platform-service-detail-page__property-value {
+        min-width: 0;
+        overflow: visible;
+      }
+
       .playground-evaluations-detail-sidebar-row.is-evaluator-selector .playground-evaluations-detail-sidebar-value {
         flex: 1 1 auto;
         overflow: visible;
@@ -408,12 +426,6 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         justify-content: flex-end;
       }
 
-      .playground-evaluations-detail-sidebar-row.is-owner {
-        margin-top: 12px;
-        padding-top: 12px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
       .playground-evaluations-detail-sidebar-row.playground-evaluations-run-agent-property {
         margin-top: 12px;
         padding-top: 12px;
@@ -433,6 +445,7 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
       .playground-evaluations-detail-owner-selector {
         width: 100%;
         min-width: 0;
+        margin-bottom: 12px;
       }
 
       .playground-evaluations-detail-owner-trigger.platform-selector__trigger {

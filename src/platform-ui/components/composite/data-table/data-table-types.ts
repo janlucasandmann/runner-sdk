@@ -154,6 +154,7 @@ export interface PlatformDataTableRowGroup {
   ariaLabel?: string;
   color?: string;
   defaultExpanded?: boolean;
+  showChevron?: boolean;
 }
 
 export interface PlatformDataTableRowGroupingConfig<TData> {
@@ -174,12 +175,15 @@ export interface PlatformDataTableRowReorderChange<TData> {
 }
 
 /**
- * Adds a dedicated drag handle without making the complete row draggable.
- * Consumers should keep a keyboard-accessible reorder action available when
- * ordering is part of the product workflow.
+ * Enables row reordering. The default `handle` activation preserves an
+ * explicit drag control; `row` makes the complete row draggable without
+ * reserving a visible handle column. Consumers should keep a
+ * keyboard-accessible reorder action available when ordering is part of the
+ * product workflow.
  */
 export interface PlatformDataTableRowReorderingConfig<TData> {
   enabled?: boolean;
+  activation?: "handle" | "row";
   isRowReorderable?: (row: TData) => boolean;
   canDrop?: (row: TData, targetRow: TData) => boolean;
   onReorder: (

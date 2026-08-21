@@ -5,10 +5,27 @@ import {
   SkillsOverviewGuide,
   SkillsOverviewPage,
   type SkillOverviewRow,
+  type SkillsOverviewIdentityColumn,
   type SkillsOverviewPageProps,
 } from "../../skills/overview/index.js";
 
 export type PromptOverviewRow = SkillOverviewRow;
+
+const PROMPT_CREATOR_IDENTITY_COLUMN: SkillsOverviewIdentityColumn = {
+  id: "creator",
+  header: "Creator",
+  getIdentity: (row) => {
+    const name = row.creatorName?.trim()
+      || (row.isCustom ? "Unknown user" : "Computer Agents");
+    return {
+      name,
+      imageUrl: row.creatorAvatarUrl
+        || (row.isCustom
+          ? undefined
+          : "/img/agent-profile-pics/ca-profilepic.jpg"),
+    };
+  },
+};
 
 export interface PromptsOverviewPageProps
   extends Omit<
@@ -71,6 +88,7 @@ export function PromptsOverviewPage({
       heroContent={heroContent}
       pageClassName="is-skills is-prompts"
       grouping="flat"
+      identityColumn={PROMPT_CREATOR_IDENTITY_COLUMN}
     />
   );
 }

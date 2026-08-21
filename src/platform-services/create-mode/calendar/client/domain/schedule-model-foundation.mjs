@@ -1,4 +1,25 @@
 export const CALENDAR_SCHEDULE_MODEL_FOUNDATION_SCRIPT = `
+      const PLAYGROUND_CALENDAR_SCHEDULE_TARGET_OPTIONS = [
+        { id: "task", label: "Task" },
+        { id: "loop", label: "Loop" },
+        { id: "workflow", label: "Workflow" },
+        { id: "batch", label: "Batch" },
+      ];
+
+      function normalizePlaygroundScheduleTargetType(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        if (normalized === "workflow" || normalized === "metronome" || normalized === "metronome_run") {
+          return "workflow";
+        }
+        if (normalized === "loop" || normalized === "loop_task" || normalized === "metronome_loop") {
+          return "loop";
+        }
+        if (normalized === "batch" || normalized === "batch_job" || normalized === "batch_job_run") {
+          return "batch";
+        }
+        return "task";
+      }
+
       function buildPlaygroundDefaultScheduleDraft() {
         const now = new Date().toISOString();
         const nextHour = new Date(Date.now() + 60 * 60 * 1000).toISOString();
@@ -7,10 +28,15 @@ export const CALENDAR_SCHEDULE_MODEL_FOUNDATION_SCRIPT = `
           userId: "",
           name: "New Scheduled Task",
           description: "",
-          taskColor: PLAYGROUND_TASK_COLOR_OPTIONS[0].id,
+          taskColor: "blue",
           priority: "medium",
           releaseId: null,
           dependencyIds: [],
+          targetType: "task",
+          workflowId: null,
+          workflowName: null,
+          batchJobId: null,
+          batchJobName: null,
           taskType: "task",
           parentTaskId: null,
           attachments: [],

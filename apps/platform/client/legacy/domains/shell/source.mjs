@@ -112,6 +112,7 @@ export function createLegacyPlatformShellScript(bindings) {
   const deploymentProfileRuntime = `
         const platformDeploymentProfileEnvelope = Object.freeze(${serializedDeploymentProfileEnvelope});
         const platformDeploymentProfile = platformDeploymentProfileEnvelope.profile;
+        configurePlatformDeploymentMapRuntime(platformDeploymentProfile);
         function platformHasCapability(capability) {
           return platformDeploymentProfile.capabilities?.[capability] === true;
         }

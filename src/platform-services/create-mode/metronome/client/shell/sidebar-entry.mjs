@@ -22,6 +22,13 @@ export const METRONOME_APP_SIDEBAR_ENTRY_SCRIPT = `
           const isRunActive = isActiveMetronomeRunStatus(entry?.status);
           const isMenuOpen = metronomeRunActionMenuState?.key === groupKey;
           const isDeletingRun = threadMutationState.action === "delete-metronome-run" && threadMutationState.threadId === groupKey;
+          const loopPresentation = getMetronomeTaskLoopPresentation(entry, {
+            projects: realProjects,
+            threads: realThreads,
+          });
+          const runTitle = loopPresentation.isTaskLoop
+            ? loopPresentation.label
+            : entry.workflowName || "Metronome";
 
           return React.createElement("div", {
             key: groupKey,
@@ -34,15 +41,21 @@ export const METRONOME_APP_SIDEBAR_ENTRY_SCRIPT = `
                 type: "button",
                 className: "sidebar-metronome-run-main",
                 onClick: () => openMetronomeRunTraceThread(entry),
-                "aria-label": "Open Metronome run " + (entry.workflowName || "Metronome"),
+                "aria-label": loopPresentation.isTaskLoop
+                  ? "Open Loop " + runTitle
+                  : "Open Metronome run " + runTitle,
               },
-                React.createElement("span", { className: "sidebar-metronome-run-icon" },
-                  isRunActive
+                React.createElement("span", {
+                  className: "sidebar-metronome-run-icon" + (loopPresentation.isTaskLoop ? " is-loop" : ""),
+                },
+                  loopPresentation.isTaskLoop
+                    ? React.createElement(RefreshCw, { strokeWidth: 1.9 })
+                    : isRunActive
                     ? React.createElement(Loader2, { className: "sidebar-thread-running-indicator", strokeWidth: 1.9 })
                     : React.createElement(Metronome, { strokeWidth: 1.85 })
                 ),
                 React.createElement("span", { className: "sidebar-metronome-run-copy" },
-                  React.createElement("span", { className: "sidebar-metronome-run-title" }, entry.workflowName || "Metronome")
+                  React.createElement("span", { className: "sidebar-metronome-run-title" }, runTitle)
                 )
               ),
               React.createElement("div", { className: "sidebar-metronome-run-side" },

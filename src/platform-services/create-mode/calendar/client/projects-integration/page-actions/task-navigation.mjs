@@ -8,6 +8,7 @@ export const CALENDAR_PROJECTS_PAGE_TASK_NAVIGATION_SCRIPT = `
           setMissionControlStrategyOpen(false);
           setProjectTaskDetailScreenOpen(false);
           setSelectedScheduleId("");
+          setSelectedScheduleOccurrenceAt("");
           setScheduleViewMode("calendar");
           setScheduleEditorMode("create");
           setSelectedTaskId(taskId);

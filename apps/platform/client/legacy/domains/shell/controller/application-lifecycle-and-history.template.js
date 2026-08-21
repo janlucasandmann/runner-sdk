@@ -1226,6 +1226,7 @@
                 toolsView,
                 pluginId: toolsView === "plugins" || toolsView === "tags" ? selectedPluginId : "",
                 skillId: toolsView === "skills" ? toolsSkillsHeaderState.skillId : "",
+                skillTab: toolsView === "skills" ? toolsSkillsHeaderState.activeTab : "",
                 promptId: toolsView === "prompts" ? toolsPromptsHeaderState.promptId : "",
               };
             }
@@ -1328,6 +1329,7 @@
             teamPageSelectedRoleId,
             teamPageSelectedTeamId,
             toolsSkillsHeaderState.mode,
+            toolsSkillsHeaderState.activeTab,
             toolsSkillsHeaderState.skillId,
             toolsPromptsHeaderState.mode,
             toolsPromptsHeaderState.promptId,
@@ -1489,7 +1491,7 @@
               openToolsView(
                 nextToolsView,
                 nextToolsView === "skills" && entry.skillId
-                  ? { skillId: entry.skillId }
+                  ? { skillId: entry.skillId, skillTab: entry.skillTab }
                   : nextToolsView === "prompts" && entry.promptId
                     ? { promptId: entry.promptId }
                     : {},
@@ -1600,8 +1602,15 @@
             }
   
             platformNavigationLastKeyRef.current = entryKey;
-            window.history.pushState({
+            const nextHistoryState = {
               ...(window.history.state && typeof window.history.state === "object" ? window.history.state : {}),
+            };
+            // Resource-access details are a child history entry of their
+            // owning resource. Never copy that marker into the destination
+            // page, but leave the previous entry untouched for browser Back.
+            delete nextHistoryState[PLAYGROUND_RESOURCE_ACCESS_HISTORY_STATE_KEY];
+            window.history.pushState({
+              ...nextHistoryState,
               ...nextState,
             }, "");
           }, [currentPlatformNavigationEntry]);

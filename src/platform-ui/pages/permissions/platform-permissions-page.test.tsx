@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PLATFORM_PERMISSION_ACCESS_OPTIONS } from "./permission-model.js";
@@ -216,6 +216,54 @@ describe("PlatformPermissionsPage", () => {
     expect(onActionAccessChange).toHaveBeenCalledWith("workspace_read", "no_access");
   });
 
+  it("renders one searchable action table with ordered ring sections", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <PlatformPermissionsPage
+        permissionSet={{ subjectType: "team_role" }}
+        accessOptions={PLATFORM_PERMISSION_ACCESS_OPTIONS}
+        ringDefinitions={rings}
+        actionDefinitions={actions.map(({ subjectTypes: _subjectTypes, ...action }) => action)}
+        subjectType="agent"
+        actionTablePresentation="grouped-rings"
+      />,
+    );
+
+    expect(container.querySelectorAll(".platform-settings-data-table")).toHaveLength(1);
+    expect(container.querySelectorAll(".platform-data-table__group-header")).toHaveLength(2);
+    expect(container.querySelector(".platform-data-table__group-chevron")).toBeNull();
+    expect(
+      container.querySelectorAll(
+        ".platform-data-table__group-header .platform-permission-mini-ring-icon",
+      ),
+    ).toHaveLength(2);
+    expect(
+      container.querySelectorAll(".platform-data-table__group-indicator"),
+    ).toHaveLength(0);
+    expect(
+      screen
+        .getByRole("columnheader", { name: "Permission" })
+        .classList.contains("platform-permissions-page__permission-column"),
+    ).toBe(true);
+    expect(
+      screen
+        .getByRole("button", { name: "Read workspace permissions" })
+        .closest(".platform-selector")
+        ?.classList.contains("is-align-end"),
+    ).toBe(true);
+    expect(container.querySelector("[data-platform-settings-section-list='true']")).toBeNull();
+    expect(screen.getByText("Read workspace")).not.toBeNull();
+    expect(screen.getByText("Invite members")).not.toBeNull();
+
+    await user.type(screen.getByRole("searchbox", { name: "Search permissions" }), "invite");
+
+    await waitFor(() => {
+      expect(screen.queryByText("Read workspace")).toBeNull();
+      expect(screen.getByText("Invite members")).not.toBeNull();
+      expect(container.querySelectorAll(".platform-data-table__group-header")).toHaveLength(1);
+    });
+  });
+
   it("renders role navigation around the shared editor", () => {
     const onValueChange = vi.fn();
     render(
@@ -247,6 +295,46 @@ describe("PlatformPermissionsPage", () => {
     expect(onValueChange).toHaveBeenCalledWith("admin");
     expect(screen.getByRole("heading", { name: "Member" })).not.toBeNull();
     expect(screen.getByText("Invite members")).not.toBeNull();
+  });
+
+  it("places role navigation inside the shared details sidebar", () => {
+    const { container } = render(
+      <PlatformRolePermissionsPage
+        roles={[
+          { id: "member", label: "Member" },
+          { id: "admin", label: "Admin" },
+        ]}
+        value="member"
+        onValueChange={vi.fn()}
+        roleAriaLabel="Team roles"
+        roleListPlacement="details-sidebar"
+        roleListTitle="Details"
+        permissionSet={{ subjectType: "team_role" }}
+        accessOptions={PLATFORM_PERMISSION_ACCESS_OPTIONS}
+        ringDefinitions={rings}
+        actionDefinitions={actions}
+        subjectType="team_role"
+      />,
+    );
+
+    const page = container.querySelector(
+      '[data-platform-role-list-placement="details-sidebar"]',
+    );
+    expect(page).not.toBeNull();
+    expect(
+      page?.firstElementChild?.classList.contains(
+        "platform-role-permissions-page__content",
+      ),
+    ).toBe(true);
+    const sidebar = page?.querySelector(
+      ".platform-role-permissions-page__details-sidebar",
+    );
+    expect(sidebar?.getAttribute("data-platform-detail-sidebar")).toBe("true");
+    expect(
+      sidebar?.querySelector('[data-platform-ui-card-variant="sidebar"]'),
+    ).not.toBeNull();
+    expect(within(sidebar as HTMLElement).getByRole("heading", { name: "Details" })).not.toBeNull();
+    expect(within(sidebar as HTMLElement).getByRole("tab", { name: "Member" })).not.toBeNull();
   });
 
   it("renders assigned member avatars and opens the shared minimal member popup", async () => {

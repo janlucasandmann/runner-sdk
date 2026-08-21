@@ -773,15 +773,14 @@
 
             async function createSkillSourceFile() {
               if (!isSelectedSkillCodeFilesEditable) return;
-              const requestedPath = window.prompt("File path", "file.js");
-              const normalizedPath = normalizeHistoryPath(requestedPath);
-              if (!normalizedPath) return;
-              if (selectedSkillCodeFiles.some((file) => normalizeHistoryPath(file.name) === normalizedPath)) {
-                setSkillCodeFilesTransferState({
-                  isProcessing: false,
-                  error: "A source file with this path already exists.",
-                });
-                return;
+              const existingPaths = new Set(
+                selectedSkillCodeFiles.map((file) => normalizeHistoryPath(file.name))
+              );
+              let normalizedPath = "untitled.js";
+              let suffix = 2;
+              while (existingPaths.has(normalizedPath)) {
+                normalizedPath = "untitled-" + suffix + ".js";
+                suffix += 1;
               }
               const nextFile = buildPlaygroundSkillCodeFileRecord(normalizedPath, "");
               const didSave = await saveSelectedSkillCodeFiles([...selectedSkillCodeFiles, nextFile]);
@@ -794,6 +793,7 @@
                   error: "",
                   message: "",
                 });
+                return nextFile.id;
               }
             }
 
@@ -805,16 +805,18 @@
               await persistSkillSourceFolders([...explicitSkillSourceFolders, normalizedPath]);
             }
 
-            async function renameSkillWorkspaceEntry(workspaceFile) {
+            async function renameSkillWorkspaceEntry(workspaceFile, nextLabel) {
               if (!isSelectedSkillCodeFilesEditable || !workspaceFile) return;
               const sourceEntry = skillWorkspaceSourceById.get(workspaceFile.id);
               if (!sourceEntry) return;
               const currentPath = normalizeHistoryPath(sourceEntry.path);
-              const requestedPath = window.prompt(
-                sourceEntry.isFolder ? "Rename folder" : "Rename file",
-                currentPath
-              );
-              const nextPath = normalizeHistoryPath(requestedPath);
+              const currentParentPath = currentPath.split("/").slice(0, -1).join("/");
+              const normalizedLabel = normalizeHistoryPath(nextLabel);
+              const nextPath = normalizedLabel.includes("/")
+                ? normalizedLabel
+                : normalizeHistoryPath(
+                    (currentParentPath ? currentParentPath + "/" : "") + normalizedLabel
+                  );
               if (!nextPath || nextPath === currentPath) return;
               if (sourceEntry.isFolder) {
                 const nextFiles = selectedSkillCodeFiles.map((codeFile) => {
@@ -1023,22 +1025,68 @@
                 }, skillSaveState.error || skillCodeFilesTransferState.error)
               : null;
 
-            const normalizedWorkspaceTeams = (Array.isArray(workspaceTeams) ? workspaceTeams : [])
+            const rawSkillWorkspaceTeams = Array.isArray(workspaceTeams)
+              ? workspaceTeams
+              : Array.isArray(workspaceTeams?.teams)
+                ? workspaceTeams.teams
+                : Array.isArray(workspaceTeams?.data)
+                  ? workspaceTeams.data
+                  : Array.isArray(workspaceTeams?.items)
+                    ? workspaceTeams.items
+                    : [];
+            const normalizedWorkspaceTeams = rawSkillWorkspaceTeams
               .map((team) => {
-                const id = String(team?.id || team?.teamId || "").trim();
+                const source = team && typeof team === "object" && !Array.isArray(team)
+                  ? team
+                  : {};
+                const nestedTeam = source.team && typeof source.team === "object"
+                  ? source.team
+                  : {};
+                const id = String(
+                  source.id
+                  || source.teamId
+                  || source.team_id
+                  || nestedTeam.id
+                  || nestedTeam.teamId
+                  || ""
+                ).trim();
                 if (!id) return null;
+                const roleId = String(
+                  source.roleId
+                  || source.role_id
+                  || source.role
+                  || source.membershipRole
+                  || source.membership_role
+                  || source.currentUserRole
+                  || source.current_user_role
+                  || "member"
+                ).trim().toLowerCase() || "member";
                 return {
-                  ...team,
+                  ...source,
                   id,
-                  name: String(team?.name || team?.title || "Team").trim() || "Team",
+                  name: String(
+                    source.name
+                    || source.title
+                    || source.displayName
+                    || source.teamName
+                    || nestedTeam.name
+                    || "Team"
+                  ).trim() || "Team",
                   kind: "team",
-                  roleId: String(team?.roleId || "member"),
-                  roleLabel: String(team?.roleLabel || team?.role || "Member"),
-                  createdAt: String(team?.createdAt || ""),
+                  roleId,
+                  roleLabel: String(
+                    source.roleLabel
+                    || source.role_label
+                    || (roleId.charAt(0).toUpperCase() + roleId.slice(1))
+                  ),
+                  createdAt: String(source.createdAt || source.created_at || nestedTeam.createdAt || ""),
                   profileImageUrl: String(
-                    team?.profileImageUrl
-                    || team?.imageUrl
-                    || team?.avatarUrl
+                    source.profileImageUrl
+                    || source.imageUrl
+                    || source.avatarUrl
+                    || nestedTeam.profileImageUrl
+                    || nestedTeam.imageUrl
+                    || nestedTeam.avatarUrl
                     || ""
                   ),
                 };
@@ -1068,63 +1116,6 @@
             const selectedSkillAccessTeam = skillAccessPrincipalId && !selectedSkillSystemPrincipal
               ? skillAccessTeams.find((team) => String(team.id) === String(skillAccessPrincipalId)) || null
               : null;
-            const skillAccessAddTeamsControl = selectedSkill.isCustom
-              ? React.createElement(PlatformButtonSelector, {
-                  mode: "popup",
-                  buttonVariant: "secondary",
-                  buttonSize: "small",
-                  label: "Add Teams",
-                  leading: React.createElement(Plus, {
-                    width: 14,
-                    height: 14,
-                    strokeWidth: 1.8,
-                    "aria-hidden": "true",
-                  }),
-                  open: skillAccessTeamMenuOpen,
-                  onOpenChange: setSkillAccessTeamMenuOpen,
-                  closeOnSelect: true,
-                  popupAriaLabel: "Add teams with skill access",
-                  popupAlignment: "right",
-                  popupRole: "menu",
-                  popupVariant: "minimal",
-                  popupWidth: 240,
-                  disabled: skillSaveState.isSaving,
-                },
-                availableSkillAccessTeams.length
-                  ? availableSkillAccessTeams.map((team) =>
-                      React.createElement("button", {
-                        key: team.id,
-                        type: "button",
-                        role: "menuitem",
-                        className: "platform-data-table__menu-item",
-                        onClick: () => {
-                          setSkillAccessTeamMenuOpen(false);
-                          void updateSelectedSkillAccessMetadata(
-                            buildPlatformTeamAccessMetadata(
-                              skillResourceMetadata,
-                              team.id,
-                              true,
-                              "skill_team_role"
-                            )
-                          );
-                        },
-                      },
-                        React.createElement(Users, {
-                          className: "platform-data-table__menu-icon",
-                          width: 14,
-                          height: 14,
-                          strokeWidth: 1.8,
-                        }),
-                        React.createElement("span", {
-                          className: "platform-data-table__menu-copy",
-                        }, team.name)
-                      )
-                    )
-                  : React.createElement("div", {
-                      className: "playground-project-teams-menu-empty",
-                    }, "All available teams have access.")
-              )
-              : null;
             const skillPermissionActionDefinitions = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter(
               (definition) => Array.isArray(definition?.subjectTypes)
                 && definition.subjectTypes.some((subjectType) =>
@@ -1134,11 +1125,39 @@
             const skillAccessSettingsContent = React.createElement(PlatformResourceAccessSettings, {
               teams: skillAccessTeams,
               resourceLabel: "Skill",
+              addTeams: selectedSkill.isCustom
+                ? {
+                    teams: availableSkillAccessTeams,
+                    totalTeamCount: normalizedWorkspaceTeams.length,
+                    loading: workspaceTeamsLoading,
+                    requiresPlan: workspaceTeamsRequiresPlan,
+                    disabled: skillSaveState.isSaving,
+                    popupAriaLabel: "Add teams with skill access",
+                    onRequestTeams: onWorkspaceTeamsRequest,
+                    onAddTeam: (team) => updateSelectedSkillAccessMetadata(
+                      buildPlatformTeamAccessMetadata(
+                        skillResourceMetadata,
+                        team.id,
+                        true,
+                        "skill_team_role"
+                      )
+                    ),
+                  }
+                : undefined,
               selectedPrincipalId: skillAccessPrincipalId,
               onSelectedPrincipalIdChange: (principalId) => {
                 setSkillAccessRoleId("member");
                 setSkillAccessPrincipalId(String(principalId || ""));
               },
+              teamMembers: workspaceTeamMembers,
+              teamMembersTeamId: workspaceTeamMembersTeamId,
+              onRequestTeamMembers: (teamId) => onWorkspaceTeamsRequest?.({
+                selectedTeamId: teamId,
+                teamId,
+              }),
+              onViewTeam: onViewTeam
+                ? (team) => onViewTeam(String(team?.id || ""))
+                : undefined,
               subjectType: "skill",
               teamSubjectType: "skill_team_role",
               systemPermissionSet: getPlatformSystemPrincipalPermissionSet(
@@ -1204,7 +1223,6 @@
                 className: "skill-detail-page__access-table",
                 title: "Manage Skill Access",
                 titleTooltip: "Controls which agents, organization roles, and teams can view, use, update, publish, or manage this skill.",
-                trailing: skillAccessAddTeamsControl,
                 selectedIds: skillAccessSelectedTeamIds,
                 onSelectedIdsChange: setSkillAccessSelectedTeamIds,
                 pagination: {},
@@ -1225,7 +1243,6 @@
                       void updateSelectedSkillAccessMetadata(nextMetadata);
                     }
                   : undefined,
-                getTeamProfileImageUrl: (team) => String(team.profileImageUrl || ""),
                 formatCreatedAt: (value) => value
                   ? formatRelativeThreadTime(value)
                   : "—",
@@ -1234,7 +1251,8 @@
             });
             const skillSettingsComposition = renderSkillSettingsComposition(
               skillAccessSettingsContent,
-              skillResourceMetadata
+              skillResourceMetadata,
+              Boolean(selectedSkillAccessTeam)
             );
             const skillSettingsTabContent = skillSettingsComposition.content;
             const skillSettingsSidebar = skillSettingsComposition.sidebar;
@@ -1295,8 +1313,9 @@
             const skillsTopNavActions = topNavActionsContainer
               ? createPortal(renderSkillsCreateAction(), topNavActionsContainer)
               : null;
-            const rows = allSkills.map((skill) => {
+            const rows = scopedOverviewSkills.map((skill) => {
               const updatedAt = Date.parse(String(skill?.updatedAt || skill?.createdAt || ""));
+              const ownerIdentity = getSelectedSkillOwnerIdentity(skill);
               const systemSkillFamilyId = String(
                 skill?.systemFamilyId
                 || getPlaygroundSkillFamilyId(skill?.id)
@@ -1326,6 +1345,8 @@
                     : COMPUTER_AGENTS_CREATOR_PROFILE_URL)
                   || ""
                 ).trim(),
+                ownerName: String(ownerIdentity?.name || "").trim(),
+                ownerAvatarUrl: String(ownerIdentity?.avatarUrl || "").trim(),
                 updatedAt: Number.isFinite(updatedAt) ? updatedAt : 0,
                 updatedLabel: formatRelativeThreadTime(skill?.updatedAt || skill?.createdAt) || (skill?.isCustom ? "Recently" : "System"),
               };
@@ -1344,6 +1365,10 @@
                 controlsPortalId: "playground-tools-overview-controls",
                 loading: skillsLoading && !skillsLoaded,
                 mutating: skillSaveState.isSaving,
+                selection: {
+                  enabled: true,
+                  ariaLabel: (skill) => `Select ${skill.name}`,
+                },
                 onOpen: (skill) => handleSkillSelect(skill.id),
                 onCreate: () => void createAndOpenCustomSkill(),
                 onEdit: openSkillEditDialog,

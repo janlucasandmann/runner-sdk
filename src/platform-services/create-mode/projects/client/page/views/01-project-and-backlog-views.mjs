@@ -1,4 +1,96 @@
-export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task, extraMeta) {
+export const PROJECTS_VIEWS_01_FRAGMENT = `        function getPlaygroundTaskTypeIcon(value) {
+          const taskType = normalizePlaygroundTaskType(value);
+          if (taskType === "subtask") return Check;
+          if (taskType === "loop") return RefreshCw;
+          return Bookmark;
+        }
+
+        function renderPlaygroundTaskLoopFields({
+          task,
+          inputIdPrefix = "playground-task-loop-",
+          disabled = false,
+          onChange,
+        }) {
+          const loop = normalizePlaygroundTaskLoopConfig(task?.loop, task);
+          return React.createElement("div", { className: "playground-new-issue-modal__loop-fields" },
+            [
+              [
+                "Iteration budget",
+                "maxIterations",
+                loop.maxIterations,
+                1,
+                50,
+                "The maximum number of worker-verifier cycles this Loop may run.",
+                "The supervisor checks the cycle counter before scheduling more work and stops safely when the limit is reached.",
+              ],
+              [
+                "Stagnation limit",
+                "noProgressLimit",
+                loop.noProgressLimit,
+                1,
+                Math.min(loop.maxIterations, 20),
+                "How many consecutive cycles may finish without a better verified result.",
+                "Each verifier result is compared with the best result so far. The supervisor stops after this many non-improving cycles.",
+              ],
+              [
+                "Passing score (%)",
+                "minimumScore",
+                Math.round(loop.minimumScore * 100),
+                0,
+                100,
+                "The minimum verifier score required for the Loop to succeed.",
+                "The normalized verifier score must meet this threshold and the stated success criteria before the Loop can complete.",
+              ],
+              [
+                "Time budget (min)",
+                "maxDurationMinutes",
+                loop.maxDurationMinutes,
+                1,
+                1440,
+                "The maximum wall-clock time available to this Loop.",
+                "The supervisor checks the deadline before another cycle and stops safely once the time budget has expired.",
+              ],
+            ].map(([label, key, value, minimum, maximum, description, runtime]) => {
+              const inputId = inputIdPrefix + key;
+              return React.createElement("div", {
+                  key,
+                  className: "playground-new-issue-modal__loop-field",
+                },
+                React.createElement("label", {
+                  className: "playground-new-issue-modal__loop-field-label",
+                  htmlFor: inputId,
+                }, label),
+                React.createElement(PlatformInfoTooltip, {
+                  title: label,
+                  description,
+                  runtime,
+                  placement: "top-start",
+                  ariaLabel: "About " + label,
+                }),
+                React.createElement("input", {
+                  id: inputId,
+                  type: "number",
+                  "aria-label": label,
+                  min: minimum,
+                  max: maximum,
+                  value,
+                  disabled,
+                  style: {
+                    width: "calc(" + Math.max(1, String(value).length) + "ch + 1px)",
+                    flexBasis: "calc(" + Math.max(1, String(value).length) + "ch + 1px)",
+                  },
+                  onChange: (event) => onChange?.({
+                    [key]: key === "minimumScore"
+                      ? Number(event.target.value) / 100
+                      : Number(event.target.value),
+                  }),
+                })
+              );
+            })
+          );
+        }
+
+        function renderTaskCard(task, extraMeta) {
           const assignee = task.assigneeAgentId ? assignableActorsById[task.assigneeAgentId] : null;
           const isHumanTask = isHumanAssignedTask(task);
           const sprint = task.sprintId ? sprintsById[task.sprintId] : null;
@@ -263,6 +355,82 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
 
           const normalizedIssueType = normalizePlaygroundTaskType(issueComposerDraft.taskType);
           const issueComposerTitle = normalizedIssueType === "subtask" ? "Create Subtask" : "Create Issue";
+
+          function renderIssueComposerTypeBadge(taskType, className = "") {
+            const normalizedTaskType = normalizePlaygroundTaskType(taskType);
+            const TypeIcon = normalizedTaskType === "subtask"
+              ? Check
+              : (normalizedTaskType === "loop" ? RefreshCw : Bookmark);
+            return React.createElement("span", {
+                className: (
+                  "playground-tasks-detail-type-badge is-"
+                  + normalizedTaskType
+                  + " "
+                  + className
+                ).trim(),
+                "aria-hidden": "true",
+              },
+              React.createElement(TypeIcon, { strokeWidth: 1.9 })
+            );
+          }
+
+          function renderIssueComposerTypeSelector() {
+            return React.createElement(PlatformSelector, {
+              value: normalizedIssueType,
+              options: PLAYGROUND_TASK_TYPE_OPTIONS.map((option) => ({
+                value: option.id,
+                label: option.label,
+                leading: renderIssueComposerTypeBadge(
+                  option.id,
+                  "playground-new-issue-modal__type-option-icon"
+                ),
+              })),
+              onValueChange: (nextValue) => {
+                const nextType = normalizePlaygroundTaskType(nextValue);
+                updateIssueComposerDraft((current) => {
+                  const currentType = normalizePlaygroundTaskType(current?.taskType);
+                  const currentDescription = String(current?.description || "").trim();
+                  const normalizedLoop = normalizePlaygroundTaskLoopConfig(
+                    current?.loop,
+                    currentType === "loop" ? current : null,
+                  );
+                  const nextDescription = nextType === "loop" && currentType !== "loop"
+                    ? buildPlaygroundTaskLoopGoalTemplate({
+                        ...normalizedLoop,
+                        goal: currentDescription || normalizedLoop.goal,
+                      })
+                    : current.description;
+                  return {
+                    ...current,
+                    description: nextDescription,
+                    taskType: nextType,
+                    loop: nextType === "loop"
+                      ? normalizePlaygroundTaskLoopConfig({
+                          ...normalizedLoop,
+                          ...parsePlaygroundTaskLoopGoalMarkdown(nextDescription),
+                        }, { ...current, description: nextDescription })
+                      : null,
+                    parentTaskId: nextType === "subtask" ? current.parentTaskId : null,
+                  };
+                });
+              },
+              ariaLabel: "Issue type",
+              label: renderIssueComposerTypeBadge(
+                normalizedIssueType,
+                "playground-new-issue-modal__type-trigger-icon"
+              ),
+              open: issueComposerDetailSelectPopover === "type",
+              onOpenChange: (nextOpen) => setIssueComposerDetailSelectPopover(nextOpen ? "type" : ""),
+              alignment: "start",
+              popupAlignment: "left",
+              popupWidth: "min(220px, calc(100vw - 48px))",
+              popupMaxWidth: "calc(100vw - 48px)",
+              className: "playground-new-issue-modal__type-selector",
+              triggerClassName: "playground-new-issue-modal__type-selector-trigger",
+              popupClassName: "playground-new-issue-modal__type-selector-popup",
+            });
+          }
+
           const selectedDependencyId = normalizePlaygroundIdList(issueComposerDraft.dependencyIds)[0] || "";
           const parentTicketCandidates = tasks
             .filter((task) => {
@@ -292,29 +460,28 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
           const scheduleMode = issueComposerDraft.scheduledStartAt
             ? (issueComposerDraft.scheduleType === "recurring" ? "recurring" : "one-time")
             : "none";
-          const recurrencePresetId = getPlaygroundTaskSchedulePresetId(issueComposerDraft.cronExpression) || "daily";
-          const selectedIssueEnvironment = issueComposerDraft.environmentId
-            ? availableBacklogEnvironments.find((environment) => environment?.id === issueComposerDraft.environmentId) || null
-            : null;
-          const issueEnvironmentLabel = selectedIssueEnvironment
-            ? ((selectedIssueEnvironment.name || selectedIssueEnvironment.id) + (selectedIssueEnvironment.isDefault ? " (Default)" : ""))
-            : (availableBacklogEnvironments.length > 0 ? "Select environment" : "No environments");
-
           function renderIssueComposerDescriptionField() {
-            return React.createElement(PlatformInstructionsEditor, {
+            const descriptionEditor = React.createElement(PlatformInstructionsEditor, {
               value: resolveTaskDescriptionAttachmentFiles(
                 issueComposerDraft.description || "",
                 issueComposerDraft.attachments
               ),
               onChange: handleIssueComposerDescriptionEditorChange,
-              title: "Description",
-              placeholder: "Describe the expected outcome, context, constraints, and acceptance criteria.",
-              ariaLabel: "Issue description",
+              title: normalizedIssueType === "loop" ? "Loop Goal" : "Description",
+              placeholder: normalizedIssueType === "loop"
+                ? "Define the Loop goal, success criteria, progress signal, and verification method."
+                : "Describe the expected outcome, context, constraints, and acceptance criteria.",
+              ariaLabel: normalizedIssueType === "loop" ? "Loop goal" : "Issue description",
               editorRef: issueComposerDescriptionTextareaRef,
-              historyKey: "new-issue-description:" + String(selectedProjectId || selectedProject?.id || "project"),
+              historyKey: (
+                normalizedIssueType === "loop" ? "new-loop-goal:" : "new-issue-description:"
+              ) + String(selectedProjectId || selectedProject?.id || "project"),
               stickyHeader: false,
               variant: "minimalistic-ui",
               contentVariant: "file-enabled",
+              promptInsertion: typeof onOpenPromptSearch === "function"
+                ? { openSearch: onOpenPromptSearch }
+                : undefined,
               fileUpload: {
                 upload: uploadIssueComposerDescriptionFiles,
                 resolvePreviewSource: resolveTaskDescriptionFilePreviewSource,
@@ -323,6 +490,34 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                 onRemove: handleRemoveIssueComposerDescriptionFile,
               },
               className: "playground-new-issue-modal__description",
+            });
+            if (normalizedIssueType !== "loop") {
+              return descriptionEditor;
+            }
+            return React.createElement("section", {
+                className: "playground-new-issue-modal__loop-goal-section",
+                "aria-label": "Loop goal",
+              },
+              descriptionEditor,
+              renderIssueComposerLoopFields()
+            );
+          }
+
+          function renderIssueComposerLoopFields() {
+            if (normalizedIssueType !== "loop") {
+              return null;
+            }
+            const updateLoop = (patch) => updateIssueComposerDraft((current) => ({
+              ...current,
+              loop: normalizePlaygroundTaskLoopConfig({
+                ...normalizePlaygroundTaskLoopConfig(current.loop, current),
+                ...patch,
+              }, current),
+            }));
+            return renderPlaygroundTaskLoopFields({
+              task: issueComposerDraft,
+              inputIdPrefix: "playground-new-issue-loop-",
+              onChange: updateLoop,
             });
           }
 
@@ -345,12 +540,22 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
             isEmpty = false,
             buttonContent = null,
             popupClassName = "",
+            popupHeader = null,
+            popupHeaderClassName = "",
+            popupContent = null,
+            popupAriaLabel = "",
+            open = null,
+            onOpenChange = null,
             popupWidth = "min(300px, calc(100vw - 48px))",
             popupMaxHeight = "min(320px, calc(100vh - 120px))",
             options = [],
             emptyContent = "No options available.",
           }) {
             const normalizedPopoverId = String(popoverId || "").trim();
+            const hasControlledOpenState = typeof open === "boolean";
+            const isOpen = hasControlledOpenState
+              ? open
+              : issueComposerDetailSelectPopover === normalizedPopoverId;
             const selectorOptions = Array.isArray(options) ? options.filter((option) => option?.value) : [];
             return React.createElement(PlatformSelector, {
               value: String(value || ""),
@@ -365,12 +570,30 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
               label: buttonContent || React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, valueLabel),
               placeholder: valueLabel,
               disabled,
-              open: issueComposerDetailSelectPopover === normalizedPopoverId,
-              onOpenChange: (nextOpen) => setIssueComposerDetailSelectPopover(nextOpen ? normalizedPopoverId : ""),
+              open: isOpen,
+              onOpenChange: (nextOpen) => {
+                if (nextOpen && ["assignee", "reviewer"].includes(normalizedPopoverId)) {
+                  const selectedActorId = normalizedPopoverId === "reviewer"
+                    ? (issueComposerDraft.reviewRequired ? issueComposerDraft.reviewerAgentId : "")
+                    : issueComposerDraft.assigneeAgentId;
+                  setIssueComposerActorPopupMode(
+                    getDefaultTaskActorPopupMode(assignableActorsById[selectedActorId] || null)
+                  );
+                }
+                if (typeof onOpenChange === "function") {
+                  onOpenChange(nextOpen);
+                  return;
+                }
+                setIssueComposerDetailSelectPopover(nextOpen ? normalizedPopoverId : "");
+              },
               alignment: "end",
               popupAlignment: "right",
               fullWidth: true,
               emptyContent,
+              popupHeader,
+              popupHeaderClassName,
+              popupContent,
+              popupAriaLabel: popupAriaLabel || undefined,
               popupWidth,
               popupMaxWidth: "calc(100vw - 48px)",
               popupMaxHeight,
@@ -422,13 +645,10 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
 
           function renderIssueComposerDetailsSection() {
             const issueType = normalizePlaygroundTaskType(issueComposerDraft.taskType);
-            const IssueTypeIcon = issueType === "subtask" ? Check : (issueType === "loop" ? RefreshCw : Bookmark);
-            const issueTypeLabel = PLAYGROUND_TASK_TYPE_OPTIONS.find((option) => option.id === issueType)?.label || "Task";
             const issueStatus = issueComposerDraft.status === "blocked" ? "blocked" : "todo";
             const issueStatusPresentation = getPlaygroundTaskStatusPresentation(issueStatus);
             const issueStatusLabel = issueStatusPresentation.label;
             const issuePriorityPresentation = getPlaygroundTaskPriorityPresentation(issueComposerDraft.priority);
-            const issueColorPresentation = getPlaygroundTaskColorPresentation(issueComposerDraft.taskColor);
             const selectedRelease = issueComposerDraft.releaseId ? releases.find((release) => release.id === issueComposerDraft.releaseId) || null : null;
             const selectedParentTaskId = normalizePlaygroundParentTaskId(issueComposerDraft.parentTaskId);
             const selectedParentTask = selectedParentTaskId ? tasks.find((task) => task.id === selectedParentTaskId) || null : null;
@@ -443,6 +663,28 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
             const reviewerLabel = issueComposerDraft.reviewRequired
               ? (selectedReviewer ? getTaskAssigneeOptionLabel(selectedReviewer) : "Reviewer")
               : "No review";
+            const loop = issueType === "loop"
+              ? normalizePlaygroundTaskLoopConfig(issueComposerDraft.loop, issueComposerDraft)
+              : null;
+            const verifierAgents = issueType === "loop"
+              ? assignableActors.filter((actor) => (
+                  getPlaygroundTaskAssigneePopupMode(actor) === "agents"
+                  && actor?.id
+                ))
+              : [];
+            const selectedVerifier = loop?.verifierAgentId
+              ? verifierAgents.find((agent) => agent.id === loop.verifierAgentId) || null
+              : null;
+            const updateLoop = (patch) => updateIssueComposerDraft((current) => ({
+              ...current,
+              loop: normalizePlaygroundTaskLoopConfig({
+                ...normalizePlaygroundTaskLoopConfig(current.loop, current),
+                ...patch,
+              }, current),
+            }));
+            const filteredIssueComposerAssignableActors = assignableActors.filter(
+              (actor) => getPlaygroundTaskAssigneePopupMode(actor) === issueComposerActorPopupMode
+            );
             const selectedDependencyTask = selectedDependencyId ? tasks.find((task) => task.id === selectedDependencyId) || null : null;
             const dependencyLabel = selectedDependencyTask
               ? ((taskTicketNumbersById[selectedDependencyTask.id] || selectedDependencyTask.ticketNumber || "000") + " - " + (selectedDependencyTask.title || "Untitled Task"))
@@ -453,57 +695,6 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                 className: "playground-tasks-detail-facts playground-tasks-issue-details-section" + (issueComposerDetailSelectPopover ? " is-popover-open" : ""),
               },
               React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                    renderIssueComposerDetailFact("Computer",
-                      renderIssueComposerDetailSelectControl({
-                        popoverId: "computer",
-                        value: selectedIssueEnvironment?.id || "",
-                        valueLabel: issueEnvironmentLabel,
-                        isEmpty: !selectedIssueEnvironment,
-                        disabled: availableBacklogEnvironments.length === 0,
-                        buttonContent: React.createElement("span", { className: "playground-tasks-detail-person-value" },
-                          React.createElement(Monitor, { className: "playground-tasks-project-modal-environment-icon", strokeWidth: 1.8 }),
-                          React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, issueEnvironmentLabel)
-                        ),
-                        options: availableBacklogEnvironments.map((environment) =>
-                          createIssueComposerSelectorOption({
-                            value: environment.id,
-                            label: (environment.name || environment.id) + (environment.isDefault ? " (Default)" : ""),
-                            description: "Use this computer for this issue.",
-                            onSelect: () => updateIssueComposerField("environmentId", environment.id),
-                          })
-                        ),
-                        emptyContent: "No computers available.",
-                      })
-                    ),
-                    renderIssueComposerDetailFact("Type",
-                      React.createElement("div", { className: "playground-tasks-type-control" },
-                        renderIssueComposerDetailSelectControl({
-                          popoverId: "type",
-                          value: issueType,
-                          valueLabel: issueTypeLabel,
-                          buttonContent: React.createElement("span", { className: "playground-tasks-detail-type-value" },
-                            React.createElement(IssueTypeIcon, { className: "playground-tasks-detail-type-icon", strokeWidth: 1.9 }),
-                            React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, issueTypeLabel)
-                          ),
-                          options: PLAYGROUND_TASK_TYPE_OPTIONS.map((option) => {
-                            const OptionIcon = option.id === "subtask" ? Check : (option.id === "loop" ? RefreshCw : Bookmark);
-                            return createIssueComposerSelectorOption({
-                              value: option.id,
-                              label: option.label,
-                              leading: React.createElement(OptionIcon, { width: 16, height: 16, strokeWidth: 1.9 }),
-                              onSelect: () => {
-                                const nextType = normalizePlaygroundTaskType(option.id);
-                                updateIssueComposerDraft((current) => ({
-                                  ...current,
-                                  taskType: nextType,
-                                  parentTaskId: nextType === "subtask" ? current.parentTaskId : null,
-                                }));
-                              },
-                            });
-                          }),
-                        })
-                      )
-                    ),
                     issueType === "subtask"
                       ? renderIssueComposerDetailFact("Subtask to",
                           renderIssueComposerDetailSelectControl({
@@ -593,33 +784,6 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                         ),
                       })
                     ),
-                    renderIssueComposerDetailFact("Color",
-                      renderIssueComposerDetailSelectControl({
-                        popoverId: "color",
-                        value: getPlaygroundTaskColorId(issueComposerDraft.taskColor),
-                        valueLabel: issueColorPresentation.label,
-                        buttonContent: React.createElement("span", {
-                            className: "playground-tasks-detail-color-value",
-                            style: getPlaygroundTaskColorStyle(issueComposerDraft.taskColor),
-                          },
-                          React.createElement("span", { className: "playground-tasks-detail-color-swatch", "aria-hidden": "true" }),
-                          React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, issueColorPresentation.label)
-                        ),
-                        options: PLAYGROUND_TASK_COLOR_OPTIONS.map((option) =>
-                          createIssueComposerSelectorOption({
-                            value: option.id,
-                            label: React.createElement("span", {
-                                className: "playground-tasks-detail-select-popup-label-slot",
-                                style: getPlaygroundTaskColorStyle(option.id),
-                              },
-                              React.createElement("span", { className: "playground-tasks-detail-color-swatch", "aria-hidden": "true" }),
-                              React.createElement("span", null, option.label)
-                            ),
-                            onSelect: () => updateIssueComposerField("taskColor", option.id),
-                          })
-                        ),
-                      })
-                    ),
                     renderIssueComposerDetailFact("Milestone",
                       renderIssueComposerDetailSelectControl({
                         popoverId: "release",
@@ -653,68 +817,127 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                         valueLabel: assigneeLabel,
                         isEmpty: !selectedAssignee,
                         buttonContent: renderIssueComposerPersonValue(issueComposerDraft.assigneeAgentId, assigneeLabel),
-                        popupClassName: "tb-popup-menu-inline-agent",
+                        popupClassName: "playground-tasks-detail-assignee-selector-popup",
+                        popupHeader: renderTaskActorModeSwitch({
+                          ariaLabel: "Assignee type",
+                          value: issueComposerActorPopupMode,
+                          onValueChange: setIssueComposerActorPopupMode,
+                        }),
                         options: [
                           createIssueComposerSelectorOption({
                             value: "__none__",
                             label: "Unassigned",
                             onSelect: () => updateIssueComposerField("assigneeAgentId", null),
                           }),
-                          ...assignableActors.map((actor) => createIssueComposerActorSelectorOption(actor)),
+                          ...filteredIssueComposerAssignableActors.map((actor) => createIssueComposerActorSelectorOption(actor)),
                         ],
                         emptyContent: "No assignees available.",
                       })
                     ),
-                    renderIssueComposerDetailFact("Reviewer",
-                      renderIssueComposerDetailSelectControl({
-                        popoverId: "reviewer",
-                        value: issueComposerDraft.reviewRequired ? (issueComposerDraft.reviewerAgentId || "") : "__none__",
-                        valueLabel: reviewerLabel,
-                        isEmpty: !issueComposerDraft.reviewRequired,
-                        buttonContent: renderIssueComposerPersonValue(issueComposerDraft.reviewRequired ? issueComposerDraft.reviewerAgentId : "", reviewerLabel),
-                        popupClassName: "tb-popup-menu-inline-agent",
-                        options: [
-                          createIssueComposerSelectorOption({
-                            value: "__none__",
-                            label: "No review",
-                            description: "Move directly to Done when work is done.",
-                            onSelect: () => updateIssueComposerDraft((current) => ({
-                              ...current,
-                              reviewRequired: false,
-                              reviewerAgentId: null,
-                            })),
-                          }),
-                          ...assignableActors.map((actor) => createIssueComposerActorSelectorOption(actor, { reviewer: true })),
-                        ],
-                      })
-                    ),
+                    issueType === "loop"
+                      ? React.createElement(React.Fragment, null,
+                          renderIssueComposerDetailFact("Verifier",
+                            renderIssueComposerDetailSelectControl({
+                              popoverId: "loop-verifier",
+                              value: loop.verifierAgentId || "__automatic__",
+                              valueLabel: selectedVerifier
+                                ? getTaskAssigneeOptionLabel(selectedVerifier)
+                                : "Automatic",
+                              isEmpty: !selectedVerifier,
+                              buttonContent: selectedVerifier
+                                ? renderIssueComposerPersonValue(selectedVerifier.id, getTaskAssigneeOptionLabel(selectedVerifier))
+                                : React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, "Automatic"),
+                              popupClassName: "playground-tasks-detail-assignee-selector-popup",
+                              options: [
+                                createIssueComposerSelectorOption({
+                                  value: "__automatic__",
+                                  label: "Automatic",
+                                  description: "Use an isolated verifier run with the selected worker agent.",
+                                  onSelect: () => updateLoop({ verifierAgentId: null }),
+                                }),
+                                ...verifierAgents.map((agent) => createIssueComposerSelectorOption({
+                                  value: agent.id,
+                                  label: getTaskAssigneeOptionLabel(agent),
+                                  description: "Run this agent in a read-only verifier context.",
+                                  leading: renderTaskActorAvatar(agent.id, "playground-tasks-detail-person-menu-avatar"),
+                                  onSelect: () => updateLoop({ verifierAgentId: agent.id }),
+                                })),
+                              ],
+                            })
+                          ),
+                          renderIssueComposerDetailFact("On regression",
+                            renderIssueComposerDetailSelectControl({
+                              popoverId: "loop-regression",
+                              value: loop.regressionPolicy,
+                              valueLabel: loop.regressionPolicy === "continue" ? "Continue" : "Stop safely",
+                              options: [
+                                createIssueComposerSelectorOption({
+                                  value: "stop",
+                                  label: "Stop safely",
+                                  description: "Stop when a candidate scores materially below the best result.",
+                                  onSelect: () => updateLoop({ regressionPolicy: "stop" }),
+                                }),
+                                createIssueComposerSelectorOption({
+                                  value: "continue",
+                                  label: "Continue",
+                                  description: "Allow later iterations to recover from a regression.",
+                                  onSelect: () => updateLoop({ regressionPolicy: "continue" }),
+                                }),
+                              ],
+                            })
+                          )
+                        )
+                      : renderIssueComposerDetailFact("Reviewer",
+                          renderIssueComposerDetailSelectControl({
+                            popoverId: "reviewer",
+                            value: issueComposerDraft.reviewRequired ? (issueComposerDraft.reviewerAgentId || "") : "__none__",
+                            valueLabel: reviewerLabel,
+                            isEmpty: !issueComposerDraft.reviewRequired,
+                            buttonContent: renderIssueComposerPersonValue(issueComposerDraft.reviewRequired ? issueComposerDraft.reviewerAgentId : "", reviewerLabel),
+                            popupClassName: "playground-tasks-detail-assignee-selector-popup",
+                            popupHeader: renderTaskActorModeSwitch({
+                              ariaLabel: "Reviewer type",
+                              value: issueComposerActorPopupMode,
+                              onValueChange: setIssueComposerActorPopupMode,
+                            }),
+                            options: [
+                              createIssueComposerSelectorOption({
+                                value: "__none__",
+                                label: "No review",
+                                description: "Move directly to Done when work is done.",
+                                onSelect: () => updateIssueComposerDraft((current) => ({
+                                  ...current,
+                                  reviewRequired: false,
+                                  reviewerAgentId: null,
+                                })),
+                              }),
+                              ...filteredIssueComposerAssignableActors.map((actor) => createIssueComposerActorSelectorOption(actor, { reviewer: true })),
+                            ],
+                          })
+                        ),
                     renderIssueComposerDetailFact("Schedule",
                       renderIssueComposerDetailSelectControl({
                         popoverId: "schedule",
                         value: scheduleMode,
                         valueLabel: scheduleLabel,
                         isEmpty: scheduleMode === "none",
-                        options: [
-                          { id: "none", label: "None" },
-                          { id: "one-time", label: "One-time" },
-                          { id: "recurring", label: "Recurring" },
-                        ].map((option) =>
-                          createIssueComposerSelectorOption({
-                            value: option.id,
-                            label: option.label,
-                            onSelect: () => {
-                              updateIssueComposerDraft((current) => ({
-                                ...current,
-                                scheduledStartAt: option.id === "none" ? null : (current.scheduledStartAt || new Date().toISOString()),
-                                scheduledEndAt: option.id === "none" ? null : current.scheduledEndAt,
-                                scheduleType: option.id === "recurring" ? "recurring" : "one-time",
-                                cronExpression: option.id === "recurring"
-                                  ? (current.cronExpression || buildPlaygroundCronExpressionForPreset("daily", current.scheduledStartAt || Date.now()))
-                                  : null,
-                              }));
-                            },
-                          })
-                        ),
+                        open: Boolean(taskScheduleDialogState?.target === "issue") && taskScheduleDialogPhase !== "exit",
+                        onOpenChange: (nextOpen) => {
+                          if (nextOpen) {
+                            if (taskScheduleDialogState?.target !== "issue") {
+                              openTaskScheduleDialog("issue");
+                            }
+                            return;
+                          }
+                          if (taskScheduleDialogState?.target === "issue") {
+                            closeTaskScheduleDialog();
+                          }
+                        },
+                        popupContent: renderTaskScheduleDialog({ embedded: true }),
+                        popupAriaLabel: "Edit issue schedule",
+                        popupClassName: "playground-tasks-schedule-selector-popup",
+                        popupWidth: "min(320px, calc(100vw - 48px))",
+                        popupMaxHeight: "min(520px, calc(100vh - 96px))",
                       })
                     )
                   )
@@ -728,12 +951,13 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
 	            animationDurationMs: issueComposerAnimationMs,
 	            onClose: () => closeProjectIssueComposer(),
 	            as: "form",
-	            size: "medium",
-	            maxHeight: "80vh",
+	            size: "large",
+	            maxHeight: normalizedIssueType === "loop" ? "88vh" : "80vh",
 	            title: issueComposerTitle,
 	            headerVariant: "search",
+	            headerLeading: renderIssueComposerTypeSelector(),
 	            headerSearchProps: {
-	              icon: Bookmark,
+	              icon: null,
 	              value: issueComposerDraft.title || "",
 	              placeholder: "Issue title",
 	              "aria-label": "Issue title",
@@ -760,6 +984,7 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
 	            className: "playground-new-issue-modal",
 	            bodyClassName: "playground-new-issue-modal__body",
 	            footerClassName: "playground-new-issue-modal__footer",
+	            closeOnEscape: !issueComposerDetailSelectPopover,
 	            closeButtonLabel: "Close new issue",
 	            closeButtonDisabled: issueComposerSaveState.isSaving,
 	            surfaceProps: {

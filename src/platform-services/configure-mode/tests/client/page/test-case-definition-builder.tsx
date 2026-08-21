@@ -1,7 +1,6 @@
 import {
   Activity,
   Camera,
-  Check,
   FileArchive,
   Network,
   Plus,
@@ -28,14 +27,12 @@ import {
 } from "../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformCheckbox } from "../../../../../platform-ui/components/ui/checkbox/index.js";
 import { PlatformIconButton } from "../../../../../platform-ui/components/ui/icon-button/index.js";
-import { PlatformLabel } from "../../../../../platform-ui/components/ui/label/index.js";
 import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
+import { PlatformToggle } from "../../../../../platform-ui/components/ui/toggle/index.js";
 import {
   getDefaultTestCaseRequest,
   getTestCaseTargetKind,
-  TEST_CASE_TYPE_OPTIONS,
   type TestCaseDefinition,
-  type TestCaseTargetKind,
   type TestPlanDefinition,
   type TestWorkspaceResourceOption,
 } from "../domain/index.js";
@@ -58,6 +55,8 @@ interface JsonValueFieldProps {
   id: string;
   label: string;
   description?: string;
+  className?: string;
+  codeHeaderLabel?: string;
   value: unknown;
   onChange: (value: unknown) => void;
   onValidationError: (id: string, error: string) => void;
@@ -106,10 +105,6 @@ function formatJson(value: unknown): string {
   return typeof formatted === "string" ? formatted : "null";
 }
 
-function targetLabel(target: TestCaseTargetKind): string {
-  return TEST_CASE_TYPE_OPTIONS.find((option) => option.value === target)?.label || target;
-}
-
 function withCurrentOption(
   options: readonly TestWorkspaceResourceOption[],
   value: string,
@@ -137,6 +132,7 @@ function TestResourceField({
   value,
   options,
   loading = false,
+  fullRow = true,
   placeholder,
   onChange,
 }: {
@@ -145,12 +141,13 @@ function TestResourceField({
   value: string;
   options: readonly TestWorkspaceResourceOption[];
   loading?: boolean;
+  fullRow?: boolean;
   placeholder: string;
   onChange: (value: string) => void;
 }) {
   const selectorOptions = withCurrentOption(options, value, `${label} · ${value}`);
   return (
-    <div className="tests-case-builder__field is-span-2">
+    <div className={`tests-case-builder__field${fullRow ? " is-span-2" : ""}`}>
       <span>{label}</span>
       {loading || selectorOptions.length > 0 ? (
         <PlatformSelector
@@ -180,6 +177,8 @@ function JsonValueField({
   id,
   label,
   description,
+  className = "",
+  codeHeaderLabel,
   value,
   onChange,
   onValidationError,
@@ -218,10 +217,11 @@ function JsonValueField({
   }
 
   return (
-    <div className="tests-case-builder__field tests-case-builder__editor-field is-span-2">
+    <div className={`tests-case-builder__field tests-case-builder__editor-field is-span-2${className ? ` ${className}` : ""}`}>
       {description ? <small>{description}</small> : null}
+      {codeHeaderLabel ? <span>{label}</span> : null}
       <PlatformInstructionsEditor
-        title={label}
+        title={codeHeaderLabel || label}
         value={source}
         onChange={update}
         placeholder="Enter JSON."
@@ -299,13 +299,14 @@ function FunctionRequestFields({
   const method = String(request.method || "POST").toUpperCase();
   const path = String(request.path || "/");
   return (
-    <div className="tests-case-builder__form-grid">
+    <div className="tests-case-builder__form-grid is-function-request">
       <TestResourceField
         label="Function"
         ariaLabel="Test Function"
         value={functionId}
         options={functions}
         loading={resourcesLoading}
+        fullRow={false}
         placeholder="Select a Function"
         onChange={(value) => onChange({ ...request, functionId: value })}
       />
@@ -331,7 +332,8 @@ function FunctionRequestFields({
       <JsonValueField
         id={`${fieldId}:body`}
         label="Request body"
-        description="JSON passed to the selected Function. Use null when no body is required."
+        className="tests-case-builder__request-body-field"
+        codeHeaderLabel="JSON"
         value={request.body ?? null}
         onChange={(body) => onChange({ ...request, body })}
         onValidationError={onValidationError}
@@ -521,14 +523,30 @@ function ScenarioStepEditor({
   );
 }
 
-function EvidenceItem({ icon, label, enabled }: { icon: ReactNode; label: string; enabled: boolean }) {
+function EvidenceItem({
+  icon,
+  label,
+  enabled,
+  selectable = false,
+  onCheckedChange,
+}: {
+  icon: ReactNode;
+  label: string;
+  enabled: boolean;
+  selectable?: boolean;
+  onCheckedChange?: (checked: boolean) => void;
+}) {
   return (
     <div className="tests-case-builder__evidence-item">
       <span aria-hidden="true">{icon}</span>
       <strong>{label}</strong>
-      <PlatformLabel variant={enabled ? "green" : "gray"}>
-        {enabled ? "Retained" : "Not retained"}
-      </PlatformLabel>
+      <PlatformToggle
+        checked={enabled}
+        disabled={!selectable}
+        aria-label={`${label} evidence retention`}
+        title={selectable ? undefined : "Managed in Test settings"}
+        onCheckedChange={selectable ? onCheckedChange : undefined}
+      />
     </div>
   );
 }
@@ -602,13 +620,9 @@ export function TestCaseDefinitionBuilder({
                 : target === "control_plane_readiness"
                   ? "Readiness requirements"
                   : "Request"}
-          description={target === "command"
-            ? "The executor runs this exact command in the selected environment."
-            : target === "agent"
-              ? "Describe the workflow, success criteria, and concrete evidence the executor must retain."
-              : target === "service_topology"
-                ? "Build an ordered set of deterministic platform operations."
-                : "Configure the exact input sent to the selected target."}
+          className={target === "computer_agents_function"
+            ? "tests-case-builder__function-request-section"
+            : undefined}
           bodyClassName="tests-case-builder__section-body"
         >
           {target === "command" ? (
@@ -744,7 +758,6 @@ export function TestCaseDefinitionBuilder({
         {!["command", "agent"].includes(target) ? (
           <PlatformSettingsSection
             title="Expected outcome"
-            description="Assertions are evaluated directly against the deterministic target response."
             bodyClassName="tests-case-builder__section-body"
           >
             <TestAssertionBuilder
@@ -756,7 +769,7 @@ export function TestCaseDefinitionBuilder({
 
         <PlatformSettingsSection
           title="Evidence"
-          description="This case inherits the immutable evidence policy from its Test Plan."
+          className="tests-case-builder__evidence-section"
           bodyClassName="tests-case-builder__section-body"
         >
           <div className="tests-case-builder__evidence-grid">
@@ -781,22 +794,7 @@ export function TestCaseDefinitionBuilder({
               enabled={evidencePolicy.retainArtifacts}
             />
           </div>
-          <div className="tests-case-builder__redaction-note">
-            {evidencePolicy.redactSecrets ? (
-              <Check width={14} height={14} aria-hidden="true" />
-            ) : null}
-            Secret redaction is {evidencePolicy.redactSecrets ? "enabled" : "disabled"} for this plan.
-          </div>
         </PlatformSettingsSection>
-
-        <details className="tests-case-builder__raw-definition">
-          <summary>Advanced definition</summary>
-          <pre>{JSON.stringify({
-            target: targetLabel(target),
-            request: testCase.request,
-            assertions: testCase.assertions,
-          }, null, 2)}</pre>
-        </details>
       </PlatformSettingsSectionList>
     </div>
   );

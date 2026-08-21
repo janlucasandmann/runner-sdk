@@ -31,6 +31,10 @@ describe("RunnerChat Batch capability", () => {
     );
     expect(capabilityRows[0]?.textContent).toContain("Batch");
     expect(capabilityRows[0]?.textContent).toContain("Save work to Batches");
+    expect(Array.from(capabilityRows).some((row) => (
+      row.textContent?.includes("Loop")
+      && row.textContent?.includes("Run a verified improvement loop")
+    ))).toBe(true);
   });
 
   it("saves staged work on the shelf without starting a thread", async () => {

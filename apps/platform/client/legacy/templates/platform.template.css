@@ -1115,12 +1115,12 @@
           --tb-task-input-base-bg: rgba(255, 255, 255, 0.1);
         }
   
-        .playground-shell.is-initial-thread-page .tb-runner-chat.playground-thread-runner .task-input-box {
+        .playground-shell .tb-runner-chat.playground-thread-runner.is-home-composer-surface .task-input-box {
           --tb-task-input-overlay: transparent;
           --tb-task-input-base-bg: transparent;
         }
   
-        .playground-shell:not(.is-initial-thread-page) .tb-runner-chat.playground-thread-runner .task-input-box {
+        .playground-shell .tb-runner-chat.playground-thread-runner.is-thread-composer-surface .task-input-box {
           --tb-task-input-overlay: transparent;
           --tb-task-input-base-bg: rgba(30, 30, 30, 0.9);
           -webkit-backdrop-filter: blur(5px);

@@ -452,7 +452,15 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /evaluationRunSubmitting
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /evaluationCreateSubmittingRef\.current = true;[\s\S]*?setEvaluationCreateSubmitting\(true\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /evaluationCreateRequestIdRef\.current = createPlaygroundEvaluationId\("eval_create"\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /clientRequestId: creationRequestId/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /if \(evaluationCreateAttemptedRef\.current\)[\s\S]*?"\/evaluations\?limit=500"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /if \(evaluationCreateAttemptedRef\.current\)[\s\S]*?"\/evaluations\?view=summary&limit=500"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /const EVALUATION_OVERVIEW_INITIAL_PAGE_SIZE = 20;/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /const EVALUATION_OVERVIEW_PAGE_INCREMENT = 10;/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /\?view=summary&offset=" \+ normalizedOffset \+ "&limit=/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /supportsOverviewSummaries/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /"\/evaluations\?offset="/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /\/evaluations\?limit=500/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /\/evaluations\/runs\?limit=1000/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /incrementalLoading: \{[\s\S]*?onLoadMore: loadMoreBackendEvaluationSets/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /setEvaluationSets\(\(current\) => deduplicatePlaygroundEvaluationSets/);
 assert.match(evaluationCreateModalScript, /"aria-busy": evaluationCreateSubmitting \|\| undefined/);
 assert.match(evaluationCreateModalScript, /playground-evaluations-create-submit-spinner/);
@@ -565,7 +573,12 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /onDeleteMany: \(sets\) =>
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(PlatformDataTable/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(EvaluationDetailPage/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /className: "playground-content-title playground-evaluations-title-input",[\s\S]{0,160}?size:/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationDetailSidebarRow\("pass-threshold"/);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views,
+  /React\.createElement\(PlatformServiceDetailPropertyList,[\s\S]*?React\.createElement\(PlatformServiceDetailProperty, \{[\s\S]*?label: "Evaluator"[\s\S]*?label: passThresholdLabel[\s\S]*?label: "Creator"[\s\S]*?label: "Owner"/,
+);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /label: "Cases"/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /label: "Runs"/);
 assert.match(
   EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views,
   /React\.createElement\(PlatformButtonSelector, \{[\s\S]*?className: "playground-evaluations-detail-run-button"[\s\S]*?openRunEvaluationModal\(activeSet\.id\)[\s\S]*?"Add to Batches"/,
@@ -621,6 +634,18 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(Pla
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /evaluator: \{[\s\S]*?type: "agent",[\s\S]*?agentId: nextAgentId/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformAnalyticsSection/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /variant: "default"/);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables,
+  /function getPlaygroundEvaluationScoreLabelVariant\(value, passThreshold\)[\s\S]*?score >= threshold[\s\S]*?"green"[\s\S]*?threshold - 0\.2[\s\S]*?"yellow" : "red"/,
+);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables,
+  /function renderPlaygroundEvaluationScoreLabel\(value, passThreshold, status = ""\)[\s\S]*?React\.createElement\(PlatformLabel,[\s\S]*?variant: "blue"[\s\S]*?getPlaygroundEvaluationScoreLabelVariant\(value, passThreshold\)/,
+);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables,
+  /id: "score"[\s\S]*?renderPlaygroundEvaluationScoreLabel\([\s\S]*?run\.averageScore,[\s\S]*?set\.passThreshold,[\s\S]*?run\.status/,
+);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformAttachments/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /function renderEvaluationImportsSection\(set\)/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationImportsSection\(activeSet\)/);
@@ -651,7 +676,8 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /function renderEvaluati
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /"Run Without Changes"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /"Save & Continue"/);
 assert.match(EVALUATIONS_STYLE_FRAGMENTS.dialogs, /\.playground-evaluations-unsaved-run-copy \{[\s\S]*?font-size: 12px;/);
-assert.match(EVALUATIONS_STYLE_FRAGMENTS.detail, /\.playground-evaluations-detail-sidebar-row\.is-owner \{[\s\S]*?margin-top: 12px;[\s\S]*?padding-top: 12px;[\s\S]*?border-top: 1px solid rgba\(255, 255, 255, 0\.1\);/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /platform-resource-detail-sidebar__owner-row playground-evaluations-detail-owner-row/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /platform-resource-detail-sidebar__owner-selector playground-evaluations-detail-owner-selector/);
 assert.match(EVALUATIONS_STYLE_FRAGMENTS.detail, /\.playground-evaluations-detail-sidebar-row\.playground-evaluations-run-agent-property \{[\s\S]*?margin-top: 12px;[\s\S]*?padding-top: 12px;[\s\S]*?border-top: 1px solid rgba\(255, 255, 255, 0\.1\);/);
 assert.match(EVALUATIONS_STYLE_FRAGMENTS.detail, /\.playground-evaluations-run-again-button\.platform-button \{[\s\S]*?width: 100%;[\s\S]*?margin-top: 12px;/);
 assert.match(EVALUATIONS_STYLE_FRAGMENTS.detail, /\.playground-evaluations-thread-case-modal \{[\s\S]*?display: flex;[\s\S]*?flex-direction: column;/);

@@ -174,6 +174,31 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
           );
         }
 
+        function getPlaygroundEvaluationScoreLabelVariant(value, passThreshold) {
+          if (value === null || value === undefined || value === "") return "gray";
+          const numericScore = Number(value);
+          if (!Number.isFinite(numericScore)) return "gray";
+          const score = Math.max(0, Math.min(1, numericScore));
+          const threshold = normalizePlaygroundEvaluationPassThreshold(passThreshold);
+          if (score >= threshold) return "green";
+          return score >= Math.max(0, threshold - 0.2) ? "yellow" : "red";
+        }
+
+        function renderPlaygroundEvaluationScoreLabel(value, passThreshold, status = "") {
+          const normalizedStatus = String(status || "").trim().toLowerCase();
+          if (normalizedStatus === "queued" || normalizedStatus === "running") {
+            const statusLabel = normalizedStatus === "queued" ? "Queued" : "Running";
+            return React.createElement(PlatformLabel, {
+              variant: "blue",
+              className: "playground-evaluations-score-label is-active",
+            }, statusLabel);
+          }
+          return React.createElement(PlatformLabel, {
+            variant: getPlaygroundEvaluationScoreLabelVariant(value, passThreshold),
+            className: "playground-evaluations-score-label",
+          }, formatPlaygroundEvaluationPercent(value));
+        }
+
         function renderRunsTable(set) {
           const runs = Array.isArray(set?.runs) ? set.runs : [];
           const tableMode = evaluationRunsTableMode === "scores" ? "scores" : "runs";
@@ -306,12 +331,12 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
               accessor: (run) => Number(run.averageScore || 0),
               sortable: true,
               width: "minmax(80px, 0.65fr)",
-              cell: ({ row: run }) => {
-                const status = String(run?.status || "").trim().toLowerCase();
-                return status === "queued" || status === "running" ? "running" : formatPlaygroundEvaluationPercent(run.averageScore);
-              },
+              cell: ({ row: run }) => renderPlaygroundEvaluationScoreLabel(
+                run.averageScore,
+                set.passThreshold,
+                run.status,
+              ),
             },
-            { id: "cases", header: "Cases", accessor: (run) => Number(run.totalCount || 0), sortable: true, width: "minmax(70px, 0.55fr)", hideBelow: 680 },
             {
               id: "date",
               header: "Date",
@@ -347,7 +372,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
               sortable: true,
               sortDescFirst: true,
               width: "minmax(100px, 0.75fr)",
-              cell: ({ row }) => formatPlaygroundEvaluationPercent(row.latestScore),
+              cell: ({ row }) => renderPlaygroundEvaluationScoreLabel(row.latestScore, set.passThreshold),
             },
             {
               id: "averageScore",
@@ -356,7 +381,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
               sortable: true,
               sortDescFirst: true,
               width: "minmax(100px, 0.75fr)",
-              cell: ({ row }) => formatPlaygroundEvaluationPercent(row.averageScore),
+              cell: ({ row }) => renderPlaygroundEvaluationScoreLabel(row.averageScore, set.passThreshold),
             },
             {
               id: "runs",

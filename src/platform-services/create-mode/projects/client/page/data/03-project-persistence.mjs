@@ -1415,6 +1415,16 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
         }, [taskDetailAssigneePopupMode, taskDetailAvailableAssigneePopupModes]);
 
         useEffect(() => {
+          if (taskDetailAvailableAssigneePopupModes.includes(issueComposerActorPopupMode)) {
+            return;
+          }
+          const nextMode = taskDetailAvailableAssigneePopupModes[0] || "agents";
+          if (nextMode !== issueComposerActorPopupMode) {
+            setIssueComposerActorPopupMode(nextMode);
+          }
+        }, [issueComposerActorPopupMode, taskDetailAvailableAssigneePopupModes]);
+
+        useEffect(() => {
           if (taskView === "threads") {
             setTaskView("backlog");
           }

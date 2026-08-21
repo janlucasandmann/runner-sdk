@@ -26,6 +26,7 @@
                 connectors: runRequest.connectors || null,
                 environmentId: typeof runRequest.environmentId === "string" ? runRequest.environmentId : "",
                 quotedSelection: runRequest.quotedSelection || null,
+                loopCommand: runRequest.loopCommand || null,
                 executionStarted: false,
               },
             });

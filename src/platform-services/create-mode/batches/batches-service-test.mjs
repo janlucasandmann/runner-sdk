@@ -32,6 +32,10 @@ const manualRunContractsSource = await readFile(
   new URL("../metronome/client/manual-run-contracts.ts", baseUrl),
   "utf8",
 );
+const manualRunContextSource = await readFile(
+  new URL("../metronome/client/manual-run-context.ts", baseUrl),
+  "utf8",
+);
 const navigationSource = await readFile(
   new URL("../../../platform-shell/app-sidebar/client/components/navigation.mjs", baseUrl),
   "utf8",
@@ -86,7 +90,14 @@ assert.match(overviewSource, /label: "Created by me"/);
 assert.match(overviewSource, /id: "stay_on_shelf"/);
 assert.match(overviewSource, /label: "Stay on shelf"/);
 assert.match(overviewSource, /job\.status !== "succeeded"/);
-assert.match(overviewSource, /creatorAvatarUrl: creator\.avatarUrl/);
+assert.match(overviewSource, /const owner = getBatchOwnerIdentity/);
+assert.match(overviewSource, /ownerAvatarUrl: owner\.avatarUrl/);
+assert.match(overviewSource, /header: "Owner"/);
+assert.match(overviewSource, /selection=\{\{/);
+assert.match(overviewSource, /activation: "row"/);
+assert.match(overviewSource, /description: job\.description\?\.trim\(\) \|\| "No description"/);
+assert.match(overviewSource, /updatedLabel: relativeTime\(job\.updatedAt\)/);
+assert.doesNotMatch(overviewSource, /STATUS_LABELS/);
 assert.match(overviewSource, /const JOB_TYPE_ICONS/);
 assert.match(overviewSource, /const JobIcon = JOB_TYPE_ICONS\[job\.targetKind\]/);
 assert.match(overviewSource, /icon: <JobIcon/);
@@ -105,6 +116,14 @@ assert.match(compositionSource, /renderBatchesPageNav\(\)/);
 assert.doesNotMatch(compositionSource, /onTopNavigationChange: setBatchesTopNavState/);
 assert.match(BATCHES_PAGE_CSS, /\.batches-form-grid/);
 assert.match(BATCHES_PAGE_CSS, /\.batches-page-error/);
+assert.match(
+  BATCHES_PAGE_CSS,
+  /\.resource-overview-table\.is-batches\.is-catalog-ui[\s\S]*?\.platform-data-table__row-group\.is-grouped-row[\s\S]*?> \.platform-data-table__row\s*\{[\s\S]*?padding-left:\s*var\(--platform-data-table-catalog-inline-padding\);/,
+);
+assert.doesNotMatch(
+  BATCHES_PAGE_CSS,
+  /\.platform-data-table__cell\[data-column-id="name"\][\s\S]*?padding-left/,
+);
 assert.match(
   BATCHES_PAGE_CSS,
   /\.batches-create-modal[\s\S]*\.batches-create-modal__thread-composer\.tb-runner-chat[\s\S]*\.tb-input-shell\s*\{[\s\S]*position:\s*static;/,
@@ -151,14 +170,14 @@ assert.match(targetResourcesSource, /\/evaluations\?limit=500/);
 assert.match(targetResourcesSource, /\/fine-tuning\/jobs\?view=overview&limit=100/);
 assert.match(targetResourcesSource, /loadBatchMetronomeManualRunContext/);
 assert.match(
-  targetResourcesSource,
+  manualRunContextSource,
   /const versionsPath = `\/metronomes\/\$\{encodeURIComponent\(normalizedMetronomeId\)\}\/versions`/,
 );
 assert.doesNotMatch(
-  targetResourcesSource,
+  manualRunContextSource,
   /\/versions\/\$\{encodeURIComponent\(normalizedVersionId\)\}/,
 );
-assert.match(targetResourcesSource, /fetch\(`\$\{baseUrl\}\/servers`/);
+assert.match(manualRunContextSource, /fetch\(`\$\{baseUrl\}\/servers`/);
 assert.match(targetResourcesSource, /\/projects\?view=overview/);
 assert.match(
   targetResourcesSource,

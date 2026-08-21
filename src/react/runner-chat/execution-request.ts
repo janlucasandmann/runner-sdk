@@ -11,6 +11,7 @@ import {
   buildRunnerScrapeCreationLabel,
   buildRunnerSlideCreationHiddenPrompt,
   buildRunnerSlideCreationLabel,
+  buildRunnerLoopLabel,
   getRunnerAdCreationQualityComputeTokensPerImage,
   normalizeRunnerAdCreationSettings,
   type RunnerAgentCreationCommandType,
@@ -25,6 +26,7 @@ import {
   type StagedScrapeCreationCommand,
   type StagedSkillCreationCommand,
   type StagedSlideCreationCommand,
+  type StagedLoopCommand,
 } from "./composer-commands.js";
 import {
   buildRunnerAgentGuardrailsHiddenPrompt,
@@ -50,6 +52,7 @@ export interface RunnerExecutionCreationCommands {
   scrapeCreationCommand?: StagedScrapeCreationCommand | null;
   parseCreationCommand?: StagedParseCreationCommand | null;
   adCreationCommand?: StagedAdCreationCommand | null;
+  loopCommand?: StagedLoopCommand | null;
 }
 
 export interface RunnerExecutionMessageMetadataOptions
@@ -141,6 +144,7 @@ export function buildRunnerExecutionMessageMetadata(
     && !commands.scrapeCreationCommand
     && !commands.parseCreationCommand
     && !commands.adCreationCommand
+    && !commands.loopCommand
     && connectorIds.length === 0
   ) {
     return undefined;
@@ -153,6 +157,14 @@ export function buildRunnerExecutionMessageMetadata(
   return {
     ...(connectorIds.length > 0
       ? { [RUNNER_CONNECTOR_IDS_METADATA_KEY]: connectorIds }
+      : {}),
+    ...(commands.loopCommand
+      ? {
+          loopCommand: {
+            action: "loop" as const,
+            label: buildRunnerLoopLabel(),
+          },
+        }
       : {}),
     ...(commands.slideCreationCommand
       ? {

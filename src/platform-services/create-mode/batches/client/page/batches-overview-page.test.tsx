@@ -1,12 +1,16 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { BatchJob } from "../batches-types.js";
 import { BatchCreateModal } from "./batch-create-modal.js";
-import { BatchesOverviewPage, getBatchDropIndex } from "./batches-overview-page.js";
+import {
+  BatchesOverviewPage,
+  getBatchDropIndex,
+  reorderBatchJobsForDisplay,
+} from "./batches-overview-page.js";
 
 const heldJob: BatchJob = {
   id: "batch_1",
@@ -102,6 +106,17 @@ describe("BatchesOverviewPage", () => {
     expect(container.querySelector(".is-skills.is-batches")).not.toBeNull();
     expect(container.querySelector(".lucide-message-square")).not.toBeNull();
     expect(screen.getAllByText("Review repository").length).toBeGreaterThan(0);
+    expect(screen.getByRole("columnheader", { name: "Owner" })).not.toBeNull();
+    expect(screen.queryByRole("columnheader", { name: "Creator" })).toBeNull();
+    expect(screen.getByRole("checkbox", { name: "Select all visible rows" })).not.toBeNull();
+    expect(screen.getByRole("checkbox", { name: "Select Review repository" })).not.toBeNull();
+    const overviewRow = screen.getByRole("row", { name: "Review repository" });
+    expect(overviewRow.getAttribute("draggable")).toBe("true");
+    expect(
+      within(overviewRow).getByText("Run the repository review later."),
+    ).not.toBeNull();
+    expect(within(overviewRow).queryByText("On shelf")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Reorder Review repository" })).toBeNull();
     expect(screen.queryByText(/Shelf work for later/)).toBeNull();
     await user.click(screen.getByRole("button", { name: "New Job" }));
     expect(onCreate).toHaveBeenLastCalledWith();
@@ -119,19 +134,25 @@ describe("BatchesOverviewPage", () => {
     expect(screen.getByRole("menuitem", { name: "Delete" }).classList.contains("is-danger")).toBe(false);
   });
 
-  it("filters jobs from the app-header scope switch and renders the creator identity", async () => {
+  it("filters jobs from the app-header scope switch and renders the owner identity", async () => {
     const user = userEvent.setup();
     const otherJob: BatchJob = {
       ...heldJob,
       id: "batch_2",
       userId: "user_2",
-      createdByUserId: "user_2",
+      createdByUserId: "user_3",
       name: "Team evaluation",
+      description: "",
       metadata: {
-        creator: {
+        owner: {
           userId: "user_2",
-          name: "Simone Reviewer",
+          name: "Simone Owner",
           avatarUrl: "/simone.png",
+        },
+        creator: {
+          userId: "user_3",
+          name: "Casey Creator",
+          avatarUrl: "/casey.png",
         },
       },
     };
@@ -169,7 +190,9 @@ describe("BatchesOverviewPage", () => {
     expect(screen.getByRole("radio", { name: "All Jobs" })).not.toBeNull();
     expect(screen.getByRole("radio", { name: "Created by me" })).not.toBeNull();
     expect(screen.getByText("Jan Sandmann")).not.toBeNull();
-    expect(screen.getByText("Simone Reviewer")).not.toBeNull();
+    expect(screen.getByText("Simone Owner")).not.toBeNull();
+    expect(screen.queryByText("Casey Creator")).toBeNull();
+    expect(screen.getByText("No description")).not.toBeNull();
     expect(container.querySelector('img[src="/jan.png"]')).not.toBeNull();
     expect(container.querySelector('img[src="/simone.png"]')).not.toBeNull();
 
@@ -234,6 +257,18 @@ describe("BatchesOverviewPage", () => {
     expect(
       getBatchDropIndex([capacityJob, laterShelfJob, heldJob], heldJob, capacityJob, "after"),
     ).toBe(-1);
+    const optimisticallyReordered = reorderBatchJobsForDisplay(
+      [laterShelfJob, heldJob],
+      laterShelfJob,
+      0,
+    );
+    expect(
+      optimisticallyReordered.find((job) => job.id === laterShelfJob.id)
+        ?.position,
+    ).toBe(1000);
+    expect(
+      optimisticallyReordered.find((job) => job.id === heldJob.id)?.position,
+    ).toBe(1001);
   });
 
   it("uses save and start actions for existing manual-policy jobs", async () => {

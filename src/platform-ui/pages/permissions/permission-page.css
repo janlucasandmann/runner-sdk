@@ -480,6 +480,128 @@
   min-width: 0;
 }
 
+.platform-role-permissions-page[data-platform-role-list-placement="details-sidebar"] {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 42px;
+}
+
+.platform-role-permissions-page[data-platform-role-list-placement="details-sidebar"]
+  > .platform-role-permissions-page__content {
+  box-sizing: border-box;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-role-permissions-page[data-platform-role-list-placement="details-sidebar"]
+  .platform-role-permissions-page__header {
+  margin-bottom: 20px;
+}
+
+.platform-role-permissions-page[data-platform-role-list-placement="details-sidebar"]
+  .platform-permissions-page__overview {
+  margin-bottom: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.platform-permissions-page__grouped-table {
+  --platform-data-table-surface: transparent;
+  --platform-data-table-body-background: transparent;
+  --platform-data-table-row-background: transparent;
+  --platform-data-table-header-background: transparent;
+  --platform-data-table-sticky-background: transparent;
+  width: calc(100% + 40px);
+  margin-left: -20px;
+  gap: 12px;
+}
+
+.platform-permissions-page__grouped-table .platform-data-table__toolbar {
+  min-height: 36px;
+  padding: 0 20px;
+}
+
+.platform-permissions-page__grouped-table
+  .platform-data-table__toolbar-spacer {
+  display: none;
+}
+
+.platform-permissions-page__grouped-table
+  .platform-data-table__toolbar-controls,
+.platform-permissions-page__grouped-table .platform-data-table__search {
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.platform-permissions-page__grouped-table.is-minimalistic-ui
+  .platform-data-table__surface,
+.platform-permissions-page__grouped-table.is-minimalistic-ui
+  .platform-data-table__sticky,
+.platform-permissions-page__grouped-table.is-minimalistic-ui
+  .platform-data-table__header-group,
+.platform-permissions-page__grouped-table.is-minimalistic-ui
+  .platform-data-table__header,
+.platform-permissions-page__grouped-table.is-minimalistic-ui
+  .platform-data-table__scroll,
+.platform-permissions-page__grouped-table
+  .platform-data-table__group-header {
+  background: transparent;
+}
+
+.platform-permissions-page__grouped-table
+  .platform-data-table__group-label {
+  overflow: visible;
+}
+
+.platform-permissions-page__grouped-table
+  .platform-permissions-page__ring-title {
+  --platform-permission-summary-icon-size: 24px;
+}
+
+.platform-permissions-page__grouped-table.is-minimalistic-ui
+  .platform-data-table__header,
+.platform-permissions-page__grouped-table.is-minimalistic-ui
+  .platform-data-table__row {
+  padding-right: 20px;
+  padding-left: 20px;
+}
+
+.platform-permissions-page__grouped-table.is-minimalistic-ui
+  .platform-data-table__header {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0e0e0e;
+}
+
+.platform-permissions-page__grouped-table
+  .platform-data-table__group-toggle {
+  padding-right: 20px;
+  padding-left: 20px;
+}
+
+.platform-permissions-page__grouped-table
+  .platform-data-table__group-header
+  ~ .platform-data-table__group-header {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.platform-permissions-page__permission-column {
+  text-align: right;
+}
+
+.platform-role-permissions-page__details-sidebar {
+  min-width: 0;
+}
+
+.platform-role-permissions-page__details-card.platform-ui-card {
+  min-width: 0;
+}
+
 .platform-role-permissions-page__roles,
 .playground-team-role-list {
   min-width: 0;
@@ -592,8 +714,10 @@
 .platform-role-permissions-page__assigned-members-trigger {
   display: inline-flex;
   align-items: center;
-  width: 20px;
-  height: 20px;
+  justify-content: flex-end;
+  width: auto;
+  min-width: 24px;
+  height: 24px;
   padding: 0;
   border: 0;
   border-radius: 999px;
@@ -605,13 +729,15 @@
 
 .platform-role-permissions-page__assigned-members-trigger:hover,
 .platform-role-permissions-page__assigned-members-trigger.is-open {
-  background: rgba(255, 255, 255, 0.08);
+  background: transparent;
   color: #fff;
 }
 
 .platform-role-permissions-page__assigned-avatar-group {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
   padding-left: 0;
 }
 
@@ -625,17 +751,25 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 2px solid #121212;
+  box-sizing: border-box;
+  border: 2px solid #131313;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 9px;
-  font-weight: 500;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 10px;
+  font-weight: 600;
   line-height: 1;
 }
 
+.platform-role-permissions-page__assigned-avatar,
+.platform-role-permissions-page__assigned-empty-avatar {
+  width: 24px;
+  height: 24px;
+  flex-basis: 24px;
+}
+
 .platform-role-permissions-page__assigned-avatar + .platform-role-permissions-page__assigned-avatar {
-  margin-left: -7px;
+  margin-left: -5px;
 }
 
 .platform-role-permissions-page__assigned-avatar img,
@@ -755,5 +889,15 @@
   .platform-role-permissions-page,
   .playground-team-role-pages {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 821px) and (max-width: 1180px) {
+  .platform-role-permissions-page[data-platform-role-list-placement="details-sidebar"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .platform-role-permissions-page__details-sidebar {
+    position: static;
   }
 }

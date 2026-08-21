@@ -1,4 +1,4 @@
-import { type ChangeEvent, useCallback } from "react";
+import { type ChangeEvent, type ReactNode, useCallback } from "react";
 import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
 import { PlatformToggle } from "../../../../../platform-ui/components/ui/toggle/index.js";
 import {
@@ -19,6 +19,12 @@ export interface MetronomeManualRunInputsProps {
   composerKey?: string;
   composerSubmitRequest?: number | null;
   threadComposerProps?: Partial<RunnerChatProps>;
+  renderComposerInput?: (options: {
+    contract: MetronomeManualRunContract;
+    value: string;
+    disabled: boolean;
+    onChange: (value: string) => void;
+  }) => ReactNode;
   onContractChange: (contractId: string) => void;
   onValueChange: (fieldId: string, value: unknown) => void;
   onComposerSubmit: (payload: RunnerChatComposerSubmitPayload) => boolean | Promise<boolean>;
@@ -139,6 +145,7 @@ export function MetronomeManualRunInputs({
   composerKey = "workflow-manual-run",
   composerSubmitRequest = null,
   threadComposerProps,
+  renderComposerInput,
   onContractChange,
   onValueChange,
   onComposerSubmit,
@@ -182,36 +189,45 @@ export function MetronomeManualRunInputs({
         </div>
       ) : null}
       {contract.mode === "composer" ? (
-        <RunnerChat
-          {...threadComposerProps}
-          key={`${composerKey}:${contract.id}`}
-          backendUrl={threadComposerProps?.backendUrl || ""}
-          apiKey={threadComposerProps?.apiKey || ""}
-          className="batches-create-modal__thread-composer metronome-manual-run-inputs__composer"
-          initialTask={String(values.prompt ?? "")}
-          inputMode="computer-agents"
-          placeholder={
-            contract.inputFields[0]?.placeholder || "Describe the input for this workflow run"
-          }
-          disabled={disabled}
-          autoCreateThread={false}
-          autoFocusComposer={false}
-          keepFocusOnSubmit={false}
-          showUsageInStatus={false}
-          portalComposerSuggestions
-          agentId={binding?.agentId || threadComposerProps?.agentId}
-          environmentId={binding?.environmentId || threadComposerProps?.environmentId}
-          projectId={binding?.projectId || null}
-          agents={agents}
-          environments={environments}
-          hideAgentSelector={false}
-          hideEnvironmentSelector={false}
-          lockAgentSelector={Boolean(binding)}
-          lockEnvironmentSelector={Boolean(binding)}
-          onComposerDraftChange={handleComposerDraftChange}
-          composerSubmitRequest={composerSubmitRequest}
-          onComposerSubmit={onComposerSubmit}
-        />
+        renderComposerInput ? (
+          renderComposerInput({
+            contract,
+            value: String(values.prompt ?? ""),
+            disabled,
+            onChange: handleComposerDraftChange,
+          })
+        ) : (
+          <RunnerChat
+            {...threadComposerProps}
+            key={`${composerKey}:${contract.id}`}
+            backendUrl={threadComposerProps?.backendUrl || ""}
+            apiKey={threadComposerProps?.apiKey || ""}
+            className="batches-create-modal__thread-composer metronome-manual-run-inputs__composer"
+            initialTask={String(values.prompt ?? "")}
+            inputMode="computer-agents"
+            placeholder={
+              contract.inputFields[0]?.placeholder || "Describe the input for this workflow run"
+            }
+            disabled={disabled}
+            autoCreateThread={false}
+            autoFocusComposer={false}
+            keepFocusOnSubmit={false}
+            showUsageInStatus={false}
+            portalComposerSuggestions
+            agentId={binding?.agentId || threadComposerProps?.agentId}
+            environmentId={binding?.environmentId || threadComposerProps?.environmentId}
+            projectId={binding?.projectId || null}
+            agents={agents}
+            environments={environments}
+            hideAgentSelector={false}
+            hideEnvironmentSelector={false}
+            lockAgentSelector={Boolean(binding)}
+            lockEnvironmentSelector={Boolean(binding)}
+            onComposerDraftChange={handleComposerDraftChange}
+            composerSubmitRequest={composerSubmitRequest}
+            onComposerSubmit={onComposerSubmit}
+          />
+        )
       ) : (
         <div className="metronome-manual-run-inputs__fields">
           {contract.inputFields.map((inputField) => (

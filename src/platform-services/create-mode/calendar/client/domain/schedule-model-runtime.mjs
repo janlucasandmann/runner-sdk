@@ -1,4 +1,188 @@
 export const CALENDAR_SCHEDULE_MODEL_RUNTIME_SCRIPT = `
+      function getPlaygroundScheduleExecutionSources(schedule) {
+        const source = schedule && typeof schedule === "object" && !Array.isArray(schedule) ? schedule : {};
+        const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+          ? source.metadata
+          : {};
+        return [
+          source,
+          source.execution,
+          source.lastExecution,
+          metadata,
+          metadata.execution,
+          metadata.lastExecution,
+        ].filter((candidate) => candidate && typeof candidate === "object" && !Array.isArray(candidate));
+      }
+
+      function readPlaygroundScheduleExecutionId(sources, keys) {
+        for (const source of Array.isArray(sources) ? sources : []) {
+          for (const key of keys) {
+            const value = typeof source?.[key] === "string" ? source[key].trim() : "";
+            if (value) return value;
+          }
+        }
+        return "";
+      }
+
+      function getPlaygroundScheduleExecutionHistory(schedule) {
+        const source = schedule && typeof schedule === "object" && !Array.isArray(schedule) ? schedule : {};
+        const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+          ? source.metadata
+          : {};
+        const history = [
+          source.executionHistory,
+          source.scheduleExecutions,
+          metadata.executionHistory,
+          metadata.scheduleExecutions,
+        ].find((candidate) => Array.isArray(candidate)) || [];
+        return history.filter((candidate) => candidate && typeof candidate === "object" && !Array.isArray(candidate));
+      }
+
+      function getPlaygroundScheduleThreadSources(thread) {
+        const source = thread && typeof thread === "object" && !Array.isArray(thread) ? thread : {};
+        const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+          ? source.metadata
+          : {};
+        const runnerPlayground = metadata.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+          ? metadata.runnerPlayground
+          : {};
+        const taskPreview = runnerPlayground.taskPreview && typeof runnerPlayground.taskPreview === "object" && !Array.isArray(runnerPlayground.taskPreview)
+          ? runnerPlayground.taskPreview
+          : {};
+        return [source, metadata, metadata.execution, runnerPlayground, taskPreview]
+          .filter((candidate) => candidate && typeof candidate === "object" && !Array.isArray(candidate));
+      }
+
+      function findPlaygroundScheduleExecutionThreadId(schedule, occurrenceAt = "", threadRecords = []) {
+        const scheduleId = String(schedule?.id || "").trim();
+        if (!scheduleId) return "";
+        const occurrenceTime = new Date(occurrenceAt || schedule?.scheduledTime || "").getTime();
+        const candidates = (Array.isArray(threadRecords) ? threadRecords : [])
+          .map((thread) => {
+            const sources = getPlaygroundScheduleThreadSources(thread);
+            const linkedScheduleId = readPlaygroundScheduleExecutionId(sources, [
+              "scheduleId", "schedule_id", "sourceScheduleId", "source_schedule_id",
+            ]);
+            const threadId = readPlaygroundScheduleExecutionId(sources, ["threadId", "thread_id", "id"]);
+            if (linkedScheduleId !== scheduleId || !threadId) return null;
+            const scheduledFor = readPlaygroundScheduleExecutionId(sources, [
+              "scheduledFor", "scheduled_for", "scheduledAt", "scheduled_at", "occurrenceAt", "occurrence_at",
+            ]);
+            const threadTime = new Date(
+              scheduledFor
+              || thread?.startedAt
+              || thread?.started_at
+              || thread?.createdAt
+              || thread?.created_at
+              || ""
+            ).getTime();
+            return {
+              threadId,
+              distance: Number.isFinite(occurrenceTime) && Number.isFinite(threadTime)
+                ? Math.abs(threadTime - occurrenceTime)
+                : Number.POSITIVE_INFINITY,
+              threadTime,
+            };
+          })
+          .filter(Boolean)
+          .sort((left, right) => {
+            if (left.distance !== right.distance) return left.distance - right.distance;
+            return (right.threadTime || 0) - (left.threadTime || 0);
+          });
+        if (candidates.length === 0) return "";
+        if (String(schedule?.scheduleType || "") !== "recurring") {
+          return candidates[0].threadId;
+        }
+        return candidates[0].distance <= (24 * 60 * 60 * 1000) ? candidates[0].threadId : "";
+      }
+
+      function getPlaygroundScheduleExecutionRecord(schedule, occurrenceAt = "", threadRecords = []) {
+        const occurrenceTime = new Date(occurrenceAt || "").getTime();
+        const history = getPlaygroundScheduleExecutionHistory(schedule);
+        let historyRecord = null;
+        if (history.length > 0 && Number.isFinite(occurrenceTime)) {
+          const rankedHistory = history
+            .map((record) => {
+              const scheduledFor = String(
+                record.scheduledFor || record.scheduled_for || record.occurrenceAt || record.occurrence_at || ""
+              ).trim();
+              const scheduledForTime = new Date(scheduledFor).getTime();
+              return {
+                record,
+                distance: Number.isFinite(scheduledForTime)
+                  ? Math.abs(scheduledForTime - occurrenceTime)
+                  : Number.POSITIVE_INFINITY,
+              };
+            })
+            .sort((left, right) => left.distance - right.distance);
+          if (rankedHistory[0] && rankedHistory[0].distance <= (5 * 60 * 1000)) {
+            historyRecord = rankedHistory[0].record;
+          }
+        }
+        if (!historyRecord && history.length > 0 && String(schedule?.scheduleType || "") !== "recurring") {
+          historyRecord = history[history.length - 1];
+        }
+
+        const hasUnmatchedRecurringOccurrence = !historyRecord
+          && history.length > 0
+          && String(schedule?.scheduleType || "") === "recurring"
+          && Number.isFinite(occurrenceTime);
+        const sources = historyRecord
+          ? [historyRecord].concat(getPlaygroundScheduleExecutionSources(schedule))
+          : hasUnmatchedRecurringOccurrence
+            ? []
+            : getPlaygroundScheduleExecutionSources(schedule);
+        const directThreadId = readPlaygroundScheduleExecutionId(sources, [
+            "threadId", "thread_id", "executionThreadId", "execution_thread_id",
+            "lastThreadId", "last_thread_id", "originThreadId", "origin_thread_id",
+            "sourceThreadId", "source_thread_id",
+          ]);
+        return {
+          threadId: directThreadId || findPlaygroundScheduleExecutionThreadId(schedule, occurrenceAt, threadRecords),
+          workflowRunId: readPlaygroundScheduleExecutionId(sources, [
+            "workflowRunId", "workflow_run_id", "metronomeRunId", "metronome_run_id",
+            "lastWorkflowRunId", "last_workflow_run_id", "runId", "run_id",
+          ]),
+        };
+      }
+
+      function getPlaygroundScheduleExecutionAction(schedule, occurrenceAt = "", nowValue = Date.now(), threadRecords = []) {
+        const source = schedule && typeof schedule === "object" && !Array.isArray(schedule) ? schedule : {};
+        const eventAt = String(
+          occurrenceAt
+          || source.scheduledTime
+          || source.scheduled_time
+          || source.lastRunAt
+          || source.last_run_at
+          || ""
+        ).trim();
+        const eventTime = new Date(eventAt).getTime();
+        const nowTime = nowValue instanceof Date ? nowValue.getTime() : Number(nowValue);
+        if (!Number.isFinite(eventTime) || !Number.isFinite(nowTime) || eventTime >= nowTime) {
+          return null;
+        }
+        const execution = getPlaygroundScheduleExecutionRecord(source, eventAt, threadRecords);
+        if (!execution.threadId && !execution.workflowRunId) {
+          return null;
+        }
+        const targetType = normalizePlaygroundScheduleTargetType(
+          source.targetType
+          || source.target_type
+          || source.metadata?.scheduleTargetType
+          || source.metadata?.targetType
+          || source.metadata?.targetKind
+        );
+        return {
+          ...execution,
+          targetType,
+          label: targetType === "workflow"
+            ? "View Workflow"
+            : targetType === "loop"
+              ? "View Loop"
+              : "View Thread",
+        };
+      }
+
       function normalizePlaygroundScheduleRecord(schedule) {
         if (!schedule || typeof schedule !== "object") {
           return buildPlaygroundDefaultScheduleDraft();
@@ -44,6 +228,7 @@ export const CALENDAR_SCHEDULE_MODEL_RUNTIME_SCRIPT = `
           schedule.taskColor
           || metadata?.taskColor
           || metadata?.color
+          || "blue"
         );
         const priority = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === schedule.priority)
           ? schedule.priority
@@ -59,6 +244,42 @@ export const CALENDAR_SCHEDULE_MODEL_RUNTIME_SCRIPT = `
           || metadata?.taskType
           || (normalizedParentTaskId ? "subtask" : draft.taskType)
         );
+        const targetType = normalizePlaygroundScheduleTargetType(
+          schedule.targetType
+          || schedule.target_type
+          || metadata?.scheduleTargetType
+          || metadata?.targetType
+          || metadata?.targetKind
+          || taskType
+        );
+        const workflowId = typeof schedule.workflowId === "string" && schedule.workflowId.trim()
+          ? schedule.workflowId.trim()
+          : (typeof schedule.workflow_id === "string" && schedule.workflow_id.trim()
+            ? schedule.workflow_id.trim()
+            : (typeof metadata?.workflowId === "string" && metadata.workflowId.trim()
+              ? metadata.workflowId.trim()
+              : (typeof metadata?.metronomeId === "string" && metadata.metronomeId.trim() ? metadata.metronomeId.trim() : null)));
+        const workflowName = typeof schedule.workflowName === "string" && schedule.workflowName.trim()
+          ? schedule.workflowName.trim()
+          : (typeof schedule.workflow_name === "string" && schedule.workflow_name.trim()
+            ? schedule.workflow_name.trim()
+            : (typeof metadata?.workflowName === "string" && metadata.workflowName.trim()
+              ? metadata.workflowName.trim()
+              : (typeof metadata?.metronomeName === "string" && metadata.metronomeName.trim() ? metadata.metronomeName.trim() : null)));
+        const batchJobId = typeof schedule.batchJobId === "string" && schedule.batchJobId.trim()
+          ? schedule.batchJobId.trim()
+          : (typeof schedule.batch_job_id === "string" && schedule.batch_job_id.trim()
+            ? schedule.batch_job_id.trim()
+            : (typeof metadata?.batchJobId === "string" && metadata.batchJobId.trim()
+              ? metadata.batchJobId.trim()
+              : (typeof metadata?.batch_job_id === "string" && metadata.batch_job_id.trim() ? metadata.batch_job_id.trim() : null)));
+        const batchJobName = typeof schedule.batchJobName === "string" && schedule.batchJobName.trim()
+          ? schedule.batchJobName.trim()
+          : (typeof schedule.batch_job_name === "string" && schedule.batch_job_name.trim()
+            ? schedule.batch_job_name.trim()
+            : (typeof metadata?.batchJobName === "string" && metadata.batchJobName.trim()
+              ? metadata.batchJobName.trim()
+              : (typeof metadata?.batch_job_name === "string" && metadata.batch_job_name.trim() ? metadata.batch_job_name.trim() : null)));
         const releaseId = typeof schedule.releaseId === "string" && schedule.releaseId.trim()
           ? schedule.releaseId.trim()
           : (typeof metadata?.releaseId === "string" && metadata.releaseId.trim() ? metadata.releaseId.trim() : null);
@@ -100,8 +321,13 @@ export const CALENDAR_SCHEDULE_MODEL_RUNTIME_SCRIPT = `
           task: typeof schedule.task === "string" ? schedule.task : draft.task,
           taskColor,
           priority,
-          taskType: normalizedParentTaskId ? taskType : "task",
-          parentTaskId: normalizedParentTaskId,
+          targetType,
+          workflowId: targetType === "workflow" ? workflowId : null,
+          workflowName: targetType === "workflow" ? workflowName : null,
+          batchJobId: targetType === "batch" ? batchJobId : null,
+          batchJobName: targetType === "batch" ? batchJobName : null,
+          taskType: targetType === "loop" ? "loop" : "task",
+          parentTaskId: null,
           releaseId,
           dependencyIds,
           attachments,

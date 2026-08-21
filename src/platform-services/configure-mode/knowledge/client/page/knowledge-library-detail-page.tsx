@@ -72,8 +72,11 @@ export interface KnowledgeLibraryDetailPageProps {
   versionsDrawerPortalId?: string;
   workspaceTeams?: readonly unknown[];
   workspaceTeamsLoading?: boolean;
+  workspaceTeamMembers?: readonly unknown[];
+  workspaceTeamMembersTeamId?: string;
   activeOrganizationId?: string;
   onWorkspaceTeamsRequest?: () => void;
+  onWorkspaceTeamMembersRequest?: (teamId: string) => void | Promise<void>;
   onVersionsSidebarOpenChange?: (open: boolean) => void;
   onLibraryChange: (library: KnowledgeLibrary) => void;
   onReload: () => Promise<void>;
@@ -209,15 +212,26 @@ function asRecord(value: unknown): Record<string, unknown> {
 
 function normalizeOwnerCandidate(value: unknown): KnowledgeOwnerIdentity | null {
   const source = asRecord(value);
-  const nested = [source.user, source.profile, source.account, source.member]
-    .map(asRecord)
-    .find((candidate) => Object.keys(candidate).length > 0) || {};
+  const metadata = asRecord(source.metadata);
+  const candidateSources = [
+    source,
+    asRecord(source.user),
+    asRecord(source.profile),
+    asRecord(source.account),
+    asRecord(source.member),
+    asRecord(source.identity),
+    metadata,
+    asRecord(metadata.user),
+    asRecord(metadata.profile),
+    asRecord(metadata.account),
+    asRecord(metadata.member),
+  ];
   const read = (...keys: string[]) => {
     for (const key of keys) {
-      const direct = String(source[key] || "").trim();
-      if (direct) return direct;
-      const nestedValue = String(nested[key] || "").trim();
-      if (nestedValue) return nestedValue;
+      for (const candidate of candidateSources) {
+        const candidateValue = String(candidate[key] || "").trim();
+        if (candidateValue) return candidateValue;
+      }
     }
     return "";
   };
@@ -241,8 +255,11 @@ export function KnowledgeLibraryDetailPage({
   versionsDrawerPortalId,
   workspaceTeams = [],
   workspaceTeamsLoading = false,
+  workspaceTeamMembers = [],
+  workspaceTeamMembersTeamId = "",
   activeOrganizationId = "",
   onWorkspaceTeamsRequest,
+  onWorkspaceTeamMembersRequest,
   onVersionsSidebarOpenChange,
   onLibraryChange,
   onReload,
@@ -300,8 +317,11 @@ export function KnowledgeLibraryDetailPage({
   const [ownerSelectorOpen, setOwnerSelectorOpen] = useState(false);
   const [ownerCandidatesLoading, setOwnerCandidatesLoading] = useState(false);
   const [ownerCandidates, setOwnerCandidates] = useState<KnowledgeOwnerIdentity[]>([]);
+  const [workspaceTeamMembersById, setWorkspaceTeamMembersById] = useState<
+    Record<string, readonly unknown[]>
+  >({});
+  const workspaceTeamMemberRequestsRef = useRef(new Set<string>());
   const teamsRequestedForOrganizationRef = useRef("");
-  const activeDocumentTitleInputRef = useRef<HTMLInputElement | null>(null);
   const isHistorical = viewedVersionId !== library.currentVersionId;
   const documentRevisionSignature = currentDocuments
     .map((document) => `${document.id}:${document.revisionId}`)
@@ -328,6 +348,47 @@ export function KnowledgeLibraryDetailPage({
     setVersionChangesDocuments({ left: [], right: [] });
     setVersionChangesError("");
   }, [library.id, library.name, library.description, library.currentVersionId]);
+
+  useEffect(() => {
+    setOwnerSelectorOpen(false);
+    setOwnerCandidates([]);
+  }, [activeOrganizationId]);
+
+  useEffect(() => {
+    setWorkspaceTeamMembersById({});
+    workspaceTeamMemberRequestsRef.current = new Set();
+  }, [activeOrganizationId, library.id]);
+
+  useEffect(() => {
+    const teamId = String(workspaceTeamMembersTeamId || "").trim();
+    if (!teamId || workspaceTeamsLoading) return;
+    setWorkspaceTeamMembersById((current) => {
+      if (current[teamId] === workspaceTeamMembers) return current;
+      return { ...current, [teamId]: workspaceTeamMembers };
+    });
+    workspaceTeamMemberRequestsRef.current.delete(teamId);
+  }, [workspaceTeamMembers, workspaceTeamMembersTeamId, workspaceTeamsLoading]);
+
+  const requestWorkspaceTeamMembers = useCallback((teamId: string) => {
+    const normalizedTeamId = String(teamId || "").trim();
+    if (
+      !normalizedTeamId
+      || Object.prototype.hasOwnProperty.call(workspaceTeamMembersById, normalizedTeamId)
+      || workspaceTeamMemberRequestsRef.current.has(normalizedTeamId)
+      || !onWorkspaceTeamMembersRequest
+    ) {
+      return;
+    }
+    workspaceTeamMemberRequestsRef.current.add(normalizedTeamId);
+    void Promise.resolve(onWorkspaceTeamMembersRequest(normalizedTeamId)).catch(() => {
+      workspaceTeamMemberRequestsRef.current.delete(normalizedTeamId);
+      setWorkspaceTeamMembersById((current) => (
+        Object.prototype.hasOwnProperty.call(current, normalizedTeamId)
+          ? current
+          : { ...current, [normalizedTeamId]: [] }
+      ));
+    });
+  }, [onWorkspaceTeamMembersRequest, workspaceTeamMembersById]);
 
   useEffect(() => {
     onVersionsSidebarOpenChange?.(versionsOpen);
@@ -477,6 +538,29 @@ export function KnowledgeLibraryDetailPage({
     () => new Set(getPlatformSharedTeamIds(library.metadata)),
     [library.metadata],
   );
+  const ownerCandidateTeamIds = useMemo(
+    () => [...sharedTeamIds].filter(Boolean),
+    [sharedTeamIds],
+  );
+  const ownerMissingTeamIds = useMemo(
+    () => ownerCandidateTeamIds.filter((teamId) => (
+      !Object.prototype.hasOwnProperty.call(workspaceTeamMembersById, teamId)
+    )),
+    [ownerCandidateTeamIds, workspaceTeamMembersById],
+  );
+  const teamOwnerCandidates = useMemo(
+    () => ownerCandidateTeamIds
+      .flatMap((teamId) => workspaceTeamMembersById[teamId] || [])
+      .map(normalizeOwnerCandidate)
+      .filter((candidate): candidate is KnowledgeOwnerIdentity => Boolean(candidate)),
+    [ownerCandidateTeamIds, workspaceTeamMembersById],
+  );
+
+  useEffect(() => {
+    if (!ownerSelectorOpen || ownerMissingTeamIds.length === 0) return;
+    requestWorkspaceTeamMembers(ownerMissingTeamIds[0]);
+  }, [ownerMissingTeamIds, ownerSelectorOpen, requestWorkspaceTeamMembers]);
+
   const shareTeams = useMemo<PlatformResourceShareTeam[]>(
     () => workspaceTeams
       .map(normalizeKnowledgeAccessTeam)
@@ -767,10 +851,7 @@ export function KnowledgeLibraryDetailPage({
         versions: result.library.versions || library.versions,
       });
       setActiveDocumentId(result.document.id);
-      globalThis.requestAnimationFrame?.(() => {
-        activeDocumentTitleInputRef.current?.focus();
-        activeDocumentTitleInputRef.current?.select();
-      });
+      return result.document.id;
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "Failed to create the document.");
     } finally {
@@ -778,12 +859,19 @@ export function KnowledgeLibraryDetailPage({
     }
   }, [api, busy, currentDocuments, documentDrafts, isHistorical, library, onLibraryChange]);
 
-  const requestDocumentRename = useCallback((file: PlatformCodeEditorFile) => {
-    if (dirty || isHistorical) return;
+  const requestDocumentRename = useCallback((file: PlatformCodeEditorFile, nextTitle: string) => {
+    if (isHistorical) return;
     setActiveDocumentId(file.id);
-    globalThis.requestAnimationFrame?.(() => {
-      activeDocumentTitleInputRef.current?.focus();
-      activeDocumentTitleInputRef.current?.select();
+    setDocumentDrafts((current) => {
+      const draft = current[file.id];
+      if (!draft) return current;
+      return {
+        ...current,
+        [file.id]: {
+          ...draft,
+          title: nextTitle,
+        },
+      };
     });
   }, [isHistorical]);
 
@@ -923,7 +1011,7 @@ export function KnowledgeLibraryDetailPage({
   };
   const ownerOptions = useMemo<PlatformOwnerOption<string, { identity: KnowledgeOwnerIdentity }>[]>(() => {
     const byId = new Map<string, KnowledgeOwnerIdentity>();
-    [ownerIdentity, ...ownerCandidates].forEach((candidate) => {
+    [ownerIdentity, ...ownerCandidates, ...teamOwnerCandidates].forEach((candidate) => {
       const key = String(candidate.id || candidate.email || "").trim();
       if (key && !byId.has(key)) byId.set(key, candidate);
     });
@@ -934,7 +1022,7 @@ export function KnowledgeLibraryDetailPage({
       avatarUrl: candidate.avatarUrl,
       data: { identity: candidate },
     }));
-  }, [ownerCandidates, ownerIdentity.avatarUrl, ownerIdentity.email, ownerIdentity.id, ownerIdentity.name]);
+  }, [ownerCandidates, ownerIdentity.avatarUrl, ownerIdentity.email, ownerIdentity.id, ownerIdentity.name, teamOwnerCandidates]);
 
   const openOwnerSelector = useCallback(async (open: boolean) => {
     if (!open) {
@@ -1023,7 +1111,7 @@ export function KnowledgeLibraryDetailPage({
         popupAlignment: "right",
         fullWidth: true,
         disabled: busy || dirty || !activeOrganizationId,
-        loading: ownerCandidatesLoading,
+        loading: ownerCandidatesLoading || (ownerSelectorOpen && ownerMissingTeamIds.length > 0),
         title: dirty ? "Save Knowledge changes before changing the owner." : undefined,
       }}
       primaryAction={onStartThread ? (
@@ -1109,7 +1197,6 @@ export function KnowledgeLibraryDetailPage({
         onChange: (markdown) => updateActiveDocumentDraft({ markdown }),
         title: (
           <input
-            ref={activeDocumentTitleInputRef}
             className="knowledge-document-workspace__title-input"
             value={activeDocumentDraft.title}
             readOnly={isHistorical}
@@ -1136,16 +1223,24 @@ export function KnowledgeLibraryDetailPage({
 
   const settings = (
     <div className="playground-server-detail-content knowledge-detail-page__settings-content">
-      <div className="playground-server-settings-tab is-function-settings-tab knowledge-settings-layout">
-        <PlatformDeploymentMap
-          className="knowledge-detail-page__storage-map"
-          regionCode={String(library.metadata.region || library.metadata.location || "eur3")}
-          title="Location"
-        />
+      <div
+        className={`playground-server-settings-tab is-function-settings-tab knowledge-settings-layout${accessDetailOpen ? " is-access-detail-view" : ""}`}
+      >
+        {!accessDetailOpen ? (
+          <PlatformDeploymentMap
+            key="knowledge-storage-map"
+            className="knowledge-detail-page__storage-map"
+            regionCode={String(library.metadata.region || library.metadata.location || "eur3")}
+            title="Location"
+          />
+        ) : null}
         <KnowledgeAccessSettings
+          key="knowledge-access-settings"
           library={library}
           api={api}
           workspaceTeams={workspaceTeams}
+          workspaceTeamMembersById={workspaceTeamMembersById}
+          onWorkspaceTeamMembersRequest={requestWorkspaceTeamMembers}
           onLibraryChange={onLibraryChange}
           onPermissionDetailOpenChange={setAccessDetailOpen}
         />
@@ -1198,11 +1293,11 @@ export function KnowledgeLibraryDetailPage({
       notice={error ? <p className="knowledge-inline-error" role="alert">{error}</p> : null}
       code={documentWorkspace}
       settings={settings}
-      sidebar={sidebar}
-      sidebarCollapsed={activeTab !== "settings" || accessDetailOpen || versionsOpen}
+      sidebar={accessDetailOpen ? null : sidebar}
+      sidebarCollapsed={activeTab !== "settings" || versionsOpen}
       ariaLabel={`${library.name} Knowledge library`}
       sidebarAriaLabel="Knowledge library information"
-      className={`knowledge-detail-page playground-project-overview-layout playground-agents-detail-overview-layout is-${activeTab}-tab`}
+      className={`knowledge-detail-page playground-project-overview-layout playground-agents-detail-overview-layout is-${activeTab}-tab${accessDetailOpen ? " is-access-detail-view" : ""}`}
       contentClassName={`knowledge-detail-content playground-project-overview-main playground-agents-detail-overview-main is-${activeTab}-tab`}
       codeClassName="knowledge-detail-page__general"
       metadataClassName="knowledge-detail-page__identity"

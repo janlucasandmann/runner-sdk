@@ -87,7 +87,19 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
         function handleTaskDescriptionEditorChange(nextValue, context = {}) {
           const previousAttachments = normalizePlaygroundTaskAttachmentList(draftTask?.attachments);
           const nextTask = updateDraftTask(
-            (current) => reconcileTaskDescriptionDraftRecord(current, nextValue, context),
+            (current) => {
+              const nextDraft = reconcileTaskDescriptionDraftRecord(current, nextValue, context);
+              if (normalizePlaygroundTaskType(nextDraft?.taskType) !== "loop") {
+                return nextDraft;
+              }
+              return {
+                ...nextDraft,
+                loop: normalizePlaygroundTaskLoopConfig({
+                  ...normalizePlaygroundTaskLoopConfig(current?.loop, current),
+                  ...parsePlaygroundTaskLoopGoalMarkdown(nextDraft.description),
+                }, nextDraft),
+              };
+            },
             { autosave: context?.source === "file-upload" || context?.source === "image-upload" }
           );
           const retainedAttachmentIds = new Set(
@@ -99,9 +111,19 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
         }
 
         function handleIssueComposerDescriptionEditorChange(nextValue, context = {}) {
-          updateIssueComposerDraft((current) =>
-            reconcileTaskDescriptionDraftRecord(current, nextValue, context)
-          );
+          updateIssueComposerDraft((current) => {
+            const nextDraft = reconcileTaskDescriptionDraftRecord(current, nextValue, context);
+            if (normalizePlaygroundTaskType(nextDraft?.taskType) !== "loop") {
+              return nextDraft;
+            }
+            return {
+              ...nextDraft,
+              loop: normalizePlaygroundTaskLoopConfig({
+                ...normalizePlaygroundTaskLoopConfig(current?.loop, current),
+                ...parsePlaygroundTaskLoopGoalMarkdown(nextDraft.description),
+              }, nextDraft),
+            };
+          });
         }
 
         function commitTaskTitleInput() {
@@ -1482,6 +1504,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
         }
 
 \${CALENDAR_PROJECTS_PAGE_ACTION_FRAGMENTS.comments}
+\${CALENDAR_PROJECTS_PAGE_ACTION_FRAGMENTS.descriptionEditor}
         function toggleTaskSkill(skillId) {
           const normalizedSkillId = normalizePlaygroundEnabledSkillIds([skillId])[0];
           if (!normalizedSkillId) {
@@ -1541,6 +1564,9 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
           updateDraftTask((current) => ({
             ...current,
             taskType: normalizedType,
+            loop: normalizedType === "loop"
+              ? normalizePlaygroundTaskLoopConfig(current.loop, current)
+              : null,
             parentTaskId: null,
           }), { autosave: true });
         }

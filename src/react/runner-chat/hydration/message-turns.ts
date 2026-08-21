@@ -4,6 +4,7 @@ import {
   normalizeResearchCreationCommandFromMetadata,
   normalizeScrapeCreationCommandFromMetadata,
   normalizeSlideCreationCommandFromMetadata,
+  normalizeLoopCommandFromMetadata,
 } from "../composer-commands.js";
 import {
   buildAssistantMessageRunMetadata,
@@ -64,6 +65,7 @@ function createUserTurn(
     scrapeCreationCommand: normalizeScrapeCreationCommandFromMetadata(message.logMetadata),
     parseCreationCommand: normalizeParseCreationCommandFromMetadata(message.logMetadata),
     adCreationCommand: normalizeAdCreationCommandFromMetadata(message.logMetadata),
+    loopCommand: normalizeLoopCommandFromMetadata(message.logMetadata),
   };
 }
 

@@ -205,13 +205,6 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
           scheduleDraftRef.current = scheduleDraft;
         }, [scheduleDraft]);
 
-        useEffect(() => () => {
-          if (scheduleAutosaveTimerRef.current) {
-            window.clearTimeout(scheduleAutosaveTimerRef.current);
-            scheduleAutosaveTimerRef.current = null;
-          }
-        }, []);
-
 	        useEffect(() => {
 	          if (!selectedProjectId || !selectedTaskId || taskView === "threads") {
 	            taskDetailAutoLoadKeyRef.current = "";

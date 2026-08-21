@@ -10,6 +10,7 @@ import { useMemo, useState } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
+  PlatformDataTableIncrementalLoadingConfig,
 } from "../../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../../../../platform-ui/components/composite/empty-state/index.js";
 import {
@@ -26,8 +27,8 @@ export interface EvaluationOverviewRow {
   evaluatorType: string;
   evaluatorAvatarUrl?: string;
   evaluatorFallback?: string;
-  caseCount: number;
-  runCount: number;
+  caseCount: number | null;
+  runCount: number | null;
   creatorLabel: string;
   creatorAvatarUrl?: string;
   creatorFallback?: string;
@@ -42,6 +43,7 @@ export interface EvaluationsOverviewPageProps {
   rows: readonly EvaluationOverviewRow[];
   loading?: boolean;
   error?: string;
+  incrementalLoading?: PlatformDataTableIncrementalLoadingConfig;
   controlsPortalId?: string;
   onOpen: (row: EvaluationOverviewRow) => void;
   onCreate: () => void;
@@ -55,6 +57,7 @@ export function EvaluationsOverviewPage({
   rows,
   loading = false,
   error = "",
+  incrementalLoading,
   controlsPortalId,
   onOpen,
   onCreate,
@@ -80,25 +83,6 @@ export function EvaluationsOverviewPage({
         ),
       },
       {
-        id: "evaluator",
-        header: "Evaluator",
-        accessor: "evaluatorLabel",
-        sortable: true,
-        width: "minmax(170px, 0.86fr)",
-        cell: ({ row }) =>
-          row.evaluatorType === "agent" ? (
-            <ResourceOverviewIdentityCell
-              title={row.evaluatorLabel}
-              imageUrl={row.evaluatorAvatarUrl}
-              fallback={row.evaluatorFallback}
-              iconClassName="is-agent"
-              size="compact"
-            />
-          ) : (
-            <ResourceOverviewValue>{row.evaluatorLabel}</ResourceOverviewValue>
-          ),
-      },
-      {
         id: "cases",
         header: "Cases",
         accessor: "caseCount",
@@ -106,7 +90,7 @@ export function EvaluationsOverviewPage({
         sortDescFirst: true,
         width: "minmax(80px, 0.4fr)",
         cell: ({ row }) => (
-          <ResourceOverviewValue>{row.caseCount}</ResourceOverviewValue>
+          <ResourceOverviewValue>{row.caseCount ?? "—"}</ResourceOverviewValue>
         ),
       },
       {
@@ -231,6 +215,7 @@ export function EvaluationsOverviewPage({
           ariaLabel: (row) => `Select ${row.name}`,
         },
         pagination: false,
+        incrementalLoading,
         toolbar: {
           search: {
             placeholder: "Search evaluations",

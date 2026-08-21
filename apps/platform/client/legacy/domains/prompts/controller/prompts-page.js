@@ -938,19 +938,28 @@
                 .map((entry) => String(entry || "").trim().toLowerCase())
                 .filter(Boolean);
               const isFallbackIdentity = !valueId || fallbackKeys.includes(valueId.toLowerCase()) || fallbackKeys.includes(email);
-              const name = explicitName && !["you", "me", "current user"].includes(explicitName.toLowerCase())
-                ? explicitName
-                : isFallbackIdentity
-                  ? fallbackName
-                  : email || valueId || "Unknown user";
+              const trustedExplicitName = getTrustedDisplayName(explicitName, email);
+              const trustedFallbackName = getTrustedDisplayName(
+                fallbackName,
+                String(fallbackSource.email || email || ""),
+              );
+              const name = trustedExplicitName
+                || (isFallbackIdentity ? trustedFallbackName : "")
+                || formatAccountDisplayName(explicitName, email, valueId || "Unknown user");
+              const fallbackEmail = isFallbackIdentity
+                ? String(fallbackSource.email || currentUserEmail || "").trim().toLowerCase()
+                : "";
+              const fallbackAvatarUrl = isFallbackIdentity
+                ? String(fallbackSource.avatarUrl || currentUserAvatarUrl || "").trim()
+                : "";
               return {
                 value: valueKey,
                 id: valueId || valueKey,
                 userId: read("userId", "user_id", "uid") || valueId || valueKey,
                 name,
-                email: email || String(fallbackSource.email || currentUserEmail || "").trim().toLowerCase(),
+                email: email || fallbackEmail,
                 avatarUrl: read("avatarUrl", "avatar_url", "photoUrl", "photoURL", "picture", "imageUrl", "imageURL")
-                  || String(fallbackSource.avatarUrl || currentUserAvatarUrl || "").trim(),
+                  || fallbackAvatarUrl,
               };
             }
 
@@ -1006,6 +1015,7 @@
             function getPromptOwnerCandidateRecords(payload) {
               if (Array.isArray(payload)) return payload;
               if (Array.isArray(payload?.data)) return payload.data;
+              if (Array.isArray(payload?.data?.members)) return payload.data.members;
               if (Array.isArray(payload?.members)) return payload.members;
               if (Array.isArray(payload?.organizationMembers)) return payload.organizationMembers;
               if (Array.isArray(payload?.organization_members)) return payload.organization_members;
@@ -1031,9 +1041,28 @@
                         + "/members?includeProfiles=1&includeUsers=1&include=profile,user,account&expand=profile,user,account",
                     )
                   : [];
+                const memberRecords = getPromptOwnerCandidateRecords(payload);
+                let memberProfilesPayload = null;
+                if (organizationId && memberRecords.length > 0) {
+                  try {
+                    memberProfilesPayload = await requestJson(
+                      "/api/real/organizations/" + encodeURIComponent(organizationId)
+                        + "/member-profiles/lookup",
+                      {
+                        method: "POST",
+                        body: JSON.stringify({ members: memberRecords }),
+                      },
+                    );
+                  } catch {
+                    memberProfilesPayload = null;
+                  }
+                }
+                const hydratedMemberRecords = typeof mergeTeamPageMemberProfiles === "function"
+                  ? mergeTeamPageMemberProfiles(memberRecords, payload, memberProfilesPayload)
+                  : memberRecords;
                 const byKey = new Map();
                 [getPromptCreatorIdentity(selectedPrompt), getPromptOwnerIdentity(selectedPrompt)]
-                  .concat(getPromptOwnerCandidateRecords(payload).map(normalizePromptOwnerCandidate))
+                  .concat(hydratedMemberRecords.map(normalizePromptOwnerCandidate))
                   .forEach((candidate) => {
                     const key = String(candidate.value || candidate.email || candidate.id || "").toLowerCase();
                     if (key && !byKey.has(key)) byKey.set(key, candidate);
@@ -1161,7 +1190,11 @@
                   description: String(source.description || nestedTeam.description || ""),
                   kind: "team",
                   roleId,
-                  roleLabel: roleId.charAt(0).toUpperCase() + roleId.slice(1),
+                  roleLabel: String(
+                    source.roleLabel
+                      || source.role_label
+                      || (roleId.charAt(0).toUpperCase() + roleId.slice(1))
+                  ),
                   createdAt: String(source.createdAt || source.created_at || nestedTeam.createdAt || ""),
                   profileImageUrl: String(
                     source.profileImageUrl
@@ -1516,41 +1549,6 @@
                 ? rows.filter((row) => !row.isCreatedByCurrentUser)
                 : rows, [normalizedPromptOverviewScope, rows]);
 
-            const promptAccessAddTeamsControl = !isDraft
-              ? React.createElement(PlatformButtonSelector, {
-                  mode: "popup",
-                  buttonVariant: "secondary",
-                  buttonSize: "small",
-                  label: "Add Teams",
-                  leading: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-                  open: promptAccessTeamMenuOpen,
-                  onOpenChange: setPromptAccessTeamMenuOpen,
-                  closeOnSelect: true,
-                  popupAriaLabel: "Add teams with prompt access",
-                  popupAlignment: "right",
-                  popupRole: "menu",
-                  popupVariant: "minimal",
-                  popupWidth: 240,
-                  disabled: promptAccessState.isSaving,
-                },
-                promptAvailableAccessTeams.length
-                  ? promptAvailableAccessTeams.map((team) => React.createElement("button", {
-                      key: team.id,
-                      type: "button",
-                      role: "menuitem",
-                      className: "platform-data-table__menu-item",
-                      onClick: () => {
-                        setPromptAccessTeamMenuOpen(false);
-                        void sharePromptWithTeam(team.id);
-                      },
-                    },
-                      React.createElement(Users, { className: "platform-data-table__menu-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", { className: "platform-data-table__menu-copy" }, team.name),
-                    ))
-                  : React.createElement("div", { className: "playground-project-teams-menu-empty" }, "All available teams have access."),
-              )
-              : null;
-
             const promptPermissionActionDefinitions = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter(
               (definition) => Array.isArray(definition?.subjectTypes)
                 && definition.subjectTypes.some((subjectType) => subjectType === "prompt" || subjectType === "prompt_team_role"),
@@ -1622,11 +1620,20 @@
                   disabled: promptAccessState.isSaving,
                   backLabel: "Settings",
                   className: "prompt-detail-page__access-settings",
+                  addTeams: {
+                    teams: promptAvailableAccessTeams,
+                    totalTeamCount: normalizedPromptWorkspaceTeams.length,
+                    loading: workspaceTeamsLoading,
+                    requiresPlan: workspaceTeamsRequiresPlan,
+                    disabled: promptAccessState.isSaving,
+                    popupAriaLabel: "Add teams with prompt access",
+                    onRequestTeams: onWorkspaceTeamsRequest,
+                    onAddTeam: (team) => sharePromptWithTeam(team.id),
+                  },
                   tableProps: {
                     className: "prompt-detail-page__access-table",
                     title: "Manage Prompt Access",
                     titleTooltip: "Controls which agents, organization roles, and teams can view, use, edit, version, publish, or delete this prompt.",
-                    trailing: promptAccessAddTeamsControl,
                     selectedIds: promptAccessSelectedTeamIds,
                     onSelectedIdsChange: setPromptAccessSelectedTeamIds,
                     pagination: {},
@@ -1733,9 +1740,6 @@
                     popupWidth: 260,
                     popupMaxHeight: "min(320px, calc(100vh - 180px))",
                     title: isDirty ? "Save prompt changes before changing the owner." : undefined,
-                    triggerClassName: "prompt-detail-page__owner-trigger",
-                    popupClassName: "prompt-detail-page__owner-menu",
-                    optionClassName: "prompt-detail-page__owner-option",
                   },
                   className: "prompt-detail-page__settings-sidebar",
                   propertiesClassName: "prompt-detail-page__settings-sidebar-properties",

@@ -6,7 +6,9 @@ export const CALENDAR_PROJECTS_PAGE_SCHEDULE_DIALOG_VIEW_SCRIPT = `
 
           const hasExistingSchedule = taskScheduleDialogState.target === "schedule"
             ? Boolean(scheduleDraft?.scheduledTime || (scheduleDraft?.scheduleType === "recurring" && scheduleDraft?.cronExpression))
-            : Boolean(draftTask?.scheduledStartAt || (draftTask?.scheduleType === "recurring" && draftTask?.cronExpression));
+            : taskScheduleDialogState.target === "issue"
+              ? Boolean(issueComposerDraft?.scheduledStartAt || (issueComposerDraft?.scheduleType === "recurring" && issueComposerDraft?.cronExpression))
+              : Boolean(draftTask?.scheduledStartAt || (draftTask?.scheduleType === "recurring" && draftTask?.cronExpression));
           const isRecurring = taskScheduleDialogState.scheduleType === "recurring";
           const selectedPresetId = taskScheduleDialogState.presetId || getPlaygroundTaskSchedulePresetId(taskScheduleDialogState.cronExpression);
           const animationClass = taskScheduleDialogPhase === "exit"

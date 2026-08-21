@@ -56,6 +56,9 @@ export function normalizeSkillOverviewRows(
         : Object.keys(asRecord(metadata.creator)).length
           ? asRecord(metadata.creator)
           : asRecord(metadata.createdBy);
+    const owner = Object.keys(asRecord(skill.owner)).length
+      ? asRecord(skill.owner)
+      : asRecord(metadata.owner);
     const updatedValue = asString(skill.updatedAt)
       || asString(skill.updated_at)
       || asString(skill.createdAt)
@@ -92,6 +95,29 @@ export function normalizeSkillOverviewRows(
           metadata.created_by_avatar_url,
         ])
       : "/img/agent-profile-pics/ca-profilepic.jpg";
+    const ownerName = isCustom
+      ? firstString([
+          owner.name,
+          owner.displayName,
+          owner.display_name,
+          skill.ownerName,
+          skill.owner_name,
+          metadata.ownerName,
+          metadata.owner_name,
+        ]) || creatorName
+      : "Computer Agents";
+    const ownerAvatarUrl = isCustom
+      ? firstString([
+          owner.avatarUrl,
+          owner.avatar_url,
+          owner.photoUrl,
+          owner.photoURL,
+          skill.ownerAvatarUrl,
+          skill.owner_avatar_url,
+          metadata.ownerAvatarUrl,
+          metadata.owner_avatar_url,
+        ]) || creatorAvatarUrl
+      : "/img/agent-profile-pics/ca-profilepic.jpg";
     return [{
       id,
       name,
@@ -109,6 +135,8 @@ export function normalizeSkillOverviewRows(
       isCustom,
       creatorName,
       creatorAvatarUrl,
+      ownerName,
+      ownerAvatarUrl,
       updatedAt: parseTimestamp(updatedValue),
       updatedLabel: updatedValue
         ? formatDate(updatedValue)

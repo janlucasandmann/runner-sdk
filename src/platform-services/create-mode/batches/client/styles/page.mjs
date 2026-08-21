@@ -1,4 +1,10 @@
 export const BATCHES_PAGE_CSS = String.raw`
+  .resource-overview-table.is-batches.is-catalog-ui
+    .platform-data-table__row-group.is-grouped-row
+    > .platform-data-table__row {
+    padding-left: var(--platform-data-table-catalog-inline-padding);
+  }
+
   .batches-create-modal__header {
     min-height: 46px;
     padding: 7px 16px;

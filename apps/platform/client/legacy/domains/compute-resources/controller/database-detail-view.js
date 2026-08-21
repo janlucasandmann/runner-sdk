@@ -1169,31 +1169,6 @@
   	              return String(value || "");
   	            }
   	          };
-	          const renderAddDatabaseTeamsMenuContent = () =>
-	              databaseAddableTeams.length
-	                ? databaseAddableTeams.map((team) =>
-	                    React.createElement("button", {
-	                      key: team.id,
-	                      type: "button",
-	                      role: "menuitem",
-	                      className: "tb-popup-row playground-project-team-menu-item",
-  	                      disabled: databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
-  	                      onClick: () => void handleAddDatabaseTeamAccess(team),
-  	                    },
-  	                      React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8 }),
-  	                      React.createElement("span", null, team.name || "Untitled team")
-  	                    )
-  	                  )
-	                : React.createElement("button", {
-	                    type: "button",
-	                    role: "menuitem",
-	                    className: "tb-popup-row playground-project-team-menu-item",
-  	                    disabled: true,
-  	                  }, workspaceTeamsLoading
-  	                    ? "Loading teams..."
-  	                    : workspaceTeamsRequiresPlan
-  	                      ? "Teams require a team plan"
-	                      : "All teams already have access");
 	          const databaseOwnerLabel = String(databaseOwnerIdentity.name || databaseOwnerIdentity.email || "Owner").trim();
 	          const databaseOwnerOptions = databaseOwnerCandidates.map((candidate) => {
 	            const candidateKey = getDatabaseOwnerIdentityKey(candidate);
@@ -1245,46 +1220,16 @@
 	            optionClassName: "playground-agents-detail-owner-option",
 	          });
 	          const databaseAddTeamsControl = canManageDatabaseTeamAccess
-	            ? React.createElement(PlatformPopup, {
-	                open: databaseTeamMenuId === "add-teams",
-	                variant: "minimal",
-	                portal: true,
-	                placement: "bottom-end",
-	                portalOffset: 6,
-	                rootClassName: "playground-project-teams-add-shell playground-database-team-menu-scope",
-	                surfaceClassName: "playground-project-teams-add-menu playground-database-team-menu-scope",
-	                surfaceProps: {
-	                  role: "menu",
-	                  "aria-label": "Add teams to database",
-	                  onClick: (event) => event.stopPropagation(),
-	                  onKeyDown: (event) => {
-	                    if (event.key === "Escape") {
-	                      event.preventDefault();
-	                      event.stopPropagation();
-	                      setDatabaseTeamMenuId("");
-	                    }
-	                  },
-	                },
-	                animation: "down-in",
-	                trigger: React.createElement(PlatformSecondaryButton, {
-	                  type: "button",
-	                  size: "small",
-	                  className: "playground-project-teams-add-button",
-	                  "aria-haspopup": "menu",
-	                  "aria-expanded": databaseTeamMenuId === "add-teams" ? "true" : "false",
-	                  disabled: workspaceTeamsLoading || databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
-	                  onClick: (event) => {
-	                    event.stopPropagation();
-	                    if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
-	                    setDatabaseTeamMenuId((current) => current === "add-teams" ? "" : "add-teams");
-	                  },
-	                },
-	                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                  React.createElement("span", null, "Add Teams")
-	                ),
-	              },
-	              renderAddDatabaseTeamsMenuContent()
-	            )
+	            ? React.createElement(PlatformResourceAccessAddTeams, {
+	                teams: databaseAddableTeams,
+	                totalTeamCount: normalizedEnvironmentWorkspaceTeams.length,
+	                loading: workspaceTeamsLoading,
+	                requiresPlan: workspaceTeamsRequiresPlan,
+	                disabled: databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
+	                popupAriaLabel: "Add teams with Database access",
+	                onRequestTeams: () => onWorkspaceTeamsRequest?.({}),
+	                onAddTeam: handleAddDatabaseTeamAccess,
+	              })
 	            : null;
 	          const databaseTeamAccessPlatformSection = React.createElement("section", {
 	              className: "playground-project-settings-access-section",

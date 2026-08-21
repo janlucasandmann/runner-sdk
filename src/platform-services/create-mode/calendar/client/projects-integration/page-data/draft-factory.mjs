@@ -27,6 +27,12 @@ export const CALENDAR_PROJECTS_PAGE_DRAFT_FACTORY_SCRIPT = `
             metadata: {
               projectId: null,
               projectName: null,
+              scheduleTargetType: "task",
+              targetKind: "thread",
+              workflowId: null,
+              workflowName: null,
+              batchJobId: null,
+              batchJobName: null,
               taskColor: base.taskColor,
               source: "runner_playground_project_calendar",
             },

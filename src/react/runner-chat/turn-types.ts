@@ -6,6 +6,7 @@ import type {
   StagedResearchCreationCommand,
   StagedScrapeCreationCommand,
   StagedSlideCreationCommand,
+  StagedLoopCommand,
 } from "./composer-commands.js";
 
 export type RunnerTurnStatus =
@@ -48,4 +49,5 @@ export interface RunnerTurn {
   scrapeCreationCommand?: StagedScrapeCreationCommand | null;
   parseCreationCommand?: StagedParseCreationCommand | null;
   adCreationCommand?: StagedAdCreationCommand | null;
+  loopCommand?: StagedLoopCommand | null;
 }

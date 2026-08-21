@@ -133,4 +133,50 @@ describe("KnowledgeApi editor attachments", () => {
     });
     expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))).toEqual({});
   });
+
+  it("reads organization members from the canonical nested response envelope", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        data: {
+          members: [
+            {
+              id: "membership-2",
+              userId: "user-2",
+              email: "john@example.com",
+            },
+          ],
+        },
+      }), { status: 200, headers: { "Content-Type": "application/json" } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        profiles: [
+          {
+            userId: "user-2",
+            displayName: "John Smith",
+            email: "john@example.com",
+            photoURL: "/img/profiles/john.webp",
+          },
+        ],
+      }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    const api = new KnowledgeApi("/api/real");
+
+    await expect(api.listOrganizationMembers("organization-1")).resolves.toEqual([
+      expect.objectContaining({
+        userId: "user-2",
+        profile: expect.objectContaining({
+          displayName: "John Smith",
+          email: "john@example.com",
+        }),
+      }),
+    ]);
+    expect(fetchMock.mock.calls[0]?.[0]).toContain(
+      "/api/real/organizations/organization-1/members?includeProfiles=1",
+    );
+    expect(fetchMock.mock.calls[1]?.[0]).toContain(
+      "/api/real/organizations/organization-1/member-profiles/lookup",
+    );
+    expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))).toEqual({
+      members: [expect.objectContaining({ userId: "user-2" })],
+    });
+  });
 });

@@ -25,7 +25,7 @@
 	        import { PlatformCodeEditorWorkspace, PlatformMonacoCodeEditor } from "/dist/platform-ui/components/composite/code-editor-workspace/index.js";
   	      import { PlatformCodePreviewBox } from "/dist/platform-ui/components/composite/code-preview-box/index.js";
   	      import { PlatformDataTable } from "/dist/platform-ui/components/composite/data-table/index.js";
-          import { PlatformDeploymentMap } from "/dist/platform-ui/components/composite/deployment-map/index.js";
+          import { PlatformDeploymentMap, configurePlatformDeploymentMapRuntime } from "/dist/platform-ui/components/composite/deployment-map/index.js";
   	      import { PlatformDetailTabBar } from "/dist/platform-ui/components/composite/detail-tab-bar/index.js";
         import { PlatformDiffViewer } from "/dist/platform-ui/components/composite/diff-viewer/index.js";
   	      import { PlatformEmptyState } from "/dist/platform-ui/components/composite/empty-state/index.js";
@@ -43,11 +43,11 @@
   	      import { PlatformLabel } from "/dist/platform-ui/components/ui/label/index.js";
   	      import { PlatformSearch } from "/dist/platform-ui/components/ui/search/index.js";
   	      import { PlatformButtonSelector, PlatformSelector } from "/dist/platform-ui/components/ui/selector/index.js";
-        import { PlatformPopup, PlatformPopupDismissLayer, PlatformPopupSearchHeader, PlatformPopupSurface } from "/dist/platform-ui/components/composite/popup/index.js";
+        import { PlatformInfoTooltip, PlatformPopup, PlatformPopupDismissLayer, PlatformPopupSearchHeader, PlatformPopupSurface } from "/dist/platform-ui/components/composite/popup/index.js";
         import { PlatformResourceActionMenuItem, PlatformResourceActionsDivider, PlatformResourceActionsInformation, PlatformResourceActionsMenu, PlatformResourceHeaderActions, PlatformResourceVersionHistoryMenuItem, PlatformResourceVersionLabel } from "/dist/platform-ui/components/composite/resource-header-actions/index.js";
         import { PlatformResourceDetailSidebar } from "/dist/platform-ui/components/composite/resource-detail-sidebar/index.js";
         import { PLATFORM_PROFILE_IMAGE_PRESET_OPTIONS, PlatformProfileImagePicker, getPlatformProfileImageInitials } from "/dist/platform-ui/components/composite/profile-image-picker/index.js";
-	      import { PlatformOwnerSelector } from "/dist/platform-ui/components/composite/owner-selector/index.js";
+	      import { PlatformOrganizationMemberDirectoryProvider, PlatformOwnerSelector } from "/dist/platform-ui/components/composite/owner-selector/index.js";
 	      import { PlatformConfirmationModal, PlatformModal, PlatformModalBackdrop, PlatformModalBody, PlatformModalFooter, PlatformModalHeader, PlatformModalSurface, PlatformSetupModal, PlatformSetupModalStep, PlatformUnsavedChangesModal } from "/dist/platform-ui/components/composite/modal/index.js";
         import { PlatformGlobalSearchModal } from "/dist/platform-shell/app-header/global-search-modal/index.js";
         import { PlatformPlanGateModal, requestPlatformPlanGate, requestPlatformPlanGateFromResponse, subscribePlatformPlanGateRequests } from "/dist/platform-shell/plan-gate/plan-gate-modal/index.js";
@@ -98,9 +98,18 @@
           listPlatformConnectorCatalogEntries,
         } from "/dist/platform-integrations/connectors/index.js";
         import { createPlatformConnectionCredential, finalizePlatformConnectionCredential, normalizePlatformConnectionCredentials, reconcilePlatformConnectionCredentials, removePlatformConnectionCredential, upsertPlatformConnectionCredential } from "/dist/platform-resources/shared/connections/connection-credentials.js";
-	      import { PLATFORM_ALL_AGENTS_PRINCIPAL_ID, PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID, PlatformResourceAccessSettings, PlatformResourceAccessTable, buildPlatformSystemPrincipalPermissionMetadata, buildPlatformSystemPrincipalRolePermissionMetadata, buildPlatformTeamAccessMetadata, buildPlatformTeamRolePermissionMetadata, composePlatformAccessPrincipalRows, createPlatformSystemAccessPrincipalRows, getPlatformAccessPrincipalProfileImageUrl, getPlatformSharedTeamIds, getPlatformSystemAccessPrincipal, getPlatformSystemPrincipalPermissionSet, getPlatformSystemPrincipalRolePermissionSet, getPlatformTeamPermissionSet, getPlatformTeamRolePermissionSet, getPlatformTeamRolePermissionSets, isPlatformRoleScopedSystemAccessPrincipalId, isPlatformSystemAccessPrincipalId, normalizePlatformAccessPrincipalId } from "/dist/platform-resources/access-control/index.js";
+	      import { PLATFORM_ALL_AGENTS_PRINCIPAL_ID, PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID, PlatformResourceAccessAddTeams, PlatformResourceAccessSettings, PlatformResourceAccessTable, buildPlatformSystemPrincipalPermissionMetadata, buildPlatformSystemPrincipalRolePermissionMetadata, buildPlatformTeamAccessMetadata, buildPlatformTeamRolePermissionMetadata, composePlatformAccessPrincipalRows, createPlatformSystemAccessPrincipalRows, getPlatformAccessPrincipalProfileImageUrl, getPlatformSharedTeamIds, getPlatformSystemAccessPrincipal, getPlatformSystemPrincipalPermissionSet, getPlatformSystemPrincipalRolePermissionSet, getPlatformTeamPermissionSet, getPlatformTeamRolePermissionSets, getPlatformTeamRolePermissionSet, isPlatformRoleScopedSystemAccessPrincipalId, isPlatformSystemAccessPrincipalId, normalizePlatformAccessPrincipalId } from "/dist/platform-resources/access-control/index.js";
 	      import { MetronomeWorkflowAccessSettings } from "/dist/platform-services/create-mode/metronome/client/settings/index.js";
-	      import { PlatformServiceDetailFrame, PlatformServiceDetailPage } from "/dist/platform-ui/pages/details/index.js";
+	      import { loadMetronomeManualRunContext as loadPlatformMetronomeManualRunContext } from "/dist/platform-services/create-mode/metronome/client/manual-run-context.js";
+	      import {
+	        buildMetronomeManualRunFixture as buildPlatformMetronomeManualRunFixture,
+	        buildMetronomeManualRunInput as buildPlatformMetronomeManualRunInput,
+	        createMetronomeManualRunContracts as createPlatformMetronomeManualRunContracts,
+	        createMetronomeManualRunInitialValues as createPlatformMetronomeManualRunInitialValues,
+	        getMetronomeManualRunValidationError as getPlatformMetronomeManualRunValidationError,
+	      } from "/dist/platform-services/create-mode/metronome/client/manual-run-contracts.js";
+	      import { MetronomeManualRunInputs as PlatformMetronomeManualRunInputs } from "/dist/platform-services/create-mode/metronome/client/components/metronome-manual-run-inputs.js";
+	      import { PlatformServiceDetailFrame, PlatformServiceDetailPage, PlatformServiceDetailProperty, PlatformServiceDetailPropertyList } from "/dist/platform-ui/pages/details/index.js";
   	      import { openGoogleDrivePicker } from "/dist/platform-integrations/google-drive/google-drive-picker.js";
   
   	      function getPlaygroundSafeIconComponent(Icon, fallbackIcon = Circle) {
@@ -15487,6 +15496,7 @@
   
   __PLATFORM_COMPATIBILITY_BINDING_126__
         const PLAYGROUND_PLATFORM_NAVIGATION_STATE_KEY = "__runnerPlatformNavigation";
+        const PLAYGROUND_RESOURCE_ACCESS_HISTORY_STATE_KEY = "__computerAgentsResourceAccess";
   __PLATFORM_COMPATIBILITY_BINDING_127__      const PLAYGROUND_PLATFORM_NAVIGATION_HISTORY_LIMIT = 200;
         const PLAYGROUND_PLATFORM_NAVIGATION_RESTORE_SUPPRESSION_MS = 1800;
         const PLAYGROUND_PLATFORM_NAVIGATION_FIELDS = [
@@ -15511,6 +15521,7 @@
           "toolsView",
           "pluginId",
           "skillId",
+          "skillTab",
           "promptId",
           "sectionId",
           "teamId",
@@ -15531,6 +15542,10 @@
           "testCaseName",
           "testRunId",
           "testRunName",
+          "libraryId",
+          "libraryName",
+          "documentId",
+          "documentName",
           "fineTuneJobId",
           "developSection",
           "imagineView",

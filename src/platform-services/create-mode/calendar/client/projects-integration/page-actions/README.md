@@ -9,6 +9,7 @@ This directory contains page actions behavior for the owning feature for the Cal
 ## Contents
 
 - [`comments.mjs`](comments.mjs) — Focused implementation of Comments.
+- [`description-editor.mjs`](description-editor.mjs) — Adapts Calendar event instructions and attachments to the shared ticket instructions editor contract.
 - [`draft-updates.mjs`](draft-updates.mjs) — Focused implementation of Draft Updates.
 - [`index.mjs`](index.mjs) — Public barrel or composition entry point.
 - [`parent-picker.mjs`](parent-picker.mjs) — Focused implementation of Parent Picker.

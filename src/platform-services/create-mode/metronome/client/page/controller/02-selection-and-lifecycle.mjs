@@ -1231,6 +1231,12 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
           }, [onNodeDetailOpenChange, isMetronomeVersionHistorySidebarOpen]);
 
           useEffect(() => {
+            if (!isActiveWorkflowBuiltIn) return;
+            setMetronomeVersionChangesState(null);
+            setIsMetronomeVersionHistorySidebarOpen(false);
+          }, [isActiveWorkflowBuiltIn]);
+
+          useEffect(() => {
             if (typeof onTopNavStateChange !== "function") return;
             if (!activeWorkflow) {
               if (metronomeTopNavStateKeyRef.current) {

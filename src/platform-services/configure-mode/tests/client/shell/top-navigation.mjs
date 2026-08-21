@@ -18,6 +18,9 @@ export const TESTS_APP_TOP_NAVIGATION_SCRIPT = `        function renderTestsPage
           ) {
             pathItems.push({
               label: selectedTestPlanName || "Test Plan",
+              className: testsPageMode === "case"
+                ? "playground-tests-case-plan-breadcrumb"
+                : "",
               onClick: testsPageMode === "run"
                 || testsPageMode === "run-technical"
                 || testsPageMode === "case"

@@ -1,4 +1,3 @@
-import { Plus, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   buildPlatformSystemPrincipalPermissionMetadata,
@@ -17,7 +16,6 @@ import {
   type PlatformAccessPrincipal,
   PlatformResourceAccessSettings,
 } from "../../../../../../platform-resources/access-control/index.js";
-import { PlatformButtonSelector } from "../../../../../../platform-ui/components/ui/selector/index.js";
 import type { PlatformPermissionSet } from "../../../../../../platform-ui/pages/permissions/index.js";
 import type { InferenceEndpointRow } from "../inference-endpoint-model.js";
 
@@ -115,7 +113,6 @@ export function InferenceEndpointAccessSettings({
   const [selectedPrincipalId, setSelectedPrincipalId] = useState("");
   const [selectedRoleId, setSelectedRoleId] = useState("member");
   const [selectedTeamIds, setSelectedTeamIds] = useState<Set<string>>(new Set());
-  const [addTeamsOpen, setAddTeamsOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const metadata = useMemo(() => asRecord(endpoint.metadata), [endpoint.metadata]);
@@ -218,7 +215,6 @@ export function InferenceEndpointAccessSettings({
         },
       };
       await onMetadataChange(nextMetadata, permissionSet);
-      setAddTeamsOpen(false);
     } catch (nextError) {
       if (createdShareId) {
         await onRemoveTeamShare(team.id, createdShareId).catch(() => undefined);
@@ -286,50 +282,6 @@ export function InferenceEndpointAccessSettings({
         "inference_endpoint_team_role",
       )
     : null;
-  const addTeamsControl = (
-    <PlatformButtonSelector
-      mode="popup"
-      buttonVariant="secondary"
-      buttonSize="small"
-      label="Add Teams"
-      leading={<Plus width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
-      open={addTeamsOpen}
-      onOpenChange={setAddTeamsOpen}
-      closeOnSelect
-      popupAriaLabel="Add teams with inference endpoint access"
-      popupAlignment="right"
-      popupRole="menu"
-      popupVariant="minimal"
-      popupWidth={240}
-      disabled={busy || workspaceTeamsLoading}
-    >
-      {availableTeams.length > 0 ? (
-        availableTeams.map((team) => (
-          <button
-            key={team.id}
-            type="button"
-            role="menuitem"
-            className="platform-data-table__menu-item"
-            onClick={() => void addTeam(team.id)}
-          >
-            <Users
-              className="platform-data-table__menu-icon"
-              width={14}
-              height={14}
-              strokeWidth={1.8}
-              aria-hidden="true"
-            />
-            <span className="platform-data-table__menu-copy">{team.name}</span>
-          </button>
-        ))
-      ) : (
-        <div className="playground-project-teams-menu-empty">
-          {workspaceTeamsLoading ? "Loading teams..." : "All available teams have access."}
-        </div>
-      )}
-    </PlatformButtonSelector>
-  );
-
   return (
     <PlatformResourceAccessSettings<InferenceEndpointAccessTeam>
       teams={sharedTeams}
@@ -385,12 +337,20 @@ export function InferenceEndpointAccessSettings({
       disabled={busy}
       backLabel="Settings"
       className="inference-endpoint-detail__access-settings"
+      addTeams={{
+        teams: availableTeams,
+        totalTeamCount: allTeams.length,
+        loading: workspaceTeamsLoading,
+        disabled: busy,
+        popupAriaLabel: "Add teams with inference endpoint access",
+        onRequestTeams: onWorkspaceTeamsRequest,
+        onAddTeam: (team) => addTeam(team.id),
+      }}
       tableProps={{
         className: "inference-endpoint-detail__access-table",
         title: "Manage Inference Access",
         titleTooltip:
           "Controls which agents, organization roles, and teams can view, use, configure, test, share, or delete this endpoint.",
-        trailing: addTeamsControl,
         selectedIds: selectedTeamIds,
         onSelectedIdsChange: setSelectedTeamIds,
         pagination: {},

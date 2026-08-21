@@ -88,14 +88,49 @@ assert.match(
   "Prompt Settings must pass the selected prompt to its New Thread action.",
 );
 assert.match(
+  promptPageSource,
+  /React\.createElement\(PlatformResourceDetailSidebar,[\s\S]{0,700}owner: promptOwnerIdentity,[\s\S]{0,300}ownerOptions: promptOwnerOptions,[\s\S]{0,300}onOwnerTransfer: transferPromptOwner/,
+  "Prompt Settings must render ownership through the centralized resource sidebar and owner selector.",
+);
+assert.match(
+  promptPageSource,
+  /\/member-profiles\/lookup[\s\S]{0,500}mergeTeamPageMemberProfiles\(memberRecords, payload, memberProfilesPayload\)/,
+  "Prompt owner candidates must be enriched through the authoritative organization profile directory.",
+);
+assert.match(
+  promptPageSource,
+  /const fallbackAvatarUrl = isFallbackIdentity[\s\S]{0,180}: "";[\s\S]{0,350}avatarUrl:[\s\S]{0,180}\|\| fallbackAvatarUrl/,
+  "Prompt identities without an avatar must not inherit the signed-in user's profile image.",
+);
+assert.match(
+  toolsRenderingSource,
+  /const promptsOrganization =[\s\S]{0,500}getOrganizationPagePersonalOrganization[\s\S]{0,500}activeOrganizationId: promptsOrganizationId/,
+  "Prompt ownership must resolve the concrete active organization, including the personal organization.",
+);
+assert.match(
   toolsRenderingSource,
   /onStartThread: \(prompt\) => \{[\s\S]{0,120}handleNewThread\(\{ promptAttachment: prompt \}\)/,
   "Prompt Settings must enter the shared new-thread flow with the selected prompt.",
 );
 assert.match(
   threadNavigationSource,
-  /function handleNewThread\(options = \{\}\)[\s\S]{0,500}options\?\.promptAttachment[\s\S]{0,1400}setPendingThreadPromptAttachmentRequest/,
+  /function handleNewThread\(options = \{\}\)[\s\S]{0,1500}options\?\.promptAttachment[\s\S]{0,1500}setPendingThreadPromptAttachmentRequest/,
   "The new-thread flow must stage a prompt attachment request for the composer.",
+);
+assert.match(
+  toolsRenderingSource,
+  /onTestSkill: \(skill\) => \{[\s\S]{0,240}handleNewThread\(\{[\s\S]{0,120}privateMode: true,[\s\S]{0,120}enabledSkillIds: \[skillId\]/,
+  "Skill Settings must use the shared private new-thread handoff with its Skill selected.",
+);
+assert.match(
+  threadNavigationSource,
+  /const requestedEnabledSkillIds = normalizePlaygroundEnabledSkillIds\(options\?\.enabledSkillIds\)[\s\S]{0,2600}setRunnerEnabledSkillIds\(\(current\)[\s\S]{0,220}requestedEnabledSkillIds/,
+  "The shared new-thread flow must apply explicitly requested Skills before rendering the composer.",
+);
+assert.match(
+  threadNavigationSource,
+  /setInitialThreadPrivateMode\(options\?\.privateMode === true\)/,
+  "The shared new-thread flow must honor an explicit private-chat request.",
 );
 assert.match(
   threadRenderingSource,

@@ -1,4 +1,5 @@
 export const CALENDAR_PROJECTS_PAGE_SHELL_TEXTAREA_REFS_SCRIPT = `
+        const scheduleTitleInputRef = useRef(null);
         const scheduleTaskTextareaRef = useRef(null);
         const scheduleDescriptionTextareaRef = useRef(null);
 `;

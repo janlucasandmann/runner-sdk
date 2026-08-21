@@ -1,5 +1,5 @@
 import { Rocket, SquarePen, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
@@ -32,9 +32,6 @@ export interface ProjectsOverviewPageProps {
   onDelete: (rows: readonly ProjectOverviewRow[]) => void;
 }
 
-const INITIAL_PROJECT_LIMIT = 20;
-const PROJECT_LOAD_MORE_COUNT = 10;
-
 function getStatusVariant(status: ProjectOverviewStatus): PlatformLabelVariant {
   if (status === "on_track" || status === "completed") return "green";
   if (status === "in_progress") return "blue";
@@ -62,23 +59,6 @@ export function ProjectsOverviewPage({
   onEdit,
   onDelete,
 }: ProjectsOverviewPageProps) {
-  const [visibleRowCount, setVisibleRowCount] = useState(INITIAL_PROJECT_LIMIT);
-  const visibleRows = useMemo(
-    () => rows.slice(0, visibleRowCount),
-    [rows, visibleRowCount],
-  );
-
-  useEffect(() => {
-    setVisibleRowCount((current) =>
-      Math.min(current, Math.max(INITIAL_PROJECT_LIMIT, rows.length)),
-    );
-  }, [rows.length]);
-
-  const canLoadMore = visibleRowCount < rows.length;
-  const handleLoadMore = useCallback(() => {
-    setVisibleRowCount((current) => current + PROJECT_LOAD_MORE_COUNT);
-  }, []);
-
   const columns = useMemo<PlatformDataTableColumn<ProjectOverviewRow>[]>(
     () => [
       {
@@ -173,7 +153,7 @@ export function ProjectsOverviewPage({
       showPeriodSelector={false}
       className="is-projects"
       table={{
-        rows: visibleRows,
+        rows,
         columns,
         getRowId: (row) => row.id,
         ariaLabel: "Projects",
@@ -185,12 +165,6 @@ export function ProjectsOverviewPage({
           ariaLabel: (row) => `Select ${row.name}`,
         },
         pagination: false,
-        incrementalLoading: {
-          hasMore: canLoadMore,
-          loading: false,
-          onLoadMore: handleLoadMore,
-          loadingMessage: "Loading more projects...",
-        },
         toolbar: {
           search: {
             placeholder: "Search projects",

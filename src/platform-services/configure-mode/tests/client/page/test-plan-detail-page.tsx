@@ -531,8 +531,13 @@ export function TestPlanDetailPage({
     if (nextOpen) void loadOwnerCandidates();
   }
 
-  async function changeOwner(nextValue: string) {
-    const nextOwner = ownerCandidateByValue.get(nextValue);
+  async function changeOwner(
+    nextValue: string,
+    option?: PlatformOwnerOption<string, { candidate: TestPersonIdentity }>,
+  ) {
+    const nextOwner = option?.data?.candidate
+      ? normalizeTestPersonIdentity(option.data.candidate)
+      : ownerCandidateByValue.get(nextValue);
     if (!nextOwner || !canManageOwner || dirty || busyAction) return;
     setOwnerSelectorOpen(false);
     setBusyAction("owner");
@@ -1044,7 +1049,7 @@ export function TestPlanDetailPage({
           options={ownerOptions}
           open={ownerSelectorOpen}
           onOpenChange={handleOwnerSelectorOpenChange}
-          onTransfer={(nextValue) => changeOwner(nextValue)}
+          onTransfer={(nextValue, option) => changeOwner(nextValue, option)}
           ariaLabel="Choose test plan owner"
           resourceLabel="test plan"
           alignment="end"

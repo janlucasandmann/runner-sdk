@@ -131,6 +131,46 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 		        flex: 0 0 auto;
 		      }
 
+		      .playground-new-issue-modal > .platform-modal-header.is-search {
+		        gap: 10px;
+		      }
+
+		      .playground-new-issue-modal > .platform-modal-header .platform-modal-header__leading {
+		        overflow: visible;
+		      }
+
+		      .playground-new-issue-modal__type-selector {
+		        flex: 0 0 auto;
+		      }
+
+		      .playground-new-issue-modal__type-selector .playground-new-issue-modal__type-selector-trigger {
+		        width: 24px;
+		        min-height: 32px;
+		        justify-content: center;
+		        padding: 0;
+		      }
+
+		      .playground-new-issue-modal__type-selector .platform-selector__value {
+		        overflow: visible;
+		      }
+
+		      .playground-new-issue-modal__type-selector .platform-selector__chevrons {
+		        display: none;
+		      }
+
+		      .playground-new-issue-modal__type-selector-trigger:hover .playground-new-issue-modal__type-trigger-icon {
+		        filter: brightness(1.08);
+		      }
+
+		      .playground-new-issue-modal__type-selector-trigger:focus-visible .playground-new-issue-modal__type-trigger-icon {
+		        outline: 1px solid rgba(255, 255, 255, 0.55);
+		        outline-offset: 2px;
+		      }
+
+		      .playground-new-issue-modal__type-selector-popup.platform-selector__popup {
+		        min-width: 180px;
+		      }
+
 		      .playground-new-issue-modal .playground-tasks-issue-details-section {
 		        margin-top: 0;
 		        padding: 0;
@@ -172,6 +212,74 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 		        overflow-x: hidden;
 		        overflow-y: auto;
 		        overscroll-behavior: contain;
+		      }
+
+		      .playground-new-issue-modal__loop-goal-section {
+		        display: flex;
+		        min-height: 0;
+		        flex: 1 1 auto;
+		        flex-direction: column;
+		        border: 1px solid rgba(255, 255, 255, 0.075);
+		        border-radius: 10px;
+		        background: rgba(255, 255, 255, 0.075);
+		        overflow: hidden;
+		      }
+
+		      .playground-new-issue-modal__loop-goal-section > .playground-new-issue-modal__description.platform-instructions-editor {
+		        border: 0;
+		        border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+		        border-radius: 0;
+		        background: transparent;
+		      }
+
+		      .playground-new-issue-modal__loop-fields {
+		        display: grid;
+		        flex: 0 0 auto;
+		        grid-template-columns: repeat(4, minmax(170px, 1fr));
+		        gap: 16px;
+		        padding: 12px;
+		        overflow-x: auto;
+		      }
+
+		      .playground-new-issue-modal__loop-field {
+		        display: flex;
+		        min-height: 30px;
+		        min-width: 0;
+		        align-items: center;
+		        justify-content: flex-start;
+		        gap: 4px;
+		        color: rgba(255, 255, 255, 0.5);
+		        font-size: 12px;
+		        font-weight: 400;
+		        white-space: nowrap;
+		      }
+
+		      .playground-new-issue-modal__loop-field input {
+		        width: 4ch;
+		        min-width: 0;
+		        flex: 0 0 4ch;
+		        order: -1;
+		        box-sizing: border-box;
+		        border: 0;
+		        border-radius: 0;
+		        outline: 0;
+		        background: transparent;
+		        color: #fff;
+		        font: inherit;
+		        font-size: 12px;
+		        line-height: 1.45;
+		        min-height: 0;
+		        padding: 0;
+		        text-align: left;
+		        -moz-appearance: textfield;
+		        appearance: textfield;
+		      }
+
+		      .playground-new-issue-modal__loop-field input::-webkit-inner-spin-button,
+		      .playground-new-issue-modal__loop-field input::-webkit-outer-spin-button {
+		        margin: 0;
+		        -webkit-appearance: none;
+		        appearance: none;
 		      }
 
 		      .playground-database-access-table-section,
@@ -1338,7 +1446,9 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
         background: linear-gradient(180deg, #4f7fc5 0%, #1e4585 100%);
       }
 
-      .playground-tasks-detail-type-badge.is-loop {
+      .playground-tasks-detail-type-badge.is-loop,
+      .playground-tasks-backlog-project-icon.is-loop,
+      .playground-tasks-lane-card-type-badge.is-loop {
         background: linear-gradient(180deg, #9a72df 0%, #6542a8 100%);
       }
 

@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import test from "node:test";
 
 import { createKnowledgeService } from "./server/index.mjs";
+import { normalizeKnowledgeContext } from "./server/knowledge-context.mjs";
 import { KNOWLEDGE_APP_SCRIPT_FRAGMENTS } from "./client/shell/index.mjs";
 import { PLAYGROUND_KNOWLEDGE_CSS } from "./client/styles/index.mjs";
 
@@ -35,6 +37,22 @@ test("Knowledge service proxies reads, search, document mutations, and version p
   );
 });
 
+test("Knowledge execution context preserves scoped proposal access and provenance", () => {
+  assert.deepEqual(normalizeKnowledgeContext({
+    libraryIds: ["knowledge-1"],
+    bindings: [{ libraryId: "knowledge-1", versionId: "version-4" }],
+    mode: "propose",
+    source: "composer",
+  }), {
+    schemaVersion: "computer_agents_knowledge_context_v1",
+    enabled: true,
+    libraryIds: ["knowledge-1"],
+    bindings: [{ libraryId: "knowledge-1", versionId: "version-4" }],
+    mode: "propose",
+    source: "composer",
+  });
+});
+
 test("Knowledge shell owns the complete Configure navigation lifecycle", () => {
   assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /LibraryBig/);
   assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.navigation, /openKnowledgeDocumentPage/);
@@ -46,6 +64,13 @@ test("Knowledge shell owns the complete Configure navigation lifecycle", () => {
   assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.pageView, /currentUserId: hasSessionAuth/);
   assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.pageView, /currentUserAvatarUrl: hasSessionAuth \? accountAvatarUrl/);
   assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.pageView, /onWorkspaceTeamsRequest/);
+  assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.pageView, /workspaceTeamMembers: teamPageMembers/);
+  assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.pageView, /workspaceTeamMembersTeamId: teamPageSelectedTeamId/);
+  assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.pageView, /onWorkspaceTeamMembersRequest/);
+  assert.match(
+    KNOWLEDGE_APP_SCRIPT_FRAGMENTS.pageView,
+    /const knowledgeOrganization =[^]*?isOrganizationPageActiveOrganization[^]*?getOrganizationPagePersonalOrganization[^]*?activeOrganizationId: knowledgeOrganizationId/,
+  );
   assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.pageView, /onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen/);
   assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-knowledge-title-actions/);
   assert.match(
@@ -55,7 +80,37 @@ test("Knowledge shell owns the complete Configure navigation lifecycle", () => {
   assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-detail-page__document-workspace/);
   assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-document-workspace__title-input/);
   assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-detail-page\.file-resource-detail-page\.is-settings-tab/);
+  assert.match(
+    PLAYGROUND_KNOWLEDGE_CSS,
+    /knowledge-detail-page\.file-resource-detail-page\.is-settings-tab\.is-access-detail-view[\s\S]{0,160}width:\s*100%;[\s\S]{0,120}max-width:\s*none;/,
+  );
+  assert.match(
+    PLAYGROUND_KNOWLEDGE_CSS,
+    /knowledge-detail-page \.knowledge-detail-page__settings-content[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}max-width:\s*none;/,
+  );
   assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-detail-page__settings-sidebar/);
+});
+
+test("Knowledge library identity survives browser history and nested access navigation", async () => {
+  const platformTemplateSource = await fs.readFile(
+    new URL(
+      "../../../../apps/platform/client/legacy/templates/platform.template.js",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(
+    platformTemplateSource,
+    /PLAYGROUND_PLATFORM_NAVIGATION_FIELDS\s*=\s*\[[\s\S]*?"libraryId"[\s\S]*?"libraryName"[\s\S]*?"documentId"[\s\S]*?"documentName"/,
+  );
+  assert.match(
+    KNOWLEDGE_APP_SCRIPT_FRAGMENTS.historyCapture,
+    /libraryId:\s*selectedKnowledgeLibraryId[\s\S]*?libraryName:\s*selectedKnowledgeLibraryName/,
+  );
+  assert.match(
+    KNOWLEDGE_APP_SCRIPT_FRAGMENTS.historyRestore,
+    /libraryId:\s*entry\.libraryId\s*\|\|\s*""[\s\S]*?libraryName:\s*entry\.libraryName\s*\|\|\s*""/,
+  );
 });
 
 test("Knowledge service declines unrelated and unsupported requests", () => {

@@ -30,6 +30,10 @@ assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "created", lab
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /\{ value: "shared", label: "Shared with me" \}/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.pageView, /overviewScope: testsOverviewScope/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /selectedTestCaseName/);
+assert.match(
+  TESTS_APP_SCRIPT_FRAGMENTS.topNavigation,
+  /testsPageMode === "case"[\s\S]*?playground-tests-case-plan-breadcrumb/,
+);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /Raw Configuration/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Details"/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.topNavigation, /const isRunLevel = testsPageMode === "run"/);
@@ -214,6 +218,23 @@ assert.match(workspaceSource, /sectionControlsPortalId/);
 assert.match(workspaceSource, /mode === "case"/);
 assert.match(workspaceSource, /mode === "configuration"/);
 assert.match(workspaceSource, /mode === "run-technical"/);
+assert.match(workspaceSource, /TEST_OVERVIEW_INITIAL_PAGE_SIZE = 20/);
+assert.match(workspaceSource, /TEST_OVERVIEW_PAGE_INCREMENT = 10/);
+assert.match(workspaceSource, /incrementalLoading=\{\{/);
+assert.match(workspaceSource, /onLoadMore: loadMoreOverview/);
+const overviewLoaderSource = workspaceSource.slice(
+  workspaceSource.indexOf("const loadOverview"),
+  workspaceSource.indexOf("const loadMoreOverview"),
+);
+assert.match(overviewLoaderSource, /api\.listPlanPage/);
+assert.doesNotMatch(overviewLoaderSource, /api\.listRuns/);
+
+const testsApiSource = await fs.readFile(
+  new URL("./client/api/tests-api.ts", import.meta.url),
+  "utf8",
+);
+assert.match(testsApiSource, /view: "summary"/);
+assert.doesNotMatch(testsApiSource, /test-plans\?limit=500/);
 assert.match(workspaceSource, /TestCaseDetailPage/);
 assert.match(workspaceSource, /TestPlanRawConfigurationPage/);
 assert.match(workspaceSource, /TestRunTechnicalDetailsPage/);
@@ -280,6 +301,8 @@ assert.match(
 );
 assert.doesNotMatch(caseDetailSource, /PlatformServiceDetailPropertyList|PlatformUiCard/);
 assert.match(caseDetailSource, /Save Changes/);
+assert.match(caseDetailSource, /import \{ Bookmark,[\s\S]*?from "lucide-react"/);
+assert.match(caseDetailSource, /<Bookmark width=\{14\} height=\{14\}/);
 assert.match(caseDetailSource, /Delete Case/);
 
 const caseCodeEditorSource = await fs.readFile(
@@ -298,16 +321,69 @@ const caseDefinitionBuilderSource = await fs.readFile(
   new URL("./client/page/test-case-definition-builder.tsx", import.meta.url),
   "utf8",
 );
-assert.match(caseDefinitionBuilderSource, /TEST_CASE_TYPE_OPTIONS/);
 assert.doesNotMatch(caseDefinitionBuilderSource, /What are you testing\?/);
 assert.match(caseDefinitionBuilderSource, /Readiness requirements/);
 assert.match(caseDefinitionBuilderSource, /FunctionRequestFields/);
+assert.match(
+  caseDefinitionBuilderSource,
+  /className="tests-case-builder__form-grid is-function-request"[\s\S]*?label="Function"[\s\S]*?fullRow=\{false\}[\s\S]*?<span>Method<\/span>[\s\S]*?<span>Path<\/span>/,
+);
+assert.doesNotMatch(
+  caseDefinitionBuilderSource,
+  /JSON passed to the selected Function\. Use null when no body is required\./,
+);
+assert.match(caseDefinitionBuilderSource, /className="tests-case-builder__request-body-field"/);
+assert.match(caseDefinitionBuilderSource, /codeHeaderLabel="JSON"/);
+assert.match(caseDefinitionBuilderSource, /className="tests-case-builder__evidence-section"/);
+assert.match(
+  caseDefinitionBuilderSource,
+  /className=\{target === "computer_agents_function"[\s\S]*?tests-case-builder__function-request-section/,
+);
+assert.match(
+  PLAYGROUND_TESTS_CSS,
+  /\.tests-case-builder__form-grid\.is-function-request\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 1\.5fr\) minmax\(100px, 0\.55fr\) minmax\(0, 1fr\);/,
+);
+assert.match(
+  PLAYGROUND_TESTS_CSS,
+  /\.tests-case-builder__request-body-field[\s\S]*?\.platform-instructions-editor\.is-minimalistic-ui\s*\{[\s\S]*?border-radius:\s*10px;[\s\S]*?background:\s*#000;[\s\S]*?overflow:\s*hidden;/,
+);
+assert.match(
+  PLAYGROUND_TESTS_CSS,
+  /\.tests-case-builder__request-body-field[\s\S]*?\.platform-instructions-editor\.is-minimalistic-ui[\s\S]*?\.platform-instructions-editor__header\s*\{[\s\S]*?padding:\s*12px;[\s\S]*?border-bottom:\s*1px solid rgba\(255, 255, 255, 0\.1\);[\s\S]*?background:\s*#000;/,
+);
+assert.match(
+  PLAYGROUND_TESTS_CSS,
+  /\.platform-settings-section\.tests-case-builder__evidence-section\s*\{[\s\S]*?border-bottom:\s*0;/,
+);
+assert.match(
+  PLAYGROUND_TESTS_CSS,
+  /\.platform-settings-section\.tests-case-builder__function-request-section\s*\{[\s\S]*?border-bottom:\s*0;/,
+);
+assert.match(
+  PLAYGROUND_TESTS_CSS,
+  /\.tests-assertion-builder__row > input\s*\{[\s\S]*?border:\s*0;[\s\S]*?background:\s*rgba\(255, 255, 255, 0\.1\);/,
+);
 assert.match(caseDefinitionBuilderSource, /WorkflowRequestFields/);
 assert.match(caseDefinitionBuilderSource, /ScenarioStepEditor/);
 assert.match(caseDefinitionBuilderSource, /TestAssertionBuilder/);
+assert.match(
+  caseDefinitionBuilderSource,
+  /<PlatformToggle[\s\S]*?checked=\{enabled\}[\s\S]*?disabled=\{!selectable\}/,
+);
+assert.doesNotMatch(caseDefinitionBuilderSource, /Retained|Not retained/);
+assert.doesNotMatch(caseDefinitionBuilderSource, /Advanced definition|Secret redaction is/);
+assert.doesNotMatch(PLAYGROUND_TESTS_CSS, /tests-case-builder__raw-definition|tests-case-builder__redaction-note/);
 assert.match(caseDefinitionBuilderSource, /PlatformInstructionsEditor/);
 assert.match(caseDefinitionBuilderSource, /editorMode="code"/);
 assert.match(caseDefinitionBuilderSource, /codeLanguage="json"/);
+assert.doesNotMatch(
+  caseDefinitionBuilderSource,
+  /description="Assertions are evaluated directly against the deterministic target response\."/,
+);
+assert.doesNotMatch(
+  caseDefinitionBuilderSource,
+  /description="This case inherits the immutable evidence policy from its Test Plan\."/,
+);
 assert.match(caseDefinitionBuilderSource, /codeLanguage="shell"/);
 assert.doesNotMatch(caseDefinitionBuilderSource, /<textarea/);
 assert.doesNotMatch(caseDefinitionBuilderSource, /PlatformMonacoCodeEditor/);

@@ -17,6 +17,7 @@ import { ResourceOverviewIdentityCell } from "../../../../../platform-ui/pages/o
 import {
   getDevelopResourceCreatorIdentity,
   getDevelopResourceOwnerIdentity,
+  normalizeDevelopResourceIdentity,
   type DevelopResourceIdentity,
   type DevelopResourceIdentityInput,
 } from "../../../shared/client/domain/index.js";
@@ -256,8 +257,13 @@ export function SecurityRepositorySidebar({
   );
 
   const handleOwnerChange = useCallback(
-    async (nextValue: string) => {
-      const nextOwner = ownerCandidateByValue.get(nextValue);
+    async (
+      nextValue: string,
+      option?: PlatformOwnerOption<string, { candidate: DevelopResourceIdentity }>,
+    ) => {
+      const nextOwner = option?.data?.candidate
+        ? normalizeDevelopResourceIdentity(option.data.candidate)
+        : ownerCandidateByValue.get(nextValue);
       if (!nextOwner || !onOwnerChange || !canManageOwner) return;
       setOwnerSelectorOpen(false);
       setOwnerSaving(true);
@@ -344,7 +350,7 @@ export function SecurityRepositorySidebar({
             options={ownerOptions}
             open={ownerSelectorOpen}
             onOpenChange={handleOwnerSelectorOpenChange}
-            onTransfer={(nextValue) => handleOwnerChange(nextValue)}
+            onTransfer={(nextValue, option) => handleOwnerChange(nextValue, option)}
             ariaLabel="Choose repository owner"
             resourceLabel="security repository"
             alignment="end"

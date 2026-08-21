@@ -165,6 +165,10 @@
   -webkit-backdrop-filter: blur(20px);
 }
 
+.platform-code-editor-workspace__file.is-renaming {
+  cursor: text;
+}
+
 .platform-code-editor-workspace__file-checkbox.platform-checkbox {
   flex: 0 0 14px;
 }
@@ -223,6 +227,33 @@
   line-height: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.platform-code-editor-workspace__file-rename-input {
+  width: 100%;
+  min-width: 0;
+  height: 24px;
+  flex: 1 1 0;
+  box-sizing: border-box;
+  padding: 3px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  outline: 0;
+  background: rgba(255, 255, 255, 0.075);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.platform-code-editor-workspace__file-rename-input:focus {
+  border-color: rgba(77, 163, 255, 0.72);
+  box-shadow: 0 0 0 1px rgba(77, 163, 255, 0.2);
+}
+
+.platform-code-editor-workspace__file-rename-input:disabled {
+  opacity: 0.62;
 }
 
 .platform-code-editor-workspace__file-actions {

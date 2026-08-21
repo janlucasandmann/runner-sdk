@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -123,6 +129,7 @@ describe("EvaluationsOverviewPage", () => {
     expect(screen.queryByText("All Evaluations")).toBeNull();
     expect(screen.getByPlaceholderText("Search evaluations")).not.toBeNull();
     expect(screen.queryByRole("button", { name: "Runs" })).toBeNull();
+    expect(screen.queryByRole("columnheader", { name: "Evaluator" })).toBeNull();
     expect(
       screen.getByRole("checkbox", { name: "Select all visible rows" }),
     ).not.toBeNull();
@@ -161,5 +168,113 @@ describe("EvaluationsOverviewPage", () => {
         .map((row: EvaluationOverviewRow) => row.id)
         .sort(),
     ).toEqual(["evaluation-code", "evaluation-support"]);
+  });
+
+  it("reveals evaluations in shared 20 then 10 row increments on page scroll", async () => {
+    const evaluationRows: EvaluationOverviewRow[] = Array.from(
+      { length: 35 },
+      (_, index) => ({
+        ...rows[0],
+        id: `evaluation-${index + 1}`,
+        name: `Evaluation ${String(index + 1).padStart(2, "0")}`,
+        updatedAt: 35 - index,
+      }),
+    );
+    const { container } = render(
+      <EvaluationsOverviewPage
+        rows={evaluationRows}
+        onOpen={vi.fn()}
+        onCreate={vi.fn()}
+        onRename={vi.fn()}
+        onRun={vi.fn()}
+        onDelete={vi.fn()}
+        onDeleteMany={vi.fn()}
+      />,
+    );
+    const scroll = container.querySelector<HTMLElement>(
+      ".platform-data-table__scroll",
+    );
+    expect(scroll).not.toBeNull();
+    Object.defineProperties(scroll as HTMLElement, {
+      scrollHeight: { configurable: true, value: 1000 },
+      clientHeight: { configurable: true, value: 400 },
+      scrollTop: { configurable: true, value: 0, writable: true },
+      getBoundingClientRect: {
+        configurable: true,
+        value: () => ({
+          top: 200,
+          right: 800,
+          bottom: 760,
+          left: 0,
+          width: 800,
+          height: 560,
+          x: 0,
+          y: 200,
+          toJSON: () => ({}),
+        }),
+      },
+    });
+
+    expect(screen.getByText("Evaluation 20")).not.toBeNull();
+    expect(screen.queryByText("Evaluation 21")).toBeNull();
+
+    fireEvent.scroll(window);
+
+    await waitFor(() => {
+      expect(screen.getByText("Evaluation 30")).not.toBeNull();
+    });
+    expect(screen.queryByText("Evaluation 31")).toBeNull();
+  });
+
+  it("requests the next remote evaluation page when the visible page reaches the boundary", async () => {
+    const onLoadMore = vi.fn().mockResolvedValue(undefined);
+    const evaluationRows: EvaluationOverviewRow[] = Array.from(
+      { length: 20 },
+      (_, index) => ({
+        ...rows[0],
+        id: `remote-evaluation-${index + 1}`,
+        name: `Remote Evaluation ${index + 1}`,
+        updatedAt: 20 - index,
+      }),
+    );
+    const { container } = render(
+      <EvaluationsOverviewPage
+        rows={evaluationRows}
+        incrementalLoading={{ hasMore: true, onLoadMore }}
+        onOpen={vi.fn()}
+        onCreate={vi.fn()}
+        onRename={vi.fn()}
+        onRun={vi.fn()}
+        onDelete={vi.fn()}
+        onDeleteMany={vi.fn()}
+      />,
+    );
+    const scroll = container.querySelector<HTMLElement>(
+      ".platform-data-table__scroll",
+    );
+    expect(scroll).not.toBeNull();
+    Object.defineProperties(scroll as HTMLElement, {
+      scrollHeight: { configurable: true, value: 1000 },
+      clientHeight: { configurable: true, value: 400 },
+      scrollTop: { configurable: true, value: 0, writable: true },
+      getBoundingClientRect: {
+        configurable: true,
+        value: () => ({
+          top: 200,
+          right: 800,
+          bottom: 760,
+          left: 0,
+          width: 800,
+          height: 560,
+          x: 0,
+          y: 200,
+          toJSON: () => ({}),
+        }),
+      },
+    });
+
+    fireEvent.scroll(window);
+
+    await waitFor(() => expect(onLoadMore).toHaveBeenCalledOnce());
   });
 });

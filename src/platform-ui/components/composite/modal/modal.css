@@ -209,6 +209,13 @@
   gap: 8px;
 }
 
+.platform-modal-header__leading {
+  min-width: 0;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
 .platform-modal-header.is-search .platform-modal-header__close {
   margin: 0;
 }

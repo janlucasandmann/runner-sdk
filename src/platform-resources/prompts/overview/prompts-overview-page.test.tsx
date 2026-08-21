@@ -28,6 +28,7 @@ describe("PromptsOverviewPage", () => {
     );
 
     expect(screen.getByText("Release summary")).not.toBeNull();
+    expect(screen.getByRole("columnheader", { name: "Creator" })).not.toBeNull();
     expect(
       container.querySelector(".resource-overview-identity__visual .lucide-message-square-text"),
     ).not.toBeNull();

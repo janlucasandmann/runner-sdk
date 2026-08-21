@@ -140,6 +140,23 @@ describe("PlatformModal", () => {
 
     const describedDialog = screen.getByRole("dialog", { name: "Title with description" });
     expect(describedDialog.querySelector(".platform-modal-header.is-title-only")).toBeNull();
+
+    rerender(
+      <PlatformModal
+        open
+        visible
+        portal={false}
+        title="Title with leading control"
+        headerLeading={<button type="button">Change type</button>}
+        onClose={() => {}}
+      >
+        Modal content
+      </PlatformModal>
+    );
+
+    const leadingDialog = screen.getByRole("dialog", { name: "Title with leading control" });
+    expect(leadingDialog.querySelector(".platform-modal-header.is-title-only")).toBeNull();
+    expect(screen.getByRole("button", { name: "Change type" })).toBeTruthy();
   });
 
   it("mounts in the opening render and keeps close timing stable across rerenders", () => {
@@ -313,6 +330,7 @@ describe("PlatformModal", () => {
           onChange: onSearchChange,
           placeholder: "Search models",
         }}
+        headerLeading={<button type="button">Model family</button>}
         headerActions={<button type="button">Filter models</button>}
         onClose={() => {}}
       >
@@ -328,6 +346,10 @@ describe("PlatformModal", () => {
         .classList.contains("platform-modal-header__visually-hidden"),
     ).toBe(true);
     expect(screen.getByRole("button", { name: "Filter models" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Model family" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Model family" }).closest(".platform-modal-header__leading"),
+    ).not.toBeNull();
     await waitFor(() => expect(document.activeElement).toBe(searchInput));
 
     fireEvent.change(searchInput, { target: { value: "deepseek" } });

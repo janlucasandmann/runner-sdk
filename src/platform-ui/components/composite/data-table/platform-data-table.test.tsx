@@ -1,7 +1,16 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, createEvent, fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  createEvent,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { Copy } from "lucide-react";
 import type { ComponentProps } from "react";
@@ -354,6 +363,85 @@ describe("PlatformDataTable", () => {
     expect(controls?.contains(search)).toBe(true);
   });
 
+  it("progressively reveals catalog rows in shared 20 then 10 row increments", () => {
+    const catalogRows: TestRow[] = Array.from({ length: 35 }, (_, index) => ({
+      id: `resource-${index + 1}`,
+      name: `Resource ${String(index + 1).padStart(2, "0")}`,
+      status: "Published",
+    }));
+    const { container } = renderTable({
+      rows: catalogRows,
+      variant: "catalog-ui",
+      pagination: false,
+    });
+
+    expect(screen.getByText("Resource 20")).not.toBeNull();
+    expect(screen.queryByText("Resource 21")).toBeNull();
+    expect(screen.getByRole("table").getAttribute("aria-rowcount")).toBe("36");
+
+    const scroll = container.querySelector<HTMLElement>(
+      ".platform-data-table__scroll",
+    );
+    expect(scroll).not.toBeNull();
+    Object.defineProperties(scroll as HTMLElement, {
+      scrollHeight: { configurable: true, value: 1000 },
+      clientHeight: { configurable: true, value: 400 },
+      scrollTop: { configurable: true, value: 600, writable: true },
+    });
+
+    fireEvent.scroll(scroll as HTMLElement);
+    expect(screen.getByText("Resource 30")).not.toBeNull();
+    expect(screen.queryByText("Resource 31")).toBeNull();
+  });
+
+  it("progressively reveals catalog rows when the overview page owns scrolling", async () => {
+    const catalogRows: TestRow[] = Array.from({ length: 35 }, (_, index) => ({
+      id: `resource-${index + 1}`,
+      name: `Resource ${String(index + 1).padStart(2, "0")}`,
+      status: "Published",
+    }));
+    const { container } = renderTable({
+      rows: catalogRows,
+      variant: "catalog-ui",
+      pagination: false,
+    });
+    const scroll = container.querySelector<HTMLElement>(
+      ".platform-data-table__scroll",
+    );
+    expect(scroll).not.toBeNull();
+    Object.defineProperties(scroll as HTMLElement, {
+      // Some overview layouts report a nominal inner scroll range even while
+      // their page-level container is the surface that actually scrolls.
+      scrollHeight: { configurable: true, value: 1000 },
+      clientHeight: { configurable: true, value: 400 },
+      scrollTop: { configurable: true, value: 0, writable: true },
+      getBoundingClientRect: {
+        configurable: true,
+        value: () => ({
+          top: 200,
+          right: 800,
+          bottom: 760,
+          left: 0,
+          width: 800,
+          height: 560,
+          x: 0,
+          y: 200,
+          toJSON: () => ({}),
+        }),
+      },
+    });
+
+    expect(screen.getByText("Resource 20")).not.toBeNull();
+    expect(screen.queryByText("Resource 21")).toBeNull();
+
+    fireEvent.scroll(window);
+
+    await waitFor(() => {
+      expect(screen.getByText("Resource 30")).not.toBeNull();
+    });
+    expect(screen.queryByText("Resource 31")).toBeNull();
+  });
+
   it("renders ordered row groups that can be expanded and collapsed", async () => {
     const user = userEvent.setup();
     const onExpandedChange = vi.fn();
@@ -471,6 +559,14 @@ describe("PlatformDataTable", () => {
     Object.defineProperty(dragOverEvent, "clientY", { value: 5 });
     fireEvent(targetRow, dragOverEvent);
     expect(targetRow.classList.contains("is-drop-before")).toBe(true);
+    expect(
+      targetRow.parentElement?.classList.contains("is-reorder-shift-down"),
+    ).toBe(true);
+    expect(
+      targetRow
+        .closest(".platform-data-table")
+        ?.classList.contains("has-active-row-reorder"),
+    ).toBe(true);
     const dropEvent = createEvent.drop(targetRow, { dataTransfer });
     Object.defineProperty(dropEvent, "clientY", { value: 5 });
     fireEvent(targetRow, dropEvent);
@@ -481,6 +577,55 @@ describe("PlatformDataTable", () => {
       targetRow: rows[0],
       targetRowId: "row-b",
       placement: "before",
+    });
+  });
+
+  it("supports full-row dragging without reserving a reorder-handle column", () => {
+    const onReorder = vi.fn();
+    renderTable({
+      rowReordering: {
+        activation: "row",
+        onReorder,
+      },
+    });
+    const dataTransfer = {
+      effectAllowed: "none",
+      dropEffect: "none",
+      setData: vi.fn(),
+      getData: vi.fn(),
+    };
+    const sourceRow = screen.getByRole("row", { name: "Alpha" });
+    const targetRow = screen.getByRole("row", { name: "Beta" });
+    Object.defineProperty(targetRow, "getBoundingClientRect", {
+      configurable: true,
+      value: () => ({
+        top: 0,
+        bottom: 40,
+        left: 0,
+        right: 400,
+        width: 400,
+        height: 40,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }),
+    });
+
+    expect(sourceRow.getAttribute("draggable")).toBe("true");
+    expect(document.querySelector(".platform-data-table__reorder-handle")).toBeNull();
+    expect(document.querySelector(".platform-data-table__header-cell.is-reordering")).toBeNull();
+
+    fireEvent.dragStart(sourceRow, { dataTransfer });
+    const dropEvent = createEvent.drop(targetRow, { dataTransfer });
+    Object.defineProperty(dropEvent, "clientY", { value: 35 });
+    fireEvent(targetRow, dropEvent);
+
+    expect(onReorder).toHaveBeenCalledWith({
+      row: rows[1],
+      rowId: "row-a",
+      targetRow: rows[0],
+      targetRowId: "row-b",
+      placement: "after",
     });
   });
 

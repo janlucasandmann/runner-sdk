@@ -54,7 +54,7 @@ leaving it undefined retains the default plus icon.
 
 `variant="minimalistic-ui"` provides the flat header, borderless rows, expanded row viewport, and compact footer treatment used by resource overview pages. `ResourceOverviewPage` selects this variant by default; pass `variant="default"` in its table configuration when a resource requires the standard framed table.
 
-`variant="catalog-ui"` is the full-screen catalog treatment: it bleeds the table surface and divider lines through the standard 24px page gutter, then restores that gutter inside the toolbar and adds the table's 8px column inset so controls and cell content stay aligned. It also provides a stacked toolbar with a full-width search field, flat surfaces, and roomier rows for logo-and-description identities. Its host must allow horizontal overflow; `ResourceOverviewPage` does this automatically for catalog tables. Override `--platform-data-table-catalog-viewport-gutter` only when a full-screen host uses a different page gutter.
+`variant="catalog-ui"` is the full-screen catalog treatment: it bleeds the table surface and divider lines through the standard 24px page gutter, then restores that gutter inside the toolbar and adds the table's 8px column inset so controls and cell content stay aligned. It also provides a stacked toolbar with a full-width search field, flat surfaces, and roomier rows for logo-and-description identities. Unpaginated catalog tables progressively render 20 rows initially and reveal 10 more whenever the row viewport reaches its bottom; this behavior composes with `incrementalLoading` when additional rows still need to be fetched from the owning service. Its host must allow horizontal overflow; `ResourceOverviewPage` does this automatically for catalog tables. Override `--platform-data-table-catalog-viewport-gutter` only when a full-screen host uses a different page gutter.
 
 Use `rowGrouping` when one table needs ordered, collapsible sections without changing its columns or toolbar. Configure the section order in `groups`, return a group ID from `getGroupId`, and use `expandedIds` with `onExpandedChange` when expansion state must be controlled. Groups are expanded by default unless `defaultExpanded` is `false`.
 
@@ -64,7 +64,7 @@ The table supplies a dedicated drag handle and before/after drop feedback;
 `onReorder` performs the mutation. Retain row-menu Move up/Move down actions as
 the keyboard-accessible equivalent.
 
-Passing `pagination={{}}` enables client pagination with 20 rows per page and 10, 20, and 50-row options. Use `value` and `onChange` for controlled state. For server pagination, set `manual: true` and provide `totalCount`. Resource overview pages enable pagination by default; pass `pagination={false}` through their table configuration to opt out.
+Passing `pagination={{}}` enables client pagination with 20 rows per page and 10, 20, and 50-row options. Use `value` and `onChange` for controlled state. For server pagination, set `manual: true` and provide `totalCount`. Resource overview pages enable pagination by default except for `catalog-ui`, which defaults to its progressive 20/10 row reveal; pass an explicit pagination configuration to override either default.
 
 Use `incrementalLoading` for cursor or offset-based lists that append rows when the table body reaches its bottom. Keep the data request in the page module; the table owns scroll detection, duplicate request suppression, and the shared loading presentation.
 

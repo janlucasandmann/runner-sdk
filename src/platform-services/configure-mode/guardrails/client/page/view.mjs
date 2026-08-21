@@ -179,14 +179,13 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
           const activeGuardrailPrompt = selectedGuardrailPrompts.find((prompt) => prompt?.id === guardrailActivePromptId)
             || selectedGuardrailPrompts[0]
             || null;
-          const renameGuardrailPromptFile = (file) => {
+          const renameGuardrailPromptFile = (file, nextTitle) => {
             if (selectedGuardrailSetReadonly || !file?.id) return;
             const prompt = selectedGuardrailPrompts.find((candidate) => candidate?.id === file.id);
             if (!prompt) return;
-            const requestedTitle = window.prompt("Prompt name", String(prompt.title || "Untitled prompt"));
-            const nextTitle = String(requestedTitle || "").trim();
-            if (!nextTitle || nextTitle === String(prompt.title || "").trim()) return;
-            updateGuardrailPrompt(selectedGuardrailSet.id, prompt.id, { title: nextTitle });
+            const normalizedTitle = String(nextTitle || "").trim();
+            if (!normalizedTitle || normalizedTitle === String(prompt.title || "").trim()) return;
+            updateGuardrailPrompt(selectedGuardrailSet.id, prompt.id, { title: normalizedTitle });
           };
           const deleteGuardrailPromptFiles = (files) => {
             if (selectedGuardrailSetReadonly || !Array.isArray(files) || !files.length) return;

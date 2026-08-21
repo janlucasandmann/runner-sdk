@@ -37,6 +37,8 @@ export type PlatformCodeEditorWorkspaceVariant = "default" | "full-screen";
 export interface PlatformCodeEditorFile {
   id: string;
   label?: ReactNode;
+  /** Plain-text value used while the sidebar label is being edited. */
+  editableLabel?: string;
   tabLabel?: ReactNode;
   editorMode?: "code" | "markdown";
   icon?: ReactNode;
@@ -100,10 +102,22 @@ export interface PlatformCodeEditorWorkspaceProps {
   selectedFileIds?: ReadonlySet<string> | readonly string[];
   defaultSelectedFileIds?: ReadonlySet<string> | readonly string[];
   onFileSelectionChange?: (change: PlatformCodeEditorFileSelectionChange) => void;
-  onFileRename?: (file: PlatformCodeEditorFile) => void | Promise<void>;
+  /** Enables inline sidebar renaming and persists the committed label. */
+  onFileRename?: (
+    file: PlatformCodeEditorFile,
+    nextLabel: string,
+  ) => void | Promise<void>;
   onFilesDelete?: (files: readonly PlatformCodeEditorFile[]) => void | Promise<void>;
   onFilesMove?: (move: PlatformCodeEditorFileMove) => void | Promise<void>;
-  onCreateFile?: () => void | Promise<void>;
+  /**
+   * Return the created file (or its id) to open its inline label editor as
+   * soon as it appears in the controlled `files` collection.
+   */
+  onCreateFile?: () =>
+    | string
+    | PlatformCodeEditorFile
+    | void
+    | Promise<string | PlatformCodeEditorFile | void>;
   createFileLabel?: ReactNode;
   createFileButtonLabel?: string;
   onUploadFiles?: () => void | Promise<void>;
@@ -174,6 +188,13 @@ function normalizeFileSelection(
       .map((fileId) => String(fileId || "").trim())
       .filter(Boolean),
   );
+}
+
+function getEditableFileLabel(file: PlatformCodeEditorFile) {
+  if (typeof file.editableLabel === "string") return file.editableLabel;
+  if (typeof file.label === "string") return file.label;
+  if (typeof file.tabLabel === "string") return file.tabLabel;
+  return String(file.ariaLabel || file.id || "");
 }
 
 export function isPlatformCodeEditorMarkdownFile(
@@ -261,6 +282,10 @@ export function PlatformCodeEditorWorkspace({
     () => normalizeFileSelection(defaultSelectedFileIds),
   );
   const [createFileMenuOpen, setCreateFileMenuOpen] = useState(false);
+  const [renamingFileId, setRenamingFileId] = useState("");
+  const [renamingFileLabel, setRenamingFileLabel] = useState("");
+  const [renamePending, setRenamePending] = useState(false);
+  const [createdFileId, setCreatedFileId] = useState("");
   const [draggedFileIds, setDraggedFileIds] = useState<readonly string[]>([]);
   const [dropTargetId, setDropTargetId] = useState<string | null | undefined>(undefined);
   const [fileMenu, setFileMenu] = useState<{
@@ -272,6 +297,7 @@ export function PlatformCodeEditorWorkspace({
   const createFileMenuRootRef = useRef<HTMLDivElement | null>(null);
   const createFileMenuSurfaceRef = useRef<HTMLDivElement | null>(null);
   const fileMenuSurfaceRef = useRef<HTMLDivElement | null>(null);
+  const renameInputRef = useRef<HTMLInputElement | null>(null);
   const selectionControlled = selectedFileIds !== undefined;
   const resolvedSelectedFileIds = useMemo(
     () => selectionControlled
@@ -299,6 +325,60 @@ export function PlatformCodeEditorWorkspace({
       .filter((file): file is PlatformCodeEditorFile => Boolean(file)),
     [draggedFileIds, fileById],
   );
+
+  const cancelFileRename = useCallback(() => {
+    setRenamingFileId("");
+    setRenamingFileLabel("");
+    setRenamePending(false);
+  }, []);
+
+  const beginFileRename = useCallback((file: PlatformCodeEditorFile) => {
+    if (!onFileRename || file.renameDisabled || file.disabled) return;
+    setFileMenu(null);
+    setCreateFileMenuOpen(false);
+    onFileSelect?.(file.id);
+    setRenamingFileId(file.id);
+    setRenamingFileLabel(getEditableFileLabel(file));
+    setRenamePending(false);
+  }, [onFileRename, onFileSelect]);
+
+  const commitFileRename = useCallback(async (file: PlatformCodeEditorFile) => {
+    if (!onFileRename || renamePending || renamingFileId !== file.id) return;
+    const nextLabel = renamingFileLabel.trim();
+    const currentLabel = getEditableFileLabel(file).trim();
+    if (!nextLabel || nextLabel === currentLabel) {
+      cancelFileRename();
+      return;
+    }
+    setRenamePending(true);
+    try {
+      await onFileRename(file, nextLabel);
+      cancelFileRename();
+    } catch (error) {
+      console.error("[PlatformCodeEditorWorkspace] File rename failed", error);
+      setRenamePending(false);
+      renameInputRef.current?.focus();
+      renameInputRef.current?.select();
+    }
+  }, [cancelFileRename, onFileRename, renamePending, renamingFileId, renamingFileLabel]);
+
+  useEffect(() => {
+    if (!renamingFileId) return;
+    if (!fileById.has(renamingFileId)) {
+      cancelFileRename();
+      return;
+    }
+    renameInputRef.current?.focus();
+    renameInputRef.current?.select();
+  }, [cancelFileRename, fileById, renamingFileId]);
+
+  useEffect(() => {
+    if (!createdFileId) return;
+    const createdFile = fileById.get(createdFileId);
+    if (!createdFile) return;
+    setCreatedFileId("");
+    beginFileRename(createdFile);
+  }, [beginFileRename, createdFileId, fileById]);
 
   useEffect(() => {
     if (selectionControlled) return;
@@ -430,6 +510,23 @@ export function PlatformCodeEditorWorkspace({
     }
   }, []);
 
+  const createFile = useCallback(async () => {
+    if (!onCreateFile || creationControlsDisabled) return;
+    setFileMenu(null);
+    setCreateFileMenuOpen(false);
+    try {
+      const createdFile = await onCreateFile();
+      const nextCreatedFileId = typeof createdFile === "string"
+        ? createdFile
+        : createdFile?.id;
+      if (nextCreatedFileId && onFileRename) {
+        setCreatedFileId(nextCreatedFileId);
+      }
+    } catch (error) {
+      console.error("[PlatformCodeEditorWorkspace] File creation failed", error);
+    }
+  }, [creationControlsDisabled, onCreateFile, onFileRename]);
+
   const openFile = (file: PlatformCodeEditorFile) => {
     onFileSelect?.(file.id);
   };
@@ -560,7 +657,7 @@ export function PlatformCodeEditorWorkspace({
               disabled={renameMenuDisabled}
               onClick={() => {
                 if (!menuFile || renameMenuDisabled) return;
-                runFileAction(() => onFileRename(menuFile));
+                beginFileRename(menuFile);
               }}
             >
               <SquarePen className="tb-popup-icon" aria-hidden="true" />
@@ -620,7 +717,7 @@ export function PlatformCodeEditorWorkspace({
           role="menuitem"
           className="tb-popup-row"
           disabled={creationControlsDisabled}
-          onClick={() => runFileAction(onCreateFile)}
+          onClick={() => void createFile()}
         >
           <FilePlus2 className="tb-popup-icon" aria-hidden="true" />
           <span className="tb-popup-label">{createFileLabel}</span>
@@ -705,9 +802,28 @@ export function PlatformCodeEditorWorkspace({
             files.map((file) => {
               const isActive = file.id === activeFileId;
               const isSelected = resolvedSelectedFileIds.has(file.id);
+              const isRenaming = file.id === renamingFileId;
               const fileSelectable = fileSelectionEnabled
                 && file.selectable !== false
                 && !file.deleteDisabled;
+              const fileIdentity = (
+                <>
+                  {file.leading ? (
+                    <span
+                      className="platform-code-editor-workspace__file-leading"
+                      aria-hidden="true"
+                    >
+                      {file.leading}
+                    </span>
+                  ) : null}
+                  {file.isFolder ? (
+                    <Folder
+                      className="platform-code-editor-workspace__folder-icon"
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                </>
+              );
               return (
                 <div
                   key={file.id}
@@ -715,6 +831,7 @@ export function PlatformCodeEditorWorkspace({
                     "platform-code-editor-workspace__file",
                     isActive && "is-active",
                     isSelected && "is-selected",
+                    isRenaming && "is-renaming",
                     fileMenu?.fileId === file.id && "is-menu-open",
                     draggedFileIds.includes(file.id) && "is-dragging",
                     dropTargetId === file.id && "is-drop-target",
@@ -722,7 +839,7 @@ export function PlatformCodeEditorWorkspace({
                   style={{
                     paddingInlineStart: `${12 + Math.max(0, Number(file.depth || 0)) * 16}px`,
                   }}
-                  draggable={fileMoveEnabled && !file.moveDisabled}
+                  draggable={fileMoveEnabled && !file.moveDisabled && !isRenaming}
                   aria-grabbed={
                     fileMoveEnabled && !file.moveDisabled
                       ? draggedFileIds.includes(file.id)
@@ -755,32 +872,60 @@ export function PlatformCodeEditorWorkspace({
                       }}
                     />
                   ) : null}
-                  <button
-                    type="button"
-                    className="platform-code-editor-workspace__file-main"
-                    disabled={file.disabled}
-                    aria-current={isActive ? "page" : undefined}
-                    aria-label={file.ariaLabel}
-                    onClick={() => openFile(file)}
-                  >
-                    {file.leading ? (
-                      <span
-                        className="platform-code-editor-workspace__file-leading"
-                        aria-hidden="true"
-                      >
-                        {file.leading}
-                      </span>
-                    ) : null}
-                    {file.isFolder ? (
-                      <Folder
-                        className="platform-code-editor-workspace__folder-icon"
-                        aria-hidden="true"
+                  {isRenaming ? (
+                    <div className="platform-code-editor-workspace__file-main is-renaming">
+                      {fileIdentity}
+                      <input
+                        ref={renameInputRef}
+                        type="text"
+                        className="platform-code-editor-workspace__file-rename-input"
+                        value={renamingFileLabel}
+                        disabled={renamePending}
+                        aria-label={`Rename ${getEditableFileLabel(file)}`}
+                        autoComplete="off"
+                        spellCheck={false}
+                        onChange={(event) => setRenamingFileLabel(event.currentTarget.value)}
+                        onClick={(event) => event.stopPropagation()}
+                        onPointerDown={(event) => event.stopPropagation()}
+                        onBlur={() => void commitFileRename(file)}
+                        onKeyDown={(event) => {
+                          event.stopPropagation();
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            void commitFileRename(file);
+                          } else if (event.key === "Escape") {
+                            event.preventDefault();
+                            cancelFileRename();
+                          }
+                        }}
                       />
-                    ) : null}
-                    <span className="platform-code-editor-workspace__file-label">
-                      {file.label ?? file.id}
-                    </span>
-                  </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="platform-code-editor-workspace__file-main"
+                      disabled={file.disabled}
+                      aria-current={isActive ? "page" : undefined}
+                      aria-label={file.ariaLabel}
+                      onClick={() => openFile(file)}
+                      onDoubleClick={(event) => {
+                        if (!onFileRename || file.renameDisabled || file.disabled) return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        beginFileRename(file);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== "F2") return;
+                        event.preventDefault();
+                        beginFileRename(file);
+                      }}
+                    >
+                      {fileIdentity}
+                      <span className="platform-code-editor-workspace__file-label">
+                        {file.label ?? file.id}
+                      </span>
+                    </button>
+                  )}
                   {fileActionsEnabled ? (
                     <button
                       type="button"

@@ -1138,9 +1138,10 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
             const visibleChildTasks = (childrenByParentId[task.id] || []).filter((childTask) =>
               visibleTaskIds.has(childTask.id) && backlogRenderedTaskIds.has(childTask.id)
             );
+            const taskType = normalizePlaygroundTaskType(task.taskType || task.type);
             const isSubtask = isPlaygroundSubtaskRecord(task);
             const isTitleEditable = selectedTaskId === task.id || backlogEditingTaskId === task.id;
-            const TaskTypeIcon = isSubtask ? Check : Bookmark;
+            const TaskTypeIcon = getPlaygroundTaskTypeIcon(taskType);
             const isRowManualSort = isBacklogManualSort;
             const isReleaseSectionDraggable = canDragTaskAcrossReleaseSections(task) && depth === 0;
             const isDraggable = (isRowManualSort || isReleaseSectionDraggable)
@@ -1186,7 +1187,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
                   variant: "list",
                   role: "button",
                   tabIndex: 0,
-                  taskType: isSubtask ? "subtask" : "task",
+                  taskType,
                   typeIcon: React.createElement(TaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 }),
                   priority: renderPlaygroundTaskPriorityIcon(task.priority, "playground-tasks-backlog-priority"),
                   ticketNumber: taskTicketNumber,

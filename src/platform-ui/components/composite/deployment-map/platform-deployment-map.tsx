@@ -15,6 +15,17 @@ export interface PlatformDeploymentMapProps
   imageSource?: string;
 }
 
+interface PlatformDeploymentMapRuntimeProfile {
+  topology?: unknown;
+  product?: {
+    inference?: {
+      deploymentEndpoint?: {
+        region?: unknown;
+      } | null;
+    };
+  };
+}
+
 const PLATFORM_DEPLOYMENT_MAP_BOUNDS = Object.freeze({
   latitude: Object.freeze({ min: -56, max: 71 }),
   longitude: Object.freeze({ min: -168, max: 168 }),
@@ -103,6 +114,9 @@ const PLATFORM_DEPLOYMENT_REGION_LOCATIONS = Object.freeze<
 const DEFAULT_REGION_CODE = "eur3";
 const DEFAULT_IMAGE_SOURCE = "/img/platform/deployment-world-map.svg";
 
+let platformDeploymentMapLocationOverride: PlatformDeploymentMapLocation | null =
+  null;
+
 function joinClassNames(...classNames: Array<string | false | null | undefined>) {
   return classNames
     .filter(
@@ -121,6 +135,48 @@ function normalizeRegionCode(value: unknown) {
   return String(value || "")
     .trim()
     .toLowerCase();
+}
+
+function normalizeDeploymentMapLocation(
+  value: unknown,
+): PlatformDeploymentMapLocation | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+
+  const candidate = value as Partial<PlatformDeploymentMapLocation>;
+  const code = normalizeRegionCode(candidate.code);
+  const label = String(candidate.label || "").trim();
+  const latitude = Number(candidate.latitude);
+  const longitude = Number(candidate.longitude);
+  if (
+    !code ||
+    !label ||
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    return null;
+  }
+
+  return Object.freeze({ code, label, latitude, longitude });
+}
+
+/**
+ * Configures the immutable deployment-site override used by appliance builds.
+ * Hosted deployments deliberately clear the override so their resource maps
+ * continue to reflect each resource's configured cloud region.
+ */
+export function configurePlatformDeploymentMapRuntime(
+  profile: PlatformDeploymentMapRuntimeProfile | null | undefined,
+) {
+  platformDeploymentMapLocationOverride =
+    profile?.topology === "on_prem"
+      ? normalizeDeploymentMapLocation(
+          profile.product?.inference?.deploymentEndpoint?.region,
+        )
+      : null;
 }
 
 export function resolvePlatformDeploymentMapLocation(
@@ -173,7 +229,9 @@ export function PlatformDeploymentMap({
 }: PlatformDeploymentMapProps) {
   const generatedId = useId();
   const resolvedLocation =
-    location || resolvePlatformDeploymentMapLocation(regionCode);
+    platformDeploymentMapLocationOverride ||
+    location ||
+    resolvePlatformDeploymentMapLocation(regionCode);
   const markerPosition = getMarkerPosition(resolvedLocation);
   const markerStyle = {
     "--platform-deployment-map-marker-left": `${markerPosition.left}%`,

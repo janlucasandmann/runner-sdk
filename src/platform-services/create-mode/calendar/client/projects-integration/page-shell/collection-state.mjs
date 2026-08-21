@@ -1,6 +1,12 @@
 export const CALENDAR_PROJECTS_PAGE_SHELL_COLLECTION_STATE_SCRIPT = `
         const [schedules, setSchedules] = useState([]);
+        const [scheduleExecutionThreadRecords, setScheduleExecutionThreadRecords] = useState([]);
         const [calendarMetronomeWorkflows, setCalendarMetronomeWorkflows] = useState([]);
+        const [calendarBatchJobs, setCalendarBatchJobs] = useState([]);
+        const [calendarBatchJobsLoadState, setCalendarBatchJobsLoadState] = useState({
+          status: "idle",
+          error: "",
+        });
         const [scheduleLoadState, setScheduleLoadState] = useState({
           status: "idle",
           error: "",

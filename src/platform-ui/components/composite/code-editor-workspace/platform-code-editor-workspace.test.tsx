@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   isPlatformCodeEditorMarkdownFile,
+  type PlatformCodeEditorFile,
   PlatformCodeEditorWorkspace,
 } from "./platform-code-editor-workspace.js";
 
@@ -387,7 +389,7 @@ describe("PlatformCodeEditorWorkspace", () => {
     expect(onFilesMove).not.toHaveBeenCalled();
   });
 
-  it("uses shared checkboxes and minimal popup actions for single and multi-file operations", () => {
+  it("uses inline renaming, shared checkboxes, and minimal popup actions", async () => {
     const onFileRename = vi.fn();
     const onFilesDelete = vi.fn();
     render(
@@ -416,7 +418,14 @@ describe("PlatformCodeEditorWorkspace", () => {
     expect(screen.getByRole("menuitem", { name: "Rename" })).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "Delete" })).not.toBeNull();
     fireEvent.click(screen.getByRole("menuitem", { name: "Rename" }));
-    expect(onFileRename).toHaveBeenCalledWith(expect.objectContaining({ id: "main.ts" }));
+    const renameInput = screen.getByRole("textbox", { name: "Rename main.ts" });
+    expect(document.activeElement).toBe(renameInput);
+    fireEvent.change(renameInput, { target: { value: "app.ts" } });
+    fireEvent.keyDown(renameInput, { key: "Enter" });
+    await waitFor(() => expect(onFileRename).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "main.ts" }),
+      "app.ts",
+    ));
 
     fireEvent.click(screen.getByRole("checkbox", { name: "Select main.ts" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Select styles.css" }));
@@ -428,6 +437,50 @@ describe("PlatformCodeEditorWorkspace", () => {
       expect.objectContaining({ id: "main.ts" }),
       expect.objectContaining({ id: "styles.css" }),
     ]);
+  });
+
+  it("focuses and selects a newly created file label before the editor", async () => {
+    const onFileRename = vi.fn();
+
+    function Harness() {
+      const [files, setFiles] = useState<PlatformCodeEditorFile[]>([
+        { id: "overview", label: "Overview", editorMode: "markdown" },
+      ]);
+      return (
+        <PlatformCodeEditorWorkspace
+          files={files}
+          activeFileId={files.at(-1)?.id}
+          onFileRename={onFileRename}
+          onCreateFile={() => {
+            const createdFile = {
+              id: "document-new",
+              label: "Untitled document",
+              editorMode: "markdown" as const,
+            };
+            setFiles((current) => [...current, createdFile]);
+            return createdFile.id;
+          }}
+        />
+      );
+    }
+
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "Add file" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Create File" }));
+
+    const renameInput = await screen.findByRole("textbox", {
+      name: "Rename Untitled document",
+    });
+    expect(document.activeElement).toBe(renameInput);
+    expect((renameInput as HTMLInputElement).selectionStart).toBe(0);
+    expect((renameInput as HTMLInputElement).selectionEnd).toBe("Untitled document".length);
+
+    fireEvent.change(renameInput, { target: { value: "Architecture" } });
+    fireEvent.keyDown(renameInput, { key: "Enter" });
+    await waitFor(() => expect(onFileRename).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "document-new" }),
+      "Architecture",
+    ));
   });
 
   it("keeps a single selected-file header without opening persistent tabs", () => {

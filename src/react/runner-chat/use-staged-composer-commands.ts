@@ -4,6 +4,7 @@ import {
   buildRunnerAgentCreationLabel,
   buildRunnerBacklogSubtaskLabel,
   buildRunnerBatchCreationLabel,
+  buildRunnerLoopLabel,
   buildRunnerMissionControlLabel,
   buildRunnerParseCreationLabel,
   buildRunnerResearchCreationLabel,
@@ -18,6 +19,7 @@ import {
   parseAutoStageBacklogMissionControlCommand,
   parseAutoStageBacklogSubtaskCommand,
   parseAutoStageBatchCreationCommand,
+  parseAutoStageLoopCommand,
   parseAutoStageParseCreationCommand,
   parseAutoStageResearchCreationCommand,
   parseAutoStageResourceCreationCommand,
@@ -33,6 +35,7 @@ import {
   type StagedBacklogMissionControlCommand,
   type StagedBacklogSubtaskCommand,
   type StagedBatchCreationCommand,
+  type StagedLoopCommand,
   type StagedParseCreationCommand,
   type StagedResearchCreationCommand,
   type StagedResourceCreationCommand,
@@ -58,6 +61,7 @@ interface RunnerStagedComposerCommands {
   backlogSubtask: StagedBacklogSubtaskCommand | null;
   backlogMissionControl: StagedBacklogMissionControlCommand | null;
   batchCreation: StagedBatchCreationCommand | null;
+  loop: StagedLoopCommand | null;
 }
 
 type RunnerStagedComposerCommandKey = keyof RunnerStagedComposerCommands;
@@ -75,6 +79,7 @@ const EMPTY_STAGED_COMPOSER_COMMANDS: RunnerStagedComposerCommands = {
   backlogSubtask: null,
   backlogMissionControl: null,
   batchCreation: null,
+  loop: null,
 };
 
 const BACKSPACE_DISMISS_ORDER: readonly RunnerStagedComposerCommandKey[] = [
@@ -90,6 +95,7 @@ const BACKSPACE_DISMISS_ORDER: readonly RunnerStagedComposerCommandKey[] = [
   "backlogSubtask",
   "backlogMissionControl",
   "batchCreation",
+  "loop",
 ];
 
 export interface UseRunnerStagedComposerCommandsOptions {
@@ -191,6 +197,16 @@ export function useRunnerStagedComposerCommands({
       stageCommand(
         "batchCreation",
         { action: "batch", label: buildRunnerBatchCreationLabel() },
+        prompt,
+      );
+    },
+    [stageCommand],
+  );
+  const stageLoopCommand = useCallback(
+    (prompt = "") => {
+      stageCommand(
+        "loop",
+        { action: "loop", label: buildRunnerLoopLabel() },
         prompt,
       );
     },
@@ -320,6 +336,11 @@ export function useRunnerStagedComposerCommands({
         stageParseCreationCommand(parse.prompt);
         return true;
       }
+      const loop = parseAutoStageLoopCommand(input);
+      if (loop) {
+        stageLoopCommand(loop.prompt);
+        return true;
+      }
       if (capabilities.batchCreation) {
         const batch = parseAutoStageBatchCreationCommand(input);
         if (batch) {
@@ -371,6 +392,7 @@ export function useRunnerStagedComposerCommands({
       stageBacklogMissionControlCommand,
       stageBacklogSubtaskCommand,
       stageBatchCreationCommand,
+      stageLoopCommand,
       stageParseCreationCommand,
       stageResearchCreationCommand,
       stageResourceCreationCommand,
@@ -401,6 +423,7 @@ export function useRunnerStagedComposerCommands({
     stagedBacklogSubtaskCommand: commands.backlogSubtask,
     stagedBacklogMissionControlCommand: commands.backlogMissionControl,
     stagedBatchCreationCommand: commands.batchCreation,
+    stagedLoopCommand: commands.loop,
     clearAllStagedCommands: clearAll,
     clearStagedCommand: clearCommand,
     dismissActiveCommand,
@@ -411,6 +434,7 @@ export function useRunnerStagedComposerCommands({
     stageBacklogSubtaskCommand,
     stageBacklogMissionControlCommand,
     stageBatchCreationCommand,
+    stageLoopCommand,
     stageResourceCreationCommand,
     stageAgentCreationCommand,
     stageSkillCreationCommand,

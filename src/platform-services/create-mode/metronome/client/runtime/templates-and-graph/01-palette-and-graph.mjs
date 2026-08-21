@@ -43,15 +43,7 @@ export const METRONOME_TEMPLATES_01_FRAGMENT = String.raw`
           "campaign-content-calendar": createCampaignContentCalendarTemplateMetronomeGraph,
         });
 
-        const METRONOME_BUILT_IN_WORKFLOWS = [
-          {
-            id: "builtin_loop",
-            title: "Loop",
-            copy: "A default worker and verifier workflow that iterates on a task until the verifier accepts the result.",
-            Icon: RefreshCw,
-            graphFactory: createWorkerVerifierLoopMetronomeGraph,
-          },
-        ];
+        const METRONOME_BUILT_IN_WORKFLOWS = [];
 
         function createMetronomeNodeFromPaletteItem(item, position) {
           const normalizedItem = item && typeof item === "object" ? item : {};
@@ -492,7 +484,7 @@ export const METRONOME_TEMPLATES_01_FRAGMENT = String.raw`
         }
 
         const METRONOME_CONDITION_TYPES = new Set(["previous_output_contains", "database_document_field", "ticket_status", "json"]);
-        const METRONOME_LOOP_TYPES = new Set(["fixed_count", "workflow_context_contains", "input_items", "project_tickets", "database_field", "database_documents"]);
+        const METRONOME_LOOP_TYPES = new Set(["fixed_count", "repeat_until", "workflow_context_contains", "input_items", "project_tickets", "database_field", "database_documents"]);
         const METRONOME_TICKET_OPERATIONS = new Set(["adapt_ticket", "add_ticket_comment", "move_ticket_status", "start_work_on_ticket", "add_subtask"]);
 
         function normalizeMetronomeConditionType(value) {
@@ -531,6 +523,16 @@ export const METRONOME_TEMPLATES_01_FRAGMENT = String.raw`
             loopType: normalizedLoopType,
             iterations: Number(source.iterations || source.count || 5) || 5,
             maxIterations: Number(source.maxIterations || source.max_iterations || 25) || 25,
+            verdictBinding: String(source.verdictBinding || source.verdict_binding || "previous.data.verdict").trim() || "previous.data.verdict",
+            scoreBinding: String(source.scoreBinding || source.score_binding || "previous.data.score").trim() || "previous.data.score",
+            minimumScore: Number.isFinite(Number(source.minimumScore ?? source.minimum_score))
+              ? Math.min(1, Math.max(0, Number(source.minimumScore ?? source.minimum_score)))
+              : 0.85,
+            noProgressLimit: Math.max(1, Number(source.noProgressLimit || source.no_progress_limit || 2) || 2),
+            maxDurationMinutes: Math.max(1, Number(source.maxDurationMinutes || source.max_duration_minutes || 60) || 60),
+            maxCostUsd: source.maxCostUsd ?? source.max_cost_usd ?? "",
+            maxActions: source.maxActions ?? source.max_actions ?? "",
+            regressionPolicy: String(source.regressionPolicy || source.regression_policy || "stop").trim() || "stop",
             contextContainsText: String(source.contextContainsText || source.context_contains || source.contextContains || "").trim(),
             projectId: String(source.projectId || source.project_id || "").trim(),
             projectName: String(source.projectName || source.project_name || "").trim(),

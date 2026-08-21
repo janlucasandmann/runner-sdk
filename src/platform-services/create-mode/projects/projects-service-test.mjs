@@ -40,6 +40,7 @@ import { PROJECTS_VIEWS_04_FRAGMENT } from "./client/page/views/04-task-detail-a
 import { PROJECTS_CORE_CSS, PROJECTS_CORE_CSS_FRAGMENT_PATHS } from "./client/styles/core.mjs";
 import { assertLegacyBrowserSourceContract } from "../../../../apps/platform/testing/legacy-browser-source-contract.mjs";
 import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
+import { createTaskBacklogService } from "./server/task-backlog.mjs";
 
 const projectsClientUrl = new URL("./client/", import.meta.url);
 const projectsOverviewUrl = new URL("./client/overview/", import.meta.url);
@@ -50,7 +51,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects domain runtime",
     source: PROJECTS_DOMAIN_RUNTIME_SCRIPT,
-    expectedSha256: "89fc6a3ddeffe54685e59a105a09c8626e8d176f15370bb45d63adb266393069",
+    expectedSha256: "cb5ca57f2acc0ef0cf2f605904b14ebfa266a1a80c86d8a00911a062df513a91",
     fragmentGroups: [
       {
         baseUrl: projectsClientUrl,
@@ -62,7 +63,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "4d68a3860926506d9d4ad4f38d03d0587eeb4caedff56cba22151f3660eb04fc",
+    expectedSha256: "52008601e216cdf64450c2fdf28d41052a1eb4ba8014750f71b43414b61577b4",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -86,7 +87,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects actions runtime",
     source: PROJECTS_PAGE_ACTIONS_SCRIPT,
-    expectedSha256: "0645e7d7146633a03c1f64164104dea2862c1b652a695c771fd2c7c93ccd6e14",
+    expectedSha256: "4ee63be1275b1a235e50abc17baec0173337b5c6d4726a09f87ec1454ba9f94f",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -98,7 +99,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects data runtime",
     source: PROJECTS_PAGE_DATA_SCRIPT,
-    expectedSha256: "f9c794131621cda5197f140462e243500307d0b2f49cb0619c6ec2f764664502",
+    expectedSha256: "37c1cdcd1b283a9be5c81fd7c02da5ef6255f287919dedbe5ad8ecaac0d7547b",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -110,7 +111,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects shell runtime",
     source: PROJECTS_PAGE_SHELL_SCRIPT,
-    expectedSha256: "919161895809c50eacc4c4fb1f405f5539cd13c8ebec538f187510a74b4f6ad7",
+    expectedSha256: "d652e7ef4d50fce8714cf4f54bb94ce240f0ae63a2cc59e37d54ea3a03233dcf",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -122,7 +123,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "ea6941f92e714b686a6b1000033183e9c681c58477c26d308e4e9b1c99a2dfab",
+    expectedSha256: "edde4f4f4205eb13f54f3438bf3be61f7117278f2bc3f4c8ba2da5e4444d86b2",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -134,7 +135,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects core styles",
     source: PROJECTS_CORE_CSS,
-    expectedSha256: "17dab1a4b64a4469553e256437b304c2920a96e60025e9e8fec994e4d41998a2",
+    expectedSha256: "5f620982533345be2beefa9f5f01fd8feb78f5bfd902302b3f43322b2528d561",
     fragmentGroups: [
       {
         baseUrl: projectsStylesUrl,
@@ -152,6 +153,49 @@ assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /moveToInProgress: options\?\.addToBa
 assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /targetKind: "project_ticket_action"/);
 assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /options\?\.addToBatch !== true && typeof onTaskRunStateChange/);
 assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /preparedThreadId: threadRecord\.id/);
+assert.match(
+  PROJECTS_DOMAIN_RUNTIME_SCRIPT,
+  /function normalizePlaygroundTaskLoopConfig\(value, task = null\)/,
+);
+assert.match(
+  PROJECTS_DOMAIN_RUNTIME_SCRIPT,
+  /function buildPlaygroundTaskLoopGoalTemplate\(value = null\)[\s\S]*?"\*\*" \+ section\.label \+ "\*\*"[\s\S]*?"- " \+ sectionValue/,
+);
+assert.match(
+  PROJECTS_DOMAIN_RUNTIME_SCRIPT,
+  /function parsePlaygroundTaskLoopGoalMarkdown\(value\)[\s\S]*?parsed\[section\.key\]/,
+);
+assert.match(
+  PROJECTS_DOMAIN_RUNTIME_SCRIPT,
+  /taskType,\s*loop,/,
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /loop: mergedTask\.taskType === "loop" \? mergedTask\.loop : null/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function renderPlaygroundTaskLoopFields\(\{[\s\S]*?"Iteration budget"[\s\S]*?"Stagnation limit"[\s\S]*?"Passing score \(%\)"[\s\S]*?"Time budget \(min\)"/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function renderIssueComposerLoopFields\(\)[\s\S]*?return renderPlaygroundTaskLoopFields\(\{\s*task: issueComposerDraft,[\s\S]*?onChange: updateLoop/,
+  "Issue creation must use the shared Loop controls renderer.",
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /renderTaskDetailLoopContract|playground-tasks-detail__loop-section|"Loop contract"|The durable supervisor uses this contract/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /React\.createElement\(PlatformInfoTooltip, \{\s*title: label,\s*description,\s*runtime,\s*placement: "top-start",\s*ariaLabel: "About " \+ label,/,
+  "Loop controls must use the centralized explanatory info tooltip.",
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /"Iteration budget"[\s\S]*?"The supervisor checks the cycle counter before scheduling more work[\s\S]*?"Stagnation limit"[\s\S]*?"Each verifier result is compared with the best result so far[\s\S]*?"Passing score \(%\)"[\s\S]*?"The normalized verifier score must meet this threshold[\s\S]*?"Time budget \(min\)"[\s\S]*?"The supervisor checks the deadline before another cycle/,
+  "Every Loop control must explain both its meaning and runtime enforcement.",
+);
 assert.match(
   PROJECTS_DOMAIN_FOUNDATION_SCRIPT,
   /\{ id: "overview", label: "General", icon: LayoutDashboard \}/,
@@ -296,6 +340,10 @@ assert.doesNotMatch(PROJECTS_VIEWS_04_FRAGMENT, /"Relations"/);
 assert.match(
   PROJECTS_PAGE_ACTIONS_SCRIPT,
   /const taskRunRequest = \{[\s\S]*?executionMode: "deferred"[\s\S]*?\/tasks\/" \+ encodeURIComponent\(task\.id\) \+ "\/run-thread"[\s\S]*?agentSessionRecord[\s\S]*?setSelectedProjectDetail/,
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /const serverOwnsExecution = executionStarted[\s\S]*?\|\| queuedInBatch[\s\S]*?executionRecord\?\.owner === "server"[\s\S]*?\.\.\.\(serverOwnsExecution\s*\? \{\}/,
 );
 assert.match(
   PROJECTS_PAGE_ACTIONS_SCRIPT,
@@ -562,8 +610,16 @@ assert.match(
   /placeholder: "Change type\.\.\.",[\s\S]*?shortcut: "T"[\s\S]*?leading: renderTaskDetailTypeBadge\(option\.id\),[\s\S]*?trailing: option\.shortcut/,
 );
 assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /function renderTaskActorModeSwitch\([\s\S]*?return React\.createElement\(PlatformSwitch, \{[\s\S]*?className: "playground-tasks-detail-assignee-mode-switch"/,
+);
+assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /popupHeader: taskDetailAvailableAssigneePopupModes\.length > 1[\s\S]*?React\.createElement\(PlatformSwitch/,
+  /popoverId: "assignee"[\s\S]*?popupHeader: renderTaskActorModeSwitch\(\{\s*ariaLabel: "Assignee type",[\s\S]*?filteredTaskDetailAssignableActors\.map/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /popoverId: "reviewer"[\s\S]*?popupHeader: renderTaskActorModeSwitch\(\{\s*ariaLabel: "Reviewer type",[\s\S]*?filteredTaskDetailAssignableActors\.map/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -770,7 +826,7 @@ assert.match(
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /renderProjectOverviewSidebarRow\("Owner", owner\.name,[\s\S]*?className: "is-owner"[\s\S]*?ariaLabel: "Project owner"/,
+  /renderProjectOverviewSidebarRow\("Owner", owner\.name,[\s\S]*?platform-resource-detail-sidebar__owner-row[\s\S]*?ariaLabel: "Project owner"[\s\S]*?includeOrganizationMembers: true/,
 );
 assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /renderProjectOverviewSidebarRow\("Lead"/);
 assert.match(
@@ -829,6 +885,10 @@ assert.equal(
 );
 assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\(PlatformOwnerSelector, \{/);
 assert.match(PROJECT_OVERVIEW_SCRIPT, /ariaLabel: "Project owner"/);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /className: "platform-resource-detail-sidebar__owner-selector playground-tasks-detail-central-selector playground-project-overview-sidebar-selector"/,
+);
 assert.doesNotMatch(
   PROJECT_OVERVIEW_SCRIPT,
   /renderProjectOverviewSidebarRow\("Type"/,
@@ -1337,7 +1397,7 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /React\.createElement\(PlatformInstructionsEditor, \{\s*value: resolveTaskDescriptionAttachmentFiles\(\s*String\(draftTask\.description \|\| ""\),\s*draftTask\.attachments\s*\),[\s\S]*?historyKey: "ticket-description:" \+ draftTask\.id,\s*variant: "minimalistic-ui",\s*contentVariant: "file-enabled",\s*fileUpload: \{\s*upload: uploadTaskDescriptionFiles/,
+  /React\.createElement\(PlatformInstructionsEditor, \{\s*value: resolveTaskDescriptionAttachmentFiles\(\s*String\(draftTask\.description \|\| ""\),\s*draftTask\.attachments\s*\),[\s\S]*?historyKey: "ticket-description:" \+ draftTask\.id,\s*variant: "minimalistic-ui",\s*contentVariant: "file-enabled",[\s\S]*?fileUpload: \{\s*upload: uploadTaskDescriptionFiles/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -1362,7 +1422,7 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_ACTIONS_SCRIPT,
-  /function handleIssueComposerDescriptionEditorChange\(nextValue, context = \{\}\)/,
+  /function handleIssueComposerDescriptionEditorChange\(nextValue, context = \{\}\)[\s\S]*?parsePlaygroundTaskLoopGoalMarkdown\(nextDraft\.description\)/,
 );
 assert.match(
   PROJECTS_PAGE_SHELL_SCRIPT,
@@ -1598,6 +1658,18 @@ assert.match(
   PROJECTS_PAGE_RUNTIME_SCRIPT,
   /searchQuery: taskEnvironmentFilePickerSearch,\s*onSearchQueryChange: setTaskEnvironmentFilePickerSearch/,
 );
+const centralizedTaskConnectorExplorerSource = PROJECTS_PAGE_RUNTIME_SCRIPT.slice(
+  PROJECTS_PAGE_RUNTIME_SCRIPT.indexOf("function renderTaskConnectorBrowser()"),
+  PROJECTS_PAGE_RUNTIME_SCRIPT.indexOf("function renderTaskParentPickerDialog()"),
+);
+assert.match(
+  centralizedTaskConnectorExplorerSource,
+  /React\.createElement\(PlatformFileExplorerBrowserModal, \{[\s\S]*?title: "Attach connector data"/,
+);
+assert.doesNotMatch(
+  centralizedTaskConnectorExplorerSource,
+  /React\.createElement\(PlatformModalBackdrop|React\.createElement\(PlatformModalSurface/,
+);
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
   /isPlaygroundSubtaskRecord\(draftTask\)\s*\? null\s*:\s*React\.createElement\(PlatformSubtasks, \{\s*className: "playground-tasks-ticket-subtasks",\s*appearance: "minimal",[\s\S]*?onAdd: \(\) => openProjectSubtaskIssueComposer\(draftTask\.id\)/,
@@ -1632,7 +1704,7 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /function renderProjectIssueComposerDialog\(\)[\s\S]*?const issueComposerTitle = normalizedIssueType === "subtask" \? "Create Subtask" : "Create Issue";[\s\S]*?return React\.createElement\(PlatformModal, \{\s*open: issueComposerOpen,\s*visible: issueComposerVisible,\s*closing: issueComposerClosing,[\s\S]*?size: "medium",\s*maxHeight: "80vh",\s*title: issueComposerTitle,/,
+  /function renderProjectIssueComposerDialog\(\)[\s\S]*?const issueComposerTitle = normalizedIssueType === "subtask" \? "Create Subtask" : "Create Issue";[\s\S]*?return React\.createElement\(PlatformModal, \{\s*open: issueComposerOpen,\s*visible: issueComposerVisible,\s*closing: issueComposerClosing,[\s\S]*?size: "large",\s*maxHeight: normalizedIssueType === "loop" \? "88vh" : "80vh",\s*title: issueComposerTitle,/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -1640,7 +1712,11 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /title: issueComposerTitle,\s*headerVariant: "search",\s*headerSearchProps: \{\s*icon: Bookmark,\s*value: issueComposerDraft\.title \|\| "",[\s\S]*?onChange: \(event\) => updateIssueComposerField\("title", event\.target\.value\)/,
+  /title: issueComposerTitle,\s*headerVariant: "search",\s*headerLeading: renderIssueComposerTypeSelector\(\),\s*headerSearchProps: \{\s*icon: null,\s*value: issueComposerDraft\.title \|\| "",[\s\S]*?onChange: \(event\) => updateIssueComposerField\("title", event\.target\.value\)/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function renderIssueComposerTypeSelector\(\) \{[\s\S]*?return React\.createElement\(PlatformSelector, \{[\s\S]*?options: PLAYGROUND_TASK_TYPE_OPTIONS\.map[\s\S]*?playground-new-issue-modal__type-option-icon[\s\S]*?ariaLabel: "Issue type"[\s\S]*?playground-new-issue-modal__type-trigger-icon/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -1648,7 +1724,7 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /function renderIssueComposerDescriptionField\(\) \{\s*return React\.createElement\(PlatformInstructionsEditor, \{\s*value: resolveTaskDescriptionAttachmentFiles\(\s*issueComposerDraft\.description \|\| "",\s*issueComposerDraft\.attachments\s*\),[\s\S]*?title: "Description",[\s\S]*?editorRef: issueComposerDescriptionTextareaRef,[\s\S]*?variant: "minimalistic-ui",\s*contentVariant: "file-enabled",\s*fileUpload: \{\s*upload: uploadIssueComposerDescriptionFiles/,
+  /function renderIssueComposerDescriptionField\(\) \{\s*const descriptionEditor = React\.createElement\(PlatformInstructionsEditor, \{\s*value: resolveTaskDescriptionAttachmentFiles\(\s*issueComposerDraft\.description \|\| "",\s*issueComposerDraft\.attachments\s*\),[\s\S]*?title: normalizedIssueType === "loop" \? "Loop Goal" : "Description",[\s\S]*?editorRef: issueComposerDescriptionTextareaRef,[\s\S]*?variant: "minimalistic-ui",\s*contentVariant: "file-enabled",[\s\S]*?fileUpload: \{\s*upload: uploadIssueComposerDescriptionFiles[\s\S]*?className: "playground-new-issue-modal__loop-goal-section"[\s\S]*?descriptionEditor,\s*renderIssueComposerLoopFields\(\)/,
 );
 assert.match(
   PROJECTS_PAGE_SHELL_SCRIPT,
@@ -1674,6 +1750,15 @@ assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
   /value: resolveTaskDescriptionAttachmentFiles\(\s*issueComposerDraft\.description \|\| "",\s*issueComposerDraft\.attachments\s*\),\s*onChange: handleIssueComposerDescriptionEditorChange/,
 );
+assert.equal(
+  (
+    PROJECTS_PAGE_VIEWS_SCRIPT.match(
+      /promptInsertion: typeof onOpenPromptSearch === "function"\s*\? \{ openSearch: onOpenPromptSearch \}\s*: undefined/g,
+    ) || []
+  ).length,
+  2,
+  "Both new and existing ticket descriptions must support centralized prompt insertion.",
+);
 assert.match(
   PROJECTS_PAGE_RUNTIME_SCRIPT,
   /function handleRenameIssueComposerDescriptionFile\(file, nextName\)/,
@@ -1686,9 +1771,49 @@ assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
   /function renderIssueComposerDetailSelectControl\([\s\S]*?return React\.createElement\(PlatformSelector, \{/,
 );
+assert.doesNotMatch(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /renderIssueComposerDetailFact\("Computer",[\s\S]*?popoverId: "computer"/,
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /renderIssueComposerDetailFact\("Type",[\s\S]*?popoverId: "type"/,
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /renderIssueComposerDetailFact\("Color",[\s\S]*?popoverId: "color"/,
+);
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /renderIssueComposerDetailFact\("Computer",[\s\S]*?popoverId: "computer",[\s\S]*?options: availableBacklogEnvironments\.map/,
+  /renderIssueComposerDetailFact\("Assignee",[\s\S]*?popupClassName: "playground-tasks-detail-assignee-selector-popup",[\s\S]*?ariaLabel: "Assignee type",[\s\S]*?filteredIssueComposerAssignableActors\.map/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /renderIssueComposerDetailFact\("Reviewer",[\s\S]*?popupClassName: "playground-tasks-detail-assignee-selector-popup",[\s\S]*?ariaLabel: "Reviewer type",[\s\S]*?filteredIssueComposerAssignableActors\.map/,
+);
+const issueComposerLoopSectionSource = PROJECTS_PAGE_VIEWS_SCRIPT.slice(
+  PROJECTS_PAGE_VIEWS_SCRIPT.indexOf("function renderIssueComposerLoopFields()"),
+  PROJECTS_PAGE_VIEWS_SCRIPT.indexOf("function createIssueComposerSelectorOption"),
+);
+const issueComposerDetailsSectionSource = PROJECTS_PAGE_VIEWS_SCRIPT.slice(
+  PROJECTS_PAGE_VIEWS_SCRIPT.indexOf("function renderIssueComposerDetailsSection()"),
+  PROJECTS_PAGE_VIEWS_SCRIPT.indexOf("return React.createElement(PlatformModal", PROJECTS_PAGE_VIEWS_SCRIPT.indexOf("function renderIssueComposerDetailsSection()")),
+);
+assert.doesNotMatch(
+  issueComposerLoopSectionSource,
+  /renderIssueComposerDetailFact\("Verifier"|renderIssueComposerDetailFact\("On regression"/,
+);
+assert.match(
+  issueComposerDetailsSectionSource,
+  /issueType === "loop"[\s\S]*?renderIssueComposerDetailFact\("Verifier"[\s\S]*?popoverId: "loop-verifier"[\s\S]*?renderIssueComposerDetailFact\("On regression"[\s\S]*?popoverId: "loop-regression"[\s\S]*?: renderIssueComposerDetailFact\("Reviewer"/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /renderIssueComposerDetailFact\("Schedule",[\s\S]*?taskScheduleDialogState\?\.target === "issue"[\s\S]*?openTaskScheduleDialog\("issue"\)[\s\S]*?popupContent: renderTaskScheduleDialog\(\{ embedded: true \}\)[\s\S]*?popupAriaLabel: "Edit issue schedule"/,
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /taskScheduleDialogState\.target === "issue"[\s\S]*?updateIssueComposerDraft\([\s\S]*?scheduledStartAt: nextStart/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -1724,11 +1849,19 @@ assert.doesNotMatch(
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /function renderBacklogTaskRow\([\s\S]*?React\.createElement\(PlatformTicketItem, \{\s*variant: "list"/,
+  /function renderBacklogTaskRow\([\s\S]*?const taskType = normalizePlaygroundTaskType\(task\.taskType \|\| task\.type\);[\s\S]*?const TaskTypeIcon = getPlaygroundTaskTypeIcon\(taskType\);[\s\S]*?React\.createElement\(PlatformTicketItem, \{\s*variant: "list",[\s\S]*?taskType,[\s\S]*?typeIcon: React\.createElement\(TaskTypeIcon/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /function renderBoardCard\(task\)[\s\S]*?React\.createElement\(PlatformTicketItem, \{[\s\S]*?variant: "card"/,
+  /function renderBoardCard\(task\)[\s\S]*?const taskType = normalizePlaygroundTaskType\(task\.taskType \|\| task\.type\);[\s\S]*?const TaskTypeIcon = getPlaygroundTaskTypeIcon\(taskType\);[\s\S]*?React\.createElement\(PlatformTicketItem, \{[\s\S]*?variant: "card",[\s\S]*?taskType,[\s\S]*?typeIcon: React\.createElement\(TaskTypeIcon/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function getPlaygroundTaskTypeIcon\(value\)[\s\S]*?taskType === "subtask"\) return Check;[\s\S]*?taskType === "loop"\) return RefreshCw;[\s\S]*?return Bookmark;/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-tasks-detail-type-badge\.is-loop,\s*\.playground-tasks-backlog-project-icon\.is-loop,\s*\.playground-tasks-lane-card-type-badge\.is-loop\s*\{\s*background: linear-gradient\(180deg, #9a72df 0%, #6542a8 100%\);/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -1770,6 +1903,14 @@ assert.match(
   PROJECTS_CORE_CSS,
   /\.playground-new-issue-modal__body\.platform-modal-body\s*\{[\s\S]*?flex: 1 1 auto;[\s\S]*?display: flex;[\s\S]*?overflow-y: auto;/,
 );
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-new-issue-modal__type-selector \.playground-new-issue-modal__type-selector-trigger\s*\{[\s\S]*?width: 24px;[\s\S]*?justify-content: center;/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-new-issue-modal__type-selector \.platform-selector__chevrons\s*\{\s*display: none;/,
+);
 assert.doesNotMatch(
   PROJECTS_PAGE_VIEWS_SCRIPT,
   /className: "playground-tasks-detail-facts playground-tasks-issue-details-section"[^\n]*,\s*\},\s*React\.createElement\("div", \{ className: "playground-tasks-detail-facts-header"/,
@@ -1795,8 +1936,24 @@ assert.match(
   /\.playground-new-issue-modal \.playground-new-issue-modal__description\.platform-instructions-editor > \.platform-instructions-editor__body\s*\{\s*min-height: 36px;\s*flex: 1 1 auto;[\s\S]*?overflow-y: auto;/,
 );
 assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-new-issue-modal__loop-goal-section\s*\{[\s\S]*?flex: 1 1 auto;[\s\S]*?border: 1px solid rgba\(255, 255, 255, 0\.075\);[\s\S]*?overflow: hidden;/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-new-issue-modal__loop-goal-section > \.playground-new-issue-modal__description\.platform-instructions-editor\s*\{\s*border: 0;\s*border-bottom: 1px solid rgba\(255, 255, 255, 0\.075\);\s*border-radius: 0;\s*background: transparent;/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-new-issue-modal__loop-fields\s*\{\s*display: grid;[\s\S]*?grid-template-columns: repeat\(4, minmax\(170px, 1fr\)\);[\s\S]*?\.playground-new-issue-modal__loop-field\s*\{[\s\S]*?align-items: center;[\s\S]*?justify-content: flex-start;[\s\S]*?color: rgba\(255, 255, 255, 0\.5\);[\s\S]*?white-space: nowrap;[\s\S]*?\.playground-new-issue-modal__loop-field input\s*\{\s*width: 4ch;[\s\S]*?order: -1;[\s\S]*?background: transparent;[\s\S]*?font-size: 12px;[\s\S]*?appearance: textfield;/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /style: \{\s*width: "calc\(" \+ Math\.max\(1, String\(value\)\.length\) \+ "ch \+ 1px\)",\s*flexBasis: "calc\(" \+ Math\.max\(1, String\(value\)\.length\) \+ "ch \+ 1px\)",/,
+);
+assert.match(
   PROJECTS_PAGE_SHELL_SCRIPT,
-  /const normalizedDraft = normalizePlaygroundTaskRecord\(syncPlaygroundTaskRecordMetadata\([\s\S]*?return \{\s*\.\.\.normalizedDraft,\s*title: "",\s*taskType: requestedTaskType,\s*parentTaskId: requestedTaskType === "subtask" \? requestedParentTaskId : null,\s*\};/,
+  /const requestedDescription = requestedTaskType === "loop"\s*\? buildPlaygroundTaskLoopGoalTemplate\(requestedLoop\)[\s\S]*?const normalizedDraft = normalizePlaygroundTaskRecord\(syncPlaygroundTaskRecordMetadata\([\s\S]*?return \{\s*\.\.\.normalizedDraft,\s*title: "",\s*description: requestedDescription,\s*taskType: requestedTaskType,\s*loop: requestedTaskType === "loop"[\s\S]*?parentTaskId: requestedTaskType === "subtask" \? requestedParentTaskId : null,\s*\};/,
 );
 assert.match(
   PROJECTS_PAGE_SHELL_SCRIPT,
@@ -1921,8 +2078,38 @@ assert.match(
   /className: "playground-tasks-detail-fact-label" \}, "Reviewer"[\s\S]*?className: "playground-tasks-detail-fact-label" \}, "Milestone"/,
 );
 assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function updateTaskDetailLoop\(patch\)[\s\S]*?updateDraftTask[\s\S]*?\{ autosave: true \}/,
+  "Loop ticket details must autosave changes through the normalized loop configuration.",
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /activeTaskType === "loop"\s*\? React\.createElement\(React\.Fragment, null,[\s\S]*?"Verifier"[\s\S]*?popoverId: "loop-verifier"[\s\S]*?updateTaskDetailLoop\(\{ verifierAgentId:[\s\S]*?"On regression"[\s\S]*?popoverId: "loop-regression"[\s\S]*?updateTaskDetailLoop\(\{ regressionPolicy:/,
+  "Loop ticket details must show editable verifier and regression-policy rows.",
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const taskDescriptionContent = activeTaskType === "loop"\s*\? React\.createElement\(React\.Fragment, null,\s*taskDescriptionEditor,\s*renderPlaygroundTaskLoopFields\(\{[\s\S]*?task: draftTask,[\s\S]*?onChange: updateTaskDetailLoop/,
+  "Loop ticket details must render the shared controls directly beneath the Loop Goal editor.",
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const taskDescriptionEditor = React\.createElement\(PlatformInstructionsEditor,[\s\S]*?className: activeTaskType === "loop" \? "playground-new-issue-modal__description"/,
+  "Loop ticket details must not inherit the creation modal editor container styling.",
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /function handleTaskDescriptionEditorChange\(nextValue, context = \{\}\)[\s\S]*?normalizePlaygroundTaskType\(nextDraft\?\.taskType\) !== "loop"[\s\S]*?parsePlaygroundTaskLoopGoalMarkdown\(nextDraft\.description\)/,
+  "Editing an existing Loop Goal must keep the durable Loop contract in sync.",
+);
+assert.match(
   PROJECTS_CORE_CSS,
-  /\.playground-tasks-detail-type-badge\s*\{\s*width: 18px;[\s\S]*?\.playground-tasks-detail-type-badge\.is-loop\s*\{\s*background:/,
+  /\.playground-tasks-detail-type-badge\s*\{\s*width: 18px;[\s\S]*?\.playground-tasks-detail-type-badge\.is-loop,[\s\S]*?\{\s*background:/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-ticket-detail-content \.playground-new-issue-modal__loop-fields\s*\{\s*padding-left: 0;\s*padding-right: 0;/,
+  "Loop controls must remove horizontal padding only inside ticket details.",
 );
 assert.match(
   PROJECTS_PAGE_SHELL_SCRIPT,
@@ -2694,6 +2881,26 @@ assert.match(
 );
 assert.match(
   platformEntrySource,
+  /function openProjectIssueComposerFromHeader\(taskType = "task"\)[\s\S]*?registeredHandler\(composerOptions\)[\s\S]*?taskType: requestedTaskType/,
+  "The project-header creation bridge must preserve the requested task type.",
+);
+assert.match(
+  platformEntrySource,
+  /React\.createElement\(PlatformButtonSelector, \{\s*mode: "split-action",\s*buttonVariant: "primary",[\s\S]*?label: "New Issue",[\s\S]*?onAction: \(\) => openProjectIssueComposerFromHeader\("task"\),[\s\S]*?popupVariant: "minimal",[\s\S]*?PLAYGROUND_TASK_TYPE_OPTIONS\.map\(\(option\) =>/,
+  "Project details must use the central primary split selector for typed issue creation.",
+);
+assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /onProjectIssueCreateHandlerChange\(\(options = \{\}\) => openProjectIssueComposer\(options\)\)/,
+  "The mounted project issue composer must accept header-selected task types.",
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /openProjectIssueComposer\(\{ taskType: projectNavIssueRequest\?\.taskType \}\)/,
+  "Fallback header requests must carry their selected task type into the issue composer.",
+);
+assert.match(
+  platformEntrySource,
   /projectNavTaskRequest: tasksProjectTaskRequest/,
 );
 assert.match(
@@ -2965,6 +3172,90 @@ result = dispatch("GET", "/api/task-backlog/project_1/threads/taskbacklog_test/c
 assert.equal(result.handled, true);
 assert.equal(result.call.adapter, "send");
 assert.equal(result.call.args[1], 200);
+
+const taskBacklogUpstreamCalls = [];
+const taskBacklogService = createTaskBacklogService({
+  fetchAiosTaskApi: async (_req, path, options) => {
+    taskBacklogUpstreamCalls.push({ path, options });
+    return new Response(JSON.stringify({
+      task: {
+        id: "task_created_from_backlog",
+        projectId: "project_1",
+        title: "Create a backlog task",
+      },
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  },
+  hasAiosSession: () => true,
+  inferProxyContentTypeFromPath: () => "application/octet-stream",
+  parseUpstreamUrl: () => "https://api.example.test/v1",
+  proxyUpstreamBinaryGet: () => {},
+  proxyUpstreamGet: () => {},
+  proxyUpstreamJsonRequest: () => {},
+  proxyUpstreamRawRequest: () => {},
+  readOptionalApiKey: () => "",
+  readRequestBody: async (req) => req.body || {},
+  sendJson: (res, status, payload) => {
+    res.status = status;
+    res.payload = payload;
+    res.finish?.();
+  },
+  withProxyOrganizationHeader: (_req, _body, headers) => headers,
+});
+const createBacklogThreadResponse = {};
+const createBacklogThreadFinished = new Promise((resolve) => {
+  createBacklogThreadResponse.finish = resolve;
+});
+const createBacklogThreadPath = "/api/task-backlog/project_1/threads";
+assert.equal(taskBacklogService.handleRequest(
+  {
+    method: "POST",
+    url: createBacklogThreadPath,
+    headers: {},
+    body: { agentId: "agent_1", environmentId: "environment_1" },
+  },
+  createBacklogThreadResponse,
+  new URL(createBacklogThreadPath, "http://localhost"),
+), true);
+await createBacklogThreadFinished;
+assert.equal(createBacklogThreadResponse.status, 200);
+const backlogThreadId = createBacklogThreadResponse.payload?.thread?.id;
+assert.match(backlogThreadId, /^taskbacklog_/);
+
+const createBacklogTaskResponse = {
+  chunks: [],
+  writeHead(status, headers) {
+    this.status = status;
+    this.headers = headers;
+  },
+  write(chunk) {
+    this.chunks.push(chunk);
+  },
+  end() {
+    this.finish?.();
+  },
+};
+const createBacklogTaskFinished = new Promise((resolve) => {
+  createBacklogTaskResponse.finish = resolve;
+});
+const createBacklogTaskPath = `/api/task-backlog/project_1/threads/${encodeURIComponent(backlogThreadId)}/messages?source=backlog`;
+assert.equal(taskBacklogService.handleRequest(
+  {
+    method: "POST",
+    url: createBacklogTaskPath,
+    headers: {},
+    body: { content: "Create a backlog task" },
+  },
+  createBacklogTaskResponse,
+  new URL(createBacklogTaskPath, "http://localhost"),
+), true);
+await createBacklogTaskFinished;
+assert.equal(createBacklogTaskResponse.status, 200);
+assert.equal(taskBacklogUpstreamCalls.length, 1);
+assert.equal(taskBacklogUpstreamCalls[0].path, "/tasks");
+assert.match(createBacklogTaskResponse.chunks.join(""), /stream\.completed/);
 
 result = dispatch("GET", "/api/real/agents");
 assert.equal(result.handled, false);

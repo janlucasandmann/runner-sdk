@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import {
+  getPlatformOwnerDisplayName,
   PlatformOwnerSelector,
   type PlatformOwnerIdentity,
   type PlatformOwnerOption,
@@ -57,7 +58,7 @@ function joinClassNames(...classNames: Array<string | false | null | undefined>)
 }
 
 function getInitials(identity: PlatformOwnerIdentity) {
-  const label = String(identity.name || identity.email || "User").trim();
+  const label = getPlatformOwnerDisplayName(identity);
   const parts = label.split(/\s+/).filter(Boolean);
   return (parts.length > 1
     ? `${parts[0]?.[0] || ""}${parts[1]?.[0] || ""}`
@@ -66,8 +67,7 @@ function getInitials(identity: PlatformOwnerIdentity) {
 }
 
 function ResourceIdentity({ identity }: { identity: PlatformOwnerIdentity }) {
-  const label = String(identity.name || identity.email || "Unknown user").trim()
-    || "Unknown user";
+  const label = getPlatformOwnerDisplayName(identity);
   return (
     <span
       className="platform-resource-detail-sidebar__identity"

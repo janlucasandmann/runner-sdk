@@ -21,14 +21,20 @@
           enabledSkillIds = [],
           onSkillsChange = null,
 	          workspaceTeams = [],
+	          workspaceTeamsLoading = false,
+	          workspaceTeamsRequiresPlan = false,
+	          workspaceTeamMembers = [],
+	          workspaceTeamMembersTeamId = "",
+	          onWorkspaceTeamsRequest = null,
+	          onViewTeam = null,
+	          activeOrganizationId = "",
+	          onTestSkill = null,
 	          onNavigationGuardChange,
 	          onNavigationRequest,
 	        }) {
 	          const PLAYGROUND_CUSTOM_SKILL_DRAFT_ID = "__custom_skill_draft__";
 	          const searchPopupInputRef = useRef(null);
           const skillCodeFileInputRef = useRef(null);
-          const skillActionsPopoverRef = useRef(null);
-          const skillActionsPopoverSurfaceRef = useRef(null);
           const skillDetailIconPickerRef = useRef(null);
           const skillRenameInputRef = useRef(null);
           const skillEditTitleInputRef = useRef(null);
@@ -37,6 +43,7 @@
           const [toolbarPopover, setToolbarPopover] = useState("");
           const [searchPopupQuery, setSearchPopupQuery] = useState("");
           const [skillListMode, setSkillListMode] = useState("system");
+          const [skillOverviewScope, setSkillOverviewScope] = useState("all");
           const [selectedSkillId, setSelectedSkillId] = useState("");
           const [skillActionsPopoverOpen, setSkillActionsPopoverOpen] = useState(false);
           const [skillRenameState, setSkillRenameState] = useState(null);
@@ -57,7 +64,6 @@
           const [skillDetailTab, setSkillDetailTab] = useState("code");
           const [skillAccessPrincipalId, setSkillAccessPrincipalId] = useState("");
           const [skillAccessRoleId, setSkillAccessRoleId] = useState("member");
-          const [skillAccessTeamMenuOpen, setSkillAccessTeamMenuOpen] = useState(false);
           const [skillAccessSelectedTeamIds, setSkillAccessSelectedTeamIds] = useState(() => new Set());
           const [skillVersionsOpen, setSkillVersionsOpen] = useState(false);
           const [skillPublishMenuOpen, setSkillPublishMenuOpen] = useState(false);
@@ -84,6 +90,12 @@
           const [skillSaveState, setSkillSaveState] = useState({
             isSaving: false,
             error: "",
+          });
+          const [skillOwnerSelectorOpen, setSkillOwnerSelectorOpen] = useState(false);
+          const [skillOwnerCandidateState, setSkillOwnerCandidateState] = useState({
+            skillId: "",
+            status: "idle",
+            candidates: [],
           });
           const [skillCodeFilesTransferState, setSkillCodeFilesTransferState] = useState({
             isProcessing: false,
@@ -118,6 +130,7 @@
           const skillExamplesTextareaRef = useRef(null);
           const handledBackRequestTokenRef = useRef(backRequestToken);
           const systemSkillSourceRequestRef = useRef(new Map());
+          const skillOwnerCandidatesRequestRef = useRef(false);
           const [systemSkillSourceCatalog, setSystemSkillSourceCatalog] = useState({});
   
           const loadSystemSkillSource = useCallback((skillId) => {
@@ -572,6 +585,15 @@
                       && !Array.isArray(skillMetadata.createdBy)
                       ? skillMetadata.createdBy
                       : {};
+              const nestedOwner = skill?.owner
+                && typeof skill.owner === "object"
+                && !Array.isArray(skill.owner)
+                ? skill.owner
+                : skillMetadata.owner
+                  && typeof skillMetadata.owner === "object"
+                  && !Array.isArray(skillMetadata.owner)
+                  ? skillMetadata.owner
+                  : {};
               const explicitCreatorId =
                 readSkillCreatorString([nestedCreator], [
                   "id",
@@ -616,6 +638,14 @@
                   "createdByAvatarUrl",
                   "created_by_avatar_url",
                 ]);
+              const explicitCreatorEmail =
+                readSkillCreatorString([nestedCreator], ["email", "emailAddress", "email_address"])
+                || readSkillCreatorString([skill, skillMetadata], [
+                  "creatorEmail",
+                  "creator_email",
+                  "createdByEmail",
+                  "created_by_email",
+                ]);
               const creatorName = isSystemSkill
                 ? "Computer Agents"
                 : explicitCreatorName
@@ -629,6 +659,52 @@
                   || (isCurrentUserCreator
                     ? String(currentUserAvatarUrl || "").trim()
                     : "");
+              const explicitOwnerId =
+                readSkillCreatorString([nestedOwner], ["id", "userId", "user_id"])
+                || readSkillCreatorString([skill, skillMetadata], [
+                  "ownerId",
+                  "owner_id",
+                  "ownerUserId",
+                  "owner_user_id",
+                ]);
+              const explicitOwnerName =
+                readSkillCreatorString([nestedOwner], ["name", "displayName", "display_name"])
+                || readSkillCreatorString([skill, skillMetadata], ["ownerName", "owner_name"]);
+              const explicitOwnerAvatarUrl =
+                readSkillCreatorString([nestedOwner], [
+                  "avatarUrl",
+                  "avatar_url",
+                  "photoUrl",
+                  "photoURL",
+                ])
+                || readSkillCreatorString([skill, skillMetadata], [
+                  "ownerAvatarUrl",
+                  "owner_avatar_url",
+                ]);
+              const explicitOwnerEmail =
+                readSkillCreatorString([nestedOwner], ["email", "emailAddress", "email_address"])
+                || readSkillCreatorString([skill, skillMetadata], ["ownerEmail", "owner_email"]);
+              const normalizedOwnerId = explicitOwnerId.toLowerCase();
+              const ownerIsCreator = Boolean(
+                normalizedOwnerId
+                && normalizedCreatorId
+                && normalizedOwnerId === normalizedCreatorId
+              );
+              const ownerIsCurrentUser = !normalizedOwnerId
+                || currentCreatorIds.includes(normalizedOwnerId);
+              const ownerName = isSystemSkill
+                ? "Computer Agents"
+                : explicitOwnerName
+                  || (ownerIsCreator ? creatorName : "")
+                  || (ownerIsCurrentUser
+                    ? String(currentUserName || currentUserEmail || "").trim()
+                    : explicitOwnerId)
+                  || creatorName;
+              const ownerAvatarUrl = isSystemSkill
+                ? COMPUTER_AGENTS_CREATOR_PROFILE_URL
+                : explicitOwnerAvatarUrl
+                  || (ownerIsCreator ? creatorAvatarUrl : "")
+                  || (ownerIsCurrentUser ? String(currentUserAvatarUrl || "").trim() : "");
   
             const rawMarkdown = typeof skill?.markdown === "string" ? skill.markdown : "";
             const parsedRawMarkdownSections = parsePlaygroundSkillMarkdownSections(rawMarkdown);
@@ -678,8 +754,12 @@
                 : null,
               creatorId: explicitCreatorId,
               creatorName,
+              creatorEmail: isSystemSkill ? "" : explicitCreatorEmail,
               creatorAvatarUrl,
-              ownerId: typeof skill?.ownerId === "string" ? skill.ownerId : "",
+              ownerId: explicitOwnerId,
+              ownerName,
+              ownerEmail: isSystemSkill ? "" : explicitOwnerEmail,
+              ownerAvatarUrl,
               currentVersionId: typeof skill?.currentVersionId === "string" ? skill.currentVersionId : "",
               publishedVersionId: typeof skill?.publishedVersionId === "string" ? skill.publishedVersionId : "",
               isActive: skill?.isActive !== false,
@@ -724,8 +804,12 @@
               accessControl: normalizedNext.accessControl || normalizedBase.accessControl || null,
               creatorId: normalizedNext.creatorId || normalizedBase.creatorId,
               creatorName: normalizedNext.creatorName || normalizedBase.creatorName,
+              creatorEmail: normalizedNext.creatorEmail || normalizedBase.creatorEmail,
               creatorAvatarUrl: normalizedNext.creatorAvatarUrl || normalizedBase.creatorAvatarUrl,
               ownerId: normalizedNext.ownerId || normalizedBase.ownerId,
+              ownerName: normalizedNext.ownerName || normalizedBase.ownerName,
+              ownerEmail: normalizedNext.ownerEmail || normalizedBase.ownerEmail,
+              ownerAvatarUrl: normalizedNext.ownerAvatarUrl || normalizedBase.ownerAvatarUrl,
               currentVersionId: normalizedNext.currentVersionId || normalizedBase.currentVersionId,
               publishedVersionId: normalizedNext.publishedVersionId || normalizedBase.publishedVersionId,
               codeFiles: normalizedNext.codeFiles.length > 0 ? normalizedNext.codeFiles : normalizedBase.codeFiles,
@@ -837,6 +921,49 @@
             });
             return next;
           }, [normalizedCustomSkills, systemSkills]);
+
+          const scopedOverviewSkills = useMemo(() => {
+            const normalizedScope = skillOverviewScope === "created"
+              ? "created"
+              : skillOverviewScope === "shared"
+                ? "shared"
+                : "all";
+            if (normalizedScope === "all") {
+              return allSkills;
+            }
+            const normalizeIdentityKey = (value) => String(value || "").trim().toLowerCase();
+            const currentIdentityKeys = new Set([
+              normalizeIdentityKey(currentUserId),
+              normalizeIdentityKey(currentUserEmail),
+            ].filter(Boolean));
+            const currentName = normalizeIdentityKey(currentUserName);
+            const placeholderNames = new Set([
+              "",
+              "unknown",
+              "unknown user",
+              "you",
+              "me",
+              "current user",
+            ]);
+            return normalizedCustomSkills.filter((skill) => {
+              const creatorId = normalizeIdentityKey(skill?.creatorId);
+              const creatorName = normalizeIdentityKey(skill?.creatorName);
+              const isCreatedByCurrentUser = creatorId
+                ? currentIdentityKeys.has(creatorId)
+                : placeholderNames.has(creatorName)
+                  || Boolean(currentName && creatorName === currentName);
+              return normalizedScope === "created"
+                ? isCreatedByCurrentUser
+                : !isCreatedByCurrentUser;
+            });
+          }, [
+            allSkills,
+            currentUserEmail,
+            currentUserId,
+            currentUserName,
+            normalizedCustomSkills,
+            skillOverviewScope,
+          ]);
   
           const displaySkills = useMemo(() => {
             if (skillListMode === "custom") {
@@ -861,15 +988,30 @@
           }, [selectedSkill?.markdown]);
   
           useEffect(() => {
-            setSkillDetailTab("code");
+            const requestedAction = String(openSkillRequest?.action || "").trim();
+            const requestedSkillId = PLAYGROUND_RUNNER_SKILL_ID_ALIASES[
+              String(openSkillRequest?.skillId || "").trim()
+            ] || String(openSkillRequest?.skillId || "").trim();
+            const isRestoredSkillSelection = requestedAction === "open"
+              && Boolean(requestedSkillId)
+              && requestedSkillId === selectedSkillId;
+            setSkillDetailTab(
+              isRestoredSkillSelection && openSkillRequest?.skillTab === "settings"
+                ? "settings"
+                : "code"
+            );
             setSkillAccessPrincipalId("");
             setSkillAccessRoleId("member");
-            setSkillAccessTeamMenuOpen(false);
             setSkillAccessSelectedTeamIds(new Set());
             setSkillVersionsOpen(false);
             setSkillPublishMenuOpen(false);
             setSkillVersionSaveDialog(null);
-          }, [selectedSkillId]);
+          }, [
+            openSkillRequest?.action,
+            openSkillRequest?.skillId,
+            openSkillRequest?.skillTab,
+            selectedSkillId,
+          ]);
   
           useEffect(() => {
             if (!selectedSkill?.isSystem) {
@@ -1077,37 +1219,6 @@
           }, [topNavActionsPortalId]);
   
           useEffect(() => {
-            if (!skillActionsPopoverOpen) {
-              return undefined;
-            }
-  
-            function handleSkillActionsPopoverPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (
-                !target
-                || skillActionsPopoverRef.current?.contains(target)
-                || skillActionsPopoverSurfaceRef.current?.contains(target)
-              ) {
-                return;
-              }
-              setSkillActionsPopoverOpen(false);
-            }
-  
-            function handleSkillActionsPopoverEscape(event) {
-              if (event.key === "Escape") {
-                setSkillActionsPopoverOpen(false);
-              }
-            }
-  
-            document.addEventListener("mousedown", handleSkillActionsPopoverPointerDown);
-            window.addEventListener("keydown", handleSkillActionsPopoverEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleSkillActionsPopoverPointerDown);
-              window.removeEventListener("keydown", handleSkillActionsPopoverEscape);
-            };
-          }, [skillActionsPopoverOpen]);
-  
-          useEffect(() => {
             if (!skillDetailIconPickerOpen) {
               return undefined;
             }
@@ -1133,7 +1244,11 @@
               window.removeEventListener("keydown", handleSkillDetailIconPickerEscape);
             };
           }, [skillDetailIconPickerOpen]);
-  
+
+          useEffect(() => {
+            setSkillOwnerSelectorOpen(false);
+          }, [selectedSkillId]);
+
   	        useEffect(() => {
             if (skillsPageMode !== "detail") {
               return;
@@ -1141,8 +1256,27 @@
             if (selectedSkill) {
               return;
             }
+            const requestedAction = String(openSkillRequest?.action || "").trim();
+            const requestedSkillId = PLAYGROUND_RUNNER_SKILL_ID_ALIASES[
+              String(openSkillRequest?.skillId || "").trim()
+            ] || String(openSkillRequest?.skillId || "").trim();
+            const isRestoringRequestedSkill = requestedAction === "open"
+              && Boolean(requestedSkillId)
+              && requestedSkillId === selectedSkillId
+              && (!skillsLoaded || skillsLoading);
+            if (isRestoringRequestedSkill) {
+              return;
+            }
             setSkillsPageMode("overview");
-          }, [selectedSkill, skillsPageMode]);
+          }, [
+            openSkillRequest?.action,
+            openSkillRequest?.skillId,
+            selectedSkill,
+            selectedSkillId,
+            skillsLoaded,
+            skillsLoading,
+            skillsPageMode,
+          ]);
           useEffect(() => {
             if (typeof onToolsSkillsHeaderChange !== "function") {
               return;
@@ -1180,6 +1314,10 @@
                     mode: "overview",
                     title: "",
                     skillId: "",
+                    overviewScope: skillOverviewScope,
+                    onOverviewScopeChange: (nextScope) => setSkillOverviewScope(
+                      nextScope === "created" || nextScope === "shared" ? nextScope : "all"
+                    ),
                   }
             );
           }, [
@@ -1194,6 +1332,7 @@
             skillDetailTab,
             skillVersionState.currentVersionId,
             skillVersionState.versions,
+            skillOverviewScope,
             skillsPageMode,
           ]);
   
@@ -1218,8 +1357,14 @@
               return;
             }
             setSkillListMode("system");
+            setSkillDetailTab(openSkillRequest?.skillTab === "settings" ? "settings" : "code");
             handleSkillSelect(requestedSkillId);
-          }, [openSkillRequest?.token, openSkillRequest?.action, openSkillRequest?.skillId]);
+          }, [
+            openSkillRequest?.token,
+            openSkillRequest?.action,
+            openSkillRequest?.skillId,
+            openSkillRequest?.skillTab,
+          ]);
   
           useEffect(() => {
             setSkillTitleDraft(String(selectedSkill?.name || ""));

@@ -1201,11 +1201,19 @@ export const METRONOME_WORKFLOW_DOMAIN_01_FRAGMENT = String.raw`
         function isMetronomeWorkflowBuiltIn(workflow) {
           if (!workflow || typeof workflow !== "object") return false;
           const metadata = workflow.metadata && typeof workflow.metadata === "object" ? workflow.metadata : {};
+          const definition = workflow.definition && typeof workflow.definition === "object" ? workflow.definition : {};
+          const systemWorkflow = metadata.systemWorkflow && typeof metadata.systemWorkflow === "object"
+            ? metadata.systemWorkflow
+            : metadata.system_workflow && typeof metadata.system_workflow === "object"
+              ? metadata.system_workflow
+              : {};
           return Boolean(
             metadata.builtIn
             || metadata.built_in
             || metadata.defaultWorkflow
             || metadata.default_workflow
+            || systemWorkflow.locked === true
+            || definition.locked === true && String(definition.systemWorkflowKey || definition.system_workflow_key || "").trim()
             || String(workflow.id || "").startsWith("builtin_")
           );
         }

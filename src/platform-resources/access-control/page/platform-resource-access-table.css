@@ -54,6 +54,48 @@
   white-space: nowrap;
 }
 
+.platform-resource-access-settings__add-team-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.platform-resource-access-settings__add-team-item
+  .platform-resource-access-table__principal-avatar {
+  flex: 0 0 20px;
+}
+
+.platform-resource-access-settings__add-team-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.platform-resource-access-settings__add-team-name,
+.platform-resource-access-settings__add-team-role {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-resource-access-settings__add-team-role {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.platform-resource-access-settings__add-teams-empty {
+  padding: 8px 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .platform-resource-access-settings
   .platform-resource-access-settings__role-page {
   width: 100%;
@@ -62,6 +104,49 @@
   grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
   align-items: start;
   gap: 24px;
+}
+
+.platform-resource-access-settings
+  .platform-resource-access-settings__role-page[data-platform-role-list-placement="details-sidebar"] {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 42px;
+}
+
+.platform-resource-access-settings:is(
+    .is-team-detail-view,
+    .is-system-detail-view
+  ) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--platform-page-content-max-width, 87.5rem);
+  min-width: 0;
+  margin-inline: auto;
+}
+
+.platform-resource-access-settings[data-platform-resource-access-view]
+  ~ * {
+  /* The component normally remains the final settings section. This fallback
+     keeps later adapter-owned sections out of a focused access page. */
+  display: none;
+}
+
+[data-platform-resource-access-detail-host]
+  > :not(.platform-resource-access-settings) {
+  display: none;
+}
+
+.resource-detail-page:has(
+    .platform-resource-access-settings[data-platform-resource-access-view]
+  ) {
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: 0;
+}
+
+.resource-detail-page:has(
+    .platform-resource-access-settings[data-platform-resource-access-view]
+  )
+  > .platform-detail-sidebar {
+  display: none;
 }
 
 .platform-resource-access-settings
@@ -78,9 +163,55 @@
   gap: 8px;
 }
 
+.platform-resource-access-settings:is(
+    .is-team-detail-view,
+    .is-system-detail-view
+  )
+  .platform-role-permissions-page__details-card.platform-ui-card {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.platform-resource-access-settings:is(
+    .is-team-detail-view,
+    .is-system-detail-view
+  )
+  .platform-role-permissions-page__details-card
+  > .platform-ui-card__sidebar-header {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.platform-resource-access-settings:is(
+    .is-team-detail-view,
+    .is-system-detail-view
+  )
+  .platform-role-permissions-page__details-card
+  > .platform-ui-card__sidebar-header
+  .platform-ui-card__sidebar-title {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.platform-resource-access-settings
+  .platform-role-permissions-page__details-footer {
+  margin-top: 20px;
+}
+
 @media (max-width: 640px) {
   .platform-resource-access-settings
     .platform-resource-access-settings__role-page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1180px) {
+  .platform-resource-access-settings
+    .platform-resource-access-settings__role-page[data-platform-role-list-placement="details-sidebar"] {
     grid-template-columns: minmax(0, 1fr);
   }
 }

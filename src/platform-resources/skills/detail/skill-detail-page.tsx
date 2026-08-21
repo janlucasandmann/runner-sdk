@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
-import { MarkdownResourceDetailPage } from "../../../platform-ui/pages/details/index.js";
+import {
+  MarkdownResourceDetailPage,
+  PlatformServiceDetailFrame,
+  PlatformServiceDetailPage,
+} from "../../../platform-ui/pages/details/index.js";
 
 export type SkillDetailTab = "code" | "settings";
 
@@ -26,6 +30,25 @@ export function SkillDetailPage({
 }: SkillDetailPageProps) {
   const normalizedTab: SkillDetailTab =
     activeTab === "settings" ? "settings" : "code";
+
+  if (normalizedTab === "settings") {
+    return (
+      <PlatformServiceDetailFrame className="skill-detail-page__settings-frame">
+        <PlatformServiceDetailPage
+          properties={sidebar}
+          sidebarCollapsed={sidebarCollapsed}
+          ariaLabel="Skill details"
+          sidebarAriaLabel="Skill properties"
+          className={`skill-detail-page is-settings-tab${className ? ` ${className}` : ""}`}
+          contentClassName="skill-detail-page__content is-settings-tab"
+          sidebarClassName="skill-detail-page__sidebar"
+          propertiesCardClassName="skill-detail-page__properties-card"
+        >
+          {settings}
+        </PlatformServiceDetailPage>
+      </PlatformServiceDetailFrame>
+    );
+  }
 
   return (
     <MarkdownResourceDetailPage

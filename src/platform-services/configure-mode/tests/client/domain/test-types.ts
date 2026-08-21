@@ -149,6 +149,27 @@ export interface TestPlan {
   runs?: TestRun[];
 }
 
+export interface TestPlanOverviewSummary {
+  id: string;
+  projectId: string | null;
+  name: string;
+  description: string;
+  targetType: string;
+  targetId: string | null;
+  defaultEnvironmentId: string | null;
+  caseCount: number;
+  publishedVersionId: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+  overviewSummaryVersion: number;
+  runCount: number | null;
+  passedRunCount: number | null;
+  lastRunStatus: TestRunStatus | null;
+}
+
+export type TestPlanCatalogEntry = TestPlan | TestPlanOverviewSummary;
+
 export interface TestPlanCreateInput {
   name: string;
   description?: string;

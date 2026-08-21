@@ -8,7 +8,10 @@ This directory contains page views behavior for the owning feature for the Calen
 
 ## Contents
 
-- [`calendar.mjs`](calendar.mjs) — Focused implementation of Calendar.
+- [`calendar.mjs`](calendar.mjs) — Calendar workspace and the event inspector,
+  composed from the same centralized editor, selector, explorer, toggle, and
+  preview components as the inline ticket inspector. Calendar intentionally
+  omits comments, ticket-only Subtasks, and Activity timeline sections.
 - [`index.mjs`](index.mjs) — Public barrel or composition entry point.
 - [`standalone-workspace.mjs`](standalone-workspace.mjs) — Focused implementation of Standalone Workspace.
 - [`upgrade-modal.mjs`](upgrade-modal.mjs) — Focused implementation of Upgrade Modal.

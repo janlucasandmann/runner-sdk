@@ -4,9 +4,11 @@ import {
   buildRunnerBacklogSubtaskLabel,
   buildStagedRunnerAdCreationCommand,
   normalizeAdCreationCommandFromMetadata,
+  normalizeLoopCommandFromMetadata,
   normalizeRunnerAdCreationSettings,
   parseAutoStageBacklogSubtaskCommand,
   parseAutoStageBatchCreationCommand,
+  parseAutoStageLoopCommand,
   parseAutoStageResourceCreationCommand,
   resolveRunnerSlashCommandInputState,
 } from "./composer-commands.js";
@@ -71,6 +73,17 @@ describe("runner composer commands", () => {
     expect(parseAutoStageBatchCreationCommand("/Batch review this repository")).toEqual({
       prompt: "review this repository",
     });
+    expect(parseAutoStageLoopCommand("/loop improve this until it passes")).toEqual({
+      prompt: "improve this until it passes",
+    });
+  });
+
+  it("restores the managed Loop command from persisted message metadata", () => {
+    expect(
+      normalizeLoopCommandFromMetadata({
+        loopCommand: { action: "loop", label: "/loop" },
+      }),
+    ).toEqual({ action: "loop", label: "/loop" });
   });
 
   it("finds the active slash command at the cursor", () => {

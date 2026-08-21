@@ -2961,57 +2961,6 @@
             const availableAgentAccessTeams = availableAgentShareTeams.filter(
               (team) => !agentSharedTeamIdSet.has(String(team.id))
             );
-            const agentAccessAddTeamsControl = !isDefaultAgentConfigurationLocked
-              ? React.createElement(PlatformButtonSelector, {
-                  mode: "popup",
-                  buttonVariant: "secondary",
-                  buttonSize: "small",
-                  label: "Add Teams",
-                  leading: React.createElement(Plus, {
-                    width: 14,
-                    height: 14,
-                    strokeWidth: 1.8,
-                    "aria-hidden": "true",
-                  }),
-                  open: agentAccessTeamMenuOpen,
-                  onOpenChange: (nextOpen) => {
-                    if (
-                      nextOpen
-                      && typeof onWorkspaceTeamsRequest === "function"
-                      && !workspaceTeamsLoading
-                    ) {
-                      requestAgentWorkspaceTeams();
-                    }
-                    setAgentAccessTeamMenuOpen(nextOpen);
-                  },
-                  closeOnSelect: true,
-                  popupAriaLabel: "Add teams with agent access",
-                  popupAlignment: "right",
-                  popupRole: "menu",
-                  popupVariant: "minimal",
-                  popupWidth: 240,
-                  disabled: Boolean(agentAccessState.action),
-                  className: "playground-project-teams-add-shell playground-agent-access-team-menu",
-                  popupClassName: "playground-project-teams-menu",
-                },
-                availableAgentAccessTeams.length
-                  ? availableAgentAccessTeams.map((team) => React.createElement("button", {
-                      key: team.id,
-                      type: "button",
-                      role: "menuitem",
-                      className: "platform-data-table__menu-item playground-project-teams-menu-row",
-                      onClick: () => void handleAddAgentTeamAccess(team),
-                    },
-                    React.createElement("span", { className: "platform-data-table__menu-icon" },
-                      React.createElement(Users, { width: 14, height: 14, strokeWidth: 1.8 })
-                    ),
-                    React.createElement("span", { className: "platform-data-table__menu-copy" }, team.name)
-                  ))
-                  : React.createElement("div", {
-                      className: "playground-project-teams-menu-empty",
-                    }, workspaceTeamsLoading ? "Loading teams..." : "All available teams have access.")
-              )
-              : null;
             const selectedAgentSystemAccessPrincipal = getPlatformSystemAccessPrincipal(agentAccessPrincipalId);
             const selectedAgentAccessTeam = agentAccessPrincipalId && !selectedAgentSystemAccessPrincipal
               ? agentAccessTeams.find((team) => String(team.id) === String(agentAccessPrincipalId)) || null
@@ -3144,12 +3093,23 @@
               disabled: isDefaultAgentConfigurationLocked,
               backLabel: "Settings",
               className: "playground-agent-access-settings",
+              addTeams: isDefaultAgentConfigurationLocked
+                ? undefined
+                : {
+                    teams: availableAgentAccessTeams,
+                    totalTeamCount: normalizedWorkspaceTeams.length,
+                    loading: workspaceTeamsLoading,
+                    requiresPlan: workspaceTeamsRequiresPlan,
+                    disabled: Boolean(agentAccessState.action),
+                    popupAriaLabel: "Add teams with agent access",
+                    onRequestTeams: requestAgentWorkspaceTeams,
+                    onAddTeam: handleAddAgentTeamAccess,
+                  },
               tableProps: {
                 className: "playground-agent-access-platform-data-table",
                 title: null,
                 titleTooltip: "Controls the access levels and permissions users inside teams have when editing or managing this agent.",
                 leading: agentSettingsTableTabs,
-                trailing: agentAccessAddTeamsControl,
                 selectedIds: selectedAgentAccessTeamIds,
                 onSelectedIdsChange: setSelectedAgentAccessTeamIds,
                 pagination: {},

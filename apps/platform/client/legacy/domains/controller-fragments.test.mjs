@@ -118,6 +118,32 @@ const runnerChatSource = await fs.readFile(
   "utf8",
 );
 
+assert.match(
+  platformTemplateSource,
+  /PLAYGROUND_RESOURCE_ACCESS_HISTORY_STATE_KEY\s*=\s*"__computerAgentsResourceAccess"[\s\S]*?"skillTab"/,
+  "Platform history must retain the nested Skill tab used by resource access details.",
+);
+assert.match(
+  platformTemplateSource,
+  /PLAYGROUND_PLATFORM_NAVIGATION_FIELDS\s*=\s*\[[\s\S]*?"libraryId"[\s\S]*?"libraryName"[\s\S]*?"documentId"[\s\S]*?"documentName"/,
+  "Platform history must retain Knowledge library identity so nested access details return to their parent library.",
+);
+assert.match(
+  shellApplicationLifecycleSource,
+  /skillTab: toolsView === "skills" \? toolsSkillsHeaderState\.activeTab[\s\S]*?delete nextHistoryState\[PLAYGROUND_RESOURCE_ACCESS_HISTORY_STATE_KEY\]/,
+  "Full-page navigation must preserve the previous resource-access entry without copying its marker forward.",
+);
+assert.match(
+  shellDataLifecycleSource,
+  /skillTab: options\.skillTab === "settings" \? "settings" : "code"/,
+  "Skill navigation requests must carry their active detail tab.",
+);
+assert.match(
+  skillStateSource,
+  /setSkillDetailTab\(openSkillRequest\?\.skillTab === "settings" \? "settings" : "code"\)/,
+  "Restored Skill routes must reopen Settings before access details hydrate.",
+);
+
 const pendingThreadRunRequestBlocks = Array.from(
   shellCompositionSource.matchAll(/setPendingThreadRunRequest\(\{([\s\S]*?)\n\s*\}\);/g),
   (match) => match[1],
@@ -414,9 +440,29 @@ assert.match(
   "The Skills overview must mount its Custom Skill primary action in the app header.",
 );
 assert.match(
+  skillStateSource,
+  /const \[skillOverviewScope, setSkillOverviewScope\] = useState\("all"\)[\s\S]{0,45000}const scopedOverviewSkills = useMemo[\s\S]{0,2200}normalizedScope === "created"[\s\S]{0,500}!isCreatedByCurrentUser/,
+  "The Skills overview must scope custom Skills into Created by me and Shared with me views.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /className: "playground-skills-overview-scope-switch"[\s\S]{0,700}"All Skills"[\s\S]{0,300}"Created by me"[\s\S]{0,300}"Shared with me"/,
+  "The Skills overview must expose its centralized scope switch in the app-header center.",
+);
+assert.match(
+  shellSettingsToolsSource,
+  /label: toolsOverviewTitle,[\s\S]{0,100}trailing: isSkillsView[\s\S]{0,80}\? null/,
+  "The Skills overview title must not render a trailing overflow menu.",
+);
+assert.match(
   skillRenderingSource,
   /isComputerAgents: systemSkillFamilyId === "computer_agents"[\s\S]{0,400}creatorName: String\([\s\S]{0,260}currentUserName \|\| currentUserEmail \|\| "You"[\s\S]{0,500}creatorAvatarUrl: String\([\s\S]{0,260}currentUserAvatarUrl/,
   "The Skills overview must distinguish the Computer Agents icon and render custom creator provenance.",
+);
+assert.match(
+  skillRenderingSource,
+  /const rows = scopedOverviewSkills\.map[\s\S]{0,240}getSelectedSkillOwnerIdentity\(skill\)[\s\S]{0,1400}ownerName: String\(ownerIdentity\?\.name[\s\S]{0,200}ownerAvatarUrl: String\(ownerIdentity\?\.avatarUrl/,
+  "The Skills overview must render its Owner column from the authoritative Skill owner identity.",
 );
 assert.match(
   skillStateSource,
@@ -491,8 +537,8 @@ assert.match(
 );
 assert.match(
   skillDetailIdentityAndSettingsSource,
-  /renderSkillDetailSidebarRow\("Creator"[\s\S]{0,900}renderSkillDetailSidebarRow\("Owner"/,
-  "Skill Settings must expose creator and owner identities in its properties sidebar.",
+  /React\.createElement\(PlatformServiceDetailPropertyList[\s\S]{0,1500}label: "Creator"[\s\S]{0,1500}label: "Owner"/,
+  "Skill Settings must expose creator and owner through the centralized service detail property list.",
 );
 assert.match(
   skillRenderingSource,
@@ -554,24 +600,20 @@ assert.match(
   /hasInferenceVersionsDrawerSlot = activePage === "inference"[\s\S]{0,1800}hasInferenceVersionsDrawerSlot[\s\S]{0,1600}settingsInferenceVersionsOpen/,
   "The shell must reserve content width while the Inference versions drawer is open.",
 );
-for (const expectedSkillTitleAction of [
-  '"aria-label": "Skill actions"',
-  '["ID"',
-  '["Created"',
-  '["Updated"',
-  '"Send to Team"',
-  '"Copy Skill"',
-  '"Delete"',
-]) {
-  assert.ok(
-    skillTitleActionsSource.includes(expectedSkillTitleAction),
-    `Skill title actions must include ${expectedSkillTitleAction}.`,
-  );
-}
 assert.match(
   skillTitleActionsSource,
-  /function renderSkillTitleActions\(\)[\s\S]*?titleActionsContainer/,
-  "Skill details must provide the same compact metadata and actions menu as Agent details.",
+  /function renderSkillTitleActions\(\)[\s\S]{0,1800}React\.createElement\(PlatformResourceHeaderActions[\s\S]{0,180}React\.createElement\(PlatformResourceActionsMenu,[\s\S]{0,300}resourceLabel: "Skill"/,
+  "Skill details must use the centralized resource header action menu used by Test details.",
+);
+assert.match(
+  skillTitleActionsSource,
+  /React\.createElement\(PlatformResourceActionsInformation,[\s\S]{0,1800}label: "ID"[\s\S]{0,500}label: "Created"[\s\S]{0,500}label: "Updated"/,
+  "Skill resource information must remain available from the centralized secondary popup.",
+);
+assert.match(
+  skillTitleActionsSource,
+  /React\.createElement\(PlatformResourceVersionHistoryMenuItem,[\s\S]{0,900}label: "Send to Team"[\s\S]{0,700}label: "Copy Skill"[\s\S]{0,900}label: "Delete"/,
+  "Skill title actions must expose version history, sharing, copying, and deletion through centralized menu rows.",
 );
 assert.match(
   skillTitleActionsSource,
@@ -1139,6 +1181,16 @@ assert.doesNotMatch(
   platformTemplateCss,
   /\.playground-agent-preview-sidebar\.is-empty[\s\S]{0,240}--tb-task-input-base-bg:\s*transparent;/,
   "The private Agent preview composer must retain its dark surface in the empty state.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-shell \.tb-runner-chat\.playground-thread-runner\.is-home-composer-surface \.task-input-box\s*\{[\s\S]{0,180}--tb-task-input-base-bg:\s*transparent;/,
+  "The initial thread composer must use its transparent home surface only while it is still in home mode.",
+);
+assert.match(
+  platformTemplateCss,
+  /\.playground-shell \.tb-runner-chat\.playground-thread-runner\.is-thread-composer-surface \.task-input-box\s*\{[\s\S]{0,180}--tb-task-input-base-bg:\s*rgba\(30, 30, 30, 0\.9\);/,
+  "The composer must switch to the thread background synchronously when thread creation starts.",
 );
 assert.match(
   platformTemplateCss,

@@ -87,6 +87,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const evaluationVersionDraftTouchedRef = useRef(false);
         const evaluationBackendLoadRef = useRef("");
         const evaluationBackendLoadedRef = useRef(false);
+        const evaluationOverviewLoadMoreRef = useRef(false);
         const evaluationDetailsLoadedRef = useRef(new Set());
         const evaluationWorkspaceTeamsRequestRef = useRef("");
 	        const evaluationRunHistoryLoadedRef = useRef(new Set());
@@ -153,6 +154,11 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const [evaluationVersionChangesState, setEvaluationVersionChangesState] = useState(null);
 	        const [openEvaluationVersionMenuId, setOpenEvaluationVersionMenuId] = useState("");
 	        const [evaluationBackendSyncState, setEvaluationBackendSyncState] = useState({ status: "idle", error: "" });
+	        const [evaluationOverviewPaginationState, setEvaluationOverviewPaginationState] = useState({
+	          hasMore: false,
+	          loadingMore: false,
+	          nextOffset: 0,
+	        });
 	        const [evaluationRunHistorySyncState, setEvaluationRunHistorySyncState] = useState({ status: "idle", error: "" });
         const [evaluationDetailSidebarCollapsed, setEvaluationDetailSidebarCollapsed] = useState(false);
         const [evaluationAnalyticsTimeframe, setEvaluationAnalyticsTimeframe] = useState("month");
@@ -558,6 +564,72 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           return await reloadBackendEvaluationSet(createdSet.id, { clearRunSelection: false, select: false });
         }
 
+        const EVALUATION_OVERVIEW_INITIAL_PAGE_SIZE = 20;
+        const EVALUATION_OVERVIEW_PAGE_INCREMENT = 10;
+
+        async function requestBackendEvaluationSetPage(offset, pageSize) {
+          const normalizedOffset = Math.max(0, Number(offset) || 0);
+          const normalizedPageSize = Math.max(1, Number(pageSize) || EVALUATION_OVERVIEW_PAGE_INCREMENT);
+          const query = "?view=summary&offset=" + normalizedOffset + "&limit=" + normalizedPageSize;
+          const setsPayload = await requestEvaluationBackendJson(
+            "/evaluations" + query,
+            { method: "GET" },
+            "Failed to load evaluations."
+          );
+          const rawSets = readPlaygroundEvaluationListFromPayload(
+            setsPayload || {},
+            ["evaluations", "evaluationSets", "evaluation_sets"]
+          );
+          const pageSets = deduplicatePlaygroundEvaluationSets(
+            rawSets
+              .map((set) => {
+                const sourceMetadata = set?.metadata && typeof set.metadata === "object" && !Array.isArray(set.metadata)
+                  ? set.metadata
+                  : {};
+                const summaryVersion = Number(
+                  set?.overviewSummaryVersion || set?.overview_summary_version || 0
+                ) || 0;
+                const rawCaseCount = set?.caseCount ?? set?.case_count ?? sourceMetadata.overviewCaseCount ?? sourceMetadata.overview_case_count;
+                const rawRunCount = set?.runCount ?? set?.run_count ?? sourceMetadata.overviewRunCount ?? sourceMetadata.overview_run_count;
+                return normalizePlaygroundEvaluationSet({
+                  ...set,
+                  metadata: {
+                    ...sourceMetadata,
+                    overviewSummaryVersion: summaryVersion,
+                    overviewCaseCount: Number.isFinite(Number(rawCaseCount)) ? Math.max(0, Number(rawCaseCount)) : null,
+                    overviewRunCount: Number.isFinite(Number(rawRunCount)) ? Math.max(0, Number(rawRunCount)) : null,
+                  },
+                });
+              })
+              .filter((set) => set.id)
+          );
+          const payloadHasMore = setsPayload?.hasMore ?? setsPayload?.has_more;
+          const payloadNextOffset = Number(setsPayload?.nextOffset ?? setsPayload?.next_offset);
+          return {
+            sets: pageSets,
+            hasMore: typeof payloadHasMore === "boolean"
+              ? payloadHasMore
+              : rawSets.length >= normalizedPageSize,
+            nextOffset: Number.isFinite(payloadNextOffset) && payloadNextOffset > normalizedOffset
+              ? payloadNextOffset
+              : normalizedOffset + rawSets.length,
+          };
+        }
+
+        function getCachedEvaluationRunsForSets(sets) {
+          const cachedRunsBySet = readPlaygroundEvaluationRunHistoryCache(evaluationRunHistoryCacheScopeKey);
+          return (Array.isArray(sets) ? sets : []).flatMap((set) => (
+            Array.isArray(cachedRunsBySet?.[set.id]) ? cachedRunsBySet[set.id] : []
+          ));
+        }
+
+        async function hydrateEvaluationOverviewPageSets(sets) {
+          const cachedRuns = getCachedEvaluationRunsForSets(sets);
+          return await Promise.all((Array.isArray(sets) ? sets : []).map((set) => (
+            fetchBackendEvaluationSetDetails(set, cachedRuns, { includeVersions: false })
+          )));
+        }
+
         async function loadBackendEvaluationSets(options = {}) {
           const normalizedBackendUrl = String(backendUrl || "").replace(/\/+$/, "");
           if (!normalizedBackendUrl || typeof setEvaluationSets !== "function") return [];
@@ -572,38 +644,16 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
             evaluationDetailEntryHydrationRef.current = "";
 	          }
 	          evaluationBackendLoadRef.current = loadKey;
+	          evaluationOverviewLoadMoreRef.current = false;
+	          setEvaluationOverviewPaginationState({ hasMore: false, loadingMore: false, nextOffset: 0 });
 	          setEvaluationBackendSyncState({ status: "loading", error: "" });
-	          setEvaluationRunHistorySyncState((current) => (
-	            current.status === "error" && options.runHistoryRetry !== true
-	              ? current
-	              : { status: "loading", error: "" }
-	          ));
+	          setEvaluationRunHistorySyncState({ status: "idle", error: "" });
 	          try {
-	            const [setsPayload, runsResult] = await Promise.all([
-	              requestEvaluationBackendJson("/evaluations?limit=500", { method: "GET" }, "Failed to load evaluations."),
-	              requestBackendEvaluationRunHistory(
-	                "/evaluations/runs?limit=1000",
-	                { maxAttempts: 3 }
-	              ).then((payload) => ({ payload, error: null })).catch((error) => ({ payload: null, error })),
-	            ]);
-	            const backendSets = deduplicatePlaygroundEvaluationSets(
-	              readPlaygroundEvaluationListFromPayload(setsPayload || {}, ["evaluations", "evaluationSets", "evaluation_sets"])
-	                .map((set) => normalizePlaygroundEvaluationSet(set))
-	                .filter((set) => set.id)
-	            );
-	            const cachedRunsBySet = runsResult.error
-	              ? readPlaygroundEvaluationRunHistoryCache(evaluationRunHistoryCacheScopeKey)
-	              : {};
-	            const backendRuns = resolvePlaygroundEvaluationRunHistorySnapshot({
-	              historyLoadSucceeded: !runsResult.error,
-	              backendSets,
-	              currentSets: normalizedSets,
-	              cachedRunsBySet,
-	              backendRuns: readPlaygroundEvaluationListFromPayload(runsResult.payload || {}, ["runs", "evaluationRuns", "evaluation_runs"])
-	                .map((run, index) => normalizePlaygroundEvaluationRun(run, index))
-	                .filter((run) => run.id),
-	            });
-	            let detailedSets = await Promise.all(backendSets.map((set) => fetchBackendEvaluationSetDetails(set, backendRuns, { includeVersions: false })));
+              const initialPage = await requestBackendEvaluationSetPage(
+                0,
+                EVALUATION_OVERVIEW_INITIAL_PAGE_SIZE
+              );
+	            let detailedSets = await hydrateEvaluationOverviewPageSets(initialPage.sets);
             if (!detailedSets.length && !evaluationBackendMigratedLocalRef.current) {
               evaluationBackendMigratedLocalRef.current = true;
               const localSets = readPlaygroundEvaluationSetsFromStorage()
@@ -626,22 +676,17 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
               .map((set) => ensurePlaygroundEvaluationInitialVersion(normalizePlaygroundEvaluationSet(set)))
               .sort((left, right) => (Date.parse(right.updatedAt || 0) || 0) - (Date.parse(left.updatedAt || 0) || 0));
             setEvaluationSets(detailedSets);
+            setEvaluationOverviewPaginationState({
+              hasMore: initialPage.hasMore,
+              loadingMore: false,
+              nextOffset: initialPage.nextOffset,
+            });
             evaluationSetPersistSignaturesRef.current = new Map(detailedSets.map((set) => [
               set.id,
               JSON.stringify(buildPlaygroundEvaluationBackendPayload(set)),
 	            ]));
 	            evaluationBackendLoadedRef.current = true;
 	            setEvaluationBackendSyncState({ status: "idle", error: "" });
-	            if (runsResult.error) {
-	              setEvaluationRunHistorySyncState({
-	                status: "error",
-	                error: runsResult.error?.message || String(runsResult.error),
-	              });
-	              scheduleEvaluationRunHistoryRetry();
-	            } else {
-	              markEvaluationRunHistoryLoaded(detailedSets.map((set) => set.id));
-	              writePlaygroundEvaluationRunHistoryCache(evaluationRunHistoryCacheScopeKey, detailedSets);
-	            }
 	            const selectedStillExists = detailedSets.some((set) => set.id === selectedEvaluationSetId);
             if (!selectedStillExists) {
               setSelectedEvaluationSetId(detailedSets[0]?.id || "");
@@ -658,6 +703,59 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
 	          }
 	        }
 
+        async function loadMoreBackendEvaluationSets() {
+          if (
+            evaluationOverviewLoadMoreRef.current
+            || !evaluationOverviewPaginationState.hasMore
+          ) {
+            return;
+          }
+          evaluationOverviewLoadMoreRef.current = true;
+          setEvaluationOverviewPaginationState((current) => ({
+            ...current,
+            loadingMore: true,
+          }));
+          try {
+            const nextPage = await requestBackendEvaluationSetPage(
+              evaluationOverviewPaginationState.nextOffset,
+              EVALUATION_OVERVIEW_PAGE_INCREMENT
+            );
+            const nextSets = await hydrateEvaluationOverviewPageSets(nextPage.sets);
+            setEvaluationSets((currentSets) => (
+              deduplicatePlaygroundEvaluationSets([
+                ...(Array.isArray(currentSets) ? currentSets : []),
+                ...nextSets,
+              ]).sort((left, right) => (
+                (Date.parse(right.updatedAt || 0) || 0)
+                - (Date.parse(left.updatedAt || 0) || 0)
+              ))
+            ));
+            nextSets.forEach((set) => {
+              evaluationSetPersistSignaturesRef.current.set(
+                set.id,
+                JSON.stringify(buildPlaygroundEvaluationBackendPayload(set))
+              );
+            });
+            setEvaluationOverviewPaginationState({
+              hasMore: nextPage.hasMore,
+              loadingMore: false,
+              nextOffset: nextPage.nextOffset,
+            });
+          } catch (error) {
+            setEvaluationBackendSyncState({
+              status: "error",
+              error: error?.message || String(error),
+            });
+            setEvaluationOverviewPaginationState((current) => ({
+              ...current,
+              loadingMore: false,
+            }));
+            throw error;
+          } finally {
+            evaluationOverviewLoadMoreRef.current = false;
+          }
+        }
+
 	        useEffect(() => {
 	          if (!shouldLoadData) {
 	            return undefined;
@@ -670,6 +768,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
 	          if (
 	            !evaluationRunHistoryCacheScopeKey
 	            || !evaluationBackendLoadedRef.current
+	            || evaluationRunHistoryLoadedRef.current.size === 0
 	            || evaluationRunHistorySyncState.status !== "idle"
 	          ) {
 	            return;

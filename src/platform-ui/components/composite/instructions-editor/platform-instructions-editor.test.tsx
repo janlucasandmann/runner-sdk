@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -366,9 +367,67 @@ describe("PlatformInstructionsEditor", () => {
     ).toBe(true);
     expect(screen.getByRole("menuitem", { name: "Table" })).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "Divider" })).not.toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Prompt" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Code" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Link" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Add file" })).toBeNull();
+  });
+
+  it("inserts a selected centralized prompt when the host opts in", async () => {
+    const user = userEvent.setup();
+    let persistedValue = "";
+    let selectPrompt:
+      | ((prompt: {
+          id?: string;
+          name?: string;
+          markdown?: string | null;
+          currentVersion?: { markdown?: string | null } | null;
+        }) => void | Promise<void>)
+      | null = null;
+    const openSearch = vi.fn((onSelect: typeof selectPrompt) => {
+      selectPrompt = onSelect;
+    });
+    const changeSources: Array<string | undefined> = [];
+
+    function Example() {
+      const [value, setValue] = useState("");
+      return (
+        <PlatformInstructionsEditor
+          value={value}
+          onChange={(nextValue, context) => {
+            persistedValue = nextValue;
+            changeSources.push(context?.source);
+            setValue(nextValue);
+          }}
+          promptInsertion={{ openSearch }}
+        />
+      );
+    }
+
+    render(<Example />);
+    await user.click(screen.getByRole("textbox", { name: "Instructions" }));
+    await user.click(screen.getByRole("button", { name: "Insert" }));
+    await user.click(screen.getByRole("menuitem", { name: "Prompt" }));
+
+    expect(openSearch).toHaveBeenCalledOnce();
+    expect(selectPrompt).not.toBeNull();
+    await act(async () => {
+      await selectPrompt?.({
+        id: "prompt-1",
+        name: "Incident response",
+        markdown: "Stale content",
+        currentVersion: {
+          markdown: "## Incident response\n\n- Contain the incident",
+        },
+      });
+    });
+
+    await waitFor(() => {
+      expect(persistedValue).toContain("## Incident response");
+      expect(persistedValue).toContain("- Contain the incident");
+    });
+    expect(persistedValue).not.toContain("Stale content");
+    expect(changeSources.at(-1)).toBe("prompt-insert");
   });
 
   it("inserts, edits, persists, and renders Markdown tables", async () => {

@@ -68,6 +68,8 @@ import type {
 const DEFAULT_ACTION_MENU_WIDTH = 220;
 const DEFAULT_PAGE_SIZE = 20;
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+const DEFAULT_CATALOG_INITIAL_ROW_COUNT = 20;
+const DEFAULT_CATALOG_ROW_INCREMENT = 10;
 const VIEWPORT_GUTTER = 8;
 
 interface FloatingAnchor {
@@ -245,6 +247,8 @@ export function PlatformDataTable<TData>({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const incrementalRequestInFlightRef = useRef(false);
+  const progressiveRevealInFlightRef = useRef(false);
+  const previousProgressiveRowIdsRef = useRef<readonly string[]>([]);
   const rowMenuRef = useRef<HTMLDivElement | null>(null);
   const toolbarMenuRef = useRef<HTMLDivElement | null>(null);
   const rowSelectionControlRefs = useRef(
@@ -273,6 +277,11 @@ export function PlatformDataTable<TData>({
   const [internalSearchValue, setInternalSearchValue] = useState(
     toolbar?.search?.defaultValue || "",
   );
+  const [progressiveRowLimit, setProgressiveRowLimit] = useState(
+    DEFAULT_CATALOG_INITIAL_ROW_COUNT,
+  );
+  const [incrementalRequestPending, setIncrementalRequestPending] =
+    useState(false);
   const [internallyCollapsedGroupIds, setInternallyCollapsedGroupIds] =
     useState<Set<string>>(
       () =>
@@ -293,7 +302,11 @@ export function PlatformDataTable<TData>({
     top: VIEWPORT_GUTTER,
   });
   const draggedRowIdRef = useRef<string | null>(null);
+  const rowDropPendingRef = useRef(false);
+  const rowDragResetFrameRef = useRef<number | null>(null);
   const [draggedRowId, setDraggedRowId] = useState<string | null>(null);
+  const [draggedRowHeight, setDraggedRowHeight] = useState(0);
+  const [rowDropCommitted, setRowDropCommitted] = useState(false);
   const [rowDropTarget, setRowDropTarget] = useState<{
     rowId: string;
     placement: "before" | "after";
@@ -308,6 +321,7 @@ export function PlatformDataTable<TData>({
       return;
     }
     incrementalRequestInFlightRef.current = true;
+    setIncrementalRequestPending(true);
     try {
       Promise.resolve(incrementalLoading.onLoadMore())
         .catch((loadError) => {
@@ -318,29 +332,17 @@ export function PlatformDataTable<TData>({
         })
         .finally(() => {
           incrementalRequestInFlightRef.current = false;
+          setIncrementalRequestPending(false);
         });
     } catch (loadError) {
       incrementalRequestInFlightRef.current = false;
+      setIncrementalRequestPending(false);
       console.error(
         "[PlatformDataTable] Incremental row loading failed",
         loadError,
       );
     }
   }, [incrementalLoading]);
-
-  const handleIncrementalScroll = useCallback(() => {
-    const scrollElement = scrollRef.current;
-    if (!scrollElement || !incrementalLoading?.hasMore) return;
-    const requestedThreshold = Number(incrementalLoading.threshold);
-    const threshold = Number.isFinite(requestedThreshold)
-      ? Math.max(0, requestedThreshold)
-      : 24;
-    const remainingScrollDistance =
-      scrollElement.scrollHeight -
-      scrollElement.scrollTop -
-      scrollElement.clientHeight;
-    if (remainingScrollDistance <= threshold) requestMoreRows();
-  }, [incrementalLoading?.hasMore, incrementalLoading?.threshold, requestMoreRows]);
 
   const data = useMemo(() => Array.from(rows || []), [rows]);
   const sortingControlled = sorting?.value !== undefined;
@@ -361,6 +363,8 @@ export function PlatformDataTable<TData>({
     : internalSearchValue;
   const paginationConfig = typeof pagination === "object" ? pagination : null;
   const paginationEnabled = Boolean(paginationConfig);
+  const usesProgressiveCatalogRows =
+    variant === "catalog-ui" && !paginationEnabled;
   const paginationControlled = paginationConfig?.value !== undefined;
   const activePagination = normalizePaginationState(
     paginationControlled ? paginationConfig?.value : internalPagination,
@@ -372,6 +376,15 @@ export function PlatformDataTable<TData>({
   const hasReordering = Boolean(
     rowReordering && rowReordering.enabled !== false,
   );
+  const rowReorderActivation = rowReordering?.activation === "row" ? "row" : "handle";
+  const hasReorderColumn = hasReordering && rowReorderActivation === "handle";
+  const progressiveRowIds = useMemo(
+    () => data.map((row) => getRowId(row)),
+    [data, getRowId],
+  );
+  const progressiveViewKey = `${activeSorting?.id || ""}:${
+    activeSorting?.direction || ""
+  }:${searchValue}`;
   const rowGroupExpansionControlled = rowGrouping?.expandedIds !== undefined;
   const expandedRowGroupIds = useMemo(
     () =>
@@ -389,6 +402,26 @@ export function PlatformDataTable<TData>({
       rowGrouping?.groups,
     ],
   );
+
+  useEffect(() => {
+    const previousRowIds = previousProgressiveRowIdsRef.current;
+    const unchanged =
+      previousRowIds.length === progressiveRowIds.length &&
+      previousRowIds.every((rowId, index) => rowId === progressiveRowIds[index]);
+    const appended =
+      previousRowIds.length > 0 &&
+      previousRowIds.length < progressiveRowIds.length &&
+      previousRowIds.every((rowId, index) => rowId === progressiveRowIds[index]);
+
+    previousProgressiveRowIdsRef.current = progressiveRowIds;
+    if (!usesProgressiveCatalogRows || unchanged || appended) return;
+    setProgressiveRowLimit(DEFAULT_CATALOG_INITIAL_ROW_COUNT);
+  }, [progressiveRowIds, usesProgressiveCatalogRows]);
+
+  useEffect(() => {
+    if (!usesProgressiveCatalogRows) return;
+    setProgressiveRowLimit(DEFAULT_CATALOG_INITIAL_ROW_COUNT);
+  }, [progressiveViewKey, usesProgressiveCatalogRows]);
 
   useLayoutEffect(() => {
     const element = rootRef.current;
@@ -556,6 +589,9 @@ export function PlatformDataTable<TData>({
   const sortColumn = useCallback(
     (column: PlatformDataTableColumn<TData>) => {
       if (!column.sortable) return;
+      if (usesProgressiveCatalogRows) {
+        setProgressiveRowLimit(DEFAULT_CATALOG_INITIAL_ROW_COUNT);
+      }
       commitSorting(
         getNextPlatformDataTableSort(
           activeSorting,
@@ -565,7 +601,12 @@ export function PlatformDataTable<TData>({
       );
       resetPagination();
     },
-    [activeSorting, commitSorting, resetPagination],
+    [
+      activeSorting,
+      commitSorting,
+      resetPagination,
+      usesProgressiveCatalogRows,
+    ],
   );
 
   const selectedRows = useMemo(
@@ -615,7 +656,128 @@ export function PlatformDataTable<TData>({
     [data, getRowId, selection, selectionControlled],
   );
 
-  const renderedRows = table.getRowModel().rows;
+  const allRenderedRows = table.getRowModel().rows;
+  const renderedRows = usesProgressiveCatalogRows
+    ? allRenderedRows.slice(0, progressiveRowLimit)
+    : allRenderedRows;
+  const hasLocalProgressiveRows =
+    usesProgressiveCatalogRows && renderedRows.length < allRenderedRows.length;
+  const incrementalLoadingActive = Boolean(
+    incrementalLoading?.loading || incrementalRequestPending,
+  );
+
+  useEffect(() => {
+    progressiveRevealInFlightRef.current = false;
+  }, [allRenderedRows.length, progressiveRowLimit]);
+
+  const handleIncrementalScroll = useCallback(
+    (scrollBoundary: Element | null = null) => {
+      const scrollElement = scrollRef.current;
+      const hasRemoteRows = Boolean(incrementalLoading?.hasMore);
+      if (
+        !scrollElement ||
+        (!hasLocalProgressiveRows && !hasRemoteRows) ||
+        (!hasLocalProgressiveRows && incrementalLoadingActive)
+      ) {
+        return;
+      }
+
+      const requestedThreshold = Number(incrementalLoading?.threshold);
+      const threshold = Number.isFinite(requestedThreshold)
+        ? Math.max(0, requestedThreshold)
+        : 24;
+      const ownScrollRange =
+        scrollElement.scrollHeight - scrollElement.clientHeight;
+      const scrollHappenedInTableViewport = scrollBoundary === scrollElement;
+      if (scrollHappenedInTableViewport && ownScrollRange > 1) {
+        const remainingScrollDistance =
+          ownScrollRange - scrollElement.scrollTop;
+        if (remainingScrollDistance > threshold) return;
+      } else {
+        const viewportBottom =
+          typeof window === "undefined"
+            ? Number.POSITIVE_INFINITY
+            : window.innerHeight || document.documentElement.clientHeight;
+        const boundaryRect =
+          scrollBoundary &&
+          scrollBoundary !== scrollElement &&
+          scrollBoundary.contains(rootRef.current)
+            ? scrollBoundary.getBoundingClientRect()
+            : null;
+        const visibleBottom =
+          boundaryRect && boundaryRect.height > 0
+            ? Math.min(viewportBottom, boundaryRect.bottom)
+            : viewportBottom;
+        if (
+          scrollElement.getBoundingClientRect().bottom >
+          visibleBottom + threshold
+        ) {
+          return;
+        }
+      }
+
+      if (!usesProgressiveCatalogRows) {
+        requestMoreRows();
+        return;
+      }
+      if (progressiveRevealInFlightRef.current) return;
+
+      progressiveRevealInFlightRef.current = true;
+      const nextLimit = progressiveRowLimit + DEFAULT_CATALOG_ROW_INCREMENT;
+      setProgressiveRowLimit(nextLimit);
+      if (hasRemoteRows && nextLimit > allRenderedRows.length) {
+        requestMoreRows();
+      }
+    },
+    [
+      allRenderedRows.length,
+      hasLocalProgressiveRows,
+      incrementalLoading?.hasMore,
+      incrementalLoading?.threshold,
+      incrementalLoadingActive,
+      progressiveRowLimit,
+      requestMoreRows,
+      usesProgressiveCatalogRows,
+    ],
+  );
+
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      (!usesProgressiveCatalogRows && !incrementalLoading)
+    ) {
+      return undefined;
+    }
+
+    const handleCapturedScroll = (event: Event) => {
+      const rootElement = rootRef.current;
+      const scrollElement = scrollRef.current;
+      if (!rootElement || !scrollElement) return;
+
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        handleIncrementalScroll();
+        return;
+      }
+
+      const scrollHappenedInsideTable = rootElement.contains(target);
+      const scrollHappenedInAncestor = target.contains(rootElement);
+      if (!scrollHappenedInsideTable && !scrollHappenedInAncestor) return;
+
+      handleIncrementalScroll(
+        target === scrollElement
+          ? scrollElement
+          : scrollHappenedInAncestor
+            ? target
+            : null,
+      );
+    };
+
+    window.addEventListener("scroll", handleCapturedScroll, true);
+    return () => {
+      window.removeEventListener("scroll", handleCapturedScroll, true);
+    };
+  }, [handleIncrementalScroll, incrementalLoading, usesProgressiveCatalogRows]);
   const renderedRowGroupIds = rowGrouping
     ? new Set(
         renderedRows.map((tableRow) =>
@@ -629,7 +791,7 @@ export function PlatformDataTable<TData>({
       ).length
     : 0;
   const showEmptyStateRow =
-    !loading && !error && (!data.length || !renderedRows.length);
+    !loading && !error && (!data.length || !allRenderedRows.length);
   const totalRowCount = paginationConfig?.manual
     ? Math.max(
         0,
@@ -836,10 +998,18 @@ export function PlatformDataTable<TData>({
   const updateSearch = useCallback(
     (value: string) => {
       if (!searchControlled) setInternalSearchValue(value);
+      if (usesProgressiveCatalogRows) {
+        setProgressiveRowLimit(DEFAULT_CATALOG_INITIAL_ROW_COUNT);
+      }
       toolbar?.search?.onChange?.(value);
       resetPagination();
     },
-    [resetPagination, searchControlled, toolbar?.search],
+    [
+      resetPagination,
+      searchControlled,
+      toolbar?.search,
+      usesProgressiveCatalogRows,
+    ],
   );
 
   const closeMenus = useCallback(() => {
@@ -957,10 +1127,71 @@ export function PlatformDataTable<TData>({
   );
 
   const resetRowDrag = useCallback(() => {
+    rowDropPendingRef.current = false;
     draggedRowIdRef.current = null;
     setDraggedRowId(null);
+    setDraggedRowHeight(0);
+    setRowDropCommitted(false);
     setRowDropTarget(null);
   }, []);
+
+  const scheduleRowDragReset = useCallback(() => {
+    if (rowDragResetFrameRef.current != null) {
+      globalThis.cancelAnimationFrame?.(rowDragResetFrameRef.current);
+      rowDragResetFrameRef.current = null;
+    }
+    if (typeof globalThis.requestAnimationFrame !== "function") {
+      resetRowDrag();
+      return;
+    }
+    rowDragResetFrameRef.current = globalThis.requestAnimationFrame(() => {
+      rowDragResetFrameRef.current = null;
+      resetRowDrag();
+    });
+  }, [resetRowDrag]);
+
+  useEffect(
+    () => () => {
+      if (rowDragResetFrameRef.current != null) {
+        globalThis.cancelAnimationFrame?.(rowDragResetFrameRef.current);
+      }
+    },
+    [],
+  );
+
+  const beginRowDrag = useCallback(
+    (event: ReactDragEvent<HTMLElement>, rowId: string) => {
+      if (rowDragResetFrameRef.current != null) {
+        globalThis.cancelAnimationFrame?.(rowDragResetFrameRef.current);
+        rowDragResetFrameRef.current = null;
+      }
+      rowDropPendingRef.current = false;
+      draggedRowIdRef.current = rowId;
+      setDraggedRowId(rowId);
+      setRowDropCommitted(false);
+      setRowDropTarget(null);
+      const dragHandle = event.currentTarget as HTMLElement;
+      const rowElement = dragHandle.closest<HTMLElement>(
+        ".platform-data-table__row",
+      );
+      const rowGroupElement = rowElement?.closest<HTMLElement>(
+        ".platform-data-table__row-group",
+      );
+      const measuredHeight = (
+        rowGroupElement ||
+        rowElement ||
+        dragHandle
+      ).getBoundingClientRect().height;
+      setDraggedRowHeight(
+        Number.isFinite(measuredHeight) && measuredHeight > 0
+          ? measuredHeight
+          : 0,
+      );
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", rowId);
+    },
+    [],
+  );
 
   const resolveDropPlacement = (
     event: ReactDragEvent<HTMLDivElement>,
@@ -984,23 +1215,27 @@ export function PlatformDataTable<TData>({
   const gridTemplateColumns = useMemo(
     () =>
       [
-        hasReordering ? "24px" : "",
+        hasReorderColumn ? "24px" : "",
         hasSelection ? "21px" : "",
         ...visibleColumns.map((column) => column.width || "minmax(120px, 1fr)"),
         hasActions ? "28px" : "",
       ]
         .filter(Boolean)
         .join(" "),
-    [hasActions, hasReordering, hasSelection, visibleColumns],
+    [hasActions, hasReorderColumn, hasSelection, visibleColumns],
   );
 
+  const resolvedRowMinHeight = Math.max(
+    36,
+    rowMinHeight ?? (variant === "catalog-ui" ? 72 : 58),
+  );
   const rootStyle = {
     ...style,
     "--platform-data-table-columns": gridTemplateColumns,
-    "--platform-data-table-row-min-height": `${Math.max(
-      36,
-      rowMinHeight ?? (variant === "catalog-ui" ? 72 : 58),
-    )}px`,
+    "--platform-data-table-row-min-height": `${resolvedRowMinHeight}px`,
+    "--platform-data-table-drag-shift-distance": `${
+      draggedRowHeight || resolvedRowMinHeight
+    }px`,
     "--platform-data-table-sticky-top":
       typeof stickyTop === "number" ? `${stickyTop}px` : stickyTop,
   } as CSSProperties;
@@ -1068,11 +1303,7 @@ export function PlatformDataTable<TData>({
         },
         onDragStart: (event: ReactDragEvent<HTMLButtonElement>) => {
           event.stopPropagation();
-          draggedRowIdRef.current = rowId;
-          setDraggedRowId(rowId);
-          setRowDropTarget(null);
-          event.dataTransfer.effectAllowed = "move";
-          event.dataTransfer.setData("text/plain", rowId);
+          beginRowDrag(event, rowId);
         },
         onDragEnd: resetRowDrag,
       },
@@ -1365,7 +1596,7 @@ export function PlatformDataTable<TData>({
           "aria-rowindex": 1,
           style: { gridTemplateColumns },
         },
-        hasReordering
+        hasReorderColumn
           ? createElement("div", {
               className: "platform-data-table__header-cell is-reordering",
               role: "columnheader",
@@ -1481,7 +1712,7 @@ export function PlatformDataTable<TData>({
     if (showEmptyStateRow) {
       const columnCount =
         visibleColumns.length +
-        (hasReordering ? 1 : 0) +
+        (hasReorderColumn ? 1 : 0) +
         (hasSelection ? 1 : 0) +
         (hasActions ? 1 : 0);
       return createElement(
@@ -1579,9 +1810,68 @@ export function PlatformDataTable<TData>({
       );
     }
 
+    const reorderShiftByRowId = new Map<string, "up" | "down">();
+    if (draggedRowId && rowDropTarget && !rowDropCommitted) {
+      const visibleRowEntries = bodyEntries.filter(
+        (
+          candidate,
+        ): candidate is Extract<(typeof bodyEntries)[number], { kind: "row" }> =>
+          candidate.kind === "row",
+      );
+      const sourceIndex = visibleRowEntries.findIndex(
+        (candidate) => candidate.tableRow.id === draggedRowId,
+      );
+      const targetIndex = visibleRowEntries.findIndex(
+        (candidate) => candidate.tableRow.id === rowDropTarget.rowId,
+      );
+      const sourceEntry = visibleRowEntries[sourceIndex];
+      const targetEntry = visibleRowEntries[targetIndex];
+      const sourceGroupId = sourceEntry?.group?.id || null;
+      const targetGroupId = targetEntry?.group?.id || null;
+
+      if (
+        sourceIndex >= 0 &&
+        targetIndex >= 0 &&
+        sourceGroupId === targetGroupId
+      ) {
+        const destinationIndex =
+          rowDropTarget.placement === "before"
+            ? targetIndex > sourceIndex
+              ? targetIndex - 1
+              : targetIndex
+            : targetIndex > sourceIndex
+              ? targetIndex
+              : targetIndex + 1;
+
+        if (destinationIndex > sourceIndex) {
+          for (
+            let index = sourceIndex + 1;
+            index <= destinationIndex;
+            index += 1
+          ) {
+            reorderShiftByRowId.set(
+              visibleRowEntries[index].tableRow.id,
+              "up",
+            );
+          }
+        } else if (destinationIndex < sourceIndex) {
+          for (
+            let index = destinationIndex;
+            index < sourceIndex;
+            index += 1
+          ) {
+            reorderShiftByRowId.set(
+              visibleRowEntries[index].tableRow.id,
+              "down",
+            );
+          }
+        }
+      }
+    }
+
     const columnCount =
       visibleColumns.length +
-      (hasReordering ? 1 : 0) +
+      (hasReorderColumn ? 1 : 0) +
       (hasSelection ? 1 : 0) +
       (hasActions ? 1 : 0);
 
@@ -1629,13 +1919,15 @@ export function PlatformDataTable<TData>({
                       } as CSSProperties)
                     : undefined,
                 },
-                createElement(ChevronDown, {
-                  className: "platform-data-table__group-chevron",
-                  width: 15,
-                  height: 15,
-                  strokeWidth: 1.8,
-                  "aria-hidden": true,
-                }),
+                entry.group.showChevron === false
+                  ? null
+                  : createElement(ChevronDown, {
+                      className: "platform-data-table__group-chevron",
+                      width: 15,
+                      height: 15,
+                      strokeWidth: 1.8,
+                      "aria-hidden": true,
+                    }),
                 entry.group.color
                   ? createElement("span", {
                       className: "platform-data-table__group-indicator",
@@ -1660,6 +1952,9 @@ export function PlatformDataTable<TData>({
         const { tableRow, renderedIndex } = entry;
         const row = tableRow.original;
         const rowId = tableRow.id;
+        const rowDraggable =
+          rowReorderActivation === "row" && isReorderableRow(row);
+        const reorderShift = reorderShiftByRowId.get(rowId) || null;
         const dropPlacement =
           rowDropTarget?.rowId === rowId ? rowDropTarget.placement : null;
         const isSectionEnd =
@@ -1704,6 +1999,7 @@ export function PlatformDataTable<TData>({
               "platform-data-table__row",
               selected && "is-selected",
               disabled && "is-disabled",
+              rowDraggable && "is-row-draggable",
               draggedRowId === rowId && "is-dragging",
               dropPlacement === "before" && "is-drop-before",
               dropPlacement === "after" && "is-drop-after",
@@ -1733,6 +2029,25 @@ export function PlatformDataTable<TData>({
               ? () => onRowPointerEnter(row)
               : undefined,
             onFocus: onRowFocus ? () => onRowFocus(row) : undefined,
+            draggable: rowDraggable,
+            onDragStart: rowDraggable
+              ? (event: ReactDragEvent<HTMLDivElement>) => {
+                  const target = event.target as HTMLElement;
+                  const interactiveTarget = target.closest(
+                    "button, a, input, textarea, select, [contenteditable='true']",
+                  );
+                  if (interactiveTarget && interactiveTarget !== event.currentTarget) {
+                    event.preventDefault();
+                    return;
+                  }
+                  beginRowDrag(event, rowId);
+                }
+              : undefined,
+            onDragEnd: rowDraggable
+              ? () => {
+                  if (!rowDropPendingRef.current) resetRowDrag();
+                }
+              : undefined,
             onDragOver: hasReordering
               ? (event: ReactDragEvent<HTMLDivElement>) => {
                   const sourceRow = findDraggedRow();
@@ -1757,7 +2072,8 @@ export function PlatformDataTable<TData>({
                   event.stopPropagation();
                   const sourceRowId = getRowId(sourceRow);
                   const placement = resolveDropPlacement(event);
-                  resetRowDrag();
+                  rowDropPendingRef.current = true;
+                  setRowDropCommitted(true);
                   try {
                     const result = rowReordering?.onReorder({
                       row: sourceRow,
@@ -1772,6 +2088,7 @@ export function PlatformDataTable<TData>({
                   } catch (reorderError) {
                     reportRowReorderError(reorderError);
                   }
+                  scheduleRowDragReset();
                 }
               : undefined,
             onContextMenu: (event) => {
@@ -1780,7 +2097,7 @@ export function PlatformDataTable<TData>({
                 openRowMenu(event, rowId, true);
             },
           },
-          hasReordering
+          hasReorderColumn
             ? createElement(
                 "div",
                 {
@@ -1899,6 +2216,9 @@ export function PlatformDataTable<TData>({
               key: rowId,
               className: joinClassNames(
                 "platform-data-table__row-group",
+                reorderShift === "up" && "is-reorder-shift-up",
+                reorderShift === "down" && "is-reorder-shift-down",
+                draggedRowId === rowId && "is-drag-origin",
                 isSectionEnd && "is-section-end",
                 ...groupedRowClassNames,
               ),
@@ -1911,6 +2231,9 @@ export function PlatformDataTable<TData>({
             key: rowId,
             className: joinClassNames(
               "platform-data-table__row-group is-expanded",
+              reorderShift === "up" && "is-reorder-shift-up",
+              reorderShift === "down" && "is-reorder-shift-down",
+              draggedRowId === rowId && "is-drag-origin",
               isSectionEnd && "is-section-end",
               ...groupedRowClassNames,
             ),
@@ -1926,7 +2249,7 @@ export function PlatformDataTable<TData>({
                 role: "cell",
                 "aria-colspan":
                   visibleColumns.length +
-                  (hasReordering ? 1 : 0) +
+                  (hasReorderColumn ? 1 : 0) +
                   (hasSelection ? 1 : 0) +
                   (hasActions ? 1 : 0),
               },
@@ -2119,6 +2442,8 @@ export function PlatformDataTable<TData>({
         variant === "catalog-ui" && "is-catalog-ui",
         paginationEnabled && "has-pagination",
         sticky && "has-sticky-header",
+        draggedRowId && "has-active-row-reorder",
+        rowDropCommitted && "is-row-drop-committed",
         className,
       ),
       style: rootStyle,
@@ -2138,14 +2463,16 @@ export function PlatformDataTable<TData>({
           "aria-label": ariaLabel,
           "aria-rowcount":
             Math.max(
-              paginationEnabled ? totalRowCount : renderedRows.length,
+              paginationEnabled || usesProgressiveCatalogRows
+                ? totalRowCount
+                : renderedRows.length,
               showEmptyStateRow ? 1 : 0,
             ) +
             renderedRowGroupCount +
             1,
           "aria-colcount":
             visibleColumns.length +
-            (hasReordering ? 1 : 0) +
+            (hasReorderColumn ? 1 : 0) +
             (hasSelection ? 1 : 0) +
             (hasActions ? 1 : 0),
         },
@@ -2159,14 +2486,17 @@ export function PlatformDataTable<TData>({
           {
             ref: scrollRef,
             className: "platform-data-table__scroll",
-            onScroll: incrementalLoading ? handleIncrementalScroll : undefined,
+            onScroll:
+              usesProgressiveCatalogRows || incrementalLoading
+                ? () => handleIncrementalScroll(scrollRef.current)
+                : undefined,
           },
           renderBody(),
-          incrementalLoading?.loading
+          incrementalLoadingActive
             ? createElement(PlatformLoadingState, {
                 className: "platform-data-table__incremental-loading",
                 message:
-                  incrementalLoading.loadingMessage || "Loading more...",
+                  incrementalLoading?.loadingMessage || "Loading more...",
                 centered: true,
               })
             : null,

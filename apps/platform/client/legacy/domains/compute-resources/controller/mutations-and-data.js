@@ -2096,13 +2096,21 @@
             return handleServerFilesDelete([entry]);
           }
   
-          async function handleServerFileRename(entry) {
+          async function handleServerFileRename(entry, nextLabel) {
             if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isSelectedServerTemplatePreview || !entry?.path || entry.isFolder) {
               return;
             }
             const currentPath = normalizeHistoryPath(entry.path);
-            const rawNextPath = window.prompt("Rename source file", currentPath);
-            const nextPath = normalizeHistoryPath(rawNextPath || "");
+            const currentParentPath = getPlaygroundEntryParentPath(currentPath);
+            const rawNextPath = typeof nextLabel === "string"
+              ? nextLabel
+              : window.prompt("Rename source file", currentPath);
+            const normalizedLabel = normalizeHistoryPath(rawNextPath || "");
+            const nextPath = normalizedLabel.includes("/")
+              ? normalizedLabel
+              : normalizeHistoryPath(
+                  (currentParentPath ? currentParentPath + "/" : "") + normalizedLabel
+                );
             setServerSourceFileMenuPath("");
             if (!nextPath || nextPath === currentPath) {
               return;
@@ -2414,10 +2422,14 @@
             if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isSelectedServerTemplatePreview) {
               return;
             }
-            const rawPath = window.prompt("New file path", "index.js");
-            const normalizedPath = normalizeHistoryPath(rawPath || "");
-            if (!normalizedPath) {
-              return;
+            const existingPaths = new Set(
+              currentServerFiles.map((entry) => normalizeHistoryPath(entry?.path || entry?.name || ""))
+            );
+            let normalizedPath = "untitled.js";
+            let suffix = 2;
+            while (existingPaths.has(normalizedPath)) {
+              normalizedPath = "untitled-" + suffix + ".js";
+              suffix += 1;
             }
   
             setServerFileTransferState({
@@ -2453,6 +2465,7 @@
                 message: "Created " + normalizedPath,
               });
               await loadServerFileContent(draftServer.id, normalizedPath, { fallbackValue: "" });
+              return normalizedPath;
             } catch (error) {
               setServerFileTransferState({
                 isUploading: false,

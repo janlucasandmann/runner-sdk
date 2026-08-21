@@ -998,8 +998,8 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
           function renderBoardCard(task) {
             const boardStatus = getTaskBoardStatus(task);
             const statusLabel = getPlaygroundTaskStatusLabel(boardStatus);
-            const isSubtask = isPlaygroundSubtaskRecord(task);
-            const TaskTypeIcon = isSubtask ? Check : Bookmark;
+            const taskType = normalizePlaygroundTaskType(task.taskType || task.type);
+            const TaskTypeIcon = getPlaygroundTaskTypeIcon(taskType);
             const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "001";
             const taskDescription = String(task.description || "").trim() || "No description";
             const isDraggable = canDropTaskOnBoardLane(task, "blocked") || canDropTaskOnBoardLane(task, "in_progress") || canDropTaskOnBoardLane(task, "todo");
@@ -1011,7 +1011,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                   content: taskDescription,
                   className: "tb-message-markdown",
                 }),
-                taskType: isSubtask ? "subtask" : "task",
+                taskType,
                 typeIcon: React.createElement(TaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 }),
                 priority: renderPlaygroundTaskPriorityIcon(task.priority, "playground-tasks-lane-card-priority"),
                 ticketNumber: taskTicketNumber,
@@ -2448,9 +2448,11 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
           const activeAssigneeActor = resolvedTaskAssigneeId
             ? (assignableActorsById[resolvedTaskAssigneeId] || null)
             : null;
-          const defaultTaskAssigneePopupMode = taskDetailAvailableAssigneePopupModes.includes(getPlaygroundTaskAssigneePopupMode(activeAssigneeActor))
-            ? getPlaygroundTaskAssigneePopupMode(activeAssigneeActor)
-            : (taskDetailAvailableAssigneePopupModes[0] || "agents");
+          const activeReviewerActor = resolvedTaskReviewerId
+            ? (assignableActorsById[resolvedTaskReviewerId] || null)
+            : null;
+          const defaultTaskAssigneePopupMode = getDefaultTaskActorPopupMode(activeAssigneeActor);
+          const defaultTaskReviewerPopupMode = getDefaultTaskActorPopupMode(activeReviewerActor);
 
           function createTaskDetailSelectorOption({ value, label, description, leading = null, trailing = null, onSelect, disabled = false }) {
             return {

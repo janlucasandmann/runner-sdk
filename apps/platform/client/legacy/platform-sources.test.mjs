@@ -39,7 +39,25 @@ const applianceSources = createLegacyPlatformApplicationSources({
         commercialUsageLimits: false,
       },
       product: {
-        inference: { mode: "deployment_fixed", fixedModelId: "local-model" },
+        inference: {
+          mode: "deployment_fixed",
+          fixedModelId: "local-model",
+          deploymentEndpoint: {
+            id: "deployment-inference-endpoint",
+            name: "Stockifi Inference",
+            principal: {
+              type: "appliance",
+              id: "appliance:stockifi",
+              name: "Stockifi",
+            },
+            region: {
+              code: "hr-zad-1",
+              label: "Zadar, Croatia",
+              latitude: 44.1194,
+              longitude: 15.2314,
+            },
+          },
+        },
         agents: {
           visibleBuiltIns: ["spark"],
           defaultBuiltIn: "spark",
@@ -102,6 +120,14 @@ assert.match(
 assert.match(
   applianceSources.moduleSource,
   /const platformDeploymentProfileEnvelope = Object\.freeze\(\{"profile":\{"schemaVersion":2,"profileId":"dgx-spark-appliance-v1"/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /configurePlatformDeploymentMapRuntime\(platformDeploymentProfile\);/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /"region":\{"code":"hr-zad-1","label":"Zadar, Croatia","latitude":44\.1194,"longitude":15\.2314\}/,
 );
 assert.doesNotMatch(
   applianceSources.moduleSource,

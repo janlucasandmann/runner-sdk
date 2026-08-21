@@ -1081,13 +1081,16 @@
             return String(tasksHeaderState.projectId || latestInteractedProjectId || "").trim();
           }
 
-          function openProjectIssueComposerFromHeader() {
+          function openProjectIssueComposerFromHeader(taskType = "task") {
+            const requestedTaskType = normalizePlaygroundTaskType(taskType);
+            const composerOptions = { taskType: requestedTaskType };
             const registeredHandler = tasksProjectIssueCreateHandlerRef.current;
-            if (typeof registeredHandler === "function" && registeredHandler() !== false) {
+            if (typeof registeredHandler === "function" && registeredHandler(composerOptions) !== false) {
               return;
             }
             setTasksProjectIssueRequest({
               action: "create",
+              taskType: requestedTaskType,
               token: Date.now().toString(36) + Math.random().toString(36).slice(2),
             });
           }
@@ -2205,6 +2208,28 @@
               ];
             }
 
+            const activeMetronomeLoopPresentation = metronomeRunTraceSelection?.key
+              && typeof getMetronomeTaskLoopPresentation === "function"
+                ? getMetronomeTaskLoopPresentation(metronomeRunTraceSelection, {
+                    projects: realProjects,
+                    threads: realThreads,
+                  })
+                : null;
+            if (activeMetronomeLoopPresentation?.isTaskLoop) {
+              return [{
+                label: activeMetronomeLoopPresentation.label,
+                trailing: threadTitleActionMenu,
+                leading: React.createElement("span", {
+                  className: "playground-tasks-backlog-project-icon is-loop",
+                  "aria-hidden": "true",
+                }, React.createElement(RefreshCw, {
+                  width: 12,
+                  height: 12,
+                  strokeWidth: 1.9,
+                })),
+              }];
+            }
+
             if (selectedThreadProjectId && selectedThreadProjectName) {
               const ProjectBreadcrumbIcon = selectedThreadProjectIconConfig?.icon || Rocket;
               const TicketTypeIcon = selectedThreadTaskType === "subtask"
@@ -2572,19 +2597,52 @@
                           }, React.createElement(ArrowUp, { width: 14, height: 14, strokeWidth: 2 }))
                         )
                       : null,
-                    React.createElement(PlatformPrimaryButton, {
-                      type: "button",
-                      className: "playground-files-control-button is-backlog-sort playground-tasks-nav-issue-button",
-                      "aria-label": "New issue",
-                      title: "New issue",
-                      onClick: (event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        openProjectIssueComposerFromHeader();
+                    React.createElement(PlatformButtonSelector, {
+                        mode: "split-action",
+                        buttonVariant: "primary",
+                        buttonSize: "small",
+                        label: "New Issue",
+                        leading: React.createElement(Plus, {
+                          width: 14,
+                          height: 14,
+                          strokeWidth: 1.8,
+                          "aria-hidden": "true",
+                        }),
+                        onAction: () => openProjectIssueComposerFromHeader("task"),
+                        actionAriaLabel: "New issue",
+                        closeOnSelect: true,
+                        popupAriaLabel: "Choose task type",
+                        popupAlignment: "right",
+                        popupRole: "menu",
+                        popupVariant: "minimal",
+                        popupWidth: 200,
+                        className: "playground-tasks-nav-issue-selector",
+                        actionButtonClassName: "playground-files-control-button is-backlog-sort playground-tasks-nav-issue-button",
                       },
-                    },
-                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-                      React.createElement("span", null, "New Issue")
+                      PLAYGROUND_TASK_TYPE_OPTIONS.map((option) => {
+                        const TaskTypeIcon = option.id === "subtask"
+                          ? Check
+                          : option.id === "loop"
+                            ? RefreshCw
+                            : Bookmark;
+                        return React.createElement("button", {
+                            key: option.id,
+                            type: "button",
+                            role: "menuitem",
+                            className: "tb-popup-row",
+                            onClick: () => openProjectIssueComposerFromHeader(option.id),
+                          },
+                          React.createElement("span", {
+                            className: "playground-tasks-detail-type-badge is-" + option.id,
+                            "aria-hidden": "true",
+                          }, React.createElement(TaskTypeIcon, {
+                            width: 10,
+                            height: 10,
+                            strokeWidth: 1.9,
+                          })),
+                          React.createElement("span", null, option.label)
+                        );
+                      })
                     )
                   )
                 : React.createElement(PlatformPrimaryButton, {
@@ -2654,8 +2712,10 @@
                   ? metronomePathItems
                 : [{ label: selectedThreadTitle || "Home" }],
               leftExtra: null,
-              center: activePage === "imagine"
-                ? renderImagineModeSwitch()
+              center: activePage === "calendar"
+                ? renderCalendarTopNavCenter()
+                : activePage === "imagine"
+                  ? renderImagineModeSwitch()
                 : activePage === "batches"
                   ? React.createElement("div", {
                       id: "playground-batches-overview-scope",
@@ -2814,6 +2874,7 @@
                             knowledgeContext: options.taskRunRequest.knowledgeContext || null,
                             environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                             quotedSelection: options.taskRunRequest.quotedSelection || null,
+                            loopCommand: options.taskRunRequest.loopCommand || null,
                           });
                         } else {
                           setPendingThreadRunRequest(null);
@@ -2943,6 +3004,7 @@
                         knowledgeContext: options.taskRunRequest.knowledgeContext || null,
                         environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                         quotedSelection: options.taskRunRequest.quotedSelection || null,
+                        loopCommand: options.taskRunRequest.loopCommand || null,
                       });
                     } else {
                       setPendingThreadRunRequest(null);
@@ -3058,9 +3120,26 @@
               renderedPlatformPlanGate
             );
           }
+          const ownerDirectoryOrganization = (Array.isArray(organizationPageOrganizations)
+            ? organizationPageOrganizations
+            : []
+          ).find((organization) => isOrganizationPageActiveOrganization(organization))
+            || getOrganizationPagePersonalOrganization(organizationPageOrganizations);
+          const ownerDirectoryOrganizationId = String(
+            ownerDirectoryOrganization?.id
+            || activeOrganizationId
+            || billingOrganizationId
+            || settingsBudgetStatus?.organizationId
+            || ""
+          ).trim();
   
   	        return (
-            React.createElement(React.Fragment, null,
+            React.createElement(PlatformOrganizationMemberDirectoryProvider, {
+                organizationId: ownerDirectoryOrganizationId,
+                apiBaseUrl: proxyBackendBase,
+                requestHeaders,
+              },
+              React.createElement(React.Fragment, null,
               renderPlatformNavigationGuardModal(),
               renderedPlaygroundOnboarding,
               renderedSubscriptionSuccessModal,
@@ -3526,6 +3605,7 @@
                                       knowledgeContext: options.taskRunRequest.knowledgeContext || null,
                                       environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
                                       quotedSelection: options.taskRunRequest.quotedSelection || null,
+                                      loopCommand: options.taskRunRequest.loopCommand || null,
                                     });
                                   } else {
                                     setPendingThreadRunRequest(null);
@@ -3678,6 +3758,7 @@
                                       scrapeCreationCommand: options.taskRunRequest.scrapeCreationCommand || null,
                                       parseCreationCommand: options.taskRunRequest.parseCreationCommand || null,
                                       adCreationCommand: options.taskRunRequest.adCreationCommand || null,
+                                      loopCommand: options.taskRunRequest.loopCommand || null,
                                     });
                                   } else {
                                     setPendingThreadRunRequest(null);
@@ -3889,6 +3970,7 @@
                               canStartThreads: hasRealAccess,
                               hasRealAccess,
                               taskRunStates: taskRunStates,
+                              threadRecords: realThreads,
                               openTaskRequest: taskOpenRequest,
                               navigationRequest: tasksPageNavigationRequest,
                               onTaskRunStateChange: applyTaskRunState,
@@ -4033,6 +4115,7 @@
                                       connectors: options.taskRunRequest.connectors || null,
                                       knowledgeContext: options.taskRunRequest.knowledgeContext || null,
                                       environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
+                                      loopCommand: options.taskRunRequest.loopCommand || null,
                                     });
                                   }
                                 } else {
@@ -4525,6 +4608,7 @@
                                 canStartThreads: hasRealAccess,
                                 hasRealAccess,
                                 taskRunStates: taskRunStates,
+                                threadRecords: realThreads,
                                 openTaskRequest: threadTaskOpenRequest,
                                 navigationRequest: null,
                                 onTaskRunStateChange: applyTaskRunState,
@@ -4711,6 +4795,7 @@
                                           connectors: options.taskRunRequest.connectors || null,
                                           knowledgeContext: options.taskRunRequest.knowledgeContext || null,
                                           environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
+                                          loopCommand: options.taskRunRequest.loopCommand || null,
                                         });
                                     }
                                   } else {
@@ -4775,7 +4860,7 @@
                       renderStatusIndicators()
                     )
                   : null
-              )))
+              ))))
           );
         }
   

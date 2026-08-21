@@ -1600,84 +1600,6 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
           });
         }
 
-        function renderTaskDetailFileBrowserSidebar(activeSource, searchValue, setSearchValue, options = {}) {
-          const sidebarEnvironment = options.environment || activeTaskEnvironment;
-          const showIntegrations = options.showIntegrations !== false;
-          const sidebarContent = React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "tb-file-browser-search-wrap" },
-              React.createElement("div", { className: "tb-file-browser-search" },
-                React.createElement(Search, { className: "tb-file-browser-search-icon", strokeWidth: 1.9 }),
-                React.createElement("input", {
-                  className: "tb-file-browser-search-input",
-                  value: searchValue,
-                  placeholder: "Search files...",
-                  onChange: (event) => setSearchValue(event.target.value),
-                }),
-                searchValue
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "tb-file-browser-search-clear",
-                      onClick: () => setSearchValue(""),
-                      "aria-label": "Clear search",
-                    }, React.createElement(X, { className: "tb-file-browser-search-clear-icon", strokeWidth: 1.9 }))
-                  : null
-              )
-            ),
-            sidebarEnvironment
-              ? React.createElement("div", { className: "tb-file-browser-sidebar-section tb-file-browser-sidebar-section-environments" },
-                  React.createElement("div", { className: "tb-file-browser-sidebar-title" }, "Environments"),
-                  React.createElement("div", { className: "tb-file-browser-sidebar-list tb-file-browser-sidebar-list-environments" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "tb-file-browser-source-row" + (activeSource === "workspace" ? " active" : ""),
-                      onClick: () => {
-                        if (activeSource === "workspace") {
-                          return;
-                        }
-                        closeTaskConnectorBrowser();
-                        openTaskEnvironmentFilePicker();
-                      },
-                    },
-                      React.createElement(Cloud, { className: "tb-file-browser-source-icon", strokeWidth: 1.75 }),
-                      React.createElement("span", { className: "tb-file-browser-source-label" }, sidebarEnvironment.name || "Environment")
-                    )
-                  )
-                )
-              : null,
-            showIntegrations
-              ? React.createElement("div", { className: "tb-file-browser-sidebar-section" },
-                  React.createElement("div", { className: "tb-file-browser-sidebar-title" }, "Integrations"),
-                  React.createElement("div", { className: "tb-file-browser-sidebar-list" },
-                    PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) =>
-                      React.createElement("button", {
-                        key: option.key,
-                        type: "button",
-                        className: "tb-file-browser-source-row" + (activeSource === option.source ? " active" : ""),
-                        onClick: () => {
-                          if (activeSource === "workspace") {
-                            setTaskEnvironmentFilePickerOpen(false);
-                            openTaskConnectorBrowser(option.source);
-                            return;
-                          }
-                          switchTaskConnectorBrowserSource(option.source);
-                        },
-                      },
-                        renderTaskConnectorServiceIcon(option.source, "tb-file-browser-source-brand-icon"),
-                        React.createElement("span", { className: "tb-file-browser-source-label" }, option.label),
-                        taskConnectorConfigByKey[option.key]?.connected === false
-                          ? React.createElement("span", { className: "tb-file-browser-source-note" }, "Connect")
-                          : null
-                      )
-                    )
-                  )
-                )
-              : null
-          );
-          return options.contentOnly
-            ? sidebarContent
-            : React.createElement("div", { className: "tb-file-browser-sidebar" }, sidebarContent);
-        }
-
         function renderTaskConnectorBrowserItemIcon(item) {
           if (item?.isFolder) {
             return React.createElement("img", {
@@ -2146,165 +2068,157 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
             hasSavedSelection: Boolean(currentSavedSelection),
           });
 
-          const connectorBrowserElement = React.createElement("div", {
-            key: "connector-browser:" + taskConnectorBrowserRenderKey,
-            className: "tb-runner-chat playground-tasks-connector-browser-portal",
-            "data-connector-browser-mode": isProjectConnectorMode ? "project" : "task",
-            "data-connector-browser-source": taskConnectorBrowserCurrentSource,
-          },
-            React.createElement(PlatformModalBackdrop, {
-              className: "tb-file-browser-scrim",
-              onClick: closeTaskConnectorBrowser,
+          const connectorSourceGroups = [
+            !isProjectConnectorMode && activeTaskEnvironment
+              ? {
+                  id: "computers",
+                  label: "Computers",
+                  items: [{
+                    id: String(activeTaskEnvironment.id || activeTaskEnvironmentId || "workspace"),
+                    label: activeTaskEnvironment.name || "Computer",
+                    onSelect: () => {
+                      closeTaskConnectorBrowser();
+                      openTaskEnvironmentFilePicker();
+                    },
+                  }],
+                }
+              : null,
+            {
+              id: "integrations",
+              label: "Integrations",
+              items: PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) => ({
+                id: option.source,
+                label: option.label,
+                icon: renderTaskConnectorServiceIcon(option.source, "tb-file-browser-source-brand-icon"),
+                note: taskConnectorConfigByKey[option.key]?.connected === false ? "Connect" : undefined,
+                active: taskConnectorBrowserCurrentSource === option.source,
+                onSelect: () => switchTaskConnectorBrowserSource(option.source),
+              })),
             },
-              React.createElement(PlatformModalSurface, {
-                className: "tb-file-browser-modal",
-                onClick: (event) => event.stopPropagation(),
-              },
-                React.createElement("div", { className: "tb-file-browser-body" },
-                  isProjectConnectorMode
-                    ? renderProjectConnectorBrowserSidebar()
-                    : renderTaskDetailFileBrowserSidebar(taskConnectorBrowserCurrentSource, taskConnectorBrowserSearchQuery, setTaskConnectorBrowserSearchQuery),
-                  React.createElement("div", { className: "tb-file-browser-main" },
-                    !isConnected
-                      ? React.createElement("div", { className: "tb-file-browser-auth-screen" },
-                          React.createElement("div", { className: "tb-file-browser-auth-card" },
-                            React.createElement("div", { className: "tb-file-browser-auth-icon-wrap" },
-                              renderTaskConnectorServiceIcon(taskConnectorBrowserCurrentSource, "tb-file-browser-auth-icon")
-                            ),
-                            React.createElement("h3", { className: "tb-file-browser-auth-title" },
-                              "Connect to " + taskConnectorBrowserCurrentOption.label
-                            ),
-                            React.createElement("p", { className: "tb-file-browser-auth-copy" },
-                              taskConnectorBrowserCurrentSource === "notion"
-                                ? "Connect your Notion workspace to browse and select databases."
-                                : "Connect your " + taskConnectorBrowserCurrentOption.label + " to browse and select files."
-                            ),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "tb-file-browser-auth-button",
-                              onClick: () => {
-                                const connectorBrowserPayload = {
-                                  mode: isProjectComposerConnectorMode
-                                    ? "project-composer"
-                                    : isProjectConnectorMode
-                                      ? "project"
-                                      : "task",
-                                  source: taskConnectorBrowserCurrentSource,
-                                  projectId: isProjectConnectorMode
-                                    ? String(projectConnectorRecord?.id || selectedProjectId || "")
-                                    : String(selectedProjectId || ""),
-                                  view: isProjectConnectorMode ? "overview" : taskView,
-                                };
-                                console.info("[connector-debug] task connector auth button clicked", {
-                                  connectorBrowser: connectorBrowserPayload,
-                                  hasOnConnect: typeof currentConfig?.onConnect === "function",
-                                  isConnected,
-                                  isProjectConnectorMode,
-                                });
-                                currentConfig?.onConnect?.({
-                                  connectorBrowser: connectorBrowserPayload,
-                                  projectComposerMode,
-                                  projectDraft: isProjectComposerConnectorMode ? projectDraft : undefined,
-                                });
-                              },
-                            }, "Connect " + taskConnectorBrowserCurrentOption.label)
-                          )
-                        )
-                      : React.createElement(React.Fragment, null,
-                          React.createElement("div", { className: "tb-file-browser-header" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "tb-file-browser-nav-button",
-                              onClick: goTaskConnectorBrowserBack,
-                              disabled: taskConnectorBrowserHistoryIndex <= 0,
-                            }, React.createElement(ChevronLeft, { className: "tb-file-browser-nav-icon", strokeWidth: 1.9 })),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "tb-file-browser-nav-button",
-                              onClick: goTaskConnectorBrowserForward,
-                              disabled: taskConnectorBrowserHistoryIndex >= taskConnectorBrowserHistory.length - 1,
-                            }, React.createElement(ChevronRight, { className: "tb-file-browser-nav-icon", strokeWidth: 1.9 })),
-                            React.createElement("div", { className: "tb-file-browser-header-icon" },
-                              renderTaskConnectorServiceIcon(taskConnectorBrowserCurrentSource, "tb-file-browser-source-brand-icon")
-                            ),
-                            React.createElement("div", { className: "tb-file-browser-breadcrumbs" },
-                              taskConnectorBrowserPath.map((crumb, index) =>
-                                React.createElement("span", {
-                                  key: String(crumb.id || "root") + ":" + index,
-                                  className: "tb-file-browser-breadcrumb-chip",
-                                },
-                                  index > 0 ? React.createElement("span", { className: "tb-file-browser-breadcrumb-sep" }, "/") : null,
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "tb-file-browser-breadcrumb" + (index === taskConnectorBrowserPath.length - 1 ? " active" : ""),
-                                    onClick: () => navigateTaskConnectorBrowserToBreadcrumb(index),
-                                  }, crumb.name)
-                                )
-                              )
-                            ),
-                            currentConfig?.onDisconnect
-                              ? React.createElement("button", {
-                                  type: "button",
-                                  className: "tb-file-browser-toolbar-button",
-                                  onClick: () => currentConfig.onDisconnect?.(),
-                                  title: "Disconnect " + taskConnectorBrowserCurrentOption.label,
-                                }, React.createElement(LogOut, { className: "tb-file-browser-toolbar-icon", strokeWidth: 1.8 }))
-                              : null
-                          ),
-                          React.createElement("div", { className: "tb-file-browser-list" },
-                            isLoading
-                              ? React.createElement("div", { className: "tb-file-browser-empty" },
-                                  "Loading " + taskConnectorBrowserCurrentOption.label + "..."
-                                )
-                              : currentError
-                                ? React.createElement("div", { className: "tb-file-browser-empty" }, currentError)
-                                : taskConnectorBrowserFilteredItems.length === 0
-                                  ? React.createElement("div", { className: "tb-file-browser-empty" },
-                                      taskConnectorBrowserSearchQuery.trim()
-                                        ? "No files match your search"
-                                        : taskConnectorBrowserCurrentSource === "notion"
-                                          ? "No Notion databases found"
-                                          : "This folder is empty"
-                                    )
-                                  : React.createElement("div", { className: "tb-file-browser-list-inner" },
-                                      taskConnectorBrowserFilteredItems.map((item) => renderTaskConnectorBrowserItem(item))
-                                    )
-                          )
-                        )
+          ].filter(Boolean);
+          const connectorAuthContent = !isConnected
+            ? React.createElement("div", { className: "tb-file-browser-auth-screen" },
+                React.createElement("div", { className: "tb-file-browser-auth-card" },
+                  React.createElement("div", { className: "tb-file-browser-auth-icon-wrap" },
+                    renderTaskConnectorServiceIcon(taskConnectorBrowserCurrentSource, "tb-file-browser-auth-icon")
                   ),
-                  renderTaskConnectorBrowserPreview()
-                ),
-                React.createElement("div", { className: "tb-file-browser-footer" },
-                  React.createElement(PlatformSecondaryButton, {
+                  React.createElement("h3", { className: "tb-file-browser-auth-title" },
+                    "Connect to " + taskConnectorBrowserCurrentOption.label
+                  ),
+                  React.createElement("p", { className: "tb-file-browser-auth-copy" },
+                    taskConnectorBrowserCurrentSource === "notion"
+                      ? "Connect your Notion workspace to browse and select databases."
+                      : "Connect your " + taskConnectorBrowserCurrentOption.label + " to browse and select files."
+                  ),
+                  React.createElement("button", {
                     type: "button",
-                    className: "tb-file-browser-footer-button tb-file-browser-footer-button-secondary",
-                    onClick: closeTaskConnectorBrowser,
-                  }, "Cancel"),
-                  React.createElement(PlatformPrimaryButton, {
-                    type: "button",
-                    className: "tb-file-browser-footer-button tb-file-browser-footer-button-primary",
-                    onClick: handleApplyTaskConnectorSelection,
-                    disabled: (!hasSelection && !currentSavedSelection) || taskAttachmentTransferState.isProcessing,
-                  },
-                    React.createElement("span", { className: "tb-file-browser-footer-button-content" },
-                      taskAttachmentTransferState.isProcessing && taskConnectorBrowserCurrentSource !== "notion"
-                        ? React.createElement("span", { className: "runner-spinner tb-file-browser-footer-button-spinner" })
-                        : null,
-                      React.createElement("span", { className: "tb-file-browser-footer-button-label" },
-                        taskAttachmentTransferState.isProcessing && taskConnectorBrowserCurrentSource !== "notion"
-                          ? "Attaching Files..."
-                          : primaryActionLabel
-                      )
-                    )
-                  )
+                    className: "tb-file-browser-auth-button",
+                    onClick: () => {
+                      const connectorBrowserPayload = {
+                        mode: isProjectComposerConnectorMode
+                          ? "project-composer"
+                          : isProjectConnectorMode
+                            ? "project"
+                            : "task",
+                        source: taskConnectorBrowserCurrentSource,
+                        projectId: isProjectConnectorMode
+                          ? String(projectConnectorRecord?.id || selectedProjectId || "")
+                          : String(selectedProjectId || ""),
+                        view: isProjectConnectorMode ? "overview" : taskView,
+                      };
+                      currentConfig?.onConnect?.({
+                        connectorBrowser: connectorBrowserPayload,
+                        projectComposerMode,
+                        projectDraft: isProjectComposerConnectorMode ? projectDraft : undefined,
+                      });
+                    },
+                  }, "Connect " + taskConnectorBrowserCurrentOption.label)
                 )
               )
-            )
-          );
+            : null;
 
-          return typeof document !== "undefined" && document.body
-            ? createPortal(connectorBrowserElement, document.body)
-            : connectorBrowserElement;
+          return React.createElement("div", {
+              key: "connector-browser:" + taskConnectorBrowserRenderKey,
+              className: "tb-runner-chat playground-tasks-connector-browser-portal",
+              "data-connector-browser-mode": isProjectConnectorMode ? "project" : "task",
+              "data-connector-browser-source": taskConnectorBrowserCurrentSource,
+            },
+            React.createElement(PlatformFileExplorerBrowserModal, {
+              open: true,
+              visible: true,
+              portal: false,
+              size: "full",
+              title: "Attach connector data",
+              backdropClassName: "tb-file-browser-scrim",
+              className: "tb-file-browser-modal",
+              onClose: closeTaskConnectorBrowser,
+              closeButtonLabel: "Close connector explorer",
+              sourceGroups: connectorSourceGroups,
+              breadcrumbs: taskConnectorBrowserPath.map((crumb, index) => ({
+                id: String(crumb.id || "root") + ":" + index,
+                label: crumb.name,
+                onSelect: () => navigateTaskConnectorBrowserToBreadcrumb(index),
+              })),
+              searchQuery: taskConnectorBrowserSearchQuery,
+              onSearchQueryChange: setTaskConnectorBrowserSearchQuery,
+              searchPlaceholder: "Search Files",
+              onBack: goTaskConnectorBrowserBack,
+              onForward: goTaskConnectorBrowserForward,
+              canGoBack: taskConnectorBrowserHistoryIndex > 0,
+              canGoForward: taskConnectorBrowserHistoryIndex < taskConnectorBrowserHistory.length - 1,
+              headerIcon: renderTaskConnectorServiceIcon(
+                taskConnectorBrowserCurrentSource,
+                "tb-file-browser-source-brand-icon"
+              ),
+              headerTitle: taskConnectorBrowserCurrentOption.label,
+              headerActions: currentConfig?.onDisconnect
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "tb-file-browser-toolbar-button",
+                    onClick: () => currentConfig.onDisconnect?.(),
+                    title: "Disconnect " + taskConnectorBrowserCurrentOption.label,
+                    "aria-label": "Disconnect " + taskConnectorBrowserCurrentOption.label,
+                  }, React.createElement(LogOut, { className: "tb-file-browser-toolbar-icon", strokeWidth: 1.8 }))
+                : null,
+              filterContextKey: "connector:" + taskConnectorBrowserCurrentSource,
+              items: isConnected ? taskConnectorBrowserFilteredItems : [],
+              renderItem: (item) => renderTaskConnectorBrowserItem(item),
+              getItemKind: (item) => {
+                if (item?.isFolder) return "folder";
+                if (getPlaygroundFileKind(item) === "image") return "image";
+                if (/\.pdf$/i.test(String(item?.name || ""))) return "pdf";
+                return "file";
+              },
+              getItemTimestamp: (item) => item?.modifiedTime || item?.createdTime,
+              loading: isConnected && isLoading,
+              loadingMessage: "Loading " + taskConnectorBrowserCurrentOption.label + "...",
+              error: isConnected ? currentError || null : null,
+              emptyMessage: ({ hasSearchQuery }) => hasSearchQuery
+                ? "No files match your search"
+                : taskConnectorBrowserCurrentSource === "notion"
+                  ? "No Notion databases found"
+                  : "This folder is empty",
+              content: connectorAuthContent,
+              preview: isConnected ? renderTaskConnectorBrowserPreview() : null,
+              previewTitle: "Preview",
+              onPreviewClose: () => setTaskConnectorBrowserPreviewId(""),
+              cancelLabel: "Cancel",
+              confirmLabel: React.createElement("span", { className: "tb-file-browser-footer-button-content" },
+                taskAttachmentTransferState.isProcessing && taskConnectorBrowserCurrentSource !== "notion"
+                  ? React.createElement("span", { className: "runner-spinner tb-file-browser-footer-button-spinner" })
+                  : null,
+                React.createElement("span", { className: "tb-file-browser-footer-button-label" },
+                  taskAttachmentTransferState.isProcessing && taskConnectorBrowserCurrentSource !== "notion"
+                    ? "Attaching Files..."
+                    : primaryActionLabel
+                )
+              ),
+              confirmDisabled: !isConnected
+                || ((!hasSelection && !currentSavedSelection) || taskAttachmentTransferState.isProcessing),
+              onCancel: closeTaskConnectorBrowser,
+              onConfirm: handleApplyTaskConnectorSelection,
+            })
+          );
         }
 
         function renderTaskParentPickerDialog() {

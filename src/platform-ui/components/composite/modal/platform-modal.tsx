@@ -60,6 +60,7 @@ export interface PlatformModalProps {
   headerVariant?: PlatformModalHeaderVariant;
   headerSearchProps?: PlatformModalHeaderSearchProps;
   headerMedia?: ReactNode;
+  headerLeading?: ReactNode;
   headerActions?: ReactNode;
   footer?: ReactNode;
   children?: ReactNode;
@@ -115,6 +116,7 @@ export interface PlatformModalHeaderProps extends Omit<HTMLAttributes<HTMLDivEle
   description?: ReactNode;
   searchProps?: PlatformModalHeaderSearchProps;
   media?: ReactNode;
+  leading?: ReactNode;
   actions?: ReactNode;
   titleId?: string;
   descriptionId?: string;
@@ -344,6 +346,7 @@ export function PlatformModal({
   headerVariant = "default",
   headerSearchProps,
   headerMedia,
+  headerLeading,
   headerActions,
   footer,
   children,
@@ -572,6 +575,7 @@ export function PlatformModal({
               inputRef: setHeaderSearchInputRef,
             } : undefined}
             media={headerVariant === "media" ? headerMedia : undefined}
+            leading={headerLeading}
             actions={headerActions}
             titleId={titleId}
             descriptionId={descriptionId}
@@ -648,6 +652,7 @@ export function PlatformModalHeader({
   description,
   searchProps = {},
   media,
+  leading,
   actions,
   titleId,
   descriptionId,
@@ -665,6 +670,7 @@ export function PlatformModalHeader({
     variant === "default"
     && title != null
     && description == null
+    && leading == null
     && actions == null
     && children == null
   );
@@ -759,6 +765,9 @@ export function PlatformModalHeader({
             {description}
           </p>
         ) : null}
+        {leading != null ? (
+          <div className="platform-modal-header__leading">{leading}</div>
+        ) : null}
         <PlatformSearch
           {...inputProps}
           ref={inputRef}
@@ -799,6 +808,9 @@ export function PlatformModalHeader({
         className,
       )}
     >
+      {leading != null ? (
+        <div className="platform-modal-header__leading">{leading}</div>
+      ) : null}
       <div className="platform-modal-header__copy">
         <h2
           id={titleId}

@@ -3,6 +3,7 @@ export const APP_HEADER_STATE_SCRIPT = `        const [accountMenuOpen, setAccou
         const [renderedAccountMenu, setRenderedAccountMenu] = useState(false);
         const [accountMenuPhase, setAccountMenuPhase] = useState("idle");
         const [notificationsOpen, setNotificationsOpen] = useState(false);
+        const [resourceAccessNavigationState, setResourceAccessNavigationState] = useState(null);
         const [threadSearchOpen, setThreadSearchOpen] = useState(false);
         const [threadSearchQuery, setThreadSearchQuery] = useState("");
         const [threadSearchMode, setThreadSearchMode] = useState("threads");

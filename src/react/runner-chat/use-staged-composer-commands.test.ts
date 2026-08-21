@@ -100,6 +100,17 @@ describe("useRunnerStagedComposerCommands", () => {
     expect(result.current.stagedSlideCreationCommand?.action).toBe("slides");
     expect(onDraftChange).toHaveBeenLastCalledWith("Quarterly plan");
 
+    act(() => result.current.clearAllStagedCommands());
+    act(() => {
+      handled = result.current.tryAutoStageInput("/loop raise the score");
+    });
+    expect(handled).toBe(true);
+    expect(result.current.stagedLoopCommand).toEqual({
+      action: "loop",
+      label: "/loop",
+    });
+    expect(onDraftChange).toHaveBeenLastCalledWith("raise the score");
+
     act(() => {
       handled = result.current.tryAutoStageInput("/research ignored");
     });

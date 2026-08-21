@@ -1,4 +1,4 @@
-import { Plus, Save, Trash2 } from "lucide-react";
+import { Bookmark, Plus, Trash2 } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -747,7 +747,7 @@ export function TestCaseDetailPage({
         setSaveModalOpen(true);
       }}
     >
-      <Save width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
+      <Bookmark width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
       <span>{busyAction === "save" ? "Saving…" : "Save Changes"}</span>
     </PlatformPrimaryButton>
   );

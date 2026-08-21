@@ -134,6 +134,52 @@ export function getPlatformAccessPrincipalProfileImageUrl(
   );
 }
 
+function formatPlatformAccessPrincipalRoleLabel(value: string): string {
+  const normalized = value.trim();
+  if (!normalized) return "";
+  if (/\s/.test(normalized) || /[A-Z]/.test(normalized.slice(1))) {
+    return normalized;
+  }
+  return normalized
+    .split(/[_-]+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1).toLowerCase()}`)
+    .join(" ");
+}
+
+/**
+ * Resolves the viewer's membership role from the normalized team record and
+ * legacy organization-team response shapes. This role describes the current
+ * user's place in the team, not the team's policy on the selected resource.
+ */
+export function getPlatformAccessPrincipalRoleLabel(value: unknown): string {
+  const source = asRecord(value);
+  const metadata = asRecord(source.metadata);
+  const membership = asRecord(source.membership);
+  const currentMembership = asRecord(source.currentMembership);
+  const metadataMembership = asRecord(metadata.membership);
+  return formatPlatformAccessPrincipalRoleLabel(
+    readFirstString(
+      [source, membership, currentMembership, metadata, metadataMembership],
+      [
+        "roleLabel",
+        "role_label",
+        "currentUserRoleLabel",
+        "current_user_role_label",
+        "membershipRoleLabel",
+        "membership_role_label",
+        "role",
+        "roleId",
+        "role_id",
+        "currentUserRole",
+        "current_user_role",
+        "membershipRole",
+        "membership_role",
+      ],
+    ),
+  );
+}
+
 function readStringArray(value: unknown): string[] {
   return Array.isArray(value)
     ? value.map((item) => String(item || "").trim()).filter(Boolean)

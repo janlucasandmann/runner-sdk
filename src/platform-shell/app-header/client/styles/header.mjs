@@ -217,6 +217,35 @@ export const APP_HEADER_CSS = `      .playground-top-nav-search-divider {
         height: 14px;
       }
 
+      .platform-resource-access-breadcrumb-avatar {
+        position: relative;
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .platform-resource-access-breadcrumb-avatar__fallback {
+        font-size: 7px;
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .platform-resource-access-breadcrumb-avatar__image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
       .playground-top-nav-path-item-group {
         min-width: auto;
         display: inline-flex;

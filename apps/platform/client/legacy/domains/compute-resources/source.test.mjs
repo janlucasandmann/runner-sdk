@@ -426,6 +426,16 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /async function handleCreateServerFile\(\)[\s\S]*?let normalizedPath = "untitled\.js";[\s\S]*?return normalizedPath;/,
+  "New server source files must return their path so the shared editor can focus inline naming.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /onFileRename: \(file, nextLabel\)[\s\S]{0,180}handleServerFileRename\(row\.entry, nextLabel\)/,
+  "Server source renames must persist the shared editor's inline label.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
   /async function handleCreateServerFolder\(\)[\s\S]*?const markerPath = normalizeHistoryPath\(normalizedPath \+ "\/\.gitkeep"\);/,
   "Source code workspaces must persist newly created folders through a hidden marker file.",
 );
@@ -877,8 +887,8 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const serverAddTeamsControl = React\.createElement\(PlatformButtonSelector,[\s\S]{0,350}buttonVariant: "secondary"[\s\S]{0,1200}popupVariant: "minimal"/,
-  "Function and web app access tables must use the centralized secondary Add Teams selector.",
+  /const serverAddTeamsControl = React\.createElement\(PlatformResourceAccessAddTeams,[\s\S]{0,700}onAddTeam: handleAddServerTeamAccess/,
+  "Function and web app access tables must use the centralized Add Teams component.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -1594,13 +1604,13 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const databaseAddTeamsControl = canManageDatabaseTeamAccess\s*\? React\.createElement\(PlatformPopup, \{\s*open: databaseTeamMenuId === "add-teams",\s*variant: "minimal"/,
-  "Database access management must use the shared minimal popup and secondary Add Teams control.",
+  /const databaseAddTeamsControl = canManageDatabaseTeamAccess\s*\? React\.createElement\(PlatformResourceAccessAddTeams,[\s\S]{0,700}onAddTeam: handleAddDatabaseTeamAccess/,
+  "Database access management must use the centralized Add Teams component.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /surfaceClassName: "playground-project-teams-add-menu playground-database-team-menu-scope",[\s\S]{0,1000}trigger: React\.createElement\(PlatformSecondaryButton/,
-  "Database Add Teams must use the centralized secondary trigger.",
+  /const databaseAddTeamsControl[\s\S]{0,700}loading: workspaceTeamsLoading,[\s\S]{0,200}requiresPlan: workspaceTeamsRequiresPlan/,
+  "Database Add Teams must delegate loading and plan states to the centralized component.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,

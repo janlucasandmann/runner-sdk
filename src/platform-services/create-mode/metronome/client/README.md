@@ -14,6 +14,8 @@ This directory contains browser-side public composition and integration for the 
 - [`runtime/`](runtime/) — This directory contains stateful runtime orchestration for the Metronome service in Create Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
 - [`shell/`](shell/) — This directory contains application-shell state, lifecycle, and navigation integration for the Metronome service in Create Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
 - [`styles/`](styles/) — This directory contains ordered, owner-scoped style modules for the Metronome service in Create Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
+- [`manual-run-context.ts`](manual-run-context.ts) resolves the immutable published or pinned Workflow snapshot plus server-backed selector options. Calendar, Batches, and direct manual-run surfaces share this resolver so they execute the same versioned contract. Consumers pass an `AbortSignal` when selection can change; the resolver retries bounded transient GET failures while never retrying a superseded request.
+- [`manual-run-contracts.ts`](manual-run-contracts.ts) derives strict trigger-specific input contracts and canonical execution payloads. Consumers may provide their own composer presentation through [`components/metronome-manual-run-inputs.tsx`](components/metronome-manual-run-inputs.tsx), but must not redefine the execution shape.
 - [`index.mjs`](index.mjs) — Public barrel or composition entry point.
 
 ## Working in this directory

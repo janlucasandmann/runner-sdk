@@ -1161,7 +1161,7 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           }
           handledProjectNavIssueRequestTokenRef.current = requestToken;
           if (projectNavIssueRequest?.action === "create") {
-            openProjectIssueComposer();
+            openProjectIssueComposer({ taskType: projectNavIssueRequest?.taskType });
           }
         }, [projectNavIssueRequest, selectedProject?.id, selectedProjectId, useUnifiedProjectNav]);
 

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -66,5 +66,43 @@ describe("TestsOverviewPage", () => {
     expect(onCreate).toHaveBeenCalledOnce();
     await user.click(screen.getByText("Release checks"));
     expect(onOpen).toHaveBeenCalledWith(rows[0]);
+  });
+
+  it("requests ten more tests when the initial twenty reach the scroll boundary", () => {
+    const onLoadMore = vi.fn();
+    const initialRows = Array.from({ length: 20 }, (_, index): TestPlanOverviewRow => ({
+      ...rows[0],
+      id: `plan-${index + 1}`,
+      name: `Test plan ${index + 1}`,
+      updatedAt: rows[0].updatedAt - index,
+    }));
+    const { container } = render(
+      <TestsOverviewPage
+        rows={initialRows}
+        incrementalLoading={{
+          hasMore: true,
+          onLoadMore,
+          loadingMessage: "Loading more tests...",
+        }}
+        onOpen={vi.fn()}
+        onCreate={vi.fn()}
+        onRun={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+    const scroll = container.querySelector<HTMLElement>(
+      ".platform-data-table__scroll",
+    );
+    expect(scroll).not.toBeNull();
+    Object.defineProperties(scroll as HTMLElement, {
+      scrollHeight: { configurable: true, value: 1000 },
+      clientHeight: { configurable: true, value: 400 },
+      scrollTop: { configurable: true, value: 600, writable: true },
+    });
+
+    fireEvent.scroll(scroll as HTMLElement);
+    fireEvent.scroll(scroll as HTMLElement);
+
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
   });
 });

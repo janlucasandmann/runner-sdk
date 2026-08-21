@@ -726,6 +726,8 @@ describe("resource overview pages", () => {
         isCustom: true,
         creatorName: "Jane Doe",
         creatorAvatarUrl: "/img/people/jane.jpg",
+        ownerName: "Grace Hopper",
+        ownerAvatarUrl: "/img/people/grace.jpg",
         updatedLabel: "Today",
       },
     ];
@@ -740,6 +742,10 @@ describe("resource overview pages", () => {
       onEdit: vi.fn(),
       onRename: vi.fn(),
       onDelete: vi.fn(),
+      selection: {
+        enabled: true,
+        ariaLabel: (row: (typeof rows)[number]) => `Select ${row.name}`,
+      },
     };
     const { container } = render(
       <SkillsOverviewPage mode="system" {...sharedProps} />,
@@ -782,7 +788,12 @@ describe("resource overview pages", () => {
     ).toBeNull();
     expect(screen.queryByRole("button", { name: "Filter" })).toBeNull();
     const table = screen.getByRole("table", { name: "Skills" });
-    expect(within(table).queryByRole("checkbox")).toBeNull();
+    expect(
+      within(table).getByRole("checkbox", { name: "Select all visible rows" }),
+    ).not.toBeNull();
+    expect(
+      within(table).getByRole("checkbox", { name: "Select Audit" }),
+    ).not.toBeNull();
     expect(
       within(table).queryByRole("columnheader", { name: "Type" }),
     ).toBeNull();
@@ -790,7 +801,7 @@ describe("resource overview pages", () => {
       within(table).queryByRole("columnheader", { name: "Status" }),
     ).toBeNull();
     expect(
-      within(table).getByRole("columnheader", { name: "Creator" }),
+      within(table).getByRole("columnheader", { name: "Owner" }),
     ).not.toBeNull();
     expect(
       within(screen.getByRole("row", { name: "Computer Agents Skill" }))
@@ -801,11 +812,11 @@ describe("resource overview pages", () => {
     ).toBe("/img/agent-profile-pics/ca-profilepic.jpg");
     expect(
       within(screen.getByRole("row", { name: "Audit" }))
-        .getByText("Jane Doe")
+        .getByText("Grace Hopper")
         ?.closest(".resource-overview-identity")
         ?.querySelector("img")
         ?.getAttribute("src"),
-    ).toBe("/img/people/jane.jpg");
+    ).toBe("/img/people/grace.jpg");
     expect(
       screen
         .getByRole("row", { name: "Computer Agents Skill" })
@@ -827,6 +838,20 @@ describe("resource overview pages", () => {
     ).toEqual(["Collapse System Skills", "Collapse Custom Skills"]);
 
     await user.click(
+      within(table).getByRole("checkbox", { name: "Select all visible rows" }),
+    );
+    expect(
+      within(table)
+        .getByRole("checkbox", { name: "Select Computer Agents Skill" })
+        .getAttribute("aria-checked"),
+    ).toBe("true");
+    expect(
+      within(table)
+        .getByRole("checkbox", { name: "Select Audit" })
+        .getAttribute("aria-checked"),
+    ).toBe("true");
+
+    await user.click(
       within(table).getByRole("button", { name: "Collapse Custom Skills" }),
     );
     expect(screen.queryByRole("row", { name: "Audit" })).toBeNull();
@@ -841,6 +866,33 @@ describe("resource overview pages", () => {
     expect(onOpen).toHaveBeenCalledWith(rows[1]);
     expect(onModeChange).not.toHaveBeenCalled();
     expect(onCreate).not.toHaveBeenCalled();
+  });
+
+  it("uses the centralized empty state for an empty Skills table", async () => {
+    const user = userEvent.setup();
+    const onCreate = vi.fn();
+    const { container } = render(
+      <SkillsOverviewPage
+        rows={[]}
+        mode="system"
+        onModeChange={vi.fn()}
+        period="month"
+        onPeriodChange={vi.fn()}
+        onOpen={vi.fn()}
+        onCreate={onCreate}
+        onEdit={vi.fn()}
+        onRename={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    expect(container.querySelector(".platform-empty-state")).not.toBeNull();
+    expect(
+      container.querySelector(".platform-empty-state__icon.lucide-square-mouse-pointer"),
+    ).not.toBeNull();
+    expect(screen.getByText("No skills available")).not.toBeNull();
+    await user.click(screen.getByRole("button", { name: "Custom Skill" }));
+    expect(onCreate).toHaveBeenCalledTimes(1);
   });
 
   it("routes period changes through the common selector", async () => {

@@ -2,6 +2,10 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
+import {
+  PlatformServiceDetailProperty,
+  PlatformServiceDetailPropertyList,
+} from "../../../platform-ui/pages/details/index.js";
 import { SkillDetailPage } from "./skill-detail-page.js";
 
 afterEach(cleanup);
@@ -40,7 +44,13 @@ describe("SkillDetailPage", () => {
         activeTab="settings"
         code={<div>Skill source workspace</div>}
         settings={<div>Skill access settings</div>}
-        sidebar={<div>Skill properties</div>}
+        sidebar={(
+          <PlatformServiceDetailPropertyList>
+            <PlatformServiceDetailProperty label="Owner">
+              Skill properties
+            </PlatformServiceDetailProperty>
+          </PlatformServiceDetailPropertyList>
+        )}
       />,
     );
 
@@ -48,6 +58,15 @@ describe("SkillDetailPage", () => {
     expect(screen.getByText("Skill properties")).not.toBeNull();
     expect(screen.queryByText("Skill source workspace")).toBeNull();
     expect(screen.queryByRole("tab")).toBeNull();
+    expect(
+      container.querySelectorAll("[data-platform-service-detail-frame='true']"),
+    ).toHaveLength(1);
+    expect(
+      container.querySelector(".platform-service-detail-page__sidebar-card"),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(".platform-service-detail-page__property-list"),
+    ).not.toBeNull();
     expect(
       container
         .querySelector(".skill-detail-page")

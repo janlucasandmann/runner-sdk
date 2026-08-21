@@ -2455,6 +2455,7 @@
               ? options.promptAttachment
               : null;
             const normalizedPromptAttachmentId = String(promptAttachment?.id || "").trim();
+            const requestedEnabledSkillIds = normalizePlaygroundEnabledSkillIds(options?.enabledSkillIds);
             const previousThreadId = String(currentThreadId || "").trim();
             if (isPrivateThreadId(previousThreadId)) {
               discardPrivateThread(previousThreadId);
@@ -2462,7 +2463,7 @@
             metronomeRunTraceSelectionRef.current = null;
             setSidebarWorkspaceMode("work");
             setInitialLandingPrompt(nextInitialPrompt);
-            setInitialThreadPrivateMode(false);
+            setInitialThreadPrivateMode(options?.privateMode === true);
             setActivePage("thread");
             setCurrentThreadId("");
             setMetronomeRunTraceSelection(null);
@@ -2500,6 +2501,12 @@
                   },
                 }
               : null);
+            if (requestedEnabledSkillIds.length > 0) {
+              setRunnerEnabledSkillIds((current) => Array.from(new Set([
+                ...normalizePlaygroundEnabledSkillIds(current),
+                ...requestedEnabledSkillIds,
+              ])));
+            }
             setContentMode("chat");
             setChangesNavigationTarget(null);
             setThreadListMode("threads");
@@ -3232,6 +3239,7 @@
                 setToolsSkillsOpenRequest({
                   action: "open",
                   skillId: String(options.skillId || "").trim(),
+                  skillTab: options.skillTab === "settings" ? "settings" : "code",
                   token: Date.now().toString(36) + Math.random().toString(36).slice(2),
                 });
               } else {

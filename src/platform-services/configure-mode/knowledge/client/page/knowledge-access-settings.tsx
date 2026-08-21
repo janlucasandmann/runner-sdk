@@ -1,4 +1,3 @@
-import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   PLATFORM_ALL_AGENTS_PRINCIPAL_ID,
@@ -15,7 +14,6 @@ import {
   isPlatformSystemAccessPrincipalId,
   type PlatformAccessPrincipal,
 } from "../../../../../platform-resources/access-control/index.js";
-import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
 import type { PlatformPermissionSet } from "../../../../../platform-ui/pages/permissions/index.js";
 import type { KnowledgeApi } from "../api/index.js";
 import type { KnowledgeLibrary } from "../domain/index.js";
@@ -28,6 +26,8 @@ export interface KnowledgeAccessSettingsProps {
   library: KnowledgeLibrary;
   api: KnowledgeApi;
   workspaceTeams?: readonly unknown[];
+  workspaceTeamMembersById?: Readonly<Record<string, readonly unknown[] | undefined>>;
+  onWorkspaceTeamMembersRequest?: (teamId: string) => void | Promise<void>;
   onLibraryChange: (library: KnowledgeLibrary) => void;
   onPermissionDetailOpenChange?: (open: boolean) => void;
 }
@@ -66,6 +66,8 @@ export function KnowledgeAccessSettings({
   library,
   api,
   workspaceTeams = [],
+  workspaceTeamMembersById = {},
+  onWorkspaceTeamMembersRequest,
   onLibraryChange,
   onPermissionDetailOpenChange,
 }: KnowledgeAccessSettingsProps) {
@@ -228,6 +230,16 @@ export function KnowledgeAccessSettings({
         ));
       }}
       teamPermissionSet={teamPermissionSet}
+      teamMembers={selectedTeam ? workspaceTeamMembersById[selectedTeam.id] || [] : []}
+      teamMembersTeamId={
+        selectedTeam && Object.prototype.hasOwnProperty.call(
+          workspaceTeamMembersById,
+          selectedTeam.id,
+        )
+          ? selectedTeam.id
+          : ""
+      }
+      onRequestTeamMembers={onWorkspaceTeamMembersRequest}
       onTeamPermissionSetChange={(roleId, permissionSet) => {
         if (!selectedTeam) return;
         void persistMetadata(buildPlatformTeamRolePermissionMetadata(
@@ -239,26 +251,16 @@ export function KnowledgeAccessSettings({
         ));
       }}
       disabled={busy}
+      addTeams={{
+        teams: availableTeams,
+        totalTeamCount: allTeams.length,
+        disabled: busy,
+        popupAriaLabel: "Add teams with Knowledge Library access",
+        onAddTeam: (team) => addTeam(team.id),
+      }}
       tableProps={{
         busy,
         error,
-        trailing: (
-          <PlatformSelector
-            value=""
-            options={availableTeams.map((team) => ({
-              value: team.id,
-              label: team.name,
-              description: team.description || team.roleLabel,
-            }))}
-            label={<span className="knowledge-access-add-label"><Plus width={14} height={14} />Add Team</span>}
-            placeholder="Add Team"
-            ariaLabel="Add a team to this Knowledge library"
-            disabled={busy || availableTeams.length === 0}
-            onValueChange={(teamId) => void addTeam(teamId)}
-            popupAlignment="right"
-            popupWidth={280}
-          />
-        ),
         onRemoveTeams: removeTeams,
         formatCreatedAt: (createdAt) => createdAt
           ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(createdAt))

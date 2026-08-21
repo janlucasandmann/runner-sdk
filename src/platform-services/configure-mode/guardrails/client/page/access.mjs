@@ -410,9 +410,22 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
             .filter((team) => String(team?.id || "").trim());
           const guardrailSharedTeams = guardrailAccessTeamIds.map((teamId) => {
             const team = guardrailWorkspaceTeams.find((candidate) => String(candidate.id) === teamId);
+            const roleId = String(
+              team?.roleId
+                || team?.role
+                || team?.membershipRole
+                || team?.membership_role
+                || team?.currentUserRole
+                || team?.current_user_role
+                || "member"
+            ).trim().toLowerCase();
             return {
+              ...(team && typeof team === "object" ? team : {}),
               id: teamId,
               name: team?.name || "Shared team",
+              kind: "team",
+              roleId,
+              roleLabel: String(team?.roleLabel || team?.role_label || (roleId.charAt(0).toUpperCase() + roleId.slice(1))),
               profileImageUrl: getPlatformAccessPrincipalProfileImageUrl(team),
               createdAt: team?.createdAt || selectedGuardrailSet?.updatedAt || "",
               meta: "Team role permissions",
@@ -730,43 +743,14 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
             }
             const addTeamsControl = selectedGuardrailSetReadonly
               ? null
-              : React.createElement(PlatformPopup, {
-                  open: guardrailAccessMenuOpen,
-                  variant: "minimal",
-                  portal: true,
-                  placement: "bottom-end",
-                  portalOffset: 6,
-                  animation: "down-in",
-                  surfaceProps: { role: "menu", "aria-label": "Add teams to guardrail" },
-                  trigger: React.createElement(PlatformSecondaryButton, {
-                    type: "button",
-                    size: "small",
-                    onClick: () => {
-                      if (!guardrailWorkspaceTeams.length && typeof loadTeamPageData === "function") {
-                        void loadTeamPageData({ selectedTeamId: "" });
-                      }
-                      setGuardrailAccessMenuOpen((current) => !current);
-                    },
-                  },
-                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Add Teams")
-                  )
-                },
-                  availableGuardrailTeams.length
-                    ? availableGuardrailTeams.map((team) => React.createElement("button", {
-                        key: team.id,
-                        type: "button",
-                        role: "menuitem",
-                        className: "tb-popup-row",
-                        onClick: () => addGuardrailTeamAccess(team),
-                      },
-                        React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, team.name || "Untitled team")
-                      ))
-                    : React.createElement("button", { type: "button", role: "menuitem", className: "tb-popup-row", disabled: true },
-                        teamPageLoading ? "Loading teams..." : "All teams already have access"
-                      )
-                );
+              : React.createElement(PlatformResourceAccessAddTeams, {
+                  teams: availableGuardrailTeams,
+                  totalTeamCount: guardrailWorkspaceTeams.length,
+                  loading: teamPageLoading,
+                  popupAriaLabel: "Add teams with Guardrail access",
+                  onRequestTeams: () => loadTeamPageData?.({ selectedTeamId: "" }),
+                  onAddTeam: addGuardrailTeamAccess,
+                });
             return React.createElement("section", { className: "playground-guardrails-access-settings" },
               React.createElement(PlatformResourceAccessTable, {
                 teams: guardrailSharedTeams.map((team) => ({ ...team, description: team.meta })),

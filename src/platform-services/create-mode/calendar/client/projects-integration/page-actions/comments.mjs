@@ -1,8 +1,17 @@
 export const CALENDAR_PROJECTS_PAGE_COMMENTS_SCRIPT = `
-        function handleAddScheduleComment() {
+        async function handleAddScheduleComment(files = []) {
           const nextCommentBody = String(taskCommentInputValue || "").replaceAll(String.fromCharCode(13), "").trim();
           if (!nextCommentBody) {
-            return;
+            return false;
+          }
+          let uploadedAttachments = [];
+          try {
+            uploadedAttachments = await uploadTaskAttachmentFiles(files, {
+              environmentId: activeTaskEnvironmentId,
+              allowWithoutEnvironment: true,
+            });
+          } catch {
+            return false;
           }
           const createdComment = normalizePlaygroundTaskCommentRecord({
             id: "schedule_comment_" + Date.now(),
@@ -11,6 +20,10 @@ export const CALENDAR_PROJECTS_PAGE_COMMENTS_SCRIPT = `
             authorType: "user",
             authorName: currentUserName || "You",
             createdAt: new Date().toISOString(),
+            attachments: uploadedAttachments,
+            metadata: {
+              attachments: uploadedAttachments,
+            },
           });
           updateScheduleDraft((current) => ({
             ...(current || buildProjectScheduleDraft(selectedProject)),
@@ -18,6 +31,7 @@ export const CALENDAR_PROJECTS_PAGE_COMMENTS_SCRIPT = `
           }));
           setTaskCommentInputValue("");
           resetScheduleSaveState("");
+          return true;
         }
 
 `;

@@ -92,3 +92,80 @@ export function getBatchCreatorIdentity(
   ).trim();
   return { id: creatorId, name, email, avatarUrl };
 }
+
+/** Resolves the durable Batch owner independently from the creating actor. */
+export function getBatchOwnerIdentity(
+  job: BatchJob,
+  currentUser: BatchCreatorIdentity = { id: "", name: "" },
+): BatchCreatorIdentity {
+  const source = asRecord(job);
+  const metadata = asRecord(job.metadata);
+  const owner = asRecord(
+    source.owner
+    || source.ownedBy
+    || source.owned_by
+    || metadata.owner
+    || metadata.ownedBy
+    || metadata.owned_by,
+  );
+  const ownerId = String(
+    readIdentityValue([owner], ["userId", "user_id", "id"])
+    || readIdentityValue([source, metadata], [
+      "ownerUserId",
+      "owner_user_id",
+      "ownedByUserId",
+      "owned_by_user_id",
+    ])
+    || job.userId,
+  ).trim();
+  const isCurrentUser = Boolean(
+    currentUser.id && ownerId && currentUser.id === ownerId,
+  );
+  const creator = getBatchCreatorIdentity(job, currentUser);
+  const creatorIsOwner = Boolean(ownerId && creator.id && ownerId === creator.id);
+  const email = (
+    (isCurrentUser ? currentUser.email : "")
+    || readIdentityValue([owner], ["email"])
+    || readIdentityValue([source, metadata], [
+      "ownerEmail",
+      "owner_email",
+      "ownedByEmail",
+      "owned_by_email",
+    ])
+    || (creatorIsOwner ? creator.email : "")
+    || ""
+  ).trim();
+  const name = (
+    (isCurrentUser ? currentUser.name : "")
+    || readIdentityValue([owner], ["name", "displayName", "display_name"])
+    || readIdentityValue([source, metadata], [
+      "ownerName",
+      "owner_name",
+      "ownedByName",
+      "owned_by_name",
+    ])
+    || (creatorIsOwner ? creator.name : "")
+    || email
+    || "User"
+  ).trim();
+  const avatarUrl = (
+    (isCurrentUser ? currentUser.avatarUrl : "")
+    || readIdentityValue([owner], [
+      "avatarUrl",
+      "avatar_url",
+      "photoURL",
+      "photoUrl",
+      "photo_url",
+      "picture",
+    ])
+    || readIdentityValue([source, metadata], [
+      "ownerAvatarUrl",
+      "owner_avatar_url",
+      "ownedByAvatarUrl",
+      "owned_by_avatar_url",
+    ])
+    || (creatorIsOwner ? creator.avatarUrl : "")
+    || ""
+  ).trim();
+  return { id: ownerId, name, email, avatarUrl };
+}

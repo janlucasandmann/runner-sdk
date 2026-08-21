@@ -851,6 +851,97 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   line-height: 1;
 }
 
+.platform-info-tooltip.platform-popup-anchor {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.platform-info-tooltip__trigger {
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  min-height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  outline: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.38);
+  cursor: help;
+  transition: color 120ms ease, background-color 120ms ease;
+}
+
+.platform-info-tooltip__trigger svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+}
+
+.platform-info-tooltip__trigger:hover,
+.platform-info-tooltip__trigger:focus-visible,
+.platform-info-tooltip.is-open .platform-info-tooltip__trigger {
+  background: rgba(255, 255, 255, 0.075);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.platform-info-tooltip__trigger:focus-visible {
+  box-shadow: 0 0 0 1px rgba(77, 163, 255, 0.72);
+}
+
+.platform-popup-surface.platform-info-tooltip__surface {
+  min-width: 220px;
+  width: min(280px, calc(100vw - 24px));
+  max-width: min(280px, calc(100vw - 24px));
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px !important;
+  color: #fff;
+  pointer-events: auto;
+  white-space: normal;
+}
+
+.platform-info-tooltip__title,
+.platform-info-tooltip__description,
+.platform-info-tooltip__runtime,
+.platform-info-tooltip__runtime-label {
+  display: block;
+}
+
+.platform-info-tooltip__title {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.platform-info-tooltip__description,
+.platform-info-tooltip__runtime {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.platform-info-tooltip__runtime {
+  margin-top: 3px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-info-tooltip__runtime-label {
+  margin-bottom: 2px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .platform-popup-surface::before {
   content: "";
   pointer-events: none;
@@ -2139,6 +2230,13 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   flex: 0 0 auto;
   align-items: center;
   gap: 8px;
+}
+
+.platform-modal-header__leading {
+  min-width: 0;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
 }
 
 .platform-modal-header.is-search .platform-modal-header__close {

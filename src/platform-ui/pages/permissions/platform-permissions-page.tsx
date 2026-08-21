@@ -1,5 +1,5 @@
 import { Info } from "lucide-react";
-import type { ReactNode } from "react";
+import { isValidElement, type ReactNode } from "react";
 import type { PlatformDataTableColumn } from "../../components/composite/data-table/index.js";
 import {
   PlatformSettingsDataTable,
@@ -117,6 +117,168 @@ interface PermissionActionTableRow {
   inheritedAccess: PlatformPermissionAccess;
   explicitAccess: PlatformPermissionAccess | "";
   effectiveAccess: PlatformPermissionAccess;
+  searchText: string;
+}
+
+function getPermissionNodeText(value: ReactNode): string {
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (Array.isArray(value)) return value.map(getPermissionNodeText).join(" ");
+  if (isValidElement<{ children?: ReactNode }>(value)) {
+    return getPermissionNodeText(value.props.children);
+  }
+  return "";
+}
+
+interface PermissionActionTableOptions {
+  permissionSet: PlatformPermissionsPageProps["permissionSet"];
+  rings: readonly PlatformPermissionRingDefinition[];
+  accessOptions: readonly PlatformPermissionAccessOption[];
+  actionPresentation: PlatformPermissionsPageProps["actionPresentation"];
+}
+
+function createPermissionActionRows(
+  actions: readonly PlatformPermissionActionDefinition[],
+  {
+    permissionSet,
+    rings,
+    accessOptions,
+    actionPresentation,
+  }: PermissionActionTableOptions,
+): PermissionActionTableRow[] {
+  return actions.map((action) => {
+    const actionRingId = getPlatformPermissionActionRingId(permissionSet, action, rings);
+    const actionRing = rings.find((candidate) => candidate.id === actionRingId) || rings[0];
+    const presentation = actionPresentation?.[action.id];
+    const label = presentation?.label ?? action.label;
+    const description = presentation?.description ?? action.description;
+    return {
+      action,
+      label,
+      description,
+      actionRingId,
+      inheritedAccess: actionRing
+        ? getPlatformPermissionRingAccess(permissionSet, actionRing, accessOptions)
+        : normalizePlatformPermissionAccess(permissionSet?.defaultAccess, accessOptions),
+      explicitAccess: getPlatformPermissionActionExplicitAccess(
+        permissionSet,
+        action,
+        rings,
+        accessOptions,
+      ),
+      effectiveAccess: getPlatformPermissionActionAccess(
+        permissionSet,
+        action,
+        rings,
+        accessOptions,
+      ),
+      searchText: [
+        action.id,
+        action.label,
+        action.description,
+        getPermissionNodeText(label),
+        getPermissionNodeText(description),
+      ].join(" "),
+    };
+  });
+}
+
+function createPermissionActionColumns({
+  firstColumnHeader,
+  rings,
+  accessOptions,
+  disabled,
+  showEffectiveAccess,
+  onActionRingChange,
+  onActionAccessChange,
+}: {
+  firstColumnHeader: ReactNode;
+  rings: readonly PlatformPermissionRingDefinition[];
+  accessOptions: readonly PlatformPermissionAccessOption[];
+  disabled: boolean;
+  showEffectiveAccess: boolean;
+  onActionRingChange: PlatformPermissionsPageProps["onActionRingChange"];
+  onActionAccessChange: PlatformPermissionsPageProps["onActionAccessChange"];
+}): PlatformDataTableColumn<PermissionActionTableRow>[] {
+  const columns: PlatformDataTableColumn<PermissionActionTableRow>[] = [
+    {
+      id: "action",
+      header: firstColumnHeader,
+      width: "minmax(0, 1fr)",
+      accessor: (row) => row.searchText,
+      cell: ({ row }) => (
+        <div className="platform-permissions-page__action-copy playground-agents-permission-copy">
+          <div className="platform-permissions-page__action-title playground-agents-permission-title">
+            {row.label}
+            {row.explicitAccess ? (
+              <PlatformLabel
+                variant="blue"
+                className="platform-permissions-page__override-badge"
+              >
+                Override
+              </PlatformLabel>
+            ) : null}
+          </div>
+          <div className="platform-permissions-page__action-description playground-agents-permission-description">
+            {row.description}
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "ring",
+      header: "Ring",
+      width: "104px",
+      cell: ({ row }) => (
+        <PermissionRingSelect
+          value={row.actionRingId}
+          rings={rings}
+          disabled={disabled || !onActionRingChange}
+          ariaLabel={`${row.action.label} ring`}
+          onChange={onActionRingChange
+            ? (ringId) => onActionRingChange(row.action.id, ringId)
+            : undefined}
+        />
+      ),
+    },
+    {
+      id: "permission",
+      header: "Permission",
+      width: "126px",
+      className: "platform-permissions-page__permission-column",
+      headerClassName: "platform-permissions-page__permission-column",
+      cell: ({ row }) => (
+        <PermissionAccessSelect
+          value={row.explicitAccess}
+          inheritedAccess={row.inheritedAccess}
+          includeInherit
+          accessOptions={accessOptions}
+          disabled={disabled || !onActionAccessChange}
+          ariaLabel={`${row.action.label} permissions`}
+          alignment="end"
+          popupAlignment="right"
+          onChange={onActionAccessChange
+            ? (access) => onActionAccessChange(row.action.id, access)
+            : undefined}
+        />
+      ),
+    },
+  ];
+
+  if (showEffectiveAccess) {
+    columns.push({
+      id: "effective",
+      header: "Effective",
+      width: "minmax(92px, 0.3fr)",
+      hideBelow: 760,
+      cell: ({ row }) => (
+        <span className="platform-permissions-page__effective-access playground-agents-permission-effective-access">
+          {getPlatformPermissionAccessLabel(row.effectiveAccess, accessOptions)}
+        </span>
+      ),
+    });
+  }
+
+  return columns;
 }
 
 export function PlatformPermissionHelpTooltip({
@@ -277,111 +439,30 @@ function PermissionRingTable({
   onActionRingChange: PlatformPermissionsPageProps["onActionRingChange"];
   onActionAccessChange: PlatformPermissionsPageProps["onActionAccessChange"];
 }) {
-  const rows: PermissionActionTableRow[] = actions.map((action) => {
-    const actionRingId = getPlatformPermissionActionRingId(permissionSet, action, rings);
-    const actionRing = rings.find((candidate) => candidate.id === actionRingId) || rings[0];
-    const presentation = actionPresentation?.[action.id];
-    return {
-      action,
-      label: presentation?.label ?? action.label,
-      description: presentation?.description ?? action.description,
-      actionRingId,
-      inheritedAccess: actionRing
-        ? getPlatformPermissionRingAccess(permissionSet, actionRing, accessOptions)
-        : normalizePlatformPermissionAccess(permissionSet?.defaultAccess, accessOptions),
-      explicitAccess: getPlatformPermissionActionExplicitAccess(
-        permissionSet,
-        action,
-        rings,
-        accessOptions,
-      ),
-      effectiveAccess: getPlatformPermissionActionAccess(permissionSet, action, rings, accessOptions),
-    };
+  const rows = createPermissionActionRows(actions, {
+    permissionSet,
+    rings,
+    accessOptions,
+    actionPresentation,
   });
-  const columns: PlatformDataTableColumn<PermissionActionTableRow>[] = [
-    {
-      id: "action",
-      header: (
-        <span className="platform-permissions-page__ring-title playground-agents-permission-detail-ring-title-label">
-          <PlatformPermissionMiniRingIcon
-            ringId={ring.id}
-            icon={ring.icon}
-            accessOptions={accessOptions}
-          />
-          <span>{ring.label}</span>
-        </span>
-      ),
-      width: "minmax(0, 1fr)",
-      cell: ({ row }) => (
-        <div className="platform-permissions-page__action-copy playground-agents-permission-copy">
-          <div className="platform-permissions-page__action-title playground-agents-permission-title">
-            {row.label}
-            {row.explicitAccess ? (
-              <PlatformLabel
-                variant="blue"
-                className="platform-permissions-page__override-badge"
-              >
-                Override
-              </PlatformLabel>
-            ) : null}
-          </div>
-          <div className="platform-permissions-page__action-description playground-agents-permission-description">
-            {row.description}
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "ring",
-      header: "Ring",
-      width: "104px",
-      cell: ({ row }) => (
-        <PermissionRingSelect
-          value={row.actionRingId}
-          rings={rings}
-          disabled={disabled || !onActionRingChange}
-          ariaLabel={`${row.action.label} ring`}
-          onChange={onActionRingChange
-            ? (ringId) => onActionRingChange(row.action.id, ringId)
-            : undefined}
-        />
-      ),
-    },
-    {
-      id: "permission",
-      header: "Permission",
-      width: "126px",
-      cell: ({ row }) => (
-        <PermissionAccessSelect
-          value={row.explicitAccess}
-          inheritedAccess={row.inheritedAccess}
-          includeInherit
+  const columns = createPermissionActionColumns({
+    firstColumnHeader: (
+      <span className="platform-permissions-page__ring-title playground-agents-permission-detail-ring-title-label">
+        <PlatformPermissionMiniRingIcon
+          ringId={ring.id}
+          icon={ring.icon}
           accessOptions={accessOptions}
-          disabled={disabled || !onActionAccessChange}
-          ariaLabel={`${row.action.label} permissions`}
-          alignment="start"
-          popupAlignment="right"
-          onChange={onActionAccessChange
-            ? (access) => onActionAccessChange(row.action.id, access)
-            : undefined}
         />
-      ),
-    },
-  ];
-
-  if (showEffectiveAccess) {
-    columns.push({
-      id: "effective",
-      header: "Effective",
-      width: "minmax(92px, 0.3fr)",
-      hideBelow: 760,
-      cell: ({ row }) => (
-        <span className="platform-permissions-page__effective-access playground-agents-permission-effective-access">
-          {getPlatformPermissionAccessLabel(row.effectiveAccess, accessOptions)}
-        </span>
-      ),
-    });
-  }
+        <span>{ring.label}</span>
+      </span>
+    ),
+    rings,
+    accessOptions,
+    disabled,
+    showEffectiveAccess,
+    onActionRingChange,
+    onActionAccessChange,
+  });
 
   return (
     <PlatformSettingsDataTable
@@ -400,6 +481,93 @@ function PermissionRingTable({
   );
 }
 
+function PermissionGroupedTable({
+  actions,
+  permissionSet,
+  rings,
+  accessOptions,
+  actionPresentation,
+  disabled,
+  showEffectiveAccess,
+  searchPlaceholder,
+  onActionRingChange,
+  onActionAccessChange,
+}: {
+  actions: readonly PlatformPermissionActionDefinition[];
+  permissionSet: PlatformPermissionsPageProps["permissionSet"];
+  rings: readonly PlatformPermissionRingDefinition[];
+  accessOptions: readonly PlatformPermissionAccessOption[];
+  actionPresentation: PlatformPermissionsPageProps["actionPresentation"];
+  disabled: boolean;
+  showEffectiveAccess: boolean;
+  searchPlaceholder: string;
+  onActionRingChange: PlatformPermissionsPageProps["onActionRingChange"];
+  onActionAccessChange: PlatformPermissionsPageProps["onActionAccessChange"];
+}) {
+  const rows = createPermissionActionRows(actions, {
+    permissionSet,
+    rings,
+    accessOptions,
+    actionPresentation,
+  });
+  const columns = createPermissionActionColumns({
+    firstColumnHeader: "Action",
+    rings,
+    accessOptions,
+    disabled,
+    showEffectiveAccess,
+    onActionRingChange,
+    onActionAccessChange,
+  });
+
+  return (
+    <PlatformSettingsDataTable
+      rows={rows}
+      columns={columns}
+      getRowId={(row) => row.action.id}
+      getRowAriaLabel={(row) => `${row.action.label} permission`}
+      ariaLabel="Permission actions"
+      className="platform-permissions-page__grouped-table"
+      toolbar={{
+        search: {
+          placeholder: searchPlaceholder,
+          ariaLabel: searchPlaceholder,
+          getSearchText: (row) => `${row.searchText} ${row.actionRingId}`,
+        },
+      }}
+      rowGrouping={{
+        groups: rings.map((ring) => ({
+          id: ring.id,
+          showChevron: false,
+          label: (
+            <span className="platform-permissions-page__ring-title playground-agents-permission-detail-ring-title-label">
+              <PlatformPermissionMiniRingIcon
+                ringId={ring.id}
+                icon={ring.icon}
+                accessOptions={accessOptions}
+              />
+              <span>{ring.label} · {ring.title}</span>
+            </span>
+          ),
+          ariaLabel: `${ring.label} ${ring.title}`,
+          defaultExpanded: true,
+        })),
+        getGroupId: (row) => row.actionRingId,
+      }}
+      emptyState={
+        <span className="platform-permissions-page__ring-empty">
+          No permission actions are available.
+        </span>
+      }
+      noResultsState={
+        <span className="platform-permissions-page__ring-empty">
+          No permissions match this search.
+        </span>
+      }
+    />
+  );
+}
+
 export function PlatformPermissionsPage({
   permissionSet,
   accessOptions = PLATFORM_PERMISSION_ACCESS_OPTIONS,
@@ -411,6 +579,8 @@ export function PlatformPermissionsPage({
   disabled = false,
   showOverview = true,
   showEffectiveAccess = false,
+  actionTablePresentation = "separate-rings",
+  actionSearchPlaceholder = "Search permissions",
   ariaLabel = "Permissions",
   className = "",
   onRingAccessChange,
@@ -439,34 +609,49 @@ export function PlatformPermissionsPage({
       ) : null}
 
       <div className="platform-permissions-page__details playground-permissions-panel-details">
-        <PlatformSettingsSectionList className="platform-permissions-page__ring-list playground-agents-permissions-list is-details-only">
-          {ringDefinitions.map((ring) => {
-            const ringActions = visibleActions.filter((action) =>
-              getPlatformPermissionActionRingId(permissionSet, action, ringDefinitions) === ring.id
-            );
-            return (
-              <PlatformSettingsSection
-                key={ring.id}
-                className="platform-permissions-page__ring playground-agents-permission-ring-card is-details-only"
-                bodyPresentation="flush"
-                aria-label={`${ring.label} settings`}
-              >
-                <PermissionRingTable
-                  ring={ring}
-                  actions={ringActions}
-                  permissionSet={permissionSet}
-                  rings={ringDefinitions}
-                  accessOptions={accessOptions}
-                  actionPresentation={actionPresentation}
-                  disabled={disabled}
-                  showEffectiveAccess={showEffectiveAccess}
-                  onActionRingChange={onActionRingChange}
-                  onActionAccessChange={onActionAccessChange}
-                />
-              </PlatformSettingsSection>
-            );
-          })}
-        </PlatformSettingsSectionList>
+        {actionTablePresentation === "grouped-rings" ? (
+          <PermissionGroupedTable
+            actions={visibleActions}
+            permissionSet={permissionSet}
+            rings={ringDefinitions}
+            accessOptions={accessOptions}
+            actionPresentation={actionPresentation}
+            disabled={disabled}
+            showEffectiveAccess={showEffectiveAccess}
+            searchPlaceholder={actionSearchPlaceholder}
+            onActionRingChange={onActionRingChange}
+            onActionAccessChange={onActionAccessChange}
+          />
+        ) : (
+          <PlatformSettingsSectionList className="platform-permissions-page__ring-list playground-agents-permissions-list is-details-only">
+            {ringDefinitions.map((ring) => {
+              const ringActions = visibleActions.filter((action) =>
+                getPlatformPermissionActionRingId(permissionSet, action, ringDefinitions) === ring.id
+              );
+              return (
+                <PlatformSettingsSection
+                  key={ring.id}
+                  className="platform-permissions-page__ring playground-agents-permission-ring-card is-details-only"
+                  bodyPresentation="flush"
+                  aria-label={`${ring.label} settings`}
+                >
+                  <PermissionRingTable
+                    ring={ring}
+                    actions={ringActions}
+                    permissionSet={permissionSet}
+                    rings={ringDefinitions}
+                    accessOptions={accessOptions}
+                    actionPresentation={actionPresentation}
+                    disabled={disabled}
+                    showEffectiveAccess={showEffectiveAccess}
+                    onActionRingChange={onActionRingChange}
+                    onActionAccessChange={onActionAccessChange}
+                  />
+                </PlatformSettingsSection>
+              );
+            })}
+          </PlatformSettingsSectionList>
+        )}
       </div>
     </section>
   );

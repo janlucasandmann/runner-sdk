@@ -26,6 +26,8 @@
   that preserve Markdown round trips
 - ProseMirror-backed selection, keyboard shortcuts, and undo/redo history
 - Optional multi-file upload, caret/drop-position insertion, and drag-and-drop handling
+- Optional centralized prompt search with selection-aware Markdown insertion from
+  the header's Insert menu
 - Inline image rendering with persisted small, medium, and full-width sizing,
   durable attachment metadata, and hover actions for copy, rename, and removal,
   plus reusable attachment rows for documents and other non-image files
@@ -54,6 +56,12 @@ Markdown.
 `contentVariant="image-enabled"` and `imageUpload` remain compatibility aliases
 for existing image-only consumers. New resource integrations should use the
 generic file API.
+
+Provide `promptInsertion.openSearch(onSelect)` only on surfaces that should
+offer the Insert → Prompt action. The host keeps ownership of global search,
+access checks, and loading the selected prompt's current version; the editor
+captures the current selection and inserts the returned Markdown at that
+position (or appends it when the editor was not focused).
 
 The toolbar popup behavior lives in `platform-instructions-editor-toolbar-popup.tsx`;
 the slash-command presentation lives in `platform-instructions-editor-slash-menu.tsx`.

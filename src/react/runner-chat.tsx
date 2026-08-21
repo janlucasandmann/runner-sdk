@@ -36,6 +36,7 @@ import {
   Presentation as LucidePresentation,
   Plug as LucidePlug,
   RefreshCw as LucideRefreshCw,
+  Repeat2 as LucideRepeat2,
   Split as LucideSplit,
   Star as LucideStar,
   Telescope as LucideTelescope,
@@ -1166,6 +1167,7 @@ export function RunnerChat({
     stagedBacklogSubtaskCommand,
     stagedBacklogMissionControlCommand,
     stagedBatchCreationCommand,
+    stagedLoopCommand,
     clearAllStagedCommands,
     clearStagedCommand,
     dismissActiveCommand: dismissActiveStagedCommand,
@@ -1176,6 +1178,7 @@ export function RunnerChat({
     stageBacklogSubtaskCommand,
     stageBacklogMissionControlCommand,
     stageBatchCreationCommand,
+    stageLoopCommand,
     stageResourceCreationCommand,
     stageAgentCreationCommand,
     stageSkillCreationCommand,
@@ -1526,9 +1529,11 @@ export function RunnerChat({
   const stagedParseCreationCommandLabel = stagedParseCreationCommand?.label || "";
   const stagedAdCreationCommandLabel = stagedAdCreationCommand?.label || "";
   const stagedBatchCreationCommandLabel = stagedBatchCreationCommand?.label || "";
+  const stagedLoopCommandLabel = stagedLoopCommand?.label || "";
   const stagedBacklogCommand = stagedBacklogMissionControlCommand || stagedBacklogSubtaskCommand;
   const stagedComposerLabel =
     stagedBacklogCommand?.label
+    || stagedLoopCommandLabel
     || stagedBatchCreationCommandLabel
     || stagedSlideCreationCommandLabel
     || stagedAdCreationCommandLabel
@@ -1539,8 +1544,8 @@ export function RunnerChat({
     || stagedAgentCreationCommandLabel
     || stagedResourceCreationCommandLabel
     || stagedThreadContextCommandLabel;
-  const stagedComposerToneValue = stagedBacklogCommand || stagedBatchCreationCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand ? "compact" : stagedThreadContextCommandToneValue;
-  const stagedComposerOffsetValue = stagedBacklogCommand || stagedBatchCreationCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand
+  const stagedComposerToneValue = stagedBacklogCommand || stagedLoopCommand || stagedBatchCreationCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand ? "compact" : stagedThreadContextCommandToneValue;
+  const stagedComposerOffsetValue = stagedBacklogCommand || stagedLoopCommand || stagedBatchCreationCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand
     ? `${Math.max(
         16,
         Math.round(
@@ -1550,7 +1555,7 @@ export function RunnerChat({
         )
       )}px`
     : stagedThreadContextCommandOffset(stagedThreadContextCommand);
-  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedBatchCreationCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand || stagedBacklogCommand);
+  const hasStagedComposerCommand = Boolean(stagedThreadContextCommand || stagedLoopCommand || stagedBatchCreationCommand || stagedResourceCreationCommand || stagedAgentCreationCommand || stagedSkillCreationCommand || stagedSlideCreationCommand || stagedResearchCreationCommand || stagedScrapeCreationCommand || stagedParseCreationCommand || stagedAdCreationCommand || stagedBacklogCommand);
   const slashCommandInputState = useMemo(() => {
     if (hasStagedComposerCommand) {
       return null;
@@ -1672,6 +1677,13 @@ export function RunnerChat({
       });
     }
     items.push({
+      id: "loop",
+      command: "/loop",
+      description: "Run a verified improvement loop",
+      icon: <LucideRepeat2 className="tb-popup-icon" strokeWidth={1.75} />,
+      stage: () => stageLoopCommand(slashCommandInputState?.prompt || ""),
+    });
+    items.push({
       id: "slides",
       command: "/slides",
       description: "Create or adapt slides",
@@ -1755,7 +1767,7 @@ export function RunnerChat({
       });
     }
     return items;
-  }, [enableAgentCreationCommand, enableResourceCreationCommand, enableSkillCreationCommand, onBatchJobCreate, slashCommandInputState?.prompt, stageAdCreationCommand, stageAgentCreationCommand, stageBatchCreationCommand, stageParseCreationCommand, stageResearchCreationCommand, stageResourceCreationCommand, stageScrapeCreationCommand, stageSkillCreationCommand, stageSlideCreationCommand]);
+  }, [enableAgentCreationCommand, enableResourceCreationCommand, enableSkillCreationCommand, onBatchJobCreate, slashCommandInputState?.prompt, stageAdCreationCommand, stageAgentCreationCommand, stageBatchCreationCommand, stageLoopCommand, stageParseCreationCommand, stageResearchCreationCommand, stageResourceCreationCommand, stageScrapeCreationCommand, stageSkillCreationCommand, stageSlideCreationCommand]);
   const filteredSlashCommandItems = useMemo(() => {
     if (!slashCommandInputState) {
       return [];
@@ -3780,6 +3792,7 @@ export function RunnerChat({
         scrapeCreationCommand: request.scrapeCreationCommand || null,
         parseCreationCommand: request.parseCreationCommand || null,
         adCreationCommand: request.adCreationCommand || null,
+        loopCommand: request.loopCommand || null,
       });
     },
     handledTokenRef: handledExternalRunRequestTokenRef,
@@ -5050,6 +5063,7 @@ export function RunnerChat({
       const quotedSelection = composerQuotedSelection;
       const backlogCommand = stagedBacklogCommand;
       const batchCreationCommand = stagedBatchCreationCommand;
+      const loopCommand = stagedLoopCommand;
       const resourceCreationCommand = stagedResourceCreationCommand;
       const agentCreationCommand = stagedAgentCreationCommand;
       const skillCreationCommand = stagedSkillCreationCommand;
@@ -5153,7 +5167,7 @@ export function RunnerChat({
         ? [...implicitAttachmentEntries, ...composerAttachmentEntries]
         : composerAttachmentEntries;
 
-      if (onComposerSubmit && taskText) {
+      if (onComposerSubmit && taskText && !loopCommand) {
         const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
         const githubRepo = buildSelectedGithubRepoReference(attachmentEntries, {
           repositories: githubRepositories,
@@ -5191,7 +5205,12 @@ export function RunnerChat({
         return;
       }
 
-      if (selectedComposerProjectTask && onComposerProjectTaskSubmit && taskText) {
+      if (
+        selectedComposerProjectTask
+        && onComposerProjectTaskSubmit
+        && taskText
+        && !loopCommand
+      ) {
         const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
         const githubRepo = buildSelectedGithubRepoReference(attachmentEntries, {
           repositories: githubRepositories,
@@ -5311,7 +5330,8 @@ export function RunnerChat({
       const shouldAttemptParticipantNeutralRouting = (
         executionAttachmentEntries.length === 0 &&
         !quotedSelection &&
-        !runConnectorPayload
+        !runConnectorPayload &&
+        !loopCommand
       );
       if (shouldAttemptParticipantNeutralRouting) {
         participantNeutralTurnId = appendParticipantNeutralPendingTurn(taskText);
@@ -5329,6 +5349,7 @@ export function RunnerChat({
         || scrapeCreationCommand
         || parseCreationCommand
         || adCreationCommand
+        || loopCommand
       );
       if (
         executionAttachmentEntries.length === 0
@@ -5363,6 +5384,7 @@ export function RunnerChat({
           scrapeCreationCommand,
           parseCreationCommand,
           adCreationCommand,
+          loopCommand,
           messageMetadata: runConnectorIds.length > 0
             ? { [RUNNER_CONNECTOR_IDS_METADATA_KEY]: runConnectorIds }
             : null,
@@ -5402,6 +5424,7 @@ export function RunnerChat({
             scrapeCreationCommand,
             parseCreationCommand,
             adCreationCommand,
+            loopCommand,
             connectors: runConnectorPayload,
           },
         ]);
@@ -5420,6 +5443,7 @@ export function RunnerChat({
         scrapeCreationCommand,
         parseCreationCommand,
         adCreationCommand,
+        loopCommand,
         connectorsOverride: runConnectorPayload,
         extraResolvedAttachments: previewImageRunAttachments,
         displayPromptOverride: executionTaskText === taskText ? undefined : taskText,
@@ -5470,6 +5494,7 @@ export function RunnerChat({
           scrapeCreationCommand: nextQueuedMessage.scrapeCreationCommand,
           parseCreationCommand: nextQueuedMessage.parseCreationCommand,
           adCreationCommand: nextQueuedMessage.adCreationCommand,
+          loopCommand: nextQueuedMessage.loopCommand,
           extraResolvedAttachments:
             nextQueuedMessage.extraResolvedAttachments,
           displayPromptOverride: nextQueuedMessage.displayPrompt,
@@ -6841,11 +6866,12 @@ export function RunnerChat({
           ? documentPreviewWidthStyleValue
           : "var(--tb-image-preview-side-width, var(--tb-document-preview-max-width))"
       : documentPreviewWidthStyleValue;
+  const isThreadComposerSurface = Boolean(currentThreadId) || isPreparingRun;
 
   return (
     <div
       ref={rootRef}
-      className={`tb-runner-chat ${isPreparingRun ? "is-run-preparing" : ""} ${shouldReserveDocumentPreviewWidth ? "tb-runner-chat-document-preview-open" : ""} ${isPreviewedDocumentImage ? "tb-runner-chat-image-preview-open" : ""} ${isPreviewedDocumentImage && hasPortalDocumentPreview ? "tb-runner-chat-image-preview-portal-open" : ""} ${isPreviewedDocumentImage && !hasPortalDocumentPreview ? "tb-runner-chat-image-preview-local-open" : ""} ${previewedDocumentAttachment && isDocumentPreviewMaximized ? "tb-runner-chat-document-preview-maximized" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${detachedExecutionWorkbenchOpen ? "tb-runner-chat-execution-workbench-open" : ""} ${className || ""}`.trim()}
+      className={`tb-runner-chat ${isPreparingRun ? "is-run-preparing" : ""} ${isThreadComposerSurface ? "is-thread-composer-surface" : "is-home-composer-surface"} ${shouldReserveDocumentPreviewWidth ? "tb-runner-chat-document-preview-open" : ""} ${isPreviewedDocumentImage ? "tb-runner-chat-image-preview-open" : ""} ${isPreviewedDocumentImage && hasPortalDocumentPreview ? "tb-runner-chat-image-preview-portal-open" : ""} ${isPreviewedDocumentImage && !hasPortalDocumentPreview ? "tb-runner-chat-image-preview-local-open" : ""} ${previewedDocumentAttachment && isDocumentPreviewMaximized ? "tb-runner-chat-document-preview-maximized" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${detachedExecutionWorkbenchOpen ? "tb-runner-chat-execution-workbench-open" : ""} ${className || ""}`.trim()}
       onDragEnterCapture={handleRootFileDragEnter}
       onDragOverCapture={handleRootFileDragOver}
       onDragLeaveCapture={handleRootFileDragLeave}
@@ -7171,6 +7197,12 @@ export function RunnerChat({
                     Icon: LucidePresentation,
                     label: "Slides",
                   }
+                : turn.loopCommand
+                  ? {
+                      className: "is-loop",
+                      Icon: LucideRepeat2,
+                      label: "Loop",
+                    }
                 : turn.adCreationCommand
                   ? {
                       className: "is-ad",

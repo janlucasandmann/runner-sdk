@@ -32,6 +32,7 @@ import {
   type StagedScrapeCreationCommand,
   type StagedSkillCreationCommand,
   type StagedSlideCreationCommand,
+  type StagedLoopCommand,
 } from "../composer-commands.js";
 import {
   isComputeTokenBudgetErrorMessage,
@@ -103,6 +104,7 @@ export interface RunnerThreadRunOptions {
   scrapeCreationCommand?: StagedScrapeCreationCommand | null;
   parseCreationCommand?: StagedParseCreationCommand | null;
   adCreationCommand?: StagedAdCreationCommand | null;
+  loopCommand?: StagedLoopCommand | null;
   resolvedAttachmentsOverride?: RunnerAttachment[] | null;
   extraResolvedAttachments?: RunnerAttachment[] | null;
   githubRepoOverride?: RunnerGithubRunReference | null;
@@ -140,6 +142,7 @@ export interface RunnerExternalRunHandoff {
   scrapeCreationCommand?: StagedScrapeCreationCommand | null;
   parseCreationCommand?: StagedParseCreationCommand | null;
   adCreationCommand?: StagedAdCreationCommand | null;
+  loopCommand?: StagedLoopCommand | null;
 }
 
 export interface RunnerThreadRunResult {
@@ -401,6 +404,7 @@ export function createRunnerThreadRunExecutor(
         scrapeCreationCommand: options.scrapeCreationCommand || null,
         parseCreationCommand: options.parseCreationCommand || null,
         adCreationCommand: options.adCreationCommand || null,
+        loopCommand: options.loopCommand || null,
       });
       if (didHandle !== false) {
         if (
@@ -432,12 +436,14 @@ export function createRunnerThreadRunExecutor(
     const scrapeCreationCommand = options.scrapeCreationCommand || null;
     const parseCreationCommand = options.parseCreationCommand || null;
     const adCreationCommand = options.adCreationCommand || null;
+    const loopCommand = options.loopCommand || null;
     const turnMessageMetadata = buildRunnerExecutionMessageMetadata({
       slideCreationCommand,
       researchCreationCommand,
       scrapeCreationCommand,
       parseCreationCommand,
       adCreationCommand,
+      loopCommand,
       connectors: runConnectors,
     });
     const startedAtMs = Date.now();
@@ -474,6 +480,7 @@ export function createRunnerThreadRunExecutor(
           parseCreationCommand || turn.parseCreationCommand || null,
         adCreationCommand:
           adCreationCommand || turn.adCreationCommand || null,
+        loopCommand: loopCommand || turn.loopCommand || null,
         messageMetadata: turnMessageMetadata
           ? {
               ...(turn.messageMetadata || {}),
@@ -503,6 +510,7 @@ export function createRunnerThreadRunExecutor(
           scrapeCreationCommand,
           parseCreationCommand,
           adCreationCommand,
+          loopCommand,
           messageMetadata: turnMessageMetadata || null,
         },
       ]);
@@ -676,6 +684,7 @@ export function createRunnerThreadRunExecutor(
             scrapeCreationCommand: options.scrapeCreationCommand,
             parseCreationCommand: options.parseCreationCommand,
             adCreationCommand: options.adCreationCommand,
+            loopCommand: options.loopCommand,
           }),
         },
         onLog: (log) => {

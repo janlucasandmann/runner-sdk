@@ -253,6 +253,12 @@
 }
 
 .resource-overview-table.is-skills.is-catalog-ui
+  .platform-data-table__row-group.is-grouped-row
+  > .platform-data-table__row {
+  padding-left: var(--platform-data-table-catalog-inline-padding);
+}
+
+.resource-overview-table.is-skills.is-catalog-ui
   .resource-overview-identity__visual.is-creator,
 .resource-overview-table.is-projects.is-catalog-ui
   .resource-overview-identity__visual.is-creator {

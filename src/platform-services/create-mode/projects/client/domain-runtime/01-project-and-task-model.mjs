@@ -491,6 +491,7 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           releaseId: null,
           ticketNumber: "",
           taskType: "task",
+          loop: null,
           parentTaskId: null,
           title: "New Task",
           description: "",

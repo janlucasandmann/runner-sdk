@@ -58,7 +58,7 @@ function getPrincipalInitials(name: string): string {
   ).toUpperCase();
 }
 
-function PlatformResourceAccessPrincipalAvatar({
+export function PlatformResourceAccessPrincipalAvatar({
   name,
   imageUrl,
 }: {

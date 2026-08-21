@@ -18,6 +18,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         canStartThreads,
         hasRealAccess = false,
         taskRunStates,
+        threadRecords = [],
         onThreadOpen,
         onThreadOptionsOpen,
         onThreadStarted,
@@ -603,6 +604,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const issueComposerDescriptionTextareaRef = useRef(null);
         const issueComposerAnimationMs = 75;
         const [issueComposerDetailSelectPopover, setIssueComposerDetailSelectPopover] = useState("");
+        const [issueComposerActorPopupMode, setIssueComposerActorPopupMode] = useState("agents");
         const [issueComposerDraft, setIssueComposerDraft] = useState(buildPlaygroundDefaultTaskDraft());
         const [issueComposerSaveState, setIssueComposerSaveState] = useState({
           isSaving: false,
@@ -833,6 +835,29 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const filteredTaskDetailAssignableActors = useMemo(() => {
           return assignableActors.filter((actor) => getPlaygroundTaskAssigneePopupMode(actor) === taskDetailAssigneePopupMode);
         }, [assignableActors, taskDetailAssigneePopupMode]);
+
+        function getDefaultTaskActorPopupMode(actor) {
+          const actorMode = getPlaygroundTaskAssigneePopupMode(actor);
+          return taskDetailAvailableAssigneePopupModes.includes(actorMode)
+            ? actorMode
+            : (taskDetailAvailableAssigneePopupModes[0] || "agents");
+        }
+
+        function renderTaskActorModeSwitch({ ariaLabel, value, onValueChange }) {
+          if (taskDetailAvailableAssigneePopupModes.length <= 1) {
+            return null;
+          }
+          return React.createElement(PlatformSwitch, {
+            className: "playground-tasks-detail-assignee-mode-switch",
+            ariaLabel,
+            value,
+            options: taskDetailAvailableAssigneePopupModes.map((mode) => ({
+              value: mode,
+              label: mode === "teams" ? "Squads" : mode === "humans" ? "Humans" : "Agents",
+            })),
+            onValueChange,
+          });
+        }
 
         const agentsById = useMemo(() => {
           const next = {};
@@ -1253,12 +1278,19 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           const requestedParentTaskId = requestedTaskType === "subtask"
             ? normalizePlaygroundParentTaskId(options?.parentTaskId)
             : null;
+          const requestedLoop = requestedTaskType === "loop"
+            ? normalizePlaygroundTaskLoopConfig(options?.loop)
+            : null;
+          const requestedDescription = requestedTaskType === "loop"
+            ? buildPlaygroundTaskLoopGoalTemplate(requestedLoop)
+            : "";
           const normalizedDraft = normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata({
             ...buildPlaygroundDefaultTaskDraft(),
             projectId: selectedProjectId || selectedProject?.id || null,
             title: "",
-            description: "",
+            description: requestedDescription,
             taskType: requestedTaskType,
+            loop: requestedLoop,
             parentTaskId: requestedParentTaskId,
             status: "todo",
             priority: "medium",
@@ -1288,7 +1320,14 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           return {
             ...normalizedDraft,
             title: "",
+            description: requestedDescription,
             taskType: requestedTaskType,
+            loop: requestedTaskType === "loop"
+              ? normalizePlaygroundTaskLoopConfig({
+                  ...normalizedDraft.loop,
+                  ...parsePlaygroundTaskLoopGoalMarkdown(requestedDescription),
+                }, normalizedDraft)
+              : null,
             parentTaskId: requestedTaskType === "subtask" ? requestedParentTaskId : null,
           };
         }
@@ -1340,6 +1379,15 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           setIssueComposerClosing(false);
           setIssueComposerOpen(false);
           setIssueComposerDetailSelectPopover("");
+          setIssueComposerActorPopupMode("agents");
+          if (taskScheduleDialogState?.target === "issue") {
+            if (taskScheduleDialogTimerRef.current) {
+              window.clearTimeout(taskScheduleDialogTimerRef.current);
+              taskScheduleDialogTimerRef.current = null;
+            }
+            setTaskScheduleDialogState(null);
+            setTaskScheduleDialogPhase("idle");
+          }
           setIssueComposerDraft(buildPlaygroundDefaultTaskDraft());
           setIssueComposerSaveState({
             isSaving: false,
@@ -1378,6 +1426,9 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
               ...normalizedDraft,
               title: typeof nextDraft?.title === "string" ? nextDraft.title : normalizedDraft.title,
               taskType: requestedTaskType,
+              loop: requestedTaskType === "loop"
+                ? normalizePlaygroundTaskLoopConfig(nextDraft?.loop, nextDraft)
+                : null,
               parentTaskId: requestedTaskType === "subtask"
                 ? normalizePlaygroundParentTaskId(nextDraft?.parentTaskId)
                 : null,
@@ -1400,7 +1451,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           if (!useUnifiedProjectNav || typeof onProjectIssueCreateHandlerChange !== "function") {
             return undefined;
           }
-          onProjectIssueCreateHandlerChange(() => openProjectIssueComposer());
+          onProjectIssueCreateHandlerChange((options = {}) => openProjectIssueComposer(options));
           return () => {
             onProjectIssueCreateHandlerChange(null);
           };

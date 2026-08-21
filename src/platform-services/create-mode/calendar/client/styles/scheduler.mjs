@@ -213,20 +213,6 @@ export const CALENDAR_SCHEDULER_CSS = `
         max-width: none;
       }
 
-      .playground-tasks-schedule-side-scroll {
-        gap: 16px;
-        background: transparent;
-      }
-
-      .playground-tasks-schedule-side-scroll .playground-tasks-scheduler-form-card {
-        border-radius: 18px;
-        box-shadow: none;
-      }
-
-      .playground-tasks-schedule-side-scroll .playground-tasks-scheduler-form-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
       .playground-tasks-scheduler-editor-header {
         position: sticky;
         top: 0;
@@ -352,8 +338,290 @@ export const CALENDAR_SCHEDULER_CSS = `
         background: transparent;
       }
 
-      .playground-tasks-schedule-detail-facts {
+      .playground-tasks-schedule-detail-shell .playground-tasks-detail-navbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+        column-gap: 8px;
+      }
+
+      .playground-tasks-schedule-detail-shell
+        .playground-tasks-detail-navbar
+        > .playground-content-nav-center {
+        display: none;
+      }
+
+      .playground-tasks-schedule-detail-shell .playground-tasks-detail-navbar-title {
+        grid-column: 1;
+        width: 100%;
+      }
+
+      .playground-tasks-schedule-detail-shell .playground-tasks-detail-navbar-actions {
+        grid-column: 2;
+        width: auto;
+      }
+
+      .playground-tasks-schedule-navbar-title {
+        width: 100%;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+
+      .playground-tasks-schedule-detail-shell .playground-tasks-detail-body {
+        box-sizing: border-box;
+        border-left: 1px solid rgba(255, 255, 255, 0.075);
+        overflow: hidden;
+      }
+
+      .playground-tasks-schedule-identity {
+        box-sizing: border-box;
+        min-width: 0;
+        display: flex;
+        align-items: flex-start;
+        padding: 12px 6px 0;
+        border-bottom: 0;
+      }
+
+      .playground-tasks-schedule-identity-copy {
+        min-width: 0;
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .playground-tasks-schedule-identity-name-input,
+      .playground-tasks-schedule-identity-description-input {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        outline: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.96);
+        font: inherit;
+        letter-spacing: 0;
+      }
+
+      .playground-tasks-schedule-identity-name-input {
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 1.3;
+      }
+
+      .playground-tasks-schedule-identity-description-input {
+        min-height: 36px;
+        max-height: 54px;
+        overflow-y: auto;
+        resize: none;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.5;
+      }
+
+      .playground-tasks-schedule-identity-name-input::placeholder,
+      .playground-tasks-schedule-identity-description-input::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+      }
+
+      .playground-tasks-schedule-detail-footer {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-height: 62px;
+        padding: 11px 18px;
+        box-sizing: border-box;
+        background: rgba(0, 0, 0, 0.28);
+      }
+
+      .playground-tasks-schedule-save-button.platform-button {
+        --platform-button-height: 32px;
+      }
+
+      .playground-tasks-schedule-save-spinner {
+        animation: playground-schedule-save-spin 800ms linear infinite;
+      }
+
+      @keyframes playground-schedule-save-spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .playground-tasks-detail-panel.is-project-task-detail
+        .playground-tasks-schedule-detail-shell
+        .playground-tasks-schedule-detail-facts {
         margin-top: 2px;
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        background: rgba(255, 255, 255, 0.075);
+        box-shadow: none;
+      }
+
+      .playground-tasks-detail-panel.is-project-task-detail
+        .playground-tasks-schedule-detail-shell
+        .playground-tasks-schedule-detail-facts::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-tasks-schedule-skills-source-switch.platform-switch {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-tasks-detail-skills-selector-popup.platform-selector__popup {
+        display: flex;
+        flex-direction: column;
+        overflow-y: hidden;
+      }
+
+      .playground-tasks-detail-skills-selector-popup .platform-selector__custom-content,
+      .playground-tasks-detail-skills-selector-popup .tb-popup-panel-section-skills-body {
+        min-height: 0;
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .playground-tasks-schedule-skills-list {
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: none;
+      }
+
+      .playground-tasks-schedule-skills-list::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-tasks-schedule-skills-all {
+        display: flex;
+        position: relative;
+        z-index: 2;
+        align-items: center;
+        justify-content: space-between;
+        flex: 0 0 auto;
+        gap: 16px;
+        margin-top: 0;
+        padding: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.075);
+        background: #1a1a1a;
+      }
+
+      .playground-tasks-schedule-skills-all-label {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-tasks-schedule-workflow-picker {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 16px;
+        width: 100%;
+        margin: 8px 0 3px;
+        padding: 10px 0 14px;
+      }
+
+      .playground-tasks-schedule-workflow-picker-label {
+        color: #fff;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .playground-tasks-schedule-workflow-picker .playground-tasks-detail-central-selector,
+      .playground-tasks-schedule-workflow-picker .platform-selector,
+      .playground-tasks-schedule-workflow-picker .platform-selector__trigger {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-tasks-schedule-detail-shell .metronome-manual-run-inputs,
+      .playground-tasks-schedule-detail-shell .metronome-manual-run-inputs__fields {
+        width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .playground-tasks-schedule-detail-shell .metronome-manual-run-inputs {
+        margin: 0 0 3px;
+      }
+
+      .playground-tasks-schedule-detail-shell .metronome-manual-run-inputs__trigger,
+      .playground-tasks-schedule-detail-shell .metronome-manual-run-inputs__composer,
+      .playground-tasks-schedule-detail-shell .metronome-manual-run-inputs__fields {
+        grid-column: 1 / -1;
+      }
+
+      .playground-tasks-detail-panel.is-project-task-detail
+        .playground-tasks-schedule-detail-shell
+        .playground-tasks-schedule-workflow-parameters {
+        display: grid;
+        align-content: start;
+        gap: 12px;
+        margin: 2px 0 3px;
+      }
+
+      .playground-tasks-schedule-workflow-parameters-title {
+        margin: 0 !important;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-tasks-schedule-workflow-parameters .batches-form-field input,
+      .playground-tasks-schedule-workflow-parameters .batches-form-field textarea {
+        border: none !important;
+        box-shadow: none !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+      }
+
+      .playground-tasks-schedule-workflow-parameters .batches-create-modal__resource-trigger {
+        border: none !important;
+        box-shadow: none !important;
+      }
+
+      .playground-tasks-schedule-workflow-loading,
+      .playground-tasks-schedule-workflow-error {
+        min-height: 76px;
+        margin: 0;
+      }
+
+      .playground-tasks-schedule-detail-shell .playground-tasks-backlog-project-icon.is-loop,
+      .playground-tasks-detail-type-badge.is-loop {
+        background: linear-gradient(180deg, #9a72df 0%, #6542a8 100%);
+      }
+
+      .playground-tasks-schedule-detail-shell .playground-tasks-backlog-project-icon.is-workflow,
+      .playground-tasks-detail-type-badge.is-workflow {
+        background: linear-gradient(180deg, #4f7fc5 0%, #1e4585 100%);
+      }
+
+      .playground-tasks-schedule-detail-shell .playground-tasks-backlog-project-icon.is-batch,
+      .playground-tasks-detail-type-badge.is-batch {
+        background: linear-gradient(180deg, #d69a4b 0%, #986126 100%);
+      }
+
+      .playground-tasks-schedule-detail-shell .playground-tasks-detail-type-badge.is-schedule-compact {
+        width: 16px;
+        height: 16px;
+        flex-basis: 16px;
+        border-radius: 4px;
+      }
+
+      .playground-tasks-schedule-detail-shell .playground-tasks-detail-type-badge.is-schedule-compact svg {
+        width: 9px;
+        height: 9px;
       }
 
       .playground-tasks-schedule-detail-control {
@@ -602,6 +870,45 @@ export const CALENDAR_SCHEDULER_CSS = `
         color: white !important;
       }
 
+      .playground-tasks-scheduler .rbc-time-header-cell:not(.rbc-time-header-cell-single-day) .rbc-button-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        height: 26px;
+        margin-top: 0 !important;
+        border-radius: 0;
+      }
+
+      .playground-tasks-calendar-week-header {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        white-space: nowrap;
+      }
+
+      .playground-tasks-calendar-week-header-day {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        color: white;
+        font-size: 0.875rem;
+        font-weight: 400;
+      }
+
+      .playground-tasks-calendar-week-header-day.is-today {
+        background: #016bdf;
+        color: white;
+      }
+
+      .playground-tasks-calendar-week-header-weekday {
+        color: white;
+      }
+
       .playground-tasks-scheduler .rbc-today {
         background: transparent !important;
       }
@@ -609,17 +916,28 @@ export const CALENDAR_SCHEDULER_CSS = `
       .playground-tasks-scheduler .rbc-event {
         margin: 0.25rem !important;
         width: calc(100% - 0.5rem) !important;
+        box-sizing: border-box;
         border-radius: 8px !important;
-        background: var(--playground-calendar-event-surface, rgba(1, 107, 203, 0.1)) !important;
+        background: var(--playground-calendar-event-surface, rgba(1, 107, 203, 0.15)) !important;
         border: none !important;
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
       }
 
+      .playground-tasks-scheduler .rbc-event:focus,
+      .playground-tasks-scheduler .rbc-day-slot .rbc-background-event:focus {
+        outline: none !important;
+      }
+
+      .playground-tasks-scheduler .rbc-event.is-calendar-active {
+        border: 1px solid var(--playground-calendar-event-border, rgba(1, 107, 203, 0.5)) !important;
+        box-shadow: none !important;
+      }
+
       .playground-tasks-scheduler .rbc-event-content {
         font-size: 0.75rem !important;
         padding: 4px 4px 2px !important;
-        color: var(--playground-calendar-event-text, rgba(124, 197, 255, 0.95)) !important;
+        color: #fff !important;
       }
 
       .playground-tasks-scheduler .rbc-month-view .rbc-event {
@@ -628,11 +946,15 @@ export const CALENDAR_SCHEDULER_CSS = `
 
       .playground-tasks-scheduler .rbc-time-view .rbc-event {
         margin: 0 !important;
-        height: 34px !important;
-        min-height: 34px !important;
+        height: 74px !important;
+        min-height: 74px !important;
         margin-top: 3px !important;
         width: calc(100% - 4px) !important;
         border-radius: 5px !important;
+      }
+
+      .playground-tasks-scheduler .rbc-time-view .rbc-events-container {
+        margin-right: 0 !important;
       }
 
       .playground-tasks-scheduler .rbc-day-slot .rbc-event,
@@ -645,8 +967,8 @@ export const CALENDAR_SCHEDULER_CSS = `
       .playground-tasks-scheduler .rbc-time-view .rbc-event-content {
         height: 100%;
         display: flex;
-        align-items: center;
-        padding: 0 4px !important;
+        align-items: stretch;
+        padding: 8px !important;
       }
 
       .playground-tasks-calendar-event-inner {
@@ -656,6 +978,64 @@ export const CALENDAR_SCHEDULER_CSS = `
         display: flex;
         align-items: center;
         gap: 6px;
+      }
+
+      .playground-tasks-calendar-event-top {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .playground-tasks-calendar-event-meta {
+        order: -1;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-tasks-calendar-event-top > .playground-tasks-board-assignee-avatar,
+      .playground-tasks-calendar-event-meta .playground-tasks-calendar-event-priority,
+      .playground-tasks-calendar-event-time {
+        display: none;
+      }
+
+      .playground-tasks-scheduler .rbc-time-view .playground-tasks-calendar-event-inner {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: space-between;
+        gap: 6px;
+      }
+
+      .playground-tasks-scheduler .rbc-time-view .playground-tasks-calendar-event-top,
+      .playground-tasks-scheduler .rbc-time-view .playground-tasks-calendar-event-meta {
+        width: 100%;
+      }
+
+      .playground-tasks-scheduler .rbc-time-view .playground-tasks-calendar-event-meta {
+        order: initial;
+        justify-content: flex-start;
+        margin-top: auto;
+      }
+
+      .playground-tasks-scheduler .rbc-time-view .playground-tasks-calendar-event-top > .playground-tasks-board-assignee-avatar,
+      .playground-tasks-scheduler .rbc-time-view .playground-tasks-calendar-event-priority,
+      .playground-tasks-scheduler .rbc-time-view .playground-tasks-calendar-event-time {
+        display: inline-flex;
+      }
+
+      .playground-tasks-calendar-event-time {
+        flex: 0 0 auto;
+        align-items: center;
+        margin-left: auto;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.2;
+        white-space: nowrap;
       }
 
       .playground-tasks-calendar-event-type-icon {
@@ -669,14 +1049,37 @@ export const CALENDAR_SCHEDULER_CSS = `
         color: white;
       }
 
+      .playground-tasks-scheduler .rbc-time-view .playground-tasks-calendar-event-type-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 5px;
+      }
+
       .playground-tasks-calendar-event-type-icon svg {
         width: 9px;
         height: 9px;
         filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.24));
       }
 
+      .playground-tasks-scheduler .rbc-time-view .playground-tasks-calendar-event-type-icon svg {
+        width: 12px;
+        height: 12px;
+      }
+
       .playground-tasks-calendar-event-type-icon.is-task {
         background: linear-gradient(180deg, #39b877 0%, #2b8b59 100%);
+      }
+
+      .playground-tasks-calendar-event-type-icon.is-loop {
+        background: linear-gradient(180deg, #9a72df 0%, #6542a8 100%);
+      }
+
+      .playground-tasks-calendar-event-type-icon.is-workflow {
+        background: linear-gradient(180deg, #4f7fc5 0%, #1e4585 100%);
+      }
+
+      .playground-tasks-calendar-event-type-icon.is-batch {
+        background: linear-gradient(180deg, #d69a4b 0%, #986126 100%);
       }
 
       .playground-tasks-calendar-event-type-icon.is-subtask {
@@ -687,28 +1090,16 @@ export const CALENDAR_SCHEDULER_CSS = `
         background: linear-gradient(180deg, #125ffb 0%, #0d48fb 100%);
       }
 
-      .playground-tasks-calendar-event-priority {
-        flex: 0 0 auto;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 14px;
-        height: 14px;
-        gap: 0;
-      }
-
-      .playground-tasks-calendar-event-priority .playground-tasks-priority-value-icon {
-        width: 14px;
-        height: 14px;
-      }
-
       .playground-tasks-calendar-event-title {
         min-width: 0;
         flex: 1 1 auto;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        line-height: 1.1;
+        color: white;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.35;
       }
 
       .playground-tasks-scheduler .rbc-label {
@@ -741,7 +1132,53 @@ export const CALENDAR_SCHEDULER_CSS = `
       }
 
       .playground-tasks-scheduler .rbc-current-time-indicator {
-        background: #016bdf !important;
+        display: none !important;
+      }
+
+      .playground-tasks-calendar-time-gutter-wrapper {
+        position: relative;
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+      }
+
+      .playground-tasks-calendar-current-time {
+        position: absolute;
+        z-index: 8;
+        left: 0;
+        right: 0;
+        width: auto;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.7);
+        pointer-events: none;
+      }
+
+      .playground-tasks-calendar-current-time-label {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 24px;
+        padding: 0 5px;
+        transform: translateY(-50%);
+        border: 0 !important;
+        border-radius: 5px;
+        background: #fff;
+        color: #000;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .playground-tasks-calendar-context-menu-anchor {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: visible;
       }
 
       .playground-tasks-scheduler .rbc-event-label {
@@ -806,6 +1243,7 @@ export const CALENDAR_SCHEDULER_CSS = `
       }
 
       .playground-tasks-scheduler .rbc-timeslot-group {
+        min-height: 80px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
       }
 
@@ -815,6 +1253,10 @@ export const CALENDAR_SCHEDULER_CSS = `
 
       .playground-tasks-scheduler .rbc-time-content {
         border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+      }
+
+      .playground-tasks-scheduler.is-day-view .rbc-time-content {
+        border-top: none !important;
       }
 
 `;

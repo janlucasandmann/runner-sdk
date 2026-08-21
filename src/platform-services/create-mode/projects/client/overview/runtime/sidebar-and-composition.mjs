@@ -918,7 +918,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                     }),
                     }),
                     renderProjectOverviewSidebarRow("Owner", owner.name, {
-                      className: "is-owner",
+                      className: "is-owner platform-resource-detail-sidebar__owner-row",
                       editable: true,
                       content: React.createElement(PlatformOwnerSelector, {
                         owner: {
@@ -941,6 +941,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                         },
                         ariaLabel: "Project owner",
                         resourceLabel: "project",
+                        includeOrganizationMembers: true,
                         open: projectOverviewSidebarPropertyPopover === "owner",
                         onOpenChange: (nextOpen) => {
                           if (nextOpen) void requestProjectOverviewOwnerCandidates();
@@ -950,13 +951,14 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                         },
                         disabled: !canTransferOwnership || projectSaveState?.isSaving,
                         loading: ownerCandidatesAreLoading,
+                        loadingContent: "Loading organization members...",
                         emptyContent: projectOverviewOwnerCandidatesState?.error || "No eligible organization members.",
                         alignment: "end",
                         popupAlignment: "right",
                         fullWidth: true,
-                        popupWidth: "min(280px, calc(100vw - 48px))",
-                        popupMaxHeight: "min(320px, calc(100vh - 120px))",
-                        className: "playground-tasks-detail-central-selector playground-project-overview-sidebar-selector",
+                        popupWidth: 260,
+                        popupMaxHeight: "min(320px, calc(100vh - 180px))",
+                        className: "platform-resource-detail-sidebar__owner-selector playground-tasks-detail-central-selector playground-project-overview-sidebar-selector",
                         triggerClassName: "playground-tasks-detail-central-selector-trigger playground-project-overview-sidebar-selector-trigger",
                         popupClassName: "playground-tasks-detail-central-selector-popup playground-project-overview-sidebar-selector-popup",
                       }),

@@ -926,6 +926,7 @@ export const METRONOME_TRIGGERS_01_FRAGMENT = String.raw`
             Icon: RefreshCw,
             subtypes: [
               { id: "fixed_count", label: "Fixed count" },
+              { id: "repeat_until", label: "Repeat until verified" },
               { id: "workflow_context_contains", label: "Workflow context contains" },
               { id: "input_items", label: "Input items" },
               { id: "project_tickets", label: "Project tickets" },
@@ -1093,6 +1094,7 @@ export const METRONOME_TRIGGERS_01_FRAGMENT = String.raw`
             },
             loop: {
               fixed_count: "Repeat a fixed number of times.",
+              repeat_until: "Repeat worker and verifier steps until the verifier passes or a safety budget stops the run.",
               workflow_context_contains: "Repeat while workflow context matches.",
               input_items: "Repeat once for each input item.",
               project_tickets: "Repeat over tickets in a project.",

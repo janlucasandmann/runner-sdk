@@ -1324,7 +1324,7 @@
             }
             const name = String(source.name || source.title || source.displayName || "Team").trim() || "Team";
             const roleId = normalizePlaygroundTeamRoleId(
-              source.role || source.membershipRole || source.membership_role || source.currentUserRole || source.current_user_role,
+              source.roleId || source.role_id || source.role || source.membershipRole || source.membership_role || source.currentUserRole || source.current_user_role,
               "admin"
             );
             return {

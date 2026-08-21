@@ -2572,10 +2572,10 @@
                 files: sourceServerCodeWorkspaceFiles,
                 activeFileId: normalizeHistoryPath(serverFileEditorState.path || ""),
                 onFileSelect: handleSourceServerCodeWorkspaceFileSelect,
-                onFileRename: (file) => {
+                onFileRename: (file, nextLabel) => {
                   const row = sourceServerCodeWorkspaceRowById.get(file.id);
                   if (!row) return;
-                  return handleServerFileRename(row.entry);
+                  return handleServerFileRename(row.entry, nextLabel);
                 },
                 onFilesDelete: (files) => handleServerFilesDelete(
                   files
@@ -3380,51 +3380,16 @@
               )
               : null;
   
-            const serverAddTeamsControl = React.createElement(PlatformButtonSelector, {
-                mode: "popup",
-                buttonVariant: "secondary",
-                buttonSize: "small",
-                label: "Add Teams",
-                leading: React.createElement(Plus, {
-                  width: 14,
-                  height: 14,
-                  strokeWidth: 1.8,
-                  "aria-hidden": "true",
-                }),
-                open: serverTeamMenuId === "add-teams",
-                onOpenChange: (nextOpen) => {
-                  if (nextOpen && typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
-                    onWorkspaceTeamsRequest({});
-                  }
-                  setServerTeamMenuId(nextOpen ? "add-teams" : "");
-                },
-                closeOnSelect: true,
-                popupAriaLabel: "Add teams with " + serverKindLabel.toLowerCase() + " access",
-                popupAlignment: "right",
-                popupRole: "menu",
-                popupVariant: "minimal",
-                popupWidth: 240,
-                disabled: Boolean(serverTeamAccessState.action),
-                className: "playground-project-teams-add-shell playground-database-team-menu-scope",
-                popupClassName: "playground-project-teams-menu",
-              },
-              availableServerAccessTeams.length
-                ? availableServerAccessTeams.map((team) => React.createElement("button", {
-                    key: team.id,
-                    type: "button",
-                    role: "menuitem",
-                    className: "platform-data-table__menu-item playground-project-teams-menu-row",
-                    onClick: () => void handleAddServerTeamAccess(team),
-                  },
-                    React.createElement("span", { className: "platform-data-table__menu-icon" },
-                      React.createElement(Users, { width: 14, height: 14, strokeWidth: 1.8 })
-                    ),
-                    React.createElement("span", { className: "platform-data-table__menu-copy" }, team.name)
-                  ))
-                : React.createElement("div", {
-                    className: "playground-project-teams-menu-empty",
-                  }, workspaceTeamsLoading ? "Loading teams..." : "All available teams have access.")
-            );
+            const serverAddTeamsControl = React.createElement(PlatformResourceAccessAddTeams, {
+              teams: availableServerAccessTeams,
+              totalTeamCount: normalizedEnvironmentWorkspaceTeams.length,
+              loading: workspaceTeamsLoading,
+              requiresPlan: workspaceTeamsRequiresPlan,
+              disabled: Boolean(serverTeamAccessState.action),
+              popupAriaLabel: "Add teams with " + serverKindLabel.toLowerCase() + " access",
+              onRequestTeams: () => onWorkspaceTeamsRequest?.({}),
+              onAddTeam: handleAddServerTeamAccess,
+            });
             const usesCentralServerAccessTable = isOperationalDetailServer;
             const serverTeamAccessTable = React.createElement(PlatformResourceAccessTable, {
               teams: isAuthServer ? serverSharedTeams : visibleServerSharedTeams,

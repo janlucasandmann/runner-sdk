@@ -1,4 +1,12 @@
 export const KNOWLEDGE_APP_PAGE_VIEW_SCRIPT = String.raw`        function renderKnowledgePage() {
+          const knowledgeOrganization = (Array.isArray(organizationPageOrganizations)
+            ? organizationPageOrganizations
+            : []
+          ).find((organization) => isOrganizationPageActiveOrganization(organization))
+            || getOrganizationPagePersonalOrganization(organizationPageOrganizations);
+          const knowledgeOrganizationId = String(
+            knowledgeOrganization?.id || activeOrganizationId || ""
+          ).trim();
           return React.createElement(KnowledgeWorkspacePage, {
             shouldLoadData: activePage === "knowledge",
             backendUrl: proxyBackendBase,
@@ -26,7 +34,9 @@ export const KNOWLEDGE_APP_PAGE_VIEW_SCRIPT = String.raw`        function render
             onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
             workspaceTeams: teamPageTeams,
             workspaceTeamsLoading: teamPageLoading,
-            activeOrganizationId,
+            workspaceTeamMembers: teamPageMembers,
+            workspaceTeamMembersTeamId: teamPageSelectedTeamId,
+            activeOrganizationId: knowledgeOrganizationId,
             onWorkspaceTeamsRequest: () => {
               if (
                 !teamPageLoading
@@ -35,6 +45,18 @@ export const KNOWLEDGE_APP_PAGE_VIEW_SCRIPT = String.raw`        function render
               ) {
                 void loadTeamPageData({ selectedTeamId: "" });
               }
+            },
+            onWorkspaceTeamMembersRequest: (teamId) => {
+              const normalizedTeamId = String(teamId || "").trim();
+              if (!normalizedTeamId) return Promise.resolve();
+              if (
+                !teamPageLoading
+                && String(teamPageSelectedTeamId || "").trim() === normalizedTeamId
+                && Array.isArray(teamPageMembers)
+              ) {
+                return Promise.resolve();
+              }
+              return loadTeamPageData({ selectedTeamId: normalizedTeamId });
             },
             onOpenLibrary: (libraryId, libraryName = "") => {
               requestPlatformNavigation(() => openKnowledgeLibraryPage(libraryId, libraryName));

@@ -160,7 +160,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        fun
             let createdSet = null;
             if (evaluationCreateAttemptedRef.current) {
               const existingPayload = await requestEvaluationBackendJson(
-                "/evaluations?limit=500",
+                "/evaluations?view=summary&limit=500",
                 { method: "GET" },
                 "Failed to reconcile evaluation creation."
               ).catch(() => null);
@@ -600,8 +600,33 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        fun
           setEvaluationRenameError("");
         }
 
-        function openEvaluationRenameDialog(set) {
+        function openEvaluationRenameDialog(set, options = {}) {
           if (!set?.id) {
+            return;
+          }
+          const normalizedSetId = String(set.id || "").trim();
+          if (
+            options.skipHydration !== true
+            && String(backendUrl || "").trim()
+            && normalizedSetId
+            && !evaluationDetailsLoadedRef.current.has(normalizedSetId)
+          ) {
+            setEvaluationBackendSyncState({ status: "loading", error: "" });
+            void reloadBackendEvaluationSet(normalizedSetId, {
+              clearRunSelection: false,
+              select: false,
+              rememberBaseline: false,
+            }).then((loadedSet) => {
+              setEvaluationBackendSyncState({ status: "idle", error: "" });
+              if (loadedSet?.id) {
+                openEvaluationRenameDialog(loadedSet, { skipHydration: true });
+              }
+            }).catch((error) => {
+              setEvaluationBackendSyncState({
+                status: "error",
+                error: error?.message || String(error),
+              });
+            });
             return;
           }
           setEvaluationActionsPopoverOpen(false);
@@ -825,6 +850,13 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        fun
               !deletedSetIds.has(normalizePlaygroundEvaluationSet(item).id)
             ))
           ));
+          setEvaluationOverviewPaginationState((current) => ({
+            ...current,
+            nextOffset: Math.max(
+              0,
+              Number(current.nextOffset || 0) - normalizedSetIds.length
+            ),
+          }));
           if (deletedSetIds.has(selectedEvaluationSetId)) {
             setSelectedEvaluationSetId("");
             setSelectedEvaluationRunId("");

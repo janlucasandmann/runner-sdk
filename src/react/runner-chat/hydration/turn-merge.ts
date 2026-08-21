@@ -555,6 +555,7 @@ export function mergeHydratedMessageTurnsIntoTurns(
       parseCreationCommand:
         turn.parseCreationCommand ?? messageTurn.parseCreationCommand ?? null,
       adCreationCommand: turn.adCreationCommand ?? messageTurn.adCreationCommand ?? null,
+      loopCommand: turn.loopCommand ?? messageTurn.loopCommand ?? null,
     };
   };
 
@@ -681,6 +682,8 @@ export function mergeHydratedTurns(
         hydratedTurn.parseCreationCommand ?? localTurn.parseCreationCommand ?? null,
       adCreationCommand:
         hydratedTurn.adCreationCommand ?? localTurn.adCreationCommand ?? null,
+      loopCommand:
+        hydratedTurn.loopCommand ?? localTurn.loopCommand ?? null,
     };
   }
   return [...mergedTurns]

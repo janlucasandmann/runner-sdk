@@ -9,7 +9,19 @@ import { KnowledgeLibraryDetailPage } from "./knowledge-library-detail-page.js";
 
 beforeAll(() => {
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => ({
+    arc: vi.fn(),
+    beginPath: vi.fn(),
+    clearRect: vi.fn(),
+    clip: vi.fn(),
+    createConicGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+    createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+    fill: vi.fn(),
     measureText: () => ({ width: 0 }),
+    rect: vi.fn(),
+    restore: vi.fn(),
+    save: vi.fn(),
+    setTransform: vi.fn(),
+    stroke: vi.fn(),
   }) as unknown as CanvasRenderingContext2D);
 });
 
@@ -199,6 +211,172 @@ describe("KnowledgeLibraryDetailPage", () => {
     });
   });
 
+  it("uses the full content width for a focused team access page", async () => {
+    const accessLibrary: KnowledgeLibrary = {
+      ...library,
+      metadata: {
+        sharedTeamIds: ["team-platform"],
+      },
+    };
+    const { container } = render(
+      <>
+        <div id="knowledge-access-sections" />
+        <KnowledgeLibraryDetailPage
+          library={accessLibrary}
+          api={{} as KnowledgeApi}
+          sectionControlsPortalId="knowledge-access-sections"
+          workspaceTeams={[
+            {
+              id: "team-platform",
+              name: "Platform",
+              roleId: "admin",
+              profileImageUrl: "/img/teams/platform.webp",
+            },
+          ]}
+          workspaceTeamMembersTeamId="team-platform"
+          workspaceTeamMembers={[
+            {
+              id: "membership-john",
+              role: "member",
+              user: {
+                userId: "user-2",
+              },
+              profile: {
+                displayName: "John Smith",
+                email: "john@example.com",
+                photoURL: "/img/profiles/john.webp",
+              },
+            },
+          ]}
+          onLibraryChange={vi.fn()}
+          onReload={vi.fn(async () => undefined)}
+        />
+      </>,
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: "Settings" }));
+    expect(screen.getByText("Location")).not.toBeNull();
+    fireEvent.click(
+      screen.getByRole("row", { name: "Edit permissions for Platform" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        container.querySelector('[data-platform-resource-access-view="team"]'),
+      ).not.toBeNull();
+    });
+    const page = container.querySelector(".knowledge-detail-page");
+    expect(page?.classList.contains("is-sidebar-empty")).toBe(true);
+    expect(page?.classList.contains("has-sidebar")).toBe(false);
+    expect(page?.classList.contains("is-access-detail-view")).toBe(true);
+    expect(
+      container.querySelector(
+        ".knowledge-detail-sidebar.playground-agents-detail-sidebar",
+      ),
+    ).toBeNull();
+    expect(
+      container.querySelector(".platform-role-permissions-page__details-sidebar"),
+    ).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Member assigned members" })).not.toBeNull();
+    expect(
+      container.querySelector(
+        '.platform-role-permissions-page__assigned-avatar img[src="/img/profiles/john.webp"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(".knowledge-settings-layout.is-access-detail-view"),
+    ).not.toBeNull();
+    expect(screen.queryByText("Location")).toBeNull();
+  });
+
+  it("enables ownership transfer with the resolved active organization", async () => {
+    const listOrganizationMembers = vi.fn(async () => ([
+      {
+        userId: "user-1",
+        name: "Jane Doe",
+        email: "jane@example.com",
+      },
+    ]));
+    const updateLibrary = vi.fn(async () => ({
+      ...library,
+      ownerId: "user-2",
+      ownerUserId: "user-2",
+      ownerName: "John Smith",
+      ownerEmail: "john@example.com",
+      ownerAvatarUrl: "/img/profiles/john.webp",
+    }));
+
+    render(
+      <>
+        <div id="knowledge-owner-sections" />
+        <KnowledgeLibraryDetailPage
+          library={{
+            ...library,
+            metadata: { sharedTeamIds: ["team-platform"] },
+          }}
+          api={{ listOrganizationMembers, updateLibrary } as unknown as KnowledgeApi}
+          sectionControlsPortalId="knowledge-owner-sections"
+          workspaceTeams={[
+            {
+              id: "team-platform",
+              name: "Platform",
+              roleId: "admin",
+            },
+          ]}
+          workspaceTeamMembersTeamId="team-platform"
+          workspaceTeamMembers={[
+            {
+              id: "membership-john",
+              role: "member",
+              user: {
+                userId: "user-2",
+              },
+              profile: {
+                displayName: "John Smith",
+                email: "john@example.com",
+                photoURL: "/img/profiles/john.webp",
+              },
+            },
+          ]}
+          activeOrganizationId="organization-personal-1"
+          onLibraryChange={vi.fn()}
+          onReload={vi.fn(async () => undefined)}
+        />
+      </>,
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: "Settings" }));
+    const ownerSelector = screen.getByRole("button", {
+      name: "Choose Knowledge library owner",
+    });
+    expect((ownerSelector as HTMLButtonElement).disabled).toBe(false);
+
+    fireEvent.click(ownerSelector);
+    await waitFor(() => {
+      expect(listOrganizationMembers).toHaveBeenCalledWith("organization-personal-1");
+    });
+    fireEvent.click(await screen.findByRole("option", {
+      name: "John Smith, john@example.com",
+    }));
+    expect(screen.getByRole("alertdialog")).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Transfer Ownership" }));
+
+    await waitFor(() => {
+      expect(updateLibrary).toHaveBeenCalledWith(
+        "library-1",
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            ownerId: "user-2",
+            ownerUserId: "user-2",
+            ownerName: "John Smith",
+            ownerEmail: "john@example.com",
+          }),
+          permissionSet: null,
+        }),
+      );
+    });
+  });
+
   it("creates a document before the first explicit save without discarding unsaved drafts", async () => {
     const createdDocument: KnowledgeDocument = {
       ...documents[1],
@@ -253,7 +431,16 @@ describe("KnowledgeLibraryDetailPage", () => {
       markdown: "",
       sortOrder: 2,
     }));
-    expect(await screen.findByRole("button", { name: "Untitled document" })).not.toBeNull();
+    const documentNameInput = await screen.findByRole("textbox", {
+      name: "Rename Untitled document",
+    });
+    expect(document.activeElement).toBe(documentNameInput);
+    fireEvent.change(documentNameInput, { target: { value: "Incident response" } });
+    fireEvent.keyDown(documentNameInput, { key: "Enter" });
+    expect(await screen.findByRole("button", { name: "Incident response" })).not.toBeNull();
+    expect(
+      (screen.getByRole("textbox", { name: "Knowledge document title" }) as HTMLInputElement).value,
+    ).toBe("Incident response");
     expect((nameInput as HTMLInputElement).value).toBe("Unsaved handbook name");
     expect(onReload).not.toHaveBeenCalled();
   });

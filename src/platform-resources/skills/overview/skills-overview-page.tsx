@@ -1,12 +1,21 @@
-import { ChevronRight, Sparkles, SquarePen, Trash2 } from "lucide-react";
+import {
+  ChevronRight,
+  Plus,
+  Sparkles,
+  SquareMousePointer,
+  SquarePen,
+  Trash2,
+} from "lucide-react";
 import { useMemo, type ReactNode } from "react";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
   PlatformDataTableRowGroupingConfig,
   PlatformDataTableRowReorderingConfig,
+  PlatformDataTableSelectionConfig,
   PlatformDataTableSortingConfig,
 } from "../../../platform-ui/components/composite/data-table/index.js";
+import { PlatformEmptyState } from "../../../platform-ui/components/composite/empty-state/index.js";
 import {
   ResourceOverviewCatalogIdentityCell,
   ResourceOverviewIdentityCell,
@@ -32,9 +41,23 @@ export interface SkillOverviewRow {
   isCustom: boolean;
   creatorName?: string;
   creatorAvatarUrl?: string;
+  ownerName?: string;
+  ownerAvatarUrl?: string;
   updatedAt?: number;
   updatedLabel: string;
   updatedTitle?: string;
+}
+
+export interface SkillOverviewIdentity {
+  name: string;
+  imageUrl?: string;
+  fallback?: string;
+}
+
+export interface SkillsOverviewIdentityColumn {
+  id?: string;
+  header: ReactNode;
+  getIdentity: (row: SkillOverviewRow) => SkillOverviewIdentity;
 }
 
 export interface SkillsOverviewPageProps {
@@ -64,6 +87,8 @@ export interface SkillsOverviewPageProps {
   grouping?: "skills" | "flat";
   rowGrouping?: PlatformDataTableRowGroupingConfig<SkillOverviewRow>;
   rowReordering?: PlatformDataTableRowReorderingConfig<SkillOverviewRow>;
+  selection?: PlatformDataTableSelectionConfig<SkillOverviewRow>;
+  identityColumn?: SkillsOverviewIdentityColumn;
   sorting?: PlatformDataTableSortingConfig;
   sortableColumns?: boolean;
   /** Optional service-owned actions when this catalog shell is reused. */
@@ -78,13 +103,27 @@ function getCreatorName(row: SkillOverviewRow): string {
     || (row.isCustom ? "You" : COMPUTER_AGENTS_CREATOR_NAME);
 }
 
-function getCreatorFallback(name: string): string {
+function getIdentityFallback(name: string): string {
   return name
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() || "")
     .join("");
+}
+
+function getOwnerIdentity(row: SkillOverviewRow): SkillOverviewIdentity {
+  const isSystemSkill = !row.isCustom;
+  const name = isSystemSkill
+    ? COMPUTER_AGENTS_CREATOR_NAME
+    : row.ownerName?.trim() || getCreatorName(row);
+  return {
+    name,
+    imageUrl: isSystemSkill
+      ? COMPUTER_AGENTS_CREATOR_PROFILE_URL
+      : row.ownerAvatarUrl || row.creatorAvatarUrl,
+    fallback: getIdentityFallback(name),
+  };
 }
 
 export function SkillsOverviewPage({
@@ -97,6 +136,7 @@ export function SkillsOverviewPage({
   mutating = false,
   headerActions,
   onOpen,
+  onCreate,
   onEdit,
   onRename,
   onDelete,
@@ -104,17 +144,32 @@ export function SkillsOverviewPage({
   systemGroupLabel = "System Skills",
   customGroupLabel = "Custom Skills",
   searchPlaceholder = "Search skills",
-  emptyState = "No skills available.",
+  emptyState,
   noResultsState = "No skills match this view.",
   heroContent = <SkillsOverviewGuide />,
   pageClassName = "is-skills",
   grouping = "skills",
   rowGrouping,
   rowReordering,
+  selection,
+  identityColumn,
   sorting,
   sortableColumns = true,
   rowActions,
 }: SkillsOverviewPageProps) {
+  const resolveIdentity = identityColumn?.getIdentity || getOwnerIdentity;
+  const resolvedEmptyState = emptyState ?? (
+    <PlatformEmptyState
+      icon={SquareMousePointer}
+      title="No skills available"
+      description="Create a custom skill to give agents reusable expertise and repeatable workflows."
+      primaryAction={{
+        label: "Custom Skill",
+        icon: Plus,
+        onClick: onCreate,
+      }}
+    />
+  );
   const columns = useMemo<PlatformDataTableColumn<SkillOverviewRow>[]>(() => [
     {
       id: "name",
@@ -137,22 +192,17 @@ export function SkillsOverviewPage({
       ),
     },
     {
-      id: "creator",
-      header: "Creator",
-      accessor: getCreatorName,
+      id: identityColumn?.id || "owner",
+      header: identityColumn?.header || "Owner",
+      accessor: (row) => resolveIdentity(row).name,
       width: "minmax(160px, 0.62fr)",
       cell: ({ row }) => {
-        const creatorName = getCreatorName(row);
+        const identity = resolveIdentity(row);
         return (
           <ResourceOverviewIdentityCell
-            title={creatorName}
-            imageUrl={
-              row.creatorAvatarUrl
-              || (row.isCustom
-                ? undefined
-                : COMPUTER_AGENTS_CREATOR_PROFILE_URL)
-            }
-            fallback={getCreatorFallback(creatorName)}
+            title={identity.name}
+            imageUrl={identity.imageUrl}
+            fallback={identity.fallback || getIdentityFallback(identity.name)}
             iconClassName="is-creator"
           />
         );
@@ -168,7 +218,7 @@ export function SkillsOverviewPage({
       hideBelow: 900,
       cell: ({ row }) => <ResourceOverviewValue title={row.updatedTitle}>{row.updatedLabel}</ResourceOverviewValue>,
     },
-  ], [sortableColumns]);
+  ], [identityColumn?.header, identityColumn?.id, resolveIdentity, sortableColumns]);
 
   const getRowActions = (row: SkillOverviewRow, state: { targetRows: readonly SkillOverviewRow[] }): readonly PlatformDataTableAction<SkillOverviewRow>[] => {
     if (rowActions) return rowActions(row, state);
@@ -226,19 +276,20 @@ export function SkillsOverviewPage({
           getGroupId: (row) => row.isCustom ? "custom" : "system",
         }),
         rowReordering,
+        selection,
         pagination: false,
         toolbar: {
           search: {
             placeholder: searchPlaceholder,
             getSearchText: (row) =>
-              `${row.searchText || row.name} ${getCreatorName(row)}`,
+              `${row.searchText || row.name} ${resolveIdentity(row).name}`,
           },
         },
         getRowActions,
         onRowActivate: onOpen,
         getRowAriaLabel: (row) => row.name,
         loading,
-        emptyState,
+        emptyState: resolvedEmptyState,
         noResultsState,
       }}
     />

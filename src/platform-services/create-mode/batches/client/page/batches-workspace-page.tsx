@@ -28,7 +28,10 @@ import type {
   BatchTargetKind,
 } from "../batches-types.js";
 import { BatchCreateModal, type BatchThreadComposerProps } from "./batch-create-modal.js";
-import { BatchesOverviewPage } from "./batches-overview-page.js";
+import {
+  BatchesOverviewPage,
+  reorderBatchJobsForDisplay,
+} from "./batches-overview-page.js";
 
 export const BATCH_DRAFT_STORAGE_KEY = "computer_agents_batch_draft_v1";
 export const BATCH_DRAFT_EVENT = "computer-agents:open-batch-composer";
@@ -324,8 +327,13 @@ export function BatchesWorkspacePage({
         onHold={(job) => void act(job, "hold")}
         onCancel={(job) => void act(job, "cancel")}
         onDelete={(candidates) => setDeleteCandidates([...candidates])}
-        onReorder={(job, index) => {
-          void mutate(() => reorderBatchJob(job.id, Math.max(0, index), apiOptions));
+        onReorder={async (job, index) => {
+          const previousJobs = jobs;
+          setJobs(reorderBatchJobsForDisplay(previousJobs, job, index));
+          const succeeded = await mutate(() =>
+            reorderBatchJob(job.id, Math.max(0, index), apiOptions),
+          );
+          if (!succeeded) setJobs(previousJobs);
         }}
         controlsPortalId={controlsPortalId}
         scopePortalId={scopePortalId}

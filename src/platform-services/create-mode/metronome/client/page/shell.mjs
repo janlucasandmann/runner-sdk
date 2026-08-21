@@ -218,6 +218,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const [metronomeCodeUndoStack, setMetronomeCodeUndoStack] = useState([]);
           const [metronomeCodeRedoStack, setMetronomeCodeRedoStack] = useState([]);
           const [metronomeWorkflowNameDraft, setMetronomeWorkflowNameDraft] = useState("");
+          const [metronomeInferenceBudgetPolicyDraft, setMetronomeInferenceBudgetPolicyDraft] = useState(null);
           const [activeMetronomeCodeFilePath, setActiveMetronomeCodeFilePath] = useState("main.py");
           const [isMetronomeCodeDirty, setIsMetronomeCodeDirty] = useState(false);
           const [metronomeRuns, setMetronomeRuns] = useState([]);
@@ -557,9 +558,10 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
                   ...activeWorkflow,
                   name: String(metronomeWorkflowNameDraft || activeWorkflow.name || "Untitled Metronome").trim()
                     || "Untitled Metronome",
+                  inferenceBudgetPolicy: metronomeInferenceBudgetPolicyDraft,
                 }
               : null
-          ), [activeWorkflow, metronomeWorkflowNameDraft]);
+          ), [activeWorkflow, metronomeInferenceBudgetPolicyDraft, metronomeWorkflowNameDraft]);
           const activeWorkflowOwnerIdentityKeys = useMemo(() => (
             getMetronomeWorkflowOwnerIdentityKeys(activeWorkflow)
           ), [activeWorkflow]);
@@ -590,8 +592,8 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             && activeWorkflowTeamShareAccessLevel === "manage"
           );
           const isActiveWorkflowBuiltIn = Boolean(
-            activeBuiltInWorkflow && isMetronomeWorkflowBuiltIn(activeBuiltInWorkflow)
-            || isActiveWorkflowTeamShared && !isActiveWorkflowTeamSharedEditable
+            (activeWorkflow && isMetronomeWorkflowBuiltIn(activeWorkflow))
+            || (isActiveWorkflowTeamShared && !isActiveWorkflowTeamSharedEditable)
           );
           const isEditor = Boolean(activeWorkflow);
           const replaceMetronomeWorkflowInEditableState = useCallback((oldWorkflowId, nextWorkflow, options = {}) => {
@@ -1734,6 +1736,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             setNodes(nextNodes);
             setEdges(nextEdges);
             setMetronomeWorkflowNameDraft(String(activeWorkflow?.name || ""));
+            setMetronomeInferenceBudgetPolicyDraft(readMetronomeWorkflowInferenceBudgetPolicy(activeWorkflow));
             metronomeVisitBaselineKeyRef.current = activeWorkflow
               ? createMetronomeVisitEditorKey(activeWorkflow, nextNodes, nextEdges)
               : "";

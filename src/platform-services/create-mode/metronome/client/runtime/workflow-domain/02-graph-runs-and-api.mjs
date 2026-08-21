@@ -104,6 +104,49 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
           return normalizeMetronomeNodeOrder(normalizedNodes);
         }
 
+        const METRONOME_INFERENCE_BUDGET_POLICY_SCHEMA_VERSION = "computer_agents_metronome_inference_budget_policy_v2";
+        const METRONOME_INFERENCE_BUDGET_TOKENS_PER_USD = 100;
+
+        function normalizeMetronomeInferenceBudgetPolicy(value) {
+          const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+          if (!source) return null;
+          const requestedUnit = String(source.unit || "").trim().toLowerCase();
+          const unit = requestedUnit === "tokens" ? "tokens" : "usd";
+          const legacyMaximumCostUsdPerRun = Number(source.maximumCostUsdPerRun ?? source.maximum_cost_usd_per_run);
+          const requestedAmount = Number(source.maximumAmountPerRun ?? source.maximum_amount_per_run);
+          const rawMaximumAmountPerRun = Number.isFinite(requestedAmount) && requestedAmount > 0
+            ? requestedAmount
+            : Number.isFinite(legacyMaximumCostUsdPerRun) && legacyMaximumCostUsdPerRun > 0
+              ? legacyMaximumCostUsdPerRun
+              : 0;
+          if (rawMaximumAmountPerRun <= 0) return null;
+          const maximumAmountPerRun = unit === "tokens"
+            ? Math.min(1000000, Math.max(1, Math.round(rawMaximumAmountPerRun)))
+            : Math.min(10000, Math.max(0.01, rawMaximumAmountPerRun));
+          return {
+            schemaVersion: METRONOME_INFERENCE_BUDGET_POLICY_SCHEMA_VERSION,
+            unit,
+            maximumAmountPerRun,
+          };
+        }
+
+        function readMetronomeWorkflowInferenceBudgetPolicy(workflow) {
+          const source = workflow && typeof workflow === "object" && !Array.isArray(workflow) ? workflow : {};
+          const definition = source.definition && typeof source.definition === "object" && !Array.isArray(source.definition)
+            ? source.definition
+            : {};
+          if (Object.prototype.hasOwnProperty.call(source, "inferenceBudgetPolicy")) {
+            return normalizeMetronomeInferenceBudgetPolicy(source.inferenceBudgetPolicy);
+          }
+          if (Object.prototype.hasOwnProperty.call(source, "inference_budget_policy")) {
+            return normalizeMetronomeInferenceBudgetPolicy(source.inference_budget_policy);
+          }
+          return normalizeMetronomeInferenceBudgetPolicy(
+            definition.inferenceBudgetPolicy
+            || definition.inference_budget_policy
+          );
+        }
+
         function normalizeMetronomeWorkflow(rawWorkflow) {
           const workflow = rawWorkflow && typeof rawWorkflow === "object" ? rawWorkflow : {};
           const definition = workflow.definition && typeof workflow.definition === "object" ? workflow.definition : {};
@@ -218,6 +261,14 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
           const graphRawEdges = graphDeployment && Array.isArray(graphDeployment.edges) && graphDeployment.edges.length
             ? graphDeployment.edges
             : rawEdges;
+          const inferenceBudgetPolicy = normalizeMetronomeInferenceBudgetPolicy(
+            graphDeployment?.definition?.inferenceBudgetPolicy
+            || graphDeployment?.definition?.inference_budget_policy
+            || workflow.inferenceBudgetPolicy
+            || workflow.inference_budget_policy
+            || definition.inferenceBudgetPolicy
+            || definition.inference_budget_policy
+          );
           const nodes = normalizeMetronomeNodes(graphRawNodes);
           const edges = normalizeMetronomeEdgesForNodes(graphRawEdges, nodes);
           const activeDeploymentId = activeDeployment?.id || activeDeploymentFromMetadata;
@@ -245,6 +296,7 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
             lastRunAt: workflow.lastRunAt || workflow.last_run_at || "",
             runsToday: Number(workflow.runsToday || workflow.runs_today || 0) || 0,
             waitingApprovals: Number(workflow.waitingApprovals || workflow.waiting_approvals || 0) || 0,
+            inferenceBudgetPolicy,
             userId,
             ownerUserId,
             ownerName,

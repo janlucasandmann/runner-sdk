@@ -50,6 +50,8 @@ describe("runner Knowledge context", () => {
     ])).toMatchObject({
       libraryIds: ["library-a"],
       bindings: [{ libraryId: "library-a", versionId: "version-2", versionNumber: 2 }],
+      mode: "propose",
+      source: "composer",
     });
   });
 });

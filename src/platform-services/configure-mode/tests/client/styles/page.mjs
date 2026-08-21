@@ -381,6 +381,21 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     min-width: 0;
   }
 
+  .playground-top-nav-path-item.playground-tests-case-plan-breadcrumb {
+    min-width: 0;
+    max-width: min(360px, 28vw);
+    flex: 0 1 min(360px, 28vw);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .playground-tests-case-plan-breadcrumb .playground-top-nav-path-label {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .tests-case-detail-page {
     box-sizing: border-box;
     width: 100%;
@@ -575,6 +590,11 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     border-bottom: 1px solid rgba(255, 255, 255, 0.075);
   }
 
+  .tests-case-builder
+    .platform-settings-section.tests-case-builder__function-request-section {
+    border-bottom: 0;
+  }
+
   .tests-case-builder .platform-settings-section__header,
   .tests-case-builder .platform-settings-section__body {
     padding-right: 0;
@@ -595,6 +615,10 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
+  }
+
+  .tests-case-builder__form-grid.is-function-request {
+    grid-template-columns: minmax(0, 1.5fr) minmax(100px, 0.55fr) minmax(0, 1fr);
   }
 
   .tests-case-builder__field {
@@ -631,6 +655,37 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     box-shadow: inset 0 0 0 1px rgba(255, 91, 91, 0.5);
   }
 
+  .tests-case-builder__request-body-field
+    .platform-instructions-editor.is-minimalistic-ui {
+    border-radius: 10px;
+    background: #000;
+    overflow: hidden;
+  }
+
+  .tests-case-builder__request-body-field
+    .platform-instructions-editor__content-viewport {
+    margin-top: 0;
+    border-radius: 0 0 10px 10px;
+  }
+
+  .tests-case-builder__request-body-field
+    .platform-instructions-editor.is-minimalistic-ui
+    .platform-instructions-editor__header {
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: #000;
+  }
+
+  .tests-case-builder__request-body-field
+    .platform-instructions-editor__title {
+    font-size: 11px;
+    font-weight: 400;
+  }
+
+  .platform-settings-section.tests-case-builder__evidence-section {
+    border-bottom: 0;
+  }
+
   .tests-case-builder__field > small {
     margin-top: -4px;
     color: rgba(255, 255, 255, 0.42);
@@ -650,10 +705,10 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 0;
     border-radius: 8px;
     outline: 0;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.1);
     color: rgba(255, 255, 255, 0.9);
     font: inherit;
     font-size: 12px;
@@ -875,38 +930,6 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     font-weight: 400;
   }
 
-  .tests-case-builder__redaction-note {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    margin-top: 10px;
-    color: rgba(255, 255, 255, 0.45);
-    font-size: 10px;
-  }
-
-  .tests-case-builder__raw-definition {
-    color: rgba(255, 255, 255, 0.56);
-    font-size: 11px;
-  }
-
-  .tests-case-builder__raw-definition > summary {
-    width: fit-content;
-    cursor: pointer;
-  }
-
-  .tests-case-builder__raw-definition > pre {
-    box-sizing: border-box;
-    max-height: 320px;
-    margin: 12px 0 0;
-    padding: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.075);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.025);
-    color: rgba(255, 255, 255, 0.7);
-    font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    overflow: auto;
-  }
-
   .tests-case-detail-settings-section {
     display: grid;
     gap: 12px;
@@ -1032,10 +1055,10 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     min-width: 160px;
     min-height: 30px;
     padding: 5px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 0;
     border-radius: 7px;
     outline: 0;
-    background: transparent;
+    background: rgba(255, 255, 255, 0.1);
     color: #fff;
     font: inherit;
     text-align: right;
@@ -1332,11 +1355,11 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     width: 100%;
     height: 34px;
     padding: 0 9px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 0;
     border-radius: 7px;
     outline: 0;
     color: rgba(255, 255, 255, 0.82);
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.1);
     font: inherit;
     font-size: 11px;
   }
@@ -1878,6 +1901,10 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     .tests-case-builder__form-grid,
     .tests-case-builder__checks,
     .tests-case-builder__evidence-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tests-case-builder__form-grid.is-function-request {
       grid-template-columns: minmax(0, 1fr);
     }
 

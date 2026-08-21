@@ -247,7 +247,7 @@ export function createTaskBacklogService({
       const body = await readRequestBody(req);
       const apiKey = readOptionalApiKey(req, body);
       const upstreamUrl = parseUpstreamUrl(req, body);
-      const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
+      const requestUrl = new URL(req.url || "/", "http://localhost");
 
       if (!apiKey && !hasAiosSession(req)) {
         return sendJson(res, 401, {

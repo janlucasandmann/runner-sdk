@@ -37,8 +37,8 @@ export function EvaluationDetailPage({
       sidebarAriaLabel={variant === "run"
         ? "Evaluation run information and actions"
         : "Evaluation information and actions"}
-      className={`playground-evaluations-detail-overview-layout${className ? ` ${className}` : ""}`}
-      contentClassName="playground-evaluations-detail-overview-main"
+      className={`playground-evaluations-detail-overview-layout playground-evaluations-detail-page${className ? ` ${className}` : ""}`}
+      contentClassName="playground-evaluations-detail-overview-main playground-evaluations-detail-content"
       sidebarClassName="playground-evaluations-detail-sidebar"
       propertiesCardClassName="playground-evaluations-detail-sidebar-card"
       actionsCardClassName="playground-evaluations-detail-sidebar-card"
