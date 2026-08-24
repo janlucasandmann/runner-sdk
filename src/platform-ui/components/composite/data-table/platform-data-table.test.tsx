@@ -224,6 +224,7 @@ describe("PlatformDataTable", () => {
     expect(screen.queryByRole("button", { name: "Sort" })).toBeNull();
 
     await user.click(filterButton);
+    expect(screen.getByRole("menu").classList.contains("is-minimal")).toBe(true);
     await user.click(screen.getByRole("menuitemradio", { name: "Published" }));
     expect(onChange).toHaveBeenCalledWith("published");
   });

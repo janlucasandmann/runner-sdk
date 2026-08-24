@@ -39,6 +39,8 @@ export const PROJECT_UPDATES_CSS_FRAGMENT = `
       }
 
       .platform-project-update-card__meta {
+        flex: 1 1 auto;
+        min-width: 0;
         flex-wrap: wrap;
         gap: 10px;
         color: rgba(255, 255, 255, 0.5);
@@ -51,6 +53,7 @@ export const PROJECT_UPDATES_CSS_FRAGMENT = `
         display: inline-flex;
         align-items: center;
         gap: 7px;
+        margin-left: auto;
         color: rgba(255, 255, 255, 0.82);
       }
 
@@ -247,7 +250,7 @@ export const PROJECT_UPDATES_CSS_FRAGMENT = `
       .platform-project-update-modal__body {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 20px;
       }
 
       .platform-project-update-modal__status-row {
@@ -270,18 +273,6 @@ export const PROJECT_UPDATES_CSS_FRAGMENT = `
       .platform-project-update-modal__status-trigger {
         min-height: 30px;
         padding: 0;
-      }
-
-      .platform-project-update-modal__editor {
-        min-height: 220px;
-        padding: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.075);
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.075);
-      }
-
-      .platform-project-update-modal__editor .platform-instructions-editor__header {
-        background: transparent;
       }
 
       .platform-project-update-modal__error {

@@ -5,7 +5,8 @@
 ## Purpose
 
 `PlatformLoadingState` is the canonical inline loading composition for platform
-surfaces. It pairs the shared animated dot loader with concise status copy.
+surfaces. It renders the shared 24px animated spinner without visible status
+copy. The `message` remains the accessible status label for assistive technology.
 
 Use `centered` for page-level and fill-layout loading states. Otherwise the
 component remains an inline-flex element that can be placed inside controls,

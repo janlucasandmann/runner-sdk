@@ -31,6 +31,22 @@ export interface MetronomeWorkflowBranchMiniMap {
   }>;
   width: number;
   height: number;
+  nodeWidth: number;
+}
+
+export function getMetronomeWorkflowCanvasContentWidth({
+  clientWidth,
+  paddingLeft = 0,
+  paddingRight = 0,
+}: {
+  clientWidth: number;
+  paddingLeft?: number;
+  paddingRight?: number;
+}): number {
+  const normalizedClientWidth = Number.isFinite(clientWidth) ? Math.max(0, clientWidth) : 0;
+  const normalizedPaddingLeft = Number.isFinite(paddingLeft) ? Math.max(0, paddingLeft) : 0;
+  const normalizedPaddingRight = Number.isFinite(paddingRight) ? Math.max(0, paddingRight) : 0;
+  return Math.max(0, normalizedClientWidth - normalizedPaddingLeft - normalizedPaddingRight);
 }
 
 function normalizeMetronomeWorkflowMiniNode(value: unknown): MetronomeWorkflowMiniNode | null {
@@ -241,11 +257,13 @@ export function buildMetronomeWorkflowBranchMiniMap({
   path,
   nodes,
   edges,
+  availableWidth,
 }: {
   activeNodeId: string | null;
   path: string[];
   nodes: MetronomeWorkflowMiniNode[];
   edges: MetronomeWorkflowMiniEdge[];
+  availableWidth?: number;
 }): MetronomeWorkflowBranchMiniMap | null {
   if (!activeNodeId) return null;
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
@@ -299,9 +317,8 @@ export function buildMetronomeWorkflowBranchMiniMap({
   );
   const prefixId =
     incoming.find((edge) => path.includes(edge.source))?.source || incoming[0]?.source || null;
-  const nodeWidth = 132;
   const nodeHeight = 40;
-  const gapX = 56;
+  const gapX = 24;
   const rowGap = 64;
   const paddingX = 0;
   const paddingY = 2;
@@ -324,6 +341,16 @@ export function buildMetronomeWorkflowBranchMiniMap({
   }
   if (branchRows.length < 2) return null;
 
+  const hasNextColumn = branchRows.some((row) => Boolean(row.nextNode));
+  const expectedColumnCount = (hasNextColumn ? nextColumn : branchColumn) + 1;
+  const normalizedAvailableWidth = Number.isFinite(Number(availableWidth))
+    ? Math.max(0, Number(availableWidth))
+    : 0;
+  const fluidNodeWidth = normalizedAvailableWidth > 0
+    ? (normalizedAvailableWidth - Math.max(0, expectedColumnCount - 1) * gapX) / expectedColumnCount
+    : 132;
+  const nodeWidth = Math.max(96, Math.min(220, fluidNodeWidth));
+
   const graphHeight = paddingY * 2 + nodeHeight + (branchRows.length - 1) * (nodeHeight + rowGap);
   const conditionY = paddingY + ((branchRows.length - 1) * (nodeHeight + rowGap)) / 2;
   const itemsById = new Map<string, { node: MetronomeWorkflowMiniNode; x: number; y: number }>();
@@ -332,10 +359,19 @@ export function buildMetronomeWorkflowBranchMiniMap({
     column: number,
     y: number,
   ) => {
-    if (!node || itemsById.has(node.id)) return;
+    if (!node) return;
+    const x = paddingX + column * (nodeWidth + gapX);
+    const existing = itemsById.get(node.id);
+    if (existing) {
+      // A convergence node can be reached directly by one branch and after an
+      // action by another. Keep it in the deepest encountered column so every
+      // rendered edge continues from left to right.
+      if (x > existing.x) existing.x = x;
+      return;
+    }
     itemsById.set(node.id, {
       node,
-      x: paddingX + column * (nodeWidth + gapX),
+      x,
       y,
     });
   };
@@ -371,7 +407,7 @@ export function buildMetronomeWorkflowBranchMiniMap({
   });
 
   const usedColumns = Math.max(
-    nextColumn + 1,
+    1,
     ...Array.from(itemsById.values()).map((item) => Math.floor(item.x / (nodeWidth + gapX)) + 1),
   );
   return {
@@ -380,5 +416,6 @@ export function buildMetronomeWorkflowBranchMiniMap({
     links,
     width: paddingX * 2 + usedColumns * nodeWidth + Math.max(0, usedColumns - 1) * gapX,
     height: graphHeight,
+    nodeWidth,
   };
 }

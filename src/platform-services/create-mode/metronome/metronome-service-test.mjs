@@ -12,6 +12,7 @@ import {
   METRONOME_STYLE_FRAGMENTS,
   createMetronomeService,
 } from "./index.mjs";
+import { METRONOME_APP_SIDEBAR_ENTRY_SCRIPT } from "./client/shell/sidebar-entry.mjs";
 import {
   METRONOME_PAGE_CONTROLLER_FRAGMENT_PATHS,
   METRONOME_PAGE_CONTROLLER_SCRIPT,
@@ -198,6 +199,39 @@ const getMetronomeTaskLoopPresentation = new Function(
   (thread) => ({ taskTicketNumber: String(thread?.title || "").split(" ")[0] }),
   (_project, ticketNumber) => `PRO-${String(Number(ticketNumber)).padStart(3, "0")}`,
 );
+const readThreadMetronomeMetadata = new Function(
+  "normalizeThreadItem",
+  `${METRONOME_SHELL_RUNTIME_SCRIPT}\nreturn getThreadMetronomeMetadata;`,
+)((value) => value);
+assert.deepEqual(
+  readThreadMetronomeMetadata({
+    id: "thread_stage",
+    title: "Mission Control: Legacy title",
+    status: "completed",
+    metadata: {
+      metronome: {
+        metronomeId: "met_mission",
+        runId: "run_one",
+      },
+      metronomeWorkflow: {
+        workflowId: "met_mission",
+        workflowRunId: "run_one",
+        workflowName: "Mission Control",
+        nodeId: "stage_strategy",
+        nodeName: "Update project strategy",
+      },
+    },
+  }),
+  {
+    metronomeId: "met_mission",
+    runId: "run_one",
+    nodeId: "stage_strategy",
+    status: "completed",
+    workflowName: "Mission Control",
+    nodeName: "Update project strategy",
+  },
+  "Workflow metadata must supply the node name when the legacy Metronome record is only partial.",
+);
 assert.deepEqual(
   getMetronomeTaskLoopPresentation({
     workflowName: "Loop",
@@ -222,21 +256,150 @@ assert.deepEqual(
   }),
   {
     isTaskLoop: true,
+    isMissionControl: false,
     ticketId: "",
     projectId: "project_loop",
     ticketNumber: "PRO-031",
     label: "PRO-031",
   },
 );
+assert.deepEqual(
+  getMetronomeTaskLoopPresentation({
+    workflowName: "Mission Control",
+    input: {
+      source: "project_mission_control",
+      projectId: "project_alpha",
+      projectName: "Alpha",
+      systemWorkflow: { key: "system.mission-control" },
+    },
+  }),
+  {
+    isTaskLoop: false,
+    isMissionControl: true,
+    ticketId: "",
+    projectId: "project_alpha",
+    projectName: "Alpha",
+    ticketNumber: "",
+    label: "Mission Control for Alpha",
+  },
+);
+assert.deepEqual(
+  getMetronomeTaskLoopPresentation({
+    workflowName: "Metronome",
+    input: { source: "thread_event", threadId: "thread_mission_control" },
+    latestThread: {
+      id: "thread_mission_control",
+      title: "Mission Control for Alpha",
+      metadata: {
+        systemWorkflow: { key: "system.mission-control" },
+        metronomeWorkflow: {
+          systemWorkflowKey: "system.mission-control",
+        },
+        runnerPlayground: {
+          missionControl: {
+            source: "project_mission_control_workflow",
+            projectId: "project_alpha",
+            projectName: "Alpha",
+          },
+        },
+      },
+    },
+  }),
+  {
+    isTaskLoop: false,
+    isMissionControl: true,
+    ticketId: "",
+    projectId: "project_alpha",
+    projectName: "Alpha",
+    ticketNumber: "",
+    label: "Mission Control for Alpha",
+  },
+);
+assert.deepEqual(
+  getMetronomeTaskLoopPresentation({
+    key: "met_mission:run_one",
+    metronomeId: "met_mission",
+    runId: "run_one",
+    workflowName: "Metronome",
+    input: { source: "thread_event" },
+    latestThread: {
+      id: "thread_child",
+      title: "Create and clean up issues",
+      metadata: {
+        metronomeWorkflow: {
+          metronomeId: "met_mission",
+          runId: "run_one",
+          nodeId: "stage_issues",
+          isOriginThread: false,
+        },
+      },
+    },
+  }, {
+    threads: [{
+      id: "thread_origin",
+      title: "Mission Control for Alpha",
+      metadata: {
+        systemWorkflow: { key: "system.mission-control" },
+        metronomeWorkflow: {
+          metronomeId: "met_mission",
+          runId: "run_one",
+          isOriginThread: true,
+          originThreadId: "thread_origin",
+        },
+        runnerPlayground: {
+          missionControl: {
+            source: "project_mission_control_workflow",
+            projectId: "project_alpha",
+            projectName: "Alpha",
+          },
+        },
+      },
+    }],
+  }),
+  {
+    isTaskLoop: false,
+    isMissionControl: true,
+    ticketId: "",
+    projectId: "project_alpha",
+    projectName: "Alpha",
+    ticketNumber: "",
+    label: "Mission Control for Alpha",
+  },
+  "Mission Control identity must survive when the latest run thread is a child node thread.",
+);
 assert.match(METRONOME_SHELL_STYLE_FRAGMENTS.sidebar, /sidebar-metronome-run/);
 assert.match(
   METRONOME_SHELL_STYLE_FRAGMENTS.sidebar,
   /\.sidebar-metronome-run-icon\.is-loop[\s\S]*?linear-gradient\(180deg, #9a72df 0%, #6542a8 100%\)/,
 );
+assert.match(
+  METRONOME_SHELL_STYLE_FRAGMENTS.sidebar,
+  /\.sidebar-metronome-run-icon\.is-mission-control[\s\S]*?linear-gradient\(180deg, #3159a8 0%, #172f68 100%\)[\s\S]*?box-shadow: inset 0 0 0 1px rgba\(137, 178, 255, 0\.16\)/,
+);
+assert.match(
+  METRONOME_APP_SIDEBAR_ENTRY_SCRIPT,
+  /loopPresentation\.isMissionControl[\s\S]*?React\.createElement\(RefreshCcwDot/,
+  "Mission Control run groups must use the shared RefreshCcwDot icon.",
+);
 assert.match(METRONOME_SHELL_STYLE_FRAGMENTS.runTrace, /playground-metronome-run-thread/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.state, /metronomeRunTraceState/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runController, /function openMetronomePage/);
+assert.match(METRONOME_SHELL_RUNTIME_SCRIPT, /function findMetronomeRunOriginThread/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runController, /originThread: entry\?\.originThread \|\| findMetronomeRunOriginThread\(entry, realThreads\)/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.sidebarState, /existing\.input = entry\?\.input \|\| existing\.input \|\| null/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runController, /createWorkflow/);
+assert.doesNotMatch(
+  METRONOME_APP_SCRIPT_FRAGMENTS.runController,
+  /if \(!registeredGroupKey && !isActiveSourceThread\)/,
+);
+assert.doesNotMatch(
+  METRONOME_APP_SCRIPT_FRAGMENTS.runController,
+  /const absorbedSourceThreadIds = \[\]/,
+);
+assert.doesNotMatch(
+  METRONOME_APP_SCRIPT_FRAGMENTS.runController,
+  /setRealThreads\(\(current\) => current\.filter\(\(thread\) => String\(thread\?\.id \|\| ""\)\.trim\(\) !== sourceThreadId\)\)/,
+);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.modeSwitch, /React\.createElement\(PlatformSwitch,[\s\S]*ariaLabel: "Metronome modes"/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /React\.createElement\(PlatformButtonSelector,\s*\{\s*mode: "split-action",\s*buttonVariant: "primary"/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /label: "Save Changes"/);
@@ -407,6 +570,50 @@ assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /limit: 10,\s*offset,/);
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /renderPlaygroundPlatformPopup/);
 assert.match(METRONOME_TEMPLATES_RUNTIME_SCRIPT, /function createTriggerOnlyMetronomeGraph[\s\S]*nodes: \[trigger\],[\s\S]*edges: \[\]/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /function renderMetronomeRunTraceThreadSurface/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /function renderMetronomeRunTraceActivitySurface/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /React\.createElement\(PlatformActivityWorkspace, \{/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /composerSurfaceMode: "thread"/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /initialSurfaceLoading:[\s\S]{0,260}metronomeRunTraceState\.status === "loading"/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /threadViewMode: "legacy"/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /"Workflow Logs"/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /React\.createElement\(PlatformMetronomeConditionResult, conditionPresentation\)/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /buildPlatformMetronomeConditionResultPresentation/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runController, /function enrichMetronomeRunTraceConditionSteps/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runController, /detail\.mode === "run-overview"/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runController, /openMetronomeRunTraceThread\(\{[\s\S]*?metronomeId: normalizedWorkflowId,[\s\S]*?runId: normalizedRunId/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runController, /conditionWorkflowRequest/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runController, /normalizeMetronomeRunTraceResponse\(data, selection, conditionWorkflow\)/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /React\.createElement\(RunnerTurnIdentity, \{/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /React\.createElement\(RunnerThreadLiveWorkStatus, \{/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /className: "playground-metronome-run-trace-thread-title"/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /function isMetronomeRunTraceVisibleStep\(step\)[\s\S]*?kind !== "trigger" && kind !== "end"/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /getMetronomeRunTraceSteps\(run\)\.filter\(isMetronomeRunTraceVisibleStep\)\.forEach/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /const visibleSteps = steps\.filter\(isMetronomeRunTraceVisibleStep\)/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /visibleSteps\.map\(\(step, index\) =>/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /isRunWorking && !hasActiveChildThread/);
+assert.doesNotMatch(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /renderMetronomeRunTraceThreadValue\(conditionInput\)/);
+assert.doesNotMatch(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /className: "tb-turn-environment-pill"/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformMetronomeConditionResult, conditionPresentation\)/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /buildPlatformMetronomeConditionResultPresentation\(step, conditionNode\)/);
+assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /renderMetronomeRunTraceValue\(conditionInput\)/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result\s*\{/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result\s*\{[\s\S]*?width:\s*fit-content[\s\S]*?max-width:\s*100%/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result\s*\{[\s\S]*?margin:\s*8px auto 0/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__node-icon\s*\{[\s\S]*?width:\s*20px[\s\S]*?height:\s*20px/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__node-icon\s*\{[\s\S]*?background:\s*linear-gradient\(180deg, #3159a8 0%, #172f68 100%\)/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-run-trace-thread-title\s*\{[\s\S]*?padding-bottom:\s*12px[\s\S]*?border-bottom:\s*1px solid rgba\(255, 255, 255, 0\.1\)[\s\S]*?font-size:\s*14px/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__condition-node\s*\{[\s\S]*?height:\s*38px/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__condition-node\s*\{[\s\S]*?border-radius:\s*10px/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__condition-node\s*\{[\s\S]*?width:\s*auto/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__options\s*\{[\s\S]*?width:\s*max-content/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__options\s*\{[\s\S]*?gap:\s*12px/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__option\s*\{[\s\S]*?width:\s*100%/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__option\.is-selected\s*\{[\s\S]*?background:\s*rgba\(255, 255, 255, 0\.9\)[\s\S]*?color:\s*#000/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__branch-line\.is-selected\s*\{[\s\S]*?stroke:\s*rgba\(255, 255, 255, 0\.9\)/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__branch-arrow\.is-selected\s*\{[\s\S]*?fill:\s*rgba\(255, 255, 255, 0\.9\)/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /onOpenPromptSearch:/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /onOpenKnowledgeSearch:/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /onOpenThreadSearch:/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /function renderSidebarMetronomeRunEntry/);
 assert.match(
   METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,

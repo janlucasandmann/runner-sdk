@@ -6,18 +6,24 @@ export const METRONOME_SHELL_RUNTIME_SCRIPT = `
           : {};
         const metronome = metadata?.metronome && typeof metadata.metronome === "object" && !Array.isArray(metadata.metronome)
           ? metadata.metronome
-          : metadata?.metronomeWorkflow && typeof metadata.metronomeWorkflow === "object" && !Array.isArray(metadata.metronomeWorkflow)
-            ? metadata.metronomeWorkflow
-            : {};
+          : {};
+        const workflow = metadata?.metronomeWorkflow && typeof metadata.metronomeWorkflow === "object" && !Array.isArray(metadata.metronomeWorkflow)
+          ? metadata.metronomeWorkflow
+          : {};
         const metronomeId = String(
           metronome.metronomeId
           || metronome.workflowId
           || metronome.id
+          || workflow.metronomeId
+          || workflow.workflowId
+          || workflow.id
           || ""
         ).trim();
         const runId = String(
           metronome.runId
           || metronome.workflowRunId
+          || workflow.runId
+          || workflow.workflowRunId
           || ""
         ).trim();
         if (!metronomeId || !runId) {
@@ -29,6 +35,9 @@ export const METRONOME_SHELL_RUNTIME_SCRIPT = `
           metronome.metronomeName
           || metronome.workflowName
           || metronome.name
+          || workflow.metronomeName
+          || workflow.workflowName
+          || workflow.name
           || (titleParts ? titleParts[1] : "")
           || "Metronome"
         ).trim();
@@ -36,6 +45,9 @@ export const METRONOME_SHELL_RUNTIME_SCRIPT = `
           metronome.nodeName
           || metronome.nodeLabel
           || metronome.nodeTitle
+          || workflow.nodeName
+          || workflow.nodeLabel
+          || workflow.nodeTitle
           || (titleParts ? titleParts[2] : "")
           || title
           || "Thread"
@@ -43,11 +55,88 @@ export const METRONOME_SHELL_RUNTIME_SCRIPT = `
         return {
           metronomeId,
           runId,
-          nodeId: String(metronome.nodeId || "").trim(),
-          status: String(metronome.status || "").trim(),
+          nodeId: String(metronome.nodeId || workflow.nodeId || "").trim(),
+          status: String(metronome.status || workflow.status || safeThread.status || "").trim(),
           workflowName,
           nodeName,
         };
+      }
+
+      function isMetronomeOriginTriggerThread(thread) {
+        const normalizedThread = normalizeThreadItem(thread || {});
+        const normalizedThreadId = String(normalizedThread?.id || "").trim();
+        const metadata = thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
+          ? thread.metadata
+          : normalizedThread?.metadata && typeof normalizedThread.metadata === "object" && !Array.isArray(normalizedThread.metadata)
+            ? normalizedThread.metadata
+            : {};
+        const metronome = metadata.metronome && typeof metadata.metronome === "object" && !Array.isArray(metadata.metronome)
+          ? metadata.metronome
+          : {};
+        const workflow = metadata.metronomeWorkflow && typeof metadata.metronomeWorkflow === "object" && !Array.isArray(metadata.metronomeWorkflow)
+          ? metadata.metronomeWorkflow
+          : {};
+        const meta = getThreadMetronomeMetadata(normalizedThread);
+        const groupKey = getSidebarMetronomeRunGroupKey(meta);
+        if (!normalizedThreadId || !groupKey) {
+          return false;
+        }
+        const nodeId = String(meta?.nodeId || workflow.nodeId || metronome.nodeId || "").trim();
+        if (nodeId) {
+          return false;
+        }
+        if (workflow.isOriginThread === false || workflow.is_origin_thread === false) {
+          return false;
+        }
+        const originThreadIds = [
+          workflow.originThreadId,
+          workflow.sourceThreadId,
+          workflow.triggerThreadId,
+        ].map((value) => String(value || "").trim()).filter(Boolean);
+        const hasMatchingOriginThreadId = originThreadIds.includes(normalizedThreadId);
+        if (originThreadIds.length > 0 && !hasMatchingOriginThreadId) {
+          return false;
+        }
+        const definitionSource = String(workflow.definitionSource || workflow.source || "").trim().toLowerCase();
+        return Boolean(
+          workflow.isOriginThread === true
+          || workflow.is_origin_thread === true
+          || hasMatchingOriginThreadId
+          || String(workflow.triggerCommand || "").trim()
+          || String(workflow.triggerEventId || "").trim()
+          || definitionSource === "thread"
+          || definitionSource === "thread_event"
+        );
+      }
+
+      function findMetronomeRunOriginThread(value, availableThreads = []) {
+        const entry = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+        const targetKey = String(
+          entry.key
+          || getSidebarMetronomeRunGroupKey({
+            metronomeId: entry.metronomeId || entry.workflowId,
+            runId: entry.runId || entry.workflowRunId,
+          })
+          || ""
+        ).trim();
+        const candidates = [
+          entry.originThread,
+          entry.latestThread,
+          ...(Array.isArray(entry.threads) ? entry.threads : []),
+          ...(Array.isArray(availableThreads) ? availableThreads : []),
+        ];
+        const seenThreadIds = new Set();
+        for (const candidate of candidates) {
+          const candidateId = String(candidate?.id || "").trim();
+          if (!candidateId || seenThreadIds.has(candidateId)) continue;
+          seenThreadIds.add(candidateId);
+          const candidateKey = getSidebarMetronomeRunGroupKey(getThreadMetronomeMetadata(candidate));
+          if (targetKey && candidateKey !== targetKey) continue;
+          if (isMetronomeOriginTriggerThread(candidate)) {
+            return normalizeThreadItem(candidate);
+          }
+        }
+        return null;
       }
 
       function getMetronomeTaskLoopPresentation(value, options = {}) {
@@ -82,16 +171,20 @@ export const METRONOME_SHELL_RUNTIME_SCRIPT = `
           || ""
         ).trim().toLowerCase();
         const originThreadId = String(input.originThreadId || input.threadId || "").trim();
+        const availableThreads = Array.isArray(options.threads) ? options.threads : [];
+        const originThread = findMetronomeRunOriginThread(entry, availableThreads);
         const entryThreads = [
+          originThread,
           entry.latestThread,
           ...(Array.isArray(entry.threads) ? entry.threads : []),
         ].filter(Boolean);
-        const availableThreads = Array.isArray(options.threads) ? options.threads : [];
         if (originThreadId) {
-          const originThread = availableThreads.find((thread) => (
+          const referencedOriginThread = availableThreads.find((thread) => (
             String(thread?.id || "").trim() === originThreadId
           ));
-          if (originThread) entryThreads.unshift(originThread);
+          if (referencedOriginThread && !entryThreads.some((thread) => thread === referencedOriginThread)) {
+            entryThreads.unshift(referencedOriginThread);
+          }
         }
         const hasLoopThreadContext = entryThreads.some((thread) => {
           const metadata = thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
@@ -106,6 +199,36 @@ export const METRONOME_SHELL_RUNTIME_SCRIPT = `
           return String(taskContext.taskType || taskPreview?.taskType || taskPreview?.type || "").trim().toLowerCase() === "loop"
             || Boolean(String(taskContext.loopRole || "").trim());
         });
+        const hasMissionControlThreadContext = entryThreads.some((thread) => {
+          const metadata = thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
+            ? thread.metadata
+            : {};
+          const workflowMetadata = metadata.metronomeWorkflow && typeof metadata.metronomeWorkflow === "object" && !Array.isArray(metadata.metronomeWorkflow)
+            ? metadata.metronomeWorkflow
+            : {};
+          const threadSystemWorkflow = metadata.systemWorkflow && typeof metadata.systemWorkflow === "object" && !Array.isArray(metadata.systemWorkflow)
+            ? metadata.systemWorkflow
+            : {};
+          const runnerMetadata = metadata.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+            ? metadata.runnerPlayground
+            : {};
+          const missionControl = runnerMetadata.missionControl && typeof runnerMetadata.missionControl === "object" && !Array.isArray(runnerMetadata.missionControl)
+            ? runnerMetadata.missionControl
+            : {};
+          const threadWorkflowKey = String(
+            threadSystemWorkflow.key
+            || workflowMetadata.systemWorkflowKey
+            || workflowMetadata.system_workflow_key
+            || ""
+          ).trim().toLowerCase();
+          const missionControlSource = String(missionControl.source || "").trim().toLowerCase();
+          return threadWorkflowKey === "system.mission-control"
+            || [
+              "project_backlog_mission_control",
+              "project_mission_control",
+              "project_mission_control_workflow",
+            ].includes(missionControlSource);
+        });
         const triggerCommand = String(input.triggerCommand || input.command || "").trim().toLowerCase();
         const isTaskLoop = systemWorkflowKey === "system.task-loop"
           || source === "project_ticket_loop"
@@ -113,9 +236,53 @@ export const METRONOME_SHELL_RUNTIME_SCRIPT = `
           || triggerCommand === "/loop"
           || hasLoopThreadContext
           || (workflowName.toLowerCase() === "loop" && Boolean(input.ticketId || originThreadId));
+        const isMissionControl = systemWorkflowKey === "system.mission-control"
+          || source === "project_mission_control"
+          || source === "project_mission_control_workflow"
+          || hasMissionControlThreadContext
+          || workflowName.toLowerCase() === "mission control";
+        if (isMissionControl) {
+          let projectId = String(
+            input.projectId
+            || entry.attachedProjectId
+            || run.attachedProjectId
+            || ""
+          ).trim();
+          const projects = Array.isArray(options.projects) ? options.projects : [];
+          const projectRecord = projects.find((project) => (
+            String(project?.id || "").trim() === projectId
+          )) || null;
+          let projectName = String(input.projectName || projectRecord?.name || "").trim();
+          if (!projectId || !projectName) {
+            for (const thread of entryThreads) {
+              const metadata = thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
+                ? thread.metadata
+                : {};
+              const runnerMetadata = metadata.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+                ? metadata.runnerPlayground
+                : {};
+              const missionControl = runnerMetadata.missionControl && typeof runnerMetadata.missionControl === "object" && !Array.isArray(runnerMetadata.missionControl)
+                ? runnerMetadata.missionControl
+                : {};
+              projectId = projectId || String(missionControl.projectId || missionControl.project_id || "").trim();
+              projectName = projectName || String(missionControl.projectName || "").trim();
+              if (projectId && projectName) break;
+            }
+          }
+          return {
+            isTaskLoop: false,
+            isMissionControl: true,
+            ticketId: "",
+            projectId,
+            projectName,
+            ticketNumber: "",
+            label: projectName ? "Mission Control for " + projectName : "Mission Control",
+          };
+        }
         if (!isTaskLoop) {
           return {
             isTaskLoop: false,
+            isMissionControl: false,
             ticketId: "",
             projectId: "",
             ticketNumber: "",
@@ -184,6 +351,7 @@ export const METRONOME_SHELL_RUNTIME_SCRIPT = `
 
         return {
           isTaskLoop: true,
+          isMissionControl: false,
           ticketId,
           projectId,
           ticketNumber,
@@ -670,7 +838,7 @@ export const METRONOME_SHELL_RUNTIME_SCRIPT = `
           || agentNameFromId
           || ""
         ).trim();
-        const computerName = String(
+        const explicitComputerName = String(
           safeThread.environmentName
           || safeThread.environment_name
           || safeThread.computerName
@@ -711,11 +879,27 @@ export const METRONOME_SHELL_RUNTIME_SCRIPT = `
           || taskPreview.environmentName
           || computerRecord.name
           || computerRecord.label
-          || computerNameFromId
           || ""
         ).trim();
+        const defaultComputerName = String(
+          environments.find((environment) => environment?.isDefault)?.name || ""
+        ).trim();
+        const looksLikeComputerId = Boolean(
+          explicitComputerName
+          && (
+            explicitComputerName === computerId
+            || explicitComputerName.startsWith("env_")
+            || explicitComputerName.startsWith("computer_")
+          )
+        );
+        const computerName = computerNameFromId
+          || (!looksLikeComputerId ? explicitComputerName : "")
+          || defaultComputerName
+          || explicitComputerName;
 
         return {
+          agentId,
+          computerId,
           agentName: agentName || (agentId ? "Agent" : ""),
           computerName: computerName || (computerId ? "Computer" : ""),
           agentPhotoUrl: explicitAgentPhotoUrl

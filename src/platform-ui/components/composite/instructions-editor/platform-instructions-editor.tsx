@@ -54,6 +54,11 @@ import remarkGfm from "remark-gfm";
 import { visit } from "unist-util-visit";
 import { PlatformSecondaryButton } from "../../ui/button/index.js";
 import { PlatformMonacoCodeEditor } from "../code-editor-workspace/platform-monaco-code-editor.js";
+import {
+  PlatformMentionSuggestionsPopup,
+  type PlatformMentionOption,
+  type PlatformMentionReference,
+} from "../comments/index.js";
 import { resolvePlatformFileExplorerFileKind } from "../file-explorer/index.js";
 import { ParagraphQuote, remarkParagraphQuotes } from "./paragraph-quote.js";
 import {
@@ -165,6 +170,12 @@ export interface PlatformInstructionsEditorProps {
   autoFocus?: boolean;
   collapsedLines?: number;
   onEditingChange?: (editing: boolean) => void;
+  /** People and agents available to the contextual @ mention picker. */
+  mentionOptions?: readonly PlatformMentionOption[];
+  mentionsLoading?: boolean;
+  mentionEmptyMessage?: string;
+  onMentionQueryChange?: (query: string | null) => void;
+  onMentionSelect?: (mention: PlatformMentionReference) => void;
 }
 
 interface InstructionsEditorInsertionTarget {
@@ -174,6 +185,13 @@ interface InstructionsEditorInsertionTarget {
 }
 
 interface InstructionsEditorSlashMenuState {
+  from: number;
+  to: number;
+  query: string;
+  anchor: InstructionsEditorSlashMenuAnchor;
+}
+
+interface InstructionsEditorMentionMenuState {
   from: number;
   to: number;
   query: string;
@@ -252,6 +270,67 @@ function getInstructionsEditorSlashMenuState(
     query,
     anchor,
   };
+}
+
+function getInstructionsEditorMentionMenuState(
+  editor: TiptapEditor,
+): InstructionsEditorMentionMenuState | null {
+  const { selection } = editor.state;
+  if (!selection.empty || !selection.$from.parent.isTextblock) return null;
+
+  const textBeforeCursor = selection.$from.parent.textBetween(
+    0,
+    selection.$from.parentOffset,
+    "\0",
+    "\0",
+  );
+  const match = /(^|[\s([{])@([^@\n]*)$/.exec(textBeforeCursor);
+  if (!match) return null;
+
+  const query = String(match[2] || "");
+  if (query.length > 80) return null;
+  const mentionOffset = match.index + String(match[1] || "").length;
+  const mentionPosition = selection.$from.start() + mentionOffset;
+
+  let anchor: InstructionsEditorSlashMenuAnchor;
+  try {
+    const coordinates = editor.view.coordsAtPos(mentionPosition);
+    anchor = {
+      left: coordinates.left,
+      top: coordinates.top,
+      bottom: coordinates.bottom,
+    };
+  } catch {
+    const editorRect = editor.view.dom.getBoundingClientRect();
+    anchor = {
+      left: editorRect.left,
+      top: editorRect.top,
+      bottom: editorRect.top + 20,
+    };
+  }
+
+  return {
+    from: mentionPosition,
+    to: selection.from,
+    query,
+    anchor,
+  };
+}
+
+function filterInstructionsEditorMentionOptions(
+  options: readonly PlatformMentionOption[],
+  query: string,
+) {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  return options
+    .filter(
+      (option) =>
+        !normalizedQuery ||
+        [option.label, option.description, option.kind].some((value) =>
+          String(value || "").toLocaleLowerCase().includes(normalizedQuery),
+        ),
+    )
+    .slice(0, 12);
 }
 
 function getNextEnabledSlashCommandIndex(
@@ -761,6 +840,11 @@ export function PlatformInstructionsEditor({
   autoFocus = false,
   collapsedLines = 0,
   onEditingChange,
+  mentionOptions = [],
+  mentionsLoading = false,
+  mentionEmptyMessage,
+  onMentionQueryChange,
+  onMentionSelect,
 }: PlatformInstructionsEditorProps) {
   const normalizedCollapsedLines = Number.isFinite(Number(collapsedLines))
     ? Math.max(0, Math.floor(Number(collapsedLines)))
@@ -782,6 +866,9 @@ export function PlatformInstructionsEditor({
   const [slashMenuState, setSlashMenuState] =
     useState<InstructionsEditorSlashMenuState | null>(null);
   const [slashMenuActiveIndex, setSlashMenuActiveIndex] = useState(0);
+  const [mentionMenuState, setMentionMenuState] =
+    useState<InstructionsEditorMentionMenuState | null>(null);
+  const [mentionMenuActiveIndex, setMentionMenuActiveIndex] = useState(0);
   const shellRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const contentViewportRef = useRef<HTMLDivElement>(null);
@@ -804,9 +891,15 @@ export function PlatformInstructionsEditor({
   const slashMenuStateRef = useRef<InstructionsEditorSlashMenuState | null>(
     null,
   );
+  const mentionMenuStateRef =
+    useRef<InstructionsEditorMentionMenuState | null>(null);
+  const onMentionQueryChangeRef = useRef(onMentionQueryChange);
+  const onMentionSelectRef = useRef(onMentionSelect);
   onChangeRef.current = onChange;
   onEditingChangeRef.current = onEditingChange;
   fileUploadRef.current = fileUpload || imageUpload;
+  onMentionQueryChangeRef.current = onMentionQueryChange;
+  onMentionSelectRef.current = onMentionSelect;
   if (interactionHistoryKeyRef.current !== historyKey) {
     interactionHistoryKeyRef.current = historyKey;
     userInteractionRef.current = false;
@@ -867,6 +960,39 @@ export function PlatformInstructionsEditor({
       return unchanged ? currentState : nextState;
     });
   }, []);
+
+  const mentionsEnabled = Boolean(
+    mentionOptions.length || onMentionQueryChange || mentionsLoading,
+  );
+  const refreshMentionMenuState = useCallback(
+    (editor: TiptapEditor) => {
+      const nextState = mentionsEnabled
+        ? getInstructionsEditorMentionMenuState(editor)
+        : null;
+      const previousState = mentionMenuStateRef.current;
+      const queryChanged =
+        previousState?.from !== nextState?.from ||
+        previousState?.query !== nextState?.query;
+      mentionMenuStateRef.current = nextState;
+      if (queryChanged) setMentionMenuActiveIndex(0);
+      setMentionMenuState((currentState) => {
+        if (!currentState || !nextState)
+          return currentState === nextState ? currentState : nextState;
+        const unchanged =
+          currentState.from === nextState.from &&
+          currentState.to === nextState.to &&
+          currentState.query === nextState.query &&
+          currentState.anchor.left === nextState.anchor.left &&
+          currentState.anchor.top === nextState.anchor.top &&
+          currentState.anchor.bottom === nextState.anchor.bottom;
+        return unchanged ? currentState : nextState;
+      });
+      if (previousState?.query !== nextState?.query) {
+        onMentionQueryChangeRef.current?.(nextState?.query ?? null);
+      }
+    },
+    [mentionsEnabled],
+  );
 
   const richTextEditor = useEditor(
     {
@@ -936,19 +1062,22 @@ export function PlatformInstructionsEditor({
       onCreate: ({ editor }) => {
         refreshToolbarState(editor);
         refreshSlashMenuState(editor);
+        refreshMentionMenuState(editor);
       },
       onTransaction: ({ editor }) => {
         refreshToolbarState(editor);
         refreshSlashMenuState(editor);
+        refreshMentionMenuState(editor);
       },
       onSelectionUpdate: ({ editor }) => {
         refreshToolbarState(editor);
         refreshSlashMenuState(editor);
+        refreshMentionMenuState(editor);
       },
       onFocus: () => setEditingState(true),
       onBlur: () => setEditingState(false),
     },
-    [historyKey, placeholder, ariaLabel],
+    [historyKey, placeholder, ariaLabel, refreshMentionMenuState],
   );
 
   useEffect(() => {
@@ -1721,6 +1850,14 @@ export function PlatformInstructionsEditor({
     slashCommandOptions,
     slashMenuState?.query || "",
   );
+  const filteredMentionOptions = useMemo(
+    () =>
+      filterInstructionsEditorMentionOptions(
+        mentionOptions,
+        mentionMenuState?.query || "",
+      ),
+    [mentionMenuState?.query, mentionOptions],
+  );
 
   useEffect(() => {
     setSlashMenuActiveIndex((currentIndex) => {
@@ -1738,10 +1875,42 @@ export function PlatformInstructionsEditor({
     });
   }, [filteredSlashCommandOptions.length, slashMenuState?.query]);
 
+  useEffect(() => {
+    setMentionMenuActiveIndex((currentIndex) =>
+      filteredMentionOptions.length
+        ? Math.min(currentIndex, filteredMentionOptions.length - 1)
+        : 0,
+    );
+  }, [filteredMentionOptions.length, mentionMenuState?.query]);
+
   const dismissSlashMenu = () => {
     slashMenuStateRef.current = null;
     setSlashMenuState(null);
     setSlashMenuActiveIndex(0);
+  };
+
+  const dismissMentionMenu = () => {
+    mentionMenuStateRef.current = null;
+    setMentionMenuState(null);
+    setMentionMenuActiveIndex(0);
+    onMentionQueryChangeRef.current?.(null);
+  };
+
+  const selectMention = (option: PlatformMentionOption) => {
+    const menuState = mentionMenuStateRef.current;
+    if (!menuState) return;
+    dismissMentionMenu();
+    richTextEditor
+      .chain()
+      .focus()
+      .deleteRange({ from: menuState.from, to: menuState.to })
+      .insertContent(`@${option.label} `)
+      .run();
+    onMentionSelectRef.current?.({
+      kind: option.kind,
+      id: option.id,
+      label: option.label,
+    });
   };
 
   const selectSlashCommand = (option: InstructionsEditorSlashCommandOption) => {
@@ -1792,7 +1961,39 @@ export function PlatformInstructionsEditor({
     selectSlashCommand(activeOption);
   };
 
+  const handleMentionMenuKeyDown = (
+    event: ReactKeyboardEvent<HTMLElement>,
+  ) => {
+    if (!mentionMenuState) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      dismissMentionMenu();
+      return;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      event.stopPropagation();
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      setMentionMenuActiveIndex((currentIndex) =>
+        filteredMentionOptions.length
+          ? (currentIndex + direction + filteredMentionOptions.length) %
+            filteredMentionOptions.length
+          : 0,
+      );
+      return;
+    }
+    if (event.key !== "Enter" && event.key !== "Tab") return;
+    const activeOption = filteredMentionOptions[mentionMenuActiveIndex];
+    if (!activeOption) return;
+    event.preventDefault();
+    event.stopPropagation();
+    selectMention(activeOption);
+  };
+
   const handleEditorKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+    handleMentionMenuKeyDown(event);
+    if (event.defaultPrevented) return;
     handleSlashMenuKeyDown(event);
     if (
       !event.defaultPrevented &&
@@ -2066,8 +2267,14 @@ export function PlatformInstructionsEditor({
               editor={richTextEditor}
               className="platform-instructions-editor__content"
               onKeyDownCapture={handleEditorKeyDown}
-              onKeyUpCapture={() => refreshSlashMenuState(richTextEditor)}
-              onMouseUpCapture={() => refreshSlashMenuState(richTextEditor)}
+              onKeyUpCapture={() => {
+                refreshSlashMenuState(richTextEditor);
+                refreshMentionMenuState(richTextEditor);
+              }}
+              onMouseUpCapture={() => {
+                refreshSlashMenuState(richTextEditor);
+                refreshMentionMenuState(richTextEditor);
+              }}
               onContextMenu={handleEditorContextMenu}
             />
           )}
@@ -2121,6 +2328,26 @@ export function PlatformInstructionsEditor({
           onSelect={selectSlashCommand}
           onDismiss={dismissSlashMenu}
         />
+      ) : null}
+      {!readOnly && editorMode === "rich-text" && mentionMenuState ? (
+        <div
+          className="platform-instructions-editor__mention-popup"
+          style={{
+            position: "fixed",
+            left: mentionMenuState.anchor.left,
+            top: mentionMenuState.anchor.bottom + 4,
+            zIndex: 10080,
+          }}
+        >
+          <PlatformMentionSuggestionsPopup
+            options={filteredMentionOptions}
+            activeIndex={mentionMenuActiveIndex}
+            loading={mentionsLoading}
+            emptyMessage={mentionEmptyMessage}
+            onActiveIndexChange={setMentionMenuActiveIndex}
+            onSelect={selectMention}
+          />
+        </div>
       ) : null}
     </section>
   );

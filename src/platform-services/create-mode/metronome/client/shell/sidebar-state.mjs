@@ -47,6 +47,7 @@ export const METRONOME_APP_SIDEBAR_STATE_SCRIPT = `
                 status: cachedStatus || meta.status || "",
                 threads: [],
                 latestThread: thread,
+                originThread: isMetronomeOriginTriggerThread(thread) ? thread : null,
               };
               groupsByKey.set(groupKey, group);
               entries.push(group);
@@ -54,6 +55,9 @@ export const METRONOME_APP_SIDEBAR_STATE_SCRIPT = `
               group.status = cachedStatus;
             }
             group.threads = mergeMetronomeRunEntryThreads(group.threads, [thread]);
+            if (!group.originThread && isMetronomeOriginTriggerThread(thread)) {
+              group.originThread = thread;
+            }
             if (resolveThreadSortTimestamp(thread) > resolveThreadSortTimestamp(group.latestThread)) {
               group.latestThread = thread;
             }
@@ -66,6 +70,9 @@ export const METRONOME_APP_SIDEBAR_STATE_SCRIPT = `
               return;
             }
             group.threads = mergeMetronomeRunEntryThreads(group.threads, [thread]);
+            if (!group.originThread && isMetronomeOriginTriggerThread(thread)) {
+              group.originThread = thread;
+            }
             if (resolveThreadSortTimestamp(thread) > resolveThreadSortTimestamp(group.latestThread)) {
               group.latestThread = thread;
             }
@@ -81,6 +88,12 @@ export const METRONOME_APP_SIDEBAR_STATE_SCRIPT = `
                 !latest || resolveThreadSortTimestamp(thread) > resolveThreadSortTimestamp(latest) ? thread : latest
               ), existing.latestThread || entry?.latestThread || null);
               existing.status = cachedStatus || String(entry?.status || existing.status || "").trim();
+              existing.workflowName = String(entry?.workflowName || existing.workflowName || "Metronome").trim() || "Metronome";
+              existing.input = entry?.input || existing.input || null;
+              existing.originThread = entry?.originThread
+                || existing.originThread
+                || findMetronomeRunOriginThread(existing, visibleThreadItems)
+                || null;
               return;
             }
             entries.unshift({
@@ -93,6 +106,7 @@ export const METRONOME_APP_SIDEBAR_STATE_SCRIPT = `
               input: entry?.input || null,
               threads: mergeMetronomeRunEntryThreads(Array.isArray(entry?.threads) ? entry.threads : []),
               latestThread: entry?.latestThread || null,
+              originThread: entry?.originThread || null,
             });
           });
           const getSidebarEntryThread = (entry) => {
@@ -128,6 +142,7 @@ export const METRONOME_APP_SIDEBAR_STATE_SCRIPT = `
                 status: String(metronomeRunStatusByKey?.[selectedKey] || metronomeRunTraceSelection.status || "").trim(),
                 threads: Array.isArray(metronomeRunTraceSelection.threads) ? metronomeRunTraceSelection.threads : [],
                 latestThread: metronomeRunTraceSelection.latestThread || null,
+                originThread: metronomeRunTraceSelection.originThread || null,
               }
             : null);
         }, [displayedSidebarThreadEntries, metronomeRunStatusByKey, metronomeRunTraceSelection]);

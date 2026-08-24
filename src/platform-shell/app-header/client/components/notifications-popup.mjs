@@ -10,6 +10,30 @@ export const APP_HEADER_NOTIFICATIONS_POPUP_SCRIPT = `        function renderPro
         }
 
         function renderNotificationItem(item) {
+	          if (item.kind === "inbox") {
+            const metaText = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "";
+            const isAttention = item.severity === "warning" || item.severity === "error" || item.severity === "critical";
+            const NotificationIcon = isAttention ? AlertCircle : Bell;
+            return React.createElement("button", {
+              key: item.id,
+              type: "button",
+              className: "notification-menu-item",
+              onClick: () => handleOpenInboxNotification(item),
+            },
+              React.createElement(NotificationIcon, {
+                className: "notification-menu-icon" + (isAttention ? " is-warning" : ""),
+                strokeWidth: 1.8,
+              }),
+              React.createElement("div", { className: "notification-menu-copy" },
+                React.createElement("div", { className: "notification-menu-label" }, item.title || "Notification"),
+                React.createElement("div", { className: "notification-menu-text" }, item.body || ""),
+                metaText
+                  ? React.createElement("div", { className: "notification-menu-meta" }, metaText)
+                  : null
+              )
+            );
+	          }
+
 	          if (item.kind === "permission") {
             const metaText = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "";
             return React.createElement("button", {
@@ -199,8 +223,8 @@ export const APP_HEADER_NOTIFICATIONS_POPUP_SCRIPT = `        function renderPro
                 React.createElement("h2", { className: "notification-menu-title" }, "Notifications")
               ),
               React.createElement("div", { className: "notification-menu-body" },
-                notificationItems.length > 0
-                  ? notificationItems.map(renderNotificationItem)
+                notificationPopupItems.length > 0
+                  ? notificationPopupItems.map(renderNotificationItem)
                   : React.createElement(PlatformEmptyState, {
                       className: "notification-menu-empty-state",
                       icon: Bell,

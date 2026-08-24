@@ -219,6 +219,45 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           : null;
       }
 
+      // Task list and work-graph responses are not completely uniform across
+      // deployments.  Some responses put the markdown in a dedicated field,
+      // while older responses keep it in task metadata.  Resolve the canonical
+      // description once here so every task surface (including Spotlight) uses
+      // the same value instead of intermittently rendering an empty card.
+      function resolvePlaygroundTaskDescription(task) {
+        if (!task || typeof task !== "object") {
+          return "";
+        }
+        const metadata = task.metadata && typeof task.metadata === "object" && !Array.isArray(task.metadata)
+          ? task.metadata
+          : {};
+        const runnerPlayground = metadata.runnerPlayground
+          && typeof metadata.runnerPlayground === "object"
+          && !Array.isArray(metadata.runnerPlayground)
+          ? metadata.runnerPlayground
+          : {};
+        const details = task.details && typeof task.details === "object" && !Array.isArray(task.details)
+          ? task.details
+          : {};
+        const candidates = [
+          task.description,
+          task.descriptionMarkdown,
+          task.description_markdown,
+          details.description,
+          details.descriptionMarkdown,
+          details.description_markdown,
+          metadata.description,
+          metadata.descriptionMarkdown,
+          metadata.description_markdown,
+          runnerPlayground.description,
+          runnerPlayground.descriptionMarkdown,
+          runnerPlayground.description_markdown,
+        ];
+        return candidates
+          .map((value) => typeof value === "string" ? value.trim() : "")
+          .find(Boolean) || "";
+      }
+
       const PLAYGROUND_TASK_LOOP_GOAL_SECTIONS = Object.freeze([
         Object.freeze({
           key: "goal",
@@ -816,8 +855,22 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           ? "blocked"
           : baseStatus;
         const priority = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === task.priority) ? task.priority : draft.priority;
-        const createdAt = typeof task.createdAt === "string" && task.createdAt ? task.createdAt : draft.createdAt;
-        const updatedAt = typeof task.updatedAt === "string" && task.updatedAt ? task.updatedAt : createdAt;
+        const normalizeTaskTimestamp = (value, fallback) => {
+          if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+            const timestamp = value < 100000000000 ? value * 1000 : value;
+            return new Date(timestamp).toISOString();
+          }
+          if (value && typeof value === "object" && !Array.isArray(value)) {
+            const seconds = Number(value.seconds ?? value._seconds ?? value.epochSeconds);
+            if (Number.isFinite(seconds) && seconds > 0) {
+              return new Date(seconds * 1000).toISOString();
+            }
+          }
+          const normalized = String(value || "").trim();
+          return normalized || fallback;
+        };
+        const createdAt = normalizeTaskTimestamp(task.createdAt, draft.createdAt);
+        const updatedAt = normalizeTaskTimestamp(task.updatedAt, createdAt);
         const ticketNumber = normalizePlaygroundTaskTicketNumber(task.ticketNumber || runnerPlaygroundMetadata?.ticketNumber);
         const normalizedParentTaskId = normalizePlaygroundParentTaskId(task.parentTaskId || runnerPlaygroundMetadata?.parentTaskId);
         const taskType = normalizePlaygroundTaskType(
@@ -903,7 +956,7 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           loop,
           parentTaskId,
           title: typeof task.title === "string" && task.title.trim() ? task.title.trim() : draft.title,
-          description: typeof task.description === "string" ? task.description : draft.description,
+          description: resolvePlaygroundTaskDescription(task) || draft.description,
           taskColor,
           status,
           priority,
@@ -1258,6 +1311,18 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
 
       function getPlaygroundTaskResponseRecord(data) {
         const source = data?.task || data?.data || data;
+        const readActivityRecords = (value) => {
+          if (Array.isArray(value)) {
+            return value;
+          }
+          if (value && typeof value === "object" && Array.isArray(value.data)) {
+            return value.data;
+          }
+          if (value && typeof value === "object" && Array.isArray(value.items)) {
+            return value.items;
+          }
+          return [];
+        };
         return source && typeof source === "object" && typeof source.id === "string"
           ? normalizePlaygroundTaskRecord({
               ...source,
@@ -1265,9 +1330,15 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
                 ? data.comments
                 : source.comments,
               activity: normalizePlaygroundTaskActivityList([
-                ...(Array.isArray(source.activity) ? source.activity : []),
-                ...(Array.isArray(data?.activity) ? data.activity : []),
-                ...(Array.isArray(data?.activityEvents) ? data.activityEvents : []),
+                ...readActivityRecords(source.activity),
+                ...readActivityRecords(source.activityEvents),
+                ...readActivityRecords(source.activity_events),
+                ...readActivityRecords(data?.activity),
+                ...readActivityRecords(data?.activityEvents),
+                ...readActivityRecords(data?.activity_events),
+                ...readActivityRecords(data?.details?.activity),
+                ...readActivityRecords(data?.details?.activityEvents),
+                ...readActivityRecords(data?.details?.activity_events),
               ]),
             })
           : null;

@@ -523,15 +523,17 @@
               hasRealAccess &&
               (Boolean(threadTaskOpenRequest) || Boolean(threadSubagentDetailOpen));
             const normalizedCurrentThreadId = String(currentThreadId || "").trim();
-            const hasThreadTarget = Boolean(normalizedCurrentThreadId) && (
-              baseThreadItems.some((thread) => thread.id === normalizedCurrentThreadId)
-              || evaluationThreadIds.has(normalizedCurrentThreadId)
-              || (isRealThreadId(normalizedCurrentThreadId) && !isPrivateThreadId(normalizedCurrentThreadId))
-              || realThreads.some((thread) => {
-                const normalizedThreadId = String(thread?.id || "").trim();
-                return normalizedThreadId === normalizedCurrentThreadId && isEvaluationThreadRecord(thread);
-              })
-            );
+            const hasThreadTarget = (
+              Boolean(normalizedCurrentThreadId) && (
+                baseThreadItems.some((thread) => thread.id === normalizedCurrentThreadId)
+                || evaluationThreadIds.has(normalizedCurrentThreadId)
+                || (isRealThreadId(normalizedCurrentThreadId) && !isPrivateThreadId(normalizedCurrentThreadId))
+                || realThreads.some((thread) => {
+                  const normalizedThreadId = String(thread?.id || "").trim();
+                  return normalizedThreadId === normalizedCurrentThreadId && isEvaluationThreadRecord(thread);
+                })
+              )
+            ) || Boolean(metronomeRunTraceSelection?.key);
   
             if (activePage !== "thread" || hasThreadSideDetailOpen || !hasThreadTarget) {
               setThreadNavMenuOpen(false);
@@ -548,7 +550,7 @@
               window.removeEventListener("resize", handleViewportChange);
               window.removeEventListener("scroll", handleViewportChange, true);
             };
-          }, [activePage, baseThreadItems, currentThreadId, evaluationThreadIds, hasRealAccess, realThreads, threadNavMenuOpen, threadSubagentDetailOpen, threadTaskOpenRequest]);
+          }, [activePage, baseThreadItems, currentThreadId, evaluationThreadIds, hasRealAccess, metronomeRunTraceSelection?.key, realThreads, threadNavMenuOpen, threadSubagentDetailOpen, threadTaskOpenRequest]);
   
           useEffect(() => {
             if (!threadTaskListMenuOpen) {
@@ -1654,6 +1656,15 @@
           }, [activePage, activeResourcesServerKind, activeResourcesView, hasSessionAuth, loadSettingsPlatformConfig]);
   
   ${DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.resourceMetricsLifecycle}
+          const activeMetronomeRunPresentation = useMemo(() => {
+            if (activePage !== "thread" || !metronomeRunTraceSelection?.key) {
+              return null;
+            }
+            return getMetronomeTaskLoopPresentation(metronomeRunTraceSelection, {
+              projects: realProjects,
+              threads: realThreads,
+            });
+          }, [activePage, metronomeRunTraceSelection, realProjects, realThreads]);
           const selectedThreadTitle = useMemo(() => {
             if (activePage === "tools" || activePage === "plugins" || activePage === "skills") {
               return "Tools";
@@ -1674,7 +1685,7 @@
               return "Calendar";
             }
             if (activePage === "thread" && metronomeRunTraceSelection?.key) {
-              return metronomeRunTraceSelection.workflowName || "Metronome run";
+              return activeMetronomeRunPresentation?.label || metronomeRunTraceSelection.workflowName || "Metronome run";
             }
             if (!hasRealAccess && !currentThreadId) {
               return hasDemoAccess ? "ACP Demo" : "Sign In Required";
@@ -1683,10 +1694,19 @@
               return "New Thread";
             }
             return selectedKnownThread?.title || "Current thread";
-          }, [activePage, currentThreadId, hasDemoAccess, hasRealAccess, isResourcesPage, metronomeRunTraceSelection, selectedKnownThread, settingsSelectedTrigger, settingsSelectedTriggerId]);
+          }, [activeMetronomeRunPresentation?.label, activePage, currentThreadId, hasDemoAccess, hasRealAccess, isResourcesPage, metronomeRunTraceSelection, selectedKnownThread, settingsSelectedTrigger, settingsSelectedTriggerId]);
+          const selectedMetronomeRunOriginThread = useMemo(() => {
+            if (activePage !== "thread" || !metronomeRunTraceSelection?.key) {
+              return null;
+            }
+            return findMetronomeRunOriginThread(metronomeRunTraceSelection, realThreads);
+          }, [activePage, metronomeRunTraceSelection, realThreads]);
           const selectedThreadNavRecord = useMemo(() => {
             if (selectedKnownThread?.id) {
               return selectedKnownThread;
+            }
+            if (selectedMetronomeRunOriginThread?.id) {
+              return selectedMetronomeRunOriginThread;
             }
             const normalizedThreadId = String(currentThreadId || "").trim();
             if (activePage !== "thread" || !normalizedThreadId || metronomeRunTraceSelection?.key) {
@@ -1709,8 +1729,12 @@
               agentCT: 0,
               environmentCT: 0,
             };
-          }, [activeEvaluationThreadContext, activePage, currentThreadId, metronomeRunTraceSelection?.key, realThreads, selectedKnownThread]);
-          const showThreadNavMutationActions = Boolean(selectedKnownThread?.id && !activeEvaluationThreadContext);
+          }, [activeEvaluationThreadContext, activePage, currentThreadId, metronomeRunTraceSelection?.key, realThreads, selectedKnownThread, selectedMetronomeRunOriginThread]);
+          const showThreadNavMutationActions = Boolean(
+            selectedThreadNavRecord?.id
+            && isRealThreadId(String(selectedThreadNavRecord.id || "").trim())
+            && !activeEvaluationThreadContext
+          );
           const selectedThreadStartedLabel = useMemo(() => {
             const startedAt = typeof selectedThreadNavRecord?.createdAt === "string" ? selectedThreadNavRecord.createdAt.trim() : "";
             return startedAt ? formatPlaygroundFileDate(startedAt) : "Unknown";
@@ -1740,17 +1764,17 @@
               ? "Loading"
               : "No tasks";
           const rawSelectedThreadTaskPreview = useMemo(() => {
-            if (!selectedKnownThread) {
+            if (!selectedThreadNavRecord) {
               return null;
             }
-            return getThreadTaskPreview(selectedKnownThread);
-          }, [selectedKnownThread]);
+            return getThreadTaskPreview(selectedThreadNavRecord);
+          }, [selectedThreadNavRecord]);
           const rawSelectedThreadMissionControlMetadata = useMemo(() => {
-            if (!selectedKnownThread) {
+            if (!selectedThreadNavRecord) {
               return null;
             }
-            return getThreadMissionControlMetadata(selectedKnownThread);
-          }, [selectedKnownThread]);
+            return getThreadMissionControlMetadata(selectedThreadNavRecord);
+          }, [selectedThreadNavRecord]);
           const selectedThreadTaskPreview = useMemo(() => {
             if (!currentThreadId) {
               return null;
@@ -2006,8 +2030,8 @@
             ? selectedThreadTaskPreview.projectId.trim()
             : (typeof rawSelectedThreadMissionControlMetadata?.projectId === "string" && rawSelectedThreadMissionControlMetadata.projectId.trim()
               ? rawSelectedThreadMissionControlMetadata.projectId.trim()
-            : (typeof selectedKnownThread?.projectId === "string" && selectedKnownThread.projectId.trim()
-              ? selectedKnownThread.projectId.trim()
+            : (typeof selectedThreadNavRecord?.projectId === "string" && selectedThreadNavRecord.projectId.trim()
+              ? selectedThreadNavRecord.projectId.trim()
               : (typeof selectedThreadCachedProjectContext?.projectId === "string" ? selectedThreadCachedProjectContext.projectId.trim() : "")));
           const cachedSelectedThreadProjectRecord = selectedThreadProjectId
             ? (threadProjectRecordsById[selectedThreadProjectId] || null)
@@ -2040,10 +2064,10 @@
               || selectedThreadCachedProjectContext?.projectName
               || rawSelectedThreadMissionControlMetadata?.projectName
               || selectedThreadTaskPreview?.projectName
-              || selectedKnownThread?.projectName
+              || selectedThreadNavRecord?.projectName
               || ""
             ).trim();
-          }, [rawSelectedThreadMissionControlMetadata?.projectName, selectedKnownThread?.projectName, selectedThreadCachedProjectContext?.projectName, selectedThreadProjectRecord?.name, selectedThreadTaskPreview?.projectName]);
+          }, [rawSelectedThreadMissionControlMetadata?.projectName, selectedThreadCachedProjectContext?.projectName, selectedThreadNavRecord?.projectName, selectedThreadProjectRecord?.name, selectedThreadTaskPreview?.projectName]);
           const selectedThreadProjectMetadata = selectedThreadProjectRecord?.metadata
             && typeof selectedThreadProjectRecord.metadata === "object"
             && !Array.isArray(selectedThreadProjectRecord.metadata)
@@ -2054,12 +2078,12 @@
               selectedThreadProjectRecord,
               selectedThreadTaskPreview?.projectIcon,
               rawSelectedThreadMissionControlMetadata?.projectIcon,
-              selectedKnownThread?.projectIcon,
+              selectedThreadNavRecord?.projectIcon,
               selectedThreadCachedProjectContext?.projectIcon
             )
           ), [
             rawSelectedThreadMissionControlMetadata?.projectIcon,
-            selectedKnownThread?.projectIcon,
+            selectedThreadNavRecord?.projectIcon,
             selectedThreadCachedProjectContext?.projectIcon,
             selectedThreadProjectRecord,
             selectedThreadTaskPreview?.projectIcon,
@@ -2069,7 +2093,7 @@
             || selectedThreadProjectMetadata.color
             || selectedThreadTaskPreview?.projectColor
             || rawSelectedThreadMissionControlMetadata?.projectColor
-            || selectedKnownThread?.projectColor
+            || selectedThreadNavRecord?.projectColor
             || selectedThreadCachedProjectContext?.projectColor
             || ""
           ).trim();

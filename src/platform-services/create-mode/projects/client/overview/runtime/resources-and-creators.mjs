@@ -1115,9 +1115,28 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
 
 
           function renderProjectOverviewResourcesHome() {
+            const activeProjectOverviewResourcesTab = projectOverviewResourcesTab === "threads"
+              ? "threads"
+              : "resources";
+            const projectOverviewResourcesTabs = React.createElement(PlatformDetailTabBar, {
+              ariaLabel: "Project resources and threads",
+              value: activeProjectOverviewResourcesTab,
+              tabs: [
+                { id: "resources", label: "Resources" },
+                { id: "threads", label: "Threads" },
+              ],
+              onValueChange: setProjectOverviewResourcesTab,
+              variant: "minimal",
+              className: "playground-project-overview-activity-tabs playground-project-overview-resources-tabs",
+            });
             return React.createElement(React.Fragment, null,
               renderProjectOverviewFeaturedResources(),
-              React.createElement(PlaygroundSharedResourcesTab, {
+              activeProjectOverviewResourcesTab === "threads"
+                ? renderProjectOverviewThreadsSection({
+                    embedded: true,
+                    toolbarLeading: projectOverviewResourcesTabs,
+                  })
+                : React.createElement(PlaygroundSharedResourcesTab, {
               rows: projectOverviewResourceRows,
               allRows: projectOverviewAllResourceRows,
               searchQuery: projectOverviewResourceSearchQuery,
@@ -1149,7 +1168,7 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
               useCentralSearch: true,
               useCentralNewSelector: true,
               useCentralFilterPopup: true,
-              toolbarTitle: "All Resources",
+              toolbarLeading: projectOverviewResourcesTabs,
               tableVariant: "minimalistic-ui",
               showViewToggle: false,
               emptyLabel: "No resources yet.",
@@ -1169,11 +1188,19 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             const hasActivity = buildProjectOverviewActivityItems().length > 0;
             const hasMilestones = (Array.isArray(releases) && releases.length > 0)
               || Number(selectedProjectSummary?.releaseCount || 0) > 0;
+            const hasAuthoredUpdates = getProjectOverviewUpdateRecords().length > 0;
+            const hasMissionControlActivity = Boolean(
+              String(selectedProjectMissionControl?.summary || "").trim()
+              || String(selectedProjectMissionControl?.document || "").trim()
+              || String(selectedProjectMissionControl?.updatedAt || "").trim()
+            );
             const hasProjectKnowledge = Boolean(getPlaygroundProjectKnowledgeLibraryId(selectedProject));
             return !hasTasks
               && !hasThreads
               && !hasActivity
               && !hasMilestones
+              && !hasAuthoredUpdates
+              && !hasMissionControlActivity
               && !projectHasCostData
               && !hasProjectKnowledge;
           }
@@ -1226,8 +1253,7 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
               );
             }
             return React.createElement("div", { className: "playground-project-overview-general-grid" },
-              renderProjectOverviewActivitySection(),
-              renderProjectOverviewSetupSection()
+              renderProjectOverviewStatusFeed()
             );
           }
 

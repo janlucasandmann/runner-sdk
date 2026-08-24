@@ -18,6 +18,41 @@ export const CONFIGURE_HOME_NOTIFICATION_RECORDS_SCRIPT = `      function normal
         };
       }
 
+      function normalizeNotificationInboxRecord(value) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          return null;
+        }
+        const id = String(value.id || "").trim();
+        const title = String(value.title || "").trim();
+        const body = String(value.body || "").trim();
+        if (!id || !title || !body) {
+          return null;
+        }
+        return {
+          id,
+          eventId: String(value.eventId || value.event_id || "").trim(),
+          eventType: String(value.eventType || value.event_type || "").trim(),
+          organizationId: String(value.organizationId || value.organization_id || "").trim(),
+          preferenceKey: String(value.preferenceKey || value.preference_key || "").trim(),
+          category: String(value.category || "").trim(),
+          severity: String(value.severity || "info").trim() || "info",
+          title,
+          body,
+          actionUrl: String(value.actionUrl || value.action_url || "").trim(),
+          resourceType: String(value.resourceType || value.resource_type || "").trim(),
+          resourceId: String(value.resourceId || value.resource_id || "").trim(),
+          metadata: value.metadata && typeof value.metadata === "object" && !Array.isArray(value.metadata)
+            ? value.metadata
+            : {},
+          seenAt: value.seenAt || value.seen_at || null,
+          readAt: value.readAt || value.read_at || null,
+          dismissedAt: value.dismissedAt || value.dismissed_at || null,
+          actedAt: value.actedAt || value.acted_at || null,
+          createdAt: value.createdAt || value.created_at || "",
+          updatedAt: value.updatedAt || value.updated_at || "",
+        };
+      }
+
       function normalizeTeamInvitationNotificationRecord(value) {
         if (!value || typeof value !== "object" || Array.isArray(value)) {
           return null;

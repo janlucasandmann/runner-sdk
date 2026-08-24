@@ -86,6 +86,15 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
         flex: 0 1 auto;
       }
 
+      .playground-project-overview-resources-tabs {
+        width: auto;
+        max-width: 100%;
+      }
+
+      .playground-project-overview-resources-tabs .platform-detail-tab-bar__list {
+        flex: 0 1 auto;
+      }
+
       .playground-project-resources-toolbar-title {
         margin: 0;
         color: #fff;

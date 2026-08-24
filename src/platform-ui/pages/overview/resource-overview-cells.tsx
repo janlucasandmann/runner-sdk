@@ -27,12 +27,14 @@ export function ResourceOverviewCatalogIdentityCell({
 }: ResourceOverviewCatalogIdentityCellProps) {
   return (
     <div className="resource-overview-identity is-catalog">
-      <span
-        className={`resource-overview-identity__visual${iconClassName ? ` ${iconClassName}` : ""}`}
-        aria-hidden="true"
-      >
-        {icon}
-      </span>
+      {icon != null ? (
+        <span
+          className={`resource-overview-identity__visual${iconClassName ? ` ${iconClassName}` : ""}`}
+          aria-hidden="true"
+        >
+          {icon}
+        </span>
+      ) : null}
       <span className="resource-overview-identity__copy">
         <span className="resource-overview-identity__title">{title}</span>
         {description ? (

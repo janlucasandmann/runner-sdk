@@ -145,7 +145,17 @@ assert.match(
 );
 assert.match(
   fragments.threadList,
-  /className: "sidebar-thread-project-icon"[\s\S]*?style: threadProject\.color \? \{ color: threadProject\.color \} : undefined[\s\S]*?React\.createElement\(ThreadProjectIcon/,
+  /className: "sidebar-thread-project-icon" \+ \(threadProject\.isMissionControl \? " is-mission-control" : ""\)[\s\S]*?style: threadProject\.color \? \{ color: threadProject\.color \} : undefined[\s\S]*?React\.createElement\(ThreadProjectIcon/,
+);
+assert.match(
+  fragments.threadList,
+  /Icon: isMissionControl \? RefreshCcwDot : \(iconConfig\.icon \|\| Rocket\)/,
+  "Mission Control threads must use the shared RefreshCcwDot icon in the sidebar.",
+);
+assert.match(
+  fragments.threadList,
+  /const metronomeMeta = metronomeChild \? getThreadMetronomeMetadata\(safeThread\) : null;[\s\S]*?const displayThreadTitle = metronomeChild && metronomeMeta\?\.nodeName[\s\S]*?\? metronomeMeta\.nodeName[\s\S]*?: rawDisplayThreadTitle/,
+  "Nested workflow threads must use their node names in the sidebar.",
 );
 assert.ok(fragments.sidebar.includes("renderAppSidebarModeSelector()"));
 assert.ok(fragments.sidebar.includes("function renderAppSidebar()"));
@@ -287,6 +297,7 @@ const globalServiceRuntime = new Function(
   SquareMousePointer: StubIcon,
   MessageSquareText: StubIcon,
   SquarePen: StubIcon,
+  RefreshCcwDot: StubIcon,
   Rocket: StubIcon,
   FolderOpen: StubIcon,
   Metronome: StubIcon,
@@ -375,5 +386,9 @@ assert.ok(platformEntrySource.includes("${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.sideb
 assert.ok(platformEntrySource.includes("renderAppSidebar()"));
 assert.ok(!platformEntrySource.includes("function renderExpandedSidebarContent()"));
 assert.doesNotMatch(platformEntrySource, /className: "sidebar-workspace-row"/);
+assert.match(
+  platformEntrySource,
+  /function getThreadMissionControlMetadata\(thread\)[\s\S]*?project_backlog_mission_control[\s\S]*?project_mission_control[\s\S]*?project_mission_control_workflow/,
+);
 
 console.log("App Sidebar ownership, mode selector, styles, and browser syntax passed.");

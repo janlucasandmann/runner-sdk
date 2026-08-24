@@ -1,4 +1,11 @@
-import { type ChangeEvent, type FocusEvent, useLayoutEffect, useRef } from "react";
+import {
+  type ChangeEvent,
+  type FocusEvent,
+  type KeyboardEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   ProjectIconPicker,
   type ProjectIconPickerOption,
@@ -13,10 +20,14 @@ export interface ProjectSummaryProps {
   iconOptions: readonly ProjectIconPickerOption[];
   colorOptions: readonly string[];
   identityDisabled?: boolean;
+  projectNameDisabled?: boolean;
   summaryDisabled?: boolean;
   onIdentityChange: (
     value: ProjectIconPickerValue,
   ) => boolean | undefined | Promise<boolean | undefined>;
+  onProjectNameChange?: (value: string) => void;
+  onProjectNameCommit?: (value: string) => void | Promise<unknown>;
+  onProjectNameEditingChange?: (editing: boolean) => void;
   onSummaryChange: (value: string) => void;
   onSummaryCommit?: (value: string) => void | Promise<void>;
   onSummaryEditingChange?: (editing: boolean) => void;
@@ -47,15 +58,29 @@ export function ProjectSummary({
   iconOptions,
   colorOptions,
   identityDisabled = false,
+  projectNameDisabled = false,
   summaryDisabled = false,
   onIdentityChange,
+  onProjectNameChange,
+  onProjectNameCommit,
+  onProjectNameEditingChange,
   onSummaryChange,
   onSummaryCommit,
   onSummaryEditingChange,
   className = "",
 }: ProjectSummaryProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const nameEditingRef = useRef(false);
+  const latestNameRef = useRef(projectName);
   const latestSummaryRef = useRef(summary);
+  const [nameDraft, setNameDraft] = useState(projectName);
+
+  useLayoutEffect(() => {
+    if (!nameEditingRef.current) {
+      latestNameRef.current = projectName;
+      setNameDraft(projectName);
+    }
+  }, [projectName]);
 
   useLayoutEffect(() => {
     latestSummaryRef.current = summary;
@@ -71,6 +96,41 @@ export function ProjectSummary({
   const handleBlur = (_event: FocusEvent<HTMLTextAreaElement>) => {
     onSummaryEditingChange?.(false);
     void onSummaryCommit?.(latestSummaryRef.current);
+  };
+
+  const handleNameFocus = () => {
+    nameEditingRef.current = true;
+    onProjectNameEditingChange?.(true);
+  };
+
+  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextName = event.currentTarget.value;
+    latestNameRef.current = nextName;
+    setNameDraft(nextName);
+    onProjectNameChange?.(nextName);
+  };
+
+  const commitName = () => {
+    nameEditingRef.current = false;
+    onProjectNameEditingChange?.(false);
+    const nextName = latestNameRef.current.trim();
+    if (!nextName) {
+      setNameDraft(projectName);
+      return;
+    }
+    void onProjectNameCommit?.(nextName);
+  };
+
+  const handleNameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      event.currentTarget.blur();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      latestNameRef.current = projectName;
+      setNameDraft(projectName);
+      event.currentTarget.blur();
+    }
   };
 
   return (
@@ -90,7 +150,18 @@ export function ProjectSummary({
         className="platform-project-summary__icon-picker"
       />
       <div className="platform-project-summary__copy">
-        <h1 className="platform-project-summary__title">{projectName}</h1>
+        <input
+          className="platform-project-summary__title"
+          type="text"
+          value={nameDraft}
+          maxLength={160}
+          aria-label="Project name"
+          disabled={projectNameDisabled}
+          onFocus={handleNameFocus}
+          onChange={handleNameChange}
+          onBlur={commitName}
+          onKeyDown={handleNameKeyDown}
+        />
         <textarea
           ref={textareaRef}
           className="platform-project-summary__input"

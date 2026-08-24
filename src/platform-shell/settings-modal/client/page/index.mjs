@@ -55,39 +55,6 @@ export function createSettingsModalPageScript(options = {}) {
 	            { id: "data-controls", label: "Data Controls", title: "Data Controls" },
 	            { id: "delete", label: "Delete Account", title: "Delete Account" },
 	          ];
-	          const settingsNotificationPreferenceRows = [
-	            {
-	              id: "agentRuns",
-	              title: "Agent runs",
-	              description: "Run completions and failures for threads, schedules, and triggers.",
-	            },
-	            {
-	              id: "permissionRequests",
-	              title: "Permission requests",
-	              description: "When an agent needs approval or additional tool access.",
-	            },
-	            {
-	              id: "assignedWork",
-	              title: "Assigned work and reviews",
-	              description: "Tasks assigned to you and review requests that need attention.",
-	            },
-	            {
-	              id: "taskActivity",
-	              title: "Ticket activity",
-	              description: "Comments and changes on tickets you follow.",
-	            },
-	            {
-	              id: "invitations",
-	              title: "Invitations",
-	              description: "Team and organization invitations.",
-	            },
-	            {
-	              id: "productUpdates",
-	              title: "Product updates",
-	              description: "Important product announcements and release information.",
-	            },
-	          ];
-
 	          const selectedSection = effectiveSettingsSection === "inference"
               ? { id: "inference", label: "Inference", title: "Inference" }
               : effectiveSettingsSection === "costs-overview"

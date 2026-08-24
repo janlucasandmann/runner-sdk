@@ -83,7 +83,32 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           };
         }
 
-        function normalizeMetronomeRunTraceResponse(data, selection) {
+        function enrichMetronomeRunTraceConditionSteps(steps, workflow) {
+          const definition = workflow?.definition && typeof workflow.definition === "object"
+            ? workflow.definition
+            : {};
+          const workflowNodes = Array.isArray(workflow?.nodes)
+            ? workflow.nodes
+            : Array.isArray(definition.nodes)
+              ? definition.nodes
+              : [];
+          if (!workflowNodes.length) return Array.isArray(steps) ? steps : [];
+          const nodesById = new Map(
+            workflowNodes
+              .map((node) => [String(node?.id || "").trim(), node])
+              .filter(([nodeId]) => Boolean(nodeId))
+          );
+          return (Array.isArray(steps) ? steps : []).map((step) => {
+            if (String(step?.kind || step?.nodeType || "").trim().toLowerCase() !== "condition") {
+              return step;
+            }
+            const nodeId = String(step?.nodeId || step?.node_id || "").trim();
+            const conditionNode = nodesById.get(nodeId) || null;
+            return conditionNode ? { ...step, conditionNode } : step;
+          });
+        }
+
+        function normalizeMetronomeRunTraceResponse(data, selection, workflow = null) {
           const rawRun = data?.data?.run
             || data?.data?.metronomeRun
             || data?.run
@@ -101,7 +126,15 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
               : [];
           const finalSteps = Array.isArray(output.steps) ? output.steps : [];
           const normalizedTimelineSteps = normalizeMetronomeRunTimelineSteps(timelineRows, finalSteps, run.id || run.runId || fallbackRun.id || "");
-          const timelineThreads = normalizedTimelineSteps
+          const runSteps = normalizedTimelineSteps.length
+            ? normalizedTimelineSteps
+            : Array.isArray(output.steps)
+              ? output.steps
+              : Array.isArray(fallbackOutput.steps)
+                ? fallbackOutput.steps
+                : [];
+          const enrichedRunSteps = enrichMetronomeRunTraceConditionSteps(runSteps, workflow);
+          const timelineThreads = enrichedRunSteps
             .map((step) => {
               const stepOutput = step?.output && typeof step.output === "object" && !Array.isArray(step.output) ? step.output : {};
               const thread = stepOutput.thread && typeof stepOutput.thread === "object" && !Array.isArray(stepOutput.thread)
@@ -126,9 +159,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             output: {
               ...fallbackOutput,
               ...output,
-              steps: normalizedTimelineSteps.length
-                ? normalizedTimelineSteps
-                : Array.isArray(output.steps) ? output.steps : Array.isArray(fallbackOutput.steps) ? fallbackOutput.steps : [],
+              steps: enrichedRunSteps,
               threads: Array.isArray(output.threads) && output.threads.length
                 ? output.threads
                 : timelineThreads.length
@@ -405,6 +436,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             input: entry?.input || null,
             threads: Array.isArray(entry?.threads) ? entry.threads : [],
             latestThread: entry?.latestThread || null,
+            originThread: entry?.originThread || findMetronomeRunOriginThread(entry, realThreads),
           };
           metronomeRunTraceSelectionRef.current = nextSelection;
           metronomeRunTraceSeenStepKeysRef.current = {
@@ -424,6 +456,10 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             error: "",
           });
           setMetronomeRunTraceWorkExpanded(true);
+          setMetronomeRunActivitySearchQuery("");
+          setMetronomeRunActivityTimeRange(null);
+          setMetronomeRunActivityChartHeight(null);
+          setMetronomeRunActivitySelectedItemId("");
           setRunnerRenderKey((current) => current + 1);
         }
 
@@ -553,6 +589,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             },
             threads: [],
             latestThread: normalizedThread,
+            originThread: normalizedThread,
           };
         }
 
@@ -577,6 +614,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
                 key: groupKey,
                 threads,
                 latestThread,
+                originThread: entry?.originThread || existing?.originThread || null,
               },
             };
           });
@@ -822,7 +860,6 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           const triggerThread = buildOptimisticMetronomeRunThread(payload);
           if (sourceThreadId) {
             registerAbsorbedMetronomeTriggerThread(sourceThreadId, key);
-            setRealThreads((current) => current.filter((thread) => String(thread?.id || "").trim() !== sourceThreadId));
             setThreadActionMenuState((current) => (
               current?.threadId === sourceThreadId ? null : current
             ));
@@ -849,6 +886,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             },
             threads: [],
             latestThread: triggerThread.id ? triggerThread : null,
+            originThread: triggerThread.id ? triggerThread : null,
           };
           upsertOptimisticMetronomeRunEntry(entry);
           if (
@@ -867,7 +905,6 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           const absorbedMap = absorbedMetronomeTriggerThreadIdsRef.current && typeof absorbedMetronomeTriggerThreadIdsRef.current === "object"
             ? absorbedMetronomeTriggerThreadIdsRef.current
             : {};
-          const absorbedSourceThreadIds = [];
           const entries = [];
 
           realThreads.forEach((thread) => {
@@ -881,14 +918,10 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             }
             const registeredGroupKey = String(absorbedMap[sourceThreadId] || "").trim();
             const isActiveSourceThread = Boolean(activeThreadId && activeThreadId === sourceThreadId);
-            if (!registeredGroupKey && !isActiveSourceThread) {
-              return;
-            }
             if (registeredGroupKey && registeredGroupKey !== entry.key) {
               return;
             }
             registerAbsorbedMetronomeTriggerThread(sourceThreadId, entry.key);
-            absorbedSourceThreadIds.push(sourceThreadId);
             entries.push({
               entry,
               shouldOpen: isActiveSourceThread || activeThreadId === createMetronomeRunTraceThreadId(entry.key),
@@ -900,11 +933,6 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           }
 
           entries.forEach(({ entry }) => upsertOptimisticMetronomeRunEntry(entry));
-
-          if (absorbedSourceThreadIds.length) {
-            const absorbedSet = new Set(absorbedSourceThreadIds);
-            setRealThreads((current) => current.filter((thread) => !absorbedSet.has(String(thread?.id || "").trim())));
-          }
 
           const openEntry = entries.find((item) => item.shouldOpen)?.entry || null;
           if (
@@ -942,6 +970,33 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           });
 
           let reloadTimer = null;
+          let conditionWorkflowRequest = null;
+          const loadRunTraceWorkflow = () => {
+            if (conditionWorkflowRequest) return conditionWorkflowRequest;
+            conditionWorkflowRequest = fetchJsonWithTimeout(
+              proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId),
+              {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: authRequestHeaders,
+              },
+              6000
+            ).then(({ response, data }) => {
+              if (!response.ok) return null;
+              const rawWorkflow = data?.data && typeof data.data === "object"
+                ? data.data
+                : data?.metronome && typeof data.metronome === "object"
+                  ? data.metronome
+                  : data?.workflow && typeof data.workflow === "object"
+                    ? data.workflow
+                    : data;
+              return rawWorkflow && typeof rawWorkflow === "object"
+                ? normalizeMetronomeWorkflow(rawWorkflow)
+                : null;
+            }).catch(() => null);
+            return conditionWorkflowRequest;
+          };
           const scheduleRunTraceReload = (run, failed) => {
             if (cancelled) return;
             const startedAt = Date.parse(String(run?.startedAt || run?.createdAt || ""));
@@ -959,29 +1014,25 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           };
           const loadRunTrace = async () => {
             try {
-              const { response, data } = await fetchJsonWithTimeout(
-                proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId) + "/runs/" + encodeURIComponent(runId) + "/timeline?view=compact",
-                { method: "GET", headers: authRequestHeaders },
-                12000
-              );
+              const [timelineResponse, conditionWorkflow] = await Promise.all([
+                fetchJsonWithTimeout(
+                  proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId) + "/runs/" + encodeURIComponent(runId) + "/timeline?view=compact",
+                  { method: "GET", headers: authRequestHeaders },
+                  12000
+                ),
+                loadRunTraceWorkflow(),
+              ]);
+              const { response, data } = timelineResponse;
               if (cancelled) return;
               if (!response.ok) {
                 throw new Error(data?.message || data?.error || "Failed to load Metronome run.");
               }
-              const nextRun = normalizeMetronomeRunTraceResponse(data, selection);
+              const nextRun = normalizeMetronomeRunTraceResponse(data, selection, conditionWorkflow);
               const nextStepKeys = getMetronomeRunTraceSteps(nextRun)
                 .map((step, index) => getMetronomeRunTraceStepRenderKey(step, index))
                 .filter(Boolean);
               const previousSeen = metronomeRunTraceSeenStepKeysRef.current;
               if (!previousSeen || previousSeen.key !== key || !previousSeen.hydrated) {
-                const shouldAnimateInitialSteps = Boolean(
-                  nextStepKeys.length
-                  && isActiveMetronomeRunStatus(nextRun?.status)
-                  && previousSeen
-                  && previousSeen.key === key
-                  && previousSeen.keys instanceof Set
-                  && previousSeen.keys.size === 0
-                );
                 metronomeRunTraceSeenStepKeysRef.current = {
                   key,
                   hydrated: true,
@@ -989,7 +1040,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
                 };
                 metronomeRunTraceAnimatedStepKeysRef.current = {
                   key,
-                  keys: new Set(shouldAnimateInitialSteps ? nextStepKeys : []),
+                  keys: new Set(),
                 };
               } else {
                 const animatedKeys = nextStepKeys.filter((stepKey) => !previousSeen.keys.has(stepKey));
@@ -1047,6 +1098,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
                     input: nextRun?.input || existing?.input || null,
                     threads: nextThreads,
                     latestThread,
+                    originThread: existing?.originThread || selection?.originThread || null,
                   },
                 };
               });
@@ -1102,9 +1154,36 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             if (!normalizedWorkflowId) {
               return;
             }
+            const normalizedRunId = String(detail.runId || "").trim();
+            if (detail.mode === "run-overview") {
+              const key = getSidebarMetronomeRunGroupKey({
+                metronomeId: normalizedWorkflowId,
+                runId: normalizedRunId,
+              });
+              if (!normalizedRunId || !key) {
+                return;
+              }
+              const workflowName = String(detail.workflowName || "Metronome").trim() || "Metronome";
+              const message = String(detail.userMessage || "").trim();
+              openMetronomeRunTraceThread({
+                kind: "metronome-run",
+                key,
+                metronomeId: normalizedWorkflowId,
+                runId: normalizedRunId,
+                workflowName,
+                status: String(detail.status || "running").trim() || "running",
+                input: message
+                  ? { source: "thread_event", message }
+                  : null,
+                threads: [],
+                latestThread: null,
+                originThread: null,
+              });
+              return;
+            }
             openMetronomePage({
               workflowId: normalizedWorkflowId,
-              runId: String(detail.runId || "").trim(),
+              runId: normalizedRunId,
               mode: detail.mode === "run-detail" ? "run-detail" : detail.mode === "runs" ? "runs" : detail.mode === "code" ? "code" : "edit",
             });
           };

@@ -84,6 +84,7 @@ export interface RunnerThreadHistoryHydrationOptions {
   isPreparingRun: boolean;
   locallyOwnedExecutionThreadIdRef: MutableRefObject<string | null>;
   onEnvironmentHydrated: (payload: RunnerThreadHydrationPayload) => void;
+  onInitialHydrationSettled?: (threadId: string) => void;
   pendingQueuedMessageCount: number;
   requestHeaders?: HeadersInit;
   setError: Dispatch<SetStateAction<string | null>>;
@@ -115,6 +116,7 @@ export function useRunnerThreadHistoryHydration({
   isPreparingRun,
   locallyOwnedExecutionThreadIdRef,
   onEnvironmentHydrated,
+  onInitialHydrationSettled,
   pendingQueuedMessageCount,
   requestHeaders,
   setError,
@@ -130,11 +132,13 @@ export function useRunnerThreadHistoryHydration({
     agentName,
     environmentName,
     onEnvironmentHydrated,
+    onInitialHydrationSettled,
   });
   renderingRef.current = {
     agentName,
     environmentName,
     onEnvironmentHydrated,
+    onInitialHydrationSettled,
   };
 
   useEffect(() => {
@@ -157,6 +161,7 @@ export function useRunnerThreadHistoryHydration({
 
     if (!eligibility.shouldHydrate) {
       setIsLoading(false);
+      renderingRef.current.onInitialHydrationSettled?.(normalizedThreadId);
       return () => {
         cancelled = true;
       };
@@ -183,7 +188,6 @@ export function useRunnerThreadHistoryHydration({
         });
         if (!previewTurns.length) return;
         previewRendered = true;
-        initializedThreadIdRef.current = normalizedThreadId;
         const previousTurns = turnsRef.current;
         setTurns(previewTurns);
         setExpandedTurns((previousExpandedTurns) =>
@@ -264,7 +268,10 @@ export function useRunnerThreadHistoryHydration({
         );
       })
       .finally(() => {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+          renderingRef.current.onInitialHydrationSettled?.(normalizedThreadId);
+        }
       });
 
     return () => {

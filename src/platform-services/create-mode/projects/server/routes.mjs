@@ -126,12 +126,35 @@ export function createProjectsRequestHandler({
       ));
     }
 
+    const projectMentionCandidatesMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/mention-candidates$/,
+    );
+    if (method === "GET" && projectMentionCandidatesMatch) {
+      return startRequest(proxyUpstreamGet(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectMentionCandidatesMatch[1])}/mention-candidates`,
+      ));
+    }
+
     const projectWorkGraphMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/work-graph$/);
     if (method === "GET" && projectWorkGraphMatch) {
       return startRequest(proxyUpstreamGet(
         req,
         res,
         `/projects/${encodePathSegment(projectWorkGraphMatch[1])}/work-graph`,
+      ));
+    }
+
+    const projectMissionControlRunsMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/mission-control\/runs$/,
+    );
+    if (method === "POST" && projectMissionControlRunsMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectMissionControlRunsMatch[1])}/mission-control/runs`,
+        "POST",
       ));
     }
 
@@ -241,6 +264,54 @@ export function createProjectsRequestHandler({
       return method === "GET"
         ? startRequest(proxyUpstreamGet(req, res, upstreamPath))
         : startRequest(proxyUpstreamJsonRequest(req, res, upstreamPath, "POST"));
+    }
+
+    const projectActivityCommentsMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/activity\/([^/]+)\/comments$/,
+    );
+    if (method === "POST" && projectActivityCommentsMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectActivityCommentsMatch[1])}/activity/${encodePathSegment(projectActivityCommentsMatch[2])}/comments`,
+        "POST",
+      ));
+    }
+
+    const projectUpdateCommentsMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/updates\/([^/]+)\/comments$/,
+    );
+    if (method === "POST" && projectUpdateCommentsMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectUpdateCommentsMatch[1])}/updates/${encodePathSegment(projectUpdateCommentsMatch[2])}/comments`,
+        "POST",
+      ));
+    }
+
+    const projectUpdateCommentMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/updates\/([^/]+)\/comments\/([^/]+)$/,
+    );
+    if (["PATCH", "DELETE"].includes(method) && projectUpdateCommentMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectUpdateCommentMatch[1])}/updates/${encodePathSegment(projectUpdateCommentMatch[2])}/comments/${encodePathSegment(projectUpdateCommentMatch[3])}`,
+        method,
+      ));
+    }
+
+    const projectUpdateReactionsMatch = pathname.match(
+      /^\/api\/real\/projects\/([^/]+)\/updates\/([^/]+)\/reactions$/,
+    );
+    if (method === "PUT" && projectUpdateReactionsMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectUpdateReactionsMatch[1])}/updates/${encodePathSegment(projectUpdateReactionsMatch[2])}/reactions`,
+        "PUT",
+      ));
     }
 
     const projectDeliveryPreviewMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/delivery-plan\/preview$/);

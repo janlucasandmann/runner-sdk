@@ -598,6 +598,11 @@
           margin-left: 0;
         }
 
+        .playground-unified-top-navbar
+          .playground-tasks-nav-settings-button.platform-button.is-active {
+          background: rgba(255, 255, 255, 0.1) !important;
+        }
+
         .playground-tasks-ticket-navigation {
           box-sizing: border-box;
           height: 32px;
@@ -31505,6 +31510,12 @@
         .playground-tasks-backlog-project-icon.is-subtask {
           background: linear-gradient(180deg, #4f7fc5 0%, #1e4585 100%);
         }
+
+        .playground-tasks-backlog-project-icon.is-mission-control {
+          background: linear-gradient(180deg, #3159a8 0%, #172f68 100%);
+          box-shadow: inset 0 0 0 1px rgba(137, 178, 255, 0.16), 0 1px 2px rgba(0, 0, 0, 0.28);
+          border-radius: 5px;
+        }
   
         .playground-tasks-backlog-ticket {
           flex: 0 0 auto;
@@ -32057,9 +32068,9 @@
           flex-direction: column;
           gap: 0;
           padding: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.075);
           border-radius: 8px;
-          background: var(--playground-task-color-surface, rgba(255, 255, 255, 0.05));
+          background: var(--playground-task-color-surface, rgba(255, 255, 255, 0.075));
           box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.15);
           color: rgba(255, 255, 255, 0.92);
           text-align: left;
@@ -32310,7 +32321,7 @@
           flex: 0 0 auto;
           color: var(--playground-task-color-accent, rgba(255, 255, 255, 0.92));
           font-size: 12px;
-          font-weight: 500;
+          font-weight: 400;
         }
   
         .playground-tasks-detail-color-value {

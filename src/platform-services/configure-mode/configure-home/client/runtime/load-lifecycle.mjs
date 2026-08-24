@@ -8,6 +8,7 @@ export const CONFIGURE_HOME_NOTIFICATION_LOAD_LIFECYCLE_SCRIPT = `        useEff
         useEffect(() => {
           if (!canFetchNotificationCenter) {
             setProductNotifications([]);
+            setInboxNotifications([]);
             setTeamInvitationNotifications([]);
             setOrganizationInvitationNotifications([]);
             setTaskActivityNotifications([]);
@@ -40,6 +41,9 @@ export const CONFIGURE_HOME_NOTIFICATION_LOAD_LIFECYCLE_SCRIPT = `        useEff
               const taskActivityItems = Array.isArray(data?.taskNotifications)
                 ? data.taskNotifications
                 : [];
+              const inboxItems = Array.isArray(data?.inboxNotifications)
+                ? data.inboxNotifications
+                : [];
               setProductNotifications(
                 items.map(normalizeInAppNotificationRecord).filter(Boolean)
               );
@@ -52,6 +56,9 @@ export const CONFIGURE_HOME_NOTIFICATION_LOAD_LIFECYCLE_SCRIPT = `        useEff
                 taskActivityItems
                   .map(normalizeTaskActivityNotificationRecord)
                   .filter(Boolean)
+              );
+              setInboxNotifications(
+                inboxItems.map(normalizeNotificationInboxRecord).filter(Boolean)
               );
             } catch {}
           };

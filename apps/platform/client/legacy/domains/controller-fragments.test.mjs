@@ -124,6 +124,11 @@ assert.match(
   "Platform history must retain the nested Skill tab used by resource access details.",
 );
 assert.match(
+  platformTemplateCss,
+  /\.playground-tasks-nav-settings-button\.platform-button\.is-active\s*\{\s*background:\s*rgba\(255, 255, 255, 0\.1\) !important;/,
+  "The active Project Settings header button must use the white\/10 surface.",
+);
+assert.match(
   platformTemplateSource,
   /PLAYGROUND_PLATFORM_NAVIGATION_FIELDS\s*=\s*\[[\s\S]*?"libraryId"[\s\S]*?"libraryName"[\s\S]*?"documentId"[\s\S]*?"documentName"/,
   "Platform history must retain Knowledge library identity so nested access details return to their parent library.",
@@ -1436,6 +1441,11 @@ assert.match(
   agentDialogsSource,
   /const agentInsightsTableTabs = React\.createElement\(PlatformDetailTabBar,[\s\S]{0,700}\{ id: "threads", label: "Threads" \},[\s\S]{0,120}\{ id: "evaluations", label: "Evaluations" \}/,
   "Agent Insights must provide adjacent Threads and Evaluations table tabs.",
+);
+assert.doesNotMatch(
+  platformTemplateSource,
+  /id: "triggered-by"[\s\S]{0,80}header: "Triggered by"/,
+  "The centralized Threads table must not expose a Triggered by column.",
 );
 assert.match(
   agentDialogsSource,

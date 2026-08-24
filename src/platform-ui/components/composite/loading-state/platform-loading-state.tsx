@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { DotLoader } from "../../ui/dot-loader/index.js";
 
 export interface PlatformLoadingStateProps {
   message: ReactNode;
@@ -34,9 +33,14 @@ export function PlatformLoadingState({
       aria-label={accessibleMessage}
     >
       <span className="platform-loading-state__loader" aria-hidden="true">
-        <DotLoader dotCount={9} dotSize={3} gap={2} speed={800} />
+        <img
+          className="platform-loading-state__spinner"
+          src="/img/spinner.svg"
+          alt=""
+          width={24}
+          height={24}
+        />
       </span>
-      <span className="platform-loading-state__message">{message}</span>
     </Component>
   );
 }

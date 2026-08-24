@@ -104,6 +104,7 @@ for public_file in \
   img/logos/agentsappicon.png \
   img/logos/apple-touch-icon.png \
   img/logos/browsericon.png \
+  img/logos/calogonew.webp \
   img/logos/discord.svg \
   img/logos/envappicon.png \
   img/logos/favicon-16x16.png \
@@ -126,6 +127,7 @@ for public_file in \
     echo "Warning: optional platform asset missing: web/hosting/public/${public_file}" >&2
   fi
 done
+cp "repos/runner-web-sdk/img/camark.svg" "${TMP_BUILD_DIR}/web/hosting/public/img/camark.svg"
 mkdir -p "${TMP_BUILD_DIR}/web/hosting/public/img/agent-profile-pics"
 for public_file in \
   assistantastro-1.webp \

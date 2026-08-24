@@ -11,6 +11,7 @@ import { PROJECTS_VIEWS_03_FRAGMENT } from "./views/03-overview-and-task-preview
 import { PROJECTS_VIEWS_04_FRAGMENT } from "./views/04-task-detail-and-modals.mjs";
 import { PROJECT_ACTIVITY_CARD_SCRIPT } from "./views/project-activity-card.mjs";
 import { PROJECT_ACTIVITY_FILTER_SCRIPT } from "./views/project-activity-filter.mjs";
+import { PROJECT_ACTIVITY_LINE_SCRIPT } from "./views/project-activity-line.mjs";
 import { PROJECT_ACTIVITY_LIST_SCRIPT } from "./views/project-activity-list.mjs";
 import { PROJECT_ACTIVITY_RANGE_SCRIPT } from "./views/project-activity-range.mjs";
 
@@ -38,6 +39,7 @@ export const PROJECTS_PAGE_VIEWS_SCRIPT =
       ),
       PROJECT_ACTIVITY_CARD_SCRIPT,
       PROJECT_ACTIVITY_FILTER_SCRIPT,
+      PROJECT_ACTIVITY_LINE_SCRIPT,
       PROJECT_ACTIVITY_LIST_SCRIPT,
       PROJECT_ACTIVITY_RANGE_SCRIPT,
       PROJECT_OVERVIEW_SCRIPT,

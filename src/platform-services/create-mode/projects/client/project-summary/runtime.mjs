@@ -18,6 +18,7 @@ export const PROJECT_SUMMARY_RUNTIME_FRAGMENT = `
                 iconOptions: PLAYGROUND_PROJECT_ICON_OPTIONS,
                 colorOptions: PLAYGROUND_PROJECT_ACCENT_COLORS,
                 identityDisabled: !canManageProjectAccess,
+                projectNameDisabled: !canManageProjectAccess,
                 onIdentityChange: async (nextIdentity) => {
                   const nextIcon = getPlaygroundProjectIconId(nextIdentity?.icon);
                   const nextColor = String(nextIdentity?.color || projectColor).trim() || projectColor;
@@ -30,6 +31,8 @@ export const PROJECT_SUMMARY_RUNTIME_FRAGMENT = `
                   });
                   return Boolean(updatedProject?.id);
                 },
+                onProjectNameChange: (nextName) => updateProjectOverviewNameDraftValue(nextName),
+                onProjectNameCommit: (nextName) => saveProjectOverviewName(nextName),
                 onSummaryChange: (nextSummary) => {
                   updateProjectDescriptionDraftValue(nextSummary, {
                     previousValue: String(projectOverviewDraft?.description || ""),
@@ -39,7 +42,7 @@ export const PROJECT_SUMMARY_RUNTIME_FRAGMENT = `
                 onSummaryEditingChange: setProjectDescriptionEditing,
               }),
               renderProjectOverviewProgressAnalyticsSection(),
-              renderProjectOverviewLatestUpdateSection()
+              renderProjectOverviewSpotlightSection()
             );
           }
 `;

@@ -6,3 +6,30 @@
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+
+/* Ticket identifiers stay readable on every card color. */
+.platform-ticket-item__card-number.playground-tasks-lane-card-ticket {
+  color: #fff !important;
+}
+
+.playground-tasks-detail-color-value {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.playground-tasks-detail-color-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  background: var(--playground-task-color-accent, #016bcb);
+  box-shadow: inset 0 0 0 1px var(--playground-task-color-border, rgba(1, 107, 203, 0.2));
+}
+
+.playground-tasks-detail-color-menu-swatch {
+  width: 12px;
+  height: 12px;
+}

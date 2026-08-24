@@ -1,4 +1,5 @@
 export const CONFIGURE_HOME_NOTIFICATIONS_STATE_SCRIPT = `        const [productNotifications, setProductNotifications] = useState([]);
+        const [inboxNotifications, setInboxNotifications] = useState([]);
         const [readProductNotificationIds, setReadProductNotificationIds] = useState([]);
         const [teamInvitationNotifications, setTeamInvitationNotifications] = useState([]);
         const [readTeamInvitationNotificationIds, setReadTeamInvitationNotificationIds] = useState([]);

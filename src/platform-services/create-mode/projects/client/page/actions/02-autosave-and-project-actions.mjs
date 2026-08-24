@@ -575,6 +575,9 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
             const projectDraftLead = projectDraftMetadata.lead && typeof projectDraftMetadata.lead === "object" && !Array.isArray(projectDraftMetadata.lead)
               ? projectDraftMetadata.lead
               : {};
+            const projectDraftOwner = projectDraftMetadata.owner && typeof projectDraftMetadata.owner === "object" && !Array.isArray(projectDraftMetadata.owner)
+              ? projectDraftMetadata.owner
+              : {};
             const nextLeadUserId = String(projectDraft.leadUserId || projectDraftMetadata.leadUserId || projectDraftLead.userId || projectDraftLead.id || currentUserEmail || currentUserName || "").trim();
             const nextLeadName = String(projectDraft.leadName || projectDraftMetadata.leadName || projectDraftLead.name || currentUserName || "").trim();
             const nextLeadEmail = String(projectDraft.leadEmail || projectDraftMetadata.leadEmail || projectDraftLead.email || currentUserEmail || "").trim();
@@ -585,6 +588,20 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
 	              email: nextLeadEmail,
 	              avatarUrl: nextLeadAvatarUrl,
 	            };
+	            const nextOwnerUserId = String(projectDraft.ownerUserId || projectDraftMetadata.ownerUserId || projectDraftOwner.userId || projectDraftOwner.id || nextLeadUserId || currentUserId || "").trim();
+	            const nextOwnerName = String(projectDraft.ownerName || projectDraftMetadata.ownerName || projectDraftOwner.name || nextLeadName || currentUserName || "Project owner").trim();
+	            const nextOwnerEmail = String(projectDraft.ownerEmail || projectDraftMetadata.ownerEmail || projectDraftOwner.email || nextLeadEmail || currentUserEmail || "").trim();
+	            const nextOwnerAvatarUrl = String(projectDraft.ownerAvatarUrl || projectDraftMetadata.ownerAvatarUrl || projectDraftOwner.avatarUrl || projectDraftOwner.photoUrl || nextLeadAvatarUrl || "").trim();
+	            const nextOwner = {
+	              userId: nextOwnerUserId,
+	              name: nextOwnerName,
+	              email: nextOwnerEmail,
+	              avatarUrl: nextOwnerAvatarUrl,
+	            };
+	            const normalizedProjectStatus = normalizePlaygroundProjectStatus(projectDraft.status || projectDraftMetadata.status || "backlog");
+	            const normalizedProjectPriority = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === String(projectDraft.priority || projectDraftMetadata.priority || "").trim().toLowerCase())
+	              ? String(projectDraft.priority || projectDraftMetadata.priority || "").trim().toLowerCase()
+	              : "medium";
 	            const normalizedProjectPermissionSet = normalizePlaygroundPermissionSet(
 	              projectDraft.permissionSet || projectDraftMetadata.permissionSet,
 	              "project"
@@ -603,7 +620,13 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
                 projectType: projectBlueprint.id,
                 type: projectBlueprint.id,
                 color: projectDraft.color || getPlaygroundProjectAccent(projectDraft, projects.length),
+                status: normalizedProjectStatus,
+                priority: normalizedProjectPriority,
                 defaultEnvironmentId: projectDraft.defaultEnvironmentId || undefined,
+                ownerUserId: nextOwnerUserId || undefined,
+                ownerName: nextOwnerName || undefined,
+	                ownerEmail: nextOwnerEmail || undefined,
+	                ownerAvatarUrl: nextOwnerAvatarUrl || undefined,
                 leadUserId: nextLeadUserId || undefined,
                 leadName: nextLeadName || undefined,
 	                leadEmail: nextLeadEmail || undefined,
@@ -621,6 +644,13 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
                   icon: getPlaygroundProjectIconId(projectDraft.icon),
                   wallpaperId: nextWallpaperId,
                   useCardBackgroundAsWallpaper: nextUseCardBackgroundAsWallpaper,
+                  status: normalizedProjectStatus,
+                  priority: normalizedProjectPriority,
+                  ownerUserId: nextOwnerUserId,
+                  ownerName: nextOwnerName,
+                  ownerEmail: nextOwnerEmail,
+                  ownerAvatarUrl: nextOwnerAvatarUrl,
+                  owner: nextOwner,
                   leadUserId: nextLeadUserId,
                   leadName: nextLeadName,
                   leadEmail: nextLeadEmail,
@@ -646,8 +676,15 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
               description: nextDescription,
               projectType: projectBlueprint.id,
               type: projectBlueprint.id,
+              status: normalizedProjectStatus,
+              priority: normalizedProjectPriority,
               wallpaperId: nextWallpaperId,
               useCardBackgroundAsWallpaper: nextUseCardBackgroundAsWallpaper,
+              ownerUserId: nextOwnerUserId,
+	              ownerName: nextOwnerName,
+	              ownerEmail: nextOwnerEmail,
+	              ownerAvatarUrl: nextOwnerAvatarUrl,
+	              owner: nextOwner,
               leadUserId: nextLeadUserId,
 	              leadName: nextLeadName,
 	              leadEmail: nextLeadEmail,
@@ -662,6 +699,13 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
 	                blueprintId: projectBlueprint.id,
 	                wallpaperId: nextWallpaperId,
 	                useCardBackgroundAsWallpaper: nextUseCardBackgroundAsWallpaper,
+                  status: normalizedProjectStatus,
+                  priority: normalizedProjectPriority,
+                  ownerUserId: nextOwnerUserId,
+                  ownerName: nextOwnerName,
+                  ownerEmail: nextOwnerEmail,
+                  ownerAvatarUrl: nextOwnerAvatarUrl,
+                  owner: nextOwner,
                   leadUserId: nextLeadUserId,
                   leadName: nextLeadName,
                   leadEmail: nextLeadEmail,
@@ -684,11 +728,18 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
             projectDraftNameDirtyRef.current = false;
             projectDraftTypedNameRef.current = "";
             const committedProjectRules = String(savedProject.projectRules || projectDraft.projectRules || "");
-            const committedProject = commitLocalProjectRecord({
+            let committedProject = commitLocalProjectRecord({
               ...savedProject,
               projectType: projectBlueprint.id,
               type: projectBlueprint.id,
               name: nextName,
+              status: normalizedProjectStatus,
+              priority: normalizedProjectPriority,
+              ownerUserId: nextOwnerUserId,
+              ownerName: nextOwnerName,
+              ownerEmail: nextOwnerEmail,
+              ownerAvatarUrl: nextOwnerAvatarUrl,
+              owner: nextOwner,
               leadUserId: nextLeadUserId,
               leadName: nextLeadName,
               leadEmail: nextLeadEmail,
@@ -700,6 +751,13 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
 		                description: nextDescription,
 		                projectType: projectBlueprint.id,
 		                blueprintId: projectBlueprint.id,
+                    status: normalizedProjectStatus,
+                    priority: normalizedProjectPriority,
+                    ownerUserId: nextOwnerUserId,
+                    ownerName: nextOwnerName,
+                    ownerEmail: nextOwnerEmail,
+                    ownerAvatarUrl: nextOwnerAvatarUrl,
+                    owner: nextOwner,
                     leadUserId: nextLeadUserId,
                     leadName: nextLeadName,
                     leadEmail: nextLeadEmail,
@@ -720,6 +778,54 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
 
             if (!isEditMode) {
               await applyPlaygroundProjectInitialSetup(committedProject, projectBlueprint, savedProjectEnvironments);
+              const persistedOwnerUserId = String(
+                savedProject.ownerUserId
+                  || savedProject.userId
+                  || savedProject.metadata?.ownerUserId
+                  || savedProject.metadata?.owner?.userId
+                  || currentUserId
+                  || ""
+              ).trim();
+              if (nextOwnerUserId && nextOwnerUserId !== persistedOwnerUserId) {
+                const transferResponse = await fetch(
+                  backendUrl + "/projects/" + encodeURIComponent(committedProject.id) + "/owner",
+                  {
+                    method: "PATCH",
+                    headers: {
+                      ...requestHeaders,
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ ownerUserId: nextOwnerUserId }),
+                  }
+                );
+                const transferData = await transferResponse.json().catch(() => ({}));
+                if (!transferResponse.ok) {
+                  throw new Error(transferData?.message || transferData?.error || "The project was created, but its owner could not be assigned.");
+                }
+                const transferredProject = getPlaygroundProjectResponseRecord(transferData, {
+                  ...committedProject,
+                  ownerUserId: nextOwnerUserId,
+                  ownerName: nextOwnerName,
+                  ownerEmail: nextOwnerEmail,
+                  ownerAvatarUrl: nextOwnerAvatarUrl,
+                  owner: nextOwner,
+                  metadata: {
+                    ...(committedProject.metadata && typeof committedProject.metadata === "object" ? committedProject.metadata : {}),
+                    ownerUserId: nextOwnerUserId,
+                    ownerName: nextOwnerName,
+                    ownerEmail: nextOwnerEmail,
+                    ownerAvatarUrl: nextOwnerAvatarUrl,
+                    owner: nextOwner,
+                  },
+                });
+                committedProject = commitLocalProjectRecord(transferredProject || committedProject, {
+                  summary: transferredProject?.summary || committedProject.summary,
+                  environments: savedProjectEnvironments,
+                  recentThreads: [],
+                  threads: [],
+                  selectImmediately: false,
+                });
+              }
             }
 
             if (options?.closeAfterSave !== false) {
@@ -732,6 +838,13 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
                 description: nextDescription,
                 projectType: projectBlueprint.id,
                 type: projectBlueprint.id,
+                status: normalizedProjectStatus,
+                priority: normalizedProjectPriority,
+                ownerUserId: nextOwnerUserId,
+                ownerName: nextOwnerName,
+                ownerEmail: nextOwnerEmail,
+                ownerAvatarUrl: nextOwnerAvatarUrl,
+                owner: nextOwner,
                 leadUserId: nextLeadUserId,
                 leadName: nextLeadName,
                 leadEmail: nextLeadEmail,
@@ -743,6 +856,13 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
 	                  description: nextDescription,
 	                  projectType: projectBlueprint.id,
 	                  blueprintId: projectBlueprint.id,
+                    status: normalizedProjectStatus,
+                    priority: normalizedProjectPriority,
+                    ownerUserId: nextOwnerUserId,
+                    ownerName: nextOwnerName,
+                    ownerEmail: nextOwnerEmail,
+                    ownerAvatarUrl: nextOwnerAvatarUrl,
+                    owner: nextOwner,
                     leadUserId: nextLeadUserId,
                     leadName: nextLeadName,
                     leadEmail: nextLeadEmail,

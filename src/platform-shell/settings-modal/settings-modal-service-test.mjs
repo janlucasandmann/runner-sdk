@@ -152,8 +152,10 @@ for (const preferenceId of [
   "invitations",
   "productUpdates",
 ]) {
-  assert.match(pageScript, new RegExp(`id: "${preferenceId}"`));
+  assert.match(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.state, new RegExp(`id: "${preferenceId}"`));
 }
+assert.match(pageScript, /settingsNotificationPreferenceRows\.map/);
+assert.match(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.navigation, /notifications\/catalog/);
 assert.match(
   pageScript,
   /className: "playground-settings-marketing-toggle-row"[\s\S]{0,900}React\.createElement\(PlatformToggle, \{[\s\S]{0,500}updateSettingsMarketingConsent\(checked \? "opted_in" : "opted_out"\)/,

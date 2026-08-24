@@ -392,6 +392,7 @@ export function RunnerAgentSelectorControl({
               <PlatformSwitch
                 className="tb-agent-reasoning-effort-tabs"
                 ariaLabel="Reasoning effort"
+                fullWidth
                 value={selectedReasoningEffort.id}
                 options={RUNNER_REASONING_EFFORT_OPTIONS.map((option) => ({
                   value: option.id,

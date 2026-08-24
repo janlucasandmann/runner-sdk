@@ -489,7 +489,7 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           const defaultLeadName = String(currentUserName || currentUserEmail || "Project Lead").trim();
           const defaultLeadEmail = String(currentUserEmail || "").trim();
           const defaultLeadAvatarUrl = String(currentUserAvatarUrl || "").trim();
-          const defaultLeadUserId = defaultLeadEmail || defaultLeadName || "current";
+          const defaultLeadUserId = String(currentUserId || defaultLeadEmail || defaultLeadName || "current").trim();
           const defaultProjectDraft = buildPlaygroundDefaultProjectDraft();
           projectDraftNameDirtyRef.current = Boolean(initialName);
           projectDraftTypedNameRef.current = initialName;
@@ -503,13 +503,27 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
             leadName: defaultLeadName,
             leadEmail: defaultLeadEmail,
             leadAvatarUrl: defaultLeadAvatarUrl,
+            ownerUserId: defaultLeadUserId,
+            ownerName: defaultLeadName,
+            ownerEmail: defaultLeadEmail,
+            ownerAvatarUrl: defaultLeadAvatarUrl,
             metadata: {
               ...(defaultProjectDraft.metadata || {}),
               leadUserId: defaultLeadUserId,
               leadName: defaultLeadName,
               leadEmail: defaultLeadEmail,
               leadAvatarUrl: defaultLeadAvatarUrl,
+              ownerUserId: defaultLeadUserId,
+              ownerName: defaultLeadName,
+              ownerEmail: defaultLeadEmail,
+              ownerAvatarUrl: defaultLeadAvatarUrl,
               lead: {
+                userId: defaultLeadUserId,
+                name: defaultLeadName,
+                email: defaultLeadEmail,
+                avatarUrl: defaultLeadAvatarUrl,
+              },
+              owner: {
                 userId: defaultLeadUserId,
                 name: defaultLeadName,
                 email: defaultLeadEmail,
@@ -757,86 +771,13 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           }
           setMissionControlSetupVisible(false);
           setMissionControlSetupClosing(false);
-          closeProjectComposer({ animate: false });
-        }
-
-        function getMissionControlSetupProjectGoalDraft() {
-          return String(
-            projectDescriptionTextareaRef.current
-              ? projectDescriptionTextareaRef.current.value || ""
-              : projectDraft.description || ""
-          );
-        }
-
-        function getMissionControlSetupProjectSnapshot() {
-          const normalizedProjectId = String(projectDraft?.id || selectedProjectId || "").trim();
-          if (!normalizedProjectId) {
-            return null;
-          }
-          return normalizePlaygroundProjectRecord(
-            (selectedProject?.id === normalizedProjectId ? selectedProject : null)
-            || projectsById[normalizedProjectId]
-            || projectDraft
-          );
-        }
-
-        async function commitMissionControlSetupDraftBeforeClose() {
-          const normalizedProjectId = String(projectDraft?.id || selectedProjectId || "").trim();
-          if (!normalizedProjectId) {
-            return true;
-          }
-          if (missionControlSetupCommitInFlightRef.current) {
-            return false;
-          }
-
-          missionControlSetupCommitInFlightRef.current = true;
-          try {
-            const nextProjectGoal = getMissionControlSetupProjectGoalDraft();
-            const sourceProject = getMissionControlSetupProjectSnapshot();
-            const shouldSaveProjectGoal = Boolean(
-              sourceProject?.id
-              && String(nextProjectGoal) !== String(sourceProject.description || "")
-            );
-            if (shouldSaveProjectGoal && String(projectDraft?.name || sourceProject.name || "").trim()) {
-              await persistProjectComposerDraft({
-                mode: projectDraft?.id ? "edit" : projectComposerMode,
-                closeAfterSave: false,
-                selectAfterSave: false,
-              });
-            }
-
-            setProjectSaveState((current) => current.error
-              ? { isSaving: false, error: "" }
-              : current
-            );
-            setMissionControlSaveState((current) => current.error
-              ? { isSaving: false, error: "", message: "" }
-              : current
-            );
-            return true;
-          } catch (error) {
-            const message = error instanceof Error ? error.message : "Failed to save Mission Control changes.";
-            setProjectSaveState({
-              isSaving: false,
-              error: message,
-            });
-            setMissionControlSaveState({
-              isSaving: false,
-              error: message,
-              message: "",
-            });
-            return false;
-          } finally {
-            missionControlSetupCommitInFlightRef.current = false;
-          }
+          setMissionControlSetupOpen(false);
+          setMissionControlSetupError("");
         }
 
         function closeMissionControlSetupModal(options = {}) {
           if (!missionControlSetupOpen) {
             return;
-          }
-          if (options?.persist !== false) {
-            void commitMissionControlSetupDraftBeforeClose();
           }
           if (options?.animate === false) {
             finishCloseMissionControlSetupModal();
@@ -1221,16 +1162,6 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
             setProjectWallpaperTransition(null);
             projectWallpaperTransitionTimerRef.current = null;
           }, 380);
-        }
-
-        function focusMissionControlSetupTaskInput() {
-          window.requestAnimationFrame(() => {
-            const textarea = document.querySelector(".playground-mission-control-setup-runner textarea.sidebar-textarea")
-              || document.querySelector(".playground-mission-control-setup-runner .sidebar-textarea");
-            if (textarea && typeof textarea.focus === "function") {
-              textarea.focus({ preventScroll: true });
-            }
-          });
         }
 
         async function handleSaveProjectFromStudio() {

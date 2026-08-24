@@ -86,32 +86,196 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
           onThreadStarted(threadId, { contentMode: "chat" });
         }
 
-        function openBacklogTaskContextMenu(task, event) {
+        function openBacklogTaskContextMenu(task, event, options = {}) {
           if (!task?.id || !event) {
             return;
           }
-          const viewportPadding = 12;
-          const estimatedMenuWidth = 296;
-          const estimatedMenuHeight = getTaskStartedThreadId(task) ? 180 : 128;
-          const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 0;
-          const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 0;
-          const nextX = viewportWidth > 0
-            ? Math.max(viewportPadding, Math.min(event.clientX, viewportWidth - estimatedMenuWidth - viewportPadding))
-            : event.clientX;
-          const nextY = viewportHeight > 0
-            ? Math.max(viewportPadding, Math.min(event.clientY, viewportHeight - estimatedMenuHeight - viewportPadding))
-            : event.clientY;
+          const includeOpenAction = options?.includeOpenAction === true;
           setTaskDetailPopover("");
           setTaskDetailSelectPopover("");
           setTaskSkillsPopoverOpen(false);
           setBacklogTaskContextMenu({
             taskId: task.id,
-            x: nextX,
-            y: nextY,
+            x: Number.isFinite(event.clientX) ? event.clientX : 0,
+            y: Number.isFinite(event.clientY) ? event.clientY : 0,
+            includeOpenAction,
+            useWorkActions: options?.useWorkActions === true,
           });
         }
 
-        function renderTaskActionsMenu(task, { closeMenu, includeFullScreenAction = false } = {}) {
+        function getTaskWorkActionConfiguration(task, { locked = false } = {}) {
+          const taskConfigLocked = locked === true;
+          const normalizedTaskStatus = String(task?.status || "").trim().toLowerCase();
+          const isBlockedTask = normalizedTaskStatus === "blocked";
+          const hasStartedThread = taskHasStartedThread(task);
+          const reviewerAgentId = String(task?.reviewerAgentId || "").trim();
+          const hasRunnableReviewer = Boolean(
+            reviewerAgentId
+            && !isPlaygroundHumanAssigneeId(reviewerAgentId)
+            && typeof onStartAgentReviewThread === "function"
+          );
+          const taskThreadStartPending = taskRunPendingIds.includes(task?.id)
+            || taskRunPendingIdsRef.current.has(task?.id);
+          const taskReviewStartPending = taskAgentReviewStartPendingId === task?.id;
+          const actionPending = taskThreadStartPending || taskReviewStartPending;
+          const mainActionKind = isBlockedTask
+            ? "batch"
+            : !hasStartedThread
+              ? "start"
+              : hasRunnableReviewer
+                ? "review"
+                : "rerun";
+          const mainActionLabel = actionPending
+            ? mainActionKind === "review"
+              ? "Starting Review..."
+              : mainActionKind === "batch"
+                ? "Moving..."
+                : "Starting..."
+            : mainActionKind === "batch"
+              ? "Move to Batch"
+              : mainActionKind === "start"
+                ? "Start Work"
+                : mainActionKind === "review"
+                  ? "Start Review"
+                  : "Rerun Thread";
+          const batchActionDisabled = taskConfigLocked
+            || normalizedTaskStatus === "canceled"
+            || isHumanAssignedTask(task)
+            || actionPending;
+          const threadActionDisabled = batchActionDisabled || isBlockedTask;
+          const reviewActionDisabled = taskConfigLocked
+            || normalizedTaskStatus === "canceled"
+            || isBlockedTask
+            || !hasRunnableReviewer
+            || actionPending;
+          return {
+            isBlockedTask,
+            hasStartedThread,
+            hasRunnableReviewer,
+            mainActionKind,
+            mainActionLabel,
+            mainActionDisabled: mainActionKind === "batch"
+              ? batchActionDisabled
+              : mainActionKind === "review"
+                ? reviewActionDisabled
+                : threadActionDisabled,
+            popupActionLabel: !hasStartedThread
+              ? "Run Review"
+              : hasRunnableReviewer
+                ? "Rerun Thread"
+                : "Start Review",
+            popupActionDisabled: !hasStartedThread || !hasRunnableReviewer || reviewActionDisabled,
+            batchActionDisabled,
+            threadActionDisabled,
+          };
+        }
+
+        function runTaskWorkPrimaryAction(task, configuration = getTaskWorkActionConfiguration(task)) {
+          if (configuration.mainActionDisabled) {
+            return;
+          }
+          if (configuration.mainActionKind === "review") {
+            void handleStartSelectedTaskAgentReview(task);
+            return;
+          }
+          if (configuration.mainActionKind === "batch") {
+            void handleStartTaskThread(task, {
+              addToBatch: true,
+              successMessage: "Ticket added to Batches",
+            });
+            return;
+          }
+          void handleStartTaskThread(task);
+        }
+
+        function renderTaskWorkActionMenuItems(task, {
+          closeMenu,
+          includePrimaryAction = false,
+          configuration: providedConfiguration = null,
+        } = {}) {
+          const configuration = providedConfiguration && typeof providedConfiguration === "object"
+            ? providedConfiguration
+            : getTaskWorkActionConfiguration(task);
+          const dismissMenu = typeof closeMenu === "function" ? closeMenu : function noop() {};
+          return React.createElement(React.Fragment, null,
+            includePrimaryAction && !configuration.isBlockedTask
+              ? React.createElement("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "tb-popup-row",
+                  disabled: configuration.mainActionDisabled,
+                  onClick: () => {
+                    if (configuration.mainActionDisabled) {
+                      return;
+                    }
+                    dismissMenu();
+                    runTaskWorkPrimaryAction(task, configuration);
+                  },
+                },
+                  configuration.mainActionKind === "review"
+                    ? React.createElement(ScanEye, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" })
+                    : React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  React.createElement("span", null, configuration.mainActionLabel)
+                )
+              : null,
+            configuration.isBlockedTask
+              ? React.createElement("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "tb-popup-row",
+                  disabled: true,
+                },
+                  React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  React.createElement("span", null, "Start Work")
+                )
+              : null,
+            React.createElement("button", {
+              type: "button",
+              role: "menuitem",
+              className: "tb-popup-row",
+              disabled: configuration.popupActionDisabled,
+              onClick: () => {
+                if (configuration.popupActionDisabled) {
+                  return;
+                }
+                dismissMenu();
+                if (configuration.hasRunnableReviewer) {
+                  void handleStartTaskThread(task);
+                }
+              },
+            },
+              React.createElement(ScanEye, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+              React.createElement("span", null, configuration.popupActionLabel)
+            ),
+            configuration.isBlockedTask && !includePrimaryAction
+              ? null
+              : React.createElement("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "tb-popup-row",
+                  disabled: configuration.batchActionDisabled,
+                  onClick: () => {
+                    if (configuration.batchActionDisabled) {
+                      return;
+                    }
+                    dismissMenu();
+                    void handleStartTaskThread(task, {
+                      addToBatch: true,
+                      successMessage: "Ticket added to Batches",
+                    });
+                  },
+                },
+                  React.createElement(Truck, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  React.createElement("span", null, configuration.isBlockedTask ? "Move to Batch" : "Add to Batches")
+                )
+          );
+        }
+
+        function renderTaskActionsMenu(task, {
+          closeMenu,
+          includeFullScreenAction = false,
+          includeOpenAction = false,
+        } = {}) {
           if (!task?.id) {
             return null;
           }
@@ -121,6 +285,23 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
           const canShowRevertTaskChanges = Boolean(startedThreadId);
 
           return React.createElement(React.Fragment, null,
+            includeOpenAction
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row",
+                  onClick: () => {
+                    dismissMenu();
+                    openProjectTaskDetailScreen(task.id);
+                  },
+                  disabled: saveState.isSaving,
+                },
+                  React.createElement(Maximize2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                    React.createElement("span", null, "Open"),
+                    React.createElement("span", null, "Open this ticket in its detail view.")
+                  )
+                )
+              : null,
             React.createElement("button", {
               type: "button",
               className: "tb-popup-row",

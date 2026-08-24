@@ -391,6 +391,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
 	              "9. End your final response with a fenced code block labeled mission_control_json.",
 	              "10. That JSON must contain these keys:",
 	              '   - "summary": a 1-2 sentence summary for the Mission Control card',
+	              '   - "activity": an object with optional "issues", "strategy", "milestones", and "knowledge" keys. Each key must be {"created":string[],"updated":string[],"createdCount"?:number,"updatedCount"?:number}. Include a key only when that focus actually created or updated resources; count each resource once even when it was both created and updated.',
 	              '   - "knowledgeDocuments": an array of complete durable documents to create or update in the attached library',
 	              '     - Each item is {"kind":"strategy|architecture|decision_log|runbook|research|handoff|documentation","title":string,"summary":string,"markdown":string,"documentId"?:string}.',
 	              '     - Always include the complete current Project Strategy document, even if the runtime already submitted a Knowledge proposal. Include every other durable document created or materially updated by this run.',

@@ -1,32 +1,25 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 import { PlatformLoadingState } from "./platform-loading-state.js";
 
 afterEach(() => {
-  vi.useRealTimers();
   cleanup();
 });
 
 describe("PlatformLoadingState", () => {
-  it("renders the shared dot loader beside its message", () => {
-    vi.useFakeTimers();
+  it("renders only the shared white spinner while retaining an accessible label", () => {
     const { container } = render(<PlatformLoadingState message="Loading projects..." />);
 
     const status = screen.getByRole("status", { name: "Loading projects..." });
-    const dots = Array.from(
-      container.querySelectorAll<HTMLElement>(".platform-loading-state__loader > span > span"),
-    );
-    const initialOpacities = dots.map((dot) => dot.style.opacity);
+    const spinner = container.querySelector<HTMLImageElement>(".platform-loading-state__spinner");
 
     expect(status.classList.contains("is-centered")).toBe(false);
-    expect(screen.getByText("Loading projects...")).not.toBeNull();
-    expect(dots).toHaveLength(9);
-
-    act(() => vi.advanceTimersByTime(62));
-
-    expect(dots.map((dot) => dot.style.opacity)).not.toEqual(initialOpacities);
+    expect(screen.queryByText("Loading projects...")).toBeNull();
+    expect(spinner?.getAttribute("src")).toBe("/img/spinner.svg");
+    expect(spinner?.getAttribute("width")).toBe("24");
+    expect(spinner?.getAttribute("height")).toBe("24");
   });
 
   it("supports a centered page-level presentation", () => {

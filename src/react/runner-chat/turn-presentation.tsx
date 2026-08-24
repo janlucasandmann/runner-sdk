@@ -8,6 +8,8 @@ interface RunnerTurnIdentityProps {
   environmentName: string;
   isGenerating?: boolean;
   onAgentClick?: () => void;
+  onClick?: () => void;
+  ariaLabel?: string;
   style?: CSSProperties;
 }
 
@@ -17,6 +19,8 @@ export function RunnerTurnIdentity({
   environmentName,
   isGenerating = false,
   onAgentClick,
+  onClick,
+  ariaLabel,
   style,
 }: RunnerTurnIdentityProps) {
   const normalizedAgentName = String(agentName || "").trim() || "Agent";
@@ -28,8 +32,8 @@ export function RunnerTurnIdentity({
     </>
   );
 
-  return (
-    <div className="tb-turn-meta" style={style}>
+  const content = (
+    <>
       {onAgentClick ? (
         <button
           type="button"
@@ -47,6 +51,22 @@ export function RunnerTurnIdentity({
         <LucideCloud className="tb-turn-environment-icon" />
         <span className="tb-turn-environment-label">{normalizedEnvironmentName}</span>
       </div>
-    </div>
+    </>
   );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className="tb-turn-meta tb-turn-meta-button"
+        style={style}
+        onClick={onClick}
+        aria-label={ariaLabel || `Open thread from ${normalizedAgentName}`}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return <div className="tb-turn-meta" style={style}>{content}</div>;
 }

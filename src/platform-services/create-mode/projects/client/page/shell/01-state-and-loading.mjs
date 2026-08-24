@@ -148,6 +148,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const backlogTitleSkipCommitRef = useRef("");
         const taskRunPendingIdsRef = useRef(new Set());
         const taskCompletionReconciliationInFlightRef = useRef(new Set());
+        const projectOverviewTaskDescriptionHydrationRef = useRef(new Set());
         const missingTaskCompletionThreadKeysRef = useRef(new Set());
         const taskWaitingSubtasksThreadKeysRef = useRef(new Set());
         const handledGithubDisconnectTokenRef = useRef("");
@@ -280,14 +281,17 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           () => projectOverviewNavigationHomeTabRef.current || "general"
         );
         const [projectOverviewActivityTab, setProjectOverviewActivityTab] = useState("threads");
+        const [projectOverviewResourcesTab, setProjectOverviewResourcesTab] = useState("resources");
         const [projectOverviewUpdateComposerState, setProjectOverviewUpdateComposerState] = useState({
           open: false,
           isSaving: false,
           error: "",
           draft: {
             body: "",
+            kind: "update",
             status: "on_track",
             attachments: [],
+            mentions: [],
           },
         });
         const [projectOverviewUpdateInteractionState, setProjectOverviewUpdateInteractionState] = useState({
@@ -306,6 +310,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
             error: "",
             draft: {
               body: "",
+              kind: "update",
               status: "on_track",
               attachments: [],
             },
@@ -435,7 +440,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const projectOverviewTaskActivityFilterPopupRef = useRef(null);
         const projectOverviewTaskActivityFilterSurfaceRef = useRef(null);
         useEffect(() => {
-          if (projectOverviewTaskActivityToolbarPopover !== "filter") {
+          if (!["filter", "timeline-filter"].includes(projectOverviewTaskActivityToolbarPopover)) {
             return undefined;
           }
           const handleProjectActivityFilterPointerDown = (event) => {
@@ -513,6 +518,12 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        const [projectOverviewSidebarPropertyPopover, setProjectOverviewSidebarPropertyPopover] = useState("");
 	        const [projectOverviewSidebarStatusSearchQuery, setProjectOverviewSidebarStatusSearchQuery] = useState("");
 	        const [projectOverviewOwnerCandidatesState, setProjectOverviewOwnerCandidatesState] = useState({
+	          projectId: "",
+	          status: "idle",
+	          error: "",
+	          items: [],
+	        });
+	        const [projectMentionCandidatesState, setProjectMentionCandidatesState] = useState({
 	          projectId: "",
 	          status: "idle",
 	          error: "",
@@ -622,6 +633,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [boardDropLaneId, setBoardDropLaneId] = useState("");
         const [boardBlockedPickerState, setBoardBlockedPickerState] = useState(null);
         const [taskCommentInputValue, setTaskCommentInputValue] = useState("");
+        const [taskCommentMentions, setTaskCommentMentions] = useState([]);
         const [taskCommentMode, setTaskCommentMode] = useState("");
         const [taskCommentComposerOpen, setTaskCommentComposerOpen] = useState(false);
         const [taskActivityCommentValue, setTaskActivityCommentValue] = useState("");
@@ -685,6 +697,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           projectId: "",
           status: "idle",
           error: "",
+          workflowManaged: false,
         });
         const [missionControlDeliveryExecutionState, setMissionControlDeliveryExecutionState] = useState({
           projectId: "",
@@ -700,18 +713,24 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           missionControlDeliveryApprovalOpen,
           setMissionControlDeliveryApprovalOpen,
         ] = useState(false);
-        const missionControlAgentSavePromiseRef = useRef(null);
         const [missionControlSetupOpen, setMissionControlSetupOpen] = useState(false);
         const [missionControlSetupVisible, setMissionControlSetupVisible] = useState(false);
         const [missionControlSetupClosing, setMissionControlSetupClosing] = useState(false);
         const missionControlSetupCloseTimerRef = useRef(null);
         const missionControlSetupFrameRef = useRef(null);
-        const missionControlSetupCommitInFlightRef = useRef(false);
         const missionControlSetupAnimationMs = 75;
         const [missionControlSetupResetToken, setMissionControlSetupResetToken] = useState(0);
-        const [missionControlAgent, setMissionControlAgent] = useState(null);
-        const [missionControlAgentPreparing, setMissionControlAgentPreparing] = useState(false);
-        const [missionControlAgentError, setMissionControlAgentError] = useState("");
+        const [missionControlSetupInstructions, setMissionControlSetupInstructions] = useState("");
+        const [missionControlSetupAgentId, setMissionControlSetupAgentId] = useState(initialAgentId || "");
+        const [missionControlSetupEnvironmentId, setMissionControlSetupEnvironmentId] = useState(initialEnvironmentId || "");
+        const [missionControlSetupFocus, setMissionControlSetupFocus] = useState({
+          issues: true,
+          strategy: true,
+          milestones: true,
+          knowledge: true,
+        });
+        const [missionControlSetupSubmitting, setMissionControlSetupSubmitting] = useState(false);
+        const [missionControlSetupError, setMissionControlSetupError] = useState("");
         const [pendingExternalTaskOpenRequest, setPendingExternalTaskOpenRequest] = useState(null);
         const [searchQuery, setSearchQuery] = useState("");
         const [boardSprintId, setBoardSprintId] = useState(PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID);
@@ -819,6 +838,13 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        const sortedAgents = useMemo(() => {
           return [...agents].sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || "")));
         }, [agents]);
+        const missionControlAgentOptions = useMemo(() => {
+          return sortedAgents.filter((agent) =>
+            agent?.id
+            && !isPlaygroundMissionControlAgent(agent)
+            && !isPlaygroundAgentCreatorAgent(agent)
+          );
+        }, [sortedAgents]);
 
         const humanAssigneeOptions = useMemo(() => [buildPlaygroundHumanAssigneeOption()], []);
         const assignableActors = useMemo(() => [...sortedAgents, ...humanAssigneeOptions], [humanAssigneeOptions, sortedAgents]);
@@ -890,6 +916,26 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           }
           return sortedAgents[0]?.id || "";
         }, [assignableActorsById, backlogComposerAgentId, initialAgentId, sortedAgents]);
+
+        useEffect(() => {
+          if (!missionControlSetupOpen) {
+            return;
+          }
+          if (!missionControlAgentOptions.some((agent) => agent.id === missionControlSetupAgentId)) {
+            const preferredAgent = missionControlAgentOptions.find((agent) => agent.id === backlogComposerAgentId)
+              || missionControlAgentOptions.find((agent) => agent.id === initialAgentId)
+              || getPlaygroundPreferredDefaultAgent(missionControlAgentOptions)
+              || missionControlAgentOptions[0]
+              || null;
+            setMissionControlSetupAgentId(String(preferredAgent?.id || ""));
+          }
+        }, [
+          backlogComposerAgentId,
+          initialAgentId,
+          missionControlAgentOptions,
+          missionControlSetupAgentId,
+          missionControlSetupOpen,
+        ]);
 
         function getTaskAssigneeName(assigneeId, fallback = "") {
           const normalizedAssigneeId = String(assigneeId || "").trim();
@@ -1189,7 +1235,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 
         useEffect(() => {
           setMissionControlSetupOpen(false);
-          setMissionControlAgentError("");
+          setMissionControlSetupError("");
           setMissionControlDeliveryApprovalOpen(false);
           setMissionControlDeliveryActionState({
             action: "",
@@ -1225,6 +1271,30 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
             ...(defaultEnvironmentId && environment.id === defaultEnvironmentId ? { isDefault: true } : {}),
           }));
         }, [environments, selectedProject?.defaultEnvironmentId, selectedProjectEnvironments]);
+        useEffect(() => {
+          if (!missionControlSetupOpen || availableBacklogEnvironments.length === 0) {
+            return;
+          }
+          if (availableBacklogEnvironments.some((environment) => environment.id === missionControlSetupEnvironmentId)) {
+            return;
+          }
+          const preferredEnvironmentId = String(
+            selectedProject?.defaultEnvironmentId
+            || backlogComposerEnvironmentId
+            || initialEnvironmentId
+            || availableBacklogEnvironments.find((environment) => environment.isDefault)?.id
+            || availableBacklogEnvironments[0]?.id
+            || ""
+          ).trim();
+          setMissionControlSetupEnvironmentId(preferredEnvironmentId);
+        }, [
+          availableBacklogEnvironments,
+          backlogComposerEnvironmentId,
+          initialEnvironmentId,
+          missionControlSetupEnvironmentId,
+          missionControlSetupOpen,
+          selectedProject?.defaultEnvironmentId,
+        ]);
         const projectComposerBaseEnvironments = useMemo(() => {
           const sourceItems = environments.length > 0
             ? environments

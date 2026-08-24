@@ -14,6 +14,20 @@ import {
     isTransientUpstreamStatus,
 } from "./transient-upstream.mjs";
 
+/** Merge route-owned and browser query parameters without duplicating pairs. */
+export function mergeUpstreamRequestPath(upstreamPath, requestUrl) {
+    const target = new URL(String(upstreamPath || "/"), "http://platform-upstream.invalid");
+    const request = requestUrl instanceof URL
+        ? requestUrl
+        : new URL(String(requestUrl || "/"), "http://platform-request.invalid");
+    for (const [key, value] of request.searchParams.entries()) {
+        if (!target.searchParams.getAll(key).includes(value)) {
+            target.searchParams.append(key, value);
+        }
+    }
+    return `${target.pathname}${target.search}`;
+}
+
 export function createCoreGateway(bindings) {
     const { aiosOrigin, defaultUpstreamOrigin, identityService, port, shouldForwardLocalCloudApiOverride, shouldRetryUpstreamWithAiosSession, } = bindings;
     function parseUpstreamUrl(req, body) {
@@ -163,10 +177,10 @@ export function createCoreGateway(bindings) {
             const upstreamUrl = parseUpstreamUrl(req, {});
             const apiKey = readOptionalApiKey(req, {});
             const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
+            const mergedUpstreamPath = mergeUpstreamRequestPath(upstreamPath, requestUrl);
             let upstream;
             if (apiKey) {
-                const upstreamTarget = new URL(`${upstreamUrl}${upstreamPath}`);
-                upstreamTarget.search = requestUrl.search;
+                const upstreamTarget = new URL(`${upstreamUrl}${mergedUpstreamPath}`);
                 upstream = await fetchWithTransientRetry(upstreamTarget.toString(), {
                     method: "GET",
                     headers: withProxyOrganizationHeader(req, {}, {
@@ -180,14 +194,14 @@ export function createCoreGateway(bindings) {
                     hasSession: hasAiosSession(req),
                 })) {
                     await upstream.body?.cancel().catch(() => undefined);
-                    upstream = await fetchAiosCloud(req, upstreamPath + requestUrl.search, {
+                    upstream = await fetchAiosCloud(req, mergedUpstreamPath, {
                         method: "GET",
                         signal: controller.signal,
                     });
                 }
             }
             else if (hasAiosSession(req)) {
-                upstream = await fetchAiosCloud(req, upstreamPath + requestUrl.search, {
+                upstream = await fetchAiosCloud(req, mergedUpstreamPath, {
                     method: "GET",
                     signal: controller.signal,
                 });

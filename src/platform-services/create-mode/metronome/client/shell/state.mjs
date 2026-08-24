@@ -15,6 +15,10 @@ export const METRONOME_APP_STATE_SCRIPT = `
           error: "",
         });
         const [metronomeRunTraceWorkExpanded, setMetronomeRunTraceWorkExpanded] = useState(true);
+        const [metronomeRunActivitySearchQuery, setMetronomeRunActivitySearchQuery] = useState("");
+        const [metronomeRunActivityTimeRange, setMetronomeRunActivityTimeRange] = useState(null);
+        const [metronomeRunActivityChartHeight, setMetronomeRunActivityChartHeight] = useState(null);
+        const [metronomeRunActivitySelectedItemId, setMetronomeRunActivitySelectedItemId] = useState("");
         const [metronomeRunJsonViewModeByKey, setMetronomeRunJsonViewModeByKey] = useState({});
         const [metronomeRunJsonEditorModule, setMetronomeRunJsonEditorModule] = useState(null);
         const [metronomeRunJsonEditorModuleError, setMetronomeRunJsonEditorModuleError] = useState("");

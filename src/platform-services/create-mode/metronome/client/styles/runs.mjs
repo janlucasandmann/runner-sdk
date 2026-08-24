@@ -879,6 +879,17 @@ export const METRONOME_RUNS_CSS = String.raw`
         overflow-wrap: anywhere;
       }
 
+      .playground-metronome-run-trace-thread-title {
+        margin: 12px 0 8px 26px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+      }
+
       .playground-metronome-run-trace-field {
         margin-left: 26px;
         display: flex;
@@ -923,6 +934,145 @@ export const METRONOME_RUNS_CSS = String.raw`
         color: rgba(255, 255, 255, 0.58);
         font-size: 12px;
         line-height: 1.4;
+      }
+
+      .playground-metronome-condition-result {
+        width: fit-content;
+        max-width: 100%;
+        margin: 8px auto 0;
+        box-sizing: border-box;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: auto 40px auto;
+        align-items: center;
+      }
+
+      .playground-metronome-condition-result__condition-node {
+        width: auto;
+        max-width: 100%;
+        min-width: 0;
+        height: 38px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+        padding: 8px 12px;
+        background: rgba(24, 24, 25, 0.94);
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+      }
+
+      .playground-metronome-condition-result__node-icon {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        background: linear-gradient(180deg, #3159a8 0%, #172f68 100%);
+        color: #fff;
+      }
+
+      .playground-metronome-condition-result__node-icon svg {
+        width: 12px;
+        height: 12px;
+        stroke-width: 1.9;
+      }
+
+      .playground-metronome-condition-result__node-title {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.15;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-condition-result__connector {
+        min-width: 0;
+        min-height: 38px;
+        align-self: stretch;
+        display: block;
+      }
+
+      .playground-metronome-condition-result__connector svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: visible;
+      }
+
+      .playground-metronome-condition-result__branch-line {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.18);
+        stroke-width: 1px;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .playground-metronome-condition-result__branch-line.is-selected {
+        stroke: rgba(255, 255, 255, 0.9);
+        stroke-width: 1.25px;
+      }
+
+      .playground-metronome-condition-result__branch-arrow {
+        fill: rgba(255, 255, 255, 0.28);
+      }
+
+      .playground-metronome-condition-result__branch-arrow.is-selected {
+        fill: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-metronome-condition-result__options {
+        width: max-content;
+        max-width: 100%;
+        min-width: 0;
+        display: grid;
+        gap: 12px;
+      }
+
+      .playground-metronome-condition-result__option {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        height: 38px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        border-radius: 10px;
+        padding: 8px 11px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.25;
+      }
+
+      .playground-metronome-condition-result__option-label {
+        min-width: 0;
+        font-weight: 400;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-metronome-condition-result__option.is-selected {
+        border-color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.9);
+        color: #000;
+      }
+
+      @media (max-width: 720px) {
+        .playground-metronome-condition-result {
+          grid-template-columns: auto 32px auto;
+        }
       }
 
       .playground-metronome-run-trace-summary-step {

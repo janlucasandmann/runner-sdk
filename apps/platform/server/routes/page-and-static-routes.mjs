@@ -110,7 +110,7 @@ export function createPageAndStaticRoutes(bindings) {
             return true;
         }
         if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/favicon.ico") {
-            void serveAiosPublicAsset(req, res, "/img/logos/favicon-32x32.png");
+            void serveAiosPublicAsset(req, res, "/img/camark.svg");
             return true;
         }
         if ((req.method === "GET" || req.method === "HEAD") && url.pathname.startsWith("/vendor/novnc-next/")) {

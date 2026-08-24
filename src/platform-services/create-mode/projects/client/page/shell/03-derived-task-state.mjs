@@ -1814,9 +1814,13 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 	            || rawContent;
 	          const summary = String(parsedBlock?.summary || "").trim()
 	            || extractPlaygroundMissionControlSummary(summarySource);
-	          const normalizedRecord = normalizePlaygroundProjectMissionControlRecord({
-	            summary,
-	            deliveryAssurance: normalizePlaygroundDeliveryAssurance(
+          const normalizedRecord = normalizePlaygroundProjectMissionControlRecord({
+            summary,
+            activity: parsedBlock?.activity
+              || parsedBlock?.resourceActivity
+              || parsedBlock?.resource_activity
+              || parsedBlock?.changes,
+            deliveryAssurance: normalizePlaygroundDeliveryAssurance(
 	              parsedBlock?.deliveryAssurance
 	              || parsedBlock?.delivery_assurance
 	            ),

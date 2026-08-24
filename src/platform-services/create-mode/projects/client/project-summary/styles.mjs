@@ -10,6 +10,63 @@ export const PROJECT_SUMMARY_CSS_FRAGMENT = `
         margin-top: 28px;
       }
 
+      .playground-project-overview-spotlight {
+        width: 100%;
+        min-width: 0;
+        margin-top: 0;
+      }
+
+      .playground-project-overview-spotlight__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        min-width: 0;
+        margin: 24px 0 12px;
+      }
+
+      .playground-project-overview-spotlight__title {
+        flex: 1 1 auto;
+        min-width: 0;
+        margin: 0;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.3;
+      }
+
+      .playground-project-overview-spotlight__view-all.platform-button {
+        flex: 0 0 auto;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-spotlight__grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        width: 100%;
+        min-width: 0;
+        margin-top: 0;
+      }
+
+      .playground-project-overview-spotlight__grid .playground-tasks-lane-card {
+        border-radius: 10px;
+      }
+
+      /* Progress spotlight cards are intentionally concise: the title and state
+         metadata are the useful scan targets, not a second task description. */
+      .playground-project-overview-spotlight__grid .playground-tasks-lane-card-copy,
+      .playground-project-overview-spotlight__grid .platform-ticket-item__description {
+        display: none;
+      }
+
+      @media (max-width: 900px) {
+        .playground-project-overview-spotlight__grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
       .platform-project-summary {
         box-sizing: border-box;
         width: 100%;
@@ -76,16 +133,31 @@ export const PROJECT_SUMMARY_CSS_FRAGMENT = `
       }
 
       .platform-project-summary__title {
+        display: block;
+        box-sizing: border-box;
+        width: 100%;
         max-width: 100%;
         margin: 0;
+        padding: 0;
         overflow: hidden;
+        border: 0;
+        border-radius: 0;
+        outline: 0;
+        background: transparent;
         color: rgba(255, 255, 255, 0.96);
         font-size: 20px;
+        font-family: inherit;
         line-height: 1.3;
         font-weight: 400;
         letter-spacing: 0;
         text-overflow: ellipsis;
         white-space: nowrap;
+        caret-color: currentColor;
+      }
+
+      .platform-project-summary__title:disabled {
+        cursor: default;
+        opacity: 1;
       }
 
       .platform-project-summary__input {

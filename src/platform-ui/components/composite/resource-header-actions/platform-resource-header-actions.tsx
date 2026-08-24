@@ -17,7 +17,7 @@ import {
   PlatformVersionLabel,
   type PlatformVersionLabelProps,
 } from "../../ui/version-label/index.js";
-import { PlatformPopup } from "../popup/index.js";
+import { PlatformPopup, type PlatformPopupPlacement } from "../popup/index.js";
 
 const PlatformResourceActionsMenuContext = createContext<{ ownerId: string } | null>(null);
 
@@ -168,6 +168,7 @@ export interface PlatformResourceActionsMenuProps {
   popupClassName?: string;
   width?: number | string;
   maxWidth?: number | string;
+  placement?: PlatformPopupPlacement;
   shortcutActions?: PlatformResourceActionShortcutActions;
 }
 
@@ -181,6 +182,7 @@ export function PlatformResourceActionsMenu({
   popupClassName = "",
   width = 240,
   maxWidth = "calc(100vw - 16px)",
+  placement = "bottom-start",
   shortcutActions = {},
 }: PlatformResourceActionsMenuProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -280,7 +282,7 @@ export function PlatformResourceActionsMenu({
       animation="down-in"
       variant="minimal"
       portal
-      placement="bottom-start"
+      placement={placement}
       trigger={({ open: popupOpen }) => (
         <PlatformIconButton
           type="button"

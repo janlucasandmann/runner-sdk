@@ -11,9 +11,9 @@
         import { visit as unistVisit } from "unist-util-visit";
         import Chart from "chart.js/auto";
         import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
-        import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, GitPullRequestArrow, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, MessageSquareText, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plug, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquareMousePointer, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Truck, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
+        import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, GitPullRequestArrow, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, MessageSquareText, Milestone, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plug, Plus, ReceiptText, Redo2, RefreshCcwDot, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, ScanEye, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquareMousePointer, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Truck, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
         import { RunnerClient, buildRunnerThreadActivityTree, collectRunnerConnectorIdsFromStructuredEvidence, describeRunnerThreadActivityGroup, extractRunnerThreadPlanSteps, flattenRunnerThreadActivityTree, presentRunnerThreadAction } from "/dist/index.js";
-	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
+	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface, RunnerThreadLiveWorkStatus, RunnerTurnIdentity } from "/dist/react/index.js";
 	      import { PlatformAnalyticsChart, PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
         import { PlatformAttachmentActionMenu, PlatformAttachments } from "/dist/platform-ui/components/composite/attachments/index.js";
         import { PlatformFileExplorerBrowser, PlatformFileExplorerBrowserModal, PlatformFileExplorerFileIcon, PlatformFileExplorerModal, resolvePlatformFileExplorerFileKind } from "/dist/platform-ui/components/composite/file-explorer/index.js";
@@ -109,6 +109,10 @@
 	        getMetronomeManualRunValidationError as getPlatformMetronomeManualRunValidationError,
 	      } from "/dist/platform-services/create-mode/metronome/client/manual-run-contracts.js";
 	      import { MetronomeManualRunInputs as PlatformMetronomeManualRunInputs } from "/dist/platform-services/create-mode/metronome/client/components/metronome-manual-run-inputs.js";
+	      import {
+	        MetronomeConditionResult as PlatformMetronomeConditionResult,
+	        buildMetronomeConditionResultPresentation as buildPlatformMetronomeConditionResultPresentation,
+	      } from "/dist/platform-services/create-mode/metronome/client/components/metronome-condition-result.js";
 	      import { PlatformServiceDetailFrame, PlatformServiceDetailPage, PlatformServiceDetailProperty, PlatformServiceDetailPropertyList } from "/dist/platform-ui/pages/details/index.js";
   	      import { openGoogleDrivePicker } from "/dist/platform-integrations/google-drive/google-drive-picker.js";
   
@@ -177,6 +181,7 @@
           ownerHeader = "Owner",
           emptyLabel = "No resources yet.",
           noMatchesLabel = "No resources match this view yet.",
+          toolbarLeading = null,
           toolbarTitle = "",
           tableVariant = "default",
           showNewButton = true,
@@ -690,12 +695,12 @@
                 }, React.createElement(List, { width: 21, height: 21, strokeWidth: 1.8 }))
               )
             : null;
-          const renderSharedToolbar = () => normalizedToolbarTitle
+          const renderSharedToolbar = () => (toolbarLeading || normalizedToolbarTitle)
             ? React.createElement("div", {
                 className: "playground-project-resources-toolbar playground-files-library-title-row is-titled",
               },
               React.createElement("div", { className: "playground-project-resources-toolbar-title-group" },
-                React.createElement("h2", { className: "playground-project-resources-toolbar-title" }, normalizedToolbarTitle),
+                toolbarLeading || React.createElement("h2", { className: "playground-project-resources-toolbar-title" }, normalizedToolbarTitle),
                 renderSharedFilterControl()
               ),
               React.createElement("div", { className: "playground-files-library-actions playground-project-resources-toolbar-actions" },
@@ -848,6 +853,7 @@
   
         const STATUS_INDICATOR_PENDING_STORAGE_KEY = "runner_demo_pending_status_indicators_v1";
         const HISTORY_MONACO_THEME_NAME = "runner-history-diff";
+        const APP_SIDEBAR_LOGO_URL = "/img/camark.svg";
         const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
         const COMPUTER_AGENTS_CREATOR_PROFILE_URL = "/img/agent-profile-pics/ca-profilepic.jpg";
         const PLAYGROUND_GITHUB_LOGO_URL = getPlatformPluginConnectionDefinition("github").logoUrl;
@@ -3294,7 +3300,11 @@
           const missionControl = runnerPlaygroundMetadata?.missionControl && typeof runnerPlaygroundMetadata.missionControl === "object" && !Array.isArray(runnerPlaygroundMetadata.missionControl)
             ? runnerPlaygroundMetadata.missionControl
             : null;
-          return missionControl?.source === "project_backlog_mission_control"
+          return [
+            "project_backlog_mission_control",
+            "project_mission_control",
+            "project_mission_control_workflow",
+          ].includes(String(missionControl?.source || "").trim().toLowerCase())
             ? missionControl
             : null;
         }
@@ -3515,24 +3525,6 @@
                 accessor: (thread) => String(typeof rowOptions.getEnvironmentLabel === "function" ? rowOptions.getEnvironmentLabel(thread, readThreadContext(thread).safeThread) : "").trim() || "Workspace",
                 width: "minmax(110px, 1fr)",
                 hideBelow: 720,
-              },
-              {
-                id: "triggered-by",
-                header: "Triggered by",
-                accessor: (thread) => String(typeof rowOptions.getTriggeredByLabel === "function" ? rowOptions.getTriggeredByLabel(thread, readThreadContext(thread).safeThread) : "").trim() || "-",
-                width: "minmax(120px, 1fr)",
-                hideBelow: 900,
-                cell: ({ row: thread }) => {
-                  const safeThread = readThreadContext(thread).safeThread;
-                  const label = String(typeof rowOptions.getTriggeredByLabel === "function" ? rowOptions.getTriggeredByLabel(thread, safeThread) : "").trim() || "-";
-                  const avatarUrl = typeof rowOptions.getTriggeredByAvatarUrl === "function" ? rowOptions.getTriggeredByAvatarUrl(thread, safeThread) : "";
-                  return label !== "-"
-                    ? React.createElement("span", { className: "playground-agents-detail-thread-triggered-by" },
-                        renderPlaygroundThreadOverviewPersonAvatar(label, avatarUrl),
-                        React.createElement("span", { className: "playground-agents-detail-thread-triggered-by-label" }, label)
-                      )
-                    : "-";
-                },
               },
               {
                 id: "date",
@@ -4227,6 +4219,13 @@
             description: "Search, read, summarize, and send email through the connected Gmail account.",
           },
         ];
+        const PLAYGROUND_EXECUTION_ONLY_SYSTEM_SKILL_OPTIONS = [
+          {
+            id: "mission_control",
+            label: "Mission Control",
+            description: "Maintain project strategy, milestones, issues, and durable Knowledge during a Mission Control workflow.",
+          },
+        ];
         const PLAYGROUND_RUNNER_SKILL_ID_ALIASES = {
           imageGeneration: "image_generation",
           image_generation: "image_generation",
@@ -4258,6 +4257,9 @@
           taskManagement: "task_management",
           task_management: "task_management",
           "task-management": "task_management",
+          missionControl: "mission_control",
+          mission_control: "mission_control",
+          "mission-control": "mission_control",
           computerAgents: "computer_agents",
           computer_agents: "computer_agents",
           "computer-agents": "computer_agents",

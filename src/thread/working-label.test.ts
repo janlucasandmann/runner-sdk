@@ -17,6 +17,7 @@ describe("runner thread working labels", () => {
 
   it("rejects vague labels while accepting an informative observer sentence", () => {
     expect(normalizeRunnerThreadWorkingLabel("Working through the current task")).toBeNull();
+    expect(normalizeRunnerThreadWorkingLabel("Thread is running.")).toBeNull();
     expect(normalizeRunnerThreadWorkingLabel("Implementing changes in the workspace")).toBeNull();
     expect(
       normalizeRunnerThreadWorkingLabel("Reviewing the complete implementation before running tests"),

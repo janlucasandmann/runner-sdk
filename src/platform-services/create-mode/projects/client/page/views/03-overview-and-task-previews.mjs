@@ -797,7 +797,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                       ? null
                       : renderProjectWorkActivityActorAvatar(event),
                 icon: isMilestoneChange
-                  ? Flag
+                  ? Milestone
                   : isScheduleChange
                     ? CalendarIcon
                     : isFieldChange
@@ -817,6 +817,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             });
         }
 
+\${PROJECT_ACTIVITY_LINE_SCRIPT}
 \${PROJECT_ACTIVITY_FILTER_SCRIPT}
 \${PROJECT_ACTIVITY_RANGE_SCRIPT}
 
@@ -1211,213 +1212,168 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
           );
         }
 
-        function renderMissionControlSetupEmptyState() {
-          const capabilities = [
+        function renderMissionControlSetupView() {
+          const normalizedProject = normalizePlaygroundProjectRecord(projectComposerOpen ? projectDraft : (selectedProject || buildPlaygroundDefaultProjectDraft()));
+          const selectedAgent = missionControlAgentOptions.find((agent) => agent.id === missionControlSetupAgentId) || null;
+          const focusDefinitions = [
             {
-              title: "Maintain Knowledge",
-              copy: "Create or update durable strategy, decisions, and project documentation in Knowledge.",
-              Icon: SquarePen,
+              id: "issues",
+              label: "Issues and backlog",
+              description: "Create missing work, clean up duplicates, and keep existing issues execution-ready.",
             },
             {
-              title: "Generate Tickets",
-              copy: "Create structured backlog work with owners, order, and dependencies.",
-              Icon: ListTodo,
+              id: "strategy",
+              label: "Project strategy",
+              description: "Reconcile goals, outcomes, operating rules, and delivery direction.",
             },
             {
-              title: "Define Milestones",
-              copy: "Set measurable delivery targets and connect them to planned work.",
-              Icon: Award,
+              id: "milestones",
+              label: "Milestones",
+              description: "Create or update measurable milestones and connect the right work.",
             },
             {
-              title: "Update Rules",
-              copy: "Capture project-level instructions agents should follow on every task.",
-              Icon: Shield,
+              id: "knowledge",
+              label: "Project Knowledge",
+              description: "Maintain the project library, Home document, decisions, and durable context.",
             },
           ];
-          return React.createElement("div", { className: "playground-mission-control-setup-empty-card" },
-            React.createElement("div", { className: "playground-mission-control-setup-empty-kicker" }, "Mission Control"),
-            React.createElement("div", { className: "playground-mission-control-setup-empty-title" }, "Plan or update this project"),
-            React.createElement("div", { className: "playground-mission-control-capability-list" },
-              capabilities.map((capability) =>
-                React.createElement("div", { key: capability.title, className: "playground-mission-control-capability-item" },
-                  React.createElement(getPlaygroundSafeIconComponent(capability.Icon, Circle), { className: "playground-mission-control-capability-icon", strokeWidth: 1.8 }),
-                  React.createElement("div", { className: "playground-mission-control-capability-copy-shell" },
-                    React.createElement("div", { className: "playground-mission-control-capability-title" }, capability.title),
-                    React.createElement("div", { className: "playground-mission-control-capability-copy" }, capability.copy)
+          const renderSelector = ({ value, label, ariaLabel, options, onValueChange, disabled = false, emptyContent }) =>
+            React.createElement(PlatformSelector, {
+              value,
+              options,
+              onValueChange,
+              ariaLabel,
+              label: React.createElement("span", { className: "playground-mission-control-selector-value" }, label),
+              placeholder: label,
+              disabled,
+              alignment: "end",
+              popupAlignment: "right",
+              popupWidth: "min(320px, calc(100vw - 48px))",
+              popupMaxWidth: "calc(100vw - 48px)",
+              popupMaxHeight: "min(320px, calc(100vh - 120px))",
+              emptyContent,
+              className: "playground-tasks-detail-central-selector playground-mission-control-selector",
+              triggerClassName: "playground-tasks-detail-central-selector-trigger",
+              popupClassName: "playground-tasks-detail-central-selector-popup playground-mission-control-selector-popup",
+            });
+
+          return React.createElement(React.Fragment, null,
+            React.createElement(PlatformInstructionsEditor, {
+              key: "mission-control-instructions:" + (normalizedProject.id || selectedProjectId || "project") + ":" + missionControlSetupResetToken,
+              value: missionControlSetupInstructions,
+              onChange: setMissionControlSetupInstructions,
+              title: "Instructions",
+              placeholder: "Optional: tell Mission Control what changed, what needs attention, or what it should leave untouched.",
+              ariaLabel: "Mission Control instructions",
+              historyKey: "mission-control-instructions:" + String(normalizedProject.id || selectedProjectId || "project"),
+              stickyHeader: false,
+              variant: "minimalistic-ui",
+              contentVariant: "text",
+              className: "playground-new-issue-modal__description playground-project-command-modal__instructions playground-mission-control-instructions",
+            }),
+            React.createElement("section", { className: "playground-mission-control-parameters", "aria-label": "Mission Control parameters" },
+              React.createElement("div", { className: "playground-mission-control-parameter-row" },
+                React.createElement("div", { className: "playground-mission-control-parameter-copy" },
+                  React.createElement("span", { className: "playground-mission-control-parameter-label" }, "Agent"),
+                  React.createElement("span", { className: "playground-mission-control-parameter-description" }, "Runs every selected workflow stage.")
+                ),
+                renderSelector({
+                  value: missionControlSetupAgentId,
+                  label: React.createElement("span", { className: "playground-mission-control-agent-selector-label" },
+                    selectedAgent
+                      ? renderTaskActorAvatar(selectedAgent.id, "playground-tasks-detail-person-avatar")
+                      : null,
+                    React.createElement("span", null, selectedAgent?.name || "Select agent")
+                  ),
+                  ariaLabel: "Mission Control agent",
+                  disabled: missionControlAgentOptions.length === 0 || missionControlSetupSubmitting,
+                  emptyContent: "No agents are available.",
+                  options: missionControlAgentOptions.map((agent) => ({
+                    value: agent.id,
+                    label: agent.name || "Agent",
+                    description: agent.description || undefined,
+                    leading: renderTaskActorAvatar(agent.id, "playground-tasks-detail-person-menu-avatar"),
+                  })),
+                  onValueChange: (nextAgentId) => setMissionControlSetupAgentId(nextAgentId),
+                })
+              ),
+              React.createElement("div", { className: "playground-mission-control-focus-list" },
+                focusDefinitions.map((focus) =>
+                  React.createElement("div", { key: focus.id, className: "playground-mission-control-focus-row" },
+                    React.createElement("div", { className: "playground-mission-control-parameter-copy" },
+                      React.createElement("span", { className: "playground-mission-control-parameter-label" }, focus.label),
+                      React.createElement("span", { className: "playground-mission-control-parameter-description" }, focus.description)
+                    ),
+                    React.createElement(PlatformToggle, {
+                      checked: missionControlSetupFocus[focus.id] === true,
+                      disabled: missionControlSetupSubmitting,
+                      "aria-label": "Include " + focus.label,
+                      onCheckedChange: (checked) => setMissionControlSetupFocus((current) => ({ ...current, [focus.id]: checked })),
+                    })
                   )
                 )
               )
-            )
-          );
-        }
-
-        function renderMissionControlSetupView() {
-          const normalizedProject = normalizePlaygroundProjectRecord(projectComposerOpen ? projectDraft : (selectedProject || buildPlaygroundDefaultProjectDraft()));
-          const defaultEnvironmentId = String(
-            normalizedProject.defaultEnvironmentId
-            || backlogComposerEnvironmentId
-            || initialEnvironmentId
-            || ""
-          ).trim();
-          const missionControlRunnerEnvironments = availableBacklogEnvironments.map((environment) => ({
-            ...environment,
-            ...(defaultEnvironmentId && environment.id === defaultEnvironmentId ? { isDefault: true } : {}),
-          }));
-          const missionControlAgentId = String(missionControlAgent?.id || "").trim();
-          const normalizedProjectId = String(normalizedProject.id || selectedProjectId || "").trim();
-          const runnerProjectId = normalizedProjectId || "draft-project";
-          const isMissionControlReady = Boolean(
-            canStartThreads !== false
-            && missionControlAgentId
-            && !missionControlAgentPreparing
-            && !missionControlAgentError
-            && defaultEnvironmentId
-          );
-          const lockedProjectConfig = {
-            ...(computerAgents && typeof computerAgents === "object" ? computerAgents : {}),
-            projects: {
-              ...((computerAgents?.projects && typeof computerAgents.projects === "object") ? computerAgents.projects : {}),
-              items: [{
-                id: runnerProjectId,
-                name: normalizedProject.name || "Project",
-                description: normalizedProject.description || "",
-                defaultEnvironmentId: defaultEnvironmentId || null,
-                connectors: normalizePlaygroundTaskConnectorSelections(normalizedProject.connectors),
-                color: normalizedProject.color || null,
-                metadata: normalizedProject.metadata || null,
-              }],
-              selectedProjectId: runnerProjectId,
-            },
-          };
-
-          return React.createElement("div", { className: "playground-mission-control-setup-pane" },
-            React.createElement(RunnerChat, {
-              key: "mission-control-setup:" + (normalizedProject.id || selectedProjectId || "project") + ":" + missionControlSetupResetToken,
-              className: "playground-mission-control-setup-runner playground-mission-control-modal-runner",
-              backendUrl,
-              apiKey,
-              fetchCustomSkills: fetchProjectCustomSkills,
-              speechToTextUrl: speechToTextUrl || undefined,
-              requestHeaders,
-              appId: "runner-web-sdk-demo",
-              title: (normalizedProject.name || "Project") + " Mission Control",
-              threadMetadata: buildMissionControlThreadMetadata(normalizedProject, ""),
-              projectId: normalizedProjectId || undefined,
-              inputMode: "computer-agents",
-              computerAgents: lockedProjectConfig,
-              environments: missionControlRunnerEnvironments,
-              agents: missionControlAgentId
-                ? [buildPlaygroundRunnerAgentOption(missionControlAgent, { isDefault: true })]
-                : [],
-              skills: skills,
-              skillDefaults: getDemoImageGenerationSkillDefaults(),
-              environmentId: defaultEnvironmentId || undefined,
-              agentId: missionControlAgentId || undefined,
-              autoFocusComposer: true,
-              keepFocusOnSubmit: true,
-              showUsageInStatus: false,
-              disabled: !isMissionControlReady,
-              placeholder: "Plan work and maintain project Knowledge with Mission Control",
-              emptyState: renderMissionControlSetupEmptyState(),
-              onExternalRunRequestCreate: handleMissionControlSetupRunRequest,
-            })
+            ),
+            missionControlSetupError
+              ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, missionControlSetupError)
+              : null
           );
         }
 
         function renderMissionControlStudio() {
-          if (!missionControlSetupOpen || !projectComposerOpen) {
+          if (!missionControlSetupOpen) {
             return null;
           }
-          const normalizedProject = normalizePlaygroundProjectRecord(projectDraft || selectedProject || buildPlaygroundDefaultProjectDraft());
-          const projectGoalDraft = String(normalizedProject.description || "");
-          const hasProjectGoal = Boolean(projectGoalDraft.trim());
-
-          function renderMissionControlGoalEditor() {
-            return React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-mission-control-modal-context-editor" },
-              React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Project goal"),
-                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                  [
-                    { id: "bold", label: "Bold", icon: Bold },
-                    { id: "italic", label: "Italic", icon: Italic },
-                    { id: "underline", label: "Underline", icon: Underline },
-                    { id: "list", label: "List", icon: List },
-                  ].map((action) =>
-                    React.createElement("button", {
-                      key: action.id,
-                      type: "button",
-                      className: "playground-tasks-detail-format-button",
-                      title: action.label,
-                      "aria-label": action.label,
-                      onMouseDown: (event) => event.preventDefault(),
-                      onClick: () => handleProjectDescriptionFormat(action.id),
-                    }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                  )
-                )
-              ),
-              React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isProjectDescriptionEditing ? " is-editing" : " is-preview") },
-                !isProjectDescriptionEditing
-                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                      hasProjectGoal
-                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                            content: projectGoalDraft,
-                            className: "playground-tasks-detail-description-preview tb-message-markdown",
-                          })
-                        : React.createElement("div", {
-                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                          }, "Define the project goal, scope, working style, and constraints.")
-                    )
-                  : null,
-                React.createElement("textarea", {
-                  ref: projectDescriptionTextareaRef,
-                  className: "playground-tasks-detail-description-input " + (isProjectDescriptionEditing ? "is-editing" : "is-preview"),
-                  rows: 1,
-                  placeholder: isProjectDescriptionEditing ? "Define the project goal, scope, working style, and constraints." : "",
-                  value: projectGoalDraft,
-                  onFocus: () => setProjectDescriptionEditing(true),
-                  onChange: (event) => {
-                    setProjectDraft((current) => ({ ...current, description: event.target.value }));
-                    resizeTaskDescriptionTextarea(event.currentTarget);
-                  },
-                  onBlur: () => {
-                    setProjectDescriptionEditing(false);
-                  },
-                })
-              )
-            );
-          }
-
+          const hasMissionControlFocus = Object.values(missionControlSetupFocus || {}).some(Boolean);
+          const canRunMissionControl = Boolean(
+            canStartThreads !== false
+            && missionControlSetupAgentId
+            && hasMissionControlFocus
+            && !missionControlSetupSubmitting
+          );
           const studioElement = React.createElement(PlatformModal, {
-            open: missionControlSetupOpen && projectComposerOpen && !missionControlSetupClosing,
+            open: missionControlSetupOpen && !missionControlSetupClosing,
             visible: missionControlSetupVisible,
             closing: missionControlSetupClosing,
             onClose: () => closeMissionControlSetupModal(),
-            closeOnEscape: false,
+            closeOnEscape: !missionControlSetupSubmitting,
             animationDurationMs: missionControlSetupAnimationMs,
+            as: "form",
             size: "large",
+            maxHeight: "84vh",
             title: "Mission Control",
-            className: "playground-mission-control-modal",
+            className: "playground-new-issue-modal playground-project-command-modal playground-mission-control-modal",
+            bodyClassName: "playground-new-issue-modal__body playground-project-command-modal__body playground-mission-control-modal__body",
+            footerClassName: "playground-new-issue-modal__footer",
             ariaLabel: "Mission Control",
-            showFooter: false,
-            bodyProps: {
-              style: {
-                maxHeight: "calc(100dvh - 96px)",
-                overflow: "auto",
+            closeButtonDisabled: missionControlSetupSubmitting,
+            surfaceProps: {
+              onSubmit: (event) => {
+                event.preventDefault();
+                if (canRunMissionControl) {
+                  void handleMissionControlSetupSubmit();
+                }
               },
             },
-          },
-            React.createElement("div", { className: "playground-mission-control-modal-body" },
-              React.createElement("div", { className: "playground-mission-control-modal-context" },
-                renderMissionControlGoalEditor(),
-                missionControlAgentError
-                  ? React.createElement("div", { className: "playground-mission-control-setup-error playground-environments-error" }, missionControlAgentError)
-                  : null
-              ),
-              React.createElement("div", { className: "playground-mission-control-modal-composer" },
-                renderMissionControlSetupView()
-              )
+            footer: React.createElement(React.Fragment, null,
+              React.createElement(PlatformSecondaryButton, {
+                type: "button",
+                size: "medium",
+                disabled: missionControlSetupSubmitting,
+                onClick: () => closeMissionControlSetupModal(),
+              }, "Cancel"),
+              React.createElement(PlatformPrimaryButton, {
+                type: "button",
+                size: "medium",
+                disabled: !canRunMissionControl,
+                onClick: () => {
+                  if (canRunMissionControl) {
+                    void handleMissionControlSetupSubmit();
+                  }
+                },
+              }, missionControlSetupSubmitting ? "Starting..." : "Run Mission Control")
             )
-          );
+          }, renderMissionControlSetupView());
           return studioElement;
         }
 
@@ -2422,6 +2378,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             };
           });
           const activeTaskPriorityPresentation = getPlaygroundTaskPriorityPresentation(draftTask.priority);
+          const activeTaskColorPresentation = getPlaygroundTaskColorPresentation(draftTask.taskColor);
           const ActiveTaskTypeIcon = activeTaskType === "subtask" ? Check : (activeTaskType === "loop" ? RefreshCw : Bookmark);
           const startedThreadRecord = startedThreadId
             ? selectedProjectRecentThreads.find((thread) => thread.id === startedThreadId) || null

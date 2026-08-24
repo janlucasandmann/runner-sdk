@@ -159,8 +159,39 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
 	          const readTeamInvitations = new Set(readTeamInvitationNotificationIds);
 	          const readOrganizationInvitations = new Set(readOrganizationInvitationNotificationIds);
 	          const items = [];
+          const durablePermissionRequestIds = new Set(inboxNotifications
+            .filter((notification) => notification.eventType === "agent.run.permission_requested")
+            .map((notification) => String(notification.metadata?.permissionRequestId || "").trim())
+            .filter(Boolean));
+          const durableTaskActivityEventIds = new Set(inboxNotifications
+            .filter((notification) => notification.eventType === "project.ticket.activity")
+            .map((notification) => String(notification.metadata?.activityEventId || notification.payload?.activityEventId || "").trim())
+            .filter(Boolean));
+          const durableAssignedTaskIds = new Set(inboxNotifications
+            .filter((notification) => notification.eventType === "project.ticket.assigned"
+              || notification.eventType === "project.ticket.review_requested")
+            .map((notification) => String(notification.metadata?.taskId || notification.resourceId || "").trim())
+            .filter(Boolean));
+
+          inboxNotifications.forEach((notification) => {
+            if (!notification?.id || notification.readAt || notification.dismissedAt) {
+              return;
+            }
+            items.push({
+              ...notification,
+              kind: "inbox",
+              label: notification.title,
+              text: notification.body,
+            });
+          });
 
           enabledPermissionNotificationItems.forEach((notification) => {
+            const requestIds = Array.isArray(notification?.requestIds)
+              ? notification.requestIds
+              : [notification?.requestId];
+            if (requestIds.some((requestId) => durablePermissionRequestIds.has(String(requestId || "").trim()))) {
+              return;
+            }
             const readIds = getPermissionNotificationReadIds(notification);
             if (!notification?.id || readIds.some((id) => readPermissions.has(id))) {
               return;
@@ -182,6 +213,9 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
 	          }
 
 	          enabledHumanTaskNotificationItems.forEach((notification) => {
+	            if (durableAssignedTaskIds.has(String(notification?.taskId || "").trim())) {
+	              return;
+	            }
 	            if (!notification?.id || readHumanTasks.has(notification.id)) {
               return;
 	            }
@@ -189,6 +223,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
 	          });
 
 	          enabledTaskActivityNotifications.forEach((notification) => {
+	            if (durableTaskActivityEventIds.has(String(notification?.activityEventId || "").trim())) return;
 	            if (!notification?.id || readTaskActivities.has(notification.id)) {
               return;
 	            }
@@ -239,6 +274,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
           accountEmail,
           emailVerificationNotificationDismissed,
 	          hasSessionAuth,
+	          inboxNotifications,
 	          enabledHumanTaskNotificationItems,
 	          enabledOrganizationInvitationNotifications,
 	          enabledPermissionNotificationItems,
@@ -253,7 +289,15 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
           readTeamInvitationNotificationIds,
           sessionState.emailVerified,
         ]);
-        const hasVisibleNotifications = notificationItems.length > 0;
+        const notificationPopupItems = useMemo(() => notificationItems
+          .slice()
+          .sort((left, right) => {
+            const leftMs = Date.parse(left?.createdAt || "");
+            const rightMs = Date.parse(right?.createdAt || "");
+            return (Number.isFinite(rightMs) ? rightMs : 0) - (Number.isFinite(leftMs) ? leftMs : 0);
+          })
+          .slice(0, 20), [notificationItems]);
+        const hasVisibleNotifications = notificationPopupItems.length > 0;
         function getNotificationPlainText(notification) {
           const source = notification && typeof notification === "object" && !Array.isArray(notification) ? notification : {};
           const directText = String(
@@ -311,8 +355,52 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
           const readTeamInvitations = new Set(readTeamInvitationNotificationIds);
           const readOrganizationInvitations = new Set(readOrganizationInvitationNotificationIds);
           const items = [];
+          const durablePermissionRequestIds = new Set(inboxNotifications
+            .filter((notification) => notification.eventType === "agent.run.permission_requested")
+            .map((notification) => String(notification.metadata?.permissionRequestId || "").trim())
+            .filter(Boolean));
+          const durableTaskActivityEventIds = new Set(inboxNotifications
+            .filter((notification) => notification.eventType === "project.ticket.activity")
+            .map((notification) => String(notification.metadata?.activityEventId || "").trim())
+            .filter(Boolean));
+          const durableAssignedTaskIds = new Set(inboxNotifications
+            .filter((notification) => notification.eventType === "project.ticket.assigned"
+              || notification.eventType === "project.ticket.review_requested")
+            .map((notification) => String(notification.metadata?.taskId || notification.resourceId || "").trim())
+            .filter(Boolean));
+
+          inboxNotifications.forEach((notification) => {
+            if (!notification?.id || notification.dismissedAt) {
+              return;
+            }
+            const categoryLabel = ({
+              agent_runs: "Agent run",
+              permission_requests: "Permission request",
+              assigned_work: "Assigned work",
+              task_activity: "Ticket activity",
+              invitations: "Invitation",
+              product_updates: "Product",
+            })[notification.category] || "Notification";
+            items.push({
+              ...notification,
+              kind: "inbox",
+              kindLabel: categoryLabel,
+              label: notification.title,
+              text: notification.body,
+              meta: notification.createdAt ? formatThreadSearchTimestamp(notification.createdAt) : "",
+              statusLabel: notification.readAt ? "Read" : "Unread",
+              unread: !notification.readAt,
+              createdAt: notification.createdAt || "",
+            });
+          });
 
           enabledPermissionNotificationItems.forEach((notification) => {
+            const requestIds = Array.isArray(notification?.requestIds)
+              ? notification.requestIds
+              : [notification?.requestId];
+            if (requestIds.some((requestId) => durablePermissionRequestIds.has(String(requestId || "").trim()))) {
+              return;
+            }
             const readIds = getPermissionNotificationReadIds(notification);
             const isRead = Boolean(readIds.length > 0 && readIds.every((id) => readPermissions.has(id)));
             const metaText = [
@@ -348,6 +436,9 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
           }
 
           enabledHumanTaskNotificationItems.forEach((notification) => {
+            if (durableAssignedTaskIds.has(String(notification?.taskId || "").trim())) {
+              return;
+            }
             items.push({
               ...notification,
               kindLabel: "Task",
@@ -363,6 +454,9 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
           enabledTaskActivityNotifications.forEach((notification) => {
             const id = String(notification?.id || "").trim();
             if (!id) {
+              return;
+            }
+            if (durableTaskActivityEventIds.has(String(notification?.activityEventId || "").trim())) {
               return;
             }
             const isRead = readTaskActivities.has(id);
@@ -458,6 +552,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
           accountEmail,
           emailVerificationNotificationDismissed,
           hasSessionAuth,
+          inboxNotifications,
           enabledHumanTaskNotificationItems,
           enabledOrganizationInvitationNotifications,
           enabledPermissionNotificationItems,
@@ -483,10 +578,10 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
               return false;
             }
             if (notificationsPageFilter === "permission" && item.kind !== "permission") {
-              return false;
+              if (!(item.kind === "inbox" && item.category === "permission_requests")) return false;
             }
             if (notificationsPageFilter === "tasks" && item.kind !== "human_task" && item.kind !== "task_activity") {
-              return false;
+              if (!(item.kind === "inbox" && (item.category === "assigned_work" || item.category === "task_activity"))) return false;
             }
             if (notificationsPageFilter === "team" && item.kind !== "team_invitation") {
               return false;

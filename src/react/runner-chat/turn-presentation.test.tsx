@@ -100,6 +100,22 @@ describe("RunnerTurnIdentity", () => {
     fireEvent.mouseEnter(avatar());
     expect(image()).toBe("/img/agent-profile-pics/forge.webp");
   });
+
+  it("can make the complete standard identity header navigable", () => {
+    const onClick = vi.fn();
+    render(
+      <RunnerTurnIdentity
+        agentName="Spark"
+        agentPhotoUrl="/spark.webp"
+        environmentName="Default"
+        onClick={onClick}
+        ariaLabel="Open Maintain project issues"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Open Maintain project issues" }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("RunnerWorkStatusDisclosure", () => {

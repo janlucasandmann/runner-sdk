@@ -573,7 +573,7 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
                         ? null
                         : renderProjectOverviewTaskActivityActorAvatar(event),
                   icon: isMilestoneChange
-                    ? Flag
+                    ? Milestone
                     : isScheduleChange
                       ? CalendarIcon
                       : isFieldChange
@@ -949,6 +949,108 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
             });
           }
 
+          function renderProjectOverviewSpotlightCard(task) {
+            const boardStatus = typeof getTaskBoardStatus === "function"
+              ? getTaskBoardStatus(task)
+              : String(task?.status || "").trim().toLowerCase();
+            const taskType = normalizePlaygroundTaskType(task?.taskType || task?.type);
+            const TaskTypeIcon = getPlaygroundTaskTypeIcon(taskType);
+            const taskId = String(task?.id || "").trim();
+            const taskTicketNumber = taskTicketNumbersById[taskId] || task?.ticketNumber || "001";
+            const statusLabel = getPlaygroundTaskStatusLabel(boardStatus);
+            return React.createElement(PlatformTicketItem, {
+              key: taskId || taskTicketNumber,
+              variant: "card",
+              title: task?.title || "Untitled Task",
+              taskType,
+              typeIcon: React.createElement(TaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 }),
+              priority: renderPlaygroundTaskPriorityIcon(task?.priority, "playground-tasks-lane-card-priority"),
+              ticketNumber: taskTicketNumber,
+              status: React.createElement("span", {
+                className: "playground-tasks-lane-card-status",
+                title: statusLabel,
+              }, statusLabel),
+              assignee: renderTaskAssigneeAvatar(task, "playground-tasks-board-assignee-avatar"),
+              completed: task?.status === "done",
+              active: selectedTaskId === taskId,
+              style: getPlaygroundTaskColorStyle(task?.taskColor),
+              onClick: () => {
+                if (taskId) {
+                  openProjectTaskDetailScreen(taskId);
+                }
+              },
+              onContextMenu: (event) => {
+                if (!taskId) {
+                  return;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                openBacklogTaskContextMenu(task, event, {
+                  includeOpenAction: true,
+                  useWorkActions: true,
+                });
+              },
+            });
+          }
+
+          function getProjectOverviewSpotlightTasks() {
+            const statusOrder = {
+              in_review: 1,
+              review: 1,
+              in_progress: 2,
+              doing: 2,
+              backlog: 3,
+              todo: 3,
+              to_do: 3,
+              blocked: 4,
+            };
+            return (Array.isArray(normalizedOverviewTasks) ? normalizedOverviewTasks : [])
+              .filter((task) => typeof isPlaygroundSubtaskRecord !== "function" || !isPlaygroundSubtaskRecord(task))
+              .map((task, index) => {
+                const boardStatus = typeof getTaskBoardStatus === "function"
+                  ? getTaskBoardStatus(task)
+                  : String(task?.status || "").trim().toLowerCase();
+                const normalizedBoardStatus = String(boardStatus || "")
+                  .trim()
+                  .toLowerCase()
+                  .replaceAll("-", "_")
+                  .replace(/\s+/g, "_");
+                return { task, index, rank: statusOrder[normalizedBoardStatus] || 0 };
+              })
+              .filter((entry) => entry.rank > 0)
+              .sort((left, right) => left.rank - right.rank || left.index - right.index)
+              .slice(0, 3)
+              .map((entry) => entry.task);
+          }
+
+          function renderProjectOverviewSpotlightSection() {
+            const spotlightTasks = getProjectOverviewSpotlightTasks();
+            return React.createElement("section", {
+              className: "playground-project-overview-spotlight",
+              "aria-label": "Spotlight",
+            },
+              React.createElement("div", { className: "playground-project-overview-spotlight__header" },
+                React.createElement("h2", { className: "playground-project-overview-spotlight__title" }, "Spotlight"),
+                React.createElement(PlatformSecondaryButton, {
+                  type: "button",
+                  size: "small",
+                  className: "playground-project-overview-spotlight__view-all",
+                  onClick: () => {
+                    if (typeof setTaskView === "function") {
+                      setTaskView("backlog");
+                    }
+                  },
+                }, "View all")
+              ),
+              spotlightTasks.length > 0
+                ? React.createElement("div", { className: "playground-project-overview-spotlight__grid" },
+                    spotlightTasks.map((task) => renderProjectOverviewSpotlightCard(task))
+                  )
+                : null,
+              renderBacklogTaskContextMenu()
+            );
+          }
+
           function renderProjectOverviewWidgetHeader(title, Icon, action) {
             return React.createElement("div", { className: "playground-project-overview-widget-header" },
               React.createElement("div", { className: "playground-project-overview-widget-title-wrap" },
@@ -980,51 +1082,6 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
                 React.createElement("span", { className: "playground-project-overview-widget-list-title", title }, title),
                 meta ? React.createElement("span", { className: "playground-project-overview-widget-list-meta", title: meta }, meta) : null
               )
-            );
-          }
-
-          function renderProjectOverviewSetupSection() {
-            const progressStats = getProjectOverviewProgressStats();
-            if (progressStats.scopeCount > 0) {
-              return null;
-            }
-            const operatingProfile = getProjectOverviewOperatingProfile();
-            const setupRecipe = operatingProfile?.setupRecipe && typeof operatingProfile.setupRecipe === "object" && !Array.isArray(operatingProfile.setupRecipe)
-              ? operatingProfile.setupRecipe
-              : {};
-            const starterTasks = Array.isArray(setupRecipe.starterTasks)
-              ? setupRecipe.starterTasks
-              : [];
-            const firstSteps = Array.isArray(setupRecipe.firstSteps)
-              ? setupRecipe.firstSteps
-              : [];
-            const setupSteps = (starterTasks.length ? starterTasks : firstSteps)
-              .map((step) => String(step || "").trim())
-              .filter(Boolean)
-              .slice(0, 4);
-            const recommendedResources = Array.isArray(operatingProfile?.suggestedResources)
-              ? operatingProfile.suggestedResources
-              : [];
-            const recommendedConnectors = Array.isArray(setupRecipe.recommendedConnectors)
-              ? setupRecipe.recommendedConnectors
-              : [];
-            const recommendationLine = recommendedConnectors.concat(recommendedResources)
-              .map((item) => String(item || "").trim())
-              .filter(Boolean)
-              .slice(0, 3)
-              .join(" · ");
-            return React.createElement("section", { className: "playground-project-overview-setup-section" },
-              renderProjectOverviewWidgetHeader("Project Setup", ListTodo),
-              setupSteps.length > 0
-                ? React.createElement("div", { className: "playground-project-overview-widget-list" },
-                    setupSteps.map((step, index) => renderProjectOverviewWidgetListItem({
-                      key: "setup:" + index + ":" + step,
-                      Icon: ListTodo,
-                      title: step,
-                      meta: index === 0 && recommendationLine ? "Recommended: " + recommendationLine : "",
-                    }))
-                  )
-                : React.createElement("div", { className: "playground-project-overview-widget-empty" }, "Run Mission Control to create the first setup plan.")
             );
           }
 

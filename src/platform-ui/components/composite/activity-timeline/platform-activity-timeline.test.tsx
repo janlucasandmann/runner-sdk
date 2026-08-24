@@ -262,7 +262,7 @@ describe("PlatformActivityTimeline", () => {
       /\.platform-comment-card\s*\{[^}]*border: 1px solid rgba\(255, 255, 255, 0\.075\);[^}]*border-radius: var\(--platform-comment-card-radius, 15px\);[^}]*background: rgba\(255, 255, 255, 0\.075\);/s,
     );
     expect(css).toMatch(
-      /\.platform-activity-timeline__list\s*\{[^}]*gap: 6px;/s,
+      /\.platform-activity-timeline__list\s*\{[^}]*gap: 12px;/s,
     );
     expect(css).toMatch(
       /\.platform-activity-timeline__marker\s*\{[^}]*background: transparent;/s,

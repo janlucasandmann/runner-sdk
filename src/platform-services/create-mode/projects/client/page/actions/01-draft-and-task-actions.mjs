@@ -1,4 +1,227 @@
-export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(updater, options = {}) {
+export const PROJECTS_ACTIONS_01_FRAGMENT = `        function normalizeProjectMentionCandidate(candidate) {
+          const metadata = candidate?.metadata && typeof candidate.metadata === "object"
+            ? candidate.metadata
+            : {};
+          const sources = [
+            candidate,
+            candidate?.user,
+            candidate?.profile,
+            candidate?.account,
+            candidate?.identity,
+            metadata,
+            metadata.user,
+            metadata.profile,
+          ].filter((value) => value && typeof value === "object" && !Array.isArray(value));
+          const readValue = (keys) => {
+            for (const source of sources) {
+              for (const key of keys) {
+                const value = source[key];
+                if (typeof value === "string" && value.trim()) return value.trim();
+              }
+            }
+            return "";
+          };
+          const kind = readValue(["kind", "principalKind", "type"]).toLowerCase() === "agent"
+            ? "agent"
+            : "human";
+          const id = readValue(kind === "agent"
+            ? ["agentId", "id", "uid"]
+            : ["userId", "id", "uid", "accountId"]);
+          const email = readValue(["email", "emailAddress", "mail"]);
+          const label = readValue(["label", "name", "displayName", "display_name"]) || email;
+          if (!id || !label) return null;
+          return {
+            kind,
+            id,
+            label,
+            description: readValue(["description", "subtitle"]) || email,
+            avatarUrl: readValue(["avatarUrl", "profilePhotoUrl", "photoUrl", "picture"]),
+          };
+        }
+
+        function mergeProjectMentionCandidates(...candidateLists) {
+          const nextItems = [];
+          const seen = new Set();
+          candidateLists.flat().forEach((candidate) => {
+            const normalized = normalizeProjectMentionCandidate(candidate);
+            if (!normalized) return;
+            const key = normalized.kind + ":" + normalized.id;
+            if (seen.has(key)) return;
+            seen.add(key);
+            nextItems.push(normalized);
+          });
+          return nextItems.sort((left, right) => {
+            if (left.kind !== right.kind) return left.kind === "human" ? -1 : 1;
+            return left.label.localeCompare(right.label);
+          });
+        }
+
+        function getLocalProjectMentionCandidates() {
+          const humans = [];
+          const currentHumanId = String(currentUserId || currentUserEmail || "").trim();
+          if (currentHumanId) {
+            humans.push({
+              kind: "human",
+              userId: currentHumanId,
+              name: String(currentUserName || currentUserEmail || "You").trim() || "You",
+              email: String(currentUserEmail || "").trim(),
+              avatarUrl: String(currentUserAvatarUrl || "").trim(),
+            });
+          }
+          (Array.isArray(workspaceTeamMembers) ? workspaceTeamMembers : []).forEach((member) => {
+            humans.push({ ...member, kind: "human" });
+          });
+
+          const projectAgents = (Array.isArray(sortedAgents) ? sortedAgents : [])
+            .filter((agent) => {
+              if (!agent || !String(agent.id || agent.agentId || "").trim()) return false;
+              if (agent.isActive === false || agent.active === false) return false;
+              return !["inactive", "archived", "deleted"]
+                .includes(String(agent.status || "").trim().toLowerCase());
+            })
+            .map((agent) => ({
+              ...agent,
+              kind: "agent",
+              agentId: String(agent.id || agent.agentId || "").trim(),
+              avatarUrl: typeof getPlaygroundAgentProfilePhotoUrl === "function"
+                ? String(getPlaygroundAgentProfilePhotoUrl(agent) || "").trim()
+                : String(agent.avatarUrl || agent.profilePhotoUrl || agent.photoUrl || "").trim(),
+            }));
+          return mergeProjectMentionCandidates(humans, projectAgents);
+        }
+
+        function renderProjectMentionCandidateAvatar(candidate) {
+          const label = String(candidate?.label || "User").trim() || "User";
+          return React.createElement(AccountAvatar, {
+            className: "playground-project-mention-avatar",
+            imageClassName: "playground-project-mention-avatar-image",
+            fallbackLabel: getAccountInitials(label) || label.charAt(0).toUpperCase(),
+            photoUrl: normalizeSessionPhotoUrl(candidate?.avatarUrl || ""),
+          });
+        }
+
+        function getProjectMentionOptions() {
+          const projectId = String(selectedProjectId || selectedProject?.id || "").trim();
+          const remoteCandidates = projectMentionCandidatesState?.projectId === projectId
+            && Array.isArray(projectMentionCandidatesState?.items)
+              ? projectMentionCandidatesState.items
+              : [];
+          const candidates = mergeProjectMentionCandidates(
+            getLocalProjectMentionCandidates(),
+            remoteCandidates
+          );
+          return candidates.map((candidate) => ({
+            kind: candidate.kind,
+            id: candidate.id,
+            label: candidate.label,
+            description: candidate.description,
+            avatar: renderProjectMentionCandidateAvatar(candidate),
+          }));
+        }
+
+        async function requestProjectMentionCandidates(options = {}) {
+          const projectId = String(selectedProjectId || selectedProject?.id || "").trim();
+          if (!projectId || typeof setProjectMentionCandidatesState !== "function") return [];
+          const isCurrentProject = projectMentionCandidatesState?.projectId === projectId;
+          if (
+            options.force !== true
+            && isCurrentProject
+            && ["loading", "ready", "error"].includes(projectMentionCandidatesState?.status)
+          ) {
+            return Array.isArray(projectMentionCandidatesState?.items)
+              ? projectMentionCandidatesState.items
+              : [];
+          }
+          const localItems = getLocalProjectMentionCandidates();
+          setProjectMentionCandidatesState((current) => ({
+            projectId,
+            status: "loading",
+            error: "",
+            items: mergeProjectMentionCandidates(
+              localItems,
+              current?.projectId === projectId && Array.isArray(current.items)
+                ? current.items
+                : []
+            ),
+          }));
+          try {
+            let response = await fetch(
+              backendUrl + "/projects/" + encodeURIComponent(projectId) + "/mention-candidates",
+              { headers: requestHeaders }
+            );
+            if (!response.ok) {
+              response = await fetch(
+                backendUrl + "/projects/" + encodeURIComponent(projectId) + "/owner-candidates",
+                { headers: requestHeaders }
+              );
+            }
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load people and agents.");
+            }
+            const items = mergeProjectMentionCandidates(
+              localItems,
+              Array.isArray(data?.data) ? data.data : []
+            );
+            setProjectMentionCandidatesState({
+              projectId,
+              status: "ready",
+              error: "",
+              items,
+            });
+            return items;
+          } catch (error) {
+            const hasLocalItems = localItems.length > 0;
+            setProjectMentionCandidatesState({
+              projectId,
+              status: hasLocalItems ? "ready" : "error",
+              error: error instanceof Error ? error.message : "Failed to load people and agents.",
+              items: localItems,
+            });
+            return localItems;
+          }
+        }
+
+        function getProjectMentionComposerProps() {
+          const projectId = String(selectedProjectId || selectedProject?.id || "").trim();
+          const stateApplies = projectMentionCandidatesState?.projectId === projectId;
+          const mentionOptions = getProjectMentionOptions();
+          return {
+            mentionOptions,
+            mentionsLoading: stateApplies
+              && projectMentionCandidatesState?.status === "loading"
+              && mentionOptions.length === 0,
+            mentionEmptyMessage: stateApplies && projectMentionCandidatesState?.status === "error"
+              ? String(projectMentionCandidatesState?.error || "People and agents could not be loaded.")
+              : "No project members or agents found.",
+            onMentionQueryChange: (query) => {
+              if (query !== null) void requestProjectMentionCandidates();
+            },
+            mentionManageLabel: "Manage Access",
+            onMentionManage: () => {
+              setTaskView("overview");
+              setSelectedTaskId("");
+              setProjectTaskDetailScreenOpen(false);
+              setDraftTask(null);
+              setProjectOverviewPermissionTeamId("");
+              setProjectOverviewHomeTab("permissions");
+            },
+          };
+        }
+
+        function mergeProjectMentionReference(currentMentions, mention) {
+          const kind = String(mention?.kind || "").trim().toLowerCase();
+          const id = String(mention?.id || "").trim();
+          const label = String(mention?.label || "").trim();
+          if (!["human", "agent"].includes(kind) || !id || !label) {
+            return Array.isArray(currentMentions) ? currentMentions : [];
+          }
+          return (Array.isArray(currentMentions) ? currentMentions : [])
+            .filter((entry) => !(entry?.kind === kind && entry?.id === id))
+            .concat({ kind, id, label });
+        }
+
+        function updateDraftTask(updater, options = {}) {
           const baseTask = normalizePlaygroundTaskRecord(draftTask || selectedTaskSnapshot || buildPlaygroundDefaultTaskDraft());
           const nextTask = normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata(
             typeof updater === "function" ? updater(baseTask) : updater
@@ -1030,6 +1253,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
 
         function openTaskCommentComposer(options = {}) {
           setTaskCommentMode(options?.review === true ? "review" : "");
+          setTaskCommentMentions([]);
           setTaskCommentComposerOpen(true);
         }
 
@@ -1039,6 +1263,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
           }
           setTaskCommentComposerOpen(false);
           setTaskCommentMode("");
+          setTaskCommentMentions([]);
         }
 
         function activateTaskReviewCommentMode() {
@@ -1114,6 +1339,11 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
           const parentCommentId = String(options?.parentCommentId || "").trim();
           const isReply = Boolean(parentCommentId);
           const submittedFiles = normalizeTaskAttachmentUploadFiles(options?.files);
+          const submittedMentions = Array.isArray(options?.mentions)
+            ? options.mentions
+            : Array.isArray(taskCommentMentions)
+              ? taskCommentMentions
+              : [];
           const submittedBody = typeof options?.body === "string" ? options.body : taskCommentInputValue;
           const commentSubmission = isReply
             ? {
@@ -1176,6 +1406,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
                 authorType: "user",
                 authorName: currentUserName || undefined,
                 metadata: Object.keys(commentMetadata).length ? commentMetadata : undefined,
+                mentions: submittedMentions,
               }),
             });
             const data = await response.json().catch(() => ({}));
@@ -1225,6 +1456,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
               setTaskActivityCommentError("");
             } else if (!isReply) {
               setTaskCommentInputValue("");
+              setTaskCommentMentions([]);
               setTaskCommentMode("");
               setTaskCommentComposerOpen(false);
             }
@@ -1420,8 +1652,13 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
           }
         }
 
-        function getLatestImplementationThreadIdForSelectedTask() {
-            const implementationThread = selectedTaskThreads
+        function getLatestImplementationThreadIdForTask(task = draftTask) {
+          const normalizedTaskId = String(task?.id || "").trim();
+          const selectedDraftTaskId = String(draftTask?.id || "").trim();
+          const candidateThreads = normalizedTaskId && normalizedTaskId === selectedDraftTaskId
+            ? selectedTaskThreads
+            : [];
+            const implementationThread = candidateThreads
               .filter((thread) => {
                 const taskPreview = getThreadTaskPreview(thread);
                 const normalizedRunKind = String(taskPreview?.runKind || "").trim().toLowerCase();
@@ -1432,16 +1669,16 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
           if (latestImplementationThreadId) {
             return latestImplementationThreadId;
           }
-          const lastStartedThreadId = String(draftTask?.lastStartedThreadId || "").trim();
+          const lastStartedThreadId = String(task?.lastStartedThreadId || "").trim();
           if (lastStartedThreadId) {
             return lastStartedThreadId;
           }
-          const linkedThreadIds = normalizePlaygroundIdList(draftTask?.linkedThreadIds);
+          const linkedThreadIds = normalizePlaygroundIdList(task?.linkedThreadIds);
           return linkedThreadIds[linkedThreadIds.length - 1] || "";
         }
 
-        async function handleStartSelectedTaskAgentReview() {
-          if (!draftTask?.id) {
+        async function handleStartSelectedTaskAgentReview(task = draftTask) {
+          if (!task?.id) {
             return;
           }
           if (typeof onStartAgentReviewThread !== "function") {
@@ -1453,7 +1690,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
             return;
           }
 
-	          const reviewerAgentId = String(draftTask.reviewerAgentId || "").trim();
+	          const reviewerAgentId = String(task.reviewerAgentId || "").trim();
 	          if (!reviewerAgentId || isPlaygroundHumanAssigneeId(reviewerAgentId)) {
 	            setSaveState({
 	              isSaving: false,
@@ -1463,12 +1700,12 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
 	            return;
 	          }
           const normalizedTask = normalizePlaygroundTaskRecord({
-            ...draftTask,
+            ...task,
             status: "in_review",
             reviewRequired: true,
             reviewerAgentId,
           });
-          const implementationThreadId = getLatestImplementationThreadIdForSelectedTask();
+          const implementationThreadId = getLatestImplementationThreadIdForTask(normalizedTask);
           setTaskAgentReviewStartPendingId(normalizedTask.id);
           setSaveState({
             isSaving: true,
@@ -1488,7 +1725,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
               taskStatus: "in_review",
               reviewerAgentId,
             });
-            if (reviewThread?.id) {
+            if (reviewThread?.id && selectedTaskIdRef.current === normalizedTask.id) {
               setTaskDetailThreadRecords((current) => normalizeThreadList([reviewThread].concat(Array.isArray(current) ? current : [])));
             }
             resetSaveState("Agent review started");

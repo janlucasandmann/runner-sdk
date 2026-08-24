@@ -2416,6 +2416,7 @@ export function PlatformDataTable<TData>({
           ref: toolbarMenuRef,
           className: "platform-data-table__floating-menu",
           mode: "fixed",
+          variant: "minimal",
           animation: "down-in",
           role: "menu",
           style: {

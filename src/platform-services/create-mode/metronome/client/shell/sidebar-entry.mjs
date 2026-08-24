@@ -28,6 +28,8 @@ export const METRONOME_APP_SIDEBAR_ENTRY_SCRIPT = `
           });
           const runTitle = loopPresentation.isTaskLoop
             ? loopPresentation.label
+            : loopPresentation.isMissionControl
+              ? loopPresentation.label
             : entry.workflowName || "Metronome";
 
           return React.createElement("div", {
@@ -43,13 +45,19 @@ export const METRONOME_APP_SIDEBAR_ENTRY_SCRIPT = `
                 onClick: () => openMetronomeRunTraceThread(entry),
                 "aria-label": loopPresentation.isTaskLoop
                   ? "Open Loop " + runTitle
+                  : loopPresentation.isMissionControl
+                    ? "Open " + runTitle
                   : "Open Metronome run " + runTitle,
               },
                 React.createElement("span", {
-                  className: "sidebar-metronome-run-icon" + (loopPresentation.isTaskLoop ? " is-loop" : ""),
+                  className: "sidebar-metronome-run-icon"
+                    + (loopPresentation.isTaskLoop ? " is-loop" : "")
+                    + (loopPresentation.isMissionControl ? " is-mission-control" : ""),
                 },
                   loopPresentation.isTaskLoop
                     ? React.createElement(RefreshCw, { strokeWidth: 1.9 })
+                    : loopPresentation.isMissionControl
+                      ? React.createElement(RefreshCcwDot, { strokeWidth: 1.9 })
                     : isRunActive
                     ? React.createElement(Loader2, { className: "sidebar-thread-running-indicator", strokeWidth: 1.9 })
                     : React.createElement(Metronome, { strokeWidth: 1.85 })

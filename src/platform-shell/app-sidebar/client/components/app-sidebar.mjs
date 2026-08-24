@@ -11,8 +11,10 @@ export const APP_SIDEBAR_COMPONENT_SCRIPT = `        function renderExpandedSide
               },
                 React.createElement("img", {
                   className: "playground-sidebar-brand-logo",
-                  src: RUNNER_TRANSPARENT_LOGO_URL,
-                  alt: "Runner",
+                  src: APP_SIDEBAR_LOGO_URL,
+                  alt: "Computer Agents",
+                  width: 16,
+                  height: 16,
                 })
               ),
               renderAppSidebarModeSelector(),
@@ -132,8 +134,10 @@ export const APP_SIDEBAR_COMPONENT_SCRIPT = `        function renderExpandedSide
               },
                 React.createElement("img", {
                   className: "sidebar-rail-logo",
-                  src: RUNNER_TRANSPARENT_LOGO_URL,
-                  alt: "Runner"
+                  src: APP_SIDEBAR_LOGO_URL,
+                  alt: "Computer Agents",
+                  width: 16,
+                  height: 16,
                 }),
                 React.createElement(PanelLeftOpen, { className: "sidebar-rail-logo-open-icon", strokeWidth: 1.5 })
               )

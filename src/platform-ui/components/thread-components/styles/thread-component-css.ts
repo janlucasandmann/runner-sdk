@@ -4719,11 +4719,7 @@ button.platform-attachment-preview__file-main {
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
   color: #fff;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.4;
 }
 
 .platform-loading-state.is-centered {
@@ -4735,15 +4731,46 @@ button.platform-attachment-preview__file-main {
 }
 
 .platform-loading-state__loader {
-  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.platform-loading-state__message {
-  min-width: 0;
-  color: inherit;
+.platform-loading-state__spinner {
+  display: block;
+  width: 24px;
+  height: 24px;
+  transform-origin: 50% 50%;
+  backface-visibility: hidden;
+  will-change: transform;
+  animation: platform-loading-state-spin 1800ms linear infinite;
+}
+
+@keyframes platform-loading-state-spin {
+  0% {
+    transform: translateZ(0) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.33, 0.22, 0.67, 0.56);
+  }
+
+  /* Accelerate from 50% to full speed. */
+  28.571% {
+    transform: translateZ(0) rotate(180deg);
+    animation-timing-function: linear;
+  }
+
+  /* Hold full speed for exactly one complete rotation. */
+  71.429% {
+    transform: translateZ(0) rotate(540deg);
+    animation-timing-function: cubic-bezier(0.33, 0.44, 0.67, 0.78);
+  }
+
+  /* Decelerate to 50% speed, which matches the next cycle's entry speed. */
+  100% {
+    transform: translateZ(0) rotate(720deg);
+  }
 }
 
 
@@ -4970,6 +4997,31 @@ button.platform-attachment-preview__file-main {
   position: relative;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+}
+
+.tb-runner-chat.is-initial-surface-loading > :not(.tb-runner-chat__initial-loader) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.tb-runner-chat .tb-runner-chat__initial-loader.platform-loading-state {
+  position: absolute;
+  inset: 0;
+  z-index: 2000;
+  min-height: 100%;
+  background: #000;
+}
+
+.tb-runner-chat.is-initial-surface-entering > .workinglogsbox,
+.tb-runner-chat.is-initial-surface-entering > .tb-input-shell {
+  animation: tb-log-slide-in 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-runner-chat.is-initial-surface-entering > .workinglogsbox,
+  .tb-runner-chat.is-initial-surface-entering > .tb-input-shell {
+    animation: none;
+  }
 }
 
 .tb-runner-chat.tb-runner-chat-document-preview-open {
@@ -5549,9 +5601,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-metronome-turn-workflow-prompt-shell {
-  width: min(100%, 760px);
-  max-width: 100%;
-  margin: 12px 0 var(--tb-user-turn-shell-gap) auto;
+  width: min(100%, 56rem);
+  max-width: 56rem;
+  margin: 12px auto var(--tb-user-turn-shell-gap);
 }
 
 .tb-runner-chat .tb-metronome-turn-workflow-prompt {
@@ -6289,6 +6341,28 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   margin-bottom: 14px;
 }
 
+.tb-runner-chat .tb-turn-meta-button {
+  width: fit-content;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-turn-meta-button:hover,
+.tb-runner-chat .tb-turn-meta-button:focus-visible {
+  background: transparent;
+}
+
+.tb-runner-chat .tb-turn-meta-button:focus-visible {
+  outline: none;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+
 .tb-runner-chat .tb-turn-agent {
   display: inline-flex;
   align-items: center;
@@ -6529,6 +6603,43 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-turn-work-section .tb-work-label.is-live .tb-work-label-copy {
+  animation: tb-turn-work-label-update 180ms ease-out;
+}
+
+.tb-runner-chat .tb-thread-live-work-status {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 20px;
+  justify-content: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.tb-runner-chat button.tb-thread-live-work-status {
+  cursor: pointer;
+}
+
+.tb-runner-chat button.tb-thread-live-work-status:focus-visible {
+  outline: none;
+  border-radius: 6px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+
+.tb-runner-chat .tb-thread-live-work-status .tb-work-label {
+  flex: 0 1 auto;
+  max-width: 100%;
+}
+
+.tb-runner-chat .tb-thread-live-work-status .tb-work-status-loader {
+  margin-right: 0;
+}
+
+.tb-runner-chat .tb-thread-live-work-status .tb-work-label-copy {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   animation: tb-turn-work-label-update 180ms ease-out;
 }
 
@@ -7699,7 +7810,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   gap: 8px;
   appearance: none;
   border: 0;
-  background: transparent;
+  background: #262626;
   padding: 0;
   color: inherit;
   font: inherit;
@@ -7733,7 +7844,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   color: rgba(255, 255, 255, 0.96);
   font-size: 12px;
   line-height: 1.35;
-  font-weight: 500;
+  font-weight: 400;
   white-space: nowrap;
 }
 
@@ -7749,7 +7860,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-log-card-metronome-workflow {
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   margin-left: auto;
   display: flex;
@@ -7759,8 +7870,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-log-metronome-workflow-link {
-  appearance: none;
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   min-width: 0;
   margin: 0;
@@ -7772,29 +7882,66 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: 12px;
+  text-align: left;
+}
+
+.tb-runner-chat .tb-log-metronome-workflow-canvas-button {
+  appearance: none;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  display: block;
   cursor: pointer;
   text-align: left;
   font: inherit;
 }
 
-.tb-runner-chat .tb-log-metronome-workflow-link:disabled {
+.tb-runner-chat .tb-log-metronome-workflow-canvas-button:disabled {
   cursor: default;
 }
 
-.tb-runner-chat .tb-log-metronome-workflow-link:not(:disabled):focus-visible {
+.tb-runner-chat .tb-log-metronome-workflow-canvas-button:not(:disabled):focus-visible {
   outline: 1px solid rgba(77, 163, 255, 0.72);
-  outline-offset: 4px;
+  outline-offset: -1px;
 }
 
 .tb-runner-chat .tb-log-metronome-workflow-header {
-  width: fit-content;
+  box-sizing: border-box;
+  width: 100%;
   max-width: 100%;
   min-width: 0;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  background: #262626;
+}
+
+.tb-runner-chat .tb-log-metronome-workflow-identity {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tb-runner-chat .tb-log-metronome-workflow-identity .tb-log-compact-action-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-metronome-workflow-actions {
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .tb-runner-chat .tb-log-metronome-workflow-status {
@@ -7810,14 +7957,33 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-log-metronome-minimap {
-  width: fit-content;
+  box-sizing: border-box;
+  width: 100%;
   max-width: 100%;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   position: relative;
-  overflow: visible;
-  border-radius: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 20px;
   padding: 0;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-canvas {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+  padding: 20px;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-position: 0 0;
+  background-size: 18px 18px;
 }
 
 .tb-runner-chat .tb-log-metronome-minimap-track {
@@ -7865,7 +8031,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-runner-chat .tb-log-metronome-minimap-node {
   width: 100%;
-  max-width: 132px;
+  max-width: 100%;
   min-width: 0;
   height: 40px;
   display: inline-flex;
@@ -7874,14 +8040,15 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   padding: 0 9px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.055);
+  background: #262626;
   color: rgba(255, 255, 255, 0.84);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
 }
 
 .tb-runner-chat .tb-log-metronome-minimap-node.is-active {
+  border-width: 1px;
   border-color: rgba(77, 163, 255, 0.5);
-  box-shadow: 0 0 0 1px rgba(77, 163, 255, 0.52);
+  box-shadow: none;
   color: #fff;
 }
 
@@ -7970,13 +8137,15 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-log-metronome-minimap-node-title {
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 11px;
   line-height: 1.2;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .tb-runner-chat .tb-log-metronome-minimap-connector {
@@ -7994,17 +8163,11 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   width: fit-content;
   max-width: min(100%, 760px);
   min-width: 0;
-  margin-top: 6px;
+  margin-top: 12px;
 }
 
 .tb-runner-chat .tb-log-metronome-user-message-markdown {
   color: inherit;
-}
-
-.tb-runner-chat .tb-log-card.tb-log-card-metronome-workflow {
-  width: fit-content;
-  max-width: 100%;
-  margin-left: auto;
 }
 
 .tb-runner-chat .tb-log-file-change-summary {
@@ -8695,6 +8858,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   font-size: 12px;
   line-height: 1.35;
 }
+
 
 .tb-runner-chat .tb-log-card.tb-log-card-git-commit .tb-log-card-panel,
 .tb-runner-chat .tb-log-card.tb-log-card-git-diff .tb-log-card-panel,
@@ -21780,6 +21944,33 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   background: transparent;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+}
+
+/* Ticket identifiers stay readable on every card color. */
+.platform-ticket-item__card-number.playground-tasks-lane-card-ticket {
+  color: #fff !important;
+}
+
+.playground-tasks-detail-color-value {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.playground-tasks-detail-color-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  background: var(--playground-task-color-accent, #016bcb);
+  box-shadow: inset 0 0 0 1px var(--playground-task-color-border, rgba(1, 107, 203, 0.2));
+}
+
+.playground-tasks-detail-color-menu-swatch {
+  width: 12px;
+  height: 12px;
 }
 
 

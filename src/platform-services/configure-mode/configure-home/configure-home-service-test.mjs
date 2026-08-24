@@ -15,11 +15,7 @@ import { readPlatformCompositionSource } from "../../../../apps/platform/testing
 assert.deepEqual(Object.keys(CONFIGURE_HOME_STYLE_FRAGMENTS), [
   "notificationPage",
 ]);
-assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.notificationPage, /\.configure-home-notification__identity/);
-assert.match(
-  CONFIGURE_HOME_STYLE_FRAGMENTS.notificationPage,
-  /\.platform-empty-state\.configure-home-notification__empty-state[\s\S]*?margin-top: 36px;[\s\S]*?margin-bottom: 36px;/,
-);
+assert.equal(CONFIGURE_HOME_STYLE_FRAGMENTS.notificationPage, "");
 assert.equal(Object.values(CONFIGURE_HOME_STYLE_FRAGMENTS).join(""), CONFIGURE_HOME_PAGE_CSS);
 assert.equal(
   await fs.readFile(
@@ -45,6 +41,8 @@ assert.doesNotThrow(() => new Function(`
 `));
 
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationProjection, /const notificationItems = useMemo/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationProjection, /const notificationPopupItems = useMemo/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationProjection, /\.slice\(0, 20\)/);
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationProjection, /const visibleNotificationPageItems = useMemo/);
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationProjection, /kind: "task_activity"/);
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /const notificationCenterSurfaceVisible/);
@@ -60,7 +58,12 @@ assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, 
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /PLAYGROUND_NOTIFICATION_VISIBLE_REFRESH_INTERVAL_MS/);
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /loadThreadPermissionNotifications/);
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationActions, /function handleMarkAllNotificationsRead/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationActions, /function markNotificationItemsRead/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationActions, /function handleMarkConfigureHomeNotificationsRead/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationActions, /method: "PATCH"/);
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationActions, /function handleOpenTaskActivityNotification/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationActions, /resourceType === "project"/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationActions, /sectionId: "general"/);
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationActions, /function handleOrganizationInvitationDecision/);
 assert.doesNotThrow(() => new Function(`
   function configureHomeRuntimeHost() {
@@ -132,6 +135,8 @@ assert.deepEqual(Object.keys(pageFragments), [
   "notifications",
 ]);
 assert.match(pageFragments.notificationsSection, /function getConfigureHomeNotificationActions/);
+assert.match(pageFragments.notificationsSection, /selectedRows:/);
+assert.match(pageFragments.notificationsSection, /handleMarkConfigureHomeNotificationsRead/);
 assert.match(pageFragments.home, /function renderConfigureHomePage/);
 assert.match(pageFragments.home, /ConfigureHomeOverviewPage/);
 assert.match(pageFragments.home, /onOpenNotifications: openNotificationsPage/);

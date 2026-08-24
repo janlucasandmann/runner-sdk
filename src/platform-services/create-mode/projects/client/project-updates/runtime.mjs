@@ -19,6 +19,13 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
               || PROJECT_OVERVIEW_UPDATE_STATUS_OPTIONS[0];
           }
 
+          function normalizeProjectOverviewUpdateKind(value) {
+            const normalizedValue = String(value || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+            return ["comment", "project_comment", "discussion"].includes(normalizedValue)
+              ? "comment"
+              : "update";
+          }
+
           function normalizeProjectOverviewUpdateComment(value, includeReplies = true) {
             if (!value || typeof value !== "object" || Array.isArray(value)) {
               return null;
@@ -122,7 +129,7 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                     authorName: "",
                     authorEmail: "",
                     authorAvatarUrl: "",
-                    kind: "",
+                    kind: "update",
                     isSynthetic: false,
                   }
                 : null;
@@ -197,15 +204,32 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                   || author.photoUrl
                   || ""
               ).trim(),
-              kind: String(
+              kind: normalizeProjectOverviewUpdateKind(
                 value.kind
                   || value.eventType
                   || value.event_type
                   || value.type
-                  || ""
-              ).trim(),
+              ),
               isSynthetic: value.isSynthetic === true,
             };
+          }
+
+          function getProjectOverviewUpdateStableId(record, index = 0) {
+            const explicitId = String(record?.id || "").trim();
+            if (explicitId) return explicitId;
+            const seed = [
+              record?.createdAt,
+              record?.authorUserId,
+              record?.authorEmail,
+              record?.body,
+              index,
+            ].map((value) => String(value || "")).join("|");
+            let hash = 2166136261;
+            for (let characterIndex = 0; characterIndex < seed.length; characterIndex += 1) {
+              hash ^= seed.charCodeAt(characterIndex);
+              hash = Math.imul(hash, 16777619);
+            }
+            return "project_update_legacy_" + (hash >>> 0).toString(36);
           }
 
           function resolveProjectOverviewUpdateAuthorIdentity(value = {}) {
@@ -426,7 +450,12 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
             }
             const seen = new Set();
             return candidates
-              .map(normalizeProjectOverviewUpdateRecord)
+              .map((candidate, index) => {
+                const record = normalizeProjectOverviewUpdateRecord(candidate);
+                return record
+                  ? { ...record, id: getProjectOverviewUpdateStableId(record, index) }
+                  : null;
+              })
               .filter((record) => {
                 if (!record?.body) return false;
                 const key = record.id
@@ -441,12 +470,6 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                 return (Number.isFinite(rightTime) ? rightTime : 0)
                   - (Number.isFinite(leftTime) ? leftTime : 0);
               });
-          }
-
-          function getProjectOverviewLatestUpdateInfo() {
-            return getProjectOverviewUpdateRecords()[0]
-              || getProjectOverviewCreationUpdate()
-              || null;
           }
 
           function getProjectOverviewUpdateRecordById(updateId) {
@@ -494,6 +517,7 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
             return {
               id: "project_update_" + Date.now().toString(36) + randomPart,
               body: String(draft?.body || "").trim(),
+              kind: normalizeProjectOverviewUpdateKind(draft?.kind),
               status: normalizeProjectOverviewUpdateStatus(draft?.status),
               attachments: normalizePlaygroundTaskAttachmentList(draft?.attachments),
               comments: [],
@@ -514,8 +538,10 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
               error: "",
               draft: {
                 body: "",
+                kind: "update",
                 status: "on_track",
                 attachments: [],
+                mentions: [],
               },
             });
           }
@@ -530,8 +556,10 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                     error: "",
                     draft: {
                       body: "",
+                      kind: "update",
                       status: "on_track",
                       attachments: [],
+                      mentions: [],
                     },
                   }
             ));
@@ -623,27 +651,42 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
             });
           }
 
-          async function postProjectOverviewUpdate(event) {
+          async function postProjectOverviewUpdate(event, options = {}) {
             event?.preventDefault?.();
             const draft = projectOverviewUpdateComposerState?.draft || {};
             const body = String(draft.body || "").trim();
+            const submissionKind = normalizeProjectOverviewUpdateKind(options.kind || draft.kind);
             const projectId = String(selectedProjectId || selectedProject?.id || "").trim();
             if (!body || !projectId || projectOverviewUpdateComposerState?.isSaving) {
               if (!body) {
                 setProjectOverviewUpdateComposerState((current) => ({
                   ...current,
-                  error: "Write an update before posting.",
+                  error: submissionKind === "comment"
+                    ? "Write a comment before posting."
+                    : "Write an update before posting.",
                 }));
               }
-              return;
+              return false;
             }
-            const clientRecord = createProjectOverviewUpdateClientRecord(draft);
             setProjectOverviewUpdateComposerState((current) => ({
               ...current,
               isSaving: true,
               error: "",
             }));
             try {
+              const uploadedFiles = Array.isArray(options.files) && options.files.length
+                ? await uploadProjectOverviewUpdateFiles(options.files)
+                : [];
+              const submissionAttachments = normalizePlaygroundTaskAttachmentList(
+                normalizePlaygroundTaskAttachmentList(draft.attachments).concat(
+                  getProjectOverviewUpdateUploadedAttachments({ uploadedFiles })
+                )
+              );
+              const clientRecord = createProjectOverviewUpdateClientRecord({
+                ...draft,
+                kind: submissionKind,
+                attachments: submissionAttachments,
+              });
               const headers = new Headers(requestHeaders || {});
               headers.set("Content-Type", "application/json");
               const response = await fetch(
@@ -654,8 +697,14 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                   body: JSON.stringify({
                     idempotencyKey: clientRecord.id,
                     body: clientRecord.body,
+                    kind: clientRecord.kind,
                     status: clientRecord.status,
                     attachments: clientRecord.attachments,
+                    mentions: Array.isArray(options.mentions)
+                      ? options.mentions
+                      : Array.isArray(draft.mentions)
+                        ? draft.mentions
+                        : [],
                   }),
                 }
               );
@@ -671,11 +720,20 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
               }
               let updatedProject = null;
               if (response.ok) {
-                const updateRecord = normalizeProjectOverviewUpdateRecord(data?.update) || clientRecord;
+                const updateRecord = {
+                  ...(normalizeProjectOverviewUpdateRecord(data?.update) || clientRecord),
+                  kind: clientRecord.kind,
+                };
                 const responseProject = getPlaygroundProjectResponseRecord(data, null);
                 if (responseProject?.id) {
                   commitProjectOverviewSidebarProjectRecord(responseProject);
-                  updatedProject = responseProject;
+                  const requiresKindReconciliation = submissionKind === "comment"
+                    || getProjectOverviewUpdateRecords().some(
+                      (record) => normalizeProjectOverviewUpdateKind(record.kind) === "comment"
+                    );
+                  updatedProject = requiresKindReconciliation
+                    ? await persistProjectOverviewUpdateFallback(updateRecord)
+                    : responseProject;
                 } else {
                   updatedProject = await persistProjectOverviewUpdateFallback(updateRecord);
                 }
@@ -691,16 +749,24 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                 error: "",
                 draft: {
                   body: "",
+                  kind: options.preserveKind === true ? submissionKind : "update",
                   status: "on_track",
                   attachments: [],
+                  mentions: [],
                 },
               });
+              return true;
             } catch (error) {
               setProjectOverviewUpdateComposerState((current) => ({
                 ...current,
                 isSaving: false,
-                error: error instanceof Error ? error.message : "Failed to post project update.",
+                error: error instanceof Error
+                  ? error.message
+                  : submissionKind === "comment"
+                    ? "Failed to post project comment."
+                    : "Failed to post project update.",
               }));
+              return false;
             }
           }
 
@@ -805,6 +871,7 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
             body: rawBody,
             files = [],
             parentCommentId = "",
+            mentions = [],
             throwOnError = false,
           }) {
             const normalizedUpdateId = String(updateId || "").trim();
@@ -896,6 +963,7 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                     idempotencyKey: clientCommentId,
                     body,
                     attachments,
+                    mentions: Array.isArray(mentions) ? mentions : [],
                     ...(normalizedParentCommentId
                       ? { parentCommentId: normalizedParentCommentId }
                       : {}),
@@ -956,19 +1024,26 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
             }
           }
 
-          async function postProjectOverviewUpdateComment(updateId, files = []) {
+          async function postProjectOverviewUpdateComment(
+            updateId,
+            files = [],
+            mentions = [],
+            submittedBody = ""
+          ) {
             return persistProjectOverviewUpdateComment({
               updateId,
-              body: projectOverviewUpdateInteractionState?.commentValue || "",
+              body: submittedBody || projectOverviewUpdateInteractionState?.commentValue || "",
               files,
+              mentions,
             });
           }
 
-          async function postProjectOverviewUpdateReply(updateId, parentCommentId, body) {
+          async function postProjectOverviewUpdateReply(updateId, parentCommentId, body, mentions = []) {
             return persistProjectOverviewUpdateComment({
               updateId,
               parentCommentId,
               body,
+              mentions,
               throwOnError: true,
             });
           }
@@ -1219,11 +1294,12 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                 open: Boolean(projectOverviewUpdateComposerState?.open),
                 onClose: closeProjectOverviewUpdateComposer,
                 as: "form",
-                size: "medium",
+                size: "large",
+                maxHeight: "84vh",
                 title: "Post project update",
-                className: "platform-project-update-modal",
-                bodyClassName: "platform-project-update-modal__body",
-                footerClassName: "platform-project-update-modal__footer",
+                className: "playground-new-issue-modal playground-project-command-modal platform-project-update-modal",
+                bodyClassName: "playground-new-issue-modal__body playground-project-command-modal__body platform-project-update-modal__body",
+                footerClassName: "playground-new-issue-modal__footer platform-project-update-modal__footer",
                 surfaceProps: {
                   onSubmit: postProjectOverviewUpdate,
                 },
@@ -1241,6 +1317,34 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                   }, projectOverviewUpdateComposerState?.isSaving ? "Posting..." : "Post Update")
                 ),
               },
+              React.createElement(PlatformInstructionsEditor, {
+                value: resolveTaskDescriptionAttachmentFiles(
+                  String(draft.body || ""),
+                  draft.attachments
+                ),
+                onChange: handleProjectOverviewUpdateEditorChange,
+                title: "Update",
+                placeholder: "Share progress, decisions, risks, and what happens next.",
+                ariaLabel: "Project update",
+                historyKey: "project-update:" + String(selectedProjectId || selectedProject?.id || "project"),
+                stickyHeader: false,
+                autoFocus: true,
+                variant: "minimalistic-ui",
+                contentVariant: "file-enabled",
+                fileUpload: {
+                  upload: uploadProjectOverviewUpdateFiles,
+                  resolvePreviewSource: resolveTaskDescriptionFilePreviewSource,
+                  disabled: projectOverviewUpdateComposerState?.isSaving || taskAttachmentTransferState?.isProcessing,
+                  onRename: handleRenameProjectOverviewUpdateFile,
+                onRemove: handleRemoveProjectOverviewUpdateFile,
+                },
+                ...getProjectMentionComposerProps(),
+                onMentionSelect: (mention) => updateProjectOverviewUpdateDraft((current) => ({
+                  ...current,
+                  mentions: mergeProjectMentionReference(current?.mentions, mention),
+                })),
+                className: "playground-new-issue-modal__description playground-project-command-modal__instructions platform-project-update-modal__editor",
+              }),
               React.createElement("div", { className: "platform-project-update-modal__status-row" },
                 React.createElement("span", { className: "platform-project-update-modal__status-label" }, "Health"),
                 React.createElement(PlatformSelector, {
@@ -1265,29 +1369,6 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                   popupClassName: "platform-project-update-modal__status-popup",
                 })
               ),
-              React.createElement(PlatformInstructionsEditor, {
-                value: resolveTaskDescriptionAttachmentFiles(
-                  String(draft.body || ""),
-                  draft.attachments
-                ),
-                onChange: handleProjectOverviewUpdateEditorChange,
-                title: "Update",
-                placeholder: "Share progress, decisions, risks, and what happens next.",
-                ariaLabel: "Project update",
-                historyKey: "project-update:" + String(selectedProjectId || selectedProject?.id || "project"),
-                stickyHeader: false,
-                autoFocus: true,
-                variant: "minimalistic-ui",
-                contentVariant: "file-enabled",
-                fileUpload: {
-                  upload: uploadProjectOverviewUpdateFiles,
-                  resolvePreviewSource: resolveTaskDescriptionFilePreviewSource,
-                  disabled: projectOverviewUpdateComposerState?.isSaving || taskAttachmentTransferState?.isProcessing,
-                  onRename: handleRenameProjectOverviewUpdateFile,
-                  onRemove: handleRemoveProjectOverviewUpdateFile,
-                },
-                className: "platform-project-update-modal__editor",
-              }),
               projectOverviewUpdateComposerState?.error
                 ? React.createElement("div", {
                     className: "platform-project-update-modal__error",
@@ -1297,8 +1378,7 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
             );
           }
 
-          function renderProjectOverviewLatestUpdateSection() {
-            const update = getProjectOverviewLatestUpdateInfo();
+          function renderProjectOverviewUpdateCard(update, options = {}) {
             const updateBody = String(update?.body || "").trim();
             const updateComments = Array.isArray(update?.comments) ? update.comments : [];
             const updateReactions = Array.isArray(update?.reactions) ? update.reactions : [];
@@ -1314,11 +1394,15 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
               : "";
             return React.createElement(React.Fragment, null,
               React.createElement("section", {
-                  className: "platform-project-update-card" + (updateBody ? "" : " is-empty"),
+                  className: "platform-project-update-card"
+                    + (options.className ? " " + String(options.className).trim() : "")
+                    + (updateBody ? "" : " is-empty"),
                 },
                 React.createElement("div", { className: "platform-project-update-card__header" },
                   React.createElement("div", { className: "platform-project-update-card__meta" },
-                    renderProjectOverviewUpdateStatus(update.status),
+                    options.showStatus === false
+                      ? null
+                      : renderProjectOverviewUpdateStatus(update.status),
                     React.createElement("span", { className: "platform-project-update-card__author" },
                       renderProjectOverviewSidebarAvatar(
                         actorName,
@@ -1330,15 +1414,17 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                       ? React.createElement("span", { className: "platform-project-update-card__time" }, timeLabel)
                       : null
                   ),
-                  React.createElement(PlatformSecondaryButton, {
-                    type: "button",
-                    size: "small",
-                    className: "platform-project-update-card__action",
-                    onClick: openProjectOverviewUpdateComposer,
-                  },
-                    React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Update")
-                  )
+                  options.showUpdateAction === false
+                    ? null
+                    : React.createElement(PlatformSecondaryButton, {
+                        type: "button",
+                        size: "small",
+                        className: "platform-project-update-card__action",
+                        onClick: openProjectOverviewUpdateComposer,
+                      },
+                        React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Update")
+                      )
                 ),
                 updateBody
                   ? React.createElement(React.Fragment, null,
@@ -1347,10 +1433,10 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                         onChange: () => {},
                         title: null,
                         placeholder: "",
-                        ariaLabel: "Latest project update",
+                        ariaLabel: options.ariaLabel || "Project update",
                         readOnly: true,
                         stickyHeader: false,
-                        historyKey: "latest-project-update:" + String(update.id || selectedProjectId || "project"),
+                        historyKey: "project-update:" + String(update.id || selectedProjectId || "project"),
                         variant: "minimalistic-ui",
                         contentVariant: "file-enabled",
                         fileUpload: {
@@ -1398,7 +1484,8 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                                   className: "platform-project-update-card__reaction"
                                     + (selected ? " is-selected" : ""),
                                   "aria-pressed": selected,
-                                  disabled: projectOverviewUpdateInteractionState?.reactionSaving === reaction.emoji,
+                                  disabled: updateInteractionActive
+                                    && projectOverviewUpdateInteractionState?.reactionSaving === reaction.emoji,
                                   onClick: () => void toggleProjectOverviewUpdateReaction(
                                     update.id,
                                     reaction.emoji
@@ -1503,10 +1590,12 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                                 disabled: Boolean(projectOverviewUpdateInteractionState?.isSaving),
                                 autoFocus: commentComposerOpen
                                   && commentIndex === updateComments.length - 1,
-                                onSubmit: (value) => postProjectOverviewUpdateReply(
+                                ...getProjectMentionComposerProps(),
+                                onSubmit: (value, mentions) => postProjectOverviewUpdateReply(
                                   update.id,
                                   comment.id,
-                                  value
+                                  value,
+                                  mentions
                                 ),
                               },
                               actions: isProjectOverviewUpdateCommentByCurrentUser(comment)
@@ -1528,6 +1617,7 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                           }),
                           commentComposerOpen && !updateComments.length
                             ? React.createElement(PlatformCommentComposer, {
+                                ...getProjectMentionComposerProps(),
                                 value: projectOverviewUpdateInteractionState?.commentValue || "",
                                 onChange: (nextValue) => setProjectOverviewUpdateInteractionState((current) => ({
                                   ...current,
@@ -1535,18 +1625,26 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                                   commentValue: nextValue,
                                   error: "",
                                 })),
-                                onSubmit: (files) => postProjectOverviewUpdateComment(update.id, files),
+                                onSubmit: (files, mentions, body) => postProjectOverviewUpdateComment(
+                                  update.id,
+                                  files,
+                                  mentions,
+                                  body
+                                ),
                                 allowAttachments: true,
                                 submitting: projectOverviewUpdateInteractionState?.isSaving,
                                 errorMessage: projectOverviewUpdateInteractionState?.error,
                                 placeholder: "Leave a comment...",
                                 ariaLabel: "Project update comment",
+                                autoFocus: true,
                                 className: "platform-project-update-card__comment-composer",
                               })
                             : null
                         )
                         : null,
-                      !commentComposerOpen && projectOverviewUpdateInteractionState?.error
+                      updateInteractionActive
+                        && !commentComposerOpen
+                        && projectOverviewUpdateInteractionState?.error
                         ? React.createElement("div", {
                             className: "platform-project-update-card__interaction-error",
                             role: "alert",
@@ -1555,7 +1653,10 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                     )
                   : null
               ),
-              renderProjectOverviewUpdateComposerModal()
+              options.includeComposerModal === true
+                ? renderProjectOverviewUpdateComposerModal()
+                : null
             );
           }
+
 `;

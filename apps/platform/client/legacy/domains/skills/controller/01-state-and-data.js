@@ -261,6 +261,11 @@
               description: "Let the agent create, organize, and comment on planning tasks and projects.",
               icon: "list",
             },
+            mission_control: {
+              name: "Mission Control",
+              description: "Maintain project strategy, milestones, issues, and durable Knowledge in platform-managed Mission Control workflows.",
+              icon: "rocket",
+            },
             app_platform: {
               name: "App Platform",
               description: "Create, connect, deploy, and debug web apps, functions, databases, and auth resources.",
@@ -866,6 +871,15 @@
               id: skill.id,
               name: skill.label,
               description: skill.description,
+            }));
+            PLAYGROUND_EXECUTION_ONLY_SYSTEM_SKILL_OPTIONS.forEach((skill) => appendSkill({
+              id: skill.id,
+              name: skill.label,
+              description: skill.description,
+              metadata: {
+                executionOnly: true,
+                managedBy: "computer-agents-platform",
+              },
             }));
   
             return next;

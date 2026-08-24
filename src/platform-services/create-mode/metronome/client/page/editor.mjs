@@ -510,36 +510,9 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             return React.createElement("pre", { className: "playground-metronome-run-output-block" }, formatted);
           };
 
-          const getMetronomeRunStepInput = (step) => {
-            if (step?.input !== null && typeof step?.input !== "undefined") return step.input;
-            const output = step?.output && typeof step.output === "object" ? step.output : {};
-            return output.input || output.inputs || output.previous || output.context || output.inputSummary || "";
-          };
-
-          const getMetronomeRunConditionBranchLabel = (step) => {
-            const output = step?.output && typeof step.output === "object" ? step.output : {};
-            return String(
-              step?.branchLabel
-                || output.branchLabel
-                || output.branch?.label
-                || output.branchName
-                || output.selectedBranch
-                || output.selectedBranchLabel
-                || "Default"
-            ).trim() || "Default";
-          };
-
-          const getMetronomeRunConditionReason = (step) => {
-            const output = step?.output && typeof step.output === "object" ? step.output : {};
-            return String(
-              step?.branchReason
-                || output.branchReason
-                || output.branch?.reason
-                || output.reason
-                || output.message
-                || ""
-            ).trim();
-          };
+          const getMetronomeRunConditionPresentation = (step, conditionNode = null) => (
+            buildPlatformMetronomeConditionResultPresentation(step, conditionNode)
+          );
 
           const isGenericMetronomeRunSummaryText = (value) => {
             const normalized = String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
@@ -668,10 +641,9 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                   : isThreadStep
                     ? extractMetronomeThreadReadableOutputText(step, thread)
                     : extractMetronomeReadableOutputText(step.output);
-                const conditionInput = stepKind === "condition" ? getMetronomeRunStepInput(step) : null;
-                const conditionInputText = stepKind === "condition" ? formatMetronomeRunValue(conditionInput) : "";
-                const conditionBranchLabel = stepKind === "condition" ? getMetronomeRunConditionBranchLabel(step) : "";
-                const conditionReason = stepKind === "condition" ? getMetronomeRunConditionReason(step) : "";
+                const conditionPresentation = stepKind === "condition"
+                  ? getMetronomeRunConditionPresentation(step, stepNode)
+                  : null;
                 const summary = String(
                   isThreadStep
                     ? (readableOutputText ? "" : thread?.prompt || step.status || "Completed")
@@ -687,49 +659,37 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                   )
                 );
                 traceItems.push(React.createElement("div", { key: step.id || step.nodeId || index, className: "playground-metronome-run-trace-step" },
-                  React.createElement("div", { className: "playground-metronome-run-trace-heading" },
-                    React.createElement("span", { className: "playground-metronome-run-trace-icon" },
-                      React.createElement(StepIcon, { width: 13, height: 13, strokeWidth: 1.9 })
-                    ),
-                    React.createElement("div", { className: "playground-metronome-run-trace-title-group" },
-                      React.createElement("div", { className: "playground-metronome-run-trace-title" }, stepTitle),
-                      thread?.id
-                        ? React.createElement("div", { className: "playground-metronome-run-thread-meta-row" },
-                            React.createElement("span", { className: "playground-metronome-run-thread-id" }, thread.id),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-metronome-run-thread-link",
-                              onClick: () => {
-                                if (typeof onThreadOpen === "function") {
-                                  requestMetronomeNavigation(() => (
-                                    onThreadOpen(thread.id, { contentMode: "chat" })
-                                  ));
-                                }
-                              },
-                            }, "Show thread")
-                          )
-                        : null
-                    )
-                  ),
-                  summary
-                    ? React.createElement("div", { className: "playground-metronome-run-trace-summary" }, summary)
-                    : null,
-                  stepKind === "condition" && conditionInputText
-                    ? React.createElement("div", { className: "playground-metronome-run-trace-field" },
-                        React.createElement("div", { className: "playground-metronome-run-trace-field-label" }, "Input"),
-                        renderMetronomeRunTraceValue(conditionInput)
-                      )
-                    : null,
-                  stepKind === "condition"
-                    ? React.createElement("div", { className: "playground-metronome-run-trace-field" },
-                        React.createElement("div", { className: "playground-metronome-run-trace-field-label" }, "Branch"),
-                        React.createElement("div", { className: "playground-metronome-run-branch-result" },
-                          React.createElement("span", { className: "playground-metronome-run-branch-chip" }, conditionBranchLabel || "Default"),
-                          conditionReason
-                            ? React.createElement("span", { className: "playground-metronome-run-branch-reason" }, conditionReason)
+                  stepKind !== "condition"
+                    ? React.createElement("div", { className: "playground-metronome-run-trace-heading" },
+                        React.createElement("span", { className: "playground-metronome-run-trace-icon" },
+                          React.createElement(StepIcon, { width: 13, height: 13, strokeWidth: 1.9 })
+                        ),
+                        React.createElement("div", { className: "playground-metronome-run-trace-title-group" },
+                          React.createElement("div", { className: "playground-metronome-run-trace-title" }, stepTitle),
+                          thread?.id
+                            ? React.createElement("div", { className: "playground-metronome-run-thread-meta-row" },
+                                React.createElement("span", { className: "playground-metronome-run-thread-id" }, thread.id),
+                                React.createElement("button", {
+                                  type: "button",
+                                  className: "playground-metronome-run-thread-link",
+                                  onClick: () => {
+                                    if (typeof onThreadOpen === "function") {
+                                      requestMetronomeNavigation(() => (
+                                        onThreadOpen(thread.id, { contentMode: "chat" })
+                                      ));
+                                    }
+                                  },
+                                }, "Show thread")
+                              )
                             : null
                         )
                       )
+                    : null,
+                  summary
+                    ? React.createElement("div", { className: "playground-metronome-run-trace-summary" }, summary)
+                    : null,
+                  conditionPresentation
+                    ? React.createElement(PlatformMetronomeConditionResult, conditionPresentation)
                     : null,
                   shouldRenderOutputText
                     ? renderMetronomeRunOutputMarkdown(readableOutputText)
@@ -799,14 +759,10 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                   onClick: () => setMetronomeRunTraceWorkExpanded((current) => !current),
                 },
                   React.createElement("span", { className: "tb-work-label" },
-                    React.createElement("span", null, metronomeRunState.status === "loading" ? "Loading Metronome run" : "Metronome Working Logs"),
+                    React.createElement("span", null, metronomeRunState.status === "loading" ? "Loading workflow" : "Workflow Logs"),
                     isExpanded
                       ? React.createElement(ChevronUp, { className: "tb-chevron", strokeWidth: 1.8 })
                       : React.createElement(ChevronDown, { className: "tb-chevron", strokeWidth: 1.8 })
-                  ),
-                  React.createElement("div", { className: "tb-turn-environment-pill" },
-                    React.createElement(Metronome, { className: "tb-turn-environment-icon", strokeWidth: 1.6 }),
-                    React.createElement("span", { className: "tb-turn-environment-label" }, activeWorkflow?.name || "Metronome")
                   )
                 ),
                 React.createElement("div", {

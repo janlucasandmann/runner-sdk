@@ -64,6 +64,71 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             }
           }
 
+          function updateProjectOverviewNameDraftValue(nextValue) {
+            const normalizedProjectId = String(selectedProjectId || selectedProject?.id || "").trim();
+            const nextName = String(nextValue ?? "").replace(/\s+/g, " ");
+            if (!normalizedProjectId || typeof setProjectDraft !== "function") {
+              return;
+            }
+            setProjectDraft((current) => {
+              if (!current || String(current.id || "") !== normalizedProjectId) {
+                return current;
+              }
+              const currentMetadata = current.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
+                ? current.metadata
+                : {};
+              return normalizePlaygroundProjectRecord({
+                ...current,
+                name: nextName,
+                metadata: {
+                  ...currentMetadata,
+                  name: nextName,
+                },
+              });
+            });
+          }
+
+          async function saveProjectOverviewName(nameOverride) {
+            const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+            const normalizedProjectId = String(normalizedProject.id || selectedProjectId || "").trim();
+            const nextName = String(nameOverride ?? normalizedProject.name ?? "")
+              .trim()
+              .replace(/\s+/g, " ");
+            if (!normalizedProjectId || !nextName || nextName === String(normalizedProject.name || "").trim()) {
+              return Boolean(normalizedProjectId);
+            }
+            const updatedProject = await persistProjectOverviewSidebarProjectUpdate({
+              name: nextName,
+            }, {
+              name: nextName,
+            });
+            if (updatedProject?.id) {
+              if (typeof rememberProjectLocalNameOverride === "function") {
+                rememberProjectLocalNameOverride(updatedProject.id, nextName);
+              }
+              return true;
+            }
+            if (typeof setProjectDraft === "function") {
+              setProjectDraft((current) => {
+                if (!current || String(current.id || "") !== normalizedProjectId) {
+                  return current;
+                }
+                const currentMetadata = current.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
+                  ? current.metadata
+                  : {};
+                return normalizePlaygroundProjectRecord({
+                  ...current,
+                  name: normalizedProject.name,
+                  metadata: {
+                    ...currentMetadata,
+                    name: normalizedProject.name,
+                  },
+                });
+              });
+            }
+            return false;
+          }
+
           function updateProjectOverviewSidebarProjectProperty(projectUpdates = {}, metadataUpdates = {}) {
             if (typeof setProjectOverviewSidebarPropertyPopover === "function") {
               setProjectOverviewSidebarPropertyPopover("");
@@ -815,6 +880,12 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                 className: "playground-tasks-status-value-label playground-tasks-detail-select-trigger-label",
               }, option?.label || "Backlog")
             );
+            const activeMilestoneRows = getProjectOverviewMilestoneRecords()
+              .filter((release) => String(getPlaygroundTaskReleaseStatus(release) || "").trim().toLowerCase() === "active")
+              .map((release) => ({
+                release,
+                progress: getProjectOverviewMilestoneProgress(release),
+              }));
             return React.createElement(React.Fragment, null,
               React.createElement(PlatformUiCard, {
                   as: "section",
@@ -985,16 +1056,101 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                         }
                       },
                     },
-                      React.createElement("button", {
+                    React.createElement("button", {
                         type: "button",
                         role: "menuitem",
                         className: "tb-popup-row",
                         disabled: fullAutoActionDisabled,
                         onClick: handleFullAutoAction,
-                      }, fullAutoActionLabel)
+                      }, fullAutoActionLabel),
+                    React.createElement("button", {
+                        type: "button",
+                        role: "menuitem",
+                        className: "tb-popup-row",
+                        onClick: () => {
+                          if (typeof openProjectOverviewUpdateComposer === "function") {
+                            openProjectOverviewUpdateComposer();
+                          }
+                        },
+                      }, "Post Update")
                     )
                   )
                 )
+              ),
+              React.createElement(PlatformUiCard, {
+                  as: "section",
+                  variant: "sidebar",
+                  className: "playground-project-overview-sidebar-card playground-project-overview-milestones-card",
+                },
+                React.createElement("div", {
+                    className: "playground-project-overview-milestones-card__header",
+                  },
+                  React.createElement("button", {
+                      type: "button",
+                      className: "playground-project-overview-milestones-card__title",
+                      onClick: () => handleProjectOverviewHomeTabChange("milestones"),
+                    },
+                    React.createElement("span", null, "Milestones")
+                  ),
+                  React.createElement("button", {
+                      type: "button",
+                      className: "playground-project-overview-milestones-card__add",
+                      onClick: () => {
+                        if (typeof openReleaseComposer === "function") {
+                          openReleaseComposer();
+                        }
+                      },
+                      title: "Add milestone",
+                      "aria-label": "Add milestone",
+                    },
+                    React.createElement(Plus, {
+                      width: 16,
+                      height: 16,
+                      strokeWidth: 1.8,
+                      "aria-hidden": "true",
+                    })
+                  )
+                ),
+                activeMilestoneRows.length > 0
+                  ? React.createElement("div", {
+                      className: "playground-project-overview-milestones-card__list",
+                    },
+                    activeMilestoneRows.map(({ release, progress }) => {
+                      const milestoneName = String(release?.name || "Untitled Milestone").trim() || "Untitled Milestone";
+                      return React.createElement("div", {
+                          key: String(release.id),
+                          className: "playground-project-overview-milestones-card__row",
+                        },
+                        React.createElement("button", {
+                            type: "button",
+                            className: "playground-project-overview-milestones-card__open",
+                            onClick: () => {
+                              if (typeof openReleaseComposerForEdit === "function") {
+                                openReleaseComposerForEdit(release);
+                              }
+                            },
+                            title: "Open " + milestoneName,
+                          },
+                          React.createElement("span", {
+                            className: "playground-project-overview-milestones-card__progress",
+                            style: {
+                              "--project-milestone-progress": String(progress.percent) + "%",
+                            },
+                            "aria-label": String(progress.percent) + "% complete",
+                          }),
+                          React.createElement("span", {
+                            className: "playground-project-overview-milestones-card__name",
+                          }, milestoneName),
+                          React.createElement("span", {
+                            className: "playground-project-overview-milestones-card__meta",
+                          }, String(progress.completed) + " of " + String(progress.total))
+                        )
+                      );
+                    })
+                  )
+                  : React.createElement("div", {
+                      className: "playground-project-overview-milestones-card__empty",
+                    }, "No active milestones.")
               )
             );
           }
@@ -1385,6 +1541,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                 canViewProjectRules
                   ? renderProjectOverviewSettingsRulesSection({ canEdit: canEditProjectRules })
                   : null,
+                renderProjectOverviewTimelineSettingsSection({ canEdit: false }),
                 React.createElement("section", {
                     className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-permissions-section playground-project-teams-section playground-project-settings-reduced-access",
                   },
@@ -1629,10 +1786,10 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 
 	            return React.createElement("section", {
 	                className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root",
-	              },
-	              renderProjectOverviewWallpaperSettingsSection(),
-	              renderProjectOverviewPluginsPanel(),
-	              renderProjectOverviewSettingsRulesSection(),
+              },
+              renderProjectOverviewPluginsPanel(),
+              renderProjectOverviewTimelineSettingsSection({ canEdit: canManageProjectAccess }),
+              renderProjectOverviewSettingsRulesSection(),
 	              renderProjectAccessSettings()
 	            );
 	          }
@@ -1668,7 +1825,8 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                 },
                 projectOverviewActivePanel
               )
-            )
+            ),
+            renderProjectOverviewUpdateComposerModal()
           );
         }
 `;

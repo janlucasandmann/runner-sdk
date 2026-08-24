@@ -96,6 +96,28 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
         };
       }
 
+      function renderPlaygroundTaskColorSwatch(value, className = "") {
+        const presentation = getPlaygroundTaskColorPresentation(value);
+        return React.createElement("span", {
+          className: ["playground-tasks-detail-color-swatch", className].filter(Boolean).join(" "),
+          style: {
+            "--playground-task-color-accent": presentation.accent,
+            "--playground-task-color-border": presentation.border,
+          },
+          "aria-hidden": "true",
+        });
+      }
+
+      function renderPlaygroundTaskColorValue(value, className = "") {
+        const presentation = getPlaygroundTaskColorPresentation(value);
+        return React.createElement("span", {
+          className: ["playground-tasks-detail-color-value", className].filter(Boolean).join(" "),
+        },
+          renderPlaygroundTaskColorSwatch(value),
+          React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, presentation.label)
+        );
+      }
+
       function buildPlaygroundHumanAssigneeOption() {
         return {
           id: PLAYGROUND_TASK_HUMAN_ME_ID,
@@ -585,6 +607,10 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           leadName: "",
           leadEmail: "",
 	          leadAvatarUrl: "",
+	          ownerUserId: "",
+	          ownerName: "",
+	          ownerEmail: "",
+	          ownerAvatarUrl: "",
 	          permissionSet: createPlaygroundDefaultPermissionSet("project"),
 		          attachments: [],
 		          connectors: buildPlaygroundDefaultTaskConnectors(),
@@ -616,9 +642,77 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           deliveryPlan: null,
           deliveryExecution: null,
           deliveryAssurance: buildEmptyPlaygroundDeliveryAssurance(),
+          activity: buildEmptyPlaygroundMissionControlActivity(),
           comments: [],
           lastThreadId: "",
           updatedAt: "",
+        };
+      }
+
+      function normalizePlaygroundMissionControlActivityEntry(value) {
+        const source = value && typeof value === "object" && !Array.isArray(value)
+          ? value
+          : {};
+        const normalizeIds = (candidate) => {
+          const values = Array.isArray(candidate) ? candidate : [];
+          return Array.from(new Set(values.map((item) => {
+            if (item && typeof item === "object" && !Array.isArray(item)) {
+              return String(item.id || item.resourceId || item.resource_id || item.name || item.title || "").trim();
+            }
+            return String(item || "").trim();
+          }).filter(Boolean)));
+        };
+        const normalizeCount = (...candidates) => {
+          for (const candidate of candidates) {
+            const number = Number(candidate);
+            if (Number.isFinite(number) && number >= 0) {
+              return Math.floor(number);
+            }
+          }
+          return null;
+        };
+        const created = normalizeIds(source.created || source.createdIds || source.created_ids);
+        const updated = normalizeIds(source.updated || source.updatedIds || source.updated_ids);
+        return {
+          created,
+          updated,
+          createdCount: normalizeCount(source.createdCount, source.created_count),
+          updatedCount: normalizeCount(source.updatedCount, source.updated_count),
+          count: normalizeCount(source.count, source.total, source.totalCount, source.total_count),
+        };
+      }
+
+      function buildEmptyPlaygroundMissionControlActivity() {
+        return {
+          issues: normalizePlaygroundMissionControlActivityEntry(null),
+          strategy: normalizePlaygroundMissionControlActivityEntry(null),
+          milestones: normalizePlaygroundMissionControlActivityEntry(null),
+          knowledge: normalizePlaygroundMissionControlActivityEntry(null),
+        };
+      }
+
+      function normalizePlaygroundMissionControlActivity(value) {
+        const source = value && typeof value === "object" && !Array.isArray(value)
+          ? value
+          : {};
+        const resolveEntry = (key, aliases = []) => {
+          const candidates = [key, ...aliases];
+          for (const candidate of candidates) {
+            if (Object.prototype.hasOwnProperty.call(source, candidate)) {
+              const raw = source[candidate];
+              if (typeof raw === "number") {
+                return normalizePlaygroundMissionControlActivityEntry({ count: raw });
+              }
+              return normalizePlaygroundMissionControlActivityEntry(raw);
+            }
+          }
+          return normalizePlaygroundMissionControlActivityEntry(null);
+        };
+        return {
+          issues: resolveEntry("issues", ["tasks", "tickets", "issue"]),
+          strategy: resolveEntry("strategy", ["projectStrategy", "project_strategy"]),
+          milestones: resolveEntry("milestones", ["releases", "milestone"]),
+          knowledge: resolveEntry("knowledge", ["documents", "knowledgeDocuments", "knowledge_documents"]),
         };
       }
 
@@ -1030,6 +1124,11 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
             missionControl.deliveryAssurance
             || missionControl.delivery_assurance
           ),
+          activity: normalizePlaygroundMissionControlActivity(
+            missionControl.activity
+            || missionControl.resourceActivity
+            || missionControl.resource_activity
+          ),
           comments: normalizePlaygroundTaskCommentList(missionControl.comments),
           lastThreadId: typeof missionControl.lastThreadId === "string" ? missionControl.lastThreadId : "",
           updatedAt: typeof missionControl.updatedAt === "string" ? missionControl.updatedAt : "",
@@ -1072,6 +1171,16 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
       function hasMeaningfulPlaygroundProjectMissionControlRecord(value) {
         const missionControl = normalizePlaygroundProjectMissionControlRecord(value);
         const strategyBrief = normalizePlaygroundProjectStrategyBrief(missionControl.strategyBrief);
+        const hasActivity = Object.values(missionControl.activity || {}).some((entry) => {
+          const createdCount = Number(entry?.createdCount);
+          const updatedCount = Number(entry?.updatedCount);
+          const totalCount = Number(entry?.count);
+          return (Array.isArray(entry?.created) && entry.created.length > 0)
+            || (Array.isArray(entry?.updated) && entry.updated.length > 0)
+            || (Number.isFinite(totalCount) && totalCount > 0)
+            || (Number.isFinite(createdCount) && createdCount > 0)
+            || (Number.isFinite(updatedCount) && updatedCount > 0);
+        });
         return Boolean(
           String(missionControl.summary || "").trim()
           || String(missionControl.knowledgeLibraryId || "").trim()
@@ -1096,6 +1205,7 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           )
           || normalizePlaygroundTaskCommentList(missionControl.comments).length > 0
           || hasMeaningfulPlaygroundProjectStrategyBrief(strategyBrief)
+          || hasActivity
           || hasMeaningfulPlaygroundDeliveryAssurance(missionControl.deliveryAssurance)
         );
       }
@@ -1111,6 +1221,7 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           deliveryPlan: clonePlaygroundProjectBlueprintValue(normalized.deliveryPlan, null),
           deliveryExecution: clonePlaygroundProjectBlueprintValue(normalized.deliveryExecution, null),
           deliveryAssurance: normalizePlaygroundDeliveryAssurance(normalized.deliveryAssurance),
+          activity: normalizePlaygroundMissionControlActivity(normalized.activity),
           comments: normalizePlaygroundTaskCommentList(normalized.comments),
           lastThreadId: normalized.lastThreadId,
           updatedAt: normalized.updatedAt,
@@ -2055,11 +2166,16 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
             ? comment.attachments
             : metadata.attachments
         );
-        const createdAt = typeof comment.createdAt === "string" && comment.createdAt.trim()
-          ? comment.createdAt.trim()
-          : typeof comment.updatedAt === "string" && comment.updatedAt.trim()
-            ? comment.updatedAt.trim()
-            : "";
+        const commentTimestamp = comment.createdAt
+          ?? comment.created_at
+          ?? comment.timestamp
+          ?? comment.occurredAt
+          ?? comment.occurred_at
+          ?? comment.updatedAt
+          ?? comment.updated_at;
+        const createdAt = typeof commentTimestamp === "number" && Number.isFinite(commentTimestamp)
+          ? new Date(commentTimestamp < 100000000000 ? commentTimestamp * 1000 : commentTimestamp).toISOString()
+          : String(commentTimestamp || "").trim();
 
         return {
           id,
@@ -2102,23 +2218,100 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           "thread_started",
           "comment_added",
         ]);
-        const eventType = String(event.eventType || event.event_type || "").trim().toLowerCase();
+        const eventPayload = event.payload && typeof event.payload === "object" && !Array.isArray(event.payload)
+          ? event.payload
+          : event.data && typeof event.data === "object" && !Array.isArray(event.data)
+            ? event.data
+            : {};
+        const rawEventType = String(
+          event.eventType
+            || event.event_type
+            || event.activityType
+            || event.activity_type
+            || event.type
+            || event.action
+            || event.name
+            || eventPayload.eventType
+            || eventPayload.event_type
+            || eventPayload.type
+            || ""
+        ).trim().toLowerCase();
+        // A few older task activity producers used field-specific event names
+        // before the canonical activity contract was introduced. Normalize
+        // those aliases here so every consumer (including the ticket detail
+        // activity feed) renders the same field-change line.
+        const eventTypeAliases = {
+          task_created: "created",
+          task_create: "created",
+          status_change: "status_changed",
+          priority_changed: "field_changed",
+          priority_change: "field_changed",
+          priority_updated: "field_changed",
+          task_priority_changed: "field_changed",
+          task_status_changed: "status_changed",
+          task_status_change: "status_changed",
+          status_updated: "status_changed",
+          task_updated: "field_changed",
+          task_field_changed: "field_changed",
+          field_change: "field_changed",
+          attribute_changed: "field_changed",
+          assignee_changed: "field_changed",
+          assignment_changed: "field_changed",
+          assignee_updated: "field_changed",
+          task_assigned: "field_changed",
+          owner_changed: "field_changed",
+          reviewer_changed: "field_changed",
+          title_changed: "field_changed",
+          milestone_changed: "field_changed",
+          release_changed: "field_changed",
+          milestone_updated: "field_changed",
+          release_updated: "field_changed",
+          thread_created: "thread_started",
+          agent_thread_started: "thread_started",
+        };
+        const eventType = eventTypeAliases[rawEventType] || rawEventType;
         if (!validEventTypes.has(eventType)) {
           return null;
         }
-        const sourceId = String(event.sourceId || event.source_id || event.commentId || event.threadId || event.id || "").trim();
+        const sourceId = String(
+          event.sourceId
+            || event.source_id
+            || eventPayload.sourceId
+            || eventPayload.source_id
+            || event.commentId
+            || event.comment_id
+            || event.threadId
+            || event.thread_id
+            || event.id
+            || ""
+        ).trim();
         const id = String(event.id || (eventType + ":" + sourceId)).trim();
         if (!id || !sourceId) {
           return null;
         }
-        const actorAgentId = readPlaygroundTaskCommentIdentityString(event, ["actorAgentId", "actor_agent_id"]) || undefined;
-        const actorUserId = readPlaygroundTaskCommentIdentityString(event, ["actorUserId", "actor_user_id", "createdByUserId", "created_by_user_id"]) || undefined;
+        const taskId = String(
+          event.taskId
+            || event.task_id
+            || eventPayload.taskId
+            || eventPayload.task_id
+            || event.task?.id
+            || eventPayload.task?.id
+            || ""
+        ).trim() || null;
+        const actorAgentId = readPlaygroundTaskCommentIdentityString(event, ["actorAgentId", "actor_agent_id"])
+          || readPlaygroundTaskCommentIdentityString(eventPayload, ["actorAgentId", "actor_agent_id"])
+          || undefined;
+        const actorUserId = readPlaygroundTaskCommentIdentityString(event, ["actorUserId", "actor_user_id", "createdByUserId", "created_by_user_id"])
+          || readPlaygroundTaskCommentIdentityString(eventPayload, ["actorUserId", "actor_user_id", "createdByUserId", "created_by_user_id"])
+          || undefined;
         const actorType = ["user", "agent", "system"].includes(String(event.actorType || event.actor_type || "").trim().toLowerCase())
           ? String(event.actorType || event.actor_type).trim().toLowerCase()
           : actorAgentId
             ? "agent"
             : "user";
-        const actorName = readPlaygroundTaskCommentIdentityString(event, ["actorName", "actor_name", "authorName", "author_name", "name"]) || undefined;
+        const actorName = readPlaygroundTaskCommentIdentityString(event, ["actorName", "actor_name", "authorName", "author_name", "name"])
+          || readPlaygroundTaskCommentIdentityString(eventPayload, ["actorName", "actor_name", "authorName", "author_name", "name"])
+          || undefined;
         const actorAvatarUrl = readPlaygroundTaskCommentIdentityString(event, [
           "actorAvatarUrl",
           "actor_avatar_url",
@@ -2129,25 +2322,142 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           "avatarUrl",
           "avatar_url",
           "picture",
-        ]) || undefined;
-        const createdAt = String(event.createdAt || event.created_at || "").trim();
+        ])
+          || readPlaygroundTaskCommentIdentityString(eventPayload, ["actorAvatarUrl", "actor_avatar_url", "avatarUrl", "avatar_url", "photoUrl", "photo_url"])
+          || undefined;
+        const eventTimestamp = event.createdAt
+          ?? event.created_at
+          ?? event.timestamp
+          ?? event.occurredAt
+          ?? event.occurred_at
+          ?? event.metadata?.createdAt
+          ?? event.metadata?.created_at
+          ?? eventPayload.createdAt
+          ?? eventPayload.created_at
+          ?? eventPayload.timestamp;
+        const timestampObject = eventTimestamp && typeof eventTimestamp === "object" && !Array.isArray(eventTimestamp)
+          ? eventTimestamp
+          : null;
+        const numericTimestamp = typeof eventTimestamp === "number"
+          ? eventTimestamp
+          : Number(timestampObject?.seconds ?? timestampObject?._seconds ?? timestampObject?.epochSeconds);
+        let createdAt = Number.isFinite(numericTimestamp) && numericTimestamp > 0
+          ? new Date(numericTimestamp < 100000000000 ? numericTimestamp * 1000 : numericTimestamp).toISOString()
+          : "";
+        if (!createdAt && eventTimestamp && typeof eventTimestamp.toDate === "function") {
+          try {
+            const dateValue = eventTimestamp.toDate();
+            const dateTimestamp = dateValue instanceof Date
+              ? dateValue.getTime()
+              : Date.parse(String(dateValue || ""));
+            if (Number.isFinite(dateTimestamp)) {
+              createdAt = new Date(dateTimestamp).toISOString();
+            }
+          } catch {}
+        }
+        if (!createdAt && typeof eventTimestamp === "string") {
+          const parsedTimestamp = Date.parse(eventTimestamp.trim());
+          if (Number.isFinite(parsedTimestamp)) {
+            createdAt = new Date(parsedTimestamp).toISOString();
+          }
+        }
         const comment = normalizePlaygroundTaskCommentRecord(event.comment);
         const thread = event.thread && typeof event.thread === "object" && !Array.isArray(event.thread)
           ? { ...event.thread }
           : null;
 
+        const rawFieldName = String(
+          event.fieldName
+            || event.field_name
+            || event.field
+            || event.fieldKey
+            || event.field_key
+            || eventPayload.fieldName
+            || eventPayload.field_name
+            || eventPayload.field
+            || ""
+        ).trim();
+        const fieldNameAliases = {
+          status: "status",
+          status_id: "status",
+          priority: "priority",
+          priority_id: "priority",
+          assignee: "assigneeAgentId",
+          assignee_id: "assigneeAgentId",
+          assignee_agent_id: "assigneeAgentId",
+          reviewer: "reviewerAgentId",
+          reviewer_id: "reviewerAgentId",
+          reviewer_agent_id: "reviewerAgentId",
+          title: "title",
+          name: "title",
+          release: "releaseId",
+          release_id: "releaseId",
+          milestone: "milestoneId",
+          milestone_id: "milestoneId",
+          due_at: "dueAt",
+          scheduled_start_at: "scheduledStartAt",
+          scheduled_end_at: "scheduledEndAt",
+          schedule_type: "scheduleType",
+          cron_expression: "cronExpression",
+          schedule_timezone: "scheduleTimezone",
+          schedule_enabled: "scheduleEnabled",
+          dependency_ids: "dependencyIds",
+        };
+        const normalizedRawFieldName = rawFieldName
+          ? fieldNameAliases[rawFieldName.toLowerCase()]
+            || (rawFieldName.includes("_")
+              ? rawFieldName.split("_").map((part, index) => index === 0
+                ? part
+                : part.charAt(0).toUpperCase() + part.slice(1)).join("")
+              : rawFieldName)
+          : "";
+        const aliasedFieldNames = {
+          status_change: "status",
+          task_status_changed: "status",
+          task_status_change: "status",
+          priority_changed: "priority",
+          priority_change: "priority",
+          priority_updated: "priority",
+          task_priority_changed: "priority",
+          assignee_changed: "assigneeAgentId",
+          assignment_changed: "assigneeAgentId",
+          title_changed: "title",
+          milestone_changed: "milestoneId",
+          release_changed: "releaseId",
+          status_updated: "status",
+        };
         return {
           id,
           eventType,
           sourceId,
+          taskId,
           actorType,
           actorUserId,
           actorAgentId,
           actorName,
           actorAvatarUrl,
-          fieldName: String(event.fieldName || event.field_name || "").trim() || null,
-          previousValue: event.previousValue ?? event.previous_value ?? null,
-          nextValue: event.nextValue ?? event.next_value ?? null,
+          fieldName: normalizedRawFieldName
+            || String(event.field || event.field_key || "").trim()
+            || aliasedFieldNames[rawEventType]
+            || null,
+          previousValue: event.previousValue
+            ?? event.previous_value
+            ?? event.oldValue
+            ?? event.old_value
+            ?? eventPayload.previousValue
+            ?? eventPayload.previous_value
+            ?? eventPayload.oldValue
+            ?? eventPayload.old_value
+            ?? null,
+          nextValue: event.nextValue
+            ?? event.next_value
+            ?? event.newValue
+            ?? event.new_value
+            ?? eventPayload.nextValue
+            ?? eventPayload.next_value
+            ?? eventPayload.newValue
+            ?? eventPayload.new_value
+            ?? null,
           threadId: String(event.threadId || event.thread_id || thread?.id || "").trim() || null,
           commentId: String(event.commentId || event.comment_id || comment?.id || "").trim() || null,
           thread,

@@ -9,6 +9,8 @@ afterEach(cleanup);
 
 describe("ProjectSummary", () => {
   it("renders project identity separately from its editable summary", () => {
+    const onProjectNameChange = vi.fn();
+    const onProjectNameCommit = vi.fn();
     const onSummaryChange = vi.fn();
     const onSummaryCommit = vi.fn();
     const { container } = render(
@@ -20,18 +22,26 @@ describe("ProjectSummary", () => {
         iconOptions={[{ id: "rocket", label: "Rocket", icon: Rocket }]}
         colorOptions={["#79d0ff"]}
         onIdentityChange={vi.fn()}
+        onProjectNameChange={onProjectNameChange}
+        onProjectNameCommit={onProjectNameCommit}
         onSummaryChange={onSummaryChange}
         onSummaryCommit={onSummaryCommit}
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "Computer Agents" })).not.toBeNull();
+    const projectName = screen.getByRole("textbox", { name: "Project name" });
+    expect(projectName).not.toBeNull();
     expect(screen.queryByText("Computer Agents", { selector: "span" })).toBeNull();
     const header = container.querySelector(".platform-project-summary");
     expect(header?.firstElementChild?.classList.contains("platform-project-summary__icon-picker"))
       .toBe(true);
     expect(header?.lastElementChild?.classList.contains("platform-project-summary__copy"))
       .toBe(true);
+
+    fireEvent.change(projectName, { target: { value: "Renamed project" } });
+    expect(onProjectNameChange).toHaveBeenCalledWith("Renamed project");
+    fireEvent.blur(projectName);
+    expect(onProjectNameCommit).toHaveBeenCalledWith("Renamed project");
 
     const summary = screen.getByRole("textbox", { name: "Project summary" });
     fireEvent.change(summary, { target: { value: "A concise project summary" } });

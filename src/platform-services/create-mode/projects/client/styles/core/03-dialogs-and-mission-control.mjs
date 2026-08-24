@@ -4,6 +4,7 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 		      .playground-project-create-modal.platform-modal-surface {
 		        display: flex;
 		        flex-direction: column;
+		        height: auto;
 		      }
 
 		      .playground-project-create-modal > .platform-modal-header,
@@ -13,7 +14,7 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 
 		      .playground-project-create-modal__body.platform-modal-body {
 		        min-height: 0;
-		        flex: 1 1 auto;
+		        flex: 0 1 auto;
 		        display: flex;
 		        flex-direction: column;
 		        gap: 16px;
@@ -21,16 +22,49 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 		        overflow-y: auto;
 		      }
 
+		      .playground-project-create-modal .playground-tasks-project-initial-setup-body {
+		        width: 100%;
+		        min-height: 0;
+		        flex: 0 0 auto;
+		      }
+
 		      .playground-project-create-modal__description-editor.platform-instructions-editor {
 		        margin: 0;
+		        min-height: 0;
+		        flex: 0 0 auto;
+		        display: flex;
+		        flex-direction: column;
+		        padding: 12px;
+		        border: 1px solid rgba(255, 255, 255, 0.075);
+		        border-radius: 10px;
+		        background: rgba(255, 255, 255, 0.075);
+		        overflow: hidden;
+		      }
+
+		      .playground-project-create-modal__description-editor.platform-instructions-editor > .platform-instructions-editor__header {
+		        flex: 0 0 auto;
+		        margin-bottom: 12px;
+		      }
+
+		      .playground-project-create-modal__description-editor.platform-instructions-editor > .platform-instructions-editor__body {
+		        min-height: 36px;
+		        flex: 1 1 auto;
+		        overflow-x: hidden;
+		        overflow-y: auto;
 		      }
 
 		      .playground-project-create-modal__description-editor .platform-instructions-editor__prosemirror {
-		        min-height: 96px;
+		        min-height: 144px;
 		      }
 
 		      .playground-project-create-modal .playground-tasks-project-initial-setup-field.is-inline {
+		        box-sizing: border-box;
+		        width: 100%;
+		        min-width: 0;
+		        min-height: 32px;
+		        flex: 0 0 auto;
 		        display: flex;
+		        flex-direction: row;
 		        justify-content: space-between;
 		        align-items: center;
 		        gap: 16px;
@@ -40,9 +74,20 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 		        white-space: nowrap;
 		      }
 
+		      .playground-project-create-modal .playground-tasks-project-initial-setup-label,
+		      .playground-project-create-modal .playground-tasks-project-lead-label {
+		        margin: 0;
+		        color: rgba(255, 255, 255, 0.92);
+		        font-size: 12px;
+		        line-height: 1.3;
+		        font-weight: 500;
+		      }
+
 		      .playground-project-create-modal .playground-tasks-project-initial-setup-field .playground-tasks-project-modal-environment-picker {
+		        flex: 0 1 auto;
 		        width: auto;
 		        min-width: 0;
+		        max-width: 70%;
 		        margin-left: auto;
 		        display: flex;
 		        align-items: center;
@@ -50,15 +95,58 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 		      }
 
 		      .playground-project-create-modal .playground-tasks-project-modal-computer-selector {
+		        min-width: 0;
+		        max-width: 100%;
+		        flex: 0 1 auto;
 		        margin-left: auto;
+		      }
+
+		      .playground-project-create-modal .playground-tasks-project-modal-computer-selector-trigger {
+		        min-width: 0;
+		        max-width: 100%;
+		        justify-content: flex-end;
 		      }
 
 		      .playground-project-create-modal .playground-tasks-project-modal-computer-selector-value {
 		        min-width: 0;
+		        max-width: 100%;
 		        display: inline-flex;
 		        align-items: center;
 		        justify-content: flex-end;
 		        gap: 8px;
+		      }
+
+		      .playground-project-create-modal .playground-tasks-project-modal-computer-selector-value > span {
+		        min-width: 0;
+		        overflow: hidden;
+		        text-overflow: ellipsis;
+		        white-space: nowrap;
+		      }
+
+		      .playground-project-create-modal__icon-picker .platform-project-icon-picker__trigger {
+		        width: 36px;
+		        height: 36px;
+		        flex-basis: 36px;
+		      }
+
+		      .playground-project-create-modal__icon-picker .platform-project-icon-picker__trigger-icon {
+		        width: 32px;
+		        height: 32px;
+		        flex-basis: 32px;
+		        border-radius: 8px;
+		      }
+
+		      .playground-project-create-modal__icon-picker .platform-project-icon-picker__trigger-icon svg {
+		        width: 18px;
+		        height: 18px;
+		      }
+
+		      .playground-project-create-modal__icon-picker .platform-project-icon-picker__emoji {
+		        font-size: 18px !important;
+		      }
+
+		      .playground-project-create-modal > .platform-modal-header .platform-modal-header__search-input {
+		        font-size: 16px;
 		      }
 
 		      .playground-project-create-modal__identity {
@@ -66,6 +154,22 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 		        display: flex;
 		        align-items: center;
 		        gap: 16px;
+		      }
+
+		      .playground-project-create-modal__properties {
+		        width: 100%;
+		        min-width: 0;
+		        overflow: visible;
+		        padding: 0;
+		        border: 0;
+		        border-radius: 0;
+		        background: transparent;
+		        backdrop-filter: none;
+		        -webkit-backdrop-filter: none;
+		      }
+
+		      .playground-project-create-modal__properties .playground-project-overview-sidebar-row {
+		        min-height: 34px;
 		      }
 
 		      .playground-project-create-modal__identity .playground-tasks-project-modal-name-row {
@@ -111,6 +215,31 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 		        padding-right: 0;
 		      }
 
+		      .playground-project-milestone-modal__description.platform-instructions-editor {
+		        margin: 0;
+		      }
+
+		      .playground-project-milestone-modal__success-criteria.platform-instructions-editor {
+		        margin: 0;
+		        padding: 12px;
+		        border: 1px solid rgba(255, 255, 255, 0.075);
+		        border-radius: 10px;
+		        background: rgba(255, 255, 255, 0.075);
+		        overflow: hidden;
+		      }
+
+		      .playground-project-milestone-modal__success-criteria.platform-instructions-editor > .platform-instructions-editor__header {
+		        margin-bottom: 12px;
+		      }
+
+		      .playground-project-milestone-modal__success-criteria.platform-instructions-editor > .platform-instructions-editor__body {
+		        min-height: 36px;
+		      }
+
+	      .playground-project-milestone-modal__delete-button.platform-button {
+	        background: rgba(255, 255, 255, 0.1) !important;
+	      }
+
 		      .playground-new-issue-modal.platform-modal-surface {
 		        display: flex;
 		        flex-direction: column;
@@ -133,6 +262,10 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 
 		      .playground-new-issue-modal > .platform-modal-header.is-search {
 		        gap: 10px;
+		      }
+
+		      .playground-new-issue-modal > .platform-modal-header .platform-modal-header__search-input {
+		        font-size: 16px;
 		      }
 
 		      .playground-new-issue-modal > .platform-modal-header .platform-modal-header__leading {
@@ -280,6 +413,120 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 		        margin: 0;
 		        -webkit-appearance: none;
 		        appearance: none;
+		      }
+
+		      .playground-project-command-modal.platform-modal-surface {
+		        width: min(760px, calc(100vw - 32px));
+		        max-width: calc(100vw - 32px);
+		      }
+
+		      .playground-project-command-modal__body.platform-modal-body {
+		        gap: 20px;
+		      }
+
+		      .playground-project-command-modal .playground-project-command-modal__instructions.platform-instructions-editor {
+		        min-height: 230px;
+		        flex: 0 0 auto;
+		      }
+
+		      .playground-project-command-modal .playground-project-command-modal__instructions .platform-instructions-editor__body,
+		      .playground-project-command-modal .playground-project-command-modal__instructions .platform-instructions-editor__prosemirror {
+		        min-height: 150px;
+		      }
+
+		      .playground-mission-control-parameters {
+		        width: 100%;
+		        min-width: 0;
+		        display: flex;
+		        flex-direction: column;
+		      }
+
+		      .playground-mission-control-parameter-row,
+		      .playground-mission-control-focus-row {
+		        min-height: 48px;
+		        display: flex;
+		        align-items: center;
+		        justify-content: space-between;
+		        gap: 24px;
+		        padding: 8px 0;
+		        border: 0;
+		        box-sizing: border-box;
+		      }
+
+		      .playground-mission-control-parameter-copy {
+		        min-width: 0;
+		        display: flex;
+		        flex-direction: column;
+		        gap: 2px;
+		      }
+
+		      .playground-mission-control-parameter-label {
+		        color: rgba(255, 255, 255, 0.92);
+		        font-size: 12px;
+		        font-weight: 400;
+		        line-height: 1.4;
+		      }
+
+		      .playground-mission-control-parameter-description {
+		        color: rgba(255, 255, 255, 0.5);
+		        font-size: 12px;
+		        font-weight: 400;
+		        line-height: 1.4;
+		      }
+
+		      .playground-mission-control-selector {
+		        min-width: 180px;
+		        max-width: 280px;
+		        flex: 0 1 280px;
+		      }
+
+		      .playground-mission-control-selector .playground-tasks-detail-central-selector-trigger {
+		        width: 100%;
+		        justify-content: flex-end;
+		      }
+
+		      .playground-mission-control-selector-value {
+		        min-width: 0;
+		        overflow: hidden;
+		        text-overflow: ellipsis;
+		        white-space: nowrap;
+		      }
+
+		      .playground-mission-control-agent-selector-label {
+		        min-width: 0;
+		        display: inline-flex;
+		        align-items: center;
+		        justify-content: flex-end;
+		        gap: 8px;
+		      }
+
+		      .playground-mission-control-agent-selector-label > span:last-child {
+		        min-width: 0;
+		        overflow: hidden;
+		        text-overflow: ellipsis;
+		        white-space: nowrap;
+		      }
+
+		      .playground-mission-control-focus-list {
+		        display: flex;
+		        flex-direction: column;
+		      }
+
+		      .playground-mission-control-focus-row .platform-toggle {
+		        flex: 0 0 auto;
+		      }
+
+		      @media (max-width: 640px) {
+		        .playground-mission-control-parameter-row,
+		        .playground-mission-control-focus-row {
+		          align-items: flex-start;
+		        }
+
+		        .playground-mission-control-selector {
+		          min-width: 140px;
+		          max-width: 50%;
+		          flex-basis: 50%;
+		        }
 		      }
 
 		      .playground-database-access-table-section,
@@ -1422,27 +1669,31 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
       }
 
       .playground-tasks-detail-type-badge {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex: 0 0 18px;
+        flex: 0 0 20px;
         border-radius: 5px;
         color: #fff;
       }
 
       .playground-tasks-detail-type-badge svg {
-        width: 10px;
-        height: 10px;
+        width: 12px;
+        height: 12px;
         filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.28));
       }
 
-      .playground-tasks-detail-type-badge.is-task {
-        background: linear-gradient(180deg, #39b877 0%, #2b8b59 100%);
-      }
+	      .playground-tasks-detail-type-badge.is-task {
+	        background: linear-gradient(180deg, #39b877 0%, #2b8b59 100%);
+	      }
 
-      .playground-tasks-detail-type-badge.is-subtask {
+	      .playground-tasks-detail-type-badge.is-milestone {
+	        background: linear-gradient(180deg, #287c4d 0%, #17492f 100%);
+	      }
+
+	      .playground-tasks-detail-type-badge.is-subtask {
         background: linear-gradient(180deg, #4f7fc5 0%, #1e4585 100%);
       }
 
@@ -1450,6 +1701,10 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
       .playground-tasks-backlog-project-icon.is-loop,
       .playground-tasks-lane-card-type-badge.is-loop {
         background: linear-gradient(180deg, #9a72df 0%, #6542a8 100%);
+      }
+
+      .playground-tasks-backlog-project-icon.is-mission-control {
+        background: linear-gradient(180deg, #38bdf8 0%, #2563eb 100%);
       }
 
       .playground-tasks-status-value {

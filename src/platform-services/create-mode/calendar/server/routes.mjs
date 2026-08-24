@@ -29,6 +29,9 @@ export function createCalendarRequestHandler({
     if (pathname === "/api/real/schedules" && method === "POST") {
       return startRequest(proxyUpstreamJsonRequest(req, res, "/schedules", "POST"));
     }
+    if (pathname === "/api/real/schedules/executions" && method === "GET") {
+      return startRequest(proxyUpstreamGet(req, res, "/schedules/executions"));
+    }
 
     const scheduleTriggerMatch = pathname.match(/^\/api\/real\/schedules\/([^/]+)\/trigger$/);
     if (method === "POST" && scheduleTriggerMatch) {

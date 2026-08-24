@@ -138,6 +138,10 @@ assert.match(CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.editorState, /scheduleCurren
 assert.match(CALENDAR_PROJECTS_PAGE_DATA_FRAGMENTS.loading, /\{ appId: "runner_project_calendar" \}, \{ appId: "automations" \}/);
 assert.match(CALENDAR_PROJECTS_PAGE_DATA_FRAGMENTS.loading, /requestTarget\.searchParams\.set\("scheduleId", query\.scheduleId\)/);
 assert.match(CALENDAR_PROJECTS_PAGE_DATA_FRAGMENTS.loading, /setScheduleExecutionThreadRecords\(\(current\) =>/);
+assert.match(CALENDAR_PROJECTS_PAGE_DATA_FRAGMENTS.loading, /backendUrl \+ "\/schedules\/executions"/);
+assert.match(CALENDAR_PROJECTS_PAGE_DATA_FRAGMENTS.loading, /Number\(error\?\.status\) !== 404/);
+assert.match(CALENDAR_PROJECTS_PAGE_DATA_FRAGMENTS.lifecycle, /window\.setInterval\(refreshExecutionLifecycle, 5_000\)/);
+assert.match(CALENDAR_PROJECTS_PAGE_DATA_FRAGMENTS.lifecycle, /document\.visibilityState === "hidden"/);
 assert.match(CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.editorState, /window\.setInterval\(updateScheduleCurrentTime, 30000\)/);
 assert.match(CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.editorState, /scheduleContextMenu/);
 assert.match(CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.editorState, /scheduleContextMenuRef/);
@@ -479,6 +483,10 @@ result = dispatch("POST", "/api/real/schedules");
 assert.equal(result.call.adapter, "json");
 assert.equal(result.call.args[2], "/schedules");
 assert.equal(result.call.args[3], "POST");
+
+result = dispatch("GET", "/api/real/schedules/executions?appId=runner_project_calendar");
+assert.equal(result.call.adapter, "get");
+assert.equal(result.call.args[2], "/schedules/executions");
 
 result = dispatch("PATCH", "/api/real/schedules/schedule%201");
 assert.equal(result.call.adapter, "json");

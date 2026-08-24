@@ -180,6 +180,8 @@ assert.match(fragments.notificationsPopup, /function renderAppHeaderNotification
 assert.match(fragments.notificationsPopup, /React\.createElement\(PlatformPopup,/);
 assert.match(fragments.notificationsPopup, /variant: "minimal"/);
 assert.match(fragments.notificationsPopup, /surfaceClassName: "notification-menu"/);
+assert.match(fragments.notificationsPopup, /notificationPopupItems\.map\(renderNotificationItem\)/);
+assert.doesNotMatch(fragments.notificationsPopup, /notificationItems\.map\(renderNotificationItem\)/);
 assert.match(fragments.notificationsPopup, /item\.kind === "task_activity"/);
 assert.match(fragments.notificationsPopup, /handleOpenTaskActivityNotification\(item\)/);
 assert.doesNotMatch(fragments.notificationsPopup, /React\.createElement\(PlatformPopupSurface,/);
@@ -356,7 +358,31 @@ assert.match(
 );
 assert.match(
   platformEntrySource,
-  /const activeMetronomeLoopPresentation = metronomeRunTraceSelection\?\.key[\s\S]*?getMetronomeTaskLoopPresentation\(metronomeRunTraceSelection,[\s\S]*?label: activeMetronomeLoopPresentation\.label,[\s\S]*?className: "playground-tasks-backlog-project-icon is-loop"[\s\S]*?React\.createElement\(RefreshCw/,
+  /const activeMetronomeRunPresentation = useMemo\(\(\) => \{[\s\S]*?getMetronomeTaskLoopPresentation\(metronomeRunTraceSelection,[\s\S]*?label: activeMetronomeRunPresentation\.label,[\s\S]*?className: "playground-tasks-backlog-project-icon is-loop"[\s\S]*?React\.createElement\(RefreshCw/,
+);
+assert.match(
+  platformEntrySource,
+  /activeMetronomeRunPresentation\?\.isMissionControl[\s\S]*?label: activeMetronomeRunPresentation\.label[\s\S]*?className: "playground-tasks-backlog-project-icon is-mission-control"[\s\S]*?React\.createElement\(RefreshCcwDot/,
+);
+assert.match(
+  platformEntrySource,
+  /const selectedMetronomeRunOriginThread = useMemo\(\(\) => \{[\s\S]*?findMetronomeRunOriginThread\(metronomeRunTraceSelection, realThreads\)[\s\S]*?const selectedThreadNavRecord = useMemo\(\(\) => \{[\s\S]*?selectedMetronomeRunOriginThread\?\.id/,
+  "Workflow overview threads must resolve their persisted origin thread for shared header actions.",
+);
+assert.match(
+  platformEntrySource,
+  /function renderThreadTitleActionMenu\(\) \{[\s\S]*?threadCanMutate = Boolean\(showThreadNavMutationActions && selectedThreadNavRecord\?\.id\)[\s\S]*?openThreadRenameDialog\(selectedThreadNavRecord\)[\s\S]*?handleThreadDelete\(selectedThreadNavRecord\.id\)/,
+  "Workflow overview threads must reuse the normal thread action popup against their origin thread.",
+);
+assert.match(
+  platformEntrySource,
+  /const hasThreadTarget = \([\s\S]*?\) \|\| Boolean\(metronomeRunTraceSelection\?\.key\);[\s\S]*?if \(activePage !== "thread" \|\| hasThreadSideDetailOpen \|\| !hasThreadTarget\)/,
+  "The shared thread action popup must remain open on synthetic workflow overview threads.",
+);
+assert.doesNotMatch(
+  platformEntrySource,
+  /selectedMetronomeRunEntry\?\.key\s*\? React\.createElement\("button", \{[\s\S]{0,900}"aria-label": "Metronome run actions"/,
+  "Workflow overview threads must not render a second run-actions button on the right side of the app header.",
 );
 assert.match(
   platformEntrySource,

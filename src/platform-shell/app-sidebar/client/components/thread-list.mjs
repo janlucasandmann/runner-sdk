@@ -4,6 +4,7 @@ export function createAppSidebarThreadListScript(options = {}) {
   return `${metronomeSidebarEntryScript}
         function getSidebarThreadProjectPresentation(safeThread, taskPreview, safeThreadId) {
           const missionControlMetadata = getThreadMissionControlMetadata(safeThread);
+          const isMissionControl = Boolean(missionControlMetadata);
           const cachedProjectContext = safeThreadId
             ? (threadProjectContextById[safeThreadId] || null)
             : null;
@@ -14,7 +15,7 @@ export function createAppSidebarThreadListScript(options = {}) {
             || cachedProjectContext?.projectId
             || ""
           ).trim();
-          if (!projectId) {
+          if (!projectId && !isMissionControl) {
             return null;
           }
 
@@ -38,18 +39,23 @@ export function createAppSidebarThreadListScript(options = {}) {
           );
 
           return {
-            id: projectId,
+            id: projectId || "mission-control",
             title: String(
-              projectRecord?.name
+              isMissionControl
+                ? "Mission Control"
+                : projectRecord?.name
               || cachedProjectContext?.projectName
               || taskPreview?.projectName
               || missionControlMetadata?.projectName
               || safeThread?.projectName
               || "Project"
             ).trim() || "Project",
-            Icon: iconConfig.icon || Rocket,
+            Icon: isMissionControl ? RefreshCcwDot : (iconConfig.icon || Rocket),
+            isMissionControl,
             color: String(
-              projectRecord?.color
+              isMissionControl
+                ? ""
+                : projectRecord?.color
               || projectMetadata.color
               || taskPreview?.projectColor
               || missionControlMetadata?.projectColor
@@ -109,7 +115,7 @@ export function createAppSidebarThreadListScript(options = {}) {
                   React.createElement("div", { className: "sidebar-thread-title-row" },
                     threadProject
                       ? React.createElement("span", {
-                          className: "sidebar-thread-project-icon",
+                          className: "sidebar-thread-project-icon" + (threadProject.isMissionControl ? " is-mission-control" : ""),
                           title: threadProject.title,
                           style: threadProject.color ? { color: threadProject.color } : undefined,
                         }, React.createElement(ThreadProjectIcon, { strokeWidth: 1.85 }))

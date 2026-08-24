@@ -11,6 +11,7 @@ const SYSTEM_SKILL_SOURCE_DIRECTORIES = Object.freeze({
   image_generation: "image-generation",
   image_understanding: "image-understanding",
   memory: "memory",
+  mission_control: "mission-control",
   pdf: "pdf",
   pptx: "pptx",
   task_management: "task-management",

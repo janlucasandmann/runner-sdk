@@ -65,7 +65,8 @@ describe("PlatformGlobalSearchModal", () => {
     const loader = loadingState.querySelector(".platform-loading-state__loader");
     expect(loadingState.classList.contains("platform-loading-state")).toBe(true);
     expect(loadingState.classList.contains("is-centered")).toBe(true);
-    expect(screen.getByText("Loading threads...")).toBeTruthy();
+    expect(screen.queryByText("Loading threads...")).toBeNull();
+    expect(loader?.querySelector('img[src="/img/spinner.svg"]')).toBeTruthy();
     expect(loader).toBeTruthy();
     expect(loadingState.querySelector(".platform-empty-state")).toBeNull();
     expect(screen.queryByRole("button", { name: "Stale thread" })).toBeNull();

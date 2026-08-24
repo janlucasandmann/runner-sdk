@@ -27,8 +27,36 @@ export const SETTINGS_MODAL_NAVIGATION_SCRIPT = String.raw`        function clos
               PLAYGROUND_NOTIFICATION_REQUEST_TIMEOUT_MS
             );
             if (!response.ok) {
+              setSettingsNotificationPreferencesError(
+                data?.error || "Notification preferences could not be loaded."
+              );
               return storedPreferences;
             }
+            try {
+              const catalogResult = await fetchJsonWithTimeout(
+                proxyBackendBase + "/notifications/catalog",
+                {
+                  method: "GET",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: requestHeaders,
+                },
+                PLAYGROUND_NOTIFICATION_REQUEST_TIMEOUT_MS
+              );
+              const rows = Array.isArray(catalogResult?.data?.preferences)
+                ? catalogResult.data.preferences
+                    .map((row) => ({
+                      id: String(row?.id || "").trim(),
+                      title: String(row?.title || "").trim(),
+                      description: String(row?.description || "").trim(),
+                      defaultEnabled: row?.defaultEnabled !== false,
+                    }))
+                    .filter((row) => row.id && row.title)
+                : [];
+              if (catalogResult?.response?.ok && rows.length > 0) {
+                setSettingsNotificationPreferenceRows(rows);
+              }
+            } catch {}
             const preferences = normalizeSettingsNotificationPreferences(
               data?.preferences || data?.data?.preferences || data?.data
             );
@@ -39,6 +67,7 @@ export const SETTINGS_MODAL_NAVIGATION_SCRIPT = String.raw`        function clos
             );
             return preferences;
           } catch {
+            setSettingsNotificationPreferencesError("Notification preferences could not be loaded.");
             return storedPreferences;
           } finally {
             setSettingsNotificationPreferencesLoading(false);
@@ -58,6 +87,7 @@ export const SETTINGS_MODAL_NAVIGATION_SCRIPT = String.raw`        function clos
           if (!SETTINGS_NOTIFICATION_PREFERENCE_KEYS.includes(key)) {
             return;
           }
+          const previousPreferences = settingsNotificationPreferences;
           const nextPreferences = normalizeSettingsNotificationPreferences({
             ...settingsNotificationPreferences,
             [key]: Boolean(enabled),
@@ -89,7 +119,7 @@ export const SETTINGS_MODAL_NAVIGATION_SCRIPT = String.raw`        function clos
               PLAYGROUND_NOTIFICATION_REQUEST_TIMEOUT_MS
             );
             if (!response.ok) {
-              return;
+              throw new Error(data?.error || "Notification preference could not be saved.");
             }
             const synchronizedPreferences = normalizeSettingsNotificationPreferences(
               data?.preferences || data?.data?.preferences || data?.data
@@ -99,8 +129,15 @@ export const SETTINGS_MODAL_NAVIGATION_SCRIPT = String.raw`        function clos
               settingsNotificationPreferenceStorageKey,
               synchronizedPreferences
             );
-          } catch {
-            // Local persistence remains authoritative while an older control API is being upgraded.
+          } catch (error) {
+            setSettingsNotificationPreferences(previousPreferences);
+            writeStoredSettingsNotificationPreferences(
+              settingsNotificationPreferenceStorageKey,
+              previousPreferences
+            );
+            setSettingsNotificationPreferencesError(
+              error instanceof Error ? error.message : "Notification preference could not be saved."
+            );
           } finally {
             setSettingsNotificationPreferenceSavingKey("");
           }

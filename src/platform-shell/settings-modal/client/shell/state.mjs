@@ -1,12 +1,15 @@
 export const SETTINGS_MODAL_STATE_SCRIPT = String.raw`        const settingsMarketingEmailsAvailable = platformDeploymentProfile.topology !== "on_prem";
-        const SETTINGS_NOTIFICATION_PREFERENCE_DEFAULTS = Object.freeze({
-          agentRuns: true,
-          permissionRequests: true,
-          assignedWork: true,
-          taskActivity: true,
-          invitations: true,
-          productUpdates: true,
-        });
+        const SETTINGS_NOTIFICATION_PREFERENCE_FALLBACK_ROWS = Object.freeze([
+          { id: "agentRuns", title: "Agent runs", description: "Run completions and failures for threads, schedules, triggers, and workflows.", defaultEnabled: true },
+          { id: "permissionRequests", title: "Permission requests", description: "When an agent needs approval or additional tool access.", defaultEnabled: true },
+          { id: "assignedWork", title: "Assigned work and reviews", description: "Tasks assigned to you and review requests that need attention.", defaultEnabled: true },
+          { id: "taskActivity", title: "Ticket activity", description: "Comments and changes on tickets you follow.", defaultEnabled: true },
+          { id: "invitations", title: "Invitations", description: "Team and organization invitations.", defaultEnabled: true },
+          { id: "productUpdates", title: "Product updates", description: "Important product announcements and release information.", defaultEnabled: true },
+        ]);
+        const SETTINGS_NOTIFICATION_PREFERENCE_DEFAULTS = Object.freeze(
+          Object.fromEntries(SETTINGS_NOTIFICATION_PREFERENCE_FALLBACK_ROWS.map((row) => [row.id, row.defaultEnabled !== false]))
+        );
         const SETTINGS_NOTIFICATION_PREFERENCE_KEYS = Object.freeze(
           Object.keys(SETTINGS_NOTIFICATION_PREFERENCE_DEFAULTS)
         );
@@ -44,6 +47,9 @@ export const SETTINGS_MODAL_STATE_SCRIPT = String.raw`        const settingsMark
           )
         ));
         const [settingsNotificationPreferencesLoading, setSettingsNotificationPreferencesLoading] = useState(false);
+        const [settingsNotificationPreferenceRows, setSettingsNotificationPreferenceRows] = useState(
+          SETTINGS_NOTIFICATION_PREFERENCE_FALLBACK_ROWS
+        );
         const [settingsNotificationPreferenceSavingKey, setSettingsNotificationPreferenceSavingKey] = useState("");
         const [settingsNotificationPreferencesError, setSettingsNotificationPreferencesError] = useState("");
         const [settingsDataControlCategory, setSettingsDataControlCategory] = useState("");

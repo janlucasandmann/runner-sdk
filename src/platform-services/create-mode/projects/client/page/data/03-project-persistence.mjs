@@ -868,7 +868,127 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               throw new Error(data?.message || data?.error || "Failed to load task details.");
             }
 
-            const refreshedTask = getPlaygroundTaskResponseRecord(data);
+            // Always hydrate the dedicated activity collection for the ticket.
+            // The detail route has historically been deployed with a reduced
+            // activity projection (creation + comments), while the canonical
+            // collection contains every persisted mutation (status, priority,
+            // assignment, rename, milestone, schedule, and thread events).
+            // Keeping this as a separate merge also makes the ticket view
+            // independent from the timing of the project-wide activity feed.
+            const readActivityRecords = (value) => {
+              if (Array.isArray(value)) return value;
+              if (value && typeof value === "object" && Array.isArray(value.data)) return value.data;
+              if (value && typeof value === "object" && Array.isArray(value.items)) return value.items;
+              return [];
+            };
+            const detailActivityRecords = [
+              ...readActivityRecords(data?.activity),
+              ...readActivityRecords(data?.activityEvents),
+              ...readActivityRecords(data?.activity_events),
+              ...readActivityRecords(data?.details?.activity),
+              ...readActivityRecords(data?.details?.activityEvents),
+            ];
+            const projectActivityRecords = typeof getProjectActivityEventsForTask === "function"
+              ? getProjectActivityEventsForTask(taskId)
+              : [];
+            const shouldHydrateCanonicalActivity = String(selectedTaskId || "").trim() === String(taskId || "").trim()
+              || String(selectedTaskIdRef.current || "").trim() === String(taskId || "").trim();
+            let taskResponseData = detailActivityRecords.length > 0 || projectActivityRecords.length > 0
+              ? {
+                  ...data,
+                  activity: detailActivityRecords.concat(projectActivityRecords),
+                }
+              : data;
+            if (shouldHydrateCanonicalActivity) {
+              try {
+              // Read both canonical projections. The task endpoint is the
+              // authoritative history for this ticket; the project endpoint is
+              // intentionally merged as a compatibility bridge for older
+              // deployments where the task projection still contains only
+              // creation/comments. Both responses contain the same persisted
+              // event contract, so the normalizer de-duplicates them safely.
+              const taskActivityTarget = backendUrl
+                + "/tasks/" + encodeURIComponent(taskId) + "/activity?limit=250";
+              const projectActivityTarget = new URL(
+                backendUrl + "/tasks/activity",
+                window.location.origin
+              );
+              projectActivityTarget.searchParams.set("projectId", selectedProjectId);
+              projectActivityTarget.searchParams.set("limit", "500");
+              const [activityResult, projectActivityResult] = await Promise.allSettled([
+                fetch(taskActivityTarget, {
+                  method: "GET",
+                  headers: requestHeaders,
+                  // Activity is append-only and must not be satisfied from a
+                  // stale browser/service-worker GET cache when a ticket is
+                  // opened immediately after a mutation.
+                  cache: "no-store",
+                }),
+                fetch(projectActivityTarget.toString(), {
+                  method: "GET",
+                  headers: requestHeaders,
+                  cache: "no-store",
+                }),
+              ]);
+              const activityResponse = activityResult.status === "fulfilled"
+                ? activityResult.value
+                : null;
+              const projectActivityResponse = projectActivityResult.status === "fulfilled"
+                ? projectActivityResult.value
+                : null;
+              const activityPayload = activityResponse
+                ? await activityResponse.json().catch(() => ({}))
+                : {};
+              const projectActivityPayload = projectActivityResponse
+                ? await projectActivityResponse.json().catch(() => ({}))
+                : {};
+              const activityRecords = activityResponse?.ok
+                ? (readActivityRecords(activityPayload?.data).length > 0
+                  ? readActivityRecords(activityPayload?.data)
+                  : readActivityRecords(activityPayload?.items).length > 0
+                    ? readActivityRecords(activityPayload?.items)
+                    : readActivityRecords(activityPayload?.activity).length > 0
+                      ? readActivityRecords(activityPayload?.activity)
+                      : readActivityRecords(activityPayload?.activityEvents).length > 0
+                        ? readActivityRecords(activityPayload?.activityEvents)
+                        : readActivityRecords(activityPayload))
+                : [];
+              const projectActivityRows = projectActivityResponse?.ok
+                ? (readActivityRecords(projectActivityPayload?.data).length > 0
+                  ? readActivityRecords(projectActivityPayload?.data)
+                  : readActivityRecords(projectActivityPayload?.items).length > 0
+                    ? readActivityRecords(projectActivityPayload?.items)
+                    : readActivityRecords(projectActivityPayload))
+                : [];
+              const filteredProjectActivityRows = projectActivityRows.filter((event) => {
+                const eventTaskId = String(
+                  event?.taskId
+                    || event?.task_id
+                    || event?.task?.id
+                    || event?.source?.taskId
+                    || event?.source?.task?.id
+                    || ""
+                ).trim();
+                return eventTaskId === String(taskId || "").trim();
+              });
+              const mergedActivityRecords = detailActivityRecords.concat(
+                projectActivityRecords,
+                activityRecords,
+                filteredProjectActivityRows,
+              );
+              if (mergedActivityRecords.length > 0) {
+                taskResponseData = {
+                  ...data,
+                  activity: mergedActivityRecords,
+                };
+              }
+              } catch {
+                // Keep the detail response usable when an older backend does
+                // not expose one of the canonical activity routes yet.
+              }
+            }
+
+            const refreshedTask = getPlaygroundTaskResponseRecord(taskResponseData);
             if (!refreshedTask?.id) {
               throw new Error("Task details are unavailable.");
             }
@@ -905,6 +1025,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 
         useEffect(() => {
           setProjectOverviewActivityTab("threads");
+          setProjectOverviewResourcesTab("resources");
         }, [selectedProjectId]);
 
 	        useEffect(() => {
@@ -1314,9 +1435,55 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 	              projectWorkspaceAutoLoadKeyRef.current = "";
 	            }
 	          });
-	        }, [backendUrl, isStandaloneCalendarMode, requestHeadersKey, selectedProjectId, taskView]);
+        }, [backendUrl, isStandaloneCalendarMode, requestHeadersKey, selectedProjectId, taskView]);
 
-	        useEffect(() => {
+        // Work-graph/list responses can intentionally omit the heavier markdown
+        // description. Hydrate only the small set of candidates that can appear
+        // in the project Spotlight so cards never get stuck at "No description".
+        useEffect(() => {
+          if (!selectedProjectId || !Array.isArray(tasks) || typeof loadTaskDetails !== "function") {
+            return;
+          }
+          const focusStatuses = new Set([
+            "in_review",
+            "in-progress",
+            "in_progress",
+            "review",
+            "doing",
+            "backlog",
+            "todo",
+            "to-do",
+            "to_do",
+          ]);
+          const candidates = tasks
+            .filter((task) => typeof isPlaygroundSubtaskRecord !== "function" || !isPlaygroundSubtaskRecord(task))
+            .filter((task) => {
+              const status = typeof getTaskBoardStatus === "function"
+                ? getTaskBoardStatus(task)
+                : task?.status;
+              const normalizedStatus = String(status || "")
+                .trim()
+                .toLowerCase()
+                .replaceAll(" ", "_");
+              return focusStatuses.has(normalizedStatus)
+                || focusStatuses.has(normalizedStatus.replaceAll("_", "-"));
+            })
+            .filter((task) => typeof resolvePlaygroundTaskDescription !== "function" || !resolvePlaygroundTaskDescription(task))
+            .filter((task) => String(task?.id || "").trim())
+            .slice(0, 3);
+
+          candidates.forEach((task) => {
+            const taskId = String(task.id).trim();
+            const hydrationKey = selectedProjectId + ":" + taskId;
+            if (projectOverviewTaskDescriptionHydrationRef.current.has(hydrationKey)) {
+              return;
+            }
+            projectOverviewTaskDescriptionHydrationRef.current.add(hydrationKey);
+            void loadTaskDetails(taskId).catch(() => {});
+          });
+        }, [selectedProjectId, tasks]);
+
+        useEffect(() => {
             if (!isCalendarContext) {
               projectSchedulesAutoLoadKeyRef.current = "";
               return;
@@ -1343,6 +1510,8 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 	          projectSchedulesAutoLoadKeyRef.current = loadKey;
 	          void loadProjectSchedules(scheduleProjectId, visibleScheduleCalendarRange);
 	        }, [backendUrl, isCalendarContext, isStandaloneCalendarMode, requestHeadersKey, selectedProjectId, visibleScheduleCalendarRange, visibleScheduleCalendarRangeKey]);
+
+\${CALENDAR_PROJECTS_PAGE_DATA_FRAGMENTS.lifecycle}
 
 	        useEffect(() => {
             if (!isCalendarContext) {
@@ -1521,7 +1690,21 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
                     }
                   : current
                 );
-                await syncMissionControlThreadResult(normalizedThreadId, normalizedProjectId);
+                if (missionControlRunState.workflowManaged) {
+                  await loadProjectWorkspace(normalizedProjectId);
+                  setMissionControlRunState((current) => current.threadId === normalizedThreadId
+                    ? {
+                        threadId: "",
+                        projectId: "",
+                        status: "idle",
+                        error: "",
+                        workflowManaged: false,
+                      }
+                    : current
+                  );
+                } else {
+                  await syncMissionControlThreadResult(normalizedThreadId, normalizedProjectId);
+                }
                 return;
               }
 
@@ -1562,6 +1745,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
           missionControlRunState.projectId,
           missionControlRunState.status,
           missionControlRunState.threadId,
+          missionControlRunState.workflowManaged,
           onStatusIndicatorItemChange,
           requestHeaders,
           selectedProject?.name,

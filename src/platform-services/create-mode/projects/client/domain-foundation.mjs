@@ -3,7 +3,7 @@ import { PROJECT_TYPE_ALIASES, PROJECT_TYPE_REGISTRY } from "../catalog.mjs";
 export const PROJECTS_DOMAIN_FOUNDATION_SCRIPT = `
       const PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID = "__playground_unscheduled_sprint__";
       const PLAYGROUND_PROJECT_VIEW_OPTIONS = [
-        { id: "overview", label: "General", icon: LayoutDashboard },
+        { id: "overview", label: "Progress", icon: LayoutDashboard },
         { id: "backlog", label: "Backlog", icon: ListTodo },
         { id: "board", label: "Board", icon: LayoutGrid },
         { id: "calendar", label: "Calendar", icon: Clock },
@@ -60,7 +60,7 @@ export const PROJECTS_DOMAIN_FOUNDATION_SCRIPT = `
           id: "gray",
           label: "Gray",
           accent: "rgba(255, 255, 255, 0.92)",
-          surface: "rgba(255, 255, 255, 0.05)",
+          surface: "rgba(255, 255, 255, 0.075)",
           surfaceHover: "rgba(255, 255, 255, 0.07)",
           surfaceActive: "rgba(255, 255, 255, 0.1)",
           border: "rgba(255, 255, 255, 0.08)",
@@ -153,7 +153,7 @@ export const PROJECTS_DOMAIN_FOUNDATION_SCRIPT = `
         { id: "cloud", label: "Cloud", icon: Cloud },
         { id: "cpu", label: "Compute", icon: Cpu },
         { id: "database", label: "Database", icon: Database },
-        { id: "flag", label: "Milestone", icon: Flag },
+        { id: "flag", label: "Milestone", icon: Milestone },
         { id: "globe", label: "Global", icon: Globe },
         { id: "hand", label: "Human", icon: Hand },
         { id: "heart", label: "Favorite", icon: Heart },

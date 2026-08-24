@@ -336,12 +336,12 @@ export function createAppSidebarFoundationStyles(options = {}) {
 
       .playground-sidebar-brand-logo {
         position: absolute;
-        left: 12px;
+        left: 11.5px;
         top: 50%;
         margin: 0;
         display: block;
-        width: auto;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         object-fit: contain;
         transform: translateY(-50%) scale(1);
         transform-origin: center;
@@ -480,8 +480,8 @@ export function createAppSidebarFoundationStyles(options = {}) {
         top: 50%;
         margin: 0;
         display: block;
-        width: auto;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         object-fit: contain;
         transform: translateY(-50%) scale(1);
         transform-origin: center;
@@ -587,8 +587,8 @@ export function createAppSidebarFoundationStyles(options = {}) {
 
       .sidebar-action-subtitle,
       .sidebar-thread-section-title {
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 11px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
         font-weight: 400;
         line-height: 1;
         text-transform: none;
@@ -731,6 +731,13 @@ ${metronomeSidebarCss}
         display: inline-flex;
         align-items: center;
         justify-content: center;
+      }
+
+      .sidebar-thread-project-icon.is-mission-control {
+        background: linear-gradient(180deg, #3159a8 0%, #172f68 100%);
+        box-shadow: inset 0 0 0 1px rgba(137, 178, 255, 0.16), 0 1px 2px rgba(0, 0, 0, 0.28);
+        border-radius: 5px;
+        color: #fff;
       }
 
       .sidebar-thread-project-icon svg {

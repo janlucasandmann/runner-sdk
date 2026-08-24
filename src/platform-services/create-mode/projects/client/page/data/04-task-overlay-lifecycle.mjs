@@ -734,6 +734,7 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
 
         useEffect(() => {
           setTaskCommentInputValue("");
+          setTaskCommentMentions([]);
         }, [draftTask?.id]);
 
         useEffect(() => {

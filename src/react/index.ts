@@ -1,5 +1,6 @@
 export { RunnerLogList } from "./runner-log-list.js";
 export { RunnerChat } from "./runner-chat.js";
+export { RunnerTurnIdentity } from "./runner-chat/turn-presentation.js";
 export { RunnerDocumentPreviewDrawer } from "./runner-document-preview-drawer.js";
 export { RunnerFileDiffSurface } from "./runner-file-diff-surface.js";
 export { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
@@ -17,6 +18,7 @@ export {
   RunnerThreadActivityActionList,
   RunnerThreadPermissionRequestCard,
   RunnerThreadActiveRunsDock,
+  RunnerThreadLiveWorkStatus,
   RunnerThreadParticipantAvatar,
   isRunnerThreadRunActive,
   useRunnerThreadProjection,
@@ -64,6 +66,7 @@ export type {
   RunnerThreadActionRenderer,
   RunnerThreadPermissionRequestCardProps,
   RunnerThreadActiveRunsDockProps,
+  RunnerThreadLiveWorkStatusProps,
   RunnerThreadParticipantAvatarProps,
   RunnerThreadDetailLoadState,
   RunnerThreadDetailLoadStatus,

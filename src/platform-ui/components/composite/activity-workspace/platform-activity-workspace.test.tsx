@@ -53,7 +53,8 @@ describe("PlatformActivityWorkspace", () => {
       />,
     );
 
-    expect(screen.getByText("Loading thread activity...")).toBeTruthy();
+    expect(screen.getByRole("status", { name: "Loading thread activity..." })).toBeTruthy();
+    expect(screen.queryByText("Loading thread activity...")).toBeNull();
     expect(screen.queryByText("Ticket creation details")).toBeNull();
   });
 });

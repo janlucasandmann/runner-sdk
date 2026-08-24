@@ -61,6 +61,7 @@ import {
   PlatformSecondaryButton,
 } from "../platform-ui/components/ui/button/index.js";
 import { PlatformStatusIndicator } from "../platform-ui/components/composite/status-indicator/index.js";
+import { PlatformLoadingState } from "../platform-ui/components/composite/loading-state/index.js";
 import { PlatformIconButton } from "../platform-ui/components/ui/icon-button/index.js";
 import {
   PlatformResourceActionMenuItem,
@@ -350,6 +351,7 @@ import {
 } from "./runner-chat/hydration/turn-builders.js";
 import { useRunnerRunningThreadReattachment } from "./runner-chat/hydration/use-running-thread-reattachment.js";
 import { useRunnerThreadHistoryHydration } from "./runner-chat/hydration/use-thread-history-hydration.js";
+import { useRunnerInitialSurfaceReadiness } from "./runner-chat/use-initial-surface-readiness.js";
 import {
   normalizeQuotedSelection,
   previewQuotedSelectionText,
@@ -752,6 +754,8 @@ export function RunnerChat({
   threadMetadata = null,
   knowledgeContext = null,
   threadViewMode = "auto",
+  composerSurfaceMode = "auto",
+  initialSurfaceLoading = false,
   placeholder = "What would you like me to do?",
   privateMode = false,
   initialTask = "",
@@ -888,6 +892,7 @@ export function RunnerChat({
   const [selectedDeepResearchDetail, setSelectedDeepResearchDetail] = useState<RunnerSelectedDeepResearchDetail | null>(null);
   const [selectedComputerUseDetail, setSelectedComputerUseDetail] = useState<RunnerSelectedComputerUseDetail | null>(null);
   const [isThreadHistoryLoading, setIsThreadHistoryLoading] = useState(false);
+  const [initialHydratedThreadId, setInitialHydratedThreadId] = useState("");
   const [inlineError, setInlineError] = useState<string | null>(null);
   const [batchSavedReceiptId, setBatchSavedReceiptId] = useState(0);
   const [isSavingBatchJob, setIsSavingBatchJob] = useState(false);
@@ -2177,6 +2182,7 @@ export function RunnerChat({
     isPreparingRun,
     locallyOwnedExecutionThreadIdRef,
     onEnvironmentHydrated: applyHydratedThreadEnvironment,
+    onInitialHydrationSettled: setInitialHydratedThreadId,
     pendingQueuedMessageCount: pendingQueuedMessages.length,
     requestHeaders,
     setError: setInlineError,
@@ -6866,12 +6872,32 @@ export function RunnerChat({
           ? documentPreviewWidthStyleValue
           : "var(--tb-image-preview-side-width, var(--tb-document-preview-max-width))"
       : documentPreviewWidthStyleValue;
-  const isThreadComposerSurface = Boolean(currentThreadId) || isPreparingRun;
+  const isThreadComposerSurface = composerSurfaceMode === "thread"
+    || (composerSurfaceMode !== "home" && (Boolean(currentThreadId) || isPreparingRun));
+  const normalizedControlledThreadId = String(threadId || "").trim();
+  const hasPendingInitialExternalRun = Boolean(
+    externalRunRequest
+    && handledExternalRunRequestTokenRef.current !== externalRunRequest.token
+    && String(externalRunRequest.threadId || "").trim() === normalizedControlledThreadId
+    && String(externalRunRequest.prompt || "").trim(),
+  );
+  const isInitialThreadHydrationPending = Boolean(
+    normalizedControlledThreadId
+    && initialHydratedThreadId !== normalizedControlledThreadId
+    && locallyOwnedExecutionThreadIdRef.current !== normalizedControlledThreadId
+    && !hasPendingInitialExternalRun,
+  );
+  const initialSurfacePhase = useRunnerInitialSurfaceReadiness({
+    blocked: Boolean(initialSurfaceLoading || isInitialThreadHydrationPending),
+    rootRef,
+  });
+  const isInitialSurfaceLoading = initialSurfacePhase === "loading";
 
   return (
     <div
       ref={rootRef}
-      className={`tb-runner-chat ${isPreparingRun ? "is-run-preparing" : ""} ${isThreadComposerSurface ? "is-thread-composer-surface" : "is-home-composer-surface"} ${shouldReserveDocumentPreviewWidth ? "tb-runner-chat-document-preview-open" : ""} ${isPreviewedDocumentImage ? "tb-runner-chat-image-preview-open" : ""} ${isPreviewedDocumentImage && hasPortalDocumentPreview ? "tb-runner-chat-image-preview-portal-open" : ""} ${isPreviewedDocumentImage && !hasPortalDocumentPreview ? "tb-runner-chat-image-preview-local-open" : ""} ${previewedDocumentAttachment && isDocumentPreviewMaximized ? "tb-runner-chat-document-preview-maximized" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${detachedExecutionWorkbenchOpen ? "tb-runner-chat-execution-workbench-open" : ""} ${className || ""}`.trim()}
+      className={`tb-runner-chat ${isPreparingRun ? "is-run-preparing" : ""} ${isThreadComposerSurface ? "is-thread-composer-surface" : "is-home-composer-surface"} ${isInitialSurfaceLoading ? "is-initial-surface-loading" : ""} ${initialSurfacePhase === "entering" ? "is-initial-surface-entering" : ""} ${shouldReserveDocumentPreviewWidth ? "tb-runner-chat-document-preview-open" : ""} ${isPreviewedDocumentImage ? "tb-runner-chat-image-preview-open" : ""} ${isPreviewedDocumentImage && hasPortalDocumentPreview ? "tb-runner-chat-image-preview-portal-open" : ""} ${isPreviewedDocumentImage && !hasPortalDocumentPreview ? "tb-runner-chat-image-preview-local-open" : ""} ${previewedDocumentAttachment && isDocumentPreviewMaximized ? "tb-runner-chat-document-preview-maximized" : ""} ${selectedSubagentDetailPresentation || selectedComputerUseDetailPresentation ? "tb-runner-chat-subagent-detail-open" : ""} ${effectiveSelectedDeepResearchDetailPresentation ? "tb-runner-chat-deep-research-detail-open" : ""} ${detachedExecutionWorkbenchOpen ? "tb-runner-chat-execution-workbench-open" : ""} ${className || ""}`.trim()}
+      aria-busy={isInitialSurfaceLoading ? true : undefined}
       onDragEnterCapture={handleRootFileDragEnter}
       onDragOverCapture={handleRootFileDragOver}
       onDragLeaveCapture={handleRootFileDragLeave}
@@ -6883,6 +6909,13 @@ export function RunnerChat({
         } as CSSProperties
       }
     >
+      {isInitialSurfaceLoading ? (
+        <PlatformLoadingState
+          className="tb-runner-chat__initial-loader"
+          message="Loading thread..."
+          centered
+        />
+      ) : null}
       <input ref={fileInputRef} type="file" multiple hidden onChange={handleAddFiles} />
 
       {isScreenFileDragActive ? (

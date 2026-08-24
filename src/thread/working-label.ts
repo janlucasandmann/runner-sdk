@@ -47,6 +47,8 @@ const UNINFORMATIVE_WORKING_LABELS = new Set([
   "reviewing progress",
   "running checks and verifying the work",
   "starting the worker run",
+  "thread is running",
+  "thread running",
   "working on it",
   "working on the current task",
   "working on the task",

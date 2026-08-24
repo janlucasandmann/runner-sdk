@@ -44,6 +44,31 @@
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
 }
 
+.tb-runner-chat.is-initial-surface-loading > :not(.tb-runner-chat__initial-loader) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.tb-runner-chat .tb-runner-chat__initial-loader.platform-loading-state {
+  position: absolute;
+  inset: 0;
+  z-index: 2000;
+  min-height: 100%;
+  background: #000;
+}
+
+.tb-runner-chat.is-initial-surface-entering > .workinglogsbox,
+.tb-runner-chat.is-initial-surface-entering > .tb-input-shell {
+  animation: tb-log-slide-in 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-runner-chat.is-initial-surface-entering > .workinglogsbox,
+  .tb-runner-chat.is-initial-surface-entering > .tb-input-shell {
+    animation: none;
+  }
+}
+
 .tb-runner-chat.tb-runner-chat-document-preview-open {
   --tb-document-preview-width: var(--tb-document-preview-max-width);
 }
@@ -621,9 +646,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-metronome-turn-workflow-prompt-shell {
-  width: min(100%, 760px);
-  max-width: 100%;
-  margin: 12px 0 var(--tb-user-turn-shell-gap) auto;
+  width: min(100%, 56rem);
+  max-width: 56rem;
+  margin: 12px auto var(--tb-user-turn-shell-gap);
 }
 
 .tb-runner-chat .tb-metronome-turn-workflow-prompt {
@@ -1361,6 +1386,28 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   margin-bottom: 14px;
 }
 
+.tb-runner-chat .tb-turn-meta-button {
+  width: fit-content;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tb-runner-chat .tb-turn-meta-button:hover,
+.tb-runner-chat .tb-turn-meta-button:focus-visible {
+  background: transparent;
+}
+
+.tb-runner-chat .tb-turn-meta-button:focus-visible {
+  outline: none;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+
 .tb-runner-chat .tb-turn-agent {
   display: inline-flex;
   align-items: center;
@@ -1601,6 +1648,43 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-turn-work-section .tb-work-label.is-live .tb-work-label-copy {
+  animation: tb-turn-work-label-update 180ms ease-out;
+}
+
+.tb-runner-chat .tb-thread-live-work-status {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 20px;
+  justify-content: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.tb-runner-chat button.tb-thread-live-work-status {
+  cursor: pointer;
+}
+
+.tb-runner-chat button.tb-thread-live-work-status:focus-visible {
+  outline: none;
+  border-radius: 6px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+
+.tb-runner-chat .tb-thread-live-work-status .tb-work-label {
+  flex: 0 1 auto;
+  max-width: 100%;
+}
+
+.tb-runner-chat .tb-thread-live-work-status .tb-work-status-loader {
+  margin-right: 0;
+}
+
+.tb-runner-chat .tb-thread-live-work-status .tb-work-label-copy {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   animation: tb-turn-work-label-update 180ms ease-out;
 }
 

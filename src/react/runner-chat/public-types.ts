@@ -355,6 +355,19 @@ export interface RunnerChatProps {
    * a deployment-safe compatibility fallback.
    */
   threadViewMode?: "auto" | "canonical" | "legacy";
+  /**
+   * Controls the visual composer surface independently from thread loading.
+   * This is useful for synthetic detail screens (for example workflow-run
+   * overviews) that should look like an existing thread without pretending
+   * that their synthetic route id is a loadable thread id.
+   */
+  composerSurfaceMode?: "auto" | "home" | "thread";
+  /**
+   * Holds a synthetic thread surface behind the canonical page loader until
+   * its host-owned data is ready. Existing persisted threads are gated
+   * automatically by RunnerChat's own history hydration.
+   */
+  initialSurfaceLoading?: boolean;
   placeholder?: string;
   privateMode?: boolean;
   initialTask?: string;

@@ -1,20 +1,24 @@
-export const CONFIGURE_HOME_NOTIFICATION_ACTIONS_SCRIPT = `        function handleMarkAllNotificationsRead() {
-          const productIds = notificationItems
+export const CONFIGURE_HOME_NOTIFICATION_ACTIONS_SCRIPT = `        function markNotificationItemsRead(items, options = {}) {
+          const sourceItems = Array.isArray(items) ? items.filter(Boolean) : [];
+          const inboxIds = sourceItems
+            .filter((item) => item.kind === "inbox" && item.id)
+            .map((item) => item.id);
+          const productIds = sourceItems
             .filter((item) => item.kind === "product" && item.id)
             .map((item) => item.id);
-	          const permissionIds = notificationItems
+	          const permissionIds = sourceItems
 	            .filter((item) => item.kind === "permission" && item.id)
 	            .flatMap((item) => getPermissionNotificationReadIds(item));
-	          const humanTaskIds = notificationItems
+	          const humanTaskIds = sourceItems
 	            .filter((item) => item.kind === "human_task" && item.id)
 	            .map((item) => item.id);
-	          const taskActivityIds = notificationItems
+	          const taskActivityIds = sourceItems
 	            .filter((item) => item.kind === "task_activity" && item.id)
 	            .map((item) => item.id);
-	          const teamInvitationIds = notificationItems
+	          const teamInvitationIds = sourceItems
 	            .filter((item) => item.kind === "team_invitation" && item.id)
 	            .map((item) => item.id);
-	          const organizationInvitationIds = notificationItems
+	          const organizationInvitationIds = sourceItems
 	            .filter((item) => item.kind === "organization_invitation" && item.id)
 	            .map((item) => item.id);
 
@@ -62,8 +66,145 @@ export const CONFIGURE_HOME_NOTIFICATION_ACTIONS_SCRIPT = `        function hand
 	            ));
 	          }
 
+          if (sourceItems.some((item) => item.kind === "email_verification")) {
 	          setEmailVerificationNotificationDismissed(true);
-	        }
+          }
+          if (inboxIds.length > 0) {
+            const readAt = new Date().toISOString();
+            setInboxNotifications((current) => current.map((notification) => (
+              inboxIds.includes(notification.id)
+                ? { ...notification, seenAt: notification.seenAt || readAt, readAt, updatedAt: readAt }
+                : notification
+            )));
+            if (hasRealAccess) {
+              if (options.markAllInbox) {
+                void fetchJsonWithTimeout(proxyBackendBase + "/notifications/read-all", {
+                  method: "POST",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: {
+                    ...requestHeaders,
+                    "Content-Type": "application/json",
+                  },
+                  body: "{}",
+                }, PLAYGROUND_NOTIFICATION_REQUEST_TIMEOUT_MS).catch(() => {});
+              } else {
+                inboxIds.forEach((notificationId) => {
+                  void fetchJsonWithTimeout(
+                    proxyBackendBase + "/notifications/" + encodeURIComponent(notificationId),
+                    {
+                      method: "PATCH",
+                      credentials: "include",
+                      cache: "no-store",
+                      headers: {
+                        ...requestHeaders,
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({ seen: true, read: true }),
+                    },
+                    PLAYGROUND_NOTIFICATION_REQUEST_TIMEOUT_MS
+                  ).catch(() => {});
+                });
+              }
+            }
+          }
+	      }
+
+        function handleMarkAllNotificationsRead() {
+          markNotificationItemsRead(notificationItems, { markAllInbox: true });
+        }
+
+        function handleMarkConfigureHomeNotificationsRead(items) {
+          markNotificationItemsRead(items);
+        }
+
+        function markInboxNotificationRead(item, acted) {
+          const notificationId = String(item?.id || "").trim();
+          if (!notificationId) return;
+          const readAt = new Date().toISOString();
+          setInboxNotifications((current) => current.map((notification) => (
+            notification.id === notificationId
+              ? {
+                ...notification,
+                seenAt: notification.seenAt || readAt,
+                readAt,
+                actedAt: acted ? readAt : notification.actedAt,
+                updatedAt: readAt,
+              }
+              : notification
+          )));
+          if (!hasRealAccess) return;
+          void fetchJsonWithTimeout(
+            proxyBackendBase + "/notifications/" + encodeURIComponent(notificationId),
+            {
+              method: "PATCH",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ seen: true, read: true, acted: Boolean(acted) }),
+            },
+            PLAYGROUND_NOTIFICATION_REQUEST_TIMEOUT_MS
+          ).catch(() => {});
+        }
+
+        function handleOpenInboxNotification(item) {
+          markInboxNotificationRead(item, true);
+          setNotificationsOpen(false);
+          const resourceType = String(item?.resourceType || "").trim().toLowerCase();
+          const resourceId = String(item?.resourceId || "").trim();
+          if ((resourceType === "thread" || resourceType === "agent_run") && resourceId) {
+            handleThreadSelect(resourceId);
+            return;
+          }
+          if ((resourceType === "task" || resourceType === "ticket") && resourceId) {
+            handleOpenTaskActivityNotification({
+              ...item,
+              taskId: resourceId,
+              projectId: String(item?.metadata?.projectId || "").trim(),
+              taskTitle: item.title,
+            });
+            return;
+          }
+          if (resourceType === "project" && resourceId) {
+            setLatestInteractedProjectId(resourceId);
+            setTasksPageNavigationRequest({
+              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              projectId: resourceId,
+              view: "overview",
+              sectionId: "general",
+              taskId: "",
+              taskDetailMode: "default",
+              missionControlAction: "",
+              projectComposerAction: "",
+            });
+            setSidebarWorkspaceMode("work");
+            setActivePage("tasks");
+            return;
+          }
+          if (resourceType === "metronome_run" && resourceId) {
+            openMetronomePage({
+              workflowId: String(item?.metadata?.metronomeId || "").trim(),
+              runId: resourceId,
+              mode: "run-detail",
+            });
+            return;
+          }
+          if (resourceType === "evaluation_run" && resourceId) {
+            openEvaluationsPage({
+              evaluationId: String(item?.metadata?.evaluationId || "").trim(),
+              evaluationRunId: resourceId,
+              mode: "run",
+            });
+            return;
+          }
+          const actionUrl = String(item?.actionUrl || "").trim();
+          if (actionUrl.startsWith("/") && !actionUrl.startsWith("//")) {
+            window.location.assign(actionUrl);
+          }
+        }
 
         function handleOpenEmailVerificationSettings() {
           setNotificationsOpen(false);

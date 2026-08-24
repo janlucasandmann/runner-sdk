@@ -1,5 +1,6 @@
 import { joinLegacyBrowserSourceFragments } from "../../../../legacy-browser-source.mjs";
 import { PROJECT_MILESTONES_RUNTIME_FRAGMENT } from "../project-milestones/runtime.mjs";
+import { PROJECT_ACTIVITY_FEED_RUNTIME_FRAGMENT } from "../project-activity-feed/runtime.mjs";
 import { PROJECT_UPDATES_RUNTIME_FRAGMENT } from "../project-updates/runtime.mjs";
 import { PROJECT_SUMMARY_RUNTIME_FRAGMENT } from "../project-summary/runtime.mjs";
 import { PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT } from "./runtime/activity-and-analytics.mjs";
@@ -17,6 +18,7 @@ export const PROJECT_OVERVIEW_SCRIPT_FRAGMENT_PATHS = Object.freeze([
   "../project-summary/runtime.mjs",
   "runtime/files-and-activity.mjs",
   "runtime/activity-and-analytics.mjs",
+  "../project-activity-feed/runtime.mjs",
   "runtime/resources-and-creators.mjs",
   "runtime/sidebar-and-composition.mjs",
 ]);
@@ -29,6 +31,7 @@ export const PROJECT_OVERVIEW_SCRIPT = joinLegacyBrowserSourceFragments([
   PROJECT_SUMMARY_RUNTIME_FRAGMENT,
   PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT,
   PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT,
+  PROJECT_ACTIVITY_FEED_RUNTIME_FRAGMENT,
   PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT,
   PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT,
 ]);

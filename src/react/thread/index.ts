@@ -13,6 +13,10 @@ export {
 } from "./pending-permissions-dock.js";
 export { RunnerThreadActiveRunsDock } from "./active-runs-dock.js";
 export { RunnerThreadLiveSupervisionDock } from "./live-supervision-dock.js";
+export {
+  RunnerThreadLiveWorkStatus,
+  resolveRunnerThreadLiveWorkStatusLabel,
+} from "./live-work-status.js";
 export { RunnerThreadParticipantAvatar } from "./participant-avatar.js";
 export { RunnerThreadRunReceipt } from "./run-receipt.js";
 export { RunnerThreadExecutionWorkbench } from "./execution-workbench.js";
@@ -32,6 +36,7 @@ export type {
 } from "./pending-permissions-dock.js";
 export type { RunnerThreadActiveRunsDockProps } from "./active-runs-dock.js";
 export type { RunnerThreadLiveSupervisionDockProps } from "./live-supervision-dock.js";
+export type { RunnerThreadLiveWorkStatusProps } from "./live-work-status.js";
 export type { RunnerThreadParticipantAvatarProps } from "./participant-avatar.js";
 export type { RunnerThreadRunReceiptProps } from "./run-receipt.js";
 export type {

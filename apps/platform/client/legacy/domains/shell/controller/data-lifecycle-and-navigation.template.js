@@ -3572,7 +3572,22 @@
           }
   
           function handleOpenTasksShortcut() {
-            setTasksProjectBackRequestToken((current) => current + 1);
+            setTasksProjectBackRequestToken((current) => String(latestInteractedProjectId || "").trim() ? current : current + 1);
+            const lastWorkedProjectId = String(latestInteractedProjectId || "").trim();
+            // Keep the existing overview reset behavior when there is no project history,
+            // but reopen the last project directly when one has been used before.
+            if (lastWorkedProjectId) {
+              setTasksPageNavigationRequest({
+                token: createPlaygroundPlatformNavigationToken(),
+                projectId: lastWorkedProjectId,
+                view: "overview",
+                sectionId: "general",
+                taskId: "",
+                taskDetailMode: "default",
+                missionControlAction: "",
+                projectComposerAction: "",
+              });
+            }
             setSidebarWorkspaceMode("work");
             setActivePage("tasks");
           }

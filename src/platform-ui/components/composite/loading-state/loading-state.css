@@ -3,11 +3,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
   color: #fff;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.4;
 }
 
 .platform-loading-state.is-centered {
@@ -19,13 +15,44 @@
 }
 
 .platform-loading-state__loader {
-  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.platform-loading-state__message {
-  min-width: 0;
-  color: inherit;
+.platform-loading-state__spinner {
+  display: block;
+  width: 24px;
+  height: 24px;
+  transform-origin: 50% 50%;
+  backface-visibility: hidden;
+  will-change: transform;
+  animation: platform-loading-state-spin 1800ms linear infinite;
+}
+
+@keyframes platform-loading-state-spin {
+  0% {
+    transform: translateZ(0) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.33, 0.22, 0.67, 0.56);
+  }
+
+  /* Accelerate from 50% to full speed. */
+  28.571% {
+    transform: translateZ(0) rotate(180deg);
+    animation-timing-function: linear;
+  }
+
+  /* Hold full speed for exactly one complete rotation. */
+  71.429% {
+    transform: translateZ(0) rotate(540deg);
+    animation-timing-function: cubic-bezier(0.33, 0.44, 0.67, 0.78);
+  }
+
+  /* Decelerate to 50% speed, which matches the next cycle's entry speed. */
+  100% {
+    transform: translateZ(0) rotate(720deg);
+  }
 }

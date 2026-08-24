@@ -2034,10 +2034,10 @@
             }
 
             const threadId = String(selectedThreadNavRecord.id || "").trim();
-            const threadCanMutate = Boolean(showThreadNavMutationActions && selectedKnownThread?.id);
+            const threadCanMutate = Boolean(showThreadNavMutationActions && selectedThreadNavRecord?.id);
             const threadMutationIs = (action) =>
               threadMutationState.action === action
-              && threadMutationState.threadId === selectedKnownThread?.id;
+              && threadMutationState.threadId === selectedThreadNavRecord?.id;
             const closeThreadActions = () => setThreadNavMenuOpen(false);
 
             return React.createElement(PlatformResourceHeaderActions, {
@@ -2053,12 +2053,12 @@
                 popupClassName: "playground-thread-nav-popup-menu",
                 shortcutActions: {
                   rename: {
-                    onInvoke: () => openThreadRenameDialog(selectedKnownThread),
+                    onInvoke: () => openThreadRenameDialog(selectedThreadNavRecord),
                     disabled: !threadCanMutate || Boolean(threadMutationState.action),
                   },
                   delete: {
                     onInvoke: () => {
-                      if (selectedKnownThread?.id) void handleThreadDelete(selectedKnownThread.id);
+                      if (selectedThreadNavRecord?.id) void handleThreadDelete(selectedThreadNavRecord.id);
                     },
                     disabled: !threadCanMutate || threadMutationIs("delete"),
                   },
@@ -2109,11 +2109,11 @@
                 ? React.createElement(PlatformResourceActionMenuItem, {
                     icon: React.createElement(Pin, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
                     label: threadMutationIs("pin")
-                      ? (selectedKnownThread.isPinned ? "Unpinning thread..." : "Pinning thread...")
-                      : (selectedKnownThread.isPinned ? "Unpin thread" : "Pin thread"),
+                      ? (selectedThreadNavRecord.isPinned ? "Unpinning thread..." : "Pinning thread...")
+                      : (selectedThreadNavRecord.isPinned ? "Unpin thread" : "Pin thread"),
                     disabled: threadMutationIs("pin"),
                     onClick: () => {
-                      void handleThreadPinToggle(selectedKnownThread.id);
+                      void handleThreadPinToggle(selectedThreadNavRecord.id);
                     },
                   })
                 : null,
@@ -2122,7 +2122,7 @@
                     icon: React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
                     label: "Rename thread",
                     shortcut: "rename",
-                    onClick: () => openThreadRenameDialog(selectedKnownThread),
+                    onClick: () => openThreadRenameDialog(selectedThreadNavRecord),
                   })
                 : null,
               threadCanMutate
@@ -2132,7 +2132,7 @@
                       ? (selectedThreadProjectId ? "Removing from project..." : "Adding to project...")
                       : (selectedThreadProjectId ? "Remove from Project" : "Add to Project"),
                     disabled: threadMutationIs("project"),
-                    onClick: () => handleOpenThreadProjectAction(selectedKnownThread),
+                    onClick: () => handleOpenThreadProjectAction(selectedThreadNavRecord),
                   })
                 : null,
               threadCanMutate
@@ -2142,16 +2142,16 @@
                     onClick: () => {
                       closeThreadActions();
                       openBatchComposer({
-                        name: "Continue " + String(selectedKnownThread.title || selectedKnownThread.task || "thread").slice(0, 180),
+                        name: "Continue " + String(selectedThreadNavRecord.title || selectedThreadNavRecord.task || "thread").slice(0, 180),
                         description: "Thread work queued from the thread details page.",
                         targetKind: "thread_run",
-                        targetResourceId: selectedKnownThread.id,
+                        targetResourceId: selectedThreadNavRecord.id,
                         definition: {
-                          threadId: selectedKnownThread.id,
-                          message: String(selectedKnownThread.task || "Continue the work in this thread.").trim(),
+                          threadId: selectedThreadNavRecord.id,
+                          message: String(selectedThreadNavRecord.task || "Continue the work in this thread.").trim(),
                         },
                         sourceProjectId: selectedThreadProjectId || null,
-                        sourceTicketId: String(selectedKnownThread.taskId || selectedKnownThread.ticketId || "").trim() || null,
+                        sourceTicketId: String(selectedThreadNavRecord.taskId || selectedThreadNavRecord.ticketId || "").trim() || null,
                         startPolicy: "manual",
                       });
                     },
@@ -2165,7 +2165,7 @@
                     danger: true,
                     disabled: threadMutationIs("delete"),
                     onClick: () => {
-                      void handleThreadDelete(selectedKnownThread.id);
+                      void handleThreadDelete(selectedThreadNavRecord.id);
                     },
                   })
                 : null
@@ -2208,21 +2208,28 @@
               ];
             }
 
-            const activeMetronomeLoopPresentation = metronomeRunTraceSelection?.key
-              && typeof getMetronomeTaskLoopPresentation === "function"
-                ? getMetronomeTaskLoopPresentation(metronomeRunTraceSelection, {
-                    projects: realProjects,
-                    threads: realThreads,
-                  })
-                : null;
-            if (activeMetronomeLoopPresentation?.isTaskLoop) {
+            if (activeMetronomeRunPresentation?.isTaskLoop) {
               return [{
-                label: activeMetronomeLoopPresentation.label,
+                label: activeMetronomeRunPresentation.label,
                 trailing: threadTitleActionMenu,
                 leading: React.createElement("span", {
                   className: "playground-tasks-backlog-project-icon is-loop",
                   "aria-hidden": "true",
                 }, React.createElement(RefreshCw, {
+                  width: 12,
+                  height: 12,
+                  strokeWidth: 1.9,
+                })),
+              }];
+            }
+            if (activeMetronomeRunPresentation?.isMissionControl) {
+              return [{
+                label: activeMetronomeRunPresentation.label,
+                trailing: threadTitleActionMenu,
+                leading: React.createElement("span", {
+                  className: "playground-tasks-backlog-project-icon is-mission-control",
+                  "aria-hidden": "true",
+                }, React.createElement(RefreshCcwDot, {
                   width: 12,
                   height: 12,
                   strokeWidth: 1.9,
@@ -2335,6 +2342,11 @@
               isProjectDetailView
               && !isProjectTaskDetailView
               && activeProjectSectionId === "delivery"
+            );
+            const isProjectSettingsView = Boolean(
+              isProjectDetailView
+              && !isProjectTaskDetailView
+              && activeProjectSectionId === "permissions"
             );
             const activeTicketNavigation = isProjectTaskDetailView
               && tasksHeaderState.ticketNavigation
@@ -2531,7 +2543,7 @@
                       className: "playground-tasks-nav playground-tasks-project-nav-switch",
                       value: activeProjectView,
                       options: [
-                        { value: "overview", label: "General" },
+                        { value: "overview", label: "Progress" },
                         { value: "backlog", label: "Backlog" },
                         { value: "resources", label: "Resources" },
                       ],
@@ -2595,6 +2607,25 @@
                             title: "Previous open ticket",
                             "aria-label": "Previous open ticket",
                           }, React.createElement(ArrowUp, { width: 14, height: 14, strokeWidth: 2 }))
+                        )
+                      : null,
+                    canViewProjectSettings && !isProjectTaskDetailView
+                      ? React.createElement(PlatformSecondaryButton, {
+                          type: "button",
+                          size: "small",
+                          active: isProjectSettingsView,
+                          className: "playground-tasks-nav-settings-button",
+                          onClick: () => navigateToProjectSection("permissions"),
+                          "aria-label": "Project settings",
+                          "aria-pressed": isProjectSettingsView ? "true" : "false",
+                        },
+                          React.createElement(Settings, {
+                            width: 14,
+                            height: 14,
+                            strokeWidth: 1.8,
+                            "aria-hidden": "true",
+                          }),
+                          React.createElement("span", null, "Settings")
                         )
                       : null,
                     React.createElement(PlatformButtonSelector, {
@@ -2853,6 +2884,9 @@
   	                      return;
                       }
                       requestPlatformNavigation(() => {
+                        if (options?.threadRecord?.id) {
+                          upsertRealThreadRecord(options.threadRecord);
+                        }
                         setThreadAgentSelectionOverride(null);
                         if (options?.taskPreview?.taskId) {
                           upsertThreadTaskPreview(normalizedThreadId, {
@@ -2982,6 +3016,9 @@
                     const normalizedThreadId = String(threadId || "").trim();
                     if (!normalizedThreadId) {
                       return;
+                    }
+                    if (options?.threadRecord?.id) {
+                      upsertRealThreadRecord(options.threadRecord);
                     }
                     setThreadAgentSelectionOverride(null);
                     if (options?.taskPreview?.taskId) {
@@ -3398,18 +3435,6 @@
                                       : null
                                     )
                                     : null,
-                                  selectedMetronomeRunEntry?.key
-                                    ? React.createElement("button", {
-                                        type: "button",
-                                        className: "playground-content-menu-button",
-                                        "aria-label": "Metronome run actions",
-                                        "aria-expanded": metronomeRunActionMenuState?.key === selectedMetronomeRunEntry.key ? "true" : "false",
-                                        onClick: (event) => openMetronomeRunActionMenu(event, selectedMetronomeRunEntry),
-                                        disabled: threadMutationState.action === "delete-metronome-run" && threadMutationState.threadId === selectedMetronomeRunEntry.key,
-                                      }, threadMutationState.action === "delete-metronome-run" && threadMutationState.threadId === selectedMetronomeRunEntry.key
-                                        ? React.createElement(Loader2, { className: "playground-content-menu-icon is-spinning", strokeWidth: 1.75 })
-                                        : React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 }))
-                                    : null
                                 )
                               : null,
   	                    }),
@@ -4541,21 +4566,23 @@
                             React.createElement("div", { className: "playground-view-pane" + (contentMode === "changes" ? "" : " is-hidden") },
                               contentMode === "changes"
                                 ? hasRealAccess
-                                  ? React.createElement(ThreadChangesView, {
-                                      threadId: activeRunnerThreadId,
-                                      threadTitle: selectedThreadTitle,
-                                      backendUrl: proxyBackendBase,
-                                      apiKey: effectiveApiKey,
-                                      upstreamUrl: resolvedUpstreamUrl,
-                                      hasRealAccess,
-                                      currentUserName: hasSessionAuth ? accountName : "User",
-                                      currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
-                                      onThreadMutated: () => refreshThreads(),
-                                      navigationTarget: changesNavigationTarget,
-                                      onNavigationTargetHandled: (token) => {
-                                        setChangesNavigationTarget((current) => (current && current.token === token ? null : current));
-                                      },
-                                    })
+                                  ? metronomeRunTraceSelection?.key
+                                    ? renderMetronomeRunTraceActivitySurface()
+                                    : React.createElement(ThreadChangesView, {
+                                        threadId: activeRunnerThreadId,
+                                        threadTitle: selectedThreadTitle,
+                                        backendUrl: proxyBackendBase,
+                                        apiKey: effectiveApiKey,
+                                        upstreamUrl: resolvedUpstreamUrl,
+                                        hasRealAccess,
+                                        currentUserName: hasSessionAuth ? accountName : "User",
+                                        currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
+                                        onThreadMutated: () => refreshThreads(),
+                                        navigationTarget: changesNavigationTarget,
+                                        onNavigationTargetHandled: (token) => {
+                                          setChangesNavigationTarget((current) => (current && current.token === token ? null : current));
+                                        },
+                                      })
                                   : hasDemoAccess
                                     ? renderDemoThreadChangesSurface()
                                     : renderAuthGate()

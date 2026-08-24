@@ -1,5 +1,27 @@
 import type { ReactNode } from "react";
 
+export type PlatformMentionKind = "human" | "agent";
+
+export interface PlatformMentionReference {
+  kind: PlatformMentionKind;
+  id: string;
+  label: string;
+}
+
+export interface PlatformMentionOption extends PlatformMentionReference {
+  description?: string;
+  avatar?: ReactNode;
+}
+
+export interface PlatformMentionSuggestionsProps {
+  mentionOptions?: readonly PlatformMentionOption[];
+  mentionsLoading?: boolean;
+  mentionEmptyMessage?: string;
+  onMentionQueryChange?: (query: string | null) => void;
+  mentionManageLabel?: string;
+  onMentionManage?: () => void;
+}
+
 export interface PlatformCommentReply {
   id: string;
   author: ReactNode;
@@ -8,8 +30,11 @@ export interface PlatformCommentReply {
   content: ReactNode;
 }
 
-export interface PlatformCommentReplyComposerProps {
-  onSubmit: (value: string) => void | Promise<void>;
+export interface PlatformCommentReplyComposerProps extends PlatformMentionSuggestionsProps {
+  onSubmit: (
+    value: string,
+    mentions?: readonly PlatformMentionReference[],
+  ) => void | Promise<void>;
   avatar?: ReactNode;
   placeholder?: string;
   ariaLabel?: string;
@@ -24,10 +49,14 @@ export interface PlatformCommentActions {
   disabled?: boolean;
 }
 
-export interface PlatformCommentComposerProps {
+export interface PlatformCommentComposerProps extends PlatformMentionSuggestionsProps {
   value: string;
   onChange: (value: string) => void;
-  onSubmit: (files: readonly File[]) => void | Promise<unknown>;
+  onSubmit: (
+    files: readonly File[],
+    mentions?: readonly PlatformMentionReference[],
+    body?: string,
+  ) => void | Promise<unknown>;
   avatar?: ReactNode;
   placeholder?: string;
   ariaLabel?: string;
@@ -35,6 +64,7 @@ export interface PlatformCommentComposerProps {
   attachmentAriaLabel?: string;
   disabled?: boolean;
   submitting?: boolean;
+  autoFocus?: boolean;
   errorMessage?: ReactNode;
   className?: string;
 }

@@ -47,35 +47,11 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
           ).trim();
         }
 
-        function getMetronomeRunTraceStepInput(step) {
-          if (step?.input !== null && typeof step?.input !== "undefined") return step.input;
-          const output = step?.output && typeof step.output === "object" ? step.output : {};
-          return output.input || output.inputs || output.context || output.inputSummary || "";
-        }
-
-        function getMetronomeRunTraceConditionBranchLabel(step) {
-          const output = step?.output && typeof step.output === "object" ? step.output : {};
-          return String(
-            step?.branchLabel
-              || output.branchLabel
-              || output.branch?.label
-              || output.branchName
-              || output.selectedBranch
-              || output.selectedBranchLabel
-              || "Default"
-          ).trim() || "Default";
-        }
-
-        function getMetronomeRunTraceConditionReason(step) {
-          const output = step?.output && typeof step.output === "object" ? step.output : {};
-          return String(
-            step?.branchReason
-              || output.branchReason
-              || output.branch?.reason
-              || output.reason
-              || output.message
-              || ""
-          ).trim();
+        function getMetronomeRunTraceConditionPresentation(step) {
+          return buildPlatformMetronomeConditionResultPresentation(
+            step,
+            step?.conditionNode || step?.condition_node || null
+          );
         }
 
         function renderMetronomeRunTraceThreadMarkdown(value, className = "tb-message-markdown tb-message-markdown-summary") {
@@ -443,9 +419,16 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
             agentName: thread.agentName || thread.agent_name || "",
             computerName: thread.computerName || thread.computer_name || thread.environmentName || thread.environment_name || "",
             environmentName: thread.environmentName || thread.environment_name || "",
+            startedAt: thread.startedAt || thread.started_at || thread.createdAt || thread.created_at || "",
+            completedAt: thread.completedAt || thread.completed_at || thread.updatedAt || thread.updated_at || "",
             output: thread.output || thread.summary || thread.result || thread.data || "",
             summary: thread.summary || "",
           })).filter((step) => !isMetronomeRunTraceStarterStep(step));
+        }
+
+        function isMetronomeRunTraceVisibleStep(step) {
+          const kind = getMetronomeRunTraceStepKind(step);
+          return kind !== "trigger" && kind !== "end";
         }
 
         function getMetronomeRunTraceStepRenderKey(step, index = 0) {
@@ -590,6 +573,54 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
           handleThreadSelect(normalizedThreadId);
         }
 
+        function getMetronomeRunTraceChildThreadStatus(step, thread) {
+          const safeStep = getMetronomeRunTraceRecord(step);
+          const safeThread = getMetronomeRunTraceRecord(thread);
+          const output = getMetronomeRunTraceStepOutputRecord(safeStep);
+          const outputThread = getMetronomeRunTraceRecord(output.thread || output.threadRecord || output.thread_record);
+          return String(
+            safeStep.status
+            || outputThread.status
+            || safeThread.status
+            || output.status
+            || ""
+          ).trim();
+        }
+
+        function getMetronomeRunTraceChildThreadWorkingLabel(step, thread) {
+          const safeStep = getMetronomeRunTraceRecord(step);
+          const safeThread = getMetronomeRunTraceRecord(thread);
+          const output = getMetronomeRunTraceStepOutputRecord(safeStep);
+          const outputThread = getMetronomeRunTraceRecord(output.thread || output.threadRecord || output.thread_record);
+          const records = [safeStep, outputThread, safeThread, output].flatMap((record) => {
+            const metadata = getMetronomeRunTraceRecord(record.metadata);
+            const projection = getMetronomeRunTraceRecord(metadata.projection);
+            const runProjection = getMetronomeRunTraceRecord(metadata.runProjection || metadata.run_projection);
+            return [record, metadata, projection, runProjection];
+          });
+          const keys = [
+            "workingLabel",
+            "working_label",
+            "workingSummary",
+            "working_summary",
+            "headerSummary",
+            "header_summary",
+            "statusMessage",
+            "status_message",
+            "liveSummary",
+            "live_summary",
+            "thinkingSummary",
+            "thinking_summary",
+          ];
+          for (const record of records) {
+            for (const key of keys) {
+              const value = String(record[key] || "").trim();
+              if (value) return value;
+            }
+          }
+          return "";
+        }
+
         function renderMetronomeRunTraceStepLog(step, run) {
           const output = run?.output && typeof run.output === "object" ? run.output : {};
           const threads = Array.isArray(output.threads) ? output.threads : [];
@@ -597,6 +628,10 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
           const kind = getMetronomeRunTraceStepKind(step);
           const isThreadStep = isMetronomeRunTraceThreadStep(step, thread);
           const threadId = getMetronomeRunTraceStepThreadId(step, thread);
+          const childThreadStatus = isThreadStep
+            ? getMetronomeRunTraceChildThreadStatus(step, thread)
+            : "";
+          const isThreadRunning = isThreadStep && isActiveMetronomeRunStatus(childThreadStatus);
           const runtimeMeta = isThreadStep
             ? getMetronomeRunTraceThreadRuntimeMeta(step, thread, {
                 threads: realThreadsRef.current || [],
@@ -627,65 +662,309 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
               || normalizeMetronomeRunTraceComparableText(readableOutputText) !== normalizeMetronomeRunTraceComparableText(summary)
             )
           );
-          const conditionInput = kind === "condition" ? getMetronomeRunTraceStepInput(step) : null;
-          const conditionInputText = kind === "condition" ? formatMetronomeRunValue(conditionInput) : "";
-          const conditionBranchLabel = kind === "condition" ? getMetronomeRunTraceConditionBranchLabel(step) : "";
-          const conditionReason = kind === "condition" ? getMetronomeRunTraceConditionReason(step) : "";
-          const runtimeMetaContent = isThreadStep
-            ? renderMetronomeRunTraceThreadRuntimeMeta(runtimeMeta, { showSeparator: false })
-            : null;
-          const stepIconContent = isThreadStep
-            ? renderMetronomeRunTraceThreadStepAvatar(runtimeMeta)
+          const conditionPresentation = kind === "condition"
+            ? getMetronomeRunTraceConditionPresentation(step)
             : null;
           return React.createElement("div", { className: "playground-metronome-run-trace-step playground-metronome-run-thread-log-step" },
-            React.createElement("div", { className: "playground-metronome-run-trace-heading" },
-              React.createElement("span", { className: "playground-metronome-run-trace-icon" },
-                stepIconContent || React.createElement(StepIcon, { width: 13, height: 13, strokeWidth: 1.9 })
-              ),
-              React.createElement("div", { className: "playground-metronome-run-trace-title-group" },
-                React.createElement("div", { className: "playground-metronome-run-thread-title-line" },
-                  React.createElement("div", { className: "playground-metronome-run-trace-title playground-metronome-run-thread-title-text" }, title),
-                  threadId
-                    ? React.createElement("div", { className: "playground-metronome-run-thread-meta-row" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-metronome-run-thread-link",
-                          onClick: () => handleMetronomeRunTraceChildThreadSelect(threadId, thread, step, run),
-                        }, "Show thread")
-                      )
-                    : null
-                ),
-                runtimeMetaContent
-                  ? React.createElement("div", { className: "playground-metronome-run-thread-meta-row" },
-                      runtimeMetaContent
-                    )
-                  : null,
-              )
-            ),
-            summary
+            isThreadStep
+              ? React.createElement(RunnerTurnIdentity, {
+                  agentName: runtimeMeta?.agentName || "Agent",
+                  agentPhotoUrl: runtimeMeta?.agentPhotoUrl || "",
+                  environmentName: runtimeMeta?.computerName || "Default",
+                  isGenerating: isThreadRunning,
+                  onClick: threadId
+                    ? () => handleMetronomeRunTraceChildThreadSelect(threadId, thread, step, run)
+                    : undefined,
+                  ariaLabel: threadId ? "Open thread for " + title : undefined,
+                })
+              : kind !== "condition"
+                ? React.createElement("div", { className: "playground-metronome-run-trace-heading" },
+                  React.createElement("span", { className: "playground-metronome-run-trace-icon" },
+                    React.createElement(StepIcon, { width: 13, height: 13, strokeWidth: 1.9 })
+                  ),
+                  React.createElement("div", { className: "playground-metronome-run-trace-title-group" },
+                    React.createElement("div", { className: "playground-metronome-run-trace-title" }, title)
+                  )
+                )
+                : null,
+            isThreadStep && title
+              ? React.createElement("div", {
+                  className: "playground-metronome-run-trace-thread-title",
+                }, title)
+              : null,
+            isThreadRunning
+              ? React.createElement(RunnerThreadLiveWorkStatus, {
+                  backendUrl: proxyBackendBase,
+                  threadId,
+                  headers: authRequestHeaders,
+                  enabled: Boolean(threadId),
+                  fallbackLabel: getMetronomeRunTraceChildThreadWorkingLabel(step, thread),
+                  onClick: threadId
+                    ? () => handleMetronomeRunTraceChildThreadSelect(threadId, thread, step, run)
+                    : undefined,
+                  ariaLabel: threadId ? "Open running thread for " + title : undefined,
+                })
+              : null,
+            summary && !isThreadRunning
               ? React.createElement("div", { className: "playground-metronome-run-trace-summary" },
                   renderMetronomeRunTraceThreadValue(summary) || summary
                 )
               : null,
-            kind === "condition" && conditionInputText
-              ? React.createElement("div", { className: "playground-metronome-run-trace-field" },
-                  React.createElement("div", { className: "playground-metronome-run-trace-field-label" }, "Input"),
-                  renderMetronomeRunTraceThreadValue(conditionInput)
-                )
+            conditionPresentation
+              ? React.createElement(PlatformMetronomeConditionResult, conditionPresentation)
               : null,
-            kind === "condition"
-              ? React.createElement("div", { className: "playground-metronome-run-trace-field" },
-                  React.createElement("div", { className: "playground-metronome-run-trace-field-label" }, "Branch"),
-                  React.createElement("div", { className: "playground-metronome-run-branch-result" },
-                    React.createElement("span", { className: "playground-metronome-run-branch-chip" }, conditionBranchLabel || "Default"),
-                    conditionReason ? React.createElement("span", { className: "playground-metronome-run-branch-reason" }, conditionReason) : null
-                  )
-                )
-              : null,
-            shouldRenderOutputText
+            shouldRenderOutputText && !isThreadRunning
               ? renderMetronomeRunTraceThreadValue(readableOutputText)
               : null
           );
+        }
+
+        function getMetronomeRunActivityTimestamp(value, fallbackValue = "") {
+          const candidates = [
+            value?.startedAt,
+            value?.started_at,
+            value?.createdAt,
+            value?.created_at,
+            value?.updatedAt,
+            value?.updated_at,
+            fallbackValue,
+          ];
+          for (const candidate of candidates) {
+            const timestamp = Date.parse(String(candidate || ""));
+            if (Number.isFinite(timestamp)) return timestamp;
+          }
+          return 0;
+        }
+
+        function getMetronomeRunActivityEndTimestamp(value, fallbackValue = "") {
+          const candidates = [
+            value?.completedAt,
+            value?.completed_at,
+            value?.endedAt,
+            value?.ended_at,
+            value?.updatedAt,
+            value?.updated_at,
+            fallbackValue,
+          ];
+          for (const candidate of candidates) {
+            const timestamp = Date.parse(String(candidate || ""));
+            if (Number.isFinite(timestamp)) return timestamp;
+          }
+          return 0;
+        }
+
+        function buildMetronomeRunActivityRecords(run, selection) {
+          const runThreads = Array.isArray(run?.output?.threads) ? run.output.threads : [];
+          const runStartedAt = getMetronomeRunActivityTimestamp(run, selection?.createdAt || "") || 1;
+          const prompt = String(getMetronomeRunPrompt(run) || "").trim();
+          const records = [];
+
+          if (prompt) {
+            records.push({
+              id: "metronome-run-prompt:" + String(selection?.key || run?.id || "run"),
+              kind: "message",
+              title: normalizeHistoryPreviewText(prompt, 80) || "Started workflow",
+              detail: prompt,
+              createdAt: runStartedAt,
+              endAt: runStartedAt,
+              status: "success",
+              actor: {
+                name: String(accountName || "User").trim() || "User",
+                avatarUrl: String(accountAvatarUrl || COMPUTER_AGENTS_CREATOR_PROFILE_URL).trim() || COMPUTER_AGENTS_CREATOR_PROFILE_URL,
+              },
+              step: null,
+              thread: null,
+              threadId: "",
+              searchText: [prompt, accountName].filter(Boolean).join(" ").toLowerCase(),
+            });
+          }
+
+          getMetronomeRunTraceSteps(run).filter(isMetronomeRunTraceVisibleStep).forEach((step, index) => {
+            const thread = findMetronomeRunThreadForStep(step, runThreads);
+            const runtimeMeta = getMetronomeRunTraceThreadRuntimeMeta(step, thread, {
+              threads: realThreadsRef.current || [],
+              agents: runtimeAgentsForComposer || [],
+              environments: runtimeEnvironments || [],
+            });
+            const title = isMetronomeRunTraceThreadStep(step, thread)
+              ? getMetronomeRunTraceThreadDisplayTitle(step, thread)
+              : getMetronomeRunTraceThreadStepTitle(step);
+            const rawDetail = String(
+              extractMetronomeThreadReadableOutputText(step, thread)
+              || extractMetronomeReadableOutputText(step?.output || step?.result || step?.data)
+              || step?.summary
+              || step?.status
+              || ""
+            ).trim();
+            const detail = normalizeHistoryPreviewText(rawDetail, 280);
+            const createdAt = getMetronomeRunActivityTimestamp(step, runStartedAt + index + 1) || runStartedAt + index + 1;
+            const resolvedEndAt = getMetronomeRunActivityEndTimestamp(step, "");
+            const threadId = getMetronomeRunTraceStepThreadId(step, thread);
+            const actor = {
+              name: String(runtimeMeta?.agentName || "Computer Agents").trim() || "Computer Agents",
+              avatarUrl: String(runtimeMeta?.agentPhotoUrl || COMPUTER_AGENTS_CREATOR_PROFILE_URL).trim() || COMPUTER_AGENTS_CREATOR_PROFILE_URL,
+            };
+            records.push({
+              id: "metronome-run-step:" + getMetronomeRunTraceStepRenderKey(step, index),
+              kind: "step",
+              title: title || "Workflow step",
+              detail,
+              createdAt,
+              endAt: resolvedEndAt > 0 ? Math.max(createdAt, resolvedEndAt) : null,
+              status: getThreadHistoryActivityStatus(step),
+              actor,
+              step,
+              thread,
+              threadId,
+              searchText: [title, rawDetail, actor.name, runtimeMeta?.computerName].filter(Boolean).join(" ").toLowerCase(),
+            });
+          });
+
+          return records.sort((left, right) => {
+            if (left.createdAt !== right.createdAt) return left.createdAt - right.createdAt;
+            return String(left.id).localeCompare(String(right.id));
+          });
+        }
+
+        function renderMetronomeRunActivityPreview(record) {
+          const meta = record.actor.name + " · " + formatHistoryTimestamp(record.createdAt);
+          return React.createElement("div", { className: "playground-thread-activity-preview" },
+            React.createElement("div", { className: "playground-thread-activity-preview__heading" },
+              renderThreadHistoryActivityAvatar(record.actor),
+              React.createElement("div", { className: "playground-thread-activity-preview__heading-copy" },
+                React.createElement("div", { className: "playground-thread-activity-preview__title" }, record.title),
+                React.createElement("div", { className: "playground-thread-activity-preview__meta" }, meta)
+              )
+            ),
+            record.detail
+              ? React.createElement("div", { className: "playground-thread-activity-preview__description" }, record.detail)
+              : null
+          );
+        }
+
+        function renderMetronomeRunTraceActivitySurface() {
+          const selection = metronomeRunTraceSelection;
+          const run = metronomeRunTraceState.run || buildFallbackMetronomeRunTraceRun(selection || {});
+          const records = buildMetronomeRunActivityRecords(run, selection || {});
+          const normalizedSearchQuery = String(metronomeRunActivitySearchQuery || "").trim().toLowerCase();
+          const searchMatchedRecords = normalizedSearchQuery
+            ? records.filter((record) => record.searchText.includes(normalizedSearchQuery))
+            : records;
+          const rangeStart = Number(metronomeRunActivityTimeRange?.startAt);
+          const rangeEnd = Number(metronomeRunActivityTimeRange?.endAt);
+          const visibleRecords = Number.isFinite(rangeStart) && Number.isFinite(rangeEnd)
+            ? searchMatchedRecords.filter((record) => record.createdAt >= rangeStart && record.createdAt <= rangeEnd)
+            : searchMatchedRecords;
+          const selectedItemId = visibleRecords.some((record) => record.id === metronomeRunActivitySelectedItemId)
+            ? metronomeRunActivitySelectedItemId
+            : String(visibleRecords[0]?.id || "");
+          const loading = metronomeRunTraceState.status === "loading" && records.length === 0;
+          const activityError = records.length ? "" : String(metronomeRunTraceState.error || "").trim();
+          const overviewItems = searchMatchedRecords.map((record) => {
+            const StepIcon = record.kind === "message" ? MessageSquare : getMetronomeRunTraceThreadStepIcon(record.step);
+            return {
+              id: record.id,
+              label: record.title,
+              ariaLabel: "Inspect " + record.title,
+              startAt: record.createdAt,
+              endAt: record.endAt,
+              status: record.status,
+              color: getThreadHistoryActivityColor(record.status),
+              content: React.createElement(PlatformActivityOverviewCard, {
+                title: record.title,
+                leadingIcon: React.createElement(StepIcon, { width: 14, height: 14, strokeWidth: 1.8 }),
+                permissionRingId: "ring_2",
+                actorAvatar: renderThreadHistoryActivityAvatar(record.actor),
+                actorLabel: record.actor.name,
+                status: record.status === "default" ? undefined : record.status,
+                selected: selectedItemId === record.id,
+                onClick: () => setMetronomeRunActivitySelectedItemId(record.id),
+                "aria-label": "Inspect " + record.title,
+              }),
+            };
+          });
+          const timelineItems = visibleRecords.map((record) => ({
+            id: record.id,
+            tone: record.status === "error" ? "status" : "neutral",
+            summary: React.createElement(React.Fragment, null,
+              React.createElement("span", { className: "playground-thread-activity-summary__actor" }, record.actor.name),
+              React.createElement("span", { className: "playground-thread-activity-summary__action" }, record.title)
+            ),
+            timestamp: formatHistoryTimestamp(record.createdAt),
+            avatar: renderThreadHistoryActivityAvatar(record.actor),
+            preview: renderMetronomeRunActivityPreview(record),
+            ariaLabel: "Inspect " + record.title,
+            inspectorAction: record.threadId
+              ? React.createElement(PlatformSecondaryButton, {
+                  size: "compact",
+                  onClick: () => handleMetronomeRunTraceChildThreadSelect(record.threadId, record.thread, record.step, run),
+                },
+                  React.createElement(ExternalLink, { width: 13, height: 13, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Show thread")
+                )
+              : null,
+          }));
+
+          return React.createElement(PlatformActivityWorkspace, {
+            className: "playground-thread-activity-page playground-metronome-run-activity-page",
+            chartHeight: metronomeRunActivityChartHeight,
+            overviewProps: {
+              className: "playground-thread-activity-overview",
+              items: overviewItems,
+              loading,
+              loadingMessage: "Loading workflow activity...",
+              timelineLayout: "scroll",
+              resizable: true,
+              minResizeHeight: 240,
+              minSiblingHeight: 220,
+              onHeightChange: setMetronomeRunActivityChartHeight,
+              onTimeRangeChange: setMetronomeRunActivityTimeRange,
+              emptyTitle: activityError
+                ? "Activity unavailable"
+                : normalizedSearchQuery
+                  ? "No matching activity"
+                  : "No workflow activity yet",
+              emptyDescription: activityError
+                ? activityError
+                : normalizedSearchQuery
+                  ? "Clear the search to show all recorded workflow actions."
+                  : "Workflow nodes and their threads will appear here over time.",
+              ariaLabel: "Workflow activity over time",
+            },
+            timelineLoading: loading,
+            timelineLoadingMessage: "Loading workflow activity...",
+            timelineLoadingClassName: "playground-thread-activity-loading",
+            timelineProps: {
+              className: "playground-thread-activity-timeline",
+              layout: "inspector",
+              title: "Activity",
+              headerActions: React.createElement(PlatformSearch, {
+                className: "playground-thread-activity-search",
+                value: metronomeRunActivitySearchQuery,
+                onChange: (event) => setMetronomeRunActivitySearchQuery(event.target.value),
+                placeholder: "Search activity",
+                "aria-label": "Search workflow activity",
+              }),
+              inspectorTitle: "Inspector",
+              items: timelineItems,
+              selectedItemId,
+              onSelectedItemChange: setMetronomeRunActivitySelectedItemId,
+              emptyTitle: activityError
+                ? "Activity unavailable"
+                : normalizedSearchQuery
+                  ? "No matching activity"
+                  : metronomeRunActivityTimeRange
+                    ? "No activity in this range"
+                    : "No activity yet",
+              emptyDescription: activityError
+                ? activityError
+                : normalizedSearchQuery
+                  ? "Clear the search to show all recorded workflow actions."
+                  : metronomeRunActivityTimeRange
+                    ? "Expand the selected time range to show more workflow actions."
+                    : "Workflow nodes and their threads will appear here.",
+            },
+          });
         }
 
         function buildMetronomeRunTraceContinuationPrompt(run, selection) {
@@ -723,13 +1002,20 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
           const selection = metronomeRunTraceSelection;
           const run = metronomeRunTraceState.run || buildFallbackMetronomeRunTraceRun(selection || {});
           const steps = getMetronomeRunTraceSteps(run);
+          const visibleSteps = steps.filter(isMetronomeRunTraceVisibleStep);
+          const runThreads = Array.isArray(run?.output?.threads) ? run.output.threads : [];
+          const hasActiveChildThread = steps.some((step) => {
+            const thread = findMetronomeRunThreadForStep(step, runThreads);
+            return isMetronomeRunTraceThreadStep(step, thread)
+              && isActiveMetronomeRunStatus(getMetronomeRunTraceChildThreadStatus(step, thread));
+          });
           const rawSummaryText = getMetronomeRunSummaryText(run);
           const status = metronomeRunTraceState.status;
           const isRunWorking = status === "loading" || isActiveMetronomeRunStatus(run?.status || selection?.status);
           const summaryText = isGenericMetronomeRunSummaryText(rawSummaryText)
             ? ""
             : rawSummaryText;
-          const shouldShowNoStepsMessage = !isRunWorking && !metronomeRunTraceState.error && !steps.length;
+          const shouldShowNoStepsMessage = !isRunWorking && !metronomeRunTraceState.error && !visibleSteps.length;
           const isExpanded = metronomeRunTraceWorkExpanded;
           return React.createElement("div", { className: "playground-metronome-run-thread-list" },
               React.createElement("div", { className: "tb-turn tb-turn-user playground-metronome-run-thread-turn" },
@@ -743,14 +1029,10 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
                   onClick: () => setMetronomeRunTraceWorkExpanded((current) => !current),
                 },
                   React.createElement("span", { className: "tb-work-label" },
-                    React.createElement("span", null, status === "loading" ? "Loading Metronome run" : "Metronome Working Logs"),
+                    React.createElement("span", null, status === "loading" ? "Loading workflow" : "Workflow Logs"),
                     isExpanded
                       ? React.createElement(ChevronUp, { className: "tb-chevron", strokeWidth: 1.8 })
                       : React.createElement(ChevronDown, { className: "tb-chevron", strokeWidth: 1.8 })
-                  ),
-                  React.createElement("div", { className: "tb-turn-environment-pill" },
-                    React.createElement(Metronome, { className: "tb-turn-environment-icon", strokeWidth: 1.6 }),
-                    React.createElement("span", { className: "tb-turn-environment-label" }, selection?.workflowName || "Metronome")
                   )
                 ),
                 React.createElement("div", {
@@ -765,8 +1047,8 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
                             )
                           )
                         : null,
-                      steps.length
-                        ? steps.map((step, index) => {
+                      visibleSteps.length
+                        ? visibleSteps.map((step, index) => {
                           const stepKey = getMetronomeRunTraceStepRenderKey(step, index);
                           const animatedKeys = metronomeRunTraceAnimatedStepKeysRef.current;
                           const shouldAnimateStep = animatedKeys?.key === String(selection?.key || "").trim()
@@ -804,7 +1086,7 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
                       )
                     )
                   : null,
-                isRunWorking
+                isRunWorking && !hasActiveChildThread
                   ? React.createElement("div", { className: "tb-btw-turn-pending tb-thinking-status playground-metronome-run-thread-working" },
                       React.createElement("span", { className: "tb-btw-turn-pending-loader", "aria-hidden": "true" },
                         renderMetronomeRunWorkingDotLoader()
@@ -824,10 +1106,17 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
             className: "playground-thread-runner playground-metronome-run-thread-surface",
             backendUrl: proxyBackendBase,
             apiKey: effectiveApiKey,
+            onBatchJobCreate: handleQuickBatchJobCreate,
             fetchCustomSkills: computerAgentsMode ? handleFetchCustomSkills : undefined,
             speechToTextUrl: speechToTextUrl || undefined,
             requestHeaders,
+            resolveRequestHeaders: resolveRunnerRequestHeaders,
             appId: "runner-web-sdk-demo",
+            threadViewMode: "legacy",
+            composerSurfaceMode: "thread",
+            initialSurfaceLoading: String(metronomeRunTraceState.key || "").trim() !== String(selection?.key || "").trim()
+              || metronomeRunTraceState.status === "idle"
+              || metronomeRunTraceState.status === "loading",
             inputMode: computerAgentsMode ? "computer-agents" : "minimal",
             computerAgents: computerAgentsMode ? {
               ...demoComputerAgents,
@@ -859,11 +1148,31 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
             keepFocusOnSubmit: true,
             showUsageInStatus: false,
             placeholder: "Continue this workflow",
+            privateMode: runnerComposerPrivateMode,
             hiddenSystemPrompt: buildMetronomeRunTraceContinuationPrompt(run, selection || {}),
+            enableResourceCreationCommand: true,
+            resourceCreationCommandHiddenPrompt: buildThreadRunnerResourceHiddenPrompt,
+            enableAgentCreationCommand: !isFreeComposerAgentPlan,
+            agentCreationCommandHiddenPrompt: buildThreadRunnerAgentHiddenPrompt,
+            enableSkillCreationCommand: true,
+            skillCreationCommandHiddenPrompt: buildThreadRunnerSkillHiddenPrompt,
             emptyState: renderMetronomeRunTraceThreadContent(),
+            composerPlanTierId: settingsCurrentTierId || accountTierId || "sandbox",
+            composerOrganizations: getComposerOrganizationOptions(),
+            composerOrganizationId: getActiveComposerOrganizationId(),
+            onComposerOrganizationChange: handleComposerOrganizationChange,
             onOpenPluginsOverview: () => {
               setSelectedPluginId("");
               openToolsView("plugins");
+            },
+            onOpenPromptSearch: (onSelect) => {
+              openPromptSearch(onSelect);
+            },
+            onOpenKnowledgeSearch: (onSelect) => {
+              openKnowledgeSearch(onSelect);
+            },
+            onOpenThreadSearch: (onSelect) => {
+              openThreadReferenceSearch(onSelect);
             },
             onOpenPlansBudget: () => {
               requestPlatformPlanGate({
@@ -940,6 +1249,11 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
               }
               void loadThreadGroundTruthStatus(normalizedThreadId);
               void refreshThreads();
+            },
+            onMetronomeWorkflowRun: handleMetronomeWorkflowRunFromThread,
+            onOpenChanges: () => {
+              setChangesNavigationTarget(null);
+              setContentMode("changes");
             },
             onAgentChange: (nextAgentId) => {
               setPreferredAgentId(String(nextAgentId || "").trim());

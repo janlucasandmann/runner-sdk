@@ -810,6 +810,22 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function getPlaygroundTaskTyp
                         ],
                       })
                     ),
+                    renderIssueComposerDetailFact("Color",
+                      renderIssueComposerDetailSelectControl({
+                        popoverId: "color",
+                        value: getPlaygroundTaskColorId(issueComposerDraft.taskColor),
+                        valueLabel: getPlaygroundTaskColorPresentation(issueComposerDraft.taskColor).label,
+                        buttonContent: renderPlaygroundTaskColorValue(issueComposerDraft.taskColor),
+                        options: PLAYGROUND_TASK_COLOR_OPTIONS.map((option) =>
+                          createIssueComposerSelectorOption({
+                            value: option.id,
+                            label: option.label,
+                            leading: renderPlaygroundTaskColorSwatch(option.id, "playground-tasks-detail-color-menu-swatch"),
+                            onSelect: () => updateIssueComposerField("taskColor", option.id),
+                          })
+                        ),
+                      })
+                    ),
                     renderIssueComposerDetailFact("Assignee",
                       renderIssueComposerDetailSelectControl({
                         popoverId: "assignee",
@@ -1329,6 +1345,41 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function getPlaygroundTaskTyp
             });
           }
 
+          function renderProjectComposerIconPicker() {
+            const projectIcon = getPlaygroundProjectIconId(projectDraft.icon);
+            const projectColor = String(
+              projectDraft.color
+              || projectDraft.metadata?.color
+              || PLAYGROUND_PROJECT_ACCENT_COLORS[0]
+            ).trim() || PLAYGROUND_PROJECT_ACCENT_COLORS[0];
+            return React.createElement(ProjectIconPicker, {
+              projectName: String(projectDraft.name || "New Project").trim() || "New Project",
+              icon: projectIcon,
+              color: projectColor,
+              iconOptions: PLAYGROUND_PROJECT_ICON_OPTIONS,
+              colorOptions: PLAYGROUND_PROJECT_ACCENT_COLORS,
+              showProjectName: false,
+              onChange: (nextIdentity) => {
+                const nextIcon = getPlaygroundProjectIconId(nextIdentity?.icon);
+                const nextColor = String(nextIdentity?.color || projectColor).trim() || projectColor;
+                setProjectDraft((current) => ({
+                  ...current,
+                  icon: nextIcon,
+                  color: nextColor,
+                  metadata: {
+                    ...(current?.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
+                      ? current.metadata
+                      : {}),
+                    icon: nextIcon,
+                    color: nextColor,
+                  },
+                }));
+                return true;
+              },
+              className: "playground-project-create-modal__icon-picker",
+            });
+          }
+
           function renderProjectComposerNameControl() {
             return React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
               React.createElement("button", {
@@ -1373,15 +1424,225 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function getPlaygroundTaskTyp
             );
           }
 
+          function updateProjectComposerProperty(property, value) {
+            setProjectDraft((current) => ({
+              ...current,
+              [property]: value,
+              metadata: {
+                ...(current?.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
+                  ? current.metadata
+                  : {}),
+                [property]: value,
+              },
+            }));
+          }
+
+          function createProjectComposerSidebarSelectorOption(option) {
+            const value = String(option?.value || option?.id || option?.key || option?.label || "").trim();
+            const label = String(option?.label || option?.name || value || "Option").trim();
+            const description = String(option?.description || option?.email || "").trim();
+            return {
+              value,
+              label,
+              description: description || undefined,
+              leading: option?.icon || undefined,
+              trailing: option?.trailing || undefined,
+              ariaLabel: option?.ariaLabel,
+              disabled: option?.disabled === true,
+              selected: option?.selected === true,
+              onSelect: option?.onSelect,
+            };
+          }
+
+          function renderProjectComposerSidebarRow(label, value, options = {}) {
+            const content = options.content || React.createElement("span", null, value || "None");
+            return React.createElement("div", {
+                className: "playground-tasks-detail-fact playground-project-overview-sidebar-row"
+                  + (options.className ? " " + options.className : ""),
+              },
+              React.createElement("div", {
+                className: "playground-tasks-detail-fact-label playground-project-overview-sidebar-row-label",
+              }, label),
+              React.createElement("div", {
+                className: "playground-tasks-detail-fact-control playground-project-overview-sidebar-row-value"
+                  + (!value && !options.content ? " playground-project-overview-sidebar-muted" : "")
+                  + (options.editable ? " is-editable" : ""),
+              }, content)
+            );
+          }
+
+          function renderProjectComposerSidebarSelectControl(id, value, content, options = {}) {
+            const normalizedId = String(id || "").trim();
+            const selectorOptions = Array.isArray(options.options)
+              ? options.options.filter((option) => option?.value)
+              : [];
+            const selectedOption = selectorOptions.find((option) => option.selected)
+              || selectorOptions.find((option) => option.value === String(value || ""));
+            const selectedValue = String(selectedOption?.value || value || "");
+            return React.createElement(PlatformSelector, {
+              value: selectedValue,
+              options: selectorOptions,
+              onValueChange: (nextValue, option) => {
+                if (typeof options.onValueChange === "function") {
+                  options.onValueChange(nextValue, option);
+                } else if (typeof option?.onSelect === "function") {
+                  option.onSelect();
+                }
+              },
+              ariaLabel: String(options.ariaLabel || ("Select project " + normalizedId)),
+              label: content,
+              placeholder: content,
+              open: Boolean(normalizedId && projectOverviewSidebarPropertyPopover === normalizedId),
+              onOpenChange: (nextOpen) => {
+                setProjectOverviewSidebarPropertyPopover(nextOpen ? normalizedId : "");
+                if (typeof options.onOpenChange === "function") {
+                  options.onOpenChange(nextOpen);
+                }
+              },
+              disabled: options.disabled === true,
+              loading: options.loading === true,
+              loadingContent: options.loadingContent || "Loading organization members...",
+              alignment: "end",
+              popupAlignment: "right",
+              fullWidth: true,
+              emptyContent: options.emptyContent || "No options available.",
+              popupHeader: options.popupHeader || null,
+              popupHeaderClassName: options.popupHeaderClassName || "",
+              optionClassName: options.optionClassName || "",
+              popupWidth: "min(280px, calc(100vw - 48px))",
+              popupMaxWidth: "calc(100vw - 48px)",
+              popupMaxHeight: "min(320px, calc(100vh - 120px))",
+              className: "playground-tasks-detail-central-selector playground-project-overview-sidebar-selector"
+                + (options.empty ? " is-empty" : ""),
+              triggerClassName: "playground-tasks-detail-central-selector-trigger playground-project-overview-sidebar-selector-trigger"
+                + (options.empty ? " is-empty" : ""),
+              popupClassName: "playground-tasks-detail-central-selector-popup playground-project-overview-sidebar-selector-popup"
+                + (options.popupClassName ? " " + options.popupClassName : ""),
+            });
+          }
+
+          function renderProjectComposerStatusIcon(option) {
+            const StatusIcon = option?.icon || Circle;
+            return React.createElement(StatusIcon, {
+              className: [
+                "playground-tasks-status-icon",
+                option?.toneClassName,
+                "playground-project-overview-status-icon",
+              ].filter(Boolean).join(" "),
+              strokeWidth: option?.id === "in_progress" ? 1.7 : 2,
+              "aria-hidden": "true",
+            });
+          }
+
+          function renderProjectComposerStatusContent(option) {
+            return React.createElement("span", {
+                className: [
+                  "playground-tasks-status-value",
+                  option?.toneClassName,
+                  "playground-project-overview-status-value",
+                ].filter(Boolean).join(" "),
+              },
+              renderProjectComposerStatusIcon(option),
+              React.createElement("span", {
+                className: "playground-tasks-status-value-label playground-tasks-detail-select-trigger-label",
+              }, option?.label || "Backlog")
+            );
+          }
+
+          function renderProjectComposerProperties() {
+            const currentStatusValue = normalizePlaygroundProjectStatus(projectDraft.status || projectDraft.metadata?.status || "backlog");
+            const statusOptions = PLAYGROUND_PROJECT_STATUS_OPTIONS.map((option) => ({
+              ...option,
+              selected: option.id === currentStatusValue,
+            }));
+            const currentStatusOption = statusOptions.find((option) => option.selected) || statusOptions[0];
+            const currentPriorityValue = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === projectDraft.priority)
+              ? projectDraft.priority
+              : "medium";
+            return React.createElement("div", {
+                className: "playground-tasks-detail-facts is-centralized-sidebar-content playground-project-create-modal__properties",
+              },
+              React.createElement("div", {
+                  className: "playground-tasks-detail-facts-body playground-project-overview-sidebar-rows",
+                },
+                renderProjectComposerSidebarRow("Status", currentStatusOption.label, {
+                  editable: true,
+                  content: renderProjectComposerSidebarSelectControl(
+                    "create-project-status",
+                    currentStatusValue,
+                    renderProjectComposerStatusContent(currentStatusOption),
+                    {
+                      ariaLabel: "Project status",
+                      onValueChange: (nextStatus) => updateProjectComposerProperty(
+                        "status",
+                        normalizePlaygroundProjectStatus(nextStatus)
+                      ),
+                      options: statusOptions.map((option) => createProjectComposerSidebarSelectorOption({
+                        id: option.id,
+                        label: option.label,
+                        selected: option.selected,
+                        icon: renderProjectComposerStatusIcon(option),
+                      })),
+                    }
+                  ),
+                }),
+                renderProjectComposerSidebarRow("Priority", getPlaygroundTaskPriorityLabel(currentPriorityValue), {
+                  editable: true,
+                  content: renderProjectComposerSidebarSelectControl(
+                    "create-project-priority",
+                    currentPriorityValue,
+                    renderPlaygroundTaskPriorityLabel(currentPriorityValue),
+                    {
+                      ariaLabel: "Project priority",
+                      onValueChange: (nextPriority) => updateProjectComposerProperty(
+                        "priority",
+                        PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === nextPriority)
+                          ? nextPriority
+                          : "medium"
+                      ),
+                      options: PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) => createProjectComposerSidebarSelectorOption({
+                        id: option.id,
+                        label: option.label,
+                        selected: option.id === currentPriorityValue,
+                        icon: renderPlaygroundTaskPriorityIcon(option.id),
+                      })),
+                    }
+                  ),
+                }),
+                renderProjectComposerSidebarRow("Computer", projectDefaultEnvironmentLabel, {
+                  editable: true,
+                  content: renderProjectComposerSidebarSelectControl(
+                    "create-project-computer",
+                    selectedProjectEnvironmentId,
+                    React.createElement(React.Fragment, null,
+                      React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.85 }),
+                      React.createElement("span", null, projectDefaultEnvironmentLabel)
+                    ),
+                    {
+                      ariaLabel: "Project computer",
+                      emptyContent: "No computers available.",
+                      onValueChange: (nextEnvironmentId) => {
+                        updateProjectComposerProperty("defaultEnvironmentId", nextEnvironmentId || null);
+                        setProjectAttachmentTransferState((current) => ({ ...current, error: "" }));
+                      },
+                      options: projectComposerAvailableEnvironments.map((environment) => createProjectComposerSidebarSelectorOption({
+                        id: environment.id,
+                        label: environment.name + (environment.isDefault ? " (Default)" : ""),
+                        description: environment.isDefault ? "Default computer" : "",
+                        selected: environment.id === selectedProjectEnvironmentId,
+                        icon: React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.85 }),
+                      })),
+                    }
+                  ),
+                })
+              )
+            );
+          }
+
           function renderProjectInitialSetupBody() {
             return React.createElement("div", { className: "playground-tasks-project-initial-setup-body" },
-              renderProjectInitialSetupField(
-                "Computer",
-                renderProjectComposerEnvironmentPicker(),
-                "is-inline"
-              ),
-              renderProjectLeadSelector({ label: "Project lead" }),
-              renderProjectInitialGoalField()
+              renderProjectInitialGoalField(),
+              renderProjectComposerProperties()
             );
           }
 
@@ -1634,8 +1895,9 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function getPlaygroundTaskTyp
 	                closing: projectInitialSetupModalClosing,
 	                title: "New Project",
 	                headerVariant: "search",
+	                headerLeading: renderProjectComposerIconPicker(),
 	                headerSearchProps: {
-	                  icon: SelectedProjectIcon,
+	                  icon: null,
 	                  value: String(projectDraft.name || ""),
 	                  maxLength: 500,
 	                  placeholder: "Project name",
@@ -1645,7 +1907,7 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function getPlaygroundTaskTyp
 	                  onChange: (event) => updateProjectDraftName(event.target.value),
 	                },
 	                as: "form",
-	                size: "medium",
+	                size: "large",
 	                maxHeight: "min(720px, calc(100vh - 48px))",
 	                scrollable: true,
 	                className: "playground-project-create-modal playground-tasks-project-initial-setup-modal",

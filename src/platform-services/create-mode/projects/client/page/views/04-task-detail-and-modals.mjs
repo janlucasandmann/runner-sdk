@@ -90,7 +90,48 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             );
           }
 
+          function getTaskActivityTimestampValue(value) {
+            if (value && typeof value === "object" && !Array.isArray(value)) {
+              const seconds = Number(value.seconds ?? value._seconds ?? value.epochSeconds);
+              if (Number.isFinite(seconds) && seconds > 0) {
+                return seconds < 100000000000 ? seconds * 1000 : seconds;
+              }
+              if (typeof value.toDate === "function") {
+                try {
+                  const dateValue = value.toDate();
+                  const dateTimestamp = dateValue instanceof Date ? dateValue.getTime() : Date.parse(String(dateValue || ""));
+                  return Number.isFinite(dateTimestamp) ? dateTimestamp : 0;
+                } catch {}
+              }
+            }
+            if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+              return value < 100000000000 ? value * 1000 : value;
+            }
+            const normalizedValue = String(value || "").trim();
+            if (!normalizedValue) {
+              return 0;
+            }
+            const timestamp = Date.parse(normalizedValue);
+            return Number.isFinite(timestamp) ? timestamp : 0;
+          }
+
+          function getTaskActivityEventTimestamp(event) {
+            return getTaskActivityTimestampValue(
+              event?.createdAt
+                ?? event?.created_at
+                ?? event?.timestamp
+                ?? event?.occurredAt
+                ?? event?.occurred_at
+                ?? event?.comment?.createdAt
+            );
+          }
+
           function getTaskActivityEvents() {
+            // Some task detail payloads arrive before the normalized task id is
+            // copied onto draftTask. Keep the selected route id as the stable
+            // identity so the guaranteed creation event is not discarded by
+            // activity normalization during that short loading window.
+            const taskIdentity = String(draftTask?.id || selectedTaskId || draftTask?.ticketNumber || "").trim();
             const normalizedTaskDescription = String(draftTask.description || "")
               .replaceAll(String.fromCharCode(13), "")
               .replace(/\s+/g, " ")
@@ -119,23 +160,51 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             });
             repliesByParentCommentId.forEach((replies) => {
               replies.sort((left, right) => {
-                const leftTime = Date.parse(left.createdAt || "") || 0;
-                const rightTime = Date.parse(right.createdAt || "") || 0;
+                const leftTime = getTaskActivityEventTimestamp(left);
+                const rightTime = getTaskActivityEventTimestamp(right);
                 return leftTime - rightTime;
               });
             });
             const threadsById = new Map(selectedTaskThreads.map((thread) => [String(thread?.id || "").trim(), thread]));
             const creator = getTaskCreatorIdentity(draftTask);
+            const taskCreatedAt = getTaskActivityTimestampValue(draftTask.createdAt);
+            // The project workspace already loads the canonical task activity
+            // feed (including status, priority, assignment, rename, and
+            // milestone mutations). Reuse that same feed here and filter it
+            // to the selected ticket. Detail responses from older deployments
+            // sometimes contain only comments plus the synthetic creation
+            // record, so relying exclusively on draftTask.activity makes the
+            // ticket timeline silently lose those mutation events.
+            const canonicalProjectActivityEvents = typeof getProjectActivityEventsForTask === "function"
+              ? getProjectActivityEventsForTask(taskIdentity)
+              : [];
+            const canonicalActivityRecords = [
+              ...(Array.isArray(draftTask.activity) ? draftTask.activity : []),
+              ...(Array.isArray(draftTask.activityEvents) ? draftTask.activityEvents : []),
+              ...(Array.isArray(draftTask.details?.activity) ? draftTask.details.activity : []),
+              ...(Array.isArray(draftTask.details?.activityEvents) ? draftTask.details.activityEvents : []),
+              ...canonicalProjectActivityEvents,
+            ];
+            const knownActivityTimestamps = [
+              ...canonicalActivityRecords,
+              ...comments,
+              ...selectedTaskThreads,
+            ].map(getTaskActivityEventTimestamp).filter((timestamp) => timestamp > 0);
+            const inferredCreatedAt = taskCreatedAt > 0
+              ? new Date(taskCreatedAt).toISOString()
+              : knownActivityTimestamps.length > 0
+                ? new Date(Math.max(0, Math.min(...knownActivityTimestamps) - 1)).toISOString()
+                : String(draftTask.updatedAt || new Date().toISOString());
             const syntheticEvents = [{
-              id: "task_activity_created_" + draftTask.id,
+              id: "task_activity_created_" + taskIdentity,
               eventType: "created",
-              sourceId: draftTask.id,
+              sourceId: taskIdentity,
               actorType: creator.type,
               actorUserId: creator.type === "user" ? (draftTask.createdByUserId || currentUserId || "") : undefined,
               actorAgentId: creator.type === "agent" ? (draftTask.creator?.agentId || undefined) : undefined,
               actorName: creator.name,
               actorAvatarUrl: creator.photoUrl,
-              createdAt: draftTask.createdAt,
+              createdAt: inferredCreatedAt,
             }];
 
             comments.forEach((comment) => {
@@ -175,8 +244,8 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
               });
             });
 
-            return normalizePlaygroundTaskActivityList([
-              ...(Array.isArray(draftTask.activity) ? draftTask.activity : []),
+            const normalizedEvents = normalizePlaygroundTaskActivityList([
+              ...canonicalActivityRecords,
               ...syntheticEvents,
             ]).map((event) => ({
               ...event,
@@ -194,6 +263,23 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                 return Boolean(event.comment && !event.comment.parentCommentId);
               }
               return true;
+            });
+            // Ticket activity follows the same newest-first convention as the
+            // project Progress feed. This also keeps events with missing or
+            // delayed timestamps from appearing before ticket creation.
+            return normalizedEvents.sort((left, right) => {
+              const timestampDifference = getTaskActivityEventTimestamp(right)
+                - getTaskActivityEventTimestamp(left);
+              if (timestampDifference) {
+                return timestampDifference;
+              }
+              if (left.eventType === "created" && right.eventType !== "created") {
+                return 1;
+              }
+              if (right.eventType === "created" && left.eventType !== "created") {
+                return -1;
+              }
+              return String(right.id || "").localeCompare(String(left.id || ""));
             });
           }
 
@@ -308,6 +394,151 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             return actor;
           }
 
+          function getTaskActivityAssignmentTarget(event) {
+            const fieldName = String(event?.fieldName || "").trim().toLowerCase();
+            if (!["assigneeagentid", "assigneeid"].includes(fieldName)) {
+              return null;
+            }
+            const rawValue = event?.nextValue;
+            const valueObject = rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)
+              ? rawValue
+              : {};
+            const assigneeId = decodeSharedProjectActivityFieldValue(rawValue, ["id", "agentId", "userId", "value"]);
+            if (!assigneeId) {
+              return null;
+            }
+            const explicitName = String(
+              valueObject.name
+                || valueObject.displayName
+                || valueObject.display_name
+                || valueObject.fullName
+                || valueObject.full_name
+                || event?.nextValueName
+                || event?.assigneeName
+                || ""
+            ).trim();
+            const assigneeName = String(
+              explicitName
+                || (typeof getTaskAssigneeName === "function" ? getTaskAssigneeName(assigneeId, assigneeId) : assigneeId)
+                || assigneeId
+            ).trim() || "Agent";
+            const avatar = typeof renderTaskActorAvatar === "function"
+              ? renderTaskActorAvatar(assigneeId, "playground-project-activity-line__assignee-avatar")
+              : typeof renderAgentNameAvatar === "function"
+                ? renderAgentNameAvatar(
+                    assigneeName,
+                    "playground-project-activity-line__assignee-avatar",
+                    valueObject.photoUrl || valueObject.photoURL || valueObject.avatarUrl || valueObject.avatarURL || ""
+                  )
+                : null;
+            return { id: assigneeId, name: assigneeName, avatar };
+          }
+
+          function renderTaskActivitySharedLine(event) {
+            const normalizedEvent = typeof normalizePlaygroundTaskActivityRecord === "function"
+              ? normalizePlaygroundTaskActivityRecord(event) || event
+              : event;
+            const isThread = normalizedEvent?.eventType === "thread_started";
+            const thread = normalizedEvent?.thread || null;
+            const threadId = String(
+              normalizedEvent?.threadId
+                || thread?.id
+                || normalizedEvent?.sourceId
+                || ""
+            ).trim();
+            const taskId = String(draftTask?.id || selectedTaskId || "").trim();
+            const persistedTask = taskId && tasksById ? tasksById[taskId] || null : null;
+            const storedTicketNumber = String(
+              persistedTask?.ticketNumber || draftTask?.ticketNumber || ""
+            ).trim();
+            const canonicalTicketNumber = String(
+              (taskId && taskTicketNumbersById ? taskTicketNumbersById[taskId] : "")
+                || (typeof formatPlaygroundProjectTicketNumber === "function"
+                  ? formatPlaygroundProjectTicketNumber(selectedProject, storedTicketNumber)
+                  : "")
+                || storedTicketNumber
+                || ""
+            ).trim();
+            const activityTask = typeof normalizePlaygroundTaskRecord === "function"
+              ? normalizePlaygroundTaskRecord({
+                  ...(persistedTask || {}),
+                  ...(draftTask || {}),
+                  id: taskId,
+                  ticketNumber: canonicalTicketNumber,
+                  taskType: draftTask?.taskType || draftTask?.type || persistedTask?.taskType || persistedTask?.type || "task",
+                })
+              : {
+                  ...(persistedTask || {}),
+                  ...(draftTask || {}),
+                  id: taskId,
+                  ticketNumber: canonicalTicketNumber,
+                };
+            const source = {
+              ...normalizedEvent,
+              id: isThread ? threadId : normalizedEvent?.id,
+              task: activityTask,
+              taskId,
+            };
+            const sharedEvent = {
+              id: normalizedEvent.id,
+              eventType: isThread
+                ? "threads"
+                : typeof getProjectActivityTaskEventType === "function"
+                  ? getProjectActivityTaskEventType(normalizedEvent)
+                  : "issue_progress",
+              presentation: "line",
+              isThreadRecord: isThread,
+              timestamp: getTaskActivityEventTimestamp(normalizedEvent),
+              source,
+            };
+            if (isThread) {
+              const timestamp = getTaskActivityEventTimestamp(normalizedEvent);
+              return renderSharedProjectTaskActivityLine(sharedEvent, {
+                task: activityTask,
+                taskId,
+                ticketNumber: canonicalTicketNumber,
+                actorName: getTaskActivityActorName(normalizedEvent) || "Agent",
+                actorAvatar: renderTaskActivityActorAvatar(normalizedEvent),
+                fallbackSummary: renderTaskActivityEventSummary(normalizedEvent),
+                timeLabel: timestamp
+                  ? formatRelativeThreadTime(new Date(timestamp).toISOString())
+                  : "",
+                showTaskReference: false,
+                onActivate: thread ? () => openTaskDetailThread(thread, "chat") : undefined,
+              });
+            }
+            const fieldName = String(normalizedEvent?.fieldName || "").trim().toLowerCase();
+            const milestoneId = ["releaseid", "milestoneid"].includes(fieldName)
+              ? decodeSharedProjectActivityFieldValue(normalizedEvent?.nextValue, ["id", "releaseId", "milestoneId", "value"])
+              : "";
+            const milestone = milestoneId
+              ? releasesById?.[milestoneId]
+                || (Array.isArray(releases)
+                  ? releases.find((release) => String(release?.id || "").trim() === milestoneId)
+                  : null)
+              : null;
+            const timestamp = getTaskActivityEventTimestamp(normalizedEvent);
+            return renderSharedProjectTaskActivityLine(sharedEvent, {
+              task: activityTask,
+              taskId,
+              ticketNumber: canonicalTicketNumber,
+              actorName: getTaskActivityActorName(normalizedEvent) || "Someone",
+              actorAvatar: renderTaskActivityActorAvatar(normalizedEvent),
+              milestoneName: String(
+                milestone?.name
+                  || milestone?.title
+                  || normalizedEvent?.nextValueName
+                  || formatTaskActivityFieldValue(normalizedEvent?.fieldName, normalizedEvent?.nextValue)
+                  || ""
+              ).trim(),
+              assignmentTarget: getTaskActivityAssignmentTarget(normalizedEvent),
+              fallbackSummary: renderTaskActivityEventSummary(normalizedEvent),
+              timeLabel: timestamp
+                ? formatRelativeThreadTime(new Date(timestamp).toISOString())
+                : "",
+            });
+          }
+
           function renderTaskActivitySection() {
             const normalizedDraftTaskStatus = String(draftTask.status || "").trim().toLowerCase();
             const isHumanReviewerForTask = isPlaygroundHumanAssigneeId(draftTask.reviewerAgentId);
@@ -325,7 +556,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
               const isStatus = event.eventType === "status_changed";
               const isFieldChange = event.eventType === "field_changed";
               const isPriorityChange = isFieldChange
-                && String(event.fieldName || "").trim() === "priority";
+                && String(event.fieldName || "").trim().toLowerCase() === "priority";
               const isMilestoneChange = isFieldChange
                 && ["releaseId", "milestoneId"].includes(String(event.fieldName || "").trim());
               const isScheduleChange = isFieldChange
@@ -352,9 +583,11 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                       : "gray";
               return {
                 id: event.id,
+                isComment: Boolean(isComment),
+                sharedLine: isComment ? null : renderTaskActivitySharedLine(event),
                 tone: isComment ? "comment" : isThread ? "thread" : isStatus ? "status" : "created",
                 summary: isComment
-                  ? React.createElement("strong", null, getTaskCommentDisplayName(comment))
+                  ? getTaskCommentDisplayName(comment)
                   : renderTaskActivityEventSummary(event),
                 timestamp: formatRelativeThreadTime(event.createdAt) || formatPlaygroundFileDate(event.createdAt),
                 avatar: isStatus
@@ -371,7 +604,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                     ? null
                     : renderTaskActivityActorAvatar(event),
                 icon: isMilestoneChange
-                  ? Flag
+                  ? Milestone
                   : isScheduleChange
                     ? CalendarIcon
                     : isFieldChange
@@ -409,10 +642,12 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   : undefined,
                 replyComposer: isComment
                   ? {
-                      onSubmit: (body) => handleAddTaskComment({
+                      ...getProjectMentionComposerProps(),
+                      onSubmit: (body, mentions) => handleAddTaskComment({
                         inline: true,
                         parentCommentId: comment.id,
                         body,
+                        mentions,
                       }),
                       avatar: renderAgentNameAvatar(
                         currentUserName || "Me",
@@ -445,56 +680,103 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   : undefined,
               };
             });
-            return React.createElement(PlatformActivityTimeline, {
-              className: "playground-tasks-activity",
-              items: activityItems,
-              headerActions: React.createElement(React.Fragment, null,
-                    React.createElement(PlatformSecondaryButton, {
-                      type: "button",
-                      size: "small",
-                      className: "playground-tasks-activity-subscription-button",
-                      disabled: activitySubscriptionPending,
-                      "aria-pressed": activitySubscribed,
-                      title: activitySubscriptionMatchesTask
-                        ? taskActivitySubscriptionState.error || undefined
-                        : undefined,
-                      onClick: () => void handleToggleTaskActivitySubscription(),
-                    },
-                    React.createElement(activitySubscribed ? UserRoundMinus : UserRoundPlus, {
-                      width: 14,
-                      height: 14,
-                      strokeWidth: 1.8,
-                      "aria-hidden": "true",
-                    }),
-                    activitySubscribed ? "Unsubscribe" : "Subscribe"),
-                    canHumanReviewTask
-                      ? React.createElement(PlatformPrimaryButton, {
-                          type: "button",
-                          size: "small",
-                          disabled: saveState.isSaving,
-                          onClick: () => void handleApproveTaskReview(),
-                        }, "Approve")
-                      : null
-                  ),
-              composer: {
-                value: taskActivityCommentValue,
-                onChange: (nextValue) => {
-                  setTaskActivityCommentValue(nextValue);
-                  if (taskActivityCommentError) {
-                    setTaskActivityCommentError("");
-                  }
-                },
-                onSubmit: async (files) => Boolean(await handleAddTaskComment({
-                  inline: true,
-                  body: taskActivityCommentValue,
-                  files,
-                })),
-                allowAttachments: true,
-                disabled: isTaskConfigLocked,
-                submitting: taskActivityCommentPending,
-                errorMessage: taskActivityCommentError,
+            const renderableActivityItems = activityItems.filter((item) => item.sharedLine || item.isComment);
+            const activityHeaderActions = React.createElement(React.Fragment, null,
+              React.createElement(PlatformSecondaryButton, {
+                type: "button",
+                size: "small",
+                className: "playground-tasks-activity-subscription-button",
+                disabled: activitySubscriptionPending,
+                "aria-pressed": activitySubscribed,
+                title: activitySubscriptionMatchesTask
+                  ? taskActivitySubscriptionState.error || undefined
+                  : undefined,
+                onClick: () => void handleToggleTaskActivitySubscription(),
               },
-            });
+              React.createElement(activitySubscribed ? UserRoundMinus : UserRoundPlus, {
+                width: 14,
+                height: 14,
+                strokeWidth: 1.8,
+                "aria-hidden": "true",
+              }),
+              activitySubscribed ? "Unsubscribe" : "Subscribe"),
+              canHumanReviewTask
+                ? React.createElement(PlatformPrimaryButton, {
+                    type: "button",
+                    size: "small",
+                    disabled: saveState.isSaving,
+                    onClick: () => void handleApproveTaskReview(),
+                  }, "Approve")
+                : null
+            );
+            const activityComposer = {
+              ...getProjectMentionComposerProps(),
+              value: taskActivityCommentValue,
+              onChange: (nextValue) => {
+                setTaskActivityCommentValue(nextValue);
+                if (taskActivityCommentError) {
+                  setTaskActivityCommentError("");
+                }
+              },
+              onSubmit: async (files, mentions, body) => Boolean(await handleAddTaskComment({
+                inline: true,
+                body: typeof body === "string" ? body : taskActivityCommentValue,
+                files,
+                mentions,
+              })),
+              allowAttachments: true,
+              disabled: isTaskConfigLocked,
+              submitting: taskActivityCommentPending,
+              errorMessage: taskActivityCommentError,
+            };
+            return React.createElement("section", {
+                className: "platform-activity-timeline playground-tasks-activity",
+              },
+              React.createElement("header", { className: "platform-activity-timeline__header" },
+                React.createElement("div", { className: "platform-activity-timeline__pane-heading" },
+                  React.createElement("h2", { className: "platform-activity-timeline__title" }, "Activity")
+                ),
+                React.createElement("div", { className: "platform-activity-timeline__header-actions" }, activityHeaderActions)
+              ),
+              renderableActivityItems.length > 0
+                ? React.createElement("ol", { className: "platform-activity-timeline__list" },
+                    renderableActivityItems.map((item) => {
+                      // Activity mutations and thread starts must always use the
+                      // shared compact project activity line. Never fall back to
+                      // a comment card for a non-comment event: that produced
+                      // empty rounded cards whenever the shared renderer was not
+                      // available during a hot reload.
+                      if (item.sharedLine) {
+                        return React.createElement("li", {
+                          key: item.id,
+                          className: "platform-activity-timeline__item playground-tasks-activity-shared-line-item",
+                        }, item.sharedLine);
+                      }
+                      if (!item.isComment) {
+                        return null;
+                      }
+                      return React.createElement("li", {
+                        key: item.id,
+                        className: "platform-activity-timeline__item has-content is-comment",
+                      },
+                        React.createElement(PlatformCommentCard, {
+                          author: item.summary,
+                          timestamp: item.timestamp,
+                          avatar: item.avatar,
+                          content: item.content,
+                          replies: item.replies,
+                          replyComposer: item.replyComposer,
+                          actions: item.actions,
+                        })
+                      );
+                    })
+                  )
+                : React.createElement(PlatformEmptyState, {
+                    className: "platform-activity-timeline__empty",
+                    title: "No activity yet",
+                  }),
+              React.createElement(PlatformCommentComposer, activityComposer)
+            );
           }
 
           function getTaskDetailThreadStatusPresentation(thread) {
@@ -590,6 +872,10 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                 historyKey: "ticket-comment:" + String(draftTask?.id || ""),
                 stickyHeader: false,
                 variant: "minimalistic-ui",
+                ...getProjectMentionComposerProps(),
+                onMentionSelect: (mention) => setTaskCommentMentions((current) => (
+                  mergeProjectMentionReference(current, mention)
+                )),
                 className: "playground-tasks-comment-modal-instructions",
               }),
               saveState.error
@@ -599,48 +885,9 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
           }
 
           function renderTaskWorkActionControl() {
-            const hasStartedThread = taskHasStartedThread(draftTask);
-            const reviewerAgentId = String(draftTask.reviewerAgentId || "").trim();
-            const hasRunnableReviewer = Boolean(
-              reviewerAgentId
-              && !isPlaygroundHumanAssigneeId(reviewerAgentId)
-              && typeof onStartAgentReviewThread === "function"
-            );
-            const taskThreadStartPending = taskRunPendingIds.includes(draftTask.id)
-              || taskRunPendingIdsRef.current.has(draftTask.id);
-            const taskReviewStartPending = taskAgentReviewStartPendingId === draftTask.id;
-            const actionPending = taskThreadStartPending || taskReviewStartPending;
-            const mainActionKind = !hasStartedThread
-              ? "start"
-              : hasRunnableReviewer
-                ? "review"
-                : "rerun";
-            const mainActionLabel = actionPending
-              ? (mainActionKind === "review" ? "Starting Review..." : "Starting...")
-              : mainActionKind === "start"
-                ? "Start Work"
-                : mainActionKind === "review"
-                  ? "Start Review"
-                  : "Rerun Thread";
-            const threadActionDisabled = isTaskConfigLocked
-              || draftTask.status === "canceled"
-              || isHumanAssignedTask(draftTask)
-              || actionPending;
-            const reviewActionDisabled = isTaskConfigLocked
-              || draftTask.status === "canceled"
-              || !hasRunnableReviewer
-              || actionPending;
-            const mainActionDisabled = mainActionKind === "review"
-              ? reviewActionDisabled
-              : threadActionDisabled;
-            const popupActionLabel = !hasStartedThread
-              ? "Run Review"
-              : hasRunnableReviewer
-                ? "Rerun Thread"
-                : "Start Review";
-            const popupActionDisabled = !hasStartedThread
-              || !hasRunnableReviewer
-              || threadActionDisabled;
+            const workActionConfiguration = getTaskWorkActionConfiguration(draftTask, {
+              locked: isTaskConfigLocked,
+            });
 
             return React.createElement("div", {
                 className: "playground-tasks-detail-work-control",
@@ -649,8 +896,8 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   mode: "split-action",
                   buttonVariant: "primary",
                   buttonSize: "small",
-                  label: mainActionLabel,
-                  actionAriaLabel: mainActionLabel,
+                  label: workActionConfiguration.mainActionLabel,
+                  actionAriaLabel: workActionConfiguration.mainActionLabel,
                   popupAriaLabel: "Ticket work options",
                   popupRole: "menu",
                   popupVariant: "minimal",
@@ -658,48 +905,15 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   matchTriggerWidth: true,
                   fullWidth: true,
                   closeOnSelect: true,
-                  actionDisabled: mainActionDisabled,
+                  actionDisabled: workActionConfiguration.mainActionDisabled,
                   popupDisabled: false,
                   className: "playground-tasks-detail-work-selector",
                   popupClassName: "playground-tasks-detail-work-selector-popup",
-                  onAction: () => {
-                    if (mainActionKind === "review") {
-                      return handleStartSelectedTaskAgentReview();
-                    }
-                    return handleStartTaskThread(draftTask);
-                  },
+                  onAction: () => runTaskWorkPrimaryAction(draftTask, workActionConfiguration),
                 },
-                React.createElement("button", {
-                  type: "button",
-                  role: "menuitem",
-                  className: "tb-popup-row",
-                  disabled: popupActionDisabled,
-                  onClick: () => {
-                    if (popupActionDisabled) {
-                      return;
-                    }
-                    if (hasRunnableReviewer) {
-                      void handleStartTaskThread(draftTask);
-                    }
-                  },
-                }, popupActionLabel),
-                React.createElement("button", {
-                  type: "button",
-                  role: "menuitem",
-                  className: "tb-popup-row",
-                  disabled: threadActionDisabled,
-                  onClick: () => {
-                    if (!threadActionDisabled) {
-                      void handleStartTaskThread(draftTask, {
-                        addToBatch: true,
-                        successMessage: "Ticket added to Batches",
-                      });
-                    }
-                  },
-                },
-                  React.createElement(Truck, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-                  React.createElement("span", null, "Add to Batches")
-                )
+                renderTaskWorkActionMenuItems(draftTask, {
+                  configuration: workActionConfiguration,
+                })
               )
             );
           }
@@ -847,33 +1061,6 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                     })
                   )
                 ),
-                React.createElement("div", { className: "playground-tasks-detail-fact is-agent-runs" },
-                      React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Agent runs"),
-                      React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                        React.createElement("button", {
-                            type: "button",
-                            className: "playground-tasks-detail-fact-button playground-tasks-detail-agent-runs-value",
-                            disabled: !latestTaskAgentSessionThread,
-                            onClick: () => {
-                              if (latestTaskAgentSessionThread) {
-                                openTaskDetailThread(latestTaskAgentSessionThread, "chat");
-                              }
-                            },
-                            title: latestTaskAgentSessionThread ? "Open latest agent run" : undefined,
-                          },
-                          React.createElement("span", null,
-                            selectedTaskAgentSessions.length
-                              + " attempt"
-                              + (selectedTaskAgentSessions.length === 1 ? "" : "s")
-                          ),
-                          taskAgentSessionPresentation
-                            ? React.createElement(PlatformLabel, {
-                                variant: taskAgentSessionPresentation.variant,
-                              }, taskAgentSessionPresentation.label)
-                            : React.createElement(PlatformLabel, { variant: "gray" }, "No runs")
-                        )
-                      )
-                    ),
                 activeTaskStatus === "blocked"
                   ? React.createElement("div", { className: "playground-tasks-detail-fact" },
                       React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Blocked by"),
@@ -1147,6 +1334,26 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                             })
                           ),
                       ],
+                    })
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-detail-fact" },
+                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Color"),
+                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                    renderTaskDetailSelectControl({
+                      popoverId: "color",
+                      value: getPlaygroundTaskColorId(draftTask.taskColor),
+                      valueLabel: activeTaskColorPresentation.label,
+                      disabled: isTaskConfigLocked,
+                      buttonContent: renderPlaygroundTaskColorValue(draftTask.taskColor),
+                      options: PLAYGROUND_TASK_COLOR_OPTIONS.map((option) =>
+                        createTaskDetailSelectorOption({
+                          value: option.id,
+                          label: option.label,
+                          leading: renderPlaygroundTaskColorSwatch(option.id, "playground-tasks-detail-color-menu-swatch"),
+                          onSelect: () => updateDraftField("taskColor", option.id, { autosave: true }),
+                        })
+                      ),
                     })
                   )
                 ),

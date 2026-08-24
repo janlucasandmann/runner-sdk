@@ -13,7 +13,7 @@
   gap: 8px;
   appearance: none;
   border: 0;
-  background: transparent;
+  background: #262626;
   padding: 0;
   color: inherit;
   font: inherit;
@@ -47,7 +47,7 @@
   color: rgba(255, 255, 255, 0.96);
   font-size: 12px;
   line-height: 1.35;
-  font-weight: 500;
+  font-weight: 400;
   white-space: nowrap;
 }
 
@@ -63,7 +63,7 @@
 }
 
 .tb-runner-chat .tb-log-card-metronome-workflow {
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   margin-left: auto;
   display: flex;
@@ -73,8 +73,7 @@
 }
 
 .tb-runner-chat .tb-log-metronome-workflow-link {
-  appearance: none;
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   min-width: 0;
   margin: 0;
@@ -86,29 +85,66 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: 12px;
+  text-align: left;
+}
+
+.tb-runner-chat .tb-log-metronome-workflow-canvas-button {
+  appearance: none;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  display: block;
   cursor: pointer;
   text-align: left;
   font: inherit;
 }
 
-.tb-runner-chat .tb-log-metronome-workflow-link:disabled {
+.tb-runner-chat .tb-log-metronome-workflow-canvas-button:disabled {
   cursor: default;
 }
 
-.tb-runner-chat .tb-log-metronome-workflow-link:not(:disabled):focus-visible {
+.tb-runner-chat .tb-log-metronome-workflow-canvas-button:not(:disabled):focus-visible {
   outline: 1px solid rgba(77, 163, 255, 0.72);
-  outline-offset: 4px;
+  outline-offset: -1px;
 }
 
 .tb-runner-chat .tb-log-metronome-workflow-header {
-  width: fit-content;
+  box-sizing: border-box;
+  width: 100%;
   max-width: 100%;
   min-width: 0;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  background: #262626;
+}
+
+.tb-runner-chat .tb-log-metronome-workflow-identity {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tb-runner-chat .tb-log-metronome-workflow-identity .tb-log-compact-action-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-runner-chat .tb-log-metronome-workflow-actions {
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .tb-runner-chat .tb-log-metronome-workflow-status {
@@ -124,14 +160,33 @@
 }
 
 .tb-runner-chat .tb-log-metronome-minimap {
-  width: fit-content;
+  box-sizing: border-box;
+  width: 100%;
   max-width: 100%;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   position: relative;
-  overflow: visible;
-  border-radius: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 20px;
   padding: 0;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tb-runner-chat .tb-log-metronome-minimap-canvas {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+  padding: 20px;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-position: 0 0;
+  background-size: 18px 18px;
 }
 
 .tb-runner-chat .tb-log-metronome-minimap-track {
@@ -179,7 +234,7 @@
 
 .tb-runner-chat .tb-log-metronome-minimap-node {
   width: 100%;
-  max-width: 132px;
+  max-width: 100%;
   min-width: 0;
   height: 40px;
   display: inline-flex;
@@ -188,14 +243,15 @@
   padding: 0 9px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.055);
+  background: #262626;
   color: rgba(255, 255, 255, 0.84);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
 }
 
 .tb-runner-chat .tb-log-metronome-minimap-node.is-active {
+  border-width: 1px;
   border-color: rgba(77, 163, 255, 0.5);
-  box-shadow: 0 0 0 1px rgba(77, 163, 255, 0.52);
+  box-shadow: none;
   color: #fff;
 }
 
@@ -284,13 +340,15 @@
 }
 
 .tb-runner-chat .tb-log-metronome-minimap-node-title {
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 11px;
   line-height: 1.2;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .tb-runner-chat .tb-log-metronome-minimap-connector {
@@ -308,17 +366,11 @@
   width: fit-content;
   max-width: min(100%, 760px);
   min-width: 0;
-  margin-top: 6px;
+  margin-top: 12px;
 }
 
 .tb-runner-chat .tb-log-metronome-user-message-markdown {
   color: inherit;
-}
-
-.tb-runner-chat .tb-log-card.tb-log-card-metronome-workflow {
-  width: fit-content;
-  max-width: 100%;
-  margin-left: auto;
 }
 
 .tb-runner-chat .tb-log-file-change-summary {

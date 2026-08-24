@@ -66,7 +66,18 @@ export const METRONOME_SIDEBAR_CSS = `
         color: #fff;
       }
 
-      .sidebar-metronome-run-icon.is-loop svg {
+      .sidebar-metronome-run-icon.is-mission-control {
+        width: 20px;
+        height: 20px;
+        flex-basis: 20px;
+        border-radius: 5px;
+        background: linear-gradient(180deg, #3159a8 0%, #172f68 100%);
+        box-shadow: inset 0 0 0 1px rgba(137, 178, 255, 0.16), 0 1px 2px rgba(0, 0, 0, 0.28);
+        color: #fff;
+      }
+
+      .sidebar-metronome-run-icon.is-loop svg,
+      .sidebar-metronome-run-icon.is-mission-control svg {
         filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.28));
       }
 

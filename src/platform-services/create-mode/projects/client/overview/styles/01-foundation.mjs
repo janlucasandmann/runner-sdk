@@ -76,6 +76,130 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
         overflow: visible;
       }
 
+      .playground-project-overview-milestones-card {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-project-overview-milestones-card__header {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-milestones-card__title,
+      .playground-project-overview-milestones-card__add,
+      .playground-project-overview-milestones-card__open {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .playground-project-overview-milestones-card__title {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        color: #fff;
+        font-size: 12px;
+        line-height: 1.3;
+        font-weight: 400;
+      }
+
+      .playground-project-overview-milestones-card__title:hover {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-project-overview-milestones-card__add {
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        border-radius: 999px;
+        color: rgba(255, 255, 255, 0.52);
+      }
+
+      .playground-project-overview-milestones-card__add:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-project-overview-milestones-card__list {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-project-overview-milestones-card__row {
+        min-width: 0;
+        display: block;
+      }
+
+      .playground-project-overview-milestones-card__open {
+        min-width: 0;
+        width: 100%;
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 0;
+        text-align: left;
+      }
+
+      .playground-project-overview-milestones-card__progress {
+        box-sizing: border-box;
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at center, #131313 52%, transparent 54%),
+          conic-gradient(
+            #636bdc 0 var(--project-milestone-progress, 0%),
+            rgba(255, 255, 255, 0.12) var(--project-milestone-progress, 0%) 100%
+          );
+      }
+
+      .playground-project-overview-milestones-card__name {
+        min-width: 0;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-milestones-card__meta {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-milestones-card__empty {
+        padding: 6px 0;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 12px;
+        line-height: 1.4;
+        font-weight: 400;
+      }
+
       .playground-project-overview-sidebar-facts {
         position: relative;
         min-width: 0;

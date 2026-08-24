@@ -1,18 +1,16 @@
 export const CALENDAR_PROJECTS_PAGE_LOADING_SCRIPT = `
-        async function loadScheduleExecutionThreads(scheduleId = "") {
-          try {
-            const normalizedScheduleId = String(scheduleId || "").trim();
-            const queries = normalizedScheduleId
+        async function loadScheduleExecutionThreads(
+          scheduleId = "",
+          visibleRange = visibleScheduleCalendarRange,
+          projectId = isStandaloneCalendarMode ? "" : selectedProjectId
+        ) {
+          async function loadLegacyScheduleExecutionThreads(normalizedScheduleId) {
+            const legacyQueries = normalizedScheduleId
               ? [{ scheduleId: normalizedScheduleId }]
               : [{ appId: "runner_project_calendar" }, { appId: "automations" }];
-            const responses = await Promise.all(queries.map(async (query) => {
+            return Promise.all(legacyQueries.map(async (query) => {
               const requestTarget = new URL(backendUrl + "/threads", window.location.origin);
-              if (query.scheduleId) {
-                requestTarget.searchParams.set("scheduleId", query.scheduleId);
-              }
-              if (query.appId) {
-                requestTarget.searchParams.set("appId", query.appId);
-              }
+              Object.entries(query).forEach(([key, value]) => requestTarget.searchParams.set(key, value));
               requestTarget.searchParams.set("limit", normalizedScheduleId ? "100" : "200");
               const response = await fetch(requestTarget.toString(), {
                 method: "GET",
@@ -30,6 +28,71 @@ export const CALENDAR_PROJECTS_PAGE_LOADING_SCRIPT = `
                     ? data.items
                     : [];
             }));
+          }
+
+          try {
+            const normalizedScheduleId = String(scheduleId || "").trim();
+            const queries = normalizedScheduleId
+              ? [{ scheduleId: normalizedScheduleId }]
+              : [{ appId: "runner_project_calendar" }, { appId: "automations" }];
+            let responses;
+            try {
+              responses = await Promise.all(queries.map(async (query) => {
+                const requestTarget = new URL(backendUrl + "/schedules/executions", window.location.origin);
+                if (query.scheduleId) requestTarget.searchParams.set("scheduleId", query.scheduleId);
+                if (query.appId) requestTarget.searchParams.set("appId", query.appId);
+                const normalizedProjectId = String(projectId || "").trim();
+                if (normalizedProjectId) requestTarget.searchParams.set("contextId", normalizedProjectId);
+                if (visibleRange?.start instanceof Date && !Number.isNaN(visibleRange.start.getTime())) {
+                  requestTarget.searchParams.set("rangeStart", visibleRange.start.toISOString());
+                }
+                if (visibleRange?.end instanceof Date && !Number.isNaN(visibleRange.end.getTime())) {
+                  requestTarget.searchParams.set("rangeEnd", visibleRange.end.toISOString());
+                }
+                requestTarget.searchParams.set("limit", normalizedScheduleId ? "100" : "200");
+                const response = await fetch(requestTarget.toString(), {
+                  method: "GET",
+                  headers: requestHeaders,
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                  const compatibilityError = new Error(
+                    data?.message || data?.error || "Schedule executions could not be loaded."
+                  );
+                  compatibilityError.status = response.status;
+                  throw compatibilityError;
+                }
+                const executions = Array.isArray(data?.data)
+                  ? data.data
+                  : Array.isArray(data?.executions)
+                    ? data.executions
+                    : [];
+                return executions.map((execution) => {
+                  const threadId = String(execution?.threadId || execution?.thread_id || "").trim();
+                  if (!threadId) return null;
+                  return {
+                    id: threadId,
+                    threadId,
+                    title: execution?.threadTitle || execution?.thread_title || execution?.scheduleName || "Scheduled execution",
+                    status: execution?.threadStatus || execution?.thread_status || execution?.status || "running",
+                    createdAt: execution?.threadCreatedAt || execution?.thread_created_at || execution?.startedAt || execution?.scheduledFor,
+                    startedAt: execution?.startedAt || execution?.started_at || null,
+                    completedAt: execution?.threadCompletedAt || execution?.thread_completed_at || execution?.completedAt || null,
+                    lastMessagePreview: execution?.threadLastMessagePreview || execution?.thread_last_message_preview || execution?.error || "",
+                    metadata: {
+                      scheduleId: execution?.scheduleId || execution?.schedule_id || query.scheduleId || "",
+                      scheduleExecutionId: execution?.id || "",
+                      scheduledFor: execution?.scheduledFor || execution?.scheduled_for || "",
+                      triggered: execution?.triggerType || execution?.trigger_type || "automatic",
+                      contextId: execution?.contextId || execution?.context_id || normalizedProjectId || "",
+                    },
+                  };
+                }).filter(Boolean);
+              }));
+            } catch (error) {
+              if (Number(error?.status) !== 404 && Number(error?.status) !== 501) throw error;
+              responses = await loadLegacyScheduleExecutionThreads(normalizedScheduleId);
+            }
             const recordsById = new Map();
             responses.flat().forEach((thread) => {
               const threadId = String(thread?.id || thread?.threadId || thread?.thread_id || "").trim();
@@ -53,7 +116,7 @@ export const CALENDAR_PROJECTS_PAGE_LOADING_SCRIPT = `
         }
 
         async function loadProjectSchedules(projectId, visibleRange = visibleScheduleCalendarRange) {
-          const executionThreadsPromise = loadScheduleExecutionThreads();
+          const executionThreadsPromise = loadScheduleExecutionThreads("", visibleRange, projectId);
           setScheduleLoadState((current) => ({
             status: "loading",
             error: current.status === "ready" ? "" : current.error,
