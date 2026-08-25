@@ -46,6 +46,38 @@ describe("runner hydrated turn reconciliation", () => {
     ).toBe(true);
   });
 
+  it("collapses repeated canonical turns introduced by preview and live hydration", () => {
+    const turns = mergeHydratedTurns([], [
+      turn({
+        id: "preview-turn",
+        sourceMessageId: "msg-project-mention",
+        prompt: "@Spark what is this ticket about?",
+      }),
+      turn({
+        id: "history-turn",
+        sourceMessageId: "msg-project-mention",
+        prompt: "@Spark what is this ticket about?",
+      }),
+      turn({
+        id: "event-turn",
+        sourceMessageId: "msg-project-mention",
+        prompt: "@Spark what is this ticket about?",
+        logs: [
+          {
+            time: "00:01",
+            type: "info",
+            eventType: "command_execution",
+            message: "Inspecting the ticket",
+          },
+        ],
+      }),
+    ]);
+
+    expect(turns).toHaveLength(1);
+    expect(turns[0]?.prompt).toBe("@Spark what is this ticket about?");
+    expect(turns[0]?.logs).toHaveLength(1);
+  });
+
   it("preserves a real local response over a remote fallback", () => {
     const [merged] = mergeHydratedTurns(
       [

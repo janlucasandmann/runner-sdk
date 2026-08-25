@@ -149,6 +149,26 @@ assert.match(
 );
 assert.match(
   fragments.threadList,
+  /isRunning[\s\S]*?React\.createElement\("img", \{[\s\S]*?className: "sidebar-thread-running-indicator"[\s\S]*?src: "\/img\/spinner\.svg"[\s\S]*?: threadProject/,
+  "A running thread must show the shared spinner in place of its project icon.",
+);
+assert.match(
+  fragments.threadList,
+  /const isRunning = isRunningThreadDisplayStatus\(safeThread\?\.status\)/,
+  "Queued and starting background threads must show the running affordance before they are opened.",
+);
+assert.match(
+  fragments.threadList,
+  /const fallbackIsRunning = isRunningThreadDisplayStatus\(fallbackThread\?\.status\)/,
+  "Fallback sidebar rows must preserve the shared active-lifecycle presentation.",
+);
+assert.doesNotMatch(
+  fragments.threadList,
+  /isRunning[\s\S]{0,120}React\.createElement\(Loader2, \{ className: "sidebar-thread-running-indicator"/,
+  "The sidebar must not render a second Lucide spinner beside the thread icon.",
+);
+assert.match(
+  fragments.threadList,
   /Icon: isMissionControl \? RefreshCcwDot : \(iconConfig\.icon \|\| Rocket\)/,
   "Mission Control threads must use the shared RefreshCcwDot icon in the sidebar.",
 );

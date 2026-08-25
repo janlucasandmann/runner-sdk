@@ -5,4 +5,6 @@ export const KNOWLEDGE_APP_STATE_SCRIPT = `        const [knowledgePageMode, set
         const [selectedKnowledgeDocumentId, setSelectedKnowledgeDocumentId] = useState("");
         const [selectedKnowledgeDocumentName, setSelectedKnowledgeDocumentName] = useState("");
         const [selectedKnowledgeVersionNumber, setSelectedKnowledgeVersionNumber] = useState(1);
+        const [knowledgeOriginThreadId, setKnowledgeOriginThreadId] = useState("");
+        const [knowledgeOriginThreadTitle, setKnowledgeOriginThreadTitle] = useState("");
 `;

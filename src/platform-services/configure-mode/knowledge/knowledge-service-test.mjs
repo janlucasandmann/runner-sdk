@@ -103,6 +103,7 @@ test("Knowledge library identity survives browser history and nested access navi
     platformTemplateSource,
     /PLAYGROUND_PLATFORM_NAVIGATION_FIELDS\s*=\s*\[[\s\S]*?"libraryId"[\s\S]*?"libraryName"[\s\S]*?"documentId"[\s\S]*?"documentName"/,
   );
+  assert.match(platformTemplateSource, /"originThreadId"[\s\S]*?"originThreadTitle"/);
   assert.match(
     KNOWLEDGE_APP_SCRIPT_FRAGMENTS.historyCapture,
     /libraryId:\s*selectedKnowledgeLibraryId[\s\S]*?libraryName:\s*selectedKnowledgeLibraryName/,
@@ -110,6 +111,10 @@ test("Knowledge library identity survives browser history and nested access navi
   assert.match(
     KNOWLEDGE_APP_SCRIPT_FRAGMENTS.historyRestore,
     /libraryId:\s*entry\.libraryId\s*\|\|\s*""[\s\S]*?libraryName:\s*entry\.libraryName\s*\|\|\s*""/,
+  );
+  assert.match(
+    KNOWLEDGE_APP_SCRIPT_FRAGMENTS.topNavigation,
+    /knowledgeOriginThreadTitle[\s\S]*?returnToKnowledgeOriginThread/,
   );
 });
 

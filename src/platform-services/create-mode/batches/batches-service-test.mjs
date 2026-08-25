@@ -156,7 +156,7 @@ assert.match(createModalSource, /Start Job/);
 assert.match(createModalSource, /Save Changes/);
 assert.match(
   workspaceSource,
-  /const saved = activeJob[\s\S]*await updateBatchJob[\s\S]*intent === "start"[\s\S]*await runBatchJobAction\(saved\.id, "start"/,
+  /saved = activeJob[\s\S]*await updateBatchJob[\s\S]*intent === "start"[\s\S]*await runBatchJobAction\(saved\.id, "start"/,
 );
 assert.match(createModalSource, /<MetronomeManualRunInputs/);
 assert.match(createModalSource, /buildMetronomeManualRunInput/);
@@ -177,7 +177,7 @@ assert.doesNotMatch(
   manualRunContextSource,
   /\/versions\/\$\{encodeURIComponent\(normalizedVersionId\)\}/,
 );
-assert.match(manualRunContextSource, /fetch\(`\$\{baseUrl\}\/servers`/);
+assert.match(manualRunContextSource, /fetchManualRunResource\(`\$\{baseUrl\}\/servers`/);
 assert.match(targetResourcesSource, /\/projects\?view=overview/);
 assert.match(
   targetResourcesSource,
@@ -186,6 +186,9 @@ assert.match(
 assert.match(workspaceSource, /listBatchTargetResources/);
 assert.match(workspaceSource, /loadBatchMetronomeManualRunContext/);
 assert.match(workspaceSource, /prepareBatchProjectTicket/);
+assert.match(targetResourcesSource, /queueInBatch: true/);
+assert.match(targetResourcesSource, /triggerKind: "batch"/);
+assert.match(workspaceSource, /saved = prepared\.batchJob/);
 assert.match(BATCHES_PAGE_CSS, /\.batches-form-field\s*\{[\s\S]*?font-weight:\s*400;/);
 assert.match(compositionSource, /resourceBackendUrl: proxyBackendBase/);
 assert.match(compositionSource, /targetKind: "thread_run"/);

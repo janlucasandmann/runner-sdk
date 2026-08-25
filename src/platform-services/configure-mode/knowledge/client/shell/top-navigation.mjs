@@ -1,17 +1,24 @@
 export const KNOWLEDGE_APP_TOP_NAVIGATION_SCRIPT = `        function renderKnowledgePageNav() {
           const isOverview = knowledgePageMode === "overview";
           const isLibrary = knowledgePageMode === "library";
-          const pathItems = [{ label: "Configure" }, {
-            label: "Knowledge",
-            onClick: isOverview ? undefined : () => requestPlatformNavigation(openKnowledgeOverviewPage),
-          }];
+          const hasThreadOrigin = Boolean(String(knowledgeOriginThreadId || "").trim());
+          const pathItems = hasThreadOrigin
+            ? [{
+                label: knowledgeOriginThreadTitle || "Current thread",
+                onClick: () => requestPlatformNavigation(returnToKnowledgeOriginThread),
+              }]
+            : [{ label: "Configure" }, {
+                label: "Knowledge",
+                onClick: isOverview ? undefined : () => requestPlatformNavigation(openKnowledgeOverviewPage),
+              }];
           if (!isOverview) {
             pathItems.push({
               label: selectedKnowledgeLibraryName || "Knowledge Library",
               onClick: knowledgePageMode === "document"
                 ? () => requestPlatformNavigation(() => openKnowledgeLibraryPage(
                     selectedKnowledgeLibraryId,
-                    selectedKnowledgeLibraryName
+                    selectedKnowledgeLibraryName,
+                    { preserveThreadOrigin: true }
                   ))
                 : undefined,
               trailing: isLibrary ? React.createElement("span", {

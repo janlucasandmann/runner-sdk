@@ -469,7 +469,23 @@ function applyEmbeddedEventEntities(projection: RunnerThreadProjection, event: E
   const message = embeddedMessage
     ?? (looksLikeEntityPayload(event.type, "message") && hasAnyPayloadKey(payload, ["content", "message", "text", "body"]) ? payload : null);
   if (message && Object.keys(message).length) {
-    const messageId = typeof message.id === "string" ? message.id : typeof message.messageId === "string" ? message.messageId : "";
+    const explicitMessageId = typeof message.id === "string"
+      ? message.id
+      : typeof message.messageId === "string"
+        ? message.messageId
+        : "";
+    const sourceType = typeof message.sourceType === "string"
+      ? message.sourceType
+      : typeof message.source_type === "string"
+        ? message.source_type
+        : "";
+    const sourceId = typeof message.sourceId === "string"
+      ? message.sourceId
+      : typeof message.source_id === "string"
+        ? message.source_id
+        : "";
+    const messageId = explicitMessageId.trim()
+      || (sourceType.trim() === "thread_message" ? sourceId.trim() : "");
     const existingMessage = messageId ? next.messagesById[messageId] : null;
     const explicitAuthorParticipantId = typeof message.authorParticipantId === "string" && message.authorParticipantId.trim()
       ? message.authorParticipantId.trim()
@@ -506,6 +522,7 @@ function applyEmbeddedEventEntities(projection: RunnerThreadProjection, event: E
     next = upsertTimelineItem(next, normalizeRunnerThreadMessage({
       ...existingMessage,
       ...message,
+      ...(messageId ? { id: messageId } : {}),
       ...(authorParticipantId ? { authorParticipantId } : {}),
     }, defaults));
   }

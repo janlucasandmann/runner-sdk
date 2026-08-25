@@ -107,6 +107,8 @@ describe("RunnerFileBrowserDialog", () => {
         open
         apiKeyPromptOpen={false}
         source="github"
+        showSourceSidebar={false}
+        showFilterTabs={false}
         searchQuery=""
         onSearchQueryChange={vi.fn()}
         environments={[]}
@@ -157,6 +159,8 @@ describe("RunnerFileBrowserDialog", () => {
     );
 
     const selector = screen.getByRole("button", { name: "Select GitHub account" });
+    expect(document.querySelector("[data-platform-modal-part='sidebar']")).toBeNull();
+    expect(screen.queryByRole("navigation", { name: "File filters" })).toBeNull();
     expect(selector.textContent).toContain("me@example.com");
     fireEvent.click(selector);
     expect(screen.getByRole("option", { name: /work@example\.com/i })).toBeTruthy();

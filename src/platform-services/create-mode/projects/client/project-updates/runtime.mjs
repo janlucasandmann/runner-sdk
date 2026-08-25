@@ -232,11 +232,72 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
             return "project_update_legacy_" + (hash >>> 0).toString(36);
           }
 
+          function isGenericProjectOverviewIdentityName(value) {
+            return ["project owner", "project member", "organization member"].includes(
+              String(value || "").trim().toLowerCase()
+            );
+          }
+
           function resolveProjectOverviewUpdateAuthorIdentity(value = {}) {
-            const authorUserId = String(value?.authorUserId || "").trim();
-            const storedAuthorName = String(value?.authorName || "").trim();
+            const activeProjectRecord = projectOverviewDraft || selectedProject || {};
+            const activeProjectMetadata = activeProjectRecord?.metadata
+              && typeof activeProjectRecord.metadata === "object"
+              && !Array.isArray(activeProjectRecord.metadata)
+                ? activeProjectRecord.metadata
+                : {};
+            const normalizedUpdateId = String(value?.id || "").trim().toLowerCase();
+            const normalizedUpdateBody = String(value?.body || "").trim().toLowerCase();
+            const isProjectCreationUpdate = normalizedUpdateId.startsWith("project_created_")
+              || normalizedUpdateBody.endsWith("created this project.")
+              || normalizedUpdateBody.endsWith("created the project.");
+            const authorUserId = String(
+              value?.authorUserId
+              || (isProjectCreationUpdate
+                ? (
+                    activeProjectRecord?.createdByUserId
+                    || activeProjectRecord?.creatorUserId
+                    || activeProjectMetadata.createdByUserId
+                    || activeProjectMetadata.creatorUserId
+                    || activeProjectRecord?.ownerUserId
+                    || activeProjectMetadata.ownerUserId
+                  )
+                : "")
+              || ""
+            ).trim();
+            const explicitAuthorName = String(value?.authorName || "").trim();
+            const projectCreationAuthorName = String(
+              isProjectCreationUpdate
+                ? (
+                    activeProjectRecord?.createdByName
+                    || activeProjectRecord?.creatorName
+                    || activeProjectMetadata.createdByName
+                    || activeProjectMetadata.creatorName
+                    || activeProjectRecord?.ownerName
+                    || activeProjectMetadata.ownerName
+                    || ""
+                  )
+                : ""
+            ).trim();
+            const storedAuthorName = String(
+              (isProjectCreationUpdate && isGenericProjectOverviewIdentityName(explicitAuthorName)
+                ? projectCreationAuthorName
+                : explicitAuthorName)
+              || projectCreationAuthorName
+              || explicitAuthorName
+              || ""
+            ).trim();
             const authorEmail = String(
               value?.authorEmail
+                || (isProjectCreationUpdate
+                  ? (
+                      activeProjectRecord?.createdByEmail
+                      || activeProjectRecord?.creatorEmail
+                      || activeProjectMetadata.createdByEmail
+                      || activeProjectMetadata.creatorEmail
+                      || activeProjectRecord?.ownerEmail
+                      || activeProjectMetadata.ownerEmail
+                    )
+                  : "")
                 || (storedAuthorName.includes("@") ? storedAuthorName : "")
                 || ""
             ).trim();
@@ -268,13 +329,22 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                 ? readTaskCommentMemberIdentityValue(workspaceMember, keys)
                 : ""
             );
+            const ownerCandidate = projectOverviewOwnerCandidatesState?.projectId === String(activeProjectRecord?.id || "").trim()
+              && Array.isArray(projectOverviewOwnerCandidatesState?.items)
+                ? projectOverviewOwnerCandidatesState.items.find((candidate) => {
+                    const candidateUserId = String(candidate?.userId || candidate?.id || "").trim();
+                    const candidateEmail = String(candidate?.email || "").trim().toLowerCase();
+                    return (authorUserId && candidateUserId === authorUserId)
+                      || (authorEmail && candidateEmail === authorEmail.toLowerCase());
+                  }) || null
+                : null;
             const memberName = readMemberValue([
               "displayName",
               "display_name",
               "name",
               "fullName",
               "full_name",
-            ]);
+            ]) || String(ownerCandidate?.name || ownerCandidate?.displayName || "").trim();
             const memberAvatarUrl = readMemberValue([
               "photoURL",
               "photoUrl",
@@ -286,7 +356,12 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
               "picture",
               "imageUrl",
               "image_url",
-            ]);
+            ]) || String(
+              ownerCandidate?.avatarUrl
+                || ownerCandidate?.photoUrl
+                || ownerCandidate?.photoURL
+                || ""
+            ).trim();
             const rawName = String(
               (isCurrentUser ? currentUserName : "")
                 || memberName
@@ -307,6 +382,14 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
               (isCurrentUser ? currentUserAvatarUrl : "")
                 || memberAvatarUrl
                 || value?.authorAvatarUrl
+                || (isProjectCreationUpdate
+                  ? (
+                      activeProjectRecord?.createdByAvatarUrl
+                      || activeProjectMetadata.createdByAvatarUrl
+                      || activeProjectRecord?.ownerAvatarUrl
+                      || activeProjectMetadata.ownerAvatarUrl
+                    )
+                  : "")
                 || ""
             ).trim();
             return {
@@ -329,6 +412,29 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
               && !Array.isArray(projectRecord.metadata)
                 ? projectRecord.metadata
                 : {};
+            const storedUpdateCandidates = [
+              ...(Array.isArray(metadata.projectUpdates) ? metadata.projectUpdates : []),
+              ...(Array.isArray(projectRecord?.projectUpdates) ? projectRecord.projectUpdates : []),
+              metadata.latestUpdate,
+              projectRecord?.latestUpdate,
+            ].filter((candidate) => candidate && typeof candidate === "object" && !Array.isArray(candidate));
+            const hasStoredCreationUpdate = storedUpdateCandidates.some((candidate) => {
+              const candidateId = String(candidate.id || candidate.updateId || candidate.update_id || "").trim().toLowerCase();
+              const candidateKind = String(candidate.kind || candidate.eventType || candidate.event_type || candidate.type || "")
+                .trim()
+                .toLowerCase()
+                .replace(/[\s-]+/g, "_");
+              const candidateBody = String(candidate.body || candidate.text || candidate.message || candidate.content || "")
+                .trim()
+                .toLowerCase();
+              return candidateId.startsWith("project_created_")
+                || candidateKind === "project_created"
+                || candidateBody.endsWith("created this project.")
+                || candidateBody.endsWith("created the project.");
+            });
+            if (hasStoredCreationUpdate) {
+              return null;
+            }
             const identityCandidates = [
               projectRecord?.createdBy,
               projectRecord?.creator,
@@ -405,12 +511,23 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
             const createdAt = Number.isFinite(numericCreatedAt) && numericCreatedAt > 0
               ? new Date(numericCreatedAt < 100000000000 ? numericCreatedAt * 1000 : numericCreatedAt).toISOString()
               : String(rawCreatedAt || "").trim();
+            if (!createdAt || !Number.isFinite(Date.parse(createdAt))) {
+              return null;
+            }
             const authorIdentity = resolveProjectOverviewUpdateAuthorIdentity({
               authorUserId,
               authorName,
               authorEmail,
               authorAvatarUrl,
             });
+            const normalizedAuthorName = String(authorIdentity.name || "").trim().toLowerCase();
+            if (
+              !authorIdentity.userId
+              && !authorIdentity.email
+              && (!normalizedAuthorName || isGenericProjectOverviewIdentityName(normalizedAuthorName))
+            ) {
+              return null;
+            }
             return {
               id: "project_created_" + projectId,
               body: authorIdentity.name + " created this project.",
@@ -718,6 +835,17 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
               if (!response.ok && response.status !== 404 && response.status !== 405) {
                 throw new Error(data?.message || data?.error || "Failed to post project update.");
               }
+              if (response.ok) {
+                reconcileProjectMentionDispatches(data, {
+                  project: selectedProject,
+                  projectId,
+                  body: clientRecord.body,
+                  source: {
+                    type: "project_update",
+                    updateId: data?.update?.id || clientRecord.id,
+                  },
+                });
+              }
               let updatedProject = null;
               if (response.ok) {
                 const updateRecord = {
@@ -985,6 +1113,21 @@ export const PROJECT_UPDATES_RUNTIME_FRAGMENT = String.raw`
                       ? "Failed to add reply."
                       : "Failed to add comment.")
                 );
+              }
+              if (response.ok) {
+                reconcileProjectMentionDispatches(data, {
+                  project: selectedProject,
+                  projectId,
+                  body,
+                  source: {
+                    type: "project_update_comment",
+                    updateId: normalizedUpdateId,
+                    commentId: data?.comment?.id || clientCommentId,
+                    ...(normalizedParentCommentId
+                      ? { parentCommentId: normalizedParentCommentId }
+                      : {}),
+                  },
+                });
               }
               const updatedProject = response.ok
                 ? await applyProjectOverviewUpdateMutationResponse(data, fallbackUpdate)

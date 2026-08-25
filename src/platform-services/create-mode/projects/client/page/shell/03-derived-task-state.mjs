@@ -980,6 +980,7 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
             threadId: String(threadId || "").trim(),
             ticketNumber,
             title: normalizedTask.title || "Untitled Task",
+            createdAt: normalizedTask.createdAt || null,
             description: normalizedTask.description || "",
             taskColor: normalizedTask.taskColor || PLAYGROUND_TASK_COLOR_OPTIONS[0].id,
             status: normalizedTask.status || "todo",
@@ -1082,6 +1083,7 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
                 method: "POST",
                 headers: buildProjectGithubPreparationHeaders(),
                 body: JSON.stringify({
+                  projectId: normalizedProject.id,
                   repoFullName: repoReference.repoFullName,
                   branch: repoReference.branch || "main",
                 }),
@@ -1345,13 +1347,10 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
           const environmentName = environmentDisplay.label === "Project Default" && environmentDisplay.description
             ? "Project Default (" + environmentDisplay.description + ")"
             : environmentDisplay.label;
-          const connectorLines = PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) => {
-            const selection = getDraftTaskConnectorSelection(option.source, normalizedTask);
-            if (!selection?.valueLabel) {
-              return null;
-            }
-            return "- " + option.label + ": " + selection.valueLabel;
-          }).filter(Boolean);
+          const connectorAccessSection = buildPlaygroundConnectorPromptSection(
+            "Project and task connector access",
+            normalizedTask.connectors
+          );
           const commentLines = normalizePlaygroundTaskCommentList(normalizedTask.comments)
             .slice()
             .sort((left, right) => String(left.createdAt || "").localeCompare(String(right.createdAt || "")))
@@ -1385,7 +1384,7 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 			            skillNames.length > 0
 			              ? (directResponseTask ? "Skills: None needed for this response-only ticket." : "Skills: " + skillNames.join(", "))
 			              : "",
-			            connectorLines.length > 0 ? "Connectors:" + newline + connectorLines.join(newline) : "",
+			            connectorAccessSection,
 	            projectKnowledgeSection,
 				            projectRulesSection,
 				            projectDeliveryAssuranceSection,

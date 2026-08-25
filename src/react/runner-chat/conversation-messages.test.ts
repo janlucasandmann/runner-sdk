@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  dedupeRunnerConversationMessages,
   isComputeTokenBudgetErrorMessage,
   mergeConversationMessageRunMetadataFromLogs,
   normalizeRunnerConversationMessage,
@@ -102,5 +103,56 @@ describe("runner conversation messages", () => {
         "Insufficient compute tokens balance; upgrade your quota"
       )
     ).toBe(true);
+  });
+
+  it("deduplicates repeated canonical rows by message id", () => {
+    expect(dedupeRunnerConversationMessages([
+      { id: "message-1", role: "user", content: "Hello" },
+      { id: "message-1", role: "user", content: "Hello" },
+    ])).toHaveLength(1);
+  });
+
+  it("deduplicates Project mention projections by durable source identity", () => {
+    const projectMention = {
+      projectMention: {
+        hiddenPromptAdaptation: true,
+        source: {
+          type: "ticket_comment",
+          id: "comment-1",
+          projectId: "project-1",
+        },
+      },
+    };
+    expect(dedupeRunnerConversationMessages([
+      {
+        id: "legacy-message",
+        role: "user",
+        content: "@Spark please help",
+        logMetadata: projectMention,
+      },
+      {
+        id: "canonical-event-message",
+        role: "user",
+        content: "@Spark please help",
+        logMetadata: projectMention,
+      },
+    ])).toHaveLength(1);
+  });
+
+  it("keeps intentional repeated user messages distinct", () => {
+    expect(dedupeRunnerConversationMessages([
+      {
+        id: "message-1",
+        role: "user",
+        content: "Retry",
+        createdAt: "2026-08-25T08:00:00.000Z",
+      },
+      {
+        id: "message-2",
+        role: "user",
+        content: "Retry",
+        createdAt: "2026-08-25T08:01:00.000Z",
+      },
+    ])).toHaveLength(2);
   });
 });

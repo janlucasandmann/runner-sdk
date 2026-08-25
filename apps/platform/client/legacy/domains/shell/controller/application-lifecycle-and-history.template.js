@@ -1012,7 +1012,8 @@
             }
             setThreadActionMenuState(null);
             setThreadNavMenuOpen(false);
-            setThreadTaskListMenuOpen(true);
+            setThreadTaskListMenuOpen(false);
+            setThreadExecutionWorkbenchOpen(true);
             void loadThreadTaskListForThread(normalizedThreadId, { force: true });
           }, [currentThreadId, loadThreadTaskListForThread, selectedKnownThread?.id]);
   
@@ -1038,7 +1039,7 @@
               ));
               return undefined;
             }
-            if (!threadTaskListMenuOpen) {
+            if (!threadExecutionWorkbenchOpen) {
               return undefined;
             }
             if (isMetronomeOverviewThread) {
@@ -1064,7 +1065,7 @@
             hasRealAccess,
             loadThreadTaskListForThread,
             metronomeRunTraceSelection,
-            threadTaskListMenuOpen,
+            threadExecutionWorkbenchOpen,
           ]);
   
           const activeResourcesView = activePage === "agents"
@@ -1276,6 +1277,8 @@
             fineTuningPageMode,
             testsPageMode,
             knowledgePageMode,
+            knowledgeOriginThreadId,
+            knowledgeOriginThreadTitle,
             filesPageTopNav?.contentMode,
             filesPageTopNav?.environmentId,
             filesPageTopNav?.path,
@@ -2022,7 +2025,29 @@
           const selectedThreadTaskPreviewTaskId = typeof selectedThreadTaskPreview?.taskId === "string"
             ? selectedThreadTaskPreview.taskId.trim()
             : "";
+          const selectedThreadTaskPreviewHydrationThreadId = String(
+            activeRunnerThreadId
+            || currentThreadId
+            || selectedThreadTaskPreview?.threadId
+            || ""
+          ).trim();
           const selectedThreadTaskPreviewDeleted = Boolean(selectedThreadTaskPreview?.isDeleted);
+          const selectedThreadTaskPreviewHydrationPending = Boolean(
+            activePage === "thread"
+            && selectedThreadTaskPreviewTaskId
+            && !selectedThreadTaskPreviewDeleted
+            && selectedThreadTaskPreview?.requiresHydration === true
+          );
+          const selectedThreadInitialSurfaceLoading = Boolean(
+            selectedThreadTaskPreviewHydrationPending
+            || (
+              activePage === "thread"
+              && activeRunnerThreadId
+              && hasRealAccess
+              && isThreadsLoading
+              && !selectedKnownThread
+            )
+          );
           const selectedThreadCachedProjectContext = currentThreadId
             ? (threadProjectContextById[currentThreadId] || null)
             : null;
@@ -2108,6 +2133,20 @@
                   || ""
               )
             : "";
+          const selectedThreadTaskPreviewForDisplay = useMemo(() => {
+            if (!selectedThreadTaskPreview) {
+              return null;
+            }
+            const displayTicketNumber = selectedThreadTaskTicketNumber
+              || normalizePlaygroundTaskTicketNumber(selectedThreadTaskPreview.ticketNumber || "");
+            if (displayTicketNumber === String(selectedThreadTaskPreview.ticketNumber || "").trim()) {
+              return selectedThreadTaskPreview;
+            }
+            return {
+              ...selectedThreadTaskPreview,
+              ticketNumber: displayTicketNumber,
+            };
+          }, [selectedThreadTaskPreview, selectedThreadTaskTicketNumber]);
           const selectedThreadTaskType = normalizePlaygroundTaskType(
             selectedThreadTaskPreview?.taskType
             || selectedThreadTaskPreview?.type
@@ -3226,15 +3265,15 @@
             if (
               activePage !== "thread"
               || !hasRealAccess
-              || !activeRunnerThreadId
+              || !selectedThreadTaskPreviewHydrationThreadId
               || !selectedThreadTaskPreviewTaskId
               || selectedThreadTaskPreviewDeleted
             ) {
               return;
             }
   
-            if (selectedThreadTaskPreviewFetchThreadIdRef.current !== activeRunnerThreadId) {
-              selectedThreadTaskPreviewFetchThreadIdRef.current = activeRunnerThreadId;
+            if (selectedThreadTaskPreviewFetchThreadIdRef.current !== selectedThreadTaskPreviewHydrationThreadId) {
+              selectedThreadTaskPreviewFetchThreadIdRef.current = selectedThreadTaskPreviewHydrationThreadId;
               selectedThreadTaskPreviewFetchKeysRef.current.clear();
             }
   
@@ -3243,66 +3282,118 @@
   	            selectedKnownThread?.updatedAt || "",
   	            selectedKnownThread?.completedAt || "",
   	          ].join(":");
-  	          const previewFetchKey = activeRunnerThreadId + ":" + selectedThreadTaskPreviewTaskId + ":" + selectedThreadTaskPreviewVersionKey;
+            const previewFetchKey = selectedThreadTaskPreviewHydrationThreadId + ":" + selectedThreadTaskPreviewTaskId + ":" + selectedThreadTaskPreviewVersionKey;
             if (selectedThreadTaskPreviewFetchKeysRef.current.has(previewFetchKey)) {
               return;
             }
             selectedThreadTaskPreviewFetchKeysRef.current.add(previewFetchKey);
   
             let cancelled = false;
+            let hydrationCompleted = false;
+            let retryTimer = null;
+            const controller = new AbortController();
   
             const syncTaskPreview = async () => {
-              try {
-                const latestTaskPreview = selectedThreadTaskPreviewRef.current;
-                if (!latestTaskPreview || latestTaskPreview.isDeleted) {
-                  return;
-                }
-                const response = await fetch(proxyBackendBase + "/tasks/" + encodeURIComponent(selectedThreadTaskPreviewTaskId), {
-                  method: "GET",
-                  headers: authRequestHeaders,
-                });
-                const data = await response.json().catch(() => ({}));
-                if (!response.ok) {
-                  if (response.status === 404 && !cancelled && !latestTaskPreview.isDeleted) {
-                    markThreadTaskPreviewDeleted(activeRunnerThreadId, latestTaskPreview);
-                    setThreadTaskOpenRequest((current) => (
-                      current && String(current.taskId || "").trim() === selectedThreadTaskPreviewTaskId
-                        ? null
-                        : current
-                    ));
-                  }
-                  return;
-                }
-                const taskRecord = getPlaygroundTaskResponseRecord(data);
-                if (!taskRecord?.id || cancelled) {
-                  return;
-                }
-                const nextPreview = buildLiveThreadTaskPreview(taskRecord, latestTaskPreview, activeRunnerThreadId);
+              const retryDelays = [0, 400, 1200, 3000];
+              for (let attemptIndex = 0; attemptIndex < retryDelays.length; attemptIndex += 1) {
                 if (cancelled) {
                   return;
                 }
-                upsertThreadTaskPreview(activeRunnerThreadId, nextPreview);
-              } catch {}
+                const retryDelay = retryDelays[attemptIndex];
+                if (retryDelay > 0) {
+                  await new Promise((resolve) => {
+                    retryTimer = window.setTimeout(resolve, retryDelay);
+                  });
+                  retryTimer = null;
+                  if (cancelled) {
+                    return;
+                  }
+                }
+                try {
+                  const latestTaskPreview = selectedThreadTaskPreviewRef.current;
+                  if (!latestTaskPreview || latestTaskPreview.isDeleted) {
+                    return;
+                  }
+                  const response = await fetch(
+                    proxyBackendBase
+                      + "/tasks/"
+                      + encodeURIComponent(selectedThreadTaskPreviewTaskId)
+                      + "?view=preview",
+                    {
+                      method: "GET",
+                      headers: authRequestHeaders,
+                      credentials: "include",
+                      signal: controller.signal,
+                    }
+                  );
+                  const data = await response.json().catch(() => ({}));
+                  if (!response.ok) {
+                    if (response.status === 404 && !cancelled && !latestTaskPreview.isDeleted) {
+                      hydrationCompleted = true;
+                      markThreadTaskPreviewDeleted(selectedThreadTaskPreviewHydrationThreadId, latestTaskPreview);
+                      setThreadTaskOpenRequest((current) => (
+                        current && String(current.taskId || "").trim() === selectedThreadTaskPreviewTaskId
+                          ? null
+                          : current
+                      ));
+                      return;
+                    }
+                    if (isUnauthorizedStatus(response.status)) {
+                      triggerPlatformSessionRecovery();
+                      return;
+                    }
+                    continue;
+                  }
+                  const taskRecord = getPlaygroundTaskResponseRecord(data);
+                  if (!taskRecord?.id || cancelled) {
+                    continue;
+                  }
+                  const nextPreview = buildLiveThreadTaskPreview(
+                    taskRecord,
+                    latestTaskPreview,
+                    selectedThreadTaskPreviewHydrationThreadId
+                  );
+                  if (cancelled) {
+                    return;
+                  }
+                  upsertThreadTaskPreview(selectedThreadTaskPreviewHydrationThreadId, nextPreview);
+                  hydrationCompleted = true;
+                  return;
+                } catch (error) {
+                  if (cancelled || error?.name === "AbortError") {
+                    return;
+                  }
+                }
+              }
             };
   
             void syncTaskPreview();
   
             return () => {
               cancelled = true;
+              controller.abort();
+              if (retryTimer !== null) {
+                window.clearTimeout(retryTimer);
+              }
+              if (!hydrationCompleted) {
+                selectedThreadTaskPreviewFetchKeysRef.current.delete(previewFetchKey);
+              }
             };
           }, [
             activePage,
-            activeRunnerThreadId,
             authRequestHeaders,
             buildLiveThreadTaskPreview,
             hasRealAccess,
+            isUnauthorizedStatus,
             markThreadTaskPreviewDeleted,
   	          proxyBackendBase,
   	          selectedKnownThread?.completedAt,
   	          selectedKnownThread?.status,
   	          selectedKnownThread?.updatedAt,
   	          selectedThreadTaskPreviewDeleted,
+            selectedThreadTaskPreviewHydrationThreadId,
   	          selectedThreadTaskPreviewTaskId,
+            triggerPlatformSessionRecovery,
   	          upsertThreadTaskPreview,
           ]);
   

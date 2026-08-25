@@ -1,4 +1,6 @@
 import type {
+  BatchJob,
+  BatchJobDraft,
   BatchMetronomeManualRunContext,
   BatchPreparedProjectTicket,
   BatchProjectOption,
@@ -16,6 +18,10 @@ export interface BatchTargetResourceApiOptions {
 export interface PrepareBatchProjectTicketOptions extends BatchTargetResourceApiOptions {
   idempotencyKey?: string | null;
   runKind?: "implementation" | "review";
+  batch: BatchJobDraft & {
+    name: string;
+    targetKind: "project_ticket_action";
+  };
 }
 
 const RESOURCE_PATHS: Record<BatchSelectableTargetKind, string> = {
@@ -305,7 +311,7 @@ export async function listBatchProjectTickets(
 
 export async function prepareBatchProjectTicket(
   ticketId: string,
-  options: PrepareBatchProjectTicketOptions = {},
+  options: PrepareBatchProjectTicketOptions,
 ): Promise<BatchPreparedProjectTicket> {
   const normalizedTicketId = String(ticketId || "").trim();
   if (!normalizedTicketId) throw new Error("Select a project ticket first.");
@@ -323,12 +329,29 @@ export async function prepareBatchProjectTicket(
       },
       body: JSON.stringify({
         executionMode: "deferred",
+        queueInBatch: true,
         moveToInProgress: false,
         idempotencyKey: options.idempotencyKey || undefined,
+        environmentId: readString(options.batch.definition?.environmentId) || undefined,
+        agentId: readString(options.batch.definition?.agentId) || undefined,
+        message: readString(options.batch.definition?.message) || undefined,
+        batch: {
+          name: options.batch.name,
+          description: options.batch.description || "",
+          startPolicy: options.batch.startPolicy || "manual",
+          definition: options.batch.definition || {},
+          metadata: options.batch.metadata || {},
+        },
         metadata: {
           source: "batch_composer",
-          triggerKind: "manual",
+          triggerKind: "batch",
           runKind: options.runKind || "implementation",
+          runnerPlayground: {
+            enabledSkills: options.batch.definition?.enabledSkills || [],
+            githubRepo: options.batch.definition?.githubRepo || undefined,
+            connectors: options.batch.definition?.connectors || [],
+            knowledgeContext: options.batch.definition?.knowledgeContext || undefined,
+          },
         },
       }),
     },
@@ -337,9 +360,14 @@ export async function prepareBatchProjectTicket(
   const thread = asRecord(payload.thread);
   const threadId = readString(thread.id, payload.threadId, payload.thread_id);
   if (!threadId) throw new Error("The project ticket thread could not be prepared.");
+  const batchJob = asRecord(payload.batchJob) as unknown as BatchJob;
+  if (!readString(batchJob.id)) {
+    throw new Error("The project ticket Batch receipt could not be created.");
+  }
   return {
     threadId,
     threadTitle: readString(thread.title, "Project ticket Batch"),
     taskPrompt: readString(thread.task, thread.prompt),
+    batchJob,
   };
 }

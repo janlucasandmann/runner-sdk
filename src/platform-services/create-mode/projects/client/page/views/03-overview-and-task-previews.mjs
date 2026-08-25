@@ -907,6 +907,9 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
 
         function renderBoardView() {
           const boardTasks = boardVisibleTasks;
+          const visibleBoardLanes = PLAYGROUND_TASK_BOARD_LANES.filter((lane) =>
+            boardTasks.some((task) => lane.statuses.includes(getTaskBoardStatus(task)))
+          );
           const draggingBoardTask = boardDraggingTaskId ? tasksById[boardDraggingTaskId] || null : null;
           const hasSelectedReleaseSection = Boolean(selectedReleaseId && selectedRelease);
 
@@ -984,6 +987,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-backlog-header-actions" },
+                  renderProjectAppHeaderMilestoneSelector(),
                   React.createElement(PlatformSearch, {
                     className: "playground-tasks-board-central-search",
                     value: searchQuery,
@@ -1002,24 +1006,23 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             const taskType = normalizePlaygroundTaskType(task.taskType || task.type);
             const TaskTypeIcon = getPlaygroundTaskTypeIcon(taskType);
             const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "001";
-            const taskDescription = String(task.description || "").trim() || "No description";
             const isDraggable = canDropTaskOnBoardLane(task, "blocked") || canDropTaskOnBoardLane(task, "in_progress") || canDropTaskOnBoardLane(task, "todo");
             return React.createElement(PlatformTicketItem, {
                 key: task.id,
                 variant: "card",
                 title: task.title || "Untitled Task",
-                description: React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                  content: taskDescription,
-                  className: "tb-message-markdown",
-                }),
                 taskType,
                 typeIcon: React.createElement(TaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 }),
                 priority: renderPlaygroundTaskPriorityIcon(task.priority, "playground-tasks-lane-card-priority"),
                 ticketNumber: taskTicketNumber,
                 status: React.createElement("span", {
-                  className: "playground-tasks-lane-card-status",
                   title: statusLabel,
-                }, statusLabel),
+                  "aria-label": statusLabel,
+                }, renderPlaygroundTaskStatusGlyph(
+                  boardStatus,
+                  "playground-tasks-lane-card-status-icon"
+                )),
+                createdAt: task.createdAt || task.created_at || task.metadata?.createdAt || null,
                 assignee: renderTaskAssigneeAvatar(task, "playground-tasks-board-assignee-avatar"),
                 completed: task.status === "done",
                 active: selectedTaskId === task.id,
@@ -1027,6 +1030,10 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                   + (isDraggable ? " is-draggable" : "")
                   + (boardDraggingTaskId === task.id ? " is-dragging" : ""),
                 style: getPlaygroundTaskColorStyle(task.taskColor),
+                ticketActionMenu: ({ closeMenu }) => renderProjectTicketPreviewContextMenu(task, { closeMenu }),
+                onTicketActionMenuOpen: () => handleSelectTask(task.id),
+                onTicketDeleteRequest: () => void handleDeleteTask(task.id),
+                ticketDeleteShortcutDisabled: saveState.isSaving || Boolean(taskDeleteDialogState),
                 onClick: () => openProjectTaskDetailScreen(task.id),
                 draggable: isDraggable,
                 onDragStart: (event) => {
@@ -1063,7 +1070,13 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                 className: "playground-tasks-board-release-box" + (isLaneDropTarget ? " is-drop-target" : ""),
               },
               React.createElement("div", { className: "playground-tasks-board-release-box-header" },
-                React.createElement("div", { className: "playground-tasks-board-release-box-title" }, lane.label),
+                React.createElement("div", { className: "playground-tasks-board-release-box-title" },
+                  renderPlaygroundTaskStatusGlyph(
+                    lane.id,
+                    "playground-tasks-board-release-box-status-icon"
+                  ),
+                  React.createElement("span", null, lane.label)
+                ),
                 React.createElement("span", { className: "playground-tasks-board-release-box-count" }, String(allLaneTasks.length))
               ),
               React.createElement("div", {
@@ -1127,13 +1140,19 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                 ),
                 renderReleaseHeaderMeta(sectionRelease)
               ),
-              React.createElement("div", { className: "playground-tasks-board-grid" },
-                PLAYGROUND_TASK_BOARD_LANES.map((lane) => renderBoardReleaseLane(section, lane))
+              React.createElement("div", {
+                  className: "playground-tasks-board-grid",
+                  style: {
+                    "--playground-tasks-board-column-count": String(visibleBoardLanes.length),
+                  },
+                },
+                visibleBoardLanes.map((lane) => renderBoardReleaseLane(section, lane))
               )
             );
           }
 
-          const shouldRenderBoardSections = hasSelectedReleaseSection || boardReleaseSections.length > 0;
+          const shouldRenderBoardSections = visibleBoardLanes.length > 0
+            && (hasSelectedReleaseSection || boardReleaseSections.length > 0);
           const shouldShowMissionControlEmptyAction = !selectedRelease
             && !normalizedSearchQuery
             && boardFilterMode === "all"
@@ -1385,6 +1404,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
           }
 
           const projectWorkspaceTitle = selectedProjectWorkspaceTitle;
+          const selectedProjectDetailsReady = isPlaygroundProjectDetailRecord(selectedProject);
           const selectedProjectAccessLevel = String(
             selectedProject?.teamAccessLevel
             || selectedProject?.metadata?.teamAccessLevel
@@ -1553,15 +1573,15 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                     + (taskView === "backlog" ? " is-backlog-work-view" : "")
                     + (taskView === "board" ? " is-board-work-view" : ""),
                 },
-                  taskLoadState.status === "loading" && tasks.length === 0
+                  taskLoadState.status === "loading" && (tasks.length === 0 || !selectedProjectDetailsReady)
                     ? React.createElement(PlatformLoadingState, {
                         message: "Loading project...",
                         centered: true,
                       })
-                    : taskLoadState.status === "error" && tasks.length === 0
+                    : (taskLoadState.status === "error" && tasks.length === 0) || !selectedProjectDetailsReady
                       ? React.createElement("div", { className: "playground-tasks-empty" },
                           React.createElement("div", { className: "playground-tasks-empty-title" }, "Project workspace unavailable"),
-                          React.createElement("div", { className: "playground-tasks-empty-copy" }, taskLoadState.error || "The tasks API could not be reached for this project."),
+                          React.createElement("div", { className: "playground-tasks-empty-copy" }, taskLoadState.error || "The complete project record could not be loaded."),
                           React.createElement(PlatformPrimaryButton, {
                             size: "medium",
                             type: "button",
@@ -2303,12 +2323,11 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
 
           if (!draftTask) {
             if (taskLoadState.status === "loading" || pendingExternalTaskOpenRequest) {
-              return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-detail-empty" },
-                React.createElement("div", { className: "playground-tasks-loading-state" },
-                  React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                  React.createElement("div", { className: "playground-tasks-loading-copy" }, "Loading ticket…")
-                )
-              );
+              return React.createElement(PlatformLoadingState, {
+                className: "playground-environments-detail-scroll playground-environments-detail-empty playground-tasks-detail-sidebar-loading-state",
+                message: "Loading ticket...",
+                centered: true,
+              });
             }
             if (taskLoadState.status === "error") {
               return React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-detail-empty" },

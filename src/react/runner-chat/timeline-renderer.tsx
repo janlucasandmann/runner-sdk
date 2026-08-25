@@ -57,6 +57,9 @@ type EnvironmentPreview = Parameters<
 type ProjectPreview = Parameters<
   NonNullable<RunnerWorkLogEntryProps["onProjectPreviewClick"]>
 >[0];
+type KnowledgeLibraryPreview = Parameters<
+  NonNullable<RunnerWorkLogEntryProps["onKnowledgeLibraryPreviewClick"]>
+>[0];
 
 export interface RunnerTimelineRenderContext {
   activeTaskPreviewId?: string | null;
@@ -160,6 +163,26 @@ function openProjectPreview(
   });
 }
 
+function openKnowledgeLibraryPreview(
+  context: RunnerTimelineRenderContext,
+  library: KnowledgeLibraryPreview,
+) {
+  const libraryId = String(library.libraryId || "").trim();
+  if (!libraryId) return;
+  context.onResourcePreviewClick?.({
+    id: libraryId,
+    name: String(library.libraryName || "Knowledge Library").trim() || "Knowledge Library",
+    resourceType: "knowledge",
+    description: null,
+    model: null,
+    category: null,
+    projectId: null,
+    projectName: null,
+    isDefault: false,
+    status: null,
+  });
+}
+
 export interface RunnerTimelineWorkLogEntryProps {
   activeTaskPreviewId?: string | null;
   context: RunnerTimelineRenderContext;
@@ -216,6 +239,9 @@ export function RunnerTimelineWorkLogEntry({
       }}
       onProjectPreviewClick={(project) => {
         openProjectPreview(context, project);
+      }}
+      onKnowledgeLibraryPreviewClick={(library) => {
+        openKnowledgeLibraryPreview(context, library);
       }}
       onOpenTaskList={context.onOpenTaskList}
     />

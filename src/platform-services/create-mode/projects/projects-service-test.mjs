@@ -52,7 +52,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects domain runtime",
     source: PROJECTS_DOMAIN_RUNTIME_SCRIPT,
-    expectedSha256: "199ace47e1335d98e23b5c08107e806ae553572059ee375ef4fbcb554567ac1c",
+    expectedSha256: "7eb6fe15b152f18c133925d8801a801731117ea205a8b82dd90de0385d4b1ee5",
     fragmentGroups: [
       {
         baseUrl: projectsClientUrl,
@@ -64,7 +64,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "eabe907a7e9f5f19efa15852eec2cc01b6b326f5caf79a06aae8531849843b48",
+    expectedSha256: "0fd9bbdffdad678d1c59dfbc7cb7b829f92af9739373e4706d9841c79fae5e1c",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -76,7 +76,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview styles",
     source: PROJECT_OVERVIEW_CSS,
-    expectedSha256: "d90523ada08a7eabe27085ad40447d6935b8dc6dec3b3885ebc1815fe7c49362",
+    expectedSha256: "55053c3d887cc6925d2dd8686f969c2de9f9d2b30933159031613805faaee0f3",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -88,7 +88,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects actions runtime",
     source: PROJECTS_PAGE_ACTIONS_SCRIPT,
-    expectedSha256: "29bead3697a42700b6bd379c5935f807f71cc56d0181e4412bf4a3bd9d2936a0",
+    expectedSha256: "226388f9c62b271e491adba982d4dac583e9df2c6caf43550cfcda5a0da28dcf",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -100,7 +100,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects data runtime",
     source: PROJECTS_PAGE_DATA_SCRIPT,
-    expectedSha256: "5d3e6d9d428dc6b75c4be2d72d8d8a0c05c8d1d5750741e34ed73e054a763b44",
+    expectedSha256: "9a9f00d7b19840946decae7829ff0695ac648e0341b366144b781a10e17f19e4",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -112,7 +112,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects shell runtime",
     source: PROJECTS_PAGE_SHELL_SCRIPT,
-    expectedSha256: "32533296e394e9356db5c4ad53fcd9517775eab2ec5fd389f724f832e36e69a7",
+    expectedSha256: "832504045746d160db9b7d7f390eea66033a85ebbfe642528bf8b1923a55753b",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -124,7 +124,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "cd7b464c4ec5e518ed02cbbc51e8a3d014628e50240ae495d8f0db0c40fe0414",
+    expectedSha256: "8b8a73186d4e5707f3e14d7a3d036659c88c8f6acf0fb9c1ae566b4ec0bb3cc2",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -136,7 +136,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects core styles",
     source: PROJECTS_CORE_CSS,
-    expectedSha256: "1db6a6f95153f77c5289301faf15ee984ab3ba2c5e326a438bad162a53b87d31",
+    expectedSha256: "b92432f137e5bd93246b90d32480e4414847f9d6da5fcf4240049d38842e2b27",
     fragmentGroups: [
       {
         baseUrl: projectsStylesUrl,
@@ -194,10 +194,14 @@ assert.equal(
 );
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /"Add to Batches"/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /addToBatch: true/);
-assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /moveToInProgress: options\?\.addToBatch === true \? false : true/);
 assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /targetKind: "project_ticket_action"/);
 assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /options\?\.addToBatch !== true && typeof onTaskRunStateChange/);
-assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /preparedThreadId: threadRecord\.id/);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /if \(options\?\.addToBatch === true\) \{[\s\S]*?openBatchComposer\(\{[\s\S]*?targetResourceId: null,[\s\S]*?return;[\s\S]*?const taskRunRequest = \{/,
+  "Opening the Project ticket Batch composer must not create a deferred Thread first.",
+);
+assert.doesNotMatch(PROJECTS_PAGE_ACTIONS_SCRIPT, /preparedThreadId: threadRecord\.id/);
 assert.match(
   PROJECTS_DOMAIN_RUNTIME_SCRIPT,
   /function normalizePlaygroundTaskLoopConfig\(value, task = null\)/,
@@ -731,21 +735,119 @@ assert.doesNotMatch(
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root",\s*\},\s*renderProjectOverviewPluginsPanel\(\),\s*renderProjectOverviewTimelineSettingsSection\(\{ canEdit: canManageProjectAccess \}\),\s*renderProjectOverviewSettingsRulesSection\(\),\s*renderProjectAccessSettings\(\)/,
-  "Project Settings must include timeline visibility controls before its remaining configuration sections.",
+  /function renderProjectOverviewSettingsLayout\(sections, options = \{\}\)[\s\S]*?data-project-settings-section[\s\S]*?activeSection\.render\(\)/,
+  "Project Settings must render only its active section inside the focused settings layout.",
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /id: "plugins",\s*label: "Plugins"[\s\S]*?id: "timeline",\s*label: "Timeline"[\s\S]*?id: "rules",\s*label: "Rules"[\s\S]*?id: "access",\s*label: "Access"/,
+  "Project Settings must expose the Plugins, Timeline, Rules, and Access section links in order.",
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /id: "plugins",\s*label: "Plugins",\s*icon: Plug[\s\S]*?id: "timeline",\s*label: "Timeline",\s*icon: History[\s\S]*?id: "rules",\s*label: "Rules",\s*icon: ListTodo[\s\S]*?id: "access",\s*label: "Access",\s*icon: KeyRound/,
+  "Project Settings section links must expose their Lucide icons.",
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.playground-project-settings-layout\s*\{[\s\S]*?grid-template-columns: 220px minmax\(0, 1fr\);/,
+  "Project Settings must use the dedicated left-navigation layout.",
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /const isAccessDetail = activeSection\.id === "access"[\s\S]*?projectOverviewPermissionTeamId[\s\S]*?!isAccessDetail \? React\.createElement\("aside"/,
+  "A focused team access page must omit the outer Project Settings navigation.",
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /function normalizeProjectAccessRoleId\(principalId, roleId, fallback = "member"\)[\s\S]*?\["owner", "admin", "developer", "member", "billing", "viewer"\]\.includes\(normalizedRoleId\)/,
+  "Organization member access must preserve every durable organization role.",
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /const selectedAccessRoleId = normalizeProjectAccessRoleId\([\s\S]*?selectedRoleId: selectedAccessRoleId/,
+  "Project access details must render the selected organization role without collapsing to Member.",
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /onSelectedPrincipalIdChange: \(principalId\) => \{[\s\S]*?!normalizedPrincipalId[\s\S]*?setProjectOverviewHomeTab\("permissions"\)[\s\S]*?setProjectOverviewSettingsSection\("access"\)/,
+  "Closing Project access details must return to the Project Settings access section.",
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.playground-project-settings-layout\.is-access-detail\s*\{\s*grid-template-columns: minmax\(0, 1fr\);\s*gap: 0;/,
+  "A focused team access page must leave the centralized Roles layout at full width.",
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.playground-project-settings-navigation__header\s*\{[\s\S]*?padding-bottom: 0;[\s\S]*?border-bottom: 0;[\s\S]*?\.playground-project-settings-navigation__title\s*\{[\s\S]*?color: rgba\(255, 255, 255, 0\.62\);[\s\S]*?font-size: 12px;/,
+  "Project Settings must keep its navigation heading subdued and divider-free.",
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.playground-project-timeline-settings \.playground-project-settings-section__title\s*\{[\s\S]*?margin: 0 0 8px;/,
+  "Project Timeline must keep eight pixels below its title.",
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.playground-project-settings-content[\s\S]*?\.playground-project-overview-plugins-panel[\s\S]*?\.playground-plugins-section-title,[\s\S]*?\.playground-project-settings-section__title,[\s\S]*?\.playground-project-overview-strategy-add-title,[\s\S]*?\.platform-data-table__toolbar-title,[\s\S]*?\.playground-team-role-permission-title\s*\{\s*font-size: 18px;/,
+  "Project Settings must normalize all active content section titles to 18px.",
+);
+assert.doesNotMatch(
+  PROJECT_OVERVIEW_SCRIPT,
+  /renderProjectConnectorCredentialRouting\(projectOverviewDraft/,
+  "Project Settings must not duplicate credential routing below its plugin rows.",
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /function renderProjectOverviewIntegrationRow\(row\)[\s\S]*?requestProjectConnectorBrowserOpen\(row\.source, \{[\s\S]*?projectId: rowProjectId,[\s\S]*?projectRecord: selectedProject/,
+  "Each project plugin row must open the centralized project connector explorer.",
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /row\.source === "github"[\s\S]*?React\.createElement\(PlatformSecondaryButton, \{[\s\S]*?playground-project-overview-integration-manage-button[\s\S]*?\}, "Manage"\)/,
+  "The GitHub project plugin must use the centralized Manage button instead of an inline repository selector.",
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /row\.repositories\.map\(\(repository\) => React\.createElement\(RunnerProjectGithubRepositorySettings, \{[\s\S]*?updateProjectGithubRepositorySettings/,
+  "Selected GitHub repositories must expose their persisted branch and pull-request settings below the plugin row.",
+);
+assert.match(
+  PROJECTS_PAGE_RUNTIME_SCRIPT,
+  /function requestProjectConnectorBrowserOpen\(source, options = \{\}\)[\s\S]*?setTaskConnectorBrowserMode\("project"\);\s*setTaskConnectorBrowserOpen\(true\);/,
+  "Project plugin rows must launch the shared file explorer in project mode.",
+);
+assert.match(
+  PROJECTS_PAGE_RUNTIME_SCRIPT,
+  /function handleTaskConnectorGithubBranchChange\(item, nextBranch\)[\s\S]*?React\.createElement\(RunnerGithubBranchSelector, \{[\s\S]*?onValueChange: \(branch\) => handleTaskConnectorGithubBranchChange/,
+  "GitHub repository rows in the centralized explorer must expose a base-branch selector.",
+);
+assert.match(
+  PROJECTS_DOMAIN_RUNTIME_SCRIPT,
+  /branchPrefix:[\s\S]*?createPullRequests:[\s\S]*?branch-prefix=[\s\S]*?pull-requests=/,
+  "Project GitHub branch naming and pull-request policies must survive normalization and reach agent context.",
+);
+assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /const connectorAccessSection = buildPlaygroundConnectorPromptSection\([\s\S]*?normalizedTask\.connectors[\s\S]*?connectorAccessSection,/,
+  "Project ticket prompts must include the detailed connector branch and pull-request policy context.",
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /const launchConnectors = mergePlaygroundTaskConnectorSelections[\s\S]*?buildPlaygroundTaskRunPrompt\(\{[\s\S]*?connectors: launchConnectors,/,
+  "Project ticket runs must merge project connector policy before building their hidden execution prompt.",
+);
+assert.match(
+  PROJECTS_PAGE_RUNTIME_SCRIPT,
+  /function buildCentralizedConnectorConnection\(source\)[\s\S]*?accounts,[\s\S]*?selectedAccountId,[\s\S]*?onAccountChange: \(accountId\) => \{[\s\S]*?updateProjectConnectorCredentialBinding\([\s\S]*?accounts[\s\S]*?const centralizedConnections = \{/,
+  "The shared project explorer must expose project credential routing through its centralized account contract.",
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
   /React\.createElement\(PlatformSecondaryButton, \{\s*type: "button",\s*size: "small",\s*className: "playground-project-settings-add-rule-button"/,
 );
-assert.match(
-  PROJECT_OVERVIEW_SCRIPT,
-  /React\.createElement\(PlatformSecondaryButton, \{\s*type: "button",\s*size: "small",\s*className: "playground-project-teams-add-button"/,
-);
-assert.match(
-  PROJECT_OVERVIEW_SCRIPT,
-  /React\.createElement\(PlatformPopup, \{\s*open: isAddTeamsMenuOpen,\s*variant: "minimal",\s*portal: true,\s*placement: "bottom-end"/,
-);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /Add Teams|Add teams to project|playground-project-teams-add-button/);
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
   /const systemPrincipal = getPlatformSystemAccessPrincipal\(selectedPermissionTeam\?\.id\)/,
@@ -758,6 +860,11 @@ assert.match(
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
   /resourceLabel: "Project",\s*selectedPrincipalId: projectOverviewPermissionTeamId,[\s\S]*?teamSubjectType: "project_team_role"/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /roles: systemPrincipal\s*\? undefined\s*:\s*PLAYGROUND_TEAM_ROLE_DEFINITIONS\.map/,
+  "Organization principals must use the centralized organization-role definitions.",
 );
 assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\(PlatformRolePermissionsPage/);
 assert.match(
@@ -859,9 +966,14 @@ assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
   /new URL\(backendUrl \+ "\/tasks\/activity", window\.location\.origin\)[\s\S]*?searchParams\.set\("projectId", projectId\)[\s\S]*?searchParams\.set\("limit", "50"\)/,
 );
+assert.doesNotMatch(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /normalizedEvent\.eventType === "comment_added"/,
+  "Project-wide activity loading must retain ticket comments for the Progress timeline.",
+);
 assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
-  /normalizedEvent\.eventType === "comment_added"[\s\S]*?normalizedEvent\.eventType === "field_changed" && fieldName === "description"/,
+  /normalizedEvent\.eventType === "field_changed" && fieldName === "description"/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -1261,6 +1373,22 @@ assert.doesNotMatch(
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformLoadingState/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /message: "Loading projects\.\.\."/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /message: "Loading project\.\.\.",\s*centered: true/);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const isProjectTaskDetailInitialLoading = Boolean\([\s\S]*?taskDetailHydrationId !== selectedTaskDetailHydrationId[\s\S]*?taskDetailHydrationStatus === "loading"/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function renderProjectTaskDetailLoadingState\(\) \{[\s\S]*?className: "playground-projects-loading-state playground-tasks-ticket-loading-state",\s*message: "Loading ticket\.\.\.",\s*centered: true/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /isDirectTaskNavigationPending\s*\? renderProjectTaskDetailLoadingState\(\)[\s\S]*?isProjectTaskDetailInitialLoading\s*\? renderProjectTaskDetailLoadingState\(\)/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-tasks-main-scroll\.is-project-workspace > \.playground-tasks-ticket-loading-state\s*\{[\s\S]*?min-height: 100%;[\s\S]*?background: #000;/,
+);
 assert.doesNotMatch(
   PROJECTS_PAGE_VIEWS_SCRIPT,
   /playground-tasks-loading-copy" \}, "Loading project/,
@@ -1534,7 +1662,11 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_DATA_SCRIPT,
-  /extraActions: taskView === "backlog" \|\| taskView === "board"\s*\? renderProjectAppHeaderMilestoneSelector\(\)\s*: null/,
+  /extraActions: taskView === "board"\s*\? renderProjectAppHeaderMilestoneSelector\(\)\s*: null/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /const backlogHeaderAction = React\.createElement\(React\.Fragment, null,[\s\S]*?renderProjectAppHeaderMilestoneSelector\(\)[\s\S]*?headerAction: backlogHeaderAction/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -1805,11 +1937,11 @@ const centralizedTaskConnectorExplorerSource = PROJECTS_PAGE_RUNTIME_SCRIPT.slic
 );
 assert.match(
   centralizedTaskConnectorExplorerSource,
-  /React\.createElement\(PlatformFileExplorerBrowserModal, \{[\s\S]*?title: "Attach connector data"/,
+  /React\.createElement\(RunnerFileBrowserDialog, \{[\s\S]*?showSourceSidebar: !isPersistedProjectConnectorMode,[\s\S]*?showFilterTabs: !isPersistedProjectConnectorMode,[\s\S]*?connections: centralizedConnections/,
 );
 assert.doesNotMatch(
   centralizedTaskConnectorExplorerSource,
-  /React\.createElement\(PlatformModalBackdrop|React\.createElement\(PlatformModalSurface/,
+  /React\.createElement\(PlatformFileExplorerBrowserModal|React\.createElement\(PlatformModalBackdrop|React\.createElement\(PlatformModalSurface/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -2305,8 +2437,23 @@ assert.match(
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /const PROJECT_ACTIVITY_EVENT_TYPES = Object\.freeze\(\[[\s\S]*?id: "project_updates"[\s\S]*?id: "comments"[\s\S]*?id: "mission_control"[\s\S]*?id: "milestones"[\s\S]*?id: "issue_progress"[\s\S]*?id: "assignments"[\s\S]*?id: "schedules"[\s\S]*?id: "threads"[\s\S]*?id: "project_changes"/,
+  /const PROJECT_ACTIVITY_EVENT_TYPES = Object\.freeze\(\[[\s\S]*?id: "project_updates"[\s\S]*?id: "comments"[\s\S]*?id: "ticket_comments"[\s\S]*?id: "mission_control"[\s\S]*?id: "milestones"[\s\S]*?id: "issue_progress"[\s\S]*?id: "assignments"[\s\S]*?id: "schedules"[\s\S]*?id: "threads"[\s\S]*?id: "project_changes"/,
   "The project feed and Settings controls must share one explicit event taxonomy.",
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /event\?\.eventType === "comment_added"\) return "ticket_comments"/,
+  "Ticket comments must have their own independently filterable timeline category.",
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /cardType: isTicketComment \? "ticket_comment" : null/,
+  "Ticket comments must render as timeline cards instead of compact mutation lines.",
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /event\.cardType === "ticket_comment"[\s\S]*?React\.createElement\(PlatformCommentCard/,
+  "The shared project timeline must render ticket comments through the centralized comment card.",
 );
 assert.doesNotMatch(
   PROJECT_OVERVIEW_SCRIPT,
@@ -3024,11 +3171,7 @@ assert.match(
 );
 assert.match(
   PROJECTS_CORE_CSS,
-  /\.playground-project-workspace-inner\.is-backlog-work-view\s*\{\s*width: min\(100%, var\(--playground-thread-content-max-width\)\);\s*max-width: var\(--playground-thread-content-max-width\);/,
-);
-assert.match(
-  PROJECTS_CORE_CSS,
-  /\.playground-project-workspace-inner\.is-board-work-view\s*\{\s*width: min\(100%, var\(--playground-centered-page-max-width\)\);\s*max-width: var\(--playground-centered-page-max-width\);/,
+  /\.playground-project-workspace-inner\.is-backlog-work-view,\s*\.playground-project-workspace-inner\.is-board-work-view\s*\{\s*width: min\(100%, var\(--playground-centered-page-max-width\)\);\s*max-width: var\(--playground-centered-page-max-width\);/,
 );
 assert.match(
   PROJECTS_CORE_CSS,
@@ -3135,6 +3278,11 @@ assert.match(
 assert.match(
   platformEntrySource,
   /import \{[^}]*PlatformFileExplorerBrowserModal[^}]*PlatformFileExplorerModal[^}]*\} from "\/dist\/platform-ui\/components\/composite\/file-explorer\/index\.js";/,
+);
+assert.match(
+  platformEntrySource,
+  /import \{[^}]*RunnerFileBrowserDialog[^}]*\} from "\/dist\/react\/index\.js";/,
+  "The legacy platform must consume the same centralized explorer dialog exported for Runner Chat.",
 );
 assert.match(
   platformEntrySource,

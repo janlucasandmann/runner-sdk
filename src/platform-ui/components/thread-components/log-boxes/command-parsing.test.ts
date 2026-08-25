@@ -25,6 +25,24 @@ describe("runner log command parsing", () => {
     });
   });
 
+  it("recognizes short help flags and names nested CLI topics", () => {
+    expect(
+      parseRunnerHelpCommandDetails(
+        "python3 /workspace/.claude/skills/task-management/scripts/manage-tasks.py tasks -h 2>&1 | head -80",
+      ),
+    ).toEqual({
+      resourceName: "Tasks",
+      normalizedCommand:
+        "python3 /workspace/.claude/skills/task-management/scripts/manage-tasks.py tasks -h 2>&1 | head -80",
+    });
+    expect(
+      parseRunnerHelpCommandDetails("python3 /workspace/manage-tasks.py tasks comments --help"),
+    ).toEqual({
+      resourceName: "Tasks Comments",
+      normalizedCommand: "python3 /workspace/manage-tasks.py tasks comments --help",
+    });
+  });
+
   it("parses heredoc command sections", () => {
     expect(parseShellCommandSegments("python <<'PY'\nprint('ok')\nPY")).toEqual({
       header: "$ python <<'PY'",

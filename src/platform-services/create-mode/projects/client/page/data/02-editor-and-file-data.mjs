@@ -947,9 +947,7 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
               color: selectedProject.color || selectedProject.metadata?.color || "",
               view: taskView,
               sectionId: taskView === "overview" ? projectOverviewHomeTab : "",
-              extraActions: taskView === "backlog" || taskView === "board"
-                ? renderProjectAppHeaderMilestoneSelector()
-                : null,
+              extraActions: null,
               projectId: selectedProject.id,
               createdAt: selectedProject.createdAt || selectedProject.metadata?.createdAt || "",
               updatedAt: selectedProject.updatedAt || selectedProject.metadata?.updatedAt || "",

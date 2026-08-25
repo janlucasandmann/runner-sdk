@@ -1693,6 +1693,11 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 	        background: linear-gradient(180deg, #287c4d 0%, #17492f 100%);
 	      }
 
+	      .playground-tasks-detail-type-badge.is-rule,
+	      .playground-tasks-backlog-project-icon.is-rule {
+	        background: linear-gradient(180deg, #4a68a4 0%, #263a68 100%);
+	      }
+
 	      .playground-tasks-detail-type-badge.is-subtask {
         background: linear-gradient(180deg, #4f7fc5 0%, #1e4585 100%);
       }

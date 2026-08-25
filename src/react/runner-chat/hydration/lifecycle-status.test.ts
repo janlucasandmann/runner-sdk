@@ -12,7 +12,9 @@ describe("runner hydration lifecycle status", () => {
   it("normalizes pending permission, running, and terminal states", () => {
     expect(isPendingPermissionThreadLifecycleStatus("Permission Asked")).toBe(true);
     expect(isRunningThreadLifecycleStatus("starting")).toBe(true);
+    expect(isRunningThreadLifecycleStatus("active")).toBe(false);
     expect(isTerminalThreadLifecycleStatus("succeeded")).toBe(true);
+    expect(resolveHydratedThreadLifecycleStatus("active", null)).toBe("active");
     expect(resolveHydratedThreadLifecycleStatus("active", Date.now())).toBe("completed");
     expect(resolveHydratedThreadLifecycleStatus("permission asked", Date.now())).toBe(
       "permission_asked",

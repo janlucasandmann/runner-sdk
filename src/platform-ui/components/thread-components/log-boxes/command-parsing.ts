@@ -276,13 +276,14 @@ function normalizeRunnerHelpCommandCandidate(command: string): string {
 export function tokenizeShellLikeArguments(value: string): string[] {
   const tokens: string[] = [];
   const tokenPattern = /"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'|([^\s]+)/g;
-  let match: RegExpExecArray | null;
-  while ((match = tokenPattern.exec(value)) !== null) {
+  let match = tokenPattern.exec(value);
+  while (match !== null) {
     const rawToken = match[1] ?? match[2] ?? match[3] ?? "";
     const token = rawToken.replace(/\\(["'\\\s])/g, "$1").trim();
     if (token) {
       tokens.push(token);
     }
+    match = tokenPattern.exec(value);
   }
   return tokens;
 }
@@ -291,8 +292,40 @@ export function parseRunnerHelpCommandDetails(
   command: string,
 ): RunnerHelpCommandDetails | null {
   const normalizedCommand = normalizeRunnerHelpCommandCandidate(command);
-  if (!/(?:^|\s)--help$/i.test(normalizedCommand)) {
+  const tokens = tokenizeShellLikeArguments(normalizedCommand);
+  const helpTokenIndex = tokens.findIndex((token) => /^(?:-h|--help)$/i.test(token));
+  if (helpTokenIndex < 0) {
     return null;
+  }
+
+  const invocationTokens = tokens.slice(0, helpTokenIndex);
+  const scriptTokenIndex = invocationTokens.findIndex((token) => (
+    /\.(?:py|mjs|cjs|js|ts|tsx|sh|bash|zsh)$/i.test(token)
+  ));
+  const commandTokenIndex = scriptTokenIndex >= 0
+    ? scriptTokenIndex
+    : invocationTokens.findIndex((token) => (
+        !token.startsWith("-")
+        && !/^(?:python3?|node|deno|bun|bash|sh|zsh|npx|pnpm|npm|yarn)$/i.test(
+          token,
+        )
+      ));
+  const commandToken = commandTokenIndex >= 0
+    ? invocationTokens[commandTokenIndex]
+    : undefined;
+  const topicTokens = commandTokenIndex >= 0
+    ? invocationTokens
+        .slice(commandTokenIndex + 1)
+        .filter((token) => (
+          !token.startsWith("-")
+          && !/^(?:\||\|\||&&|;|&|\d?>)/.test(token)
+        ))
+    : [];
+  if (topicTokens.length > 0) {
+    return {
+      resourceName: formatRunnerCommandResourceName(topicTokens.join(" ")),
+      normalizedCommand,
+    };
   }
 
   const skillMatch = normalizedCommand.match(
@@ -305,16 +338,6 @@ export function parseRunnerHelpCommandDetails(
     };
   }
 
-  const tokens = tokenizeShellLikeArguments(normalizedCommand);
-  const scriptToken = tokens.find((token) => (
-    /\.(?:py|mjs|cjs|js|ts|tsx|sh|bash|zsh)$/i.test(token)
-  ));
-  const commandToken = scriptToken || tokens.find((token) => (
-    !token.startsWith("-")
-    && !/^(?:python3?|node|deno|bun|bash|sh|zsh|npx|pnpm|npm|yarn)$/i.test(
-      token,
-    )
-  ));
   return {
     resourceName: formatRunnerCommandResourceName(commandToken || "Command"),
     normalizedCommand,

@@ -78,4 +78,24 @@ describe("PlatformConfirmationModal", () => {
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onCancel).toHaveBeenCalledOnce();
   });
+
+  it("supports a secondary confirmation path for multi-outcome decisions", async () => {
+    const onSecondaryAction = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <PlatformConfirmationModal
+        open
+        title="Delete EC-004?"
+        description="Choose what happens to its subtasks."
+        confirmLabel="Delete All"
+        secondaryActionLabel="Keep Subtasks"
+        onCancel={vi.fn()}
+        onConfirm={vi.fn()}
+        onSecondaryAction={onSecondaryAction}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Keep Subtasks" }));
+    await waitFor(() => expect(onSecondaryAction).toHaveBeenCalledOnce());
+  });
 });

@@ -386,6 +386,7 @@ describe("permission policy", () => {
         "project_rules_view",
         "project_threads_create",
         "project_issues_manage",
+        "project_updates_write",
         "project_strategy_manage",
         "project_resources_manage",
         "project_rules_edit",
@@ -481,6 +482,18 @@ describe("permission policy", () => {
     ).toEqual(expectedActionIds);
     expect(visibleActionIds).not.toContain("workspace_read");
     expect(visibleActionIds).not.toContain("send_email");
+  });
+
+  it("classifies writing project updates as a Ring 2 entitlement", () => {
+    expect(
+      PLATFORM_PERMISSION_ACTION_DEFINITIONS.find(
+        (action) => action.id === "project_updates_write",
+      ),
+    ).toMatchObject({
+      ringId: "ring_2",
+      label: "Write project updates",
+      subjectTypes: ["project", "project_team_role"],
+    });
   });
 
   it.each(["web_app", "function", "auth", "secrets", "payments", "agent_runtime"])(

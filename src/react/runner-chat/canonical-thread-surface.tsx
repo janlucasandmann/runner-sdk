@@ -16,12 +16,13 @@ import { RunnerThreadLiveSupervisionDock } from "../thread/live-supervision-dock
 import type { RunnerThreadDetailLoadState } from "../thread/run-detail-hydration.js";
 import { RunnerThreadTimeline } from "../thread/thread-timeline.js";
 import { RunnerUserMessageContent } from "./message-connectors.js";
-import type { RunnerChatConnectorOption } from "./public-types.js";
+import type { RunnerChatConnectorOption, RunnerThreadTaskListSummary } from "./public-types.js";
 import { CollapsibleRunnerUserPrompt } from "./run-summary-content.js";
 
 export interface RunnerCanonicalThreadSurfaceProps {
   activityGroupActionStates?: Record<string, RunnerThreadDetailLoadState>;
   availableConnectorOptions?: readonly RunnerChatConnectorOption[];
+  taskList?: RunnerThreadTaskListSummary | null;
   connected: boolean;
   error?: string | null;
   fallbackRunAgentName?: string | null;
@@ -78,6 +79,7 @@ function renderCanonicalUserMessage(
 export function RunnerCanonicalThreadSurface({
   activityGroupActionStates,
   availableConnectorOptions = [],
+  taskList,
   connected,
   error,
   fallbackRunAgentName,
@@ -111,6 +113,7 @@ export function RunnerCanonicalThreadSurface({
   const selectedReceipt = selectedRunId
     ? screen.receipts.find((receipt) => receipt.id === selectedRunId) || null
     : null;
+  const workbenchAvailable = Boolean(projection.threadId);
 
   useEffect(() => {
     if (currentThreadIdRef.current === projection.threadId) return;
@@ -131,9 +134,9 @@ export function RunnerCanonicalThreadSurface({
   }, [screen.defaultRunId, screen.receipts, selectedRunId]);
 
   useEffect(() => {
-    onWorkbenchAvailabilityChangeRef.current?.(Boolean(screen.defaultRunId));
+    onWorkbenchAvailabilityChangeRef.current?.(workbenchAvailable);
     return () => onWorkbenchAvailabilityChangeRef.current?.(false);
-  }, [screen.defaultRunId]);
+  }, [workbenchAvailable]);
 
   useEffect(() => {
     if (!workbenchOpen || selectedReceipt || !screen.defaultRunId) return;
@@ -206,7 +209,7 @@ export function RunnerCanonicalThreadSurface({
     >
       <PlatformThreadScreen
         conversation={conversation}
-        workbenchOpen={workbenchOpen && Boolean(selectedReceipt)}
+        workbenchOpen={workbenchOpen && workbenchAvailable}
         decisionBar={
           screen.pendingPermissionCount ? (
             <RunnerThreadLiveSupervisionDock
@@ -216,14 +219,18 @@ export function RunnerCanonicalThreadSurface({
           ) : null
         }
         workbench={
-          selectedReceipt ? (
+          workbenchAvailable ? (
             <RunnerThreadExecutionWorkbench
-              key={selectedReceipt.id}
+              key={selectedReceipt?.id || `task-list:${projection.threadId}`}
               receipt={selectedReceipt}
               projection={projection}
+              taskList={taskList}
+              availableConnectorOptions={availableConnectorOptions}
               detailLoadState={
-                runDetailStates?.[selectedReceipt.id] ||
-                (onLoadRunDetails ? { status: "idle", error: null } : undefined)
+                selectedReceipt
+                  ? runDetailStates?.[selectedReceipt.id] ||
+                    (onLoadRunDetails ? { status: "idle", error: null } : undefined)
+                  : undefined
               }
               activityGroupActionStates={activityGroupActionStates}
               renderAction={renderAction}

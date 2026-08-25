@@ -396,6 +396,85 @@ assert.match(
   platformEntrySource,
   /const selectedThreadTaskTicketNumber = selectedThreadTaskPreview\?\.taskId[\s\S]*?formatPlaygroundProjectTicketNumber\([\s\S]*?name: selectedThreadProjectName/,
 );
+assert.match(
+  platformEntrySource,
+  /const selectedThreadTaskPreviewForDisplay = useMemo\([\s\S]*?ticketNumber: displayTicketNumber[\s\S]*?threadTaskPreview: selectedThreadTaskPreviewForDisplay \|\| undefined/,
+  "Thread ticket cards must render the same project-prefixed ticket number as the project details surface.",
+);
+const threadTaskPreviewFunctionStart = platformEntrySource.indexOf("function getThreadTaskPreview(thread)");
+const threadTaskPreviewFunctionEnd = platformEntrySource.indexOf("function getThreadMissionControlMetadata(thread)", threadTaskPreviewFunctionStart);
+assert.ok(threadTaskPreviewFunctionStart >= 0 && threadTaskPreviewFunctionEnd > threadTaskPreviewFunctionStart);
+const getThreadTaskPreview = new Function(
+  `${platformEntrySource.slice(threadTaskPreviewFunctionStart, threadTaskPreviewFunctionEnd)}\nreturn getThreadTaskPreview;`,
+)();
+assert.deepEqual(
+  getThreadTaskPreview({
+    id: "thread_mention_1",
+    projectId: "project_1",
+    environmentId: "env_1",
+    metadata: {
+      projectMention: {
+        source: {
+          type: "ticket_comment",
+          ticketId: "task_1",
+          projectId: "project_1",
+        },
+      },
+    },
+  }),
+  {
+    taskId: "task_1",
+    projectId: "project_1",
+    projectName: "",
+    threadId: "thread_mention_1",
+    ticketNumber: "",
+    title: "Ticket",
+    description: "",
+    taskColor: "gray",
+    status: "todo",
+    priority: "medium",
+    taskType: "task",
+    environmentId: "env_1",
+    runKind: "mention",
+    showPromptPreview: true,
+    requiresHydration: true,
+  },
+);
+assert.match(
+  platformEntrySource,
+  /const selectedThreadTaskPreviewHydrationThreadId = String\([\s\S]*?activeRunnerThreadId[\s\S]*?\|\| currentThreadId[\s\S]*?\|\| selectedThreadTaskPreview\?\.threadId/,
+  "Ticket-comment Threads must hydrate from their durable Thread id even when no runner execution is attached.",
+);
+assert.match(
+  platformEntrySource,
+  /\+ "\?view=preview"[\s\S]*?credentials: "include"/,
+  "Ticket cards must use the lightweight canonical Task read with the signed-in session.",
+);
+assert.match(
+  platformEntrySource,
+  /const retryDelays = \[0, 400, 1200, 3000\][\s\S]*?selectedThreadTaskPreviewFetchKeysRef\.current\.delete\(previewFetchKey\)/,
+  "Development effect replay and transient reads must not permanently poison the Task-preview hydration key.",
+);
+assert.match(
+  platformEntrySource,
+  /const selectedThreadTaskPreviewHydrationPending = Boolean\([\s\S]*?selectedThreadTaskPreview\?\.requiresHydration === true[\s\S]*?const selectedThreadInitialSurfaceLoading = Boolean\([\s\S]*?isThreadsLoading[\s\S]*?!selectedKnownThread[\s\S]*?initialSurfaceLoading: selectedThreadInitialSurfaceLoading/,
+  "Thread surfaces must remain behind the shared loader until shell metadata and any canonical Task preview are ready.",
+);
+assert.match(
+  platformEntrySource,
+  /requiresHydration: false,[\s\S]*?const mergeThreadTaskPreviewRecord[\s\S]*?requiresHydration: incoming\.requiresHydration === true/,
+  "Canonical Task hydration must clear the compatibility preview's render-blocking marker.",
+);
+assert.match(
+  platformEntrySource,
+  /const incomingIsCompatibilityFallback = incoming\.requiresHydration === true;[\s\S]*?if \(incomingIsCompatibilityFallback && baseIsCanonicalPreview\)[\s\S]*?requiresHydration: false/,
+  "A stale legacy mention placeholder must never downgrade an already-hydrated Task preview.",
+);
+assert.match(
+  platformEntrySource,
+  /const shouldPreserveCanonicalTaskPreview = Boolean\([\s\S]*?existingTaskPreview\.requiresHydration !== true[\s\S]*?incomingTaskPreview\?\.requiresHydration === true[\s\S]*?taskPreview: existingTaskPreview/,
+  "Periodic Thread overview refreshes must preserve locally hydrated canonical Task metadata.",
+);
 assert.match(platformEntrySource, /pathItems: getThreadPagePathItems\(\)/);
 assert.match(
   platformEntrySource,
@@ -404,6 +483,11 @@ assert.match(
 assert.match(
   platformEntrySource,
   /onClick: isProjectMilestonesView[\s\S]*?navigateToProjectSection\("general"\)[\s\S]*?\[\{ label: "Milestones" \}\]/,
+);
+assert.match(
+  platformEntrySource,
+  /className: "playground-tasks-nav playground-tasks-project-nav-switch",\s*value: isProjectSettingsView \? "" : activeProjectView/,
+  "Project Settings must leave Progress, Backlog, and Resources unselected in the shared header switch.",
 );
 assert.match(
   platformEntrySource,

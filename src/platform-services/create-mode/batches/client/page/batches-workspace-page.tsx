@@ -359,43 +359,37 @@ export function BatchesWorkspacePage({
           setMutating(true);
           setModalError("");
           try {
-            let resolvedDraft = draft;
+            let saved: BatchJob;
             if (
+              !activeJob &&
               draft.targetKind === "project_ticket_action" &&
               !String(draft.targetResourceId || "").trim()
             ) {
               const ticketId = String(draft.sourceTicketId || "").trim();
-              const projectId = String(draft.sourceProjectId || "").trim();
-              const idempotencyKey = `${String(draft.idempotencyKey || createComposerIdempotencyKey())}:prepare-ticket`;
+              const idempotencyKey = String(
+                draft.idempotencyKey || createComposerIdempotencyKey(),
+              );
               const prepared = await prepareBatchProjectTicket(ticketId, {
                 baseUrl: resourceBackendUrl,
                 requestHeaders: normalizedRequestHeaders,
                 idempotencyKey,
                 runKind: draft.metadata?.runKind === "review" ? "review" : "implementation",
+                batch: {
+                  ...draft,
+                  name: String(draft.name || "").trim(),
+                  targetKind: "project_ticket_action",
+                  idempotencyKey,
+                },
               });
-              resolvedDraft = {
-                ...draft,
-                targetResourceId: prepared.threadId,
-                targetVersionId: null,
-                definition: {
-                  ...(draft.definition || {}),
-                  projectId,
-                  ticketId,
-                  threadId: prepared.threadId,
-                  preparedThreadId: prepared.threadId,
-                },
-                metadata: {
-                  ...(draft.metadata || {}),
-                  preparedThreadTitle: prepared.threadTitle,
-                },
-              };
+              saved = prepared.batchJob;
+            } else {
+              saved = activeJob
+                ? await updateBatchJob(activeJob.id, draft, apiOptions)
+                : await createBatchJob(
+                    draft as BatchJobDraft & { name: string; targetKind: BatchTargetKind },
+                    apiOptions,
+                  );
             }
-            const saved = activeJob
-              ? await updateBatchJob(activeJob.id, resolvedDraft, apiOptions)
-              : await createBatchJob(
-                  resolvedDraft as BatchJobDraft & { name: string; targetKind: BatchTargetKind },
-                  apiOptions,
-                );
             setJobs((current) => [saved, ...current.filter((job) => job.id !== saved.id)]);
             if (intent === "start" && activeJob) {
               const started = await runBatchJobAction(saved.id, "start", apiOptions);

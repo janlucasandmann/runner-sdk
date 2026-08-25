@@ -425,9 +425,9 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
         border: 0;
         outline: none;
         background: transparent;
-        color: rgba(255, 255, 255, 0.94);
+        color: rgba(255, 255, 255, 0.8);
         font-size: 13px;
-        font-weight: 500;
+        font-weight: 400;
         line-height: 1.2;
         box-sizing: border-box;
       }
@@ -443,9 +443,9 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
 
       .playground-tasks-detail-navbar-ticket {
         flex: 0 0 auto;
-        color: #66a6ff;
+        color: #fff;
         font-size: 13px;
-        font-weight: 500;
+        font-weight: 400;
         line-height: 1;
       }
 
@@ -941,7 +941,7 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid rgba(255, 255, 255, 0.05);
         padding: 12px;
-        border-radius: 10px;
+        border-radius: 15px;
         backdrop-filter: blur(50px);
         -webkit-backdrop-filter: blur(50px);
       }

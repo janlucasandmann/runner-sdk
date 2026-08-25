@@ -17,12 +17,11 @@ import {
   Cpu,
   Circle,
   CircleCheckBig,
-  CircleHelp,
+  CircleQuestionMark,
   Ellipsis,
   Equal,
   Eye,
   FileImage,
-  FilePlus,
   FileSearch,
   FileText,
   Folder,
@@ -38,9 +37,9 @@ import {
   MousePointerClick,
   Route,
   Paperclip,
-  Rocket,
   Search,
   Server,
+  SquareMousePointer,
   SlidersHorizontal,
   Terminal,
   ThumbsDown,
@@ -59,7 +58,12 @@ import {
 } from "../document-preview/preview-contracts.js";
 import { RunnerFileDiffSurface } from "../../composite/diff-viewer/index.js";
 import { RunnerImagePreviewSurface } from "../document-preview/image-preview-surface.js";
-import { parseComputerAgentsListCommandOutput, parseComputerAgentsListLogDetails, type ComputerAgentsListAgent, type ComputerAgentsListAvailableAgent } from "./agents-list-log-box.js";
+import {
+  parseComputerAgentsListCommandOutput,
+  parseComputerAgentsListLogDetails,
+  type ComputerAgentsListAgent,
+  type ComputerAgentsListAvailableAgent,
+} from "./agents-list-log-box.js";
 import { parseComputerAgentsEnvironmentsListLogDetails } from "./environments-list-log-box.js";
 import { parseTaskManagementProjectsListLogDetails } from "./projects-list-log-box.js";
 import { parseAppPlatformResourcesListLogDetails } from "./resources-list-log-box.js";
@@ -73,12 +77,18 @@ import { parseGitCommitLogDetails } from "./git-commit-log-box.js";
 import { parseGitDiffLogDetails } from "./git-diff-log-box.js";
 import { parseGitStatusLogDetails } from "./git-status-log-box.js";
 import { LogHeader, LogPanel } from "./log-card.js";
-import { RunnerMarkdown, stripRunnerSystemTags } from "../shared/runner-markdown.js";
+import {
+  RunnerMarkdown,
+  stripRunnerSystemTags,
+} from "../shared/runner-markdown.js";
 import { DotLoader } from "../../ui/dot-loader/index.js";
 import { LazyMediaPreviewMount } from "../shared/lazy-media-preview.js";
-import {
-  findRunnerWorkingLogJsonSegments,
-} from "./working-log-json.js";
+import { findRunnerWorkingLogJsonSegments } from "./working-log-json.js";
+
+const RUNNER_TEXT_FILE_ICON_URL = new URL(
+  "../assets/txtfile.png",
+  import.meta.url,
+).toString();
 import {
   extractQuotedArgument,
   extractHeadTailReadPath,
@@ -102,17 +112,11 @@ import {
   sanitizeSubagentDisplayText,
   truncateSubagentPreviewText,
 } from "./presentation-utils.js";
-import {
-  RunnerWorkingLogJsonContent,
-} from "./working-log-json-view.js";
-import {
-  CompactActionLogLine,
-} from "./compact-action-log-line.js";
+import { RunnerWorkingLogJsonContent } from "./working-log-json-view.js";
+import { CompactActionLogLine } from "./compact-action-log-line.js";
 import { MetronomeWorkflowLogBox } from "./metronome-workflow-view.js";
 import { PermissionRequestLogBox } from "./permission-request-view.js";
-import {
-  isDeepResearchCommand,
-} from "./deep-research-state.js";
+import { isDeepResearchCommand } from "./deep-research-state.js";
 import {
   DeepResearchCommandLogBox,
   DeepResearchEventLogBox,
@@ -139,15 +143,18 @@ import {
   VideoGenerationLogBox,
 } from "./media-view.js";
 import type { RunnerWorkLogEntryProps } from "./log-entry-types.js";
-import {
-  isListFilesLog,
-  normalizeListFileName,
-} from "./list-files-state.js";
+import { isListFilesLog, normalizeListFileName } from "./list-files-state.js";
 import { ListFilesLogBox } from "./list-files-view.js";
 import {
   AtlassianActivityLogBox,
   isAtlassianConnectorLog,
 } from "./atlassian-activity-view.js";
+import { parseRunnerKnowledgeActivityDetails } from "./knowledge-activity-state.js";
+import { KnowledgeActivityLogBox } from "./knowledge-activity-view.js";
+import { parseRunnerProjectTaskListDetails } from "./project-task-list-state.js";
+import { ProjectTaskListActivityLogBox } from "./project-task-list-view.js";
+import { parseRunnerProjectMilestoneListDetails } from "./project-milestone-list-state.js";
+import { ProjectMilestoneListActivityLogBox } from "./project-milestone-list-view.js";
 export type {
   RunnerTaskPreviewClickPayload,
   RunnerWorkLogEntryProps,
@@ -170,48 +177,82 @@ export {
   DeepResearchLogBox,
 } from "./deep-research-view.js";
 
-function formatCompactListCount(count: number, singular: string, plural = `${singular}s`): string {
+function formatCompactListCount(
+  count: number,
+  singular: string,
+  plural = `${singular}s`,
+): string {
   const safeCount = Number.isFinite(count) ? Math.max(0, count) : 0;
   return `${safeCount.toLocaleString()} ${safeCount === 1 ? singular : plural}`;
 }
 
 function renderComputerAgentsListCompactLog(
   details: NonNullable<ReturnType<typeof parseComputerAgentsListLogDetails>>,
-  onAgentPreviewClick?: RunnerWorkLogEntryProps["onAgentPreviewClick"]
+  onAgentPreviewClick?: RunnerWorkLogEntryProps["onAgentPreviewClick"],
 ) {
   const agents = details.agents || [];
   const firstAgent = agents.length === 1 ? agents[0] : null;
   return (
     <CompactActionLogLine
-      icon={<Bot className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <Bot className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
+      }
       title="Listed Agents"
-      detail={firstAgent?.name || formatCompactListCount(agents.length, "agent")}
-      onClick={firstAgent ? () => onAgentPreviewClick?.({ agentId: firstAgent.id, agentName: firstAgent.name }) : null}
+      detail={
+        firstAgent?.name || formatCompactListCount(agents.length, "agent")
+      }
+      onClick={
+        firstAgent
+          ? () =>
+              onAgentPreviewClick?.({
+                agentId: firstAgent.id,
+                agentName: firstAgent.name,
+              })
+          : null
+      }
     />
   );
 }
 
 function renderComputerAgentsThreadsListCompactLog(
-  details: NonNullable<ReturnType<typeof parseComputerAgentsThreadsListLogDetails>>
+  details: NonNullable<
+    ReturnType<typeof parseComputerAgentsThreadsListLogDetails>
+  >,
 ) {
   const threads = details.threads || [];
   const firstThread = threads.length === 1 ? threads[0] : null;
   return (
     <CompactActionLogLine
-      icon={<MessageSquare className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <MessageSquare
+          className="tb-log-compact-action-icon-svg"
+          strokeWidth={1.6}
+        />
+      }
       title="Listed Threads"
-      detail={firstThread?.title || firstThread?.id || formatCompactListCount(threads.length, "thread")}
+      detail={
+        firstThread?.title ||
+        firstThread?.id ||
+        formatCompactListCount(threads.length, "thread")
+      }
     />
   );
 }
 
 function renderComputerAgentsThreadGetCompactLog(
-  details: NonNullable<ReturnType<typeof parseComputerAgentsThreadGetLogDetails>>
+  details: NonNullable<
+    ReturnType<typeof parseComputerAgentsThreadGetLogDetails>
+  >,
 ) {
   const thread = details.thread;
   return (
     <CompactActionLogLine
-      icon={<MessageSquare className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <MessageSquare
+          className="tb-log-compact-action-icon-svg"
+          strokeWidth={1.6}
+        />
+      }
       title="Retrieved Thread"
       detail={thread?.title || thread?.id || ""}
     />
@@ -219,80 +260,134 @@ function renderComputerAgentsThreadGetCompactLog(
 }
 
 function renderAppPlatformResourcesListCompactLog(
-  details: NonNullable<ReturnType<typeof parseAppPlatformResourcesListLogDetails>>
+  details: NonNullable<
+    ReturnType<typeof parseAppPlatformResourcesListLogDetails>
+  >,
 ) {
   const resources = details.resources || [];
   const firstResource = resources.length === 1 ? resources[0] : null;
   return (
     <CompactActionLogLine
-      icon={<Server className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <Server className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
+      }
       title="Listed Resources"
-      detail={firstResource?.name || formatCompactListCount(resources.length, "resource")}
+      detail={
+        firstResource?.name ||
+        formatCompactListCount(resources.length, "resource")
+      }
     />
   );
 }
 
 function renderTaskManagementProjectsListCompactLog(
-  details: NonNullable<ReturnType<typeof parseTaskManagementProjectsListLogDetails>>,
-  onProjectPreviewClick?: RunnerWorkLogEntryProps["onProjectPreviewClick"]
+  details: NonNullable<
+    ReturnType<typeof parseTaskManagementProjectsListLogDetails>
+  >,
+  onProjectPreviewClick?: RunnerWorkLogEntryProps["onProjectPreviewClick"],
 ) {
   const projects = details.projects || [];
   const firstProject = projects.length === 1 ? projects[0] : null;
   return (
     <CompactActionLogLine
-      icon={<Rocket className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={<span aria-hidden="true">🚀</span>}
       title="Listed Projects"
-      detail={firstProject?.name || formatCompactListCount(projects.length, "project")}
-      onClick={firstProject ? () => onProjectPreviewClick?.({ projectId: firstProject.id, projectName: firstProject.name }) : null}
+      detail={
+        firstProject?.name || formatCompactListCount(projects.length, "project")
+      }
+      onClick={
+        firstProject
+          ? () =>
+              onProjectPreviewClick?.({
+                projectId: firstProject.id,
+                projectName: firstProject.name,
+              })
+          : null
+      }
     />
   );
 }
 
 function renderComputerAgentsEnvironmentsListCompactLog(
-  details: NonNullable<ReturnType<typeof parseComputerAgentsEnvironmentsListLogDetails>>,
-  onEnvironmentPreviewClick?: RunnerWorkLogEntryProps["onEnvironmentPreviewClick"]
+  details: NonNullable<
+    ReturnType<typeof parseComputerAgentsEnvironmentsListLogDetails>
+  >,
+  onEnvironmentPreviewClick?: RunnerWorkLogEntryProps["onEnvironmentPreviewClick"],
 ) {
   const environments = details.environments || [];
   const firstEnvironment = environments.length === 1 ? environments[0] : null;
   return (
     <CompactActionLogLine
-      icon={<HardDrive className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <HardDrive
+          className="tb-log-compact-action-icon-svg"
+          strokeWidth={1.6}
+        />
+      }
       title="Listed Computers"
-      detail={firstEnvironment?.name || formatCompactListCount(environments.length, "computer")}
-      onClick={firstEnvironment ? () => onEnvironmentPreviewClick?.({ environmentId: firstEnvironment.id, environmentName: firstEnvironment.name }) : null}
+      detail={
+        firstEnvironment?.name ||
+        formatCompactListCount(environments.length, "computer")
+      }
+      onClick={
+        firstEnvironment
+          ? () =>
+              onEnvironmentPreviewClick?.({
+                environmentId: firstEnvironment.id,
+                environmentName: firstEnvironment.name,
+              })
+          : null
+      }
     />
   );
 }
 
-function renderGitDiffCompactLog(details: NonNullable<ReturnType<typeof parseGitDiffLogDetails>>) {
-  const detail = details.filesChanged > 0
-    ? `${formatCompactListCount(details.filesChanged, "file")} changed`
-    : `${details.linesChanged.toLocaleString()} lines changed`;
+function renderGitDiffCompactLog(
+  details: NonNullable<ReturnType<typeof parseGitDiffLogDetails>>,
+) {
+  const detail =
+    details.filesChanged > 0
+      ? `${formatCompactListCount(details.filesChanged, "file")} changed`
+      : `${details.linesChanged.toLocaleString()} lines changed`;
   return (
     <CompactActionLogLine
-      icon={<Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
+      }
       title="Viewed Git Diff"
       detail={detail}
     />
   );
 }
 
-function renderGitCommitCompactLog(details: NonNullable<ReturnType<typeof parseGitCommitLogDetails>>) {
+function renderGitCommitCompactLog(
+  details: NonNullable<ReturnType<typeof parseGitCommitLogDetails>>,
+) {
   return (
     <CompactActionLogLine
-      icon={<Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
+      }
       title="Created Git Commit"
       detail={[details.shortSha, details.message].filter(Boolean).join(" - ")}
     />
   );
 }
 
-function renderGitStatusCompactLog(details: NonNullable<ReturnType<typeof parseGitStatusLogDetails>>) {
+function renderGitStatusCompactLog(
+  details: NonNullable<ReturnType<typeof parseGitStatusLogDetails>>,
+) {
   return (
     <CompactActionLogLine
-      icon={<Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
+      }
       title="Checked Git Status"
-      detail={details.clean ? "Working tree clean" : `${formatCompactListCount(details.totalCount, "file")} changed`}
+      detail={
+        details.clean
+          ? "Working tree clean"
+          : `${formatCompactListCount(details.totalCount, "file")} changed`
+      }
     />
   );
 }
@@ -313,14 +408,24 @@ export type RunnerLogFileChangePreview = {
   deletions?: number;
 };
 
-const runnerLogFileChangePreviewCache = new WeakMap<RunnerLog, RunnerLogFileChangePreview[]>();
+const runnerLogFileChangePreviewCache = new WeakMap<
+  RunnerLog,
+  RunnerLogFileChangePreview[]
+>();
 
-function resolveFileMapValue<T>(map: Record<string, T> | undefined, filePath?: string): T | undefined {
+function resolveFileMapValue<T>(
+  map: Record<string, T> | undefined,
+  filePath?: string,
+): T | undefined {
   if (!map || !filePath) return undefined;
   if (map[filePath] !== undefined) return map[filePath];
-  const normalizedPath = filePath.replace(/^\.?\//, "").replace(/^\/workspace\//, "");
+  const normalizedPath = filePath
+    .replace(/^\.?\//, "")
+    .replace(/^\/workspace\//, "");
   for (const [key, value] of Object.entries(map)) {
-    const normalizedKey = key.replace(/^\.?\//, "").replace(/^\/workspace\//, "");
+    const normalizedKey = key
+      .replace(/^\.?\//, "")
+      .replace(/^\/workspace\//, "");
     if (normalizedKey === normalizedPath) {
       return value;
     }
@@ -328,12 +433,19 @@ function resolveFileMapValue<T>(map: Record<string, T> | undefined, filePath?: s
   return undefined;
 }
 
-function resolveFileDiffMetadata(log: RunnerLog, filePath?: string): RunnerFileDiffMetadata | null {
-  const diffs = log.metadata?.diffs as Record<string, RunnerFileDiffMetadata> | undefined;
+function resolveFileDiffMetadata(
+  log: RunnerLog,
+  filePath?: string,
+): RunnerFileDiffMetadata | null {
+  const diffs = log.metadata?.diffs as
+    Record<string, RunnerFileDiffMetadata> | undefined;
   return resolveFileMapValue(diffs, filePath) || null;
 }
 
-function countDiffStats(diffText: string): { additions: number; deletions: number } {
+function countDiffStats(diffText: string): {
+  additions: number;
+  deletions: number;
+} {
   return {
     additions: (diffText.match(/^\+[^+]/gm) || []).length,
     deletions: (diffText.match(/^-[^-]/gm) || []).length,
@@ -349,18 +461,28 @@ function buildStructuredPatchDiff(
     newLines?: number;
     lines?: string[];
   }>,
-  operation: "created" | "modified" | "deleted"
+  operation: "created" | "modified" | "deleted",
 ): string {
   const normalizedPath = String(filePath || "").replace(/^\/+/, "");
-  const oldHeaderPath = operation === "created" ? "/dev/null" : `a/${normalizedPath}`;
-  const newHeaderPath = operation === "deleted" ? "/dev/null" : `b/${normalizedPath}`;
+  const oldHeaderPath =
+    operation === "created" ? "/dev/null" : `a/${normalizedPath}`;
+  const newHeaderPath =
+    operation === "deleted" ? "/dev/null" : `b/${normalizedPath}`;
   const lines = [`--- ${oldHeaderPath}`, `+++ ${newHeaderPath}`];
 
   for (const patch of patches) {
-    const oldStart = Number.isFinite(patch.oldStart) ? Number(patch.oldStart) : 1;
-    const oldLines = Number.isFinite(patch.oldLines) ? Number(patch.oldLines) : 0;
-    const newStart = Number.isFinite(patch.newStart) ? Number(patch.newStart) : 1;
-    const newLines = Number.isFinite(patch.newLines) ? Number(patch.newLines) : 0;
+    const oldStart = Number.isFinite(patch.oldStart)
+      ? Number(patch.oldStart)
+      : 1;
+    const oldLines = Number.isFinite(patch.oldLines)
+      ? Number(patch.oldLines)
+      : 0;
+    const newStart = Number.isFinite(patch.newStart)
+      ? Number(patch.newStart)
+      : 1;
+    const newLines = Number.isFinite(patch.newLines)
+      ? Number(patch.newLines)
+      : 0;
     lines.push(`@@ -${oldStart},${oldLines} +${newStart},${newLines} @@`);
     if (Array.isArray(patch.lines)) {
       lines.push(...patch.lines.map((entry) => String(entry)));
@@ -384,7 +506,12 @@ function buildDeletedFileDiff(filePath: string, content: string): string {
   return `--- a/${filePath}\n+++ /dev/null\n@@ -1,${lines.length} +0,0 @@\n${body}`;
 }
 
-function resolveWriteDiffPreview(log: RunnerLog, filePath: string | undefined, output: string, operation: "created" | "modified" | "deleted") {
+function resolveWriteDiffPreview(
+  log: RunnerLog,
+  filePath: string | undefined,
+  output: string,
+  operation: "created" | "modified" | "deleted",
+) {
   const diffMetadata = resolveFileDiffMetadata(log, filePath);
   const diffText = stripRunnerSystemTags(
     String(
@@ -394,8 +521,8 @@ function resolveWriteDiffPreview(log: RunnerLog, filePath: string | undefined, o
           ? buildCreatedFileDiff(filePath, output)
           : operation === "deleted" && filePath && output
             ? buildDeletedFileDiff(filePath, output)
-            : "")
-    )
+            : ""),
+    ),
   ).trim();
   const fallbackStats = diffText ? countDiffStats(diffText) : null;
   const hasKnownCounts =
@@ -404,8 +531,14 @@ function resolveWriteDiffPreview(log: RunnerLog, filePath: string | undefined, o
     !!fallbackStats;
   return {
     diffText,
-    additions: typeof diffMetadata?.additions === "number" ? diffMetadata.additions : fallbackStats?.additions ?? null,
-    deletions: typeof diffMetadata?.deletions === "number" ? diffMetadata.deletions : fallbackStats?.deletions ?? null,
+    additions:
+      typeof diffMetadata?.additions === "number"
+        ? diffMetadata.additions
+        : (fallbackStats?.additions ?? null),
+    deletions:
+      typeof diffMetadata?.deletions === "number"
+        ? diffMetadata.deletions
+        : (fallbackStats?.deletions ?? null),
     hasKnownCounts,
   };
 }
@@ -436,7 +569,9 @@ export type {
 import { shouldRenderComputerAgentsCreateLog } from "./platform-action-view.js";
 
 export function getRunnerReasoningLogContent(log: RunnerLog): string {
-  return stripRunnerSystemTags(log.message || "").replace(/^\*\*[^*]+\*\*\s*/, "").trim();
+  return stripRunnerSystemTags(log.message || "")
+    .replace(/^\*\*[^*]+\*\*\s*/, "")
+    .trim();
 }
 
 export function shouldRenderRunnerReasoningLog(log: RunnerLog): boolean {
@@ -454,7 +589,11 @@ function ReasoningLogBox({
   if (!content) return null;
   return (
     <div className="tb-log-reasoning">
-      <RunnerMarkdown content={content} className="tb-log-reasoning-copy tb-message-markdown" onWorkspacePathClick={onWorkspacePathClick} />
+      <RunnerMarkdown
+        content={content}
+        className="tb-log-reasoning-copy tb-message-markdown"
+        onWorkspacePathClick={onWorkspacePathClick}
+      />
     </div>
   );
 }
@@ -473,16 +612,20 @@ function GenericTextLogBox({
   icon: ReactNode;
   onWorkspacePathClick?: (path: string) => void;
 }) {
-  const content = stripRunnerSystemTags(log.message || log.metadata?.output || "");
+  const content = stripRunnerSystemTags(
+    log.message || log.metadata?.output || "",
+  );
   const jsonSegments = useMemo(
     () => findRunnerWorkingLogJsonSegments([content], title || label || "JSON"),
-    [content, label, title]
+    [content, label, title],
   );
   if (jsonSegments.length > 0) {
     return (
       <RunnerWorkingLogJsonContent
         segments={jsonSegments}
-        documentIdPrefix={`generic-${String(title || label || "log").replace(/[^a-z0-9_-]+/gi, "-").toLowerCase()}`}
+        documentIdPrefix={`generic-${String(title || label || "log")
+          .replace(/[^a-z0-9_-]+/gi, "-")
+          .toLowerCase()}`}
         onWorkspacePathClick={onWorkspacePathClick}
       />
     );
@@ -537,7 +680,9 @@ function isMkdirCommand(command?: string): boolean {
 function extractMkdirPaths(command?: string): string[] {
   if (!command) return [];
   const normalizedCommand = stripShellInlineComments(command);
-  const match = normalizedCommand.match(/(?:^|\n|[;&|]\s*)\$?\s*mkdir\b\s+([^\n;|]+)/i);
+  const match = normalizedCommand.match(
+    /(?:^|\n|[;&|]\s*)\$?\s*mkdir\b\s+([^\n;|]+)/i,
+  );
   const args = match?.[1]
     ?.replace(/\s+\d?>&\d+[\s\S]*$/g, "")
     ?.replace(/\s+\d?>\s*\S+[\s\S]*$/g, "")
@@ -550,7 +695,10 @@ function extractMkdirPaths(command?: string): string[] {
 }
 
 function isMkdirLog(log?: RunnerLog): boolean {
-  if (!log || (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")) {
+  if (
+    !log ||
+    (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")
+  ) {
     return false;
   }
   const command = [log.metadata?.command, log.message]
@@ -586,12 +734,20 @@ function extractWaitDurationMsFromValue(value: unknown): number | null {
 
     const record = entry as Record<string, unknown>;
     const directDuration =
-      typeof record.duration_ms === "number" ? record.duration_ms :
-      typeof record.durationMs === "number" ? record.durationMs :
-      typeof record.duration === "number" && String(record.unit || "").toLowerCase() === "ms" ? record.duration :
-      null;
+      typeof record.duration_ms === "number"
+        ? record.duration_ms
+        : typeof record.durationMs === "number"
+          ? record.durationMs
+          : typeof record.duration === "number" &&
+              String(record.unit || "").toLowerCase() === "ms"
+            ? record.duration
+            : null;
     const message = typeof record.message === "string" ? record.message : "";
-    if (directDuration != null && Number.isFinite(directDuration) && /\bSlept\b|\bWaited\b/i.test(message)) {
+    if (
+      directDuration != null &&
+      Number.isFinite(directDuration) &&
+      /\bSlept\b|\bWaited\b/i.test(message)
+    ) {
       return directDuration;
     }
 
@@ -615,17 +771,28 @@ function extractWaitDurationMsFromValue(value: unknown): number | null {
 }
 
 function extractWaitDurationSeconds(log?: RunnerLog): number | null {
-  if (!log || (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")) {
+  if (
+    !log ||
+    (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")
+  ) {
     return null;
   }
 
-  const command = stripRunnerSystemTags([log.metadata?.command, log.message]
-    .filter((value) => typeof value === "string" && value.trim().length > 0)
-    .join("\n"));
+  const command = stripRunnerSystemTags(
+    [log.metadata?.command, log.message]
+      .filter((value) => typeof value === "string" && value.trim().length > 0)
+      .join("\n"),
+  );
   const commandDurationMatch =
-    command.match(/(?:^|\n|[;&|]\s*)\$?\s*sleep\s+(\d+(?:\.\d+)?)(ms|s|m)?\b/i) ||
-    command.match(/(?:^|\n)\s*\$?\s*Sleep(?:\s+(\d+(?:\.\d+)?)(ms|s|m)?)?\s*$/i);
-  const structuredOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+    command.match(
+      /(?:^|\n|[;&|]\s*)\$?\s*sleep\s+(\d+(?:\.\d+)?)(ms|s|m)?\b/i,
+    ) ||
+    command.match(
+      /(?:^|\n)\s*\$?\s*Sleep(?:\s+(\d+(?:\.\d+)?)(ms|s|m)?)?\s*$/i,
+    );
+  const structuredOutput = parseStructuredCommandExecutionOutput(
+    log.metadata?.output,
+  );
   const outputDurationMs = [
     log.metadata,
     log.metadata?.output,
@@ -658,7 +825,13 @@ function isWaitLog(log?: RunnerLog): boolean {
   return extractWaitDurationSeconds(log) != null;
 }
 
-function WaitLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+function WaitLogBox({
+  log,
+  timeLabel,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+}) {
   void log;
   void timeLabel;
   return null;
@@ -675,7 +848,10 @@ export function isReadFileLog(log?: RunnerLog): boolean {
   return (
     isReadFileCommand(command) ||
     /^Read:\s+/i.test(message) ||
-    Boolean(log.metadata?.fileContents && typeof log.metadata.fileContents === "object") ||
+    Boolean(
+      log.metadata?.fileContents &&
+      typeof log.metadata.fileContents === "object",
+    ) ||
     Boolean(extractStructuredReadFilePayload(log.metadata?.output)) ||
     /"filePath"\s*:/.test(output) ||
     /"content"\s*:/.test(output)
@@ -722,7 +898,10 @@ function isNoopReadFileSentinelPayload(value: unknown): boolean {
 }
 
 function shouldHideNoopReadFileLog(log?: RunnerLog): boolean {
-  if (!log || (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")) {
+  if (
+    !log ||
+    (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")
+  ) {
     return false;
   }
 
@@ -730,8 +909,13 @@ function shouldHideNoopReadFileLog(log?: RunnerLog): boolean {
     .filter((value) => typeof value === "string" && value.trim().length > 0)
     .join("\n");
   const readPath =
-    normalizeRunnerFilePath((log.metadata as { file_path?: string; path?: string } | undefined)?.file_path) ||
-    normalizeRunnerFilePath((log.metadata as { file_path?: string; path?: string } | undefined)?.path) ||
+    normalizeRunnerFilePath(
+      (log.metadata as { file_path?: string; path?: string } | undefined)
+        ?.file_path,
+    ) ||
+    normalizeRunnerFilePath(
+      (log.metadata as { file_path?: string; path?: string } | undefined)?.path,
+    ) ||
     normalizeRunnerFilePath(extractReadFilePath(command));
   const basename = readPath ? getFileName(readPath) : "";
   const readsGenericFileTarget = !readPath || basename.toLowerCase() === "file";
@@ -739,7 +923,9 @@ function shouldHideNoopReadFileLog(log?: RunnerLog): boolean {
     return false;
   }
 
-  const structuredOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const structuredOutput = parseStructuredCommandExecutionOutput(
+    log.metadata?.output,
+  );
   const candidates: unknown[] = [
     log.metadata,
     log.metadata?.output,
@@ -802,9 +988,13 @@ function normalizeReadFileFailureMessage({
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean);
-    const matchedLine = lines.find((line) => failurePatterns.some((pattern) => pattern.test(line)));
+    const matchedLine = lines.find((line) =>
+      failurePatterns.some((pattern) => pattern.test(line)),
+    );
     if (matchedLine) {
-      return matchedLine.length > 180 ? `${matchedLine.slice(0, 177).trimEnd()}...` : matchedLine;
+      return matchedLine.length > 180
+        ? `${matchedLine.slice(0, 177).trimEnd()}...`
+        : matchedLine;
     }
   }
 
@@ -819,11 +1009,17 @@ function normalizeReadFileFailureMessage({
   if (!fallbackLine) {
     return "failed to read file";
   }
-  return fallbackLine.length > 180 ? `${fallbackLine.slice(0, 177).trimEnd()}...` : fallbackLine;
+  return fallbackLine.length > 180
+    ? `${fallbackLine.slice(0, 177).trimEnd()}...`
+    : fallbackLine;
 }
 
-function extractStructuredReadFilePayload(output: unknown): { filePath?: string; content?: string } | null {
-  const visit = (value: unknown): { filePath?: string; content?: string } | null => {
+function extractStructuredReadFilePayload(
+  output: unknown,
+): { filePath?: string; content?: string } | null {
+  const visit = (
+    value: unknown,
+  ): { filePath?: string; content?: string } | null => {
     if (value == null) {
       return null;
     }
@@ -853,19 +1049,26 @@ function extractStructuredReadFilePayload(output: unknown): { filePath?: string;
 
     const record = value as Record<string, unknown>;
     const filePathCandidate =
-      typeof record.filePath === "string" ? record.filePath
-      : typeof record.file_path === "string" ? record.file_path
-      : typeof record.path === "string" ? record.path
-      : undefined;
+      typeof record.filePath === "string"
+        ? record.filePath
+        : typeof record.file_path === "string"
+          ? record.file_path
+          : typeof record.path === "string"
+            ? record.path
+            : undefined;
     const contentCandidate =
-      typeof record.content === "string" ? record.content
-      : typeof record.text === "string" ? record.text
-      : undefined;
+      typeof record.content === "string"
+        ? record.content
+        : typeof record.text === "string"
+          ? record.text
+          : undefined;
 
     if (filePathCandidate || contentCandidate !== undefined) {
       return {
         ...(filePathCandidate ? { filePath: filePathCandidate } : {}),
-        ...(contentCandidate !== undefined ? { content: contentCandidate } : {}),
+        ...(contentCandidate !== undefined
+          ? { content: contentCandidate }
+          : {}),
       };
     }
 
@@ -895,8 +1098,15 @@ function extractStructuredReadFilePayload(output: unknown): { filePath?: string;
     return null;
   }
 
-  const fallbackFilePath = extractJsonStringFieldValue(output, ["filePath", "file_path", "path"]);
-  const fallbackContent = extractJsonStringFieldValue(output, ["content", "text"]);
+  const fallbackFilePath = extractJsonStringFieldValue(output, [
+    "filePath",
+    "file_path",
+    "path",
+  ]);
+  const fallbackContent = extractJsonStringFieldValue(output, [
+    "content",
+    "text",
+  ]);
   if (fallbackFilePath || fallbackContent !== null) {
     return {
       ...(fallbackFilePath ? { filePath: fallbackFilePath } : {}),
@@ -915,10 +1125,18 @@ function extractStructuredWriteFilePayload(output: string): {
   additions?: number;
   deletions?: number;
 } | null {
-  const normalizeOperation = (value: unknown): "created" | "modified" | "deleted" | undefined => {
-    const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+  const normalizeOperation = (
+    value: unknown,
+  ): "created" | "modified" | "deleted" | undefined => {
+    const normalized =
+      typeof value === "string" ? value.trim().toLowerCase() : "";
     if (!normalized) return undefined;
-    if (normalized === "created" || normalized === "create" || normalized === "new" || normalized === "write") {
+    if (
+      normalized === "created" ||
+      normalized === "create" ||
+      normalized === "new" ||
+      normalized === "write"
+    ) {
       return "created";
     }
     if (
@@ -932,13 +1150,20 @@ function extractStructuredWriteFilePayload(output: string): {
     ) {
       return "modified";
     }
-    if (normalized === "delete" || normalized === "deleted" || normalized === "remove" || normalized === "removed") {
+    if (
+      normalized === "delete" ||
+      normalized === "deleted" ||
+      normalized === "remove" ||
+      normalized === "removed"
+    ) {
       return "deleted" as const;
     }
     return undefined;
   };
 
-  const visit = (value: unknown): {
+  const visit = (
+    value: unknown,
+  ): {
     filePath?: string;
     content?: string;
     operation?: "created" | "modified" | "deleted";
@@ -975,26 +1200,45 @@ function extractStructuredWriteFilePayload(output: string): {
 
     const record = value as Record<string, unknown>;
     const filePathCandidate =
-      typeof record.filePath === "string" ? record.filePath
-      : typeof record.file_path === "string" ? record.file_path
-      : typeof record.path === "string" ? record.path
-      : undefined;
+      typeof record.filePath === "string"
+        ? record.filePath
+        : typeof record.file_path === "string"
+          ? record.file_path
+          : typeof record.path === "string"
+            ? record.path
+            : undefined;
     const contentCandidate =
-      typeof record.content === "string" ? record.content
-      : typeof record.text === "string" ? record.text
-      : typeof record.newContent === "string" ? record.newContent
-      : typeof record.newString === "string" ? record.newString
-      : undefined;
+      typeof record.content === "string"
+        ? record.content
+        : typeof record.text === "string"
+          ? record.text
+          : typeof record.newContent === "string"
+            ? record.newContent
+            : typeof record.newString === "string"
+              ? record.newString
+              : undefined;
     const operationCandidate =
-      normalizeOperation(record.operationKind)
-      || normalizeOperation(record.operation_kind)
-      || normalizeOperation(record.operation)
-      || normalizeOperation(record.type)
-      || normalizeOperation(record.mode);
+      normalizeOperation(record.operationKind) ||
+      normalizeOperation(record.operation_kind) ||
+      normalizeOperation(record.operation) ||
+      normalizeOperation(record.type) ||
+      normalizeOperation(record.mode);
     const structuredPatch = Array.isArray(record.structuredPatch)
-      ? (record.structuredPatch as Array<{ oldStart?: number; oldLines?: number; newStart?: number; newLines?: number; lines?: string[] }>)
+      ? (record.structuredPatch as Array<{
+          oldStart?: number;
+          oldLines?: number;
+          newStart?: number;
+          newLines?: number;
+          lines?: string[];
+        }>)
       : Array.isArray(record.structured_patch)
-        ? (record.structured_patch as Array<{ oldStart?: number; oldLines?: number; newStart?: number; newLines?: number; lines?: string[] }>)
+        ? (record.structured_patch as Array<{
+            oldStart?: number;
+            oldLines?: number;
+            newStart?: number;
+            newLines?: number;
+            lines?: string[];
+          }>)
         : [];
     const gitDiff =
       typeof record.gitDiff === "string" && record.gitDiff.trim()
@@ -1007,17 +1251,30 @@ function extractStructuredWriteFilePayload(output: string): {
     const diffText =
       gitDiff ||
       (filePathCandidate && structuredPatch.length > 0
-        ? buildStructuredPatchDiff(filePathCandidate, structuredPatch, operationCandidate || "modified")
+        ? buildStructuredPatchDiff(
+            filePathCandidate,
+            structuredPatch,
+            operationCandidate || "modified",
+          )
         : "");
     const stats = diffText ? countDiffStats(diffText) : null;
 
-    if (filePathCandidate || contentCandidate !== undefined || operationCandidate || diffText) {
+    if (
+      filePathCandidate ||
+      contentCandidate !== undefined ||
+      operationCandidate ||
+      diffText
+    ) {
       return {
         ...(filePathCandidate ? { filePath: filePathCandidate } : {}),
-        ...(contentCandidate !== undefined ? { content: contentCandidate } : {}),
+        ...(contentCandidate !== undefined
+          ? { content: contentCandidate }
+          : {}),
         ...(operationCandidate ? { operation: operationCandidate } : {}),
         ...(diffText ? { diffText } : {}),
-        ...(stats ? { additions: stats.additions, deletions: stats.deletions } : {}),
+        ...(stats
+          ? { additions: stats.additions, deletions: stats.deletions }
+          : {}),
       };
     }
 
@@ -1043,10 +1300,24 @@ function extractStructuredWriteFilePayload(output: string): {
     return structured;
   }
 
-  const fallbackFilePath = extractJsonStringFieldValue(output, ["filePath", "file_path", "path"]);
-  const fallbackContent = extractJsonStringFieldValue(output, ["content", "text"]);
-  const fallbackOperation =
-    normalizeOperation(extractJsonStringFieldValue(output, ["operationKind", "operation_kind", "operation", "type", "mode"]));
+  const fallbackFilePath = extractJsonStringFieldValue(output, [
+    "filePath",
+    "file_path",
+    "path",
+  ]);
+  const fallbackContent = extractJsonStringFieldValue(output, [
+    "content",
+    "text",
+  ]);
+  const fallbackOperation = normalizeOperation(
+    extractJsonStringFieldValue(output, [
+      "operationKind",
+      "operation_kind",
+      "operation",
+      "type",
+      "mode",
+    ]),
+  );
   if (fallbackFilePath || fallbackContent !== null || fallbackOperation) {
     return {
       ...(fallbackFilePath ? { filePath: fallbackFilePath } : {}),
@@ -1062,18 +1333,28 @@ export function isWriteFileLog(log?: RunnerLog): boolean {
   if (!log) return false;
   const command = String(log.metadata?.command || "");
   const message = String(log.message || "");
-  const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
+  const output =
+    typeof log.metadata?.output === "string" ? log.metadata.output : "";
   const structuredWrite = extractStructuredWriteFilePayload(output);
   const candidatePaths = [
     ...(Array.isArray(log.metadata?.filePaths)
-      ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      ? log.metadata.filePaths.filter(
+          (value): value is string =>
+            typeof value === "string" && value.trim().length > 0,
+        )
       : []),
     structuredWrite?.filePath,
     extractWriteFilePath(command),
     extractWorkspacePathFromText(message),
     extractWriteMessagePath(message),
-  ].filter((value): value is string => typeof value === "string" && value.trim().length > 0);
-  if (candidatePaths.length > 0 && candidatePaths.every((filePath) => isRunnerNullDevicePath(filePath))) {
+  ].filter(
+    (value): value is string =>
+      typeof value === "string" && value.trim().length > 0,
+  );
+  if (
+    candidatePaths.length > 0 &&
+    candidatePaths.every((filePath) => isRunnerNullDevicePath(filePath))
+  ) {
     return false;
   }
 
@@ -1087,7 +1368,9 @@ export function isWriteFileLog(log?: RunnerLog): boolean {
   );
 }
 
-export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFileChangePreview[] {
+export function collectRunnerLogFileChangePreviews(
+  log: RunnerLog,
+): RunnerLogFileChangePreview[] {
   if (!log) {
     return [];
   }
@@ -1095,24 +1378,32 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
   if (cached) {
     return cached;
   }
-  const cacheAndReturn = (previews: RunnerLogFileChangePreview[]): RunnerLogFileChangePreview[] => {
+  const cacheAndReturn = (
+    previews: RunnerLogFileChangePreview[],
+  ): RunnerLogFileChangePreview[] => {
     runnerLogFileChangePreviewCache.set(log, previews);
     return previews;
   };
 
   if (log.eventType === "file_change") {
     const filePaths = Array.isArray(log.metadata?.filePaths)
-      ? log.metadata.filePaths.filter((value): value is string =>
-        typeof value === "string" && value.trim().length > 0 && !isRunnerNullDevicePath(value)
-      )
+      ? log.metadata.filePaths.filter(
+          (value): value is string =>
+            typeof value === "string" &&
+            value.trim().length > 0 &&
+            !isRunnerNullDevicePath(value),
+        )
       : [];
     if (filePaths.length === 0) {
       return cacheAndReturn([]);
     }
 
-    const changeKinds = Array.isArray(log.metadata?.changeKinds) ? log.metadata.changeKinds : [];
+    const changeKinds = Array.isArray(log.metadata?.changeKinds)
+      ? log.metadata.changeKinds
+      : [];
     const fileContents =
-      log.metadata?.fileContents && typeof log.metadata.fileContents === "object"
+      log.metadata?.fileContents &&
+      typeof log.metadata.fileContents === "object"
         ? (log.metadata.fileContents as Record<string, string>)
         : undefined;
     const diffs =
@@ -1120,68 +1411,88 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
         ? (log.metadata.diffs as Record<string, RunnerFileDiffMetadata>)
         : undefined;
 
-    return cacheAndReturn(filePaths.map((filePath, index) => {
-      const resolvedDiff = resolveFileMapValue(diffs, filePath);
-      const normalizedKind = String(changeKinds[index] || "").trim().toLowerCase();
-      const kind: "created" | "modified" | "deleted" =
-        normalizedKind === "created"
-          ? "created"
-          : normalizedKind === "deleted"
-            ? "deleted"
-            : "modified";
-      const content = resolveFileMapValue(fileContents, filePath);
-      const diffText = stripRunnerSystemTags(
-        String(
-          resolvedDiff?.diff ||
-            resolvedDiff?.changes ||
-            (kind === "created" && filePath && content ? buildCreatedFileDiff(filePath, content) : "")
-        )
-      ).trim();
-      const fallbackStats = diffText ? countDiffStats(diffText) : null;
+    return cacheAndReturn(
+      filePaths.map((filePath, index) => {
+        const resolvedDiff = resolveFileMapValue(diffs, filePath);
+        const normalizedKind = String(changeKinds[index] || "")
+          .trim()
+          .toLowerCase();
+        const kind: "created" | "modified" | "deleted" =
+          normalizedKind === "created"
+            ? "created"
+            : normalizedKind === "deleted"
+              ? "deleted"
+              : "modified";
+        const content = resolveFileMapValue(fileContents, filePath);
+        const diffText = stripRunnerSystemTags(
+          String(
+            resolvedDiff?.diff ||
+              resolvedDiff?.changes ||
+              (kind === "created" && filePath && content
+                ? buildCreatedFileDiff(filePath, content)
+                : ""),
+          ),
+        ).trim();
+        const fallbackStats = diffText ? countDiffStats(diffText) : null;
 
-      return {
-        path: filePath,
-        kind,
-        ...(typeof content === "string" ? { content } : {}),
-        ...(diffText ? { diff: diffText } : {}),
-        ...(typeof resolvedDiff?.additions === "number"
-          ? { additions: resolvedDiff.additions }
-          : fallbackStats
-            ? { additions: fallbackStats.additions }
-            : {}),
-        ...(typeof resolvedDiff?.deletions === "number"
-          ? { deletions: resolvedDiff.deletions }
-          : fallbackStats
-            ? { deletions: fallbackStats.deletions }
-            : {}),
-      };
-    }));
+        return {
+          path: filePath,
+          kind,
+          ...(typeof content === "string" ? { content } : {}),
+          ...(diffText ? { diff: diffText } : {}),
+          ...(typeof resolvedDiff?.additions === "number"
+            ? { additions: resolvedDiff.additions }
+            : fallbackStats
+              ? { additions: fallbackStats.additions }
+              : {}),
+          ...(typeof resolvedDiff?.deletions === "number"
+            ? { deletions: resolvedDiff.deletions }
+            : fallbackStats
+              ? { deletions: fallbackStats.deletions }
+              : {}),
+        };
+      }),
+    );
   }
 
-  const imageGenerationCommand = typeof log.metadata?.command === "string" ? log.metadata.command : undefined;
+  const imageGenerationCommand =
+    typeof log.metadata?.command === "string"
+      ? log.metadata.command
+      : undefined;
   if (
-    (log.eventType === "command_execution" || log.eventType === "mcp_tool_call") &&
+    (log.eventType === "command_execution" ||
+      log.eventType === "mcp_tool_call") &&
     isLikelyImageGenerationLog(log, imageGenerationCommand)
   ) {
     const imagePaths = new Set<string>();
     const metadataFilePaths = Array.isArray(log.metadata?.filePaths)
-      ? log.metadata.filePaths.filter((value): value is string =>
-        typeof value === "string" && value.trim().length > 0 && !isRunnerNullDevicePath(value)
-      )
+      ? log.metadata.filePaths.filter(
+          (value): value is string =>
+            typeof value === "string" &&
+            value.trim().length > 0 &&
+            !isRunnerNullDevicePath(value),
+        )
       : [];
     for (const filePath of metadataFilePaths) {
       if (isRunnerLogImageFilePath(filePath)) {
         imagePaths.add(filePath);
       }
     }
-    if (typeof log.metadata?.savedImagePath === "string" && log.metadata.savedImagePath.trim()) {
+    if (
+      typeof log.metadata?.savedImagePath === "string" &&
+      log.metadata.savedImagePath.trim()
+    ) {
       imagePaths.add(log.metadata.savedImagePath.trim());
     }
-    const resultImagePath = extractWorkspaceImagePathFromResult(log.metadata?.result);
+    const resultImagePath = extractWorkspaceImagePathFromResult(
+      log.metadata?.result,
+    );
     if (resultImagePath) {
       imagePaths.add(resultImagePath);
     }
-    const outputImagePath = extractWorkspaceImagePathFromOutput(log.metadata?.output);
+    const outputImagePath = extractWorkspaceImagePathFromOutput(
+      log.metadata?.output,
+    );
     if (outputImagePath) {
       imagePaths.add(outputImagePath);
     }
@@ -1195,7 +1506,9 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
       return cacheAndReturn([]);
     }
 
-    const normalizedKind = String(log.metadata?.changeKinds?.[0] || "").trim().toLowerCase();
+    const normalizedKind = String(log.metadata?.changeKinds?.[0] || "")
+      .trim()
+      .toLowerCase();
     const kind: "created" | "modified" | "deleted" =
       normalizedKind === "deleted"
         ? "deleted"
@@ -1203,10 +1516,12 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
           ? "modified"
           : "created";
 
-    return cacheAndReturn(resolvedImagePaths.map((filePath) => ({
-      path: filePath,
-      kind,
-    })));
+    return cacheAndReturn(
+      resolvedImagePaths.map((filePath) => ({
+        path: filePath,
+        kind,
+      })),
+    );
   }
 
   if (log.eventType !== "command_execution") {
@@ -1218,10 +1533,12 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
     if (!deletedFilePath) {
       return cacheAndReturn([]);
     }
-    return cacheAndReturn([{
-      path: deletedFilePath,
-      kind: "deleted",
-    }]);
+    return cacheAndReturn([
+      {
+        path: deletedFilePath,
+        kind: "deleted",
+      },
+    ]);
   }
 
   const command = String(log.metadata?.command || "");
@@ -1238,37 +1555,54 @@ export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFil
     return cacheAndReturn([]);
   }
 
-  const fileContents = log.metadata?.fileContents as Record<string, string> | undefined;
-  const content = resolveFileMapValue(fileContents, filePath) ?? structuredWrite?.content;
-  const operation = structuredWrite?.operation || deriveWriteOperation(command, log.metadata?.changeKinds?.[0]);
+  const fileContents = log.metadata?.fileContents as
+    Record<string, string> | undefined;
+  const content =
+    resolveFileMapValue(fileContents, filePath) ?? structuredWrite?.content;
+  const operation =
+    structuredWrite?.operation ||
+    deriveWriteOperation(command, log.metadata?.changeKinds?.[0]);
   const previewSource = typeof content === "string" ? content : output;
-  const diffPreview = resolveWriteDiffPreview(log, filePath, previewSource, operation);
-  const effectiveDiffText = String(structuredWrite?.diffText || diffPreview.diffText || "").trim();
+  const diffPreview = resolveWriteDiffPreview(
+    log,
+    filePath,
+    previewSource,
+    operation,
+  );
+  const effectiveDiffText = String(
+    structuredWrite?.diffText || diffPreview.diffText || "",
+  ).trim();
 
-  return cacheAndReturn([{
-    path: filePath,
-    kind: operation,
-    ...(typeof content === "string" ? { content } : {}),
-    ...(effectiveDiffText ? { diff: effectiveDiffText } : {}),
-    ...(typeof structuredWrite?.additions === "number"
-      ? { additions: structuredWrite.additions }
-      : typeof diffPreview.additions === "number"
-        ? { additions: diffPreview.additions }
-        : {}),
-    ...(typeof structuredWrite?.deletions === "number"
-      ? { deletions: structuredWrite.deletions }
-      : typeof diffPreview.deletions === "number"
-        ? { deletions: diffPreview.deletions }
-        : {}),
-  }]);
+  return cacheAndReturn([
+    {
+      path: filePath,
+      kind: operation,
+      ...(typeof content === "string" ? { content } : {}),
+      ...(effectiveDiffText ? { diff: effectiveDiffText } : {}),
+      ...(typeof structuredWrite?.additions === "number"
+        ? { additions: structuredWrite.additions }
+        : typeof diffPreview.additions === "number"
+          ? { additions: diffPreview.additions }
+          : {}),
+      ...(typeof structuredWrite?.deletions === "number"
+        ? { deletions: structuredWrite.deletions }
+        : typeof diffPreview.deletions === "number"
+          ? { deletions: diffPreview.deletions }
+          : {}),
+    },
+  ]);
 }
 
-function extractDeletedFilePathFromCommandOutput(log: RunnerLog): string | null {
+function extractDeletedFilePathFromCommandOutput(
+  log: RunnerLog,
+): string | null {
   if (log.eventType !== "command_execution") {
     return null;
   }
 
-  const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const parsedOutput = parseStructuredCommandExecutionOutput(
+    log.metadata?.output,
+  );
   const outputText = [
     parsedOutput?.stdout || "",
     parsedOutput?.stderr || "",
@@ -1281,8 +1615,12 @@ function extractDeletedFilePathFromCommandOutput(log: RunnerLog): string | null 
   }
 
   const pathMatch =
-    /cannot access ['"`]([^'"`\n]+)['"`]: No such file or directory/i.exec(outputText) ||
-    /cannot remove ['"`]([^'"`\n]+)['"`]: No such file or directory/i.exec(outputText) ||
+    /cannot access ['"`]([^'"`\n]+)['"`]: No such file or directory/i.exec(
+      outputText,
+    ) ||
+    /cannot remove ['"`]([^'"`\n]+)['"`]: No such file or directory/i.exec(
+      outputText,
+    ) ||
     /no such file or directory[^\n]*['"`]([^'"`\n]+)['"`]/i.exec(outputText);
   const resolvedPath = normalizeRunnerFilePath(pathMatch?.[1] || "");
   if (!resolvedPath || isRunnerNullDevicePath(resolvedPath)) {
@@ -1295,19 +1633,21 @@ function resolveReadDocumentPreviewAttachment(
   filePath: string | undefined,
   content: string,
   backendUrl?: string,
-  environmentId?: string | null
+  environmentId?: string | null,
 ): RunnerPreviewAttachment | null {
   const normalizedContent = String(content || "");
   const looksLikeHtml =
     /\.html?$/i.test(String(filePath || "")) ||
     /<!doctype\s+html/i.test(normalizedContent) ||
     /<html[\s>]/i.test(normalizedContent) ||
-    (/<head[\s>]/i.test(normalizedContent) && /<body[\s>]/i.test(normalizedContent));
+    (/<head[\s>]/i.test(normalizedContent) &&
+      /<body[\s>]/i.test(normalizedContent));
   if (!looksLikeHtml) {
     return null;
   }
 
-  const normalizedPath = normalizeRunnerFilePath(filePath) || "/workspace/preview.html";
+  const normalizedPath =
+    normalizeRunnerFilePath(filePath) || "/workspace/preview.html";
   const baseAttachment = buildRunnerPreviewAttachmentFromPath(normalizedPath, {
     backendUrl,
     environmentId,
@@ -1327,13 +1667,14 @@ function resolveReadCodePreviewAttachment(
   filePath: string | undefined,
   content: string,
   backendUrl?: string,
-  environmentId?: string | null
+  environmentId?: string | null,
 ): RunnerPreviewAttachment | null {
   const normalizedContent = String(content || "");
   if (!normalizedContent.trim()) {
     return null;
   }
-  const normalizedPath = normalizeRunnerFilePath(filePath) || "/workspace/preview.txt";
+  const normalizedPath =
+    normalizeRunnerFilePath(filePath) || "/workspace/preview.txt";
   const filename = getFileName(normalizedPath);
   const isMarkdown = looksLikeMarkdown(normalizedContent, normalizedPath);
   const mimeType = isMarkdown ? "text/markdown" : "text/plain";
@@ -1352,7 +1693,9 @@ function resolveReadCodePreviewAttachment(
   };
 }
 
-function isRenderableReadFilePath(filePath?: string | null): filePath is string {
+function isRenderableReadFilePath(
+  filePath?: string | null,
+): filePath is string {
   const normalizedPath = normalizeRunnerFilePath(filePath);
   if (!normalizedPath || isRunnerNullDevicePath(normalizedPath)) {
     return false;
@@ -1366,10 +1709,12 @@ function buildReadFilePreviewAttachment(
   filePath: string,
   content: string,
   backendUrl?: string,
-  environmentId?: string | null
+  environmentId?: string | null,
 ): RunnerPreviewAttachment {
   const normalizedPath = normalizeRunnerFilePath(filePath) || filePath;
-  const normalizedContent = String(content || "").trim().toLowerCase();
+  const normalizedContent = String(content || "")
+    .trim()
+    .toLowerCase();
   if (
     isRunnerLogImageFilePath(normalizedPath) ||
     normalizedContent === "read completed (no textual content found)."
@@ -1384,12 +1729,22 @@ function buildReadFilePreviewAttachment(
     };
   }
 
-  const documentPreviewAttachment = resolveReadDocumentPreviewAttachment(normalizedPath, content, backendUrl, environmentId);
+  const documentPreviewAttachment = resolveReadDocumentPreviewAttachment(
+    normalizedPath,
+    content,
+    backendUrl,
+    environmentId,
+  );
   if (documentPreviewAttachment) {
     return documentPreviewAttachment;
   }
 
-  const codePreviewAttachment = resolveReadCodePreviewAttachment(normalizedPath, content, backendUrl, environmentId);
+  const codePreviewAttachment = resolveReadCodePreviewAttachment(
+    normalizedPath,
+    content,
+    backendUrl,
+    environmentId,
+  );
   if (codePreviewAttachment) {
     return codePreviewAttachment;
   }
@@ -1419,39 +1774,120 @@ function ReadFileLogBox({
   onWorkspacePathClick?: (path: string) => void;
 }) {
   const command = log.metadata?.command || "";
-  const output = stripRunnerSystemTags(resolveCommandOutputText(log.metadata?.output, "stdout"));
-  const commandOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
-  const structuredReadPayload = extractStructuredReadFilePayload(log.metadata?.output) ||
+  const output = stripRunnerSystemTags(
+    resolveCommandOutputText(log.metadata?.output, "stdout"),
+  );
+  const commandOutput = parseStructuredCommandExecutionOutput(
+    log.metadata?.output,
+  );
+  const structuredReadPayload =
+    extractStructuredReadFilePayload(log.metadata?.output) ||
     extractStructuredReadFilePayload(output) ||
     extractStructuredReadFilePayload(commandOutput?.stdout || "");
   const filePath =
-    normalizeRunnerFilePath(log.metadata?.filePaths?.[0] as string | undefined) ||
-    normalizeRunnerFilePath((log.metadata as { file_path?: string; path?: string } | undefined)?.file_path) ||
-    normalizeRunnerFilePath((log.metadata as { file_path?: string; path?: string } | undefined)?.path) ||
+    normalizeRunnerFilePath(
+      log.metadata?.filePaths?.[0] as string | undefined,
+    ) ||
+    normalizeRunnerFilePath(
+      (log.metadata as { file_path?: string; path?: string } | undefined)
+        ?.file_path,
+    ) ||
+    normalizeRunnerFilePath(
+      (log.metadata as { file_path?: string; path?: string } | undefined)?.path,
+    ) ||
     normalizeRunnerFilePath(structuredReadPayload?.filePath) ||
     normalizeRunnerFilePath(extractReadFilePath(command)) ||
     normalizeRunnerFilePath(extractWorkspacePathFromText(log.message)) ||
     normalizeRunnerFilePath(extractWorkspacePathFromText(command));
-  const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
-  const content = stripLineNumbers(structuredReadPayload?.content ?? commandOutput?.stdout ?? output);
+  const isError =
+    typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
+  const content = stripLineNumbers(
+    structuredReadPayload?.content ?? commandOutput?.stdout ?? output,
+  );
   const stderr = stripRunnerSystemTags(commandOutput?.stderr || "");
-  const readFailureMessage = normalizeReadFileFailureMessage({ content, output, stderr, isError });
+  const readFailureMessage = normalizeReadFileFailureMessage({
+    content,
+    output,
+    stderr,
+    isError,
+  });
 
   if (readFailureMessage || isError || !isRenderableReadFilePath(filePath)) {
     return null;
   }
 
   const normalizedPath = normalizeRunnerFilePath(filePath) || filePath;
-  const previewAttachment = buildReadFilePreviewAttachment(normalizedPath, content, backendUrl, environmentId);
+  const previewAttachment = buildReadFilePreviewAttachment(
+    normalizedPath,
+    content,
+    backendUrl,
+    environmentId,
+  );
+  const skillDescriptionName = getReadSkillDescriptionName(
+    normalizedPath,
+    content,
+  );
+
+  if (skillDescriptionName) {
+    return (
+      <CompactActionLogLine
+        icon={
+          <SquareMousePointer
+            className="tb-log-compact-action-icon-svg"
+            strokeWidth={1.6}
+          />
+        }
+        title={`Read skill description of ${skillDescriptionName}`}
+        onClick={
+          onPreviewDocument
+            ? () => onPreviewDocument(previewAttachment)
+            : undefined
+        }
+      />
+    );
+  }
 
   return (
     <CompactActionLogLine
-      icon={<FileText className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <img
+          className="tb-log-compact-action-icon-svg"
+          src={RUNNER_TEXT_FILE_ICON_URL}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+        />
+      }
       title="Read file"
       detail={normalizedPath}
-      onClick={onPreviewDocument ? () => onPreviewDocument(previewAttachment) : undefined}
+      onClick={
+        onPreviewDocument
+          ? () => onPreviewDocument(previewAttachment)
+          : undefined
+      }
     />
   );
+}
+
+function getReadSkillDescriptionName(
+  filePath: string,
+  content: string,
+): string | null {
+  const normalizedPath = normalizeRunnerFilePath(filePath);
+  if (!normalizedPath) return null;
+  const pathParts = normalizedPath.split("/").filter(Boolean);
+  if (pathParts.at(-1)?.toLowerCase() !== "skill.md") return null;
+
+  const frontmatterName = content.match(
+    /(?:^|\n)\s*name\s*:\s*["']?([^\n"']+?)["']?\s*(?:\n|$)/i,
+  )?.[1];
+  const rawName = String(frontmatterName || pathParts.at(-2) || "").trim();
+  if (!rawName) return null;
+
+  return rawName
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 function isWriteFileCommand(command?: string): boolean {
@@ -1493,13 +1929,23 @@ function extractWriteFilePath(command?: string): string | null {
 }
 
 function extractWriteMessagePath(message?: string | null): string | null {
-  const match = String(message || "").match(/^\s*(?:Write|Edit|Delete):\s+(.+?)\s*$/i);
+  const match = String(message || "").match(
+    /^\s*(?:Write|Edit|Delete):\s+(.+?)\s*$/i,
+  );
   return normalizeRunnerFilePath(match?.[1] || "") || null;
 }
 
-function deriveWriteOperation(command?: string, changeKind?: string): "created" | "modified" {
+function deriveWriteOperation(
+  command?: string,
+  changeKind?: string,
+): "created" | "modified" {
   if (changeKind === "created") return "created";
-  if (changeKind === "modified" || changeKind === "update" || changeKind === "updated") return "modified";
+  if (
+    changeKind === "modified" ||
+    changeKind === "update" ||
+    changeKind === "updated"
+  )
+    return "modified";
   if (!command) return "modified";
   if (command.includes(">>")) return "modified";
   if (/\bsed\s+-i/.test(command)) return "modified";
@@ -1511,7 +1957,7 @@ function deriveWriteOperation(command?: string, changeKind?: string): "created" 
 function resolveWriteDocumentPreviewAttachment(
   filePath: string | undefined,
   backendUrl?: string,
-  environmentId?: string | null
+  environmentId?: string | null,
 ): RunnerPreviewAttachment | null {
   const normalizedPath = normalizeRunnerFilePath(filePath);
   if (!normalizedPath) {
@@ -1528,7 +1974,11 @@ function resolveWriteDocumentPreviewAttachment(
   }
 
   const previewKind = getRunnerDocumentPreviewKind(attachment);
-  if (previewKind !== "pdf" && previewKind !== "html" && previewKind !== "markdown") {
+  if (
+    previewKind !== "pdf" &&
+    previewKind !== "html" &&
+    previewKind !== "markdown"
+  ) {
     return null;
   }
 
@@ -1610,27 +2060,41 @@ function WriteFileLogGroup({
       }),
       workspacePath: normalizedPath,
       changeKind: item.kind,
-      ...(typeof item.diff === "string" && item.diff.trim() ? { diffContent: item.diff } : {}),
-      ...(typeof item.content === "string" ? { fileContent: item.content } : {}),
-      ...(typeof item.additions === "number" ? { diffAdditions: item.additions } : {}),
-      ...(typeof item.deletions === "number" ? { diffDeletions: item.deletions } : {}),
+      ...(typeof item.diff === "string" && item.diff.trim()
+        ? { diffContent: item.diff }
+        : {}),
+      ...(typeof item.content === "string"
+        ? { fileContent: item.content }
+        : {}),
+      ...(typeof item.additions === "number"
+        ? { diffAdditions: item.additions }
+        : {}),
+      ...(typeof item.deletions === "number"
+        ? { diffDeletions: item.deletions }
+        : {}),
     });
   }
 
   const firstItem = items[0];
-  const detail = items.length === 1 && firstItem
-    ? firstItem.path
-    : `${items.length} files`;
+  const detail =
+    items.length === 1 && firstItem ? firstItem.path : `${items.length} files`;
   const canPreview = items.length === 1 && firstItem?.kind !== "deleted";
-  const icon = firstItem?.kind === "created"
-    ? <FilePlus className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
-    : <FileText className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />;
   return (
     <CompactActionLogLine
-      icon={icon}
+      icon={
+        <img
+          className="tb-log-compact-action-icon-svg"
+          src={RUNNER_TEXT_FILE_ICON_URL}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+        />
+      }
       title={getWriteFileCompactTitle(items)}
       detail={detail}
-      onClick={canPreview && firstItem ? () => openFilePreview(firstItem) : undefined}
+      onClick={
+        canPreview && firstItem ? () => openFilePreview(firstItem) : undefined
+      }
     />
   );
 }
@@ -1651,7 +2115,11 @@ function isGrepSearchCommand(command?: string): boolean {
 }
 
 function isGrepSearchLog(log?: RunnerLog): boolean {
-  return Boolean(log && log.eventType === "command_execution" && isGrepSearchCommand(String(log.metadata?.command || "")));
+  return Boolean(
+    log &&
+    log.eventType === "command_execution" &&
+    isGrepSearchCommand(String(log.metadata?.command || "")),
+  );
 }
 
 function extractFirstQuotedShellValue(value: string): string | null {
@@ -1720,12 +2188,16 @@ function parseGrepSearchMatches(output: string): GrepSearchMatch[] {
   const matches: GrepSearchMatch[] = [];
 
   for (const line of lines) {
-    const directoryEntry = line.match(/^[d-][rwx-]{9}\s+\d+\s+\S+\s+\S+\s+(\d+)\s+([A-Za-z]{3}\s+\d+\s+[\d:]+)\s+(.+)$/);
+    const directoryEntry = line.match(
+      /^[d-][rwx-]{9}\s+\d+\s+\S+\s+\S+\s+(\d+)\s+([A-Za-z]{3}\s+\d+\s+[\d:]+)\s+(.+)$/,
+    );
     if (directoryEntry) {
       const [, size, modifiedAt, name] = directoryEntry;
       matches.push({
         title: normalizeListFileName(name),
-        subtitle: [formatBytes(Number(size)), modifiedAt].filter(Boolean).join(" · "),
+        subtitle: [formatBytes(Number(size)), modifiedAt]
+          .filter(Boolean)
+          .join(" · "),
       });
       continue;
     }
@@ -1743,7 +2215,11 @@ function parseGrepSearchMatches(output: string): GrepSearchMatch[] {
     }
 
     const sourceMatch = line.match(/^(.+?):\s*(.+)$/);
-    if (sourceMatch && (sourceMatch[1].includes("/") || /\.[A-Za-z0-9]{1,12}$/.test(sourceMatch[1]))) {
+    if (
+      sourceMatch &&
+      (sourceMatch[1].includes("/") ||
+        /\.[A-Za-z0-9]{1,12}$/.test(sourceMatch[1]))
+    ) {
       const [, source, content] = sourceMatch;
       matches.push({
         title: content,
@@ -1759,20 +2235,43 @@ function parseGrepSearchMatches(output: string): GrepSearchMatch[] {
   return matches;
 }
 
-function GrepSearchLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+function GrepSearchLogBox({
+  log,
+  timeLabel,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+}) {
   const compactCommand = String(log.metadata?.command || "");
-  const compactStdout = resolveCommandOutputText(log.metadata?.output, "stdout");
-  const compactPattern = formatGrepSearchPattern(extractGrepSearchPattern(compactCommand));
+  const compactStdout = resolveCommandOutputText(
+    log.metadata?.output,
+    "stdout",
+  );
+  const compactPattern = formatGrepSearchPattern(
+    extractGrepSearchPattern(compactCommand),
+  );
   const compactMatches = parseGrepSearchMatches(compactStdout);
-  const compactExitCode = typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
-  const compactParsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
-  const compactStderr = stripRunnerSystemTags(compactParsedOutput?.stderr || "");
-  const compactHasError = Boolean(compactStderr.trim()) && compactExitCode !== 1;
+  const compactExitCode =
+    typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
+  const compactParsedOutput = parseStructuredCommandExecutionOutput(
+    log.metadata?.output,
+  );
+  const compactStderr = stripRunnerSystemTags(
+    compactParsedOutput?.stderr || "",
+  );
+  const compactHasError =
+    Boolean(compactStderr.trim()) && compactExitCode !== 1;
   return (
     <CompactActionLogLine
-      icon={<Search className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <Search className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
+      }
       title="Searched files"
-      detail={compactHasError ? "failed" : `${compactPattern}${compactMatches.length > 0 ? ` - ${compactMatches.length} ${compactMatches.length === 1 ? "match" : "matches"}` : ""}`}
+      detail={
+        compactHasError
+          ? "failed"
+          : `${compactPattern}${compactMatches.length > 0 ? ` - ${compactMatches.length} ${compactMatches.length === 1 ? "match" : "matches"}` : ""}`
+      }
     />
   );
 }
@@ -1791,7 +2290,10 @@ import {
 
 function isMemoryCommand(command?: string): boolean {
   if (!command) return false;
-  return command.includes("search-threads.py") || command.includes(".claude/skills/memory/");
+  return (
+    command.includes("search-threads.py") ||
+    command.includes(".claude/skills/memory/")
+  );
 }
 
 function extractMemoryQuery(command?: string): string | null {
@@ -1802,10 +2304,24 @@ function extractMemoryQuery(command?: string): string | null {
   return unquoted?.[1] && !unquoted[1].startsWith("-") ? unquoted[1] : null;
 }
 
-function parseMemoryOutput(output?: string): { total: number; results: Array<{ threadId: string; title: string; createdAt: string; task?: string }>; processingTimeMs?: number } {
+function parseMemoryOutput(output?: string): {
+  total: number;
+  results: Array<{
+    threadId: string;
+    title: string;
+    createdAt: string;
+    task?: string;
+  }>;
+  processingTimeMs?: number;
+} {
   if (!output) return { total: 0, results: [] };
   const total = Number(output.match(/Found (\d+) matching thread/)?.[1] || 0);
-  const results: Array<{ threadId: string; title: string; createdAt: string; task?: string }> = [];
+  const results: Array<{
+    threadId: string;
+    title: string;
+    createdAt: string;
+    task?: string;
+  }> = [];
   const sections = output.split(/###\s*\d+\./).slice(1);
   for (const section of sections) {
     const title = section.match(/^\s*(.+?)(?=\n)/)?.[1]?.trim() || "Untitled";
@@ -1814,19 +2330,26 @@ function parseMemoryOutput(output?: string): { total: number; results: Array<{ t
     results.push({
       threadId,
       title,
-      createdAt: section.match(/\*\*Created:\*\*\s*(\d{4}-\d{2}-\d{2})/)?.[1] || "",
+      createdAt:
+        section.match(/\*\*Created:\*\*\s*(\d{4}-\d{2}-\d{2})/)?.[1] || "",
       task: section.match(/\*\*Task:\*\*\s*(.+?)(?=\n-|\n###|$)/)?.[1]?.trim(),
     });
   }
   const processingTimeMs = output.match(/Search completed in (\d+)ms/)?.[1];
-  return { total, results, processingTimeMs: processingTimeMs ? Number(processingTimeMs) : undefined };
+  return {
+    total,
+    results,
+    processingTimeMs: processingTimeMs ? Number(processingTimeMs) : undefined,
+  };
 }
 
 function formatRelativeDate(dateStr: string): string {
   if (!dateStr) return "";
   try {
     const date = new Date(dateStr);
-    const diffDays = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(
+      (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24),
+    );
     if (diffDays === 0) return "Today";
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays} days ago`;
@@ -1836,31 +2359,53 @@ function formatRelativeDate(dateStr: string): string {
   }
 }
 
-function MemoryLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+function MemoryLogBox({
+  log,
+  timeLabel,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+}) {
   void timeLabel;
   const query = extractMemoryQuery(log.metadata?.command || "");
   const output = String(log.metadata?.output || log.metadata?.result || "");
   const parsed = parseMemoryOutput(output);
-  const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
-  const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
+  const isLoading =
+    log.metadata?.status === "running" || log.metadata?.status === "started";
+  const isError =
+    typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
 
   return (
     <CompactActionLogLine
-      icon={<Brain className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <Brain className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
+      }
       title="Searched Memory"
-      detail={isError ? "failed" : isLoading ? "searching..." : query || `${parsed.total} ${parsed.total === 1 ? "result" : "results"}`}
+      detail={
+        isError
+          ? "failed"
+          : isLoading
+            ? "searching..."
+            : query ||
+              `${parsed.total} ${parsed.total === 1 ? "result" : "results"}`
+      }
     />
   );
 }
 
 function isEmailCommand(command?: string): boolean {
   if (!command) return false;
-  return command.includes("/workspace/.scripts/send-email.py") || command.includes("send-email.py");
+  return (
+    command.includes("/workspace/.scripts/send-email.py") ||
+    command.includes("send-email.py")
+  );
 }
 
 function extractAttachments(command?: string): string[] {
   if (!command) return [];
-  const attachmentsMatch = command.match(/(?:--attachments|-a)\s+(.+?)(?=\s+--|\s+-[a-z]|$)/i);
+  const attachmentsMatch = command.match(
+    /(?:--attachments|-a)\s+(.+?)(?=\s+--|\s+-[a-z]|$)/i,
+  );
   if (!attachmentsMatch) return [];
   const files: string[] = [];
   let current = "";
@@ -1886,14 +2431,29 @@ function extractAttachments(command?: string): string[] {
   return files;
 }
 
-function parseEmailOutput(output?: string): { success: boolean; recipient: string | null; subject: string | null; errorMessage: string | null } {
-  const base = { success: false, recipient: null, subject: null, errorMessage: null };
+function parseEmailOutput(output?: string): {
+  success: boolean;
+  recipient: string | null;
+  subject: string | null;
+  errorMessage: string | null;
+} {
+  const base = {
+    success: false,
+    recipient: null,
+    subject: null,
+    errorMessage: null,
+  };
   if (!output) return base;
-  const jsonPattern = output.match(/---\s*JSON OUTPUT\s*---\s*(\{[\s\S]*\})/i) || output.match(/(\{[\s\S]*"success"[\s\S]*\})/);
+  const jsonPattern =
+    output.match(/---\s*JSON OUTPUT\s*---\s*(\{[\s\S]*\})/i) ||
+    output.match(/(\{[\s\S]*"success"[\s\S]*\})/);
   if (jsonPattern?.[1]) {
     try {
       const data = JSON.parse(jsonPattern[1]);
-      const recipient = typeof data.message === "string" ? data.message.match(/to\s+([^\s]+@[^\s]+)/i)?.[1] || null : null;
+      const recipient =
+        typeof data.message === "string"
+          ? data.message.match(/to\s+([^\s]+@[^\s]+)/i)?.[1] || null
+          : null;
       return {
         success: data.success === true,
         recipient,
@@ -1903,27 +2463,50 @@ function parseEmailOutput(output?: string): { success: boolean; recipient: strin
     } catch {}
   }
   return {
-    success: output.includes("EMAIL SENT SUCCESSFULLY") || output.includes("Email sent successfully"),
-    recipient: output.match(/(?:Sending email to|To):\s*([^\s\n]+@[^\s\n]+)/i)?.[1] || null,
+    success:
+      output.includes("EMAIL SENT SUCCESSFULLY") ||
+      output.includes("Email sent successfully"),
+    recipient:
+      output.match(/(?:Sending email to|To):\s*([^\s\n]+@[^\s\n]+)/i)?.[1] ||
+      null,
     subject: output.match(/Subject:\s*(.+?)(?:\n|$)/i)?.[1]?.trim() || null,
     errorMessage: output.match(/Error:\s*(.+?)(?:\n|$)/i)?.[1]?.trim() || null,
   };
 }
 
-function EmailLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+function EmailLogBox({
+  log,
+  timeLabel,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+}) {
   void timeLabel;
   const command = log.metadata?.command || log.message || "";
   const output = String(log.metadata?.output || "");
   const parsed = parseEmailOutput(output);
-  const subject = extractQuotedArgument(command, "--subject|-s") || parsed.subject;
-  const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
-  const isError = (typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0) || Boolean(parsed.errorMessage);
+  const subject =
+    extractQuotedArgument(command, "--subject|-s") || parsed.subject;
+  const isLoading =
+    log.metadata?.status === "running" || log.metadata?.status === "started";
+  const isError =
+    (typeof log.metadata?.exitCode === "number" &&
+      log.metadata.exitCode !== 0) ||
+    Boolean(parsed.errorMessage);
 
   return (
     <CompactActionLogLine
-      icon={<Mail className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <Mail className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
+      }
       title="Sent Email"
-      detail={isError ? (parsed.errorMessage || "failed") : isLoading ? "sending..." : subject || parsed.recipient || "queued"}
+      detail={
+        isError
+          ? parsed.errorMessage || "failed"
+          : isLoading
+            ? "sending..."
+            : subject || parsed.recipient || "queued"
+      }
     />
   );
 }
@@ -1940,13 +2523,19 @@ function isDocumentParseCommand(command?: string): boolean {
 
 function extractDocumentParsePath(command?: string): string | null {
   if (!command) return null;
-  const quoted = command.match(/(?:document-parse|pdf-reader)\.py\s+["']([^"']+)["']/);
+  const quoted = command.match(
+    /(?:document-parse|pdf-reader)\.py\s+["']([^"']+)["']/,
+  );
   if (quoted?.[1]) return quoted[1];
-  const unquoted = command.match(/(?:document-parse|pdf-reader)\.py\s+(\S+\.(?:pdf|docx?|xlsx?|odt|rtf|html?|csv|txt))/i);
+  const unquoted = command.match(
+    /(?:document-parse|pdf-reader)\.py\s+(\S+\.(?:pdf|docx?|xlsx?|odt|rtf|html?|csv|txt))/i,
+  );
   return unquoted?.[1] || null;
 }
 
-function parseDocumentParseOutput(output?: string): Record<string, unknown> | null {
+function parseDocumentParseOutput(
+  output?: string,
+): Record<string, unknown> | null {
   if (!output) return null;
   const patterns = [
     /---\s*DOCUMENT PARSE JSON\s*---\s*(\{[\s\S]*?\})\s*---\s*DOCUMENT PARSE MARKDOWN\s*---/i,
@@ -1965,7 +2554,13 @@ function parseDocumentParseOutput(output?: string): Record<string, unknown> | nu
   return null;
 }
 
-function DocumentParseLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+function DocumentParseLogBox({
+  log,
+  timeLabel,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+}) {
   void timeLabel;
   const command = log.metadata?.command || "";
   const output = String(log.metadata?.output || "");
@@ -1974,19 +2569,28 @@ function DocumentParseLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: s
     (typeof parsed?.file_name === "string" ? parsed.file_name : null) ||
     (typeof parsed?.title === "string" ? parsed.title : null) ||
     extractDocumentParsePath(command);
-  const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
-  const isError = (typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0) || parsed?.success === false;
+  const isLoading =
+    log.metadata?.status === "running" || log.metadata?.status === "started";
+  const isError =
+    (typeof log.metadata?.exitCode === "number" &&
+      log.metadata.exitCode !== 0) ||
+    parsed?.success === false;
 
   return (
     <CompactActionLogLine
-      icon={<FileSearch className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <FileSearch
+          className="tb-log-compact-action-icon-svg"
+          strokeWidth={1.6}
+        />
+      }
       title="Parsed Document"
-      detail={isError ? "failed" : isLoading ? "parsing..." : fileName || "document"}
+      detail={
+        isError ? "failed" : isLoading ? "parsing..." : fileName || "document"
+      }
     />
   );
 }
-
-
 
 import {
   BrowserSkillLogBox,
@@ -2032,7 +2636,13 @@ function TodoListLogBox({ onOpenTaskList }: { onOpenTaskList?: () => void }) {
   );
 }
 
-function MkdirLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+function MkdirLogBox({
+  log,
+  timeLabel,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+}) {
   void log;
   void timeLabel;
   return null;
@@ -2055,9 +2665,13 @@ function HelpCommandLogBox({
 
   return (
     <CompactActionLogLine
-      icon={<CircleHelp className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
-      title="Showed Help"
-      detail={details.resourceName}
+      icon={
+        <CircleQuestionMark
+          className="tb-log-compact-action-icon-svg"
+          strokeWidth={1.6}
+        />
+      }
+      title={`Called help on ${details.resourceName}`}
     />
   );
 }
@@ -2071,11 +2685,26 @@ function buildBashCommandPreviewText(params: {
   exitCode: number | null;
   parsedOutput: ReturnType<typeof parseStructuredCommandExecutionOutput>;
 }): string {
-  const { command, stdout, stderr, output, statusNotice, exitCode, parsedOutput } = params;
+  const {
+    command,
+    stdout,
+    stderr,
+    output,
+    statusNotice,
+    exitCode,
+    parsedOutput,
+  } = params;
   const sections: string[] = [];
   const normalizedCommand = formatShellCommandForDisplay(command).trim();
   if (normalizedCommand) {
-    sections.push(["Command", normalizedCommand.startsWith("$") ? normalizedCommand : `$ ${normalizedCommand}`].join("\n"));
+    sections.push(
+      [
+        "Command",
+        normalizedCommand.startsWith("$")
+          ? normalizedCommand
+          : `$ ${normalizedCommand}`,
+      ].join("\n"),
+    );
   }
   if (parsedOutput) {
     if (stdout.trim()) {
@@ -2096,12 +2725,17 @@ function buildBashCommandPreviewText(params: {
   return sections.length > 0 ? sections.join("\n\n") : "No command output.";
 }
 
-function buildBashCommandPreviewAttachment(previewText: string): RunnerPreviewAttachment {
+function buildBashCommandPreviewAttachment(
+  previewText: string,
+): RunnerPreviewAttachment {
   const previewUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(previewText)}`;
   return {
-    ...buildRunnerPreviewAttachmentFromPath("/workspace/bash-command-output.txt", {
-      idPrefix: "bash-command-preview",
-    }),
+    ...buildRunnerPreviewAttachmentFromPath(
+      "/workspace/bash-command-output.txt",
+      {
+        idPrefix: "bash-command-preview",
+      },
+    ),
     id: buildCompactLogPreviewId("bash-command-preview", previewText),
     filename: "bash-command-output.txt",
     mimeType: "text/plain",
@@ -2127,11 +2761,14 @@ function GenericCommandLogBox({
   onAgentClick?: (agent: ComputerAgentsListAgent) => void;
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
 }) {
-  const command = stripRunnerSystemTags(log.metadata?.command || log.message || "");
-  const exitCode = typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
+  const command = stripRunnerSystemTags(
+    log.metadata?.command || log.message || "",
+  );
+  const exitCode =
+    typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
   const parsedOutput = useMemo(
     () => parseStructuredCommandExecutionOutput(log.metadata?.output),
-    [log.metadata?.output]
+    [log.metadata?.output],
   );
   const rawOutput = stripRunnerSystemTags(String(log.metadata?.output || ""));
   const stdout = stripRunnerSystemTags(parsedOutput?.stdout || "");
@@ -2145,7 +2782,12 @@ function GenericCommandLogBox({
     if (parsedOutput?.returnCodeInterpretation === "timeout") {
       return "Timed out";
     }
-    if (typeof exitCode === "number" && exitCode !== 0 && !hasStdout && !hasStderr) {
+    if (
+      typeof exitCode === "number" &&
+      exitCode !== 0 &&
+      !hasStdout &&
+      !hasStderr
+    ) {
       return `Exited with code ${exitCode}`;
     }
     if (parsedOutput?.interrupted && !hasStdout && !hasStderr) {
@@ -2177,40 +2819,117 @@ function GenericCommandLogBox({
     return parts.join("\n");
   }, [output, parsedOutput, shellCommand, statusNotice, stderr, stdout]);
   const computerAgentsListDetails = useMemo(() => {
-    const commandCandidates = [command, shellCommand, copyPayload].filter((value) => value.trim().length > 0);
-    const outputText = [stdout, stderr, output, rawOutput, stdoutDisplay, stderrDisplay, outputDisplay, copyPayload]
+    const commandCandidates = [command, shellCommand, copyPayload].filter(
+      (value) => value.trim().length > 0,
+    );
+    const outputText = [
+      stdout,
+      stderr,
+      output,
+      rawOutput,
+      stdoutDisplay,
+      stderrDisplay,
+      outputDisplay,
+      copyPayload,
+    ]
       .filter((value) => value.trim().length > 0)
       .join("\n");
     for (const commandCandidate of commandCandidates) {
-      const parsedDetails = parseComputerAgentsListCommandOutput(commandCandidate, outputText);
+      const parsedDetails = parseComputerAgentsListCommandOutput(
+        commandCandidate,
+        outputText,
+      );
       if (parsedDetails) return parsedDetails;
     }
     return null;
-  }, [command, copyPayload, output, outputDisplay, rawOutput, shellCommand, stderr, stderrDisplay, stdout, stdoutDisplay]);
+  }, [
+    command,
+    copyPayload,
+    output,
+    outputDisplay,
+    rawOutput,
+    shellCommand,
+    stderr,
+    stderrDisplay,
+    stdout,
+    stdoutDisplay,
+  ]);
   const computerAgentsThreadsListDetails = useMemo(() => {
-    const commandCandidates = [command, shellCommand, copyPayload].filter((value) => value.trim().length > 0);
-    const outputText = [stdout, stderr, output, rawOutput, stdoutDisplay, stderrDisplay, outputDisplay, copyPayload]
+    const commandCandidates = [command, shellCommand, copyPayload].filter(
+      (value) => value.trim().length > 0,
+    );
+    const outputText = [
+      stdout,
+      stderr,
+      output,
+      rawOutput,
+      stdoutDisplay,
+      stderrDisplay,
+      outputDisplay,
+      copyPayload,
+    ]
       .filter((value) => value.trim().length > 0)
       .join("\n");
     for (const commandCandidate of commandCandidates) {
-      const parsedDetails = parseComputerAgentsThreadsListCommandOutput(commandCandidate, outputText);
+      const parsedDetails = parseComputerAgentsThreadsListCommandOutput(
+        commandCandidate,
+        outputText,
+      );
       if (parsedDetails) return parsedDetails;
     }
     return null;
-  }, [command, copyPayload, output, outputDisplay, rawOutput, shellCommand, stderr, stderrDisplay, stdout, stdoutDisplay]);
+  }, [
+    command,
+    copyPayload,
+    output,
+    outputDisplay,
+    rawOutput,
+    shellCommand,
+    stderr,
+    stderrDisplay,
+    stdout,
+    stdoutDisplay,
+  ]);
   const computerAgentsThreadGetDetails = useMemo(() => {
-    const commandCandidates = [command, shellCommand, copyPayload].filter((value) => value.trim().length > 0);
-    const outputText = [stdout, stderr, output, rawOutput, stdoutDisplay, stderrDisplay, outputDisplay, copyPayload]
+    const commandCandidates = [command, shellCommand, copyPayload].filter(
+      (value) => value.trim().length > 0,
+    );
+    const outputText = [
+      stdout,
+      stderr,
+      output,
+      rawOutput,
+      stdoutDisplay,
+      stderrDisplay,
+      outputDisplay,
+      copyPayload,
+    ]
       .filter((value) => value.trim().length > 0)
       .join("\n");
     for (const commandCandidate of commandCandidates) {
-      const parsedDetails = parseComputerAgentsThreadGetCommandOutput(commandCandidate, outputText);
+      const parsedDetails = parseComputerAgentsThreadGetCommandOutput(
+        commandCandidate,
+        outputText,
+      );
       if (parsedDetails) return parsedDetails;
     }
     return null;
-  }, [command, copyPayload, output, outputDisplay, rawOutput, shellCommand, stderr, stderrDisplay, stdout, stdoutDisplay]);
+  }, [
+    command,
+    copyPayload,
+    output,
+    outputDisplay,
+    rawOutput,
+    shellCommand,
+    stderr,
+    stderrDisplay,
+    stdout,
+    stdoutDisplay,
+  ]);
   const helpCommandDetails = useMemo(() => {
-    const commandCandidates = [command, shellCommand, copyPayload].filter((value) => value.trim().length > 0);
+    const commandCandidates = [command, shellCommand, copyPayload].filter(
+      (value) => value.trim().length > 0,
+    );
     for (const commandCandidate of commandCandidates) {
       const parsedDetails = parseRunnerHelpCommandDetails(commandCandidate);
       if (parsedDetails) return parsedDetails;
@@ -2221,39 +2940,57 @@ function GenericCommandLogBox({
     const outputParts = parsedOutput
       ? [stdout, stderr, statusNotice || ""]
       : [output || rawOutput];
-    return stripRunnerSystemTags(outputParts.filter((value) => value.trim().length > 0).join("\n")).trim();
+    return stripRunnerSystemTags(
+      outputParts.filter((value) => value.trim().length > 0).join("\n"),
+    ).trim();
   }, [output, parsedOutput, rawOutput, statusNotice, stderr, stdout]);
-  const bashPreviewText = useMemo(() => buildBashCommandPreviewText({
-    command,
-    stdout,
-    stderr,
-    output,
-    statusNotice,
-    exitCode,
-    parsedOutput,
-  }), [command, exitCode, output, parsedOutput, statusNotice, stderr, stdout]);
-  const bashPreviewAttachment = useMemo(() => buildBashCommandPreviewAttachment(bashPreviewText), [bashPreviewText]);
+  const bashPreviewText = useMemo(
+    () =>
+      buildBashCommandPreviewText({
+        command,
+        stdout,
+        stderr,
+        output,
+        statusNotice,
+        exitCode,
+        parsedOutput,
+      }),
+    [command, exitCode, output, parsedOutput, statusNotice, stderr, stdout],
+  );
+  const bashPreviewAttachment = useMemo(
+    () => buildBashCommandPreviewAttachment(bashPreviewText),
+    [bashPreviewText],
+  );
   const jsonOutputSegments = useMemo(
-    () => findRunnerWorkingLogJsonSegments(
-      parsedOutput ? [stdout, output, rawOutput] : [output, rawOutput],
-      "Command Output"
-    ),
-    [output, parsedOutput, rawOutput, stdout]
+    () =>
+      findRunnerWorkingLogJsonSegments(
+        parsedOutput ? [stdout, output, rawOutput] : [output, rawOutput],
+        "Command Output",
+      ),
+    [output, parsedOutput, rawOutput, stdout],
   );
 
   if (computerAgentsListDetails) {
-    return renderComputerAgentsListCompactLog(computerAgentsListDetails, (agent) => onAgentClick?.({
-      id: agent.agentId,
-      name: agent.agentName,
-    } as ComputerAgentsListAgent));
+    return renderComputerAgentsListCompactLog(
+      computerAgentsListDetails,
+      (agent) =>
+        onAgentClick?.({
+          id: agent.agentId,
+          name: agent.agentName,
+        } as ComputerAgentsListAgent),
+    );
   }
 
   if (computerAgentsThreadsListDetails) {
-    return renderComputerAgentsThreadsListCompactLog(computerAgentsThreadsListDetails);
+    return renderComputerAgentsThreadsListCompactLog(
+      computerAgentsThreadsListDetails,
+    );
   }
 
   if (computerAgentsThreadGetDetails) {
-    return renderComputerAgentsThreadGetCompactLog(computerAgentsThreadGetDetails);
+    return renderComputerAgentsThreadGetCompactLog(
+      computerAgentsThreadGetDetails,
+    );
   }
 
   if (helpCommandDetails) {
@@ -2271,7 +3008,10 @@ function GenericCommandLogBox({
     return (
       <RunnerWorkingLogJsonContent
         segments={jsonOutputSegments}
-        documentIdPrefix={`command-${String(command || rawOutput || "output").replace(/[^a-z0-9_-]+/gi, "-").slice(0, 80).toLowerCase()}`}
+        documentIdPrefix={`command-${String(command || rawOutput || "output")
+          .replace(/[^a-z0-9_-]+/gi, "-")
+          .slice(0, 80)
+          .toLowerCase()}`}
         onWorkspacePathClick={onWorkspacePathClick}
       />
     );
@@ -2290,35 +3030,64 @@ function GenericCommandLogBox({
   );
 }
 
-function GenericMcpToolLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+function GenericMcpToolLogBox({
+  log,
+  timeLabel,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+}) {
   void timeLabel;
   const serverName = log.metadata?.serverName || "MCP";
   const toolName = log.metadata?.toolName || "tool";
   const result = log.metadata?.result;
   const error = log.metadata?.error;
-  const content = typeof result === "string" ? stripRunnerSystemTags(result) : result ? JSON.stringify(result, null, 2) : error ? String(error) : "";
+  const content =
+    typeof result === "string"
+      ? stripRunnerSystemTags(result)
+      : result
+        ? JSON.stringify(result, null, 2)
+        : error
+          ? String(error)
+          : "";
   const jsonSegments = useMemo(
     () => findRunnerWorkingLogJsonSegments([content], "MCP Result"),
-    [content]
+    [content],
   );
   if (jsonSegments.length > 0) {
     return (
       <RunnerWorkingLogJsonContent
         segments={jsonSegments}
-        documentIdPrefix={`mcp-${String(serverName || "server").replace(/[^a-z0-9_-]+/gi, "-").toLowerCase()}-${String(toolName || "tool").replace(/[^a-z0-9_-]+/gi, "-").toLowerCase()}`}
+        documentIdPrefix={`mcp-${String(serverName || "server")
+          .replace(/[^a-z0-9_-]+/gi, "-")
+          .toLowerCase()}-${String(toolName || "tool")
+          .replace(/[^a-z0-9_-]+/gi, "-")
+          .toLowerCase()}`}
       />
     );
   }
   return (
     <CompactActionLogLine
-      icon={<Globe className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      icon={
+        <Globe className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
+      }
       title="Called MCP Tool"
-      detail={[String(serverName || "").trim(), String(toolName || "").trim()].filter(Boolean).join(" -> ") || (content ? "completed" : "")}
+      detail={
+        [String(serverName || "").trim(), String(toolName || "").trim()]
+          .filter(Boolean)
+          .join(" -> ") || (content ? "completed" : "")
+      }
     />
   );
 }
 
-function ComputerUseEventLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
+function ComputerUseEventLogBox({
+  log,
+  timeLabel,
+}: {
+  log: RunnerLog;
+  timeLabel?: string;
+}) {
   void log;
   void timeLabel;
   return null;
@@ -2333,14 +3102,30 @@ export function InlineStatusLogBox({
   pending?: boolean;
 }) {
   return (
-    <div className={`tb-log-reasoning ${pending ? "tb-log-reasoning-pending" : ""}`.trim()}>
-      <div className={`tb-log-reasoning-copy ${pending ? "tb-log-reasoning-copy-pending" : ""}`.trim()}>
+    <div
+      className={`tb-log-reasoning ${pending ? "tb-log-reasoning-pending" : ""}`.trim()}
+    >
+      <div
+        className={`tb-log-reasoning-copy ${pending ? "tb-log-reasoning-copy-pending" : ""}`.trim()}
+      >
         {pending ? (
-          <span className="tb-log-inline-status-spinner-slot" aria-hidden="true">
-            <DotLoader dotCount={9} dotSize={3} gap={2} className="tb-log-inline-status-dot-loader" />
+          <span
+            className="tb-log-inline-status-spinner-slot"
+            aria-hidden="true"
+          >
+            <DotLoader
+              dotCount={9}
+              dotSize={3}
+              gap={2}
+              className="tb-log-inline-status-dot-loader"
+            />
           </span>
         ) : null}
-        <span className={`tb-log-inline-status-copy ${pending ? "tb-log-inline-status-copy-pending" : ""}`.trim()}>{label}</span>
+        <span
+          className={`tb-log-inline-status-copy ${pending ? "tb-log-inline-status-copy-pending" : ""}`.trim()}
+        >
+          {label}
+        </span>
       </div>
     </div>
   );
@@ -2365,11 +3150,18 @@ export function RunnerWorkLogEntry({
   onAgentPreviewClick,
   onEnvironmentPreviewClick,
   onProjectPreviewClick,
+  onKnowledgeLibraryPreviewClick,
   onOpenTaskList,
 }: RunnerWorkLogEntryProps) {
-  const normalizedMessage = stripRunnerSystemTags(log.message || "").replace(/\s+/g, " ").trim().toLowerCase();
+  const normalizedMessage = stripRunnerSystemTags(log.message || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 
-  if (normalizedMessage === "starting session" || normalizedMessage === "starting session...") {
+  if (
+    normalizedMessage === "starting session" ||
+    normalizedMessage === "starting session..."
+  ) {
     return null;
   }
 
@@ -2377,33 +3169,77 @@ export function RunnerWorkLogEntry({
     return null;
   }
 
-  if (log.eventType === "reasoning" || log.eventType === "planning" || log.isReasoning || log.isPlanning) {
-    return <ReasoningLogBox log={log} onWorkspacePathClick={onWorkspacePathClick} />;
+  if (
+    log.eventType === "reasoning" ||
+    log.eventType === "planning" ||
+    log.isReasoning ||
+    log.isPlanning
+  ) {
+    return (
+      <ReasoningLogBox log={log} onWorkspacePathClick={onWorkspacePathClick} />
+    );
   }
 
-  if ((log as RunnerLog & { isActionSummary?: boolean }).isActionSummary || log.eventType === "action_summary") {
-    return <GenericTextLogBox log={log} timeLabel={timeLabel} label="Action Summary" icon={<Lightbulb className="tb-log-card-small-icon" strokeWidth={1.5} />} onWorkspacePathClick={onWorkspacePathClick} />;
+  if (
+    (log as RunnerLog & { isActionSummary?: boolean }).isActionSummary ||
+    log.eventType === "action_summary"
+  ) {
+    return (
+      <GenericTextLogBox
+        log={log}
+        timeLabel={timeLabel}
+        label="Action Summary"
+        icon={
+          <Lightbulb className="tb-log-card-small-icon" strokeWidth={1.5} />
+        }
+        onWorkspacePathClick={onWorkspacePathClick}
+      />
+    );
   }
 
   if (log.eventType === "permission_request") {
-    return <PermissionRequestLogBox log={log} timeLabel={timeLabel} onPermissionDecision={onPermissionDecision} />;
+    return (
+      <PermissionRequestLogBox
+        log={log}
+        timeLabel={timeLabel}
+        onPermissionDecision={onPermissionDecision}
+      />
+    );
   }
 
   if (log.eventType === "deep_research" && log.metadata?.deepResearch) {
     return <DeepResearchEventLogBox log={log} timeLabel={timeLabel} />;
   }
 
-  if (log.eventType === "metronome_workflow" || log.metadata?.metronomeWorkflow) {
+  if (
+    log.eventType === "metronome_workflow" ||
+    log.metadata?.metronomeWorkflow
+  ) {
     return <MetronomeWorkflowLogBox log={log} timeLabel={timeLabel} />;
   }
 
   if (isAtlassianConnectorLog(log)) {
-    return <AtlassianActivityLogBox log={log} onPreviewDocument={onPreviewDocument} />;
+    return (
+      <AtlassianActivityLogBox
+        log={log}
+        onPreviewDocument={onPreviewDocument}
+      />
+    );
   }
 
-  const persistedCommand = typeof log.metadata?.command === "string" ? log.metadata.command : "";
+  const persistedCommand =
+    typeof log.metadata?.command === "string" ? log.metadata.command : "";
   if (isLikelyVideoGenerationLog(log, persistedCommand)) {
-    return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} onPreviewDocument={onPreviewDocument} />;
+    return (
+      <VideoGenerationLogBox
+        log={log}
+        timeLabel={timeLabel}
+        backendUrl={backendUrl}
+        environmentId={environmentId}
+        requestHeaders={requestHeaders}
+        onPreviewDocument={onPreviewDocument}
+      />
+    );
   }
 
   if (log.eventType === "command_execution") {
@@ -2411,19 +3247,74 @@ export function RunnerWorkLogEntry({
     const output = String(log.metadata?.output || "");
     if (shouldHideNoopReadFileLog(log)) return null;
     if (isWaitLog(log)) return <WaitLogBox log={log} timeLabel={timeLabel} />;
+    if (parseRunnerKnowledgeActivityDetails(log)) {
+      return (
+        <KnowledgeActivityLogBox
+          log={log}
+          backendUrl={backendUrl}
+          requestHeaders={requestHeaders}
+          onKnowledgeLibraryPreviewClick={onKnowledgeLibraryPreviewClick}
+        />
+      );
+    }
+    if (parseRunnerProjectTaskListDetails(log)) {
+      return (
+        <ProjectTaskListActivityLogBox
+          log={log}
+          backendUrl={backendUrl}
+          requestHeaders={requestHeaders}
+          availableProjects={availableProjects}
+          onProjectPreviewClick={onProjectPreviewClick}
+        />
+      );
+    }
+    if (parseRunnerProjectMilestoneListDetails(log)) {
+      return (
+        <ProjectMilestoneListActivityLogBox
+          log={log}
+          backendUrl={backendUrl}
+          requestHeaders={requestHeaders}
+          availableProjects={availableProjects}
+          onProjectPreviewClick={onProjectPreviewClick}
+        />
+      );
+    }
     if (isWebScrapeCommand(command) || isWebScrapeOutput(output)) {
-      return isWebScrapeJsonCommand(command) || parseWebScrapeLog(log)?.mode === "json"
-        ? <WebScrapeJsonLogBox log={log} timeLabel={timeLabel} />
-        : <WebScrapeMarkdownLogBox log={log} timeLabel={timeLabel} onPreviewDocument={onPreviewDocument} />;
+      return isWebScrapeJsonCommand(command) ||
+        parseWebScrapeLog(log)?.mode === "json" ? (
+        <WebScrapeJsonLogBox log={log} timeLabel={timeLabel} />
+      ) : (
+        <WebScrapeMarkdownLogBox
+          log={log}
+          timeLabel={timeLabel}
+          onPreviewDocument={onPreviewDocument}
+        />
+      );
     }
     if (isWebSearchCommand(command) || isWebSearchOutput(output)) {
-      return <WebSearchLogBox log={log} timeLabel={timeLabel} onPreviewDocument={onPreviewDocument} />;
+      return (
+        <WebSearchLogBox
+          log={log}
+          timeLabel={timeLabel}
+          onPreviewDocument={onPreviewDocument}
+        />
+      );
     }
-    if (isMemoryCommand(command)) return <MemoryLogBox log={log} timeLabel={timeLabel} />;
+    if (isMemoryCommand(command))
+      return <MemoryLogBox log={log} timeLabel={timeLabel} />;
     if (isBrowserSkillCommand(command) && !renderBrowserSkillAsGeneric) {
-      return <BrowserSkillLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
+      return (
+        <BrowserSkillLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          environmentId={environmentId}
+          requestHeaders={requestHeaders}
+        />
+      );
     }
-    if (isEmailCommand(command)) return <EmailLogBox log={log} timeLabel={timeLabel} />;
+    if (isEmailCommand(command))
+      return <EmailLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderComputerAgentsCreateLog(log)) {
       return (
         <ComputerAgentsCreateLogBox
@@ -2435,36 +3326,84 @@ export function RunnerWorkLogEntry({
         />
       );
     }
-    const appPlatformResourcesListDetails = parseAppPlatformResourcesListLogDetails(log);
+    const appPlatformResourcesListDetails =
+      parseAppPlatformResourcesListLogDetails(log);
     if (appPlatformResourcesListDetails) {
-      return renderAppPlatformResourcesListCompactLog(appPlatformResourcesListDetails);
+      return renderAppPlatformResourcesListCompactLog(
+        appPlatformResourcesListDetails,
+      );
     }
-    const taskManagementProjectsListDetails = parseTaskManagementProjectsListLogDetails(log);
+    const taskManagementProjectsListDetails =
+      parseTaskManagementProjectsListLogDetails(log);
     if (taskManagementProjectsListDetails) {
-      return renderTaskManagementProjectsListCompactLog(taskManagementProjectsListDetails, onProjectPreviewClick);
+      return renderTaskManagementProjectsListCompactLog(
+        taskManagementProjectsListDetails,
+        onProjectPreviewClick,
+      );
     }
-    const computerAgentsEnvironmentsListDetails = parseComputerAgentsEnvironmentsListLogDetails(log);
+    const computerAgentsEnvironmentsListDetails =
+      parseComputerAgentsEnvironmentsListLogDetails(log);
     if (computerAgentsEnvironmentsListDetails) {
-      return renderComputerAgentsEnvironmentsListCompactLog(computerAgentsEnvironmentsListDetails, onEnvironmentPreviewClick);
+      return renderComputerAgentsEnvironmentsListCompactLog(
+        computerAgentsEnvironmentsListDetails,
+        onEnvironmentPreviewClick,
+      );
     }
     const computerAgentsListDetails = parseComputerAgentsListLogDetails(log);
     if (computerAgentsListDetails) {
-      return renderComputerAgentsListCompactLog(computerAgentsListDetails, onAgentPreviewClick);
+      return renderComputerAgentsListCompactLog(
+        computerAgentsListDetails,
+        onAgentPreviewClick,
+      );
     }
-    const computerAgentsThreadsListDetails = parseComputerAgentsThreadsListLogDetails(log);
+    const computerAgentsThreadsListDetails =
+      parseComputerAgentsThreadsListLogDetails(log);
     if (computerAgentsThreadsListDetails) {
-      return renderComputerAgentsThreadsListCompactLog(computerAgentsThreadsListDetails);
+      return renderComputerAgentsThreadsListCompactLog(
+        computerAgentsThreadsListDetails,
+      );
     }
-    const computerAgentsThreadGetDetails = parseComputerAgentsThreadGetLogDetails(log);
+    const computerAgentsThreadGetDetails =
+      parseComputerAgentsThreadGetLogDetails(log);
     if (computerAgentsThreadGetDetails) {
-      return renderComputerAgentsThreadGetCompactLog(computerAgentsThreadGetDetails);
+      return renderComputerAgentsThreadGetCompactLog(
+        computerAgentsThreadGetDetails,
+      );
     }
-    if (isComputerAgentsThreadSnapshotLog(log)) return <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />;
-    if (shouldRenderTaskManagementReleaseCreateLog(log)) return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
-    if (shouldRenderTaskManagementCommentLog(log)) return <TaskManagementCommentLogBox log={log} timeLabel={timeLabel} />;
-    if (shouldRenderTaskManagementUpdateLog(log)) return <TaskManagementUpdateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
-    if (shouldRenderTaskManagementCreateLog(log)) return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
-    if (isGrepSearchLog(log)) return <GrepSearchLogBox log={log} timeLabel={timeLabel} />;
+    if (isComputerAgentsThreadSnapshotLog(log))
+      return (
+        <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />
+      );
+    if (shouldRenderTaskManagementReleaseCreateLog(log))
+      return (
+        <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />
+      );
+    if (shouldRenderTaskManagementCommentLog(log))
+      return <TaskManagementCommentLogBox log={log} timeLabel={timeLabel} />;
+    if (shouldRenderTaskManagementUpdateLog(log))
+      return (
+        <TaskManagementUpdateLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          requestHeaders={requestHeaders}
+          activeTaskPreviewId={activeTaskPreviewId}
+          onTaskPreviewClick={onTaskPreviewClick}
+        />
+      );
+    if (shouldRenderTaskManagementCreateLog(log))
+      return (
+        <TaskManagementCreateLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          requestHeaders={requestHeaders}
+          activeTaskPreviewId={activeTaskPreviewId}
+          onTaskPreviewClick={onTaskPreviewClick}
+        />
+      );
+    if (isGrepSearchLog(log))
+      return <GrepSearchLogBox log={log} timeLabel={timeLabel} />;
     if (isListFilesLog(log)) {
       return (
         <ListFilesLogBox
@@ -2506,7 +3445,8 @@ export function RunnerWorkLogEntry({
         />
       );
     }
-    if (isDocumentParseCommand(command)) return <DocumentParseLogBox log={log} timeLabel={timeLabel} />;
+    if (isDocumentParseCommand(command))
+      return <DocumentParseLogBox log={log} timeLabel={timeLabel} />;
     if (isImageUnderstandingCommand(command)) {
       return (
         <ImageUnderstandingLogBox
@@ -2520,12 +3460,31 @@ export function RunnerWorkLogEntry({
       );
     }
     if (isLikelyImageGenerationLog(log, command)) {
-      return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} onPreviewDocument={onPreviewDocument} />;
+      return (
+        <ImageGenerationLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          environmentId={environmentId}
+          requestHeaders={requestHeaders}
+          onPreviewDocument={onPreviewDocument}
+        />
+      );
     }
     if (isLikelyVideoGenerationLog(log, command)) {
-      return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} onPreviewDocument={onPreviewDocument} />;
+      return (
+        <VideoGenerationLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          environmentId={environmentId}
+          requestHeaders={requestHeaders}
+          onPreviewDocument={onPreviewDocument}
+        />
+      );
     }
-    if (isDeepResearchCommand(command)) return <DeepResearchCommandLogBox log={log} timeLabel={timeLabel} />;
+    if (isDeepResearchCommand(command))
+      return <DeepResearchCommandLogBox log={log} timeLabel={timeLabel} />;
     const gitDiffDetails = parseGitDiffLogDetails(log);
     if (gitDiffDetails) return renderGitDiffCompactLog(gitDiffDetails);
     const gitCommitDetails = parseGitCommitLogDetails(log);
@@ -2538,7 +3497,9 @@ export function RunnerWorkLogEntry({
         timeLabel={timeLabel}
         onWorkspacePathClick={onWorkspacePathClick}
         availableAgents={availableAgents}
-        onAgentClick={(agent) => onAgentPreviewClick?.({ agentId: agent.id, agentName: agent.name })}
+        onAgentClick={(agent) =>
+          onAgentPreviewClick?.({ agentId: agent.id, agentName: agent.name })
+        }
         onPreviewDocument={onPreviewDocument}
       />
     );
@@ -2558,24 +3519,38 @@ export function RunnerWorkLogEntry({
         />
       );
     }
-    const appPlatformResourcesListDetails = parseAppPlatformResourcesListLogDetails(log);
+    const appPlatformResourcesListDetails =
+      parseAppPlatformResourcesListLogDetails(log);
     if (appPlatformResourcesListDetails) {
-      return renderAppPlatformResourcesListCompactLog(appPlatformResourcesListDetails);
+      return renderAppPlatformResourcesListCompactLog(
+        appPlatformResourcesListDetails,
+      );
     }
     const computerAgentsListDetails = parseComputerAgentsListLogDetails(log);
     if (computerAgentsListDetails) {
-      return renderComputerAgentsListCompactLog(computerAgentsListDetails, onAgentPreviewClick);
+      return renderComputerAgentsListCompactLog(
+        computerAgentsListDetails,
+        onAgentPreviewClick,
+      );
     }
-    const computerAgentsThreadsListDetails = parseComputerAgentsThreadsListLogDetails(log);
+    const computerAgentsThreadsListDetails =
+      parseComputerAgentsThreadsListLogDetails(log);
     if (computerAgentsThreadsListDetails) {
-      return renderComputerAgentsThreadsListCompactLog(computerAgentsThreadsListDetails);
+      return renderComputerAgentsThreadsListCompactLog(
+        computerAgentsThreadsListDetails,
+      );
     }
-    const computerAgentsThreadGetDetails = parseComputerAgentsThreadGetLogDetails(log);
+    const computerAgentsThreadGetDetails =
+      parseComputerAgentsThreadGetLogDetails(log);
     if (computerAgentsThreadGetDetails) {
-      return renderComputerAgentsThreadGetCompactLog(computerAgentsThreadGetDetails);
+      return renderComputerAgentsThreadGetCompactLog(
+        computerAgentsThreadGetDetails,
+      );
     }
     if (isComputerAgentsThreadSnapshotLog(log)) {
-      return <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />;
+      return (
+        <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />
+      );
     }
     if (isListFilesLog(log)) {
       return (
@@ -2607,34 +3582,88 @@ export function RunnerWorkLogEntry({
       );
     }
     if (shouldRenderTaskManagementReleaseCreateLog(log)) {
-      return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
+      return (
+        <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />
+      );
     }
     if (shouldRenderTaskManagementCommentLog(log)) {
       return <TaskManagementCommentLogBox log={log} timeLabel={timeLabel} />;
     }
     if (shouldRenderTaskManagementUpdateLog(log)) {
-      return <TaskManagementUpdateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
+      return (
+        <TaskManagementUpdateLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          requestHeaders={requestHeaders}
+          activeTaskPreviewId={activeTaskPreviewId}
+          onTaskPreviewClick={onTaskPreviewClick}
+        />
+      );
     }
     if (shouldRenderTaskManagementCreateLog(log)) {
-      return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
+      return (
+        <TaskManagementCreateLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          requestHeaders={requestHeaders}
+          activeTaskPreviewId={activeTaskPreviewId}
+          onTaskPreviewClick={onTaskPreviewClick}
+        />
+      );
     }
     if (isComputerUseMcpLog(log)) {
       if (renderComputerUseMcpAsGeneric) {
         return <ComputerUseEventLogBox log={log} timeLabel={timeLabel} />;
       }
-      return <BrowserSkillLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} />;
+      return (
+        <BrowserSkillLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          environmentId={environmentId}
+          requestHeaders={requestHeaders}
+        />
+      );
     }
     if (isLikelyImageGenerationLog(log)) {
-      return <ImageGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} onPreviewDocument={onPreviewDocument} />;
+      return (
+        <ImageGenerationLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          environmentId={environmentId}
+          requestHeaders={requestHeaders}
+          onPreviewDocument={onPreviewDocument}
+        />
+      );
     }
     if (isLikelyVideoGenerationLog(log)) {
-      return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} onPreviewDocument={onPreviewDocument} />;
+      return (
+        <VideoGenerationLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          environmentId={environmentId}
+          requestHeaders={requestHeaders}
+          onPreviewDocument={onPreviewDocument}
+        />
+      );
     }
     return <GenericMcpToolLogBox log={log} timeLabel={timeLabel} />;
   }
 
   if (log.eventType === "mcp_log") {
-    return <GenericTextLogBox log={log} timeLabel={timeLabel} label="MCP Log" icon={<Globe className="tb-log-card-small-icon" strokeWidth={1.5} />} onWorkspacePathClick={onWorkspacePathClick} />;
+    return (
+      <GenericTextLogBox
+        log={log}
+        timeLabel={timeLabel}
+        label="MCP Log"
+        icon={<Globe className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        onWorkspacePathClick={onWorkspacePathClick}
+      />
+    );
   }
 
   if (log.eventType === "file_change") {
@@ -2650,22 +3679,51 @@ export function RunnerWorkLogEntry({
       );
     }
     if (shouldRenderTaskManagementReleaseCreateLog(log)) {
-      return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
+      return (
+        <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />
+      );
     }
     if (shouldRenderTaskManagementCommentLog(log)) {
       return <TaskManagementCommentLogBox log={log} timeLabel={timeLabel} />;
     }
     if (shouldRenderTaskManagementUpdateLog(log)) {
-      return <TaskManagementUpdateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
+      return (
+        <TaskManagementUpdateLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          requestHeaders={requestHeaders}
+          activeTaskPreviewId={activeTaskPreviewId}
+          onTaskPreviewClick={onTaskPreviewClick}
+        />
+      );
     }
     if (shouldRenderTaskManagementCreateLog(log)) {
-      return <TaskManagementCreateLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} requestHeaders={requestHeaders} activeTaskPreviewId={activeTaskPreviewId} onTaskPreviewClick={onTaskPreviewClick} />;
+      return (
+        <TaskManagementCreateLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          requestHeaders={requestHeaders}
+          activeTaskPreviewId={activeTaskPreviewId}
+          onTaskPreviewClick={onTaskPreviewClick}
+        />
+      );
     }
     if (isImageFileChangeLog(log)) {
       return null;
     }
     if (isVideoFileChangeLog(log)) {
-      return <VideoGenerationLogBox log={log} timeLabel={timeLabel} backendUrl={backendUrl} environmentId={environmentId} requestHeaders={requestHeaders} onPreviewDocument={onPreviewDocument} />;
+      return (
+        <VideoGenerationLogBox
+          log={log}
+          timeLabel={timeLabel}
+          backendUrl={backendUrl}
+          environmentId={environmentId}
+          requestHeaders={requestHeaders}
+          onPreviewDocument={onPreviewDocument}
+        />
+      );
     }
     return (
       <WriteFileLogGroup
@@ -2684,16 +3742,48 @@ export function RunnerWorkLogEntry({
   }
 
   if (log.eventType === "setup" || log.eventType === "startup") {
-    return <InlineStatusLogBox label="Starting session" icon={<Terminal className="tb-log-card-small-icon" strokeWidth={1.5} />} />;
+    return (
+      <InlineStatusLogBox
+        label="Starting session"
+        icon={<Terminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
+      />
+    );
   }
 
-  if (normalizedMessage === "setting up workspace" || normalizedMessage === "setting up workspace...") {
-    return <InlineStatusLogBox label="Setting up workspace..." icon={<Terminal className="tb-log-card-small-icon" strokeWidth={1.5} />} pending />;
+  if (
+    normalizedMessage === "setting up workspace" ||
+    normalizedMessage === "setting up workspace..."
+  ) {
+    return (
+      <InlineStatusLogBox
+        label="Setting up workspace..."
+        icon={<Terminal className="tb-log-card-small-icon" strokeWidth={1.5} />}
+        pending
+      />
+    );
   }
 
   if (log.type === "error") {
-    return <GenericTextLogBox log={log} timeLabel={timeLabel} label="Error" icon={<AlertCircle className="tb-log-card-small-icon" strokeWidth={1.5} />} onWorkspacePathClick={onWorkspacePathClick} />;
+    return (
+      <GenericTextLogBox
+        log={log}
+        timeLabel={timeLabel}
+        label="Error"
+        icon={
+          <AlertCircle className="tb-log-card-small-icon" strokeWidth={1.5} />
+        }
+        onWorkspacePathClick={onWorkspacePathClick}
+      />
+    );
   }
 
-  return <GenericTextLogBox log={log} timeLabel={timeLabel} label="Log" icon={<FileText className="tb-log-card-small-icon" strokeWidth={1.5} />} onWorkspacePathClick={onWorkspacePathClick} />;
+  return (
+    <GenericTextLogBox
+      log={log}
+      timeLabel={timeLabel}
+      label="Log"
+      icon={<FileText className="tb-log-card-small-icon" strokeWidth={1.5} />}
+      onWorkspacePathClick={onWorkspacePathClick}
+    />
+  );
 }

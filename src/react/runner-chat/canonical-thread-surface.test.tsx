@@ -1,12 +1,34 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createInitialRunnerThreadProjection } from "../../thread/projection.js";
-import type { RunnerThreadRun } from "../../thread/types.js";
+import type { RunnerThreadAction, RunnerThreadRun } from "../../thread/types.js";
 import { RunnerCanonicalThreadSurface } from "./canonical-thread-surface.js";
 
-afterEach(cleanup);
+const canvasContext = {
+  arc: vi.fn(),
+  beginPath: vi.fn(),
+  clearRect: vi.fn(),
+  clip: vi.fn(),
+  createConicGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+  createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+  fill: vi.fn(),
+  rect: vi.fn(),
+  restore: vi.fn(),
+  save: vi.fn(),
+  setTransform: vi.fn(),
+  stroke: vi.fn(),
+};
+
+beforeEach(() => {
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(canvasContext as never);
+});
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 function projectionWithRun() {
   const projection = createInitialRunnerThreadProjection("thread-screen");
@@ -76,11 +98,13 @@ describe("RunnerCanonicalThreadSurface", () => {
 
     render(
       <RunnerCanonicalThreadSurface
-        availableConnectorOptions={[{
-          id: "github",
-          name: "GitHub",
-          description: "Repositories and pull requests",
-        }]}
+        availableConnectorOptions={[
+          {
+            id: "github",
+            name: "GitHub",
+            description: "Repositories and pull requests",
+          },
+        ]}
         connected
         hasContent
         loading={false}
@@ -117,6 +141,21 @@ describe("RunnerCanonicalThreadSurface", () => {
     const onExecutionWorkbenchOpenChange = vi.fn();
     const onExecutionWorkbenchAvailabilityChange = vi.fn();
     const projection = projectionWithRun();
+    const connectorAction: RunnerThreadAction = {
+      kind: "action",
+      id: "action-1",
+      threadId: projection.threadId,
+      runId: "run-1",
+      sequence: 2,
+      type: "tool_call",
+      title: "Searched GitHub",
+      status: "completed",
+      toolName: "mcp__connector_github__search_repositories",
+      metadata: { connectorId: "github" },
+      createdAt: "2030-07-25T08:00:10.000Z",
+    };
+    projection.actionsById[connectorAction.id] = connectorAction;
+    projection.runsById["run-1"].highestPermissionRing = 2;
     const { rerender } = render(
       <RunnerCanonicalThreadSurface
         connected
@@ -135,6 +174,13 @@ describe("RunnerCanonicalThreadSurface", () => {
 
     rerender(
       <RunnerCanonicalThreadSurface
+        availableConnectorOptions={[
+          {
+            id: "github",
+            name: "GitHub",
+            description: "Repositories and pull requests",
+          },
+        ]}
         connected
         executionWorkbenchOpen
         hasContent
@@ -143,13 +189,64 @@ describe("RunnerCanonicalThreadSurface", () => {
         onExecutionWorkbenchOpenChange={onExecutionWorkbenchOpenChange}
         projection={projection}
         reconnecting={false}
+        taskList={{
+          status: "loaded",
+          items: [{ id: "todo-1", text: "Review the implementation", completed: true }],
+        }}
       />,
     );
 
     expect(await screen.findByRole("complementary", { name: "Execution details" })).toBeTruthy();
-    expect(screen.getByText("No tool activity was recorded for this run.")).toBeTruthy();
+    expect(screen.getByText("Task List")).toBeTruthy();
+    expect(screen.queryByText(/1 of 1 completed/i)).toBeNull();
+    expect(
+      document.querySelector(
+        ".platform-thread-workbench__summary-item.is-complete .lucide-circle-check",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByText("Review the implementation")).toBeTruthy();
+    expect(screen.getByText("Connectors")).toBeTruthy();
+    expect(screen.getByText("GitHub")).toBeTruthy();
+    expect(document.querySelector(".platform-permission-mini-ring-icon.is-ring-2")).toBeTruthy();
+    expect(screen.queryByText("Changes")).toBeNull();
+    expect(screen.queryByText("Resources")).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Close execution details" }));
-    expect(onExecutionWorkbenchOpenChange).toHaveBeenCalledWith(false);
+    rerender(
+      <RunnerCanonicalThreadSurface
+        connected
+        executionWorkbenchOpen={false}
+        hasContent
+        loading={false}
+        onExecutionWorkbenchAvailabilityChange={onExecutionWorkbenchAvailabilityChange}
+        onExecutionWorkbenchOpenChange={onExecutionWorkbenchOpenChange}
+        projection={projection}
+        reconnecting={false}
+      />,
+    );
+    expect(screen.queryByRole("complementary", { name: "Execution details" })).toBeNull();
+  });
+
+  it("keeps a published task list available before an execution receipt exists", async () => {
+    const onExecutionWorkbenchAvailabilityChange = vi.fn();
+
+    render(
+      <RunnerCanonicalThreadSurface
+        connected
+        executionWorkbenchOpen
+        hasContent={false}
+        loading={false}
+        onExecutionWorkbenchAvailabilityChange={onExecutionWorkbenchAvailabilityChange}
+        projection={createInitialRunnerThreadProjection("task-list-only")}
+        reconnecting={false}
+        taskList={{
+          status: "loaded",
+          items: [{ id: "todo-1", text: "Prepare the release", completed: false }],
+        }}
+      />,
+    );
+
+    expect(onExecutionWorkbenchAvailabilityChange).toHaveBeenCalledWith(true);
+    expect(await screen.findByRole("complementary", { name: "Execution details" })).toBeTruthy();
+    expect(screen.getByText("Prepare the release")).toBeTruthy();
   });
 });

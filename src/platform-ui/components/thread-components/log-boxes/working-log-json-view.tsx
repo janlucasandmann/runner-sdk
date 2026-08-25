@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Braces } from "lucide-react";
 
+import { PlatformSwitch } from "../../ui/switch/index.js";
 import { RunnerMarkdown } from "../shared/runner-markdown.js";
 import { RunnerCodeViewer } from "./code-viewer.js";
 import {
@@ -11,6 +12,11 @@ import {
   type RunnerWorkingLogJsonSegment,
   type RunnerWorkingLogJsonValue,
 } from "./working-log-json.js";
+
+const WORKING_LOG_JSON_VIEW_OPTIONS = [
+  { value: "preview", label: "Preview" },
+  { value: "json", label: "JSON" },
+] as const;
 
 function RunnerWorkingLogJsonRows({
   value,
@@ -108,26 +114,15 @@ function RunnerWorkingLogJsonDocument({
           />
           <span>{title}</span>
         </div>
-        <div
+        <PlatformSwitch
           className="tb-run-summary-json-mode-switch"
-          role="tablist"
-          aria-label="JSON display mode"
-        >
-          <button
-            type="button"
-            className={`tb-run-summary-json-mode-button ${viewMode === "preview" ? "is-active" : ""}`.trim()}
-            onClick={() => setViewMode("preview")}
-          >
-            Preview
-          </button>
-          <button
-            type="button"
-            className={`tb-run-summary-json-mode-button ${viewMode === "json" ? "is-active" : ""}`.trim()}
-            onClick={() => setViewMode("json")}
-          >
-            JSON
-          </button>
-        </div>
+          value={viewMode}
+          options={WORKING_LOG_JSON_VIEW_OPTIONS}
+          onValueChange={(value) =>
+            setViewMode(value === "json" ? "json" : "preview")
+          }
+          ariaLabel="JSON display mode"
+        />
       </div>
       <div className="tb-run-summary-json-body">
         {viewMode === "json" ? (

@@ -200,6 +200,13 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
   useEffect(() => {
     if (!resolvedOpen || loading || hasCustomPopupContent) return undefined;
     const timeout = window.setTimeout(() => {
+      const searchInput = popupRef.current?.querySelector<HTMLInputElement>(
+        ".platform-selector__popup-header input[type='search']:not(:disabled)",
+      );
+      if (searchInput) {
+        searchInput.focus({ preventScroll: true });
+        return;
+      }
       const activeElement = document.activeElement;
       if (
         activeElement instanceof HTMLElement

@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { loadBatchMetronomeManualRunContext } from "./batch-target-resources.js";
+import {
+  loadBatchMetronomeManualRunContext,
+  prepareBatchProjectTicket,
+} from "./batch-target-resources.js";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -79,5 +82,68 @@ describe("loadBatchMetronomeManualRunContext", () => {
         baseUrl: "/api/real",
       }),
     ).rejects.toThrow("The pinned Workflow version is no longer available.");
+  });
+});
+
+describe("prepareBatchProjectTicket", () => {
+  it("atomically creates the prepared Thread and its durable Batch receipt", async () => {
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const request = JSON.parse(String(init?.body || "{}")) as Record<string, unknown>;
+      expect(request).toMatchObject({
+        executionMode: "deferred",
+        queueInBatch: true,
+        moveToInProgress: false,
+        message: "Implement the ticket",
+        batch: {
+          name: "PROJ-7 Implement the ticket",
+          startPolicy: "manual",
+          definition: {
+            message: "Implement the ticket",
+            environmentId: "computer_1",
+            agentId: "agent_spark",
+          },
+        },
+        metadata: {
+          triggerKind: "batch",
+          source: "batch_composer",
+        },
+      });
+      return new Response(
+        JSON.stringify({
+          thread: {
+            id: "thread_prepared",
+            title: "PROJ-7 Implement the ticket",
+            task: "Implement the ticket",
+          },
+          batchJob: {
+            id: "batch_project_ticket",
+            name: "PROJ-7 Implement the ticket",
+            targetKind: "project_ticket_action",
+            status: "held",
+          },
+        }),
+        { status: 201, headers: { "Content-Type": "application/json" } },
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const prepared = await prepareBatchProjectTicket("ticket_7", {
+      baseUrl: "/api/real",
+      idempotencyKey: "project-ticket-batch-7",
+      batch: {
+        name: "PROJ-7 Implement the ticket",
+        targetKind: "project_ticket_action",
+        startPolicy: "manual",
+        definition: {
+          message: "Implement the ticket",
+          environmentId: "computer_1",
+          agentId: "agent_spark",
+        },
+      },
+    });
+
+    expect(prepared.threadId).toBe("thread_prepared");
+    expect(prepared.batchJob.id).toBe("batch_project_ticket");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

@@ -64,6 +64,8 @@ export interface PlatformFileExplorerBrowserModalProps<TItem>
   /** Optional control rendered as the source title immediately after the icon. */
   headerTitle?: ReactNode;
   headerActions?: ReactNode;
+  /** Hides the file-type filter strip for scoped explorer flows. */
+  showFilterTabs?: boolean;
   filterContextKey?: string;
   items?: readonly TItem[];
   renderItem?: (item: TItem) => ReactNode;
@@ -112,6 +114,7 @@ export function PlatformFileExplorerBrowserModal<TItem>({
   headerIcon,
   headerTitle,
   headerActions,
+  showFilterTabs = true,
   filterContextKey = "default",
   items = [],
   renderItem,
@@ -135,8 +138,9 @@ export function PlatformFileExplorerBrowserModal<TItem>({
     contextKey: string;
     value: PlatformFileExplorerFilter;
   }>({ contextKey: filterContextKey, value: "all" });
-  const activeFilter =
-    filterSelection.contextKey === filterContextKey ? filterSelection.value : "all";
+  const activeFilter = showFilterTabs && filterSelection.contextKey === filterContextKey
+    ? filterSelection.value
+    : "all";
 
   const visibleItems = (() => {
     if (activeFilter === "all") return [...items];
@@ -265,7 +269,7 @@ export function PlatformFileExplorerBrowserModal<TItem>({
           {headerActions}
         </div>
       }
-      contentNavigation={
+      contentNavigation={showFilterTabs ? (
         <PlatformDetailTabBar
           className="tb-file-browser-tabs"
           tabs={FILE_FILTER_TABS}
@@ -276,7 +280,7 @@ export function PlatformFileExplorerBrowserModal<TItem>({
           ariaLabel="File filters"
           showDivider
         />
-      }
+      ) : null}
       mainClassName="tb-file-browser-main"
       contentFooterClassName="tb-file-browser-footer"
       footer={

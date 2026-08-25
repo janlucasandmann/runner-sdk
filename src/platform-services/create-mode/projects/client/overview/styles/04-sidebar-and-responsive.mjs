@@ -825,24 +825,6 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
         font-weight: 400;
       }
 
-      .playground-project-overview-rule-editor-modal {
-        width: min(520px, calc(100vw - 32px));
-        max-width: min(520px, calc(100vw - 32px));
-      }
-
-      .playground-project-overview-rule-description-editor {
-        margin-top: 0;
-        padding-top: 0;
-      }
-
-      .playground-project-overview-rule-editor-modal .playground-tasks-project-modal-actions {
-        margin-top: 16px;
-      }
-
-      .playground-project-overview-rule-modal-textarea {
-        min-height: 112px;
-      }
-
       .playground-project-overview-strategy-notes {
         margin-top: 0;
         padding-top: 0;
@@ -944,17 +926,17 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
       }
 
       .playground-project-overview-rules-empty {
+        width: 100%;
+        max-width: none;
         min-height: 360px;
-        border-radius: 24px;
+        box-sizing: border-box;
+        border: 1px dotted rgba(255, 255, 255, 0.15);
+        border-radius: 15px;
         background: transparent !important;
       }
 
-      .playground-project-overview-rules-tab .playground-tasks-empty.playground-project-overview-rules-empty {
+      .playground-project-overview-rules-tab .platform-empty-state.playground-project-overview-rules-empty {
         background: transparent !important;
-      }
-
-      .playground-project-overview-rules-empty .playground-tasks-empty-title {
-        font-weight: 500;
       }
 
       .playground-project-overview-rule-item {
@@ -970,26 +952,21 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
         flex: 0 0 auto;
       }
 
-      .playground-project-overview-rule-item .playground-tasks-backlog-item-content {
-        align-items: center;
-      }
-
       .playground-project-overview-rule-main {
         flex: 1 1 auto;
         min-width: 0;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: flex-start;
       }
 
       .playground-project-overview-rule-copy {
         flex: 1 1 auto;
         min-width: 0;
-        color: rgba(255, 255, 255, 0.78);
-        font-size: 13px;
-        line-height: 1.55;
-        font-weight: 400;
-        cursor: text;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        cursor: pointer;
       }
 
       .playground-project-overview-rule-copy.is-read-only {
@@ -997,7 +974,7 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
       }
 
       .playground-project-overview-rule-copy.tb-runner-chat {
-        display: block;
+        display: flex;
         height: auto;
         min-height: 0;
         flex: 1 1 auto;
@@ -1013,6 +990,13 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
         font-size: inherit;
         line-height: inherit;
         font-weight: inherit;
+      }
+
+      .playground-project-overview-rule-title {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.4;
       }
 
       .playground-project-overview-rule-copy.tb-runner-chat p {

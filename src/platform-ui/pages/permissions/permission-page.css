@@ -481,7 +481,7 @@
 }
 
 .platform-role-permissions-page[data-platform-role-list-placement="details-sidebar"] {
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
   gap: 42px;
 }
 
@@ -673,6 +673,18 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.platform-role-permissions-page__role-label {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.platform-role-permissions-page__role-icon {
+  flex: 0 0 auto;
+  color: currentColor;
 }
 
 .platform-role-permissions-page__role-title,

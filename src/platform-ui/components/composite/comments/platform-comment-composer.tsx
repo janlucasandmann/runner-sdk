@@ -34,10 +34,37 @@ function getFileKey(file: File) {
   return `${file.name}:${file.size}:${file.lastModified}:${file.type}`;
 }
 
+function PlatformCommentSubmitIcon({ submitting }: { submitting: boolean }) {
+  if (submitting) {
+    return (
+      <img
+        className="platform-comment-submit-spinner"
+        src="/img/spinner.svg"
+        alt=""
+        width={14}
+        height={14}
+        aria-hidden="true"
+      />
+    );
+  }
+  return <ArrowUp width={14} height={14} strokeWidth={1.9} aria-hidden="true" />;
+}
+
 interface ActiveMentionQuery {
   from: number;
   to: number;
   query: string;
+}
+
+function mentionQueriesMatch(
+  left: ActiveMentionQuery | null,
+  right: ActiveMentionQuery | null,
+) {
+  if (left === right) return true;
+  return Boolean(left && right)
+    && left?.from === right?.from
+    && left?.to === right?.to
+    && left?.query === right?.query;
 }
 
 function getActiveMentionQuery(value: string, caret: number): ActiveMentionQuery | null {
@@ -237,9 +264,12 @@ export function PlatformCommentComposer({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const selectedMentionsInlineRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const submitInFlightRef = useRef(false);
   const onMentionQueryChangeRef = useRef(onMentionQueryChange);
+  const mentionQueryRef = useRef<ActiveMentionQuery | null>(null);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [isDraggingFiles, setIsDraggingFiles] = useState(false);
+  const [isSubmittingInternally, setIsSubmittingInternally] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<ActiveMentionQuery | null>(null);
   const [mentionActiveIndex, setMentionActiveIndex] = useState(0);
   const [selectedMentions, setSelectedMentions] = useState<PlatformMentionReference[]>([]);
@@ -247,12 +277,19 @@ export function PlatformCommentComposer({
     selectedMentionsInlineRef,
     selectedMentions,
   );
-  const canSubmit = Boolean(value.trim()) && !disabled && !submitting;
+  const submissionPending = submitting || isSubmittingInternally;
+  const canSubmit = Boolean(value.trim()) && !disabled && !submissionPending;
   const filteredMentionOptions = useMemo(
     () => filterMentionOptions(mentionOptions, mentionQuery?.query || ""),
     [mentionOptions, mentionQuery?.query],
   );
   onMentionQueryChangeRef.current = onMentionQueryChange;
+
+  useEffect(() => {
+    setMentionActiveIndex((current) => filteredMentionOptions.length
+      ? Math.min(current, filteredMentionOptions.length - 1)
+      : 0);
+  }, [filteredMentionOptions.length]);
 
   useEffect(() => {
     onMentionQueryChangeRef.current?.(mentionQuery?.query ?? null);
@@ -273,8 +310,17 @@ export function PlatformCommentComposer({
     }
   }, [autoFocus]);
 
+  function updateMentionQuery(nextQuery: ActiveMentionQuery | null) {
+    const queryChanged = !mentionQueriesMatch(mentionQueryRef.current, nextQuery);
+    mentionQueryRef.current = nextQuery;
+    if (queryChanged) {
+      setMentionQuery(nextQuery);
+      setMentionActiveIndex(0);
+    }
+  }
+
   function appendFiles(files: FileList | readonly File[] | null) {
-    if (!allowAttachments || disabled || submitting || !files) {
+    if (!allowAttachments || disabled || submissionPending || !files) {
       return;
     }
     const incomingFiles = Array.from(files);
@@ -301,7 +347,7 @@ export function PlatformCommentComposer({
   }
 
   function handleDragOver(event: DragEvent<HTMLFormElement>) {
-    if (!allowAttachments || disabled || submitting) {
+    if (!allowAttachments || disabled || submissionPending) {
       return;
     }
     event.preventDefault();
@@ -318,7 +364,7 @@ export function PlatformCommentComposer({
   }
 
   function handleDrop(event: DragEvent<HTMLFormElement>) {
-    if (!allowAttachments || disabled || submitting) {
+    if (!allowAttachments || disabled || submissionPending) {
       return;
     }
     event.preventDefault();
@@ -327,9 +373,11 @@ export function PlatformCommentComposer({
   }
 
   async function submitComment() {
-    if (!canSubmit) {
+    if (!canSubmit || submitInFlightRef.current) {
       return;
     }
+    submitInFlightRef.current = true;
+    setIsSubmittingInternally(true);
     try {
       const submissionResult = selectedMentions.length > 0
         ? await onSubmit(
@@ -341,18 +389,23 @@ export function PlatformCommentComposer({
       if (submissionResult !== false) {
         setPendingFiles([]);
         setSelectedMentions([]);
-        setMentionQuery(null);
+        updateMentionQuery(null);
       }
     } catch {
       // The consuming domain owns the visible error and may retry these files.
+    } finally {
+      submitInFlightRef.current = false;
+      setIsSubmittingInternally(false);
     }
   }
 
-  function refreshMentionQuery(nextValue = value) {
+  function refreshMentionQuery(nextValue = value, caret?: number) {
     const textarea = textareaRef.current;
-    const nextQuery = getActiveMentionQuery(nextValue, textarea?.selectionStart ?? nextValue.length);
-    setMentionQuery(nextQuery);
-    setMentionActiveIndex(0);
+    const nextQuery = getActiveMentionQuery(
+      nextValue,
+      caret ?? textarea?.selectionStart ?? nextValue.length,
+    );
+    updateMentionQuery(nextQuery);
   }
 
   function selectMention(option: PlatformMentionOption) {
@@ -368,7 +421,7 @@ export function PlatformCommentComposer({
     const replacement = removeActiveMentionQuery(sourceValue, query);
     onChange(replacement.value);
     setSelectedMentions((current) => mergeMentionReference(current, option));
-    setMentionQuery(null);
+    updateMentionQuery(null);
     // React flushes the controlled value at the end of this input event. A
     // microtask restores the caret before the browser can deliver the next
     // typed character; requestAnimationFrame is too late and can rotate that
@@ -446,7 +499,7 @@ export function PlatformCommentComposer({
           placeholder={selectedMentions.length ? "" : placeholder}
           aria-label={ariaLabel}
           autoFocus={autoFocus}
-          disabled={disabled || submitting}
+          disabled={disabled || submissionPending}
           onChange={(event) => {
             const nextValue = event.currentTarget.value;
             const nextCaret = event.currentTarget.selectionStart ?? nextValue.length;
@@ -456,10 +509,18 @@ export function PlatformCommentComposer({
               return;
             }
             onChange(nextValue);
-            requestAnimationFrame(() => refreshMentionQuery(nextValue));
+            refreshMentionQuery(nextValue, nextCaret);
           }}
           onClick={() => refreshMentionQuery()}
-          onKeyUp={() => refreshMentionQuery()}
+          onKeyUp={(event) => {
+            // Arrow navigation is resolved on keydown. Re-reading the same
+            // mention query on keyup would reset the active option to zero,
+            // making keyboard navigation appear stuck on the first row.
+            if (["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(event.key)) {
+              return;
+            }
+            refreshMentionQuery();
+          }}
           onKeyDown={(event) => {
             const liveMentionQuery = getActiveMentionQuery(
               value,
@@ -474,7 +535,7 @@ export function PlatformCommentComposer({
             if (mentionQuery) {
               if (event.key === "Escape") {
                 event.preventDefault();
-                setMentionQuery(null);
+                updateMentionQuery(null);
                 return;
               }
               if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -538,7 +599,7 @@ export function PlatformCommentComposer({
                 className="platform-comment-composer__file-remove"
                 aria-label={`Remove ${file.name}`}
                 title={`Remove ${file.name}`}
-                disabled={disabled || submitting}
+                disabled={disabled || submissionPending}
                 onClick={() => {
                   setPendingFiles((currentFiles) =>
                     currentFiles.filter((candidate) => candidate !== file),
@@ -568,7 +629,7 @@ export function PlatformCommentComposer({
               className="platform-comment-composer__attach"
               aria-label={attachmentAriaLabel}
               title={attachmentAriaLabel}
-              disabled={disabled || submitting}
+              disabled={disabled || submissionPending}
               onClick={() => fileInputRef.current?.click()}
             >
               <Paperclip width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
@@ -579,11 +640,11 @@ export function PlatformCommentComposer({
           type="submit"
           size="small"
           className="platform-comment-composer__submit"
-          aria-label={submitting ? "Adding comment" : "Add comment"}
-          title={submitting ? "Adding comment" : "Add comment"}
+          aria-label={submissionPending ? "Adding comment" : "Add comment"}
+          title={submissionPending ? "Adding comment" : "Add comment"}
           disabled={!canSubmit}
         >
-          <ArrowUp width={14} height={14} strokeWidth={1.9} aria-hidden="true" />
+          <PlatformCommentSubmitIcon submitting={submissionPending} />
         </PlatformIconButton>
       </div>
       {errorMessage ? (
@@ -619,6 +680,7 @@ export function PlatformCommentReplyComposer({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const selectedMentionsInlineRef = useRef<HTMLDivElement | null>(null);
   const onMentionQueryChangeRef = useRef(onMentionQueryChange);
+  const mentionQueryRef = useRef<ActiveMentionQuery | null>(null);
   const canSubmit = Boolean(value.trim()) && !disabled && !submitting;
   const selectedMentionsInlineWidth = useSelectedMentionWidth(
     selectedMentionsInlineRef,
@@ -629,6 +691,12 @@ export function PlatformCommentReplyComposer({
     [mentionOptions, mentionQuery?.query],
   );
   onMentionQueryChangeRef.current = onMentionQueryChange;
+
+  useEffect(() => {
+    setMentionActiveIndex((current) => filteredMentionOptions.length
+      ? Math.min(current, filteredMentionOptions.length - 1)
+      : 0);
+  }, [filteredMentionOptions.length]);
 
   useEffect(() => {
     onMentionQueryChangeRef.current?.(mentionQuery?.query ?? null);
@@ -649,6 +717,15 @@ export function PlatformCommentReplyComposer({
     }
   }, [autoFocus]);
 
+  function updateReplyMentionQuery(nextQuery: ActiveMentionQuery | null) {
+    const queryChanged = !mentionQueriesMatch(mentionQueryRef.current, nextQuery);
+    mentionQueryRef.current = nextQuery;
+    if (queryChanged) {
+      setMentionQuery(nextQuery);
+      setMentionActiveIndex(0);
+    }
+  }
+
   async function submitReply() {
     if (!canSubmit) {
       return;
@@ -663,7 +740,7 @@ export function PlatformCommentReplyComposer({
       }
       setValue("");
       setSelectedMentions([]);
-      setMentionQuery(null);
+      updateReplyMentionQuery(null);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to add reply.");
     } finally {
@@ -671,10 +748,12 @@ export function PlatformCommentReplyComposer({
     }
   }
 
-  function refreshReplyMentionQuery(nextValue = value) {
+  function refreshReplyMentionQuery(nextValue = value, caret?: number) {
     const textarea = textareaRef.current;
-    setMentionQuery(getActiveMentionQuery(nextValue, textarea?.selectionStart ?? nextValue.length));
-    setMentionActiveIndex(0);
+    updateReplyMentionQuery(getActiveMentionQuery(
+      nextValue,
+      caret ?? textarea?.selectionStart ?? nextValue.length,
+    ));
   }
 
   function selectReplyMention(option: PlatformMentionOption) {
@@ -690,7 +769,7 @@ export function PlatformCommentReplyComposer({
     const replacement = removeActiveMentionQuery(sourceValue, query);
     setValue(replacement.value);
     setSelectedMentions((current) => mergeMentionReference(current, option));
-    setMentionQuery(null);
+    updateReplyMentionQuery(null);
     queueMicrotask(() => {
       textareaRef.current?.focus({ preventScroll: true });
       textareaRef.current?.setSelectionRange(
@@ -762,13 +841,20 @@ export function PlatformCommentReplyComposer({
               return;
             }
             setValue(nextValue);
-            requestAnimationFrame(() => refreshReplyMentionQuery(nextValue));
+            refreshReplyMentionQuery(nextValue, nextCaret);
             if (errorMessage) {
               setErrorMessage("");
             }
           }}
           onClick={() => refreshReplyMentionQuery()}
-          onKeyUp={() => refreshReplyMentionQuery()}
+          onKeyUp={(event) => {
+            // Preserve the option selected during keydown. The query itself
+            // has not changed while navigating, so it must not reset here.
+            if (["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(event.key)) {
+              return;
+            }
+            refreshReplyMentionQuery();
+          }}
           onKeyDown={(event) => {
             const liveMentionQuery = getActiveMentionQuery(
               value,
@@ -783,7 +869,7 @@ export function PlatformCommentReplyComposer({
             if (mentionQuery) {
               if (event.key === "Escape") {
                 event.preventDefault();
-                setMentionQuery(null);
+                updateReplyMentionQuery(null);
                 return;
               }
               if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -844,7 +930,7 @@ export function PlatformCommentReplyComposer({
         title={submitting ? "Adding reply" : "Add reply"}
         disabled={!canSubmit}
       >
-        <ArrowUp width={14} height={14} strokeWidth={1.9} aria-hidden="true" />
+        <PlatformCommentSubmitIcon submitting={submitting} />
       </PlatformIconButton>
       {errorMessage ? (
         <div className="platform-comment-reply-composer__error" role="alert">

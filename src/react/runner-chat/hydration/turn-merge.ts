@@ -50,6 +50,33 @@ function mergeTurnMessageMetadata(
   };
 }
 
+function getTurnProjectMentionIdentity(turn: RunnerTurn): string {
+  const projectMention =
+    turn.messageMetadata?.projectMention &&
+    typeof turn.messageMetadata.projectMention === "object"
+      ? (turn.messageMetadata.projectMention as Record<string, unknown>)
+      : null;
+  const source =
+    projectMention?.source && typeof projectMention.source === "object"
+      ? (projectMention.source as Record<string, unknown>)
+      : null;
+  const sourceType = String(source?.type || "").trim();
+  const sourceId = String(source?.id || "").trim();
+  const projectId = String(source?.projectId || projectMention?.projectId || "").trim();
+  return sourceType && sourceId
+    ? `${sourceType}:${sourceId}:${projectId}`
+    : "";
+}
+
+function getCanonicalTurnIdentity(turn: RunnerTurn): string {
+  const sourceMessageId = String(turn.sourceMessageId || "").trim();
+  if (sourceMessageId) {
+    return `message:${sourceMessageId}`;
+  }
+  const projectMentionIdentity = getTurnProjectMentionIdentity(turn);
+  return projectMentionIdentity ? `project-mention:${projectMentionIdentity}` : "";
+}
+
 function runnerLogHasMetronomeWorkflowPromptReplacement(log: RunnerLog): boolean {
   if (log.eventType !== "metronome_workflow" && !log.metadata?.metronomeWorkflow) {
     return false;
@@ -295,6 +322,58 @@ function shouldPreserveLocalTurnProgress(
     getTurnLatestProgressTimestampMs(localTurn) >
     getTurnLatestProgressTimestampMs(hydratedTurn)
   );
+}
+
+function mergeDuplicateCanonicalTurns(
+  currentTurn: RunnerTurn,
+  nextTurn: RunnerTurn,
+): RunnerTurn {
+  const preferCurrent = shouldPreserveLocalTurnProgress(currentTurn, nextTurn);
+  const preferred = preferCurrent ? currentTurn : nextTurn;
+  const fallback = preferCurrent ? nextTurn : currentTurn;
+  return {
+    ...fallback,
+    ...preferred,
+    prompt: preferred.prompt || fallback.prompt,
+    messageMetadata: mergeTurnMessageMetadata(
+      preferred.messageMetadata,
+      fallback.messageMetadata,
+    ),
+    logs: dedupeAdjacentRunnerLogs(
+      sortRunnerLogsChronologically([...fallback.logs, ...preferred.logs]),
+    ),
+    quotedSelection:
+      preferred.quotedSelection ?? fallback.quotedSelection ?? null,
+    attachments: pickTurnAttachments(
+      preferred.attachments,
+      fallback.attachments,
+    ),
+    sourceMessageId:
+      preferred.sourceMessageId ?? fallback.sourceMessageId ?? null,
+  };
+}
+
+function dedupeCanonicalTurns(turns: RunnerTurn[]): RunnerTurn[] {
+  const deduped: RunnerTurn[] = [];
+  const indexByIdentity = new Map<string, number>();
+  for (const turn of turns) {
+    const identity = getCanonicalTurnIdentity(turn);
+    if (!identity) {
+      deduped.push(turn);
+      continue;
+    }
+    const existingIndex = indexByIdentity.get(identity);
+    if (existingIndex === undefined) {
+      indexByIdentity.set(identity, deduped.length);
+      deduped.push(turn);
+      continue;
+    }
+    const existingTurn = deduped[existingIndex];
+    if (existingTurn) {
+      deduped[existingIndex] = mergeDuplicateCanonicalTurns(existingTurn, turn);
+    }
+  }
+  return deduped;
 }
 
 function replaceTurnResponseLogs(
@@ -613,8 +692,8 @@ export function mergeHydratedTurns(
   existingTurns: RunnerTurn[],
   hydratedTurns: RunnerTurn[],
 ): RunnerTurn[] {
-  const mergedTurns = [...hydratedTurns];
-  for (const localTurn of existingTurns) {
+  const mergedTurns = dedupeCanonicalTurns(hydratedTurns);
+  for (const localTurn of dedupeCanonicalTurns(existingTurns)) {
     const localPresentation = turnPresentation(localTurn);
     const carryIfUnmatched =
       localTurn.status === "queued" ||
@@ -686,7 +765,7 @@ export function mergeHydratedTurns(
         hydratedTurn.loopCommand ?? localTurn.loopCommand ?? null,
     };
   }
-  return [...mergedTurns]
+  return dedupeCanonicalTurns(mergedTurns)
     .sort(
       (left, right) =>
         (left.startedAtMs || 0) - (right.startedAtMs || 0) ||

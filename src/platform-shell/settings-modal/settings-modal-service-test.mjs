@@ -149,6 +149,7 @@ for (const preferenceId of [
   "permissionRequests",
   "assignedWork",
   "taskActivity",
+  "mentions",
   "invitations",
   "productUpdates",
 ]) {

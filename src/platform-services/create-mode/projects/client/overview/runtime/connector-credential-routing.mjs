@@ -77,16 +77,40 @@ export const PROJECT_OVERVIEW_CONNECTOR_CREDENTIAL_ROUTING_FRAGMENT = String.raw
           };
         }
 
-        function updateProjectConnectorCredentialBinding(projectRecord, definition, credentialId) {
+        function normalizeProjectConnectorCredentialCandidates(credentials) {
+          return (Array.isArray(credentials) ? credentials : []).map((credential) => ({
+            credentialId: String(
+              credential?.credentialId || credential?.id || ""
+            ).trim(),
+            name: String(
+              credential?.name || credential?.identity || "Connected account"
+            ).trim(),
+            identity: String(
+              credential?.identity || credential?.name || "Connected account"
+            ).trim(),
+            status: String(credential?.status || "valid").trim().toLowerCase(),
+            isDefault: credential?.isDefault === true,
+          })).filter((credential) => credential.credentialId);
+        }
+
+        function updateProjectConnectorCredentialBinding(
+          projectRecord,
+          definition,
+          credentialId,
+          fallbackCredentials = []
+        ) {
           const providerId = normalizeProjectConnectorCredentialProviderId(
             definition?.providerId || definition?.id
           );
           if (!providerId) return;
-          const credentials = Array.isArray(
+          const catalogCredentials = Array.isArray(
             projectOverviewConnectorCredentialCatalogState?.providers?.[definition.id]?.credentials
           )
             ? projectOverviewConnectorCredentialCatalogState.providers[definition.id].credentials
             : [];
+          const credentials = normalizeProjectConnectorCredentialCandidates(
+            catalogCredentials.length > 0 ? catalogCredentials : fallbackCredentials
+          );
           const normalizedCredentialId = String(credentialId || "").trim();
           const selectedCredential = credentials.find(
             (credential) => credential.credentialId === normalizedCredentialId
@@ -128,6 +152,124 @@ export const PROJECT_OVERVIEW_CONNECTOR_CREDENTIAL_ROUTING_FRAGMENT = String.raw
                 })
               : React.createElement(KeyRound, { size: 15, strokeWidth: 1.8 })
           );
+        }
+
+        function renderProjectConnectorCredentialSelector(
+          projectRecord,
+          providerDefinition,
+          options = {}
+        ) {
+          const definition = providerDefinition
+            && typeof providerDefinition === "object"
+            && !Array.isArray(providerDefinition)
+              ? providerDefinition
+              : buildProjectConnectorCredentialProviderDefinition(providerDefinition);
+          const providerId = normalizeProjectConnectorCredentialProviderId(
+            definition?.providerId || definition?.id
+          );
+          if (!providerId) return null;
+
+          const catalogStatus = String(
+            projectOverviewConnectorCredentialCatalogState?.status || "idle"
+          );
+          const providerCatalogs = (
+            projectOverviewConnectorCredentialCatalogState?.providers
+            && typeof projectOverviewConnectorCredentialCatalogState.providers === "object"
+          )
+            ? projectOverviewConnectorCredentialCatalogState.providers
+            : {};
+          const providerCatalog = providerCatalogs[definition.id]
+            || providerCatalogs[providerId]
+            || null;
+          const credentials = Array.isArray(providerCatalog?.credentials)
+            ? providerCatalog.credentials
+            : [];
+          const binding = getProjectConnectorCredentialBinding(projectRecord, providerId);
+          const selectedCredential = credentials.find(
+            (credential) => credential.credentialId === binding.credentialId
+          ) || null;
+          const organizationDefault = credentials.find(
+            (credential) => credential.isDefault
+          ) || credentials[0] || null;
+          const isLoading = catalogStatus === "loading" || catalogStatus === "idle";
+          if (
+            options.hideWhenUnavailable === true
+            && !isLoading
+            && credentials.length === 0
+            && !binding.credentialId
+          ) {
+            return null;
+          }
+
+          const selectorOptions = [
+            {
+              value: "__organization_default__",
+              label: "Organization default",
+              description: organizationDefault
+                ? (
+                    organizationDefault.name
+                    || organizationDefault.identity
+                    || "Current default credential"
+                  )
+                : "No organization credential is connected yet.",
+            },
+            ...credentials.map((credential) => ({
+              value: credential.credentialId,
+              label:
+                credential.name
+                || credential.identity
+                || "Connected account",
+              description: [
+                credential.identity,
+                credential.isDefault ? "Organization default" : "",
+                credential.status === "invalid" ? "Needs reconnection" : "",
+              ].filter(Boolean).join(" · "),
+              disabled: credential.status === "invalid",
+            })),
+          ];
+          if (binding.credentialId && !selectedCredential) {
+            selectorOptions.push({
+              value: binding.credentialId,
+              label: binding.credentialName || "Unavailable credential",
+              description: "This project credential no longer exists or is unavailable.",
+              disabled: true,
+            });
+          }
+
+          return React.createElement(PlatformSelector, {
+            value: binding.credentialId
+              ? binding.credentialId
+              : "__organization_default__",
+            options: selectorOptions,
+            onValueChange: (nextValue) => {
+              updateProjectConnectorCredentialBinding(
+                projectRecord,
+                definition,
+                nextValue
+              );
+            },
+            ariaLabel: "Select " + definition.label + " credentials for this project",
+            label: binding.credentialId
+              ? (
+                  selectedCredential?.name
+                  || selectedCredential?.identity
+                  || binding.credentialName
+                  || "Unavailable credential"
+                )
+              : "Organization default",
+            placeholder: "Organization default",
+            disabled: options.disabled === true,
+            loading: isLoading,
+            loadingContent: "Loading credentials...",
+            emptyContent: "No credentials available.",
+            alignment: "end",
+            popupAlignment: "right",
+            popupWidth: "min(340px, calc(100vw - 48px))",
+            popupMaxHeight: "min(360px, calc(100vh - 120px))",
+            className: String(options.className || "").trim() || undefined,
+            triggerClassName: String(options.triggerClassName || "").trim() || undefined,
+            popupClassName: String(options.popupClassName || "").trim() || undefined,
+          });
         }
 
         function renderProjectConnectorCredentialRouting(projectRecord, options = {}) {

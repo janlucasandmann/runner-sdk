@@ -908,6 +908,268 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
           await persistProjectComposerDraft({ mode: "edit" }).catch(() => null);
         }
 
+        function getActiveProjectOverviewRecord() {
+          const normalizedProjectId = String(selectedProjectId || selectedProject?.id || "").trim();
+          if (
+            normalizedProjectId
+            && projectDraft?.id
+            && String(projectDraft.id).trim() === normalizedProjectId
+          ) {
+            return normalizePlaygroundProjectRecord(projectDraft);
+          }
+          return normalizePlaygroundProjectRecord(selectedProject);
+        }
+
+        function commitProjectOverviewSidebarProjectRecord(projectRecord) {
+          if (!projectRecord?.id || typeof commitLocalProjectRecord !== "function") {
+            return;
+          }
+          const normalizedProjectRecord = normalizePlaygroundProjectRecord(projectRecord);
+          if (typeof setProjectDraft === "function") {
+            setProjectDraft((current) => {
+              if (!current || String(current.id || "") !== String(normalizedProjectRecord.id || "")) {
+                return current;
+              }
+              return normalizePlaygroundProjectRecord({
+                ...current,
+                ...normalizedProjectRecord,
+                metadata: {
+                  ...(current.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
+                    ? current.metadata
+                    : {}),
+                  ...(normalizedProjectRecord.metadata && typeof normalizedProjectRecord.metadata === "object" && !Array.isArray(normalizedProjectRecord.metadata)
+                    ? normalizedProjectRecord.metadata
+                    : {}),
+                },
+              });
+            });
+          }
+          commitLocalProjectRecord(normalizedProjectRecord, {
+            summary: normalizedProjectRecord.summary || selectedProjectSummary,
+            environments: selectedProjectEnvironments,
+            recentThreads: selectedProjectRecentThreads,
+            threads: selectedProjectRecentThreads,
+            selectImmediately: true,
+          });
+        }
+
+        async function persistProjectOverviewSidebarProjectUpdate(projectUpdates = {}, metadataUpdates = {}, options = {}) {
+          const baseProject = getActiveProjectOverviewRecord();
+          const normalizedProjectId = String(baseProject.id || selectedProjectId || "").trim();
+          if (!normalizedProjectId) {
+            return null;
+          }
+          const baseMetadata = baseProject?.metadata && typeof baseProject.metadata === "object" && !Array.isArray(baseProject.metadata)
+            ? baseProject.metadata
+            : {};
+          const nextMetadata = {
+            ...baseMetadata,
+            ...(metadataUpdates && typeof metadataUpdates === "object" ? metadataUpdates : {}),
+          };
+          const nextProjectRecord = normalizePlaygroundProjectRecord({
+            ...baseProject,
+            ...(projectUpdates && typeof projectUpdates === "object" ? projectUpdates : {}),
+            metadata: nextMetadata,
+            updatedAt: new Date().toISOString(),
+          });
+          commitProjectOverviewSidebarProjectRecord(nextProjectRecord);
+          if (typeof setProjectSaveState === "function") {
+            setProjectSaveState({ isSaving: true, error: "", message: "" });
+          }
+          try {
+            const payload = {
+              ...buildPlaygroundProjectSavePayload(nextProjectRecord, metadataUpdates),
+              ...(options.requestPayload && typeof options.requestPayload === "object"
+                ? options.requestPayload
+                : {}),
+            };
+            const headers = new Headers(requestHeaders || {});
+            headers.set("Content-Type", "application/json");
+            const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId), {
+              method: "PATCH",
+              headers,
+              body: JSON.stringify(payload),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to update project.");
+            }
+            const updatedProject = getPlaygroundProjectResponseRecord(data, nextProjectRecord);
+            const reconciledProject = normalizePlaygroundProjectRecord({
+              ...(updatedProject || nextProjectRecord),
+              ...(projectUpdates && typeof projectUpdates === "object" ? projectUpdates : {}),
+              metadata: {
+                ...(updatedProject?.metadata && typeof updatedProject.metadata === "object" && !Array.isArray(updatedProject.metadata)
+                  ? updatedProject.metadata
+                  : nextMetadata),
+                ...(metadataUpdates && typeof metadataUpdates === "object" ? metadataUpdates : {}),
+              },
+            });
+            if (reconciledProject?.id) {
+              commitProjectOverviewSidebarProjectRecord(reconciledProject);
+            }
+            if (typeof setProjectSaveState === "function") {
+              setProjectSaveState({ isSaving: false, error: "", message: "Saved" });
+            }
+            return reconciledProject;
+          } catch (error) {
+            commitProjectOverviewSidebarProjectRecord(baseProject);
+            const normalizedError = error instanceof Error
+              ? error
+              : new Error("Failed to update project.");
+            if (typeof setProjectSaveState === "function") {
+              setProjectSaveState({
+                isSaving: false,
+                error: normalizedError.message,
+                message: "",
+              });
+            }
+            if (options.throwOnError === true) {
+              throw normalizedError;
+            }
+            return null;
+          }
+        }
+
+        function updateProjectOverviewSidebarProjectProperty(projectUpdates = {}, metadataUpdates = {}) {
+          setProjectOverviewSidebarPropertyPopover("");
+          void persistProjectOverviewSidebarProjectUpdate(projectUpdates, metadataUpdates);
+        }
+
+        function selectProjectOverviewSidebarStatus(nextStatus) {
+          const normalizedStatus = normalizePlaygroundProjectStatus(nextStatus);
+          if (!PLAYGROUND_PROJECT_STATUS_OPTIONS.some((option) => option.id === normalizedStatus)) {
+            return;
+          }
+          setProjectOverviewSidebarStatusSearchQuery("");
+          updateProjectOverviewSidebarProjectProperty({
+            status: normalizedStatus,
+          }, {
+            status: normalizedStatus,
+          });
+        }
+
+        function selectProjectOverviewSidebarPriority(nextPriority) {
+          const normalizedPriority = String(nextPriority || "").trim().toLowerCase();
+          if (!PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === normalizedPriority)) {
+            return;
+          }
+          setProjectOverviewSidebarPrioritySearchQuery("");
+          updateProjectOverviewSidebarProjectProperty({
+            priority: normalizedPriority,
+          }, {
+            priority: normalizedPriority,
+          });
+        }
+
+        function getProjectOverviewEnvironmentId(environmentOrId) {
+          if (typeof environmentOrId === "string" || typeof environmentOrId === "number") {
+            return String(environmentOrId || "").trim();
+          }
+          if (!environmentOrId || typeof environmentOrId !== "object" || Array.isArray(environmentOrId)) {
+            return "";
+          }
+          const metadata = environmentOrId.metadata && typeof environmentOrId.metadata === "object" && !Array.isArray(environmentOrId.metadata)
+            ? environmentOrId.metadata
+            : {};
+          const environment = environmentOrId.environment && typeof environmentOrId.environment === "object" && !Array.isArray(environmentOrId.environment)
+            ? environmentOrId.environment
+            : {};
+          const computer = environmentOrId.computer && typeof environmentOrId.computer === "object" && !Array.isArray(environmentOrId.computer)
+            ? environmentOrId.computer
+            : {};
+          const sources = [environmentOrId, environment, computer, metadata];
+          const keys = ["environmentId", "environment_id", "computerId", "computer_id", "id"];
+          for (const source of sources) {
+            for (const key of keys) {
+              const value = String(source?.[key] || "").trim();
+              if (value) {
+                return value;
+              }
+            }
+          }
+          return "";
+        }
+
+        function requestProjectOverviewComputerChange(nextEnvironmentId, selectedEnvironmentRecord = null) {
+          const requestedEnvironmentId = getProjectOverviewEnvironmentId(nextEnvironmentId);
+          const selectedEnvironment = selectedEnvironmentRecord && typeof selectedEnvironmentRecord === "object" && !Array.isArray(selectedEnvironmentRecord)
+            ? selectedEnvironmentRecord
+            : null;
+          const environmentId = getProjectOverviewEnvironmentId(selectedEnvironment) || requestedEnvironmentId;
+          const currentEnvironmentId = String(getProjectOverviewSidebarEnvironmentValue() || "").trim();
+          const nextEnvironment = selectedEnvironment || projectComposerAvailableEnvironments.find(
+            (environment) => getProjectOverviewEnvironmentId(environment) === environmentId,
+          );
+          if (!environmentId || !nextEnvironment || environmentId === currentEnvironmentId) {
+            setProjectOverviewSidebarPropertyPopover("");
+            setProjectOverviewSidebarComputerSearchQuery("");
+            if (!environmentId || !nextEnvironment) {
+              setProjectSaveState((current) => ({
+                ...(current && typeof current === "object" ? current : {}),
+                isSaving: false,
+                error: "This computer could not be selected. Refresh the project and try again.",
+                message: "",
+              }));
+            }
+            return;
+          }
+          const nextEnvironmentName = String(nextEnvironment?.name || nextEnvironment?.label || "Computer").trim();
+          const currentEnvironment = projectComposerAvailableEnvironments.find(
+            (environment) => getProjectOverviewEnvironmentId(environment) === currentEnvironmentId,
+          ) || activeProjectAttachmentEnvironment || null;
+          const currentEnvironmentName = String(
+            currentEnvironment?.name
+              || selectedProject?.defaultEnvironmentName
+              || selectedProject?.metadata?.defaultEnvironmentName
+              || "Current computer",
+          ).trim();
+
+          if (!currentEnvironmentId) {
+            setProjectOverviewSidebarPropertyPopover("");
+            setProjectOverviewSidebarComputerSearchQuery("");
+            void persistProjectOverviewSidebarProjectUpdate({
+              defaultEnvironmentId: environmentId,
+              defaultEnvironmentName: nextEnvironmentName,
+            }, {
+              defaultEnvironmentId: environmentId,
+              defaultEnvironmentName: nextEnvironmentName,
+            });
+            return;
+          }
+          setProjectComputerChangeDialog({
+            sourceEnvironmentId: currentEnvironmentId,
+            sourceEnvironmentName: currentEnvironmentName,
+            targetEnvironmentId: environmentId,
+            targetEnvironmentName: nextEnvironmentName,
+          });
+          setProjectOverviewSidebarPropertyPopover("");
+          setProjectOverviewSidebarComputerSearchQuery("");
+        }
+
+        async function confirmProjectOverviewComputerChange(cloneProjectDirectory) {
+          const dialog = projectComputerChangeDialog;
+          if (!dialog?.targetEnvironmentId) {
+            return;
+          }
+          const updatedProject = await persistProjectOverviewSidebarProjectUpdate({
+            defaultEnvironmentId: dialog.targetEnvironmentId,
+            defaultEnvironmentName: dialog.targetEnvironmentName,
+          }, {
+            defaultEnvironmentId: dialog.targetEnvironmentId,
+            defaultEnvironmentName: dialog.targetEnvironmentName,
+          }, {
+            requestPayload: {
+              cloneProjectDirectory: cloneProjectDirectory === true,
+            },
+            throwOnError: true,
+          });
+          if (!updatedProject) {
+            throw new Error("Failed to change the project computer.");
+          }
+          setProjectComputerChangeDialog(null);
+        }
+
 	        async function saveProjectOverviewDescription(descriptionOverride) {
 	          if (!selectedProject?.id) {
 	            return;
@@ -1388,24 +1650,21 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
 
         function renderReleaseHeaderMeta(releaseRecord, options = {}) {
           const normalizedRelease = releaseRecord?.id ? normalizePlaygroundTaskReleaseRecord(releaseRecord) : null;
+          if (!normalizedRelease?.id) {
+            return null;
+          }
           const className = options.className || "playground-tasks-backlog-section-meta";
-          const dateClassName = options.dateClassName || "playground-tasks-backlog-section-date";
           return React.createElement("div", { className },
-            React.createElement("span", { className: dateClassName },
-              getPlaygroundTaskReleaseDeadlineLabel(normalizedRelease)
-            ),
-            normalizedRelease?.id
-              ? React.createElement("button", {
+            React.createElement("button", {
                 type: "button",
-                  className: "playground-tasks-release-edit-button",
-                  onClick: (event) => {
-                    event.stopPropagation();
-                    openReleaseComposerForEdit(normalizedRelease);
-                  },
-                  title: "Edit milestone",
-                  "aria-label": "Edit milestone",
-                }, React.createElement(Ellipsis, { width: 12, height: 12, strokeWidth: 1.9 }))
-              : null
+                className: "playground-tasks-release-edit-button",
+                onClick: (event) => {
+                  event.stopPropagation();
+                  openReleaseComposerForEdit(normalizedRelease);
+                },
+                title: "Edit milestone",
+                "aria-label": "Edit milestone",
+              }, React.createElement(Ellipsis, { width: 12, height: 12, strokeWidth: 1.9 }))
           );
         }
 

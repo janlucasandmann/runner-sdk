@@ -1408,35 +1408,17 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
 
           function getProjectOverviewSidebarEnvironmentValue() {
             const metadata = getProjectOverviewSidebarMetadata(projectOverviewDraft);
-            return String(projectOverviewDraft?.defaultEnvironmentId || metadata.defaultEnvironmentId || activeProjectAttachmentEnvironmentId || "").trim();
+            return String(
+              projectOverviewDraft?.defaultEnvironmentId
+                || metadata.defaultEnvironmentId
+                || activeProjectAttachmentEnvironmentId
+                || projectComposerDefaultEnvironmentId
+                || getProjectOverviewEnvironmentId(
+                  projectComposerAvailableEnvironments.find((environment) => environment?.isDefault),
+                )
+                || getProjectOverviewEnvironmentId(projectComposerAvailableEnvironments[0])
+                || ""
+            ).trim();
           }
 
-          function commitProjectOverviewSidebarProjectRecord(projectRecord) {
-            if (!projectRecord?.id || typeof commitLocalProjectRecord !== "function") {
-              return;
-            }
-            const normalizedProjectRecord = normalizePlaygroundProjectRecord(projectRecord);
-            if (typeof setProjectDraft === "function") {
-              setProjectDraft((current) => {
-                if (!current || String(current.id || "") !== String(normalizedProjectRecord.id || "")) {
-                  return current;
-                }
-                return normalizePlaygroundProjectRecord({
-                  ...current,
-                  ...normalizedProjectRecord,
-                  metadata: {
-                    ...(current.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata) ? current.metadata : {}),
-                    ...(normalizedProjectRecord.metadata && typeof normalizedProjectRecord.metadata === "object" && !Array.isArray(normalizedProjectRecord.metadata) ? normalizedProjectRecord.metadata : {}),
-                  },
-                });
-              });
-            }
-            commitLocalProjectRecord(normalizedProjectRecord, {
-              summary: normalizedProjectRecord.summary || selectedProjectSummary,
-              environments: selectedProjectEnvironments,
-              recentThreads: selectedProjectRecentThreads,
-              threads: selectedProjectRecentThreads,
-              selectImmediately: true,
-            });
-          }
 `;

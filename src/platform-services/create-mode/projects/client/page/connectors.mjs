@@ -16,7 +16,7 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
                 || { id: projectId, connectors: buildPlaygroundDefaultTaskConnectors() };
         }
 
-        async function persistProjectConnectorSelection(source, nextSelection, projectRecordOverride = null) {
+        async function persistProjectConnectorSelection(source, nextSelection, projectRecordOverride = null, options = {}) {
           const connectorKey = getPlaygroundTaskConnectorKey(source);
           const baseProject = normalizePlaygroundProjectRecord(projectRecordOverride || selectedProject || buildPlaygroundDefaultProjectDraft());
           if (!connectorKey || !baseProject?.id) {
@@ -101,7 +101,7 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
               ...(updatedProject || optimisticProject),
               connectors: nextConnectors,
             });
-            if (connectorKey === "github" && nextSelection) {
+            if (connectorKey === "github" && nextSelection && options.prepareGithub !== false) {
               void prepareProjectGithubConnectorRepositories(persistedProject, nextSelection).catch((error) => {
                 console.warn("[project connectors] Failed to prepare GitHub repository in project environment.", error);
               });
@@ -117,6 +117,65 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
             });
             throw error;
           }
+        }
+
+        async function updateProjectGithubRepositorySettings(projectRecord, repoFullName, patch = {}) {
+          const normalizedRepoFullName = String(repoFullName || "").trim();
+          const baseProject = normalizePlaygroundProjectRecord(projectRecord || selectedProject || buildPlaygroundDefaultProjectDraft());
+          const currentSelection = normalizePlaygroundTaskConnectorSelection("github", getDraftTaskConnectorSelection("github", baseProject));
+          if (!baseProject?.id || !normalizedRepoFullName || !currentSelection) {
+            return null;
+          }
+
+          const nextRef = typeof patch.ref === "string" && patch.ref.trim() ? patch.ref.trim() : "";
+          const idReplacements = new Map();
+          if (nextRef) {
+            currentSelection.items.forEach((item) => {
+              if (String(item?.repoFullName || "").trim() !== normalizedRepoFullName) {
+                return;
+              }
+              const path = String(item?.path || "").trim();
+              idReplacements.set(
+                item.id,
+                path
+                  ? createGithubBrowserNodeId(normalizedRepoFullName, path, nextRef)
+                  : createGithubBrowserRepoFolderId(normalizedRepoFullName, nextRef)
+              );
+            });
+          }
+          const nextItems = currentSelection.items.map((item) => {
+            if (String(item?.repoFullName || "").trim() !== normalizedRepoFullName) {
+              return item;
+            }
+            const nextItem = { ...item };
+            if (nextRef) {
+              nextItem.ref = nextRef;
+              nextItem.id = idReplacements.get(item.id) || item.id;
+              if (item.parentId) {
+                const path = String(item.path || "").trim();
+                const parentPath = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
+                nextItem.parentId = idReplacements.get(item.parentId)
+                  || (parentPath
+                    ? createGithubBrowserNodeId(normalizedRepoFullName, parentPath, nextRef)
+                    : createGithubBrowserRepoFolderId(normalizedRepoFullName, nextRef));
+              }
+            }
+            if (Object.prototype.hasOwnProperty.call(patch, "branchPrefix")) {
+              nextItem.branchPrefix = String(patch.branchPrefix || "").trim();
+            }
+            if (Object.prototype.hasOwnProperty.call(patch, "createPullRequests")) {
+              nextItem.createPullRequests = patch.createPullRequests !== false;
+            }
+            return nextItem;
+          });
+          const nextSelection = buildPlaygroundTaskConnectorSelection(
+            "github",
+            nextItems,
+            currentSelection.selectedIds.map((id) => idReplacements.get(id) || id)
+          );
+          return persistProjectConnectorSelection("github", nextSelection, baseProject, {
+            prepareGithub: Boolean(nextRef),
+          });
         }
 
         useEffect(() => {
@@ -139,6 +198,7 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
             ...current,
             github: [],
           }));
+          setTaskConnectorBrowserGithubBranchByRepo({});
           if (taskConnectorBrowserCurrentKey === "github") {
             setTaskConnectorBrowserPreviewId("");
           }
@@ -158,6 +218,15 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
             googleDrive: connectors.googleDrive?.selectedIds || connectors.googleDrive?.items?.map((item) => item.id) || [],
             oneDrive: connectors.oneDrive?.selectedIds || connectors.oneDrive?.items?.map((item) => item.id) || [],
           });
+          const nextGithubBranches = {};
+          (Array.isArray(connectors.github?.items) ? connectors.github.items : []).forEach((item) => {
+            const repoFullName = String(item?.repoFullName || "").trim();
+            const ref = String(item?.ref || "").trim();
+            if (repoFullName && ref && !nextGithubBranches[repoFullName]) {
+              nextGithubBranches[repoFullName] = ref;
+            }
+          });
+          setTaskConnectorBrowserGithubBranchByRepo(nextGithubBranches);
           setTaskConnectorBrowserSelectedNotionId(
             connectors.notion?.selectedIds?.[0]
             || connectors.notion?.items?.[0]?.id
@@ -408,7 +477,7 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
           setSelectedTaskId("");
           setDraftTask(null);
           setTaskConnectorBrowserMode("project");
-          setTaskConnectorBrowserOpen(false);
+          setTaskConnectorBrowserOpen(true);
           setProjectSidebarPopover("");
           setTaskDetailPopover("");
           setTaskSkillsPopoverOpen(false);
@@ -484,6 +553,91 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
               ? (current[sourceKey] || []).filter((value) => value !== itemId)
               : (current[sourceKey] || []).concat(itemId),
           }));
+        }
+
+        function resolveTaskConnectorGithubRootItem(item) {
+          const repoFullName = String(item?.repoFullName || "").trim();
+          if (
+            taskConnectorBrowserCurrentSource !== "github"
+            || !item?.isFolder
+            || item?.parentId
+            || !repoFullName
+          ) {
+            return item;
+          }
+          const persistedItem = (Array.isArray(taskConnectorBrowserCurrentSelection?.items)
+            ? taskConnectorBrowserCurrentSelection.items
+            : []
+          ).find((candidate) => String(candidate?.repoFullName || "").trim() === repoFullName && !String(candidate?.path || "").trim());
+          const ref = String(
+            taskConnectorBrowserGithubBranchByRepo[repoFullName]
+            || persistedItem?.ref
+            || item?.ref
+            || "main"
+          ).trim() || "main";
+          return {
+            ...item,
+            ...(persistedItem || {}),
+            id: createGithubBrowserRepoFolderId(repoFullName, ref),
+            ref,
+          };
+        }
+
+        function handleTaskConnectorGithubBranchChange(item, nextBranch) {
+          const repoFullName = String(item?.repoFullName || "").trim();
+          const normalizedBranch = String(nextBranch || "").trim();
+          if (!repoFullName || !normalizedBranch) return;
+          const nextRootId = createGithubBrowserRepoFolderId(repoFullName, normalizedBranch);
+          const currentRepoItems = [
+            item,
+            ...(Array.isArray(taskConnectorBrowserItems) ? taskConnectorBrowserItems : []),
+            ...(Array.isArray(taskConnectorBrowserCurrentSelection?.items) ? taskConnectorBrowserCurrentSelection.items : []),
+          ].filter((candidate) => String(candidate?.repoFullName || "").trim() === repoFullName);
+          const currentRepoItemIds = new Set(
+            currentRepoItems
+              .map((candidate) => String(candidate?.id || "").trim())
+              .filter(Boolean)
+          );
+          const currentRepoRootIds = new Set(
+            currentRepoItems
+              .filter((candidate) => !String(candidate?.path || "").trim())
+              .map((candidate) => String(candidate?.id || "").trim())
+              .filter(Boolean)
+          );
+
+          setTaskConnectorBrowserGithubBranchByRepo((current) => ({
+            ...current,
+            [repoFullName]: normalizedBranch,
+          }));
+          setTaskConnectorBrowserItemsBySource((current) => ({
+            ...current,
+            github: (current.github || [])
+              .filter((candidate) => String(candidate?.repoFullName || "").trim() !== repoFullName || !candidate?.parentId)
+              .map((candidate) => String(candidate?.repoFullName || "").trim() === repoFullName && !candidate?.parentId
+                ? {
+                    ...candidate,
+                    branchPrefix: typeof item?.branchPrefix === "string" ? item.branchPrefix : candidate?.branchPrefix,
+                    createPullRequests: typeof item?.createPullRequests === "boolean" ? item.createPullRequests : candidate?.createPullRequests,
+                    id: nextRootId,
+                    ref: normalizedBranch,
+                  }
+                : candidate),
+          }));
+          setTaskConnectorBrowserSelectedIds((current) => ({
+            ...current,
+            github: (() => {
+              const selectedIds = current.github || [];
+              const carryRepositorySelection = selectedIds.some((id) => currentRepoRootIds.has(id));
+              const nextSelectedIds = selectedIds.filter((id) => !currentRepoItemIds.has(id));
+              return carryRepositorySelection ? nextSelectedIds.concat(nextRootId) : nextSelectedIds;
+            })(),
+          }));
+          setTaskConnectorBrowserLoadedFolderIds((current) => ({ ...current, github: ["root"] }));
+          setTaskConnectorBrowserLoadingFolderIds((current) => ({ ...current, github: [] }));
+          setTaskConnectorBrowserExpandedFolderIds([]);
+          setTaskConnectorBrowserHistory([{ source: "github", folderId: null }]);
+          setTaskConnectorBrowserHistoryIndex(0);
+          setTaskConnectorBrowserPreviewId("");
         }
 
         async function toggleTaskConnectorBrowserFolderExpansion(folderId, event) {
@@ -1627,32 +1781,38 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
         }
 
         function renderTaskConnectorBrowserItem(item, depth = 0) {
-          const isSelected = taskConnectorBrowserSelectedFileIds.includes(item.id);
-          const isPreviewActive = taskConnectorBrowserPreviewItem?.id === item.id;
-          const isExpanded = taskConnectorBrowserExpandedFolderIds.includes(item.id);
-          const isFolderLoading = (taskConnectorBrowserLoadingFolderIds[taskConnectorBrowserCurrentKey] || []).includes(item.id);
-          const nestedItems = taskConnectorBrowserSearchQuery.trim() ? [] : fileItemsForParent(taskConnectorBrowserItems, item.id);
-          const showGithubFolderCheckbox = taskConnectorBrowserCurrentSource === "github" && item.isFolder;
+          const displayItem = resolveTaskConnectorGithubRootItem(item);
+          const isGithubRepoRoot = taskConnectorBrowserCurrentSource === "github"
+            && displayItem?.isFolder
+            && depth === 0
+            && !displayItem?.parentId
+            && Boolean(displayItem?.repoFullName);
+          const isSelected = taskConnectorBrowserSelectedFileIds.includes(displayItem.id);
+          const isPreviewActive = taskConnectorBrowserPreviewItem?.id === displayItem.id;
+          const isExpanded = taskConnectorBrowserExpandedFolderIds.includes(displayItem.id);
+          const isFolderLoading = (taskConnectorBrowserLoadingFolderIds[taskConnectorBrowserCurrentKey] || []).includes(displayItem.id);
+          const nestedItems = taskConnectorBrowserSearchQuery.trim() ? [] : fileItemsForParent(taskConnectorBrowserItems, displayItem.id);
+          const showGithubFolderCheckbox = taskConnectorBrowserCurrentSource === "github" && displayItem.isFolder;
 
-          return React.createElement("div", { key: item.id },
+          return React.createElement("div", { key: displayItem.id },
             React.createElement("div", {
               className: "tb-file-browser-item" + (isPreviewActive ? " preview" : "") + (isSelected ? " selected" : ""),
               role: "button",
               tabIndex: 0,
-              onClick: () => handleTaskConnectorBrowserItemClick(item),
+              onClick: () => handleTaskConnectorBrowserItemClick(displayItem),
               onKeyDown: (event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
-                  handleTaskConnectorBrowserItemClick(item);
+                  handleTaskConnectorBrowserItemClick(displayItem);
                 }
               },
               style: { paddingLeft: String(12 + depth * 20) + "px" },
             },
-              item.isFolder
+              displayItem.isFolder
                 ? React.createElement("button", {
                     type: "button",
                     className: "tb-file-browser-item-leading",
-                    onClick: (event) => void toggleTaskConnectorBrowserFolderExpansion(item.id, event),
+                    onClick: (event) => void toggleTaskConnectorBrowserFolderExpansion(displayItem.id, event),
                   }, isFolderLoading
                     ? React.createElement(Loader2, { className: "tb-file-browser-folder-chevron tb-file-browser-folder-chevron-spin", strokeWidth: 1.8 })
                     : isExpanded
@@ -1663,7 +1823,7 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
                     className: "tb-file-browser-check" + (isSelected ? " selected" : ""),
                     onClick: (event) => {
                       event.stopPropagation();
-                      handleTaskConnectorBrowserItemClick(item);
+                      handleTaskConnectorBrowserItemClick(displayItem);
                     },
                   },
                     isSelected ? React.createElement(Check, { className: "tb-file-browser-check-icon", strokeWidth: 2.2 }) : null
@@ -1673,18 +1833,32 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
                     className: "tb-file-browser-check" + (isSelected ? " selected" : ""),
                     onClick: (event) => {
                       event.stopPropagation();
-                      toggleTaskConnectorBrowserSelectedId("github", item.id);
+                      toggleTaskConnectorBrowserSelectedId("github", displayItem.id);
                     },
                   },
                     isSelected ? React.createElement(Check, { className: "tb-file-browser-check-icon", strokeWidth: 2.2 }) : null
                   )
                 : null,
-              renderTaskConnectorBrowserItemIcon(item),
-              React.createElement("span", { className: "tb-file-browser-item-name", title: item.name }, item.name),
-              React.createElement("span", { className: "tb-file-browser-item-meta" }, formatPlaygroundFileDate(item.modifiedTime || item.createdTime)),
-              React.createElement("span", { className: "tb-file-browser-item-size" }, item.isFolder ? "" : formatPlaygroundFileSize(item.size))
+              renderTaskConnectorBrowserItemIcon(displayItem),
+              React.createElement("span", { className: "tb-file-browser-item-name", title: displayItem.name }, displayItem.name),
+              isGithubRepoRoot
+                ? React.createElement("div", { className: "tb-file-browser-item-branch-slot" },
+                    React.createElement(RunnerGithubBranchSelector, {
+                      accountId: String(taskConnectorBrowserAccountIdsBySource.github || "").trim() || undefined,
+                      repoFullName: displayItem.repoFullName,
+                      value: displayItem.ref || "main",
+                      fetchBranches: taskConnectorConfigByKey.github?.fetchBranches,
+                      triggerClassName: "tb-file-browser-item-branch-select",
+                      popupClassName: "tb-file-browser-item-branch-popup",
+                      onValueChange: (branch) => handleTaskConnectorGithubBranchChange(displayItem, branch),
+                    })
+                  )
+                : React.createElement(React.Fragment, null,
+                    React.createElement("span", { className: "tb-file-browser-item-meta" }, formatPlaygroundFileDate(displayItem.modifiedTime || displayItem.createdTime)),
+                    React.createElement("span", { className: "tb-file-browser-item-size" }, displayItem.isFolder ? "" : formatPlaygroundFileSize(displayItem.size))
+                  )
             ),
-            item.isFolder && isExpanded && nestedItems.length > 0
+            displayItem.isFolder && isExpanded && nestedItems.length > 0
               ? React.createElement("div", { className: "tb-file-browser-item-children" },
                   nestedItems.map((nestedItem) => renderTaskConnectorBrowserItem(nestedItem, depth + 1))
                 )
@@ -2011,6 +2185,8 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
 
           const isProjectComposerConnectorMode = taskConnectorBrowserMode === "project-composer";
           const isProjectConnectorMode = isProjectConnectorBrowserContext;
+          const isPersistedProjectConnectorMode = isProjectConnectorMode
+            && !isProjectComposerConnectorMode;
           const projectConnectorRecord = isProjectConnectorMode
             ? (isProjectComposerConnectorMode ? projectDraft : getProjectConnectorBrowserProjectRecord())
             : null;
@@ -2038,19 +2214,6 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
             isProjectConnectorMode ? projectConnectorRecord : (isCalendarScheduleDetailMode ? scheduleDraft : draftTask)
           );
           const hasSelection = taskConnectorBrowserSelectedFileIds.length > 0;
-          const primaryActionLabel = isProjectConnectorMode
-            ? (hasSelection
-                ? "Use " + (taskConnectorBrowserSelectedLabel || "Selection")
-                : currentSavedSelection
-                  ? "Clear Selection"
-                  : "Use Selection")
-            : hasSelection
-              ? (taskConnectorBrowserCurrentSource === "notion"
-                  ? "Use " + (taskConnectorBrowserSelectedLabel || "Database")
-                  : "Attach " + (taskConnectorBrowserSelectedLabel || "Files"))
-              : currentSavedSelection
-                ? "Clear Selection"
-                : (taskConnectorBrowserCurrentSource === "notion" ? "Use Database" : "Attach Files");
 
           console.info("[connector-debug] renderTaskConnectorBrowser rendering", {
             isProjectConnectorMode,
@@ -2068,74 +2231,79 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
             hasSavedSelection: Boolean(currentSavedSelection),
           });
 
-          const connectorSourceGroups = [
-            !isProjectConnectorMode && activeTaskEnvironment
-              ? {
-                  id: "computers",
-                  label: "Computers",
-                  items: [{
-                    id: String(activeTaskEnvironment.id || activeTaskEnvironmentId || "workspace"),
-                    label: activeTaskEnvironment.name || "Computer",
-                    onSelect: () => {
-                      closeTaskConnectorBrowser();
-                      openTaskEnvironmentFilePicker();
-                    },
-                  }],
+          const connectorBrowserPayload = {
+            mode: isProjectComposerConnectorMode
+              ? "project-composer"
+              : isProjectConnectorMode
+                ? "project"
+                : "task",
+            source: taskConnectorBrowserCurrentSource,
+            projectId: isProjectConnectorMode
+              ? String(projectConnectorRecord?.id || selectedProjectId || "")
+              : String(selectedProjectId || ""),
+            view: isProjectConnectorMode ? "overview" : taskView,
+          };
+
+          function buildCentralizedConnectorConnection(source) {
+            const option = getPlaygroundTaskConnectorOption(source);
+            const config = option ? taskConnectorConfigByKey[option.key] : null;
+            const accounts = Array.isArray(config?.accounts) ? config.accounts : [];
+            const binding = isPersistedProjectConnectorMode
+              ? getProjectConnectorCredentialBinding(projectConnectorRecord, source)
+              : { credentialId: "" };
+            const defaultAccount = accounts.find((account) => account?.isDefault) || accounts[0] || null;
+            const selectedAccountId = String(
+              binding.credentialId
+              || taskConnectorBrowserAccountIdsBySource[source]
+              || defaultAccount?.id
+              || ""
+            ).trim();
+
+            return {
+              connected: Boolean(config?.connected),
+              accounts,
+              selectedAccountId,
+              onAccountChange: (accountId) => {
+                const normalizedAccountId = String(accountId || "").trim();
+                setTaskConnectorBrowserAccountIdsBySource((current) => ({
+                  ...current,
+                  [source]: normalizedAccountId,
+                }));
+                if (isPersistedProjectConnectorMode && canManageProjectAccess) {
+                  const selectedAccount = accounts.find((account) => String(account?.id || "").trim() === normalizedAccountId);
+                  updateProjectConnectorCredentialBinding(
+                    projectConnectorRecord,
+                    buildProjectConnectorCredentialProviderDefinition(source),
+                    selectedAccount?.isDefault ? "__organization_default__" : normalizedAccountId,
+                    accounts
+                  );
                 }
-              : null,
-            {
-              id: "integrations",
-              label: "Integrations",
-              items: PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) => ({
-                id: option.source,
-                label: option.label,
-                icon: renderTaskConnectorServiceIcon(option.source, "tb-file-browser-source-brand-icon"),
-                note: taskConnectorConfigByKey[option.key]?.connected === false ? "Connect" : undefined,
-                active: taskConnectorBrowserCurrentSource === option.source,
-                onSelect: () => switchTaskConnectorBrowserSource(option.source),
-              })),
-            },
-          ].filter(Boolean);
-          const connectorAuthContent = !isConnected
-            ? React.createElement("div", { className: "tb-file-browser-auth-screen" },
-                React.createElement("div", { className: "tb-file-browser-auth-card" },
-                  React.createElement("div", { className: "tb-file-browser-auth-icon-wrap" },
-                    renderTaskConnectorServiceIcon(taskConnectorBrowserCurrentSource, "tb-file-browser-auth-icon")
-                  ),
-                  React.createElement("h3", { className: "tb-file-browser-auth-title" },
-                    "Connect to " + taskConnectorBrowserCurrentOption.label
-                  ),
-                  React.createElement("p", { className: "tb-file-browser-auth-copy" },
-                    taskConnectorBrowserCurrentSource === "notion"
-                      ? "Connect your Notion workspace to browse and select databases."
-                      : "Connect your " + taskConnectorBrowserCurrentOption.label + " to browse and select files."
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "tb-file-browser-auth-button",
-                    onClick: () => {
-                      const connectorBrowserPayload = {
-                        mode: isProjectComposerConnectorMode
-                          ? "project-composer"
-                          : isProjectConnectorMode
-                            ? "project"
-                            : "task",
-                        source: taskConnectorBrowserCurrentSource,
-                        projectId: isProjectConnectorMode
-                          ? String(projectConnectorRecord?.id || selectedProjectId || "")
-                          : String(selectedProjectId || ""),
-                        view: isProjectConnectorMode ? "overview" : taskView,
-                      };
-                      currentConfig?.onConnect?.({
-                        connectorBrowser: connectorBrowserPayload,
-                        projectComposerMode,
-                        projectDraft: isProjectComposerConnectorMode ? projectDraft : undefined,
-                      });
-                    },
-                  }, "Connect " + taskConnectorBrowserCurrentOption.label)
-                )
-              )
-            : null;
+                switchTaskConnectorBrowserSource(source);
+              },
+              onConnect: () => config?.onConnect?.({
+                connectorBrowser: {
+                  ...connectorBrowserPayload,
+                  source,
+                },
+                projectComposerMode,
+                projectDraft: isProjectComposerConnectorMode ? projectDraft : undefined,
+              }),
+              onDisconnect: config?.onDisconnect,
+            };
+          }
+
+          const centralizedConnections = {
+            "google-drive": buildCentralizedConnectorConnection("google-drive"),
+            notion: buildCentralizedConnectorConnection("notion"),
+            "one-drive": buildCentralizedConnectorConnection("one-drive"),
+            github: buildCentralizedConnectorConnection("github"),
+          };
+          const centralizedEnvironments = isProjectConnectorMode
+            ? (activeProjectAttachmentEnvironment ? [activeProjectAttachmentEnvironment] : [])
+            : (activeTaskEnvironment ? [activeTaskEnvironment] : []);
+          const centralizedEnvironmentId = isProjectConnectorMode
+            ? String(activeProjectAttachmentEnvironmentId || "")
+            : String(activeTaskEnvironmentId || "");
 
           return React.createElement("div", {
               key: "connector-browser:" + taskConnectorBrowserRenderKey,
@@ -2143,80 +2311,58 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
               "data-connector-browser-mode": isProjectConnectorMode ? "project" : "task",
               "data-connector-browser-source": taskConnectorBrowserCurrentSource,
             },
-            React.createElement(PlatformFileExplorerBrowserModal, {
+            React.createElement(RunnerFileBrowserDialog, {
               open: true,
-              visible: true,
-              portal: false,
-              size: "full",
-              title: "Attach connector data",
-              backdropClassName: "tb-file-browser-scrim",
-              className: "tb-file-browser-modal",
-              onClose: closeTaskConnectorBrowser,
-              closeButtonLabel: "Close connector explorer",
-              sourceGroups: connectorSourceGroups,
-              breadcrumbs: taskConnectorBrowserPath.map((crumb, index) => ({
-                id: String(crumb.id || "root") + ":" + index,
-                label: crumb.name,
-                onSelect: () => navigateTaskConnectorBrowserToBreadcrumb(index),
-              })),
+              apiKeyPromptOpen: false,
+              source: taskConnectorBrowserCurrentSource,
+              showSourceSidebar: !isPersistedProjectConnectorMode,
+              showFilterTabs: !isPersistedProjectConnectorMode,
               searchQuery: taskConnectorBrowserSearchQuery,
               onSearchQueryChange: setTaskConnectorBrowserSearchQuery,
-              searchPlaceholder: "Search Files",
+              environments: centralizedEnvironments,
+              selectedEnvironmentId: centralizedEnvironmentId || null,
+              onEnvironmentSelect: () => {
+                closeTaskConnectorBrowser();
+                if (isProjectConnectorMode) {
+                  openProjectEnvironmentFilePicker();
+                } else {
+                  openTaskEnvironmentFilePicker();
+                }
+              },
+              onSourceChange: switchTaskConnectorBrowserSource,
+              connections: centralizedConnections,
+              authSource: isConnected ? null : taskConnectorBrowserCurrentSource,
+              path: taskConnectorBrowserPath.map((crumb) => ({
+                id: crumb.id || null,
+                name: crumb.name,
+              })),
+              historyIndex: taskConnectorBrowserHistoryIndex,
+              historyLength: taskConnectorBrowserHistory.length,
               onBack: goTaskConnectorBrowserBack,
               onForward: goTaskConnectorBrowserForward,
-              canGoBack: taskConnectorBrowserHistoryIndex > 0,
-              canGoForward: taskConnectorBrowserHistoryIndex < taskConnectorBrowserHistory.length - 1,
-              headerIcon: renderTaskConnectorServiceIcon(
-                taskConnectorBrowserCurrentSource,
-                "tb-file-browser-source-brand-icon"
-              ),
-              headerTitle: taskConnectorBrowserCurrentOption.label,
-              headerActions: currentConfig?.onDisconnect
-                ? React.createElement("button", {
-                    type: "button",
-                    className: "tb-file-browser-toolbar-button",
-                    onClick: () => currentConfig.onDisconnect?.(),
-                    title: "Disconnect " + taskConnectorBrowserCurrentOption.label,
-                    "aria-label": "Disconnect " + taskConnectorBrowserCurrentOption.label,
-                  }, React.createElement(LogOut, { className: "tb-file-browser-toolbar-icon", strokeWidth: 1.8 }))
-                : null,
-              filterContextKey: "connector:" + taskConnectorBrowserCurrentSource,
+              onBreadcrumbSelect: navigateTaskConnectorBrowserToBreadcrumb,
+              googleDriveItemCount: (taskConnectorBrowserItemsBySource.googleDrive || []).length,
+              onManageGoogleDriveAccess: taskConnectorConfigByKey.googleDrive?.onManageAccess,
+              isGoogleDrivePickerLoading: false,
+              loading: isConnected && isLoading,
+              error: isConnected ? currentError || null : null,
+              showGoogleDrivePickerPrompt: false,
               items: isConnected ? taskConnectorBrowserFilteredItems : [],
               renderItem: (item) => renderTaskConnectorBrowserItem(item),
-              getItemKind: (item) => {
-                if (item?.isFolder) return "folder";
-                if (getPlaygroundFileKind(item) === "image") return "image";
-                if (/\.pdf$/i.test(String(item?.name || ""))) return "pdf";
-                return "file";
-              },
-              getItemTimestamp: (item) => item?.modifiedTime || item?.createdTime,
-              loading: isConnected && isLoading,
-              loadingMessage: "Loading " + taskConnectorBrowserCurrentOption.label + "...",
-              error: isConnected ? currentError || null : null,
-              emptyMessage: ({ hasSearchQuery }) => hasSearchQuery
-                ? "No files match your search"
-                : taskConnectorBrowserCurrentSource === "notion"
-                  ? "No Notion databases found"
-                  : "This folder is empty",
-              content: connectorAuthContent,
-              preview: isConnected ? renderTaskConnectorBrowserPreview() : null,
-              previewTitle: "Preview",
-              onPreviewClose: () => setTaskConnectorBrowserPreviewId(""),
-              cancelLabel: "Cancel",
-              confirmLabel: React.createElement("span", { className: "tb-file-browser-footer-button-content" },
-                taskAttachmentTransferState.isProcessing && taskConnectorBrowserCurrentSource !== "notion"
-                  ? React.createElement("span", { className: "runner-spinner tb-file-browser-footer-button-spinner" })
-                  : null,
-                React.createElement("span", { className: "tb-file-browser-footer-button-label" },
-                  taskAttachmentTransferState.isProcessing && taskConnectorBrowserCurrentSource !== "notion"
-                    ? "Attaching Files..."
-                    : primaryActionLabel
-                )
+              previewItem: isConnected ? taskConnectorBrowserPreviewItem : null,
+              previewContent: taskConnectorBrowserPreviewState.content || null,
+              previewKind: taskConnectorBrowserPreviewState.kind || null,
+              isPreviewLoading: taskConnectorBrowserPreviewState.status === "loading",
+              renderPreviewIcon: (item) => renderTaskConnectorBrowserItemIcon(item),
+              selectedItemCount: taskConnectorBrowserSelectedFileIds.length,
+              selectedItemLabel: taskConnectorBrowserSelectedLabel || (
+                taskConnectorBrowserCurrentSource === "notion" ? "Database" : "Files"
               ),
-              confirmDisabled: !isConnected
-                || ((!hasSelection && !currentSavedSelection) || taskAttachmentTransferState.isProcessing),
-              onCancel: closeTaskConnectorBrowser,
-              onConfirm: handleApplyTaskConnectorSelection,
+              isAttaching: taskAttachmentTransferState.isProcessing,
+              onAttach: handleApplyTaskConnectorSelection,
+              onPreviewClose: () => setTaskConnectorBrowserPreviewId(""),
+              onClose: closeTaskConnectorBrowser,
+              onApiKeyPromptClose: closeTaskConnectorBrowser,
             })
           );
         }
@@ -2417,51 +2563,29 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
             return null;
           }
 
-          return React.createElement(PlatformModalBackdrop, {
-              className: "playground-tasks-confirm-scrim",
-              onClick: () => {
-                if (!taskDeleteDialogState.isSubmitting) {
-                  setTaskDeleteDialogState(null);
-                }
-              },
-            },
-            React.createElement(PlatformModalSurface, {
-              className: "playground-tasks-confirm-dialog",
-              onClick: (event) => event.stopPropagation(),
-            },
-              React.createElement("div", { className: "playground-tasks-confirm-title" },
-                "Delete " + taskDeleteDialogState.ticketNumber + "?"
-              ),
-              React.createElement("div", { className: "playground-tasks-confirm-copy" },
-                "\\\"" + taskDeleteDialogState.taskTitle + "\\\" has " + taskDeleteDialogState.subtaskCount + " subtask" + (taskDeleteDialogState.subtaskCount === 1 ? "" : "s") + ". Keep them and convert them into tasks, or delete them together with this task."
-              ),
-              taskDeleteDialogState.error
-                ? React.createElement("div", { className: "playground-environments-error" }, taskDeleteDialogState.error)
-                : null,
-              React.createElement("div", { className: "playground-tasks-confirm-actions" },
-                React.createElement(PlatformSecondaryButton, {
-                  size: "medium",
-                  type: "button",
-                  className: "playground-environments-action-button is-secondary",
-                  onClick: () => setTaskDeleteDialogState(null),
-                  disabled: taskDeleteDialogState.isSubmitting,
-                }, "Cancel"),
-                React.createElement(PlatformSecondaryButton, {
-                  size: "medium",
-                  type: "button",
-                  className: "playground-environments-action-button is-secondary",
-                  onClick: () => void handleTaskDeleteDialogDecision(true),
-                  disabled: taskDeleteDialogState.isSubmitting,
-                }, taskDeleteDialogState.isSubmitting ? "Keeping subtasks..." : "Keep Subtasks"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button is-danger",
-                  onClick: () => void handleTaskDeleteDialogDecision(false),
-                  disabled: taskDeleteDialogState.isSubmitting,
-                }, taskDeleteDialogState.isSubmitting ? "Deleting..." : "Delete All")
-              )
-            )
-          );
+          const hasSubtasks = taskDeleteDialogState.subtaskCount > 0;
+          return React.createElement(PlatformConfirmationModal, {
+            open: true,
+            title: "Delete " + taskDeleteDialogState.ticketNumber + "?",
+            description: hasSubtasks
+              ? "\\\"" + taskDeleteDialogState.taskTitle + "\\\" has " + taskDeleteDialogState.subtaskCount + " subtask" + (taskDeleteDialogState.subtaskCount === 1 ? "" : "s") + ". Keep them as standalone tickets, or delete them together with this ticket."
+              : "\\\"" + taskDeleteDialogState.taskTitle + "\\\" will be permanently deleted. This action cannot be undone.",
+            confirmLabel: hasSubtasks ? "Delete All" : "Delete",
+            confirmingLabel: "Deleting...",
+            secondaryActionLabel: hasSubtasks ? "Keep Subtasks" : undefined,
+            secondaryActionPendingLabel: "Keeping subtasks...",
+            tone: "default",
+            errorFallback: "Failed to delete ticket.",
+            onCancel: () => setTaskDeleteDialogState(null),
+            onSecondaryAction: hasSubtasks
+              ? () => executeTaskDeletion(taskDeleteDialogState.taskId, {
+                  keepSubtasks: true,
+                })
+              : undefined,
+            onConfirm: () => executeTaskDeletion(taskDeleteDialogState.taskId, {
+              keepSubtasks: false,
+            }),
+          });
         }
 
 ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.scheduleDialogView}

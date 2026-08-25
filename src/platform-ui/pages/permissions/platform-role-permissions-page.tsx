@@ -1,3 +1,15 @@
+import {
+  Bot,
+  Code2,
+  CreditCard,
+  Crown,
+  Eye,
+  KeyRound,
+  ShieldCheck,
+  UserRound,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { PlatformPopup } from "../../components/composite/popup/index.js";
 import { PlatformDetailSidebar } from "../../components/composite/detail-sidebar/index.js";
@@ -10,6 +22,26 @@ import { PlatformPermissionsPage } from "./platform-permissions-page.js";
 
 function getRoleLabelText(label: unknown) {
   return typeof label === "string" || typeof label === "number" ? String(label) : "Role";
+}
+
+function getRoleNavigationIcon(roleId: string): LucideIcon {
+  const normalizedRoleId = String(roleId || "").trim().toLowerCase();
+  if (normalizedRoleId === "owner") return Crown;
+  if (normalizedRoleId === "admin") return ShieldCheck;
+  if (normalizedRoleId === "developer" || normalizedRoleId === "contributor") {
+    return Code2;
+  }
+  if (normalizedRoleId === "member") return UserRound;
+  if (normalizedRoleId === "billing") return CreditCard;
+  if (normalizedRoleId === "viewer") return Eye;
+  if (normalizedRoleId.includes("agent")) return Bot;
+  if (
+    normalizedRoleId.includes("organization") ||
+    normalizedRoleId.includes("org-member")
+  ) {
+    return UsersRound;
+  }
+  return KeyRound;
 }
 
 function getMemberInitials(name: string) {
@@ -166,23 +198,35 @@ export function PlatformRolePermissionsPage<TId extends string = string>({
       aria-label={roleAriaLabel}
       data-platform-role-sidebar="true"
     >
-      {roles.map((role) => (
-        <button
-          key={role.id}
-          type="button"
-          role="tab"
-          className={`platform-role-permissions-page__role playground-team-role-card${selectedRole.id === role.id ? " is-active" : ""}`}
-          aria-selected={selectedRole.id === role.id}
-          disabled={role.disabled}
-          onClick={() => onValueChange(role.id)}
-        >
-          <span className="platform-role-permissions-page__role-heading playground-team-role-card-heading">
-            <span className="platform-role-permissions-page__role-title playground-team-role-card-title">
-              {role.label}
+      {roles.map((role) => {
+        const RoleIcon = getRoleNavigationIcon(String(role.id));
+        return (
+          <button
+            key={role.id}
+            type="button"
+            role="tab"
+            className={`platform-role-permissions-page__role playground-team-role-card${selectedRole.id === role.id ? " is-active" : ""}`}
+            aria-selected={selectedRole.id === role.id}
+            disabled={role.disabled}
+            onClick={() => onValueChange(role.id)}
+          >
+            <span className="platform-role-permissions-page__role-heading playground-team-role-card-heading">
+              <span className="platform-role-permissions-page__role-label">
+                <RoleIcon
+                  className="platform-role-permissions-page__role-icon"
+                  width={14}
+                  height={14}
+                  strokeWidth={1.8}
+                  aria-hidden="true"
+                />
+                <span className="platform-role-permissions-page__role-title playground-team-role-card-title">
+                  {role.label}
+                </span>
+              </span>
             </span>
-          </span>
-        </button>
-      ))}
+          </button>
+        );
+      })}
     </div>
   );
 
@@ -225,7 +269,6 @@ export function PlatformRolePermissionsPage<TId extends string = string>({
     >
       {roleListPlacement === "details-sidebar" ? (
         <>
-          {permissionPage}
           <PlatformDetailSidebar
             ariaLabel={roleAriaLabel}
             className="platform-role-permissions-page__details-sidebar"
@@ -244,6 +287,7 @@ export function PlatformRolePermissionsPage<TId extends string = string>({
               ) : null}
             </PlatformUiCard>
           </PlatformDetailSidebar>
+          {permissionPage}
         </>
       ) : (
         <>

@@ -680,10 +680,15 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
 	              return;
 	            }
             if (typeof setProjectOverviewPermissionRoleId === "function") {
-              setProjectOverviewPermissionRoleId(normalizePlaygroundTeamRoleId(roleId, "member"));
+              setProjectOverviewPermissionRoleId(
+                normalizeProjectAccessRoleId(teamId, roleId, "member")
+              );
             }
             if (typeof setProjectOverviewPermissionTeamId === "function") {
               setProjectOverviewPermissionTeamId(teamId);
+            }
+            if (typeof setProjectOverviewSettingsSection === "function") {
+              setProjectOverviewSettingsSection("access");
             }
             const isSystemPrincipal = isPlatformSystemAccessPrincipalId(teamId);
             const shouldAutoCollapseSidebar = !isSystemPrincipal && !projectOverviewSidebarCollapsed;
@@ -926,6 +931,26 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
               })
               .map((option) => {
                 const selection = getDraftTaskConnectorSelection(option.source, selectedProject);
+                const repositories = option.key === "github"
+                  ? Array.from((Array.isArray(selection?.items) ? selection.items : []).reduce((itemsByRepo, item) => {
+                      const repoFullName = String(item?.repoFullName || "").trim();
+                      if (!repoFullName) return itemsByRepo;
+                      const current = itemsByRepo.get(repoFullName) || {};
+                      itemsByRepo.set(repoFullName, {
+                        ...current,
+                        ...item,
+                        repoFullName,
+                        ref: String(item?.ref || current?.ref || "main").trim() || "main",
+                        branchPrefix: typeof item?.branchPrefix === "string"
+                          ? item.branchPrefix
+                          : (typeof current?.branchPrefix === "string" ? current.branchPrefix : "computer-agents/"),
+                        createPullRequests: typeof item?.createPullRequests === "boolean"
+                          ? item.createPullRequests
+                          : current?.createPullRequests !== false,
+                      });
+                      return itemsByRepo;
+                    }, new Map()).values())
+                  : [];
                 return {
                   id: String(option?.key || option?.source || option?.label || ""),
                   source: option?.source || "",
@@ -933,6 +958,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                   selection,
                   value: selection?.valueLabel || "Connect",
                   isEmpty: !selection,
+                  repositories,
                 };
               });
           })();
@@ -1765,13 +1791,13 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                 projectRecord: selectedProject,
               });
             };
-            return React.createElement("button", {
+            const mainRow = React.createElement(row.source === "github" ? "div" : "button", {
                 key: row.id || row.label,
-                type: "button",
+                ...(row.source === "github" ? {} : { type: "button" }),
                 className: "playground-tasks-connector-row playground-project-overview-integration-row",
                 "data-project-overview-connector-source": row.source,
                 "data-project-overview-project-id": rowProjectId,
-                onPointerDown: (event) => {
+                onPointerDown: row.source === "github" ? undefined : (event) => {
                   console.info("[connector-debug] project overview integration row pointerdown", {
                     source: row.source,
                     rowProjectId,
@@ -1790,7 +1816,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                   event.preventDefault();
                   openProjectConnectorBrowser("pointerdown", event);
                 },
-                onClick: (event) => {
+                onClick: row.source === "github" ? undefined : (event) => {
                   console.info("[connector-debug] project overview integration row click", {
                     source: row.source,
                     rowProjectId,
@@ -1814,13 +1840,54 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                 React.createElement("span", { className: "playground-tasks-connector-service-label" }, row.label)
               ),
               React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                React.createElement("span", {
-                  className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger playground-project-overview-integration-value-button" + (row.isEmpty ? " is-empty" : ""),
-                  title: row.value,
-                },
-                  React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, row.value),
-                  React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron playground-project-overview-integration-chevron", strokeWidth: 1.8 })
-                )
+                row.source === "github"
+                  ? React.createElement(PlatformSecondaryButton, {
+                      type: "button",
+                      size: "small",
+                      className: "playground-project-overview-integration-manage-button",
+                      onClick: (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        openProjectConnectorBrowser("manage", event);
+                      },
+                    }, "Manage")
+                  : React.createElement("span", {
+                      className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger playground-project-overview-integration-value-button" + (row.isEmpty ? " is-empty" : ""),
+                      title: row.value,
+                    },
+                      React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, row.value),
+                      React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron playground-project-overview-integration-chevron", strokeWidth: 1.8 })
+                    )
+              )
+            );
+            if (row.source !== "github" || !row.repositories?.length) {
+              return mainRow;
+            }
+            return React.createElement("div", {
+                key: row.id || row.label,
+                className: "playground-project-overview-integration-group is-github",
+              },
+              mainRow,
+              React.createElement("div", { className: "playground-project-overview-github-repositories" },
+                row.repositories.map((repository) => React.createElement(RunnerProjectGithubRepositorySettings, {
+                  key: repository.repoFullName,
+                  accountId: String(taskConnectorBrowserAccountIdsBySource.github || "").trim() || undefined,
+                  repoFullName: repository.repoFullName,
+                  refName: repository.ref || "main",
+                  branchPrefix: repository.branchPrefix,
+                  createPullRequests: repository.createPullRequests,
+                  fetchBranches: taskConnectorConfigByKey.github?.fetchBranches,
+                  onChange: (patch) => updateProjectGithubRepositorySettings(
+                    selectedProject,
+                    repository.repoFullName,
+                    patch
+                  ).catch((error) => {
+                    setTaskConnectorBrowserErrors((current) => ({
+                      ...current,
+                      github: error instanceof Error ? error.message : "Failed to update GitHub repository settings.",
+                    }));
+                  }),
+                }))
               )
             );
           }
@@ -1840,10 +1907,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                   )
                 : React.createElement("div", { className: "playground-tasks-secondary-copy" },
                     "No plugins are available yet."
-                  ),
-              renderProjectConnectorCredentialRouting(projectOverviewDraft, {
-                disabled: !canManageProjectAccess,
-              })
+                  )
             );
           }
 

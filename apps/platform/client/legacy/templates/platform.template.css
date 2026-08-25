@@ -561,6 +561,15 @@
           background: rgba(255, 255, 255, 0.1);
           color: white;
         }
+
+        .playground-thread-execution-workbench-button.platform-icon-button {
+          border-radius: 4px;
+        }
+
+        .playground-thread-execution-workbench-button.platform-icon-button.is-active {
+          background: rgba(255, 255, 255, 0.1) !important;
+          color: white !important;
+        }
   
         .playground-content-menu-button.is-private-active {
           background: rgba(96, 165, 250, 0.16);
@@ -596,6 +605,13 @@
   
         .playground-unified-top-navbar .playground-files-control-button.playground-tasks-nav-issue-button {
           margin-left: 0;
+        }
+
+        .playground-unified-top-navbar
+          .playground-tasks-nav-settings-button.platform-button,
+        .playground-unified-top-navbar
+          .playground-tasks-nav-issue-selector .platform-button {
+          --platform-button-height: 28px;
         }
 
         .playground-unified-top-navbar
@@ -4956,7 +4972,7 @@
         .playground-plugins-section-copy {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 8px;
         }
   
         .playground-plugins-section-title {
@@ -4992,7 +5008,7 @@
           margin: 0;
           font-size: 12px;
           line-height: 1.6;
-          color: rgba(255, 255, 255, 0.48);
+          color: rgba(255, 255, 255, 0.62);
         }
   
         .playground-plugins-title {
@@ -31437,7 +31453,7 @@
           color: rgba(255, 255, 255, 1);
           font-size: 12px;
           line-height: 1.35;
-          font-weight: 500;
+          font-weight: 400;
         }
   
         .playground-tasks-backlog-section-copy {
@@ -31526,7 +31542,7 @@
         }
   
         .playground-tasks-backlog-item:hover {
-          background: var(--playground-task-color-surface-hover, rgba(255, 255, 255, 0.07));
+          background: var(--playground-task-color-surface-hover, rgba(255, 255, 255, 0.1));
           color: rgba(255, 255, 255, 0.96);
         }
   
@@ -31536,7 +31552,8 @@
         }
   
         .playground-tasks-project-workspace .playground-tasks-backlog-view .playground-tasks-backlog-item {
-          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.075);
+          background: var(--playground-task-color-surface, rgba(255, 255, 255, 0.075));
         }
   
         .playground-tasks-project-workspace .playground-tasks-backlog-view .playground-tasks-backlog-item::before {
@@ -31545,11 +31562,11 @@
         }
   
         .playground-tasks-project-workspace .playground-tasks-backlog-view .playground-tasks-backlog-item:hover {
-          background: rgba(255, 255, 255, 0.07);
+          background: var(--playground-task-color-surface-hover, rgba(255, 255, 255, 0.1));
         }
-  
+
         .playground-tasks-project-workspace .playground-tasks-backlog-view .playground-tasks-backlog-item.is-active {
-          background: rgba(255, 255, 255, 0.1);
+          background: var(--playground-task-color-surface-active, rgba(255, 255, 255, 0.1));
         }
   
         .playground-tasks-backlog-title {
@@ -32069,7 +32086,7 @@
           gap: 0;
           padding: 12px;
           border: 1px solid rgba(255, 255, 255, 0.075);
-          border-radius: 8px;
+          border-radius: 10px;
           background: var(--playground-task-color-surface, rgba(255, 255, 255, 0.075));
           box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.15);
           color: rgba(255, 255, 255, 0.92);
@@ -32085,7 +32102,7 @@
         }
   
         .playground-tasks-lane-card:hover {
-          background: var(--playground-task-color-surface-hover, rgba(255, 255, 255, 0.07));
+          background: var(--playground-task-color-surface-hover, rgba(255, 255, 255, 0.1));
         }
   
         .playground-tasks-lane-card.is-active {
@@ -32105,7 +32122,7 @@
         .playground-tasks-lane-card-title {
           font-size: 12px;
           line-height: 1.35;
-          font-weight: 500;
+          font-weight: 400;
           color: white;
           min-width: 0;
           display: -webkit-box;
@@ -32176,8 +32193,8 @@
         }
   
         .playground-tasks-board-assignee-avatar {
-          width: 22px;
-          height: 22px;
+          width: 20px;
+          height: 20px;
           border-radius: 999px;
           background: rgba(255, 255, 255, 0.1);
           color: rgba(255, 255, 255, 0.88);
@@ -32258,7 +32275,7 @@
           gap: 12px;
           width: 100%;
           min-width: 0;
-          margin-top: 10px;
+          margin-top: 12px;
         }
   
         .playground-tasks-lane-card-meta-left {
@@ -32310,7 +32327,27 @@
   
         .playground-tasks-lane-card-status {
           flex: 0 0 auto;
+          width: 16px;
+          height: 16px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           color: rgba(255, 255, 255, 0.7);
+          font-size: 12px;
+          line-height: 1.2;
+          font-weight: 400;
+          white-space: nowrap;
+        }
+
+        .playground-tasks-lane-card-status-icon {
+          width: 16px;
+          height: 16px;
+          display: block;
+        }
+
+        .playground-tasks-lane-card-created-at {
+          flex: 0 0 auto;
+          color: rgba(255, 255, 255, 0.62);
           font-size: 12px;
           line-height: 1.2;
           font-weight: 400;
@@ -32338,7 +32375,7 @@
           border-radius: 999px;
           flex: 0 0 auto;
           background: var(--playground-task-color-accent, #016bcb);
-          box-shadow: inset 0 0 0 1px var(--playground-task-color-border, rgba(1, 107, 203, 0.2));
+          box-shadow: inset 0 0 0 1px var(--playground-task-color-border, rgba(255, 255, 255, 0.05));
         }
   
         .playground-tasks-board-toolbar,
@@ -32441,7 +32478,7 @@
   
         .playground-tasks-board-grid {
           display: grid;
-          grid-template-columns: repeat(5, minmax(150px, 1fr));
+          grid-template-columns: repeat(var(--playground-tasks-board-column-count, 5), minmax(150px, 1fr));
           gap: 12px;
           align-items: stretch;
         }
@@ -32470,12 +32507,20 @@
   
         .playground-tasks-board-release-box-title {
           min-width: 0;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
           font-size: 10px;
           line-height: 1.2;
           font-weight: 400;
           letter-spacing: 0.06em;
           text-transform: uppercase;
           color: rgba(255, 255, 255, 0.76);
+        }
+
+        .playground-tasks-board-release-box-status-icon {
+          width: 14px;
+          height: 14px;
         }
   
         .playground-tasks-board-release-box-count {

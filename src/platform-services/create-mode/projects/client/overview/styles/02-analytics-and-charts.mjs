@@ -1050,6 +1050,167 @@ export const PROJECT_OVERVIEW_CSS_02_FRAGMENT = String.raw`        .playground-p
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       }
 
+      .playground-project-overview-integration-group {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-project-overview-integration-group > .playground-project-overview-integration-row {
+        border-bottom: 0;
+      }
+
+      .playground-project-overview-integration-manage-button {
+        min-height: 30px;
+        padding-inline: 14px;
+        border: 0;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-github-repositories {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+        padding: 0 0 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-project-github-repository-settings {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-width: 0;
+        overflow: visible;
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.075);
+      }
+
+      .playground-project-github-repository-settings__heading,
+      .playground-project-github-repository-settings__row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 38%);
+        align-items: center;
+        gap: 24px;
+        min-height: 76px;
+        padding: 14px 18px;
+      }
+
+      .playground-project-github-repository-settings__row,
+      .playground-project-github-repository-settings__heading + .playground-project-github-repository-settings__row {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-project-github-repository-settings__identity,
+      .playground-project-github-repository-settings__branch,
+      .playground-project-github-repository-settings__copy strong {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+      }
+
+      .playground-project-github-repository-settings__identity {
+        gap: 10px;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .playground-project-github-repository-settings__identity svg,
+      .playground-project-github-repository-settings__copy strong svg {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+      }
+
+      .playground-project-github-repository-settings__identity span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-project-github-repository-settings__branch {
+        justify-content: flex-end;
+        gap: 12px;
+      }
+
+      .playground-project-github-repository-settings__branch > span {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .playground-project-github-repository-settings__branch .platform-selector {
+        width: min(220px, 100%);
+        flex: 1 1 160px;
+      }
+
+      .playground-project-github-repository-settings__branch-trigger,
+      .playground-project-github-repository-settings__input {
+        min-height: 38px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .playground-project-github-repository-settings__copy {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        gap: 3px;
+      }
+
+      .playground-project-github-repository-settings__copy strong {
+        gap: 7px;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 400;
+      }
+
+      .playground-project-github-repository-settings__copy > span {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .playground-project-github-repository-settings__input {
+        width: 100%;
+        padding: 0 12px;
+        outline: none;
+        font: inherit;
+        font-size: 13px;
+      }
+
+      .playground-project-github-repository-settings__input:focus {
+        border-color: rgba(87, 166, 255, 0.55);
+      }
+
+      .playground-project-github-repository-settings__pr-switch {
+        justify-self: end;
+        width: 100%;
+        max-width: 280px;
+      }
+
+      @media (max-width: 820px) {
+        .playground-project-github-repository-settings__heading,
+        .playground-project-github-repository-settings__row {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 12px;
+        }
+
+        .playground-project-github-repository-settings__branch {
+          justify-content: stretch;
+        }
+
+        .playground-project-github-repository-settings__pr-switch,
+        .playground-project-github-repository-settings__branch .platform-selector {
+          justify-self: stretch;
+          width: 100%;
+          max-width: none;
+        }
+      }
+
       .playground-project-overview-chart-empty {
         min-height: 220px;
         display: flex;

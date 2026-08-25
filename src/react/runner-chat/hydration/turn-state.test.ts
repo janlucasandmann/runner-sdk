@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { RunnerTurn } from "../turn-types.js";
 import {
   applyHydratedRunningThreadState,
+  getRunnerBatchQueueReceiptLabel,
   getTurnBatchQueueReceipt,
   getTurnAssistantMessageText,
   getTurnLatestProgressTimestampMs,
@@ -88,7 +89,12 @@ describe("runner hydrated turn state", () => {
     expect(getTurnBatchQueueReceipt(queued)).toEqual({
       batchJobId: "batch_1",
       admissionReason: "runtime_execution_capacity_exhausted",
+      batchStatus: "queued",
+      batchStartPolicy: null,
     });
+    expect(getRunnerBatchQueueReceiptLabel(getTurnBatchQueueReceipt(queued)!)).toBe(
+      "Moved to Batches because runtime capacity is full · starts automatically when capacity is available",
+    );
     expect(applyHydratedRunningThreadState([queued], {
       threadStatus: "active",
       completedAtMs: null,
@@ -112,5 +118,25 @@ describe("runner hydrated turn state", () => {
       threadStatus: "running",
       completedAtMs: null,
     })[0]).toMatchObject({ status: "running", completedAtMs: undefined });
+  });
+
+  it("labels manually shelved Project ticket work without claiming capacity exhaustion", () => {
+    const receipt = getTurnBatchQueueReceipt(turn({
+      logs: [{
+        time: "00:00",
+        type: "info",
+        eventType: "batch_queued",
+        message: "Saved in Batches.",
+        metadata: {
+          batchJobId: "batch_manual",
+          batchStatus: "held",
+          admissionReason: "project_ticket_batch_recovery",
+        },
+      }],
+    }));
+    expect(receipt).not.toBeNull();
+    expect(getRunnerBatchQueueReceiptLabel(receipt!)).toBe(
+      "Saved in Batches · start this job when you are ready",
+    );
   });
 });

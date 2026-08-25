@@ -462,6 +462,97 @@ export function sortRunnerConversationMessagesChronologically(
     .map((entry) => entry.message);
 }
 
+function getProjectMentionMessageIdentity(
+  message: RunnerConversationMessage,
+): string | null {
+  if (message.role !== "user") {
+    return null;
+  }
+  const metadata = normalizeRecordObject(message.logMetadata);
+  const mention = getRecordObject(metadata, ["projectMention", "project_mention"]);
+  const source = getRecordObject(mention, ["source", "mentionSource", "mention_source"]);
+  const sourceId = getRecordString(source, ["id", "sourceId", "source_id"]).trim();
+  if (!sourceId) {
+    return null;
+  }
+  const sourceType = getRecordString(source, ["type", "sourceType", "source_type"])
+    .trim()
+    .toLowerCase();
+  const projectId = getRecordString(source, ["projectId", "project_id"]).trim();
+  return ["project-mention", sourceType, sourceId, projectId].join(":");
+}
+
+function mergeDuplicateConversationMessages(
+  previous: RunnerConversationMessage,
+  next: RunnerConversationMessage,
+): RunnerConversationMessage {
+  const previousMetadata = normalizeRecordObject(previous.logMetadata);
+  const nextMetadata = normalizeRecordObject(next.logMetadata);
+  return {
+    ...previous,
+    inputTokens: previous.inputTokens ?? next.inputTokens,
+    outputTokens: previous.outputTokens ?? next.outputTokens,
+    durationMs: previous.durationMs ?? next.durationMs,
+    actionsCount: previous.actionsCount ?? next.actionsCount,
+    id: previous.id || next.id,
+    content: previous.content || next.content,
+    createdAt: previous.createdAt || next.createdAt,
+    logMetadata: previousMetadata || nextMetadata
+      ? { ...(nextMetadata || {}), ...(previousMetadata || {}) }
+      : null,
+  };
+}
+
+/**
+ * Message history can temporarily contain both a legacy row and one or more
+ * canonical event projections for the same persisted message. Collapse them
+ * by durable ID and, for retry-safe Project mentions, by their source record.
+ * Ordinary repeated prose remains distinct.
+ */
+export function dedupeRunnerConversationMessages(
+  messages: RunnerConversationMessage[],
+): RunnerConversationMessage[] {
+  if (messages.length < 2) {
+    return messages;
+  }
+  const result: RunnerConversationMessage[] = [];
+  const indexById = new Map<string, number>();
+  const indexByMention = new Map<string, number>();
+  const indexByIdlessTimestamp = new Map<string, number>();
+
+  for (const message of messages) {
+    const id = String(message.id || "").trim();
+    const mentionIdentity = getProjectMentionMessageIdentity(message);
+    const idlessIdentity = !id && message.createdAt
+      ? `${message.role}\u0000${message.createdAt}\u0000${message.content}`
+      : null;
+    const existingIndex = mentionIdentity !== null && indexByMention.has(mentionIdentity)
+      ? indexByMention.get(mentionIdentity)
+      : id && indexById.has(id)
+        ? indexById.get(id)
+        : idlessIdentity !== null && indexByIdlessTimestamp.has(idlessIdentity)
+          ? indexByIdlessTimestamp.get(idlessIdentity)
+          : undefined;
+
+    if (existingIndex !== undefined) {
+      const merged = mergeDuplicateConversationMessages(result[existingIndex], message);
+      result[existingIndex] = merged;
+      if (id) indexById.set(id, existingIndex);
+      if (merged.id) indexById.set(merged.id, existingIndex);
+      if (mentionIdentity) indexByMention.set(mentionIdentity, existingIndex);
+      if (idlessIdentity) indexByIdlessTimestamp.set(idlessIdentity, existingIndex);
+      continue;
+    }
+
+    const index = result.length;
+    result.push(message);
+    if (id) indexById.set(id, index);
+    if (mentionIdentity) indexByMention.set(mentionIdentity, index);
+    if (idlessIdentity) indexByIdlessTimestamp.set(idlessIdentity, index);
+  }
+  return result;
+}
+
 export function getRunnerLogAbsoluteTimestampMs(
   log: RunnerLog
 ): number | null {
@@ -665,5 +756,7 @@ export async function fetchAllThreadMessages(params: {
     offset += pageItems.length;
   }
 
-  return sortRunnerConversationMessagesChronologically(messages);
+  return sortRunnerConversationMessagesChronologically(
+    dedupeRunnerConversationMessages(messages),
+  );
 }

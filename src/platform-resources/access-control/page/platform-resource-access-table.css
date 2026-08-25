@@ -108,7 +108,7 @@
 
 .platform-resource-access-settings
   .platform-resource-access-settings__role-page[data-platform-role-list-placement="details-sidebar"] {
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
   gap: 42px;
 }
 
@@ -181,8 +181,8 @@
   .platform-role-permissions-page__details-card
   > .platform-ui-card__sidebar-header {
   margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 .platform-resource-access-settings:is(
@@ -192,8 +192,8 @@
   .platform-role-permissions-page__details-card
   > .platform-ui-card__sidebar-header
   .platform-ui-card__sidebar-title {
-  color: #fff;
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
   font-weight: 400;
 }
 

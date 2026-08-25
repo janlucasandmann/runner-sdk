@@ -15,6 +15,13 @@ export const PROJECT_ACTIVITY_FEED_RUNTIME_FRAGMENT = String.raw`
               defaultEnabled: true,
             },
             {
+              id: "ticket_comments",
+              label: "Ticket comments",
+              description: "Comments and replies added to project tickets.",
+              presentation: "card",
+              defaultEnabled: true,
+            },
+            {
               id: "mission_control",
               label: "Mission Control",
               description: "Plans, reviews, and project-level reports from Mission Control.",
@@ -98,6 +105,7 @@ export const PROJECT_ACTIVITY_FEED_RUNTIME_FRAGMENT = String.raw`
             if (!PROJECT_ACTIVITY_EVENT_TYPES.some((eventType) => eventType.id === normalizedEventTypeId)) {
               return null;
             }
+            setProjectActivityVisibleEventCount(20);
             const nextPreferences = {
               ...getProjectActivityTimelinePreferences(),
               [normalizedEventTypeId]: enabled !== false,
@@ -229,6 +237,18 @@ export const PROJECT_ACTIVITY_FEED_RUNTIME_FRAGMENT = String.raw`
               if (!response.ok && response.status !== 404 && response.status !== 405) {
                 throw new Error(data?.message || data?.error || "Failed to add comment.");
               }
+              if (response.ok) {
+                reconcileProjectMentionDispatches(data, {
+                  project: selectedProject,
+                  projectId,
+                  body,
+                  source: {
+                    type: "project_activity_comment",
+                    activityEventId: normalizedEventId,
+                    commentId: data?.comment?.id || comment.id,
+                  },
+                });
+              }
               const responseProject = response.ok
                 ? getPlaygroundProjectResponseRecord(data, null)
                 : null;
@@ -313,6 +333,7 @@ export const PROJECT_ACTIVITY_FEED_RUNTIME_FRAGMENT = String.raw`
           }
 
           function getProjectActivityTaskEventType(event) {
+            if (event?.eventType === "comment_added") return "ticket_comments";
             if (event?.eventType === "thread_started") return "threads";
             if (event?.eventType === "field_changed") {
               const fieldName = String(event.fieldName || "").trim().toLowerCase();
@@ -364,17 +385,20 @@ export const PROJECT_ACTIVITY_FEED_RUNTIME_FRAGMENT = String.raw`
               : [])
               .filter((event) => {
                 const fieldName = String(event?.fieldName || "").trim().toLowerCase();
-                return event?.eventType !== "comment_added"
-                  && !(event?.eventType === "field_changed" && fieldName === "description")
+                return !(event?.eventType === "field_changed" && fieldName === "description")
                   && event?.eventType !== "project_update_posted";
               })
-              .map((event, index) => ({
-                id: String(event.id || "task-event-" + index + "-" + String(event.createdAt || "")),
-                eventType: getProjectActivityTaskEventType(event),
-                presentation: "line",
-                timestamp: getProjectActivityEventTimestamp(event.createdAt),
-                source: event,
-              }));
+              .map((event, index) => {
+                const isTicketComment = event?.eventType === "comment_added";
+                return {
+                  id: String(event.id || "task-event-" + index + "-" + String(event.createdAt || "")),
+                  eventType: getProjectActivityTaskEventType(event),
+                  presentation: isTicketComment ? "card" : "line",
+                  cardType: isTicketComment ? "ticket_comment" : null,
+                  timestamp: getProjectActivityEventTimestamp(event.createdAt),
+                  source: event,
+                };
+              });
           }
 
           function buildProjectActivityThreadEvents() {
@@ -1184,6 +1208,75 @@ export const PROJECT_ACTIVITY_FEED_RUNTIME_FRAGMENT = String.raw`
           }
 
           function renderProjectActivityRichCard(event) {
+            if (event.cardType === "ticket_comment") {
+              const source = event.source || {};
+              const comment = source.comment || null;
+              const task = source.task || null;
+              if (!comment || !String(comment.text || comment.body || "").trim()) {
+                return null;
+              }
+              const taskId = String(source.taskId || task?.id || "").trim();
+              const ticketNumber = String(
+                (taskId && typeof taskTicketNumbersById !== "undefined"
+                  ? taskTicketNumbersById[taskId]
+                  : "")
+                  || task?.ticketNumber
+                  || ""
+              ).trim();
+              const taskType = task && typeof normalizePlaygroundTaskType === "function"
+                ? normalizePlaygroundTaskType(task.taskType || task.type)
+                : "";
+              const TaskTypeIcon = task && typeof getPlaygroundTaskTypeIcon === "function"
+                ? getPlaygroundTaskTypeIcon(taskType)
+                : null;
+              const authorName = typeof getTaskCommentDisplayName === "function"
+                ? getTaskCommentDisplayName(comment)
+                : String(comment.authorName || source.actorName || "Project member").trim() || "Project member";
+              const authorAvatar = typeof renderTaskCommentAvatar === "function"
+                ? renderTaskCommentAvatar(comment, "playground-project-activity-line__avatar")
+                : typeof renderProjectOverviewTaskActivityActorAvatar === "function"
+                  ? renderProjectOverviewTaskActivityActorAvatar(source, "playground-project-activity-line__avatar")
+                  : null;
+              const openTicket = taskId && typeof openProjectTaskDetailScreen === "function"
+                ? () => openProjectTaskDetailScreen(taskId)
+                : null;
+              return React.createElement(PlatformCommentCard, {
+                key: event.id,
+                className: "playground-project-activity-rich-card playground-project-activity-ticket-comment",
+                author: React.createElement(React.Fragment, null,
+                  React.createElement("span", null, authorName),
+                  ticketNumber
+                    ? React.createElement(React.Fragment, null,
+                        React.createElement("span", {
+                          className: "playground-project-activity-ticket-comment__verb",
+                        }, " commented on "),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-project-activity-ticket-comment__ticket",
+                          disabled: !openTicket,
+                          onClick: openTicket || undefined,
+                        },
+                          TaskTypeIcon
+                            ? React.createElement("span", {
+                                className: "playground-tasks-lane-card-type-badge is-" + taskType,
+                                "aria-hidden": "true",
+                              }, React.createElement(TaskTypeIcon, { width: 12, height: 12, strokeWidth: 1.8 }))
+                            : null,
+                          React.createElement("span", null, ticketNumber)
+                        )
+                      )
+                    : null
+                ),
+                timestamp: comment.createdAt && typeof formatRelativeThreadTime === "function"
+                  ? formatRelativeThreadTime(comment.createdAt)
+                  : "",
+                avatar: authorAvatar,
+                content: React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                  content: String(comment.text || comment.body || ""),
+                  className: "playground-project-activity-ticket-comment__body tb-message-markdown",
+                }),
+              });
+            }
             if (["project_update", "project_comment"].includes(event.cardType)) {
               const updateRecord = event.source?.id
                 ? event.source
@@ -1510,53 +1603,75 @@ export const PROJECT_ACTIVITY_FEED_RUNTIME_FRAGMENT = String.raw`
 
           function renderProjectOverviewStatusFeed() {
             const events = getProjectActivityFeedEvents();
-            const groups = groupProjectActivityEvents(events);
+            const visibleEvents = events.slice(0, Math.max(20, projectActivityVisibleEventCount));
+            const groups = groupProjectActivityEvents(visibleEvents);
+            const hasMoreEvents = visibleEvents.length < events.length;
+            projectActivityTimelineHasMoreRef.current = hasMoreEvents;
             const latestProjectUpdate = getProjectOverviewUpdateRecords().find(
               (record) => normalizeProjectOverviewUpdateKind(record?.kind) === "update"
             )
               || getProjectOverviewCreationUpdate();
-            const loading = projectOverviewTaskActivityState?.status === "loading" && events.length === 0;
+            const activityStateProjectId = String(
+              projectOverviewTaskActivityState?.projectId || ""
+            ).trim();
+            const currentProjectId = String(selectedProject?.id || selectedProjectId || "").trim();
+            const loading = activityStateProjectId !== currentProjectId
+              || ["idle", "loading"].includes(
+                String(projectOverviewTaskActivityState?.status || "idle").trim().toLowerCase()
+              );
             const activityError = projectOverviewTaskActivityState?.status === "error"
               ? String(projectOverviewTaskActivityState.error || "Project activity is currently unavailable.")
               : "";
-            return React.createElement("section", { className: "playground-project-activity-feed" },
+            return React.createElement("section", {
+                ref: projectActivityFeedRef,
+                className: "playground-project-activity-feed",
+              },
               React.createElement("div", { className: "playground-project-activity-feed__heading" },
                 React.createElement("h2", { className: "playground-project-activity-feed__title" }, "Activity"),
                 renderProjectOverviewTimelineFilter()
               ),
-              latestProjectUpdate
-                ? React.createElement("div", { className: "playground-project-activity-feed__latest-update" },
-                    renderProjectOverviewUpdateCard(latestProjectUpdate, {
-                      ariaLabel: "Latest project update",
-                      showUpdateAction: true,
-                    })
-                  )
-                : null,
               loading
                 ? React.createElement(PlatformLoadingState, {
                     className: "playground-project-activity-feed__loading",
                     message: "Loading project activity...",
                     centered: true,
                   })
-                : groups.length
-                  ? React.createElement("div", { className: "playground-project-activity-feed__groups" },
-                      groups.map((group) => React.createElement("section", {
-                          key: group.label,
-                          className: "playground-project-activity-feed__group",
-                        },
-                        React.createElement("h3", { className: "playground-project-activity-feed__month" }, group.label),
-                        React.createElement("div", { className: "playground-project-activity-feed__events" },
-                          group.events.map(renderProjectActivityFeedEvent)
+                : React.createElement(React.Fragment, null,
+                    latestProjectUpdate
+                      ? React.createElement("div", { className: "playground-project-activity-feed__latest-update" },
+                          renderProjectOverviewUpdateCard(latestProjectUpdate, {
+                            ariaLabel: "Latest project update",
+                            showUpdateAction: true,
+                          })
                         )
-                      ))
-                    )
-                  : React.createElement(PlatformEmptyState, {
-                      className: "playground-project-activity-feed__empty",
-                      icon: Rocket,
-                      title: activityError ? "Activity unavailable" : "No visible activity yet",
-                      description: activityError
-                        || "Project events will appear here as work progresses. You can change visible event types in Settings.",
-                    })
+                      : null,
+                    groups.length
+                      ? React.createElement("div", { className: "playground-project-activity-feed__groups" },
+                          groups.map((group) => React.createElement("section", {
+                              key: group.label,
+                              className: "playground-project-activity-feed__group",
+                            },
+                            React.createElement("h3", { className: "playground-project-activity-feed__month" }, group.label),
+                            React.createElement("div", { className: "playground-project-activity-feed__events" },
+                              group.events.map(renderProjectActivityFeedEvent)
+                            )
+                          ))
+                        )
+                      : React.createElement(PlatformEmptyState, {
+                          className: "playground-project-activity-feed__empty",
+                          icon: Rocket,
+                          title: activityError ? "Activity unavailable" : "No visible activity yet",
+                          description: activityError
+                            || "Project events will appear here as work progresses. You can change visible event types in Settings.",
+                        }),
+                    projectActivityIncrementalLoading && hasMoreEvents
+                      ? React.createElement(PlatformLoadingState, {
+                          className: "playground-project-activity-feed__incremental-loading",
+                          message: "Loading more activity...",
+                          centered: true,
+                        })
+                      : null
+                  )
             );
           }
 

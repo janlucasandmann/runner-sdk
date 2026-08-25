@@ -681,6 +681,20 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
               };
             });
             const renderableActivityItems = activityItems.filter((item) => item.sharedLine || item.isComment);
+            const selectedActivityTaskId = String(selectedTaskId || "").trim();
+            const renderedActivityTaskId = String(draftTask?.id || "").trim();
+            const activityTimelineStatus = String(taskActivityTimelineState?.status || "idle").trim().toLowerCase();
+            const activityTimelineLoading = Boolean(selectedActivityTaskId) && (
+              renderedActivityTaskId !== selectedActivityTaskId
+              || String(taskActivityTimelineState?.taskId || "").trim() !== selectedActivityTaskId
+              || ["idle", "loading"].includes(activityTimelineStatus)
+            );
+            const visibleRenderableActivityItems = renderableActivityItems.slice(
+              0,
+              Math.max(20, taskActivityVisibleEventCount)
+            );
+            taskActivityTimelineHasMoreRef.current = !activityTimelineLoading
+              && visibleRenderableActivityItems.length < renderableActivityItems.length;
             const activityHeaderActions = React.createElement(React.Fragment, null,
               React.createElement(PlatformSecondaryButton, {
                 type: "button",
@@ -731,6 +745,8 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             };
             return React.createElement("section", {
                 className: "platform-activity-timeline playground-tasks-activity",
+                ref: taskActivityTimelineRef,
+                "aria-busy": activityTimelineLoading || taskActivityIncrementalLoading,
               },
               React.createElement("header", { className: "platform-activity-timeline__header" },
                 React.createElement("div", { className: "platform-activity-timeline__pane-heading" },
@@ -738,9 +754,15 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                 ),
                 React.createElement("div", { className: "platform-activity-timeline__header-actions" }, activityHeaderActions)
               ),
-              renderableActivityItems.length > 0
+              activityTimelineLoading
+                ? React.createElement(PlatformLoadingState, {
+                    className: "playground-tasks-activity__loading",
+                    message: "Loading ticket activity...",
+                    centered: true,
+                  })
+              : visibleRenderableActivityItems.length > 0
                 ? React.createElement("ol", { className: "platform-activity-timeline__list" },
-                    renderableActivityItems.map((item) => {
+                    visibleRenderableActivityItems.map((item) => {
                       // Activity mutations and thread starts must always use the
                       // shared compact project activity line. Never fall back to
                       // a comment card for a non-comment event: that produced
@@ -775,6 +797,13 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                     className: "platform-activity-timeline__empty",
                     title: "No activity yet",
                   }),
+              !activityTimelineLoading && taskActivityIncrementalLoading
+                ? React.createElement(PlatformLoadingState, {
+                    className: "playground-tasks-activity__incremental-loading",
+                    message: "Loading more activity...",
+                    centered: true,
+                  })
+                : null,
               React.createElement(PlatformCommentComposer, activityComposer)
             );
           }
@@ -1578,29 +1607,22 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
 	                  React.createElement("div", { className: "playground-content-nav-center" }),
 	                  React.createElement("div", {
 	                    className: "playground-content-nav-right playground-tasks-detail-navbar-actions",
-	                    ref: taskDetailActionsRef,
 	                  },
-	                    React.createElement(React.Fragment, null,
-			                        React.createElement("div", { className: "playground-tasks-detail-navbar-status" },
-			                          renderTaskPreviewStatusControl(draftTask)
-		                        ),
-		                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-	                    React.createElement("button", {
-	                      type: "button",
-                      className: "playground-files-header-icon-button is-plain" + (taskDetailPopover === "menu" ? " is-active" : ""),
-                      onClick: () => setTaskDetailPopover((current) => current === "menu" ? "" : "menu"),
-                      title: "Task actions",
-                      "aria-label": "Task actions",
-                    }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
-                    taskDetailPopover === "menu"
-                      ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          renderTaskActionsMenu(draftTask, {
-                            closeMenu: () => setTaskDetailPopover(""),
-                            includeFullScreenAction: true,
-	                          })
-	                        )
-		                      : null
-		                  )
+	                    React.createElement("div", { className: "playground-tasks-detail-navbar-status" },
+	                      renderTaskPreviewStatusControl(draftTask)
+	                    ),
+	                    React.createElement(PlatformResourceActionsMenu, {
+	                        open: taskDetailPopover === "menu",
+	                        onOpenChange: (nextOpen) => setTaskDetailPopover(nextOpen ? "menu" : ""),
+	                        resourceLabel: "Ticket",
+	                        disabled: saveState.isSaving,
+	                        placement: "bottom-end",
+	                        width: 272,
+	                      },
+	                      renderTaskActionsMenu(draftTask, {
+	                        closeMenu: () => setTaskDetailPopover(""),
+	                        includeFullScreenAction: true,
+	                      })
 	                    ),
 	                    React.createElement("button", {
 	                      type: "button",
@@ -1651,6 +1673,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
               ariaLabel: activeTaskType === "loop" ? "Loop goal" : "Ticket description",
               readOnly: isTaskConfigLocked,
               historyKey: "ticket-description:" + draftTask.id,
+              stickyHeader: !isDetailOnlyMode,
               variant: "minimalistic-ui",
               contentVariant: "file-enabled",
               promptInsertion: typeof onOpenPromptSearch === "function"
@@ -1837,11 +1860,33 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
           );
         }
 
+        function renderProjectTaskDetailLoadingState() {
+          return React.createElement(PlatformLoadingState, {
+            className: "playground-projects-loading-state playground-tasks-ticket-loading-state",
+            message: "Loading ticket...",
+            centered: true,
+          });
+        }
+
         const isProjectTaskDetailScreenOpen = Boolean(
           projectTaskDetailScreenOpen
           && selectedProjectId
           && selectedTaskId
           && (taskView === "overview" || taskView === "backlog" || taskView === "board")
+        );
+        const selectedTaskDetailHydrationId = String(selectedTaskId || "").trim();
+        const taskDetailHydrationId = String(taskActivityTimelineState?.taskId || "").trim();
+        const taskDetailHydrationStatus = String(taskActivityTimelineState?.status || "idle")
+          .trim()
+          .toLowerCase();
+        const isProjectTaskDetailInitialLoading = Boolean(
+          isProjectTaskDetailScreenOpen
+          && selectedTaskDetailHydrationId
+          && (
+            taskDetailHydrationId !== selectedTaskDetailHydrationId
+            || taskDetailHydrationStatus === "idle"
+            || taskDetailHydrationStatus === "loading"
+          )
         );
         const directTaskNavigationProjectId = String(navigationRequest?.projectId || "").trim();
         const directTaskNavigationTaskId = String(navigationRequest?.taskId || "").trim();
@@ -1896,7 +1941,6 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             ),
             renderTaskEnvironmentFilePicker(),
             renderTaskConnectorBrowser(),
-            renderProjectConnectorBrowser(),
             renderBoardBlockedPickerDialog(),
             renderTaskParentPickerDialog(),
             renderTaskEnvironmentChangeDialog(),
@@ -1982,15 +2026,15 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                 isStandaloneCalendarMode
                   ? renderStandaloneCalendarWorkspace()
                   : isDirectTaskNavigationPending
-                    ? React.createElement(PlatformLoadingState, {
-                        className: "playground-projects-loading-state",
-                        message: "Loading ticket...",
-                        centered: true,
-                      })
+                    ? renderProjectTaskDetailLoadingState()
                   : projectComposerOpen && !selectedProject && !isProjectInitialSetupModalOpen
                     ? renderProjectComposerSetupWorkspace()
                     : selectedProject
-                      ? (isProjectTaskDetailScreenOpen ? renderProjectTaskDetailScreen() : renderSelectedProjectWorkspace())
+                      ? (isProjectTaskDetailScreenOpen
+                          ? (isProjectTaskDetailInitialLoading
+                              ? renderProjectTaskDetailLoadingState()
+                              : renderProjectTaskDetailScreen())
+                          : renderSelectedProjectWorkspace())
                       : renderProjectLanding()
               )
             ),
@@ -2000,7 +2044,6 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
           ),
           renderTaskEnvironmentFilePicker(),
           renderTaskConnectorBrowser(),
-          renderProjectConnectorBrowser(),
           renderBoardBlockedPickerDialog(),
           renderTaskParentPickerDialog(),
           renderTaskEnvironmentChangeDialog(),

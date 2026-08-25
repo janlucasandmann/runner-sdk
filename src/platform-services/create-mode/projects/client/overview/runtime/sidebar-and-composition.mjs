@@ -1,69 +1,4 @@
 export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
-          async function persistProjectOverviewSidebarProjectUpdate(projectUpdates = {}, metadataUpdates = {}) {
-            const baseProject = normalizePlaygroundProjectRecord(projectOverviewDraft || selectedProject);
-            const normalizedProjectId = String(baseProject.id || normalizedSelectedProjectId || "").trim();
-            if (!normalizedProjectId) {
-              return null;
-            }
-            const baseMetadata = getProjectOverviewSidebarMetadata(baseProject);
-            const nextMetadata = {
-              ...baseMetadata,
-              ...(metadataUpdates && typeof metadataUpdates === "object" ? metadataUpdates : {}),
-            };
-            const nextProjectRecord = normalizePlaygroundProjectRecord({
-              ...baseProject,
-              ...(projectUpdates && typeof projectUpdates === "object" ? projectUpdates : {}),
-              metadata: nextMetadata,
-              updatedAt: new Date().toISOString(),
-            });
-            commitProjectOverviewSidebarProjectRecord(nextProjectRecord);
-            if (typeof setProjectSaveState === "function") {
-              setProjectSaveState({ isSaving: true, error: "", message: "" });
-            }
-            try {
-              const payload = buildPlaygroundProjectSavePayload(nextProjectRecord, metadataUpdates);
-              const headers = new Headers(requestHeaders || {});
-              headers.set("Content-Type", "application/json");
-              const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId), {
-                method: "PATCH",
-                headers,
-                body: JSON.stringify(payload),
-              });
-              const data = await response.json().catch(() => ({}));
-              if (!response.ok) {
-                throw new Error(data?.message || data?.error || "Failed to update project.");
-              }
-              const updatedProject = getPlaygroundProjectResponseRecord(data, nextProjectRecord);
-              const reconciledProject = normalizePlaygroundProjectRecord({
-                ...(updatedProject || nextProjectRecord),
-                ...(projectUpdates && typeof projectUpdates === "object" ? projectUpdates : {}),
-                metadata: {
-                  ...(updatedProject?.metadata && typeof updatedProject.metadata === "object" && !Array.isArray(updatedProject.metadata)
-                    ? updatedProject.metadata
-                    : nextMetadata),
-                  ...(metadataUpdates && typeof metadataUpdates === "object" ? metadataUpdates : {}),
-                },
-              });
-              if (reconciledProject?.id) {
-                commitProjectOverviewSidebarProjectRecord(reconciledProject);
-              }
-              if (typeof setProjectSaveState === "function") {
-                setProjectSaveState({ isSaving: false, error: "", message: "Saved" });
-              }
-              return reconciledProject;
-            } catch (error) {
-              commitProjectOverviewSidebarProjectRecord(baseProject);
-              if (typeof setProjectSaveState === "function") {
-                setProjectSaveState({
-                  isSaving: false,
-                  error: error instanceof Error ? error.message : "Failed to update project.",
-                  message: "",
-                });
-              }
-              return null;
-            }
-          }
-
           function updateProjectOverviewNameDraftValue(nextValue) {
             const normalizedProjectId = String(selectedProjectId || selectedProject?.id || "").trim();
             const nextName = String(nextValue ?? "").replace(/\s+/g, " ");
@@ -127,13 +62,6 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
               });
             }
             return false;
-          }
-
-          function updateProjectOverviewSidebarProjectProperty(projectUpdates = {}, metadataUpdates = {}) {
-            if (typeof setProjectOverviewSidebarPropertyPopover === "function") {
-              setProjectOverviewSidebarPropertyPopover("");
-            }
-            void persistProjectOverviewSidebarProjectUpdate(projectUpdates, metadataUpdates);
           }
 
           function getProjectOverviewWallpaperOptions() {
@@ -331,6 +259,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
               disabled: option?.disabled === true,
               selected: option?.selected === true,
               onSelect: option?.onSelect,
+              data: option?.data,
             };
           }
 
@@ -352,28 +281,52 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                 || metadataOwner.id
                 || ""
             ).trim();
+            const isCurrentOwner = Boolean(
+              userId && userId === String(currentUserId || "").trim()
+            );
+            const resolvedOwnerCandidate = projectOverviewOwnerCandidatesState?.projectId === String(project.id || "").trim()
+              && Array.isArray(projectOverviewOwnerCandidatesState?.items)
+                ? projectOverviewOwnerCandidatesState.items
+                    .map((candidate) => normalizeProjectOverviewOwnerCandidate(candidate))
+                    .find((candidate) => candidate.userId === userId) || null
+                : null;
             const email = String(
-              project.ownerEmail
+              (isCurrentOwner ? currentUserEmail : "")
+                || resolvedOwnerCandidate?.email
+                || project.ownerEmail
                 || metadata.ownerEmail
                 || metadataOwner.email
-                || (userId && userId === String(currentUserId || "").trim() ? currentUserEmail : "")
                 || ""
             ).trim();
-            const name = String(
+            const storedName = String(
               project.ownerName
                 || metadata.ownerName
                 || metadataOwner.name
                 || metadataOwner.displayName
-                || (userId && userId === String(currentUserId || "").trim() ? currentUserName : "")
+                || ""
+            ).trim();
+            const storedNameIsGeneric = [
+              "project owner",
+              "project member",
+              "organization member",
+              "unknown",
+              "unknown user",
+            ].includes(storedName.toLowerCase());
+            const name = String(
+              (isCurrentOwner ? currentUserName : "")
+                || resolvedOwnerCandidate?.name
+                || (!storedNameIsGeneric ? storedName : "")
                 || email
+                || storedName
                 || "Project owner"
             ).trim();
             const avatarUrl = String(
-              project.ownerAvatarUrl
+              (isCurrentOwner ? currentUserAvatarUrl : "")
+                || resolvedOwnerCandidate?.avatarUrl
+                || project.ownerAvatarUrl
                 || metadata.ownerAvatarUrl
                 || metadataOwner.avatarUrl
                 || metadataOwner.photoUrl
-                || (userId && userId === String(currentUserId || "").trim() ? currentUserAvatarUrl : "")
                 || ""
             ).trim();
             return {
@@ -774,6 +727,28 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             );
           }
 
+          function renderProjectOverviewComputerChangeDialog() {
+            if (!projectComputerChangeDialog) {
+              return null;
+            }
+            const sourceName = String(projectComputerChangeDialog.sourceEnvironmentName || "the current computer").trim();
+            const targetName = String(projectComputerChangeDialog.targetEnvironmentName || "the new computer").trim();
+            return React.createElement(PlatformConfirmationModal, {
+              open: true,
+              title: "Change project computer?",
+              description: "Choose whether to clone this project's directory from " + sourceName + " to " + targetName + " before changing the project computer.",
+              confirmLabel: "Clone and change",
+              confirmingLabel: "Cloning project...",
+              secondaryActionLabel: "Change only",
+              secondaryActionPendingLabel: "Changing computer...",
+              cancelLabel: "Cancel",
+              errorFallback: "The project computer could not be changed.",
+              onCancel: () => setProjectComputerChangeDialog(null),
+              onSecondaryAction: () => confirmProjectOverviewComputerChange(false),
+              onConfirm: () => confirmProjectOverviewComputerChange(true),
+            });
+          }
+
           function renderProjectOverviewSidebar() {
             const metadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
               ? selectedProject.metadata
@@ -804,8 +779,28 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             const currentStatusValue = getProjectOverviewSidebarStatusValue();
             const currentStatusOption = statusOptions.find((option) => option.id === currentStatusValue) || statusOptions[0];
             const currentPriorityValue = getProjectOverviewSidebarPriorityValue();
+            const currentPriorityPresentation = getPlaygroundTaskPriorityPresentation(currentPriorityValue);
+            const normalizedPrioritySearchQuery = String(projectOverviewSidebarPrioritySearchQuery || "").trim().toLowerCase();
+            const priorityOptions = PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option, index) => ({
+              ...option,
+              shortcut: String(index + 1),
+            }));
+            const visiblePriorityOptions = priorityOptions.filter((option) => (
+              !normalizedPrioritySearchQuery
+              || option.label.toLowerCase().includes(normalizedPrioritySearchQuery)
+            ));
             const currentEnvironmentValue = getProjectOverviewSidebarEnvironmentValue();
-            const currentEnvironment = projectComposerAvailableEnvironments.find((environment) => String(environment?.id || "") === currentEnvironmentValue)
+            const normalizedComputerSearchQuery = String(projectOverviewSidebarComputerSearchQuery || "").trim().toLowerCase();
+            const visibleComputerOptions = projectComposerAvailableEnvironments.filter((environment) => {
+              if (!normalizedComputerSearchQuery) {
+                return true;
+              }
+              const environmentName = String(environment?.name || environment?.label || "Computer").trim().toLowerCase();
+              return environmentName.includes(normalizedComputerSearchQuery);
+            });
+            const currentEnvironment = projectComposerAvailableEnvironments.find(
+              (environment) => getProjectOverviewEnvironmentId(environment) === currentEnvironmentValue,
+            )
               || activeProjectAttachmentEnvironment
               || projectComposerAvailableEnvironments[0]
               || null;
@@ -907,11 +902,12 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                         renderStatusContent(currentStatusOption),
                         {
                           ariaLabel: "Project status",
-                          popupClassName: "playground-project-overview-status-selector-popup",
+                          popupClassName: "playground-tasks-detail-status-selector-popup playground-project-overview-status-selector-popup",
                           popupHeader: React.createElement(PlatformPopupSearchHeader, {
                             value: projectOverviewSidebarStatusSearchQuery,
                             onChange: (event) => setProjectOverviewSidebarStatusSearchQuery(event.target.value),
                             placeholder: "Change status...",
+                            shortcut: "S",
                             autoFocus: projectOverviewSidebarPropertyPopover === "status",
                             "aria-label": "Search project statuses",
                           }),
@@ -922,15 +918,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                               setProjectOverviewSidebarStatusSearchQuery("");
                             }
                           },
-                          onValueChange: (nextStatus) => {
-                            const normalizedStatus = normalizePlaygroundProjectStatus(nextStatus);
-                            setProjectOverviewSidebarStatusSearchQuery("");
-                            updateProjectOverviewSidebarProjectProperty({
-                              status: normalizedStatus,
-                            }, {
-                              status: normalizedStatus,
-                            });
-                          },
+                          onValueChange: (nextStatus) => selectProjectOverviewSidebarStatus(nextStatus),
                           options: visibleStatusOptions.map((option) => createProjectOverviewSidebarSelectorOption({
                             id: option.id,
                             label: option.label,
@@ -943,18 +931,38 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                     }),
                     renderProjectOverviewSidebarRow("Priority", getPlaygroundTaskPriorityLabel(currentPriorityValue), {
                     editable: true,
-                    content: renderProjectOverviewSidebarSelectControl("priority", currentPriorityValue, renderPlaygroundTaskPriorityLabel(currentPriorityValue), {
+                    content: renderProjectOverviewSidebarSelectControl("priority", currentPriorityValue, React.createElement("span", {
+                        className: "playground-tasks-priority-value playground-tasks-detail-priority-value " + currentPriorityPresentation.toneClassName,
+                      },
+                      renderPlaygroundTaskPriorityGlyph(currentPriorityValue),
+                      React.createElement("span", {
+                        className: "playground-tasks-priority-value-text playground-tasks-detail-select-trigger-label",
+                      }, currentPriorityPresentation.label)
+                    ), {
                       ariaLabel: "Project priority",
-                      options: PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) => createProjectOverviewSidebarSelectorOption({
+                      popupClassName: "playground-tasks-detail-priority-selector-popup playground-project-overview-priority-selector-popup",
+                      popupHeader: React.createElement(PlatformPopupSearchHeader, {
+                        value: projectOverviewSidebarPrioritySearchQuery,
+                        onChange: (event) => setProjectOverviewSidebarPrioritySearchQuery(event.target.value),
+                        placeholder: "Change priority...",
+                        shortcut: "P",
+                        autoFocus: projectOverviewSidebarPropertyPopover === "priority",
+                        "aria-label": "Search project priorities",
+                      }),
+                      popupHeaderClassName: "is-search-header",
+                      emptyContent: "No matching priorities.",
+                      onOpenChange: (nextOpen) => {
+                        if (!nextOpen) {
+                          setProjectOverviewSidebarPrioritySearchQuery("");
+                        }
+                      },
+                      onValueChange: (nextPriority) => selectProjectOverviewSidebarPriority(nextPriority),
+                      options: visiblePriorityOptions.map((option) => createProjectOverviewSidebarSelectorOption({
                         id: option.id,
-                        label: option.label,
+                        label: getPlaygroundTaskPriorityPresentation(option.id).label,
                         selected: option.id === currentPriorityValue,
-                        icon: renderPlaygroundTaskPriorityIcon(option.id),
-                        onSelect: () => updateProjectOverviewSidebarProjectProperty({
-                          priority: option.id,
-                        }, {
-                          priority: option.id,
-                        }),
+                        icon: renderPlaygroundTaskPriorityGlyph(option.id),
+                        trailing: option.shortcut,
                       })),
                     }),
                   }),
@@ -965,24 +973,36 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                       React.createElement("span", null, currentEnvironmentLabel)
                     ), {
                       ariaLabel: "Project computer",
-                      emptyContent: "No computers available.",
-                      options: projectComposerAvailableEnvironments.length > 0
-                        ? projectComposerAvailableEnvironments.map((environment) => {
-                            const environmentId = String(environment?.id || "").trim();
+                      popupHeader: React.createElement(PlatformPopupSearchHeader, {
+                        value: projectOverviewSidebarComputerSearchQuery,
+                        onChange: (event) => setProjectOverviewSidebarComputerSearchQuery(event.target.value),
+                        placeholder: "Change computer...",
+                        autoFocus: projectOverviewSidebarPropertyPopover === "computer",
+                        "aria-label": "Search project computers",
+                      }),
+                      popupHeaderClassName: "is-search-header",
+                      emptyContent: normalizedComputerSearchQuery
+                        ? "No matching computers."
+                        : "No computers available.",
+                      onOpenChange: (nextOpen) => {
+                        if (!nextOpen) {
+                          setProjectOverviewSidebarComputerSearchQuery("");
+                        }
+                      },
+                      onValueChange: (nextEnvironmentId, option) => requestProjectOverviewComputerChange(
+                        nextEnvironmentId,
+                        option?.data?.environment,
+                      ),
+                      options: visibleComputerOptions.length > 0
+                        ? visibleComputerOptions.map((environment) => {
+                            const environmentId = getProjectOverviewEnvironmentId(environment);
                             const environmentName = String(environment?.name || environment?.label || "Computer").trim();
                             return createProjectOverviewSidebarSelectorOption({
                               id: environmentId,
                               label: environmentName,
-                              description: environment?.isDefault ? "Default computer" : "",
                               selected: environmentId && environmentId === currentEnvironmentValue,
                               icon: React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.85 }),
-                              onSelect: () => updateProjectOverviewSidebarProjectProperty({
-                                defaultEnvironmentId: environmentId,
-                                defaultEnvironmentName: environmentName,
-                              }, {
-                                defaultEnvironmentId: environmentId || null,
-                                defaultEnvironmentName: environmentName,
-                              }),
+                              data: { environment },
                             });
                           })
                         : []
@@ -1160,6 +1180,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	            const isReadOnly = Boolean(options?.readOnly);
 	            const ruleEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
 	            const canAddRule = !isReadOnly
+	              && Boolean(normalizePlaygroundProjectRuleTitle(projectRuleTitleInputValue))
 	              && Boolean(normalizePlaygroundProjectRuleEntry(projectRuleInputValue))
 	              && !projectRulesSaveState.isSaving;
 
@@ -1169,118 +1190,142 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                return;
 	              }
 	              setProjectRuleComposerOpen(false);
+	              setProjectRuleTitleInputValue("");
 	              setProjectRuleInputValue("");
+	              setProjectRuleEditingIndex(-1);
+	              setProjectRuleEditingValue("");
 	            }
 
 	            function renderProjectOverviewRuleComposerModal() {
 	              if (isReadOnly || !projectRuleComposerOpen) {
 	                return null;
 	              }
-	              const content = React.createElement(PlatformModalBackdrop, {
-	                  className: "playground-tasks-project-modal-backdrop playground-tasks-project-issue-backdrop playground-project-overview-rule-editor-backdrop"
-	                    + (projectRuleComposerVisible ? " is-visible" : "")
-	                    + (projectRuleComposerClosing ? " is-closing" : ""),
-	                  onClick: (event) => {
-	                    if (event.target === event.currentTarget) {
-	                      closeProjectOverviewRuleComposer();
-	                    }
+	              const isEditingRule = projectRuleEditingIndex >= 0;
+	              return React.createElement(PlatformModal, {
+	                  open: projectRuleComposerOpen,
+	                  visible: projectRuleComposerVisible,
+	                  closing: projectRuleComposerClosing,
+	                  animationDurationMs: projectRuleComposerAnimationMs,
+	                  onClose: () => closeProjectOverviewRuleComposer(),
+	                  as: "form",
+	                  size: "large",
+	                  maxHeight: "80vh",
+	                  title: isEditingRule ? "Edit Rule" : "Add Rule",
+	                  headerVariant: "search",
+	                  headerLeading: React.createElement("span", {
+	                    className: "playground-tasks-detail-type-badge is-rule",
+	                    "aria-hidden": "true",
+	                  }, React.createElement(Shield, { width: 12, height: 12, strokeWidth: 1.9 })),
+	                  headerSearchProps: {
+	                    icon: null,
+	                    value: projectRuleTitleInputValue,
+	                    placeholder: "Rule title",
+	                    "aria-label": "Rule title",
+	                    autoComplete: "off",
+	                    onChange: (event) => setProjectRuleTitleInputValue(event.target.value),
+	                    onKeyDown: (event) => {
+	                      if (
+	                        event.key !== "Tab"
+	                        || event.shiftKey
+	                        || event.metaKey
+	                        || event.ctrlKey
+	                        || event.altKey
+	                      ) {
+	                        return;
+	                      }
+	                      event.preventDefault();
+	                      window.requestAnimationFrame(() => {
+	                        projectRuleDescriptionEditorRef.current?.focus?.({ preventScroll: true });
+	                      });
+	                    },
 	                  },
-	                },
-	                React.createElement(PlatformModalSurface, {
-	                    as: "form",
-	                    className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-project-overview-rule-editor-modal"
-	                      + (projectRuleComposerVisible ? " is-visible" : "")
-	                      + (projectRuleComposerClosing ? " is-closing" : ""),
-	                    role: "dialog",
-	                    "aria-modal": "true",
-	                    "aria-label": "Add Rule",
-	                    onMouseDown: (event) => event.stopPropagation(),
-	                    onClick: (event) => event.stopPropagation(),
+	                  className: "playground-project-milestone-modal playground-project-rule-modal",
+	                  bodyClassName: "playground-project-milestone-modal__body playground-project-rule-modal__body",
+	                  footerClassName: "playground-project-milestone-modal__footer playground-project-rule-modal__footer",
+	                  closeButtonLabel: "Close rule",
+	                  closeButtonDisabled: projectRulesSaveState.isSaving,
+	                  surfaceProps: {
 	                    onSubmit: (event) => {
 	                      event.preventDefault();
 	                      void handleAddProjectRuleEntry();
 	                    },
+	                    onKeyDown: (event) => {
+	                      if (
+	                        !(event.metaKey || event.ctrlKey)
+	                        || event.key !== "Enter"
+	                        || !canAddRule
+	                      ) {
+	                        return;
+	                      }
+	                      event.preventDefault();
+	                      event.currentTarget?.requestSubmit?.();
+	                    },
 	                  },
-	                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
-	                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-	                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-	                        React.createElement(Shield, { width: 18, height: 18, strokeWidth: 1.9 })
-	                      ),
-	                      React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input", style: { display: "flex", alignItems: "center" } }, "Add Rule")
-	                    ),
-	                    React.createElement("button", {
+	                  footer: React.createElement(React.Fragment, null,
+	                    isEditingRule
+	                      ? React.createElement(PlatformSecondaryButton, {
+	                          type: "button",
+	                          size: "medium",
+	                          className: "playground-project-milestone-modal__delete-button playground-project-rule-modal__delete-button",
+	                          style: { marginRight: "auto" },
+	                          onClick: () => requestProjectRuleEntryDeletion(projectRuleEditingIndex),
+	                          disabled: projectRulesSaveState.isSaving || Boolean(projectRuleDeleteDialogState),
+	                        }, "Delete")
+	                      : null,
+	                    React.createElement(PlatformSecondaryButton, {
 	                      type: "button",
-	                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+	                      size: "medium",
 	                      onClick: closeProjectOverviewRuleComposer,
-	                      title: "Close",
-	                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-	                  ),
-	                  React.createElement("div", { className: "playground-tasks-issue-modal-body playground-project-overview-rule-editor-body" },
-	                    React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-project-overview-rule-description-editor" },
-	                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
-	                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Rule"),
-	                        React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-	                          [
-	                            { id: "bold", label: "Bold", icon: Bold },
-	                            { id: "italic", label: "Italic", icon: Italic },
-	                            { id: "underline", label: "Underline", icon: Underline },
-	                            { id: "list", label: "List", icon: List },
-	                          ].map((action) =>
-	                            React.createElement("button", {
-	                              key: action.id,
-	                              type: "button",
-	                              className: "playground-tasks-detail-format-button",
-	                              title: action.label,
-	                              "aria-label": action.label,
-	                              onMouseDown: (event) => event.preventDefault(),
-	                              onClick: () => handleProjectRuleComposerFormat(action.id),
-	                            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-	                          )
-	                        )
-	                      ),
-	                      React.createElement("div", { className: "playground-tasks-detail-description-editor is-editing" },
-	                      React.createElement("textarea", {
-	                        ref: projectRuleComposerTextareaRef,
-	                          className: "playground-tasks-detail-description-input is-editing playground-project-overview-rule-modal-textarea",
-	                        rows: 4,
-	                        value: projectRuleInputValue,
-	                        placeholder: "Describe the rule agents should follow in this project",
-	                        onChange: (event) => {
-	                          setProjectRuleInputValue(event.target.value);
-	                          resizeTaskDescriptionTextarea(event.currentTarget);
-	                        },
-	                        onKeyDown: (event) => {
-	                          if (event.key === "Escape") {
-	                            event.preventDefault();
-	                            closeProjectOverviewRuleComposer();
-	                          }
-	                        },
-	                      })
-	                      )
-	                    )
-	                  ),
-	                  projectRulesSaveState?.error
-	                    ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, projectRulesSaveState.error)
-	                    : null,
-	                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-	                    React.createElement("button", {
-	                      type: "button",
-	                      className: "playground-environments-action-button",
-	                      onClick: closeProjectOverviewRuleComposer,
+	                      disabled: projectRulesSaveState.isSaving,
 	                    }, "Cancel"),
 	                    React.createElement(PlatformPrimaryButton, {
 	                      size: "medium",
 	                      type: "submit",
-	                      className: "playground-environments-action-button is-primary",
 	                      disabled: !canAddRule,
-	                    }, projectRulesSaveState.isSaving ? "Saving..." : "Add Rule")
-	                  )
+	                    }, projectRulesSaveState.isSaving
+	                      ? "Saving..."
+	                      : (isEditingRule ? "Save Rule" : "Add Rule"))
+	                  ),
+	                },
+	                React.createElement("div", { className: "playground-mission-control-modal-context playground-project-rule-modal__context" },
+	                  React.createElement(PlatformInstructionsEditor, {
+	                    variant: "minimalistic-ui",
+	                    title: "Description",
+	                    value: projectRuleInputValue,
+	                    onChange: (nextValue) => setProjectRuleInputValue(nextValue),
+	                    placeholder: "Describe the rule agents should follow in this project.",
+	                    ariaLabel: "Rule description",
+	                    historyKey: "project-rule-description:"
+	                      + String(selectedProjectId || "")
+	                      + ":"
+	                      + String(projectRuleEditingIndex >= 0 ? projectRuleEditingIndex : "new"),
+	                    editorRef: projectRuleDescriptionEditorRef,
+	                    stickyHeader: false,
+	                    className: "playground-project-milestone-modal__description playground-project-rule-modal__description",
+	                  }),
+	                  projectRulesSaveState?.error
+	                    ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, projectRulesSaveState.error)
+	                    : null
 	                )
 	              );
-	              if (typeof document !== "undefined" && document.body) {
-	                return createPortal(content, document.body);
+	            }
+
+	            function renderProjectOverviewRuleDeleteDialog() {
+	              if (!projectRuleDeleteDialogState) {
+	                return null;
 	              }
-	              return content;
+	              const ruleTitle = String(projectRuleDeleteDialogState.title || "Untitled Rule");
+	              return React.createElement(PlatformConfirmationModal, {
+	                open: true,
+	                title: "Delete " + ruleTitle + "?",
+	                description: ruleTitle + " will be permanently deleted. This action cannot be undone.",
+	                confirmLabel: "Delete",
+	                confirmingLabel: "Deleting...",
+	                tone: "default",
+	                errorFallback: "Failed to delete rule.",
+	                onCancel: () => setProjectRuleDeleteDialogState(null),
+	                onConfirm: confirmProjectRuleEntryDeletion,
+	              });
 	            }
 
 	            return React.createElement("section", {
@@ -1289,45 +1334,20 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	              },
 	              React.createElement("div", { className: "playground-project-overview-rules-list" },
 	                ruleEntries.length > 0
-	                  ? ruleEntries.map((entry, index) =>
-	                      React.createElement("div", {
-	                        key: String(index) + ":" + entry.slice(0, 48),
+	                  ? ruleEntries.map((entry, index) => {
+	                      const rule = parsePlaygroundProjectRuleEntry(entry, index);
+	                      return React.createElement("div", {
+	                        key: String(index) + ":" + rule.title,
 	                        className: "playground-tasks-backlog-item playground-project-overview-rule-item",
 	                      },
 	                        React.createElement("div", { className: "playground-tasks-backlog-item-content" },
 	                          React.createElement("div", { className: "playground-tasks-backlog-leading" },
-	                            React.createElement("span", { className: "playground-tasks-backlog-project-icon is-task" },
+	                            React.createElement("span", { className: "playground-tasks-backlog-project-icon is-rule" },
 	                              React.createElement(Shield, { width: 13, height: 13, strokeWidth: 1.8 })
 	                            )
 	                          ),
 	                          React.createElement("div", { className: "playground-tasks-backlog-main playground-project-overview-rule-main" },
-	                            !isReadOnly && projectRuleEditingIndex === index
-	                              ? React.createElement("textarea", {
-	                                  ref: projectRuleEditTextareaRef,
-	                                  rows: 1,
-	                                  className: "playground-project-overview-rule-edit-input",
-	                                  value: projectRuleEditingValue,
-	                                  placeholder: "Add project rule",
-	                                  onChange: (event) => {
-	                                    setProjectRuleEditingValue(event.target.value);
-	                                    resizeTaskDescriptionTextarea(event.currentTarget);
-	                                  },
-	                                  onBlur: () => {
-	                                    void commitProjectRuleEntryEdit(index);
-	                                  },
-	                                  onKeyDown: (event) => {
-	                                    if (event.key === "Enter" && !event.shiftKey) {
-	                                      event.preventDefault();
-	                                      event.currentTarget.blur();
-	                                      return;
-	                                    }
-	                                    if (event.key === "Escape") {
-	                                      event.preventDefault();
-	                                      cancelProjectRuleEntryEdit();
-	                                    }
-	                                  },
-	                                })
-	                              : React.createElement("div", {
+	                            React.createElement("div", {
 	                                  className: "playground-project-overview-rule-copy tb-runner-chat" + (isReadOnly ? " is-read-only" : ""),
 	                                  ...(isReadOnly ? {} : {
 	                                    role: "button",
@@ -1341,10 +1361,9 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                                    },
 	                                  }),
 	                                },
-	                                  React.createElement(PlaygroundTaskDescriptionMarkdown, {
-	                                    content: entry,
-	                                    className: "tb-message-markdown",
-	                                  })
+	                                  React.createElement("div", {
+	                                    className: "playground-project-overview-rule-title",
+	                                  }, rule.title || "Untitled Rule")
 	                                )
 	                          ),
 	                          isReadOnly
@@ -1353,28 +1372,29 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                                React.createElement("button", {
 	                                  type: "button",
 	                                  className: "playground-project-overview-rule-remove",
-	                                  onClick: () => void handleRemoveProjectRuleEntry(index),
+	                                  onClick: () => requestProjectRuleEntryDeletion(index),
 	                                  disabled: projectRulesSaveState.isSaving,
 	                                  title: "Remove rule",
 	                                  "aria-label": "Remove rule " + String(index + 1),
 	                                }, React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }))
 	                              )
 	                        )
-	                      )
-	                    )
-	                  : React.createElement("div", { className: "playground-tasks-empty playground-tasks-backlog-empty playground-project-overview-rules-empty" },
-	                      React.createElement("div", { className: "playground-tasks-empty-title" }, "Rules are empty"),
-	                      React.createElement("div", { className: "playground-tasks-empty-copy" },
-	                        "Add project rules for repository conventions, deployment expectations, commit policy, communication style, or other operating constraints."
-	                      )
-	                    ),
+	                      );
+	                    })
+	                  : React.createElement(PlatformEmptyState, {
+	                      className: "playground-project-overview-rules-empty",
+	                      icon: Shield,
+	                      title: "No rules yet",
+	                      description: "Add project rules for repository conventions, deployment expectations, commit policy, communication style, or other operating constraints.",
+	                    }),
 	                projectRulesSaveState.error
 	                  ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, projectRulesSaveState.error)
 	                  : projectRulesSaveState.isSaving
 	                    ? React.createElement("div", { className: "playground-environments-muted playground-tasks-comment-feedback" }, "Saving changes...")
 	                    : null
 	              ),
-	              renderProjectOverviewRuleComposerModal()
+	              renderProjectOverviewRuleComposerModal(),
+	              renderProjectOverviewRuleDeleteDialog()
 	            );
 	          }
 
@@ -1384,25 +1404,33 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                className: "playground-project-settings-section playground-project-settings-rules-section" + (canEditRules ? "" : " is-read-only"),
 	              },
 	              React.createElement("div", { className: "playground-project-overview-strategy-add-row playground-project-overview-rules-inline-title-row" },
-	                React.createElement("h2", { className: "playground-project-overview-strategy-add-title" }, "Rules"),
+	                React.createElement("div", { className: "playground-project-settings-rules-heading-copy" },
+	                  React.createElement("h2", { className: "playground-project-overview-strategy-add-title" }, "Rules"),
+	                  React.createElement("p", { className: "playground-project-settings-rules-description" },
+	                    "Rules are durable project-specific instructions that agents must follow across tickets and threads."
+	                  )
+	                ),
 	                canEditRules
-	                  ? React.createElement(PlatformSecondaryButton, {
+	                  ? React.createElement(PlatformPrimaryButton, {
 	                      type: "button",
 	                      size: "small",
 	                      className: "playground-project-settings-add-rule-button",
 	                      onClick: () => {
+	                        if (typeof setProjectRuleEditingIndex === "function") {
+	                          setProjectRuleEditingIndex(-1);
+	                        }
+	                        if (typeof setProjectRuleEditingValue === "function") {
+	                          setProjectRuleEditingValue("");
+	                        }
+	                        if (typeof setProjectRuleTitleInputValue === "function") {
+	                          setProjectRuleTitleInputValue("");
+	                        }
 	                        if (typeof setProjectRuleInputValue === "function") {
 	                          setProjectRuleInputValue("");
 	                        }
 	                        if (typeof setProjectRuleComposerOpen === "function") {
 	                          setProjectRuleComposerOpen(true);
 	                        }
-	                        window.requestAnimationFrame(() => {
-	                          const textarea = projectRuleComposerTextareaRef.current;
-	                          if (!textarea) return;
-	                          textarea.focus();
-	                          resizeTaskDescriptionTextarea(textarea);
-	                        });
 	                      },
 	                    },
 	                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
@@ -1413,6 +1441,81 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	              renderProjectOverviewRulesPanel({ inline: true, readOnly: !canEditRules })
 	            );
 	          }
+
+              function renderProjectOverviewSettingsLayout(sections, options = {}) {
+                const availableSections = (Array.isArray(sections) ? sections : [])
+                  .filter((section) => section && section.id && typeof section.render === "function");
+                if (!availableSections.length) {
+                  return null;
+                }
+                const requestedSectionId = String(projectOverviewSettingsSection || "").trim();
+                const activeSection = availableSections.find((section) => section.id === requestedSectionId)
+                  || availableSections[0];
+                const contentId = "project-settings-section-" + activeSection.id;
+                const isAccessDetail = activeSection.id === "access"
+                  && Boolean(String(projectOverviewPermissionTeamId || "").trim());
+                return React.createElement("section", {
+                    className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root playground-project-settings-layout"
+                      + (isAccessDetail ? " is-access-detail" : "")
+                      + (options.className ? " " + options.className : ""),
+                    "data-project-settings-section": activeSection.id,
+                  },
+                  !isAccessDetail ? React.createElement("aside", {
+                      className: "playground-project-settings-navigation",
+                      "aria-label": "Project settings sections",
+                    },
+                    React.createElement("div", { className: "playground-project-settings-navigation__header" },
+                      React.createElement("h2", { className: "playground-project-settings-navigation__title" }, "Settings")
+                    ),
+                    React.createElement("div", {
+                        className: "platform-role-permissions-page__roles playground-team-role-list playground-project-settings-navigation__links",
+                        role: "tablist",
+                        "aria-label": "Project settings sections",
+                      },
+                      availableSections.map((section) => React.createElement("button", {
+                          key: section.id,
+                          type: "button",
+                          role: "tab",
+                          className: "platform-role-permissions-page__role playground-team-role-card playground-project-settings-navigation__link"
+                            + (section.id === activeSection.id ? " is-active" : ""),
+                          "aria-selected": section.id === activeSection.id,
+                          "aria-controls": "project-settings-section-" + section.id,
+                          onClick: () => {
+                            if (section.id !== "access") {
+                              closeProjectOverviewPermissionDetail({ restoreSidebar: false });
+                            } else if (typeof requestProjectOverviewWorkspaceTeams === "function") {
+                              requestProjectOverviewWorkspaceTeams();
+                            }
+                            setProjectOverviewSettingsSection(section.id);
+                          },
+                        },
+                        React.createElement("span", { className: "platform-role-permissions-page__role-heading playground-team-role-card-heading" },
+                          React.createElement("span", { className: "playground-project-settings-navigation__link-label" },
+                            section.icon
+                              ? React.createElement(section.icon, {
+                                  className: "playground-project-settings-navigation__link-icon",
+                                  width: 14,
+                                  height: 14,
+                                  strokeWidth: 1.8,
+                                  "aria-hidden": true,
+                                })
+                              : null,
+                            React.createElement("span", { className: "platform-role-permissions-page__role-title playground-team-role-card-title" }, section.label)
+                          )
+                        )
+                      ))
+                    )
+                  ) : null,
+                  React.createElement("div", {
+                      id: contentId,
+                      role: "tabpanel",
+                      className: "playground-project-settings-content",
+                      "aria-label": activeSection.label,
+                    },
+                    activeSection.render()
+                  )
+                );
+              }
 
 	          function renderProjectOverviewPermissionsPanel() {
 	            if (!canViewProjectSettings) {
@@ -1451,17 +1554,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                .map((teamId) => String(teamId || "").trim())
 	                .filter((teamId) => teamId && !projectRemovedTeamIds.has(teamId))
 	            );
-	            const unsharedWorkspaceTeams = availableWorkspaceTeams
-	              .map((team) => {
-	                const teamId = String(team?.id || "").trim();
-	                return teamId
-	                  && !isPlatformSystemAccessPrincipalId(teamId)
-	                  && !projectSharedTeamIds.has(teamId)
-	                    ? { ...team, id: teamId }
-	                    : null;
-	              })
-	              .filter(Boolean);
-		            const projectSharedTeams = availableWorkspaceTeams.map((team) => {
+			            const projectSharedTeams = availableWorkspaceTeams.map((team) => {
 		                const teamId = String(team?.id || "").trim();
 		                if (
 		                  !teamId
@@ -1535,14 +1628,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                   roleId: selectedRoleDefinition.id,
                 });
               };
-              return React.createElement("section", {
-                  className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root playground-project-settings-reduced-access-root",
-                },
-                canViewProjectRules
-                  ? renderProjectOverviewSettingsRulesSection({ canEdit: canEditProjectRules })
-                  : null,
-                renderProjectOverviewTimelineSettingsSection({ canEdit: false }),
-                React.createElement("section", {
+              const renderReducedProjectAccessSection = () => React.createElement("section", {
                     className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-permissions-section playground-project-teams-section playground-project-settings-reduced-access",
                   },
                   React.createElement("div", { className: "playground-team-role-permission-page playground-project-team-role-permission-page" },
@@ -1568,8 +1654,32 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                       disabled: true,
                     })
                   )
-                )
-              );
+                );
+              const reducedSettingsSections = [
+                {
+                  id: "timeline",
+                  label: "Timeline",
+                  icon: History,
+                  render: () => renderProjectOverviewTimelineSettingsSection({ canEdit: false }),
+                },
+                canViewProjectRules
+                  ? {
+                      id: "rules",
+                      label: "Rules",
+                      icon: ListTodo,
+                      render: () => renderProjectOverviewSettingsRulesSection({ canEdit: canEditProjectRules }),
+                    }
+                  : null,
+                {
+                  id: "access",
+                  label: "Access",
+                  icon: KeyRound,
+                  render: renderReducedProjectAccessSection,
+                },
+              ];
+              return renderProjectOverviewSettingsLayout(reducedSettingsSections, {
+                className: "playground-project-settings-reduced-access-root",
+              });
             };
             if (hasReducedProjectSettingsAccess) {
               return renderReducedProjectRoleView();
@@ -1592,14 +1702,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	              }
 	              updateProjectTeamWorkspaceMembership?.(team.id, "remove");
 	            };
-	            const handleAddProjectTeam = (team) => {
-	              if (!team || !hasRealAccess) {
-	                return;
-	              }
-	              closeProjectTeamMenu();
-	              updateProjectTeamWorkspaceMembership?.(team.id, "add");
-	            };
-	            const renderProjectTeamMenu = (team) => {
+		            const renderProjectTeamMenu = (team) => {
 	              const menuId = "team:" + String(team.id || "");
 	              if (projectOverviewTeamMenuId !== menuId) {
 	                return null;
@@ -1636,73 +1739,13 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                    )
 	              );
 	            };
-	            const renderAddProjectTeamsMenuContent = () =>
-	              unsharedWorkspaceTeams.length
-	                ? unsharedWorkspaceTeams.map((team) =>
-	                    React.createElement("button", {
-	                      key: team.id,
-	                      type: "button",
-	                      role: "menuitem",
-	                      className: "tb-popup-row playground-project-team-menu-item",
-	                      onClick: () => handleAddProjectTeam(team),
-	                    },
-	                      React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                      React.createElement("span", null, team.name || "Untitled team")
-	                    )
-	                  )
-	                : React.createElement("button", {
-	                    type: "button",
-	                    role: "menuitem",
-	                    className: "tb-popup-row playground-project-team-menu-item",
-	                    disabled: true,
-	                  }, workspaceTeamsLoading ? "Loading teams..." : "All teams already have access");
-
 	            const renderProjectAccessSettings = () => {
-	              const isAddTeamsMenuOpen = projectOverviewTeamMenuId === "add-teams";
-	              const addTeamsControl = hasRealAccess
-	                ? React.createElement(PlatformPopup, {
-	                    open: isAddTeamsMenuOpen,
-	                    variant: "minimal",
-	                    portal: true,
-	                    placement: "bottom-end",
-	                    portalOffset: 6,
-	                    rootClassName: "playground-project-teams-add-shell",
-	                    surfaceClassName: "playground-project-teams-add-menu",
-	                    surfaceProps: {
-	                      role: "menu",
-	                      "aria-label": "Add teams to project",
-	                      onClick: (event) => event.stopPropagation(),
-	                      onKeyDown: (event) => {
-	                        if (event.key === "Escape") {
-	                          event.preventDefault();
-	                          event.stopPropagation();
-	                          closeProjectTeamMenu();
-	                        }
-	                      },
-	                    },
-	                    animation: "down-in",
-	                    trigger: React.createElement(PlatformSecondaryButton, {
-	                      type: "button",
-	                      size: "small",
-	                      className: "playground-project-teams-add-button",
-	                      "aria-haspopup": "menu",
-	                      "aria-expanded": isAddTeamsMenuOpen ? "true" : "false",
-	                      onClick: (event) => {
-	                        event.stopPropagation();
-	                        if (!workspaceTeamsLoading) requestProjectOverviewWorkspaceTeams?.();
-	                        setProjectOverviewTeamMenuId?.((current) => current === "add-teams" ? "" : "add-teams");
-	                      },
-	                      disabled: workspaceTeamsLoading,
-	                    },
-	                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                      React.createElement("span", null, "Add Teams")
-	                    )
-	                  },
-	                    renderAddProjectTeamsMenuContent()
-	                  )
-	                : null;
 	              const systemPrincipal = getPlatformSystemAccessPrincipal(selectedPermissionTeam?.id);
-	              const selectedRoleDefinition = getPlaygroundTeamRoleDefinition(projectOverviewPermissionRoleId);
+	              const selectedAccessRoleId = normalizeProjectAccessRoleId(
+	                systemPrincipal?.id || selectedPermissionTeam?.id,
+	                projectOverviewPermissionRoleId,
+	                "member"
+	              );
 	              return React.createElement(PlatformResourceAccessSettings, {
 	                teams: projectSharedTeams.map((team) => ({ ...team, description: team.meta })),
 	                resourceLabel: "Project",
@@ -1711,6 +1754,15 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                  const normalizedPrincipalId = String(principalId || "").trim();
 	                  if (!normalizedPrincipalId) {
 	                    closeProjectOverviewPermissionDetail();
+	                    if (typeof setTaskView === "function") {
+	                      setTaskView("overview");
+	                    }
+	                    if (typeof setProjectOverviewHomeTab === "function") {
+	                      setProjectOverviewHomeTab("permissions");
+	                    }
+	                    if (typeof setProjectOverviewSettingsSection === "function") {
+	                      setProjectOverviewSettingsSection("access");
+	                    }
 	                    return;
 	                  }
 	                  const principal = projectPermissionTeams.find((team) =>
@@ -1737,25 +1789,27 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                    ? getProjectSystemRolePermissionSet(
 	                        projectOverviewDraft || selectedProject,
 	                        systemPrincipal.id,
-	                        selectedRoleDefinition.id
+	                        selectedAccessRoleId
 	                      )
 	                    : null,
 	                onSystemRolePermissionSetChange: hasRealAccess
 	                  ? updateProjectSystemRolePermissionSet
 	                  : undefined,
-	                roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
-	                  id: role.id,
-	                  label: role.label,
-	                  description: role.description,
-	                  meta: "Project access",
-	                })),
-	                selectedRoleId: selectedRoleDefinition.id,
+		                roles: systemPrincipal
+		                  ? undefined
+		                  : PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
+		                      id: role.id,
+		                      label: role.label,
+		                      description: role.description,
+		                      meta: "Project access",
+		                    })),
+	                selectedRoleId: selectedAccessRoleId,
 	                onSelectedRoleIdChange: (roleId) => setProjectOverviewPermissionRoleId?.(roleId),
 	                teamPermissionSet: selectedPermissionTeam && !systemPrincipal
 	                  ? getProjectTeamRolePermissionSet(
 	                      projectOverviewDraft || selectedProject,
 	                      selectedPermissionTeam.id,
-	                      selectedRoleDefinition.id
+	                      selectedAccessRoleId
 	                    )
 	                  : null,
 	                onTeamPermissionSetChange: hasRealAccess && selectedPermissionTeam && !systemPrincipal
@@ -1771,8 +1825,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                className: "playground-project-settings-access-section",
 	                tableProps: {
 	                  className: "playground-project-access-platform-data-table",
-	                  trailing: addTeamsControl,
-	                  onRemoveTeams: hasRealAccess
+		                  onRemoveTeams: hasRealAccess
 	                    ? (teams) => teams.forEach((team) => handleRemoveProjectTeam(team))
 	                    : undefined,
 	                  formatCreatedAt: (value) => formatProjectTeamCreatedDate(value) || "—",
@@ -1780,18 +1833,32 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	              });
 	            }
 
-	            if (selectedPermissionTeam) {
-	              return renderProjectAccessSettings();
-	            }
-
-	            return React.createElement("section", {
-	                className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root",
-              },
-              renderProjectOverviewPluginsPanel(),
-              renderProjectOverviewTimelineSettingsSection({ canEdit: canManageProjectAccess }),
-              renderProjectOverviewSettingsRulesSection(),
-	              renderProjectAccessSettings()
-	            );
+	            return renderProjectOverviewSettingsLayout([
+                {
+                  id: "plugins",
+                  label: "Plugins",
+                  icon: Plug,
+                  render: renderProjectOverviewPluginsPanel,
+                },
+                {
+                  id: "timeline",
+                  label: "Timeline",
+                  icon: History,
+                  render: () => renderProjectOverviewTimelineSettingsSection({ canEdit: canManageProjectAccess }),
+                },
+                {
+                  id: "rules",
+                  label: "Rules",
+                  icon: ListTodo,
+                  render: renderProjectOverviewSettingsRulesSection,
+                },
+                {
+                  id: "access",
+                  label: "Access",
+                  icon: KeyRound,
+                  render: renderProjectAccessSettings,
+                },
+              ]);
 	          }
 
             const projectOverviewActivePanel = activeProjectOverviewHomeTab === "resources"
@@ -1826,7 +1893,8 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                 projectOverviewActivePanel
               )
             ),
-            renderProjectOverviewUpdateComposerModal()
+            renderProjectOverviewUpdateComposerModal(),
+            renderProjectOverviewComputerChangeDialog()
           );
         }
 `;

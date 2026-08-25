@@ -1,5 +1,12 @@
 export { RunnerLogList } from "./runner-log-list.js";
 export { RunnerChat } from "./runner-chat.js";
+export { RunnerFileBrowserDialog } from "./runner-chat/file-browser-dialog.js";
+export { RunnerGithubBranchSelector } from "./runner-chat/github-branch-selector.js";
+export { RunnerProjectGithubRepositorySettings } from "./runner-chat/project-github-repository-settings.js";
+export {
+  createGithubBrowserNodeId,
+  createGithubBrowserRepoFolderId,
+} from "./runner-chat/attachment-utils.js";
 export { RunnerTurnIdentity } from "./runner-chat/turn-presentation.js";
 export { RunnerDocumentPreviewDrawer } from "./runner-document-preview-drawer.js";
 export { RunnerFileDiffSurface } from "./runner-file-diff-surface.js";
@@ -51,6 +58,8 @@ export type {
   RunnerChatSchedulePreset,
   RunnerChatSkill,
   RunnerChatWorkspaceConfig,
+  RunnerThreadTaskListItem,
+  RunnerThreadTaskListSummary,
 } from "./runner-chat.js";
 export type { TaskComposerProps, TaskComposerSubmitPayload } from "./task-composer.js";
 export type { UseRunnerExecutionApi, UseRunnerExecutionOptions, UseRunnerExecutionState } from "./use-runner-execution.js";

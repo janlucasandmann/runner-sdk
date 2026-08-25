@@ -1182,25 +1182,87 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
         const metadataOwner = metadata?.owner && typeof metadata.owner === "object" && !Array.isArray(metadata.owner)
           ? metadata.owner
           : {};
+        const metadataCreator = metadata?.createdBy && typeof metadata.createdBy === "object" && !Array.isArray(metadata.createdBy)
+          ? metadata.createdBy
+          : {};
+        const creatorUserId = String(
+          project.createdByUserId
+            || project.creatorUserId
+            || metadata?.createdByUserId
+            || metadata?.creatorUserId
+            || metadataCreator.userId
+            || metadataCreator.id
+            || ""
+        ).trim();
+        const creatorName = String(
+          project.createdByName
+            || project.creatorName
+            || metadata?.createdByName
+            || metadata?.creatorName
+            || metadataCreator.name
+            || metadataCreator.displayName
+            || ""
+        ).trim();
+        const creatorEmail = String(
+          project.createdByEmail
+            || project.creatorEmail
+            || metadata?.createdByEmail
+            || metadata?.creatorEmail
+            || metadataCreator.email
+            || ""
+        ).trim();
+        const creatorAvatarUrl = String(
+          project.createdByAvatarUrl
+            || project.creatorAvatarUrl
+            || metadata?.createdByAvatarUrl
+            || metadata?.creatorAvatarUrl
+            || metadataCreator.avatarUrl
+            || metadataCreator.photoUrl
+            || ""
+        ).trim();
         const ownerUserId = String(
           project.ownerUserId
             || project.userId
             || metadata?.ownerUserId
             || metadataOwner.userId
             || metadataOwner.id
+            || creatorUserId
+            || leadUserId
             || ""
         ).trim();
-        const ownerName = String(
+        const canUseCreatorIdentityForOwner = Boolean(
+          creatorUserId && (!ownerUserId || creatorUserId === ownerUserId)
+        );
+        const canUseLeadIdentityForOwner = Boolean(
+          leadUserId && (!ownerUserId || leadUserId === ownerUserId)
+        );
+        const storedOwnerName = String(
           project.ownerName
             || metadata?.ownerName
             || metadataOwner.name
             || metadataOwner.displayName
             || ""
         ).trim();
+        const isGenericOwnerName = ["project owner", "project member", "organization member"].includes(
+          storedOwnerName.toLowerCase()
+        );
+        const ownerName = String(
+          (!isGenericOwnerName ? storedOwnerName : "")
+            || (canUseCreatorIdentityForOwner ? creatorName : "")
+            || (canUseLeadIdentityForOwner ? leadName : "")
+            || storedOwnerName
+            || ""
+        ).trim();
         const ownerEmail = String(
           project.ownerEmail
             || metadata?.ownerEmail
             || metadataOwner.email
+            || (canUseCreatorIdentityForOwner
+              ? (
+                  creatorEmail
+                )
+              : "")
+            || (canUseLeadIdentityForOwner ? leadEmail : "")
             || ""
         ).trim();
         const ownerAvatarUrl = String(
@@ -1208,6 +1270,12 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
             || metadata?.ownerAvatarUrl
             || metadataOwner.avatarUrl
             || metadataOwner.photoUrl
+            || (canUseCreatorIdentityForOwner
+              ? (
+                  creatorAvatarUrl
+                )
+              : "")
+            || (canUseLeadIdentityForOwner ? leadAvatarUrl : "")
             || ""
         ).trim();
 	        const projectPermissionSet = normalizePlaygroundPermissionSet(project.permissionSet || metadata?.permissionSet, "project");
@@ -1252,6 +1320,16 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
             email: ownerEmail,
             avatarUrl: ownerAvatarUrl,
           },
+          createdByUserId: creatorUserId,
+          createdByName: creatorName,
+          createdByEmail: creatorEmail,
+          createdByAvatarUrl: creatorAvatarUrl,
+          createdBy: {
+            userId: creatorUserId,
+            name: creatorName,
+            email: creatorEmail,
+            avatarUrl: creatorAvatarUrl,
+          },
 	          permissionSet: projectPermissionSet,
 			          metadata: {
 			            ...(metadata && typeof metadata === "object" ? metadata : {}),
@@ -1277,6 +1355,16 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
               name: ownerName,
               email: ownerEmail,
               avatarUrl: ownerAvatarUrl,
+            },
+            createdByUserId: creatorUserId,
+            createdByName: creatorName,
+            createdByEmail: creatorEmail,
+            createdByAvatarUrl: creatorAvatarUrl,
+            createdBy: {
+              userId: creatorUserId,
+              name: creatorName,
+              email: creatorEmail,
+              avatarUrl: creatorAvatarUrl,
             },
 	            permissionSet: projectPermissionSet,
 		          },
@@ -1436,6 +1524,42 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
         );
       }
 
+      // Project navigation, list, and detail endpoints intentionally return
+      // different projections. Keep their fidelity explicit so a matching ID
+      // can never make a partial navigation record look authoritative.
+      const PLAYGROUND_PROJECT_RECORD_SCOPE_RANK = Object.freeze({
+        unknown: 0,
+        navigation: 1,
+        overview: 2,
+        detail: 3,
+      });
+
+      function getPlaygroundProjectRecordScope(project) {
+        if (!project || typeof project !== "object" || Array.isArray(project)) {
+          return "unknown";
+        }
+        const explicitScope = String(project.__projectRecordScope || "").trim().toLowerCase();
+        if (Object.prototype.hasOwnProperty.call(PLAYGROUND_PROJECT_RECORD_SCOPE_RANK, explicitScope)) {
+          return explicitScope;
+        }
+        if (project.isOverviewRecord === true || String(project.object || "").trim() === "project.overview") {
+          return "overview";
+        }
+        return "unknown";
+      }
+
+      function getPlaygroundProjectRecordScopeRank(project) {
+        return PLAYGROUND_PROJECT_RECORD_SCOPE_RANK[getPlaygroundProjectRecordScope(project)] || 0;
+      }
+
+      function isPlaygroundProjectDetailRecord(project) {
+        return getPlaygroundProjectRecordScope(project) === "detail";
+      }
+
+      function isPlaygroundProjectStableRecord(project) {
+        return getPlaygroundProjectRecordScopeRank(project) >= PLAYGROUND_PROJECT_RECORD_SCOPE_RANK.overview;
+      }
+
       function parsePlaygroundProjectListResponse(data) {
         const items = Array.isArray(data?.data)
           ? data.data
@@ -1446,7 +1570,11 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
               : [];
         return items
           .filter(isVisiblePlaygroundProjectListRecord)
-          .map(normalizePlaygroundProjectRecord);
+          .map((project) => normalizePlaygroundProjectRecord({
+            ...project,
+            isOverviewRecord: true,
+            __projectRecordScope: "overview",
+          }));
       }
 
       function sortPlaygroundProjectsByRecent(projectList) {
@@ -1578,6 +1706,12 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           ? normalizedPrimary.projectType
           : normalizedFallback.projectType;
         const mergedBlueprint = getPlaygroundProjectBlueprint(mergedProjectType);
+        const primaryScope = getPlaygroundProjectRecordScope(primaryProject);
+        const fallbackScope = getPlaygroundProjectRecordScope(fallbackProject);
+        const mergedRecordScope = PLAYGROUND_PROJECT_RECORD_SCOPE_RANK[primaryScope]
+          >= PLAYGROUND_PROJECT_RECORD_SCOPE_RANK[fallbackScope]
+            ? primaryScope
+            : fallbackScope;
 
         return normalizePlaygroundProjectRecord({
           ...normalizedFallback,
@@ -1596,7 +1730,9 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
 	          connectors: mergedConnectors,
 		          projectRules: mergedProjectRules,
 		          permissionSet: mergedPermissionSet,
-		          missionControl: mergedMissionControl,
+	          missionControl: mergedMissionControl,
+	          isOverviewRecord: mergedRecordScope === "overview",
+	          __projectRecordScope: mergedRecordScope,
 	          metadata: {
             ...mergedMetadata,
             ...buildPlaygroundProjectBlueprintMetadata(mergedBlueprint),
@@ -1622,11 +1758,22 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
         });
       }
 
+      function mergePlaygroundProjectRecordsByFidelity(preferredProject, otherProject) {
+        const preferredRank = getPlaygroundProjectRecordScopeRank(preferredProject);
+        const otherRank = getPlaygroundProjectRecordScopeRank(otherProject);
+        return preferredRank >= otherRank
+          ? mergePlaygroundProjectRecords(preferredProject, otherProject)
+          : mergePlaygroundProjectRecords(otherProject, preferredProject);
+      }
+
       function getPlaygroundProjectResponseRecord(data, fallbackProject) {
         const source = data?.project || data?.data || data;
+        const sourceIsOverviewRecord = String(source?.object || "").trim() === "project.overview";
         const sourceRecord = source && typeof source === "object" && typeof source.id === "string"
           ? {
               ...source,
+              isOverviewRecord: sourceIsOverviewRecord,
+              __projectRecordScope: sourceIsOverviewRecord ? "overview" : "detail",
               summary: data?.summary && typeof data.summary === "object" ? data.summary : source.summary,
             }
           : null;

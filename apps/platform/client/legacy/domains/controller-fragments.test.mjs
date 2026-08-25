@@ -134,6 +134,11 @@ assert.match(
   "Platform history must retain Knowledge library identity so nested access details return to their parent library.",
 );
 assert.match(
+  platformTemplateSource,
+  /"originThreadId"[\s\S]*?"originThreadTitle"/,
+  "Platform history must retain the originating thread for Knowledge resources opened from an activity log.",
+);
+assert.match(
   shellApplicationLifecycleSource,
   /skillTab: toolsView === "skills" \? toolsSkillsHeaderState\.activeTab[\s\S]*?delete nextHistoryState\[PLAYGROUND_RESOURCE_ACCESS_HISTORY_STATE_KEY\]/,
   "Full-page navigation must preserve the previous resource-access entry without copying its marker forward.",
@@ -327,6 +332,21 @@ assert.match(
   shellCompositionSource,
   /executionWorkbenchOpen: threadExecutionWorkbenchOpen[\s\S]{0,180}onExecutionWorkbenchAvailabilityChange: setThreadExecutionWorkbenchAvailable/,
   "The normal transcript must retain the opt-in canonical execution-details sidebar.",
+);
+assert.doesNotMatch(
+  shellCompositionSource,
+  /playground-thread-execution-workbench-button[\s\S]{0,420}disabled:\s*!threadExecutionWorkbenchAvailable/,
+  "The thread context sidebar button must not wait for asynchronous execution hydration.",
+);
+assert.match(
+  shellCompositionSource,
+  /playground-thread-execution-workbench-button[\s\S]{0,420}React\.createElement\(ClipboardList/,
+  "The thread context sidebar button must use the clipboard-list affordance.",
+);
+assert.match(
+  shellCompositionSource,
+  /size:\s*"medium"[\s\S]{0,160}className:\s*"playground-thread-execution-workbench-button"/,
+  "The thread context sidebar control must match the 32px notification button and its 16px icon.",
 );
 assert.doesNotMatch(
   runnerChatSource,

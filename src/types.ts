@@ -133,6 +133,7 @@ export interface RunnerLog {
     runId?: string;
     batchJobId?: string;
     batchStatus?: string;
+    batchStartPolicy?: string;
     admissionReason?: string;
     actionsCount?: number;
     deepResearch?: {

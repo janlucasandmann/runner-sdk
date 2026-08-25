@@ -479,7 +479,7 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
           });
         }
 
-        function buildMetronomeRunTraceChildThreadRecord(step, thread, run) {
+        function buildMetronomeRunTraceChildThreadRecord(step, thread, run, selectionOverride = null) {
           const threadId = getMetronomeRunTraceStepThreadId(step, thread);
           if (!threadId) return null;
           const safeThread = getMetronomeRunTraceRecord(thread);
@@ -491,7 +491,7 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
             agents: runtimeAgentsForComposer || [],
             environments: runtimeEnvironments || [],
           });
-          const selection = metronomeRunTraceSelectionRef.current || metronomeRunTraceSelection || {};
+          const selection = selectionOverride || metronomeRunTraceSelectionRef.current || metronomeRunTraceSelection || {};
           const now = new Date().toISOString();
           const stepStatus = String(safeStep.status || outputThread.status || output.status || "").trim();
           const nextStatus = isActiveMetronomeRunStatus(stepStatus)
@@ -555,11 +555,11 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
           });
         }
 
-        function collectMetronomeRunTraceChildThreads(run) {
+        function collectMetronomeRunTraceChildThreads(run, selectionOverride = null) {
           const output = run?.output && typeof run.output === "object" ? run.output : {};
           const runThreads = Array.isArray(output.threads) ? output.threads : [];
           return getMetronomeRunTraceSteps(run)
-            .map((step) => buildMetronomeRunTraceChildThreadRecord(step, findMetronomeRunThreadForStep(step, runThreads), run))
+            .map((step) => buildMetronomeRunTraceChildThreadRecord(step, findMetronomeRunThreadForStep(step, runThreads), run, selectionOverride))
             .filter(Boolean);
         }
 

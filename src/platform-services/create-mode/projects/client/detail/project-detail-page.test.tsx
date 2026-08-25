@@ -61,4 +61,20 @@ describe("ProjectDetailPage", () => {
     expect(container.querySelector(".resource-detail-page")?.classList.contains("is-sidebar-empty")).toBe(true);
     expect(screen.getByText("Project resources")).not.toBeNull();
   });
+
+  it("removes the project properties sidebar from Settings", () => {
+    const { container } = render(
+      <ProjectDetailPage
+        sidebar={<div>Project properties</div>}
+        activeTab="permissions"
+      >
+        <div>Project settings</div>
+      </ProjectDetailPage>,
+    );
+
+    expect(container.querySelector("[data-platform-detail-sidebar='true']")).toBeNull();
+    expect(container.querySelector(".resource-detail-page")?.classList.contains("is-sidebar-empty")).toBe(true);
+    expect(screen.getByText("Project settings")).not.toBeNull();
+    expect(screen.queryByText("Project properties")).toBeNull();
+  });
 });

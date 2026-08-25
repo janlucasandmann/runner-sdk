@@ -142,10 +142,6 @@ export const METRONOME_SIDEBAR_CSS = `
         transition: transform 160ms ease;
       }
 
-      .sidebar-metronome-run-group.is-collapsed .sidebar-metronome-run-toggle svg {
-        transform: rotate(-90deg);
-      }
-
       .sidebar-metronome-run-threads {
         display: flex;
         flex-direction: column;

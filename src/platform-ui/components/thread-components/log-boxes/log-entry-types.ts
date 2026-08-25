@@ -51,5 +51,9 @@ export interface RunnerWorkLogEntryProps {
     projectId: string;
     projectName?: string;
   }) => void;
+  onKnowledgeLibraryPreviewClick?: (library: {
+    libraryId: string;
+    libraryName?: string;
+  }) => void;
   onOpenTaskList?: () => void;
 }

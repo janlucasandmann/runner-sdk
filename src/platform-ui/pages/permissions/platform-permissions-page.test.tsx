@@ -323,7 +323,7 @@ describe("PlatformPermissionsPage", () => {
     expect(page).not.toBeNull();
     expect(
       page?.firstElementChild?.classList.contains(
-        "platform-role-permissions-page__content",
+        "platform-role-permissions-page__details-sidebar",
       ),
     ).toBe(true);
     const sidebar = page?.querySelector(
@@ -335,6 +335,12 @@ describe("PlatformPermissionsPage", () => {
     ).not.toBeNull();
     expect(within(sidebar as HTMLElement).getByRole("heading", { name: "Details" })).not.toBeNull();
     expect(within(sidebar as HTMLElement).getByRole("tab", { name: "Member" })).not.toBeNull();
+    expect(sidebar?.querySelector(".platform-role-permissions-page__role-icon")).not.toBeNull();
+    expect(
+      page?.lastElementChild?.classList.contains(
+        "platform-role-permissions-page__content",
+      ),
+    ).toBe(true);
   });
 
   it("renders assigned member avatars and opens the shared minimal member popup", async () => {

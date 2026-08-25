@@ -74,7 +74,10 @@ export function PlatformMentionSuggestionsPopup({
           role="option"
           aria-selected={index === activeIndex}
           className={`tb-popup-row tb-connector-mention-row platform-mention-suggestions__option${index === activeIndex ? " is-active" : ""}`}
-          onMouseEnter={() => onActiveIndexChange?.(index)}
+          // A stationary pointer must not override ArrowUp/ArrowDown. Using
+          // movement rather than enter also avoids re-selecting whichever row
+          // happens to be under the cursor when the popup scrolls.
+          onPointerMove={() => onActiveIndexChange?.(index)}
           onMouseDown={(event) => {
             event.preventDefault();
             onSelect(option);

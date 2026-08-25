@@ -11,9 +11,9 @@
         import { visit as unistVisit } from "unist-util-visit";
         import Chart from "chart.js/auto";
         import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
-        import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, GitPullRequestArrow, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, MessageSquareText, Milestone, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plug, Plus, ReceiptText, Redo2, RefreshCcwDot, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, ScanEye, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquareMousePointer, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Truck, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
+        import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, ClipboardList, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, GitPullRequestArrow, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, MessageSquareText, Milestone, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plug, Plus, ReceiptText, Redo2, RefreshCcwDot, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, ScanEye, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquareMousePointer, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Truck, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
         import { RunnerClient, buildRunnerThreadActivityTree, collectRunnerConnectorIdsFromStructuredEvidence, describeRunnerThreadActivityGroup, extractRunnerThreadPlanSteps, flattenRunnerThreadActivityTree, presentRunnerThreadAction } from "/dist/index.js";
-	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface, RunnerThreadLiveWorkStatus, RunnerTurnIdentity } from "/dist/react/index.js";
+	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileBrowserDialog, RunnerFileDiffSurface, RunnerGithubBranchSelector, RunnerImagePreviewSurface, RunnerProjectGithubRepositorySettings, RunnerThreadLiveWorkStatus, RunnerTurnIdentity, createGithubBrowserNodeId, createGithubBrowserRepoFolderId } from "/dist/react/index.js";
 	      import { PlatformAnalyticsChart, PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
         import { PlatformAttachmentActionMenu, PlatformAttachments } from "/dist/platform-ui/components/composite/attachments/index.js";
         import { PlatformFileExplorerBrowser, PlatformFileExplorerBrowserModal, PlatformFileExplorerFileIcon, PlatformFileExplorerModal, resolvePlatformFileExplorerFileKind } from "/dist/platform-ui/components/composite/file-explorer/index.js";
@@ -43,7 +43,7 @@
   	      import { PlatformLabel } from "/dist/platform-ui/components/ui/label/index.js";
   	      import { PlatformSearch } from "/dist/platform-ui/components/ui/search/index.js";
   	      import { PlatformButtonSelector, PlatformSelector } from "/dist/platform-ui/components/ui/selector/index.js";
-        import { PlatformInfoTooltip, PlatformPopup, PlatformPopupDismissLayer, PlatformPopupSearchHeader, PlatformPopupSurface } from "/dist/platform-ui/components/composite/popup/index.js";
+        import { PlatformInfoTooltip, PlatformPopup, PlatformPopupDismissLayer, PlatformPopupSearchHeader, PlatformPopupSubmenu, PlatformPopupSurface } from "/dist/platform-ui/components/composite/popup/index.js";
         import { PlatformResourceActionMenuItem, PlatformResourceActionsDivider, PlatformResourceActionsInformation, PlatformResourceActionsMenu, PlatformResourceHeaderActions, PlatformResourceVersionHistoryMenuItem, PlatformResourceVersionLabel } from "/dist/platform-ui/components/composite/resource-header-actions/index.js";
         import { PlatformResourceDetailSidebar } from "/dist/platform-ui/components/composite/resource-detail-sidebar/index.js";
         import { PLATFORM_PROFILE_IMAGE_PRESET_OPTIONS, PlatformProfileImagePicker, getPlatformProfileImageInitials } from "/dist/platform-ui/components/composite/profile-image-picker/index.js";
@@ -3287,7 +3287,43 @@
           const taskPreview = runnerPlaygroundMetadata?.taskPreview && typeof runnerPlaygroundMetadata.taskPreview === "object" && !Array.isArray(runnerPlaygroundMetadata.taskPreview)
             ? runnerPlaygroundMetadata.taskPreview
             : null;
-          return taskPreview?.taskId ? taskPreview : null;
+          if (taskPreview?.taskId) {
+            return taskPreview;
+          }
+
+          // Ticket-comment mentions created before the canonical task-preview
+          // contract was introduced still carry their source identity. Return
+          // the smallest valid preview so the existing Task hydration effect,
+          // ticket card, and breadcrumb path handle them exactly like ordinary
+          // ticket-started Threads. `showPromptPreview` keeps the mention text
+          // visible beneath the card instead of replacing it.
+          const projectMention = metadata?.projectMention && typeof metadata.projectMention === "object" && !Array.isArray(metadata.projectMention)
+            ? metadata.projectMention
+            : null;
+          const mentionSource = projectMention?.source && typeof projectMention.source === "object" && !Array.isArray(projectMention.source)
+            ? projectMention.source
+            : null;
+          const mentionTicketId = String(mentionSource?.ticketId || "").trim();
+          if (String(mentionSource?.type || "").trim() !== "ticket_comment" || !mentionTicketId) {
+            return null;
+          }
+          return {
+            taskId: mentionTicketId,
+            projectId: String(mentionSource?.projectId || thread?.projectId || "").trim(),
+            projectName: String(thread?.projectName || "").trim(),
+            threadId: String(thread?.id || "").trim(),
+            ticketNumber: "",
+            title: "Ticket",
+            description: "",
+            taskColor: "gray",
+            status: "todo",
+            priority: "medium",
+            taskType: "task",
+            environmentId: String(thread?.environmentId || "").trim(),
+            runKind: "mention",
+            showPromptPreview: true,
+            requiresHydration: true,
+          };
         }
   
         function getThreadMissionControlMetadata(thread) {
@@ -8745,27 +8781,79 @@
           return typeof status === "string" ? status.trim() : "";
         }
   
-        function threadHasStaleCompletionAfterUpdate(thread) {
-          const completedAtMs = new Date(String(thread?.completedAt || thread?.finishedAt || thread?.endedAt || "")).getTime();
-          const updatedAtMs = new Date(String(thread?.updatedAt || "")).getTime();
-          return Number.isFinite(completedAtMs) && Number.isFinite(updatedAtMs) && updatedAtMs > completedAtMs + 1000;
+        function getOptimisticThreadExecutionAdmission(thread) {
+          const metadata = thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
+            ? thread.metadata
+            : null;
+          const runnerPlaygroundMetadata = metadata?.runnerPlayground
+            && typeof metadata.runnerPlayground === "object"
+            && !Array.isArray(metadata.runnerPlayground)
+              ? metadata.runnerPlayground
+              : null;
+          const admission = runnerPlaygroundMetadata?.optimisticExecutionAdmission
+            && typeof runnerPlaygroundMetadata.optimisticExecutionAdmission === "object"
+            && !Array.isArray(runnerPlaygroundMetadata.optimisticExecutionAdmission)
+              ? runnerPlaygroundMetadata.optimisticExecutionAdmission
+              : null;
+          return String(admission?.registeredAt || "").trim() ? admission : null;
         }
-  
-        function preserveActiveThreadStatusForStaleCompletion(existingThread, incomingThread, focusedThreadId) {
+
+        function preserveActiveThreadStatusForStaleCompletion(existingThread, incomingThread) {
           const normalizedThreadId = String(incomingThread?.id || "").trim();
-          if (!normalizedThreadId || normalizedThreadId !== String(focusedThreadId || "").trim()) {
+          const admission = getOptimisticThreadExecutionAdmission(existingThread);
+          if (!normalizedThreadId || !admission) {
+            // A canonical terminal response must always win. The previous
+            // focused-thread heuristic compared updatedAt with completedAt
+            // and could resurrect an already-finished Thread after it was
+            // opened. Only an explicit local admission may bridge the short
+            // interval before the worker changes `active` to `running`.
             return incomingThread;
           }
-          if (!isActiveThreadDisplayStatus(existingThread?.status) || !isCompletedThreadStatus(incomingThread?.status)) {
+
+          const incomingStatus = String(incomingThread?.status || "").trim().toLowerCase();
+          if (isTerminalThreadDisplayStatus(incomingStatus)) {
             return incomingThread;
           }
-          if (!threadHasStaleCompletionAfterUpdate(incomingThread)) {
-            return incomingThread;
-          }
-          return {
+
+          const existingMetadata = existingThread?.metadata && typeof existingThread.metadata === "object" && !Array.isArray(existingThread.metadata)
+            ? existingThread.metadata
+            : {};
+          const incomingMetadata = incomingThread?.metadata && typeof incomingThread.metadata === "object" && !Array.isArray(incomingThread.metadata)
+            ? incomingThread.metadata
+            : {};
+          const existingRunnerPlayground = existingMetadata?.runnerPlayground
+            && typeof existingMetadata.runnerPlayground === "object"
+            && !Array.isArray(existingMetadata.runnerPlayground)
+              ? existingMetadata.runnerPlayground
+              : {};
+          const incomingRunnerPlayground = incomingMetadata?.runnerPlayground
+            && typeof incomingMetadata.runnerPlayground === "object"
+            && !Array.isArray(incomingMetadata.runnerPlayground)
+              ? incomingMetadata.runnerPlayground
+              : {};
+          const mergedIncomingThread = {
             ...incomingThread,
-            status: existingThread.status,
+            metadata: {
+              ...existingMetadata,
+              ...incomingMetadata,
+              runnerPlayground: {
+                ...existingRunnerPlayground,
+                ...incomingRunnerPlayground,
+                optimisticExecutionAdmission: admission,
+              },
+            },
           };
+
+          if (
+            isActiveThreadDisplayStatus(existingThread?.status)
+            && (!incomingStatus || incomingStatus === "active")
+          ) {
+            return {
+              ...mergedIncomingThread,
+              status: existingThread.status,
+            };
+          }
+          return mergedIncomingThread;
         }
   
         function isActiveThreadDisplayStatus(status) {
@@ -15548,6 +15636,8 @@
           "libraryName",
           "documentId",
           "documentName",
+          "originThreadId",
+          "originThreadTitle",
           "fineTuneJobId",
           "developSection",
           "imagineView",

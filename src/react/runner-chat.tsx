@@ -332,6 +332,7 @@ import {
 } from "./runner-chat/hydration/api.js";
 import {
   applyHydratedRunningThreadState,
+  getRunnerBatchQueueReceiptLabel,
   getTurnBatchQueueReceipt,
   getTurnAssistantMessageText,
   isActiveTurnStatus,
@@ -446,6 +447,7 @@ import {
 import {
   buildRunnerConnectorPayload,
   filterRunnerConnectorOptions,
+  getRunnerConnectorIdsFromMessageMetadata,
   getRunnerConnectorIdsFromPayload,
   mergeRunnerConnectorPayloads,
   normalizeRunnerConnectorOptions,
@@ -504,6 +506,8 @@ export type {
   RunnerChatSchedulePreset,
   RunnerChatSummaryWorkspacePathClickPayload,
   RunnerChatWorkspaceConfig,
+  RunnerThreadTaskListItem,
+  RunnerThreadTaskListSummary,
 } from "./runner-chat/public-types.js";
 export type {
   RunnerFileBrowserSource,
@@ -804,6 +808,7 @@ export function RunnerChat({
   executionWorkbenchOpen,
   onExecutionWorkbenchOpenChange,
   onExecutionWorkbenchAvailabilityChange,
+  threadTaskList = null,
   onSubagentDetailOpenChange,
   onDocumentPreviewOpenChange,
   onDeepResearchDetailOpenChange,
@@ -1846,6 +1851,16 @@ export function RunnerChat({
     () => buildRunnerTurnMessageMetadataIndex(turns, canonicalThread.projection),
     [canonicalThread.projection, turns],
   );
+  const legacyUsedConnectorIds = useMemo(() => {
+    const connectorIds = new Set<string>();
+    for (const turn of turns) {
+      const metadata = legacyTurnMessageMetadataById.get(turn.id) || turn.messageMetadata;
+      for (const connectorId of getRunnerConnectorIdsFromMessageMetadata(metadata)) {
+        connectorIds.add(connectorId);
+      }
+    }
+    return Array.from(connectorIds);
+  }, [legacyTurnMessageMetadataById, turns]);
   const canonicalWorkingLabelByTurnId = useMemo(
     () => buildRunnerTurnWorkingLabelIndex(turns, canonicalThread.projection),
     [canonicalThread.projection, turns],
@@ -1918,11 +1933,11 @@ export function RunnerChat({
       (receipt) => receipt.id === executionWorkbenchScreen.defaultRunId,
     ) || null
     : null;
-  const executionWorkbenchAvailable = Boolean(executionWorkbenchReceipt);
+  const executionWorkbenchAvailable = Boolean(canonicalThreadId);
   const detachedExecutionWorkbenchOpen = Boolean(
     !shouldUseCanonicalThreadSurface
     && executionWorkbenchOpen
-    && executionWorkbenchReceipt
+    && executionWorkbenchAvailable
   );
   const workspaceItems = hasApiKey ? remoteWorkspaceItems : workspaceConfig?.items || [];
   const availableEnvironments = useMemo(
@@ -6979,6 +6994,7 @@ export function RunnerChat({
             {shouldUseCanonicalThreadSurface ? (
               <RunnerCanonicalThreadSurface
                 availableConnectorOptions={availableConnectorOptions}
+                taskList={threadTaskList}
                 projection={canonicalThread.projection}
                 connected={canonicalThread.connected}
                 reconnecting={canonicalThread.reconnecting}
@@ -7578,7 +7594,7 @@ export function RunnerChat({
                     <RunnerPageQueueReceipt
                       durable={Boolean(durableBatchQueueReceipt)}
                       label={durableBatchQueueReceipt
-                        ? "Moved to Batches because runtime capacity is full · starts automatically when capacity is available"
+                        ? getRunnerBatchQueueReceiptLabel(durableBatchQueueReceipt)
                         : undefined}
                     />
                   ) : null}
@@ -7698,7 +7714,7 @@ export function RunnerChat({
         ) : null}
       </div>
 
-      {!shouldUseCanonicalThreadSurface && executionWorkbenchReceipt ? (
+      {!shouldUseCanonicalThreadSurface && executionWorkbenchAvailable ? (
         <aside
           className={`tb-thread-execution-workbench-sidebar ${detachedExecutionWorkbenchOpen ? "is-open" : ""}`.trim()}
           aria-label="Execution details"
@@ -7707,12 +7723,17 @@ export function RunnerChat({
         >
           {detachedExecutionWorkbenchOpen ? (
             <RunnerThreadExecutionWorkbench
-              key={executionWorkbenchReceipt.id}
+              key={executionWorkbenchReceipt?.id || `task-list:${canonicalThreadId}`}
               receipt={executionWorkbenchReceipt}
               projection={canonicalThread.projection}
+              taskList={threadTaskList}
+              availableConnectorOptions={availableConnectorOptions}
+              usedConnectorIds={legacyUsedConnectorIds}
               detailLoadState={
-                canonicalThread.runDetailStates?.[executionWorkbenchReceipt.id]
-                || { status: "idle", error: null }
+                executionWorkbenchReceipt
+                  ? canonicalThread.runDetailStates?.[executionWorkbenchReceipt.id]
+                    || { status: "idle", error: null }
+                  : undefined
               }
               activityGroupActionStates={canonicalThread.activityGroupActionStates}
               renderAction={renderCanonicalThreadAction}

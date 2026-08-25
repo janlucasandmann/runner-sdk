@@ -124,6 +124,26 @@ describe("PlatformSelector", () => {
     expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "Search statuses" }));
   });
 
+  it("automatically focuses a search header whenever the selector opens", async () => {
+    const user = userEvent.setup();
+    render(
+      <PlatformSelector
+        value="default"
+        options={[
+          { value: "default", label: "Default" },
+          { value: "gpu", label: "GPU Computer" },
+        ]}
+        popupHeader={<input type="search" aria-label="Search computers" />}
+        ariaLabel="Choose computer"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Choose computer" }));
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+
+    expect(document.activeElement).toBe(screen.getByRole("searchbox", { name: "Search computers" }));
+  });
+
   it("supports an interactive popup header outside the listbox", async () => {
     const user = userEvent.setup();
     render(

@@ -35,7 +35,6 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
         }
 
         function handleCloseTaskDetail() {
-          setBacklogTaskContextMenu(null);
           setTaskDetailPopover("");
           setTaskSkillsPopoverOpen(false);
           setTaskParentPickerState(null);
@@ -71,7 +70,6 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
           if (!threadId || typeof onThreadStarted !== "function") {
             return;
           }
-          setBacklogTaskContextMenu(null);
           setTaskDetailPopover("");
           onThreadStarted(threadId, { contentMode: "changes" });
         }
@@ -81,26 +79,8 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
           if (!threadId || typeof onThreadStarted !== "function") {
             return;
           }
-          setBacklogTaskContextMenu(null);
           setTaskDetailPopover("");
           onThreadStarted(threadId, { contentMode: "chat" });
-        }
-
-        function openBacklogTaskContextMenu(task, event, options = {}) {
-          if (!task?.id || !event) {
-            return;
-          }
-          const includeOpenAction = options?.includeOpenAction === true;
-          setTaskDetailPopover("");
-          setTaskDetailSelectPopover("");
-          setTaskSkillsPopoverOpen(false);
-          setBacklogTaskContextMenu({
-            taskId: task.id,
-            x: Number.isFinite(event.clientX) ? event.clientX : 0,
-            y: Number.isFinite(event.clientY) ? event.clientY : 0,
-            includeOpenAction,
-            useWorkActions: options?.useWorkActions === true,
-          });
         }
 
         function getTaskWorkActionConfiguration(task, { locked = false } = {}) {
@@ -268,6 +248,133 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
                   React.createElement(Truck, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
                   React.createElement("span", null, configuration.isBlockedTask ? "Move to Batch" : "Add to Batches")
                 )
+          );
+        }
+
+        function renderProjectTicketPreviewContextMenu(task, { closeMenu } = {}) {
+          if (!task?.id) {
+            return null;
+          }
+          const dismissMenu = typeof closeMenu === "function" ? closeMenu : function noop() {};
+          const normalizedTask = normalizePlaygroundTaskRecord(task);
+          const activeStatus = getTaskPreviewStatusValue(normalizedTask);
+          const activeStatusLabel = getTaskPreviewStatusLabel(normalizedTask);
+          const activePriority = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === normalizedTask.priority)
+            ? normalizedTask.priority
+            : "medium";
+          const activePriorityPresentation = getPlaygroundTaskPriorityPresentation(activePriority);
+          const propertyControlsDisabled = saveState.isSaving;
+          return React.createElement(React.Fragment, null,
+            React.createElement(PlatformPopupSubmenu, {
+                label: "Status",
+                detail: activeStatusLabel,
+                leading: renderPlaygroundTaskStatusGlyph(activeStatus),
+                popupAriaLabel: "Change ticket status",
+                popupWidth: 184,
+                disabled: propertyControlsDisabled,
+                closeOnSelect: true,
+                popupClassName: "playground-tasks-detail-status-selector-popup playground-ticket-action-property-submenu",
+              },
+              PLAYGROUND_TASK_MANUAL_STATUS_OPTIONS.map((option) => {
+                const selected = option.id === activeStatus;
+                return React.createElement("button", {
+                    key: option.id,
+                    type: "button",
+                    role: "menuitemradio",
+                    "aria-checked": selected,
+                    className: "tb-popup-row" + (selected ? " is-selected" : ""),
+                    onClick: (event) => {
+                      dismissMenu();
+                      if (!selected) {
+                        void handleTaskPreviewStatusChange(normalizedTask, option.id, event, {
+                          startWorkOnProgress: false,
+                        });
+                      }
+                    },
+                  },
+                  renderPlaygroundTaskStatusGlyph(option.id),
+                  React.createElement("span", null, option.label),
+                  React.createElement("span", {
+                      className: "tb-popup-check-slot",
+                      style: { marginLeft: "auto" },
+                      "aria-hidden": "true",
+                    },
+                    selected
+                      ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 1.9 })
+                      : null
+                  )
+                );
+              })
+            ),
+            React.createElement(PlatformPopupSubmenu, {
+                label: "Priority",
+                detail: activePriorityPresentation.label,
+                leading: renderPlaygroundTaskPriorityGlyph(activePriority),
+                popupAriaLabel: "Change ticket priority",
+                popupWidth: 184,
+                disabled: propertyControlsDisabled,
+                closeOnSelect: true,
+                popupClassName: "playground-tasks-detail-priority-selector-popup playground-ticket-action-property-submenu",
+              },
+              PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) => {
+                const selected = option.id === activePriority;
+                return React.createElement("button", {
+                    key: option.id,
+                    type: "button",
+                    role: "menuitemradio",
+                    "aria-checked": selected,
+                    className: "tb-popup-row" + (selected ? " is-selected" : ""),
+                    onClick: (event) => {
+                      dismissMenu();
+                      if (!selected) {
+                        void handleTaskPreviewPriorityChange(normalizedTask, option.id, event);
+                      }
+                    },
+                  },
+                  renderPlaygroundTaskPriorityGlyph(option.id),
+                  React.createElement("span", null, option.label),
+                  React.createElement("span", {
+                      className: "tb-popup-check-slot",
+                      style: { marginLeft: "auto" },
+                      "aria-hidden": "true",
+                    },
+                    selected
+                      ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 1.9 })
+                      : null
+                  )
+                );
+              })
+            ),
+            React.createElement(PlatformResourceActionsDivider, null),
+            renderTaskWorkActionMenuItems(task, {
+              closeMenu: dismissMenu,
+              includePrimaryAction: true,
+            }),
+            React.createElement(PlatformResourceActionsDivider, null),
+            React.createElement("button", {
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row playground-ticket-action-delete",
+                "aria-keyshortcuts": "Meta+Backspace Meta+Delete Control+Backspace Control+Delete",
+                onClick: () => {
+                  dismissMenu();
+                  void handleDeleteTask(task.id);
+                },
+                disabled: saveState.isSaving,
+              },
+              React.createElement(Trash2, {
+                className: "tb-popup-icon",
+                width: 14,
+                height: 14,
+                strokeWidth: 1.8,
+                "aria-hidden": "true",
+              }),
+              React.createElement("span", { className: "tb-popup-label" }, "Delete"),
+              React.createElement("span", {
+                className: "platform-resource-actions-menu__shortcut",
+                "aria-hidden": "true",
+              }, "⌘ ⌫")
+            )
           );
         }
 
@@ -442,7 +549,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
 
           const taskRecord = tasksById[normalizedTaskId] || null;
           const directSubtasks = allTaskChildrenByParentId[normalizedTaskId] || [];
-          if (!taskRecord || directSubtasks.length === 0) {
+          if (!taskRecord) {
             return null;
           }
 
@@ -549,34 +656,6 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
           }
         }
 
-        async function handleTaskDeleteDialogDecision(keepSubtasks) {
-          const dialogState = taskDeleteDialogState;
-          if (!dialogState?.taskId || dialogState.isSubmitting) {
-            return;
-          }
-
-          setTaskDeleteDialogState({
-            ...dialogState,
-            isSubmitting: true,
-            error: "",
-          });
-
-          try {
-            await executeTaskDeletion(dialogState.taskId, {
-              keepSubtasks,
-            });
-          } catch (error) {
-            setTaskDeleteDialogState((current) => current && current.taskId === dialogState.taskId
-              ? {
-                  ...current,
-                  isSubmitting: false,
-                  error: error instanceof Error ? error.message : "Failed to delete task.",
-                }
-              : current
-            );
-          }
-        }
-
         async function handleDeleteTask(taskId) {
           setTaskDetailPopover("");
           const resolvedTaskId = String(taskId || "").trim();
@@ -587,16 +666,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
           const deleteDialogState = buildTaskDeleteDialogState(resolvedTaskId);
           if (deleteDialogState) {
             setTaskDeleteDialogState(deleteDialogState);
-            return;
           }
-
-          if (!window.confirm("Delete this task?")) {
-            return;
-          }
-
-          await executeTaskDeletion(resolvedTaskId, {
-            keepSubtasks: false,
-          });
         }
 
         async function handleToggleTaskDone(task, event) {
@@ -695,7 +765,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
           return PLAYGROUND_TASK_MANUAL_STATUS_OPTIONS.filter((option) => option.id !== currentStatus);
         }
 
-        async function handleTaskPreviewStatusChange(taskRecord, nextStatus, event) {
+        async function handleTaskPreviewStatusChange(taskRecord, nextStatus, event, options = {}) {
           event?.preventDefault?.();
           event?.stopPropagation?.();
           const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
@@ -707,7 +777,11 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
 
           setTaskStatusMenuState(null);
 
-          if (normalizedNextStatus === "in_progress" && !isHumanAssignedTask(normalizedTask)) {
+          if (
+            options.startWorkOnProgress !== false
+            && normalizedNextStatus === "in_progress"
+            && !isHumanAssignedTask(normalizedTask)
+          ) {
             await handleStartTaskThread(normalizedTask);
             return;
           }
@@ -767,6 +841,64 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
             setSaveState({
               isSaving: false,
               error: error instanceof Error ? error.message : "Failed to update task status.",
+              message: "",
+            });
+          }
+        }
+
+        async function handleTaskPreviewPriorityChange(taskRecord, nextPriority, event) {
+          event?.preventDefault?.();
+          event?.stopPropagation?.();
+          const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          const normalizedNextPriority = String(nextPriority || "").trim().toLowerCase();
+          if (
+            !normalizedTask?.id
+            || !selectedProjectId
+            || !PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === normalizedNextPriority)
+            || normalizedTask.priority === normalizedNextPriority
+            || saveState.isSaving
+          ) {
+            return;
+          }
+
+          const previousTask = normalizePlaygroundTaskRecord(normalizedTask);
+          const optimisticTask = normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata({
+            ...normalizedTask,
+            priority: normalizedNextPriority,
+          }));
+          const shouldKeepSelection = selectedTaskIdRef.current === normalizedTask.id;
+
+          commitLocalTaskRecord(optimisticTask, {
+            selectTask: shouldKeepSelection,
+            syncDraft: shouldKeepSelection,
+            markClean: true,
+          });
+          setSaveState({
+            isSaving: true,
+            error: "",
+            message: "",
+          });
+
+          try {
+            const updatedTask = await patchTaskRecord(normalizedTask, {
+              priority: normalizedNextPriority,
+            });
+            commitLocalTaskRecord(updatedTask, {
+              selectTask: shouldKeepSelection,
+            });
+            resetSaveState(
+              "Task priority changed to "
+              + getPlaygroundTaskPriorityPresentation(normalizedNextPriority).label
+            );
+          } catch (error) {
+            commitLocalTaskRecord(previousTask, {
+              selectTask: selectedTaskIdRef.current === previousTask.id,
+              syncDraft: selectedTaskIdRef.current === previousTask.id,
+              markClean: true,
+            });
+            setSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to update task priority.",
               message: "",
             });
           }
@@ -933,8 +1065,10 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
                   }
                 : {}),
             };
-            taskRunPendingIdsRef.current.add(normalizedTaskId);
-            setTaskRunPendingIds((current) => current.includes(normalizedTaskId) ? current : current.concat(normalizedTaskId));
+            if (options?.addToBatch !== true) {
+              taskRunPendingIdsRef.current.add(normalizedTaskId);
+              setTaskRunPendingIds((current) => current.includes(normalizedTaskId) ? current : current.concat(normalizedTaskId));
+            }
             if (options?.addToBatch !== true && typeof onTaskRunStateChange === "function") {
               onTaskRunStateChange({
                 taskId: normalizedTaskId,
@@ -971,7 +1105,10 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
               projectKnowledgeLibrary,
               "project-task"
             );
-            const launchPrompt = buildPlaygroundTaskRunPrompt(taskToLaunch, {
+            const launchPrompt = buildPlaygroundTaskRunPrompt({
+              ...taskToLaunch,
+              connectors: launchConnectors,
+            }, {
               projectAttachments: projectLaunchAttachments,
               reviewRequestBody,
               knowledgeLibrary: projectKnowledgeLibrary,
@@ -985,6 +1122,36 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
                   globalThis.crypto?.randomUUID?.()
                   || Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)
                 );
+            if (options?.addToBatch === true) {
+              setSaveState({
+                isSaving: false,
+                error: "",
+                message: "",
+              });
+              openBatchComposer({
+                name: taskPreview.ticketNumber + " " + taskPreview.title,
+                description: "Project ticket work prepared from the ticket details page.",
+                targetKind: "project_ticket_action",
+                targetResourceId: null,
+                definition: {
+                  message: launchPrompt,
+                  environmentId: launchEnvironmentId || null,
+                  agentId: launchAgentId || null,
+                  enabledSkills: enabledSkillsPayload || [],
+                  connectors: launchConnectors || [],
+                  githubRepo: githubRepo || null,
+                  knowledgeContext: projectKnowledgeContext,
+                },
+                sourceProjectId: taskPreview.projectId || selectedProjectId || null,
+                sourceTicketId: normalizedTaskId,
+                startPolicy: "manual",
+                metadata: {
+                  ticketNumber: taskPreview.ticketNumber || null,
+                  runKind: normalizedRunKind,
+                },
+              });
+              return;
+            }
             const taskRunRequest = {
               method: "POST",
               headers: {
@@ -999,9 +1166,9 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
                 environmentId: launchEnvironmentId || undefined,
                 agentId: launchAgentId || undefined,
                 ...(projectKnowledgeContext ? { knowledgeContext: projectKnowledgeContext } : {}),
-                moveToInProgress: options?.addToBatch === true ? false : true,
+                moveToInProgress: true,
                 metadata: {
-                  triggerKind: options?.addToBatch === true ? "batch" : "manual",
+                  triggerKind: "manual",
                   source: normalizedRunKind === "review"
                     ? "project_task_review"
                     : "project_task",
@@ -1092,32 +1259,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
               });
             }
             resetSaveState(typeof options?.successMessage === "string" && options.successMessage ? options.successMessage : "Thread started");
-            if (options?.addToBatch === true) {
-              openBatchComposer({
-                name: taskPreview.ticketNumber + " " + taskPreview.title,
-                description: "Project ticket work prepared from the ticket details page.",
-                targetKind: "project_ticket_action",
-                targetResourceId: threadRecord.id,
-                definition: {
-                  threadId: threadRecord.id,
-                  preparedThreadId: threadRecord.id,
-                  message: launchPrompt,
-                  environmentId: launchEnvironmentId || null,
-                  agentId: launchAgentId || null,
-                  enabledSkills: enabledSkillsPayload || [],
-                  connectors: launchConnectors || [],
-                  githubRepo: githubRepo || null,
-                  knowledgeContext: projectKnowledgeContext,
-                },
-                sourceProjectId: taskPreview.projectId || selectedProjectId || null,
-                sourceTicketId: updatedTask.id,
-                startPolicy: "manual",
-                metadata: {
-                  ticketNumber: taskPreview.ticketNumber || null,
-                  runKind: normalizedRunKind,
-                },
-              });
-            } else if (onThreadStarted) {
+            if (onThreadStarted) {
               onThreadStarted(threadRecord.id, {
                 threadRecord,
                 taskPreview: {
@@ -1174,7 +1316,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
 
 	        async function saveProjectRules(rulesOverride) {
 	          if (!selectedProject?.id) {
-	            return;
+	            return false;
 	          }
 
 	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
@@ -1186,7 +1328,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
 	              isSaving: false,
 	              error: "",
 	            });
-	            return;
+	            return true;
 	          }
 
 	          const nextProject = normalizePlaygroundProjectRecord({
@@ -1199,7 +1341,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
 	          });
 	          const nextName = String(nextProject.name || "").trim().replace(/\\s+/g, " ");
 	          if (!nextName) {
-	            return;
+	            return false;
 	          }
 
 	          setProjectRulesSaveState({
@@ -1262,11 +1404,13 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
 	              isSaving: false,
 	              error: "",
 	            });
+	            return true;
 	          } catch (error) {
 	            setProjectRulesSaveState({
 	              isSaving: false,
 	              error: error instanceof Error ? error.message : "Failed to update project rules.",
 	            });
+	            return false;
 	          }
 	        }
 
@@ -1282,13 +1426,21 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
 	        }
 
 	        async function handleAddProjectRuleEntry() {
-	          const nextEntry = normalizePlaygroundProjectRuleEntry(projectRuleInputValue);
+	          const nextEntry = createPlaygroundProjectRuleEntry(
+	            projectRuleTitleInputValue,
+	            projectRuleInputValue
+	          );
 	          if (!nextEntry || projectRulesSaveState.isSaving) {
 	            return;
 	          }
 
 	          const currentEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
-	          const nextRules = serializePlaygroundProjectRuleEntries([...currentEntries, nextEntry]);
+	          const isEditingExistingRule = projectRuleEditingIndex >= 0
+	            && projectRuleEditingIndex < currentEntries.length;
+	          const nextEntries = isEditingExistingRule
+	            ? currentEntries.map((entry, index) => index === projectRuleEditingIndex ? nextEntry : entry)
+	            : [...currentEntries, nextEntry];
+	          const nextRules = serializePlaygroundProjectRuleEntries(nextEntries);
 	          setProjectRulesDraft(nextRules);
 	          finishCloseProjectRuleComposer();
 	          await saveProjectRules(nextRules);
@@ -1298,14 +1450,17 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
 	          if (projectRulesSaveState.isSaving) {
 	            return;
 	          }
+	          const parsedEntry = parsePlaygroundProjectRuleEntry(entry, index);
 	          setProjectRuleEditingIndex(index);
 	          setProjectRuleEditingValue(String(entry || ""));
+	          setProjectRuleTitleInputValue(parsedEntry.title);
+	          setProjectRuleInputValue(parsedEntry.description);
+	          setProjectRuleComposerOpen(true);
 	          window.requestAnimationFrame(() => {
-	            const textarea = projectRuleEditTextareaRef.current;
+	            const textarea = projectRuleComposerTextareaRef.current;
 	            if (!textarea) {
 	              return;
 	            }
-	            textarea.focus();
 	            const length = textarea.value.length;
 	            textarea.setSelectionRange(length, length);
 	            resizeTaskDescriptionTextarea(textarea);
@@ -1342,18 +1497,65 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
 	          await saveProjectRules(nextRules);
 	        }
 
-	        async function handleRemoveProjectRuleEntry(indexToRemove) {
+	        function requestProjectRuleEntryDeletion(indexToRemove) {
 	          if (projectRulesSaveState.isSaving) {
 	            return;
 	          }
 	          const currentEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
+	          const entry = currentEntries[indexToRemove];
+	          if (!entry) {
+	            return;
+	          }
+	          const parsedEntry = parsePlaygroundProjectRuleEntry(entry, indexToRemove);
+	          setProjectRuleDeleteDialogState({
+	            index: indexToRemove,
+	            entry,
+	            title: parsedEntry.title || "Untitled Rule",
+	          });
+	        }
+
+	        async function handleRemoveProjectRuleEntry(indexToRemove) {
+	          if (projectRulesSaveState.isSaving) {
+	            return false;
+	          }
+	          const currentEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
+	          if (indexToRemove < 0 || indexToRemove >= currentEntries.length) {
+	            return false;
+	          }
 	          const nextRules = serializePlaygroundProjectRuleEntries(
 	            currentEntries.filter((_, index) => index !== indexToRemove)
 	          );
+	          setProjectRulesDraft(nextRules);
+	          const didSave = await saveProjectRules(nextRules);
+	          if (!didSave) {
+	            setProjectRulesDraft(serializePlaygroundProjectRuleEntries(currentEntries));
+	            throw new Error("Failed to delete rule.");
+	          }
 	          setProjectRuleEditingIndex(-1);
 	          setProjectRuleEditingValue("");
-	          setProjectRulesDraft(nextRules);
-	          await saveProjectRules(nextRules);
+	          return true;
+	        }
+
+	        async function confirmProjectRuleEntryDeletion() {
+	          const pendingRule = projectRuleDeleteDialogState;
+	          if (!pendingRule || projectRulesSaveState.isSaving) {
+	            return;
+	          }
+	          const currentEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
+	          const expectedEntry = String(pendingRule.entry || "");
+	          const requestedIndex = Number(pendingRule.index);
+	          const resolvedIndex = currentEntries[requestedIndex] === expectedEntry
+	            ? requestedIndex
+	            : currentEntries.indexOf(expectedEntry);
+	          if (resolvedIndex < 0) {
+	            setProjectRuleDeleteDialogState(null);
+	            return;
+	          }
+	          await handleRemoveProjectRuleEntry(resolvedIndex);
+	          setProjectRuleDeleteDialogState(null);
+	          if (projectRuleComposerOpen) {
+	            finishCloseProjectRuleComposer();
+	          }
 	        }
 
 	        function normalizeProjectFullAutoRun(run, projectId = selectedProjectId) {

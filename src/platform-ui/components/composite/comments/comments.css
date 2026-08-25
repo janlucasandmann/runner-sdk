@@ -239,6 +239,7 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
+  margin-top: 2px;
 }
 
 .platform-comment-card__reply-author {
@@ -380,6 +381,15 @@
   object-fit: cover;
 }
 
+.platform-comment-composer__selected-mention-avatar > :not(img):not(picture),
+.platform-comment-composer__selected-mention-avatar > :not(img):not(picture) > :not(img):not(picture) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+}
+
 .platform-comment-composer__selected-mention-label {
   min-width: 0;
   max-width: 160px;
@@ -411,6 +421,26 @@
 .platform-comment-reply-composer__submit.platform-icon-button:not(:disabled):hover,
 .platform-comment-composer__submit.platform-icon-button:not(:disabled):hover {
   background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.platform-comment-submit-spinner {
+  display: block;
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  animation: platform-comment-submit-spin 900ms linear infinite;
+}
+
+@keyframes platform-comment-submit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-comment-submit-spinner {
+    animation-duration: 1800ms;
+  }
 }
 
 .platform-comment-reply-composer__error {
@@ -615,6 +645,15 @@
 .platform-mention-suggestions__avatar > * {
   width: 100%;
   height: 100%;
+}
+
+.platform-mention-suggestions__avatar > :not(img):not(picture),
+.platform-mention-suggestions__avatar > :not(img):not(picture) > :not(img):not(picture) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
 }
 
 .platform-mention-suggestions__copy {

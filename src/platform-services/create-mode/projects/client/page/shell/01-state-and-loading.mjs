@@ -22,10 +22,12 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         onThreadOpen,
         onThreadOptionsOpen,
         onThreadStarted,
+        onBackgroundThreadCreated,
         onTaskRunStateChange,
         onStartAgentReviewThread,
         onStatusIndicatorItemChange,
         onTaskDeleted,
+        onOpenTaskFullScreen,
         onTaskRecordCommitted,
         openTaskRequest,
         navigationRequest,
@@ -95,7 +97,16 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           if (!navigationRequest?.projectRecord || typeof navigationRequest.projectRecord !== "object" || Array.isArray(navigationRequest.projectRecord)) {
             return null;
           }
-          const normalizedProject = normalizePlaygroundProjectRecord(navigationRequest.projectRecord);
+          const navigationProjectScope = getPlaygroundProjectRecordScope(navigationRequest.projectRecord);
+          const normalizedProject = normalizePlaygroundProjectRecord({
+            ...navigationRequest.projectRecord,
+            isOverviewRecord: navigationProjectScope !== "detail",
+            __projectRecordScope: navigationProjectScope === "detail"
+              ? "detail"
+              : navigationProjectScope === "overview"
+                ? "overview"
+                : "navigation",
+          });
           return normalizedProject.id === initialNavigationProjectId ? normalizedProject : null;
         })();
         const initialNavigationTaskRecord = (() => {
@@ -129,8 +140,6 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const projectOverviewTasksToolbarRef = useRef(null);
         const projectOverviewThreadsToolbarRef = useRef(null);
         const projectOverviewFilesToolbarRef = useRef(null);
-        const backlogTaskContextMenuRef = useRef(null);
-        const taskDetailActionsRef = useRef(null);
         const taskDetailThreadsToolbarRef = useRef(null);
         const taskSkillsActionsRef = useRef(null);
 	        const taskDetailMainRef = useRef(null);
@@ -138,6 +147,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        const missionControlDocumentTextareaRef = useRef(null);
 	        const projectRulesTextareaRef = useRef(null);
 	        const projectRuleComposerTextareaRef = useRef(null);
+	        const projectRuleDescriptionEditorRef = useRef(null);
 	        const projectRuleEditTextareaRef = useRef(null);
 \${CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.textareaRefs}
         const taskAttachmentInputRef = useRef(null);
@@ -280,6 +290,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [projectOverviewHomeTab, setProjectOverviewHomeTab] = useState(
           () => projectOverviewNavigationHomeTabRef.current || "general"
         );
+        const [projectOverviewSettingsSection, setProjectOverviewSettingsSection] = useState("plugins");
         const [projectOverviewActivityTab, setProjectOverviewActivityTab] = useState("threads");
         const [projectOverviewResourcesTab, setProjectOverviewResourcesTab] = useState("resources");
         const [projectOverviewUpdateComposerState, setProjectOverviewUpdateComposerState] = useState({
@@ -423,6 +434,98 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           error: "",
           items: [],
         });
+        const [projectActivityVisibleEventCount, setProjectActivityVisibleEventCount] = useState(20);
+        const [projectActivityIncrementalLoading, setProjectActivityIncrementalLoading] = useState(false);
+        const projectActivityFeedRef = useRef(null);
+        const projectActivityTimelineHasMoreRef = useRef(false);
+        const projectActivityIncrementalPendingRef = useRef(false);
+        const projectActivityIncrementalTimerRef = useRef(null);
+        useEffect(() => {
+          if (projectActivityIncrementalTimerRef.current) {
+            window.clearTimeout(projectActivityIncrementalTimerRef.current);
+            projectActivityIncrementalTimerRef.current = null;
+          }
+          projectActivityIncrementalPendingRef.current = false;
+          projectActivityTimelineHasMoreRef.current = false;
+          setProjectActivityVisibleEventCount(20);
+          setProjectActivityIncrementalLoading(false);
+          return () => {
+            if (projectActivityIncrementalTimerRef.current) {
+              window.clearTimeout(projectActivityIncrementalTimerRef.current);
+              projectActivityIncrementalTimerRef.current = null;
+            }
+            projectActivityIncrementalPendingRef.current = false;
+          };
+        }, [
+          selectedProjectId,
+          taskView,
+          projectOverviewHomeTab,
+          projectOverviewTaskActivityState.status,
+        ]);
+        useEffect(() => {
+          if (
+            typeof window === "undefined"
+            || taskView !== "overview"
+            || projectOverviewHomeTab !== "general"
+            || projectOverviewTaskActivityState.status !== "ready"
+          ) {
+            return undefined;
+          }
+
+          const handleProjectActivityIncrementalScroll = (event) => {
+            const feed = projectActivityFeedRef.current;
+            if (
+              !feed
+              || !projectActivityTimelineHasMoreRef.current
+              || projectActivityIncrementalPendingRef.current
+            ) {
+              return;
+            }
+
+            const target = event?.target;
+            const targetElement = target instanceof Element ? target : null;
+            const targetNode = target instanceof Node ? target : null;
+            const scrollIsInsideFeed = Boolean(targetNode && feed.contains(targetNode));
+            const scrollContainsFeed = Boolean(targetElement && targetElement.contains(feed));
+            if (
+              targetNode
+              && target !== document
+              && target !== document.documentElement
+              && !scrollIsInsideFeed
+              && !scrollContainsFeed
+            ) {
+              return;
+            }
+
+            const viewportBottom = window.innerHeight || document.documentElement.clientHeight;
+            const boundaryRect = scrollContainsFeed ? targetElement.getBoundingClientRect() : null;
+            const visibleBottom = boundaryRect && boundaryRect.height > 0
+              ? Math.min(viewportBottom, boundaryRect.bottom)
+              : viewportBottom;
+            if (feed.getBoundingClientRect().bottom > visibleBottom + 24) {
+              return;
+            }
+
+            projectActivityIncrementalPendingRef.current = true;
+            setProjectActivityIncrementalLoading(true);
+            projectActivityIncrementalTimerRef.current = window.setTimeout(() => {
+              projectActivityIncrementalTimerRef.current = null;
+              setProjectActivityVisibleEventCount((current) => current + 10);
+              setProjectActivityIncrementalLoading(false);
+              projectActivityIncrementalPendingRef.current = false;
+            }, 140);
+          };
+
+          window.addEventListener("scroll", handleProjectActivityIncrementalScroll, true);
+          return () => {
+            window.removeEventListener("scroll", handleProjectActivityIncrementalScroll, true);
+          };
+        }, [
+          projectOverviewHomeTab,
+          projectOverviewTaskActivityState.status,
+          selectedProjectId,
+          taskView,
+        ]);
         const [
           projectOverviewTaskActivitySelectedId,
           setProjectOverviewTaskActivitySelectedId,
@@ -517,6 +620,9 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        const [projectOverviewVisibleActivityCount, setProjectOverviewVisibleActivityCount] = useState(5);
 	        const [projectOverviewSidebarPropertyPopover, setProjectOverviewSidebarPropertyPopover] = useState("");
 	        const [projectOverviewSidebarStatusSearchQuery, setProjectOverviewSidebarStatusSearchQuery] = useState("");
+	        const [projectOverviewSidebarPrioritySearchQuery, setProjectOverviewSidebarPrioritySearchQuery] = useState("");
+	        const [projectOverviewSidebarComputerSearchQuery, setProjectOverviewSidebarComputerSearchQuery] = useState("");
+	        const [projectComputerChangeDialog, setProjectComputerChangeDialog] = useState(null);
 	        const [projectOverviewOwnerCandidatesState, setProjectOverviewOwnerCandidatesState] = useState({
 	          projectId: "",
 	          status: "idle",
@@ -553,7 +659,6 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const boardLoadMoreRef = useRef(null);
         const [releaseToolbarPopover, setReleaseToolbarPopover] = useState("");
         const [releaseBacklogToolbarPopover, setReleaseBacklogToolbarPopover] = useState("");
-        const [backlogTaskContextMenu, setBacklogTaskContextMenu] = useState(null);
         const [taskStatusMenuState, setTaskStatusMenuState] = useState(null);
         const [taskDetailPopover, setTaskDetailPopover] = useState("");
         const [taskDetailSelectPopover, setTaskDetailSelectPopover] = useState("");
@@ -650,6 +755,106 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           status: "idle",
           error: "",
         });
+        const [taskActivityTimelineState, setTaskActivityTimelineState] = useState(() => ({
+          taskId: initialNavigationTaskRecord?.id || "",
+          status: initialNavigationTaskRecord?.id ? "loading" : "idle",
+          error: "",
+        }));
+        const [taskActivityVisibleEventCount, setTaskActivityVisibleEventCount] = useState(20);
+        const [taskActivityIncrementalLoading, setTaskActivityIncrementalLoading] = useState(false);
+        const taskActivityTimelineRef = useRef(null);
+        const taskActivityTimelineHasMoreRef = useRef(false);
+        const taskActivityIncrementalPendingRef = useRef(false);
+        const taskActivityIncrementalTimerRef = useRef(null);
+        useEffect(() => {
+          if (taskActivityIncrementalTimerRef.current) {
+            window.clearTimeout(taskActivityIncrementalTimerRef.current);
+            taskActivityIncrementalTimerRef.current = null;
+          }
+          taskActivityIncrementalPendingRef.current = false;
+          taskActivityTimelineHasMoreRef.current = false;
+          setTaskActivityVisibleEventCount(20);
+          setTaskActivityIncrementalLoading(false);
+          setTaskActivityTimelineState({
+            taskId: selectedTaskId || "",
+            status: selectedTaskId && taskView !== "threads"
+              ? "loading"
+              : "idle",
+            error: "",
+          });
+          return () => {
+            if (taskActivityIncrementalTimerRef.current) {
+              window.clearTimeout(taskActivityIncrementalTimerRef.current);
+              taskActivityIncrementalTimerRef.current = null;
+            }
+            taskActivityIncrementalPendingRef.current = false;
+          };
+        }, [selectedProjectId, selectedTaskId, taskView]);
+        useEffect(() => {
+          if (
+            typeof window === "undefined"
+            || !selectedTaskId
+            || taskView === "threads"
+            || taskActivityTimelineState.taskId !== selectedTaskId
+            || taskActivityTimelineState.status !== "ready"
+          ) {
+            return undefined;
+          }
+
+          const handleTaskActivityIncrementalScroll = (event) => {
+            const timeline = taskActivityTimelineRef.current;
+            if (
+              !timeline
+              || !taskActivityTimelineHasMoreRef.current
+              || taskActivityIncrementalPendingRef.current
+            ) {
+              return;
+            }
+
+            const target = event?.target;
+            const targetElement = target instanceof Element ? target : null;
+            const targetNode = target instanceof Node ? target : null;
+            const scrollIsInsideTimeline = Boolean(targetNode && timeline.contains(targetNode));
+            const scrollContainsTimeline = Boolean(targetElement && targetElement.contains(timeline));
+            if (
+              targetNode
+              && target !== document
+              && target !== document.documentElement
+              && !scrollIsInsideTimeline
+              && !scrollContainsTimeline
+            ) {
+              return;
+            }
+
+            const viewportBottom = window.innerHeight || document.documentElement.clientHeight;
+            const boundaryRect = scrollContainsTimeline ? targetElement.getBoundingClientRect() : null;
+            const visibleBottom = boundaryRect && boundaryRect.height > 0
+              ? Math.min(viewportBottom, boundaryRect.bottom)
+              : viewportBottom;
+            if (timeline.getBoundingClientRect().bottom > visibleBottom + 24) {
+              return;
+            }
+
+            taskActivityIncrementalPendingRef.current = true;
+            setTaskActivityIncrementalLoading(true);
+            taskActivityIncrementalTimerRef.current = window.setTimeout(() => {
+              taskActivityIncrementalTimerRef.current = null;
+              setTaskActivityVisibleEventCount((current) => current + 10);
+              setTaskActivityIncrementalLoading(false);
+              taskActivityIncrementalPendingRef.current = false;
+            }, 140);
+          };
+
+          window.addEventListener("scroll", handleTaskActivityIncrementalScroll, true);
+          return () => {
+            window.removeEventListener("scroll", handleTaskActivityIncrementalScroll, true);
+          };
+        }, [
+          selectedTaskId,
+          taskActivityTimelineState.status,
+          taskActivityTimelineState.taskId,
+          taskView,
+        ]);
         const [backlogComposerKey, setBacklogComposerKey] = useState(0);
         const [backlogComposerEnvironmentId, setBacklogComposerEnvironmentId] = useState(initialEnvironmentId || "");
         const [backlogComposerAgentId, setBacklogComposerAgentId] = useState(initialAgentId || "");
@@ -666,6 +871,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        const projectKnowledgeLibraryEnsurePromisesRef = useRef(new Map());
 	        const selectedProjectMissionControlRef = useRef(buildEmptyPlaygroundProjectMissionControl());
 	        const [projectRulesDraft, setProjectRulesDraft] = useState("");
+	        const [projectRuleTitleInputValue, setProjectRuleTitleInputValue] = useState("");
 	        const [projectRuleInputValue, setProjectRuleInputValue] = useState("");
 	        const [projectRuleComposerOpen, setProjectRuleComposerOpen] = useState(false);
 	        const [projectRulesSaveState, setProjectRulesSaveState] = useState({
@@ -674,6 +880,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        });
 	        const [projectRuleComposerVisible, setProjectRuleComposerVisible] = useState(false);
 	        const [projectRuleComposerClosing, setProjectRuleComposerClosing] = useState(false);
+	        const [projectRuleDeleteDialogState, setProjectRuleDeleteDialogState] = useState(null);
 	        const projectRuleComposerCloseTimerRef = useRef(null);
 	        const projectRuleComposerFrameRef = useRef(null);
 	        const projectRuleComposerAnimationMs = 75;
@@ -767,6 +974,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [taskConnectorBrowserHistory, setTaskConnectorBrowserHistory] = useState([{ source: "github", folderId: null }]);
         const [taskConnectorBrowserHistoryIndex, setTaskConnectorBrowserHistoryIndex] = useState(0);
         const [taskConnectorBrowserSearchQuery, setTaskConnectorBrowserSearchQuery] = useState("");
+        const [taskConnectorBrowserAccountIdsBySource, setTaskConnectorBrowserAccountIdsBySource] = useState({});
         const [taskConnectorBrowserPreviewId, setTaskConnectorBrowserPreviewId] = useState("");
         const [taskConnectorBrowserExpandedFolderIds, setTaskConnectorBrowserExpandedFolderIds] = useState([]);
         const [taskConnectorBrowserSelectedIds, setTaskConnectorBrowserSelectedIds] = useState({
@@ -774,6 +982,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           googleDrive: [],
           oneDrive: [],
         });
+        const [taskConnectorBrowserGithubBranchByRepo, setTaskConnectorBrowserGithubBranchByRepo] = useState({});
         const [taskConnectorBrowserSelectedNotionId, setTaskConnectorBrowserSelectedNotionId] = useState("");
         const [taskConnectorBrowserItemsBySource, setTaskConnectorBrowserItemsBySource] = useState({
           github: [],
@@ -978,15 +1187,21 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 
         const selectedProject = useMemo(() => {
           if (!selectedProjectId) return null;
-          if (selectedProjectDetail?.project?.id === selectedProjectId) {
-            return selectedProjectDetail.project;
+          const detailProject = selectedProjectDetail?.project?.id === selectedProjectId
+            ? selectedProjectDetail.project
+            : null;
+          if (detailProject && selectedProjectSnapshot) {
+            return mergePlaygroundProjectRecordsByFidelity(detailProject, selectedProjectSnapshot);
           }
-          return selectedProjectSnapshot;
+          return detailProject || selectedProjectSnapshot;
         }, [selectedProjectDetail, selectedProjectId, selectedProjectSnapshot]);
 
         const selectedProjectWorkspaceTitle = useMemo(() => {
           if (!selectedProject) {
             return "Project";
+          }
+          if (!isPlaygroundProjectDetailRecord(selectedProject)) {
+            return "Loading project...";
           }
           if (
             missionControlSetupOpen
@@ -1013,7 +1228,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         }
 
         useEffect(() => {
-          if (projectComposerOpen || !selectedProject?.id) {
+          if (projectComposerOpen || !selectedProject?.id || !isPlaygroundProjectDetailRecord(selectedProject)) {
             return;
           }
 
@@ -1027,17 +1242,17 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
             const projectIndex = projects.findIndex((project) => project.id === normalizedProject.id);
             const wallpaperConfig = getPlaygroundProjectWallpaperConfig(selectedProject, projectIndex >= 0 ? projectIndex : 0);
             if (current?.id === selectedProject.id) {
-              const hasUnsavedDescription = projectDescriptionDirtyProjectIdRef.current === selectedProject.id;
-              if (
-                projectDescriptionEditingRef.current
-                || hasUnsavedDescription
-                || String(current.description || "") === String(normalizedProject.description || "")
-              ) {
+              if (getPlaygroundProjectRecordScopeRank(current) > getPlaygroundProjectRecordScopeRank(normalizedProject)) {
                 return current;
               }
+              const hasUnsavedDescription = projectDescriptionDirtyProjectIdRef.current === selectedProject.id;
+              const mergedProject = mergePlaygroundProjectRecords(normalizedProject, current)
+                || normalizedProject;
               return {
-                ...current,
-                ...normalizedProject,
+                ...mergedProject,
+                ...(projectDescriptionEditingRef.current || hasUnsavedDescription
+                  ? { description: current.description }
+                  : {}),
                 wallpaperId: getPlaygroundProjectWallpaperId(normalizedProject.wallpaperId, wallpaperConfig.id),
               };
             }
@@ -1054,12 +1269,72 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           projectDraft?.id,
           projectComposerOpen,
           projects,
-          selectedProject?.description,
+          selectedProject,
+        ]);
+
+        useEffect(() => {
+          const projectId = String(selectedProject?.id || "").trim();
+          if (!projectId || !isPlaygroundProjectDetailRecord(selectedProject)) {
+            return undefined;
+          }
+
+          const abortController = new AbortController();
+          let cancelled = false;
+          setProjectOverviewOwnerCandidatesState((current) => ({
+            projectId,
+            status: "loading",
+            error: "",
+            items: current?.projectId === projectId && Array.isArray(current.items)
+              ? current.items
+              : [],
+          }));
+
+          void (async () => {
+            try {
+              const response = await fetch(
+                backendUrl + "/projects/" + encodeURIComponent(projectId) + "/owner-candidates",
+                {
+                  headers: requestHeaders,
+                  signal: abortController.signal,
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load project owners.");
+              }
+              if (cancelled) {
+                return;
+              }
+              setProjectOverviewOwnerCandidatesState({
+                projectId,
+                status: "ready",
+                error: "",
+                items: Array.isArray(data?.data) ? data.data : [],
+              });
+            } catch (error) {
+              if (cancelled || error?.name === "AbortError") {
+                return;
+              }
+              setProjectOverviewOwnerCandidatesState((current) => ({
+                projectId,
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load project owners.",
+                items: current?.projectId === projectId && Array.isArray(current.items)
+                  ? current.items
+                  : [],
+              }));
+            }
+          })();
+
+          return () => {
+            cancelled = true;
+            abortController.abort();
+          };
+        }, [
+          backendUrl,
+          requestHeadersKey,
           selectedProject?.id,
-          selectedProject?.metadata,
-          selectedProject?.name,
-          selectedProject?.useCardBackgroundAsWallpaper,
-          selectedProject?.wallpaperId,
+          selectedProject?.ownerUserId,
         ]);
 
         const selectedProjectShellBackground = useMemo(() => "", []);

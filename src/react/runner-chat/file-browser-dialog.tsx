@@ -53,6 +53,10 @@ export interface RunnerFileBrowserDialogProps {
   open: boolean;
   apiKeyPromptOpen: boolean;
   source: RunnerFileBrowserSource;
+  /** Keeps the shared explorer chrome while allowing scoped flows to omit source navigation. */
+  showSourceSidebar?: boolean;
+  /** Keeps scoped explorer flows focused by omitting the file-type filter strip. */
+  showFilterTabs?: boolean;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   environments: RunnerFileBrowserEnvironment[];
@@ -151,6 +155,8 @@ export function RunnerFileBrowserDialog({
   open,
   apiKeyPromptOpen,
   source,
+  showSourceSidebar = true,
+  showFilterTabs = true,
   searchQuery,
   onSearchQueryChange,
   environments,
@@ -383,6 +389,8 @@ export function RunnerFileBrowserDialog({
                 portal={false}
                 size="full"
                 title="Attach files"
+                showSidebar={showSourceSidebar}
+                showFilterTabs={showFilterTabs}
                 backdropClassName="tb-file-browser-scrim"
                 className="tb-file-browser-modal"
                 onClose={onClose}

@@ -916,67 +916,6 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
           });
         }
 
-        function renderBacklogTaskContextMenu() {
-          if (!backlogTaskContextMenu?.taskId) {
-            return null;
-          }
-          const contextTask = tasksById[backlogTaskContextMenu.taskId] || null;
-          if (!contextTask) {
-            return null;
-          }
-          return React.createElement(PlatformPopup, {
-              open: true,
-              portal: true,
-              variant: "minimal",
-              animation: "down-in",
-              placement: "bottom-start",
-              portalOffset: 0,
-              portalCollisionPadding: 12,
-              portalAnchorPoint: {
-                x: backlogTaskContextMenu.x,
-                y: backlogTaskContextMenu.y,
-              },
-              surfaceRef: backlogTaskContextMenuRef,
-              rootClassName: "playground-tasks-backlog-context-menu-anchor",
-              surfaceClassName: "playground-tasks-backlog-context-menu",
-              surfaceProps: {
-                role: "menu",
-                "aria-label": "Ticket actions",
-                width: 272,
-                maxHeight: "min(360px, calc(100vh - 24px))",
-                style: {
-                  display: "flex",
-                  flexDirection: "column",
-                  overflowY: "auto",
-                },
-              },
-            },
-              backlogTaskContextMenu.useWorkActions === true
-                ? React.createElement(React.Fragment, null,
-                    React.createElement("button", {
-                      type: "button",
-                      role: "menuitem",
-                      className: "tb-popup-row",
-                      onClick: () => {
-                        setBacklogTaskContextMenu(null);
-                        openProjectTaskDetailScreen(contextTask.id);
-                      },
-                    },
-                      React.createElement(Maximize2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-                      React.createElement("span", null, "Open")
-                    ),
-                    renderTaskWorkActionMenuItems(contextTask, {
-                      closeMenu: () => setBacklogTaskContextMenu(null),
-                      includePrimaryAction: true,
-                    })
-                  )
-                : renderTaskActionsMenu(contextTask, {
-                    closeMenu: () => setBacklogTaskContextMenu(null),
-                    includeOpenAction: backlogTaskContextMenu.includeOpenAction === true,
-                  })
-          );
-        }
-
         function renderBacklogTaskListView({
           headerTitle,
           headerLeading = null,
@@ -1274,19 +1213,11 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
                     + (isDropAfter ? " is-drop-after" : ""),
                   style: getPlaygroundTaskColorStyle(task.taskColor),
                   draggable: isDraggable,
-                  onClick: () => openProjectTaskDetailScreen(task.id),
-                  onContextMenu: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    handleSelectTask(task.id);
-                    openBacklogTaskContextMenu(task, event);
-                  },
-                  onKeyDown: (event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      openProjectTaskDetailScreen(task.id);
-                    }
-                  },
+                  ticketActionMenu: ({ closeMenu }) => renderProjectTicketPreviewContextMenu(task, { closeMenu }),
+                  openTicketActionMenuOnClick: true,
+                  onTicketActionMenuOpen: () => handleSelectTask(task.id),
+                  onTicketDeleteRequest: () => void handleDeleteTask(task.id),
+                  ticketDeleteShortcutDisabled: saveState.isSaving || Boolean(taskDeleteDialogState),
                   onDragStart: (event) => handleBacklogTaskDragStart(task, event),
                   onDragEnd: handleBacklogTaskDragEnd,
                   onDragOver: (event) => {
@@ -1445,8 +1376,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
                   : null
               ),
               showComposer ? composer : null
-            ),
-            renderBacklogTaskContextMenu()
+            )
           );
         }
 
@@ -1503,16 +1433,19 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
           const backlogHeaderTitle = isReleaseBacklogView
             ? (selectedRelease.name || "Milestone")
             : "Backlog";
-          const backlogHeaderAction = isReleaseBacklogView && selectedRelease
-            ? React.createElement("button", {
-                type: "button",
-                className: "playground-files-control-button",
-                onClick: () => openReleaseComposerForEdit(selectedRelease),
-              },
-                React.createElement(Settings2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Settings")
-              )
-            : null;
+          const backlogHeaderAction = React.createElement(React.Fragment, null,
+            isReleaseBacklogView && selectedRelease
+              ? React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-control-button",
+                  onClick: () => openReleaseComposerForEdit(selectedRelease),
+                },
+                  React.createElement(Settings2, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Settings")
+                )
+              : null,
+            renderProjectAppHeaderMilestoneSelector()
+          );
           return renderBacklogTaskListView({
             headerTitle: backlogHeaderTitle,
             headerLeading: renderProjectWorkViewTabs(),
@@ -1544,7 +1477,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
               : null,
             allowManualDrag: !isReleaseBacklogView,
             groupRootTasksByRelease: !isReleaseBacklogView,
-            showComposer: true,
+            showComposer: false,
             listFooter: null,
             composer: React.createElement("div", {
                 className: "playground-tasks-backlog-composer-shell" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""),

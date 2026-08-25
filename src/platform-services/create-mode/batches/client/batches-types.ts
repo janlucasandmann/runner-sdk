@@ -55,6 +55,7 @@ export interface BatchPreparedProjectTicket {
   threadId: string;
   threadTitle: string;
   taskPrompt: string;
+  batchJob: BatchJob;
 }
 
 export interface BatchCreatorIdentity {

@@ -10,11 +10,14 @@ export interface PlatformConfirmationModalProps {
   description?: ReactNode;
   confirmLabel?: ReactNode;
   confirmingLabel?: ReactNode;
+  secondaryActionLabel?: ReactNode;
+  secondaryActionPendingLabel?: ReactNode;
   cancelLabel?: ReactNode;
   tone?: PlatformConfirmationModalTone;
   errorFallback?: string;
   onCancel: () => void;
   onConfirm: () => void | Promise<void>;
+  onSecondaryAction?: () => void | Promise<void>;
 }
 
 export function PlatformConfirmationModal({
@@ -23,19 +26,23 @@ export function PlatformConfirmationModal({
   description,
   confirmLabel = "Confirm",
   confirmingLabel = "Working...",
+  secondaryActionLabel,
+  secondaryActionPendingLabel = "Working...",
   cancelLabel = "Cancel",
   tone = "default",
   errorFallback = "The action could not be completed.",
   onCancel,
   onConfirm,
+  onSecondaryAction,
 }: PlatformConfirmationModalProps) {
   const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
-  const [pending, setPending] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"confirm" | "secondary" | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const pending = pendingAction !== null;
 
   useEffect(() => {
     if (open) return;
-    setPending(false);
+    setPendingAction(null);
     setErrorMessage("");
   }, [open]);
 
@@ -43,16 +50,19 @@ export function PlatformConfirmationModal({
     if (!pending) onCancel();
   };
 
-  const handleConfirm = async () => {
+  const handleAction = async (
+    action: "confirm" | "secondary",
+    invoke: () => void | Promise<void>,
+  ) => {
     if (pending) return;
-    setPending(true);
+    setPendingAction(action);
     setErrorMessage("");
     try {
-      await onConfirm();
+      await invoke();
     } catch (error) {
       setErrorMessage(error instanceof Error && error.message ? error.message : errorFallback);
     } finally {
-      setPending(false);
+      setPendingAction(null);
     }
   };
 
@@ -82,13 +92,24 @@ export function PlatformConfirmationModal({
           >
             {cancelLabel}
           </PlatformSecondaryButton>
+          {onSecondaryAction ? (
+            <PlatformSecondaryButton
+              size="medium"
+              onClick={() => void handleAction("secondary", onSecondaryAction)}
+              disabled={pending}
+            >
+              {pendingAction === "secondary"
+                ? secondaryActionPendingLabel
+                : secondaryActionLabel}
+            </PlatformSecondaryButton>
+          ) : null}
           <PlatformPrimaryButton
             size="medium"
             className={tone === "destructive" ? "is-destructive" : ""}
-            onClick={() => void handleConfirm()}
+            onClick={() => void handleAction("confirm", onConfirm)}
             disabled={pending}
           >
-            {pending ? confirmingLabel : confirmLabel}
+            {pendingAction === "confirm" ? confirmingLabel : confirmLabel}
           </PlatformPrimaryButton>
         </>
       }

@@ -243,18 +243,18 @@ describe("metronome workflow log state", () => {
     );
   });
 
-  it("keeps spacing inside the workflow canvas while preserving a compact outer radius", () => {
+  it("keeps spacing inside the workflow canvas and preserves its current surface styling", () => {
     expect(activityCoreCss).toMatch(
-      /\.tb-log-metronome-minimap\s*\{[^}]*border-radius:\s*10px/,
+      /\.tb-log-metronome-minimap\s*\{[^}]*border-radius:\s*20px/,
     );
     expect(activityCoreCss).toMatch(
       /\.tb-log-metronome-minimap\s*\{[^}]*overflow:\s*hidden/,
     );
     expect(activityCoreCss).toMatch(
-      /\.tb-log-metronome-minimap\s*\{[^}]*background:\s*rgba\(255,\s*255,\s*255,\s*0\.025\)/,
+      /\.tb-log-metronome-minimap\s*\{[^}]*background:\s*rgba\(255,\s*255,\s*255,\s*0\.1\)/,
     );
     expect(activityCoreCss).toMatch(
-      /\.tb-log-metronome-workflow-header\s*\{[^}]*background:\s*#131313/,
+      /\.tb-log-metronome-workflow-header\s*\{[^}]*background:\s*#262626/,
     );
     expect(activityCoreCss).toMatch(
       /\.tb-log-metronome-minimap-canvas\s*\{[^}]*padding:\s*20px/,
@@ -269,13 +269,19 @@ describe("metronome workflow log state", () => {
       /\.tb-log-metronome-minimap-node-title\s*\{[^}]*text-overflow:\s*ellipsis/,
     );
     expect(activityCoreCss).toMatch(
-      /\.tb-log-metronome-minimap-node\s*\{[^}]*background:\s*#171717/,
+      /\.tb-log-metronome-minimap-node\s*\{[^}]*background:\s*#262626/,
     );
   });
 
   it("uses regular weight for compact activity titles", () => {
     expect(activityCoreCss).toMatch(
       /\.tb-log-compact-action-title\s*\{[^}]*font-weight:\s*400/,
+    );
+  });
+
+  it("keeps centralized compact log lines visually transparent", () => {
+    expect(activityCoreCss).toMatch(
+      /\.tb-log-compact-action\s*\{[^}]*background:\s*transparent/,
     );
   });
 });

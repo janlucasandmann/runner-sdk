@@ -9,6 +9,11 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
         }, [selectedTaskId]);
 
         useEffect(() => {
+          setProjectComputerChangeDialog(null);
+          setProjectOverviewSidebarComputerSearchQuery("");
+        }, [selectedProjectId]);
+
+        useEffect(() => {
           if (
             !selectedTaskId
             || (
@@ -25,7 +30,6 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
           boardToolbarPopover
           || backlogToolbarPopover
           || releaseBacklogToolbarPopover
-          || backlogTaskContextMenu
           || taskStatusMenuState
           || taskDetailPopover
           || taskDetailSelectPopover
@@ -94,7 +98,6 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
           return () => window.removeEventListener("keydown", handleTaskNavigationKeyDown);
         }, [
           backlogNavigationTaskIds,
-          backlogTaskContextMenu,
           backlogToolbarPopover,
           boardBlockedPickerState,
           boardNavigationTaskIds,
@@ -199,6 +202,87 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
           selectedProjectId,
           selectedTaskId,
           taskDetailSelectPopover,
+        ]);
+
+        useEffect(() => {
+          if (
+            taskView !== "overview"
+            || (projectOverviewHomeTab !== "general" && projectOverviewHomeTab !== "rules")
+            || !selectedProjectId
+            || !selectedProject
+            || projectTaskDetailScreenOpen
+            || projectOverviewSidebarCollapsed
+          ) {
+            return undefined;
+          }
+
+          function handleProjectOverviewSidebarShortcut(event) {
+            if (
+              event.defaultPrevented
+              || event.metaKey
+              || event.ctrlKey
+              || event.altKey
+              || event.repeat
+            ) {
+              return;
+            }
+
+            const key = String(event.key || "").toLowerCase();
+            if (projectOverviewSidebarPropertyPopover === "status" && /^[1-6]$/.test(key)) {
+              const statusOption = PLAYGROUND_PROJECT_STATUS_OPTIONS[Number(key) - 1];
+              if (!statusOption) {
+                return;
+              }
+              event.preventDefault();
+              event.stopPropagation();
+              selectProjectOverviewSidebarStatus(statusOption.id);
+              return;
+            }
+            if (projectOverviewSidebarPropertyPopover === "priority" && /^[1-4]$/.test(key)) {
+              const priorityOption = PLAYGROUND_TASK_PRIORITY_OPTIONS[Number(key) - 1];
+              if (!priorityOption) {
+                return;
+              }
+              event.preventDefault();
+              event.stopPropagation();
+              selectProjectOverviewSidebarPriority(priorityOption.id);
+              return;
+            }
+
+            const shortcutPopoverId = key === "s"
+              ? "status"
+              : (key === "p" ? "priority" : "");
+            if (
+              !shortcutPopoverId
+              || event.shiftKey
+              || isTaskKeyboardNavigationBlocked
+              || projectOverviewSidebarPropertyPopover
+              || isBoardTaskKeyboardNavigationBlockedTarget(event.target)
+              || document.querySelector(".platform-modal-backdrop.is-visible, [role='dialog'][aria-modal='true']")
+            ) {
+              return;
+            }
+
+            event.preventDefault();
+            if (shortcutPopoverId === "status") {
+              setProjectOverviewSidebarStatusSearchQuery("");
+            } else {
+              setProjectOverviewSidebarPrioritySearchQuery("");
+            }
+            setProjectOverviewSidebarPropertyPopover(shortcutPopoverId);
+          }
+
+          window.addEventListener("keydown", handleProjectOverviewSidebarShortcut, true);
+          return () => window.removeEventListener("keydown", handleProjectOverviewSidebarShortcut, true);
+        }, [
+          isTaskKeyboardNavigationBlocked,
+          projectOverviewHomeTab,
+          projectOverviewSidebarCollapsed,
+          projectOverviewSidebarPropertyPopover,
+          projectTaskDetailScreenOpen,
+          selectedProject?.id,
+          selectedProjectId,
+          taskView,
         ]);
 
         useEffect(() => {
@@ -1250,6 +1334,7 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
 	          setProjectRuleComposerOpen(false);
 	          setProjectRuleComposerVisible(false);
 	          setProjectRuleComposerClosing(false);
+	          setProjectRuleDeleteDialogState(null);
 	          setProjectRulesSaveState({
 	            isSaving: false,
 	            error: "",

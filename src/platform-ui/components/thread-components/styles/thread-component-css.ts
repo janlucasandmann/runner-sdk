@@ -756,6 +756,50 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   background: transparent;
 }
 
+.platform-popup-submenu.platform-popup-anchor {
+  width: 100%;
+  display: block;
+}
+
+.platform-popup-submenu__trigger.tb-popup-row {
+  min-width: 0;
+}
+
+.platform-popup-submenu__leading,
+.platform-popup-submenu__chevron {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.platform-popup-submenu__label {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-popup-submenu__detail {
+  min-width: 0;
+  max-width: 92px;
+  margin-left: auto;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.5);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-popup-submenu__chevron {
+  margin-left: -4px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.platform-popup-submenu__surface.platform-popup-surface {
+  min-width: 0;
+}
+
 .platform-popup-surface .tb-popup-check-slot {
   display: inline-flex;
   align-items: center;
@@ -2149,7 +2193,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .platform-modal-header {
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   flex: 0 0 auto;
   min-width: 0;
@@ -5789,7 +5833,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   padding: 12px;
   border-radius: 15px;
   border: 0;
-  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.05));
+  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.075));
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   box-shadow: inset 0 0 0 1px var(--tb-task-preview-border, rgba(255, 255, 255, 0.08)), 0px 2px 5px rgba(0, 0, 0, 0.15);
@@ -5817,7 +5861,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-task-preview-card:disabled:hover {
-  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.05));
+  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.075));
 }
 
 .tb-runner-chat .tb-task-preview-card:focus-visible {
@@ -5885,6 +5929,10 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-runner-chat .tb-task-preview-type-badge.is-subtask {
   background: linear-gradient(180deg, rgba(102, 166, 255, 1) 0%, rgba(38, 96, 188, 1) 100%);
+}
+
+.tb-runner-chat .tb-task-preview-type-badge.is-loop {
+  background: linear-gradient(180deg, #9a72df 0%, #6542a8 100%);
 }
 
 .tb-runner-chat .tb-task-preview-type-icon {
@@ -6020,7 +6068,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-mission-control-preview-card:hover {
-  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.05));
+  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.075));
 }
 
 .tb-runner-chat .tb-mission-control-preview-header {
@@ -7259,27 +7307,11 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   max-width: 980px;
   position: relative;
   z-index: 0;
-  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
   overflow: hidden;
   background: transparent;
-  box-shadow: 0 0 0 1px var(--tb-task-input-outline);
-}
-
-.tb-runner-chat .tb-run-summary-json-document::before {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: 10px;
-  padding: 1px;
-  background: var(--tb-task-input-border);
-  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-  mask-clip: content-box, border-box;
-  mask-composite: exclude;
-  mask-origin: content-box, border-box;
-  mask-repeat: repeat, repeat;
-  mask-size: auto, auto;
+  box-shadow: none;
 }
 
 .tb-runner-chat .tb-run-summary-json-document > * {
@@ -7323,42 +7355,14 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-runner-chat .tb-run-summary-json-mode-switch {
   flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   min-width: 136px;
-  height: 30px;
-  padding: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.1);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  line-height: 1rem;
 }
 
-.tb-runner-chat .tb-run-summary-json-mode-button {
+.tb-runner-chat .tb-run-summary-json-mode-switch .platform-switch__option {
   min-width: 0;
   flex: 1 1 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border: 0;
-  border-radius: 20px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1rem;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
-}
-
-.tb-runner-chat .tb-run-summary-json-mode-button.is-active {
-  background: rgba(255, 255, 255, 0.3);
-  color: #fff;
 }
 
 .tb-runner-chat .tb-run-summary-json-body {
@@ -7810,7 +7814,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   gap: 8px;
   appearance: none;
   border: 0;
-  background: #262626;
+  background: transparent;
   padding: 0;
   color: inherit;
   font: inherit;
@@ -7857,6 +7861,39 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   font-size: 13px;
   line-height: 1.35;
   font-weight: 400;
+}
+
+.tb-runner-chat
+  .tb-log-compact-action.is-project-scoped-list
+  .tb-log-compact-action-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.tb-runner-chat .tb-log-project-resource-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  color: #fff;
+}
+
+.tb-runner-chat .tb-log-project-resource-icon.is-task {
+  background: linear-gradient(180deg, #39b877 0%, #2b8b59 100%);
+}
+
+.tb-runner-chat .tb-log-project-resource-icon.is-milestone {
+  background: linear-gradient(180deg, #287c4d 0%, #17492f 100%);
+}
+
+.tb-runner-chat .tb-log-project-resource-icon svg {
+  width: 12px;
+  height: 12px;
+  display: block;
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.28));
 }
 
 .tb-runner-chat .tb-log-card-metronome-workflow {
@@ -7906,7 +7943,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   cursor: default;
 }
 
-.tb-runner-chat .tb-log-metronome-workflow-canvas-button:not(:disabled):focus-visible {
+.tb-runner-chat
+  .tb-log-metronome-workflow-canvas-button:not(:disabled):focus-visible {
   outline: 1px solid rgba(77, 163, 255, 0.72);
   outline-offset: -1px;
 }
@@ -7932,7 +7970,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   gap: 8px;
 }
 
-.tb-runner-chat .tb-log-metronome-workflow-identity .tb-log-compact-action-title {
+.tb-runner-chat
+  .tb-log-metronome-workflow-identity
+  .tb-log-compact-action-title {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -7981,7 +8021,11 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   justify-content: flex-end;
   position: relative;
   padding: 20px;
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.12) 1px,
+    transparent 1px
+  );
   background-position: 0 0;
   background-size: 18px 18px;
 }
@@ -8435,19 +8479,25 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   padding: 12px;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-browser.is-detail-open .tb-log-card-panel {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-browser.is-detail-open
+  .tb-log-card-panel {
   padding: 12px;
   border: 0;
   background: transparent;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-subagent.is-detail-open .tb-log-card-panel {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-subagent.is-detail-open
+  .tb-log-card-panel {
   padding: 12px;
   border: 0;
   background: transparent;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-deep-research.is-detail-open .tb-log-card-panel {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-deep-research.is-detail-open
+  .tb-log-card-panel {
   padding: 12px 12px 0;
   border: 0;
   background: transparent;
@@ -8485,12 +8535,18 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   width: 100%;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-image-generation-preview {
   justify-content: flex-start;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-generation-preview .tb-log-card-panel::before,
-.tb-runner-chat .tb-log-card.tb-log-card-video-generation .tb-log-card-panel::before {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-generation-preview
+  .tb-log-card-panel::before,
+.tb-runner-chat
+  .tb-log-card.tb-log-card-video-generation
+  .tb-log-card-panel::before {
   display: none;
   content: none;
 }
@@ -8516,8 +8572,12 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .tb-log-media-preview-layout-video,
 .tb-runner-chat .tb-log-media-preview-layout-video .tb-log-media-preview-visual,
 .tb-runner-chat .tb-log-media-preview-layout-video .tb-log-media-lazy-preview,
-.tb-runner-chat .tb-log-media-preview-layout-video .tb-runner-lazy-media-preview,
-.tb-runner-chat .tb-log-media-preview-layout-video .tb-video-generation-preview-shell {
+.tb-runner-chat
+  .tb-log-media-preview-layout-video
+  .tb-runner-lazy-media-preview,
+.tb-runner-chat
+  .tb-log-media-preview-layout-video
+  .tb-video-generation-preview-shell {
   width: 100%;
   max-width: 100%;
 }
@@ -8553,7 +8613,14 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   padding: 0;
   background: transparent;
   color: rgba(255, 255, 255, 0.78);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
@@ -8567,7 +8634,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   justify-content: flex-start;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-video-generation-preview {
   display: block;
   width: 100%;
   max-width: 100%;
@@ -8577,7 +8646,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   object-fit: contain;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview-loading {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-image-generation-preview-loading {
   aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
@@ -8592,7 +8663,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   background: rgba(255, 255, 255, 0.1);
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview-loading {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-video-generation-preview-loading {
   aspect-ratio: auto;
   display: flex;
   align-items: center;
@@ -8606,7 +8679,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   background: rgba(255, 255, 255, 0.1);
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview-shell {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-video-generation-preview-shell {
   position: relative;
   width: 100%;
   max-width: 100%;
@@ -8644,7 +8719,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   cursor: pointer;
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  transition: background 160ms ease, color 160ms ease;
+  transition:
+    background 160ms ease,
+    color 160ms ease;
 }
 
 .tb-runner-chat .tb-video-generation-show-prompt-button:hover,
@@ -8675,7 +8752,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   z-index: 1;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview-error {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-video-generation-preview-error {
   aspect-ratio: 16 / 9;
   display: flex;
   align-items: center;
@@ -8692,7 +8771,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   justify-content: center;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview-image {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-image-generation-preview-image {
   height: auto;
   max-height: 500px;
   border-radius: 10px;
@@ -8712,7 +8793,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   padding: 0;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-understanding .tb-log-card-panel {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-understanding
+  .tb-log-card-panel {
   padding: 12px;
 }
 
@@ -8741,7 +8824,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   justify-content: flex-start;
 }
 
-.tb-runner-chat .tb-image-understanding-layout.is-landscape .tb-image-understanding-preview {
+.tb-runner-chat
+  .tb-image-understanding-layout.is-landscape
+  .tb-image-understanding-preview {
   flex-basis: auto;
   width: 100%;
 }
@@ -8772,11 +8857,15 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   min-width: 0;
 }
 
-.tb-runner-chat .tb-image-understanding-layout.is-multiple .tb-image-understanding-preview {
+.tb-runner-chat
+  .tb-image-understanding-layout.is-multiple
+  .tb-image-understanding-preview {
   flex-basis: min(520px, 54%);
 }
 
-.tb-runner-chat .tb-image-understanding-layout.is-multiple .tb-image-understanding-preview-item {
+.tb-runner-chat
+  .tb-image-understanding-layout.is-multiple
+  .tb-image-understanding-preview-item {
   flex: 0 0 min(220px, calc((100% - 20px) / 3));
   min-width: 140px;
 }
@@ -8803,16 +8892,24 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   border-radius: 10px;
 }
 
-.tb-runner-chat .tb-image-understanding-layout.is-multiple .tb-image-understanding-lazy-preview,
-.tb-runner-chat .tb-image-understanding-layout.is-multiple .tb-image-understanding-preview-surface {
+.tb-runner-chat
+  .tb-image-understanding-layout.is-multiple
+  .tb-image-understanding-lazy-preview,
+.tb-runner-chat
+  .tb-image-understanding-layout.is-multiple
+  .tb-image-understanding-preview-surface {
   min-height: 140px;
 }
 
-.tb-runner-chat .tb-image-understanding-layout.is-multiple .tb-image-understanding-preview-image {
+.tb-runner-chat
+  .tb-image-understanding-layout.is-multiple
+  .tb-image-understanding-preview-image {
   max-height: 180px;
 }
 
-.tb-runner-chat .tb-image-understanding-layout.is-landscape .tb-image-understanding-preview-image {
+.tb-runner-chat
+  .tb-image-understanding-layout.is-landscape
+  .tb-image-understanding-preview-image {
   width: auto;
   max-width: 100%;
 }
@@ -21946,9 +22043,42 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   backdrop-filter: none;
 }
 
-/* Ticket identifiers stay readable on every card color. */
+/* Ticket identifiers stay secondary but readable on every card color. */
 .platform-ticket-item__card-number.playground-tasks-lane-card-ticket {
-  color: #fff !important;
+  color: rgba(255, 255, 255, 0.62) !important;
+}
+
+.platform-ticket-item__card-summary {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.platform-ticket-item__card-header-leading {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.platform-ticket-item__card-summary .platform-ticket-item__card-title {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: block;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.platform-ticket-item__card-status {
+  flex: 0 0 auto;
+}
+
+.platform-ticket-item__context-menu-anchor {
+  display: contents;
 }
 
 .playground-tasks-detail-color-value {
@@ -21965,7 +22095,8 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   border-radius: 999px;
   flex: 0 0 auto;
   background: var(--playground-task-color-accent, #016bcb);
-  box-shadow: inset 0 0 0 1px var(--playground-task-color-border, rgba(1, 107, 203, 0.2));
+  box-shadow: inset 0 0 0 1px
+    var(--playground-task-color-border, rgba(255, 255, 255, 0.05));
 }
 
 .playground-tasks-detail-color-menu-swatch {

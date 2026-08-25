@@ -204,6 +204,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function normalizeProjectMe
               setProjectTaskDetailScreenOpen(false);
               setDraftTask(null);
               setProjectOverviewPermissionTeamId("");
+              setProjectOverviewSettingsSection("access");
               setProjectOverviewHomeTab("permissions");
             },
           };
@@ -219,6 +220,79 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function normalizeProjectMe
           return (Array.isArray(currentMentions) ? currentMentions : [])
             .filter((entry) => !(entry?.kind === kind && entry?.id === id))
             .concat({ kind, id, label });
+        }
+
+        function reconcileProjectMentionDispatches(responseData, options = {}) {
+          const dispatches = (Array.isArray(responseData?.mentionDispatches)
+            ? responseData.mentionDispatches
+            : [])
+            .filter((dispatch) => (
+              String(dispatch?.kind || "").trim().toLowerCase() === "agent"
+              && String(dispatch?.threadId || "").trim()
+            ));
+          if (!dispatches.length) return [];
+
+          const projectRecord = options?.project
+            && typeof options.project === "object"
+            && !Array.isArray(options.project)
+              ? options.project
+              : selectedProject;
+          const projectId = String(
+            options?.projectId
+              || projectRecord?.id
+              || selectedProjectId
+              || ""
+          ).trim();
+          const projectName = String(
+            options?.projectName
+              || projectRecord?.name
+              || selectedProject?.name
+              || "project"
+          ).trim() || "project";
+          const environmentId = String(
+            options?.environmentId
+              || projectRecord?.defaultEnvironmentId
+              || projectRecord?.environmentId
+              || ""
+          ).trim();
+          const body = String(options?.body || "").trim();
+          const source = options?.source
+            && typeof options.source === "object"
+            && !Array.isArray(options.source)
+              ? options.source
+              : null;
+          const nowIso = new Date().toISOString();
+
+          dispatches.forEach((dispatch) => {
+            const threadId = String(dispatch.threadId || "").trim();
+            const agentId = String(dispatch.id || "").trim();
+            if (!threadId) return;
+            if (typeof onBackgroundThreadCreated !== "function") return;
+            const threadRecord = {
+              id: threadId,
+              title: "Reply to mention in " + projectName,
+              status: "queued",
+              projectId: projectId || undefined,
+              environmentId: environmentId || undefined,
+              agentId: agentId || undefined,
+              appId: "project-mention",
+              task: body || undefined,
+              createdAt: nowIso,
+              updatedAt: nowIso,
+              metadata: {
+                projectMention: {
+                  ...(source ? { source } : {}),
+                  ...(agentId ? { agentId } : {}),
+                },
+              },
+            };
+            onBackgroundThreadCreated(threadId, {
+              threadRecord,
+              status: "queued",
+            });
+          });
+
+          return dispatches;
         }
 
         function updateDraftTask(updater, options = {}) {
@@ -1414,6 +1488,18 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function normalizeProjectMe
               throw new Error(data?.message || data?.error || "Failed to add comment.");
             }
 
+            reconcileProjectMentionDispatches(data, {
+              project: selectedProject,
+              projectId: draftTask.projectId,
+              environmentId: activeTaskEnvironmentId,
+              body: nextCommentBody,
+              source: {
+                type: "ticket_comment",
+                ticketId: draftTask.id,
+                commentId: data?.comment?.id,
+              },
+            });
+
             const createdCommentResponse = getPlaygroundTaskCommentResponseRecord(data);
             const createdComment = createdCommentResponse && parentCommentId && !createdCommentResponse.parentCommentId
               ? {
@@ -1864,6 +1950,10 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function normalizeProjectMe
         }
 
         function openProjectTaskDetailScreen(taskId) {
+          if (isDetailOnlyMode && typeof onOpenTaskFullScreen === "function") {
+            onOpenTaskFullScreen(taskId);
+            return;
+          }
           handleSelectTask(taskId, { screen: true });
         }
 

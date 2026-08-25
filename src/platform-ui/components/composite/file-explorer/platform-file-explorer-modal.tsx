@@ -18,6 +18,7 @@ export interface PlatformFileExplorerModalProps
   title: ReactNode;
   sidebarHeader?: ReactNode;
   sidebar: ReactNode;
+  showSidebar?: boolean;
   contentHeader: ReactNode;
   contentNavigation?: ReactNode;
   children: ReactNode;
@@ -60,6 +61,7 @@ export function PlatformFileExplorerModal({
   title,
   sidebarHeader,
   sidebar,
+  showSidebar = true,
   contentHeader,
   contentNavigation,
   children,
@@ -105,7 +107,10 @@ export function PlatformFileExplorerModal({
       onClose={onClose}
     >
       <PlatformModalSplitLayout
-        className="platform-file-explorer"
+        className={joinClassNames(
+          "platform-file-explorer",
+          !showSidebar && "has-no-sidebar",
+        )}
         onPointerDownCapture={(event) => {
           if (preview == null || !onPreviewClose) return;
           const target = event.target;
@@ -120,23 +125,25 @@ export function PlatformFileExplorerModal({
           onPreviewClose();
         }}
       >
-        <PlatformModalSidebar
-          title={sidebarHeader === undefined ? title : sidebarHeader}
-          className={joinClassNames(
-            "platform-file-explorer__sidebar",
-            !showSidebarHeader && "has-no-header",
-            sidebarClassName,
-          )}
-          titleClassName={joinClassNames(
-            sidebarHeader != null && "platform-file-explorer__sidebar-header-content",
-          )}
-          bodyClassName={joinClassNames(
-            "platform-file-explorer__sidebar-body",
-            sidebarBodyClassName,
-          )}
-        >
-          {sidebar}
-        </PlatformModalSidebar>
+        {showSidebar ? (
+          <PlatformModalSidebar
+            title={sidebarHeader === undefined ? title : sidebarHeader}
+            className={joinClassNames(
+              "platform-file-explorer__sidebar",
+              !showSidebarHeader && "has-no-header",
+              sidebarClassName,
+            )}
+            titleClassName={joinClassNames(
+              sidebarHeader != null && "platform-file-explorer__sidebar-header-content",
+            )}
+            bodyClassName={joinClassNames(
+              "platform-file-explorer__sidebar-body",
+              sidebarBodyClassName,
+            )}
+          >
+            {sidebar}
+          </PlatformModalSidebar>
+        ) : null}
         <PlatformModalContent
           className={joinClassNames("platform-file-explorer__content", contentClassName)}
           headerClassName={joinClassNames(

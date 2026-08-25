@@ -1315,10 +1315,74 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
 	        return String(value || "").replace(/\\r\\n/g, "\\n").trim();
 	      }
 
+	      function normalizePlaygroundProjectRuleTitle(value) {
+	        return String(value || "")
+	          .replace(/\\r?\\n/g, " ")
+	          .replace(/\\s+/g, " ")
+	          .trim();
+	      }
+
+	      function parsePlaygroundProjectRuleEntry(value, index = 0) {
+	        const normalized = normalizePlaygroundProjectRuleEntry(value);
+	        if (!normalized) {
+	          return {
+	            title: "",
+	            description: "",
+	            serialized: "",
+	          };
+	        }
+	        const lines = normalized.split("\\n");
+	        const headingMatch = lines[0].match(/^###\\s+Rule:\\s*(.+)$/i);
+	        if (headingMatch) {
+	          return {
+	            title: normalizePlaygroundProjectRuleTitle(headingMatch[1]),
+	            description: normalizePlaygroundProjectRuleEntry(lines.slice(1).join("\\n")),
+	            serialized: normalized,
+	          };
+	        }
+	        return {
+	          title: "Rule " + String(index + 1),
+	          description: normalized,
+	          serialized: normalized,
+	        };
+	      }
+
+	      function createPlaygroundProjectRuleEntry(title, description) {
+	        const normalizedTitle = normalizePlaygroundProjectRuleTitle(title);
+	        const normalizedDescription = normalizePlaygroundProjectRuleEntry(description);
+	        if (!normalizedTitle || !normalizedDescription) {
+	          return "";
+	        }
+	        return "### Rule: " + normalizedTitle + "\\n" + normalizedDescription;
+	      }
+
 	      function splitPlaygroundProjectRuleEntries(value) {
 	        const normalized = normalizePlaygroundProjectRuleEntry(value);
 	        if (!normalized) {
 	          return [];
+	        }
+	        const structuredEntryPattern = /^###\\s+Rule:\\s*.+$/gim;
+	        const structuredEntryStarts = [];
+	        let structuredEntryMatch = null;
+	        while ((structuredEntryMatch = structuredEntryPattern.exec(normalized)) !== null) {
+	          structuredEntryStarts.push(structuredEntryMatch.index);
+	        }
+	        if (structuredEntryStarts.length > 0) {
+	          const legacyPrefix = normalizePlaygroundProjectRuleEntry(
+	            normalized.slice(0, structuredEntryStarts[0])
+	          );
+	          const legacyEntries = legacyPrefix
+	            ? legacyPrefix
+	                .split(/\\n{2,}/)
+	                .map((entry) => normalizePlaygroundProjectRuleEntry(entry))
+	                .filter(Boolean)
+	            : [];
+	          const structuredEntries = structuredEntryStarts
+	            .map((start, index) => normalizePlaygroundProjectRuleEntry(
+	              normalized.slice(start, structuredEntryStarts[index + 1] ?? normalized.length)
+	            ))
+	            .filter(Boolean);
+	          return [...legacyEntries, ...structuredEntries];
 	        }
 	        return normalized
 	          .split(/\\n{2,}/)
@@ -1611,6 +1675,8 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           previewUrl: typeof item.previewUrl === "string" && item.previewUrl.trim() ? item.previewUrl.trim() : undefined,
           repoFullName: typeof item.repoFullName === "string" && item.repoFullName.trim() ? item.repoFullName.trim() : undefined,
           ref: typeof item.ref === "string" && item.ref.trim() ? item.ref.trim() : undefined,
+          branchPrefix: typeof item.branchPrefix === "string" ? item.branchPrefix.trim() : undefined,
+          createPullRequests: typeof item.createPullRequests === "boolean" ? item.createPullRequests : undefined,
         };
       }
 
@@ -1702,6 +1768,8 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
             repoFullName,
             repoName: repoFullName.split("/").pop() || repoFullName,
             branch,
+            branchPrefix: typeof item.branchPrefix === "string" ? item.branchPrefix : "computer-agents/",
+            createPullRequests: item.createPullRequests !== false,
           });
         });
         return references;
@@ -1784,6 +1852,8 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
             const details = [
               item.repoFullName ? ("repo=" + item.repoFullName) : null,
               item.ref ? ("branch=" + item.ref) : null,
+              item.repoFullName ? ("branch-prefix=" + (item.branchPrefix || "computer-agents/")) : null,
+              item.repoFullName ? ("pull-requests=" + (item.createPullRequests === false ? "do-not-create" : "create")) : null,
               item.path ? ("path=" + item.path) : null,
               item.isFolder ? "folder=true" : null,
             ].filter(Boolean);
@@ -2518,7 +2588,11 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
         (Array.isArray(items) ? items : []).forEach((item) => {
           const normalizedItem = normalizePlaygroundTaskConnectorItem(item);
           if (normalizedItem?.id) {
-            next.set(normalizedItem.id, normalizedItem);
+            const mergedItem = { ...(next.get(normalizedItem.id) || {}) };
+            Object.entries(normalizedItem).forEach(([key, value]) => {
+              if (value !== undefined) mergedItem[key] = value;
+            });
+            next.set(normalizedItem.id, mergedItem);
           }
         });
         return next;

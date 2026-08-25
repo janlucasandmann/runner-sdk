@@ -2541,7 +2541,7 @@
                   ? null
                   : React.createElement(PlatformSwitch, {
                       className: "playground-tasks-nav playground-tasks-project-nav-switch",
-                      value: activeProjectView,
+                      value: isProjectSettingsView ? "" : activeProjectView,
                       options: [
                         { value: "overview", label: "Progress" },
                         { value: "backlog", label: "Backlog" },
@@ -3377,63 +3377,16 @@
                                   contentMode === "chat" && currentThreadId
                                     ? React.createElement(PlatformIconButton, {
                                         type: "button",
-                                        size: "compact",
+                                        size: "medium",
                                         className: "playground-thread-execution-workbench-button",
+                                        active: threadExecutionWorkbenchOpen,
                                         "aria-label": threadExecutionWorkbenchOpen
                                           ? "Close execution details"
                                           : "Open execution details",
                                         "aria-pressed": threadExecutionWorkbenchOpen,
                                         title: "Execution details",
-                                        disabled: !threadExecutionWorkbenchAvailable,
                                         onClick: () => setThreadExecutionWorkbenchOpen((current) => !current),
-                                      }, React.createElement(PanelRight, { strokeWidth: 1.75 }))
-                                    : null,
-                                  shouldShowThreadTaskListButton
-                                    ? React.createElement("div", {
-                                    className: "playground-thread-task-list-popup-shell playground-tasks-toolbar-popup-shell",
-                                    ref: threadTaskListMenuRef,
-                                  },
-                                    React.createElement("button", {
-                                      type: "button",
-                                      className: "playground-content-menu-button",
-                                      "aria-label": "Thread task list",
-                                      "aria-expanded": threadTaskListMenuOpen ? "true" : "false",
-                                      onClick: toggleThreadTaskListMenu,
-                                      disabled: !activeThreadTaskListTargetId,
-                                    }, React.createElement(ListTodo, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-                                    threadTaskListMenuOpen && activeThreadTaskListTargetId
-                                      ? React.createElement(PlatformPopupSurface, {
-                                          className: "playground-tasks-toolbar-popup-menu playground-thread-task-list-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                                          onClick: (event) => event.stopPropagation(),
-                                        },
-                                          React.createElement("div", { className: "playground-thread-task-list-popup-header" },
-                                            React.createElement("div", { className: "playground-thread-task-list-popup-title" }, "Task List"),
-                                            React.createElement("div", { className: "playground-thread-task-list-popup-count" }, activeThreadTaskListCountLabel)
-                                          ),
-                                          activeThreadTaskListState.status === "loading" && activeThreadTaskListTodos.length === 0
-                                            ? React.createElement("div", { className: "playground-thread-task-list-popup-state" }, "Loading task list...")
-                                            : activeThreadTaskListState.status === "error" && activeThreadTaskListTodos.length === 0
-                                              ? React.createElement("div", { className: "playground-thread-task-list-popup-state" }, activeThreadTaskListState.error || "Task list unavailable.")
-                                              : activeThreadTaskListTodos.length > 0
-                                                ? React.createElement("div", { className: "playground-thread-task-list-popup-items" },
-                                                    activeThreadTaskListTodos.map((todo, index) =>
-                                                      React.createElement("div", {
-                                                        key: String(index) + ":" + String(todo?.text || ""),
-                                                        className: "playground-thread-task-list-popup-item",
-                                                      },
-                                                        todo?.completed
-                                                          ? React.createElement(CircleCheckBig, { className: "playground-thread-task-list-popup-item-icon is-complete", strokeWidth: 1.8 })
-                                                          : React.createElement(Circle, { className: "playground-thread-task-list-popup-item-icon", strokeWidth: 1.8 }),
-                                                        React.createElement("span", {
-                                                          className: "playground-thread-task-list-popup-item-text" + (todo?.completed ? " is-complete" : ""),
-                                                        }, todo?.text || "Untitled task")
-                                                      )
-                                                    )
-                                                  )
-                                                : React.createElement("div", { className: "playground-thread-task-list-popup-state" }, "No task list has been published for this thread yet.")
-                                        )
-                                      : null
-                                    )
+                                      }, React.createElement(ClipboardList, { strokeWidth: 1.75 }))
                                     : null,
                                 )
                               : null,
@@ -4101,6 +4054,7 @@
                                 }
                                 openThreadActionMenu(event, normalizedThreadId, options?.threadRecord || null, options);
                               },
+                              onBackgroundThreadCreated: handleBackgroundThreadCreated,
                               onThreadStarted: (threadId, options = {}) => {
                                 const normalizedThreadId = String(threadId || "").trim();
                                 if (!normalizedThreadId) {
@@ -4278,7 +4232,13 @@
                                           source: "composer",
                                         });
                                       },
-                                      threadTaskPreview: selectedThreadTaskPreview || undefined,
+                                      initialSurfaceLoading: selectedThreadInitialSurfaceLoading,
+                                      threadTaskList: {
+                                        status: selectedThreadTaskListState.status,
+                                        error: selectedThreadTaskListState.error || "",
+                                        items: selectedThreadTaskListTodos,
+                                      },
+                                      threadTaskPreview: selectedThreadTaskPreviewForDisplay || undefined,
                                       threadMissionControlPreview: selectedThreadMissionControlPreview || undefined,
                                       followUpActions: selectedThreadFollowUpActions,
                                       followUpError: threadFollowUpActionState.error || "",
@@ -4333,6 +4293,35 @@
                                       },
                                       onResourcePreviewClick: async (resourcePreview) => {
                                         if (!resourcePreview) {
+                                          return;
+                                        }
+                                        if (resourcePreview.resourceType === "knowledge") {
+                                          const normalizedLibraryId = String(resourcePreview.id || "").trim();
+                                          const originThreadId = String(activeRunnerThreadId || currentThreadId || "").trim();
+                                          if (!normalizedLibraryId || !originThreadId) {
+                                            return;
+                                          }
+                                          let resolvedLibraryName = String(resourcePreview.name || "").trim();
+                                          if (!resolvedLibraryName || resolvedLibraryName === "Knowledge Library") {
+                                            try {
+                                              const response = await fetch(
+                                                proxyBackendBase + "/knowledge/" + encodeURIComponent(normalizedLibraryId),
+                                                { credentials: "include", cache: "no-store", headers: requestHeaders }
+                                              );
+                                              if (response.ok) {
+                                                const payload = await response.json();
+                                                resolvedLibraryName = String(payload?.library?.name || "").trim();
+                                              }
+                                            } catch {
+                                              // The resource still opens by immutable ID if its display name cannot be refreshed.
+                                            }
+                                          }
+                                          requestPlatformNavigation(() => openKnowledgeLibraryFromThread(
+                                            normalizedLibraryId,
+                                            resolvedLibraryName || "Knowledge Library",
+                                            originThreadId,
+                                            selectedThreadTitle || "Current thread"
+                                          ));
                                           return;
                                         }
                                         if (resourcePreview.resourceType === "environment") {
@@ -4783,6 +4772,7 @@
                                   }
                                   openThreadActionMenu(event, normalizedThreadId, options?.threadRecord || null, options);
                                 },
+                                onBackgroundThreadCreated: handleBackgroundThreadCreated,
                                 onThreadStarted: (threadId, options = {}) => {
                                   const normalizedThreadId = String(threadId || "").trim();
                                   if (!normalizedThreadId) {
@@ -4851,6 +4841,7 @@
                                   }
                                   setThreadTaskOpenRequest(null);
                                 },
+                                onOpenTaskFullScreen: openSelectedThreadTaskDetail,
                                 detailOnly: true,
                                 onCloseDetailOnly: () => {
                                   setThreadTaskOpenRequest(null);

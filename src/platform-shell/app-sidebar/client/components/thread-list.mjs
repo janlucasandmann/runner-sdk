@@ -81,7 +81,11 @@ export function createAppSidebarThreadListScript(options = {}) {
               : rawDisplayThreadTitle;
             const safeThreadId = typeof safeThread.id === "string" && safeThread.id.trim() ? safeThread.id.trim() : generateId("thread");
             const isActive = activeSidebarThreadId === safeThreadId;
-            const isRunning = String(safeThread?.status || "").trim().toLowerCase() === "running";
+            // The sidebar's running affordance represents active work, not only
+            // the narrow moment after a worker has transitioned to running.
+            // Background Threads are inserted optimistically as queued, and
+            // must already look active without requiring the user to open them.
+            const isRunning = isRunningThreadDisplayStatus(safeThread?.status);
             const needsPermissionAttention = isPendingPermissionThreadDisplayStatus(safeThread?.status) || permissionAttentionThreadIds.has(safeThreadId);
             const canManageThread = hasRealAccess && isRealThreadId(safeThreadId);
             const isMenuOpen = canManageThread && threadActionMenuState?.threadId === safeThreadId;
@@ -102,7 +106,7 @@ export function createAppSidebarThreadListScript(options = {}) {
               key: safeThreadId,
               className: (pinned ? "sidebar-pinned-button" : "sidebar-thread-item") + (isActive ? " is-active" : "") + (needsPermissionAttention ? " has-permission-attention" : "") + (metronomeChild ? " is-metronome-child" : ""),
             },
-              pinned
+              pinned && !isRunning
                 ? React.createElement(Pin, { className: "sidebar-pin-icon", strokeWidth: 1.75 })
                 : null,
               React.createElement("button", {
@@ -113,16 +117,20 @@ export function createAppSidebarThreadListScript(options = {}) {
               },
                 React.createElement("div", { className: "sidebar-thread-content" },
                   React.createElement("div", { className: "sidebar-thread-title-row" },
-                    threadProject
-                      ? React.createElement("span", {
-                          className: "sidebar-thread-project-icon" + (threadProject.isMissionControl ? " is-mission-control" : ""),
-                          title: threadProject.title,
-                          style: threadProject.color ? { color: threadProject.color } : undefined,
-                        }, React.createElement(ThreadProjectIcon, { strokeWidth: 1.85 }))
-                      : null,
                     isRunning
-                      ? React.createElement(Loader2, { className: "sidebar-thread-running-indicator", strokeWidth: 1.9 })
-                      : null,
+                      ? React.createElement("img", {
+                          className: "sidebar-thread-running-indicator",
+                          src: "/img/spinner.svg",
+                          alt: "",
+                          "aria-hidden": "true",
+                        })
+                      : threadProject
+                        ? React.createElement("span", {
+                            className: "sidebar-thread-project-icon" + (threadProject.isMissionControl ? " is-mission-control" : ""),
+                            title: threadProject.title,
+                            style: threadProject.color ? { color: threadProject.color } : undefined,
+                          }, React.createElement(ThreadProjectIcon, { strokeWidth: 1.85 }))
+                        : null,
                     needsPermissionAttention
                       ? React.createElement("span", { className: "sidebar-thread-attention-dot", title: "Permission needed" })
                       : null,
@@ -168,6 +176,7 @@ export function createAppSidebarThreadListScript(options = {}) {
             const fallbackMetronomeMeta = options?.metronomeChild ? getThreadMetronomeMetadata(fallbackThread) : null;
             const fallbackSafeThreadId = typeof fallbackThread.id === "string" && fallbackThread.id.trim() ? fallbackThread.id.trim() : generateId("thread");
             const fallbackMetaText = threadMetaLabel(fallbackThread);
+            const fallbackIsRunning = isRunningThreadDisplayStatus(fallbackThread?.status);
             const {
               taskTicketNumber,
               displayThreadTitle: fallbackRawDisplayThreadTitle,
@@ -192,7 +201,7 @@ export function createAppSidebarThreadListScript(options = {}) {
               key: fallbackSafeThreadId,
               className: (options?.pinned ? "sidebar-pinned-button" : "sidebar-thread-item") + (activeSidebarThreadId === fallbackSafeThreadId ? " is-active" : "") + (fallbackNeedsPermissionAttention ? " has-permission-attention" : "") + (options?.metronomeChild ? " is-metronome-child" : ""),
             },
-              options?.pinned
+              options?.pinned && !fallbackIsRunning
                 ? React.createElement(Pin, { className: "sidebar-pin-icon", strokeWidth: 1.75 })
                 : null,
               React.createElement("button", {
@@ -203,6 +212,14 @@ export function createAppSidebarThreadListScript(options = {}) {
               },
                 React.createElement("div", { className: "sidebar-thread-content" },
                   React.createElement("div", { className: "sidebar-thread-title-row" },
+                    fallbackIsRunning
+                      ? React.createElement("img", {
+                          className: "sidebar-thread-running-indicator",
+                          src: "/img/spinner.svg",
+                          alt: "",
+                          "aria-hidden": "true",
+                        })
+                      : null,
                     fallbackNeedsPermissionAttention
                       ? React.createElement("span", { className: "sidebar-thread-attention-dot", title: "Permission needed" })
                       : null,

@@ -66,6 +66,37 @@ function historicalTimelinePage() {
 }
 
 describe("historical thread connector metadata", () => {
+  it("uses a canonical thread-message source id when event payloads omit messageId", () => {
+    const sourceMessageId = "msg_project_mention_stable";
+    const page = normalizeRunnerThreadTimelinePage({
+      threadId,
+      items: [1, 2].map((sequence) => ({
+        id: `event-message-${sequence}`,
+        kind: "event",
+        runId,
+        sequence,
+        createdAt: `2026-08-04T08:00:0${sequence}.000Z`,
+        payload: {
+          type: "thread.message.created",
+          producerType: "user",
+          producerId: "user-1",
+          sourceType: "thread_message",
+          sourceId: sourceMessageId,
+          data: {
+            role: "user",
+            content: "@Spark please help",
+          },
+        },
+      })),
+    });
+    const projection = projectRunnerThreadTimelinePage(
+      createInitialRunnerThreadProjection(threadId),
+      page,
+    );
+
+    expect(Object.keys(projection.messagesById)).toEqual([sourceMessageId]);
+  });
+
   it("restores a connector chip from structured evidence in the message run", () => {
     const page = historicalTimelinePage();
     const projection = projectRunnerThreadTimelinePage(

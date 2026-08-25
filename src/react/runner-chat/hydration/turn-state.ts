@@ -30,6 +30,23 @@ export function isTurnResponseLog(log: RunnerLog): boolean {
 export interface RunnerBatchQueueReceipt {
   batchJobId: string | null;
   admissionReason: string | null;
+  batchStatus: string | null;
+  batchStartPolicy: string | null;
+}
+
+export function getRunnerBatchQueueReceiptLabel(
+  receipt: RunnerBatchQueueReceipt,
+): string {
+  if (receipt.admissionReason === "runtime_execution_capacity_exhausted") {
+    return "Moved to Batches because runtime capacity is full · starts automatically when capacity is available";
+  }
+  if (
+    receipt.batchStatus === "queued"
+    || receipt.batchStartPolicy === "when_capacity_available"
+  ) {
+    return "Queued in Batches · starts automatically when capacity is available";
+  }
+  return "Saved in Batches · start this job when you are ready";
 }
 
 export function getTurnBatchQueueReceipt(
@@ -67,6 +84,16 @@ export function getTurnBatchQueueReceipt(
       ? queueLog.metadata.admissionReason
       : typeof turn.messageMetadata?.admissionReason === "string"
         ? turn.messageMetadata.admissionReason
+        : null,
+    batchStatus: typeof queueLog?.metadata?.batchStatus === "string"
+      ? queueLog.metadata.batchStatus
+      : typeof turn.messageMetadata?.batchStatus === "string"
+        ? turn.messageMetadata.batchStatus
+        : null,
+    batchStartPolicy: typeof queueLog?.metadata?.batchStartPolicy === "string"
+      ? queueLog.metadata.batchStartPolicy
+      : typeof turn.messageMetadata?.batchStartPolicy === "string"
+        ? turn.messageMetadata.batchStartPolicy
         : null,
   };
 }
@@ -123,10 +150,7 @@ function threadLifecycleIsTerminal(meta?: {
   if (isPendingPermissionThreadLifecycleStatus(normalizedStatus)) {
     return false;
   }
-  if (
-    isRunningThreadLifecycleStatus(normalizedStatus) &&
-    (normalizedStatus !== "active" || meta?.completedAtMs == null)
-  ) {
+  if (isRunningThreadLifecycleStatus(normalizedStatus)) {
     return false;
   }
   return (
@@ -171,7 +195,7 @@ function hydratedThreadStatusIsRunning(meta?: {
 }): boolean {
   const normalizedStatus = normalizeThreadLifecycleStatus(meta?.threadStatus);
   if (isRunningThreadLifecycleStatus(normalizedStatus)) {
-    return normalizedStatus !== "active" || meta?.completedAtMs == null;
+    return true;
   }
   if (normalizedStatus) {
     return false;
@@ -208,8 +232,7 @@ function findStaleCompletedAtRunningTurnIndex(
   const normalizedStatus = normalizeThreadLifecycleStatus(meta?.threadStatus);
   if (
     completedAtMs == null ||
-    (isRunningThreadLifecycleStatus(normalizedStatus) &&
-      normalizedStatus !== "active") ||
+    isRunningThreadLifecycleStatus(normalizedStatus) ||
     isPendingPermissionThreadLifecycleStatus(normalizedStatus)
   ) {
     return -1;

@@ -6,12 +6,18 @@ import {
 } from "lucide-react";
 import type { RunnerLog } from "../../types.js";
 import { RunnerCodeViewer } from "../../platform-ui/components/thread-components/log-boxes/index.js";
+import { PlatformSwitch } from "../../platform-ui/components/ui/switch/index.js";
 import {
   RunnerMarkdown,
   stripRunnerSystemTags as stripSystemTags,
 } from "../runner-markdown.js";
 
 type RunnerSummaryJsonValue = Record<string, unknown> | unknown[];
+
+const RUN_SUMMARY_JSON_VIEW_OPTIONS = [
+  { value: "preview", label: "Preview" },
+  { value: "json", label: "JSON" },
+] as const;
 
 function isRunnerSummaryPlainObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -197,22 +203,15 @@ export function RunnerRunSummaryJsonDocument({ value, title = "JSON", documentId
           <LucideBraces className="tb-run-summary-json-title-icon" strokeWidth={1.9} />
           <span>{title}</span>
         </div>
-        <div className="tb-run-summary-json-mode-switch" role="tablist" aria-label="JSON display mode">
-          <button
-            type="button"
-            className={`tb-run-summary-json-mode-button ${viewMode === "preview" ? "is-active" : ""}`.trim()}
-            onClick={() => setViewMode("preview")}
-          >
-            Preview
-          </button>
-          <button
-            type="button"
-            className={`tb-run-summary-json-mode-button ${viewMode === "json" ? "is-active" : ""}`.trim()}
-            onClick={() => setViewMode("json")}
-          >
-            JSON
-          </button>
-        </div>
+        <PlatformSwitch
+          className="tb-run-summary-json-mode-switch"
+          value={viewMode}
+          options={RUN_SUMMARY_JSON_VIEW_OPTIONS}
+          onValueChange={(value) =>
+            setViewMode(value === "json" ? "json" : "preview")
+          }
+          ariaLabel="JSON display mode"
+        />
       </div>
       <div className="tb-run-summary-json-body">
         {viewMode === "json" ? (

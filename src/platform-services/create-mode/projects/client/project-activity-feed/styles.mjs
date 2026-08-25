@@ -371,6 +371,43 @@ export const PROJECT_ACTIVITY_FEED_CSS_FRAGMENT = String.raw`
     background: rgba(255, 255, 255, 0.075);
   }
 
+  .playground-project-activity-ticket-comment.platform-comment-card {
+    padding: 18px 20px;
+  }
+
+  .playground-project-activity-ticket-comment .platform-comment-card__author {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .playground-project-activity-ticket-comment__verb {
+    color: rgba(255, 255, 255, 0.62);
+  }
+
+  .playground-project-activity-ticket-comment__ticket {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: #fff;
+    font: inherit;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .playground-project-activity-ticket-comment__ticket:disabled {
+    cursor: default;
+  }
+
+  .playground-project-activity-ticket-comment__body {
+    color: rgba(255, 255, 255, 0.82);
+  }
+
   .playground-project-activity-rich-card__kind {
     display: inline-flex;
     align-items: center;
@@ -552,6 +589,11 @@ export const PROJECT_ACTIVITY_FEED_CSS_FRAGMENT = String.raw`
     min-height: 220px;
   }
 
+  .playground-project-activity-feed__incremental-loading {
+    min-height: 52px;
+    width: 100%;
+  }
+
   .playground-project-timeline-settings__list {
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.075);
@@ -568,7 +610,7 @@ export const PROJECT_ACTIVITY_FEED_CSS_FRAGMENT = String.raw`
   }
 
   .playground-project-timeline-settings .playground-project-settings-section__title {
-    margin: 0;
+    margin: 0 0 8px;
     color: rgba(255, 255, 255, 0.94);
     font-size: 14px;
     font-weight: 400;
@@ -588,7 +630,7 @@ export const PROJECT_ACTIVITY_FEED_CSS_FRAGMENT = String.raw`
     justify-content: space-between;
     gap: 24px;
     min-height: 62px;
-    padding: 10px 14px;
+    padding: 20px;
     box-sizing: border-box;
   }
 

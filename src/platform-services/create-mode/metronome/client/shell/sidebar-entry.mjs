@@ -4,8 +4,10 @@ export const METRONOME_APP_SIDEBAR_ENTRY_SCRIPT = `
           if (!groupKey) {
             return null;
           }
-          const isCollapsed = Boolean(collapsedMetronomeRunGroups[groupKey]);
+          const isCollapsed = collapsedMetronomeRunGroups[groupKey] !== false;
           const threads = Array.isArray(entry.threads) ? entry.threads : [];
+          const threadLoadState = metronomeSidebarRunThreadLoadStateByKey?.[groupKey] || { status: "idle", error: "" };
+          const isLoadingThreads = threadLoadState.status === "loading";
           const latestThread = entry.latestThread || threads[0] || null;
           const lastActivityText = latestThread
             ? formatCompactThreadActivityTime(resolveThreadSortTimestamp(latestThread))
@@ -42,7 +44,14 @@ export const METRONOME_APP_SIDEBAR_ENTRY_SCRIPT = `
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-metronome-run-main",
-                onClick: () => openMetronomeRunTraceThread(entry),
+                onClick: () => {
+                  setCollapsedMetronomeRunGroups((current) => ({
+                    ...(current && typeof current === "object" ? current : {}),
+                    [groupKey]: false,
+                  }));
+                  void loadMetronomeSidebarRunThreads(entry);
+                  openMetronomeRunTraceThread(entry);
+                },
                 "aria-label": loopPresentation.isTaskLoop
                   ? "Open Loop " + runTitle
                   : loopPresentation.isMissionControl
@@ -91,15 +100,22 @@ export const METRONOME_APP_SIDEBAR_ENTRY_SCRIPT = `
                   onClick: (event) => {
                     event.preventDefault();
                     event.stopPropagation();
+                    const shouldExpand = collapsedMetronomeRunGroups[groupKey] !== false;
                     setCollapsedMetronomeRunGroups((current) => ({
-                      ...current,
-                      [groupKey]: !current[groupKey],
+                      ...(current && typeof current === "object" ? current : {}),
+                      [groupKey]: !shouldExpand,
                     }));
+                    if (shouldExpand) {
+                      void loadMetronomeSidebarRunThreads(entry);
+                    }
                   },
                   "aria-label": isCollapsed ? "Expand Metronome threads" : "Collapse Metronome threads",
                   "aria-expanded": isCollapsed ? "false" : "true",
+                  "aria-busy": isLoadingThreads ? "true" : "false",
                 },
-                  React.createElement(ChevronDown, { strokeWidth: 1.8 })
+                  isLoadingThreads
+                    ? React.createElement(Loader2, { className: "sidebar-thread-running-indicator", strokeWidth: 1.8 })
+                    : React.createElement(isCollapsed ? ChevronRight : ChevronDown, { strokeWidth: 1.8 })
                 )
               )
             ),

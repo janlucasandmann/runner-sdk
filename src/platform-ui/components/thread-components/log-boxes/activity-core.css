@@ -13,7 +13,7 @@
   gap: 8px;
   appearance: none;
   border: 0;
-  background: #262626;
+  background: transparent;
   padding: 0;
   color: inherit;
   font: inherit;
@@ -60,6 +60,39 @@
   font-size: 13px;
   line-height: 1.35;
   font-weight: 400;
+}
+
+.tb-runner-chat
+  .tb-log-compact-action.is-project-scoped-list
+  .tb-log-compact-action-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.tb-runner-chat .tb-log-project-resource-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  color: #fff;
+}
+
+.tb-runner-chat .tb-log-project-resource-icon.is-task {
+  background: linear-gradient(180deg, #39b877 0%, #2b8b59 100%);
+}
+
+.tb-runner-chat .tb-log-project-resource-icon.is-milestone {
+  background: linear-gradient(180deg, #287c4d 0%, #17492f 100%);
+}
+
+.tb-runner-chat .tb-log-project-resource-icon svg {
+  width: 12px;
+  height: 12px;
+  display: block;
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.28));
 }
 
 .tb-runner-chat .tb-log-card-metronome-workflow {
@@ -109,7 +142,8 @@
   cursor: default;
 }
 
-.tb-runner-chat .tb-log-metronome-workflow-canvas-button:not(:disabled):focus-visible {
+.tb-runner-chat
+  .tb-log-metronome-workflow-canvas-button:not(:disabled):focus-visible {
   outline: 1px solid rgba(77, 163, 255, 0.72);
   outline-offset: -1px;
 }
@@ -135,7 +169,9 @@
   gap: 8px;
 }
 
-.tb-runner-chat .tb-log-metronome-workflow-identity .tb-log-compact-action-title {
+.tb-runner-chat
+  .tb-log-metronome-workflow-identity
+  .tb-log-compact-action-title {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -184,7 +220,11 @@
   justify-content: flex-end;
   position: relative;
   padding: 20px;
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.12) 1px,
+    transparent 1px
+  );
   background-position: 0 0;
   background-size: 18px 18px;
 }
@@ -638,19 +678,25 @@
   padding: 12px;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-browser.is-detail-open .tb-log-card-panel {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-browser.is-detail-open
+  .tb-log-card-panel {
   padding: 12px;
   border: 0;
   background: transparent;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-subagent.is-detail-open .tb-log-card-panel {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-subagent.is-detail-open
+  .tb-log-card-panel {
   padding: 12px;
   border: 0;
   background: transparent;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-deep-research.is-detail-open .tb-log-card-panel {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-deep-research.is-detail-open
+  .tb-log-card-panel {
   padding: 12px 12px 0;
   border: 0;
   background: transparent;
@@ -688,12 +734,18 @@
   width: 100%;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-image-generation-preview {
   justify-content: flex-start;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-generation-preview .tb-log-card-panel::before,
-.tb-runner-chat .tb-log-card.tb-log-card-video-generation .tb-log-card-panel::before {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-generation-preview
+  .tb-log-card-panel::before,
+.tb-runner-chat
+  .tb-log-card.tb-log-card-video-generation
+  .tb-log-card-panel::before {
   display: none;
   content: none;
 }
@@ -719,8 +771,12 @@
 .tb-runner-chat .tb-log-media-preview-layout-video,
 .tb-runner-chat .tb-log-media-preview-layout-video .tb-log-media-preview-visual,
 .tb-runner-chat .tb-log-media-preview-layout-video .tb-log-media-lazy-preview,
-.tb-runner-chat .tb-log-media-preview-layout-video .tb-runner-lazy-media-preview,
-.tb-runner-chat .tb-log-media-preview-layout-video .tb-video-generation-preview-shell {
+.tb-runner-chat
+  .tb-log-media-preview-layout-video
+  .tb-runner-lazy-media-preview,
+.tb-runner-chat
+  .tb-log-media-preview-layout-video
+  .tb-video-generation-preview-shell {
   width: 100%;
   max-width: 100%;
 }
@@ -756,7 +812,14 @@
   padding: 0;
   background: transparent;
   color: rgba(255, 255, 255, 0.78);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
@@ -770,7 +833,9 @@
   justify-content: flex-start;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-video-generation-preview {
   display: block;
   width: 100%;
   max-width: 100%;
@@ -780,7 +845,9 @@
   object-fit: contain;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview-loading {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-image-generation-preview-loading {
   aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
@@ -795,7 +862,9 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview-loading {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-video-generation-preview-loading {
   aspect-ratio: auto;
   display: flex;
   align-items: center;
@@ -809,7 +878,9 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview-shell {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-video-generation-preview-shell {
   position: relative;
   width: 100%;
   max-width: 100%;
@@ -847,7 +918,9 @@
   cursor: pointer;
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  transition: background 160ms ease, color 160ms ease;
+  transition:
+    background 160ms ease,
+    color 160ms ease;
 }
 
 .tb-runner-chat .tb-video-generation-show-prompt-button:hover,
@@ -878,7 +951,9 @@
   z-index: 1;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-video-generation-preview-error {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-video-generation-preview-error {
   aspect-ratio: 16 / 9;
   display: flex;
   align-items: center;
@@ -895,7 +970,9 @@
   justify-content: center;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-preview .tb-image-generation-preview-image {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-preview
+  .tb-image-generation-preview-image {
   height: auto;
   max-height: 500px;
   border-radius: 10px;
@@ -915,7 +992,9 @@
   padding: 0;
 }
 
-.tb-runner-chat .tb-log-card.tb-log-card-image-understanding .tb-log-card-panel {
+.tb-runner-chat
+  .tb-log-card.tb-log-card-image-understanding
+  .tb-log-card-panel {
   padding: 12px;
 }
 
@@ -944,7 +1023,9 @@
   justify-content: flex-start;
 }
 
-.tb-runner-chat .tb-image-understanding-layout.is-landscape .tb-image-understanding-preview {
+.tb-runner-chat
+  .tb-image-understanding-layout.is-landscape
+  .tb-image-understanding-preview {
   flex-basis: auto;
   width: 100%;
 }
@@ -975,11 +1056,15 @@
   min-width: 0;
 }
 
-.tb-runner-chat .tb-image-understanding-layout.is-multiple .tb-image-understanding-preview {
+.tb-runner-chat
+  .tb-image-understanding-layout.is-multiple
+  .tb-image-understanding-preview {
   flex-basis: min(520px, 54%);
 }
 
-.tb-runner-chat .tb-image-understanding-layout.is-multiple .tb-image-understanding-preview-item {
+.tb-runner-chat
+  .tb-image-understanding-layout.is-multiple
+  .tb-image-understanding-preview-item {
   flex: 0 0 min(220px, calc((100% - 20px) / 3));
   min-width: 140px;
 }
@@ -1006,16 +1091,24 @@
   border-radius: 10px;
 }
 
-.tb-runner-chat .tb-image-understanding-layout.is-multiple .tb-image-understanding-lazy-preview,
-.tb-runner-chat .tb-image-understanding-layout.is-multiple .tb-image-understanding-preview-surface {
+.tb-runner-chat
+  .tb-image-understanding-layout.is-multiple
+  .tb-image-understanding-lazy-preview,
+.tb-runner-chat
+  .tb-image-understanding-layout.is-multiple
+  .tb-image-understanding-preview-surface {
   min-height: 140px;
 }
 
-.tb-runner-chat .tb-image-understanding-layout.is-multiple .tb-image-understanding-preview-image {
+.tb-runner-chat
+  .tb-image-understanding-layout.is-multiple
+  .tb-image-understanding-preview-image {
   max-height: 180px;
 }
 
-.tb-runner-chat .tb-image-understanding-layout.is-landscape .tb-image-understanding-preview-image {
+.tb-runner-chat
+  .tb-image-understanding-layout.is-landscape
+  .tb-image-understanding-preview-image {
   width: auto;
   max-width: 100%;
 }

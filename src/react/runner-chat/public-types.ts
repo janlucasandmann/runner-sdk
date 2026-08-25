@@ -329,6 +329,18 @@ export interface RunnerChatActionSummaryClickPayload {
   revertedFileName?: string | null;
 }
 
+export interface RunnerThreadTaskListItem {
+  id?: string;
+  text: string;
+  completed: boolean;
+}
+
+export interface RunnerThreadTaskListSummary {
+  status?: "idle" | "loading" | "refreshing" | "loaded" | "error";
+  error?: string | null;
+  items: readonly RunnerThreadTaskListItem[];
+}
+
 export interface RunnerChatProps {
   backendUrl: string;
   apiKey: string;
@@ -424,6 +436,7 @@ export interface RunnerChatProps {
   executionWorkbenchOpen?: boolean;
   onExecutionWorkbenchOpenChange?: (isOpen: boolean) => void;
   onExecutionWorkbenchAvailabilityChange?: (isAvailable: boolean) => void;
+  threadTaskList?: RunnerThreadTaskListSummary | null;
   onSubagentDetailOpenChange?: (isOpen: boolean) => void;
   onDocumentPreviewOpenChange?: (isOpen: boolean) => void;
   onDeepResearchDetailOpenChange?: (isOpen: boolean) => void;

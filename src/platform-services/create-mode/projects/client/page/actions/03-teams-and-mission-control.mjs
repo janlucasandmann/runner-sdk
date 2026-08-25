@@ -346,6 +346,17 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	          );
 	        }
 
+	        function normalizeProjectAccessRoleId(principalId, roleId, fallback = "member") {
+	          const normalizedPrincipalId = normalizePlatformAccessPrincipalId(principalId);
+	          if (!isPlatformRoleScopedSystemAccessPrincipalId(normalizedPrincipalId)) {
+	            return normalizePlaygroundTeamRoleId(roleId, fallback);
+	          }
+	          const normalizedRoleId = String(roleId || "").trim().toLowerCase();
+	          return ["owner", "admin", "developer", "member", "billing", "viewer"].includes(normalizedRoleId)
+	            ? normalizedRoleId
+	            : fallback;
+	        }
+
 	        function getProjectSystemRolePermissionSet(project, principalId, roleId) {
 	          return getPlatformSystemPrincipalRolePermissionSet(
 	            project?.metadata,
@@ -756,7 +767,7 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	        function applyProjectSystemRolePermissionSetLocally(projectId, principalId, roleId, permissionSet) {
 	          const normalizedProjectId = String(projectId || "").trim();
 	          const normalizedPrincipalId = normalizePlatformAccessPrincipalId(principalId);
-	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+	          const normalizedRoleId = normalizeProjectAccessRoleId(normalizedPrincipalId, roleId, "member");
 	          if (
 	            !normalizedProjectId
 	            || !isPlatformRoleScopedSystemAccessPrincipalId(normalizedPrincipalId)
@@ -805,7 +816,7 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
 	          const normalizedProjectId = String(normalizedProject.id || "").trim();
 	          const normalizedPrincipalId = normalizePlatformAccessPrincipalId(principalId);
-	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+	          const normalizedRoleId = normalizeProjectAccessRoleId(normalizedPrincipalId, roleId, "member");
 	          if (
 	            !normalizedProjectId
 	            || !isPlatformRoleScopedSystemAccessPrincipalId(normalizedPrincipalId)
@@ -864,7 +875,7 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	          const normalizedPrincipalId = normalizePlatformAccessPrincipalId(
 	            projectOverviewPermissionTeamId
 	          );
-	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+	          const normalizedRoleId = normalizeProjectAccessRoleId(normalizedPrincipalId, roleId, "member");
 	          if (
 	            !normalizedProjectId
 	            || !isPlatformRoleScopedSystemAccessPrincipalId(normalizedPrincipalId)

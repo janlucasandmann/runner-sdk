@@ -531,11 +531,13 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   position: absolute;
   inset: 0 0 0 auto;
   z-index: 120;
+  box-sizing: border-box;
   width: min(520px, 42vw);
   max-width: 100%;
   min-width: 0;
   overflow: hidden;
-  border-left: 1px solid rgba(255, 255, 255, 0.075);
+  border-left: 0;
+  padding: 20px;
   background: #000;
   opacity: 0;
   transform: translate3d(100%, 0, 0);
@@ -552,10 +554,13 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-thread-execution-workbench-sidebar .platform-thread-workbench {
-  height: 100%;
-  border: 0;
-  border-radius: 0;
-  background: #000;
+  height: auto;
+  min-height: 0;
+  max-height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.075);
+  box-shadow: none;
 }
 
 @media (max-width: 980px) {
@@ -631,6 +636,10 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   max-width: 85%;
   margin-left: auto;
   margin-bottom: var(--tb-user-turn-shell-gap);
+}
+
+.tb-runner-chat .tb-task-preview-turn-shell .platform-ticket-item.is-card {
+  min-width: 240px;
 }
 
 .tb-runner-chat .tb-user-turn-shell-has-actions,
@@ -834,7 +843,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   padding: 12px;
   border-radius: 15px;
   border: 0;
-  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.05));
+  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.075));
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   box-shadow: inset 0 0 0 1px var(--tb-task-preview-border, rgba(255, 255, 255, 0.08)), 0px 2px 5px rgba(0, 0, 0, 0.15);
@@ -862,7 +871,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-task-preview-card:disabled:hover {
-  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.05));
+  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.075));
 }
 
 .tb-runner-chat .tb-task-preview-card:focus-visible {
@@ -930,6 +939,10 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-runner-chat .tb-task-preview-type-badge.is-subtask {
   background: linear-gradient(180deg, rgba(102, 166, 255, 1) 0%, rgba(38, 96, 188, 1) 100%);
+}
+
+.tb-runner-chat .tb-task-preview-type-badge.is-loop {
+  background: linear-gradient(180deg, #9a72df 0%, #6542a8 100%);
 }
 
 .tb-runner-chat .tb-task-preview-type-icon {
@@ -1065,7 +1078,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-mission-control-preview-card:hover {
-  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.05));
+  background: var(--tb-task-preview-surface, rgba(255, 255, 255, 0.075));
 }
 
 .tb-runner-chat .tb-mission-control-preview-header {
@@ -2304,27 +2317,11 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   max-width: 980px;
   position: relative;
   z-index: 0;
-  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
   overflow: hidden;
   background: transparent;
-  box-shadow: 0 0 0 1px var(--tb-task-input-outline);
-}
-
-.tb-runner-chat .tb-run-summary-json-document::before {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: 10px;
-  padding: 1px;
-  background: var(--tb-task-input-border);
-  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-  mask-clip: content-box, border-box;
-  mask-composite: exclude;
-  mask-origin: content-box, border-box;
-  mask-repeat: repeat, repeat;
-  mask-size: auto, auto;
+  box-shadow: none;
 }
 
 .tb-runner-chat .tb-run-summary-json-document > * {
@@ -2368,42 +2365,14 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-runner-chat .tb-run-summary-json-mode-switch {
   flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   min-width: 136px;
-  height: 30px;
-  padding: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.1);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  line-height: 1rem;
 }
 
-.tb-runner-chat .tb-run-summary-json-mode-button {
+.tb-runner-chat .tb-run-summary-json-mode-switch .platform-switch__option {
   min-width: 0;
   flex: 1 1 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border: 0;
-  border-radius: 20px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1rem;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
-}
-
-.tb-runner-chat .tb-run-summary-json-mode-button.is-active {
-  background: rgba(255, 255, 255, 0.3);
-  color: #fff;
 }
 
 .tb-runner-chat .tb-run-summary-json-body {

@@ -8,11 +8,16 @@
 
 - `list` preserves the backlog row contract and is used in compact ticket lists.
 - `card` preserves the board card contract.
+- Both variants own the same pointer-positioned minimal action menu. Cards open
+  it on right click; list rows can additionally opt into click and keyboard
+  activation with `openTicketActionMenuOnClick`.
 - `appearance="minimalistic-ui"` removes the list surface, border, blur, and
   horizontal padding for tickets nested inside an existing container.
 
 The component owns ticket layout while callers retain domain behavior through
 slots for status controls, assignees, actions, priority, and editable titles.
+Callers provide domain action rows through `ticketActionMenu`; positioning, collision
+handling, outside-click dismissal, and Escape dismissal stay centralized here.
 
 The legacy class aliases are intentional while project surfaces move onto this
 primitive; they preserve the established backlog and board presentation without

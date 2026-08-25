@@ -115,9 +115,22 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
 
       .playground-thread-task-drawer .playground-tasks-detail-panel.is-inline-detail .playground-tasks-detail-navbar {
         min-height: 56px;
-        padding: 0 10px;
+        padding: 0 10px 0 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.075);
         background: transparent;
         box-sizing: border-box;
+      }
+
+      .playground-thread-task-drawer .playground-tasks-detail-panel.is-inline-detail .playground-tasks-detail-body {
+        border-left: 1px solid rgba(255, 255, 255, 0.075);
+      }
+
+      .playground-thread-task-drawer .playground-tasks-detail-panel.is-inline-detail .playground-tasks-detail-scroll {
+        padding-left: 17px;
+      }
+
+      .playground-thread-task-drawer .playground-tasks-detail-facts-header {
+        display: none;
       }
 
       .playground-content-shell:has(.playground-tasks-shell.is-detail-open > .playground-tasks-detail-panel.is-project-task-detail) {
@@ -166,7 +179,7 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         .playground-tasks-shell.is-detail-open
         > .playground-tasks-detail-panel.is-project-task-detail
         .playground-tasks-detail-navbar-ticket {
-        color: rgba(255, 255, 255, 0.94);
+        color: #fff;
       }
 
       .playground-content-shell:has(.playground-tasks-shell.is-detail-open > .playground-tasks-detail-panel.is-project-task-detail)
@@ -521,7 +534,7 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
       }
 
       .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar-ticket {
-        color: rgba(255, 255, 255, 0.7);
+        color: #fff;
         font-weight: 400;
       }
 
@@ -538,6 +551,18 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         margin-top: 0;
         padding-top: 24px;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-tasks-activity__loading {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 220px;
+      }
+
+      .playground-tasks-activity__incremental-loading {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 52px;
       }
 
       .playground-tasks-activity-comment-attachments {
@@ -663,6 +688,14 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
       .playground-tasks-main-scroll.is-project-workspace {
         padding: 0;
         gap: 0;
+      }
+
+      .playground-tasks-main-scroll.is-project-workspace > .playground-tasks-ticket-loading-state {
+        width: 100%;
+        min-height: 100%;
+        flex: 1 1 auto;
+        box-sizing: border-box;
+        background: #000;
       }
 
       .playground-tasks-main-scroll.is-projects-home {
@@ -1327,11 +1360,7 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         transition: width 220ms ease, max-width 220ms ease;
       }
 
-      .playground-project-workspace-inner.is-backlog-work-view {
-        width: min(100%, var(--playground-thread-content-max-width));
-        max-width: var(--playground-thread-content-max-width);
-      }
-
+      .playground-project-workspace-inner.is-backlog-work-view,
       .playground-project-workspace-inner.is-board-work-view {
         width: min(100%, var(--playground-centered-page-max-width));
         max-width: var(--playground-centered-page-max-width);
@@ -1579,7 +1608,19 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         .playground-tasks-backlog-view
         .playground-tasks-backlog-item {
         border-color: rgba(255, 255, 255, 0.075);
-        background: rgba(255, 255, 255, 0.075);
+        background: var(--playground-task-color-surface, rgba(255, 255, 255, 0.075));
+      }
+
+      .playground-tasks-project-workspace
+        .playground-tasks-backlog-view
+        .playground-tasks-backlog-item:hover {
+        background: var(--playground-task-color-surface-hover, rgba(255, 255, 255, 0.1));
+      }
+
+      .playground-tasks-project-workspace
+        .playground-tasks-backlog-view
+        .playground-tasks-backlog-item.is-active {
+        background: var(--playground-task-color-surface-active, rgba(255, 255, 255, 0.1));
       }
 
       .playground-tasks-backlog-header-actions {

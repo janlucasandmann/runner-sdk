@@ -8,7 +8,8 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
       }
 
       .playground-project-overview-view.is-general,
-      .playground-project-overview-view.is-milestones {
+      .playground-project-overview-view.is-milestones,
+      .playground-project-overview-view.is-permissions {
         width: 100%;
         max-width: none;
       }

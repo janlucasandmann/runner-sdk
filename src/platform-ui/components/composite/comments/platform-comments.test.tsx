@@ -2,13 +2,16 @@
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { PlatformCommentCard } from "./platform-comment-card.js";
-import { PlatformCommentComposer } from "./platform-comment-composer.js";
+import {
+  PlatformCommentComposer,
+  PlatformCommentReplyComposer,
+} from "./platform-comment-composer.js";
 
 afterEach(() => {
   cleanup();
@@ -44,6 +47,9 @@ describe("platform comments", () => {
     expect(componentStyles).toMatch(
       /\.platform-mention-suggestions__avatar\s*\{[\s\S]*?width:\s*20px;[\s\S]*?height:\s*20px;/,
     );
+    expect(componentStyles).toMatch(
+      /\.platform-comment-submit-spinner\s*\{[\s\S]*?animation:\s*platform-comment-submit-spin 900ms linear infinite;/,
+    );
   });
 
   it("submits controlled comment text through the shared composer", async () => {
@@ -67,6 +73,69 @@ describe("platform comments", () => {
     await user.click(screen.getByRole("button", { name: "Add comment" }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith([]));
+  });
+
+  it("shows the shared spinner while an arrow-button comment submission is pending", async () => {
+    const user = userEvent.setup();
+    let finishSubmission: (() => void) | undefined;
+    const submission = new Promise<void>((resolveSubmission) => {
+      finishSubmission = resolveSubmission;
+    });
+    const onSubmit = vi.fn().mockReturnValue(submission);
+
+    function Example() {
+      const [value, setValue] = useState("");
+      return (
+        <PlatformCommentComposer
+          value={value}
+          onChange={setValue}
+          onSubmit={onSubmit}
+        />
+      );
+    }
+
+    render(<Example />);
+    await user.type(screen.getByRole("textbox", { name: "Comment" }), "Pending comment");
+    await user.click(screen.getByRole("button", { name: "Add comment" }));
+
+    const pendingButton = await screen.findByRole("button", { name: "Adding comment" });
+    expect(pendingButton.querySelector('img[src="/img/spinner.svg"]')).not.toBeNull();
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+
+    finishSubmission?.();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Add comment" })).not.toBeNull());
+  });
+
+  it("shows the same spinner for Command-Enter comment submission", async () => {
+    const user = userEvent.setup();
+    let finishSubmission: (() => void) | undefined;
+    const submission = new Promise<void>((resolveSubmission) => {
+      finishSubmission = resolveSubmission;
+    });
+    const onSubmit = vi.fn().mockReturnValue(submission);
+
+    function Example() {
+      const [value, setValue] = useState("");
+      return (
+        <PlatformCommentComposer
+          value={value}
+          onChange={setValue}
+          onSubmit={onSubmit}
+        />
+      );
+    }
+
+    render(<Example />);
+    const input = screen.getByRole("textbox", { name: "Comment" });
+    await user.type(input, "Keyboard comment");
+    fireEvent.keyDown(input, { key: "Enter", metaKey: true });
+
+    const pendingButton = await screen.findByRole("button", { name: "Adding comment" });
+    expect(pendingButton.querySelector('img[src="/img/spinner.svg"]')).not.toBeNull();
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+
+    finishSubmission?.();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Add comment" })).not.toBeNull());
   });
 
   it("locks selected mentions into inline identity tokens and submits structured data", async () => {
@@ -245,6 +314,80 @@ describe("platform comments", () => {
 
     await user.click(screen.getByRole("button", { name: "Manage Access" }));
     expect(onManage).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps keyboard navigation on the selected mention option", async () => {
+    const user = userEvent.setup();
+
+    function Example() {
+      const [value, setValue] = useState("");
+      return (
+        <PlatformCommentComposer
+          value={value}
+          onChange={setValue}
+          onSubmit={vi.fn()}
+          mentionOptions={[
+            { kind: "human", id: "user-one", label: "First Person" },
+            { kind: "human", id: "user-two", label: "Second Person" },
+            { kind: "agent", id: "agent-three", label: "Third Agent" },
+          ]}
+        />
+      );
+    }
+
+    render(<Example />);
+    const input = screen.getByRole("textbox", { name: "Comment" });
+    await user.type(input, "@");
+    const options = screen.getAllByRole("option");
+
+    expect(options[0].getAttribute("aria-selected")).toBe("true");
+    await user.keyboard("{ArrowDown}");
+    expect(options[0].getAttribute("aria-selected")).toBe("false");
+    expect(options[1].getAttribute("aria-selected")).toBe("true");
+    await user.keyboard("{ArrowDown}");
+    expect(options[2].getAttribute("aria-selected")).toBe("true");
+    expect(document.activeElement).toBe(input);
+    await user.keyboard("{ArrowUp}");
+    expect(options.map((option) => option.getAttribute("aria-selected"))).toEqual([
+      "false",
+      "true",
+      "false",
+    ]);
+
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("button", { name: "Remove Second Person mention" })).not.toBeNull();
+    expect(screen.queryByRole("listbox", { name: "Mention people or agents" })).toBeNull();
+  });
+
+  it("centers nested text fallbacks inside mention avatars", () => {
+    const componentStyles = readFileSync(
+      resolve(process.cwd(), "src/platform-ui/components/composite/comments/comments.css"),
+      "utf8",
+    );
+
+    expect(componentStyles).toMatch(
+      /\.platform-mention-suggestions__avatar > :not\(img\):not\(picture\)[\s\S]*?display:\s*inline-flex;[\s\S]*?align-items:\s*center;[\s\S]*?justify-content:\s*center;[\s\S]*?line-height:\s*1;/,
+    );
+  });
+
+  it("preserves keyboard mention navigation in reply composers", async () => {
+    const user = userEvent.setup();
+    render(
+      <PlatformCommentReplyComposer
+        onSubmit={vi.fn()}
+        mentionOptions={[
+          { kind: "human", id: "user-one", label: "First Person" },
+          { kind: "agent", id: "agent-two", label: "Second Agent" },
+        ]}
+      />,
+    );
+
+    const input = screen.getByRole("textbox", { name: "Reply" });
+    await user.type(input, "@");
+    await user.keyboard("{ArrowDown}{Enter}");
+
+    expect(screen.getByRole("button", { name: "Remove Second Agent mention" })).not.toBeNull();
+    expect(screen.queryByRole("listbox", { name: "Mention people or agents" })).toBeNull();
   });
 
   it("focuses a comment textarea as soon as an opened composer mounts", async () => {

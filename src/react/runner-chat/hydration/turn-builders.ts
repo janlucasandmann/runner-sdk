@@ -5,6 +5,7 @@ import {
   isRunnerInternalHiddenExecutionPromptContent,
 } from "../agent-options.js";
 import {
+  dedupeRunnerConversationMessages,
   sortRunnerConversationMessagesChronologically,
   sortRunnerLogsChronologically,
   type RunnerConversationMessage,
@@ -46,7 +47,9 @@ export function buildHydratedTurnsFromPayload(
     backendUrl?: string;
   },
 ): RunnerTurn[] {
-  const messages = sortRunnerConversationMessagesChronologically(payload.messages);
+  const messages = sortRunnerConversationMessagesChronologically(
+    dedupeRunnerConversationMessages(payload.messages),
+  );
   const logs = sortRunnerLogsChronologically(payload.logs.map(normalizeHydratedLog));
   const hasCanonicalMessages = messages.some(
     (message) =>
@@ -123,7 +126,9 @@ export function buildHydratedTurnsFromLogs(
   },
 ): RunnerTurn[] {
   const turns: RunnerTurn[] = [];
-  const chronologicalMessages = sortRunnerConversationMessagesChronologically(messages);
+  const chronologicalMessages = sortRunnerConversationMessagesChronologically(
+    dedupeRunnerConversationMessages(messages),
+  );
   const dedupedLogs = dedupeAdjacentRunnerLogs(
     sortRunnerLogsChronologically(logs.map(normalizeHydratedLog)),
   );

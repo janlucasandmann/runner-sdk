@@ -4,9 +4,10 @@ export const KNOWLEDGE_APP_HISTORY_RESTORE_SCRIPT = `          if (entry.page ==
               libraryName: entry.libraryName || "",
               documentId: entry.mode === "document" ? (entry.documentId || "") : "",
               documentName: entry.documentName || "",
+              originThreadId: entry.originThreadId || "",
+              originThreadTitle: entry.originThreadTitle || "",
             });
             return;
           }
 
 `;
-

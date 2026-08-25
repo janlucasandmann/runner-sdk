@@ -771,7 +771,8 @@ ${metronomeSidebarCss}
         width: 12px;
         height: 12px;
         flex-shrink: 0;
-        color: inherit;
+        display: block;
+        object-fit: contain;
         animation: spinner-rotate 1s linear infinite;
       }
 

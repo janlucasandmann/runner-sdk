@@ -952,6 +952,13 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
     subjectTypes: ["project", "project_team_role"],
   },
   {
+    id: "project_updates_write",
+    ringId: "ring_2",
+    label: "Write project updates",
+    description: "Post progress and health updates to the project timeline.",
+    subjectTypes: ["project", "project_team_role"],
+  },
+  {
     id: "project_strategy_manage",
     ringId: "ring_2",
     label: "Manage strategy",

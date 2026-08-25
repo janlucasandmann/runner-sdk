@@ -967,28 +967,24 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
               priority: renderPlaygroundTaskPriorityIcon(task?.priority, "playground-tasks-lane-card-priority"),
               ticketNumber: taskTicketNumber,
               status: React.createElement("span", {
-                className: "playground-tasks-lane-card-status",
                 title: statusLabel,
-              }, statusLabel),
+                "aria-label": statusLabel,
+              }, renderPlaygroundTaskStatusGlyph(
+                boardStatus,
+                "playground-tasks-lane-card-status-icon"
+              )),
+              createdAt: task?.createdAt || task?.created_at || task?.metadata?.createdAt || null,
               assignee: renderTaskAssigneeAvatar(task, "playground-tasks-board-assignee-avatar"),
               completed: task?.status === "done",
               active: selectedTaskId === taskId,
               style: getPlaygroundTaskColorStyle(task?.taskColor),
+              ticketActionMenu: ({ closeMenu }) => renderProjectTicketPreviewContextMenu(task, { closeMenu }),
+              onTicketDeleteRequest: () => void handleDeleteTask(taskId),
+              ticketDeleteShortcutDisabled: saveState.isSaving || Boolean(taskDeleteDialogState),
               onClick: () => {
                 if (taskId) {
                   openProjectTaskDetailScreen(taskId);
                 }
-              },
-              onContextMenu: (event) => {
-                if (!taskId) {
-                  return;
-                }
-                event.preventDefault();
-                event.stopPropagation();
-                openBacklogTaskContextMenu(task, event, {
-                  includeOpenAction: true,
-                  useWorkActions: true,
-                });
               },
             });
           }
@@ -1047,7 +1043,6 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
                     spotlightTasks.map((task) => renderProjectOverviewSpotlightCard(task))
                   )
                 : null,
-              renderBacklogTaskContextMenu()
             );
           }
 

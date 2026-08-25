@@ -73,7 +73,7 @@ type RunnerComputerAgentsThreadSnapshotDetails = {
   hasMore?: boolean | null;
 };
 
-export type RunnerCreatedResourceType = "agent" | "skill" | "environment" | "project" | "release";
+export type RunnerCreatedResourceType = "agent" | "skill" | "environment" | "project" | "release" | "knowledge";
 
 export type RunnerCreatedResourcePreview = {
   id: string;

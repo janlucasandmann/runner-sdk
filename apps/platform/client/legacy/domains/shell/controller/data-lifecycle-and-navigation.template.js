@@ -823,6 +823,7 @@
               threadId: normalizedThreadId,
               ticketNumber: normalizePlaygroundTaskTicketNumber(normalizedTask.ticketNumber || existingPreview?.ticketNumber) || "000",
               title: normalizedTask.title || existingPreview?.title || "Untitled Task",
+              createdAt: normalizedTask.createdAt || existingPreview?.createdAt || null,
               description: normalizedTask.description || existingPreview?.description || "",
               status: normalizedTask.status || existingPreview?.status || "todo",
               priority: normalizedTask.priority || existingPreview?.priority || "medium",
@@ -837,12 +838,33 @@
               environmentId,
               environmentName,
               isDeleted: false,
+              requiresHydration: false,
             };
           }, [accountAvatarUrl, runtimeAgents, runtimeEnvironments]);
           const mergeThreadTaskPreviewRecord = useCallback(function mergeThreadTaskPreviewRecord(basePreview, incomingPreview, threadId = "") {
             const base = basePreview && typeof basePreview === "object" ? basePreview : {};
             const incoming = incomingPreview && typeof incomingPreview === "object" ? incomingPreview : {};
             const normalizedThreadId = String(threadId || incoming.threadId || base.threadId || "").trim();
+            const normalizedBaseTaskId = String(base.taskId || "").trim();
+            const normalizedIncomingTaskId = String(incoming.taskId || "").trim();
+            const incomingIsCompatibilityFallback = incoming.requiresHydration === true;
+            const baseIsCanonicalPreview = Boolean(
+              normalizedBaseTaskId
+              && base.requiresHydration !== true
+              && (!normalizedIncomingTaskId || normalizedIncomingTaskId === normalizedBaseTaskId)
+            );
+            if (incomingIsCompatibilityFallback && baseIsCanonicalPreview) {
+              // Periodic Thread overview refreshes can still carry the legacy
+              // mention source without a persisted taskPreview. Never let the
+              // resulting compatibility placeholder downgrade canonical data
+              // that this client has already hydrated.
+              return {
+                ...base,
+                threadId: normalizedThreadId,
+                showPromptPreview: incoming.showPromptPreview === true || base.showPromptPreview === true,
+                requiresHydration: false,
+              };
+            }
             const normalizedIncomingTicketNumber = normalizePlaygroundTaskTicketNumber(incoming.ticketNumber || "");
             const normalizedBaseTicketNumber = normalizePlaygroundTaskTicketNumber(base.ticketNumber || "");
             const incomingStatus = String(incoming.status || "").trim();
@@ -877,6 +899,10 @@
               environmentId: String(incoming.environmentId || base.environmentId || "").trim(),
               environmentName: String(incoming.environmentName || base.environmentName || "").trim(),
               isDeleted: Boolean(incoming.isDeleted || base.isDeleted),
+              // A compatibility preview is deliberately render-blocking until
+              // the canonical Task read replaces it. Canonical previews do not
+              // carry this marker, so an incoming durable record clears it.
+              requiresHydration: incoming.requiresHydration === true,
             };
           }, []);
           const resolvedUpstreamHost = useMemo(() => {
@@ -1145,20 +1171,48 @@
               const normalizedFetchedThreads = normalizeThreadList(items)
                 .filter((thread) => !isPrivateThreadRecord(thread) && !privateThreadIdsRef.current.has(String(thread?.id || "").trim()));
               setRealThreads((current) => {
-                const focusedThreadId = normalizedPreserveThreadId || currentThreadId;
                 const currentById = new Map((Array.isArray(current) ? current : []).map((thread) => [thread.id, thread]));
                 const fetchedThreads = normalizedFetchedThreads.map((thread) => {
                   const existingThread = currentById.get(thread.id);
                   const shouldPreserveEvaluationMetadata = existingThread && isEvaluationThreadRecord(existingThread) && !isEvaluationThreadRecord(thread);
-                  const mergedThread = shouldPreserveEvaluationMetadata
-                    ? normalizeThreadItem({
-                        ...thread,
-                        hidden: true,
-                        sidebarHidden: true,
-                        metadata: existingThread.metadata,
-                      })
-                    : thread;
-                  return preserveActiveThreadStatusForStaleCompletion(existingThread, mergedThread, focusedThreadId);
+                const mergedThread = shouldPreserveEvaluationMetadata
+                  ? normalizeThreadItem({
+                      ...thread,
+                      hidden: true,
+                      sidebarHidden: true,
+                      metadata: existingThread.metadata,
+                    })
+                  : thread;
+                  const existingTaskPreview = getThreadTaskPreview(existingThread);
+                  const incomingTaskPreview = getThreadTaskPreview(mergedThread);
+                  const shouldPreserveCanonicalTaskPreview = Boolean(
+                    existingTaskPreview?.taskId
+                    && existingTaskPreview.requiresHydration !== true
+                    && incomingTaskPreview?.requiresHydration === true
+                    && String(existingTaskPreview.taskId || "").trim() === String(incomingTaskPreview.taskId || "").trim()
+                  );
+                  let reconciledThread = mergedThread;
+                  if (shouldPreserveCanonicalTaskPreview) {
+                    const mergedMetadata = mergedThread?.metadata && typeof mergedThread.metadata === "object" && !Array.isArray(mergedThread.metadata)
+                      ? mergedThread.metadata
+                      : {};
+                    const mergedRunnerPlayground = mergedMetadata?.runnerPlayground
+                      && typeof mergedMetadata.runnerPlayground === "object"
+                      && !Array.isArray(mergedMetadata.runnerPlayground)
+                        ? mergedMetadata.runnerPlayground
+                        : {};
+                    reconciledThread = normalizeThreadItem({
+                      ...mergedThread,
+                      metadata: {
+                        ...mergedMetadata,
+                        runnerPlayground: {
+                          ...mergedRunnerPlayground,
+                          taskPreview: existingTaskPreview,
+                        },
+                      },
+                    });
+                  }
+                  return preserveActiveThreadStatusForStaleCompletion(existingThread, reconciledThread);
                 });
                 const fetchedIds = new Set(fetchedThreads.map((thread) => thread.id));
                 const optimisticThreads = (Array.isArray(current) ? current : []).filter((thread) => {
@@ -1263,13 +1317,36 @@
                 if (thread.id !== normalizedThreadId) {
                   return thread;
                 }
+                const threadMetadata = thread?.metadata && typeof thread.metadata === "object" && !Array.isArray(thread.metadata)
+                  ? thread.metadata
+                  : {};
+                const runnerPlaygroundMetadata = threadMetadata?.runnerPlayground
+                  && typeof threadMetadata.runnerPlayground === "object"
+                  && !Array.isArray(threadMetadata.runnerPlayground)
+                    ? threadMetadata.runnerPlayground
+                    : {};
+                const shouldClearOptimisticAdmission = isTerminalThreadDisplayStatus(normalizedStatus);
+                const nextRunnerPlaygroundMetadata = shouldClearOptimisticAdmission
+                  ? Object.fromEntries(
+                      Object.entries(runnerPlaygroundMetadata)
+                        .filter(([key]) => key !== "optimisticExecutionAdmission")
+                    )
+                  : runnerPlaygroundMetadata;
                 const nextThread = {
                   ...thread,
                   status: normalizedStatus,
                   ...(typeof options?.completedAt === "string" ? { completedAt: options.completedAt } : {}),
                   ...(typeof options?.updatedAt === "string" && options.updatedAt.trim() ? { updatedAt: options.updatedAt.trim() } : {}),
+                  ...(shouldClearOptimisticAdmission
+                    ? {
+                        metadata: {
+                          ...threadMetadata,
+                          runnerPlayground: nextRunnerPlaygroundMetadata,
+                        },
+                      }
+                    : {}),
                 };
-                const resolvedThread = preserveActiveThreadStatusForStaleCompletion(thread, nextThread, normalizedThreadId);
+                const resolvedThread = preserveActiveThreadStatusForStaleCompletion(thread, nextThread);
                 if (
                   String(thread.status || "").trim() === String(resolvedThread.status || "").trim()
                   && String(thread.completedAt || "") === String(resolvedThread.completedAt || "")
@@ -1546,7 +1623,67 @@
               return didChange ? nextThreads : current;
             });
           }, []);
-  
+
+          const handleBackgroundThreadCreated = useCallback(function handleBackgroundThreadCreated(threadId, options = {}) {
+            const normalizedThreadId = String(threadId || options?.threadRecord?.id || "").trim();
+            if (!normalizedThreadId) {
+              return;
+            }
+
+            const suppliedThreadRecord = options?.threadRecord
+              && typeof options.threadRecord === "object"
+              && !Array.isArray(options.threadRecord)
+                ? options.threadRecord
+                : {};
+            const registeredAt = new Date().toISOString();
+            const suppliedMetadata = suppliedThreadRecord?.metadata
+              && typeof suppliedThreadRecord.metadata === "object"
+              && !Array.isArray(suppliedThreadRecord.metadata)
+                ? suppliedThreadRecord.metadata
+                : {};
+            const suppliedRunnerPlayground = suppliedMetadata?.runnerPlayground
+              && typeof suppliedMetadata.runnerPlayground === "object"
+              && !Array.isArray(suppliedMetadata.runnerPlayground)
+                ? suppliedMetadata.runnerPlayground
+                : {};
+            const threadRecord = {
+              ...suppliedThreadRecord,
+              id: normalizedThreadId,
+              metadata: {
+                ...suppliedMetadata,
+                runnerPlayground: {
+                  ...suppliedRunnerPlayground,
+                  optimisticExecutionAdmission: {
+                    source: "background_dispatch",
+                    registeredAt,
+                  },
+                },
+              },
+            };
+            const taskPreview = options?.taskPreview
+              && typeof options.taskPreview === "object"
+              && !Array.isArray(options.taskPreview)
+                ? options.taskPreview
+                : null;
+
+            // Background dispatches (for example, an Agent mentioned in a
+            // Project comment) must become visible without moving the user
+            // away from their current page. The server response already owns
+            // the durable Thread id, so insert it synchronously and reconcile
+            // its canonical status in the background.
+            upsertRealThreadRecord(threadRecord, {
+              taskPreview,
+              status: String(options?.status || threadRecord.status || "queued").trim() || "queued",
+            });
+            if (taskPreview) {
+              upsertThreadTaskPreview(normalizedThreadId, {
+                ...taskPreview,
+                threadId: normalizedThreadId,
+              });
+            }
+            void refreshThreads(undefined, normalizedThreadId, { silent: true });
+          }, [refreshThreads, upsertRealThreadRecord, upsertThreadTaskPreview]);
+
           const markThreadTaskPreviewDeleted = useCallback(function markThreadTaskPreviewDeleted(threadId, taskPreview) {
             const normalizedThreadId = String(threadId || "").trim();
             if (!normalizedThreadId || !taskPreview?.taskId) {
@@ -1556,6 +1693,7 @@
             const nextPreview = {
               ...taskPreview,
               isDeleted: true,
+              requiresHydration: false,
             };
   
             upsertThreadTaskPreview(normalizedThreadId, nextPreview);
@@ -1614,8 +1752,7 @@
                   status: resolvedNextStatus,
                   completedAt,
                   updatedAt: updatedAt || existingThread?.updatedAt || "",
-                },
-                normalizedThreadId
+                }
               );
               resolvedNextStatus = String(preservedThread?.status || resolvedNextStatus || "").trim();
   
@@ -1628,6 +1765,41 @@
               return "";
             }
           }, [authRequestHeaders, hasRealAccess, proxyBackendBase, updateRealThreadStatus]);
+
+          useEffect(() => {
+            if (!hasRealAccess || typeof window === "undefined") {
+              return;
+            }
+
+            const optimisticThreadIds = (Array.isArray(realThreads) ? realThreads : [])
+              .filter((thread) => (
+                getOptimisticThreadExecutionAdmission(thread)
+                && !isTerminalThreadDisplayStatus(thread?.status)
+              ))
+              .map((thread) => String(thread?.id || "").trim())
+              .filter(Boolean);
+            if (!optimisticThreadIds.length) {
+              return;
+            }
+
+            let disposed = false;
+            let refreshTimer = 0;
+            const reconcileOptimisticThreads = async () => {
+              await Promise.all(
+                optimisticThreadIds.map((threadId) => loadThreadGroundTruthStatus(threadId))
+              );
+              if (!disposed) {
+                refreshTimer = window.setTimeout(reconcileOptimisticThreads, 1000);
+              }
+            };
+            refreshTimer = window.setTimeout(reconcileOptimisticThreads, 250);
+            return () => {
+              disposed = true;
+              if (refreshTimer) {
+                window.clearTimeout(refreshTimer);
+              }
+            };
+          }, [hasRealAccess, loadThreadGroundTruthStatus, realThreads]);
   
           const upsertStatusIndicatorItem = useCallback(function upsertStatusIndicatorItem(nextItem) {
             if (!nextItem?.id) {
@@ -2664,23 +2836,6 @@
               });
             }
           }, [hasRealAccess]);
-  
-          function toggleThreadTaskListMenu(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            const normalizedThreadId = String(activeThreadTaskListTargetId || selectedKnownThread?.id || currentThreadId || "").trim();
-            if (!normalizedThreadId) {
-              return;
-            }
-            setThreadActionMenuState(null);
-            setThreadNavMenuOpen(false);
-            setMetronomeRunActionMenuState(null);
-            const willOpen = !threadTaskListMenuOpen;
-            setThreadTaskListMenuOpen(willOpen);
-            if (willOpen) {
-              void loadThreadTaskListForThread(normalizedThreadId, { force: true });
-            }
-          }
   
           function handleThreadNavMenuOpenChange(open) {
             const nextOpen = Boolean(open);

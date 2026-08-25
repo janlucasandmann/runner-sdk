@@ -576,6 +576,16 @@ assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /composerSurfaceMode: 
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /initialSurfaceLoading:[\s\S]{0,260}metronomeRunTraceState\.status === "loading"/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /threadViewMode: "legacy"/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /"Workflow Logs"/);
+assert.match(
+  METRONOME_APP_SCRIPT_FRAGMENTS.state,
+  /metronomeRunTraceWorkExpanded, setMetronomeRunTraceWorkExpanded\] = useState\(false\)/,
+  "Metronome overview workflow logs must start collapsed.",
+);
+assert.match(
+  METRONOME_APP_SCRIPT_FRAGMENTS.runController,
+  /function openMetronomeRunTraceThread[\s\S]*?setMetronomeRunTraceWorkExpanded\(false\)/,
+  "Opening a Metronome overview thread must reset workflow logs to collapsed.",
+);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /React\.createElement\(PlatformMetronomeConditionResult, conditionPresentation\)/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /buildPlatformMetronomeConditionResultPresentation/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runController, /function enrichMetronomeRunTraceConditionSteps/);
@@ -615,6 +625,46 @@ assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /onOpenPromptSearch:/)
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /onOpenKnowledgeSearch:/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /onOpenThreadSearch:/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /function renderSidebarMetronomeRunEntry/);
+assert.match(
+  METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  /const isCollapsed = collapsedMetronomeRunGroups\[groupKey\] !== false/,
+  "Metronome run groups must start collapsed until the user expands them.",
+);
+assert.match(
+  METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  /void loadMetronomeSidebarRunThreads\(entry\)/,
+  "Expanding a Metronome run group must hydrate its child threads without opening the overview thread.",
+);
+assert.match(
+  METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  /className: "sidebar-metronome-run-main"[\s\S]*?\[groupKey\]: false[\s\S]*?void loadMetronomeSidebarRunThreads\(entry\)[\s\S]*?openMetronomeRunTraceThread\(entry\)/,
+  "Opening a Metronome run from the sidebar must expand and hydrate its node threads by default.",
+);
+assert.match(
+  METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  /React\.createElement\(isCollapsed \? ChevronRight : ChevronDown/,
+  "Metronome run groups must render directionally accurate collapsed and expanded chevrons.",
+);
+assert.match(
+  METRONOME_APP_SCRIPT_FRAGMENTS.runController,
+  /async function loadMetronomeSidebarRunThreads[\s\S]*?\/timeline\?view=compact[\s\S]*?collectMetronomeRunTraceChildThreads/,
+  "The sidebar must lazily load child threads from the compact run timeline.",
+);
+assert.match(
+  METRONOME_APP_SCRIPT_FRAGMENTS.runController,
+  /const workflowNodeName = String\([\s\S]*?nodeData\.label[\s\S]*?nodeName: workflowNodeName/,
+  "Hydrated run steps must carry their workflow node names into child-thread metadata.",
+);
+assert.match(
+  METRONOME_APP_SCRIPT_FRAGMENTS.runController,
+  /loadMetronomeSidebarRunThreads[\s\S]*?Promise\.all\([\s\S]*?\/timeline\?view=compact[\s\S]*?encodeURIComponent\(workflowId\)[\s\S]*?normalizeMetronomeRunTraceResponse\(data, selection, workflow\)/,
+  "Sidebar hydration must join run timelines with workflow definitions so node titles are available without opening the overview.",
+);
+assert.match(
+  METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView,
+  /function collectMetronomeRunTraceChildThreads\(run, selectionOverride = null\)[\s\S]*?buildMetronomeRunTraceChildThreadRecord\([\s\S]*?selectionOverride/,
+  "Sidebar child-thread records must retain the run identity while deriving node titles.",
+);
 assert.match(
   METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
   /getMetronomeTaskLoopPresentation\(entry,[\s\S]*?React\.createElement\(RefreshCw[\s\S]*?runTitle/,

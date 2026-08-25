@@ -6,6 +6,10 @@ export {
   joinPlatformPopupClassNames,
 } from "./platform-popup.js";
 export { PlatformPopupSearchHeader } from "./platform-popup-search-header.js";
+export {
+  PlatformPopupSubmenu,
+  type PlatformPopupSubmenuProps,
+} from "./platform-popup-submenu.js";
 export { PlatformInfoTooltip } from "./platform-info-tooltip.js";
 export {
   renderPlatformAnchoredPopupPortal,

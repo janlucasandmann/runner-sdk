@@ -1,13 +1,17 @@
 import type { CSSProperties, ReactNode } from "react";
 import {
+  AlertCircle as LucideAlertCircle,
   Bookmark as LucideBookmark,
   Check as LucideCheck,
-  ChevronDown as LucideChevronDown,
-  ChevronsUp as LucideChevronsUp,
-  ChevronUp as LucideChevronUp,
-  Equal as LucideEqual,
+  Circle as LucideCircle,
+  CircleCheck as LucideCircleCheck,
+  CircleDashed as LucideCircleDashed,
+  CircleEllipsis as LucideCircleEllipsis,
+  CircleMinus as LucideCircleMinus,
+  RefreshCw as LucideRefreshCw,
   Rocket as LucideRocket,
 } from "lucide-react";
+import { PlatformTicketItem } from "../../platform-ui/components/ui/ticket-item/index.js";
 import { RunnerMarkdown } from "../runner-markdown.js";
 
 export interface RunnerTaskPreview {
@@ -17,6 +21,7 @@ export interface RunnerTaskPreview {
   threadId?: string;
   ticketNumber: string;
   title: string;
+  createdAt?: string | number | Date | null;
   description?: string;
   taskColor?: string;
   status?: string;
@@ -46,7 +51,7 @@ export interface RunnerMissionControlPreview {
 }
 
 export type RunnerTaskPreviewPriority = "low" | "medium" | "high" | "critical";
-export type RunnerTaskPreviewType = "task" | "subtask";
+export type RunnerTaskPreviewType = "task" | "subtask" | "loop";
 export type RunnerTaskPreviewColor = "gray" | "blue" | "green" | "amber" | "rose";
 
 export function normalizeRunnerTaskPreviewPriority(
@@ -67,7 +72,11 @@ export function normalizeRunnerTaskPreviewPriority(
 export function normalizeRunnerTaskPreviewType(
   value: string | null | undefined,
 ): RunnerTaskPreviewType {
-  return String(value || "").trim().toLowerCase() === "subtask" ? "subtask" : "task";
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "subtask" || normalized === "loop") {
+    return normalized;
+  }
+  return "task";
 }
 
 export function normalizeRunnerTaskPreviewColor(
@@ -126,9 +135,13 @@ export function getRunnerTaskPreviewColorStyle(
 
   return {
     "--tb-task-preview-accent": presentation.accent,
-    "--tb-task-preview-surface": presentation.surface,
+    "--tb-task-preview-surface": "rgba(255, 255, 255, 0.075)",
     "--tb-task-preview-surface-hover": presentation.surfaceHover,
     "--tb-task-preview-border": presentation.border,
+    "--playground-task-color-accent": presentation.accent,
+    "--playground-task-color-surface": "rgba(255, 255, 255, 0.075)",
+    "--playground-task-color-surface-hover": presentation.surfaceHover,
+    "--playground-task-color-surface-active": presentation.surfaceHover,
   } as CSSProperties;
 }
 
@@ -141,16 +154,42 @@ function renderRunnerTaskPreviewPriorityIcon(
   className: string,
 ) {
   const normalized = normalizeRunnerTaskPreviewPriority(priority);
-  if (normalized === "low") {
-    return <LucideChevronDown className={`${className} is-low`} strokeWidth={2} />;
-  }
-  if (normalized === "high") {
-    return <LucideChevronUp className={`${className} is-high`} strokeWidth={2} />;
-  }
   if (normalized === "critical") {
-    return <LucideChevronsUp className={`${className} is-critical`} strokeWidth={2} />;
+    return (
+      <span
+        className={`playground-tasks-priority-value is-critical ${className}`}
+        title="Urgent"
+        aria-label="Urgent"
+      >
+        <LucideAlertCircle
+          className="playground-tasks-priority-value-icon"
+          strokeWidth={2}
+          aria-hidden="true"
+        />
+      </span>
+    );
   }
-  return <LucideEqual className={`${className} is-medium`} strokeWidth={2} />;
+  const level = normalized === "low" ? 1 : normalized === "high" ? 3 : 2;
+  const label = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  return (
+    <span
+      className={`playground-tasks-priority-value is-${normalized} ${className}`}
+      title={label}
+      aria-label={label}
+    >
+      <span
+        className="platform-priority-bars-icon playground-tasks-priority-value-icon playground-tasks-priority-bars-icon"
+        aria-hidden="true"
+      >
+        {[1, 2, 3].map((barLevel) => (
+          <span
+            key={barLevel}
+            className={`platform-priority-bars-icon__bar playground-tasks-priority-bars-bar${barLevel <= level ? " is-active" : ""}`}
+          />
+        ))}
+      </span>
+    </span>
+  );
 }
 
 function renderRunnerTaskPreviewAssigneeAvatar(taskPreview: RunnerTaskPreview) {
@@ -161,20 +200,69 @@ function renderRunnerTaskPreviewAssigneeAvatar(taskPreview: RunnerTaskPreview) {
   const assigneePhotoUrl = String(taskPreview.assigneePhotoUrl || "").trim();
 
   return (
-    <span className="tb-task-preview-assignee-avatar" aria-hidden="true" title={assigneeName}>
+    <span className="playground-tasks-board-assignee-avatar" aria-hidden="true" title={assigneeName}>
       {assigneePhotoUrl
         ? (
           <img
-            className="tb-task-preview-assignee-avatar-image"
+            className="playground-tasks-board-assignee-avatar-image"
             src={assigneePhotoUrl}
             alt={assigneeName.charAt(0).toUpperCase()}
           />
         )
         : (
-          <span className="tb-task-preview-assignee-avatar-fallback">
+          <span className="playground-tasks-board-assignee-avatar-fallback">
             {assigneeName.charAt(0).toUpperCase()}
           </span>
         )}
+    </span>
+  );
+}
+
+function normalizeRunnerTaskPreviewStatus(value: string | null | undefined) {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+  if (normalized === "doing") return "in_progress";
+  if (normalized === "review") return "in_review";
+  if (normalized === "cancelled") return "canceled";
+  return [
+    "backlog",
+    "todo",
+    "in_progress",
+    "done",
+    "canceled",
+    "blocked",
+    "in_review",
+  ].includes(normalized)
+    ? normalized
+    : "todo";
+}
+
+function renderRunnerTaskPreviewStatus(taskPreview: RunnerTaskPreview) {
+  const status = normalizeRunnerTaskPreviewStatus(taskPreview.status);
+  const presentation = status === "backlog"
+    ? { label: "Backlog", Icon: LucideCircleDashed, tone: "is-backlog" }
+    : status === "in_progress"
+      ? { label: "In Progress", Icon: LucideCircleEllipsis, tone: "is-in-progress" }
+      : status === "done"
+        ? { label: "Done", Icon: LucideCircleCheck, tone: "is-done" }
+        : status === "canceled"
+          ? { label: "Canceled", Icon: LucideCircleMinus, tone: "is-canceled" }
+          : status === "blocked"
+            ? { label: "Blocked", Icon: LucideAlertCircle, tone: "is-blocked" }
+            : status === "in_review"
+              ? { label: "In Review", Icon: LucideCircleEllipsis, tone: "is-in-review" }
+              : { label: "Todo", Icon: LucideCircle, tone: "is-todo" };
+  const { Icon } = presentation;
+
+  return (
+    <span title={presentation.label} aria-label={presentation.label}>
+      <Icon
+        className={`playground-tasks-status-icon ${presentation.tone} playground-tasks-lane-card-status-icon`}
+        strokeWidth={status === "in_progress" ? 1.7 : 2}
+        aria-hidden="true"
+      />
     </span>
   );
 }
@@ -186,47 +274,36 @@ export function renderRunnerTaskPreviewCard(
   } = {},
 ) {
   const isTaskPreviewDeleted = Boolean(taskPreview.isDeleted);
-  const isReviewPreview = isRunnerTaskReviewPreview(taskPreview);
   const taskType = normalizeRunnerTaskPreviewType(taskPreview.taskType);
+  const typeIcon = taskType === "subtask"
+    ? <LucideCheck width={14} height={14} strokeWidth={1.9} />
+    : taskType === "loop"
+      ? <LucideRefreshCw width={14} height={14} strokeWidth={1.9} />
+      : <LucideBookmark width={14} height={14} strokeWidth={1.9} />;
 
   return (
-    <button
-      type="button"
-      className={`tb-task-preview-card${isReviewPreview ? " is-review" : ""}`.trim()}
+    <PlatformTicketItem
+      variant="card"
       style={getRunnerTaskPreviewColorStyle(taskPreview.taskColor)}
+      title={taskPreview.title || "Untitled Task"}
+      taskType={taskType}
+      typeIcon={typeIcon}
+      priority={renderRunnerTaskPreviewPriorityIcon(
+        taskPreview.priority,
+        "playground-tasks-lane-card-priority",
+      )}
+      ticketNumber={taskPreview.ticketNumber}
+      status={renderRunnerTaskPreviewStatus(taskPreview)}
+      createdAt={taskPreview.createdAt}
+      assignee={renderRunnerTaskPreviewAssigneeAvatar(taskPreview)}
+      completed={normalizeRunnerTaskPreviewStatus(taskPreview.status) === "done"}
       disabled={isTaskPreviewDeleted}
       onClick={() => {
         if (!isTaskPreviewDeleted && typeof options.onClick === "function") {
           options.onClick(taskPreview);
         }
       }}
-    >
-      {isReviewPreview ? <div className="tb-task-preview-review-label">Review</div> : null}
-      <div className="tb-task-preview-card-header">
-        <div className="tb-task-preview-title">{taskPreview.title || "Untitled Task"}</div>
-        {renderRunnerTaskPreviewAssigneeAvatar(taskPreview)}
-      </div>
-      <RunnerMarkdown
-        content={String(taskPreview.description || "").trim() || "No description"}
-        className="tb-task-preview-card-description tb-message-markdown"
-        softBreaks
-        disallowHeadings
-      />
-      <div className="tb-task-preview-card-bottom">
-        <div className="tb-task-preview-card-meta-left">
-          <div className={`tb-task-preview-type-badge ${taskType === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
-            {taskType === "subtask"
-              ? <LucideCheck className="tb-task-preview-type-icon" strokeWidth={2} />
-              : <LucideBookmark className="tb-task-preview-type-icon" strokeWidth={2} />}
-          </div>
-          {renderRunnerTaskPreviewPriorityIcon(
-            taskPreview.priority,
-            "tb-task-preview-priority-icon",
-          )}
-        </div>
-        <span className="tb-task-preview-ticket">{taskPreview.ticketNumber}</span>
-      </div>
-    </button>
+    />
   );
 }
 

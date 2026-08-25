@@ -8,6 +8,7 @@ import {
 } from "../composer-commands.js";
 import {
   buildAssistantMessageRunMetadata,
+  dedupeRunnerConversationMessages,
   sortRunnerConversationMessagesChronologically,
   type RunnerConversationMessage,
 } from "../conversation-messages.js";
@@ -103,7 +104,9 @@ export function buildHydratedTurnsFromMessages(
   messages: RunnerConversationMessage[],
   meta?: RunnerHydratedMessageTurnMeta,
 ): RunnerTurn[] {
-  const chronologicalMessages = sortRunnerConversationMessagesChronologically(messages);
+  const chronologicalMessages = sortRunnerConversationMessagesChronologically(
+    dedupeRunnerConversationMessages(messages),
+  );
   const turns: RunnerTurn[] = [];
   let currentTurn: RunnerTurn | null = null;
   let pendingBtwTurn: RunnerTurn | null = null;

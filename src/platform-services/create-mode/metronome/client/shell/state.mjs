@@ -7,6 +7,7 @@ export const METRONOME_APP_STATE_SCRIPT = `
         const [metronomeTopNavPublishMenuOpen, setMetronomeTopNavPublishMenuOpen] = useState(false);
         const [isMetronomeNodeDetailOpen, setIsMetronomeNodeDetailOpen] = useState(false);
         const [collapsedMetronomeRunGroups, setCollapsedMetronomeRunGroups] = useState({});
+        const [metronomeSidebarRunThreadLoadStateByKey, setMetronomeSidebarRunThreadLoadStateByKey] = useState({});
         const [metronomeRunTraceSelection, setMetronomeRunTraceSelection] = useState(null);
         const [metronomeRunTraceState, setMetronomeRunTraceState] = useState({
           key: "",
@@ -14,7 +15,7 @@ export const METRONOME_APP_STATE_SCRIPT = `
           run: null,
           error: "",
         });
-        const [metronomeRunTraceWorkExpanded, setMetronomeRunTraceWorkExpanded] = useState(true);
+        const [metronomeRunTraceWorkExpanded, setMetronomeRunTraceWorkExpanded] = useState(false);
         const [metronomeRunActivitySearchQuery, setMetronomeRunActivitySearchQuery] = useState("");
         const [metronomeRunActivityTimeRange, setMetronomeRunActivityTimeRange] = useState(null);
         const [metronomeRunActivityChartHeight, setMetronomeRunActivityChartHeight] = useState(null);

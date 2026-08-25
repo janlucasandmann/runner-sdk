@@ -778,7 +778,13 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
           }));
 
           try {
-            const items = await connectorConfig.fetchItems(normalizedFolderId);
+            const selectedAccountId = String(
+              taskConnectorBrowserAccountIdsBySource[source] || ""
+            ).trim();
+            const items = await connectorConfig.fetchItems(
+              normalizedFolderId,
+              selectedAccountId ? { accountId: selectedAccountId } : undefined
+            );
             const normalizedItems = (Array.isArray(items) ? items : [])
               .map((item) => normalizePlaygroundTaskConnectorItem(item))
               .filter(Boolean);
@@ -813,6 +819,7 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
           taskConnectorBrowserItemsBySource,
           taskConnectorBrowserLoadedFolderIds,
           taskConnectorBrowserLoadingFolderIds,
+          taskConnectorBrowserAccountIdsBySource,
           taskConnectorConfigByKey,
         ]);
 
@@ -836,7 +843,12 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
           }));
 
           try {
-            const databases = await notionConfig.fetchDatabases();
+            const selectedAccountId = String(
+              taskConnectorBrowserAccountIdsBySource.notion || ""
+            ).trim();
+            const databases = await notionConfig.fetchDatabases(
+              selectedAccountId ? { accountId: selectedAccountId } : undefined
+            );
             const normalizedDatabases = (Array.isArray(databases) ? databases : [])
               .filter((database) => database && typeof database === "object" && typeof database.id === "string" && database.id.trim())
               .map((database) => ({
@@ -865,6 +877,7 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
           taskConnectorBrowserLoadingState.notion,
           taskConnectorBrowserNotionDatabases,
           taskConnectorBrowserNotionDatabasesLoaded,
+          taskConnectorBrowserAccountIdsBySource.notion,
           taskConnectorConfigByKey.notion,
         ]);
 

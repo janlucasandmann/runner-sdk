@@ -4,6 +4,7 @@ export const SETTINGS_MODAL_STATE_SCRIPT = String.raw`        const settingsMark
           { id: "permissionRequests", title: "Permission requests", description: "When an agent needs approval or additional tool access.", defaultEnabled: true },
           { id: "assignedWork", title: "Assigned work and reviews", description: "Tasks assigned to you and review requests that need attention.", defaultEnabled: true },
           { id: "taskActivity", title: "Ticket activity", description: "Comments and changes on tickets you follow.", defaultEnabled: true },
+          { id: "mentions", title: "Mentions", description: "When someone mentions you in a project update or ticket comment.", defaultEnabled: true },
           { id: "invitations", title: "Invitations", description: "Team and organization invitations.", defaultEnabled: true },
           { id: "productUpdates", title: "Product updates", description: "Important product announcements and release information.", defaultEnabled: true },
         ]);

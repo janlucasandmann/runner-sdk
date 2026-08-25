@@ -7,6 +7,101 @@ export const PROJECT_OVERVIEW_CSS_03_FRAGMENT = String.raw`        position: rel
         gap: 42px;
       }
 
+      .playground-project-settings-layout {
+        width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        align-items: start;
+        gap: 42px;
+      }
+
+      .playground-project-settings-layout.is-access-detail {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+      }
+
+      .playground-project-settings-navigation {
+        min-width: 0;
+        position: sticky;
+        top: var(--project-detail-sticky-offset, 0px);
+      }
+
+      .playground-project-settings-navigation__header {
+        min-width: 0;
+        margin-bottom: 12px;
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .playground-project-settings-navigation__title {
+        min-width: 0;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.3;
+      }
+
+      .playground-project-settings-navigation__links {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-project-settings-navigation__link {
+        flex: 0 0 auto;
+      }
+
+      .playground-project-settings-navigation__link-label {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-project-settings-navigation__link-icon {
+        flex: 0 0 auto;
+        color: currentColor;
+      }
+
+      .playground-project-settings-content {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-project-settings-content > * {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-project-settings-content
+        .playground-project-overview-plugins-panel
+        .playground-plugins-section-title,
+      .playground-project-settings-content
+        .playground-project-timeline-settings
+        .playground-project-settings-section__title,
+      .playground-project-settings-content
+        .playground-project-overview-strategy-add-title,
+      .playground-project-settings-content
+        .platform-data-table__toolbar-title,
+      .playground-project-settings-content
+        .playground-team-role-permission-title {
+        font-size: 18px;
+      }
+
+      @media (max-width: 900px) {
+        .playground-project-settings-layout {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 24px;
+        }
+
+        .playground-project-settings-navigation {
+          position: static;
+        }
+      }
+
       .playground-project-settings-section {
         display: flex;
         flex-direction: column;
@@ -37,8 +132,29 @@ export const PROJECT_OVERVIEW_CSS_03_FRAGMENT = String.raw`        position: rel
         margin-bottom: 0;
       }
 
-      .playground-project-settings-rules-section .playground-project-overview-rules-empty .playground-tasks-empty-title {
+      .playground-project-settings-rules-section .playground-project-overview-strategy-add-row {
+        align-items: flex-start;
+      }
+
+      .playground-project-overview-rules-inline-title-row {
+        margin-bottom: 8px;
+      }
+
+      .playground-project-settings-rules-heading-copy {
+        min-width: 0;
+      }
+
+      .playground-project-settings-rules-section .playground-project-overview-strategy-add-title {
+        margin: 0 0 8px;
+      }
+
+      .playground-project-settings-rules-description {
+        max-width: 620px;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.5);
         font-size: 12px;
+        font-weight: 400;
+        line-height: 1.45;
       }
 
       .playground-project-settings-access-section {

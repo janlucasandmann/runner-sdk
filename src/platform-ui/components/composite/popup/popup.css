@@ -91,6 +91,50 @@
   background: transparent;
 }
 
+.platform-popup-submenu.platform-popup-anchor {
+  width: 100%;
+  display: block;
+}
+
+.platform-popup-submenu__trigger.tb-popup-row {
+  min-width: 0;
+}
+
+.platform-popup-submenu__leading,
+.platform-popup-submenu__chevron {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.platform-popup-submenu__label {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-popup-submenu__detail {
+  min-width: 0;
+  max-width: 92px;
+  margin-left: auto;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.5);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-popup-submenu__chevron {
+  margin-left: -4px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.platform-popup-submenu__surface.platform-popup-surface {
+  min-width: 0;
+}
+
 .platform-popup-surface .tb-popup-check-slot {
   display: inline-flex;
   align-items: center;

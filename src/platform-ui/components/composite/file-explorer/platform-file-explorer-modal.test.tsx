@@ -134,4 +134,27 @@ describe("PlatformFileExplorerModal", () => {
     ).toBe(true);
     expect(dialog.classList.contains("has-no-navigation")).toBe(true);
   });
+
+  it("can omit the complete sidebar without changing the shared explorer content", () => {
+    render(
+      <PlatformFileExplorerModal
+        open
+        visible
+        portal={false}
+        title="Attach files"
+        sidebar={<div>Sources</div>}
+        showSidebar={false}
+        contentHeader={<div>GitHub account</div>}
+        onClose={vi.fn()}
+      >
+        <div>Repositories</div>
+      </PlatformFileExplorerModal>,
+    );
+
+    const dialog = screen.getByRole("dialog", { name: "Attach files" });
+    expect(dialog.querySelector("[data-platform-modal-part='sidebar']")).toBeNull();
+    expect(dialog.querySelector(".platform-file-explorer")?.classList.contains("has-no-sidebar"))
+      .toBe(true);
+    expect(dialog.textContent).toContain("Repositories");
+  });
 });

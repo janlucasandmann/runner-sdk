@@ -4,6 +4,7 @@ export const ORGANIZATION_ACCESS_RESOURCE_ACTIONS: Readonly<
   project: [
     { id: "project_view", label: "View project" },
     { id: "project_issues_manage", label: "Manage issues" },
+    { id: "project_updates_write", label: "Write project updates" },
     { id: "project_resources_manage", label: "Manage resources" },
     { id: "project_access_manage", label: "Manage access" },
   ],
@@ -112,4 +113,3 @@ export function formatOrganizationAccessDate(value: unknown): string {
     timeStyle: "short",
   }).format(date);
 }
-

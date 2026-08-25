@@ -15,7 +15,6 @@ export function isRunningThreadLifecycleStatus(
     "pending",
     "starting",
     "running",
-    "active",
     "created",
     "ready",
   ].includes(normalizeThreadLifecycleStatus(status));
@@ -57,10 +56,7 @@ export function resolveHydratedThreadLifecycleStatus(
   if (isPendingPermissionThreadLifecycleStatus(normalizedStatus)) {
     return "permission_asked";
   }
-  if (
-    isRunningThreadLifecycleStatus(normalizedStatus) &&
-    (normalizedStatus !== "active" || completedAtMs == null)
-  ) {
+  if (isRunningThreadLifecycleStatus(normalizedStatus)) {
     return normalizedStatus;
   }
   if (completedAtMs != null && !isTerminalThreadLifecycleStatus(normalizedStatus)) {

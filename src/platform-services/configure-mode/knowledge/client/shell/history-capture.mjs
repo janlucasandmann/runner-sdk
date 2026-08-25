@@ -6,8 +6,9 @@ export const KNOWLEDGE_APP_HISTORY_CAPTURE_SCRIPT = `          if (activePage ==
               libraryName: selectedKnowledgeLibraryName,
               documentId: selectedKnowledgeDocumentId,
               documentName: selectedKnowledgeDocumentName,
+              originThreadId: knowledgeOriginThreadId,
+              originThreadTitle: knowledgeOriginThreadTitle,
             };
           }
 
 `;
-

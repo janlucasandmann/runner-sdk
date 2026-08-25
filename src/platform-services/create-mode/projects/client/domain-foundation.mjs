@@ -61,9 +61,9 @@ export const PROJECTS_DOMAIN_FOUNDATION_SCRIPT = `
           label: "Gray",
           accent: "rgba(255, 255, 255, 0.92)",
           surface: "rgba(255, 255, 255, 0.075)",
-          surfaceHover: "rgba(255, 255, 255, 0.07)",
+          surfaceHover: "rgba(255, 255, 255, 0.1)",
           surfaceActive: "rgba(255, 255, 255, 0.1)",
-          border: "rgba(255, 255, 255, 0.08)",
+          border: "rgba(255, 255, 255, 0.05)",
           text: "rgba(255, 255, 255, 0.96)",
         },
         {

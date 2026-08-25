@@ -99,12 +99,35 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
               .filter(([nodeId]) => Boolean(nodeId))
           );
           return (Array.isArray(steps) ? steps : []).map((step) => {
-            if (String(step?.kind || step?.nodeType || "").trim().toLowerCase() !== "condition") {
+            const nodeId = String(step?.nodeId || step?.node_id || "").trim();
+            const workflowNode = nodesById.get(nodeId) || null;
+            if (!workflowNode) {
               return step;
             }
-            const nodeId = String(step?.nodeId || step?.node_id || "").trim();
-            const conditionNode = nodesById.get(nodeId) || null;
-            return conditionNode ? { ...step, conditionNode } : step;
+            const nodeData = workflowNode?.data && typeof workflowNode.data === "object" && !Array.isArray(workflowNode.data)
+              ? workflowNode.data
+              : {};
+            const workflowNodeName = String(
+              nodeData.label
+              || workflowNode.label
+              || nodeData.name
+              || workflowNode.name
+              || nodeData.title
+              || workflowNode.title
+              || ""
+            ).trim();
+            const isCondition = String(step?.kind || step?.nodeType || nodeData.kind || workflowNode.kind || "").trim().toLowerCase() === "condition";
+            return {
+              ...step,
+              ...(workflowNodeName
+                ? {
+                    label: workflowNodeName,
+                    nodeLabel: workflowNodeName,
+                    nodeName: workflowNodeName,
+                  }
+                : {}),
+              ...(isCondition ? { conditionNode: workflowNode } : {}),
+            };
           });
         }
 
@@ -455,7 +478,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             run: buildFallbackMetronomeRunTraceRun(entry),
             error: "",
           });
-          setMetronomeRunTraceWorkExpanded(true);
+          setMetronomeRunTraceWorkExpanded(false);
           setMetronomeRunActivitySearchQuery("");
           setMetronomeRunActivityTimeRange(null);
           setMetronomeRunActivityChartHeight(null);
@@ -660,7 +683,11 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             metronomeName: workflowName,
             runId,
           };
-          const threads = collectMetronomeRunTraceChildThreads(runForThreads);
+          const threads = collectMetronomeRunTraceChildThreads(runForThreads, {
+            workflowId: metronomeId,
+            runId,
+            workflowName,
+          });
           const activityTimestamp = run.updatedAt || run.completedAt || run.startedAt || run.createdAt || new Date().toISOString();
           const syntheticActivityThread = normalizeThreadItem({
             id: createMetronomeRunTraceThreadId(key) || key,
@@ -697,6 +724,132 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             threads,
             latestThread,
           };
+        }
+
+        async function loadMetronomeSidebarRunThreads(entry, options = {}) {
+          const workflowId = String(entry?.metronomeId || entry?.workflowId || "").trim();
+          const runId = String(entry?.runId || entry?.workflowRunId || "").trim();
+          const key = String(entry?.key || getSidebarMetronomeRunGroupKey({ metronomeId: workflowId, runId }) || "").trim();
+          if (!workflowId || !runId || !key || !hasRealAccess) {
+            return [];
+          }
+
+          const currentLoadStatus = String(metronomeSidebarRunThreadLoadStateByKey?.[key]?.status || "idle").trim();
+          const shouldRefreshActiveRun = isActiveMetronomeRunStatus(entry?.status);
+          if (currentLoadStatus === "loading" || (currentLoadStatus === "loaded" && !options?.force && !shouldRefreshActiveRun)) {
+            return Array.isArray(entry?.threads) ? entry.threads : [];
+          }
+
+          setMetronomeSidebarRunThreadLoadStateByKey((current) => ({
+            ...(current && typeof current === "object" ? current : {}),
+            [key]: { status: "loading", error: "" },
+          }));
+
+          const selection = {
+            key,
+            workflowId,
+            runId,
+            workflowName: String(entry?.workflowName || "Metronome").trim() || "Metronome",
+            status: String(entry?.status || "").trim(),
+            input: entry?.input || null,
+            threads: Array.isArray(entry?.threads) ? entry.threads : [],
+            latestThread: entry?.latestThread || null,
+            originThread: entry?.originThread || null,
+          };
+
+          try {
+            const [timelineResponse, workflowResponse] = await Promise.all([
+              fetchJsonWithTimeout(
+                proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId) + "/runs/" + encodeURIComponent(runId) + "/timeline?view=compact",
+                {
+                  method: "GET",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: authRequestHeaders,
+                },
+                12000
+              ),
+              fetchJsonWithTimeout(
+                proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId),
+                {
+                  method: "GET",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: authRequestHeaders,
+                },
+                8000
+              ).catch(() => null),
+            ]);
+            const { response, data } = timelineResponse;
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load run threads.");
+            }
+
+            const workflowData = workflowResponse?.response?.ok
+              ? workflowResponse.data?.data
+                || workflowResponse.data?.metronome
+                || workflowResponse.data?.workflow
+                || workflowResponse.data
+              : null;
+            const workflow = workflowData && typeof workflowData === "object" && !Array.isArray(workflowData)
+              ? normalizeMetronomeWorkflow(workflowData)
+              : null;
+            const run = normalizeMetronomeRunTraceResponse(data, selection, workflow);
+            const threads = collectMetronomeRunTraceChildThreads(run, selection);
+            if (threads.length) {
+              setRealThreads((current) => {
+                const existingById = new Map((Array.isArray(current) ? current : []).map((thread) => [String(thread?.id || "").trim(), thread]));
+                let didChange = false;
+                threads.forEach((thread) => {
+                  const threadId = String(thread?.id || "").trim();
+                  if (!threadId || privateThreadIdsRef.current.has(threadId) || isPrivateThreadRecord(thread)) {
+                    return;
+                  }
+                  const existing = existingById.get(threadId) || null;
+                  if (!existing || JSON.stringify(existing) !== JSON.stringify(thread)) {
+                    didChange = true;
+                    existingById.set(threadId, existing ? normalizeThreadItem({ ...existing, ...thread }) : thread);
+                  }
+                });
+                return didChange ? normalizeThreadList(Array.from(existingById.values())) : current;
+              });
+            }
+
+            const latestThread = threads.reduce((latest, thread) => (
+              !latest || resolveThreadSortTimestamp(thread) > resolveThreadSortTimestamp(latest) ? thread : latest
+            ), entry?.latestThread || null);
+            upsertOptimisticMetronomeRunEntry({
+              ...entry,
+              kind: "metronome-run",
+              key,
+              metronomeId: workflowId,
+              runId,
+              workflowName: String(entry?.workflowName || run?.metronomeName || run?.workflowName || "Metronome").trim() || "Metronome",
+              status: String(run?.status || entry?.status || "").trim(),
+              input: run?.input || entry?.input || null,
+              threads,
+              latestThread,
+              originThread: entry?.originThread || null,
+            });
+            setMetronomeRunStatusByKey((current) => ({
+              ...(current && typeof current === "object" ? current : {}),
+              [key]: String(run?.status || entry?.status || "").trim(),
+            }));
+            setMetronomeSidebarRunThreadLoadStateByKey((current) => ({
+              ...(current && typeof current === "object" ? current : {}),
+              [key]: { status: "loaded", error: "" },
+            }));
+            return threads;
+          } catch (error) {
+            setMetronomeSidebarRunThreadLoadStateByKey((current) => ({
+              ...(current && typeof current === "object" ? current : {}),
+              [key]: {
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load run threads.",
+              },
+            }));
+            return [];
+          }
         }
 
         const loadRecentMetronomeSidebarRuns = useCallback(async function loadRecentMetronomeSidebarRuns(options = {}) {
@@ -1060,7 +1213,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
                 run: nextRun,
                 error: "",
               });
-              const nextTraceThreads = collectMetronomeRunTraceChildThreads(nextRun);
+              const nextTraceThreads = collectMetronomeRunTraceChildThreads(nextRun, selection);
               if (nextTraceThreads.length) {
                 setRealThreads((current) => {
                   const existingById = new Map((Array.isArray(current) ? current : []).map((thread) => [String(thread?.id || "").trim(), thread]));

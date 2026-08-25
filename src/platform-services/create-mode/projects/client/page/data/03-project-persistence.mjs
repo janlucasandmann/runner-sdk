@@ -40,6 +40,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             const response = await fetch(backendUrl + "/projects?view=overview", {
               method: "GET",
               headers: requestHeaders,
+              cache: "no-store",
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
@@ -58,7 +59,9 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             setProjects((current) =>
               sortPlaygroundProjectsByRecent(nextProjects.map((project) => {
                 const existingProject = current.find((currentProject) => currentProject?.id === project.id) || null;
-                return applyProjectLocalNameOverride(mergePlaygroundProjectRecords(project, existingProject) || project);
+                return applyProjectLocalNameOverride(
+                  mergePlaygroundProjectRecordsByFidelity(project, existingProject) || project
+                );
               }))
             );
             setProjectLoadState({
@@ -75,7 +78,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
                   current?.project?.id === selectedProjectId
                     ? (() => {
                         const mergedProject = applyProjectLocalNameOverride(
-                          mergePlaygroundProjectRecords(refreshedProject, current.project) || refreshedProject
+                          mergePlaygroundProjectRecordsByFidelity(refreshedProject, current.project) || refreshedProject
                         );
                         return {
                           ...current,
@@ -129,7 +132,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
           const normalizedEvents = (Array.isArray(rows) ? rows : [])
             .map((row) => {
               const normalizedEvent = normalizePlaygroundTaskActivityRecord(row);
-              if (!normalizedEvent || normalizedEvent.eventType === "comment_added") {
+              if (!normalizedEvent) {
                 return null;
               }
               const fieldName = String(normalizedEvent.fieldName || "").trim().toLowerCase();
@@ -484,11 +487,15 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
         function hasCachedProjectWorkspace(projectId) {
           const normalizedProjectId = String(projectId || "").trim();
           if (!normalizedProjectId) return false;
-          return Boolean(
-            String(selectedProjectSnapshot?.id || "").trim() === normalizedProjectId
-            || String(selectedProjectDetail?.project?.id || "").trim() === normalizedProjectId
-            || projects.some((project) => String(project?.id || "").trim() === normalizedProjectId)
-          );
+          const cachedCandidates = [
+            selectedProjectSnapshot,
+            selectedProjectDetail?.project,
+            ...projects,
+          ];
+          return cachedCandidates.some((project) => (
+            String(project?.id || "").trim() === normalizedProjectId
+            && isPlaygroundProjectDetailRecord(project)
+          ));
         }
 
         function settleProjectWorkspaceLoadFailure(projectId, error, fallbackMessage) {
@@ -547,6 +554,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               {
                 method: "GET",
                 headers: requestHeaders,
+                cache: "no-store",
               }
             );
             const data = await response.json().catch(() => ({}));
@@ -570,6 +578,10 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               return false;
             }
 
+            if (!data?.project || typeof data.project !== "object" || String(data.project.id || "").trim() !== projectId) {
+              return loadProjectWorkspace(projectId, { loadProjectConfig: true });
+            }
+
             const snapshotProjectRecord = selectedProjectSnapshot
               || projects.find((project) => project?.id === projectId)
               || normalizePlaygroundProjectRecord({
@@ -583,6 +595,9 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               ? mergePlaygroundProjectRecords(currentDetailProject, snapshotProjectRecord) || currentDetailProject
               : snapshotProjectRecord;
             const projectRecord = getPlaygroundProjectResponseRecord(data, fallbackProjectRecord) || fallbackProjectRecord;
+            if (!isPlaygroundProjectDetailRecord(projectRecord)) {
+              return loadProjectWorkspace(projectId, { loadProjectConfig: true });
+            }
             const nextSummary = {
               ...buildEmptyPlaygroundProjectSummary(),
               ...(data?.summary && typeof data.summary === "object" ? data.summary : {}),
@@ -647,30 +662,27 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 
           const loadToken = projectId + ":" + Date.now().toString(36) + Math.random().toString(36).slice(2);
           projectWorkspaceLoadTokenRef.current = loadToken;
-          const shouldLoadProjectConfig = options?.loadProjectConfig === true;
-          const projectConfigLoadToken = shouldLoadProjectConfig
-            ? [
-                backendUrl,
-                requestHeadersKey,
-                projectId,
-                Date.now().toString(36),
-                Math.random().toString(36).slice(2),
-              ].join("|")
-            : "";
-          if (projectConfigLoadToken) {
-            projectConfigLoadTokenRef.current = projectConfigLoadToken;
-          }
+          const shouldLoadProjectConfig = options?.loadProjectConfig !== false;
+          const projectConfigLoadToken = [
+            backendUrl,
+            requestHeadersKey,
+            projectId,
+            Date.now().toString(36),
+            Math.random().toString(36).slice(2),
+          ].join("|");
+          projectConfigLoadTokenRef.current = projectConfigLoadToken;
           const projectDetailPromise = shouldLoadProjectConfig
             ? fetch(backendUrl + "/projects/" + encodeURIComponent(projectId), {
                 method: "GET",
                 headers: requestHeaders,
+                cache: "no-store",
               })
               .then(async (response) => ({
                 response,
                 data: await response.json().catch(() => ({})),
               }))
               .catch((error) => ({ error }))
-            : null;
+            : Promise.resolve(null);
           setTaskLoadState((current) => ({
             status: "loading",
             error: current.status === "ready" ? "" : current.error,
@@ -693,7 +705,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             threadsRequestTarget.searchParams.set("limit", "500");
             const activityResultPromise = fetchProjectOverviewTaskActivity(projectId);
 
-            const [workGraphResult, releasesResponse, sprintsResponse, threadsResponse] = await Promise.all([
+            const [workGraphResult, releasesResponse, sprintsResponse, threadsResponse, projectResult] = await Promise.all([
               loadProjectWorkGraph(projectId),
               fetch(backendUrl + buildProjectScopedPath("/tasks/releases", projectId), {
                 method: "GET",
@@ -707,6 +719,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
                 method: "GET",
                 headers: requestHeaders,
               }),
+              projectDetailPromise,
             ]);
 
             const tasksResponse = workGraphResult.response;
@@ -726,6 +739,10 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             }
 
             if (projectWorkspaceLoadTokenRef.current !== loadToken) {
+              return false;
+            }
+
+            if (projectConfigLoadTokenRef.current !== projectConfigLoadToken) {
               return false;
             }
 
@@ -754,29 +771,55 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             const fallbackProjectRecord = currentDetailProject
               ? mergePlaygroundProjectRecords(currentDetailProject, snapshotProjectRecord) || currentDetailProject
               : snapshotProjectRecord;
+            if (projectResult?.error && !isPlaygroundProjectDetailRecord(fallbackProjectRecord)) {
+              throw projectResult.error;
+            }
+            if (projectResult?.response && !projectResult.response.ok && !isPlaygroundProjectDetailRecord(fallbackProjectRecord)) {
+              throw new Error(
+                projectResult.data?.message
+                || projectResult.data?.error
+                || "Project details are temporarily unavailable."
+              );
+            }
+            const projectRecord = projectResult?.response?.ok
+              ? getPlaygroundProjectResponseRecord(projectResult.data, fallbackProjectRecord)
+              : fallbackProjectRecord;
+            if (!isPlaygroundProjectDetailRecord(projectRecord)) {
+              throw new Error("Project details are temporarily unavailable.");
+            }
             const nextReleases = enrichPlaygroundTaskReleasesWithLegacyStrategy(
               parsedReleases,
-              fallbackProjectRecord
+              projectRecord
             );
             const fallbackSummary = {
               ...buildEmptyPlaygroundProjectSummary(),
-              ...(fallbackProjectRecord?.summary && typeof fallbackProjectRecord.summary === "object" ? fallbackProjectRecord.summary : {}),
+              ...(projectRecord?.summary && typeof projectRecord.summary === "object" ? projectRecord.summary : {}),
+              ...(projectResult?.data?.summary && typeof projectResult.data.summary === "object" ? projectResult.data.summary : {}),
             };
             const fallbackEnvironments = selectedProjectDetail?.project?.id === projectId && Array.isArray(selectedProjectDetail.environments)
               ? selectedProjectDetail.environments
               : [];
+            const projectEnvironments = projectResult?.response?.ok
+              ? parsePlaygroundEnvironmentListResponse(projectResult.data)
+              : [];
+            const nextEnvironments = projectEnvironments.length > 0
+              ? projectEnvironments
+              : fallbackEnvironments;
             const nextThreads = Array.isArray(threadsData?.data)
               ? threadsData.data.map(normalizeThreadItem)
               : Array.isArray(threadsData?.threads)
                 ? threadsData.threads.map(normalizeThreadItem)
                 : [];
+            const projectRecentThreads = projectResult?.response?.ok && Array.isArray(projectResult.data?.recentThreads)
+              ? projectResult.data.recentThreads.map(normalizeThreadItem)
+              : [];
             commitLocalProjectRecord({
-              ...fallbackProjectRecord,
+              ...projectRecord,
               summary: fallbackSummary,
             }, {
               summary: fallbackSummary,
-              environments: fallbackEnvironments,
-              recentThreads: nextThreads.slice(0, 10),
+              environments: nextEnvironments,
+              recentThreads: projectRecentThreads.length > 0 ? projectRecentThreads : nextThreads.slice(0, 10),
               threads: nextThreads,
               workRelations: Array.isArray(tasksData?.relations) ? tasksData.relations : [],
               agentSessions: Array.isArray(tasksData?.agentSessions) ? tasksData.agentSessions : [],
@@ -792,51 +835,6 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               error: "",
             });
 
-            if (projectDetailPromise) {
-              void projectDetailPromise.then((projectResult) => {
-                if (projectConfigLoadTokenRef.current !== projectConfigLoadToken) {
-                  return;
-                }
-                if (projectResult?.error) {
-                  console.warn("Failed to load project config", projectResult.error);
-                  return;
-                }
-                const projectResponse = projectResult?.response;
-                const projectData = projectResult?.data || {};
-                if (!projectResponse?.ok) {
-                  console.warn("Failed to load project config", projectData?.message || projectData?.error || projectResponse?.status);
-                  return;
-                }
-
-                const projectRecord = getPlaygroundProjectResponseRecord(projectData, fallbackProjectRecord) || fallbackProjectRecord;
-                const nextSummary = {
-                  ...buildEmptyPlaygroundProjectSummary(),
-                  ...(projectData?.summary && typeof projectData.summary === "object" ? projectData.summary : {}),
-                };
-                const parsedEnvironments = parsePlaygroundEnvironmentListResponse(projectData);
-                const nextEnvironments = parsedEnvironments.length > 0 ? parsedEnvironments : fallbackEnvironments;
-                const nextRecentThreads = Array.isArray(projectData?.recentThreads)
-                  ? projectData.recentThreads.map(normalizeThreadItem)
-                  : nextThreads.slice(0, 10);
-                const enrichedReleases = enrichPlaygroundTaskReleasesWithLegacyStrategy(
-                  nextReleases,
-                  projectRecord
-                );
-
-                commitLocalProjectRecord({
-                  ...projectRecord,
-                  summary: nextSummary,
-                }, {
-                  summary: nextSummary,
-                  environments: nextEnvironments,
-                  recentThreads: nextRecentThreads,
-                  threads: nextThreads,
-                  selectImmediately: true,
-                });
-                setReleases(enrichedReleases);
-                syncProjectSummary(projectId, nextTasks, nextSprints, enrichedReleases, nextSummary);
-              });
-            }
             return true;
           } catch (error) {
             if (projectWorkspaceLoadTokenRef.current !== loadToken) {
@@ -853,6 +851,19 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
         async function loadTaskDetails(taskId) {
           if (!selectedProjectId || !taskId) {
             return null;
+          }
+
+          const normalizedTaskId = String(taskId || "").trim();
+          if (selectedTaskIdRef.current === normalizedTaskId) {
+            setTaskActivityTimelineState((current) => (
+              current.taskId === normalizedTaskId && current.status === "ready"
+                ? current
+                : {
+                    taskId: normalizedTaskId,
+                    status: "loading",
+                    error: "",
+                  }
+            ));
           }
 
           try {
@@ -1001,12 +1012,25 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               });
             }
 
-            return applyRefreshedTaskDetails(refreshedTask);
+            const appliedTask = applyRefreshedTaskDetails(refreshedTask);
+            if (selectedTaskIdRef.current === normalizedTaskId) {
+              setTaskActivityTimelineState({
+                taskId: normalizedTaskId,
+                status: "ready",
+                error: "",
+              });
+            }
+            return appliedTask;
           } catch (error) {
             if (selectedTaskIdRef.current === String(taskId || "").trim()) {
               setTaskDetailThreadsState({
                 status: "error",
                 error: error instanceof Error ? error.message : "Failed to load ticket threads.",
+              });
+              setTaskActivityTimelineState({
+                taskId: normalizedTaskId,
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load ticket activity.",
               });
             }
             throw error;
@@ -1317,49 +1341,8 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
         }, [releaseBacklogToolbarPopover]);
 
         useEffect(() => {
-          if (!backlogTaskContextMenu) return undefined;
-
-          function handleBacklogTaskContextMenuPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !backlogTaskContextMenuRef.current || backlogTaskContextMenuRef.current.contains(target)) {
-              return;
-            }
-            setBacklogTaskContextMenu(null);
-          }
-
-          function handleBacklogTaskContextMenuEscape(event) {
-            if (event.key === "Escape") {
-              setBacklogTaskContextMenu(null);
-            }
-          }
-
-          document.addEventListener("mousedown", handleBacklogTaskContextMenuPointerDown);
-          window.addEventListener("keydown", handleBacklogTaskContextMenuEscape);
-          return () => {
-            document.removeEventListener("mousedown", handleBacklogTaskContextMenuPointerDown);
-            window.removeEventListener("keydown", handleBacklogTaskContextMenuEscape);
-          };
-        }, [backlogTaskContextMenu]);
-
-        useEffect(() => {
-          if (!taskDetailPopover || projectTaskDetailScreenOpen) return undefined;
-
-          function handleTaskDetailPopoverPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !taskDetailActionsRef.current || taskDetailActionsRef.current.contains(target)) {
-              return;
-            }
-            setTaskDetailPopover("");
-          }
-
-          document.addEventListener("mousedown", handleTaskDetailPopoverPointerDown);
-          return () => document.removeEventListener("mousedown", handleTaskDetailPopoverPointerDown);
-        }, [projectTaskDetailScreenOpen, taskDetailPopover]);
-
-        useEffect(() => {
           if (taskDetailPopover) {
             setTaskDetailSelectPopover("");
-            setBacklogTaskContextMenu(null);
           }
         }, [taskDetailPopover]);
 
@@ -1427,9 +1410,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 	          projectWorkspaceAutoLoadKeyRef.current = loadKey;
 	          const loadPromise = workspaceMode === "home"
 	            ? loadProjectHome(selectedProjectId)
-	            : loadProjectWorkspace(selectedProjectId, {
-	                loadProjectConfig: selectedProjectDetail?.project?.id !== selectedProjectId,
-	              });
+	            : loadProjectWorkspace(selectedProjectId, { loadProjectConfig: true });
 	          void Promise.resolve(loadPromise).then((loaded) => {
 	            if (!loaded && projectWorkspaceAutoLoadKeyRef.current === loadKey) {
 	              projectWorkspaceAutoLoadKeyRef.current = "";
