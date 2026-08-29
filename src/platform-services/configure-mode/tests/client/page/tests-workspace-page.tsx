@@ -108,16 +108,6 @@ interface TestOverviewPaginationState {
   nextOffset: number;
 }
 
-function formatRelativeTimestamp(value: string): string {
-  const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp)) return "Unknown";
-  const delta = Date.now() - timestamp;
-  if (delta < 60_000) return "Just now";
-  if (delta < 3_600_000) return `${Math.max(1, Math.round(delta / 60_000))}m ago`;
-  if (delta < 86_400_000) return `${Math.max(1, Math.round(delta / 3_600_000))}h ago`;
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(timestamp));
-}
-
 function normalizeOptions(
   values: readonly unknown[] | undefined,
   fallbackLabel: string,
@@ -367,6 +357,7 @@ export function TestsWorkspacePage({
       (plan) => getTestPlanCreatorIdentity(plan),
     );
     return scopedPlans.map((plan) => {
+      const creator = getTestPlanCreatorIdentity(plan, currentUser);
       const loadedPlanRuns = "runs" in plan && Array.isArray(plan.runs)
         ? plan.runs
         : [];
@@ -389,6 +380,9 @@ export function TestsWorkspacePage({
       return {
         id: plan.id,
         name: plan.name,
+        description: plan.description,
+        creatorName: creator.name,
+        creatorAvatarUrl: creator.avatarUrl,
         projectLabel:
           normalizedProjects.find((project) => project.id === plan.projectId)?.name
           || "Unassigned",
@@ -401,7 +395,6 @@ export function TestsWorkspacePage({
           || lastRun?.status
           || (summaryRunCount === null ? "unknown" : ""),
         updatedAt: Date.parse(plan.updatedAt) || 0,
-        updatedLabel: formatRelativeTimestamp(plan.updatedAt),
         searchText: `${plan.name} ${plan.description} ${plan.projectId || ""}`,
       };
     });

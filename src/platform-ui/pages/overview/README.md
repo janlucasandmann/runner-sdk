@@ -10,13 +10,14 @@ This directory contains the canonical page layer for resource overview screens. 
 2. Shared `PlatformAnalyticsSection` KPI summary and usage chart, or a resource-specific `heroContent` replacement
 3. Shared `PlatformDataTable` surface
 
-Resource-specific behavior does not belong here. Each resource module under `platform-resources/<resource>/overview` defines its row model, columns, filters, actions, data mapping, and resource-specific header controls, then renders `ResourceOverviewPage`.
+Resource-specific behavior does not belong here. Each resource module under `platform-resources/<resource>/overview` defines its row model, extension columns, filters, actions, data mapping, and resource-specific header controls, then renders `ResourceOverviewPage`. Catalog overviews use the centralized Name, Creator, and Updated column set.
 
 ## Modules
 
 - `resource-overview-page.tsx`: generic page composition
 - `resource-overview-chart.tsx`: compatibility export for the shared analytics chart
 - `resource-overview-cells.tsx`: reusable table cell presentations
+- `resource-overview-columns.tsx`: fixed Name, Creator, and Updated catalog columns with typed extension slots
 - `resource-overview-types.ts`: public page and analytics contracts
 - `resource-overview.css`: canonical overview-page styling
 - `resource-overview-pages.test.tsx`: cross-resource contract tests
@@ -26,9 +27,19 @@ Resource-specific behavior does not belong here. Each resource module under `pla
 
 ```tsx
 import {
+  createResourceOverviewColumns,
   ResourceOverviewPage,
   type ResourceOverviewAnalyticsModel,
 } from "@computer-agents/platform/platform-ui/pages";
+
+const columns = createResourceOverviewColumns({
+  name: {
+    getVisual: () => ({ icon: <ResourceIcon /> }),
+  },
+  extensions: {
+    afterName: [resourceSpecificColumn],
+  },
+});
 
 <ResourceOverviewPage
   period={period}
@@ -59,6 +70,7 @@ import "@computer-agents/platform/platform-ui/pages/styles.css";
 - Provide a stable app-header target through `controlsPortalId`; timeframe and primary actions must not be rendered in the page body.
 - Set a primary action's `icon` to `null` when the centralized button should be deliberately iconless; omit it to retain the default plus icon.
 - Use `PlatformDataTable` configuration instead of introducing resource-specific table markup.
+- Build catalog columns with `createResourceOverviewColumns`; add domain-specific columns through its extension slots instead of recreating Name, Creator, or Updated.
 - Update the cross-resource test when adding a new overview page to ensure it renders the canonical shell.
 
 Run the overview contract tests with:

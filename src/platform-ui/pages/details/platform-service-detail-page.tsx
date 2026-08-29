@@ -1,11 +1,16 @@
 import type { ReactNode } from "react";
 import { PlatformUiCard } from "../../components/composite/ui-card/index.js";
+import {
+  PlatformResourceSettingsPage,
+  type PlatformResourceSettingsPageProps,
+} from "../settings/index.js";
 import { ResourceDetailPage } from "./resource-detail-page.js";
 
 export type PlatformServiceDetailVariant = "resource" | "run";
 
 export interface PlatformServiceDetailPageProps {
   children: ReactNode;
+  settings?: PlatformResourceSettingsPageProps;
   properties?: ReactNode;
   actions?: ReactNode;
   sidebarContent?: ReactNode;
@@ -110,6 +115,7 @@ export function PlatformServiceDetailProperty({
 
 export function PlatformServiceDetailPage({
   children,
+  settings,
   properties,
   actions,
   sidebarContent,
@@ -125,7 +131,8 @@ export function PlatformServiceDetailPage({
   variant = "resource",
 }: PlatformServiceDetailPageProps) {
   const isRun = variant === "run";
-  const resolvedSidebar = sidebarContent === undefined ? (
+  const hasResourceSettings = Boolean(settings);
+  const resolvedSidebar = hasResourceSettings ? null : sidebarContent === undefined ? (
     <>
       <PlatformUiCard
         as="section"
@@ -158,7 +165,7 @@ export function PlatformServiceDetailPage({
   return (
     <ResourceDetailPage
       tabs={[]}
-      sidebarCollapsed={sidebarCollapsed}
+      sidebarCollapsed={sidebarCollapsed || hasResourceSettings}
       sidebar={resolvedSidebar}
       ariaLabel={ariaLabel}
       tabAriaLabel={isRun ? "Run sections" : "Service sections"}
@@ -168,6 +175,7 @@ export function PlatformServiceDetailPage({
         "playground-agents-detail-overview-layout",
         "platform-service-detail-page",
         isRun && "is-run-detail",
+        hasResourceSettings && "has-resource-settings",
         className,
       )}
       headerClassName="platform-service-detail-page__header"
@@ -185,7 +193,7 @@ export function PlatformServiceDetailPage({
         sidebarClassName,
       )}
     >
-      {children}
+      {settings ? <PlatformResourceSettingsPage {...settings} /> : children}
     </ResourceDetailPage>
   );
 }

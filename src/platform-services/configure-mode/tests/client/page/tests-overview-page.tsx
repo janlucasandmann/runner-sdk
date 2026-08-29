@@ -2,13 +2,12 @@ import { ChevronRight, FlaskConical, Play, Plus, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
-  PlatformDataTableColumn,
   PlatformDataTableIncrementalLoadingConfig,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
 import {
+  createResourceOverviewColumns,
   ResourceOverviewPage,
-  ResourceOverviewValue,
 } from "../../../../../platform-ui/pages/overview/index.js";
 import {
   PlatformLabel,
@@ -19,13 +18,15 @@ import { TestsOverviewGuide } from "./tests-overview-guide.js";
 export interface TestPlanOverviewRow {
   id: string;
   name: string;
+  description: string;
+  creatorName: string;
+  creatorAvatarUrl?: string;
   projectLabel: string;
   caseCount: number;
   runCount: number;
   passedRunCount: number;
   lastRunStatus: string;
   updatedAt: number;
-  updatedLabel: string;
   searchText?: string;
 }
 
@@ -67,58 +68,29 @@ export function TestsOverviewPage({
   onRun,
   onDelete,
 }: TestsOverviewPageProps) {
-  const columns = useMemo<PlatformDataTableColumn<TestPlanOverviewRow>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Test plan",
-        accessor: "name",
-        sortable: true,
-        width: "minmax(250px, 1.25fr)",
-        cell: ({ row }) => (
-          <span className="resource-overview-identity__title">{row.name}</span>
-        ),
+  const columns = useMemo(
+    () => createResourceOverviewColumns<TestPlanOverviewRow>({
+      name: {
+        getVisual: () => ({
+          icon: <FlaskConical width={16} height={16} strokeWidth={1.8} />,
+          iconClassName: "is-test",
+        }),
       },
-      {
-        id: "project",
-        header: "Project",
-        accessor: "projectLabel",
-        sortable: true,
-        width: "minmax(180px, 0.9fr)",
-        cell: ({ row }) => <ResourceOverviewValue>{row.projectLabel}</ResourceOverviewValue>,
+      extensions: {
+        afterName: [{
+          id: "last-run",
+          header: "Last run",
+          accessor: "lastRunStatus",
+          sortable: true,
+          width: "minmax(160px, 0.75fr)",
+          cell: ({ row }) => (
+            <PlatformLabel variant={statusLabelVariant(row.lastRunStatus)}>
+              {statusLabel(row.lastRunStatus)}
+            </PlatformLabel>
+          ),
+        }],
       },
-      {
-        id: "cases",
-        header: "Cases",
-        accessor: "caseCount",
-        sortable: true,
-        sortDescFirst: true,
-        width: "minmax(90px, 0.45fr)",
-        cell: ({ row }) => <ResourceOverviewValue>{row.caseCount}</ResourceOverviewValue>,
-      },
-      {
-        id: "last-run",
-        header: "Last run",
-        accessor: "lastRunStatus",
-        sortable: true,
-        width: "minmax(160px, 0.75fr)",
-        cell: ({ row }) => (
-          <PlatformLabel variant={statusLabelVariant(row.lastRunStatus)}>
-            {statusLabel(row.lastRunStatus)}
-          </PlatformLabel>
-        ),
-      },
-      {
-        id: "updated",
-        header: "Updated",
-        accessor: "updatedAt",
-        sortable: true,
-        sortDescFirst: true,
-        width: "minmax(130px, 0.6fr)",
-        hideBelow: 980,
-        cell: ({ row }) => <ResourceOverviewValue>{row.updatedLabel}</ResourceOverviewValue>,
-      },
-    ],
+    }),
     [],
   );
   const actions = (

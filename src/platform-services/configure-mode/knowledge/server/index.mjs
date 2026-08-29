@@ -18,7 +18,12 @@ function buildUpstreamPath(url) {
 
 /** Deployment-neutral proxy for the authoritative Knowledge control API. */
 export function createKnowledgeService(adapters = {}) {
-  ["proxyUpstreamGet", "proxyUpstreamJsonRequest", "proxyUpstreamRawRequest"]
+  [
+    "proxyUpstreamBinaryGet",
+    "proxyUpstreamGet",
+    "proxyUpstreamJsonRequest",
+    "proxyUpstreamRawRequest",
+  ]
     .forEach((name) => assertAdapter(adapters, name));
 
   return Object.freeze({
@@ -30,9 +35,20 @@ export function createKnowledgeService(adapters = {}) {
         return false;
       }
       const upstreamPath = buildUpstreamPath(url);
-      if (req.method === "GET") {
+      const isCoverImageRead = req.method === "GET"
+        && /^\/api\/real\/knowledge\/[^/]+\/cover\/image$/.test(url.pathname);
+      const isMultipartWrite = req.method === "POST"
+        && (
+          url.pathname === `${KNOWLEDGE_PATH}/parse`
+          || /^\/api\/real\/knowledge\/[^/]+\/cover$/.test(url.pathname)
+        );
+      if (isCoverImageRead) {
+        void adapters.proxyUpstreamBinaryGet(req, res, upstreamPath, {
+          contentType: "image/webp",
+        });
+      } else if (req.method === "GET") {
         void adapters.proxyUpstreamGet(req, res, upstreamPath);
-      } else if (req.method === "POST" && url.pathname === `${KNOWLEDGE_PATH}/parse`) {
+      } else if (isMultipartWrite) {
         // Preserve the browser-generated multipart boundary and file bytes.
         void adapters.proxyUpstreamRawRequest(req, res, upstreamPath, req.method);
       } else {

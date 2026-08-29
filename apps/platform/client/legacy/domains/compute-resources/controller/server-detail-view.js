@@ -1531,21 +1531,26 @@
                   )
                 )
               : null;
-            const functionGithubConnectorMetadata = draftServer?.metadata?.functionGithubConnector
-              && typeof draftServer.metadata.functionGithubConnector === "object"
-              && !Array.isArray(draftServer.metadata.functionGithubConnector)
-                ? draftServer.metadata.functionGithubConnector
+            const sourceGithubConnectorMetadataKey = isWebAppServer
+              ? "webAppGithubConnector"
+              : "functionGithubConnector";
+            const sourceGithubConnectorCandidate = draftServer?.metadata?.[sourceGithubConnectorMetadataKey];
+            const sourceGithubConnectorMetadata = sourceGithubConnectorCandidate
+              && typeof sourceGithubConnectorCandidate === "object"
+              && !Array.isArray(sourceGithubConnectorCandidate)
+                ? sourceGithubConnectorCandidate
                 : {};
-            const functionGithubRepository = functionGithubConnectorMetadata.repository
-              && typeof functionGithubConnectorMetadata.repository === "object"
-              && !Array.isArray(functionGithubConnectorMetadata.repository)
-                ? functionGithubConnectorMetadata.repository
+            const sourceGithubRepository = sourceGithubConnectorMetadata.repository
+              && typeof sourceGithubConnectorMetadata.repository === "object"
+              && !Array.isArray(sourceGithubConnectorMetadata.repository)
+                ? sourceGithubConnectorMetadata.repository
                 : null;
-            const functionConnectorsSection = isFunctionServer
-              ? React.createElement(RunnerFunctionGithubConnectorSettings, {
-                  functionId: String(draftServer.id || "").trim(),
-                  functionName: String(draftServer.name || "").trim(),
-                  repository: functionGithubRepository,
+            const sourceConnectorsSection = isFunctionServer || isWebAppServer
+              ? React.createElement(RunnerSourceGithubConnectorSettings, {
+                  resourceId: String(draftServer.id || "").trim(),
+                  resourceKind: isWebAppServer ? "web_app" : "function",
+                  resourceName: String(draftServer.name || "").trim(),
+                  repository: sourceGithubRepository,
                   github: computerAgents?.github || null,
                   apiBaseUrl: backendUrl,
                   requestHeaders,
@@ -1562,8 +1567,8 @@
                     || serverSaveState.isSaving
                     || !draftServer.id
                     || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
-                  onCreateRepository: createFunctionGithubRepository,
-                  onRepositoryChange: updateFunctionGithubConnector,
+                  onCreateRepository: createSourceGithubRepository,
+                  onRepositoryChange: updateSourceGithubConnector,
                 })
               : null;
   
@@ -3565,7 +3570,7 @@
               serverDeploymentMapSection,
               isSourceDeployableServer ? null : descriptionSection,
               isFunctionServer ? functionInvokeSection : null,
-              functionConnectorsSection,
+              sourceConnectorsSection,
               serverSettingsResourcesTable,
               connectionsSection,
               null

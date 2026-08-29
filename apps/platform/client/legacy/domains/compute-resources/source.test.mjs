@@ -677,18 +677,18 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /serverDeploymentMapSection,\s*isSourceDeployableServer \? null : descriptionSection,\s*isFunctionServer \? functionInvokeSection : null,\s*functionConnectorsSection,\s*serverSettingsResourcesTable,\s*connectionsSection/,
+  /serverDeploymentMapSection,\s*isSourceDeployableServer \? null : descriptionSection,\s*isFunctionServer \? functionInvokeSection : null,\s*sourceConnectorsSection,\s*serverSettingsResourcesTable,\s*connectionsSection/,
   "Source settings must retain deployment, resources, and connections while descriptions live exclusively on Code.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const functionConnectorsSection = isFunctionServer[\s\S]{0,1200}React\.createElement\(RunnerFunctionGithubConnectorSettings, \{[\s\S]{0,1800}onCreateRepository: createFunctionGithubRepository,[\s\S]{0,180}onRepositoryChange: updateFunctionGithubConnector/,
-  "Function Settings must render the centralized GitHub connector with durable repository persistence.",
+  /const sourceConnectorsSection = isFunctionServer \|\| isWebAppServer[\s\S]{0,1200}React\.createElement\(RunnerSourceGithubConnectorSettings, \{[\s\S]{0,1800}onCreateRepository: createSourceGithubRepository,[\s\S]{0,180}onRepositoryChange: updateSourceGithubConnector/,
+  "Function and Web App Settings must share the centralized GitHub connector with durable repository persistence.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /async function createFunctionGithubRepository\(options = \{\}\)[\s\S]{0,1600}captureCurrentServerVersionSnapshot\(draftServer\)[\s\S]{0,2600}createRepository\(\{[\s\S]{0,500}files,[\s\S]{0,180}accountId:/,
-  "Function repository creation must capture the complete current source and seed it through the selected GitHub account.",
+  /async function createSourceGithubRepository\(options = \{\}\)[\s\S]{0,1800}captureCurrentServerVersionSnapshot\(draftServer\)[\s\S]{0,3000}PLAYGROUND_DEFAULT_WEB_APP_SOURCE_PATH[\s\S]{0,1800}createRepository\(\{[\s\S]{0,900}files,[\s\S]{0,180}accountId:/,
+  "Function and Web App repository creation must capture complete current source and seed it through the selected GitHub account.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,

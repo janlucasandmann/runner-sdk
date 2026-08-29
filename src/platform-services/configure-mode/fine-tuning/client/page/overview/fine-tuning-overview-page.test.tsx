@@ -11,13 +11,15 @@ const rows: readonly FineTuningOverviewRow[] = [
   {
     id: "fine-tune-support",
     name: "Improve Support Agent",
+    description: "Improve support response quality.",
     agentLabel: "Spark",
     agentFallback: "S",
     evaluationSetCount: 2,
     improvementScore: 0.18,
     improvementLabel: "72% -> 90% +18",
-    conductorLabel: "Jan",
-    conductorFallback: "J",
+    creatorName: "Jan",
+    creatorFallback: "J",
+    updatedAt: 1_720_000_000_000,
     status: "completed",
   },
 ];
@@ -62,13 +64,17 @@ describe("FineTuningOverviewPage", () => {
     expect(screen.queryByText("All Fine-tuning Jobs")).toBeNull();
     expect(screen.getByPlaceholderText("Search optimization jobs")).not.toBeNull();
     expect(screen.queryByRole("button", { name: "Status" })).toBeNull();
+    expect(
+      screen.getAllByRole("columnheader").map((header) => header.textContent),
+    ).toEqual(["", "Name", "Agent", "Sets", "Improvement", "Creator", "Updated", ""]);
     const jobRow = screen.getByRole("row", { name: "Improve Support Agent" });
     const jobCell = jobRow.querySelector(
       '.platform-data-table__cell[data-column-id="name"]',
     );
     expect(
       jobCell?.querySelector(".resource-overview-identity__visual"),
-    ).toBeNull();
+    ).not.toBeNull();
+    expect(screen.getByText("Improve support response quality.")).not.toBeNull();
 
     await user.click(await screen.findByRole("button", { name: "Optimize Agent" }));
     expect(onCreate).toHaveBeenCalledOnce();

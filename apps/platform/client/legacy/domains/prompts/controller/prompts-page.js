@@ -78,12 +78,20 @@
               const owner = metadata.owner && typeof metadata.owner === "object" && !Array.isArray(metadata.owner)
                 ? metadata.owner
                 : {};
-              const identityName = (primary, fallback = "") => {
+              const identityName = (primary, fallback = "", email = "") => {
                 const normalizedPrimary = String(primary || "").trim();
-                return ["", "unknown", "unknown user", "you", "me", "current user"]
-                  .includes(normalizedPrimary.toLowerCase())
-                  ? String(fallback || normalizedPrimary).trim()
-                  : normalizedPrimary;
+                const normalizedFallback = String(fallback || "").trim();
+                const normalizedEmail = String(email || "").trim().toLowerCase();
+                const isUsableName = (value) => {
+                  const normalized = String(value || "").trim();
+                  return !["", "unknown", "unknown user", "you", "me", "current user"]
+                    .includes(normalized.toLowerCase())
+                    && !normalized.includes("@")
+                    && (!normalizedEmail || normalized.toLowerCase() !== normalizedEmail);
+                };
+                if (isUsableName(normalizedPrimary)) return normalizedPrimary;
+                if (isUsableName(normalizedFallback)) return normalizedFallback;
+                return "";
               };
               const versions = Array.isArray(source.versions)
                 ? source.versions.map((version, index) => {
@@ -104,6 +112,8 @@
               const currentVersion = versions.find((version) => (
                 String(version?.id || "") === String(source.currentVersionId || "")
               )) || versions[versions.length - 1] || null;
+              const creatorEmail = String(source.creatorEmail || creator.email || "").trim();
+              const ownerEmail = String(source.ownerEmail || owner.email || "").trim();
               return {
                 ...source,
                 versions,
@@ -115,12 +125,12 @@
                 // to stale top-level content from an earlier version.
                 markdown: String(currentVersion?.markdown ?? source.markdown ?? ""),
                 creatorId: String(source.creatorId || source.creatorUserId || creator.id || creator.userId || "").trim(),
-                creatorEmail: String(source.creatorEmail || creator.email || "").trim(),
-                creatorName: identityName(source.creatorName, creator.name),
+                creatorEmail,
+                creatorName: identityName(source.creatorName, creator.name, creatorEmail),
                 creatorAvatarUrl: String(source.creatorAvatarUrl || creator.avatarUrl || "").trim(),
                 ownerId: String(source.ownerId || source.ownerUserId || owner.id || owner.userId || "").trim(),
-                ownerEmail: String(source.ownerEmail || owner.email || "").trim(),
-                ownerName: identityName(source.ownerName, owner.name),
+                ownerEmail,
+                ownerName: identityName(source.ownerName, owner.name, ownerEmail),
                 ownerAvatarUrl: String(source.ownerAvatarUrl || owner.avatarUrl || "").trim(),
                 currentVersion: currentVersion
                   ? { ...currentVersion, markdown: String(currentVersion.markdown ?? "") }
@@ -1501,6 +1511,7 @@
 
             function resolvePromptCreatorName(prompt, isCreatedByCurrentUser) {
               const creatorName = String(prompt?.creatorName || "").trim();
+              const creatorEmail = String(prompt?.creatorEmail || "").trim().toLowerCase();
               const isPlaceholder = [
                 "",
                 "unknown",
@@ -1508,18 +1519,28 @@
                 "you",
                 "me",
                 "current user",
-              ].includes(creatorName.toLowerCase());
+              ].includes(creatorName.toLowerCase())
+                || creatorName.includes("@")
+                || Boolean(creatorEmail && creatorName.toLowerCase() === creatorEmail);
               if (creatorName && !isPlaceholder) return creatorName;
               if (isCreatedByCurrentUser) {
-                return String(
-                  currentUserName
-                  || currentUserEmail
-                  || prompt?.creatorEmail
-                  || prompt?.creatorId
-                  || "Unknown user"
-                ).trim();
+                const currentName = String(currentUserName || "").trim();
+                if (
+                  currentName
+                  && !currentName.includes("@")
+                  && !["unknown", "unknown user", "you", "me", "current user"]
+                    .includes(currentName.toLowerCase())
+                ) return currentName;
               }
-              return String(prompt?.creatorEmail || prompt?.creatorId || "Unknown user").trim();
+              const emailName = creatorEmail
+                .split("@")[0]
+                ?.split("+")[0]
+                ?.replace(/[._-]+/g, " ")
+                ?.split(/\s+/)
+                ?.filter(Boolean)
+                ?.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                ?.join(" ") || "";
+              return emailName || String(prompt?.creatorId || "Unknown user").trim();
             }
 
             const normalizedPromptOverviewScope = promptOverviewScope === "created"
@@ -1650,21 +1671,6 @@
                   iconSize: 18,
                 });
             const promptStorageRegion = getSelectedPromptStorageRegion();
-            const promptSettingsContent = React.createElement("div", {
-                className: "playground-server-detail-content prompt-detail-page__settings-content",
-              },
-              React.createElement("div", {
-                  className: "playground-server-settings-tab is-function-settings-tab prompt-detail-page__settings-layout",
-                },
-                React.createElement(PlatformDeploymentMap, {
-                  regionCode: promptStorageRegion,
-                  title: "Storage region",
-                  className: "playground-managed-server-deployment-map playground-source-server-deployment-map playground-function-deployment-map prompt-detail-page__storage-map",
-                }),
-                promptAccessSettings
-              )
-            );
-
             const promptIdentity = React.createElement("section", {
                 className: "prompt-detail-page__identity",
                 "aria-label": "Prompt identity",
@@ -1714,8 +1720,8 @@
               });
             });
             const promptOwnerOptions = Array.from(promptOwnerOptionsByValue.values());
-            const promptSettingsSidebar = !isDraft && selectedPrompt
-              ? React.createElement(PlatformResourceDetailSidebar, {
+            const promptSettingsDetails = !isDraft && selectedPrompt
+              ? {
                   attributes: [{
                     id: "updated",
                     label: "Updated",
@@ -1750,8 +1756,47 @@
                     className: "prompt-detail-page__start-thread-button",
                     onClick: () => onStartThread?.(selectedPrompt),
                   }, "New Thread"),
-                })
-              : null;
+                }
+              : {
+                  attributes: [{
+                    id: "status",
+                    label: "Status",
+                    value: "Draft",
+                  }],
+                };
+
+            const promptSettings = {
+              ariaLabel: "Prompt settings",
+              className: "prompt-detail-page__settings-content",
+              identity: {
+                icon: React.createElement(MessageSquareText, {
+                  width: 24,
+                  height: 24,
+                  strokeWidth: 1.7,
+                }),
+                title: draft.name,
+                description: draft.description,
+                titleRef: promptNameInputRef,
+                titlePlaceholder: "new-prompt",
+                descriptionPlaceholder: "Add a short description",
+                titleAriaLabel: "Prompt name",
+                descriptionAriaLabel: "Prompt description",
+                onTitleChange: (value) => setDraft((current) => ({ ...current, name: value })),
+                onDescriptionChange: (value) => setDraft((current) => ({ ...current, description: value })),
+                className: "prompt-detail-page__settings-identity",
+                iconClassName: "prompt-detail-page__icon",
+              },
+              details: promptSettingsDetails,
+              location: React.createElement(PlatformDeploymentMap, {
+                regionCode: promptStorageRegion,
+                title: "Storage region",
+                className: "playground-managed-server-deployment-map playground-source-server-deployment-map playground-function-deployment-map prompt-detail-page__storage-map",
+              }),
+              access: promptAccessSettings,
+              accessDetailOpen: Boolean(promptAccessPrincipalId),
+              detailsSidebarAriaLabel: "Prompt properties",
+              detailsSidebarClassName: "prompt-detail-page__settings-sidebar-frame playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar",
+            };
 
             const promptEditor = React.createElement(PlatformCodeEditorWorkspace, {
               files: [{
@@ -1791,9 +1836,7 @@
               notice: promptNotice,
               code: promptEditor,
               activeTab: promptDetailTab === "settings" ? "settings" : "general",
-              settings: promptSettingsContent,
-              sidebar: promptSettingsSidebar,
-              sidebarCollapsed: promptDetailTab !== "settings",
+              settings: promptSettings,
             });
 
             const promptVersionsSidebar = isDetail && !isDraft && selectedPrompt

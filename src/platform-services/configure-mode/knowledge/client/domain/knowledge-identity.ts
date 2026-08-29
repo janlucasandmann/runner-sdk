@@ -19,9 +19,23 @@ function identityKey(value: unknown) {
   return text(value).toLowerCase();
 }
 
-function isPlaceholderName(value: unknown) {
+function isPlaceholderName(value: unknown, email: unknown = "") {
+  const name = text(value);
+  const key = identityKey(name);
   return ["", "unknown", "unknown user", "you", "me", "current user"]
-    .includes(identityKey(value));
+    .includes(key)
+    || name.includes("@")
+    || Boolean(identityKey(email) && key === identityKey(email));
+}
+
+function displayNameFromEmail(value: unknown) {
+  const localPart = identityKey(value).split("@")[0]?.split("+")[0] || "";
+  return localPart
+    .replace(/[._-]+/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+    .join(" ");
 }
 
 function identityMatchesViewer(
@@ -39,7 +53,9 @@ export function resolveKnowledgeViewerIdentity(
 ): KnowledgePersonIdentity | null {
   const email = text(viewer.email).toLowerCase();
   const id = text(viewer.id) || email;
-  const name = text(viewer.name) || email || id;
+  const name = isPlaceholderName(viewer.name, email)
+    ? displayNameFromEmail(email) || id
+    : text(viewer.name);
   if (!id) return null;
   return {
     id,
@@ -112,14 +128,14 @@ export function withKnowledgeLibraryViewerIdentity(
   return {
     ...library,
     ...(creatorMatches ? {
-      creatorName: isPlaceholderName(library.creatorName)
+      creatorName: isPlaceholderName(library.creatorName, library.creatorEmail)
         ? identity.name
         : library.creatorName,
       creatorEmail: text(library.creatorEmail) || text(identity.email),
       creatorAvatarUrl: text(library.creatorAvatarUrl) || text(identity.avatarUrl),
     } : {}),
     ...(ownerMatches ? {
-      ownerName: isPlaceholderName(library.ownerName)
+      ownerName: isPlaceholderName(library.ownerName, library.ownerEmail)
         ? identity.name
         : library.ownerName,
       ownerEmail: text(library.ownerEmail) || text(identity.email),

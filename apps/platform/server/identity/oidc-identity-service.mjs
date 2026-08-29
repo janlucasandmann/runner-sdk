@@ -67,6 +67,68 @@ function deriveControlApiRoot(defaultUpstreamOrigin) {
   return target.toString().replace(/\/+$/, "");
 }
 
+function encodeDecodedPathSegment(value) {
+  try {
+    const decoded = decodeURIComponent(String(value || ""));
+    return decoded ? encodeURIComponent(decoded) : "";
+  } catch {
+    return "";
+  }
+}
+
+function matchApplianceProjectTriggerRequest(path, method) {
+  const normalizedMethod = String(method || "GET").toUpperCase();
+  const collectionMatch = path.match(
+    /^\/api\/projects\/([^/]+)\/triggers$/,
+  );
+  if (
+    collectionMatch
+    && ["GET", "POST"].includes(normalizedMethod)
+    && encodeDecodedPathSegment(collectionMatch[1])
+  ) {
+    return Object.freeze({
+      controlPath: "/triggers",
+      method: normalizedMethod,
+      responseShape: normalizedMethod === "GET" ? "list" : "passthrough",
+    });
+  }
+
+  const testMatch = path.match(
+    /^\/api\/projects\/([^/]+)\/triggers\/([^/]+)\/test$/,
+  );
+  if (testMatch && normalizedMethod === "POST") {
+    const projectId = encodeDecodedPathSegment(testMatch[1]);
+    const triggerId = encodeDecodedPathSegment(testMatch[2]);
+    if (projectId && triggerId) {
+      return Object.freeze({
+        controlPath: `/triggers/${triggerId}/test`,
+        method: normalizedMethod,
+        responseShape: "passthrough",
+      });
+    }
+  }
+
+  const itemMatch = path.match(
+    /^\/api\/projects\/([^/]+)\/triggers\/([^/]+)$/,
+  );
+  if (
+    itemMatch
+    && ["GET", "PATCH", "DELETE"].includes(normalizedMethod)
+  ) {
+    const projectId = encodeDecodedPathSegment(itemMatch[1]);
+    const triggerId = encodeDecodedPathSegment(itemMatch[2]);
+    if (projectId && triggerId) {
+      return Object.freeze({
+        controlPath: `/triggers/${triggerId}`,
+        method: normalizedMethod,
+        responseShape: normalizedMethod === "DELETE" ? "delete" : "passthrough",
+      });
+    }
+  }
+
+  return null;
+}
+
 function jsonResponse(status, payload) {
   return new Response(JSON.stringify(payload), {
     status,
@@ -906,6 +968,62 @@ export function createOidcIdentityService(config, dependencies = {}) {
         error: "Unauthorized",
         message: "A valid platform session is required.",
       });
+      return true;
+    }
+    const projectTriggerRequest = matchApplianceProjectTriggerRequest(
+      path,
+      method,
+    );
+    if (projectTriggerRequest) {
+      try {
+        const requestUrl = new URL(request.url || "/", config.platformOrigin);
+        const body = ["GET", "HEAD"].includes(projectTriggerRequest.method)
+          ? undefined
+          : await readBoundedRequestBody(
+              request,
+              ACCOUNT_JSON_REQUEST_BODY_LIMIT_BYTES,
+            );
+        const controlPath = projectTriggerRequest.responseShape === "list"
+          ? `${projectTriggerRequest.controlPath}${requestUrl.search}`
+          : projectTriggerRequest.controlPath;
+        const upstream = await fetchControlApi(request, controlPath, {
+          method: projectTriggerRequest.method,
+          headers: {
+            accept: "application/json",
+            ...(body ? { "content-type": "application/json" } : {}),
+          },
+          body,
+          signal: AbortSignal.timeout(30_000),
+        });
+        if (!upstream.ok || projectTriggerRequest.responseShape === "passthrough") {
+          await relayJsonFetchResponse(upstream, response);
+          return true;
+        }
+        if (projectTriggerRequest.responseShape === "list") {
+          const payload = await upstream.json().catch(() => ({}));
+          sendJson(response, upstream.status, {
+            triggers: Array.isArray(payload?.data) ? payload.data : [],
+          });
+          return true;
+        }
+        await upstream.arrayBuffer();
+        sendJson(response, upstream.status, { success: true });
+      } catch (error) {
+        if (error?.code === "REQUEST_BODY_TOO_LARGE") {
+          sendJson(response, 413, {
+            error: "Request body too large",
+            code: "WEBHOOK_REQUEST_BODY_TOO_LARGE",
+            message: "The webhook request body exceeds the allowed size.",
+          });
+          return true;
+        }
+        reportIdentityFailure("appliance webhook proxy", error);
+        sendJson(response, 502, {
+          error: "Webhook service unavailable",
+          code: "WEBHOOK_SERVICE_UNAVAILABLE",
+          message: "The appliance control API could not complete the webhook request.",
+        });
+      }
       return true;
     }
     if (method === "GET" && path === "/api/user/profile") {

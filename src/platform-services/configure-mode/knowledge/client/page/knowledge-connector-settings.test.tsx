@@ -229,6 +229,13 @@ describe("KnowledgeConnectorSettings", () => {
       />,
     );
 
+    const notionProviderGroup = screen
+      .getByText("Notion")
+      .closest(".knowledge-connector-settings__provider-group");
+    expect(
+      notionProviderGroup?.querySelector(".playground-project-notion-resource-settings"),
+    ).toBeTruthy();
+
     fireEvent.click(screen.getAllByRole("button", { name: "Manage" })[0]);
     await screen.findByText("Current database name");
     fireEvent.click(screen.getByRole("button", { name: "Use 1 database" }));

@@ -1,14 +1,16 @@
 import type { ReactNode } from "react";
 import { MarkdownResourceDetailPage } from "../../../platform-ui/pages/details/index.js";
+import {
+  PlatformResourceSettingsPage,
+  type PlatformResourceSettingsPageProps,
+} from "../../../platform-ui/pages/settings/index.js";
 
 export interface PromptDetailPageProps {
   metadata?: ReactNode;
   notice?: ReactNode;
   code: ReactNode;
-  settings?: ReactNode;
+  settings?: PlatformResourceSettingsPageProps;
   activeTab?: "general" | "settings";
-  sidebar?: ReactNode;
-  sidebarCollapsed?: boolean;
   className?: string;
 }
 
@@ -17,25 +19,21 @@ export function PromptDetailPage({
   metadata,
   notice,
   code,
-  settings = null,
+  settings,
   activeTab = "general",
-  sidebar,
-  sidebarCollapsed = false,
   className = "",
 }: PromptDetailPageProps) {
   const normalizedTab = activeTab === "settings" ? "settings" : "code";
+  const settingsPage = settings ? <PlatformResourceSettingsPage {...settings} /> : null;
 
   return (
     <MarkdownResourceDetailPage
       metadata={metadata}
       notice={notice}
       code={code}
-      settings={settings}
+      settings={settingsPage}
       activeTab={normalizedTab}
-      sidebar={sidebar}
-      sidebarCollapsed={sidebarCollapsed}
       ariaLabel="Prompt details"
-      sidebarAriaLabel="Prompt properties"
       className={`prompt-detail-page playground-project-overview-layout playground-agents-detail-overview-layout is-${normalizedTab}-tab${className ? ` ${className}` : ""}`}
       contentClassName={`prompt-detail-page__content playground-project-overview-main playground-agents-detail-overview-main is-${normalizedTab}-tab`}
       codeClassName="prompt-detail-page__code"
@@ -43,7 +41,6 @@ export function PromptDetailPage({
       noticeClassName="prompt-detail-page__notice"
       workspaceClassName="prompt-detail-page__code-workspace"
       settingsClassName="prompt-detail-page__settings"
-      sidebarClassName="prompt-detail-page__settings-sidebar-frame playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar"
     />
   );
 }

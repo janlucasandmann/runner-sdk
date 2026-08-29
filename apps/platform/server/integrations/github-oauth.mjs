@@ -2,8 +2,6 @@ import {
   createCipheriv,
   createDecipheriv,
   createHash,
-  createPrivateKey,
-  createSign,
   randomBytes,
 } from "node:crypto";
 import fs from "node:fs";
@@ -17,6 +15,9 @@ import {
   validateGithubCredential,
 } from "./github-api-client.mjs";
 import {
+  connectorStorageConsumeDocument,
+  connectorStorageGetDocument,
+  connectorStoragePatchDocument,
   registerOrganizationConnectorCredential,
   sanitizeConnectorRedirectTarget,
   unregisterOrganizationConnectorCredential,
@@ -31,7 +32,6 @@ const IV_LENGTH = 12;
 const AUTH_TAG_LENGTH = 16;
 
 let cachedEnvMap = null;
-let cachedGoogleAccessToken = null;
 
 export function isGithubApiRequestPath(pathname) {
   return pathname === "/api/github/callback"
@@ -46,6 +46,7 @@ export async function handleGithubApiRequest({
   platformOrigin,
   envFileCandidates = [],
   allowedOrigins = [],
+  verifyUser = verifyRequestUser,
 }) {
   const normalizedPathname = normalizeGithubApiPath(url.pathname);
   if (!normalizedPathname) {
@@ -62,6 +63,7 @@ export async function handleGithubApiRequest({
         platformOrigin,
         envFileCandidates,
         allowedOrigins,
+        verifyUser,
       });
     }
 
@@ -70,6 +72,7 @@ export async function handleGithubApiRequest({
         platformOrigin,
         envFileCandidates,
         allowedOrigins,
+        verifyUser,
       });
     }
 
@@ -77,6 +80,7 @@ export async function handleGithubApiRequest({
       return await handleGithubUser(req, res, {
         envFileCandidates,
         allowedOrigins,
+        verifyUser,
       });
     }
 
@@ -84,6 +88,7 @@ export async function handleGithubApiRequest({
       return await handleGithubDisconnect(req, res, {
         envFileCandidates,
         allowedOrigins,
+        verifyUser,
       });
     }
 
@@ -94,7 +99,7 @@ export async function handleGithubApiRequest({
         url,
         envFileCandidates,
         allowedOrigins,
-        verifyRequestUser,
+        verifyRequestUser: verifyUser,
         loadGithubToken: (uid, candidates, credentialId = "") => loadGithubRequestToken(
           req,
           uid,
@@ -114,7 +119,7 @@ export async function handleGithubApiRequest({
         body: await readRequestBody(req),
         envFileCandidates,
         allowedOrigins,
-        verifyRequestUser,
+        verifyRequestUser: verifyUser,
         loadGithubToken: (uid, candidates, credentialId = "") => loadGithubRequestToken(
           req,
           uid,
@@ -134,7 +139,7 @@ export async function handleGithubApiRequest({
         normalizedPathname,
         envFileCandidates,
         allowedOrigins,
-        verifyRequestUser,
+        verifyRequestUser: verifyUser,
         loadGithubToken: (uid, candidates, credentialId = "") => loadGithubRequestToken(
           req,
           uid,
@@ -189,9 +194,14 @@ async function loadGithubRequestToken(req, uid, envFileCandidates, credentialId 
   );
 }
 
-async function handleGithubLogin(req, res, { platformOrigin, envFileCandidates, allowedOrigins }) {
+async function handleGithubLogin(req, res, {
+  platformOrigin,
+  envFileCandidates,
+  allowedOrigins,
+  verifyUser,
+}) {
   const body = await readRequestBody(req);
-  const verifiedUser = await verifyRequestUser(req, envFileCandidates);
+  const verifiedUser = await verifyUser(req, envFileCandidates);
   const clientId = await getRuntimeEnvValue("GITHUB_OAUTH_CLIENT_ID", envFileCandidates);
   if (!clientId) {
     return sendGithubJson(req, res, 500, {
@@ -434,9 +444,13 @@ function normalizeGithubOAuthError(value) {
     .slice(0, 120);
 }
 
-async function handleGithubUser(req, res, { envFileCandidates, allowedOrigins }) {
+async function handleGithubUser(req, res, {
+  envFileCandidates,
+  allowedOrigins,
+  verifyUser,
+}) {
   try {
-    const verifiedUser = await verifyRequestUser(req, envFileCandidates);
+    const verifiedUser = await verifyUser(req, envFileCandidates);
     const requestedCredentialId = urlSearchParam(req, "credentialId");
     const requestedOrganizationId = normalizeGithubOrganizationId(
       urlSearchParam(req, "organizationId")
@@ -544,8 +558,12 @@ async function handleGithubUser(req, res, { envFileCandidates, allowedOrigins })
   }
 }
 
-async function handleGithubDisconnect(req, res, { envFileCandidates, allowedOrigins }) {
-  const verifiedUser = await verifyRequestUser(req, envFileCandidates);
+async function handleGithubDisconnect(req, res, {
+  envFileCandidates,
+  allowedOrigins,
+  verifyUser,
+}) {
+  const verifiedUser = await verifyUser(req, envFileCandidates);
   const body = await readRequestBody(req);
   const credentialId = normalizeGithubCredentialId(body?.credentialId);
   const store = await deleteGithubToken(
@@ -639,7 +657,7 @@ function urlSearchParam(req, key) {
 
 async function saveOAuthState(state, data, envFileCandidates) {
   const now = Date.now();
-  await firestorePatchDocument(`${OAUTH_STATE_COLLECTION}/${encodeURIComponent(state)}`, {
+  await connectorStoragePatchDocument(`${OAUTH_STATE_COLLECTION}/${encodeURIComponent(state)}`, {
     state: { stringValue: state },
     redirectTarget: { stringValue: data.redirectTarget },
     provider: { stringValue: data.provider },
@@ -656,7 +674,10 @@ async function saveOAuthState(state, data, envFileCandidates) {
 }
 
 async function getOAuthState(state, provider, envFileCandidates) {
-  const document = await firestoreGetDocument(`${OAUTH_STATE_COLLECTION}/${encodeURIComponent(state)}`, envFileCandidates);
+  const document = await connectorStorageConsumeDocument(
+    `${OAUTH_STATE_COLLECTION}/${encodeURIComponent(state)}`,
+    envFileCandidates,
+  );
   if (!document) {
     return null;
   }
@@ -664,10 +685,8 @@ async function getOAuthState(state, provider, envFileCandidates) {
   const storedProvider = getFirestoreString(fields?.provider);
   const expiresAt = getFirestoreInteger(fields?.expiresAt);
   if (storedProvider !== provider || !expiresAt || Date.now() > expiresAt) {
-    await firestoreDeleteDocument(`${OAUTH_STATE_COLLECTION}/${encodeURIComponent(state)}`, envFileCandidates).catch(() => {});
     return null;
   }
-  await firestoreDeleteDocument(`${OAUTH_STATE_COLLECTION}/${encodeURIComponent(state)}`, envFileCandidates).catch(() => {});
   return {
     uid: getFirestoreString(fields?.uid) || "",
     redirectTarget: getFirestoreString(fields?.redirectTarget) || "",
@@ -858,7 +877,7 @@ async function trySyncGithubCredentialRegistry(uid, store, envFileCandidates) {
 }
 
 async function readGithubCredentialStore(uid, envFileCandidates) {
-  const document = await firestoreGetDocument(
+  const document = await connectorStorageGetDocument(
     `${FIRESTORE_TOKEN_COLLECTION}/${encodeURIComponent(uid)}`,
     envFileCandidates,
   );
@@ -881,7 +900,7 @@ async function writeGithubCredentialStore(uid, store, envFileCandidates) {
     defaultCredentialId,
     credentials: store.credentials,
   };
-  await firestorePatchDocument(`${FIRESTORE_TOKEN_COLLECTION}/${encodeURIComponent(uid)}`, {
+  await connectorStoragePatchDocument(`${FIRESTORE_TOKEN_COLLECTION}/${encodeURIComponent(uid)}`, {
     githubCredentialsJson: { stringValue: JSON.stringify(serializedStore) },
     githubDefaultCredentialId: { stringValue: defaultCredentialId },
     github: defaultCredential
@@ -1076,170 +1095,6 @@ async function deleteGithubToken(uid, envFileCandidates, credentialId = "") {
   return writtenStore;
 }
 
-async function firestoreGetDocument(documentPath, envFileCandidates) {
-  const { projectId, accessToken } = await getFirestoreAccessContext(envFileCandidates);
-  const response = await fetch(
-    `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents/${documentPath}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
-  if (response.status === 404) {
-    return null;
-  }
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => "");
-    throw new Error(errorText || `Firestore GET failed (${response.status})`);
-  }
-  return response.json();
-}
-
-async function firestoreDeleteDocument(documentPath, envFileCandidates) {
-  const { projectId, accessToken } = await getFirestoreAccessContext(envFileCandidates);
-  const response = await fetch(
-    `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents/${documentPath}`,
-    {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
-  if (!response.ok && response.status !== 404) {
-    const errorText = await response.text().catch(() => "");
-    throw new Error(errorText || `Firestore DELETE failed (${response.status})`);
-  }
-}
-
-async function firestorePatchDocument(documentPath, fields, updateFieldPaths, envFileCandidates) {
-  const { projectId, accessToken } = await getFirestoreAccessContext(envFileCandidates);
-  const target = new URL(
-    `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents/${documentPath}`
-  );
-  updateFieldPaths.forEach((fieldPath) => {
-    target.searchParams.append("updateMask.fieldPaths", fieldPath);
-  });
-  const response = await fetch(target.toString(), {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ fields }),
-  });
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => "");
-    throw new Error(errorText || `Firestore PATCH failed (${response.status})`);
-  }
-}
-
-async function getFirestoreAccessContext(envFileCandidates) {
-  const serviceAccount = await getServiceAccountConfig(envFileCandidates);
-  const projectId = serviceAccount?.projectId
-    || await getRuntimeEnvValue("NEXT_PUBLIC_FIREBASE_PROJECT_ID", envFileCandidates)
-    || "testbaseai";
-  const accessToken = serviceAccount
-    ? await getServiceAccountAccessToken(serviceAccount)
-    : await getMetadataAccessToken();
-  if (!accessToken) {
-    throw new Error("Unable to acquire Firestore access token");
-  }
-  return { projectId, accessToken };
-}
-
-async function getServiceAccountAccessToken(serviceAccount) {
-  const now = Date.now();
-  if (cachedGoogleAccessToken && cachedGoogleAccessToken.expiresAt - 60_000 > now) {
-    return cachedGoogleAccessToken.accessToken;
-  }
-
-  const issuedAt = Math.floor(now / 1000);
-  const expiresAt = issuedAt + 3600;
-  const header = Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64url");
-  const payload = Buffer.from(JSON.stringify({
-    iss: serviceAccount.clientEmail,
-    scope: "https://www.googleapis.com/auth/datastore",
-    aud: "https://oauth2.googleapis.com/token",
-    exp: expiresAt,
-    iat: issuedAt,
-  })).toString("base64url");
-  const unsignedToken = `${header}.${payload}`;
-  const signer = createSign("RSA-SHA256");
-  signer.update(unsignedToken);
-  signer.end();
-  const signature = signer.sign(serviceAccount.privateKey).toString("base64url");
-  const assertion = `${unsignedToken}.${signature}`;
-
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion,
-    }),
-  });
-  const payloadJson = await response.json().catch(() => ({}));
-  if (!response.ok || !payloadJson?.access_token) {
-    throw new Error(payloadJson?.error_description || payloadJson?.error || "Failed to obtain Google access token");
-  }
-
-  cachedGoogleAccessToken = {
-    accessToken: payloadJson.access_token,
-    expiresAt: now + Math.max((payloadJson.expires_in || 3600) * 1000, 60_000),
-  };
-  return payloadJson.access_token;
-}
-
-async function getMetadataAccessToken() {
-  const now = Date.now();
-  if (cachedGoogleAccessToken && cachedGoogleAccessToken.expiresAt - 60_000 > now) {
-    return cachedGoogleAccessToken.accessToken;
-  }
-
-  const response = await fetch("http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token", {
-    method: "GET",
-    headers: {
-      "Metadata-Flavor": "Google",
-    },
-  }).catch(() => null);
-  const payload = response ? await response.json().catch(() => ({})) : {};
-  if (!response?.ok || !payload?.access_token) {
-    return "";
-  }
-  cachedGoogleAccessToken = {
-    accessToken: payload.access_token,
-    expiresAt: now + Math.max((payload.expires_in || 3600) * 1000, 60_000),
-  };
-  return payload.access_token;
-}
-
-async function getServiceAccountConfig(envFileCandidates) {
-  const raw = await getRuntimeEnvValue("FB_SERVICE_ACCOUNT_KEY", envFileCandidates);
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    const privateKey = typeof parsed.private_key === "string"
-      ? parsed.private_key.replace(/\\n/g, "\n")
-      : "";
-    if (!parsed.client_email || !privateKey) {
-      return null;
-    }
-    createPrivateKey(privateKey);
-    return {
-      clientEmail: parsed.client_email,
-      privateKey,
-      projectId: parsed.project_id || await getRuntimeEnvValue("NEXT_PUBLIC_FIREBASE_PROJECT_ID", envFileCandidates) || "testbaseai",
-    };
-  } catch {
-    return null;
-  }
-}
-
 async function encryptToken(value, envFileCandidates) {
   const key = await getEncryptionKey(envFileCandidates);
   const iv = randomBytes(IV_LENGTH);
@@ -1261,9 +1116,15 @@ async function decryptToken(value, envFileCandidates) {
 }
 
 async function getEncryptionKey(envFileCandidates) {
-  const key = await getRuntimeEnvValue("GITHUB_TOKEN_ENCRYPTION_KEY", envFileCandidates);
+  const key = await getRuntimeEnvValue(
+    "GITHUB_TOKEN_ENCRYPTION_KEY",
+    envFileCandidates,
+  ) || await getRuntimeEnvValue(
+    "CONNECTOR_TOKEN_ENCRYPTION_KEY",
+    envFileCandidates,
+  );
   if (!key) {
-    throw new Error("Missing GITHUB_TOKEN_ENCRYPTION_KEY");
+    throw new Error("Missing connector token encryption key");
   }
   try {
     const decoded = Buffer.from(key, "base64");
@@ -1274,7 +1135,7 @@ async function getEncryptionKey(envFileCandidates) {
   if (key.length === 32) {
     return Buffer.from(key, "utf8");
   }
-  throw new Error("GITHUB_TOKEN_ENCRYPTION_KEY must be 32 bytes");
+  throw new Error("Connector token encryption key must be 32 bytes");
 }
 
 async function getRuntimeEnvValue(key, envFileCandidates) {

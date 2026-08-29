@@ -123,4 +123,34 @@ assert.equal(
 assert.equal(headResponse.statusCode, 200);
 assert.equal(headResponse.body, undefined);
 
+let githubBindings = null;
+const connectorHandler = createPageAndStaticRoutes({
+  platformOrigin: "https://stockifi.example.test",
+  isGithubApiRequestPath: (pathname) => pathname === "/api/aios/github/login",
+  isJiraApiRequestPath: () => false,
+  isGenericConnectorApiRequestPath: () => false,
+  identityService: {
+    async readPrincipal() {
+      return { uid: "oidc_user_1", email: "user@example.test" };
+    },
+  },
+  async handleGithubApiRequest(bindings) {
+    githubBindings = bindings;
+  },
+});
+assert.equal(
+  connectorHandler(
+    { method: "POST", headers: {} },
+    createResponseRecorder(),
+    new URL("https://stockifi.example.test/api/aios/github/login"),
+  ),
+  true,
+);
+await new Promise((resolve) => setImmediate(resolve));
+assert.ok(githubBindings, "GitHub connector route should receive its bindings");
+assert.deepEqual(await githubBindings.verifyUser({}), {
+  uid: "oidc_user_1",
+  email: "user@example.test",
+});
+
 console.log("Platform single-document route contracts passed.");

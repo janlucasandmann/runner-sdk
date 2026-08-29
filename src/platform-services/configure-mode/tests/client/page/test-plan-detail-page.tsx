@@ -1239,6 +1239,138 @@ export function TestPlanDetailPage({
       ariaLabel="Test plan section"
     />
   );
+  const settings = activeTab === "settings" ? {
+    ariaLabel: "Test settings",
+    className: "tests-settings-page",
+    identity: {
+      icon: <FlaskConical width={24} height={24} strokeWidth={1.7} />,
+      title: name,
+      description,
+      onTitleChange: setName,
+      onDescriptionChange: setDescription,
+      titlePlaceholder: "Test",
+      descriptionPlaceholder: "Describe the behavior this test protects",
+      titleAriaLabel: "Test name",
+      descriptionAriaLabel: "Test description",
+    },
+    details: {
+      children: properties,
+      className: "tests-detail-sidebar-card",
+    },
+    additionalSections: (
+      <>
+        {!plan.publishedVersionId ? (
+          <div className="tests-plan-state-banner is-warning" role="status">
+            <AlertTriangle width={15} height={15} aria-hidden="true" />
+            <span>
+              <strong>Draft only</strong>
+              Add cases, save your changes, then publish an immutable version before running this plan.
+            </span>
+          </div>
+        ) : null}
+        {error || parsedDefinition.error ? (
+          <PlatformUiCard as="div" className="tests-inline-error" role="alert">
+            {error || `Definition JSON: ${parsedDefinition.error}`}
+          </PlatformUiCard>
+        ) : null}
+        <PlatformSettingsSectionList>
+          <PlatformSettingsSection
+            title="Run behavior"
+            className="tests-settings-detail-section tests-run-behavior-section"
+            bodyPresentation="flush"
+          >
+            <PlatformServiceDetailPropertyList className="tests-settings-detail-list tests-run-behavior-list">
+              <PlatformServiceDetailProperty label="Cases running at once">
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  className="tests-settings-detail-number-input"
+                  value={definition.concurrency}
+                  aria-label="Cases running at once"
+                  title="Use 1 to run cases in order"
+                  onChange={(event) => commitDefinition({
+                    ...definition,
+                    concurrency: Math.max(1, Math.min(20, Number(event.currentTarget.value) || 1)),
+                  })}
+                />
+              </PlatformServiceDetailProperty>
+              <PlatformServiceDetailProperty label="Attempts per case">
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  className="tests-settings-detail-number-input"
+                  value={definition.retryPolicy.maxAttempts}
+                  aria-label="Attempts per case"
+                  title="The agent decides when to retry; this limit includes the first attempt"
+                  onChange={(event) => commitDefinition({
+                    ...definition,
+                    retryPolicy: {
+                      ...definition.retryPolicy,
+                      maxAttempts: Math.max(1, Math.min(10, Number(event.currentTarget.value) || 1)),
+                    },
+                  })}
+                />
+              </PlatformServiceDetailProperty>
+              <PlatformServiceDetailProperty label="Stop remaining cases">
+                <PlatformToggle
+                  checked={definition.stopOnFailure}
+                  aria-label="Stop after the first failed case"
+                  onCheckedChange={(nextChecked) => commitDefinition({
+                    ...definition,
+                    stopOnFailure: nextChecked,
+                  })}
+                />
+              </PlatformServiceDetailProperty>
+            </PlatformServiceDetailPropertyList>
+          </PlatformSettingsSection>
+          <PlatformSettingsSection
+            title="Evidence to keep"
+            className="tests-settings-detail-section tests-evidence-settings-section"
+            bodyPresentation="flush"
+          >
+            <PlatformServiceDetailPropertyList className="tests-settings-detail-list tests-evidence-policy">
+              {([
+                ["retainLogs", "Console logs"],
+                ["retainScreenshots", "Screenshots"],
+                ["retainTraces", "Execution traces"],
+                ["retainArtifacts", "Files and reports"],
+                ["redactSecrets", "Redact secrets"],
+              ] as const).map(([key, label]) => (
+                <PlatformServiceDetailProperty key={key} label={label}>
+                  <PlatformToggle
+                    checked={definition.evidencePolicy[key]}
+                    aria-label={label}
+                    onCheckedChange={(nextChecked) => commitDefinition({
+                      ...definition,
+                      evidencePolicy: {
+                        ...definition.evidencePolicy,
+                        [key]: nextChecked,
+                      },
+                    })}
+                  />
+                </PlatformServiceDetailProperty>
+              ))}
+            </PlatformServiceDetailPropertyList>
+          </PlatformSettingsSection>
+        </PlatformSettingsSectionList>
+      </>
+    ),
+    access: (
+      <TestPlanAccessSettings
+        plan={plan}
+        api={api}
+        workspaceTeams={workspaceTeams}
+        onPlanChange={onPlanChange}
+        onPermissionDetailOpenChange={setAccessDetailOpen}
+      />
+    ),
+    accessDetailOpen,
+    detailsSidebarCollapsed: versionHistoryOpen,
+    detailsSidebarAriaLabel: "Test plan information",
+    detailsSidebarClassName: "tests-detail-sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar",
+  } : undefined;
 
   return (
     <>
@@ -1248,6 +1380,7 @@ export function TestPlanDetailPage({
         ? createPortal(sectionSwitch, sectionControlsPortalTarget)
         : null}
       <PlatformServiceDetailPage
+        settings={settings}
         properties={properties}
         sidebarCollapsed={activeTab === "cases" || accessDetailOpen || versionHistoryOpen}
         ariaLabel={`${plan.name} test plan`}
@@ -1385,124 +1518,6 @@ export function TestPlanDetailPage({
           </div>
         ) : null}
 
-        {activeTab === "settings" ? (
-          <div className="tests-detail-stack tests-settings-page">
-            <section className="tests-plan-settings-identity" aria-label="Test identity">
-              <span className="tests-plan-settings-identity__icon" aria-hidden="true">
-                <FlaskConical width={22} height={22} strokeWidth={1.7} />
-              </span>
-              <div className="tests-plan-settings-identity__copy">
-                <input
-                  type="text"
-                  className="tests-plan-settings-identity__name"
-                  value={name}
-                  placeholder="Test"
-                  aria-label="Test name"
-                  title={name || "Test"}
-                  onChange={(event) => setName(event.currentTarget.value)}
-                />
-                <input
-                  type="text"
-                  className="tests-plan-settings-identity__description"
-                  value={description}
-                  placeholder="Describe the behavior this test protects"
-                  aria-label="Test description"
-                  title={description}
-                  onChange={(event) => setDescription(event.currentTarget.value)}
-                />
-              </div>
-            </section>
-            <PlatformSettingsSectionList>
-              <PlatformSettingsSection
-                title="Run behavior"
-                className="tests-settings-detail-section tests-run-behavior-section"
-                bodyPresentation="flush"
-              >
-                <PlatformServiceDetailPropertyList className="tests-settings-detail-list tests-run-behavior-list">
-                  <PlatformServiceDetailProperty label="Cases running at once">
-                    <input
-                      type="number"
-                      min={1}
-                      max={20}
-                      className="tests-settings-detail-number-input"
-                      value={definition.concurrency}
-                      aria-label="Cases running at once"
-                      title="Use 1 to run cases in order"
-                      onChange={(event) => commitDefinition({
-                        ...definition,
-                        concurrency: Math.max(1, Math.min(20, Number(event.currentTarget.value) || 1)),
-                      })}
-                    />
-                  </PlatformServiceDetailProperty>
-                  <PlatformServiceDetailProperty label="Attempts per case">
-                    <input
-                      type="number"
-                      min={1}
-                      max={10}
-                      className="tests-settings-detail-number-input"
-                      value={definition.retryPolicy.maxAttempts}
-                      aria-label="Attempts per case"
-                      title="The agent decides when to retry; this limit includes the first attempt"
-                      onChange={(event) => commitDefinition({
-                        ...definition,
-                        retryPolicy: {
-                          ...definition.retryPolicy,
-                          maxAttempts: Math.max(1, Math.min(10, Number(event.currentTarget.value) || 1)),
-                        },
-                      })}
-                    />
-                  </PlatformServiceDetailProperty>
-                  <PlatformServiceDetailProperty label="Stop remaining cases">
-                    <PlatformToggle
-                      checked={definition.stopOnFailure}
-                      aria-label="Stop after the first failed case"
-                      onCheckedChange={(nextChecked) => commitDefinition({
-                        ...definition,
-                        stopOnFailure: nextChecked,
-                      })}
-                    />
-                  </PlatformServiceDetailProperty>
-                </PlatformServiceDetailPropertyList>
-              </PlatformSettingsSection>
-              <PlatformSettingsSection
-                title="Evidence to keep"
-                className="tests-settings-detail-section tests-evidence-settings-section"
-                bodyPresentation="flush"
-              >
-                <PlatformServiceDetailPropertyList className="tests-settings-detail-list tests-evidence-policy">
-                  {([
-                    ["retainLogs", "Console logs"],
-                    ["retainScreenshots", "Screenshots"],
-                    ["retainTraces", "Execution traces"],
-                    ["retainArtifacts", "Files and reports"],
-                    ["redactSecrets", "Redact secrets"],
-                  ] as const).map(([key, label]) => (
-                    <PlatformServiceDetailProperty key={key} label={label}>
-                      <PlatformToggle
-                        checked={definition.evidencePolicy[key]}
-                        aria-label={label}
-                        onCheckedChange={(nextChecked) => commitDefinition({
-                          ...definition,
-                          evidencePolicy: {
-                            ...definition.evidencePolicy,
-                            [key]: nextChecked,
-                          },
-                        })}
-                      />
-                    </PlatformServiceDetailProperty>
-                  ))}
-                </PlatformServiceDetailPropertyList>
-              </PlatformSettingsSection>
-            </PlatformSettingsSectionList>
-            <TestPlanAccessSettings
-              plan={plan}
-              api={api}
-              workspaceTeams={workspaceTeams}
-              onPlanChange={onPlanChange}
-              onPermissionDetailOpenChange={setAccessDetailOpen}
-            />
-          </div>
-        ) : null}
       </PlatformServiceDetailPage>
       {(!versionsDrawerPortalId || versionsDrawerPortalTarget) ? (
         <PlatformVersionHistorySidebar<TestPlanVersion>

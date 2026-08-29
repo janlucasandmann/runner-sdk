@@ -2,8 +2,15 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { brotliDecompressSync } from "node:zlib";
 
+import {
+  createLegacyPlatformApplicationSources,
+} from "../client/legacy/create-legacy-platform-application.mjs";
+import {
+  createCloudCompatibilityDeploymentProfile,
+} from "./deployment-profile-service.mjs";
 import { createPlatformDocumentAssets } from "./platform-assets.mjs";
 
 const assets = await createPlatformDocumentAssets({
@@ -149,5 +156,18 @@ try {
 } finally {
   await rm(fixtureRoot, { recursive: true, force: true });
 }
+
+const productionSources = createLegacyPlatformApplicationSources({
+  aiosOrigin: "https://computer-agents.example",
+  defaultUpstreamOrigin: "http://127.0.0.1:8080",
+  deploymentProfileEnvelope: createCloudCompatibilityDeploymentProfile("prod"),
+  identityProvider: "oidc",
+  platformOrigin: "http://127.0.0.1:4177",
+});
+const productionAssets = await createPlatformDocumentAssets(productionSources, {
+  packageRoot: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.."),
+});
+assert.ok(productionAssets.metrics.moduleGraphInputs > 1);
+assert.ok(productionAssets.metrics.moduleBytes > 0);
 
 console.log("Platform document and immutable asset delivery contracts passed.");

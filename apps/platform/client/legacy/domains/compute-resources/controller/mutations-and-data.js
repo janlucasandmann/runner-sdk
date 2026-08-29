@@ -468,12 +468,17 @@
             }
           }
 
-          async function updateFunctionGithubConnector(repository) {
-            if (!draftServer || canonicalizePlaygroundServerKind(draftServer.kind) !== "function") {
-              throw new Error("Select a Function before configuring its GitHub connector.");
+          async function updateSourceGithubConnector(repository) {
+            const resourceKind = canonicalizePlaygroundServerKind(draftServer?.kind);
+            const resourceLabel = resourceKind === "web_app" ? "Web App" : "Function";
+            const metadataKey = resourceKind === "web_app"
+              ? "webAppGithubConnector"
+              : "functionGithubConnector";
+            if (!draftServer || !["function", "web_app"].includes(resourceKind)) {
+              throw new Error("Select a Function or Web App before configuring its GitHub connector.");
             }
             if (!draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
-              throw new Error("Save this Function before configuring its GitHub connector.");
+              throw new Error("Save this " + resourceLabel + " before configuring its GitHub connector.");
             }
 
             const metadata = draftServer.metadata && typeof draftServer.metadata === "object" && !Array.isArray(draftServer.metadata)
@@ -496,12 +501,12 @@
             }
 
             if (normalizedRepository) {
-              metadata.functionGithubConnector = {
+              metadata[metadataKey] = {
                 schemaVersion: "1",
                 repository: normalizedRepository,
               };
             } else {
-              delete metadata.functionGithubConnector;
+              delete metadata[metadataKey];
             }
             const nextServer = normalizePlaygroundServerRecord({
               ...draftServer,
@@ -517,7 +522,7 @@
 
             try {
               const savedServer = await persistServerRecord(nextServer);
-              if (!savedServer) throw new Error("Function connector save failed.");
+              if (!savedServer) throw new Error(resourceLabel + " connector save failed.");
               serverEditorDirtyRef.current = false;
               upsertLocalServerRecord(savedServer);
               setDraftServer(savedServer);
@@ -527,19 +532,23 @@
               setDraftServer(draftServer);
               setServerSaveState({
                 isSaving: false,
-                error: error instanceof Error ? error.message : "Failed to save the Function connector.",
+                error: error instanceof Error
+                  ? error.message
+                  : "Failed to save the " + resourceLabel + " connector.",
                 message: "",
               });
               throw error;
             }
           }
 
-          async function createFunctionGithubRepository(options = {}) {
-            if (!draftServer || canonicalizePlaygroundServerKind(draftServer.kind) !== "function") {
-              throw new Error("Select a Function before creating its GitHub repository.");
+          async function createSourceGithubRepository(options = {}) {
+            const resourceKind = canonicalizePlaygroundServerKind(draftServer?.kind);
+            const resourceLabel = resourceKind === "web_app" ? "Web App" : "Function";
+            if (!draftServer || !["function", "web_app"].includes(resourceKind)) {
+              throw new Error("Select a Function or Web App before creating its GitHub repository.");
             }
             if (!draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
-              throw new Error("Save this Function before creating its GitHub repository.");
+              throw new Error("Save this " + resourceLabel + " before creating its GitHub repository.");
             }
             const createRepository = computerAgents?.github?.createRepository;
             if (typeof createRepository !== "function") {
@@ -557,7 +566,7 @@
               .filter((filePath) => !Object.prototype.hasOwnProperty.call(sourceFileContents, filePath));
             if (missingPaths.length > 0) {
               throw new Error(
-                "Load the complete Function source before creating its repository. Missing: "
+                "Load the complete " + resourceLabel + " source before creating its repository. Missing: "
                 + missingPaths.slice(0, 3).join(", ")
                 + (missingPaths.length > 3 ? "…" : "")
               );
@@ -569,22 +578,36 @@
                 })
               : [
                   {
-                    path: PLAYGROUND_DEFAULT_FUNCTION_SOURCE_PATH,
-                    content: PLAYGROUND_DEFAULT_FUNCTION_SOURCE_CONTENT,
+                    path: resourceKind === "web_app"
+                      ? PLAYGROUND_DEFAULT_WEB_APP_SOURCE_PATH
+                      : PLAYGROUND_DEFAULT_FUNCTION_SOURCE_PATH,
+                    content: resourceKind === "web_app"
+                      ? PLAYGROUND_DEFAULT_WEB_APP_SOURCE_CONTENT
+                      : PLAYGROUND_DEFAULT_FUNCTION_SOURCE_CONTENT,
                   },
                   {
-                    path: PLAYGROUND_DEFAULT_FUNCTION_PACKAGE_PATH,
-                    content: PLAYGROUND_DEFAULT_FUNCTION_PACKAGE_CONTENT,
+                    path: resourceKind === "web_app"
+                      ? PLAYGROUND_DEFAULT_WEB_APP_PACKAGE_PATH
+                      : PLAYGROUND_DEFAULT_FUNCTION_PACKAGE_PATH,
+                    content: resourceKind === "web_app"
+                      ? PLAYGROUND_DEFAULT_WEB_APP_PACKAGE_CONTENT
+                      : PLAYGROUND_DEFAULT_FUNCTION_PACKAGE_CONTENT,
                   },
                 ];
-            const functionName = String(options?.name || draftServer.name || "Computer Agents Function").trim();
+            const resourceName = String(
+              options?.name || draftServer.name || "Computer Agents " + resourceLabel
+            ).trim();
             const createdRepository = await createRepository({
-              name: functionName,
+              name: resourceName,
               description: String(draftServer.description || "").trim()
-                || "Source for the " + functionName + " Computer Agents Function.",
-              functionId: String(draftServer.id || "").trim(),
+                || "Source for the " + resourceName + " Computer Agents " + resourceLabel + ".",
+              resourceId: String(draftServer.id || "").trim(),
+              resourceKind,
+              ...(resourceKind === "function"
+                ? { functionId: String(draftServer.id || "").trim() }
+                : { webAppId: String(draftServer.id || "").trim() }),
               private: true,
-              commitMessage: "Initialize " + functionName + " Function source",
+              commitMessage: "Initialize " + resourceName + " " + resourceLabel + " source",
               files,
             }, {
               accountId: String(options?.accountId || "").trim() || undefined,

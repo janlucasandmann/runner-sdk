@@ -6,6 +6,9 @@ import {
 import fs from "node:fs";
 
 import { createGcpConnectorOAuthAdapter } from "../../../../src/adapters/gcp/connector-oauth-gcp-adapter.mjs";
+import {
+  createApplianceConnectorDocumentStore,
+} from "./appliance-connector-document-store.mjs";
 import { createConnectorCredentialRegistry } from "./connector-credential-registry.mjs";
 import { createConnectorSettingsStore } from "./connector-settings-store.mjs";
 
@@ -166,16 +169,17 @@ export async function consumeConnectorOAuthState(
   envFileCandidates,
 ) {
   const path = `${OAUTH_STATE_COLLECTION}/${encodeURIComponent(state)}`;
-  const document = await firestoreGetDocument(path, envFileCandidates);
+  const document = await connectorStorageConsumeDocument(
+    path,
+    envFileCandidates,
+  );
   if (!document) return null;
   const fields = document?.fields || {};
   const storedProvider = getFirestoreString(fields.provider);
   const expiresAt = getFirestoreInteger(fields.expiresAt);
   if (storedProvider !== provider || !expiresAt || Date.now() > expiresAt) {
-    await firestoreDeleteDocument(path, envFileCandidates).catch(() => {});
     return null;
   }
-  await firestoreDeleteDocument(path, envFileCandidates).catch(() => {});
   let metadata = {};
   try {
     metadata = JSON.parse(getFirestoreString(fields.metadataJson) || "{}");
@@ -1080,21 +1084,21 @@ function decodeEncryptionKey(value, keyName) {
 }
 
 async function firestoreGetDocument(documentPath, envFileCandidates) {
-  return gcpConnectorOAuthAdapter.getDocument(
+  return connectorStorageGetDocument(
     documentPath,
     envFileCandidates,
   );
 }
 
 async function firestoreListDocuments(collectionPath, envFileCandidates) {
-  return gcpConnectorOAuthAdapter.listDocuments(
+  return connectorStorageListDocuments(
     collectionPath,
     envFileCandidates,
   );
 }
 
 async function firestoreDeleteDocument(documentPath, envFileCandidates) {
-  return gcpConnectorOAuthAdapter.deleteDocument(
+  return connectorStorageDeleteDocument(
     documentPath,
     envFileCandidates,
   );
@@ -1106,12 +1110,75 @@ async function firestorePatchDocument(
   updateFieldPaths,
   envFileCandidates,
 ) {
-  return gcpConnectorOAuthAdapter.patchDocument(
+  return connectorStoragePatchDocument(
     documentPath,
     fields,
     updateFieldPaths,
     envFileCandidates,
   );
+}
+
+export async function connectorStorageGetDocument(
+  documentPath,
+  envFileCandidates,
+) {
+  return getConnectorDocumentStore().getDocument(
+    documentPath,
+    envFileCandidates,
+  );
+}
+
+export async function connectorStorageListDocuments(
+  collectionPath,
+  envFileCandidates,
+) {
+  return getConnectorDocumentStore().listDocuments(
+    collectionPath,
+    envFileCandidates,
+  );
+}
+
+export async function connectorStorageDeleteDocument(
+  documentPath,
+  envFileCandidates,
+) {
+  return getConnectorDocumentStore().deleteDocument(
+    documentPath,
+    envFileCandidates,
+  );
+}
+
+export async function connectorStoragePatchDocument(
+  documentPath,
+  fields,
+  updateFieldPaths,
+  envFileCandidates,
+) {
+  return getConnectorDocumentStore().patchDocument(
+    documentPath,
+    fields,
+    updateFieldPaths,
+    envFileCandidates,
+  );
+}
+
+export async function connectorStorageConsumeDocument(
+  documentPath,
+  envFileCandidates,
+) {
+  const store = getConnectorDocumentStore();
+  if (typeof store.consumeDocument === "function") {
+    return store.consumeDocument(documentPath, envFileCandidates);
+  }
+  const document = await store.getDocument(documentPath, envFileCandidates);
+  if (document) {
+    await store.deleteDocument(documentPath, envFileCandidates);
+  }
+  return document;
+}
+
+function getConnectorDocumentStore() {
+  return createApplianceConnectorDocumentStore() || gcpConnectorOAuthAdapter;
 }
 
 function buildCorsHeaders(req, allowedOrigins) {

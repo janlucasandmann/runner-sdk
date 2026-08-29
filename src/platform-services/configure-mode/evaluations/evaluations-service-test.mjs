@@ -565,7 +565,7 @@ assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /const handleEvalua
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /\bsidebarToggle,\s*\n\s*sidebarCollapsed: evaluationDetailSidebarCollapsed/);
 assert.match(
   EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views,
-  /return React\.createElement\(EvaluationDetailPage, \{\s*properties,\s*sidebarCollapsed: evaluationDetailSidebarCollapsed,\s*\},\s*detailContent/,
+  /return React\.createElement\(EvaluationDetailPage, \{\s*properties,\s*settings: evaluationSettings,\s*sidebarCollapsed: evaluationDetailSidebarCollapsed,\s*\},\s*detailContent/,
 );
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(PlatformVersionLabel/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(EvaluationsOverviewPage/);
@@ -627,8 +627,10 @@ assert.match(
 );
 assert.match(
   EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views,
-  /activeDetailTab === "settings"[\s\S]*?renderEvaluationDescriptionEditor\(activeSet\),[\s\S]*?renderEvaluationAccessSettings\(\)/,
+  /const evaluationSettings = activeDetailTab === "settings"[\s\S]*?ariaLabel: "Evaluation settings"[\s\S]*?access: renderEvaluationAccessSettings\(\)/,
 );
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /settings: evaluationSettings/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationDescriptionEditor/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationOwnerSelector\(activeSet\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(PlatformSelector, \{[\s\S]*?ariaLabel: "Choose evaluator agent"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /evaluator: \{[\s\S]*?type: "agent",[\s\S]*?agentId: nextAgentId/);
@@ -687,8 +689,8 @@ assert.match(EVALUATIONS_STYLE_FRAGMENTS.detail, /\.playground-evaluations-threa
 assert.match(EVALUATIONS_STYLE_FRAGMENTS.detail, /\.playground-evaluations-title-input \{[\s\S]*?width: 100%;[\s\S]*?flex: 1 1 auto;/);
 assert.match(EVALUATIONS_STYLE_FRAGMENTS.detail, /\.playground-evaluations-detail-evaluator-trigger\.platform-selector__trigger \{[\s\S]*?background: transparent;/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /React\.createElement\(PlatformInstructionsEditor/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /function renderEvaluationDescriptionEditor/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationDescriptionEditor\(activeSet\)/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /function renderEvaluationDescriptionEditor/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationDescriptionEditor\(activeSet\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /variant: "minimalistic-ui"/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /renderToolbarButton|playground-evaluations-case-editor-markdown-section/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /type: "text"/);
@@ -702,14 +704,7 @@ assert.match(
   EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail,
   /function renderEvaluationDatasetGuidanceTitle\(\)[\s\S]*?Dataset Evaluator Guidance[\s\S]*?aria-label": "Dataset evaluator guidance information"[\s\S]*?role: "tooltip"/,
 );
-assert.match(
-  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail,
-  /function renderEvaluationDescriptionEditor\(set\)[\s\S]*?variant: "minimalistic-ui"[\s\S]*?className: "playground-evaluations-description-section"/,
-);
-assert.match(
-  EVALUATIONS_STYLE_FRAGMENTS.tables,
-  /playground-evaluations-description-section \.platform-instructions-editor__title,[\s\S]*?font-size: 14px !important/,
-);
+assert.doesNotMatch(EVALUATIONS_STYLE_FRAGMENTS.tables, /playground-evaluations-description-section/);
 
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.state, /evaluationSets/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.state, /evaluationsOverviewScope/);

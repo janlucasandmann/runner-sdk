@@ -335,7 +335,6 @@ export const EVALUATIONS_STYLE_TABLES = String.raw`        line-height: 1.35;
         text-align: right !important;
       }
 
-      .playground-evaluations-description-section.playground-agents-detail-instructions-section,
       .playground-evaluations-dataset-guidance-section.playground-agents-detail-instructions-section {
         margin-top: 0;
         margin-bottom: 0;
@@ -346,7 +345,6 @@ export const EVALUATIONS_STYLE_TABLES = String.raw`        line-height: 1.35;
         background: transparent !important;
       }
 
-      .playground-evaluations-description-section .platform-instructions-editor__title,
       .playground-evaluations-dataset-guidance-section .platform-instructions-editor__title {
         font-size: 14px !important;
       }
@@ -361,13 +359,10 @@ export const EVALUATIONS_STYLE_TABLES = String.raw`        line-height: 1.35;
         width: 320px;
       }
 
-      .playground-evaluations-description-section .playground-tasks-detail-description-editor,
       .playground-evaluations-dataset-guidance-section .playground-tasks-detail-description-editor {
         min-height: 118px;
       }
 
-      .playground-evaluations-description-section .playground-tasks-detail-description-input,
-      .playground-evaluations-description-section .playground-tasks-detail-description-preview-scope.tb-runner-chat,
       .playground-evaluations-dataset-guidance-section .playground-tasks-detail-description-input,
       .playground-evaluations-dataset-guidance-section .playground-tasks-detail-description-preview-scope.tb-runner-chat {
         min-height: 118px;

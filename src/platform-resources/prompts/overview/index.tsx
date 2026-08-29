@@ -1,31 +1,15 @@
 import { MessageSquareText, Plus } from "lucide-react";
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { PlatformEmptyState } from "../../../platform-ui/components/composite/empty-state/index.js";
+import { createResourceOverviewColumns } from "../../../platform-ui/pages/overview/index.js";
 import {
   SkillsOverviewGuide,
   SkillsOverviewPage,
   type SkillOverviewRow,
-  type SkillsOverviewIdentityColumn,
   type SkillsOverviewPageProps,
 } from "../../skills/overview/index.js";
 
 export type PromptOverviewRow = SkillOverviewRow;
-
-const PROMPT_CREATOR_IDENTITY_COLUMN: SkillsOverviewIdentityColumn = {
-  id: "creator",
-  header: "Creator",
-  getIdentity: (row) => {
-    const name = row.creatorName?.trim()
-      || (row.isCustom ? "Unknown user" : "Computer Agents");
-    return {
-      name,
-      imageUrl: row.creatorAvatarUrl
-        || (row.isCustom
-          ? undefined
-          : "/img/agent-profile-pics/ca-profilepic.jpg"),
-    };
-  },
-};
 
 export interface PromptsOverviewPageProps
   extends Omit<
@@ -41,6 +25,9 @@ export interface PromptsOverviewPageProps
     | "heroContent"
     | "pageClassName"
     | "grouping"
+    | "columns"
+    | "getSearchText"
+    | "identityColumn"
   > {
   heroContent?: ReactNode;
 }
@@ -53,10 +40,17 @@ export function PromptsOverviewPage({
   emptyState,
   ...props
 }: PromptsOverviewPageProps) {
-  const promptRows = rows.map((row) => ({
-    ...row,
-    icon: <MessageSquareText width={16} height={16} strokeWidth={1.8} />,
-  }));
+  const columns = useMemo(
+    () => createResourceOverviewColumns<PromptOverviewRow>({
+      name: {
+        getVisual: () => ({
+          icon: <MessageSquareText width={16} height={16} strokeWidth={1.8} />,
+          iconClassName: "is-skill",
+        }),
+      },
+    }),
+    [],
+  );
   const promptEmptyState = (
     <PlatformEmptyState
       icon={MessageSquareText}
@@ -74,7 +68,7 @@ export function PromptsOverviewPage({
     <SkillsOverviewPage
       {...props}
       onCreate={onCreate}
-      rows={promptRows}
+      rows={rows}
       mode="custom"
       onModeChange={() => undefined}
       period="month"
@@ -88,7 +82,10 @@ export function PromptsOverviewPage({
       heroContent={heroContent}
       pageClassName="is-skills is-prompts"
       grouping="flat"
-      identityColumn={PROMPT_CREATOR_IDENTITY_COLUMN}
+      columns={columns}
+      getSearchText={(row) => (
+        `${row.searchText || row.name} ${row.creatorName || ""}`
+      )}
     />
   );
 }

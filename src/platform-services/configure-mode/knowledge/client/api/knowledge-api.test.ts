@@ -8,6 +8,52 @@ afterEach(() => {
 });
 
 describe("KnowledgeApi editor attachments", () => {
+  it("uploads covers to the first-class durable Knowledge endpoint", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
+      library: {
+        id: "library-1",
+        cover: {
+          schemaVersion: "computer_agents_knowledge_cover_v1",
+          type: "image",
+          assetId: "knowledge-cover-1",
+          src: "/knowledge/library-1/cover/image?asset=knowledge-cover-1",
+          name: "cover.webp",
+          mimeType: "image/webp",
+          source: "upload",
+          positionX: 45,
+          positionY: 55,
+          zoom: 1.2,
+        },
+      },
+    }), { status: 201, headers: { "Content-Type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    const api = new KnowledgeApi("/api/real", {
+      "Content-Type": "application/json",
+      "X-Test-Identity": "user-1",
+    });
+    const file = new File(["cover-bytes"], "cover.png", { type: "image/png" });
+
+    await expect(api.uploadLibraryCover("library-1", {
+      file,
+      filename: file.name,
+      source: "upload",
+      positionX: 45,
+      positionY: 55,
+      zoom: 1.2,
+    })).resolves.toMatchObject({
+      cover: { assetId: "knowledge-cover-1" },
+    });
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/real/knowledge/library-1/cover");
+    const request = fetchMock.mock.calls[0]?.[1];
+    expect(request?.body).toBeInstanceOf(FormData);
+    expect(new Headers(request?.headers).has("content-type")).toBe(false);
+    const form = request?.body as FormData;
+    expect((form.get("file") as File).name).toBe("cover.png");
+    expect(form.get("positionX")).toBe("45");
+    expect(form.get("zoom")).toBe("1.2");
+  });
+
   it("adapts the appliance draft proposal response without leaking unsupported fields", async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
       status: "draft",

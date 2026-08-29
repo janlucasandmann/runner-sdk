@@ -1,15 +1,16 @@
-import { Rocket, ScanEye, ShieldCheck } from "lucide-react";
+import { Globe, Rocket, ScanEye, ShieldCheck } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PlatformPrimaryButton, PlatformSecondaryButton } from "../../ui/button/index.js";
 import { PlatformSelector } from "../../ui/selector/index.js";
 import { PlatformToggle } from "../../ui/toggle/index.js";
 import { PlatformModal } from "../modal/index.js";
 
-export type PlatformGitHubAutomationScopeType = "organization" | "project" | "function";
+export type PlatformGitHubAutomationScopeType = "organization" | "project" | "function" | "web_app";
 export type PlatformGitHubAutomationKind =
   | "security_scan"
   | "pull_request_review"
-  | "deploy_function";
+  | "deploy_function"
+  | "deploy_web_app";
 
 export interface PlatformGitHubAutomationAgentOption {
   id: string;
@@ -77,6 +78,12 @@ const AUTOMATIONS: readonly AutomationDefinition[] = [
     description: "Create and deploy a new Function version from the exact GitHub revision.",
     icon: Rocket,
   },
+  {
+    kind: "deploy_web_app",
+    title: "Web App deployments",
+    description: "Create and deploy a new Web App version from the exact GitHub revision.",
+    icon: Globe,
+  },
 ];
 
 const PR_EVENT_OPTIONS = [
@@ -91,20 +98,23 @@ const DEPLOY_EVENT_OPTIONS = [
   ["push", "Branch pushed"],
 ] as const;
 
+function isDeploymentAutomationKind(kind: PlatformGitHubAutomationKind): boolean {
+  return kind === "deploy_function" || kind === "deploy_web_app";
+}
+
 function defaultConfiguration(
   kind: PlatformGitHubAutomationKind,
   environmentId = "",
   defaultBranch = "",
 ): PlatformGitHubAutomationConfiguration {
   return {
-    events:
-      kind === "deploy_function"
-        ? ["pull_request.merged"]
-        : [
-            ...PR_EVENT_OPTIONS.map(([event]) => event),
-            ...(kind === "security_scan" ? ["push"] : []),
-          ],
-    branches: kind === "deploy_function" && defaultBranch ? [defaultBranch] : [],
+    events: isDeploymentAutomationKind(kind)
+      ? ["pull_request.merged"]
+      : [
+          ...PR_EVENT_OPTIONS.map(([event]) => event),
+          ...(kind === "security_scan" ? ["push"] : []),
+        ],
+    branches: isDeploymentAutomationKind(kind) && defaultBranch ? [defaultBranch] : [],
     pathIncludes: [],
     pathExcludes: [],
     agentId: "",
@@ -114,13 +124,31 @@ function defaultConfiguration(
         ? "Review the pull request for correctness, security, tests, and maintainability. Publish concise, actionable findings."
         : kind === "deploy_function"
           ? "Synchronize the Function from this exact GitHub revision, publish a new immutable version, and deploy it."
-          : "",
+          : kind === "deploy_web_app"
+            ? "Synchronize the Web App from this exact GitHub revision, publish a new immutable version, and deploy it."
+            : "",
     publishReview: kind === "pull_request_review",
   };
 }
 
 function normalizeBaseUrl(value: string | undefined): string {
   return String(value || "").replace(/\/+$/, "");
+}
+
+function errorMessages(value: unknown, prefix = ""): string[] {
+  if (typeof value === "string") {
+    const message = value.trim();
+    return message ? [prefix ? `${prefix}: ${message}` : message] : [];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((entry) => errorMessages(entry, prefix));
+  }
+  if (!value || typeof value !== "object") return [];
+
+  return Object.entries(value as Record<string, unknown>).flatMap(([key, entry]) => {
+    const nextPrefix = key === "formErrors" || key === "fieldErrors" ? prefix : key;
+    return errorMessages(entry, nextPrefix);
+  });
 }
 
 async function responseJson(response: Response): Promise<Record<string, unknown>> {
@@ -130,12 +158,12 @@ async function responseJson(response: Response): Promise<Record<string, unknown>
       ? (value as Record<string, unknown>)
       : {};
   if (!response.ok) {
-    const detail =
-      typeof body?.error === "string"
-        ? body.error
-        : typeof body?.message === "string"
-          ? body.message
-          : `Request failed with status ${response.status}.`;
+    const [structuredError] = errorMessages(body.error);
+    const detail = structuredError
+      ? structuredError
+      : typeof body?.message === "string"
+        ? body.message
+        : `Request failed with status ${response.status}.`;
     throw new Error(detail);
   }
   return body;
@@ -206,7 +234,7 @@ export function PlatformGitHubAutomations({
   );
   const visibleAutomations = useMemo(() => {
     if (!automationKinds?.length) {
-      return AUTOMATIONS.filter((automation) => automation.kind !== "deploy_function");
+      return AUTOMATIONS.filter((automation) => !isDeploymentAutomationKind(automation.kind));
     }
     const visibleKinds = new Set(automationKinds);
     return AUTOMATIONS.filter((automation) => visibleKinds.has(automation.kind));
@@ -266,7 +294,7 @@ export function PlatformGitHubAutomations({
     const configuration =
       existing?.configuration || defaultConfiguration(kind, environmentId, defaultBranch);
     if (
-      (kind === "pull_request_review" || kind === "deploy_function") &&
+      (kind === "pull_request_review" || isDeploymentAutomationKind(kind)) &&
       enabled &&
       !configuration.agentId
     ) {
@@ -301,7 +329,7 @@ export function PlatformGitHubAutomations({
         <PlatformPrimaryButton
           disabled={
             savingKind === activeKind ||
-            ((activeKind === "pull_request_review" || activeKind === "deploy_function") &&
+            ((activeKind === "pull_request_review" || isDeploymentAutomationKind(activeKind)) &&
               !draft.agentId)
           }
           onClick={async () => {
@@ -371,21 +399,22 @@ export function PlatformGitHubAutomations({
           <div className="platform-github-automation-configuration">
             <div className="platform-github-automation-configuration__section">
               <strong>Run when</strong>
-              {(activeKind === "deploy_function" ? DEPLOY_EVENT_OPTIONS : PR_EVENT_OPTIONS).map(
-                ([eventName, label]) => (
-                  <div
-                    className="platform-github-automation-configuration__toggle-row"
-                    key={eventName}
-                  >
-                    <span>{label}</span>
-                    <PlatformToggle
-                      checked={draft.events.includes(eventName)}
-                      aria-label={label}
-                      onCheckedChange={(checked) => setEvent(eventName, checked)}
-                    />
-                  </div>
-                ),
-              )}
+              {(isDeploymentAutomationKind(activeKind)
+                ? DEPLOY_EVENT_OPTIONS
+                : PR_EVENT_OPTIONS
+              ).map(([eventName, label]) => (
+                <div
+                  className="platform-github-automation-configuration__toggle-row"
+                  key={eventName}
+                >
+                  <span>{label}</span>
+                  <PlatformToggle
+                    checked={draft.events.includes(eventName)}
+                    aria-label={label}
+                    onCheckedChange={(checked) => setEvent(eventName, checked)}
+                  />
+                </div>
+              ))}
               {activeKind === "security_scan" ? (
                 <div className="platform-github-automation-configuration__toggle-row">
                   <span>Protected branch pushed</span>
@@ -446,7 +475,7 @@ export function PlatformGitHubAutomations({
                   />
                 </div>
               </>
-            ) : activeKind === "deploy_function" ? (
+            ) : isDeploymentAutomationKind(activeKind) ? (
               <>
                 <div className="platform-github-automation-configuration__field">
                   <span>Deployment Agent</span>

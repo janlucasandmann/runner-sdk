@@ -234,6 +234,9 @@ export interface RunnerChatGithubRepositoryCreateInput {
   name: string;
   description?: string;
   functionId?: string;
+  webAppId?: string;
+  resourceId?: string;
+  resourceKind?: "function" | "web_app";
   private?: boolean;
   commitMessage?: string;
   files: RunnerChatGithubRepositorySourceFile[];

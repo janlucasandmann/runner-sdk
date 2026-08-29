@@ -20,23 +20,6 @@
   min-height: 0;
 }
 
-.prompt-detail-page__settings-content,
-.prompt-detail-page__settings-layout {
-  min-width: 0;
-}
-
-.prompt-detail-page.file-resource-detail-page.is-settings-tab {
-  width: min(100%, var(--playground-centered-page-max-width, 87.5rem));
-  max-width: var(--playground-centered-page-max-width, 87.5rem);
-  margin-inline: auto;
-}
-
-.prompt-detail-page .prompt-detail-page__settings-content {
-  width: 100%;
-  max-width: none;
-  margin-inline: 0;
-}
-
 .prompt-detail-page__storage-map {
   margin-block: 0;
 }

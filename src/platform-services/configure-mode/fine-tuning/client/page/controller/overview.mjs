@@ -28,6 +28,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_OVERVIEW_SCRIPT = String.raw`        fu
               const normalizedJob = normalizePlaygroundFineTuningJob(job);
               const id = normalizePlaygroundFineTuningString(normalizedJob.id);
               const name = normalizePlaygroundFineTuningString(normalizedJob.name) || "Untitled Optimization";
+              const description = normalizePlaygroundFineTuningString(normalizedJob.description);
               const agent = normalizedAgents.find((item) => (
                 normalizePlaygroundFineTuningString(item?.id)
                 === normalizePlaygroundFineTuningString(normalizedJob.targetAgentId || normalizedJob.agentId)
@@ -54,7 +55,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_OVERVIEW_SCRIPT = String.raw`        fu
               const conductor = getPlaygroundFineTuningPersonLabel(explicitConductor)
                 ? explicitConductor
                 : currentFineTuningUser;
-              const conductorLabel = getPlaygroundFineTuningPersonLabel(conductor) || "Unknown";
+              const creatorName = getPlaygroundFineTuningPersonLabel(conductor) || "Unknown";
               const status = normalizePlaygroundFineTuningString(normalizedJob.status || "completed").toLowerCase();
               const isPlanned = status === "planned";
               const hasAfter = hasPlaygroundFineTuningAfterResult(normalizedJob);
@@ -81,20 +82,22 @@ export const FINE_TUNING_PAGE_CONTROLLER_OVERVIEW_SCRIPT = String.raw`        fu
               return {
                 id,
                 name,
+                description,
                 agentLabel,
                 agentAvatarUrl,
                 agentFallback: getPlaygroundFineTuningInitials(agentLabel),
                 evaluationSetCount,
                 improvementScore: Number(normalizedJob.improvementScore || 0) || 0,
                 improvementLabel,
-                conductorLabel,
-                conductorAvatarUrl: conductor.avatarUrl || "",
-                conductorFallback: getPlaygroundFineTuningInitials(conductorLabel),
+                creatorName,
+                creatorAvatarUrl: conductor.avatarUrl || "",
+                creatorFallback: getPlaygroundFineTuningInitials(creatorName),
+                updatedAt: Date.parse(normalizedJob.updatedAt || normalizedJob.createdAt || "") || 0,
                 status,
                 searchText: [
                   name,
                   agentLabel,
-                  conductorLabel,
+                  creatorName,
                   status,
                   (Array.isArray(normalizedJob.evaluationSets) ? normalizedJob.evaluationSets : [])
                     .map((set) => set?.name)

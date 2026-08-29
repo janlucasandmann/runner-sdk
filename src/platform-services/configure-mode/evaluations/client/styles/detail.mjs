@@ -574,7 +574,6 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         font-family: inherit;
       }
 
-      .playground-evaluations-detail-overview-main .playground-evaluations-description-section,
       .playground-evaluations-detail-overview-main .playground-evaluations-dataset-guidance-section {
         min-width: 0;
       }

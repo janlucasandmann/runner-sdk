@@ -137,14 +137,17 @@ assert.match(detailSource, /PlatformResourceRenameModal/);
 assert.match(detailSource, /PlatformConfirmationModal/);
 assert.match(detailSource, /buildPlatformTeamAccessMetadata/);
 assert.match(detailSource, /TestPlanAccessSettings/);
+assert.match(detailSource, /settings=\{settings\}/);
+assert.match(detailSource, /ariaLabel: "Test settings"/);
+assert.match(detailSource, /detailsSidebarAriaLabel: "Test plan information"/);
 assert.match(
   detailSource,
   /sidebarCollapsed=\{activeTab === "cases" \|\| accessDetailOpen \|\| versionHistoryOpen\}/,
 );
 assert.match(detailSource, /onPermissionDetailOpenChange=\{setAccessDetailOpen\}/);
-assert.match(detailSource, /className="tests-plan-settings-identity"/);
-assert.match(detailSource, /aria-label="Test name"/);
-assert.match(detailSource, /aria-label="Test description"/);
+assert.doesNotMatch(detailSource, /className="tests-plan-settings-identity"/);
+assert.match(detailSource, /titleAriaLabel: "Test name"/);
+assert.match(detailSource, /descriptionAriaLabel: "Test description"/);
 assert.match(detailSource, /usePlatformVersionNavigationGuard/);
 assert.match(detailSource, /label="Computer"/);
 assert.match(detailSource, /playground-project-overview-sidebar-selector/);

@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType, CSSProperties, ReactNode } from "react";
 
 type ResourceOverviewIdentitySize = "standard" | "compact";
 
@@ -17,6 +17,8 @@ interface ResourceOverviewCatalogIdentityCellProps {
   description?: ReactNode;
   icon?: ReactNode;
   iconClassName?: string;
+  iconStyle?: CSSProperties;
+  className?: string;
 }
 
 export function ResourceOverviewCatalogIdentityCell({
@@ -24,12 +26,15 @@ export function ResourceOverviewCatalogIdentityCell({
   description,
   icon,
   iconClassName = "",
+  iconStyle,
+  className = "",
 }: ResourceOverviewCatalogIdentityCellProps) {
   return (
-    <div className="resource-overview-identity is-catalog">
+    <div className={`resource-overview-identity is-catalog${className ? ` ${className}` : ""}`}>
       {icon != null ? (
         <span
           className={`resource-overview-identity__visual${iconClassName ? ` ${iconClassName}` : ""}`}
+          style={iconStyle}
           aria-hidden="true"
         >
           {icon}

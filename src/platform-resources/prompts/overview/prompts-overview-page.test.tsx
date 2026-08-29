@@ -17,6 +17,8 @@ describe("PromptsOverviewPage", () => {
           isActive: true,
           isCustom: true,
           creatorName: "Jane Doe",
+          creatorAvatarUrl: "/jane.png",
+          updatedAt: 1_787_990_400_000,
           updatedLabel: "Today",
         }]}
         onOpen={vi.fn()}
@@ -28,7 +30,11 @@ describe("PromptsOverviewPage", () => {
     );
 
     expect(screen.getByText("Release summary")).not.toBeNull();
-    expect(screen.getByRole("columnheader", { name: "Creator" })).not.toBeNull();
+    expect(screen.getByText("Summarize a release.")).not.toBeNull();
+    expect(
+      screen.getAllByRole("columnheader").map((header) => header.textContent),
+    ).toEqual(["Name", "Creator", "Updated", ""]);
+    expect(container.querySelector('img[src="/jane.png"]')).not.toBeNull();
     expect(
       container.querySelector(".resource-overview-identity__visual .lucide-message-square-text"),
     ).not.toBeNull();

@@ -88,11 +88,17 @@ export function createCoreGateway(bindings) {
         if (shouldForwardLocalCloudApiOverride && !headers["x-runner-upstream-url"]) {
             headers["x-runner-upstream-url"] = defaultUpstreamOrigin;
         }
+        // The hosted cloud proxy already owns the transient retry policy. A
+        // second retry loop here multiplied one UI read into four backend
+        // requests during outages and made the gateway timeout much more
+        // likely.
         return fetchWithTransientRetry(targetUrl.toString(), {
             method: init.method || "GET",
             headers,
             signal: init.signal,
             body: init.body,
+        }, {
+            maxAttempts: 1,
         });
     }
     async function fetchAiosApi(req, apiPath, init = {}) {

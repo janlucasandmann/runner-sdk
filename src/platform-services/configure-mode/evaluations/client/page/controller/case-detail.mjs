@@ -166,24 +166,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_CASE_DETAIL_SCRIPT = String.raw`       
           });
         }
 
-        function renderEvaluationDescriptionEditor(set) {
-          const description = String(set?.description || "");
-          return React.createElement(PlatformInstructionsEditor, {
-            value: description,
-            onChange: (value) => updateEvaluationSet(set.id, (current) => ({
-              ...current,
-              description: value,
-            })),
-            title: "Description",
-            placeholder: "Describe the purpose, scope, and expected use of this evaluation.",
-            ariaLabel: "Evaluation description",
-            stickyHeader: true,
-            historyKey: "evaluation-description:" + set.id,
-            variant: "minimalistic-ui",
-            className: "playground-evaluations-description-section",
-          });
-        }
-
         function renderEvaluationCaseGuidanceTitle() {
           return React.createElement("span", { className: "playground-evaluations-case-guidance-title" },
             React.createElement("span", null, "Evaluator Guidance"),

@@ -240,22 +240,6 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
           });
         }
 
-        function renderFineTuningDescriptionEditor(job) {
-          return React.createElement(PlatformInstructionsEditor, {
-            value: String(job?.description || ""),
-            onChange: (value) => patchFineTuningJob(job.id, (current) => ({
-              ...current,
-              description: String(value || ""),
-            }), { persist: true, delayMs: 450 }),
-            title: "Description",
-            placeholder: "Describe the purpose, scope, and expected outcome of this optimization job.",
-            ariaLabel: "Fine-tuning description",
-            stickyHeader: true,
-            historyKey: "fine-tuning-description:" + job.id,
-            className: "playground-fine-tuning-description-section",
-          });
-        }
-
         function renderFineTuningInstructionsEditor(job) {
           return React.createElement(PlatformInstructionsEditor, {
             value: String(job?.instructions || ""),
@@ -928,6 +912,43 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
             }),
             sidebarActions
           );
+          const fineTuningSettings = fineTuningDetailTab === "settings"
+            ? {
+                ariaLabel: "Agent Optimization settings",
+                className: "playground-fine-tuning-settings-page",
+                identity: {
+                  icon: React.createElement(TestTubeDiagonal, {
+                    width: 24,
+                    height: 24,
+                    strokeWidth: 1.7,
+                    "aria-hidden": "true",
+                  }),
+                  title: String(job.name || "Agent Optimization"),
+                  description: String(job.description || ""),
+                  onTitleChange: (value) => patchFineTuningJob(job.id, (current) => ({
+                    ...current,
+                    name: String(value || ""),
+                  }), { persist: true, delayMs: 450 }),
+                  onDescriptionChange: (value) => patchFineTuningJob(job.id, (current) => ({
+                    ...current,
+                    description: String(value || ""),
+                  }), { persist: true, delayMs: 450 }),
+                  titlePlaceholder: "Agent Optimization",
+                  descriptionPlaceholder: "Describe the purpose, scope, and expected outcome of this optimization",
+                  titleAriaLabel: "Agent Optimization name",
+                  descriptionAriaLabel: "Agent Optimization description",
+                },
+                details: {
+                  children: properties,
+                  className: "playground-fine-tuning-detail-sidebar-card",
+                },
+                additionalSections: renderFineTuningInstructionsEditor(job),
+                access: renderFineTuningAccessSettings(job),
+                accessDetailOpen: Boolean(fineTuningAccessTeamId),
+                detailsSidebarAriaLabel: "Agent Optimization information",
+                detailsSidebarClassName: "playground-fine-tuning-detail-sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar",
+              }
+            : undefined;
           const detailContent = fineTuningDetailTab === "analysis"
             ? React.createElement(React.Fragment, null,
                 renderAnalysis(analysisSummary),
@@ -936,13 +957,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
             : fineTuningDetailTab === "changes"
               ? renderDiff(job, { showHeader: false })
               : fineTuningDetailTab === "settings"
-                ? (fineTuningAccessTeamId
-                    ? renderFineTuningAccessSettings(job)
-                    : React.createElement(React.Fragment, null,
-                        renderFineTuningDescriptionEditor(job),
-                        renderFineTuningInstructionsEditor(job),
-                        renderFineTuningAccessSettings(job)
-                      ))
+                ? null
                 : React.createElement(React.Fragment, null,
                     renderKpiCard(job),
                     renderFineTuningExecutionProgress(job),
@@ -979,6 +994,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
           return React.createElement(React.Fragment, null,
             React.createElement(FineTuningDetailPage, {
               properties,
+              settings: fineTuningSettings,
               sidebarCollapsed: Boolean(fineTuningAccessTeamId),
             },
               detailContent

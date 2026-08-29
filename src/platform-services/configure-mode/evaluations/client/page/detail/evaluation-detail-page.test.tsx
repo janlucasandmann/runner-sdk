@@ -56,4 +56,30 @@ describe("EvaluationDetailPage", () => {
     expect(screen.queryByRole("tab")).toBeNull();
     expect(screen.queryByRole("button", { name: "Toggle run sidebar" })).toBeNull();
   });
+
+  it("passes Settings through the canonical resource settings composition", () => {
+    render(
+      <EvaluationDetailPage
+        properties={<div>Legacy evaluation properties</div>}
+        settings={{
+          ariaLabel: "Evaluation settings",
+          identity: {
+            icon: <span>E</span>,
+            title: "Support quality",
+            description: "Measures support responses",
+          },
+          details: {
+            attributes: [{ id: "updated", label: "Updated", value: "Today" }],
+          },
+          access: <section>Evaluation access</section>,
+        }}
+      >
+        <div>Evaluation analytics</div>
+      </EvaluationDetailPage>,
+    );
+
+    expect(screen.getByRole("region", { name: "Evaluation settings" })).not.toBeNull();
+    expect(screen.queryByText("Legacy evaluation properties")).toBeNull();
+    expect(screen.queryByText("Evaluation analytics")).toBeNull();
+  });
 });

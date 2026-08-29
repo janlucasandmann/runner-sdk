@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_KNOWLEDGE_LIBRARY_COVER,
   KnowledgeLibraryCover,
+  readKnowledgeLibraryCover,
   withKnowledgeLibraryCoverMetadata,
 } from "./knowledge-library-cover.js";
 
@@ -15,7 +16,66 @@ afterEach(() => {
 });
 
 describe("KnowledgeLibraryCover", () => {
-  it("links a computer image without re-uploading it into the default workspace", async () => {
+  it("reads the first-class cover contract while retaining legacy metadata compatibility", () => {
+    const cover = {
+      schemaVersion: "computer_agents_knowledge_cover_v1",
+      type: "image",
+      assetId: "knowledge-cover-1",
+      src: "/knowledge/library-1/cover/image?asset=knowledge-cover-1",
+      name: "cover.webp",
+      mimeType: "image/webp",
+      source: "upload",
+      positionX: 44,
+      positionY: 56,
+      zoom: 1.2,
+    };
+    expect(readKnowledgeLibraryCover(cover)).toEqual(cover);
+    expect(readKnowledgeLibraryCover({ knowledgeCover: cover })).toEqual(cover);
+  });
+
+  it("loads durable cover assets through the authenticated Knowledge proxy", async () => {
+    const fetchMock = vi.fn(async () => new Response(
+      new Blob(["webp-bytes"], { type: "image/webp" }),
+      { status: 200, headers: { "Content-Type": "image/webp" } },
+    ));
+    vi.stubGlobal("fetch", fetchMock);
+    const { container } = render(
+      <KnowledgeLibraryCover
+        cover={{
+          schemaVersion: "computer_agents_knowledge_cover_v1",
+          type: "image",
+          assetId: "knowledge-cover-1",
+          src: "/knowledge/library-1/cover/image?asset=knowledge-cover-1",
+          name: "cover.webp",
+          mimeType: "image/webp",
+          source: "upload",
+          positionX: 50,
+          positionY: 50,
+          zoom: 1,
+        }}
+        backendUrl="/api/real"
+        requestHeaders={{ "X-Test-Identity": "user-1" }}
+        onImageUpload={vi.fn()}
+        onChange={vi.fn(async () => undefined)}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/real/knowledge/library-1/cover/image?asset=knowledge-cover-1",
+        expect.objectContaining({
+          credentials: "include",
+          cache: "force-cache",
+          headers: { "X-Test-Identity": "user-1" },
+        }),
+      );
+      expect(container.querySelector(".knowledge-library-cover__image")).not.toBeNull();
+    });
+    fireEvent.load(container.querySelector(".knowledge-library-cover__image") as HTMLImageElement);
+    expect(screen.queryByRole("status", { name: "Loading cover image" })).toBeNull();
+  });
+
+  it("uploads a computer image into the durable Knowledge cover store", async () => {
     const fetchMock = vi.fn(async (input: string | URL | Request) => {
       const url = String(input);
       if (url === "/api/real/environments") {
@@ -51,14 +111,14 @@ describe("KnowledgeLibraryCover", () => {
       throw new Error(`Unexpected request: ${url}`);
     });
     vi.stubGlobal("fetch", fetchMock);
-    const onUpload = vi.fn();
+    const onImageUpload = vi.fn(async () => undefined);
     const onChange = vi.fn(async () => undefined);
 
     render(
       <KnowledgeLibraryCover
         cover={DEFAULT_KNOWLEDGE_LIBRARY_COVER}
         backendUrl="/api/real"
-        onUpload={onUpload}
+        onImageUpload={onImageUpload}
         onChange={onChange}
       />,
     );
@@ -88,21 +148,20 @@ describe("KnowledgeLibraryCover", () => {
     fireEvent.click(within(cropModal).getByRole("button", { name: "Apply" }));
 
     await waitFor(() => {
-      expect(onChange).toHaveBeenCalledWith({
-        schemaVersion: "computer_agents_knowledge_cover_v1",
-        type: "image",
-        src: "/api/real/environments/environment-1/files/download/assets/library-cover.png",
-        name: "library-cover.png",
+      expect(onImageUpload).toHaveBeenCalledWith({
+        file: expect.any(Blob),
+        filename: "library-cover.png",
         mimeType: "image/png",
         source: "computer",
         computerId: "environment-1",
         computerPath: "assets/library-cover.png",
+      }, {
         positionX: 50,
         positionY: 50,
         zoom: 1.25,
       });
     });
-    expect(onUpload).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
@@ -112,7 +171,7 @@ describe("KnowledgeLibraryCover", () => {
     render(
       <KnowledgeLibraryCover
         cover={DEFAULT_KNOWLEDGE_LIBRARY_COVER}
-        onUpload={vi.fn()}
+        onImageUpload={vi.fn()}
         onChange={onChange}
       />,
     );
@@ -133,6 +192,50 @@ describe("KnowledgeLibraryCover", () => {
   });
 
   it("uses the centralized loading state until an image cover is ready", () => {
+    const cover = {
+      schemaVersion: "computer_agents_knowledge_cover_v1" as const,
+      type: "image" as const,
+      src: "/cover.png",
+      name: "Cover",
+      mimeType: "image/png",
+      source: "upload" as const,
+      positionX: 32,
+      positionY: 68,
+      zoom: 1.4,
+    };
+    const { container, rerender } = render(
+      <KnowledgeLibraryCover
+        cover={cover}
+        onImageUpload={vi.fn()}
+        onChange={vi.fn(async () => undefined)}
+      />,
+    );
+
+    const coverElement = container.querySelector(".knowledge-library-cover");
+    expect(coverElement?.classList.contains("is-image-loading")).toBe(true);
+    expect(screen.getByRole("status", { name: "Loading cover image" })).not.toBeNull();
+    const image = container.querySelector(".knowledge-library-cover__image") as HTMLImageElement;
+    expect(image.style.objectPosition).toBe("32% 68%");
+    expect(image.style.transform).toBe("scale(1.4)");
+
+    fireEvent.load(image);
+    expect(screen.queryByRole("status", { name: "Loading cover image" })).toBeNull();
+
+    rerender(
+      <KnowledgeLibraryCover
+        cover={{ ...cover, positionX: 48, positionY: 52 }}
+        onImageUpload={vi.fn()}
+        onChange={vi.fn(async () => undefined)}
+      />,
+    );
+    expect(screen.queryByRole("status", { name: "Loading cover image" })).toBeNull();
+    expect(
+      (container.querySelector(".knowledge-library-cover__image") as HTMLImageElement).style
+        .objectPosition,
+    ).toBe("48% 52%");
+  });
+
+  it("recovers from a transient same-origin image failure", () => {
     const { container } = render(
       <KnowledgeLibraryCover
         cover={{
@@ -142,23 +245,24 @@ describe("KnowledgeLibraryCover", () => {
           name: "Cover",
           mimeType: "image/png",
           source: "upload",
-          positionX: 32,
-          positionY: 68,
-          zoom: 1.4,
+          positionX: 50,
+          positionY: 50,
+          zoom: 1,
         }}
-        onUpload={vi.fn()}
+        onImageUpload={vi.fn()}
         onChange={vi.fn(async () => undefined)}
       />,
     );
 
-    const cover = container.querySelector(".knowledge-library-cover");
-    expect(cover?.classList.contains("is-image-loading")).toBe(true);
-    expect(screen.getByRole("status", { name: "Loading cover image" })).not.toBeNull();
-    const image = container.querySelector(".knowledge-library-cover__image") as HTMLImageElement;
-    expect(image.style.objectPosition).toBe("32% 68%");
-    expect(image.style.transform).toBe("scale(1.4)");
+    fireEvent.error(container.querySelector(".knowledge-library-cover__image") as HTMLImageElement);
 
-    fireEvent.load(image);
+    const retriedImage = container.querySelector(
+      ".knowledge-library-cover__image",
+    ) as HTMLImageElement;
+    expect(retriedImage.getAttribute("src")).toBe("/cover.png?__ca_cover_retry=1");
+    expect(screen.getByRole("status", { name: "Loading cover image" })).not.toBeNull();
+
+    fireEvent.load(retriedImage);
     expect(screen.queryByRole("status", { name: "Loading cover image" })).toBeNull();
   });
 });

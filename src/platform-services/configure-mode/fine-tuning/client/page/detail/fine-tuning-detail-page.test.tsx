@@ -32,4 +32,34 @@ describe("FineTuningDetailPage", () => {
       screen.queryByRole("button", { name: "Toggle optimization sidebar" }),
     ).toBeNull();
   });
+
+  it("passes Settings through the canonical resource settings composition", () => {
+    render(
+      <FineTuningDetailPage
+        properties={<div>Legacy optimization properties</div>}
+        settings={{
+          ariaLabel: "Agent Optimization settings",
+          identity: {
+            icon: <span>O</span>,
+            title: "Improve support agent",
+            description: "Optimizes response quality",
+          },
+          details: {
+            attributes: [{ id: "updated", label: "Updated", value: "Today" }],
+          },
+          additionalSections: <section>Optimization Instructions</section>,
+          access: <section>Optimization access</section>,
+        }}
+      >
+        <div>Optimization analytics</div>
+      </FineTuningDetailPage>,
+    );
+
+    expect(
+      screen.getByRole("region", { name: "Agent Optimization settings" }),
+    ).not.toBeNull();
+    expect(screen.getByText("Optimization Instructions")).not.toBeNull();
+    expect(screen.queryByText("Legacy optimization properties")).toBeNull();
+    expect(screen.queryByText("Optimization analytics")).toBeNull();
+  });
 });

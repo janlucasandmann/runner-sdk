@@ -77,4 +77,35 @@ describe("PlatformServiceDetailPage", () => {
     expect(screen.getByText("Centralized details sidebar")).not.toBeNull();
     expect(container.querySelector(".platform-service-detail-page__sidebar-card")).toBeNull();
   });
+
+  it("hosts the canonical resource settings page without the legacy sidebar", () => {
+    const { container } = render(
+      <PlatformServiceDetailPage
+        ariaLabel="Evaluation details"
+        properties={<div>Legacy properties</div>}
+        settings={{
+          ariaLabel: "Evaluation settings",
+          identity: {
+            icon: <span>E</span>,
+            title: "Quality evaluation",
+            description: "Measures response quality",
+          },
+          details: {
+            attributes: [{ id: "updated", label: "Updated", value: "Today" }],
+          },
+          access: <section>Evaluation access</section>,
+        }}
+      >
+        <div>Evaluation analytics</div>
+      </PlatformServiceDetailPage>,
+    );
+
+    const page = screen.getByRole("region", { name: "Evaluation details" });
+    expect(page.classList.contains("has-resource-settings")).toBe(true);
+    expect(screen.getByRole("region", { name: "Evaluation settings" })).not.toBeNull();
+    expect(screen.queryByText("Legacy properties")).toBeNull();
+    expect(screen.queryByText("Evaluation analytics")).toBeNull();
+    expect(container.querySelector(".platform-service-detail-page__sidebar-card")).toBeNull();
+    expect(screen.getByRole("complementary", { name: "Resource details" })).not.toBeNull();
+  });
 });

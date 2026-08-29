@@ -108,6 +108,55 @@ test("OIDC login creates an opaque HttpOnly BFF session and keeps workload crede
         headers: { "content-type": "application/json" },
       });
     }
+    if (url.pathname === "/v1/triggers") {
+      if (init.method === "POST") {
+        return new Response(JSON.stringify({
+          trigger: {
+            id: "trigger_created_1",
+            name: "Deploy webhook",
+          },
+        }), {
+          status: 201,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({
+        object: "list",
+        data: [{ id: "trigger_1", name: "Existing webhook" }],
+        has_more: false,
+        total_count: 1,
+      }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    if (url.pathname === "/v1/triggers/trigger_1/test") {
+      return new Response(JSON.stringify({
+        success: true,
+        executionId: "execution_1",
+        threadId: "thread_1",
+      }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    if (url.pathname === "/v1/triggers/trigger_1") {
+      if (init.method === "DELETE") {
+        return new Response(JSON.stringify({
+          deleted: true,
+          triggerId: "trigger_1",
+        }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({
+        trigger: { id: "trigger_1", enabled: false },
+      }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
     if (url.pathname === "/v1/account/profile") {
       const profileUpdate = JSON.parse(String(init.body || "{}"));
       return new Response(JSON.stringify({
@@ -142,7 +191,10 @@ test("OIDC login creates an opaque HttpOnly BFF session and keeps workload crede
       void identityService.handleSessionRequest(request, response);
       return;
     }
-    if (url.pathname.startsWith("/api/user/")) {
+    if (
+      url.pathname.startsWith("/api/user/")
+      || url.pathname.startsWith("/api/projects/")
+    ) {
       void identityService.handleAccountJsonRequest(
         request,
         response,
@@ -294,6 +346,78 @@ test("OIDC login creates an opaque HttpOnly BFF session and keeps workload crede
     name: "SDK key",
     scopes: ["*"],
   });
+
+  const triggerListResponse = await fetch(
+    `${platformOrigin}/api/projects/__runner_playground__/triggers`,
+    { headers: { cookie: sessionCookie } },
+  );
+  assert.equal(triggerListResponse.status, 200);
+  assert.deepEqual(await triggerListResponse.json(), {
+    triggers: [{ id: "trigger_1", name: "Existing webhook" }],
+  });
+  const triggerListControlCall = upstreamCalls.at(-1);
+  assert.equal(new URL(triggerListControlCall.url).pathname, "/v1/triggers");
+  assert.equal(triggerListControlCall.apiKey, workloadKey);
+  assert.equal(triggerListControlCall.cookie, "");
+
+  const triggerCreateResponse = await fetch(
+    `${platformOrigin}/api/projects/__runner_playground__/triggers`,
+    {
+      method: "POST",
+      headers: {
+        authorization: "Bearer forged-browser-token",
+        cookie: sessionCookie,
+        "content-type": "application/json",
+        "x-api-key": "tb_forged-browser-key",
+      },
+      body: JSON.stringify({
+        name: "Deploy webhook",
+        environmentId: "environment_1",
+        source: "webhook",
+        event: "deploy",
+        action: { type: "send_message", prompt: "Handle deployment" },
+      }),
+    },
+  );
+  assert.equal(triggerCreateResponse.status, 201);
+  assert.equal(
+    (await triggerCreateResponse.json()).trigger.id,
+    "trigger_created_1",
+  );
+  const triggerCreateControlCall = upstreamCalls.at(-1);
+  assert.equal(new URL(triggerCreateControlCall.url).pathname, "/v1/triggers");
+  assert.equal(triggerCreateControlCall.method, "POST");
+  assert.equal(triggerCreateControlCall.apiKey, workloadKey);
+  assert.equal(triggerCreateControlCall.authorization, "");
+  assert.equal(triggerCreateControlCall.cookie, "");
+  assert.equal(
+    JSON.parse(triggerCreateControlCall.body).environmentId,
+    "environment_1",
+  );
+
+  const triggerTestResponse = await fetch(
+    `${platformOrigin}/api/projects/__runner_playground__/triggers/trigger_1/test`,
+    {
+      method: "POST",
+      headers: {
+        cookie: sessionCookie,
+        "content-type": "application/json",
+      },
+      body: "{}",
+    },
+  );
+  assert.equal(triggerTestResponse.status, 200);
+  assert.equal((await triggerTestResponse.json()).threadId, "thread_1");
+
+  const triggerDeleteResponse = await fetch(
+    `${platformOrigin}/api/projects/__runner_playground__/triggers/trigger_1`,
+    {
+      method: "DELETE",
+      headers: { cookie: sessionCookie },
+    },
+  );
+  assert.equal(triggerDeleteResponse.status, 200);
+  assert.deepEqual(await triggerDeleteResponse.json(), { success: true });
 
   const profileResponse = await fetch(
     `${platformOrigin}/api/user/profile`,

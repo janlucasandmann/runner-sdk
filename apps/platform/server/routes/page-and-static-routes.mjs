@@ -15,7 +15,20 @@ function isRetiredPlatformDocumentPath(pathname) {
 
 /** Ordered routes for the single platform document and its static assets. */
 export function createPageAndStaticRoutes(bindings) {
-    const { connectorOauthAllowedOrigins, connectorOauthEnvFileCandidates, handleFeedbackSummaryPageRequest, handleGenericConnectorApiRequest, handleGithubApiRequest, handleJiraApiRequest, handleProductUsageSummaryPageRequest, isGenericConnectorApiRequestPath, isGithubApiRequestPath, isJiraApiRequestPath, noVncNextRoot, platformDocumentHtml, platformOrigin, serveAiosPublicAsset, serveDistAsset, serveEnvironmentGuiViewerPage, serveVendorAsset, stockifiPlatformOrigin, xlsxRoot, } = bindings;
+    const { connectorOauthAllowedOrigins, connectorOauthEnvFileCandidates, handleFeedbackSummaryPageRequest, handleGenericConnectorApiRequest, handleGithubApiRequest, handleJiraApiRequest, handleProductUsageSummaryPageRequest, identityService, isGenericConnectorApiRequestPath, isGithubApiRequestPath, isJiraApiRequestPath, noVncNextRoot, platformDocumentHtml, platformOrigin, serveAiosPublicAsset, serveDistAsset, serveEnvironmentGuiViewerPage, serveVendorAsset, stockifiPlatformOrigin, xlsxRoot, } = bindings;
+    const verifyConnectorUser = async (request) => {
+        const principal = await identityService?.readPrincipal?.(request);
+        const uid = String(principal?.uid || principal?.userId || "").trim();
+        if (!uid) {
+            const error = new Error("A valid platform session is required.");
+            error.code = "unauthorized";
+            throw error;
+        }
+        return {
+            uid,
+            email: String(principal?.email || "").trim(),
+        };
+    };
     return function handlePageAndStaticRoutes(req, res, url) {
         const stockifiPathMatch = url.pathname.match(/^\/stockifi(?:\/(.*))?$/);
         if ((req.method === "GET" || req.method === "HEAD")
@@ -52,6 +65,7 @@ export function createPageAndStaticRoutes(bindings) {
                 platformOrigin,
                 envFileCandidates: connectorOauthEnvFileCandidates,
                 allowedOrigins: connectorOauthAllowedOrigins,
+                verifyUser: verifyConnectorUser,
             });
             return true;
         }
@@ -63,6 +77,7 @@ export function createPageAndStaticRoutes(bindings) {
                 platformOrigin,
                 envFileCandidates: connectorOauthEnvFileCandidates,
                 allowedOrigins: connectorOauthAllowedOrigins,
+                verifyUser: verifyConnectorUser,
             });
             return true;
         }
@@ -74,6 +89,7 @@ export function createPageAndStaticRoutes(bindings) {
                 platformOrigin,
                 envFileCandidates: connectorOauthEnvFileCandidates,
                 allowedOrigins: connectorOauthAllowedOrigins,
+                verifyUser: verifyConnectorUser,
             });
             return true;
         }

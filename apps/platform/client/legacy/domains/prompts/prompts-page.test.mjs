@@ -25,16 +25,20 @@ const promptDetailPageCss = await fs.readFile(
   new URL("../../../../../../src/platform-resources/prompts/detail/prompt-detail-page.css", import.meta.url),
   "utf8",
 );
+const promptDetailPageSource = await fs.readFile(
+  new URL("../../../../../../src/platform-resources/prompts/detail/prompt-detail-page.tsx", import.meta.url),
+  "utf8",
+);
 
 assert.match(
-  promptDetailPageCss,
-  /\.prompt-detail-page\.file-resource-detail-page\.is-settings-tab\s*\{[\s\S]{0,260}--playground-centered-page-max-width[\s\S]{0,120}margin-inline: auto/,
-  "Prompt Settings must use the centered Agent overview page width.",
+  promptDetailPageSource,
+  /PlatformResourceSettingsPage[\s\S]{0,1800}settingsPage = settings \? <PlatformResourceSettingsPage \{\.\.\.settings\} \//,
+  "Prompt Settings must render through the centralized resource Settings page.",
 );
-assert.match(
+assert.doesNotMatch(
   promptDetailPageCss,
-  /\.prompt-detail-page \.prompt-detail-page__settings-content\s*\{[\s\S]{0,160}max-width: none/,
-  "Prompt Settings content must fill its Agent-style main grid column.",
+  /prompt-detail-page__settings-layout/,
+  "Prompt-specific CSS must not recreate the centralized Settings page layout.",
 );
 
 assert.match(
@@ -44,7 +48,7 @@ assert.match(
 );
 assert.match(
   promptPageSource,
-  /React\.createElement\(PlatformDeploymentMap,[\s\S]{0,300}title: "Storage region"[\s\S]{0,500}promptAccessSettings/,
+  /const promptSettings = \{[\s\S]{0,2200}location: React\.createElement\(PlatformDeploymentMap,[\s\S]{0,300}title: "Storage region"[\s\S]{0,500}access: promptAccessSettings/,
   "Prompt Settings must place the shared storage region section before access settings.",
 );
 assert.match(
@@ -54,7 +58,7 @@ assert.match(
 );
 assert.match(
   promptPageSource,
-  /function resolvePromptCreatorName[\s\S]{0,500}"unknown"[\s\S]{0,120}"unknown user"[\s\S]{0,700}currentUserName[\s\S]{0,500}Unknown user/,
+  /function resolvePromptCreatorName[\s\S]{0,900}"unknown"[\s\S]{0,180}"unknown user"[\s\S]{0,1200}currentUserName[\s\S]{0,1400}Unknown user/,
   "Prompt Overview must resolve sparse backend creator labels to stable user identities.",
 );
 assert.match(
@@ -64,8 +68,13 @@ assert.match(
 );
 assert.match(
   promptPageSource,
-  /creatorName: identityName\(source\.creatorName, creator\.name\)/,
+  /creatorName: identityName\(source\.creatorName, creator\.name, creatorEmail\)/,
   "Prompt records must prefer persisted creator metadata over placeholder API names.",
+);
+assert.match(
+  promptPageSource,
+  /function resolvePromptCreatorName[\s\S]{0,800}creatorName\.includes\("@"\)[\s\S]{0,900}emailName/,
+  "Prompt Overview must replace email-shaped creator labels with a display name.",
 );
 assert.match(
   promptPageSource,
@@ -89,8 +98,13 @@ assert.match(
 );
 assert.match(
   promptPageSource,
-  /React\.createElement\(PlatformResourceDetailSidebar,[\s\S]{0,700}owner: promptOwnerIdentity,[\s\S]{0,300}ownerOptions: promptOwnerOptions,[\s\S]{0,300}onOwnerTransfer: transferPromptOwner/,
+  /const promptSettingsDetails = !isDraft && selectedPrompt[\s\S]{0,700}owner: promptOwnerIdentity,[\s\S]{0,300}ownerOptions: promptOwnerOptions,[\s\S]{0,300}onOwnerTransfer: transferPromptOwner/,
   "Prompt Settings must render ownership through the centralized resource sidebar and owner selector.",
+);
+assert.doesNotMatch(
+  promptPageSource,
+  /React\.createElement\(PlatformResourceDetailSidebar/,
+  "Prompt Settings must not create a resource details sidebar outside the centralized page.",
 );
 assert.match(
   promptPageSource,

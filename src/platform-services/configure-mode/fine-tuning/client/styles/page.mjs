@@ -131,7 +131,6 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         min-width: 0;
       }
 
-      .playground-fine-tuning-description-section.playground-agents-detail-instructions-section,
       .playground-fine-tuning-instructions-section.playground-agents-detail-instructions-section {
         min-width: 0;
         margin-top: 0;
@@ -139,9 +138,6 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         padding-bottom: 3px;
       }
 
-      .playground-fine-tuning-description-section .playground-tasks-detail-description-editor,
-      .playground-fine-tuning-description-section .playground-tasks-detail-description-input,
-      .playground-fine-tuning-description-section .playground-tasks-detail-description-preview-scope.tb-runner-chat,
       .playground-fine-tuning-instructions-section .playground-tasks-detail-description-editor,
       .playground-fine-tuning-instructions-section .playground-tasks-detail-description-input,
       .playground-fine-tuning-instructions-section .playground-tasks-detail-description-preview-scope.tb-runner-chat {

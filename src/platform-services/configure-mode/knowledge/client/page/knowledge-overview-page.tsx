@@ -1,5 +1,5 @@
 import { ChevronRight, LibraryBig, Plus, Trash2 } from "lucide-react";
-import { useMemo, type CSSProperties } from "react";
+import { useMemo } from "react";
 import {
   createPlatformProjectIdentityFallback,
   getPlatformProjectReferenceFromKnowledgeMetadata,
@@ -8,13 +8,12 @@ import {
 } from "../../../../../platform-resources/projects/index.js";
 import type {
   PlatformDataTableAction,
-  PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
 import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
 import { PlatformPageHero } from "../../../../../platform-ui/components/composite/page-hero/index.js";
 import {
-  ResourceOverviewIdentityCell,
+  createResourceOverviewColumns,
   ResourceOverviewPage,
   ResourceOverviewValue,
 } from "../../../../../platform-ui/pages/overview/index.js";
@@ -31,21 +30,6 @@ export interface KnowledgeOverviewPageProps {
   onDelete: (libraries: readonly KnowledgeLibrary[]) => void;
 }
 
-function formatTimestamp(value: string) {
-  const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp)) return "—";
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(timestamp));
-}
-
-function getCreatorFallback(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || "")
-    .join("");
-}
-
 export function KnowledgeOverviewPage({
   libraries,
   loading = false,
@@ -56,89 +40,47 @@ export function KnowledgeOverviewPage({
   onCreate,
   onDelete,
 }: KnowledgeOverviewPageProps) {
-  const columns = useMemo<PlatformDataTableColumn<KnowledgeLibrary>[]>(() => [
-    {
-      id: "name",
-      header: "Name",
-      accessor: "name",
-      sortable: true,
-      width: "minmax(320px, 1.5fr)",
-      cell: ({ row }) => {
+  const columns = useMemo(() => createResourceOverviewColumns<KnowledgeLibrary>({
+    name: {
+      className: "knowledge-overview-identity",
+      getVisual: (row) => {
         const projectReference = getPlatformProjectReferenceFromKnowledgeMetadata(row.metadata);
         const projectIdentity = projectReference
           ? projectIdentitiesById[projectReference.projectId]
             || createPlatformProjectIdentityFallback(projectReference)
           : null;
-        const projectVisualStyle = projectIdentity ? ({
-          "--knowledge-project-icon-color": projectIdentity.color,
-        } as CSSProperties) : undefined;
-        return (
-          <div className="resource-overview-identity is-catalog knowledge-overview-identity">
-            <span
-              className={`resource-overview-identity__visual is-skill${projectIdentity ? " is-project-linked" : ""}`}
-              style={projectVisualStyle}
-              aria-hidden="true"
-            >
-              {projectIdentity ? (
-                <PlatformProjectIdentityIcon
-                  icon={projectIdentity.icon}
-                  size={16}
-                  strokeWidth={1.8}
-                />
-              ) : (
-                <LibraryBig width={16} height={16} strokeWidth={1.8} />
-              )}
-            </span>
-            <span className="resource-overview-identity__copy">
-              <span className="resource-overview-identity__title">{row.name}</span>
-              {row.description ? (
-                <span className="resource-overview-identity__description">{row.description}</span>
-              ) : null}
-            </span>
-          </div>
-        );
+        return {
+          icon: projectIdentity ? (
+            <PlatformProjectIdentityIcon
+              icon={projectIdentity.icon}
+              size={16}
+              strokeWidth={1.8}
+            />
+          ) : (
+            <LibraryBig width={16} height={16} strokeWidth={1.8} />
+          ),
+          iconClassName: `is-skill${projectIdentity ? " is-project-linked" : ""}`,
+          iconStyle: projectIdentity ? {
+            "--knowledge-project-icon-color": projectIdentity.color,
+          } : undefined,
+        };
       },
     },
-    {
-      id: "documents",
-      header: "Documents",
-      accessor: (row) => row.documents?.filter((document) => !document.archived).length || 0,
-      sortable: true,
-      width: "minmax(110px, 0.45fr)",
-      cell: ({ row }) => (
-        <ResourceOverviewValue>
-          {row.documents?.filter((document) => !document.archived).length ?? "—"}
-        </ResourceOverviewValue>
-      ),
+    extensions: {
+      afterName: [{
+        id: "documents",
+        header: "Documents",
+        accessor: (row) => row.documents?.filter((document) => !document.archived).length || 0,
+        sortable: true,
+        width: "minmax(110px, 0.45fr)",
+        cell: ({ row }) => (
+          <ResourceOverviewValue>
+            {row.documents?.filter((document) => !document.archived).length ?? "—"}
+          </ResourceOverviewValue>
+        ),
+      }],
     },
-    {
-      id: "creator",
-      header: "Creator",
-      accessor: "creatorName",
-      sortable: true,
-      width: "minmax(160px, 0.65fr)",
-      cell: ({ row }) => {
-        const creatorName = row.creatorName || "Unknown";
-        return (
-          <ResourceOverviewIdentityCell
-            title={creatorName}
-            imageUrl={row.creatorAvatarUrl || undefined}
-            fallback={getCreatorFallback(creatorName)}
-            iconClassName="is-creator"
-          />
-        );
-      },
-    },
-    {
-      id: "updated",
-      header: "Updated",
-      accessor: "updatedAt",
-      sortable: true,
-      sortDescFirst: true,
-      width: "minmax(140px, 0.55fr)",
-      cell: ({ row }) => <ResourceOverviewValue>{formatTimestamp(row.updatedAt)}</ResourceOverviewValue>,
-    },
-  ], [projectIdentitiesById]);
+  }), [projectIdentitiesById]);
 
   return (
     <ResourceOverviewPage<KnowledgeLibrary>

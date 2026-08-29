@@ -23,6 +23,7 @@ describe("PlatformGitHubAutomations", () => {
     ["project", "project_123"],
     ["organization", "organization_123"],
     ["function", "function_123"],
+    ["web_app", "web_app_123"],
   ] as const)(
     "loads %s bindings through the shared scoped control plane",
     async (scopeType, scopeId) => {
@@ -136,5 +137,64 @@ describe("PlatformGitHubAutomations", () => {
     expect(screen.getByText("Branch pushed")).toBeTruthy();
     expect(screen.getByDisplayValue("main")).toBeTruthy();
     expect(screen.getByText("Deployment Agent")).toBeTruthy();
+  });
+
+  it("offers the same exact-revision deployment controls for a Web App scope", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      jsonResponse({ object: "list", data: [], hasMore: false }),
+    );
+
+    render(
+      <PlatformGitHubAutomations
+        scopeType="web_app"
+        scopeId="web_app_123"
+        repositoryFullName="computer-agents/customer-portal"
+        defaultBranch="production"
+        automationKinds={["security_scan", "pull_request_review", "deploy_web_app"]}
+        agentOptions={[{ id: "agent_deployer", label: "Deploy Agent" }]}
+      />,
+    );
+
+    const manageDeployment = await screen.findByRole("button", {
+      name: "Manage Web App deployments",
+    });
+    fireEvent.click(manageDeployment);
+
+    expect(screen.getByText("Pull request merged")).toBeTruthy();
+    expect(screen.getByText("Branch pushed")).toBeTruthy();
+    expect(screen.getByDisplayValue("production")).toBeTruthy();
+    expect(screen.getByText("Deployment Agent")).toBeTruthy();
+  });
+
+  it("renders structured API validation failures instead of a generic status label", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      jsonResponse(
+        {
+          error: {
+            formErrors: [],
+            fieldErrors: {
+              scopeType: [
+                "Invalid enum value. Expected 'organization' | 'project', received 'function'",
+              ],
+            },
+          },
+        },
+        400,
+      ),
+    );
+
+    render(
+      <PlatformGitHubAutomations
+        scopeType="function"
+        scopeId="function_123"
+        repositoryFullName="computer-agents/platform"
+      />,
+    );
+
+    expect(
+      await screen.findByText(
+        "scopeType: Invalid enum value. Expected 'organization' | 'project', received 'function'",
+      ),
+    ).toBeTruthy();
   });
 });

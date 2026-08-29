@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 import {
   PlatformServiceDetailPage,
 } from "../../../../../../platform-ui/pages/details/index.js";
+import type {
+  PlatformResourceSettingsPageProps,
+} from "../../../../../../platform-ui/pages/settings/index.js";
 
 export type EvaluationDetailTab = "general" | "cases" | "settings";
 export type EvaluationDetailVariant = "evaluation" | "run";
@@ -9,6 +12,7 @@ export type EvaluationDetailVariant = "evaluation" | "run";
 export interface EvaluationDetailPageProps {
   children: ReactNode;
   properties: ReactNode;
+  settings?: PlatformResourceSettingsPageProps;
   actions?: ReactNode;
   sidebarCollapsed?: boolean;
   sidebarPopoverOpen?: boolean;
@@ -20,6 +24,7 @@ export interface EvaluationDetailPageProps {
 export function EvaluationDetailPage({
   children,
   properties,
+  settings,
   actions,
   sidebarCollapsed = false,
   sidebarPopoverOpen = false,
@@ -30,6 +35,7 @@ export function EvaluationDetailPage({
   return (
     <PlatformServiceDetailPage
       properties={properties}
+      settings={settings}
       actions={actions}
       sidebarCollapsed={sidebarCollapsed}
       sidebarPopoverOpen={sidebarPopoverOpen}

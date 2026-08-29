@@ -20,29 +20,29 @@ const rows: readonly EvaluationOverviewRow[] = [
   {
     id: "evaluation-support",
     name: "Support Quality",
+    description: "Measure customer support quality.",
     evaluatorLabel: "Spark",
     evaluatorType: "agent",
     evaluatorFallback: "S",
     caseCount: 12,
     runCount: 4,
-    creatorLabel: "Jan",
+    creatorName: "Jan",
     creatorFallback: "J",
     updatedAt: 1_720_000_000_000,
-    updatedLabel: "Jul 3, 2024",
     canRun: true,
   },
   {
     id: "evaluation-code",
     name: "Code Quality",
+    description: "Measure generated code quality.",
     evaluatorLabel: "Exact match",
     evaluatorType: "exact",
     evaluatorFallback: "E",
     caseCount: 8,
     runCount: 2,
-    creatorLabel: "Jan",
+    creatorName: "Jan",
     creatorFallback: "J",
     updatedAt: 1_719_900_000_000,
-    updatedLabel: "Jul 2, 2024",
     canRun: true,
   },
 ];
@@ -131,6 +131,9 @@ describe("EvaluationsOverviewPage", () => {
     expect(screen.queryByRole("button", { name: "Runs" })).toBeNull();
     expect(screen.queryByRole("columnheader", { name: "Evaluator" })).toBeNull();
     expect(
+      screen.getAllByRole("columnheader").map((header) => header.textContent),
+    ).toEqual(["", "Name", "Cases", "Creator", "Updated", ""]);
+    expect(
       screen.getByRole("checkbox", { name: "Select all visible rows" }),
     ).not.toBeNull();
     const supportRow = screen.getByRole("row", { name: "Support Quality" });
@@ -139,11 +142,12 @@ describe("EvaluationsOverviewPage", () => {
     );
     expect(
       evaluationCell?.querySelector(".resource-overview-identity__visual"),
-    ).toBeNull();
+    ).not.toBeNull();
     expect(
       evaluationCell?.querySelector(".resource-overview-identity__title")
         ?.textContent,
     ).toBe("Support Quality");
+    expect(screen.getByText("Measure customer support quality.")).not.toBeNull();
 
     await user.click(await screen.findByRole("button", { name: "Evaluation" }));
     expect(onCreate).toHaveBeenCalledOnce();

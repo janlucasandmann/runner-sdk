@@ -27,6 +27,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
             .map((set) => {
               const id = String(set?.id || "").trim();
               const name = String(set?.name || "Untitled Evaluation").trim();
+              const description = String(set?.description || "").trim();
               const evaluator = normalizePlaygroundEvaluationEvaluator(set?.evaluator);
               const evaluatorAgent = evaluator.type === "agent"
                 ? getPlaygroundEvaluationAgentRecord(agentOptions, evaluator.agentId)
@@ -36,7 +37,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
                 ? getPlaygroundEvaluationAgentPhotoUrl(evaluatorAgent)
                 : "";
               const creator = getPlaygroundEvaluationCreatorIdentity(set);
-              const creatorLabel = getPlaygroundEvaluationCreatorLabel(creator) || "Unknown";
+              const creatorName = getPlaygroundEvaluationCreatorLabel(creator) || "Unknown";
               const updatedValue = set?.updatedAt || set?.createdAt || "";
               const updatedDate = new Date(updatedValue || "");
               const overviewMetadata = set?.metadata && typeof set.metadata === "object" && !Array.isArray(set.metadata)
@@ -65,24 +66,23 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               return {
                 id,
                 name,
+                description,
                 evaluatorLabel,
                 evaluatorType: evaluator.type,
                 evaluatorAvatarUrl,
                 evaluatorFallback: getPlaygroundEvaluationInitials(evaluatorLabel),
                 caseCount,
                 runCount,
-                creatorLabel,
+                creatorName,
                 creatorAvatarUrl: creator.avatarUrl || "",
-                creatorFallback: getPlaygroundEvaluationInitials(creatorLabel),
+                creatorFallback: getPlaygroundEvaluationInitials(creatorName),
                 updatedAt: Number.isFinite(updatedDate.getTime()) ? updatedDate.getTime() : 0,
-                updatedLabel: formatPlaygroundEvaluationDate(updatedValue),
-                updatedTitle: Number.isFinite(updatedDate.getTime()) ? updatedDate.toLocaleString() : "",
                 canRun: caseCount === null || caseCount > 0,
                 searchText: [
                   name,
                   set?.description,
                   evaluatorLabel,
-                  creatorLabel,
+                  creatorName,
                   caseCount === null ? "" : String(caseCount),
                   runCount === null ? "" : String(runCount),
                   id,
@@ -300,13 +300,45 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               )
             )
           );
+          const evaluationSettings = activeDetailTab === "settings"
+            ? {
+                ariaLabel: "Evaluation settings",
+                className: "playground-evaluations-settings-page",
+                identity: {
+                  icon: React.createElement(ChartColumnIncreasing, {
+                    width: 24,
+                    height: 24,
+                    strokeWidth: 1.7,
+                    "aria-hidden": "true",
+                  }),
+                  title: String(activeSet.name || "Evaluation"),
+                  description: String(activeSet.description || ""),
+                  onTitleChange: (value) => updateEvaluationSet(activeSet.id, (current) => ({
+                    ...current,
+                    name: String(value || ""),
+                  })),
+                  onDescriptionChange: (value) => updateEvaluationSet(activeSet.id, (current) => ({
+                    ...current,
+                    description: String(value || ""),
+                  })),
+                  titlePlaceholder: "Evaluation",
+                  descriptionPlaceholder: "Describe the purpose, scope, and expected use of this evaluation",
+                  titleAriaLabel: "Evaluation name",
+                  descriptionAriaLabel: "Evaluation description",
+                },
+                details: {
+                  children: properties,
+                  className: "playground-evaluations-detail-sidebar-card",
+                },
+                access: renderEvaluationAccessSettings(),
+                accessDetailOpen: Boolean(evaluationAccessTeamId),
+                detailsSidebarCollapsed: Boolean(evaluationVersionsSidebarOpen),
+                detailsSidebarAriaLabel: "Evaluation information",
+                detailsSidebarClassName: "playground-evaluations-detail-sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar",
+              }
+            : undefined;
           const detailContent = activeDetailTab === "settings"
-            ? evaluationAccessTeamId
-              ? renderEvaluationAccessSettings()
-              : React.createElement(React.Fragment, null,
-                  renderEvaluationDescriptionEditor(activeSet),
-                  renderEvaluationAccessSettings()
-                )
+            ? null
             : activeDetailTab === "cases"
               ? React.createElement(React.Fragment, null,
                   renderEvaluationGuidanceEditor(activeSet),
@@ -318,6 +350,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
                 );
           return React.createElement(EvaluationDetailPage, {
               properties,
+              settings: evaluationSettings,
               sidebarCollapsed: evaluationDetailSidebarCollapsed,
             },
             detailContent

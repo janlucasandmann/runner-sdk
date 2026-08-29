@@ -13,7 +13,12 @@ import {
   PlatformPrimaryButton,
   PlatformSecondaryButton,
 } from "../../../../../platform-ui/components/ui/button/index.js";
-import type { KnowledgeEditorAttachment } from "../api/index.js";
+import {
+  KNOWLEDGE_LIBRARY_COVER_SCHEMA_VERSION,
+  type KnowledgeLibraryCover,
+  type KnowledgeLibraryGradientCover,
+  type KnowledgeLibraryImageCover,
+} from "../domain/index.js";
 import {
   DEFAULT_KNOWLEDGE_LIBRARY_COVER_VIEW,
   KnowledgeLibraryCoverCropModal,
@@ -22,27 +27,20 @@ import {
 } from "./knowledge-library-cover-crop-modal.js";
 
 const KNOWLEDGE_LIBRARY_COVER_METADATA_KEY = "knowledgeCover";
-const KNOWLEDGE_LIBRARY_COVER_SCHEMA = "computer_agents_knowledge_cover_v1";
+const KNOWLEDGE_LIBRARY_COVER_SCHEMA = KNOWLEDGE_LIBRARY_COVER_SCHEMA_VERSION;
 
-export interface KnowledgeLibraryCoverGradient {
-  schemaVersion: typeof KNOWLEDGE_LIBRARY_COVER_SCHEMA;
-  type: "gradient";
-  preset: "blue";
-}
+export type KnowledgeLibraryCoverGradient = KnowledgeLibraryGradientCover;
+export type KnowledgeLibraryCoverImage = KnowledgeLibraryImageCover;
+export type KnowledgeLibraryCoverValue = KnowledgeLibraryCover;
 
-export interface KnowledgeLibraryCoverImage extends KnowledgeLibraryCoverView {
-  schemaVersion: typeof KNOWLEDGE_LIBRARY_COVER_SCHEMA;
-  type: "image";
-  src: string;
-  name: string;
-  attachmentId?: string;
+export interface KnowledgeLibraryCoverImageUpload {
+  file: Blob;
+  filename: string;
   mimeType: string;
   source: "upload" | "computer";
   computerId?: string;
   computerPath?: string;
 }
-
-export type KnowledgeLibraryCoverValue = KnowledgeLibraryCoverGradient | KnowledgeLibraryCoverImage;
 
 interface KnowledgeCoverComputer {
   id: string;
@@ -70,7 +68,10 @@ interface KnowledgeLibraryCoverProps {
   backendUrl?: string;
   requestHeaders?: Readonly<Record<string, string>>;
   disabled?: boolean;
-  onUpload: (files: File[]) => Promise<KnowledgeEditorAttachment[]>;
+  onImageUpload: (
+    input: KnowledgeLibraryCoverImageUpload,
+    view: KnowledgeLibraryCoverView,
+  ) => Promise<void>;
   onChange: (cover: KnowledgeLibraryCoverValue | null) => Promise<void>;
 }
 
@@ -84,6 +85,12 @@ interface KnowledgeCoverPreview {
   objectUrl: string;
 }
 
+interface KnowledgeCoverImageLoadState {
+  key: string;
+  status: "loading" | "loaded" | "failed";
+  attempt: number;
+}
+
 type KnowledgeCoverCropCandidate =
   | {
       kind: "upload";
@@ -93,6 +100,7 @@ type KnowledgeCoverCropCandidate =
     }
   | {
       kind: "computer";
+      file: Blob;
       cover: KnowledgeLibraryCoverImage;
       preview: KnowledgeCoverPreview;
       aspectRatio: number;
@@ -131,6 +139,13 @@ function normalizeBackendUrl(value: string): string {
   return String(value || "")
     .trim()
     .replace(/\/+$/, "");
+}
+
+function resolveKnowledgeCoverImageUrl(src: string, backendUrl: string): string {
+  const source = String(src || "").trim();
+  if (!source) return "";
+  if (source.startsWith("/knowledge/") && backendUrl) return `${backendUrl}${source}`;
+  return source;
 }
 
 function encodeFilePath(path: string): string {
@@ -252,6 +267,94 @@ function getCoverError(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
 }
 
+function getRequestHeadersSignature(
+  headers: Readonly<Record<string, string>> | undefined,
+): string {
+  return Object.entries(headers || {})
+    .map(([name, value]) => [name.toLowerCase(), String(value)] as const)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([name, value]) => `${name}:${value}`)
+    .join("\n");
+}
+
+function getCoverImageLoadKey(
+  cover: KnowledgeLibraryCoverValue,
+  resolvedSrc: string,
+  requestHeadersSignature: string,
+): string {
+  if (cover.type !== "image") return "";
+  return JSON.stringify([
+    cover.source,
+    resolvedSrc,
+    cover.assetId || "",
+    cover.name,
+    cover.mimeType,
+    cover.attachmentId || "",
+    cover.computerId || "",
+    cover.computerPath || "",
+    requestHeadersSignature,
+  ]);
+}
+
+function withCoverImageRetry(src: string, attempt: number): string {
+  if (attempt <= 0 || !src || /^(?:blob:|data:)/i.test(src) || typeof window === "undefined") {
+    return src;
+  }
+  try {
+    const url = new URL(src, window.location.href);
+    if (url.origin !== window.location.origin) return src;
+    url.searchParams.set("__ca_cover_retry", String(attempt));
+    return /^https?:\/\//i.test(src)
+      ? url.toString()
+      : `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return src;
+  }
+}
+
+function waitForCoverImageRetry(delayMs: number, signal: AbortSignal): Promise<void> {
+  if (signal.aborted) return Promise.reject(signal.reason);
+  return new Promise((resolve, reject) => {
+    const timeoutId = globalThis.setTimeout(() => {
+      signal.removeEventListener("abort", handleAbort);
+      resolve();
+    }, delayMs);
+    const handleAbort = () => {
+      globalThis.clearTimeout(timeoutId);
+      signal.removeEventListener("abort", handleAbort);
+      reject(signal.reason);
+    };
+    signal.addEventListener("abort", handleAbort, { once: true });
+  });
+}
+
+async function fetchCoverImageBlob(
+  src: string,
+  requestHeaders: Readonly<Record<string, string>> | undefined,
+  signal: AbortSignal,
+): Promise<Blob> {
+  let lastError: unknown = new Error("Failed to load the computer cover image.");
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(src, {
+        credentials: "include",
+        cache: /\/knowledge\/[^/]+\/cover\/image(?:\?|$)/.test(src)
+          ? "force-cache"
+          : "no-store",
+        headers: requestHeaders,
+        signal,
+      });
+      if (!response.ok) throw new Error("Failed to load the computer cover image.");
+      return await response.blob();
+    } catch (error) {
+      if (signal.aborted) throw error;
+      lastError = error;
+      if (attempt < 2) await waitForCoverImageRetry(180 * (attempt + 1), signal);
+    }
+  }
+  throw lastError;
+}
+
 function createKnowledgeCoverPreview(blob: Blob): Promise<KnowledgeCoverPreview> {
   if (typeof URL !== "undefined" && typeof URL.createObjectURL === "function") {
     const objectUrl = URL.createObjectURL(blob);
@@ -286,9 +389,12 @@ export const DEFAULT_KNOWLEDGE_LIBRARY_COVER: KnowledgeLibraryCoverGradient = Ob
 });
 
 export function readKnowledgeLibraryCover(
-  metadata: Record<string, unknown> | null | undefined,
+  value: unknown,
 ): KnowledgeLibraryCoverValue | null {
-  const source = asRecord(metadata?.[KNOWLEDGE_LIBRARY_COVER_METADATA_KEY]);
+  const root = asRecord(value);
+  const source = root.type
+    ? root
+    : asRecord(root[KNOWLEDGE_LIBRARY_COVER_METADATA_KEY]);
   if (source.type === "gradient" && source.preset === "blue") {
     return DEFAULT_KNOWLEDGE_LIBRARY_COVER;
   }
@@ -302,9 +408,12 @@ export function readKnowledgeLibraryCover(
   return {
     schemaVersion: KNOWLEDGE_LIBRARY_COVER_SCHEMA,
     type: "image",
+    ...(readString(source, ["assetId"]) ? { assetId: readString(source, ["assetId"]) } : {}),
     src,
     name: readString(source, ["name"]) || "Cover image",
-    attachmentId: readString(source, ["attachmentId"]),
+    ...(readString(source, ["attachmentId"])
+      ? { attachmentId: readString(source, ["attachmentId"]) }
+      : {}),
     mimeType: readString(source, ["mimeType"]),
     source: source.source === "computer" ? "computer" : "upload",
     ...view,
@@ -351,13 +460,28 @@ export function KnowledgeLibraryCover({
   backendUrl = "",
   requestHeaders,
   disabled = false,
-  onUpload,
+  onImageUpload,
   onChange,
 }: KnowledgeLibraryCoverProps) {
   const coverSectionRef = useRef<HTMLElement | null>(null);
+  const coverImageRef = useRef<HTMLImageElement | null>(null);
+  const requestHeadersRef = useRef(requestHeaders);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const settingsMenuRootRef = useRef<HTMLDivElement | null>(null);
   const settingsMenuSurfaceRef = useRef<HTMLDivElement | null>(null);
+  requestHeadersRef.current = requestHeaders;
+  const requestHeadersSignature = getRequestHeadersSignature(requestHeaders);
+  const normalizedBackendUrl = normalizeBackendUrl(backendUrl);
+  const coverImageSource = cover.type === "image"
+    ? resolveKnowledgeCoverImageUrl(cover.src, normalizedBackendUrl)
+    : "";
+  const coverImageRequiresFetch = cover.type === "image"
+    && (Boolean(cover.assetId) || cover.source === "computer");
+  const coverImageLoadKey = getCoverImageLoadKey(
+    cover,
+    coverImageSource,
+    requestHeadersSignature,
+  );
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [computers, setComputers] = useState<KnowledgeCoverComputer[]>([]);
@@ -371,14 +495,36 @@ export function KnowledgeLibraryCover({
   const [pending, setPending] = useState(false);
   const [modalError, setModalError] = useState("");
   const [cropCandidate, setCropCandidate] = useState<KnowledgeCoverCropCandidate | null>(null);
-  const [coverImageLoading, setCoverImageLoading] = useState(cover.type === "image");
-  const [coverImageFailed, setCoverImageFailed] = useState(false);
-  const [resolvedImageSrc, setResolvedImageSrc] = useState(
-    cover.type === "image" && cover.source === "upload" ? cover.src : "",
+  const [coverImageLoadState, setCoverImageLoadState] = useState<KnowledgeCoverImageLoadState>(
+    () => ({
+      key: coverImageLoadKey,
+      status: cover.type === "image" ? "loading" : "loaded",
+      attempt: 0,
+    }),
   );
+  const [resolvedComputerImage, setResolvedComputerImage] = useState({ key: "", src: "" });
   const selectedComputer = computers.find((computer) => computer.id === selectedComputerId) || null;
   const currentLocation = locations.at(-1) || null;
-  const normalizedBackendUrl = normalizeBackendUrl(backendUrl);
+  const coverImageStatus =
+    coverImageLoadState.key === coverImageLoadKey
+      ? coverImageLoadState.status
+      : cover.type === "image"
+        ? "loading"
+        : "loaded";
+  const coverImageLoading = coverImageStatus === "loading";
+  const coverImageFailed = coverImageStatus === "failed";
+  const resolvedImageSrc =
+    cover.type !== "image"
+      ? ""
+      : coverImageRequiresFetch
+        ? resolvedComputerImage.key === coverImageLoadKey
+          ? resolvedComputerImage.src
+          : ""
+        : coverImageSource;
+  const renderedImageSrc = withCoverImageRetry(
+    resolvedImageSrc,
+    coverImageLoadState.key === coverImageLoadKey ? coverImageLoadState.attempt : 0,
+  );
 
   useEffect(() => {
     const objectUrl = cropCandidate?.preview.objectUrl || "";
@@ -413,38 +559,35 @@ export function KnowledgeLibraryCover({
 
   useEffect(() => {
     if (cover.type !== "image") {
-      setResolvedImageSrc("");
-      setCoverImageLoading(false);
-      setCoverImageFailed(false);
+      setResolvedComputerImage({ key: "", src: "" });
+      setCoverImageLoadState({ key: "", status: "loaded", attempt: 0 });
       return undefined;
     }
-    setCoverImageLoading(true);
-    setCoverImageFailed(false);
-    if (cover.source !== "computer") {
-      setResolvedImageSrc(cover.src);
-      return undefined;
-    }
-
+    setCoverImageLoadState((current) =>
+      current.key === coverImageLoadKey
+        ? current
+        : { key: coverImageLoadKey, status: "loading", attempt: 0 },
+    );
+    if (!coverImageRequiresFetch) return undefined;
     const controller = new AbortController();
     let preview: KnowledgeCoverPreview | null = null;
-    setResolvedImageSrc("");
-    void fetch(cover.src, {
-      credentials: "include",
-      headers: requestHeaders,
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Failed to load the computer cover image.");
-        const sourceBlob = await response.blob();
+    setResolvedComputerImage({ key: coverImageLoadKey, src: "" });
+    void fetchCoverImageBlob(coverImageSource, requestHeadersRef.current, controller.signal)
+      .then(async (sourceBlob) => {
         const blob = await normalizeKnowledgeCoverImageBlob(sourceBlob, cover.name, cover.mimeType);
         preview = await createKnowledgeCoverPreview(blob);
-        setResolvedImageSrc(preview.src);
+        if (!controller.signal.aborted) {
+          setResolvedComputerImage({ key: coverImageLoadKey, src: preview.src });
+        }
       })
       .catch((error) => {
         if (!controller.signal.aborted) {
-          setCoverImageLoading(false);
-          setCoverImageFailed(true);
-          setModalError(getCoverError(error, "Failed to load the computer cover image."));
+          setCoverImageLoadState((current) =>
+            current.key === coverImageLoadKey
+              ? { ...current, status: "failed" }
+              : current,
+          );
+          setModalError(getCoverError(error, "Failed to load the cover image."));
         }
       });
     return () => {
@@ -453,7 +596,20 @@ export function KnowledgeLibraryCover({
         URL.revokeObjectURL(preview.objectUrl);
       }
     };
-  }, [cover, requestHeaders]);
+  }, [coverImageLoadKey, coverImageRequiresFetch, coverImageSource]);
+
+  useEffect(() => {
+    if (cover.type !== "image" || !renderedImageSrc) return;
+    const image = coverImageRef.current;
+    if (!image?.complete) return;
+    setCoverImageLoadState((current) => {
+      if (current.key !== coverImageLoadKey) return current;
+      return {
+        ...current,
+        status: image.naturalWidth > 0 ? "loaded" : "failed",
+      };
+    });
+  }, [coverImageLoadKey, renderedImageSrc]);
 
   useEffect(() => {
     if (!settingsOpen) return undefined;
@@ -617,6 +773,7 @@ export function KnowledgeLibraryCover({
       const preview = await createKnowledgeCoverPreview(blob);
       setCropCandidate({
         kind: "computer",
+        file: blob,
         preview,
         aspectRatio: getCurrentCoverAspectRatio(),
         cover: {
@@ -646,20 +803,21 @@ export function KnowledgeLibraryCover({
     setModalError("");
     try {
       if (candidate.kind === "computer") {
-        await onChange({ ...candidate.cover, ...view });
+        await onImageUpload({
+          file: candidate.file,
+          filename: candidate.cover.name,
+          mimeType: candidate.cover.mimeType,
+          source: "computer",
+          computerId: candidate.cover.computerId,
+          computerPath: candidate.cover.computerPath,
+        }, view);
       } else {
-        const [attachment] = await onUpload([candidate.file]);
-        if (!attachment?.src) throw new Error("The cover image could not be uploaded.");
-        await onChange({
-          schemaVersion: KNOWLEDGE_LIBRARY_COVER_SCHEMA,
-          type: "image",
-          src: attachment.src,
-          name: attachment.name || candidate.file.name,
-          attachmentId: attachment.attachmentId,
-          mimeType: attachment.mimeType || candidate.file.type,
+        await onImageUpload({
+          file: candidate.file,
+          filename: candidate.file.name,
+          mimeType: candidate.file.type || inferImageMimeType(candidate.file.name),
           source: "upload",
-          ...view,
-        });
+        }, view);
       }
       setCropCandidate(null);
     } catch (error) {
@@ -699,20 +857,34 @@ export function KnowledgeLibraryCover({
         className={`knowledge-library-cover${cover.type === "image" ? " is-image" : ""}${coverImageLoading ? " is-image-loading" : ""}${coverImageFailed ? " is-image-failed" : ""}`}
         aria-label="Knowledge library cover"
       >
-        {cover.type === "image" && resolvedImageSrc ? (
+        {cover.type === "image" && renderedImageSrc ? (
           <img
+            key={`${coverImageLoadKey}:${coverImageLoadState.attempt}`}
+            ref={coverImageRef}
             className="knowledge-library-cover__image"
-            src={resolvedImageSrc}
+            src={renderedImageSrc}
             alt=""
             style={coverImageStyle}
             draggable={false}
             onLoad={() => {
-              setCoverImageLoading(false);
-              setCoverImageFailed(false);
+              setCoverImageLoadState((current) =>
+                current.key === coverImageLoadKey
+                  ? { ...current, status: "loaded" }
+                  : current,
+              );
             }}
             onError={() => {
-              setCoverImageLoading(false);
-              setCoverImageFailed(true);
+              setCoverImageLoadState((current) => {
+                if (current.key !== coverImageLoadKey) return current;
+                if (current.attempt < 2) {
+                  return {
+                    ...current,
+                    status: "loading",
+                    attempt: current.attempt + 1,
+                  };
+                }
+                return { ...current, status: "failed" };
+              });
             }}
           />
         ) : cover.type === "gradient" ? (

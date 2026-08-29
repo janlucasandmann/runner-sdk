@@ -3,7 +3,10 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { RunnerFunctionGithubConnectorSettings } from "./function-github-connector-settings.js";
+import {
+  RunnerFunctionGithubConnectorSettings,
+  RunnerSourceGithubConnectorSettings,
+} from "./function-github-connector-settings.js";
 
 afterEach(() => {
   cleanup();
@@ -37,11 +40,48 @@ describe("RunnerFunctionGithubConnectorSettings", () => {
     expect(screen.getByRole("heading", { name: "Connectors" })).toBeTruthy();
     expect(screen.getByText("GitHub")).toBeTruthy();
     expect(screen.getByText("computer-agents/platform")).toBeTruthy();
+    const providerGroup = screen
+      .getByText("GitHub")
+      .closest(".playground-source-connector-settings__provider-group");
+    expect(
+      providerGroup?.querySelector(".playground-project-github-repository-settings"),
+    ).toBeTruthy();
     expect(await screen.findByRole("button", { name: "Manage Function deployments" })).toBeTruthy();
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     const requestUrl = new URL(String(fetchMock.mock.calls[0][0]), "https://example.test");
     expect(requestUrl.searchParams.get("scopeType")).toBe("function");
     expect(requestUrl.searchParams.get("scopeId")).toBe("function_123");
+  });
+
+  it("reuses the same repository policies with Web App-scoped deployment automation", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: vi.fn().mockResolvedValue({ object: "list", data: [], hasMore: false }),
+    } as unknown as Response);
+
+    render(
+      <RunnerSourceGithubConnectorSettings
+        resourceId="web_app_123"
+        resourceKind="web_app"
+        resourceName="Customer Portal"
+        repository={{ repoFullName: "computer-agents/customer-portal", ref: "main" }}
+        github={{ connected: true }}
+        automationAgentOptions={[{ id: "agent_deployer", label: "Deploy Agent" }]}
+        onRepositoryChange={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        "Synchronize this Web App with a GitHub repository and automate exact-revision deployments.",
+      ),
+    ).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Manage Web App deployments" })).toBeTruthy();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]), "https://example.test");
+    expect(requestUrl.searchParams.get("scopeType")).toBe("web_app");
+    expect(requestUrl.searchParams.get("scopeId")).toBe("web_app_123");
   });
 
   it("creates, seeds, and connects a repository from the bottom of the Function explorer", async () => {

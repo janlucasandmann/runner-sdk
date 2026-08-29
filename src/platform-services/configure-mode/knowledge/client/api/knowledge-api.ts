@@ -184,6 +184,17 @@ export interface KnowledgeParsedDocument {
   };
 }
 
+export interface KnowledgeLibraryCoverUploadInput {
+  file: Blob;
+  filename: string;
+  source: "upload" | "computer";
+  positionX: number;
+  positionY: number;
+  zoom: number;
+  computerId?: string;
+  computerPath?: string;
+}
+
 async function readResponse<T>(response: Response, fallback: string): Promise<T> {
   const raw = await response.text().catch(() => "");
   let payload: unknown = {};
@@ -264,12 +275,62 @@ export class KnowledgeApi {
 
   async updateLibrary(
     id: string,
-    input: Partial<Pick<KnowledgeLibrary, "name" | "description" | "metadata" | "permissionSet">>,
+    input: Partial<Pick<
+      KnowledgeLibrary,
+      "name" | "description" | "cover" | "metadata" | "permissionSet"
+    >>,
   ): Promise<KnowledgeLibrary> {
     const payload = await this.request<{ library: KnowledgeLibrary }>(
       `/knowledge/${encodeURIComponent(id)}`,
       { method: "PATCH", body: JSON.stringify(input) },
       "Failed to update the Knowledge library.",
+    );
+    return payload.library;
+  }
+
+  async uploadLibraryCover(
+    id: string,
+    input: KnowledgeLibraryCoverUploadInput,
+  ): Promise<KnowledgeLibrary> {
+    if (!this.baseUrl) throw new KnowledgeApiError("Knowledge backend is unavailable.", 503);
+    const body = new FormData();
+    body.append(
+      "file",
+      input.file,
+      input.filename || "knowledge-cover",
+    );
+    body.append("source", input.source);
+    body.append("positionX", String(input.positionX));
+    body.append("positionY", String(input.positionY));
+    body.append("zoom", String(input.zoom));
+    if (input.computerId) body.append("computerId", input.computerId);
+    if (input.computerPath) body.append("computerPath", input.computerPath);
+    const headers = { ...this.headers };
+    Object.keys(headers).forEach((key) => {
+      if (key.toLowerCase() === "content-type") delete headers[key];
+    });
+    const response = await fetch(
+      `${this.baseUrl}/knowledge/${encodeURIComponent(id)}/cover`,
+      {
+        method: "POST",
+        body,
+        credentials: "include",
+        cache: "no-store",
+        headers,
+      },
+    );
+    const payload = await readResponse<{ library: KnowledgeLibrary }>(
+      response,
+      "Failed to save the Knowledge library cover image.",
+    );
+    return payload.library;
+  }
+
+  async removeLibraryCover(id: string): Promise<KnowledgeLibrary> {
+    const payload = await this.request<{ library: KnowledgeLibrary }>(
+      `/knowledge/${encodeURIComponent(id)}/cover`,
+      { method: "DELETE" },
+      "Failed to remove the Knowledge library cover.",
     );
     return payload.library;
   }

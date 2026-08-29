@@ -67,7 +67,7 @@ export function createProjectsRequestHandler({
     }
 
     const aiosProjectTriggerMatch = pathname.match(/^\/api\/aios\/projects\/([^/]+)\/triggers\/([^/]+)$/);
-    if (["PATCH", "DELETE"].includes(method) && aiosProjectTriggerMatch) {
+    if (["GET", "PATCH", "DELETE"].includes(method) && aiosProjectTriggerMatch) {
       return startRequest(proxyAiosJsonRequest(
         req,
         res,

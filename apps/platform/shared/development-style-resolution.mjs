@@ -46,6 +46,7 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/composite/settings-section/settings-section.css",
   "src/platform-ui/components/ui/version-label/version-label.css",
   "src/platform-ui/pages/details/resource-detail.css",
+  "src/platform-ui/pages/settings/resource-settings-page.css",
   "src/platform-services/develop-mode/shared/client/page/develop-server-detail-page.css",
   "src/platform-services/develop-mode/security/client/page/security.css",
   "src/platform-services/develop-mode/evidence-agents/client/page/evidence-agents.css",

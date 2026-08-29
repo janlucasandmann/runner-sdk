@@ -3672,7 +3672,42 @@ function dispatch(method, pathname) {
   return { handled, call: calls[0] };
 }
 
-let result = dispatch("GET", "/api/real/projects");
+let result;
+for (const method of ["GET", "POST"]) {
+  result = dispatch(method, "/api/aios/projects/project%201/triggers");
+  assert.equal(result.handled, true);
+  assert.equal(result.call.adapter, "aios");
+  assert.equal(result.call.args[2], "/api/projects/project%201/triggers");
+  assert.equal(result.call.args[3], method);
+}
+
+for (const method of ["GET", "PATCH", "DELETE"]) {
+  result = dispatch(
+    method,
+    "/api/aios/projects/project%201/triggers/trigger%201",
+  );
+  assert.equal(result.handled, true);
+  assert.equal(result.call.adapter, "aios");
+  assert.equal(
+    result.call.args[2],
+    "/api/projects/project%201/triggers/trigger%201",
+  );
+  assert.equal(result.call.args[3], method);
+}
+
+result = dispatch(
+  "POST",
+  "/api/aios/projects/project%201/triggers/trigger%201/test",
+);
+assert.equal(result.handled, true);
+assert.equal(result.call.adapter, "aios");
+assert.equal(
+  result.call.args[2],
+  "/api/projects/project%201/triggers/trigger%201/test",
+);
+assert.equal(result.call.args[3], "POST");
+
+result = dispatch("GET", "/api/real/projects");
 assert.equal(result.handled, true);
 assert.equal(result.call.adapter, "get");
 assert.equal(result.call.args[2], "/projects");

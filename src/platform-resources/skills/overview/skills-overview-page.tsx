@@ -89,6 +89,8 @@ export interface SkillsOverviewPageProps {
   rowReordering?: PlatformDataTableRowReorderingConfig<SkillOverviewRow>;
   selection?: PlatformDataTableSelectionConfig<SkillOverviewRow>;
   identityColumn?: SkillsOverviewIdentityColumn;
+  columns?: readonly PlatformDataTableColumn<SkillOverviewRow>[];
+  getSearchText?: (row: SkillOverviewRow) => string;
   sorting?: PlatformDataTableSortingConfig;
   sortableColumns?: boolean;
   /** Optional service-owned actions when this catalog shell is reused. */
@@ -153,6 +155,8 @@ export function SkillsOverviewPage({
   rowReordering,
   selection,
   identityColumn,
+  columns: providedColumns,
+  getSearchText,
   sorting,
   sortableColumns = true,
   rowActions,
@@ -170,7 +174,7 @@ export function SkillsOverviewPage({
       }}
     />
   );
-  const columns = useMemo<PlatformDataTableColumn<SkillOverviewRow>[]>(() => [
+  const defaultColumns = useMemo<PlatformDataTableColumn<SkillOverviewRow>[]>(() => [
     {
       id: "name",
       header: "Name",
@@ -219,6 +223,7 @@ export function SkillsOverviewPage({
       cell: ({ row }) => <ResourceOverviewValue title={row.updatedTitle}>{row.updatedLabel}</ResourceOverviewValue>,
     },
   ], [identityColumn?.header, identityColumn?.id, resolveIdentity, sortableColumns]);
+  const columns = providedColumns || defaultColumns;
 
   const getRowActions = (row: SkillOverviewRow, state: { targetRows: readonly SkillOverviewRow[] }): readonly PlatformDataTableAction<SkillOverviewRow>[] => {
     if (rowActions) return rowActions(row, state);
@@ -281,8 +286,8 @@ export function SkillsOverviewPage({
         toolbar: {
           search: {
             placeholder: searchPlaceholder,
-            getSearchText: (row) =>
-              `${row.searchText || row.name} ${resolveIdentity(row).name}`,
+            getSearchText: getSearchText || ((row) =>
+              `${row.searchText || row.name} ${resolveIdentity(row).name}`),
           },
         },
         getRowActions,

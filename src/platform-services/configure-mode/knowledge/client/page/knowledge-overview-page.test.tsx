@@ -114,6 +114,22 @@ describe("KnowledgeOverviewPage", () => {
     });
   });
 
+  it("replaces an email-shaped creator label with the matching viewer name", () => {
+    expect(withKnowledgeLibraryViewerIdentity({
+      ...library,
+      creatorName: "jane@example.com",
+      ownerName: "jane@example.com",
+    }, {
+      id: "user-1",
+      name: "Jane Doe",
+      email: "jane@example.com",
+      avatarUrl: "/jane.png",
+    })).toMatchObject({
+      creatorName: "Jane Doe",
+      ownerName: "Jane Doe",
+    });
+  });
+
   it("uses the same overview shell and catalog presentation as Prompts", () => {
     const { container } = render(
       <KnowledgeOverviewPage
@@ -145,6 +161,11 @@ describe("KnowledgeOverviewPage", () => {
         ".knowledge-overview-identity .resource-overview-identity__visual.is-skill",
       ),
     ).not.toBeNull();
+    expect(
+      screen.getAllByRole("columnheader").map((header) => header.textContent),
+    ).toEqual(["", "Name", "Documents", "Creator", "Updated", ""]);
+    expect(screen.getByText("Shared product conventions and decisions.")).not.toBeNull();
+    expect(container.querySelector('img[src="/jane.png"]')).not.toBeNull();
     expect(screen.getByPlaceholderText("Search knowledge libraries")).not.toBeNull();
     expect(screen.queryByRole("columnheader", { name: "Version" })).toBeNull();
   });

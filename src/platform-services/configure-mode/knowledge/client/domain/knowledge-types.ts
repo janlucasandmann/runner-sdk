@@ -50,6 +50,36 @@ export interface KnowledgeLibraryVersion {
   updatedAt: string;
 }
 
+export const KNOWLEDGE_LIBRARY_COVER_SCHEMA_VERSION =
+  "computer_agents_knowledge_cover_v1" as const;
+
+export interface KnowledgeLibraryGradientCover {
+  schemaVersion: typeof KNOWLEDGE_LIBRARY_COVER_SCHEMA_VERSION;
+  type: "gradient";
+  preset: "blue";
+}
+
+export interface KnowledgeLibraryImageCover {
+  schemaVersion: typeof KNOWLEDGE_LIBRARY_COVER_SCHEMA_VERSION;
+  type: "image";
+  assetId?: string;
+  src: string;
+  name: string;
+  mimeType: string;
+  source: "upload" | "computer";
+  positionX: number;
+  positionY: number;
+  zoom: number;
+  /** Legacy attachment-backed covers remain readable during migration. */
+  attachmentId?: string;
+  computerId?: string;
+  computerPath?: string;
+}
+
+export type KnowledgeLibraryCover =
+  | KnowledgeLibraryGradientCover
+  | KnowledgeLibraryImageCover;
+
 export interface KnowledgeLibrary {
   id: string;
   name: string;
@@ -70,6 +100,8 @@ export interface KnowledgeLibrary {
   currentVersionId: string;
   currentVersionNumber: number;
   publishedVersionId: string;
+  /** First-class server-side cover contract. Optional only for rolling upgrades. */
+  cover?: KnowledgeLibraryCover | null;
   metadata: Record<string, unknown>;
   permissionSet: Record<string, unknown> | null;
   documents?: KnowledgeDocument[];
@@ -81,6 +113,7 @@ export interface KnowledgeLibraryCreateInput {
   description?: string;
   homeTitle?: string;
   homeMarkdown?: string;
+  cover?: KnowledgeLibraryGradientCover | null;
   metadata?: Record<string, unknown>;
   permissionSet?: Record<string, unknown> | null;
 }

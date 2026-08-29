@@ -14,13 +14,15 @@ const rows: readonly TestPlanOverviewRow[] = [
   {
     id: "plan-release",
     name: "Release checks",
+    description: "Verify the release candidate.",
+    creatorName: "Jane Doe",
+    creatorAvatarUrl: "/jane.png",
     projectLabel: "Runner",
     caseCount: 6,
     runCount: 3,
     passedRunCount: 2,
     lastRunStatus: "passed",
     updatedAt: 1_720_000_000_000,
-    updatedLabel: "Jul 3, 2024",
   },
 ];
 
@@ -61,6 +63,15 @@ describe("TestsOverviewPage", () => {
     expect(screen.queryByText("All Test Plans")).toBeNull();
     expect(screen.queryByRole("button", { name: "Status" })).toBeNull();
     expect(screen.getByPlaceholderText("Search test plans")).not.toBeNull();
+    expect(
+      screen.getAllByRole("columnheader").map((header) => header.textContent),
+    ).toEqual(["", "Name", "Last run", "Creator", "Updated", ""]);
+    expect(screen.queryByRole("columnheader", { name: "Project" })).toBeNull();
+    expect(screen.queryByRole("columnheader", { name: "Cases" })).toBeNull();
+    expect(screen.getByText("Verify the release candidate.")).not.toBeNull();
+    expect(screen.getByText("Jane Doe")).not.toBeNull();
+    expect(container.querySelector('img[src="/jane.png"]')).not.toBeNull();
+    expect(container.querySelector(".lucide-flask-conical")).not.toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Test Plan" }));
     expect(onCreate).toHaveBeenCalledOnce();

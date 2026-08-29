@@ -11,7 +11,7 @@ import { RunnerProjectGithubRepositorySettings } from "./project-github-reposito
 import type { RunnerChatGithubConfig } from "./public-types.js";
 import type { RunnerChatFileNode } from "./workspace-files.js";
 
-export interface RunnerFunctionGithubRepository {
+export interface RunnerSourceGithubRepository {
   id?: string;
   name?: string;
   repoFullName: string;
@@ -22,10 +22,10 @@ export interface RunnerFunctionGithubRepository {
   forcePushCommits?: boolean;
 }
 
-export interface RunnerFunctionGithubConnectorSettingsProps {
-  functionId: string;
-  functionName?: string;
-  repository?: RunnerFunctionGithubRepository | null;
+export type RunnerSourceGithubResourceKind = "function" | "web_app";
+
+interface RunnerSourceGithubConnectorSettingsBaseProps {
+  repository?: RunnerSourceGithubRepository | null;
   github?: RunnerChatGithubConfig | null;
   apiBaseUrl?: string;
   requestHeaders?: Record<string, string> | null;
@@ -35,9 +35,24 @@ export interface RunnerFunctionGithubConnectorSettingsProps {
   onCreateRepository?: (input: {
     name: string;
     accountId?: string;
-  }) => Promise<RunnerFunctionGithubRepository>;
-  onRepositoryChange: (repository: RunnerFunctionGithubRepository | null) => void | Promise<void>;
+  }) => Promise<RunnerSourceGithubRepository>;
+  onRepositoryChange: (repository: RunnerSourceGithubRepository | null) => void | Promise<void>;
 }
+
+export interface RunnerSourceGithubConnectorSettingsProps
+  extends RunnerSourceGithubConnectorSettingsBaseProps {
+  resourceId: string;
+  resourceKind: RunnerSourceGithubResourceKind;
+  resourceName?: string;
+}
+
+export interface RunnerFunctionGithubConnectorSettingsProps
+  extends RunnerSourceGithubConnectorSettingsBaseProps {
+  functionId: string;
+  functionName?: string;
+}
+
+export type RunnerFunctionGithubRepository = RunnerSourceGithubRepository;
 
 const EMPTY_CONNECTION = { connected: false } as const;
 
@@ -45,9 +60,10 @@ function normalizeRepositoryName(item: RunnerChatFileNode): string {
   return String(item.repoFullName || item.name || "").trim();
 }
 
-export function RunnerFunctionGithubConnectorSettings({
-  functionId,
-  functionName,
+export function RunnerSourceGithubConnectorSettings({
+  resourceId,
+  resourceKind,
+  resourceName,
   repository,
   github,
   apiBaseUrl,
@@ -57,7 +73,11 @@ export function RunnerFunctionGithubConnectorSettings({
   disabled = false,
   onCreateRepository,
   onRepositoryChange,
-}: RunnerFunctionGithubConnectorSettingsProps) {
+}: RunnerSourceGithubConnectorSettingsProps) {
+  const resourceLabel = resourceKind === "web_app" ? "Web App" : "Function";
+  const deploymentAutomationKind =
+    resourceKind === "web_app" ? "deploy_web_app" : "deploy_function";
+  const connectorTitleId = `source-connectors-title-${resourceKind}-${resourceId}`;
   const defaultAccountId = String(
     repository?.accountId ||
       github?.selectedAccountId ||
@@ -123,13 +143,16 @@ export function RunnerFunctionGithubConnectorSettings({
     setOpen(true);
   }
 
-  async function createRepositoryForFunction() {
+  async function createRepositoryForResource() {
     if (!onCreateRepository) return;
     setCreating(true);
     setCreateError("");
     try {
       const createdRepository = await onCreateRepository({
-        name: String(functionName || `function-${functionId.slice(-8)}`).trim(),
+        name: String(
+          resourceName ||
+            `${resourceKind === "web_app" ? "web-app" : "function"}-${resourceId.slice(-8)}`,
+        ).trim(),
         accountId: accountId || undefined,
       });
       await onRepositoryChange({
@@ -145,7 +168,7 @@ export function RunnerFunctionGithubConnectorSettings({
       setCreateError(
         createRepositoryError instanceof Error
           ? createRepositoryError.message
-          : "Failed to create the Function repository.",
+          : `Failed to create the ${resourceLabel} repository.`,
       );
     } finally {
       setCreating(false);
@@ -184,7 +207,9 @@ export function RunnerFunctionGithubConnectorSettings({
       setOpen(false);
     } catch (saveError) {
       setError(
-        saveError instanceof Error ? saveError.message : "Failed to update the Function connector.",
+        saveError instanceof Error
+          ? saveError.message
+          : `Failed to update the ${resourceLabel} connector.`,
       );
     } finally {
       setSaving(false);
@@ -205,55 +230,58 @@ export function RunnerFunctionGithubConnectorSettings({
 
   return (
     <section
-      className="playground-function-connector-settings"
-      aria-labelledby="function-connectors-title"
+      className="playground-source-connector-settings"
+      aria-labelledby={connectorTitleId}
+      data-source-connector-kind={resourceKind}
     >
-      <div className="playground-function-connector-settings__heading">
-        <h2 id="function-connectors-title">Connectors</h2>
+      <div className="playground-source-connector-settings__heading">
+        <h2 id={connectorTitleId}>Connectors</h2>
         <p>
-          Synchronize this Function with a GitHub repository and automate exact-revision
+          Synchronize this {resourceLabel} with a GitHub repository and automate exact-revision
           deployments.
         </p>
       </div>
 
-      <div className="playground-function-connector-settings__provider-row">
-        <div className="playground-function-connector-settings__provider-identity">
-          <IconGithub className="playground-function-connector-settings__provider-icon" />
-          <span>GitHub</span>
+      <div className="playground-source-connector-settings__provider-group">
+        <div className="playground-source-connector-settings__provider-row">
+          <div className="playground-source-connector-settings__provider-identity">
+            <IconGithub className="playground-source-connector-settings__provider-icon" />
+            <span>GitHub</span>
+          </div>
+          <PlatformPrimaryButton
+            type="button"
+            size="small"
+            disabled={disabled || saving}
+            onClick={openManager}
+          >
+            Manage
+          </PlatformPrimaryButton>
         </div>
-        <PlatformPrimaryButton
-          type="button"
-          size="small"
-          disabled={disabled || saving}
-          onClick={openManager}
-        >
-          Manage
-        </PlatformPrimaryButton>
+
+        {repository?.repoFullName ? (
+          <RunnerProjectGithubRepositorySettings
+            accountId={repository.accountId || accountId || undefined}
+            repoFullName={repository.repoFullName}
+            refName={repository.ref || "main"}
+            branchPrefix={repository.branchPrefix}
+            createPullRequests={repository.createPullRequests}
+            forcePushCommits={repository.forcePushCommits}
+            apiBaseUrl={apiBaseUrl}
+            requestHeaders={requestHeaders}
+            automationScopeType={resourceKind}
+            automationScopeId={resourceId}
+            automationKinds={["security_scan", "pull_request_review", deploymentAutomationKind]}
+            automationEnvironmentId={automationEnvironmentId}
+            automationAgentOptions={automationAgentOptions}
+            fetchBranches={github?.fetchBranches}
+            onChange={(patch) => onRepositoryChange({ ...repository, ...patch })}
+            onDisconnect={() => onRepositoryChange(null)}
+          />
+        ) : null}
       </div>
 
-      {repository?.repoFullName ? (
-        <RunnerProjectGithubRepositorySettings
-          accountId={repository.accountId || accountId || undefined}
-          repoFullName={repository.repoFullName}
-          refName={repository.ref || "main"}
-          branchPrefix={repository.branchPrefix}
-          createPullRequests={repository.createPullRequests}
-          forcePushCommits={repository.forcePushCommits}
-          apiBaseUrl={apiBaseUrl}
-          requestHeaders={requestHeaders}
-          automationScopeType="function"
-          automationScopeId={functionId}
-          automationKinds={["security_scan", "pull_request_review", "deploy_function"]}
-          automationEnvironmentId={automationEnvironmentId}
-          automationAgentOptions={automationAgentOptions}
-          fetchBranches={github?.fetchBranches}
-          onChange={(patch) => onRepositoryChange({ ...repository, ...patch })}
-          onDisconnect={() => onRepositoryChange(null)}
-        />
-      ) : null}
-
       {error && !open ? (
-        <p className="playground-function-connector-settings__error" role="alert">
+        <p className="playground-source-connector-settings__error" role="alert">
           {error}
         </p>
       ) : null}
@@ -319,29 +347,31 @@ export function RunnerFunctionGithubConnectorSettings({
         }}
         listFooter={
           onCreateRepository && github?.connected ? (
-            <div className="playground-function-connector-settings__create-repository">
+            <div className="playground-source-connector-settings__create-repository">
               <PlatformSecondaryButton
                 type="button"
                 size="small"
-                className="playground-function-connector-settings__create-repository-button"
+                className="playground-source-connector-settings__create-repository-button"
                 disabled={disabled || loading || saving || creating}
-                onClick={() => void createRepositoryForFunction()}
+                onClick={() => void createRepositoryForResource()}
               >
                 {creating ? (
                   <span
-                    className="runner-spinner playground-function-connector-settings__create-repository-spinner"
+                    className="runner-spinner playground-source-connector-settings__create-repository-spinner"
                     aria-hidden="true"
                   />
                 ) : (
                   <Plus width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
                 )}
                 <span>
-                  {creating ? "Creating repository..." : "Create repository for this Function"}
+                  {creating
+                    ? "Creating repository..."
+                    : `Create repository for this ${resourceLabel}`}
                 </span>
               </PlatformSecondaryButton>
               {createError ? (
                 <span
-                  className="playground-function-connector-settings__create-repository-error"
+                  className="playground-source-connector-settings__create-repository-error"
                   role="alert"
                 >
                   {createError}
@@ -365,5 +395,20 @@ export function RunnerFunctionGithubConnectorSettings({
         onApiKeyPromptClose={() => setOpen(false)}
       />
     </section>
+  );
+}
+
+export function RunnerFunctionGithubConnectorSettings({
+  functionId,
+  functionName,
+  ...props
+}: RunnerFunctionGithubConnectorSettingsProps) {
+  return (
+    <RunnerSourceGithubConnectorSettings
+      {...props}
+      resourceId={functionId}
+      resourceKind="function"
+      resourceName={functionName}
+    />
   );
 }

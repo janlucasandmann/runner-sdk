@@ -138,12 +138,15 @@ describe("TestPlanDetailPage", () => {
     fireEvent.click(within(sectionSwitch).getByRole("radio", { name: "Settings" }));
     expect(screen.queryByRole("heading", { name: "How this test works" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Test details" })).toBeNull();
-    expect(screen.getByRole("region", { name: "Test identity" })).not.toBeNull();
+    expect(screen.getByRole("region", { name: "Test settings" })).not.toBeNull();
     expect(
-      (screen.getByRole("textbox", { name: "Test name" }) as HTMLInputElement).value,
+      container.querySelector("[data-platform-resource-settings-page='true']"),
+    ).not.toBeNull();
+    expect(
+      (screen.getByRole("textbox", { name: "Test name" }) as HTMLTextAreaElement).value,
     ).toBe(plan.name);
     expect(
-      (screen.getByRole("textbox", { name: "Test description" }) as HTMLInputElement).value,
+      (screen.getByRole("textbox", { name: "Test description" }) as HTMLTextAreaElement).value,
     ).toBe(plan.description);
     expect(screen.queryByText("Status")).toBeNull();
     expect(screen.queryByRole("heading", { name: "Run target" })).toBeNull();
@@ -182,10 +185,13 @@ describe("TestPlanDetailPage", () => {
       .filter((guard) => Boolean(guard))
       .at(-1);
     act(() => activeGuard?.onDiscard());
-    expect((descriptionInput as HTMLInputElement).value).toBe(plan.description);
+    expect((descriptionInput as HTMLTextAreaElement).value).toBe(plan.description);
 
     fireEvent.click(within(sectionSwitch).getByRole("radio", { name: "Overview" }));
-    expect(detailsSidebar?.dataset.collapsed).toBe("false");
+    const overviewDetailsSidebar = container.querySelector<HTMLElement>(
+      "[data-platform-detail-sidebar='true']",
+    );
+    expect(overviewDetailsSidebar?.dataset.collapsed).toBe("false");
     expect(screen.getByRole("table", { name: "Test runs" })).not.toBeNull();
     expect(screen.getByText("Run History")).not.toBeNull();
     expect(container.querySelector(".tests-plan-overview-card")).toBeNull();
@@ -220,11 +226,11 @@ describe("TestPlanDetailPage", () => {
     expect(onVersionsSidebarOpenChange).toHaveBeenLastCalledWith(true);
     expect(await screen.findByRole("heading", { name: "Version history" })).not.toBeNull();
     expect(screen.getByRole("button", { name: "View Changes" })).not.toBeNull();
-    expect(detailsSidebar?.dataset.collapsed).toBe("true");
+    expect(overviewDetailsSidebar?.dataset.collapsed).toBe("true");
     expect(screen.queryByRole("radiogroup", { name: "Test plan section" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Close version history" }));
-    expect(detailsSidebar?.dataset.collapsed).toBe("false");
+    expect(overviewDetailsSidebar?.dataset.collapsed).toBe("false");
     expect(onVersionsSidebarOpenChange).toHaveBeenLastCalledWith(false);
     expect(screen.getByRole("radiogroup", { name: "Test plan section" })).not.toBeNull();
 

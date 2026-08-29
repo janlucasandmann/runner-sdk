@@ -4,6 +4,17 @@ import test from "node:test";
 
 import { createPublicApiGateway } from "./public-api-gateway.mjs";
 
+const WEBHOOK_HEADER_NAMES = [
+  "x-github-event",
+  "x-gitlab-event",
+  "x-gitlab-token",
+  "x-hub-signature-256",
+  "x-slack-request-timestamp",
+  "x-slack-signature",
+  "x-webhook-event",
+  "x-webhook-signature",
+];
+
 async function listen(server) {
   await new Promise((resolve, reject) => {
     server.once("error", reject);
@@ -77,4 +88,76 @@ test("public API gateway pins the control origin and strips browser-only headers
   assert.equal(upstreamCalls[0].headers.cookie, undefined);
   assert.equal(upstreamCalls[0].headers["x-runner-upstream-url"], undefined);
   assert.deepEqual(JSON.parse(upstreamCalls[0].body), { prompt: "hello" });
+});
+
+test("public API gateway forwards signature headers only for webhook deliveries", async (t) => {
+  const upstreamCalls = [];
+  const upstreamServer = http.createServer(async (request, response) => {
+    for await (const _chunk of request) {
+      // Drain the request body before responding.
+    }
+    upstreamCalls.push({ url: request.url, headers: request.headers });
+    response.writeHead(204).end();
+  });
+  const upstreamOrigin = await listen(upstreamServer);
+  t.after(() => new Promise((resolve) => upstreamServer.close(resolve)));
+
+  const gateway = createPublicApiGateway({
+    defaultUpstreamOrigin: `${upstreamOrigin}/v1`,
+    deploymentTopology: "on_prem",
+  });
+  const platformServer = http.createServer((request, response) => {
+    const url = new URL(request.url || "/", "http://platform.test");
+    void gateway.proxyPublicApiRequest(request, response, url);
+  });
+  const platformOrigin = await listen(platformServer);
+  t.after(() => new Promise((resolve) => platformServer.close(resolve)));
+
+  const headers = {
+    authorization: "Bearer must-not-reach-webhook",
+    "content-type": "application/json",
+    "x-api-key": "must-not-reach-webhook",
+    "x-computer-agents-organization": "must-not-reach-webhook",
+    "x-github-event": "push",
+    "x-gitlab-event": "Push Hook",
+    "x-gitlab-token": "gitlab-token",
+    "x-hub-signature-256": `sha256=${"a".repeat(64)}`,
+    "x-slack-request-timestamp": "1788041000",
+    "x-slack-signature": `v0=${"b".repeat(64)}`,
+    "x-webhook-event": "acceptance",
+    "x-webhook-signature": `sha256=${"c".repeat(64)}`,
+  };
+
+  const webhookResponse = await fetch(`${platformOrigin}/v1/webhooks/triggers/trig_1`, {
+    method: "POST",
+    headers,
+    body: "{}",
+  });
+  assert.equal(webhookResponse.status, 204);
+
+  const ordinaryResponse = await fetch(`${platformOrigin}/v1/threads`, {
+    method: "POST",
+    headers,
+    body: "{}",
+  });
+  assert.equal(ordinaryResponse.status, 204);
+
+  assert.equal(upstreamCalls.length, 2);
+  const webhookCall = upstreamCalls[0];
+  assert.equal(webhookCall.url, "/v1/webhooks/triggers/trig_1");
+  for (const name of WEBHOOK_HEADER_NAMES) {
+    assert.equal(webhookCall.headers[name], headers[name]);
+  }
+  assert.equal(webhookCall.headers.authorization, undefined);
+  assert.equal(webhookCall.headers["x-api-key"], undefined);
+  assert.equal(webhookCall.headers["x-computer-agents-organization"], undefined);
+
+  const ordinaryCall = upstreamCalls[1];
+  assert.equal(ordinaryCall.url, "/v1/threads");
+  assert.equal(ordinaryCall.headers.authorization, headers.authorization);
+  assert.equal(ordinaryCall.headers["x-api-key"], headers["x-api-key"]);
+  assert.equal(ordinaryCall.headers["x-computer-agents-organization"], headers["x-computer-agents-organization"]);
+  for (const name of WEBHOOK_HEADER_NAMES) {
+    assert.equal(ordinaryCall.headers[name], undefined);
+  }
 });

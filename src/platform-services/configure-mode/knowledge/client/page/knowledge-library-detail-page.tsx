@@ -27,7 +27,6 @@ import {
   PlatformResourceShareModal,
   type PlatformResourceShareTeam,
 } from "../../../../../platform-ui/components/composite/resource-action-modals/index.js";
-import { PlatformResourceDetailSidebar } from "../../../../../platform-ui/components/composite/resource-detail-sidebar/index.js";
 import {
   PlatformResourceActionMenuItem,
   PlatformResourceActionsDivider,
@@ -49,6 +48,7 @@ import { PlatformCheckbox } from "../../../../../platform-ui/components/ui/check
 import { PlatformLabel } from "../../../../../platform-ui/components/ui/label/index.js";
 import { PlatformSwitch } from "../../../../../platform-ui/components/ui/switch/index.js";
 import { MarkdownResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
+import { PlatformResourceSettingsPage } from "../../../../../platform-ui/pages/settings/index.js";
 import type { KnowledgeApi, KnowledgeEditorAttachment } from "../api/index.js";
 import type {
   KnowledgeDocument,
@@ -65,10 +65,11 @@ import {
   DEFAULT_KNOWLEDGE_LIBRARY_COVER,
   KnowledgeLibraryAddCoverButton,
   KnowledgeLibraryCover,
+  type KnowledgeLibraryCoverImageUpload,
   type KnowledgeLibraryCoverValue,
   readKnowledgeLibraryCover,
-  withKnowledgeLibraryCoverMetadata,
 } from "./knowledge-library-cover.js";
+import type { KnowledgeLibraryCoverView } from "./knowledge-library-cover-crop-modal.js";
 
 type KnowledgeDetailTab = "general" | "settings";
 
@@ -483,7 +484,9 @@ export function KnowledgeLibraryDetailPage({
   const [name, setName] = useState(library.name);
   const [description, setDescription] = useState(library.description);
   const [cover, setCover] = useState<KnowledgeLibraryCoverValue | null>(() =>
-    readKnowledgeLibraryCover(library.metadata),
+    library.cover === undefined
+      ? readKnowledgeLibraryCover(library.metadata)
+      : readKnowledgeLibraryCover(library.cover),
   );
   const [coverBusy, setCoverBusy] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -572,8 +575,12 @@ export function KnowledgeLibraryDetailPage({
   }, [library.id, library.name, library.description, library.currentVersionId]);
 
   useEffect(() => {
-    setCover(readKnowledgeLibraryCover(library.metadata));
-  }, [library.id, library.metadata]);
+    setCover(
+      library.cover === undefined
+        ? readKnowledgeLibraryCover(library.metadata)
+        : readKnowledgeLibraryCover(library.cover),
+    );
+  }, [library.cover, library.id, library.metadata]);
 
   useEffect(() => {
     setOwnerSelectorOpen(false);
@@ -1555,10 +1562,13 @@ export function KnowledgeLibraryDetailPage({
       setCoverBusy(true);
       setError("");
       try {
-        const nextLibrary = await api.updateLibrary(library.id, {
-          metadata: withKnowledgeLibraryCoverMetadata(library.metadata, nextCover),
-        });
-        setCover(readKnowledgeLibraryCover(nextLibrary.metadata) || nextCover);
+        const nextLibrary = nextCover === null
+          ? await api.removeLibraryCover(library.id)
+          : await api.updateLibrary(library.id, { cover: nextCover });
+        const persistedCover = nextLibrary.cover === undefined
+          ? readKnowledgeLibraryCover(nextLibrary.metadata)
+          : readKnowledgeLibraryCover(nextLibrary.cover);
+        setCover(persistedCover ?? nextCover);
         onLibraryChange(nextLibrary);
       } catch (nextError) {
         setCover(previousCover);
@@ -1572,102 +1582,49 @@ export function KnowledgeLibraryDetailPage({
         setCoverBusy(false);
       }
     },
-    [api, cover, coverBusy, isHistorical, library.id, library.metadata, onLibraryChange],
+    [api, cover, coverBusy, isHistorical, library.id, onLibraryChange],
   );
 
-  const sidebar = (
-    <PlatformResourceDetailSidebar
-      attributes={[{ id: "updated", label: "Updated", value: formatTimestamp(library.updatedAt) }]}
-      creator={{
-        value: creatorIdentity.id,
-        name: creatorIdentity.name,
-        email: creatorIdentity.email,
-        avatarUrl: creatorIdentity.avatarUrl,
-      }}
-      owner={{
-        value: ownerIdentity.id,
-        name: ownerIdentity.name,
-        email: ownerIdentity.email,
-        avatarUrl: ownerIdentity.avatarUrl,
-      }}
-      ownerOptions={ownerOptions}
-      onOwnerTransfer={transferOwner}
-      ownerSelectorProps={{
-        open: ownerSelectorOpen,
-        onOpenChange: (open) => void openOwnerSelector(open),
-        ariaLabel: "Choose Knowledge library owner",
-        resourceLabel: "Knowledge library",
-        alignment: "end",
-        popupAlignment: "right",
-        fullWidth: true,
-        disabled: busy || dirty || !activeOrganizationId,
-        loading: ownerCandidatesLoading || (ownerSelectorOpen && ownerMissingTeamIds.length > 0),
-        title: dirty ? "Save Knowledge changes before changing the owner." : undefined,
-      }}
-      primaryAction={
-        onStartThread ? (
-          <PlatformPrimaryButton
-            className="knowledge-detail-page__start-thread-button"
-            fullWidth
-            size="small"
-            onClick={() => onStartThread(library)}
-          >
-            <Send width={14} height={14} aria-hidden="true" />
-            Start Thread
-          </PlatformPrimaryButton>
-        ) : null
-      }
-      className="knowledge-detail-page__settings-sidebar"
-      propertiesClassName="knowledge-detail-page__settings-sidebar-properties"
-    />
-  );
-
-  const identitySection = (
-    <section
-      className="skill-detail-page__identity knowledge-library-identity"
-      aria-label="Knowledge library identity"
-    >
-      <span
-        className={`knowledge-library-identity__icon${relatedProjectIdentity ? " is-project-linked" : ""}`}
-        style={
-          relatedProjectIdentity
-            ? ({
-                "--knowledge-project-icon-color": relatedProjectIdentity.color,
-              } as CSSProperties)
-            : undefined
+  const persistCoverImage = useCallback(
+    async (
+      input: KnowledgeLibraryCoverImageUpload,
+      view: KnowledgeLibraryCoverView,
+    ) => {
+      if (coverBusy || isHistorical) return;
+      const previousCover = cover;
+      setCoverBusy(true);
+      setError("");
+      try {
+        const nextLibrary = await api.uploadLibraryCover(library.id, {
+          file: input.file,
+          filename: input.filename,
+          source: input.source,
+          positionX: view.positionX,
+          positionY: view.positionY,
+          zoom: view.zoom,
+          computerId: input.computerId,
+          computerPath: input.computerPath,
+        });
+        const nextCover = nextLibrary.cover === undefined
+          ? readKnowledgeLibraryCover(nextLibrary.metadata)
+          : readKnowledgeLibraryCover(nextLibrary.cover);
+        if (!nextCover) {
+          throw new Error("The cover image was saved but is missing from the library response.");
         }
-        aria-hidden="true"
-      >
-        {relatedProjectIdentity ? (
-          <PlatformProjectIdentityIcon
-            icon={relatedProjectIdentity.icon}
-            size={24}
-            strokeWidth={1.8}
-          />
-        ) : (
-          <LibraryBig width={24} height={24} strokeWidth={1.7} />
-        )}
-      </span>
-      <div className="skill-detail-page__identity-copy">
-        <input
-          className="skill-detail-page__name-input"
-          value={name}
-          readOnly={isHistorical}
-          placeholder="Knowledge library"
-          aria-label="Knowledge library name"
-          onChange={(event) => setName(event.currentTarget.value)}
-        />
-        <input
-          className="file-resource-detail-page__description-input skill-detail-page__description-input"
-          value={description}
-          readOnly={isHistorical}
-          placeholder="Describe what people and agents can learn here"
-          aria-label="Knowledge library description"
-          onChange={(event) => setDescription(event.currentTarget.value)}
-        />
-      </div>
-      {isHistorical ? <PlatformLabel variant="gray">Version preview</PlatformLabel> : null}
-    </section>
+        setCover(nextCover);
+        onLibraryChange(nextLibrary);
+      } catch (nextError) {
+        setCover(previousCover);
+        const normalized = nextError instanceof Error
+          ? nextError
+          : new Error("Failed to save the Knowledge library cover image.");
+        setError(normalized.message);
+        throw normalized;
+      } finally {
+        setCoverBusy(false);
+      }
+    },
+    [api, cover, coverBusy, isHistorical, library.id, onLibraryChange],
   );
 
   const documentWorkspace = (
@@ -1678,7 +1635,7 @@ export function KnowledgeLibraryDetailPage({
           backendUrl={backendUrl}
           requestHeaders={requestHeaders}
           disabled={busy || coverBusy || isHistorical}
-          onUpload={(files) => api.uploadEditorAttachments(files)}
+          onImageUpload={persistCoverImage}
           onChange={persistCover}
         />
       ) : null}
@@ -1726,16 +1683,22 @@ export function KnowledgeLibraryDetailPage({
             ? {
                 bodyTitle: (
                   <div className="knowledge-document-workspace__body-title">
-                    <input
+                    <textarea
                       className="knowledge-document-workspace__body-title-input"
                       value={activeDocumentDraft.title}
+                      rows={1}
                       readOnly={isHistorical}
                       aria-label="Knowledge document title"
                       onChange={(event) =>
                         updateActiveDocumentDraft({
-                          title: event.currentTarget.value,
+                          title: event.currentTarget.value.replace(/[\r\n]+/g, " "),
                         })
                       }
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+                          event.preventDefault();
+                        }
+                      }}
                     />
                     {!cover && !isHistorical ? (
                       <KnowledgeLibraryAddCoverButton
@@ -1769,43 +1732,114 @@ export function KnowledgeLibraryDetailPage({
   );
 
   const settings = (
-    <>
-      <div className="knowledge-detail-page__settings-header">{identitySection}</div>
-      <div className="playground-server-detail-content knowledge-detail-page__settings-content">
-        <div
-          className={`playground-server-settings-tab is-function-settings-tab knowledge-settings-layout${accessDetailOpen ? " is-access-detail-view" : ""}`}
-        >
-          {!accessDetailOpen ? (
-            <>
-              <PlatformDeploymentMap
-                key="knowledge-storage-map"
-                className="knowledge-detail-page__storage-map"
-                regionCode={String(library.metadata.region || library.metadata.location || "eur3")}
-                title="Location"
-              />
-              <KnowledgeConnectorSettings
-                key="knowledge-connector-settings"
-                library={library}
-                api={api}
-                requestHeaders={requestHeaders}
-                activeOrganizationId={activeOrganizationId}
-                onLibraryChange={onLibraryChange}
-              />
-            </>
-          ) : null}
-          <KnowledgeAccessSettings
-            key="knowledge-access-settings"
-            library={library}
-            api={api}
-            workspaceTeams={workspaceTeams}
-            workspaceTeamMembersById={workspaceTeamMembersById}
-            onWorkspaceTeamMembersRequest={requestWorkspaceTeamMembers}
-            onLibraryChange={onLibraryChange}
-            onPermissionDetailOpenChange={setAccessDetailOpen}
+    <PlatformResourceSettingsPage
+      className="knowledge-detail-page__settings-content"
+      ariaLabel="Knowledge Library settings"
+      identity={{
+        icon: relatedProjectIdentity ? (
+          <PlatformProjectIdentityIcon
+            icon={relatedProjectIdentity.icon}
+            size={24}
+            strokeWidth={1.8}
           />
-        </div>
-      </div>
-    </>
+        ) : (
+          <LibraryBig width={24} height={24} strokeWidth={1.7} />
+        ),
+        title: name,
+        description,
+        onTitleChange: setName,
+        onDescriptionChange: setDescription,
+        titlePlaceholder: "Knowledge library",
+        descriptionPlaceholder: "Describe what people and agents can learn here",
+        titleAriaLabel: "Knowledge library name",
+        descriptionAriaLabel: "Knowledge library description",
+        readOnly: isHistorical,
+        trailing: isHistorical ? <PlatformLabel variant="gray">Version preview</PlatformLabel> : null,
+        className: "knowledge-library-identity",
+        iconClassName: `knowledge-library-identity__icon${relatedProjectIdentity ? " is-project-linked" : ""}`,
+        iconStyle: relatedProjectIdentity
+          ? ({
+              "--knowledge-project-icon-color": relatedProjectIdentity.color,
+            } as CSSProperties)
+          : undefined,
+      }}
+      details={{
+        attributes: [
+          { id: "updated", label: "Updated", value: formatTimestamp(library.updatedAt) },
+        ],
+        creator: {
+          value: creatorIdentity.id,
+          name: creatorIdentity.name,
+          email: creatorIdentity.email,
+          avatarUrl: creatorIdentity.avatarUrl,
+        },
+        owner: {
+          value: ownerIdentity.id,
+          name: ownerIdentity.name,
+          email: ownerIdentity.email,
+          avatarUrl: ownerIdentity.avatarUrl,
+        },
+        ownerOptions,
+        onOwnerTransfer: transferOwner,
+        ownerSelectorProps: {
+          open: ownerSelectorOpen,
+          onOpenChange: (open) => void openOwnerSelector(open),
+          ariaLabel: "Choose Knowledge library owner",
+          resourceLabel: "Knowledge library",
+          alignment: "end",
+          popupAlignment: "right",
+          fullWidth: true,
+          disabled: busy || dirty || !activeOrganizationId,
+          loading:
+            ownerCandidatesLoading || (ownerSelectorOpen && ownerMissingTeamIds.length > 0),
+          title: dirty ? "Save Knowledge changes before changing the owner." : undefined,
+        },
+        primaryAction: onStartThread ? (
+          <PlatformPrimaryButton
+            className="knowledge-detail-page__start-thread-button"
+            fullWidth
+            size="small"
+            onClick={() => onStartThread(library)}
+          >
+            <Send width={14} height={14} aria-hidden="true" />
+            Start Thread
+          </PlatformPrimaryButton>
+        ) : null,
+        className: "knowledge-detail-page__settings-sidebar",
+        propertiesClassName: "knowledge-detail-page__settings-sidebar-properties",
+      }}
+      location={(
+        <PlatformDeploymentMap
+          className="knowledge-detail-page__storage-map"
+          regionCode={String(library.metadata.region || library.metadata.location || "eur3")}
+          title="Location"
+        />
+      )}
+      connectors={(
+        <KnowledgeConnectorSettings
+          library={library}
+          api={api}
+          requestHeaders={requestHeaders}
+          activeOrganizationId={activeOrganizationId}
+          onLibraryChange={onLibraryChange}
+        />
+      )}
+      access={(
+        <KnowledgeAccessSettings
+          library={library}
+          api={api}
+          workspaceTeams={workspaceTeams}
+          workspaceTeamMembersById={workspaceTeamMembersById}
+          onWorkspaceTeamMembersRequest={requestWorkspaceTeamMembers}
+          onLibraryChange={onLibraryChange}
+          onPermissionDetailOpenChange={setAccessDetailOpen}
+        />
+      )}
+      accessDetailOpen={accessDetailOpen}
+      detailsSidebarCollapsed={versionsOpen}
+      detailsSidebarAriaLabel="Knowledge library information"
+      detailsSidebarClassName="knowledge-detail-sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar"
+    />
   );
   const saveActionPortal = controlsPortal || (!titleActionsPortalId ? actionsPortal : null);
   const detailSurface = versionChangesState ? (
@@ -1868,10 +1902,7 @@ export function KnowledgeLibraryDetailPage({
       }
       code={documentWorkspace}
       settings={settings}
-      sidebar={accessDetailOpen ? null : sidebar}
-      sidebarCollapsed={activeTab !== "settings" || versionsOpen}
       ariaLabel={`${library.name} Knowledge library`}
-      sidebarAriaLabel="Knowledge library information"
       className={`knowledge-detail-page playground-project-overview-layout playground-agents-detail-overview-layout is-${activeTab}-tab${accessDetailOpen ? " is-access-detail-view" : ""}`}
       contentClassName={`knowledge-detail-content playground-project-overview-main playground-agents-detail-overview-main is-${activeTab}-tab`}
       codeClassName="knowledge-detail-page__general"
@@ -1879,7 +1910,6 @@ export function KnowledgeLibraryDetailPage({
       noticeClassName="knowledge-detail-page__notice"
       workspaceClassName="knowledge-detail-page__workspace"
       settingsClassName="knowledge-detail-page__settings"
-      sidebarClassName="knowledge-detail-sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar"
     />
   );
 

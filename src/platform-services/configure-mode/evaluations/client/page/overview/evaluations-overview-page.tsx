@@ -9,12 +9,11 @@ import {
 import { useMemo, useState } from "react";
 import type {
   PlatformDataTableAction,
-  PlatformDataTableColumn,
   PlatformDataTableIncrementalLoadingConfig,
 } from "../../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../../../../platform-ui/components/composite/empty-state/index.js";
 import {
-  ResourceOverviewIdentityCell,
+  createResourceOverviewColumns,
   ResourceOverviewPage,
   ResourceOverviewValue,
 } from "../../../../../../platform-ui/pages/overview/index.js";
@@ -23,18 +22,17 @@ import { EvaluationsOverviewGuide } from "./evaluations-overview-guide.js";
 export interface EvaluationOverviewRow {
   id: string;
   name: string;
+  description: string;
   evaluatorLabel: string;
   evaluatorType: string;
   evaluatorAvatarUrl?: string;
   evaluatorFallback?: string;
   caseCount: number | null;
   runCount: number | null;
-  creatorLabel: string;
+  creatorName: string;
   creatorAvatarUrl?: string;
   creatorFallback?: string;
   updatedAt: number;
-  updatedLabel: string;
-  updatedTitle?: string;
   canRun: boolean;
   searchText?: string;
 }
@@ -70,61 +68,28 @@ export function EvaluationsOverviewPage({
     () => new Set(),
   );
 
-  const columns = useMemo<PlatformDataTableColumn<EvaluationOverviewRow>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Evaluation",
-        accessor: "name",
-        sortable: true,
-        width: "minmax(230px, 1.25fr)",
-        cell: ({ row }) => (
-          <span className="resource-overview-identity__title">{row.name}</span>
-        ),
+  const columns = useMemo(
+    () => createResourceOverviewColumns<EvaluationOverviewRow>({
+      name: {
+        getVisual: () => ({
+          icon: <ChartColumnIncreasing width={16} height={16} strokeWidth={1.8} />,
+          iconClassName: "is-evaluation",
+        }),
       },
-      {
-        id: "cases",
-        header: "Cases",
-        accessor: "caseCount",
-        sortable: true,
-        sortDescFirst: true,
-        width: "minmax(80px, 0.4fr)",
-        cell: ({ row }) => (
-          <ResourceOverviewValue>{row.caseCount ?? "—"}</ResourceOverviewValue>
-        ),
+      extensions: {
+        afterName: [{
+          id: "cases",
+          header: "Cases",
+          accessor: "caseCount",
+          sortable: true,
+          sortDescFirst: true,
+          width: "minmax(80px, 0.4fr)",
+          cell: ({ row }) => (
+            <ResourceOverviewValue>{row.caseCount ?? "—"}</ResourceOverviewValue>
+          ),
+        }],
       },
-      {
-        id: "creator",
-        header: "Creator",
-        accessor: "creatorLabel",
-        sortable: true,
-        width: "minmax(170px, 0.86fr)",
-        hideBelow: 840,
-        cell: ({ row }) => (
-          <ResourceOverviewIdentityCell
-            title={row.creatorLabel}
-            imageUrl={row.creatorAvatarUrl}
-            fallback={row.creatorFallback}
-            iconClassName="is-creator"
-            size="compact"
-          />
-        ),
-      },
-      {
-        id: "updated",
-        header: "Updated",
-        accessor: "updatedAt",
-        sortable: true,
-        sortDescFirst: true,
-        width: "minmax(120px, 0.62fr)",
-        hideBelow: 1020,
-        cell: ({ row }) => (
-          <ResourceOverviewValue title={row.updatedTitle}>
-            {row.updatedLabel}
-          </ResourceOverviewValue>
-        ),
-      },
-    ],
+    }),
     [],
   );
 
@@ -221,7 +186,7 @@ export function EvaluationsOverviewPage({
             placeholder: "Search evaluations",
             getSearchText: (row) =>
               row.searchText ||
-              `${row.name} ${row.evaluatorLabel} ${row.creatorLabel} ${row.updatedLabel}`,
+              `${row.name} ${row.evaluatorLabel} ${row.creatorName}`,
           },
           primaryAction: { label: "Evaluation", icon: Plus, onClick: onCreate },
         },

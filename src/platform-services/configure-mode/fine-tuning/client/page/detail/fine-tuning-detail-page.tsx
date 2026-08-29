@@ -2,12 +2,16 @@ import type { ReactNode } from "react";
 import {
   PlatformServiceDetailPage,
 } from "../../../../../../platform-ui/pages/details/index.js";
+import type {
+  PlatformResourceSettingsPageProps,
+} from "../../../../../../platform-ui/pages/settings/index.js";
 
 export type FineTuningDetailTab = "general" | "analysis" | "changes" | "settings";
 
 export interface FineTuningDetailPageProps {
   children: ReactNode;
   properties: ReactNode;
+  settings?: PlatformResourceSettingsPageProps;
   actions?: ReactNode;
   sidebarCollapsed?: boolean;
   sidebarPopoverOpen?: boolean;
@@ -18,6 +22,7 @@ export interface FineTuningDetailPageProps {
 export function FineTuningDetailPage({
   children,
   properties,
+  settings,
   actions,
   sidebarCollapsed = false,
   sidebarPopoverOpen = false,
@@ -27,6 +32,7 @@ export function FineTuningDetailPage({
   return (
     <PlatformServiceDetailPage
       properties={properties}
+      settings={settings}
       actions={actions}
       sidebarCollapsed={sidebarCollapsed}
       sidebarPopoverOpen={sidebarPopoverOpen}

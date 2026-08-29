@@ -10,6 +10,7 @@ import { PLAYGROUND_KNOWLEDGE_CSS } from "./client/styles/index.mjs";
 function createHarness() {
   const calls = [];
   const service = createKnowledgeService({
+    proxyUpstreamBinaryGet: (...args) => calls.push({ type: "binary", args }),
     proxyUpstreamGet: (...args) => calls.push({ type: "get", args }),
     proxyUpstreamJsonRequest: (...args) => calls.push({ type: "json", args }),
     proxyUpstreamRawRequest: (...args) => calls.push({ type: "raw", args }),
@@ -25,6 +26,8 @@ test("Knowledge service proxies reads, search, document mutations, and version p
     ["GET", "/api/real/knowledge/library%201", "/knowledge/library%201", "get"],
     ["POST", "/api/real/knowledge", "/knowledge", "json"],
     ["POST", "/api/real/knowledge/parse", "/knowledge/parse", "raw"],
+    ["POST", "/api/real/knowledge/library-1/cover", "/knowledge/library-1/cover", "raw"],
+    ["GET", "/api/real/knowledge/library-1/cover/image?asset=cover-1", "/knowledge/library-1/cover/image?asset=cover-1", "binary"],
     ["POST", "/api/real/knowledge/search", "/knowledge/search", "json"],
     ["POST", "/api/real/knowledge/library-1/proposals", "/knowledge/library-1/proposals", "json"],
     ["PATCH", "/api/real/knowledge/library-1/documents/doc-1", "/knowledge/library-1/documents/doc-1", "json"],
@@ -38,7 +41,11 @@ test("Knowledge service proxies reads, search, document mutations, and version p
     requests.map(([method, , upstreamPath, type]) => [
       type,
       upstreamPath,
-      type === "json" || type === "raw" ? method : undefined,
+      type === "json" || type === "raw"
+        ? method
+        : type === "binary"
+          ? { contentType: "image/webp" }
+          : undefined,
     ]),
   );
 });
@@ -96,7 +103,7 @@ test("Knowledge shell owns the complete Configure navigation lifecycle", () => {
   );
   assert.match(
     PLAYGROUND_KNOWLEDGE_CSS,
-    /knowledge-detail-page \.knowledge-detail-page__settings-content[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}max-width:\s*none;/,
+    /\.knowledge-detail-page__settings,[\s\S]{0,80}\.knowledge-detail-page__settings-content[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}min-width:\s*0;/,
   );
   assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-detail-page__settings-sidebar/);
   assert.match(
@@ -105,7 +112,23 @@ test("Knowledge shell owns the complete Configure navigation lifecycle", () => {
   );
   assert.match(
     PLAYGROUND_KNOWLEDGE_CSS,
+    /\.knowledge-library-cover-crop-modal__title\.platform-modal-header__title\s*\{[\s\S]{0,100}font-size:\s*14px;[\s\S]{0,80}font-weight:\s*400;/,
+  );
+  assert.match(
+    PLAYGROUND_KNOWLEDGE_CSS,
+    /\.knowledge-library-cover-crop-modal__zoom::-(?:webkit-slider-thumb|moz-range-thumb)\s*\{[\s\S]{0,180}border:\s*0;[\s\S]{0,160}background:\s*#fff;/,
+  );
+  assert.match(
+    PLAYGROUND_KNOWLEDGE_CSS,
+    /\.playground-content-body:has\([\s\S]{0,180}\.knowledge-detail-page\.file-resource-detail-page\.is-code-tab[\s\S]{0,180}overflow-y:\s*auto;/,
+  );
+  assert.match(
+    PLAYGROUND_KNOWLEDGE_CSS,
     /\.knowledge-detail-page__document-workspace\s*\{[\s\S]{0,220}width:\s*min\(100%, var\(--playground-centered-page-max-width, 87\.5rem\)\);[\s\S]{0,180}padding-inline:\s*44px;/,
+  );
+  assert.match(
+    PLAYGROUND_KNOWLEDGE_CSS,
+    /\.knowledge-detail-page\.is-general-tab[\s\S]{0,220}\.platform-code-editor-workspace__sidebar\s*\{[\s\S]{0,120}position:\s*sticky;[\s\S]{0,80}top:\s*0;/,
   );
   assert.match(
     PLAYGROUND_KNOWLEDGE_CSS,

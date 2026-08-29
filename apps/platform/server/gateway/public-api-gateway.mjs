@@ -17,6 +17,23 @@ const REQUEST_HEADER_ALLOWLIST = Object.freeze([
   "x-request-id",
 ]);
 
+const WEBHOOK_REQUEST_HEADER_ALLOWLIST = Object.freeze([
+  "x-github-event",
+  "x-gitlab-event",
+  "x-gitlab-token",
+  "x-hub-signature-256",
+  "x-slack-request-timestamp",
+  "x-slack-signature",
+  "x-webhook-event",
+  "x-webhook-signature",
+]);
+
+const WEBHOOK_BLOCKED_PLATFORM_HEADERS = new Set([
+  "authorization",
+  "x-api-key",
+  "x-computer-agents-organization",
+]);
+
 const RESPONSE_HEADER_BLOCKLIST = new Set([
   "connection",
   "content-encoding",
@@ -51,14 +68,29 @@ function buildUpstreamTarget(defaultUpstreamOrigin, url) {
   return target;
 }
 
-function buildRequestHeaders(request) {
+function isWebhookDeliveryPath(pathname) {
+  return /^\/v1\/webhooks(?:\/|$)/.test(pathname);
+}
+
+function buildRequestHeaders(request, { webhookDelivery = false } = {}) {
   const headers = new Headers();
   for (const name of REQUEST_HEADER_ALLOWLIST) {
+    if (webhookDelivery && WEBHOOK_BLOCKED_PLATFORM_HEADERS.has(name)) continue;
     const value = request.headers[name];
     if (Array.isArray(value)) {
       if (value[0]) headers.set(name, value[0]);
     } else if (typeof value === "string" && value) {
       headers.set(name, value);
+    }
+  }
+  if (webhookDelivery) {
+    for (const name of WEBHOOK_REQUEST_HEADER_ALLOWLIST) {
+      const value = request.headers[name];
+      if (Array.isArray(value)) {
+        if (value[0]) headers.set(name, value[0]);
+      } else if (typeof value === "string" && value) {
+        headers.set(name, value);
+      }
     }
   }
   return headers;
@@ -107,7 +139,9 @@ export function createPublicApiGateway({
       const hasRequestBody = method !== "GET" && method !== "HEAD";
       const upstream = await fetchImpl(target, {
         method,
-        headers: buildRequestHeaders(request),
+        headers: buildRequestHeaders(request, {
+          webhookDelivery: isWebhookDeliveryPath(url.pathname),
+        }),
         ...(hasRequestBody ? { body: request, duplex: "half" } : {}),
         redirect: "manual",
         signal: abortController.signal,

@@ -161,7 +161,7 @@ describe("KnowledgeLibraryDetailPage", () => {
     });
 
     const identityIcon = container.querySelector(
-      ".knowledge-library-identity__icon.is-project-linked",
+      "[data-platform-resource-settings-identity='true'] .knowledge-library-identity__icon.is-project-linked",
     );
     expect(identityIcon).not.toBeNull();
     expect(identityIcon?.querySelector("[data-platform-project-icon='telescope']")).not.toBeNull();
@@ -235,12 +235,13 @@ describe("KnowledgeLibraryDetailPage", () => {
     ).not.toBeNull();
     expect(
       container.querySelector(
-        ".knowledge-detail-page__settings-header .knowledge-library-identity",
+        "[data-platform-resource-settings-identity='true'].knowledge-library-identity",
       ),
     ).not.toBeNull();
-    expect(
-      (screen.getByRole("textbox", { name: "Knowledge library name" }) as HTMLInputElement).value,
-    ).toBe("Product handbook");
+    const libraryName = screen.getByRole("textbox", { name: "Knowledge library name" });
+    expect(libraryName.tagName).toBe("TEXTAREA");
+    expect((libraryName as HTMLTextAreaElement).rows).toBe(1);
+    expect((libraryName as HTMLTextAreaElement).value).toBe("Product handbook");
     expect(
       (screen.getByRole("textbox", { name: "Knowledge library description" }) as HTMLInputElement)
         .value,
@@ -273,9 +274,10 @@ describe("KnowledgeLibraryDetailPage", () => {
     expect(homeSelection.getAttribute("aria-checked")).toBe("false");
 
     fireEvent.click(screen.getByRole("button", { name: "Runbooks" }));
-    expect(
-      (screen.getByRole("textbox", { name: "Knowledge document title" }) as HTMLInputElement).value,
-    ).toBe("Runbooks");
+    const documentTitle = screen.getByRole("textbox", { name: "Knowledge document title" });
+    expect(documentTitle.tagName).toBe("TEXTAREA");
+    expect((documentTitle as HTMLTextAreaElement).rows).toBe(1);
+    expect((documentTitle as HTMLTextAreaElement).value).toBe("Runbooks");
     expect(screen.getByRole("textbox", { name: "Runbooks content" })).not.toBeNull();
     expect(container.querySelector(".platform-instructions-editor__header")).toBeNull();
 
@@ -297,24 +299,29 @@ describe("KnowledgeLibraryDetailPage", () => {
 
   it("adds and persists a full-width library cover from the focused document title", async () => {
     const onLibraryChange = vi.fn();
-    const uploadEditorAttachments = vi.fn(async (files: File[]) =>
-      files.map((file) => ({
-        src: "/api/real/knowledge/attachments/cover-1",
-        name: file.name,
-        size: file.size,
-        mimeType: file.type,
-        attachmentId: "cover-1",
-        metadata: {},
-      })),
-    );
     const updateLibrary = vi.fn(async (_libraryId: string, input: Partial<KnowledgeLibrary>) => ({
       ...library,
       ...input,
     }));
+    const uploadLibraryCover = vi.fn(async () => ({
+      ...library,
+      cover: {
+        schemaVersion: "computer_agents_knowledge_cover_v1" as const,
+        type: "image" as const,
+        assetId: "knowledge-cover-1",
+        src: "/knowledge/library-1/cover/image?asset=knowledge-cover-1",
+        name: "library-cover.webp",
+        mimeType: "image/webp",
+        source: "upload" as const,
+        positionX: 50,
+        positionY: 50,
+        zoom: 1,
+      },
+    }));
     const { container } = render(
       <KnowledgeLibraryDetailPage
         library={library}
-        api={{ updateLibrary, uploadEditorAttachments } as unknown as KnowledgeApi}
+        api={{ updateLibrary, uploadLibraryCover } as unknown as KnowledgeApi}
         onLibraryChange={onLibraryChange}
         onReload={vi.fn(async () => undefined)}
       />,
@@ -326,12 +333,10 @@ describe("KnowledgeLibraryDetailPage", () => {
 
     await waitFor(() => {
       expect(updateLibrary).toHaveBeenCalledWith("library-1", {
-        metadata: {
-          knowledgeCover: {
-            schemaVersion: "computer_agents_knowledge_cover_v1",
-            type: "gradient",
-            preset: "blue",
-          },
+        cover: {
+          schemaVersion: "computer_agents_knowledge_cover_v1",
+          type: "gradient",
+          preset: "blue",
         },
       });
     });
@@ -345,7 +350,7 @@ describe("KnowledgeLibraryDetailPage", () => {
       target: { files: [image] },
     });
     const cropModal = await screen.findByRole("dialog", { name: "Adjust cover" });
-    expect(uploadEditorAttachments).not.toHaveBeenCalled();
+    expect(uploadLibraryCover).not.toHaveBeenCalled();
     const sourcePreview = cropModal.querySelector(
       ".knowledge-library-cover-crop-modal__source-preview",
     );
@@ -353,23 +358,18 @@ describe("KnowledgeLibraryDetailPage", () => {
     fireEvent.load(sourcePreview as HTMLImageElement);
     fireEvent.click(within(cropModal).getByRole("button", { name: "Apply" }));
     await waitFor(() => {
-      expect(uploadEditorAttachments).toHaveBeenCalledWith([image]);
-      expect(updateLibrary).toHaveBeenLastCalledWith("library-1", {
-        metadata: {
-          knowledgeCover: expect.objectContaining({
-            type: "image",
-            src: "/api/real/knowledge/attachments/cover-1",
-            attachmentId: "cover-1",
-            source: "upload",
-          }),
-        },
+      expect(uploadLibraryCover).toHaveBeenCalledWith("library-1", {
+        file: image,
+        filename: "library-cover.png",
+        source: "upload",
+        positionX: 50,
+        positionY: 50,
+        zoom: 1,
       });
     });
     expect(onLibraryChange).toHaveBeenCalledWith(
       expect.objectContaining({
-        metadata: expect.objectContaining({
-          knowledgeCover: expect.objectContaining({ type: "gradient", preset: "blue" }),
-        }),
+        cover: expect.objectContaining({ type: "gradient", preset: "blue" }),
       }),
     );
   });
@@ -441,7 +441,9 @@ describe("KnowledgeLibraryDetailPage", () => {
       ),
     ).not.toBeNull();
     expect(
-      container.querySelector(".knowledge-settings-layout.is-access-detail-view"),
+      container.querySelector(
+        "[data-platform-resource-settings-page='true'].is-access-detail-open",
+      ),
     ).not.toBeNull();
     expect(screen.queryByText("Location")).toBeNull();
   });
